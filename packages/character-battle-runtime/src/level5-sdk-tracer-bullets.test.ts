@@ -25,6 +25,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleObjectIgnitionDisposition,
   type BattleProcedureExecutionRef,
@@ -35,7 +36,11 @@ import {
   type CombatantId,
   type SpellSlotProcedure,
 } from "@dnd/battle-runtime";
-import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
+import {
+  battleRuntimeSessionForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "@dnd/battle-runtime/test-support";
 import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   characterSheetId,
@@ -90,7 +95,7 @@ import {
   requireHole,
   requireHoleFromList,
   requireResolved,
-  requireRight,
+  requireSuccess,
   savingThrowOutcomeFill,
   spellSlotActForProcedure,
   srdStatBlock,
@@ -363,10 +368,29 @@ type OngoingSpellTargetChoiceFill = Extract<
 type OngoingSpellTarget = OngoingSpellTargetChoiceFill["value"];
 type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
-type ReactionRollOrDamageReductionChoice = Extract<
+type NestedProcedureChoice = Extract<
   BattleInterruptProcedureChoice,
-  { readonly kind: "reactionRollOrDamageReduction" }
+  { readonly kind: "nestedProcedure" }
 >;
+type CounterspellReactionChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+type ReactionModifierChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "reactionModifier" }
+>;
+type ReactionRollOrDamageReductionChoice = ReactionModifierChoice & {
+  readonly modifier: Extract<
+    ReactionModifierChoice["modifier"],
+    { readonly kind: "attackDamageReduction" }
+  >;
+};
 
 describe("level 5 SDK tracer bullets", () => {
   test("Barbarian Fast Movement projects through sheet handoff and increases Speed plus Dash without Heavy armor", () => {
@@ -852,7 +876,7 @@ describe("level 5 SDK tracer bullets", () => {
       rogueId,
     );
     expect(choice.initialHoles).toEqual([]);
-    expect(choice.choice.reduction).toEqual({ kind: "halfDamage" });
+    expect(choice.modifier.reduction).toEqual({ kind: "halfDamage" });
 
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -863,7 +887,7 @@ describe("level 5 SDK tracer bullets", () => {
           responderId: rogueId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -938,7 +962,7 @@ describe("level 5 SDK tracer bullets", () => {
         session,
         hasteSpellId,
         hasteCastLevel,
-        "hastePositive",
+        "compositeTargetBuffWithAftermath",
       );
       const target = requireHoleFromList(act.initialHoles, "targetChoice");
       const resolved = requireResolved(
@@ -1159,7 +1183,7 @@ describe("level 5 SDK tracer bullets", () => {
         sessionWithTargetConcentration,
         sleetStormSpellId,
         sleetStormCastLevel,
-        "sleetStormAreaHazard",
+        "persistentAreaSaveComposite",
       );
       const area = requireHoleFromList(act.initialHoles, "spellAreaChoice");
 
@@ -1173,7 +1197,7 @@ describe("level 5 SDK tracer bullets", () => {
           tag: "spellSlot",
           spellId: sleetStormSpellId,
           slotLevel: sleetStormCastLevel,
-          procedure: "sleetStormAreaHazard",
+          procedure: "persistentAreaSaveComposite",
         },
         mode: { tag: "cast" },
       });
@@ -1192,7 +1216,7 @@ describe("level 5 SDK tracer bullets", () => {
           act.subject.procedureRef,
         ),
       ).toMatchObject({
-        procedure: "sleetStormAreaHazard",
+        procedure: "persistentAreaSaveComposite",
         resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
@@ -1216,6 +1240,17 @@ describe("level 5 SDK tracer bullets", () => {
         cast.state,
         sleetStormCase.casterId,
       );
+      const sleetStormEffect = caster.activeEffects.find(
+        (
+          effect,
+        ): effect is Extract<
+          BattleActiveEffect,
+          { readonly kind: "persistentAreaSaveComposite" }
+        > => effect.kind === "persistentAreaSaveComposite",
+      );
+      if (sleetStormEffect === undefined) {
+        throw new Error("Expected the cast Sleet Storm occurrence.");
+      }
 
       expect(caster).toMatchObject({
         concentration: {
@@ -1224,13 +1259,11 @@ describe("level 5 SDK tracer bullets", () => {
         },
         activeEffects: expect.arrayContaining([
           expect.objectContaining({
-            kind: "sleetStormAreaHazard",
+            kind: "persistentAreaSaveComposite",
             sourceProcedureRef: sleetStormProcedureRef,
             sourceCombatantId: sleetStormCase.casterId,
             areaId: sleetStormAreaId,
-            radiusFeet: movementFeet(20),
-            heightFeet: movementFeet(40),
-            save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+            savedThisTurn: [],
           }),
         ]),
       });
@@ -1286,7 +1319,8 @@ describe("level 5 SDK tracer bullets", () => {
                 kind: "areaDifficultTerrain",
                 sources: [
                   {
-                    kind: "sleetStormHazard",
+                    kind: "persistentAreaSaveComposite",
+                    effectRef: sleetStormEffect.effectRef,
                     sourceCombatantId: sleetStormCase.casterId,
                     sourceProcedureRef: sleetStormProcedureRef,
                     areaId: sleetStormAreaId,
@@ -1304,7 +1338,9 @@ describe("level 5 SDK tracer bullets", () => {
         movementSpentFeet: movementFeet(15),
       });
 
-      const entrySaveSubject = sleetStormAreaHazardSaveSubject();
+      const entrySaveSubject = persistentAreaSaveCompositeSaveSubject(
+        sleetStormEffect.effectRef,
+      );
       const entrySave = requireHole(
         resolveBattleSubject({
           state: moved.state,
@@ -1317,7 +1353,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(entrySave).toMatchObject({
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
-        sleetStormAreaHazard: {
+        persistentAreaSaveComposite: {
           trigger: "entersArea",
           areaId: sleetStormAreaId,
           sourceCombatantId: sleetStormCase.casterId,
@@ -1359,7 +1395,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(
         requireCombatant(ended, sleetStormCase.casterId).activeEffects.some(
           (effect) =>
-            effect.kind === "sleetStormAreaHazard" &&
+            effect.kind === "persistentAreaSaveComposite" &&
             effect.sourceProcedureRef === sleetStormProcedureRef,
         ),
       ).toBe(false);
@@ -1432,7 +1468,7 @@ describe("level 5 SDK tracer bullets", () => {
         session,
         slowSpellId,
         slowCastLevel,
-        "slowActivePenalties",
+        "saveGatedTurnConstraintBundle",
       );
       const savingThrow = requireHoleFromList(
         act.initialHoles,
@@ -1449,7 +1485,7 @@ describe("level 5 SDK tracer bullets", () => {
           tag: "spellSlot",
           spellId: slowSpellId,
           slotLevel: slowCastLevel,
-          procedure: "slowActivePenalties",
+          procedure: "saveGatedTurnConstraintBundle",
         },
         mode: { tag: "cast" },
       });
@@ -1465,7 +1501,7 @@ describe("level 5 SDK tracer bullets", () => {
           act.subject.procedureRef,
         ),
       ).toMatchObject({
-        procedure: "slowActivePenalties",
+        procedure: "saveGatedTurnConstraintBundle",
         resource: { tag: "spellSlot", slotLevel: slowCastLevel },
         targeting: {
           kind: "pointOriginCube",
@@ -1531,10 +1567,9 @@ describe("level 5 SDK tracer bullets", () => {
       expect(failedSaveTarget.activeEffects).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            kind: "slowActivePenalties",
+            kind: "saveGatedTurnConstraintBundle",
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: slowCase.casterId,
-            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
             expiresAt: {
               kind: "concentration",
               combatantId: slowCase.casterId,
@@ -1546,7 +1581,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(
         successfulSaveTarget.activeEffects.some(
           (effect) =>
-            effect.kind === "slowActivePenalties" &&
+            effect.kind === "saveGatedTurnConstraintBundle" &&
             effect.sourceProcedureRef === act.subject.procedureRef,
         ),
       ).toBe(false);
@@ -1767,15 +1802,19 @@ describe("level 5 SDK tracer bullets", () => {
         ],
         monsters: [],
       });
-      const state: BattleState = {
-        ...session.state,
-        lightEmitters: [
-          trackedObjectSpellLightEmitter({
-            objectId,
-            sourceCombatantId: dispelMagicCase.casterId,
-          }),
+      const state = battleStateWithAllocatedEffectOccurrencesForTest({
+        state: session.state,
+        occurrences: [
+          {
+            kind: "storedLightEmitter",
+            ownerId: dispelMagicCase.casterId,
+            emitter: trackedObjectSpellLightEmitter({
+              objectId,
+              sourceCombatantId: dispelMagicCase.casterId,
+            }),
+          },
         ],
-      };
+      }).state;
       const sessionWithTrackedLightEmitter = battleRuntimeSessionForTest({
         ...session,
         state,
@@ -2197,7 +2236,7 @@ describe("level 5 SDK tracer bullets", () => {
         session,
         hypnoticPatternSpellId,
         hypnoticPatternCastLevel,
-        "hypnoticPattern",
+        "saveGatedAreaControl",
       );
       const savingThrow = requireHoleFromList(
         act.initialHoles,
@@ -2214,7 +2253,7 @@ describe("level 5 SDK tracer bullets", () => {
           tag: "spellSlot",
           spellId: hypnoticPatternSpellId,
           slotLevel: hypnoticPatternCastLevel,
-          procedure: "hypnoticPattern",
+          procedure: "saveGatedAreaControl",
         },
         mode: { tag: "cast" },
       });
@@ -2230,7 +2269,7 @@ describe("level 5 SDK tracer bullets", () => {
           act.subject.procedureRef,
         ),
       ).toMatchObject({
-        procedure: "hypnoticPattern",
+        procedure: "saveGatedAreaControl",
         resource: { tag: "spellSlot", slotLevel: hypnoticPatternCastLevel },
         targeting: { kind: "pointOriginCube", sideFeet: 30 },
         rangeFeet: 120,
@@ -2271,7 +2310,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(target.activeEffects).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            kind: "hypnoticPatternControl",
+            kind: "saveGatedAreaControl",
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: hypnoticPatternCase.casterId,
           }),
@@ -2631,7 +2670,7 @@ describe("level 5 SDK tracer bullets", () => {
   });
 
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId(
           "character:l5-tracer-sorcerous-restoration",
@@ -2654,8 +2693,8 @@ describe("level 5 SDK tracer bullets", () => {
     );
 
     expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      success: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: sorcererFontOfMagicUnitId,
@@ -2665,14 +2704,14 @@ describe("level 5 SDK tracer bullets", () => {
       ]),
     });
 
-    const rest = requireRight(startShortRest({ sheet }));
-    const completion = requireRight(
+    const rest = requireSuccess(startShortRest({ sheet }));
+    const completion = requireSuccess(
       finishShortRest({
         rest,
         restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
       }),
     );
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeShortRest({
         completion,
         unitLibrary,
@@ -2693,8 +2732,8 @@ describe("level 5 SDK tracer bullets", () => {
       { tag: "sorcerousRestoration", usedSinceLongRest: true },
     ]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      success: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: sorcererFontOfMagicUnitId,
@@ -3097,7 +3136,7 @@ function expectSleetStormClassAccess(input: {
     session,
     sleetStormSpellId,
     sleetStormCastLevel,
-    "sleetStormAreaHazard",
+    "persistentAreaSaveComposite",
   );
   const area = requireHoleFromList(act.initialHoles, "spellAreaChoice");
 
@@ -3111,7 +3150,7 @@ function expectSleetStormClassAccess(input: {
       tag: "spellSlot",
       spellId: sleetStormSpellId,
       slotLevel: sleetStormCastLevel,
-      procedure: "sleetStormAreaHazard",
+      procedure: "persistentAreaSaveComposite",
     },
     mode: { tag: "cast" },
   });
@@ -3130,7 +3169,7 @@ function expectSleetStormClassAccess(input: {
       act.subject.procedureRef,
     ),
   ).toMatchObject({
-    procedure: "sleetStormAreaHazard",
+    procedure: "persistentAreaSaveComposite",
     resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
     targeting: {
       kind: "pointOriginCylinder",
@@ -3211,7 +3250,7 @@ function spellTargetListFill(
 function trackedObjectSpellLightEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceCombatantId: CombatantId;
-}): BattleTrackedOngoingSpellLightEmitter {
+}): Omit<BattleTrackedOngoingSpellLightEmitter, "effectRef"> {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -3283,7 +3322,7 @@ function fireballSavingThrowOutcomeFill(input: {
     holeId: input.hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: input.objectIgnitionFacts,
@@ -3306,7 +3345,7 @@ function hypnoticPatternSavingThrowOutcomeFill(input: {
     holeId: input.hole.holeId,
     value: {
       area: {
-        kind: "hypnoticPatternArea",
+        kind: "saveGatedAreaControlArea",
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: 30,
@@ -3334,7 +3373,7 @@ function slowSavingThrowOutcomeFill(input: {
     holeId: input.hole.holeId,
     value: {
       area: {
-        kind: "slowArea",
+        kind: "saveGatedTurnConstraintBundleArea",
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: slowCubeSideFeet,
@@ -3422,7 +3461,8 @@ function startCounterspellableMagicMissile(input: {
   const counterspellProcedureRef =
     reactor.origin.execution.procedureBindings.flatMap((binding) => {
       return binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.execution.procedure === "counterspell" &&
+        binding.procedure.execution.procedure ===
+          "spellCastInterruptionReaction" &&
         binding.procedure.execution.resource.tag === "spellSlot" &&
         Number(binding.procedure.execution.resource.slotLevel) ===
           counterspellCastLevel
@@ -3438,7 +3478,7 @@ function startCounterspellableMagicMissile(input: {
     fills: [
       allocationFill,
       spellCastReactionFactsFill([
-        counterspellTriggerFact({
+        spellCastInterruptionTriggerFact({
           reactorId: input.reactorId,
           casterId: input.casterId,
           sourceProcedureRef: counterspellProcedureRef,
@@ -3481,21 +3521,21 @@ function magicMissileTargetAllocationFill(input: {
   };
 }
 
-type CounterspellTriggerFact = Extract<
+type SpellCastInterruptionTriggerFact = Extract<
   Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionTriggerFact(input: {
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
-  readonly sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"];
-}): CounterspellTriggerFact {
+  readonly sourceProcedureRef: SpellCastInterruptionTriggerFact["sourceProcedureRef"];
+}): SpellCastInterruptionTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: input.sourceProcedureRef,
@@ -3504,7 +3544,7 @@ function counterspellTriggerFact(input: {
 }
 
 function spellCastReactionFactsFill(
-  facts: readonly CounterspellTriggerFact[],
+  facts: readonly SpellCastInterruptionTriggerFact[],
 ): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
   return {
     kind: "targetSpatialFacts",
@@ -3512,11 +3552,6 @@ function spellCastReactionFactsFill(
     spatialFacts: facts,
   };
 }
-
-type CounterspellReactionChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
->;
 
 function requireCounterspellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
@@ -3527,8 +3562,10 @@ function requireCounterspellChoice(
     result.state,
   )?.choices.find((candidate): candidate is CounterspellReactionChoice => {
     if (
-      candidate.kind !== "castTriggeredReactionSpell" ||
-      candidate.reactorId !== reactorId ||
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.tag !== "runtimeCommand" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId ||
       reactor?.origin.kind !== "character"
     ) {
       return false;
@@ -3539,7 +3576,8 @@ function requireCounterspellChoice(
     );
     return (
       binding?.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "counterspell" &&
+      binding.procedure.execution.procedure ===
+        "spellCastInterruptionReaction" &&
       binding.procedure.execution.resource.tag === "spellSlot" &&
       Number(binding.procedure.execution.resource.slotLevel) ===
         counterspellCastLevel
@@ -3561,16 +3599,16 @@ function requireUncannyDodgeAttackDamageChoice(
   )?.choices.find(
     (candidate): candidate is ReactionRollOrDamageReductionChoice => {
       if (
-        candidate.kind !== "reactionRollOrDamageReduction" ||
-        candidate.reactorId !== reactorId ||
-        candidate.choice.kind !== "attackDamageReduction" ||
+        candidate.kind !== "reactionModifier" ||
+        candidate.responderId !== reactorId ||
+        candidate.modifier.kind !== "attackDamageReduction" ||
         reactor?.origin.kind !== "character"
       ) {
         return false;
       }
       const binding = characterProcedureBinding(
         reactor.origin.execution,
-        candidate.choice.procedureRef,
+        candidate.modifier.procedureRef,
       );
       return (
         binding?.procedure.kind === "unitFeature" &&
@@ -4008,30 +4046,33 @@ function protectionFromEnergyDamageTypeChoiceFill(
 function stateWithSleetStormTargetConcentration(
   state: BattleState,
 ): BattleState {
-  const target = requireCombatant(state, sleetStormTargetId);
   const concentrationProcedureRef = battleProcedureExecutionRefForTest(
     "sleet-storm-target-concentration",
   );
-  const concentrationEffect = {
-    kind: "spellArmorClassBonus",
-    sourceProcedureRef: concentrationProcedureRef,
-    sourceCombatantId: sleetStormTargetId,
-    bonus: 1,
-    negatesRepeatedDamageAllocation: false,
-    expiresAt: {
-      kind: "concentration",
-      combatantId: sleetStormTargetId,
+  const allocatedState = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: sleetStormTargetId,
+    effect: {
+      kind: "spellArmorClassBonus",
+      sourceProcedureRef: concentrationProcedureRef,
+      sourceCombatantId: sleetStormTargetId,
+      bonus: 1,
+      negatesRepeatedDamageAllocation: false,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: sleetStormTargetId,
+      },
     },
-  } satisfies BattleActiveEffect;
+  });
+  const allocatedTarget = requireCombatant(allocatedState, sleetStormTargetId);
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(sleetStormTargetId, {
-      ...target,
+    ...allocatedState,
+    combatants: new Map(allocatedState.combatants).set(sleetStormTargetId, {
+      ...allocatedTarget,
       concentration: {
         sourceProcedureRef: concentrationProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
 }
@@ -4042,7 +4083,11 @@ function sleetStormAreaChoiceFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "sleetStormCylinderArea", areaId: sleetStormAreaId },
+    value: {
+      kind: "anchoredPointOriginCylinderArea",
+      areaId: sleetStormAreaId,
+      originAnchor: { kind: "tableSelectedPoint" },
+    },
   };
 }
 
@@ -4074,19 +4119,25 @@ function movementFill(
   };
 }
 
-function sleetStormAreaHazardSaveSubject(): Extract<
+function persistentAreaSaveCompositeSaveSubject(
+  effectRef: Extract<
+    BattleActiveEffect,
+    { readonly kind: "persistentAreaSaveComposite" }
+  >["effectRef"],
+): Extract<
   AvailableBattleAct["subject"],
   {
     readonly tag: "runtimeCommand";
-    readonly command: "sleetStormAreaHazardSave";
+    readonly command: "persistentAreaSaveCompositeSave";
   }
 > {
   return {
     tag: "runtimeCommand",
     actorId: sleetStormTargetId,
-    command: "sleetStormAreaHazardSave",
+    command: "persistentAreaSaveCompositeSave",
     areaMembershipTrigger: {
       kind: "firstEntryOnTurn",
+      effectRef,
       areaId: sleetStormAreaId,
     },
   };

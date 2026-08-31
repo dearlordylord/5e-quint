@@ -1,11 +1,12 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   monsterMultiattackStatBlock,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { BattleSnapshotSchema } from "./index.ts";
-import { battleActiveEffectExecutionRef } from "./identity.ts";
+import { BattleSnapshotSchema, discoverBattleActCandidates } from "./index.ts";
+import { battleEffectExecutionRef } from "./identity.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C17-HASTE-POSITIVE-RUNTIME haste
@@ -22,18 +23,15 @@ import {
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { openClassFeatureExtraAttackResource } from "./battle-reducer/attack-resolution.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
-import {
-  requireCharacterSpellProcedureRefForTest,
-  savingThrowOutcomeFill,
-} from "./battle-runtime.test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import {
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
   hasteUnitId,
+  sleepUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -48,11 +46,10 @@ import {
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { Result } from "effect";
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
-  discoverBattleActCandidates,
-  Either,
   elapsedTimeTicks,
   endTurn,
   hasCondition,
@@ -93,7 +90,11 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(hasteUnitId, 3, "hastePositive"),
+        spellSlotInvocationRef(
+          hasteUnitId,
+          3,
+          "compositeTargetBuffWithAftermath",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -135,6 +136,18 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         "spellGrantedActionResource",
       ]),
     );
+    const hasteEffects = target.activeEffects.filter((effect) =>
+      isHastePositiveEffectKind(effect.kind),
+    );
+    expect(hasteEffects).toHaveLength(5);
+    expect(hasteEffects.every((effect) => "effectRef" in effect)).toBe(true);
+    expect(
+      new Set(
+        hasteEffects.flatMap((effect) =>
+          "effectRef" in effect ? [effect.effectRef] : [],
+        ),
+      ).size,
+    ).toBe(hasteEffects.length);
     expect(savingThrowRollModeProjections(resolved.state, "dex")).toEqual([
       { targetId: spellTargetId, rollMode: "advantage" },
     ]);
@@ -176,10 +189,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       targetTurn.state.currentTurnResources,
       "magic",
     );
-    expect(Either.isRight(ordinaryActionSpent)).toBe(true);
-    if (Either.isLeft(ordinaryActionSpent)) return;
-    expect(canSpendAction(ordinaryActionSpent.right, "magic")).toBe(false);
-    expect(canSpendAction(ordinaryActionSpent.right, "dash")).toBe(true);
+    expect(Result.isSuccess(ordinaryActionSpent)).toBe(true);
+    if (Result.isFailure(ordinaryActionSpent)) return;
+    expect(canSpendAction(ordinaryActionSpent.success, "magic")).toBe(false);
+    expect(canSpendAction(ordinaryActionSpent.success, "dash")).toBe(true);
 
     const noExtraAttackFromHasteAction = openClassFeatureExtraAttackResource({
       state: stateAfterSpendingResource(targetTurn.state, spellEffectResource),
@@ -225,27 +238,36 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(ordinaryHasteResource).toBeDefined();
     if (ordinaryHasteResource === undefined) return;
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(ordinaryTurn),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(ordinaryTurn),
       ),
     ).toBe(true);
+    const ordinaryHasteOccurrence = ordinaryTurn.combatants
+      .find((combatant) => combatant.combatantId === spellTargetId)
+      ?.activeEffectOccurrences.find(
+        (occurrence) =>
+          occurrence.effectRef === ordinaryHasteResource.sourceEffectRef,
+      );
+    expect(ordinaryHasteOccurrence).toBeDefined();
+    if (ordinaryHasteOccurrence === undefined) return;
     const inactiveHaste = {
       ...ordinaryTurn,
       combatants: ordinaryTurn.combatants.map((combatant) =>
         combatant.combatantId === spellTargetId
           ? {
               ...combatant,
-              activeEffectRefs: combatant.activeEffectRefs.filter(
-                (effectRef) =>
-                  effectRef !== ordinaryHasteResource.sourceEffectRef,
+              activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
+                (occurrence) =>
+                  occurrence.effectRef !==
+                  ordinaryHasteResource.sourceEffectRef,
               ),
             }
           : combatant,
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(inactiveHaste),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(inactiveHaste),
       ),
     ).toBe(true);
     const foreignOwner = ordinaryTurn.combatants.find(
@@ -254,9 +276,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(foreignOwner?.origin.kind).toBe("character");
     if (foreignOwner?.origin.kind !== "character") return;
     const foreignEffectOrdinal = 999;
-    const foreignEffectRef = battleActiveEffectExecutionRef(
+    const foreignEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: foreignOwner.origin.execution.scopeRef,
         ordinal: foreignEffectOrdinal,
       }),
@@ -267,9 +289,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         combatant.combatantId === spellCasterId
           ? {
               ...combatant,
-              activeEffectRefs: [
-                ...combatant.activeEffectRefs,
-                foreignEffectRef,
+              activeEffectOccurrences: [
+                ...combatant.activeEffectOccurrences,
+                { ...ordinaryHasteOccurrence, effectRef: foreignEffectRef },
               ],
             }
           : combatant,
@@ -284,8 +306,8 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(foreignHaste),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(foreignHaste),
       ),
     ).toBe(true);
     const duplicatedOrdinaryHaste = {
@@ -299,8 +321,8 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           duplicatedOrdinaryHaste,
         ),
       ),
@@ -339,7 +361,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
 
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(opened.snapshot);
     expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleSnapshotSchema)(encoded)),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded),
+      ),
     ).toBe(true);
     const forgedSpellRestriction = {
       ...encoded,
@@ -353,8 +377,8 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           forgedSpellRestriction,
         ),
       ),
@@ -371,8 +395,8 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(forgedSpellOwner),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(forgedSpellOwner),
       ),
     ).toBe(true);
   });
@@ -466,6 +490,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
+    const targetBeforeLethargy = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    );
 
     const ended = breakBattleConcentration(resolved.state, spellCasterId);
     const caster = requireCombatant(ended, spellCasterId);
@@ -477,6 +505,16 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(Number(effectiveWalkSpeed(ended, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
+    const lethargyRefs = target.activeEffects.flatMap((effect) =>
+      (effect.kind === "spellCondition" || effect.kind === "spellSpeedZero") &&
+      "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(new Set(lethargyRefs).size).toBe(2);
+    expect(Number(target.nextEffectOrdinal)).toBe(
+      Number(targetBeforeLethargy.nextEffectOrdinal) + 2,
+    );
   });
 
   test("Haste lethargy Incapacitated breaks the target's own Concentration", () => {
@@ -508,56 +546,68 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteSpeedZero(target)).toBe(true);
   });
 
-  test("Sleep repeat-save Haste concentration loss breaks the target's own Concentration", () => {
+  test("a failed Sleep save breaks Haste and the Sleep caster's Concentration", () => {
     const spell = spellRecord(hasteUnitId);
+    const sleep = spellRecord(sleepUnitId);
     const base = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetPreparedSpells: [sleep],
     });
-    const state = stateWithSyntheticTargetConcentration(base.state);
     const act = spellAct({
-      session: battleRuntimeSessionForTest({ ...base, state }),
+      session: base,
       spellId: hasteUnitId,
       slotLevel: 3,
     });
     const resolved = resolveHaste({
-      state,
+      state: base.state,
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
-    const stateWithRepeatSave = stateWithSleepPendingRepeatSave(
-      resolved.state,
-      spellCasterId,
-    );
-    const repeatSaveRequest = endTurn({
-      state: stateWithRepeatSave,
+    const targetTurn = endTurn({
+      state: resolved.state,
       actorId: spellCasterId,
     });
-    expect(repeatSaveRequest.tag).toBe("needsHoles");
-    if (repeatSaveRequest.tag !== "needsHoles") {
-      throw new Error("Expected Sleep repeat-save hole.");
-    }
-    const repeatSave = requireHole(
-      repeatSaveRequest.holes,
-      "savingThrowOutcome",
-    );
-
-    const ended = endTurn({
-      state: stateWithRepeatSave,
-      actorId: spellCasterId,
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const sleepSession = battleRuntimeSessionForTest({
+      ...base,
+      state: targetTurn.state,
+    });
+    const sleepAct = spellAct({
+      session: sleepSession,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+    const sleepSave = requireHole(sleepAct.initialHoles, "savingThrowOutcome");
+    const ended = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: sleepAct.subject,
       fills: [
-        savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellCasterId, succeeded: false },
-        ]),
+        {
+          kind: "savingThrowOutcome",
+          holeId: sleepSave.holeId,
+          value: {
+            area: {
+              originAnchorId: spellTargetId,
+              affectedTargetIds: [spellCasterId],
+            },
+            outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          },
+        },
       ],
     });
+    if (ended.tag !== "resolved") {
+      throw new Error(
+        `Expected the failed Sleep save to resolve: ${ended.tag === "invalid" ? ended.message : ended.tag}`,
+      );
+    }
     expect(ended.tag).toBe("resolved");
-    if (ended.tag !== "resolved") return;
 
     const caster = requireCombatant(ended.state, spellCasterId);
     const target = requireCombatant(ended.state, spellTargetId);
     expect(caster.concentration).toBeNull();
-    expect(hasCondition(caster.conditions, "unconscious")).toBe(true);
+    expect(hasCondition(caster.conditions, "incapacitated")).toBe(false);
     expect(target.concentration).toBeNull();
     expect(hasSyntheticTargetConcentrationEffect(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
@@ -683,11 +733,24 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       spellId: hasteUnitId,
       slotLevel: 3,
     });
+    const initialTargetOrdinal = Number(
+      requireCombatant(state.state, spellTargetId).nextEffectOrdinal,
+    );
     const first = resolveHaste({
       state: state.state,
       subject: firstAct.subject,
       targetHole: requireHole(firstAct.initialHoles, "targetChoice"),
     });
+    const firstTarget = requireCombatant(first.state, spellTargetId);
+    const firstHasteRefs = firstTarget.activeEffects.flatMap((effect) =>
+      isHastePositiveEffectKind(effect.kind) && "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(firstHasteRefs).toHaveLength(5);
+    expect(Number(firstTarget.nextEffectOrdinal)).toBe(
+      initialTargetOrdinal + 5,
+    );
     const targetTurn = expectEndTurn(first.state, spellCasterId);
     const nextCasterTurn = expectEndTurn(targetTurn, spellTargetId);
     const secondAct = spellAct({
@@ -695,6 +758,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       spellId: hasteUnitId,
       slotLevel: 3,
     });
+    const ordinalBeforeRecast = Number(
+      requireCombatant(nextCasterTurn, spellTargetId).nextEffectOrdinal,
+    );
     const second = resolveHaste({
       state: nextCasterTurn,
       subject: secondAct.subject,
@@ -702,6 +768,11 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
     const caster = requireCombatant(second.state, spellCasterId);
     const target = requireCombatant(second.state, spellTargetId);
+    const secondHasteRefs = target.activeEffects.flatMap((effect) =>
+      isHastePositiveEffectKind(effect.kind) && "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
 
     expect(caster.concentration).toEqual(
       expect.objectContaining({
@@ -714,6 +785,13 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteSpeedZero(target)).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
     expect(Number(effectiveWalkSpeed(second.state, target))).toBe(0);
+    expect(secondHasteRefs).toHaveLength(5);
+    expect(secondHasteRefs.every((ref) => !firstHasteRefs.includes(ref))).toBe(
+      true,
+    );
+    // Recasting promotes the old Haste end-state into two occurrences, then
+    // binds five fresh positive effects.
+    expect(Number(target.nextEffectOrdinal)).toBe(ordinalBeforeRecast + 7);
   });
 
   test("Haste creation preserves a target-owned concentration effect", () => {
@@ -824,7 +902,7 @@ function stateWithSyntheticTargetConcentration(
   state: BattleState,
 ): BattleState {
   const target = requireCombatant(state, spellTargetId);
-  const concentrationEffect: BattleActiveEffect = {
+  const concentrationEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-target-concentration-fixture",
@@ -836,8 +914,8 @@ function stateWithSyntheticTargetConcentration(
       kind: "concentration",
       combatantId: spellTargetId,
     },
-  };
-  return {
+  } as const;
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
@@ -847,9 +925,13 @@ function stateWithSyntheticTargetConcentration(
           "synthetic-target-concentration-fixture",
         ),
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: spellTargetId,
+    effect: concentrationEffect,
+  });
 }
 
 function hasSyntheticTargetConcentrationEffect(
@@ -860,44 +942,6 @@ function hasSyntheticTargetConcentrationEffect(
       "sourceProcedureRef" in effect &&
       effect.sourceCombatantId === spellTargetId,
   );
-}
-
-function stateWithSleepPendingRepeatSave(
-  state: BattleState,
-  combatantId: CombatantId,
-): BattleState {
-  const combatant = requireCombatant(state, combatantId);
-  const sleepPendingEffect: BattleActiveEffect = {
-    kind: "sleepPendingRepeatSave",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "synthetic-sleep-repeat-save-fixture",
-    ),
-    sourceCombatantId: spellTargetId,
-    conditionHadNonSpellSource: false,
-    save: {
-      ability: "wis",
-      dc: { kind: "caster_spell_save_dc" },
-    },
-    repeatAt: {
-      kind: "endOfTurn",
-      combatantId,
-      round: state.initiative.round,
-    },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: spellTargetId,
-    },
-  };
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      combatantId,
-      battleCreatureWithSpellActiveEffects(combatant, [
-        ...combatant.activeEffects,
-        sleepPendingEffect,
-      ]),
-    ),
-  };
 }
 
 function stateWithDirectIncapacitated(
@@ -989,15 +1033,15 @@ function extraAttackBattleUnitRef() {
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(fighterExtraAttackUnitId),
       supportProfiles: [extraAttackSupportProfile],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function stateAfterSpendingResource(
@@ -1032,7 +1076,7 @@ defineSelectedIdentityReplayWitness({
           actionName: "doReplayHastePositiveEffects",
           projectionAfter: {
             unitId: hasteUnitId,
-            procedure: "hastePositive",
+            procedure: "compositeTargetBuffWithAftermath",
             targetHasHaste: true,
             targetLethargic: false,
           },
@@ -1040,7 +1084,7 @@ defineSelectedIdentityReplayWitness({
             const resolved = replayHasteCast();
             return {
               unitId: hasteUnitId,
-              procedure: "hastePositive",
+              procedure: "compositeTargetBuffWithAftermath",
               targetHasHaste: hasHastePositiveEffects(
                 requireCombatant(resolved.state, spellTargetId),
               ),

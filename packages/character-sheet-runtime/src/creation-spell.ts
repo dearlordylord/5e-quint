@@ -8,8 +8,8 @@ import {
 } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -52,7 +52,7 @@ export function castCreation(input: {
   readonly unitLibrary: UnitCatalog;
   readonly object: CharacterSheetCreationObject;
   readonly castLevel?: SpellSlotLevel;
-}): Either.Either<CharacterSheetCreationResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetCreationResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -97,10 +97,10 @@ function creationObjectIssue(input: {
 }
 
 function creationInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly object: CharacterSheetCreationObject;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheetCreationInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetCreationInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Creation support profile required by this projector. */
   if (
@@ -138,11 +138,12 @@ function creationInvocationFromSpell(input: {
 
   const objectDuration = shortestCreationObjectDuration(input.object.materials);
   /* v8 ignore next -- @preserve -- Internal invariant: every nonempty canonical Creation material list maps to a positive parsed duration. */
-  if (Either.isLeft(objectDuration)) return Either.left(objectDuration.left);
+  if (Result.isFailure(objectDuration))
+    return Result.fail(objectDuration.failure);
 
-  return Either.right({
+  return Result.succeed({
     tag: "creation",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     castLevel: input.castLevel,
     spellSlotCost: {
@@ -155,7 +156,7 @@ function creationInvocationFromSpell(input: {
     rangeFeet: 30,
     maxCubeSideFeet: creationMaxCubeSideFeet(input.castLevel),
     object: input.object,
-    objectDuration: objectDuration.right,
+    objectDuration: objectDuration.success,
     materialComponentUse: "causes_other_spell_to_fail",
   });
 }
@@ -189,7 +190,7 @@ function creationMaxCubeSideFeet(castLevel: SpellSlotLevel): number {
 
 function shortestCreationObjectDuration(
   materials: readonly CharacterSheetCreationObjectMaterial[],
-): Either.Either<TimeSpanDuration, CharacterSheetIssue> {
+): Result.Result<TimeSpanDuration, CharacterSheetIssue> {
   const shortest = CREATION_MATERIAL_DURATION_ORDER.find((material) =>
     materials.some((candidate) => candidate === material),
   );
@@ -200,7 +201,7 @@ function shortestCreationObjectDuration(
     ],
   );
   /* v8 ignore start -- @preserve -- Impossible parser failure: V8 maps the rejected-duration edge to this conditional, but every canonical Creation material maps to a positive supported time span. */
-  if (Either.isRight(duration)) return Either.right(duration.right);
+  if (Result.isSuccess(duration)) return Result.succeed(duration.success);
   return characterSheetIssue("Creation requires a supported object duration.");
   /* v8 ignore stop -- @preserve */
 }

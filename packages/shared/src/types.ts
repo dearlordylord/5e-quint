@@ -1,4 +1,4 @@
-import { Brand, Either, Schema } from "effect";
+import { Brand, Result, Schema } from "effect";
 export {
   ABILITIES,
   CONDITIONS,
@@ -21,10 +21,10 @@ const defaultGetOnlyOneError = (length: number): Error =>
 export const getOnlyOne = <T, E = Error>(
   value: readonly T[],
   error?: (length: number) => E,
-): Either.Either<T, E | Error> =>
+): Result.Result<T, E | Error> =>
   isArrayOfOne(value)
-    ? Either.right(value[0])
-    : Either.left((error ?? defaultGetOnlyOneError)(value.length));
+    ? Result.succeed(value[0])
+    : Result.fail((error ?? defaultGetOnlyOneError)(value.length));
 
 export const getOnlyOneStrict = <T>(value: readonly [T]): T => {
   return value[0];
@@ -80,7 +80,7 @@ export const DAMAGE_DIE_SIZES = [
   4, 6, 8, 10, 12,
 ] as const satisfies ReadonlyArray<number>;
 export type DamageDieSize = (typeof DAMAGE_DIE_SIZES)[number];
-export const DamageDieSizeSchema = Schema.Literal(...DAMAGE_DIE_SIZES);
+export const DamageDieSizeSchema = Schema.Literals(DAMAGE_DIE_SIZES);
 
 export const DAMAGE_QUALIFIERS = ["adamantine", "magical", "silvered"] as const;
 export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
@@ -140,18 +140,12 @@ export const SPELL_SCHOOLS = [
 export type SpellSchool = (typeof SPELL_SCHOOLS)[number];
 
 export type Integer = number & Brand.Brand<"Integer">;
-export const Integer = Brand.refined<Integer>(
-  (n: number) => Number.isInteger(n),
-  (n: number) => Brand.error(`Expected ${n} to be an integer`),
-);
+export const Integer = Brand.make<Integer>((n: number) => Number.isInteger(n));
 
 export type NonNegativeInteger = number & Brand.Brand<"NonNegativeInteger">;
 export const NonNegativeInteger = Brand.all(
   Integer,
-  Brand.refined<NonNegativeInteger>(
-    (n: number) => n >= 0,
-    (n: number) => Brand.error(`Expected ${n} to be a non-negative integer`),
-  ),
+  Brand.make<NonNegativeInteger>((n: number) => n >= 0),
 );
 
 export type CopperPieceAmount = NonNegativeInteger &
@@ -162,9 +156,7 @@ export const isCopperPieceAmount = (
   typeof value === "number" && value >= 0 && Number.isSafeInteger(value);
 export const CopperPieceAmount = Brand.all(
   NonNegativeInteger,
-  Brand.refined<CopperPieceAmount>(isCopperPieceAmount, (n: number) =>
-    Brand.error(`Expected ${n} to be a safe copper-piece amount`),
-  ),
+  Brand.make<CopperPieceAmount>(isCopperPieceAmount),
 );
 export const copperPieceAmount: (value: number) => CopperPieceAmount =
   CopperPieceAmount;
@@ -172,10 +164,7 @@ export const copperPieceAmount: (value: number) => CopperPieceAmount =
 export type PositiveInteger = number & Brand.Brand<"PositiveInteger">;
 export const PositiveInteger = Brand.all(
   Integer,
-  Brand.refined<PositiveInteger>(
-    (n: number) => n > 0,
-    (n: number) => Brand.error(`Expected ${n} to be a positive integer`),
-  ),
+  Brand.make<PositiveInteger>((n: number) => n > 0),
 );
 
 export type DieRollResult = PositiveInteger & Brand.Brand<"DieRollResult">;
@@ -188,10 +177,8 @@ export const D6_ROLL_RESULTS = [1, 2, 3, 4, 5, 6] as const;
 export type D6RollResult = DieRollResult & Brand.Brand<"D6RollResult">;
 export const D6RollResult = Brand.all(
   DieRollResult,
-  Brand.refined<D6RollResult>(
-    (value: number) =>
-      D6_ROLL_RESULTS.some((rollResult) => rollResult === value),
-    (value: number) => Brand.error(`Expected ${value} to be a d6 roll result`),
+  Brand.make<D6RollResult>((value: number) =>
+    D6_ROLL_RESULTS.some((rollResult) => rollResult === value),
   ),
 );
 
@@ -234,21 +221,21 @@ export type SpellSlots = ReadonlyArray<number>;
 export type Round = PositiveInteger & Brand.Brand<"Round">;
 export const Round = Brand.all(PositiveInteger, Brand.nominal<Round>());
 
-export const CreatureId = Schema.NonEmptyTrimmedString.pipe(
+export const CreatureId = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
   Schema.brand("CreatureId"),
 );
 export type CreatureId = typeof CreatureId.Type;
 
 export type BattleProcedureExecutionRef = string &
   Brand.Brand<"BattleProcedureExecutionRef">;
-export type BattleActiveEffectExecutionRef = string &
-  Brand.Brand<"BattleActiveEffectExecutionRef">;
+export type BattleEffectExecutionRef = string &
+  Brand.Brand<"BattleEffectExecutionRef">;
 export type BattleStatBlockProcedureExecutionRef = BattleProcedureExecutionRef &
   Brand.Brand<"BattleStatBlockProcedureExecutionRef">;
 
 export const HP = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("HP"),
 );
 export type HP = typeof HP.Type;
@@ -257,8 +244,7 @@ export function hp(n: number): HP {
 }
 
 export const TempHP = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("TempHP"),
 );
 export type TempHP = typeof TempHP.Type;
@@ -267,8 +253,7 @@ export function tempHp(n: number): TempHP {
 }
 
 export const DamageAmount = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("DamageAmount"),
 );
 export type DamageAmount = typeof DamageAmount.Type;
@@ -277,8 +262,7 @@ export function damageAmount(n: number): DamageAmount {
 }
 
 export const HealAmount = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("HealAmount"),
 );
 export type HealAmount = typeof HealAmount.Type;
@@ -286,20 +270,22 @@ export function healAmount(n: number): HealAmount {
   return HealAmount.make(Math.max(1, Math.floor(n)));
 }
 
-export const DeathSaveCount = Schema.Literal(0, 1, 2, 3).pipe(
+export const DEATH_SAVE_COUNTS = [0, 1, 2, 3] as const;
+export const DeathSaveCount = Schema.Literals(DEATH_SAVE_COUNTS).pipe(
   Schema.brand("DeathSaveCount"),
 );
 export type DeathSaveCount = typeof DeathSaveCount.Type;
 export function deathSaveCount(n: number): DeathSaveCount {
-  return DeathSaveCount.make(
-    Math.max(0, Math.min(3, Math.floor(n))) as 0 | 1 | 2 | 3,
-  );
+  const index = Math.max(0, Math.min(3, Math.floor(n)));
+  return DeathSaveCount.make(DEATH_SAVE_COUNTS[index]!);
 }
 
 export const D20Roll = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(20),
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(1),
+    Schema.isLessThanOrEqualTo(20),
+  ),
   Schema.brand("D20Roll"),
 );
 export type D20Roll = typeof D20Roll.Type;
@@ -309,21 +295,23 @@ export function d20Roll(n: number): D20Roll {
   return D20Roll.make(Math.max(MIN, Math.min(MAX, Math.floor(n))));
 }
 
-export const ExhaustionLevel = Schema.Literal(0, 1, 2, 3, 4, 5, 6).pipe(
+export const EXHAUSTION_LEVELS = [0, 1, 2, 3, 4, 5, 6] as const;
+export const ExhaustionLevel = Schema.Literals(EXHAUSTION_LEVELS).pipe(
   Schema.brand("ExhaustionLevel"),
 );
 export type ExhaustionLevel = typeof ExhaustionLevel.Type;
 export function exhaustionLevel(n: number): ExhaustionLevel {
   const MAX = 6;
-  return ExhaustionLevel.make(
-    Math.max(0, Math.min(MAX, Math.floor(n))) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
-  );
+  const index = Math.max(0, Math.min(MAX, Math.floor(n)));
+  return ExhaustionLevel.make(EXHAUSTION_LEVELS[index]!);
 }
 
 export const AbilityScore = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(30),
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(1),
+    Schema.isLessThanOrEqualTo(30),
+  ),
   Schema.brand("AbilityScore"),
 );
 export type AbilityScore = typeof AbilityScore.Type;
@@ -332,21 +320,20 @@ export function abilityScore(n: number): AbilityScore {
   return AbilityScore.make(Math.max(1, Math.min(MAX, Math.floor(n))));
 }
 
-export const ProficiencyBonus = Schema.Literal(2, 3, 4, 5, 6).pipe(
+export const PROFICIENCY_BONUSES = [2, 3, 4, 5, 6] as const;
+export const ProficiencyBonus = Schema.Literals(PROFICIENCY_BONUSES).pipe(
   Schema.brand("ProficiencyBonus"),
 );
 export type ProficiencyBonus = typeof ProficiencyBonus.Type;
 export function proficiencyBonus(n: number): ProficiencyBonus {
   const MIN = 2;
   const MAX = 6;
-  return ProficiencyBonus.make(
-    Math.max(MIN, Math.min(MAX, Math.floor(n))) as 2 | 3 | 4 | 5 | 6,
-  );
+  const value = Math.max(MIN, Math.min(MAX, Math.floor(n)));
+  return ProficiencyBonus.make(PROFICIENCY_BONUSES[value - MIN]!);
 }
 
 export const MovementFeet = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("MovementFeet"),
 );
 export type MovementFeet = typeof MovementFeet.Type;
@@ -355,7 +342,7 @@ export function movementFeet(n: number): MovementFeet {
 }
 
 export const MovementDeltaFeet = Schema.Number.pipe(
-  Schema.int(),
+  Schema.check(Schema.isInt()),
   Schema.brand("MovementDeltaFeet"),
 );
 export type MovementDeltaFeet = typeof MovementDeltaFeet.Type;
@@ -364,9 +351,11 @@ export function movementDeltaFeet(n: number): MovementDeltaFeet {
 }
 
 export const ClassLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(20),
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(1),
+    Schema.isLessThanOrEqualTo(20),
+  ),
   Schema.brand("ClassLevel"),
 );
 export type ClassLevel = typeof ClassLevel.Type;
@@ -376,9 +365,11 @@ export function classLevel(n: number): ClassLevel {
 }
 
 export const CharacterLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(20),
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(1),
+    Schema.isLessThanOrEqualTo(20),
+  ),
   Schema.brand("CharacterLevel"),
 );
 export type CharacterLevel = typeof CharacterLevel.Type;
@@ -394,8 +385,7 @@ export function proficiencyBonusForCharacterLevel(
 }
 
 export const ArmorClass = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("ArmorClass"),
 );
 export type ArmorClass = typeof ArmorClass.Type;
@@ -404,7 +394,7 @@ export function armorClass(n: number): ArmorClass {
 }
 
 export const AttackBonus = Schema.Number.pipe(
-  Schema.int(),
+  Schema.check(Schema.isInt()),
   Schema.brand("AttackBonus"),
 );
 export type AttackBonus = typeof AttackBonus.Type;
@@ -418,9 +408,11 @@ export function abilityScoreToMod(score: number): number {
 }
 
 export const SpellSlotLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(9),
+  Schema.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(1),
+    Schema.isLessThanOrEqualTo(9),
+  ),
   Schema.brand("SpellSlotLevel"),
 );
 export type SpellSlotLevel = typeof SpellSlotLevel.Type;
@@ -430,8 +422,7 @@ export function spellSlotLevel(n: number): SpellSlotLevel {
 }
 
 export const ResourceCount = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("ResourceCount"),
 );
 export type ResourceCount = typeof ResourceCount.Type;

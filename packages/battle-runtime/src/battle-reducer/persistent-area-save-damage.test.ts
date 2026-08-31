@@ -3,18 +3,19 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleId,
+  battleEffectExecutionRefForTest,
   characterSeed,
   fighterId,
   startBattleRight,
   statBlockCreatureInit,
 } from "../battle-runtime.test-support.ts";
 import type { BattleFill } from "../battle-state-execution.ts";
-import { battleAreaId } from "../identity.ts";
+import { battleAreaId, type BattleAreaId } from "../identity.ts";
 import {
-  resolveCloudkillAreaSaveDamage,
-  resolveInsectPlagueAreaSaveDamage,
+  resolveStationaryPersistentAreaAreaSaveDamage,
+  resolveTranslatingPersistentAreaAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
-import { persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn } from "./persistent-spatial-spell-procedures.ts";
+import { isPersistentAreaSubjectAllowedOutsideCurrentActorTurn } from "./persistent-spatial-spell-procedures.ts";
 
 function persistentAreaBattle() {
   return startBattleRight({
@@ -32,45 +33,81 @@ const unrelatedFill = {
   value: "fire",
 } satisfies BattleFill;
 
+const persistentAreaEffectRef = battleEffectExecutionRefForTest(
+  "persistent-area-save-damage-effect",
+);
+
+function appearanceTrigger(areaId: BattleAreaId) {
+  return {
+    kind: "appearsInArea" as const,
+    areaId,
+    effectRef: persistentAreaEffectRef,
+  };
+}
+
 describe("persistent-area save/damage protocol", () => {
-  test("admits only appearance-triggered persistent-area saves outside the current turn", () => {
-    const areaMembershipTrigger = {
-      kind: "appearsInArea",
-      areaId: battleAreaId("test-persistent-area-appearance"),
-    } as const;
+  test("identifies persistent-area subjects allowed outside the current actor turn", () => {
+    const areaMembershipTrigger = appearanceTrigger(
+      battleAreaId("test-persistent-area-appearance"),
+    );
 
     expect(
-      persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn({
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
         tag: "runtimeCommand",
         actorId: fighterId,
-        command: "insectPlagueAreaHazardSave",
+        command: "persistentAreaSaveDamageSave",
         areaMembershipTrigger,
       }),
     ).toBe(true);
     expect(
-      persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn({
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
         tag: "runtimeCommand",
         actorId: fighterId,
-        command: "cloudkillAreaHazardSave",
+        command: "persistentAreaSaveDamageSave",
         areaMembershipTrigger: {
-          ...areaMembershipTrigger,
+          kind: "firstEntryOnTurn",
+          areaId: areaMembershipTrigger.areaId,
+          effectRef: persistentAreaEffectRef,
+        },
+      }),
+    ).toBe(true);
+    expect(
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "persistentAreaSaveDamageSave",
+        areaMembershipTrigger: {
           kind: "turnEndInArea",
+          areaId: areaMembershipTrigger.areaId,
+          effectRef: persistentAreaEffectRef,
+        },
+      }),
+    ).toBe(false);
+    expect(
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "persistentAreaSaveDamageSave",
+        areaMembershipTrigger: {
+          kind: "turnEndInArea",
+          areaId: areaMembershipTrigger.areaId,
+          effectRef: persistentAreaEffectRef,
         },
       }),
     ).toBe(false);
   });
 
-  test("rejects an unsupported Insect Plague fill before stale-effect parsing", () => {
-    const result = resolveInsectPlagueAreaSaveDamage({
-      state: persistentAreaBattle(),
+  test("rejects an unsupported stationary-area fill before stale-effect parsing", () => {
+    const state = persistentAreaBattle();
+    const result = resolveStationaryPersistentAreaAreaSaveDamage({
+      state,
       subject: {
         tag: "runtimeCommand",
         actorId: fighterId,
-        command: "insectPlagueAreaHazardSave",
-        areaMembershipTrigger: {
-          kind: "appearsInArea",
-          areaId: battleAreaId("test-insect-plague-area"),
-        },
+        command: "persistentAreaSaveDamageSave",
+        areaMembershipTrigger: appearanceTrigger(
+          battleAreaId("test-stationary-persistent-area"),
+        ),
       },
       fills: [unrelatedFill],
     });
@@ -79,21 +116,21 @@ describe("persistent-area save/damage protocol", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Insect Plague save accepts only save, damage, and Concentration fills.",
+        "stationary persistent area save accepts only save, damage, damage disposition, and Concentration fills.",
     });
   });
 
-  test("rejects an unsupported Cloudkill fill before stale-effect parsing", () => {
-    const result = resolveCloudkillAreaSaveDamage({
-      state: persistentAreaBattle(),
+  test("rejects an unsupported translating-area fill before stale-effect parsing", () => {
+    const state = persistentAreaBattle();
+    const result = resolveTranslatingPersistentAreaAreaSaveDamage({
+      state,
       subject: {
         tag: "runtimeCommand",
         actorId: fighterId,
-        command: "cloudkillAreaHazardSave",
-        areaMembershipTrigger: {
-          kind: "appearsInArea",
-          areaId: battleAreaId("test-cloudkill-area"),
-        },
+        command: "persistentAreaSaveDamageSave",
+        areaMembershipTrigger: appearanceTrigger(
+          battleAreaId("test-translating-persistent-area"),
+        ),
       },
       fills: [unrelatedFill],
     });
@@ -102,7 +139,7 @@ describe("persistent-area save/damage protocol", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Cloudkill save accepts only save, damage, and Concentration fills.",
+        "translating persistent area save accepts only save, damage, damage disposition, and Concentration fills.",
     });
   });
 });

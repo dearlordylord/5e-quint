@@ -114,7 +114,7 @@ describe("battle runtime: Bardic Inspiration", () => {
       }),
     );
     expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
-      {
+      expect.objectContaining({
         kind: "bardicInspirationDie",
         sourceProcedureRef: requireBardicInspirationProcedureRef(state),
         sourceCombatantId: fighterId,
@@ -123,7 +123,7 @@ describe("battle runtime: Bardic Inspiration", () => {
           kind: "duration",
           durationTicks: requireElapsedHours(1),
         },
-      },
+      }),
     ]);
   });
 
@@ -811,7 +811,7 @@ describe("battle runtime: Bardic Inspiration", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackRollReduction",
             fills: [
               {

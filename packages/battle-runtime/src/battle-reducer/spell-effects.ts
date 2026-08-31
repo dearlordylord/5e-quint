@@ -99,8 +99,7 @@ export function spellDamageComponents(
           invocation.procedure === "spellAttackSequence" ||
           invocation.procedure === "spellAttackDamage" ||
           invocation.procedure === "spellCreatedHeldObjectAttack" ||
-          invocation.procedure === "spiritualWeaponAttackProxy" ||
-          invocation.procedure === "spiritualWeaponRepeatAttack" ||
+          invocation.procedure === "spatialMeleeSpellAttackProxy" ||
           invocation.procedure === "attackBurstSaveDamage") &&
         critical
           ? 2

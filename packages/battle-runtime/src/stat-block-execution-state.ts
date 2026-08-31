@@ -14,7 +14,7 @@ import {
 } from "@dnd/shared/types";
 import type { Ability, CreatureType } from "@dnd/shared/game-facts";
 import { Brand } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Match from "effect/Match";
 import type {
   ChallengeRating,
@@ -48,6 +48,7 @@ import type {
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
+import type { EffectOccurrenceSourceProcedure } from "./effect-occurrence-source-vocabulary.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 
 export type BattleStatBlockExecutionSource = {
@@ -109,7 +110,7 @@ export function admitStatBlockResourceGraph<
   >,
 >(
   source: TSource,
-): Either.Either<
+): Result.Result<
   BattleStatBlockClosedResourceGraph<TSource>,
   ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>
 > {
@@ -124,10 +125,10 @@ export function admitStatBlockResourceGraph<
   ];
   const [firstIssue, ...remainingIssues] = issues;
   if (firstIssue !== undefined) {
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
   const { resources: _resources, ...sourceWithoutResources } = source;
-  return Either.right({ ...sourceWithoutResources, resources });
+  return Result.succeed({ ...sourceWithoutResources, resources });
 }
 
 function analyzeStatBlockResourceDeclarations(
@@ -192,13 +193,13 @@ export type StatBlockLegendaryActionUsesParseFailure = "invalidPositiveInteger";
  */
 export function parseStatBlockLegendaryActionUses(
   value: number | undefined,
-): Either.Either<
+): Result.Result<
   PositiveIntegerType | undefined,
   StatBlockLegendaryActionUsesParseFailure
 > {
-  if (value === undefined) return Either.right(undefined);
-  return Either.mapLeft(
-    PositiveInteger.either(value),
+  if (value === undefined) return Result.succeed(undefined);
+  return Result.mapError(
+    PositiveInteger.result(value),
     () => "invalidPositiveInteger" as const,
   );
 }
@@ -217,7 +218,7 @@ export type BattleStatBlockLiteralValue = Extract<
  */
 export function parseStatBlockLiteralValue(
   value: StatBlockLiteralValue,
-): Either.Either<
+): Result.Result<
   BattleStatBlockLiteralValue,
   StatBlockLiteralValueParseFailure
 > {
@@ -230,9 +231,9 @@ export function parseStatBlockLiteralValue(
     typeof value.value !== "number" ||
     !Number.isFinite(value.value)
   ) {
-    return Either.left("invalidLiteral");
+    return Result.fail("invalidLiteral");
   }
-  return Either.right({ kind: "literal", value: value.value });
+  return Result.succeed({ kind: "literal", value: value.value });
 }
 
 export type BattleStatBlockPositiveIntegerLiteral = Omit<
@@ -248,17 +249,17 @@ export type StatBlockPositiveIntegerLiteralParseFailure =
 
 export function parseStatBlockPositiveIntegerLiteral(
   value: StatBlockLiteralValue,
-): Either.Either<
+): Result.Result<
   BattleStatBlockPositiveIntegerLiteral,
   StatBlockPositiveIntegerLiteralParseFailure
 > {
   const literal = parseStatBlockLiteralValue(value);
-  if (Either.isLeft(literal)) return Either.left(literal.left);
-  const positiveInteger = PositiveInteger.either(literal.right.value);
-  if (Either.isLeft(positiveInteger)) {
-    return Either.left("invalidPositiveInteger");
+  if (Result.isFailure(literal)) return Result.fail(literal.failure);
+  const positiveInteger = PositiveInteger.result(literal.success.value);
+  if (Result.isFailure(positiveInteger)) {
+    return Result.fail("invalidPositiveInteger");
   }
-  return Either.right({ kind: "literal", value: positiveInteger.right });
+  return Result.succeed({ kind: "literal", value: positiveInteger.success });
 }
 
 export type BattleStatBlockRuntimeResource = {
@@ -282,23 +283,23 @@ export type StatBlockRuntimeResourceParseFailure = "invalidDailyUses";
  */
 export function parseStatBlockRuntimeResource(
   resource: StatBlockProcedureResource,
-): Either.Either<
+): Result.Result<
   BattleStatBlockRuntimeResource,
   StatBlockRuntimeResourceParseFailure
 > {
   if (resource.limit.kind === "daily") {
-    const uses = PositiveInteger.either(resource.limit.uses);
-    if (Either.isLeft(uses)) {
-      return Either.left("invalidDailyUses");
+    const uses = PositiveInteger.result(resource.limit.uses);
+    if (Result.isFailure(uses)) {
+      return Result.fail("invalidDailyUses");
     }
-    return Either.right({
+    return Result.succeed({
       ordinal: resource.ordinal,
       ownership: resource.ownership,
-      limit: { kind: "daily", uses: uses.right },
+      limit: { kind: "daily", uses: uses.success },
     });
   }
   if (resource.limit.kind === "recharge") {
-    return Either.right({
+    return Result.succeed({
       ordinal: resource.ordinal,
       ownership: resource.ownership,
       limit: {
@@ -307,7 +308,7 @@ export function parseStatBlockRuntimeResource(
       },
     });
   }
-  return Either.right({
+  return Result.succeed({
     ordinal: resource.ordinal,
     ownership: resource.ownership,
     limit: { kind: "recharge_after_rest" },
@@ -553,7 +554,8 @@ export type StatBlockProcedure =
   | StatBlockUnarmedStrikeProcedure
   | StatBlockMultiattackProcedure
   | StatBlockBonusActionOptionProcedure
-  | StatBlockSpellcastingProcedure;
+  | StatBlockSpellcastingProcedure
+  | EffectOccurrenceSourceProcedure;
 
 /**
  * A known spellcasting procedure has no procedure-owned resource pools;

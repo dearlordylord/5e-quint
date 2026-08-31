@@ -5,7 +5,7 @@ import {
   timeSpanDuration,
 } from "@dnd/shared/elapsed-time";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import type {
   AreaOccupantDispositionFilter,
@@ -66,6 +66,7 @@ export function procedureForFamily(
     Match.when("magic_circle_ward", () => "activate" as const),
     Match.when("stone_merge", () => "activate" as const),
     Match.when("ongoing_effect", () => "activate" as const),
+    Match.when("modal_ongoing_effect", () => "activate" as const),
     Match.when("activation", () => "activate" as const),
     Match.when("modal_activation", () => "activate" as const),
     Match.when("passive_hit_intercept", () => "activate" as const),
@@ -486,73 +487,35 @@ export function describeAreaExclusions(
 }
 
 export function describeAreaShape(s: AreaShapeSpec): string {
-  switch (s.kind) {
-    case "sphere":
-      return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "circle":
-      return `circle r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "sphere_cluster":
-      return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
-    case "cone":
-      return `cone ${s.lengthFeet} ft`;
-    case "cube":
-      return `cube ${s.sideFeet} ft side`;
-    case "cube_cluster": {
-      const contig = s.contiguous === true ? ", contiguous" : "";
-      return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
-    }
-    case "cylinder":
-      return `cylinder r=${describeAreaDimension(s.radiusFeet)} ft h=${s.heightFeet} ft`;
-    case "emanation":
-      return `emanation r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "line":
-      return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
-    case "wall_volume":
-      return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
-    case "choice":
-      return `choice of:\n  ${s.options
-        .map(describeAreaShapeFixed)
-        .join("\n  ")}`;
-    /* v8 ignore start -- @preserve -- AreaShapeSpec is decoder-narrowed to the shape tags handled above */
-    default: {
-      const _: never = s;
-      throw new Error(`unhandled area shape: ${String(_)}`);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+  if (s.kind !== "choice") return describeAreaShapeFixed(s);
+  return `choice of:\n  ${s.options.map(describeAreaShapeFixed).join("\n  ")}`;
 }
 
 export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
-  switch (s.kind) {
-    case "sphere":
-      return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "circle":
-      return `circle r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "sphere_cluster":
-      return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
-    case "cone":
-      return `cone ${s.lengthFeet} ft`;
-    case "cube":
-      return `cube ${s.sideFeet} ft side`;
-    case "cube_cluster": {
-      const contig = s.contiguous === true ? ", contiguous" : "";
-      return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
-    }
-    case "cylinder":
-      return `cylinder r=${describeAreaDimension(s.radiusFeet)} ft h=${s.heightFeet} ft`;
-    case "emanation":
-      return `emanation r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "line":
-      return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
-    case "wall_volume":
-      return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
-    /* v8 ignore start -- @preserve -- AreaShapeDescriptor is decoder-narrowed to the fixed shape tags handled above */
-    default: {
-      const _: never = s;
-      throw new Error(`unhandled area shape: ${String(_)}`);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+  return Match.value(s).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      sphere: (shape) =>
+        `sphere r=${describeAreaDimension(shape.radiusFeet)} ft`,
+      circle: (shape) =>
+        `circle r=${describeAreaDimension(shape.radiusFeet)} ft`,
+      sphere_cluster: (shape) =>
+        `${shape.count} spheres r=${describeAreaDimension(shape.radiusFeet)} ft (${shape.overlapResolution})`,
+      cone: (shape) => `cone ${shape.lengthFeet} ft`,
+      cube: (shape) => `cube ${shape.sideFeet} ft side`,
+      ground_square: (shape) => `ground square ${shape.sideFeet} ft side`,
+      cube_cluster: (shape) => {
+        const contiguity = shape.contiguous === true ? ", contiguous" : "";
+        return `up to ${shape.maxCubes} cubes (${shape.sideFeet} ft side${contiguity})`;
+      },
+      cylinder: (shape) =>
+        `cylinder r=${describeAreaDimension(shape.radiusFeet)} ft h=${shape.heightFeet} ft`,
+      emanation: (shape) =>
+        `emanation r=${describeAreaDimension(shape.radiusFeet)} ft`,
+      line: (shape) => `line ${shape.lengthFeet} ft × ${shape.widthFeet} ft`,
+      wall_volume: (shape) =>
+        `wall ${shape.maxLengthFeet} ft × ${shape.maxHeightFeet} ft × ${shape.thicknessFeet} ft`,
+    }),
+  );
 }
 
 export type AreaDimension = Extract<
@@ -859,8 +822,8 @@ export function describeDurationValue(
   }
   const duration = timeSpanDuration(d);
   /* v8 ignore start -- @preserve -- decoded positive integer time spans always convert; the fallback requires malformed numeric input */
-  const base = Either.isRight(duration)
-    ? formatTimeSpanDuration(duration.right)
+  const base = Result.isSuccess(duration)
+    ? formatTimeSpanDuration(duration.success)
     : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   /* v8 ignore stop -- @preserve */
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
@@ -876,8 +839,8 @@ export function describeDurationValue(
 export function formatElapsedHours(hours: number): string {
   const ticks = elapsedTimeTicksFromHours(hours);
   /* v8 ignore start -- @preserve -- callers supply decoded finite hour counts; the fallback requires malformed numeric input */
-  return Either.isRight(ticks)
-    ? formatElapsedTimeTicks(ticks.right)
+  return Result.isSuccess(ticks)
+    ? formatElapsedTimeTicks(ticks.success)
     : `${hours} hour${hours === 1 ? "" : "s"}`;
   /* v8 ignore stop -- @preserve */
 }

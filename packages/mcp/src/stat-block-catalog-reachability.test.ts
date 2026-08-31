@@ -1,5 +1,5 @@
 import { statBlockId } from "@dnd/shared/game-facts";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { Match, Option } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
@@ -118,7 +118,7 @@ function mutatedReachability(mutations: readonly IndependentMutation[]) {
             name: "Synthetic Selected Record",
           });
         }
-        return Option.fromNullable(
+        return Option.fromNullishOr(
           id === unexpected.id ? unexpected : canonicalById.get(id),
         );
       },

@@ -5,6 +5,7 @@ module battleRuntimeSpatialMovementSpellTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeFallingCreatureMitigationReaction.* from "./battle-runtime-falling-creature-mitigation-reaction"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
   import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
@@ -63,17 +64,31 @@ module battleRuntimeSpatialMovementSpellTests {
     }
   }
   run test_feather_fall_reaction_targets_slot_and_descent_cap = {
-    val resolved = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 2)
-    val noReaction = resolveFeatherFallSpell({ ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }, Fighter, Set(Fighter), Set(Fighter), 1)
-    val nonFallingTarget = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter), 2)
-    val tooMany = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 6)
+    val selfTrigger = { kind: ReactorFalls, reactor: Fighter, fallingCreature: Fighter }
+    val contradictorySelfTrigger = { kind: ReactorFalls, reactor: Fighter, fallingCreature: Goblin }
+    val visibleTrigger = { kind: VisibleCreatureFalls({ distanceFeet: 60 }), reactor: Fighter, fallingCreature: Goblin }
+    val distantTrigger = { kind: VisibleCreatureFalls({ distanceFeet: 61 }), reactor: Fighter, fallingCreature: Goblin }
+    val resolved = resolveFeatherFallSpell(initialState, Goblin, visibleTrigger, Set(Fighter, Goblin), Set(Fighter, Goblin), 2)
+    val selfResolved = resolveFeatherFallSpell(initialState, Fighter, selfTrigger, Set(Fighter), Set(Fighter), 1)
+    val distant = resolveFeatherFallSpell(initialState, Goblin, distantTrigger, Set(Goblin), Set(Goblin), 1)
+    val mismatchedSelf = resolveFeatherFallSpell(initialState, Goblin, selfTrigger, Set(Fighter), Set(Fighter), 1)
+    val contradictorySelf = resolveFeatherFallSpell(initialState, Fighter, contradictorySelfTrigger, Set(Fighter), Set(Fighter), 1)
+    val mismatchedVisible = resolveFeatherFallSpell(initialState, Fighter, visibleTrigger, Set(Goblin), Set(Goblin), 1)
+    val noReaction = resolveFeatherFallSpell({ ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }, Fighter, selfTrigger, Set(Fighter), Set(Fighter), 1)
+    val nonFallingTarget = resolveFeatherFallSpell(initialState, Fighter, selfTrigger, Set(Fighter, Goblin), Set(Fighter), 2)
+    val tooMany = resolveFeatherFallSpell(initialState, Fighter, selfTrigger, Set(Fighter, Goblin), Set(Fighter, Goblin), 6)
     val goblinTurnSpentSlot = commitActorSpellSlotUse(endTurn(initialState), Goblin)
-    val offTurnResolved = resolveFeatherFallSpell(goblinTurnSpentSlot, Fighter, Set(Fighter), Set(Fighter), 1)
+    val offTurnResolved = resolveFeatherFallSpell(goblinTurnSpentSlot, Fighter, selfTrigger, Set(Fighter), Set(Fighter), 1)
     all {
       assert(not(resolved.fighter.reactionAvailable)),
       assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
       assert(resolved.fighter.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
       assert(resolved.goblin.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
+      assert(selfResolved.fighter.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
+      assert(distant == initialState),
+      assert(mismatchedSelf == initialState),
+      assert(contradictorySelf == initialState),
+      assert(mismatchedVisible == initialState),
       assert(activeFeatherFallDescentRateCapFeetPerRound(resolved.fighter.activeEffects) == 60),
       assert(noReaction == { ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }),
       assert(nonFallingTarget == initialState),
@@ -83,7 +98,14 @@ module battleRuntimeSpatialMovementSpellTests {
     }
   }
   run test_feather_fall_landing_cleanup_prevents_falling_outcomes = {
-    val resolved = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 2)
+    val resolved = resolveFeatherFallSpell(
+      initialState,
+      Fighter,
+      { kind: ReactorFalls, reactor: Fighter, fallingCreature: Fighter },
+      Set(Fighter, Goblin),
+      Set(Fighter, Goblin),
+      2,
+    )
     val fighterLanding = resolveFeatherFallLanding(resolved, Fighter)
     val fighterLandingState = featherFallLandingState(fighterLanding)
     val staleLanding = resolveFeatherFallLanding(fighterLandingState, Fighter)

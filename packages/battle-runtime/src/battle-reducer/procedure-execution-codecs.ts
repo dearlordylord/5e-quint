@@ -30,7 +30,7 @@ import {
   MovementFeet,
 } from "./codec-building-blocks.ts";
 
-export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literal(
+export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literals([
   "weaponOrUnarmedCriticalRange19",
   "attackDamageRider",
   "saveDamageReplacement",
@@ -48,13 +48,15 @@ export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literal(
   "weaponMasteryPush",
   "weaponMasterySlow",
   "zeroHitPointReplacement",
-);
+]);
 
 export const AlternateActionCostProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("alternateActionCost"),
   from: Schema.Struct({
     kind: Schema.Literal("standardAction"),
-    actions: Schema.NonEmptyArray(Schema.Literal("dash", "disengage", "hide")),
+    actions: Schema.NonEmptyArray(
+      Schema.Literals(["dash", "disengage", "hide"]),
+    ),
   }),
   to: Schema.Struct({ kind: Schema.Literal("bonusAction") }),
 });
@@ -85,7 +87,7 @@ export const AttackRollMissToHitReplacementProcedureExecutionSchema =
 export const AttackActionAttackCountScalingProcedureExecutionSchema =
   Schema.Struct({
     kind: Schema.Literal("attackActionAttackCountScaling"),
-    additionalAttacks: Schema.Literal(1, 2, 3),
+    additionalAttacks: Schema.Literals([1, 2, 3]),
   });
 
 export const AttackActionAreaSaveDamageReplacementProcedureExecutionSchema =
@@ -99,7 +101,7 @@ export const AttackActionAreaSaveDamageReplacementProcedureExecutionSchema =
       }),
       area: Schema.Struct({
         origin: Schema.Struct({ kind: Schema.Literal("self") }),
-        shapeChoice: Schema.Tuple(
+        shapeChoice: Schema.Tuple([
           Schema.Struct({
             kind: Schema.Literal("cone"),
             lengthFeet: MovementFeet,
@@ -109,7 +111,7 @@ export const AttackActionAreaSaveDamageReplacementProcedureExecutionSchema =
             lengthFeet: MovementFeet,
             widthFeet: MovementFeet,
           }),
-        ),
+        ]),
       }),
       save: Schema.Struct({
         ability: Schema.Literal("dex"),
@@ -123,7 +125,7 @@ export const AttackActionAreaSaveDamageReplacementProcedureExecutionSchema =
         damageType: Schema.Struct({
           kind: Schema.Literal("draconicAncestry"),
           holeId: Schema.Literal(DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID),
-          value: Schema.Literal(...DRACONIC_ANCESTRY_DAMAGE_TYPES),
+          value: Schema.Literals(DRACONIC_ANCESTRY_DAMAGE_TYPES),
         }),
         amount: Schema.Struct({
           kind: Schema.Literal("characterLevelDice"),
@@ -131,7 +133,7 @@ export const AttackActionAreaSaveDamageReplacementProcedureExecutionSchema =
             dice: Schema.Literal(1),
             dieSize: Schema.Literal(10),
           }),
-          tiers: Schema.Tuple(
+          tiers: Schema.Tuple([
             Schema.Struct({
               atLevel: Schema.Literal(5),
               dice: Schema.Literal(2),
@@ -144,7 +146,7 @@ export const AttackActionAreaSaveDamageReplacementProcedureExecutionSchema =
               atLevel: Schema.Literal(17),
               dice: Schema.Literal(4),
             }),
-          ),
+          ]),
         }),
         onSuccess: Schema.Literal("halfDamage"),
       }),
@@ -187,7 +189,7 @@ export const SpellSlotHealingModifierProcedureExecutionSchema = Schema.Struct({
 export const EnemyZeroHitPointTemporaryHitPointsProcedureExecutionSchema =
   Schema.Struct({
     kind: Schema.Literal("enemyZeroHitPointTemporaryHitPoints"),
-    className: Schema.Literal(...CLASS_NAMES),
+    className: Schema.Literals(CLASS_NAMES),
     temporaryHitPoints: Schema.Struct({
       trigger: Schema.Struct({
         kind: Schema.Literal("enemyReducedToZeroHitPoints"),
@@ -248,10 +250,10 @@ export const PotentCantripProcedureExecutionSchema = Schema.Struct({
       kind: Schema.Literal("castCantripAtCreature"),
       cantripKind: Schema.Literal("damaging"),
     }),
-    outcomes: Schema.Tuple(
+    outcomes: Schema.Tuple([
       Schema.Literal("missWithAttackRoll"),
       Schema.Literal("targetSucceedsSavingThrow"),
-    ),
+    ]),
     damage: Schema.Literal("halfCantripDamageIfAny"),
     additionalEffect: Schema.Literal("none"),
   }),
@@ -262,10 +264,10 @@ export const GrapplerProcedureExecutionSchema = Schema.Struct({
   grappler: Schema.Struct({
     punchAndGrab: Schema.Struct({
       trigger: Schema.Literal("attackActionUnarmedStrikeHitOnTurn"),
-      options: Schema.Tuple(
+      options: Schema.Tuple([
         Schema.Literal("damage"),
         Schema.Literal("grapple"),
-      ),
+      ]),
       usageLimit: Schema.Literal("oncePerTurn"),
     }),
     attackAdvantage: Schema.Struct({
@@ -295,11 +297,11 @@ export const RetaliationReactionAttackProcedureExecutionSchema = Schema.Struct({
 
 export const TacticalMasterReplacementProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("tacticalMasterReplacement"),
-  replacementProperties: Schema.Tuple(
+  replacementProperties: Schema.Tuple([
     Schema.Literal("push"),
     Schema.Literal("sap"),
     Schema.Literal("slow"),
-  ),
+  ]),
 });
 
 export const LightExtraAttackDamageAbilityModifierProcedureExecutionSchema =
@@ -349,7 +351,7 @@ export const D20TestNaturalOneRerollProcedureExecutionSchema = Schema.Struct({
 export const PassiveSavingThrowRollModeProcedureExecutionSchema = Schema.Struct(
   {
     kind: Schema.Literal("passiveSavingThrowRollMode"),
-    savingThrow: Schema.Union(
+    savingThrow: Schema.Union([
       Schema.Struct({
         mode: Schema.Literal("advantage"),
         scope: Schema.Struct({
@@ -362,10 +364,10 @@ export const PassiveSavingThrowRollModeProcedureExecutionSchema = Schema.Struct(
         mode: Schema.Literal("advantage"),
         scope: Schema.Struct({
           kind: Schema.Literal("condition"),
-          condition: Schema.Literal("poisoned", "frightened"),
+          condition: Schema.Literals(["poisoned", "frightened"]),
         }),
       }),
-    ),
+    ]),
   },
 );
 
@@ -384,28 +386,28 @@ export const PassiveAbilityCheckRollModeProcedureExecutionSchema =
 export const PassiveDamageResistanceProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("passiveDamageResistance"),
   resistance: Schema.Struct({
-    damageType: Schema.Union(
+    damageType: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("draconicAncestry"),
-        holeId: Schema.Literal(
+        holeId: Schema.Literals([
           "species_dragonborn_draconic_ancestry_damage_type",
-        ),
+        ]),
         value: DamageTypeSchema,
       }),
       Schema.Struct({ kind: Schema.Literal("fixed"), value: DamageTypeSchema }),
-    ),
+    ]),
   }),
 });
 
 const PassiveSpeedBonusFactsSchema = Schema.Struct({
   deltaFeet: MovementDeltaFeet,
-  condition: Schema.Union(
+  condition: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("notWearingArmor"),
-      categories: Schema.Tuple(Schema.Literal("heavy")),
+      categories: Schema.Tuple([Schema.Literal("heavy")]),
     }),
     Schema.Struct({ kind: Schema.Literal("unarmoredUnshielded") }),
-  ),
+  ]),
 });
 
 export const PassiveSpeedBonusProcedureExecutionSchema = Schema.Struct({
@@ -414,10 +416,10 @@ export const PassiveSpeedBonusProcedureExecutionSchema = Schema.Struct({
 });
 
 const PassiveSpeedKindGrantsFactsSchema = Schema.Struct({
-  speed: Schema.optionalWith(PassiveSpeedBonusFactsSchema, { exact: true }),
+  speed: Schema.optionalKey(PassiveSpeedBonusFactsSchema),
   grants: Schema.NonEmptyArray(
     Schema.Struct({
-      speedKind: Schema.Literal("climb", "swim"),
+      speedKind: Schema.Literals(["climb", "swim"]),
       feet: Schema.Struct({ kind: Schema.Literal("walkSpeed") }),
     }),
   ),
@@ -433,7 +435,7 @@ export const AcrobaticMovementProcedureExecutionSchema = Schema.Struct({
   acrobaticMovement: Schema.Struct({
     condition: Schema.Struct({ kind: Schema.Literal("unarmoredUnshielded") }),
     timing: Schema.Literal("onYourTurn"),
-    paths: Schema.Tuple(
+    paths: Schema.Tuple([
       Schema.Struct({
         kind: Schema.Literal("verticalSurface"),
         path: Schema.Literal("alongVerticalSurface"),
@@ -444,7 +446,7 @@ export const AcrobaticMovementProcedureExecutionSchema = Schema.Struct({
         path: Schema.Literal("acrossLiquid"),
         withoutFallingDuringMovement: Schema.Literal(true),
       }),
-    ),
+    ]),
   }),
 });
 
@@ -458,26 +460,26 @@ export const MonkFocusBattleOptionsProcedureExecutionSchema = Schema.Struct({
   flurryOfBlows: Schema.Struct({
     focusPointCost: Schema.Literal(1),
     strikeCount: Schema.Literal(2),
-    displayName: Schema.optionalWith(Schema.Never, { exact: true }),
+    displayName: Schema.optionalKey(Schema.Never),
   }),
   patientDefense: Schema.Struct({
     freeAction: Schema.Literal("disengage"),
     focusPointCost: Schema.Literal(1),
-    focusActions: Schema.Tuple(
+    focusActions: Schema.Tuple([
       Schema.Literal("disengage"),
       Schema.Literal("dodge"),
-    ),
-    displayName: Schema.optionalWith(Schema.Never, { exact: true }),
+    ]),
+    displayName: Schema.optionalKey(Schema.Never),
   }),
   stepOfTheWind: Schema.Struct({
     freeAction: Schema.Literal("dash"),
     focusPointCost: Schema.Literal(1),
-    focusActions: Schema.Tuple(
+    focusActions: Schema.Tuple([
       Schema.Literal("disengage"),
       Schema.Literal("dash"),
-    ),
+    ]),
     jumpDistanceMultiplier: Schema.Struct({ multiplier: Schema.Literal(2) }),
-    displayName: Schema.optionalWith(Schema.Never, { exact: true }),
+    displayName: Schema.optionalKey(Schema.Never),
   }),
 });
 
@@ -485,10 +487,10 @@ export const DruidWildShapeKnownFormProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("druidWildShapeKnownForm"),
   classLevel: ClassLevel,
   knownFormRoster: Schema.Struct({
-    creatureType: Schema.Literal(...CREATURE_TYPES),
+    creatureType: Schema.Literals(CREATURE_TYPES),
     count: Schema.Number,
     maxChallengeRating: Schema.Number,
-    flySpeed: Schema.Literal("allowed", "forbidden"),
+    flySpeed: Schema.Literals(["allowed", "forbidden"]),
   }),
 });
 
@@ -499,20 +501,20 @@ const BonusActionDelegatedStandardActionsFactsSchema = Schema.Struct({
       ability: Schema.Literal("dex"),
       skill: Schema.Literal("sleight_of_hand"),
     }),
-    operations: Schema.Tuple(
+    operations: Schema.Tuple([
       Schema.Literal("pick_lock_with_thieves_tools"),
       Schema.Literal("disarm_trap_with_thieves_tools"),
       Schema.Literal("pick_pocket"),
-    ),
+    ]),
   }),
   objectUse: Schema.Struct({
-    actions: Schema.Tuple(
+    actions: Schema.Tuple([
       Schema.Struct({ action: Schema.Literal("utilize") }),
       Schema.Struct({
         action: Schema.Literal("magic"),
         restrictedTo: Schema.Literal("magicItemRequiresMagicAction"),
       }),
-    ),
+    ]),
   }),
 });
 
@@ -545,7 +547,7 @@ export const RemarkableAthleteProcedureExecutionSchema = Schema.Struct({
 
 export const HuntersPreyProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("huntersPrey"),
-  huntersPrey: Schema.Union(
+  huntersPrey: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("woundedTargetWeaponDamage"),
       trigger: Schema.Literal("hitCreatureWithWeapon"),
@@ -574,7 +576,7 @@ export const HuntersPreyProcedureExecutionSchema = Schema.Struct({
         }),
       }),
     }),
-  ),
+  ]),
 });
 
 export const BrutalStrikeProcedureExecutionSchema = Schema.Struct({
@@ -590,7 +592,7 @@ export const BrutalStrikeProcedureExecutionSchema = Schema.Struct({
       dieSize: Schema.Literal(10),
       damageType: Schema.Literal("sameAsAttack"),
     }),
-    options: Schema.Tuple(
+    options: Schema.Tuple([
       Schema.Struct({
         selectionId: Schema.Literal("forceful_blow"),
         effect: Schema.Struct({
@@ -611,25 +613,25 @@ export const BrutalStrikeProcedureExecutionSchema = Schema.Struct({
           expires: Schema.Literal("startOfYourNextTurn"),
         }),
       }),
-    ),
+    ]),
   }),
 });
 
-export const SpellInvocationResourceExecutionSchema = Schema.Union(
+export const SpellInvocationResourceExecutionSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("none") }),
   SpellSlotInvocationResourceSchema,
   SpellAccessFreeCastExecutionResourceSchema,
-);
+]);
 
 const MechanicalResourceSpendSchema = Schema.Struct({
   resourcePoolRef: BattleResourcePoolExecutionRef,
-  resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+  resourceUnitId: Schema.optionalKey(Schema.Never),
 });
 
 const MechanicalSingleResourceSpendSchema = Schema.Struct({
   resourcePoolRef: BattleResourcePoolExecutionRef,
   amount: Schema.Literal(1),
-  resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+  resourceUnitId: Schema.optionalKey(Schema.Never),
 });
 
 export const ExtraActionGrantProcedureExecutionSchema = Schema.Struct({
@@ -644,81 +646,75 @@ export const SelfBonusActionHealingProcedureExecutionSchema = Schema.Struct({
   flatBase: Schema.Number,
   flatPerLevel: Schema.Number,
   startingAtLevel: Schema.Number,
-  className: Schema.Literal(...CLASS_NAMES),
+  className: Schema.Literals(CLASS_NAMES),
   classLevel: ClassLevel,
 });
 
-const OngoingFeatureLifecycleProcedureExecutionSchema = Schema.Union(
+const OngoingFeatureLifecycleProcedureExecutionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("turnBoundary"),
-    initialExpiration: Schema.Literal("startOfNextTurn", "endOfNextTurn"),
-    earlyEndConditions: Schema.Array(Schema.Literal(...CONDITIONS)),
-    earlyEndArmorCategories: Schema.Union(
-      Schema.Tuple(),
-      Schema.Tuple(Schema.Literal("heavy")),
-    ),
-    extensionTriggers: Schema.Tuple(),
+    initialExpiration: Schema.Literals(["startOfNextTurn", "endOfNextTurn"]),
+    earlyEndConditions: Schema.Array(Schema.Literals(CONDITIONS)),
+    earlyEndArmorCategories: Schema.Union([
+      Schema.Tuple([]),
+      Schema.Tuple([Schema.Literal("heavy")]),
+    ]),
+    extensionTriggers: Schema.Tuple([]),
   }),
   Schema.Struct({
     kind: Schema.Literal("roundExtended"),
     initialExpiration: Schema.Literal("endOfNextTurn"),
     maximumDurationRounds: Schema.Number,
-    earlyEndConditions: Schema.Array(Schema.Literal(...CONDITIONS)),
-    earlyEndArmorCategories: Schema.Union(
-      Schema.Tuple(),
-      Schema.Tuple(Schema.Literal("heavy")),
-    ),
+    earlyEndConditions: Schema.Array(Schema.Literals(CONDITIONS)),
+    earlyEndArmorCategories: Schema.Union([
+      Schema.Tuple([]),
+      Schema.Tuple([Schema.Literal("heavy")]),
+    ]),
     extensionTriggers: Schema.NonEmptyArray(
-      Schema.Literal(
+      Schema.Literals([
         "attackRollAgainstEnemy",
         "bonusAction",
         "enemySavingThrow",
-      ),
+      ]),
     ),
   }),
   Schema.Struct({
     kind: Schema.Literal("fixedDuration"),
     maximumDurationRounds: Schema.Number,
-    earlyEndConditions: Schema.Array(Schema.Literal(...CONDITIONS)),
-    earlyEndArmorCategories: Schema.Union(
-      Schema.Tuple(),
-      Schema.Tuple(Schema.Literal("heavy")),
-    ),
-    extensionTriggers: Schema.Tuple(),
+    earlyEndConditions: Schema.Array(Schema.Literals(CONDITIONS)),
+    earlyEndArmorCategories: Schema.Union([
+      Schema.Tuple([]),
+      Schema.Tuple([Schema.Literal("heavy")]),
+    ]),
+    extensionTriggers: Schema.Tuple([]),
   }),
-);
+]);
 
 const OngoingFeatureRollModifierProcedureExecutionSchema = Schema.Struct({
-  mode: Schema.Literal(...ATTACK_ROLL_MODES),
-  affects: Schema.Literal("selfRoll", "rollsAgainstSelf"),
+  mode: Schema.Literals(ATTACK_ROLL_MODES),
+  affects: Schema.Literals(["selfRoll", "rollsAgainstSelf"]),
   on: Schema.Literal("attackRoll"),
-  abilityFilter: Schema.optionalWith(Schema.Array(AbilitySchema), {
-    exact: true,
-  }),
+  abilityFilter: Schema.optionalKey(Schema.Array(AbilitySchema)),
 });
 
 const OngoingFeatureSpellModifierProcedureExecutionSchema = Schema.Struct({
-  sourceClassName: Schema.Literal(...CLASS_NAMES),
+  sourceClassName: Schema.Literals(CLASS_NAMES),
   saveDcBonus: Schema.Number,
-  attackRollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+  attackRollMode: Schema.Literals(ATTACK_ROLL_MODES),
 });
 
 const OngoingFeatureDamageModifierProcedureExecutionSchema = Schema.Struct({
   amount: Schema.Number,
-  abilityFilter: Schema.optionalWith(Schema.Array(AbilitySchema), {
-    exact: true,
-  }),
-  weaponUsageFilter: Schema.optionalWith(WeaponUsageSchema, { exact: true }),
+  abilityFilter: Schema.optionalKey(Schema.Array(AbilitySchema)),
+  weaponUsageFilter: Schema.optionalKey(WeaponUsageSchema),
 });
 
 export const OngoingFeatureProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("ongoingFeature"),
-  activationTrigger: Schema.Literal("bonusAction", "firstAttackRoll"),
+  activationTrigger: Schema.Literals(["bonusAction", "firstAttackRoll"]),
   spendsUse: Schema.Boolean,
   lifecycle: OngoingFeatureLifecycleProcedureExecutionSchema,
-  concentrationEffect: Schema.optionalWith(Schema.Literal("breakAndPrevent"), {
-    exact: true,
-  }),
+  concentrationEffect: Schema.optionalKey(Schema.Literal("breakAndPrevent")),
   actionRestrictions: Schema.Array(Schema.Literal("spellcasting")),
   rollModifiers: Schema.Array(
     OngoingFeatureRollModifierProcedureExecutionSchema,
@@ -732,15 +728,15 @@ export const OngoingFeatureProcedureExecutionSchema = Schema.Struct({
   resistances: Schema.Array(DamageTypeSchema),
 });
 
-export const AttackDamageRiderProcedureExecutionSchema = Schema.Union(
+export const AttackDamageRiderProcedureExecutionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("attackDamageRider"),
     optional: Schema.Literal(true),
     usageLimit: Schema.Literal("oncePerTurn"),
     trigger: Schema.Literal("finesseOrRangedAttackWithAdvantageOrAlly"),
-    eligibility: Schema.Literal(
+    eligibility: Schema.Literals([
       "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
-    ),
+    ]),
     classLevel: ClassLevel,
     dice: Schema.Struct({
       kind: Schema.Literal("classLevelTable"),
@@ -761,7 +757,7 @@ export const AttackDamageRiderProcedureExecutionSchema = Schema.Union(
       dieSize: Schema.Literal(6),
     }),
   }),
-);
+]);
 
 export const SaveDamageReplacementProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("saveDamageReplacement"),
@@ -775,7 +771,7 @@ export const SaveDamageReplacementProcedureExecutionSchema = Schema.Struct({
 const ResourceDieReductionProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("resourceDie"),
   dice: Schema.Literal(1),
-  dieSize: Schema.Literal(6, 8, 10, 12),
+  dieSize: Schema.Literals([6, 8, 10, 12]),
   flatModifier: Schema.Literal(0),
   spends: MechanicalSingleResourceSpendSchema,
 });
@@ -807,24 +803,20 @@ const AttackDamageReductionZeroDamageRedirectProcedureExecutionSchema =
 
 const AttackDamageReductionProcedureExecutionFields = {
   kind: Schema.Literal("attackDamageReduction"),
-  requiresVisibleAttacker: Schema.optionalWith(Schema.Literal(true), {
-    exact: true,
-  }),
-  damageIncludes: Schema.optionalWith(Schema.Array(DamageTypeSchema), {
-    exact: true,
-  }),
-  reduction: Schema.Union(
+  requiresVisibleAttacker: Schema.optionalKey(Schema.Literal(true)),
+  damageIncludes: Schema.optionalKey(Schema.Array(DamageTypeSchema)),
+  reduction: Schema.Union([
     Schema.Struct({ kind: Schema.Literal("halfDamage") }),
     Schema.Struct({
       kind: Schema.Literal("dicePlusAbilityModifierPlusClassLevel"),
       dieSize: Schema.Literal(10),
       ability: Schema.Literal("dex"),
     }),
-  ),
+  ]),
 } as const;
 
 const ReactionRollOrDamageReductionModifierProcedureExecutionSchema =
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("attackRollReduction"),
       rangeFeet: MovementFeet,
@@ -856,7 +848,7 @@ const ReactionRollOrDamageReductionModifierProcedureExecutionSchema =
         multiplier: Schema.Literal(5),
       }),
     }),
-  );
+  ]);
 
 export const ReactionRollOrDamageReductionProcedureExecutionSchema =
   Schema.Struct({
@@ -873,11 +865,11 @@ export const PassiveArmorClassBonusProcedureExecutionSchema = Schema.Struct({
     bonus: Schema.Literal(1),
     condition: Schema.Struct({
       kind: Schema.Literal("wearingArmor"),
-      categories: Schema.Tuple(
+      categories: Schema.Tuple([
         Schema.Literal("light"),
         Schema.Literal("medium"),
         Schema.Literal("heavy"),
-      ),
+      ]),
     }),
   }),
 });
@@ -935,16 +927,16 @@ export const MartialArtsAttackProjectionProcedureExecutionSchema =
       damageReplacement: Schema.Struct({
         scope: Schema.Literal("unarmedOrMonkWeapon"),
         dice: Schema.Literal(1),
-        dieSize: Schema.Literal(6, 8, 10, 12),
+        dieSize: Schema.Literals([6, 8, 10, 12]),
       }),
       abilitySubstitution: Schema.Struct({
         use: Schema.Literal("dex"),
         replaces: Schema.Literal("str"),
-        on: Schema.Tuple(
+        on: Schema.Tuple([
           Schema.Literal("attackRoll"),
           Schema.Literal("damageRoll"),
           Schema.Literal("unarmedStrikeSaveDc"),
-        ),
+        ]),
       }),
     }),
   });
@@ -1003,7 +995,7 @@ export const FailedSavingThrowRerollProcedureExecutionSchema = Schema.Struct({
 
 export const MagicActionHealingPoolProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("magicActionHealingPool"),
-  className: Schema.Literal(...CLASS_NAMES),
+  className: Schema.Literals(CLASS_NAMES),
   healingPool: Schema.Struct({
     activationCost: Schema.Struct({
       kind: Schema.Literal("standardAction"),
@@ -1013,8 +1005,8 @@ export const MagicActionHealingPoolProcedureExecutionSchema = Schema.Struct({
     rangeFeet: MovementFeet,
     targetSelection: Schema.Struct({
       mode: Schema.Literal("anyNumber"),
-      targetKinds: Schema.Tuple(Schema.Literal("creature")),
-      stateFilter: Schema.Tuple(Schema.Literal("bloodied")),
+      targetKinds: Schema.Tuple([Schema.Literal("creature")]),
+      stateFilter: Schema.Tuple([Schema.Literal("bloodied")]),
       includesSelf: Schema.Literal(true),
     }),
     pool: Schema.Struct({
@@ -1028,7 +1020,7 @@ export const MagicActionHealingPoolProcedureExecutionSchema = Schema.Struct({
 const FixedD6AmountProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("fixed"),
   expr: Schema.Struct({
-    dice: Schema.Literal(2, 3, 4),
+    dice: Schema.Literals([2, 3, 4]),
     dieSize: Schema.Literal(6),
   }),
 });
@@ -1155,9 +1147,9 @@ export const StunningStrikeProcedureExecutionSchema = Schema.Struct({
       }),
       attackRoll: Schema.Struct({
         mode: Schema.Literal("advantage"),
-        appliesTo: Schema.Literal(
+        appliesTo: Schema.Literals([
           "nextAttackRollAgainstTargetBeforeExpiration",
-        ),
+        ]),
       }),
     }),
   }),
@@ -1169,7 +1161,7 @@ const CunningStrikeCostSchema = Schema.Struct({
   dieSize: Schema.Literal(6),
 });
 
-const CunningStrikeEffectSchema = Schema.Union(
+const CunningStrikeEffectSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("equipmentGatedConditionSave"),
     requires: Schema.Struct({
@@ -1213,15 +1205,15 @@ const CunningStrikeEffectSchema = Schema.Union(
       kind: Schema.Literal("hideActionInvisibleCondition"),
     }),
     conditionSource: Schema.Literal("hideAction"),
-    ifTurnEndsBehindCover: Schema.Tuple(
-      Schema.Literal("threeQuarters", "total"),
-      Schema.Literal("threeQuarters", "total"),
-    ),
+    ifTurnEndsBehindCover: Schema.Tuple([
+      Schema.Literals(["threeQuarters", "total"]),
+      Schema.Literals(["threeQuarters", "total"]),
+    ]),
   }),
-);
+]);
 
 const CunningStrikeOptionSchema = Schema.Struct({
-  selectionId: Schema.Literal(...BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS),
+  selectionId: Schema.Literals(BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS),
   cost: CunningStrikeCostSchema,
   effect: CunningStrikeEffectSchema,
 });
@@ -1232,7 +1224,7 @@ export const CunningStrikeProcedureExecutionSchema = Schema.Struct({
     trigger: Schema.Struct({
       kind: Schema.Literal("dealSneakAttackDamage"),
       damageRiderProcedureRef: BattleProcedureExecutionRef,
-      sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+      sourceUnitId: Schema.optionalKey(Schema.Never),
     }),
     choice: Schema.Struct({
       kind: Schema.Literal("chooseOne"),
@@ -1251,7 +1243,7 @@ export const CunningStrikeOptionGrantProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("cunningStrikeOptionGrant"),
   optionGrant: Schema.Struct({
     sourceProcedureRef: BattleProcedureExecutionRef,
-    sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sourceUnitId: Schema.optionalKey(Schema.Never),
     option: CunningStrikeOptionSchema,
   }),
 });
@@ -1268,11 +1260,11 @@ export const PaladinSacredWeaponProcedureExecutionSchema = Schema.Struct({
     duration: Schema.Struct({
       amount: Schema.Literal(10),
       unit: Schema.Literal("minute"),
-      endsOn: Schema.Tuple(
+      endsOn: Schema.Tuple([
         Schema.Literal("useFeatureAgain"),
         Schema.Literal("dismissNoAction"),
         Schema.Literal("notCarryingWeapon"),
-      ),
+      ]),
     }),
     attackRollBonus: Schema.Struct({
       kind: Schema.Literal("abilityModifier"),
@@ -1280,10 +1272,10 @@ export const PaladinSacredWeaponProcedureExecutionSchema = Schema.Struct({
       minimum: Schema.Literal(1),
       appliesTo: Schema.Literal("imbuedWeaponAttackRolls"),
     }),
-    hitDamageTypeChoice: Schema.Tuple(
+    hitDamageTypeChoice: Schema.Tuple([
       Schema.Literal("normal"),
       Schema.Literal("radiant"),
-    ),
+    ]),
     light: Schema.Struct({
       brightRadiusFeet: MovementFeet,
       dimAdditionalFeet: MovementFeet,
@@ -1291,7 +1283,7 @@ export const PaladinSacredWeaponProcedureExecutionSchema = Schema.Struct({
   }),
 });
 
-export const UnitSupportProcedureExecutionSchema = Schema.Union(
+export const UnitSupportProcedureExecutionSchema = Schema.Union([
   LiteralUnitSupportProcedureExecutionSchema,
   AlternateActionCostProcedureExecutionSchema,
   PassiveRangedAttackRollBonusProcedureExecutionSchema,
@@ -1333,9 +1325,9 @@ export const UnitSupportProcedureExecutionSchema = Schema.Union(
   CunningStrikeProcedureExecutionSchema,
   CunningStrikeOptionGrantProcedureExecutionSchema,
   PaladinSacredWeaponProcedureExecutionSchema,
-);
+]);
 
-export const UnitFeatureProcedureExecutionSchema = Schema.Union(
+export const UnitFeatureProcedureExecutionSchema = Schema.Union([
   ExtraActionGrantProcedureExecutionSchema,
   SelfBonusActionHealingProcedureExecutionSchema,
   OngoingFeatureProcedureExecutionSchema,
@@ -1380,4 +1372,4 @@ export const UnitFeatureProcedureExecutionSchema = Schema.Union(
   PotentCantripProcedureExecutionSchema,
   GrapplerProcedureExecutionSchema,
   RetaliationReactionAttackProcedureExecutionSchema,
-);
+]);

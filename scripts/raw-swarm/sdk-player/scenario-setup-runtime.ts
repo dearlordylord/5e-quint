@@ -19,12 +19,12 @@ import {
 import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/index.ts";
 import { armorClass } from "../../../packages/shared-algebras/src/armor-class-algebra.ts";
 import { Hp, movementFeet } from "../../../packages/shared/src/types.ts";
-import { srdStatBlockCatalog } from "../../../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCatalog } from "../../../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "../../../packages/surface/src/surface/unit-catalog.ts";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { canonicalJson } from "../transcript.ts";
 import type { JsonValue } from "./continuation-contract.ts";
@@ -114,7 +114,7 @@ function setupContext(
           scenarioTableSpatialFingerprint,
           scenarioSessionIssueMessage,
           tableAuthoredSpatialDecision,
-          isLeft: Either.isLeft,
+          isLeft: Result.isFailure,
         },
       },
     })),

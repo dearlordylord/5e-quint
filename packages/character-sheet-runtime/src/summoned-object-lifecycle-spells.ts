@@ -7,8 +7,10 @@ import {
 } from "@dnd/shared/elapsed-time";
 import { Hp, spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { DamageType } from "@dnd/surface/surface/types";
+import { Result, Option } from "effect";
+
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 
 import { castPreparedSpell } from "./prepared-spell-cast.ts";
 import {
@@ -54,7 +56,7 @@ export function castAnimateObjects(input: {
   readonly targets: readonly CharacterSheetAnimateObjectsTarget[];
   readonly spellcastingAbilityModifier: number;
   readonly castLevel?: SpellSlotLevel;
-}): Either.Either<CharacterSheetAnimateObjectsResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetAnimateObjectsResult, CharacterSheetIssue> {
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
   return castLifecycleSpell({
     sheet: input.sheet,
@@ -83,7 +85,7 @@ export function castConjureElemental(input: {
   readonly unitLibrary: UnitCatalog;
   readonly spirit: CharacterSheetConjureElementalSpirit;
   readonly castLevel?: SpellSlotLevel;
-}): Either.Either<CharacterSheetConjureElementalResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetConjureElementalResult, CharacterSheetIssue> {
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
   return castLifecycleSpell({
     sheet: input.sheet,
@@ -112,7 +114,7 @@ export function castSummonDragon(input: {
   readonly unitLibrary: UnitCatalog;
   readonly spirit: CharacterSheetSummonDragonSpirit;
   readonly castLevel?: SpellSlotLevel;
-}): Either.Either<CharacterSheetSummonDragonResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSummonDragonResult, CharacterSheetIssue> {
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
   return castLifecycleSpell({
     sheet: input.sheet,
@@ -141,7 +143,7 @@ export function castPlanarBinding(input: {
   readonly unitLibrary: UnitCatalog;
   readonly target: CharacterSheetPlanarBindingTarget;
   readonly castLevel?: SpellSlotLevel;
-}): Either.Either<CharacterSheetPlanarBindingResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetPlanarBindingResult, CharacterSheetIssue> {
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
   return castLifecycleSpell({
     sheet: input.sheet,
@@ -171,8 +173,8 @@ function castLifecycleSpell<Invocation>(input: {
   readonly spellId: string;
   readonly castLevel: SpellSlotLevel;
   readonly invocation: (
-    spell: SpellRecord,
-  ) => Either.Either<Invocation, CharacterSheetIssue>;
+    spell: CharacterSheetSpellSource,
+  ) => Result.Result<Invocation, CharacterSheetIssue>;
 }) {
   return castPreparedSpell({
     sheet: input.sheet,
@@ -215,11 +217,11 @@ function animateObjectsTargetIssue(input: {
 }
 
 function animateObjectsInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly targets: readonly CharacterSheetAnimateObjectsTarget[];
   readonly spellcastingAbilityModifier: number;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheetAnimateObjectsInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetAnimateObjectsInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored Animate Objects support profile required by this projector. */
   if (
@@ -251,7 +253,7 @@ function animateObjectsInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue(
       "Animate Objects requires a supported duration.",
     );
@@ -262,12 +264,12 @@ function animateObjectsInvocationFromSpell(input: {
     animatedObjectContract(target, input.castLevel),
   );
 
-  return Either.right({
+  return Result.succeed({
     tag: "animateObjects",
     ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "action" },
     rangeFeet: ANIMATE_OBJECTS_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     selectedObjectCapacity: {
       maximumWeight: input.spellcastingAbilityModifier,
@@ -293,10 +295,10 @@ function animateObjectsInvocationFromSpell(input: {
 }
 
 function conjureElementalInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spirit: CharacterSheetConjureElementalSpirit;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetConjureElementalInvocation,
   CharacterSheetIssue
 > {
@@ -320,7 +322,7 @@ function conjureElementalInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue(
       "Conjure Elemental requires a supported duration.",
     );
@@ -329,12 +331,12 @@ function conjureElementalInvocationFromSpell(input: {
   const damageDiceCount = 8 + (input.castLevel - LIFECYCLE_SPELL_LEVEL);
   const repeatDamageDiceCount = 4 + (input.castLevel - LIFECYCLE_SPELL_LEVEL);
 
-  return Either.right({
+  return Result.succeed({
     tag: "conjureElemental",
     ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "action" },
     rangeFeet: CONJURE_ELEMENTAL_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     spirit: {
       spiritId: input.spirit.spiritId,
@@ -361,10 +363,10 @@ function conjureElementalInvocationFromSpell(input: {
 }
 
 function summonDragonInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spirit: CharacterSheetSummonDragonSpirit;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheetSummonDragonInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSummonDragonInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored Summon Dragon support profile required by this projector. */
   if (
@@ -396,17 +398,17 @@ function summonDragonInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact one-hour duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Summon Dragon requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "summonDragon",
     ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "action" },
     rangeFeet: SUMMON_DRAGON_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     spirit: {
       spiritId: input.spirit.spiritId,
@@ -453,10 +455,10 @@ function summonDragonInvocationFromSpell(input: {
 }
 
 function planarBindingInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly target: CharacterSheetPlanarBindingTarget;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheetPlanarBindingInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetPlanarBindingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored Planar Binding support profile required by this projector. */
   if (
@@ -476,14 +478,14 @@ function planarBindingInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = planarBindingDuration(input.castLevel);
   /* v8 ignore next -- @preserve -- Internal invariant: every supported Planar Binding cast level maps to a positive parsed hour/day duration. */
-  if (Either.isLeft(duration)) return Either.left(duration.left);
+  if (Result.isFailure(duration)) return Result.fail(duration.failure);
 
-  return Either.right({
+  return Result.succeed({
     tag: "planarBinding",
     ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "hours", amount: 1 },
     rangeFeet: PLANAR_BINDING_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     materialComponentSpend: { consumedJewelCostGpMinimum: 1000 },
     target: input.target,
     savingThrow: { ability: "cha", dc: "caster_spell_save_dc" },
@@ -504,11 +506,11 @@ function planarBindingInvocationFromSpell(input: {
 }
 
 function preparedLifecycleInvocation(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
   castLevel: SpellSlotLevel,
 ) {
   return {
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     castLevel,
     spellSlotCost: { kind: "ordinary" as const, spellLevel: castLevel },
@@ -606,20 +608,20 @@ function conjureElementalDamageType(
 }
 
 function hasConsumedMaterialCost(
-  components: SpellRecord["mechanics"]["components"],
+  components: CharacterSheetSpellSource["mechanics"]["components"],
   costGp: number,
 ): boolean {
   return (
-    "materialConsumed" in components &&
-    components.materialConsumed === true &&
-    "materialCostGp" in components &&
-    components.materialCostGp === costGp
+    components.material.kind === "present" &&
+    components.material.consumed === true &&
+    Option.isSome(components.material.costGp) &&
+    components.material.costGp.value === costGp
   );
 }
 
 function planarBindingDuration(
   castLevel: SpellSlotLevel,
-): Either.Either<TimeSpanDuration, CharacterSheetIssue> {
+): Result.Result<TimeSpanDuration, CharacterSheetIssue> {
   const duration =
     castLevel >= spellSlotLevel(9)
       ? { unit: "day", amount: 366 }
@@ -632,7 +634,7 @@ function planarBindingDuration(
             : { unit: "hour", amount: 24 };
   const parsed = timeSpanDuration(duration);
   /* v8 ignore start -- @preserve -- Impossible parser failure: V8 maps the rejected-duration edge to this conditional, but every selected Planar Binding duration is a positive supported hour/day span. */
-  if (Either.isRight(parsed)) return Either.right(parsed.right);
+  if (Result.isSuccess(parsed)) return Result.succeed(parsed.success);
   return characterSheetIssue("Planar Binding requires a supported duration.");
   /* v8 ignore stop -- @preserve */
 }

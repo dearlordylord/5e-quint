@@ -1,10 +1,9 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type {
   Ability,
-  ClassFeatureRecord,
   UnitRecord,
   UseCountResource,
 } from "@dnd/surface/surface/types";
@@ -16,14 +15,19 @@ import {
 } from "./class-level-scaling.ts";
 import type { CharacterBuild } from "./types.ts";
 import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
+import {
+  projectCharacterCreationClassFeatureSources,
+  type CharacterCreationClassFeatureFacts,
+  type CharacterCreationClassFeatureSource,
+} from "./character-feature-projection.ts";
 
 export const MONK_MONKS_FOCUS_UNIT_ID = authoredUnitId("monk_monks_focus");
 const MONK_MONKS_FOCUS_SAVE_DC_ABILITY = "wis" as const satisfies Ability;
 
-type MonkFocusFeature = ClassFeatureRecord & {
+type MonkFocusFeature = CharacterCreationClassFeatureFacts & {
   readonly className: "monk";
   readonly mechanics: Extract<
-    ClassFeatureRecord["mechanics"],
+    CharacterCreationClassFeatureFacts["mechanics"],
     { readonly family: "resource_container" }
   > & {
     readonly resource: UseCountResource;
@@ -42,7 +46,7 @@ type MonkFocusInitialOption = Pick<
 >;
 
 export type CharacterBuildMonksFocusFacts = {
-  readonly unitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
+  readonly unitId: UnitRecord["id"];
   readonly focusPointUseCount: {
     readonly maximum: ResourceCount;
     readonly shortRestRefillsAll: true;
@@ -64,68 +68,85 @@ export type CharacterBuildMonksFocusFactsIssue = {
 export function characterBuildMonksFocusFacts(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildMonksFocusFacts | undefined,
   CharacterBuildMonksFocusFactsIssue
 > {
-  if (
-    !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      authoredUnitId(MONK_MONKS_FOCUS_UNIT_ID),
-    )
-  ) {
-    return Either.right(undefined);
-  }
-  const featureUnit = input.unitLibrary.getUnit(MONK_MONKS_FOCUS_UNIT_ID);
-  if (Option.isNone(featureUnit)) {
-    return monksFocusFactsIssue("Monk's Focus requires an installed Unit.");
-  }
-  if (!isMonkFocusFeature(featureUnit.value)) {
+  const featureUnitIds = characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  );
+  const featureUnits = projectCharacterCreationClassFeatureSources(
+    featureUnitIds,
+    input.unitLibrary,
+  ).filter(
+    (
+      source,
+    ): source is CharacterCreationClassFeatureSource & {
+      readonly facts: MonkFocusFeature;
+    } => isMonkFocusFeature(source.facts),
+  );
+  if (featureUnits.length > 1) {
     return monksFocusFactsIssue(
-      "Monk's Focus requires the installed Surface feature record.",
+      "Monk Focus projection supports exactly one matching feature.",
     );
+  }
+  const featureUnit = featureUnits[0];
+  if (featureUnit === undefined) {
+    if (featureUnitIds.includes(MONK_MONKS_FOCUS_UNIT_ID)) {
+      const installed = input.unitLibrary.getUnit(MONK_MONKS_FOCUS_UNIT_ID);
+      if (Option.isNone(installed)) {
+        return monksFocusFactsIssue("Monk's Focus requires an installed Unit.");
+      }
+      return monksFocusFactsIssue(
+        "Monk's Focus requires the installed Surface feature record.",
+      );
+    }
+    return Result.succeed(undefined);
   }
 
   const monkLevel = characterBuildClassFeatureOwnerLevel({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    feature: featureUnit.value,
+    feature: featureUnit.facts,
   });
-  if (Either.isLeft(monkLevel)) {
-    return monksFocusFactsIssue(monkLevel.left.message);
+  if (Result.isFailure(monkLevel)) {
+    return monksFocusFactsIssue(monkLevel.failure.message);
   }
 
   const focusPointMaximum = monkFocusPointMaximum({
-    feature: featureUnit.value,
-    monkLevel: monkLevel.right,
+    feature: featureUnit.facts,
+    monkLevel: monkLevel.success,
   });
-  if (Either.isLeft(focusPointMaximum)) {
-    return Either.left(focusPointMaximum.left);
+  if (Result.isFailure(focusPointMaximum)) {
+    return Result.fail(focusPointMaximum.failure);
   }
 
-  return Either.right({
-    unitId: MONK_MONKS_FOCUS_UNIT_ID,
+  return Result.succeed({
+    unitId: featureUnit.unitId,
     focusPointUseCount: {
-      maximum: focusPointMaximum.right,
+      maximum: focusPointMaximum.success,
       shortRestRefillsAll: true,
       longRestRefillsAll: true,
     },
-    initialOptions: featureUnit.value.mechanics.optionSet.initialOptions.map(
+    initialOptions: featureUnit.facts.mechanics.optionSet.initialOptions.map(
       (option) => ({
         id: option.id,
         displayName: option.displayName,
       }),
     ),
     saveDc: {
-      base: featureUnit.value.mechanics.effectSaveDc.base,
-      ability: featureUnit.value.mechanics.effectSaveDc.ability,
+      base: featureUnit.facts.mechanics.effectSaveDc.base,
+      ability: featureUnit.facts.mechanics.effectSaveDc.ability,
       includesProficiencyBonus: true,
     },
   });
 }
 
-function isMonkFocusFeature(unit: UnitRecord): unit is MonkFocusFeature {
+function isMonkFocusFeature(
+  unit: CharacterCreationClassFeatureFacts,
+): unit is MonkFocusFeature {
   return (
-    unit.kind === "class_feature" &&
     unit.className === "monk" &&
     unit.mechanics.family === "resource_container" &&
     unit.mechanics.resource.kind === "use_count" &&
@@ -139,7 +160,7 @@ function isMonkFocusFeature(unit: UnitRecord): unit is MonkFocusFeature {
 function monkFocusPointMaximum(input: {
   readonly feature: MonkFocusFeature;
   readonly monkLevel: number;
-}): Either.Either<ResourceCount, CharacterBuildMonksFocusFactsIssue> {
+}): Result.Result<ResourceCount, CharacterBuildMonksFocusFactsIssue> {
   const cap = input.feature.mechanics.resource.cap;
   if (
     cap.kind !== "linear_per_level" ||
@@ -152,13 +173,13 @@ function monkFocusPointMaximum(input: {
       "Monk's Focus requires Monk-level Focus Point scaling facts.",
     );
   }
-  return Either.right(
+  return Result.succeed(
     resourceCount(classLevelLinearValueAtClassLevel(cap, input.monkLevel)),
   );
 }
 
 function monksFocusFactsIssue(
   message: string,
-): Either.Either<never, CharacterBuildMonksFocusFactsIssue> {
-  return Either.left({ tag: "monksFocusFactsIssue", message });
+): Result.Result<never, CharacterBuildMonksFocusFactsIssue> {
+  return Result.fail({ tag: "monksFocusFactsIssue", message });
 }

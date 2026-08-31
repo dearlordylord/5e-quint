@@ -26,8 +26,12 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecRoundTripForTest,
   breakBattleConcentration,
   discoverBattleActCandidates,
   elapsedTimeTicks,
@@ -35,6 +39,7 @@ import {
   movementFeet,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
+import { spellProcedureBoundToActiveEffect } from "./battle-reducer/spell-active-effect-binding.ts";
 
 describe("L12G deterministic Levitate creature admission", () => {
   test("levitate admits the creature branch as a level-2 Magic Action Spell Slot profile", () => {
@@ -67,7 +72,7 @@ describe("L12G deterministic Levitate creature admission", () => {
 
     expect(requireLevitatedEffect(cast.state)).toEqual(
       expect.objectContaining({
-        kind: "spellLevitatedCreature",
+        kind: "controlledVerticalSuspension",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         altitudeFeet: movementFeet(12),
@@ -81,8 +86,14 @@ describe("L12G deterministic Levitate creature admission", () => {
       }),
     );
     expect(target.activeEffects).toContainEqual(
-      requireLevitatedEffect(cast.state),
+      expect.objectContaining({
+        kind: "controlledVerticalSuspension",
+        sourceCombatantId: spellCasterId,
+        altitudeFeet: movementFeet(12),
+      }),
     );
+    expect(target.activeEffects[0]).not.toHaveProperty("rangeFeet");
+    expect(target.activeEffects[0]).not.toHaveProperty("maxAltitudeChangeFeet");
   });
 
   test("unwilling creature save success spends the slot without levitating or starting concentration", () => {
@@ -142,7 +153,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     ).toBeNull();
     expect(
       requireCombatant(saved.state, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
   });
@@ -195,7 +206,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     }
     const initialRiseHole = requireHole(
       needsInitialRise.holes,
-      "levitateInitialRise",
+      "controlledVerticalSuspensionInitialRise",
     );
 
     const invalid = resolveBattleSubject({
@@ -211,14 +222,14 @@ describe("L12G deterministic Levitate creature admission", () => {
         savingThrowOutcomeFill(saveHole, [
           { targetId: spellTargetId, succeeded: true },
         ]),
-        levitateInitialRiseFill(initialRiseHole, 5),
+        controlledVerticalSuspensionInitialRiseFill(initialRiseHole, 5),
       ],
     });
     expect(invalid).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
+        "Successful ControlledVerticalSuspension creature saves are unaffected and do not use an initial-rise fill.",
     });
   });
 
@@ -250,7 +261,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     }
     const initialRiseHole = requireHole(
       needsInitialRise.holes,
-      "levitateInitialRise",
+      "controlledVerticalSuspensionInitialRise",
     );
 
     const tooHigh = resolveBattleSubject({
@@ -263,7 +274,7 @@ describe("L12G deterministic Levitate creature admission", () => {
           spellCasterId,
           spellTargetId,
         ),
-        levitateInitialRiseFill(initialRiseHole, 25),
+        controlledVerticalSuspensionInitialRiseFill(initialRiseHole, 25),
       ],
     });
     expect(tooHigh).toMatchObject({ tag: "invalid" });
@@ -278,7 +289,7 @@ describe("L12G deterministic Levitate creature admission", () => {
           spellCasterId,
           spellTargetId,
         ),
-        levitateInitialRiseFill(initialRiseHole, 5),
+        controlledVerticalSuspensionInitialRiseFill(initialRiseHole, 5),
       ],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
@@ -329,8 +340,9 @@ describe("L12G deterministic Levitate creature admission", () => {
         movementFill(movementHole, {
           movementCostFeet: 5,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
+            effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
               .sourceProcedureRef,
@@ -346,7 +358,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(underpaidClimbingCost).toMatchObject({
       tag: "invalid",
       message:
-        "Levitated movement must spend the altitude-change distance as climbing, plus any area movement costs.",
+        "ControlledVerticalSuspension movement must spend the altitude-change distance as climbing, plus any area movement costs.",
     });
 
     const moved = resolveBattleSubject({
@@ -356,8 +368,9 @@ describe("L12G deterministic Levitate creature admission", () => {
         movementFill(movementHole, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
+            effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
               .sourceProcedureRef,
@@ -398,7 +411,8 @@ describe("L12G deterministic Levitate creature admission", () => {
     const altitudeAct = discoverBattleActCandidates(nextCasterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "levitateAltitudeControl",
+        candidate.subject.command ===
+          "controlledVerticalSuspensionAltitudeControl",
     );
     expect(altitudeAct).toBeDefined();
     if (altitudeAct === undefined) {
@@ -406,22 +420,26 @@ describe("L12G deterministic Levitate creature admission", () => {
     }
     const hole = requireHole(
       altitudeAct.initialHoles,
-      "levitateAltitudeChange",
+      "controlledVerticalSuspensionAltitudeChange",
     );
     const levitated = requireLevitatedEffect(nextCasterTurn.state);
-    const witnessedAltitudeChange = levitateAltitudeChangeFill(hole, "up", 10, [
-      {
-        kind: "levitatedTargetWithinSpellRange",
-        sourceCombatantId: spellCasterId,
-        sourceProcedureRef: levitated.sourceProcedureRef,
-        targetId: spellTargetId,
-        rangeFeet: movementFeet(60),
-      },
-    ]);
+    const witnessedAltitudeChange =
+      controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [
+        {
+          kind: "controlledVerticalSuspensionTargetWithinRange",
+          effectRef: levitated.effectRef,
+          sourceCombatantId: spellCasterId,
+          sourceProcedureRef: levitated.sourceProcedureRef,
+          targetId: spellTargetId,
+          rangeFeet: movementFeet(60),
+        },
+      ]);
     const missingFact = resolveBattleSubject({
       state: nextCasterTurn.state,
       subject: altitudeAct.subject,
-      fills: [levitateAltitudeChangeFill(hole, "up", 10, [])],
+      fills: [
+        controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, []),
+      ],
     });
     expect(missingFact).toMatchObject({ tag: "invalid" });
     expect(
@@ -433,7 +451,8 @@ describe("L12G deterministic Levitate creature admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Levitate altitude control is no longer active for the target.",
+      message:
+        "ControlledVerticalSuspension altitude control is no longer active for the target.",
     });
 
     const raised = resolveBattleSubject({
@@ -461,8 +480,136 @@ describe("L12G deterministic Levitate creature admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Magic action is no longer available for Levitate altitude control.",
+        "Magic action is no longer available for ControlledVerticalSuspension altitude control.",
     });
+  });
+
+  test("altitude control mutates only the selected Levitate occurrence", () => {
+    const cast = castWillingLevitate();
+    const casterTurn = advanceToNextCasterTurn(cast.state);
+    const original = requireLevitatedEffect(casterTurn);
+    const targetBeforeAllocation = requireCombatant(casterTurn, spellTargetId);
+    const casterBeforeAllocation = requireCombatant(casterTurn, spellCasterId);
+    const twoOccurrences = battleStateWithAllocatedEffectForTest({
+      state: casterTurn,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "controlledVerticalSuspension",
+        sourceProcedureRef: original.sourceProcedureRef,
+        sourceCombatantId: original.sourceCombatantId,
+        altitudeFeet: original.altitudeFeet,
+        expiresAt: original.expiresAt,
+      },
+    });
+    const targetAfterAllocation = requireCombatant(
+      twoOccurrences,
+      spellTargetId,
+    );
+    const casterAfterAllocation = requireCombatant(
+      twoOccurrences,
+      spellCasterId,
+    );
+    const selected = targetAfterAllocation.activeEffects.find(
+      (effect) =>
+        effect.kind === "controlledVerticalSuspension" &&
+        effect.effectRef !== original.effectRef,
+    );
+    if (selected?.kind !== "controlledVerticalSuspension") {
+      throw new Error("Expected a second allocated Levitate occurrence.");
+    }
+    expect(Number(targetAfterAllocation.nextEffectOrdinal)).toBe(
+      Number(targetBeforeAllocation.nextEffectOrdinal) + 1,
+    );
+    expect(casterAfterAllocation.nextEffectOrdinal).toBe(
+      casterBeforeAllocation.nextEffectOrdinal,
+    );
+    expect(
+      casterAfterAllocation.activeEffects.some(
+        (effect) => effect.effectRef === selected.effectRef,
+      ),
+    ).toBe(false);
+    const altitudeAct = discoverBattleActCandidates(twoOccurrences).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command ===
+          "controlledVerticalSuspensionAltitudeControl" &&
+        candidate.subject.effectRef === selected.effectRef,
+    );
+    if (altitudeAct === undefined) {
+      throw new Error("Expected the selected Levitate occurrence control act.");
+    }
+    const hole = requireHole(
+      altitudeAct.initialHoles,
+      "controlledVerticalSuspensionAltitudeChange",
+    );
+    expect(hole.effectRef).toBe(selected.effectRef);
+    const awaitingAltitudeChange = resolveBattleSubject({
+      state: twoOccurrences,
+      subject: altitudeAct.subject,
+      fills: [],
+    });
+    if (awaitingAltitudeChange.tag !== "needsHoles") {
+      throw new Error("Expected Levitate altitude-change hole.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingAltitudeChange.snapshot);
+    const staleRangeFact = {
+      kind: "controlledVerticalSuspensionTargetWithinRange" as const,
+      effectRef: original.effectRef,
+      sourceCombatantId: spellCasterId,
+      sourceProcedureRef: original.sourceProcedureRef,
+      targetId: spellTargetId,
+      rangeFeet: movementFeet(60),
+    };
+    expect(
+      resolveBattleSubject({
+        state: twoOccurrences,
+        subject: altitudeAct.subject,
+        fills: [
+          controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [
+            staleRangeFact,
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    const raised = resolveBattleSubject({
+      state: twoOccurrences,
+      subject: altitudeAct.subject,
+      fills: [
+        controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [
+          {
+            kind: "controlledVerticalSuspensionTargetWithinRange",
+            effectRef: selected.effectRef,
+            sourceCombatantId: spellCasterId,
+            sourceProcedureRef: selected.sourceProcedureRef,
+            targetId: spellTargetId,
+            rangeFeet: movementFeet(60),
+          },
+        ]),
+      ],
+    });
+    expect(raised).toMatchObject({ tag: "resolved" });
+    if (raised.tag !== "resolved") {
+      throw new Error("Expected exact-occurrence altitude control to resolve.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(raised.snapshot);
+    const levitateEffects = requireCombatant(
+      raised.state,
+      spellTargetId,
+    ).activeEffects.filter(
+      (effect) => effect.kind === "controlledVerticalSuspension",
+    );
+    expect(levitateEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          effectRef: original.effectRef,
+          altitudeFeet: movementFeet(20),
+        }),
+        expect.objectContaining({
+          effectRef: selected.effectRef,
+          altitudeFeet: movementFeet(30),
+        }),
+      ]),
+    );
   });
 
   test("self-target Levitate uses movement, not a caster Magic Action, to change altitude", () => {
@@ -475,7 +622,8 @@ describe("L12G deterministic Levitate creature admission", () => {
       discoverBattleActCandidates(casterTurn).some(
         (candidate) =>
           candidate.subject.tag === "runtimeCommand" &&
-          candidate.subject.command === "levitateAltitudeControl",
+          candidate.subject.command ===
+            "controlledVerticalSuspensionAltitudeControl",
       ),
     ).toBe(false);
     const moveAct = discoverBattleActCandidates(casterTurn).find(
@@ -495,8 +643,10 @@ describe("L12G deterministic Levitate creature admission", () => {
         movementFill(movementHole, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
+            effectRef: requireLevitatedEffect(casterTurn, spellCasterId)
+              .effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(
               casterTurn,
@@ -531,7 +681,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     ).toBeNull();
     expect(
       requireCombatant(concentrationBroken, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
 
@@ -541,7 +691,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       combatants: new Map(cast.state.combatants).set(spellTargetId, {
         ...target,
         activeEffects: target.activeEffects.map((effect) =>
-          effect.kind === "spellLevitatedCreature" &&
+          effect.kind === "controlledVerticalSuspension" &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -558,36 +708,30 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(requireCombatant(expired, spellCasterId).concentration).toBeNull();
     expect(
       requireCombatant(expired, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
   });
 
   test("Levitate concentration cleanup preserves an unrelated target resistance", () => {
     const cast = castWillingLevitate();
-    const target = requireCombatant(cast.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-levitate-unrelated-resistance",
     );
-    const state: BattleState = {
-      ...cast.state,
-      combatants: new Map(cast.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellTargetId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: cast.state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "damageResistance" as const,
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellTargetId,
+        damageType: "cold" as const,
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
 
     const broken = breakBattleConcentration(state, spellCasterId);
     const brokenTarget = requireCombatant(broken, spellTargetId);
@@ -600,7 +744,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     );
     expect(
       brokenTarget.activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
   });
@@ -642,7 +786,7 @@ function castWillingLevitate(
   }
   const initialRiseHole = requireHole(
     needsInitialRise.holes,
-    "levitateInitialRise",
+    "controlledVerticalSuspensionInitialRise",
   );
   const resolved = resolveBattleSubject({
     state,
@@ -654,7 +798,10 @@ function castWillingLevitate(
         spellCasterId,
         targetId,
       ),
-      levitateInitialRiseFill(initialRiseHole, input.initialRiseFeet ?? 20),
+      controlledVerticalSuspensionInitialRiseFill(
+        initialRiseHole,
+        input.initialRiseFeet ?? 20,
+      ),
     ],
   });
   if (resolved.tag !== "resolved") {
@@ -676,37 +823,57 @@ function requireLevitatedEffect(
 ) {
   const target = requireCombatant(state, targetId);
   const effect = target.activeEffects.find(
-    (candidate) => candidate.kind === "spellLevitatedCreature",
+    (candidate) => candidate.kind === "controlledVerticalSuspension",
   );
   if (effect === undefined) {
     throw new Error("Expected Levitate active effect.");
   }
-  return effect;
+  const facts = spellProcedureBoundToActiveEffect(state, effect);
+  if (facts?.procedure !== "controlledVerticalSuspension") {
+    throw new Error("Expected bound Levitate procedure facts.");
+  }
+  return {
+    ...effect,
+    maxAltitudeChangeFeet: facts.maxAltitudeChangeFeet,
+    rangeFeet: facts.rangeFeet,
+  };
 }
 
-function levitateAltitudeChangeFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateAltitudeChange" }>,
+function controlledVerticalSuspensionAltitudeChangeFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+  >,
   direction: "up" | "down",
   distanceFeet: number,
   spatialFacts: Extract<
     BattleFill,
-    { readonly kind: "levitateAltitudeChange" }
+    { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
   >["spatialFacts"],
-): Extract<BattleFill, { readonly kind: "levitateAltitudeChange" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+> {
   return {
-    kind: "levitateAltitudeChange",
+    kind: "controlledVerticalSuspensionAltitudeChange",
     holeId: hole.holeId,
     value: { direction, distanceFeet: movementFeet(distanceFeet) },
     spatialFacts,
   };
 }
 
-function levitateInitialRiseFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateInitialRise" }>,
+function controlledVerticalSuspensionInitialRiseFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionInitialRise" }
+  >,
   distanceFeet: number,
-): Extract<BattleFill, { readonly kind: "levitateInitialRise" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionInitialRise" }
+> {
   return {
-    kind: "levitateInitialRise",
+    kind: "controlledVerticalSuspensionInitialRise",
     holeId: hole.holeId,
     value: { distanceFeet: movementFeet(distanceFeet) },
   };

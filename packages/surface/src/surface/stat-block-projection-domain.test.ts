@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -280,7 +280,7 @@ const projectionArbitrary = fc
     }),
   );
 
-const decodeProjection = Schema.decodeUnknownEither(
+const decodeProjection = Schema.decodeUnknownResult(
   StatBlockScopedFidelityProjectionSchema,
 );
 
@@ -539,18 +539,18 @@ describe("domain-valid scoped Stat Block projections", () => {
     fc.assert(
       fc.property(projectionArbitrary, (candidate) => {
         const decoded = decodeProjection(candidate);
-        expect(Either.isRight(decoded)).toBe(true);
-        if (Either.isLeft(decoded)) return;
-        expectIndependentProjectionInvariants(decoded.right);
-        const encoded = Schema.encodeUnknownEither(
+        expect(Result.isSuccess(decoded)).toBe(true);
+        if (Result.isFailure(decoded)) return;
+        expectIndependentProjectionInvariants(decoded.success);
+        const encoded = Schema.encodeUnknownResult(
           StatBlockScopedFidelityProjectionSchema,
-        )(decoded.right);
-        expect(Either.isRight(encoded)).toBe(true);
-        if (Either.isRight(encoded)) {
-          const decodedAgain = decodeProjection(encoded.right);
-          expect(Either.isRight(decodedAgain)).toBe(true);
-          if (Either.isRight(decodedAgain)) {
-            expect(decodedAgain.right).toEqual(decoded.right);
+        )(decoded.success);
+        expect(Result.isSuccess(encoded)).toBe(true);
+        if (Result.isSuccess(encoded)) {
+          const decodedAgain = decodeProjection(encoded.success);
+          expect(Result.isSuccess(decodedAgain)).toBe(true);
+          if (Result.isSuccess(decodedAgain)) {
+            expect(decodedAgain.success).toEqual(decoded.success);
           }
         }
       }),
@@ -1142,9 +1142,9 @@ describe("domain-valid scoped Stat Block projections", () => {
 
     invalidCases.forEach(({ label, candidate: invalid, ...expectation }) => {
       const decoded = decodeProjection(invalid);
-      expect(Either.isLeft(decoded), label).toBe(true);
-      if (Either.isLeft(decoded) && "expectedMessage" in expectation) {
-        expect(String(decoded.left), label).toContain(
+      expect(Result.isFailure(decoded), label).toBe(true);
+      if (Result.isFailure(decoded) && "expectedMessage" in expectation) {
+        expect(String(decoded.failure), label).toContain(
           expectation.expectedMessage,
         );
       }

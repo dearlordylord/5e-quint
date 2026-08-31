@@ -15,7 +15,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -161,10 +161,10 @@ function createHealingResourceSelectedIdentityDriver() {
           restoreHp: Hp(2),
           removePoisoned: true,
         });
-        if (Either.isLeft(result)) {
-          throw new Error(result.left.message);
+        if (Result.isFailure(result)) {
+          throw new Error(result.failure.message);
         }
-        sheets = result.right;
+        sheets = result.success;
         outcome = "resolved";
       },
       step: () => {},
@@ -193,7 +193,7 @@ function layOnHandsSheets(): {
   readonly target: CharacterSheet;
 } {
   return {
-    source: requireRight(
+    source: requireSuccess(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:lay-on-hands-source"),
         build: paladinBuild({ paladinAdvancements: 1 }),
@@ -204,7 +204,7 @@ function layOnHandsSheets(): {
         unitLibrary,
       }),
     ),
-    target: requireRight(
+    target: requireSuccess(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:lay-on-hands-target"),
         build: characterBuild("class_fighter"),
@@ -244,7 +244,7 @@ function characterBuild(startingClass: string): CharacterBuild {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -287,10 +287,10 @@ function layOnHandsPool(
   { readonly tag: "layOnHandsHealingPool" }
 > {
   const resources = characterSheetResources(sheet, unitLibrary);
-  if (Either.isLeft(resources)) {
-    throw new Error(resources.left.message);
+  if (Result.isFailure(resources)) {
+    throw new Error(resources.failure.message);
   }
-  const pool = resources.right.find(
+  const pool = resources.success.find(
     (
       resource,
     ): resource is Extract<
@@ -334,18 +334,18 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }
 
 function normalizeHealingResourceSelectedIdentityQuintState(

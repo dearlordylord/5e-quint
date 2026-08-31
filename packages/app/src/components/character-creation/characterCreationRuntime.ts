@@ -36,8 +36,9 @@ import {
 import type { Ability } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog"
+import { buildStatBlockCatalog, srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
-import { Either } from "effect"
+import { Result } from "effect"
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 const catalogBuild = buildUnitCatalog({ collections: [srdUnitCollection] })
@@ -47,6 +48,16 @@ if (catalogBuild.tag !== "ok") {
 }
 
 export const characterCreationUnitLibrary = catalogBuild.catalog
+
+const statBlockCatalogBuild = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection]
+})
+/* v8 ignore next -- @preserve -- the imported checked-in SRD collection is validated by Surface catalog tests */
+if (statBlockCatalogBuild.tag !== "ok") {
+  throw new Error(`SRD Stat Block catalog failed to build: ${JSON.stringify(statBlockCatalogBuild.issues)}`)
+}
+
+export const characterCreationStatBlockCatalog = statBlockCatalogBuild.catalog
 
 export type DraftAssessment = {
   readonly holes: ReadonlyArray<CreationHole>
@@ -84,7 +95,7 @@ export function assessCharacterDraft(draft: CharacterDraft): DraftAssessment {
 export function createCharacterSheetFromDraft(
   draft: CharacterDraft,
   input: CharacterSheetFromDraftInput = {}
-): Either.Either<CharacterSheet, CharacterSheetFromDraftIssue> {
+): Result.Result<CharacterSheet, CharacterSheetFromDraftIssue> {
   const finalization = finalizeCharacterDraft({ draft, unitLibrary: characterCreationUnitLibrary })
   if (finalization.tag !== "ready")
     return characterSheetFromDraftIssue("draftNotReady", "Character Draft is not ready.")
@@ -92,10 +103,10 @@ export function createCharacterSheetFromDraft(
     build: finalization.build,
     unitLibrary: characterCreationUnitLibrary
   })
-  if (Either.isLeft(wildShapeFacts)) {
-    return characterSheetFromDraftIssue("characterSheetInvalid", wildShapeFacts.left.message)
+  if (Result.isFailure(wildShapeFacts)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", wildShapeFacts.failure.message)
   }
-  if (wildShapeFacts.right !== undefined && input.druidWildShapeKnownFormStatBlockIds === undefined) {
+  if (wildShapeFacts.success !== undefined && input.druidWildShapeKnownFormStatBlockIds === undefined) {
     return characterSheetFromDraftIssue(
       "wildShapeKnownFormsRequired",
       "Wild Shape known forms require selected Beast Stat Block identities."
@@ -108,20 +119,21 @@ export function createCharacterSheetFromDraft(
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary: characterCreationUnitLibrary,
+    statBlockCatalog: characterCreationStatBlockCatalog,
     ...(input.druidWildShapeKnownFormStatBlockIds === undefined
       ? {}
       : { druidWildShapeKnownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds })
   })
-  return Either.isLeft(sheet)
-    ? characterSheetFromDraftIssue("characterSheetInvalid", characterSheetConstructionIssuesSummary(sheet.left))
-    : Either.right(sheet.right)
+  return Result.isFailure(sheet)
+    ? characterSheetFromDraftIssue("characterSheetInvalid", characterSheetConstructionIssuesSummary(sheet.failure))
+    : Result.succeed(sheet.success)
 }
 
 function characterSheetFromDraftIssue(
   tag: CharacterSheetFromDraftIssue["tag"],
   message: string
-): Either.Either<never, CharacterSheetFromDraftIssue> {
-  return Either.left({ tag, message })
+): Result.Result<never, CharacterSheetFromDraftIssue> {
+  return Result.fail({ tag, message })
 }
 
 export function appendStoredCharacterSheet(
@@ -145,30 +157,30 @@ export type CharacterSheetSummary = {
 
 export function characterSheetSummary(
   sheet: CharacterSheet
-): Either.Either<CharacterSheetSummary, CharacterSheetFromDraftIssue> {
+): Result.Result<CharacterSheetSummary, CharacterSheetFromDraftIssue> {
   const maximumHp = characterSheetHitPointMaximum({ sheet, unitLibrary: characterCreationUnitLibrary })
-  if (Either.isLeft(maximumHp)) {
-    return characterSheetFromDraftIssue("characterSheetInvalid", maximumHp.left.message)
+  if (Result.isFailure(maximumHp)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", maximumHp.failure.message)
   }
   const hitDice = characterSheetHitDice(sheet, characterCreationUnitLibrary)
-  if (Either.isLeft(hitDice)) {
-    return characterSheetFromDraftIssue("characterSheetInvalid", hitDice.left.message)
+  if (Result.isFailure(hitDice)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", hitDice.failure.message)
   }
   const resources = characterSheetResources(sheet, characterCreationUnitLibrary)
-  if (Either.isLeft(resources)) {
-    return characterSheetFromDraftIssue("characterSheetInvalid", resources.left.message)
+  if (Result.isFailure(resources)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", resources.failure.message)
   }
   const pactSlots = characterSheetPactSlots(sheet)
-  return Either.right({
+  return Result.succeed({
     characterId: sheet.characterId,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
-    maximumHp: maximumHp.right,
+    maximumHp: maximumHp.success,
     hitPointState: sheet.hitPoints.tag,
-    hitDice: hitDice.right,
+    hitDice: hitDice.success,
     spellSlots: characterSheetSpellSlots(sheet) ?? [],
     ...(pactSlots === undefined ? {} : { pactSlots }),
-    resources: resources.right
+    resources: resources.success
   })
 }
 
@@ -191,20 +203,20 @@ export function abilityScoresFill(input: {
   readonly holeId: CreationHoleId
   readonly method: SupportedAbilityScoreMethod
   readonly scores: AbilityScoreInput
-}): Either.Either<CreationFill, AbilityScoreFillIssue> {
+}): Result.Result<CreationFill, AbilityScoreFillIssue> {
   const parsed = abilityScoreAssignment(input.scores)
-  if (Either.isLeft(parsed)) {
-    return Either.left({
+  if (Result.isFailure(parsed)) {
+    return Result.fail({
       tag: "invalidAbilityScoreAssignment",
       holeId: input.holeId,
       message: "Expected a valid ability score assignment."
     })
   }
-  return Either.right({
+  return Result.succeed({
     kind: "abilityScores",
     holeId: input.holeId,
     method: input.method,
-    value: parsed.right
+    value: parsed.success
   })
 }
 

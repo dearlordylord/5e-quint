@@ -32,7 +32,7 @@ import type { DamageType } from "@dnd/surface/surface/types";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
 import {
   BattleAreaId,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
   BattleObjectId,
@@ -42,6 +42,7 @@ import {
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  battleProcedureExecutionRefBelongsToCombatant,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -61,6 +62,10 @@ import {
   statBlockAttackDamageSelectionKey,
 } from "./stat-block-attack-damage-selection.ts";
 
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+);
+
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
   "dash",
@@ -75,8 +80,8 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "shove",
   "escapeGrapple",
   "escapeSpellRestraint",
-  "shakeAwakeFromSleep",
-  "shakeAwakeFromHypnoticPattern",
+  "shakeAwakeFromStagedCondition",
+  "shakeAwakeFromAreaControl",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
@@ -103,34 +108,33 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "retaliationAttack",
-  "greaseGroundHazardSave",
-  "webRestraintSave",
-  "sleetStormAreaHazardSave",
-  "insectPlagueAreaHazardSave",
-  "cloudkillAreaHazardSave",
-  "disperseCloudkill",
-  "webRestrainedNoLongerInArea",
-  "webAreaRemoved",
-  "gustOfWindLineSave",
-  "gustOfWindLineDirectionChange",
+  "persistentAreaSaveConditionSave",
+  "persistentAreaSaveConditionEscapeSave",
+  "persistentAreaSaveCompositeSave",
+  "persistentAreaSaveDamageSave",
+  "endPersistentAreaSaveDamageForEnvironment",
+  "endPersistentAreaSaveConditionEscapeForDeparture",
+  "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+  "directionalPersistentAreaSave",
+  "directionalPersistentAreaDirectionChange",
   "movableZoneSave",
-  "moonbeamCylinderExit",
+  "persistentAreaSaveDamageExit",
   "movableZoneReposition",
   "movableZoneRam",
   "releaseSpellCreatedHeldObject",
   "protectionRelevantEffectSave",
   "creatureTypeProtectionConditionAttempt",
   "creatureTypeProtectionPossessionAttempt",
-  "disperseFogCloud",
-  "wardingBondSeparation",
-  "jumpMovementReplacement",
-  "dragonsBreathExhale",
+  "endPersistentAreaTraitForEnvironment",
+  "linkedDefenseResistanceDamageShareSeparation",
+  "fixedCostMovementReplacement",
+  "grantedAreaSaveDamageAction",
   "replaceSelfTransformationMode",
-  "commandGrovel",
-  "commandDrop",
-  "commandApproach",
-  "commandFlee",
-  "levitateAltitudeControl",
+  "executeCompelledGrovel",
+  "executeCompelledDrop",
+  "executeCompelledApproach",
+  "executeCompelledFlee",
+  "controlledVerticalSuspensionAltitudeControl",
   "creatureFalls",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
@@ -157,82 +161,91 @@ export const MONK_FOCUS_STEP_OF_THE_WIND_MODES = [
 export type MonkFocusStepOfTheWindMode =
   (typeof MONK_FOCUS_STEP_OF_THE_WIND_MODES)[number];
 
-export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
+export const BattleSubjectTextSchema = NonEmptyTrimmedStringSchema;
 const RejectRedundantSpellProcedureSourceFields = {
-  sourceProcedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
+  sourceProcedureRef: Schema.optionalKey(Schema.Never),
 } as const;
 const RejectRedundantSpellSourceFields = {
   ...RejectRedundantSpellProcedureSourceFields,
-  sourceCombatantId: Schema.optionalWith(Schema.Never, { exact: true }),
+  sourceCombatantId: Schema.optionalKey(Schema.Never),
 } as const;
 
-export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union(
+export const BattlePersistentAreaSaveCompositeTriggerSchema = Schema.Union([
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("turnStartInArea"),
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
-);
-export type BattleSleetStormAreaMembershipTrigger =
-  typeof BattleSleetStormAreaMembershipTriggerSchema.Type;
+]);
+export type BattlePersistentAreaSaveCompositeTrigger =
+  typeof BattlePersistentAreaSaveCompositeTriggerSchema.Type;
 
-export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union(
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("appearsInArea"),
-    areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("firstEntryOnTurn"),
-    areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("turnEndInArea"),
-    areaId: BattleAreaId,
-  }),
-);
-export type BattleInsectPlagueAreaMembershipTrigger =
-  typeof BattleInsectPlagueAreaMembershipTriggerSchema.Type;
+export const BattleStationaryPersistentAreaSaveDamageTriggerSchema =
+  Schema.Union([
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("appearsInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("firstEntryOnTurn"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("turnEndInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+  ]);
+export type BattleStationaryPersistentAreaSaveDamageTrigger =
+  typeof BattleStationaryPersistentAreaSaveDamageTriggerSchema.Type;
 
-export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union(
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("appearsInArea"),
-    areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("areaMovesIntoSpace"),
-    areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("firstEntryOnTurn"),
-    areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("turnEndInArea"),
-    areaId: BattleAreaId,
-  }),
-);
-export type BattleCloudkillAreaMembershipTrigger =
-  typeof BattleCloudkillAreaMembershipTriggerSchema.Type;
+export const BattleTranslatingPersistentAreaSaveDamageTriggerSchema =
+  Schema.Union([
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("appearsInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("areaMovesIntoSpace"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("firstEntryOnTurn"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("turnEndInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+  ]);
+export type BattleTranslatingPersistentAreaSaveDamageTrigger =
+  typeof BattleTranslatingPersistentAreaSaveDamageTriggerSchema.Type;
 
 export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
   "objectLight",
   "heldLightHurl",
-  "dancingLightsSeparateCast",
-  "dancingLightsCombinedCast",
-  "dancingLightsReposition",
+  "movableLightManifestation",
   "damageReduction",
   "makeStable",
   "spellAttackSequence",
@@ -241,7 +254,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "spellAttackDamage",
   "saveGatedDamage",
   "rollModifier",
-  "thaumaturgyBoomingVoice",
+  "temporaryAbilityCheckRollMode",
 ] as const;
 export type CantripSpellProcedure = (typeof CANTRIP_SPELL_PROCEDURES)[number];
 
@@ -259,96 +272,93 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedCondition",
   "saveGatedConditionImmunity",
   "saveGatedAttackRollAdvantage",
-  "sleepTargetAdmission",
-  "hideousLaughter",
-  "hypnoticPattern",
-  "slowActivePenalties",
-  "greaseGroundHazard",
-  "webRestraintHazard",
-  "gustOfWindLine",
-  "fogCloudObscurement",
+  "stagedSaveCondition",
+  "saveGatedConditionWithRepeat",
+  "saveGatedAreaControl",
+  "saveGatedTurnConstraintBundle",
+  "persistentAreaSaveCondition",
+  "persistentAreaSaveConditionEscape",
+  "directionalPersistentArea",
+  "persistentAreaTrait",
   "magicalDarknessPointOrigin",
-  "antimagicFieldOngoingSpellSuppression",
-  "flamingSphere",
-  "spiritualWeaponAttackProxy",
-  "spikeGrowthMovementHazard",
-  "moonbeam",
-  "sleetStormAreaHazard",
-  "insectPlagueAreaHazard",
-  "cloudkillAreaHazard",
+  "magicSuppressionEmanation",
+  "persistentAreaSaveDamage",
+  "spatialMeleeSpellAttackProxy",
+  "areaMovementDistanceDamage",
+  "persistentAreaSaveComposite",
   "objectContactDamage",
   "spellCreatedHeldObject",
-  "command",
+  "compelledNextTurnBehavior",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",
   "creatureSizeIncrease",
   "creatureSizeDecrease",
-  "levitatedCreature",
-  "wardingBond",
+  "controlledVerticalSuspension",
+  "linkedDefenseResistanceDamageShare",
   "scalarBuff",
   "selfTransformationMode",
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
-  "blurAttackRollDefense",
+  "perceptionGatedAttackRollDefense",
   "seeInvisibleObserverSight",
-  "mirrorImageHitInterception",
+  "duplicateHitInterception",
   "conditionRemovalProtection",
   "chosenDamageResistance",
-  "hastePositive",
+  "compositeTargetBuffWithAftermath",
   "directConditionRemoval",
   "weaponDamageRider",
-  "magicWeaponEnhancement",
+  "weaponAttackDamageEnhancement",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
   "abilityD20TestRollModeSaveGate",
   "afterHitTimedDamageAndSave",
   "afterHitDamageAndIllumination",
   "markedDamageRider",
-  "expeditiousRetreatDash",
-  "jumpMovementReplacement",
-  "dragonsBreathInitial",
+  "grantedAlternateActionCost",
+  "fixedCostMovementReplacement",
+  "grantedAreaSaveDamageAction",
   "selfTeleport",
-  "sanctuaryTargetingInterdiction",
+  "targetingSaveInterdiction",
   "directCondition",
   "persistentArmorEffect",
-  "shieldReaction",
-  "counterspell",
+  "triggeredArmorDefense",
+  "spellCastInterruptionReaction",
   "objectLight",
   "ongoingSpellEnd",
-  "featherFallMitigation",
+  "fallingCreatureMitigationReaction",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];
-export const SpellInvocationSourceRefSchema = Schema.Union(
+export const SpellInvocationSourceRefSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("classSpellcasting") }),
   Schema.Struct({
     tag: Schema.Literal("spellAccess"),
     spellAccessRef: BattleSpellAccessExecutionRef,
   }),
-);
+]);
 export type SpellInvocationSourceRef =
   typeof SpellInvocationSourceRefSchema.Type;
 
-export const SpellInvocationRefSchema = Schema.Union(
+export const SpellInvocationRefSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("cantrip"),
     spellId: SpellId,
     source: SpellInvocationSourceRefSchema,
-    procedure: Schema.Literal(...CANTRIP_SPELL_PROCEDURES),
+    procedure: Schema.Literals(CANTRIP_SPELL_PROCEDURES),
   }),
   Schema.Struct({
     tag: Schema.Literal("spellSlot"),
     spellId: SpellId,
     source: SpellInvocationSourceRefSchema,
     slotLevel: SpellSlotLevel,
-    procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
+    procedure: Schema.Literals(SPELL_SLOT_PROCEDURES),
   }),
   Schema.Struct({
     tag: Schema.Literal("spellAccessFreeCast"),
     spellId: SpellId,
     source: SpellInvocationSourceRefSchema,
     resourcePoolRef: BattleResourcePoolExecutionRef,
-    procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
+    procedure: Schema.Literals(SPELL_SLOT_PROCEDURES),
   }),
   Schema.Struct({
     tag: Schema.Literal("armorOfShadows"),
@@ -359,15 +369,15 @@ export const SpellInvocationRefSchema = Schema.Union(
     tag: Schema.Literal("spellEffect"),
     spellId: SpellId,
     sourceCombatantId: CombatantId,
-    procedure: Schema.Literal(
+    procedure: Schema.Literals([
       "markedDamageRiderTransfer",
       "objectContactDamageRepeat",
-      "spiritualWeaponRepeatAttack",
+      "spatialMeleeSpellAttackProxy",
       "spellCreatedHeldObjectAttack",
       "spellCreatedHeldObjectReEvoke",
-    ),
+    ]),
   }),
-);
+]);
 export type SpellInvocationRef = typeof SpellInvocationRefSchema.Type;
 export type SpellInvocationRefEncoded = typeof SpellInvocationRefSchema.Encoded;
 
@@ -424,7 +434,7 @@ export function spellEffectInvocationRef(
   procedure:
     | "markedDamageRiderTransfer"
     | "objectContactDamageRepeat"
-    | "spiritualWeaponRepeatAttack"
+    | "spatialMeleeSpellAttackProxy"
     | "spellCreatedHeldObjectAttack"
     | "spellCreatedHeldObjectReEvoke",
 ): SpellInvocationRef {
@@ -483,15 +493,15 @@ export function armorOfShadowsSpellInvocationRef(
   };
 }
 
-export const SpellSubjectModeSchema = Schema.Union(
+export const SpellSubjectModeSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("cast"),
   }),
   Schema.Struct({
     tag: Schema.Literal("ready"),
-    trigger: Schema.Literal(...BATTLE_READIED_SPELL_TRIGGERS),
+    trigger: Schema.Literals(BATTLE_READIED_SPELL_TRIGGERS),
   }),
-);
+]);
 export type SpellSubjectMode = typeof SpellSubjectModeSchema.Type;
 const SpellCastSubjectModeSchema = Schema.Struct({
   tag: Schema.Literal("cast"),
@@ -507,56 +517,54 @@ const NON_TRANSMUTED_SPELL_METAMAGIC_EFFECT_KINDS = [
     > => effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND,
   ),
 ] as const;
-const TransmutedSpellDamageTypeSchema = Schema.Literal(
-  ...TRANSMUTED_SPELL_DAMAGE_TYPES,
+const TransmutedSpellDamageTypeSchema = Schema.Literals(
+  TRANSMUTED_SPELL_DAMAGE_TYPES,
 );
 
-export const SpellMetamagicSelectionSchema = Schema.Union(
+export const SpellMetamagicSelectionSchema = Schema.Union([
   Schema.Struct({
-    effectKind: Schema.Literal(...NON_TRANSMUTED_SPELL_METAMAGIC_EFFECT_KINDS),
+    effectKind: Schema.Literals(NON_TRANSMUTED_SPELL_METAMAGIC_EFFECT_KINDS),
   }),
   Schema.Struct({
     effectKind: Schema.Literal(TRANSMUTED_METAMAGIC_EFFECT_KIND),
     targetDamageType: TransmutedSpellDamageTypeSchema,
   }),
-);
+]);
 export type SpellMetamagicSelection = typeof SpellMetamagicSelectionSchema.Type;
 
 const SpellMetamagicSelectionsSchema = Schema.NonEmptyArray(
   SpellMetamagicSelectionSchema,
 );
 
-export const BattleAttackExecutionAbilitySchema = Schema.Union(
+export const BattleAttackExecutionAbilitySchema = Schema.Union([
   AbilitySchema,
   Schema.Literal("spellcasting"),
-);
+]);
 
 export const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleAttackProcedureExecutionRef,
   attackAbility: BattleAttackExecutionAbilitySchema,
   attackDamageType: DamageTypeSchema,
-  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  statBlockDamageSelection: Schema.optionalWith(Schema.Never, {
-    exact: true,
-  }),
+  attackName: Schema.optionalKey(Schema.Never),
+  statBlockDamageSelection: Schema.optionalKey(Schema.Never),
 });
 
 const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleStatBlockProcedureExecutionRef,
-  attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-  attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  attackAbility: Schema.optionalKey(Schema.Never),
+  attackDamageType: Schema.optionalKey(Schema.Never),
+  attackName: Schema.optionalKey(Schema.Never),
   statBlockDamageSelection: StatBlockAttackDamageSelection,
 });
 
-export const BattleAttackExecutionSelectionSchema = Schema.Union(
+export const BattleAttackExecutionSelectionSchema = Schema.Union([
   CharacterAttackExecutionSelectionSchema,
   StatBlockAttackExecutionSelectionSchema,
-);
+]);
 export type BattleAttackExecutionSelection =
   typeof BattleAttackExecutionSelectionSchema.Type;
 
-export const ReadyTriggerDescription = Schema.NonEmptyTrimmedString.pipe(
+export const ReadyTriggerDescription = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("ReadyTriggerDescription"),
 );
 export type ReadyTriggerDescription = typeof ReadyTriggerDescription.Type;
@@ -564,53 +572,117 @@ export const readyTriggerDescription: (
   value: string,
 ) => ReadyTriggerDescription = ReadyTriggerDescription.make;
 
-export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union(
+export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union([
   CharacterAttackExecutionSelectionSchema,
   StatBlockAttackExecutionSelectionSchema,
-);
+]);
 export type BattleInterruptAttackExecutionSelection =
   typeof BattleInterruptAttackExecutionSelectionSchema.Type;
 
-// BattleSubject is a replay key returned by discoverBattleActs and copied back
-// by callers. It identifies one discovered runtime act; it is not Surface
-// authored content, provenance, or a complete taxonomy of D&D actions.
-export const BattleSubjectSchema = Schema.Union(
-  Schema.Struct({
-    tag: Schema.Literal("action"),
+export const battleAttackExecutionSelectionWithFields = <
+  const Fields extends Schema.Struct.Fields,
+>(
+  fields: Fields,
+) =>
+  Schema.Union([
+    CharacterAttackExecutionSelectionSchema.pipe(Schema.fieldsAssign(fields)),
+    StatBlockAttackExecutionSelectionSchema.pipe(Schema.fieldsAssign(fields)),
+  ]);
+
+export const battleInterruptAttackExecutionSelectionWithFields =
+  battleAttackExecutionSelectionWithFields;
+
+const BattleInterruptReleaseReadiedSpellSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedSpell"),
+  readiedSpellCasterId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+});
+
+const BattleInterruptReleaseReadiedMovementSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedMovement"),
+  readiedMovementActorId: CombatantId,
+});
+
+const BattleInterruptReleaseReadiedActionSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedAction"),
+  reactorId: CombatantId,
+});
+
+const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedAttack"),
+  reactorId: CombatantId,
+  targetId: CombatantId,
+  procedureRef: Schema.Union([
+    BattleAttackProcedureExecutionRef,
+    BattleStatBlockProcedureExecutionRef,
+  ]),
+  attackAbility: Schema.optionalKey(Schema.Never),
+  attackDamageType: Schema.optionalKey(Schema.Never),
+});
+
+const BattleInterruptCastTriggeredReactionSpellSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("castTriggeredReactionSpell"),
+  reactorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+});
+
+const BattleInterruptCastAttackHitBonusActionSpellSubjectSchema = Schema.Struct(
+  {
+    tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    action: Schema.Literal("attack"),
-    procedureRef: BattleAttackProcedureExecutionRef,
-    attackAbility: BattleAttackExecutionAbilitySchema,
-    attackDamageType: DamageTypeSchema,
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageSelection: Schema.optionalWith(Schema.Never, {
-      exact: true,
-    }),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
+    command: Schema.Literal("castAttackHitBonusActionSpell"),
+    casterId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
+  },
+);
+
+const BattleInterruptOpportunityAttackSubjectSchema =
+  battleInterruptAttackExecutionSelectionWithFields({
+    tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    action: Schema.Literal("attack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageSelection: StatBlockAttackDamageSelection,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
+    command: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    distanceFeet: MovementFeet,
+  });
+
+const BattleInterruptRetaliationAttackSubjectSchema =
+  battleInterruptAttackExecutionSelectionWithFields({
+    tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    familiarId: CombatantId,
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    statBlockDamageSelection: StatBlockAttackDamageSelection,
-  }),
+    command: Schema.Literal("retaliationAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+  });
+
+export const BattleInterruptSubjectSchema = Schema.Union([
+  BattleInterruptReleaseReadiedSpellSubjectSchema,
+  BattleInterruptReleaseReadiedMovementSubjectSchema,
+  BattleInterruptReleaseReadiedActionSubjectSchema,
+  BattleInterruptReleaseReadiedAttackSubjectSchema,
+  BattleInterruptCastTriggeredReactionSpellSubjectSchema,
+  BattleInterruptCastAttackHitBonusActionSpellSubjectSchema,
+  BattleInterruptOpportunityAttackSubjectSchema,
+  BattleInterruptRetaliationAttackSubjectSchema,
+]);
+export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
+export const BattleReadyActionSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("dash"),
-    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -635,18 +707,7 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("multiattack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
     action: Schema.Literal("search"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("ready"),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -669,19 +730,68 @@ export const BattleSubjectSchema = Schema.Union(
     action: Schema.Literal("escapeSpellRestraint"),
     ...RejectRedundantSpellProcedureSourceFields,
     targetId: CombatantId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromSleep"),
+    action: Schema.Literal("shakeAwakeFromStagedCondition"),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromHypnoticPattern"),
+    action: Schema.Literal("shakeAwakeFromAreaControl"),
   }),
-  Schema.Union(
+]);
+export type BattleReadyActionSubject =
+  typeof BattleReadyActionSubjectSchema.Type;
+
+// BattleSubject is a replay key returned by discoverBattleActs and copied back
+// by callers. It identifies one discovered runtime act; it is not Surface
+// authored content, provenance, or a complete taxonomy of D&D actions.
+export const BattleSubjectSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("attack"),
+    procedureRef: BattleAttackProcedureExecutionRef,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalKey(Schema.Never),
+    statBlockSection: Schema.optionalKey(Schema.Never),
+    statBlockDamageSelection: Schema.optionalKey(Schema.Never),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("attack"),
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    attackAbility: Schema.optionalKey(Schema.Never),
+    attackDamageType: Schema.optionalKey(Schema.Never),
+    attackName: Schema.optionalKey(Schema.Never),
+    statBlockSection: Schema.optionalKey(Schema.Never),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("companionAttack"),
+    actorId: CombatantId,
+    familiarId: CombatantId,
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
+  }),
+  BattleReadyActionSubjectSchema,
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("multiattack"),
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("ready"),
+  }),
+  Schema.Union([
     Schema.Struct({
       tag: Schema.Literal("bonusAction"),
       actorId: CombatantId,
@@ -698,65 +808,65 @@ export const BattleSubjectSchema = Schema.Union(
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
     }),
-  ),
+  ]),
   Schema.Struct({
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
     action: Schema.Literal("statBlockActionOption"),
     procedureRef: BattleStatBlockProcedureExecutionRef,
-    standardAction: Schema.Literal(...STANDARD_ACTION_KINDS),
+    standardAction: Schema.Literals(STANDARD_ACTION_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
-    sourceEffectRef: BattleActiveEffectExecutionRef,
+    sourceUnitId: Schema.optionalKey(Schema.Never),
+    sourceEffectRef: BattleEffectExecutionRef,
     action: Schema.Literal("dash"),
-    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    sourceEffectRef: Schema.optionalWith(Schema.Never, { exact: true }),
+    sourceEffectRef: Schema.optionalKey(Schema.Never),
     action: Schema.Literal("dash"),
-    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
-    sourceEffectRef: Schema.optionalWith(Schema.Never, { exact: true }),
-    action: Schema.Literal("disengage", "hide"),
+    sourceUnitId: Schema.optionalKey(Schema.Never),
+    sourceEffectRef: Schema.optionalKey(Schema.Never),
+    action: Schema.Literals(["disengage", "hide"]),
   }),
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
       procedureRef: BattleProcedureExecutionRef,
-      resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+      resourceUnitId: Schema.optionalKey(Schema.Never),
       option: Schema.Literal("flurryOfBlows"),
     }),
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
       procedureRef: BattleProcedureExecutionRef,
-      resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+      resourceUnitId: Schema.optionalKey(Schema.Never),
       option: Schema.Literal("patientDefense"),
-      mode: Schema.Literal(...MONK_FOCUS_PATIENT_DEFENSE_MODES),
+      mode: Schema.Literals(MONK_FOCUS_PATIENT_DEFENSE_MODES),
     }),
     Schema.Struct({
       tag: Schema.Literal("monkFocusOption"),
       actorId: CombatantId,
       procedureRef: BattleProcedureExecutionRef,
-      resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
+      resourceUnitId: Schema.optionalKey(Schema.Never),
       option: Schema.Literal("stepOfTheWind"),
-      mode: Schema.Literal(...MONK_FOCUS_STEP_OF_THE_WIND_MODES),
-      speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+      mode: Schema.Literals(MONK_FOCUS_STEP_OF_THE_WIND_MODES),
+      speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
     }),
-  ),
+  ]),
   Schema.Struct({
     tag: Schema.Literal("monkFocusFlurryOfBlowsStrike"),
     actorId: CombatantId,
@@ -767,91 +877,85 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("actionSpell"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
+    invocation: Schema.optionalKey(Schema.Never),
     mode: SpellSubjectModeSchema,
-    metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
-      exact: true,
-    }),
-    componentWeaponObjectId: Schema.optionalWith(Schema.Never, { exact: true }),
+    metamagic: Schema.optionalKey(SpellMetamagicSelectionsSchema),
+    componentWeaponObjectId: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
+    invocation: Schema.optionalKey(Schema.Never),
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
     }),
-    metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
-      exact: true,
-    }),
-    componentWeaponObjectId: Schema.optionalWith(Schema.Never, { exact: true }),
+    metamagic: Schema.optionalKey(SpellMetamagicSelectionsSchema),
+    componentWeaponObjectId: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionDashSpell"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
+    invocation: Schema.optionalKey(Schema.Never),
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
     }),
-    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeature"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    unitId: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeatureHeldWeaponActivation"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    unitId: Schema.optionalKey(Schema.Never),
     weaponItemId: BattleObjectId,
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    unitId: Schema.optionalKey(Schema.Never),
     action: Schema.Literal("assumeForm"),
     formExecutionRef: BattleStatBlockExecutionScopeRef,
-    formStatBlockId: Schema.optionalWith(Schema.Never, { exact: true }),
+    formStatBlockId: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+    unitId: Schema.optionalKey(Schema.Never),
     action: Schema.Literal("dismiss"),
   }),
   Schema.Struct({
     tag: Schema.Literal("companionLifecycle"),
     actorId: CombatantId,
-    action: Schema.Literal(
+    action: Schema.Literals([
       "temporarilyDismiss",
       "reappear",
       "permanentlyDismiss",
-    ),
+    ]),
   }),
   Schema.Struct({
-    tag: Schema.Literal("findFamiliarSharedSenses"),
+    tag: Schema.Literal("spawnedCompanionSharedSenses"),
     actorId: CombatantId,
     familiarId: CombatantId,
   }),
   Schema.Struct({
-    tag: Schema.Literal("findFamiliarTouchSpell"),
+    tag: Schema.Literal("spawnedCompanionTouchSpellProxy"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
-    invocation: Schema.optionalWith(Schema.Never, { exact: true }),
+    invocation: Schema.optionalKey(Schema.Never),
     companionId: CombatantId,
-    spellAction: Schema.Literal("action", "bonusAction"),
+    spellAction: Schema.Literals(["action", "bonusAction"]),
     mode: SpellCastSubjectModeSchema,
-    metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
-      exact: true,
-    }),
-    componentWeaponObjectId: Schema.optionalWith(Schema.Never, { exact: true }),
+    metamagic: Schema.optionalKey(SpellMetamagicSelectionsSchema),
+    componentWeaponObjectId: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -873,155 +977,107 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("standFromProne"),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedSpell"),
-    readiedSpellCasterId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedMovement"),
-    readiedMovementActorId: CombatantId,
-  }),
+  BattleInterruptReleaseReadiedSpellSubjectSchema,
+  BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("reportReadyTrigger"),
     readiedActorId: CombatantId,
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAction"),
-    reactorId: CombatantId,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    procedureRef: Schema.Union(
-      BattleAttackProcedureExecutionRef,
-      BattleStatBlockProcedureExecutionRef,
-    ),
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("castTriggeredReactionSpell"),
-    reactorId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("castAttackHitBonusActionSpell"),
-    casterId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
+  BattleInterruptReleaseReadiedActionSubjectSchema,
+  BattleInterruptReleaseReadiedAttackSubjectSchema,
+  BattleInterruptCastTriggeredReactionSpellSubjectSchema,
+  BattleInterruptCastAttackHitBonusActionSpellSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
-  Schema.extend(
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("opportunityAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-      distanceFeet: MovementFeet,
-    }),
-    BattleInterruptAttackExecutionSelectionSchema,
-  ),
-  Schema.extend(
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("retaliationAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-    }),
-    BattleInterruptAttackExecutionSelectionSchema,
-  ),
+  BattleInterruptOpportunityAttackSubjectSchema,
+  BattleInterruptRetaliationAttackSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("greaseGroundHazardSave"),
+    command: Schema.Literal("persistentAreaSaveConditionSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
-    trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+    effectRef: BattleEffectExecutionRef,
+    trigger: Schema.Literals(["entersArea", "endsTurnInArea"]),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("webRestraintSave"),
+    command: Schema.Literal("persistentAreaSaveConditionEscapeSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
-    trigger: Schema.Literal("entersArea", "startsTurnInArea"),
+    effectRef: BattleEffectExecutionRef,
+    trigger: Schema.Literals(["entersArea", "startsTurnInArea"]),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("sleetStormAreaHazardSave"),
-    areaMembershipTrigger: BattleSleetStormAreaMembershipTriggerSchema,
+    command: Schema.Literal("persistentAreaSaveCompositeSave"),
+    areaMembershipTrigger: BattlePersistentAreaSaveCompositeTriggerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("insectPlagueAreaHazardSave"),
-    areaMembershipTrigger: BattleInsectPlagueAreaMembershipTriggerSchema,
+    command: Schema.Literal("persistentAreaSaveDamageSave"),
+    areaMembershipTrigger:
+      BattleStationaryPersistentAreaSaveDamageTriggerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("cloudkillAreaHazardSave"),
-    areaMembershipTrigger: BattleCloudkillAreaMembershipTriggerSchema,
+    command: Schema.Literal("persistentAreaSaveDamageSave"),
+    areaMembershipTrigger:
+      BattleTranslatingPersistentAreaSaveDamageTriggerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("disperseCloudkill"),
+    command: Schema.Literal("endPersistentAreaSaveDamageForEnvironment"),
+    ...RejectRedundantSpellSourceFields,
+    effectOwnerId: CombatantId,
+    effectRef: BattleEffectExecutionRef,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("endPersistentAreaSaveConditionEscapeForDeparture"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("webRestrainedNoLongerInArea"),
+    command: Schema.Literals([
+      "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+    ]),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("webAreaRemoved"),
+    command: Schema.Literal("directionalPersistentAreaSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("gustOfWindLineSave"),
-    ...RejectRedundantSpellSourceFields,
-    areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     directionId: BattleLineDirectionId,
     trigger: Schema.Literal("endsTurnInLine"),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("gustOfWindLineDirectionChange"),
+    command: Schema.Literal("directionalPersistentAreaDirectionChange"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     directionId: BattleLineDirectionId,
   }),
   Schema.Struct({
@@ -1030,6 +1086,7 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("movableZoneSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literal("endsTurnWithinFiveFeetOfSphere"),
   }),
   Schema.Struct({
@@ -1038,19 +1095,21 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("movableZoneSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
-    trigger: Schema.Literal(
+    effectRef: BattleEffectExecutionRef,
+    trigger: Schema.Literals([
       "appearsInArea",
       "areaMovesIntoSpace",
       "entersArea",
       "endsTurnInArea",
-    ),
+    ]),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("moonbeamCylinderExit"),
+    command: Schema.Literal("persistentAreaSaveDamageExit"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1058,6 +1117,7 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("movableZoneReposition"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1066,6 +1126,7 @@ export const BattleSubjectSchema = Schema.Union(
     ...RejectRedundantSpellSourceFields,
     targetId: CombatantId,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literal("rammedBySphere"),
   }),
   Schema.Struct({
@@ -1073,22 +1134,22 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("releaseSpellCreatedHeldObject"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("protectionRelevantEffectSave"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
-    relevantEffect: Schema.Literal("charmed", "frightened", "possession"),
+    effectRef: BattleEffectExecutionRef,
+    relevantEffect: Schema.Literals(["charmed", "frightened", "possession"]),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("creatureTypeProtectionConditionAttempt"),
     sourceCombatantId: CombatantId,
-    condition: Schema.Literal("charmed", "frightened"),
+    condition: Schema.Literals(["charmed", "frightened"]),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1099,83 +1160,83 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("disperseFogCloud"),
+    command: Schema.Literal("endPersistentAreaTraitForEnvironment"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("wardingBondSeparation"),
+    command: Schema.Literal("linkedDefenseResistanceDamageShareSeparation"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     targetId: CombatantId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("jumpMovementReplacement"),
+    command: Schema.Literal("fixedCostMovementReplacement"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("dragonsBreathExhale"),
+    command: Schema.Literal("grantedAreaSaveDamageAction"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("replaceSelfTransformationMode"),
-    ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
-    mode: Schema.Literal(...SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS),
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("replaceSelfTransformationMode"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
+    mode: Schema.Literals(SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("replaceSelfTransformationMode"),
+    ...RejectRedundantSpellSourceFields,
+    effectRef: BattleEffectExecutionRef,
     mode: Schema.Literal(SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND),
     naturalWeaponDamageType: DamageTypeSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandGrovel"),
+    command: Schema.Literal("executeCompelledGrovel"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandDrop"),
+    command: Schema.Literal("executeCompelledDrop"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandApproach"),
+    command: Schema.Literal("executeCompelledApproach"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandFlee"),
+    command: Schema.Literal("executeCompelledFlee"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("levitateAltitudeControl"),
+    command: Schema.Literal("controlledVerticalSuspensionAltitudeControl"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     targetId: CombatantId,
   }),
   Schema.Struct({
@@ -1184,26 +1245,11 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("creatureFalls"),
     fallingCreatureId: CombatantId,
   }),
-);
+]);
 type BattleSubjectWireValue = typeof BattleSubjectSchema.Type;
 export type BattleSubject = BattleSubjectWireValue;
 
-export type BattleReadyActionSubject = Exclude<
-  Extract<BattleSubject, { readonly tag: "action" }>,
-  { readonly action: "attack" | "multiattack" | "ready" }
->;
-
-export const BattleReadyActionSubjectSchema = BattleSubjectSchema.pipe(
-  Schema.filter(
-    (subject): subject is BattleReadyActionSubject =>
-      subject.tag === "action" &&
-      subject.action !== "attack" &&
-      subject.action !== "multiattack" &&
-      subject.action !== "ready",
-  ),
-);
-
-export const BattleReadyResponseSchema = Schema.Union(
+export const BattleReadyResponseSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("movement") }),
   Schema.Struct({
     kind: Schema.Literal("attack"),
@@ -1213,29 +1259,29 @@ export const BattleReadyResponseSchema = Schema.Union(
     kind: Schema.Literal("action"),
     subject: BattleReadyActionSubjectSchema,
   }),
-);
+]);
 export type BattleReadyResponse = typeof BattleReadyResponseSchema.Type;
 
 // A held response is a read-model fact, not an executable replay key. The
 // eventual interrupt choice carries its stable procedure reference; resolution
 // recovers the complete attack selection from the internal held response.
-export const BattleReadyResponseSnapshotSchema = Schema.Union(
+export const BattleReadyResponseSnapshotSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("movement") }),
   Schema.Struct({
     kind: Schema.Literal("attack"),
-    procedureRef: Schema.Union(
+    procedureRef: Schema.Union([
       BattleAttackProcedureExecutionRef,
       BattleStatBlockProcedureExecutionRef,
-    ),
-    selection: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+    ]),
+    selection: Schema.optionalKey(Schema.Never),
+    attackAbility: Schema.optionalKey(Schema.Never),
+    attackDamageType: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
     subject: BattleReadyActionSubjectSchema,
   }),
-);
+]);
 export type BattleReadyResponseSnapshot =
   typeof BattleReadyResponseSnapshotSchema.Type;
 
@@ -1260,8 +1306,8 @@ function battleActionSubjectProcedureRefs(
       shove: noProcedureExecutionReferences,
       escapeGrapple: noProcedureExecutionReferences,
       escapeSpellRestraint: noProcedureExecutionReferences,
-      shakeAwakeFromSleep: noProcedureExecutionReferences,
-      shakeAwakeFromHypnoticPattern: noProcedureExecutionReferences,
+      shakeAwakeFromStagedCondition: noProcedureExecutionReferences,
+      shakeAwakeFromAreaControl: noProcedureExecutionReferences,
     }),
   );
 }
@@ -1285,34 +1331,37 @@ function battleRuntimeCommandProcedureRefs(
       releaseGrapple: noProcedureExecutionReferences,
       opportunityAttack: (value) => [value.procedureRef],
       retaliationAttack: (value) => [value.procedureRef],
-      greaseGroundHazardSave: noProcedureExecutionReferences,
-      webRestraintSave: noProcedureExecutionReferences,
-      sleetStormAreaHazardSave: noProcedureExecutionReferences,
-      insectPlagueAreaHazardSave: noProcedureExecutionReferences,
-      cloudkillAreaHazardSave: noProcedureExecutionReferences,
-      disperseCloudkill: noProcedureExecutionReferences,
-      webRestrainedNoLongerInArea: noProcedureExecutionReferences,
-      webAreaRemoved: noProcedureExecutionReferences,
-      gustOfWindLineSave: noProcedureExecutionReferences,
-      gustOfWindLineDirectionChange: noProcedureExecutionReferences,
+      persistentAreaSaveConditionSave: noProcedureExecutionReferences,
+      persistentAreaSaveConditionEscapeSave: noProcedureExecutionReferences,
+      persistentAreaSaveCompositeSave: noProcedureExecutionReferences,
+      persistentAreaSaveDamageSave: noProcedureExecutionReferences,
+      endPersistentAreaSaveDamageForEnvironment: noProcedureExecutionReferences,
+      endPersistentAreaSaveConditionEscapeForDeparture:
+        noProcedureExecutionReferences,
+      endPersistentAreaSaveConditionEscapeForAreaRemoval:
+        noProcedureExecutionReferences,
+      directionalPersistentAreaSave: noProcedureExecutionReferences,
+      directionalPersistentAreaDirectionChange: noProcedureExecutionReferences,
       movableZoneSave: noProcedureExecutionReferences,
-      moonbeamCylinderExit: noProcedureExecutionReferences,
+      persistentAreaSaveDamageExit: noProcedureExecutionReferences,
       movableZoneReposition: noProcedureExecutionReferences,
       movableZoneRam: noProcedureExecutionReferences,
       releaseSpellCreatedHeldObject: noProcedureExecutionReferences,
       protectionRelevantEffectSave: noProcedureExecutionReferences,
       creatureTypeProtectionConditionAttempt: noProcedureExecutionReferences,
       creatureTypeProtectionPossessionAttempt: noProcedureExecutionReferences,
-      disperseFogCloud: noProcedureExecutionReferences,
-      wardingBondSeparation: noProcedureExecutionReferences,
-      jumpMovementReplacement: noProcedureExecutionReferences,
-      dragonsBreathExhale: noProcedureExecutionReferences,
+      endPersistentAreaTraitForEnvironment: noProcedureExecutionReferences,
+      linkedDefenseResistanceDamageShareSeparation:
+        noProcedureExecutionReferences,
+      fixedCostMovementReplacement: noProcedureExecutionReferences,
+      grantedAreaSaveDamageAction: noProcedureExecutionReferences,
       replaceSelfTransformationMode: noProcedureExecutionReferences,
-      commandGrovel: noProcedureExecutionReferences,
-      commandDrop: noProcedureExecutionReferences,
-      commandApproach: noProcedureExecutionReferences,
-      commandFlee: noProcedureExecutionReferences,
-      levitateAltitudeControl: noProcedureExecutionReferences,
+      executeCompelledGrovel: noProcedureExecutionReferences,
+      executeCompelledDrop: noProcedureExecutionReferences,
+      executeCompelledApproach: noProcedureExecutionReferences,
+      executeCompelledFlee: noProcedureExecutionReferences,
+      controlledVerticalSuspensionAltitudeControl:
+        noProcedureExecutionReferences,
       creatureFalls: noProcedureExecutionReferences,
     }),
   );
@@ -1324,7 +1373,7 @@ export function battleSubjectProcedureRefs(
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: battleActionSubjectProcedureRefs,
-      pactOfTheChainFamiliarAttack: (value) => [value.procedureRef],
+      companionAttack: (value) => [value.procedureRef],
       bonusAction: (value) => [value.procedureRef],
       bonusActionStandardAction: (value) => [value.procedureRef],
       monkFocusOption: (value) => [value.procedureRef],
@@ -1339,10 +1388,87 @@ export function battleSubjectProcedureRefs(
       unitFeatureHeldWeaponActivation: (value) => [value.procedureRef],
       druidWildShape: (value) => [value.procedureRef],
       companionLifecycle: noProcedureExecutionReferences,
-      findFamiliarSharedSenses: noProcedureExecutionReferences,
-      findFamiliarTouchSpell: (value) => [value.procedureRef],
+      spawnedCompanionSharedSenses: noProcedureExecutionReferences,
+      spawnedCompanionTouchSpellProxy: (value) => [value.procedureRef],
       runtimeCommand: battleRuntimeCommandProcedureRefs,
     }),
+  );
+}
+
+export function battleSubjectProcedureRefsBelongToOwners(
+  subject: BattleSubject,
+): boolean {
+  const runtimeRequestOwner = (
+    value: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+  ): CombatantId =>
+    Match.value(value).pipe(
+      Match.discriminatorsExhaustive("command")({
+        endTurn: (v) => v.actorId,
+        endConcentration: (v) => v.actorId,
+        move: (v) => v.actorId,
+        standFromProne: (v) => v.actorId,
+        releaseReadiedSpell: (v) => v.readiedSpellCasterId,
+        releaseReadiedMovement: (v) => v.actorId,
+        reportReadyTrigger: (v) => v.actorId,
+        releaseReadiedAction: (v) => v.actorId,
+        releaseReadiedAttack: (v) => v.reactorId,
+        castTriggeredReactionSpell: (v) => v.reactorId,
+        castAttackHitBonusActionSpell: (v) => v.casterId,
+        releaseGrapple: (v) => v.actorId,
+        opportunityAttack: (v) => v.reactorId,
+        retaliationAttack: (v) => v.reactorId,
+        persistentAreaSaveConditionSave: (v) => v.actorId,
+        persistentAreaSaveConditionEscapeSave: (v) => v.actorId,
+        persistentAreaSaveCompositeSave: (v) => v.actorId,
+        persistentAreaSaveDamageSave: (v) => v.actorId,
+        endPersistentAreaSaveDamageForEnvironment: (v) => v.actorId,
+        endPersistentAreaSaveConditionEscapeForDeparture: (v) => v.actorId,
+        endPersistentAreaSaveConditionEscapeForAreaRemoval: (v) => v.actorId,
+        directionalPersistentAreaSave: (v) => v.actorId,
+        directionalPersistentAreaDirectionChange: (v) => v.actorId,
+        movableZoneSave: (v) => v.actorId,
+        persistentAreaSaveDamageExit: (v) => v.actorId,
+        movableZoneReposition: (v) => v.actorId,
+        movableZoneRam: (v) => v.actorId,
+        releaseSpellCreatedHeldObject: (v) => v.actorId,
+        protectionRelevantEffectSave: (v) => v.actorId,
+        creatureTypeProtectionConditionAttempt: (v) => v.actorId,
+        creatureTypeProtectionPossessionAttempt: (v) => v.actorId,
+        endPersistentAreaTraitForEnvironment: (v) => v.actorId,
+        linkedDefenseResistanceDamageShareSeparation: (v) => v.actorId,
+        fixedCostMovementReplacement: (v) => v.actorId,
+        grantedAreaSaveDamageAction: (v) => v.actorId,
+        replaceSelfTransformationMode: (v) => v.actorId,
+        executeCompelledGrovel: (v) => v.actorId,
+        executeCompelledDrop: (v) => v.actorId,
+        executeCompelledApproach: (v) => v.actorId,
+        executeCompelledFlee: (v) => v.actorId,
+        controlledVerticalSuspensionAltitudeControl: (v) => v.actorId,
+        creatureFalls: (v) => v.fallingCreatureId,
+      }),
+    );
+  const ownerId = Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: (value) => value.actorId,
+      companionAttack: (value) => value.familiarId,
+      bonusAction: (value) => value.actorId,
+      bonusActionStandardAction: (value) => value.actorId,
+      monkFocusOption: (value) => value.actorId,
+      monkFocusFlurryOfBlowsStrike: (value) => value.actorId,
+      actionSpell: (value) => value.actorId,
+      bonusActionSpell: (value) => value.actorId,
+      bonusActionDashSpell: (value) => value.actorId,
+      unitFeature: (value) => value.actorId,
+      unitFeatureHeldWeaponActivation: (value) => value.actorId,
+      druidWildShape: (value) => value.actorId,
+      companionLifecycle: (value) => value.actorId,
+      spawnedCompanionSharedSenses: (value) => value.actorId,
+      spawnedCompanionTouchSpellProxy: (value) => value.actorId,
+      runtimeCommand: runtimeRequestOwner,
+    }),
+  );
+  return battleSubjectProcedureRefs(subject).every((procedureRef) =>
+    battleProcedureExecutionRefBelongsToCombatant(procedureRef, ownerId),
   );
 }
 
@@ -1350,7 +1476,11 @@ export type BattleSubjectBoundExecutionReference =
   | {
       readonly kind: "activeEffect";
       readonly ownerId: CombatantId;
-      readonly effectRef: BattleActiveEffectExecutionRef;
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "activeEffectOccurrence";
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "statBlockScope";
@@ -1385,8 +1515,8 @@ function battleActionSubjectBoundExecutionReferences(
           effectRef: value.effectRef,
         },
       ],
-      shakeAwakeFromSleep: noBoundExecutionReferences,
-      shakeAwakeFromHypnoticPattern: noBoundExecutionReferences,
+      shakeAwakeFromStagedCondition: noBoundExecutionReferences,
+      shakeAwakeFromAreaControl: noBoundExecutionReferences,
     }),
   );
 }
@@ -1430,7 +1560,7 @@ function battleRuntimeCommandBoundExecutionReferences(
 ): readonly BattleSubjectBoundExecutionReference[] {
   const actorEffect = (value: {
     readonly actorId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
   }): readonly BattleSubjectBoundExecutionReference[] => [
     {
       kind: "activeEffect",
@@ -1440,11 +1570,26 @@ function battleRuntimeCommandBoundExecutionReferences(
   ];
   const targetEffect = (value: {
     readonly targetId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
   }): readonly BattleSubjectBoundExecutionReference[] => [
     {
       kind: "activeEffect",
       ownerId: value.targetId,
+      effectRef: value.effectRef,
+    },
+  ];
+  const activeEffectOccurrence = (value: {
+    readonly effectRef: BattleEffectExecutionRef;
+  }): readonly BattleSubjectBoundExecutionReference[] => [
+    { kind: "activeEffectOccurrence", effectRef: value.effectRef },
+  ];
+  const ownedEffect = (value: {
+    readonly effectOwnerId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
+  }): readonly BattleSubjectBoundExecutionReference[] => [
+    {
+      kind: "activeEffect",
+      ownerId: value.effectOwnerId,
       effectRef: value.effectRef,
     },
   ];
@@ -1464,34 +1609,36 @@ function battleRuntimeCommandBoundExecutionReferences(
       releaseGrapple: noBoundExecutionReferences,
       opportunityAttack: noBoundExecutionReferences,
       retaliationAttack: noBoundExecutionReferences,
-      greaseGroundHazardSave: noBoundExecutionReferences,
-      webRestraintSave: noBoundExecutionReferences,
-      sleetStormAreaHazardSave: noBoundExecutionReferences,
-      insectPlagueAreaHazardSave: noBoundExecutionReferences,
-      cloudkillAreaHazardSave: noBoundExecutionReferences,
-      disperseCloudkill: noBoundExecutionReferences,
-      webRestrainedNoLongerInArea: noBoundExecutionReferences,
-      webAreaRemoved: noBoundExecutionReferences,
-      gustOfWindLineSave: noBoundExecutionReferences,
-      gustOfWindLineDirectionChange: noBoundExecutionReferences,
-      movableZoneSave: noBoundExecutionReferences,
-      moonbeamCylinderExit: noBoundExecutionReferences,
-      movableZoneReposition: noBoundExecutionReferences,
-      movableZoneRam: noBoundExecutionReferences,
+      persistentAreaSaveConditionSave: activeEffectOccurrence,
+      persistentAreaSaveConditionEscapeSave: activeEffectOccurrence,
+      persistentAreaSaveCompositeSave: (value) =>
+        activeEffectOccurrence(value.areaMembershipTrigger),
+      persistentAreaSaveDamageSave: (value) =>
+        activeEffectOccurrence(value.areaMembershipTrigger),
+      endPersistentAreaSaveDamageForEnvironment: ownedEffect,
+      endPersistentAreaSaveConditionEscapeForDeparture: activeEffectOccurrence,
+      endPersistentAreaSaveConditionEscapeForAreaRemoval:
+        activeEffectOccurrence,
+      directionalPersistentAreaSave: activeEffectOccurrence,
+      directionalPersistentAreaDirectionChange: activeEffectOccurrence,
+      movableZoneSave: activeEffectOccurrence,
+      persistentAreaSaveDamageExit: activeEffectOccurrence,
+      movableZoneReposition: activeEffectOccurrence,
+      movableZoneRam: activeEffectOccurrence,
       releaseSpellCreatedHeldObject: actorEffect,
       protectionRelevantEffectSave: actorEffect,
       creatureTypeProtectionConditionAttempt: noBoundExecutionReferences,
       creatureTypeProtectionPossessionAttempt: noBoundExecutionReferences,
-      disperseFogCloud: noBoundExecutionReferences,
-      wardingBondSeparation: targetEffect,
-      jumpMovementReplacement: actorEffect,
-      dragonsBreathExhale: actorEffect,
+      endPersistentAreaTraitForEnvironment: noBoundExecutionReferences,
+      linkedDefenseResistanceDamageShareSeparation: targetEffect,
+      fixedCostMovementReplacement: actorEffect,
+      grantedAreaSaveDamageAction: actorEffect,
       replaceSelfTransformationMode: actorEffect,
-      commandGrovel: actorEffect,
-      commandDrop: actorEffect,
-      commandApproach: actorEffect,
-      commandFlee: actorEffect,
-      levitateAltitudeControl: targetEffect,
+      executeCompelledGrovel: actorEffect,
+      executeCompelledDrop: actorEffect,
+      executeCompelledApproach: actorEffect,
+      executeCompelledFlee: actorEffect,
+      controlledVerticalSuspensionAltitudeControl: targetEffect,
       creatureFalls: noBoundExecutionReferences,
     }),
   );
@@ -1503,7 +1650,7 @@ export function battleSubjectBoundExecutionReferences(
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: battleActionSubjectBoundExecutionReferences,
-      pactOfTheChainFamiliarAttack: noBoundExecutionReferences,
+      companionAttack: noBoundExecutionReferences,
       bonusAction: noBoundExecutionReferences,
       bonusActionStandardAction:
         battleBonusActionStandardActionBoundExecutionReferences,
@@ -1516,8 +1663,8 @@ export function battleSubjectBoundExecutionReferences(
       unitFeatureHeldWeaponActivation: noBoundExecutionReferences,
       druidWildShape: battleDruidWildShapeBoundExecutionReferences,
       companionLifecycle: noBoundExecutionReferences,
-      findFamiliarSharedSenses: noBoundExecutionReferences,
-      findFamiliarTouchSpell: noBoundExecutionReferences,
+      spawnedCompanionSharedSenses: noBoundExecutionReferences,
+      spawnedCompanionTouchSpellProxy: noBoundExecutionReferences,
       runtimeCommand: battleRuntimeCommandBoundExecutionReferences,
     }),
   );
@@ -1530,7 +1677,7 @@ export type CharacterProcedureBattleSubject = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell"
+      | "spawnedCompanionTouchSpellProxy"
       | "unitFeature"
       | "unitFeatureHeldWeaponActivation"
       | "druidWildShape"
@@ -1546,12 +1693,28 @@ export function isCharacterProcedureBattleSubject(
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell" ||
+    subject.tag === "spawnedCompanionTouchSpellProxy" ||
     subject.tag === "unitFeature" ||
     subject.tag === "unitFeatureHeldWeaponActivation" ||
     subject.tag === "druidWildShape" ||
     subject.tag === "bonusActionStandardAction" ||
     subject.tag === "monkFocusOption"
+  );
+}
+
+export type BattleReadyTriggerReportSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "reportReadyTrigger";
+  }
+>;
+
+export function isBattleReadyTriggerReportSubject(
+  subject: BattleSubject,
+): subject is BattleReadyTriggerReportSubject {
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "reportReadyTrigger"
   );
 }
 
@@ -1625,11 +1788,12 @@ function spellMetamagicSelectionKey(
 
 function battleSubjectKey(subject: BattleSubject): string {
   return Match.value(subject).pipe(
-    Match.when({ tag: "action", action: "shakeAwakeFromSleep" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromStagedCondition" },
+      (action) => JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when(
-      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
+      { tag: "action", action: "shakeAwakeFromAreaControl" },
       (action) => JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "shove" }, (action) =>
@@ -1692,14 +1856,14 @@ function battleSubjectKey(subject: BattleSubject): string {
     Match.when({ tag: "companionLifecycle" }, (companion) =>
       JSON.stringify([companion.tag, companion.actorId, companion.action]),
     ),
-    Match.when({ tag: "findFamiliarSharedSenses" }, (sharedSenses) =>
+    Match.when({ tag: "spawnedCompanionSharedSenses" }, (sharedSenses) =>
       JSON.stringify([
         sharedSenses.tag,
         sharedSenses.actorId,
         sharedSenses.familiarId,
       ]),
     ),
-    Match.when({ tag: "findFamiliarTouchSpell" }, (spell) =>
+    Match.when({ tag: "spawnedCompanionTouchSpellProxy" }, (spell) =>
       JSON.stringify([
         spell.tag,
         spell.actorId,
@@ -1718,7 +1882,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         activation.weaponItemId,
       ]),
     ),
-    Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (attack) =>
+    Match.when({ tag: "companionAttack" }, (attack) =>
       JSON.stringify([
         attack.tag,
         attack.actorId,
@@ -1855,6 +2019,7 @@ function battleSubjectKey(subject: BattleSubject): string {
               ? command.naturalWeaponDamageType
               : null,
             "areaId" in command ? command.areaId : null,
+            runtimeCommandEffectOccurrenceKey(command),
             "trigger" in command ? command.trigger : null,
             runtimeCommandAreaMembershipTrigger(command),
             "relevantEffect" in command ? command.relevantEffect : null,
@@ -1864,6 +2029,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       ),
     ),
   );
+}
+
+function runtimeCommandEffectOccurrenceKey(
+  command: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): BattleEffectExecutionRef | null {
+  return "effectRef" in command ? command.effectRef : null;
 }
 
 function runtimeCommandAreaMembershipTrigger(

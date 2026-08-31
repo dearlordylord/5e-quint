@@ -7,13 +7,13 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castMislead,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -88,7 +88,7 @@ describe("Character Sheet runtime / Mislead", () => {
   });
 
   it("spends a prepared level-5 spell slot and returns the invisible-double contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castMislead({
         sheet: misleadWizardSheet({ preparedSpells: ["mislead"], slots: 1 }),
         unitLibrary,
@@ -155,9 +155,9 @@ describe("Character Sheet runtime / Mislead", () => {
       casting: { casterSpeedFeet: 0 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Mislead requires a positive caster Speed.",
       );
     }
@@ -171,9 +171,9 @@ describe("Character Sheet runtime / Mislead", () => {
       casting: { casterSpeedFeet: 30 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Mislead requires prepared class Spell Access.",
       );
     }
@@ -182,7 +182,7 @@ describe("Character Sheet runtime / Mislead", () => {
 
 const misleadSelectedIdentityActions = {
   doCastMislead: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castMislead({
         sheet: misleadWizardSheet({ preparedSpells: ["mislead"], slots: 1 }),
         unitLibrary,
@@ -238,7 +238,7 @@ function misleadWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:mislead-wizard-9"),
       build: {

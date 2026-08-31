@@ -1,6 +1,6 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 import {
   BattleHoleSchema,
   BattleInterruptDecisionFrontierSchema,
@@ -19,6 +19,7 @@ import {
   type BattleHole,
   type BattleInvalidReasonCode,
 } from "../../../packages/battle-runtime/src/battle-state-execution.ts";
+import { BattleSubjectSchema } from "../../../packages/battle-runtime/src/battle-subjects.ts";
 import {
   Hp,
   ResourceCount,
@@ -102,7 +103,7 @@ export type PlayerRejectionProjection =
 
 const PLAYER_SUBJECT_TAGS = [
   "action",
-  "pactOfTheChainFamiliarAttack",
+  "companionAttack",
   "bonusAction",
   "bonusActionStandardAction",
   "monkFocusOption",
@@ -114,8 +115,8 @@ const PLAYER_SUBJECT_TAGS = [
   "unitFeatureHeldWeaponActivation",
   "druidWildShape",
   "companionLifecycle",
-  "findFamiliarSharedSenses",
-  "findFamiliarTouchSpell",
+  "spawnedCompanionSharedSenses",
+  "spawnedCompanionTouchSpellProxy",
   "runtimeCommand",
 ] as const;
 type PlayerSubjectTag = (typeof PLAYER_SUBJECT_TAGS)[number];
@@ -140,7 +141,7 @@ const PLAYER_HOLE_ADMISSION = {
   helpAttackEnemyDecision: true,
   damageRelationshipDecisions: true,
   targetSpatialFacts: true,
-  slowSomaticSpellFailureOutcome: true,
+  turnConstraintSomaticSpellFailureOutcome: true,
   objectTargetChoice: true,
   targetChoice: true,
   objectContactTargets: true,
@@ -148,14 +149,14 @@ const PLAYER_HOLE_ADMISSION = {
   objectDropResolution: true,
   spellAreaChoice: true,
   teleportDestination: true,
-  spiritualWeaponForcePosition: true,
+  spatialMeleeSpellAttackProxyPosition: true,
   heldObjectFacts: true,
   toolPossessionFacts: true,
   cunningStrikeEndTurnCoverFacts: true,
-  findFamiliarConnection: true,
+  spawnedCompanionConnection: true,
   companionReappearancePlacement: true,
   companionReappearanceInitiative: true,
-  magicWeaponTargetItem: true,
+  weaponAttackDamageEnhancementTargetItem: true,
   damageTypeChoice: true,
   spellTargetAllocation: true,
   spellTargetList: true,
@@ -165,11 +166,11 @@ const PLAYER_HOLE_ADMISSION = {
   abilityChoice: true,
   targetAbilityChoices: true,
   conditionChoice: true,
-  thaumaturgyActiveOneMinuteEffectCount: true,
-  commandOptionChoice: true,
+  temporaryAbilityCheckRollModeActiveEffectCount: true,
+  compelledBehaviorOptionChoice: true,
   selfTransformationModeChoice: true,
-  dancingLightsPlacement: true,
-  gustOfWindLineDirectionChoice: true,
+  movableLightPlacement: true,
+  directionalPersistentAreaDirectionChoice: true,
   movableZoneRamMovement: true,
   movableZoneRepositionMovement: true,
   unitFeatureDecision: true,
@@ -179,27 +180,31 @@ const PLAYER_HOLE_ADMISSION = {
   concentrationSavingThrow: true,
   interruptDecision: true,
   movement: true,
-  levitateAltitudeChange: true,
-  levitateInitialRise: true,
+  controlledVerticalSuspensionAltitudeChange: true,
+  controlledVerticalSuspensionInitialRise: true,
   abilityCheck: true,
   spellcastingAbilityCheck: true,
   grappleOutcome: true,
   shoveOutcome: true,
-  sanctuaryInterdictionOutcome: true,
+  targetingSaveInterdictionOutcome: true,
   attackDamageDisposition: true,
   ongoingSpellTargetChoice: true,
   wildShapeEquipmentDisposition: true,
+  areaWindStrength: true,
+  persistentAreaSourceTurnTranslation: true,
+  startTurnOccurrenceOrder: true,
+  temporaryHitPointChoice: true,
 } as const satisfies Record<BattleHole["kind"], true>;
 
 const CharacterResourceStateSchema = Schema.Struct({
   resourcePoolRef: BattleResourcePoolExecutionRef,
-  resource: Schema.Union(UseCountResourceSchema, PointPoolResourceSchema),
-  usesRemaining: Schema.optionalWith(ResourceCount, { exact: true }),
-  usedThisTurn: Schema.optionalWith(Schema.Boolean, { exact: true }),
-  pointsRemaining: Schema.optionalWith(ResourceCount, { exact: true }),
+  resource: Schema.Union([UseCountResourceSchema, PointPoolResourceSchema]),
+  usesRemaining: Schema.optionalKey(ResourceCount),
+  usedThisTurn: Schema.optionalKey(Schema.Boolean),
+  pointsRemaining: Schema.optionalKey(ResourceCount),
 });
 
-const StatBlockResourceStateSchema = Schema.Union(
+const StatBlockResourceStateSchema = Schema.Union([
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     kind: Schema.Literal("daily"),
@@ -223,7 +228,7 @@ const StatBlockResourceStateSchema = Schema.Union(
     usesMax: ResourceCount,
     usesRemaining: ResourceCount,
   }),
-);
+]);
 
 export type PlayerActProjection = {
   readonly ref: `subject:${string}`;
@@ -263,11 +268,7 @@ export type PlayerSubjectProjection =
       readonly command: string;
     })
   | (PlayerSubjectProjectionCommon & {
-      readonly tag:
-        | "actionSpell"
-        | "bonusActionSpell"
-        | "bonusActionDashSpell"
-        | "findFamiliarTouchSpell";
+      readonly tag: "actionSpell" | "bonusActionSpell" | "bonusActionDashSpell";
       readonly mode: PlayerSubjectProjectionMode;
     })
   | (PlayerSubjectProjectionCommon & {
@@ -276,11 +277,25 @@ export type PlayerSubjectProjection =
     })
   | (PlayerSubjectProjectionCommon & {
       readonly tag:
-        | "pactOfTheChainFamiliarAttack"
         | "monkFocusFlurryOfBlowsStrike"
         | "unitFeature"
-        | "unitFeatureHeldWeaponActivation"
-        | "findFamiliarSharedSenses";
+        | "unitFeatureHeldWeaponActivation";
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "companionAttack";
+      readonly familiarId: string;
+      readonly procedureRef: string;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "spawnedCompanionSharedSenses";
+      readonly familiarId: string;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "spawnedCompanionTouchSpellProxy";
+      readonly companionId: string;
+      readonly procedureRef: string;
+      readonly spellAction: "action" | "bonusAction";
+      readonly mode: PlayerSubjectProjectionMode;
     });
 
 export type PlayerCombatantProjection = {
@@ -587,12 +602,12 @@ function characterResourceProjection(
   if (!Array.isArray(value)) return undefined;
   const projected: PlayerCombatantProjection["resources"][number][] = [];
   for (const encodedEntry of value) {
-    const decodedEntry = Schema.decodeUnknownEither(
+    const decodedEntry = Schema.decodeUnknownResult(
       CharacterResourceStateSchema,
       { onExcessProperty: "error" },
     )(encodedEntry);
-    if (Either.isLeft(decodedEntry)) return undefined;
-    const entry = decodedEntry.right;
+    if (Result.isFailure(decodedEntry)) return undefined;
+    const entry = decodedEntry.success;
     const ref = entry.resourcePoolRef;
     const resource = entry.resource;
     const projection = Match.value(resource.kind).pipe(
@@ -637,12 +652,12 @@ function statBlockResourceProjection(
   if (!Array.isArray(value)) return undefined;
   const projected: PlayerCombatantProjection["resources"][number][] = [];
   for (const encodedEntry of value) {
-    const decodedEntry = Schema.decodeUnknownEither(
+    const decodedEntry = Schema.decodeUnknownResult(
       StatBlockResourceStateSchema,
       { onExcessProperty: "error" },
     )(encodedEntry);
-    if (Either.isLeft(decodedEntry)) return undefined;
-    const entry = decodedEntry.right;
+    if (Result.isFailure(decodedEntry)) return undefined;
+    const entry = decodedEntry.success;
     const ref = entry.resourcePoolRef;
     const projection = Match.value(entry).pipe(
       Match.when({ kind: "daily" }, (entry) => {
@@ -1050,12 +1065,12 @@ export function projectPlayerSubject(
   const statBlockDamageSelection =
     value.statBlockDamageSelection === undefined
       ? undefined
-      : Schema.decodeUnknownEither(StatBlockAttackDamageSelection)(
+      : Schema.decodeUnknownResult(StatBlockAttackDamageSelection)(
           value.statBlockDamageSelection,
         );
   if (
     statBlockDamageSelection !== undefined &&
-    Either.isLeft(statBlockDamageSelection)
+    Result.isFailure(statBlockDamageSelection)
   ) {
     return undefined;
   }
@@ -1071,7 +1086,7 @@ export function projectPlayerSubject(
       ? { attackDamageType: value.attackDamageType }
       : {}),
     ...(statBlockDamageSelection !== undefined
-      ? { statBlockDamageSelection: statBlockDamageSelection.right }
+      ? { statBlockDamageSelection: statBlockDamageSelection.success }
       : {}),
     ...(typeof value.speedKind === "string"
       ? { speedKind: value.speedKind }
@@ -1082,6 +1097,14 @@ export function projectPlayerSubject(
   };
   const action = typeof value.action === "string" ? value.action : undefined;
   const command = typeof value.command === "string" ? value.command : undefined;
+  const decodedCompanionSubject =
+    value.tag === "companionAttack" ||
+    value.tag === "spawnedCompanionSharedSenses" ||
+    value.tag === "spawnedCompanionTouchSpellProxy"
+      ? Schema.decodeUnknownResult(BattleSubjectSchema, {
+          onExcessProperty: "ignore",
+        })(value)
+      : undefined;
   switch (value.tag) {
     case "action":
     case "bonusAction":
@@ -1098,7 +1121,6 @@ export function projectPlayerSubject(
     case "actionSpell":
     case "bonusActionSpell":
     case "bonusActionDashSpell":
-    case "findFamiliarTouchSpell":
       return mode === undefined
         ? undefined
         : { ...common, tag: value.tag, mode };
@@ -1108,12 +1130,45 @@ export function projectPlayerSubject(
         tag: value.tag,
         ...(mode === undefined ? {} : { mode }),
       };
-    case "pactOfTheChainFamiliarAttack":
     case "monkFocusFlurryOfBlowsStrike":
     case "unitFeature":
     case "unitFeatureHeldWeaponActivation":
-    case "findFamiliarSharedSenses":
       return { ...common, tag: value.tag };
+    case "companionAttack":
+      return decodedCompanionSubject !== undefined &&
+        Result.isSuccess(decodedCompanionSubject) &&
+        decodedCompanionSubject.success.tag === "companionAttack"
+        ? {
+            ...common,
+            tag: decodedCompanionSubject.success.tag,
+            familiarId: decodedCompanionSubject.success.familiarId,
+            procedureRef: decodedCompanionSubject.success.procedureRef,
+          }
+        : undefined;
+    case "spawnedCompanionSharedSenses":
+      return decodedCompanionSubject !== undefined &&
+        Result.isSuccess(decodedCompanionSubject) &&
+        decodedCompanionSubject.success.tag === "spawnedCompanionSharedSenses"
+        ? {
+            ...common,
+            tag: decodedCompanionSubject.success.tag,
+            familiarId: decodedCompanionSubject.success.familiarId,
+          }
+        : undefined;
+    case "spawnedCompanionTouchSpellProxy":
+      return decodedCompanionSubject !== undefined &&
+        Result.isSuccess(decodedCompanionSubject) &&
+        decodedCompanionSubject.success.tag ===
+          "spawnedCompanionTouchSpellProxy"
+        ? {
+            ...common,
+            tag: decodedCompanionSubject.success.tag,
+            companionId: decodedCompanionSubject.success.companionId,
+            procedureRef: decodedCompanionSubject.success.procedureRef,
+            spellAction: decodedCompanionSubject.success.spellAction,
+            mode: decodedCompanionSubject.success.mode,
+          }
+        : undefined;
   }
 }
 
@@ -1125,12 +1180,14 @@ function decodeHole(
   value: unknown,
   source: PlayerHoleEvidenceSource,
 ): PlayerHoleProjection | undefined {
-  const decoded = Schema.decodeUnknownEither(BattleHoleSchema, {
+  const decoded = Schema.decodeUnknownResult(BattleHoleSchema, {
     onExcessProperty:
       source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
   })(value);
-  if (Either.isLeft(decoded)) return undefined;
-  return PLAYER_HOLE_ADMISSION[decoded.right.kind] ? decoded.right : undefined;
+  if (Result.isFailure(decoded)) return undefined;
+  return PLAYER_HOLE_ADMISSION[decoded.success.kind]
+    ? decoded.success
+    : undefined;
 }
 
 function holeOccurrences(
@@ -1199,21 +1256,21 @@ function projectEnvelopeFrontier(
         };
   }
   if (frontier.kind !== "interruptDecision") return undefined;
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     BattleInterruptDecisionFrontierSchema,
     {
       onExcessProperty:
         source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
     },
   )(frontier);
-  if (Either.isLeft(decoded)) return undefined;
-  const [firstChoice, ...remainingChoices] = decoded.right.choices;
+  if (Result.isFailure(decoded)) return undefined;
+  const [firstChoice, ...remainingChoices] = decoded.success.choices;
   return {
     kind: "interruptDecision",
-    trigger: decoded.right.trigger,
-    decisionHole: jsonValue(decoded.right.decisionHole),
+    trigger: decoded.success.trigger,
+    decisionHole: jsonValue(decoded.success.decisionHole),
     choices: [jsonValue(firstChoice), ...remainingChoices.map(jsonValue)],
-    stackDepth: decoded.right.stackDepth,
+    stackDepth: decoded.success.stackDepth,
   };
 }
 

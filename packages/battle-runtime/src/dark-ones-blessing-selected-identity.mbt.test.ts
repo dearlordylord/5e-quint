@@ -227,6 +227,7 @@ function damageEnemyToZero(input: {
     throw new Error("Dark One's Blessing selected identity target must exist.");
   }
   return applyBattleHitPointDamage({
+    saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
     state,
     target,
     damageAmount: 5,

@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice character-sheet.cleric-divine-intervention-session-invocation character-sheet.ranger-tireless
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { abilityScore, PositiveInteger } from "@dnd/shared/types";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -255,14 +255,14 @@ function supportedSameClassProgression(
       hitPointRule: { tag: "fixedHigherLevelGain" },
     });
     /* v8 ignore start -- @preserve -- Consecutive generated levels and the branded class id satisfy the progression parser. */
-    if (Either.isLeft(advancement)) {
+    if (Result.isFailure(advancement)) {
       throw new Error(
-        `Invalid supported progression advancement: ${JSON.stringify(advancement.left)}`,
+        `Invalid supported progression advancement: ${JSON.stringify(advancement.failure)}`,
       );
     }
     /* v8 ignore stop -- @preserve */
 
-    return advancement.right;
+    return advancement.success;
   });
 
   return {
@@ -304,16 +304,16 @@ function supportedTwoClassSecondLevelProgression(
     hitPointRule: { tag: "fixedHigherLevelGain" },
   });
   /* v8 ignore start -- @preserve -- This generated second-level entry and branded class id satisfy the progression parser. */
-  if (Either.isLeft(advancement)) {
+  if (Result.isFailure(advancement)) {
     throw new Error(
-      `Invalid supported progression advancement: ${JSON.stringify(advancement.left)}`,
+      `Invalid supported progression advancement: ${JSON.stringify(advancement.failure)}`,
     );
   }
   /* v8 ignore stop -- @preserve */
 
   return {
     startingClass: classUnitId(startingClassUnitId),
-    advancements: [advancement.right],
+    advancements: [advancement.success],
   };
 }
 

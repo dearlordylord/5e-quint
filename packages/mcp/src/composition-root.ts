@@ -1,4 +1,4 @@
-import { srdStatBlockCatalog } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { SrdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,

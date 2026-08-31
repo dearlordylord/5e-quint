@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   ALIGNMENT_CHOICES,
@@ -38,6 +38,8 @@ import {
   isArrayOfOne,
   movementDeltaFeet,
   movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
   proficiencyBonus,
   proficiencyBonusForCharacterLevel,
   resourceCount,
@@ -133,15 +135,32 @@ describe("shared domain primitive constructors", () => {
     expect(isCopperPieceAmount(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
     expect(isCopperPieceAmount("29")).toBe(false);
     expect(() => copperPieceAmount(0.5)).toThrow();
+    expect(() => copperPieceAmount(-1)).toThrow();
+    expect(() => NonNegativeInteger(-1)).toThrow();
+    expect(() => PositiveInteger(0)).toThrow();
     expect(druidWildShapeDurationHoursForClassLevel(5)).toBe(2);
 
     expect(isArrayOfOne([1])).toBe(true);
     expect(isArrayOfOne([])).toBe(false);
     expect(getOnlyOneStrict(["only"])).toBe("only");
-    expect(Either.getOrThrow(getOnlyOne(["only"]))).toBe("only");
-    expect(Either.isLeft(getOnlyOne([]))).toBe(true);
-    expect(Either.isLeft(getOnlyOne([], (length) => `length:${length}`))).toBe(
-      true,
-    );
+    const only = getOnlyOne(["only"]);
+    expect(Result.isSuccess(only)).toBe(true);
+    if (Result.isSuccess(only)) expect(only.success).toBe("only");
+
+    const missing = getOnlyOne([]);
+    expect(Result.isFailure(missing)).toBe(true);
+    if (Result.isFailure(missing)) {
+      expect(missing.failure).toBeInstanceOf(Error);
+      expect(missing.failure.message).toBe("Expected exactly one value, got 0");
+    }
+
+    const customFailure: Result.Result<number, string | Error> = getOnlyOne<
+      number,
+      string
+    >([], (length) => `length:${length}`);
+    expect(Result.isFailure(customFailure)).toBe(true);
+    if (Result.isFailure(customFailure)) {
+      expect(customFailure.failure).toBe("length:0");
+    }
   });
 });

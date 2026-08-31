@@ -71,7 +71,7 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
@@ -1389,8 +1389,8 @@ function createRuleCoreFeatureDriver(
           unitRef: { unitId: unit.id },
           unit,
         });
-        if (Either.isLeft(unitRef)) {
-          throw new Error(unitRef.left.message);
+        if (Result.isFailure(unitRef)) {
+          throw new Error(unitRef.failure.message);
         }
         state = startBattleRight({
           battleId: battleId("rule-core-feature-archery"),
@@ -1398,7 +1398,7 @@ function createRuleCoreFeatureDriver(
             featureActor({
               initiative: 20,
               attack: zeroAbilityWeaponAttack("weapon_shortbow"),
-              characterUnitRefs: [unitRef.right],
+              characterUnitRefs: [unitRef.success],
             }),
             featureTarget(10),
           ],
@@ -1650,7 +1650,7 @@ function createRuleCoreFeatureDriver(
             responderId: actorId,
             choice: {
               kind: "reactionRollOrDamageReduction",
-              procedureRef: choice.choice.procedureRef,
+              procedureRef: choice.modifier.procedureRef,
               modifierKind: input.modifierKind,
               fills: reductionFills,
             },
@@ -1887,10 +1887,10 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function featureBattle(): BattleState {
@@ -1942,8 +1942,8 @@ function tacticalMindBattle(
     unitRef: { unitId: recordSelectedUnitRuntimeBoundaryId(unit.id) },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId("rule-core-tactical-mind"),
@@ -1957,7 +1957,7 @@ function tacticalMindBattle(
             { className: "fighter", level: classLevel(2) },
           ]),
         ],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       featureTarget(10),
     ],
@@ -1998,15 +1998,15 @@ function myceliumStepBattle(): BattleState {
     unitRef: { unitId: recordSelectedUnitRuntimeBoundaryId(unit.id) },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId("rule-core-mycelium-step"),
     combatants: [
       featureActor({
         initiative: 20,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       featureTarget(10),
     ],
@@ -2157,15 +2157,15 @@ function savageAttackerBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId("rule-core-savage-attacker"),
     combatants: [
       featureActor({
         initiative: 20,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       featureTarget(10),
     ],
@@ -2182,15 +2182,15 @@ function combatProwessBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId("rule-core-combat-prowess"),
     combatants: [
       featureActor({
         initiative: 20,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       featureTarget(10),
     ],
@@ -2469,8 +2469,8 @@ function supportedCharacterUnitRef(
     unit,
     classLevels,
   });
-  if (Either.isLeft(unitRef)) throw new Error(unitRef.left.message);
-  return unitRef.right;
+  if (Result.isFailure(unitRef)) throw new Error(unitRef.failure.message);
+  return unitRef.success;
 }
 
 function zeroAbilityWeaponAttack(
@@ -2494,7 +2494,6 @@ function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(0),
@@ -2843,10 +2842,10 @@ function reactionModifierChoice(
 ) {
   const choice = choices.find(
     (candidate) =>
-      candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.choice.kind === modifierKind,
+      candidate.kind === "reactionModifier" &&
+      candidate.modifier.kind === modifierKind,
   );
-  if (choice?.kind !== "reactionRollOrDamageReduction") {
+  if (choice?.kind !== "reactionModifier") {
     throw new Error(`Expected ${unitId} ${modifierKind} choice.`);
   }
   return choice;

@@ -20,7 +20,7 @@ export type RetainedCompanionProtocolFacts = {
   readonly expiration:
     | { readonly tag: "none" }
     | { readonly tag: "ownerFinishedLongRest" };
-  readonly formCatalog: "findFamiliar" | "pactOfTheChain";
+  readonly formCatalog: "spawnedCompanion" | "pactOfTheChain";
 };
 
 const RETAINED_COMPANION_PROTOCOL_FACTS = {
@@ -29,7 +29,7 @@ const RETAINED_COMPANION_PROTOCOL_FACTS = {
     attack: { tag: "cannotAttack" },
     dismissal: { tag: "temporaryDismissalAndReappearance" },
     expiration: { tag: "none" },
-    formCatalog: "findFamiliar",
+    formCatalog: "spawnedCompanion",
   },
   attackExceptionFamiliarLikeOneAtATime: {
     initiative: "own",
@@ -43,7 +43,7 @@ const RETAINED_COMPANION_PROTOCOL_FACTS = {
     attack: { tag: "cannotAttack" },
     dismissal: { tag: "temporaryDismissalAndReappearance" },
     expiration: { tag: "ownerFinishedLongRest" },
-    formCatalog: "findFamiliar",
+    formCatalog: "spawnedCompanion",
   },
 } as const satisfies Record<
   RetainedCompanionProtocolTag,

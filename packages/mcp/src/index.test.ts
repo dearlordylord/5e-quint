@@ -23,7 +23,6 @@ describe("MCP stdio entrypoint", () => {
 
     expect(entrypoint.runMain).toHaveBeenCalledWith(expect.anything(), {
       disableErrorReporting: true,
-      disablePrettyLogger: true,
     });
   });
 });

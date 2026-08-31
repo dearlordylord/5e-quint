@@ -4,8 +4,8 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -39,7 +39,7 @@ export function castWallOfStone(input: {
   readonly unitLibrary: UnitCatalog;
   readonly placement: CharacterSheetWallOfStonePlacement;
   readonly shape: CharacterSheetWallOfStoneShape;
-}): Either.Either<CharacterSheetWallOfStoneResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetWallOfStoneResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -85,10 +85,10 @@ function wallOfStoneShapeIssue(
 }
 
 function wallOfStoneInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly placement: CharacterSheetWallOfStonePlacement;
   readonly shape: CharacterSheetWallOfStoneShape;
-}): Either.Either<CharacterSheetWallOfStoneInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetWallOfStoneInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Wall of Stone support profile required by this projector. */
   if (
@@ -104,7 +104,7 @@ function wallOfStoneInvocationFromSpell(input: {
     spell.mechanics.duration.permanentIfMaintainedFull !== true ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "a cube of granite"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Wall of Stone requires the supported level-5 stone wall profile.",
@@ -121,14 +121,14 @@ function wallOfStoneInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Wall of Stone requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "wallOfStone",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -138,7 +138,7 @@ function wallOfStoneInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "action" },
     rangeFeet: WALL_OF_STONE_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     permanentIfMaintainedFullDuration: true,
     placement: input.placement,
@@ -172,7 +172,9 @@ function wallOfStoneInvocationFromSpell(input: {
   });
 }
 
-function hasSupportedWallOfStonePhase(spell: SpellRecord): boolean {
+function hasSupportedWallOfStonePhase(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Wall of Stone data: admission requires activation mechanics before phase projection. */
   if (spell.mechanics.family !== "activation") return false;
   return spell.mechanics.phases.some((phase) => {

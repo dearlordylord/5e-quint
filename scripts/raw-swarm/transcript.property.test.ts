@@ -10,8 +10,24 @@ import {
   sha256Canonical,
   type McpTranscriptStep,
 } from "./transcript.ts";
+import {
+  canonicalJson as sdkCanonicalJson,
+  sha256Canonical as sdkSha256Canonical,
+} from "./sdk-player/json-value.ts";
 
 describe("RAW swarm transcript canonicalization", () => {
+  test("keeps transcript and SDK canonical bytes on one golden implementation", () => {
+    const value = { z: [3, { b: true, a: null }], a: "x" };
+    const golden = '{"a":"x","z":[3,{"a":null,"b":true}]}';
+
+    expect(canonicalJson).toBe(sdkCanonicalJson);
+    expect(sha256Canonical).toBe(sdkSha256Canonical);
+    expect(canonicalJson(value)).toBe(golden);
+    expect(sha256Canonical(value)).toBe(
+      "b9e4db22e811ab3b92364a0aa53caf6b108f5f0dcee91e69d518d3668d91f106",
+    );
+  });
+
   test("reads a SHA only for a clean worktree", () => {
     const cleanRead = vi.fn((args: readonly string[]) =>
       args[0] === "status" ? "" : "a".repeat(40),

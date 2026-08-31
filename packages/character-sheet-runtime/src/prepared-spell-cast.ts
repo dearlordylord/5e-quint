@@ -1,6 +1,10 @@
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result, Option } from "effect";
+
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
 import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 import {
   characterSheetIssue,
@@ -21,37 +25,41 @@ export function castPreparedSpell<Invocation>(input: {
   readonly spellRecordIssue?: string;
   readonly spellAccessIssue?: string;
   readonly invocation: (
-    spell: SpellRecord,
-  ) => Either.Either<Invocation, CharacterSheetIssue>;
-}): Either.Either<
+    spell: CharacterSheetSpellSource,
+  ) => Result.Result<Invocation, CharacterSheetIssue>;
+}): Result.Result<
   { readonly sheet: CharacterSheet; readonly invocation: Invocation },
   CharacterSheetIssue
 > {
   const unit = getRequiredUnit(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- A selected prepared spell id missing from the catalog is malformed catalog correlation. */
-  if (Either.isLeft(unit)) return Either.left(unit.left);
+  if (Result.isFailure(unit)) return Result.fail(unit.failure);
   /* v8 ignore start -- @preserve -- A selected prepared spell id resolving to a non-Spell Unit is malformed catalog correlation. */
-  if (unit.right.kind !== "spell") {
+  const spell = projectCharacterSheetSpellSource(unit.success);
+  if (Option.isNone(spell)) {
     return characterSheetIssue(
       input.spellRecordIssue ?? `${input.spellName} requires a Spell record.`,
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (!hasPreparedClassSpellAccess(input.sheet, unit.right.id)) {
+  if (!hasPreparedClassSpellAccess(input.sheet, spell.value.unitId)) {
     return characterSheetIssue(
       input.spellAccessIssue ??
         `${input.spellName} requires prepared class Spell Access.`,
     );
   }
-  const invocation = input.invocation(unit.right);
+  const invocation = input.invocation(spell.value);
   /* v8 ignore next -- @preserve -- Invocation rejection is attributed to the spell-specific malformed request or unsupported authored profile. */
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
+  if (Result.isFailure(invocation)) return Result.fail(invocation.failure);
   const spent = spendCharacterSheetSpellSlot({
     sheet: input.sheet,
     spellLevel: input.spellLevel,
     spellSlotSource: "ordinary",
   });
   /* v8 ignore next -- @preserve -- Slot-spend rejection is malformed prepared-cast slot state. */
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-  return Either.right({ sheet: spent.right, invocation: invocation.right });
+  if (Result.isFailure(spent)) return Result.fail(spent.failure);
+  return Result.succeed({
+    sheet: spent.success,
+    invocation: invocation.success,
+  });
 }

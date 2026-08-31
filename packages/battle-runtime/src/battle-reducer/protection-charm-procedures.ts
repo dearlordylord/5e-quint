@@ -1,4 +1,4 @@
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleFill,
@@ -39,7 +39,7 @@ export function resolveProtectionRelevantEffectSaveCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Protection from Evil and Good relevant-effect save requires a matching active effect on the target.",
+      "creature-type protection relevant-effect save requires a matching active effect on the target.",
     );
   }
   const hole = protectionRelevantEffectSavingThrowOutcomeHole(
@@ -57,22 +57,33 @@ export function resolveProtectionRelevantEffectSaveCommand(
       "Protection relevant-effect identity no longer matches the selected active effect.",
     );
   }
-  const saveFill = input.fills.find(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome" && fill.holeId === hole.holeId,
+  const attemptedSaveFills = input.fills.filter(
+    (fill): fill is ProtectionRelevantEffectSaveFill =>
+      fill.kind === "savingThrowOutcome",
   );
-  if (saveFill === undefined) {
+  const fillCheck = protectionRelevantEffectSaveFillForHole(
+    input.fills,
+    attemptedSaveFills,
+    hole,
+  );
+  if (fillCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
+  if (fillCheck.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Protection relevant-effect save fill does not match the selected effect occurrence.",
+    );
+  }
+  const saveFill = fillCheck.fill;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveFill.relationshipFacts !== undefined) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      "Protection from Evil and Good save relationship facts were not requested.",
+      "creature-type protection save relationship facts were not requested.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -97,6 +108,39 @@ export function resolveProtectionRelevantEffectSaveCommand(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+type ProtectionRelevantEffectSaveFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+type ProtectionRelevantEffectSaveHole = ReturnType<
+  typeof protectionRelevantEffectSavingThrowOutcomeHole
+>;
+
+type ProtectionRelevantEffectSaveFillCheck =
+  | { readonly tag: "needsHoles" }
+  | { readonly tag: "invalid" }
+  | { readonly tag: "valid"; readonly fill: ProtectionRelevantEffectSaveFill };
+
+function protectionRelevantEffectSaveFillForHole(
+  fills: readonly BattleFill[],
+  attemptedSaveFills: readonly ProtectionRelevantEffectSaveFill[],
+  hole: ProtectionRelevantEffectSaveHole,
+): ProtectionRelevantEffectSaveFillCheck {
+  if (fills.length === 0) {
+    return { tag: "needsHoles" };
+  }
+  const saveFill = attemptedSaveFills[0];
+  if (
+    fills.length !== 1 ||
+    attemptedSaveFills.length !== 1 ||
+    saveFill === undefined ||
+    saveFill.holeId !== hole.holeId
+  ) {
+    return { tag: "invalid" };
+  }
+  return { tag: "valid", fill: saveFill };
 }
 
 export function resolveCreatureTypeProtectionConditionAttemptCommand(

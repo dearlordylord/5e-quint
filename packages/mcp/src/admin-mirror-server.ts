@@ -76,14 +76,14 @@ export function handleAdminMirrorRequest(
 
   const sessionMatch = /^\/admin-projections\/([^/]+)$/.exec(url.pathname);
   if (request.method === "GET" && sessionMatch?.[1] !== undefined) {
-    const sessionId = Schema.decodeUnknownEither(AdminMirrorSessionIdSchema)(
+    const sessionId = Schema.decodeUnknownResult(AdminMirrorSessionIdSchema)(
       decodeURIComponent(sessionMatch[1]),
     );
-    if (sessionId._tag === "Left") {
-      writeJson(response, 400, { error: sessionId.left.message });
+    if (sessionId._tag === "Failure") {
+      writeJson(response, 400, { error: sessionId.failure.message });
       return;
     }
-    const latest = store.latestFor(sessionId.right);
+    const latest = store.latestFor(sessionId.success);
     if (latest === null) {
       writeJson(response, 404, { error: "Unknown mirror session." });
       return;
@@ -96,14 +96,14 @@ export function handleAdminMirrorRequest(
     url.pathname,
   );
   if (request.method === "GET" && streamMatch?.[1] !== undefined) {
-    const sessionId = Schema.decodeUnknownEither(AdminMirrorSessionIdSchema)(
+    const sessionId = Schema.decodeUnknownResult(AdminMirrorSessionIdSchema)(
       decodeURIComponent(streamMatch[1]),
     );
-    if (sessionId._tag === "Left") {
-      writeJson(response, 400, { error: sessionId.left.message });
+    if (sessionId._tag === "Failure") {
+      writeJson(response, 400, { error: sessionId.failure.message });
       return;
     }
-    handleProjectionEvents(request, response, sessionId.right);
+    handleProjectionEvents(request, response, sessionId.success);
     return;
   }
 
@@ -136,12 +136,12 @@ async function handleProjectionPost(
   }
 
   const envelope = decodeAdminMirrorProjectionEnvelope(parsed);
-  if (envelope._tag === "Left") {
-    writeJson(response, 400, { error: envelope.left });
+  if (envelope._tag === "Failure") {
+    writeJson(response, 400, { error: envelope.failure });
     return;
   }
 
-  const accepted = store.publish(envelope.right);
+  const accepted = store.publish(envelope.success);
   writeJson(response, 202, { accepted });
 }
 
@@ -179,7 +179,7 @@ function handleProjectionEvents(
   );
 
   request.on("close", () => {
-    Effect.runFork(Fiber.interruptFork(fiber));
+    Effect.runFork(Fiber.interrupt(fiber));
   });
 }
 

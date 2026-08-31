@@ -1,4 +1,4 @@
-import { Either, Match, Option } from "effect";
+import { Match, Option, Result } from "effect";
 import { traverseValidation } from "./validation-algebra.ts";
 import {
   ABILITIES,
@@ -40,45 +40,45 @@ export const POINT_BUY_MAX_SCORE = 15;
 
 export function abilityScoreAssignment(
   scores: unknown,
-): Either.Either<
+): Result.Result<
   ParsedAbilityScoreAssignment,
   ReadonlyNonEmptyArray<AbilityScoreAssignmentIssue>
 > {
   if (typeof scores !== "object" || scores == null) {
-    return Either.left([{ tag: "abilityScoreAssignmentNotObject" }]);
+    return Result.fail([{ tag: "abilityScoreAssignmentNotObject" }]);
   }
 
   const fields = traverseValidation(ABILITIES, (ability) =>
-    Either.map(abilityScoreField(scores, ability), (score) => ({
+    Result.map(abilityScoreField(scores, ability), (score) => ({
       ability,
       score,
     })),
   );
-  if (Either.isLeft(fields)) return Either.left(fields.left);
+  if (Result.isFailure(fields)) return Result.fail(fields.failure);
   const scoresByAbility = Object.fromEntries(
-    fields.right.map(({ ability, score }) => [ability, score]),
+    fields.success.map(({ ability, score }) => [ability, score]),
   ) as ParsedAbilityScoreAssignment;
 
-  return Either.right(scoresByAbility);
+  return Result.succeed(scoresByAbility);
 }
 
 function abilityScoreField(
   scores: object,
   ability: Ability,
-): Either.Either<AbilityScoreValue, AbilityScoreAssignmentIssue> {
+): Result.Result<AbilityScoreValue, AbilityScoreAssignmentIssue> {
   const score: unknown = Reflect.get(scores, ability);
   if (typeof score !== "number") {
-    return Either.left({ tag: "missingNumericAbilityScore", ability });
+    return Result.fail({ tag: "missingNumericAbilityScore", ability });
   }
   if (!Number.isInteger(score) || score < 1 || score > 30) {
-    return Either.left({
+    return Result.fail({
       tag: "invalidAbilityScore",
       ability,
       value: score,
     });
   }
 
-  return Either.right(AbilityScore.make(score));
+  return Result.succeed(AbilityScore.make(score));
 }
 
 export function abilityScoreToMod(score: number): number {

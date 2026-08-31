@@ -189,6 +189,7 @@ function applyScenario(
 ): HitPointDamageProjection {
   const { state, target } = battleWithTarget(input);
   const afterDamage = applyBattleHitPointDamage({
+    saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
     state,
     target,
     damageAmount: input.damageAmount,

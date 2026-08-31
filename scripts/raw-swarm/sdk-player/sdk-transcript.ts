@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   GitShaSchema,
@@ -33,10 +33,12 @@ export type BattleEnvelopeSessionIdentityCheck = {
   readonly kind: "battleOnly" | "battleAndCurrentActor";
 };
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThan(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0)),
 );
 
 const HeaderCommonFields = {
@@ -44,10 +46,10 @@ const HeaderCommonFields = {
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,
-  consumerIsolation: Schema.Literal(
+  consumerIsolation: Schema.Literals([
     "permissionProfile",
     "instructionalFallback",
-  ),
+  ]),
   replaySupervisorSha256: HashSchema,
   scenarioSha256: HashSchema,
   scenarioReviewSha256: HashSchema,
@@ -62,7 +64,7 @@ const ReadyCharacterFields = {
   setupSha256: HashSchema,
   setupObservation: Schema.Unknown,
 } as const;
-export const SdkPlayerTranscriptHeaderSchema = Schema.Union(
+export const SdkPlayerTranscriptHeaderSchema = Schema.Union([
   Schema.Struct({
     ...ReadyCharacterFields,
     setupOutcome: Schema.Literal("ready"),
@@ -76,32 +78,30 @@ export const SdkPlayerTranscriptHeaderSchema = Schema.Union(
     setupOutcome: Schema.Literal("ready"),
     initialSession: Schema.Unknown,
     initialSessionSha256: HashSchema,
-    initialTurnProjection: Schema.optionalWith(Schema.Never, { exact: true }),
-    initialTurnProjectionSha256: Schema.optionalWith(Schema.Never, {
-      exact: true,
-    }),
+    initialTurnProjection: Schema.optionalKey(Schema.Never),
+    initialTurnProjectionSha256: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...ReadyCharacterFields,
     setupOutcome: Schema.Literal("obstructed"),
-    obstruction: Schema.NonEmptyTrimmedString,
+    obstruction: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
   Schema.Struct({
     ...HeaderCommonFields,
     characterOutcome: Schema.Literal("obstructed"),
-    obstruction: Schema.NonEmptyTrimmedString,
+    obstruction: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 const CallCommonFields = {
   type: Schema.Literal("sdk-call"),
   seq: PositiveIntegerSchema,
   continuation: PositiveIntegerSchema,
-  operation: Schema.Literal(...SDK_PLAYER_OPERATIONS),
+  operation: Schema.Literals(SDK_PLAYER_OPERATIONS),
   inputSession: Schema.Unknown,
   inputSessionSha256: HashSchema,
   input: Schema.Unknown,
 } as const;
-const CallSchema = Schema.Union(
+const CallSchema = Schema.Union([
   Schema.Struct({
     ...CallCommonFields,
     outcome: Schema.Literal("returned"),
@@ -113,13 +113,13 @@ const CallSchema = Schema.Union(
   Schema.Struct({
     ...CallCommonFields,
     outcome: Schema.Literal("threw"),
-    rejection: Schema.Literal("sessionConflict", "operationFailure"),
+    rejection: Schema.Literals(["sessionConflict", "operationFailure"]),
     error: Schema.Struct({
-      name: Schema.NonEmptyTrimmedString,
-      message: Schema.NonEmptyTrimmedString,
+      name: Schema.Trimmed.check(Schema.isNonEmpty()),
+      message: Schema.Trimmed.check(Schema.isNonEmpty()),
     }),
   }),
-);
+]);
 
 type SdkTranscriptHeader = Schema.Schema.Type<
   typeof SdkPlayerTranscriptHeaderSchema
@@ -271,16 +271,16 @@ function parseSdkCallSequence(input: {
   readonly initialSessionSha256: string;
 }): ParseResult<readonly SdkCallRecord[]> {
   const calls = input.records.map((record) =>
-    Schema.decodeUnknownEither(CallSchema, { onExcessProperty: "error" })(
+    Schema.decodeUnknownResult(CallSchema, { onExcessProperty: "error" })(
       record,
     ),
   );
-  const invalidCall = calls.find(Either.isLeft);
-  if (invalidCall !== undefined && Either.isLeft(invalidCall)) {
+  const invalidCall = calls.find(Result.isFailure);
+  if (invalidCall !== undefined && Result.isFailure(invalidCall)) {
     return { tag: "invalid", message: "SDK transcript has an invalid call." };
   }
   const decodedCalls = calls.flatMap((call) =>
-    Either.isRight(call) ? [call.right] : [],
+    Result.isSuccess(call) ? [call.success] : [],
   );
   let replayCursorSha256 = input.initialSessionSha256;
   for (const [index, call] of decodedCalls.entries()) {
@@ -363,25 +363,25 @@ export function parseSdkTranscript(
   records: readonly unknown[],
 ): ParseResult<ParsedSdkTranscript> {
   const [headerInput, ...callInputs] = records;
-  const header = Schema.decodeUnknownEither(SdkPlayerTranscriptHeaderSchema, {
+  const header = Schema.decodeUnknownResult(SdkPlayerTranscriptHeaderSchema, {
     onExcessProperty: "error",
   })(headerInput);
-  if (Either.isLeft(header)) {
+  if (Result.isFailure(header)) {
     return { tag: "invalid", message: "SDK transcript requires one header." };
   }
-  if (!isJsonValue(header.right.characterObservation)) {
+  if (!isJsonValue(header.success.characterObservation)) {
     return {
       tag: "invalid",
       message: "SDK transcript header has invalid character evidence.",
     };
   }
-  const characterObservation = header.right.characterObservation;
-  if (header.right.characterOutcome === "obstructed") {
+  const characterObservation = header.success.characterObservation;
+  if (header.success.characterOutcome === "obstructed") {
     return callInputs.length === 0
       ? {
           tag: "valid",
           value: {
-            header: { ...header.right, characterObservation },
+            header: { ...header.success, characterObservation },
             calls: [],
           },
         }
@@ -392,14 +392,14 @@ export function parseSdkTranscript(
         };
   }
   if (
-    header.right.setupOutcome === "ready" &&
-    (!isJsonValue(header.right.initialSession) ||
-      sha256Canonical(header.right.initialSession) !==
-        header.right.initialSessionSha256 ||
-      ("initialTurnProjection" in header.right &&
-        (!isJsonValue(header.right.initialTurnProjection) ||
-          sha256Canonical(header.right.initialTurnProjection) !==
-            header.right.initialTurnProjectionSha256)))
+    header.success.setupOutcome === "ready" &&
+    (!isJsonValue(header.success.initialSession) ||
+      sha256Canonical(header.success.initialSession) !==
+        header.success.initialSessionSha256 ||
+      ("initialTurnProjection" in header.success &&
+        (!isJsonValue(header.success.initialTurnProjection) ||
+          sha256Canonical(header.success.initialTurnProjection) !==
+            header.success.initialTurnProjectionSha256)))
   ) {
     return {
       tag: "invalid",
@@ -407,11 +407,11 @@ export function parseSdkTranscript(
         "SDK transcript header has mismatched initial session or recorded turn projection evidence.",
     };
   }
-  const setupObservation = header.right.setupObservation;
-  const characterSheets = header.right.characterSheets;
+  const setupObservation = header.success.setupObservation;
+  const characterSheets = header.success.characterSheets;
   if (
     !isJsonValue(characterSheets) ||
-    sha256Canonical(characterSheets) !== header.right.characterSheetsSha256 ||
+    sha256Canonical(characterSheets) !== header.success.characterSheetsSha256 ||
     !isJsonValue(setupObservation)
   ) {
     return {
@@ -419,7 +419,7 @@ export function parseSdkTranscript(
       message: "SDK transcript header has invalid character or setup evidence.",
     };
   }
-  if (header.right.setupOutcome === "obstructed") {
+  if (header.success.setupOutcome === "obstructed") {
     if (callInputs.length > 0) {
       return {
         tag: "invalid",
@@ -430,7 +430,7 @@ export function parseSdkTranscript(
       tag: "valid",
       value: {
         header: {
-          ...header.right,
+          ...header.success,
           characterObservation,
           characterSheets,
           setupObservation,
@@ -439,7 +439,7 @@ export function parseSdkTranscript(
       },
     };
   }
-  const initialSession = header.right.initialSession;
+  const initialSession = header.success.initialSession;
   if (!isJsonValue(initialSession)) {
     return {
       tag: "invalid",
@@ -448,14 +448,14 @@ export function parseSdkTranscript(
   }
   const calls = parseSdkCallSequence({
     records: callInputs,
-    initialSessionSha256: header.right.initialSessionSha256,
+    initialSessionSha256: header.success.initialSessionSha256,
   });
   if (calls.tag === "invalid") return calls;
   const {
     initialTurnProjection: _initialTurnProjection,
     initialTurnProjectionSha256: _initialTurnProjectionSha256,
     ...rawReadyHeaderCommon
-  } = header.right;
+  } = header.success;
   const commonReadyHeader = {
     ...rawReadyHeaderCommon,
     characterObservation,
@@ -464,10 +464,10 @@ export function parseSdkTranscript(
     setupObservation,
   };
   if (
-    "initialTurnProjection" in header.right &&
-    typeof header.right.initialTurnProjectionSha256 === "string"
+    "initialTurnProjection" in header.success &&
+    typeof header.success.initialTurnProjectionSha256 === "string"
   ) {
-    const initialTurnProjection = header.right.initialTurnProjection;
+    const initialTurnProjection = header.success.initialTurnProjection;
     if (!isJsonValue(initialTurnProjection)) {
       return {
         tag: "invalid",
@@ -480,7 +480,8 @@ export function parseSdkTranscript(
         header: {
           ...commonReadyHeader,
           initialTurnProjection,
-          initialTurnProjectionSha256: header.right.initialTurnProjectionSha256,
+          initialTurnProjectionSha256:
+            header.success.initialTurnProjectionSha256,
         },
         calls: calls.value,
       },

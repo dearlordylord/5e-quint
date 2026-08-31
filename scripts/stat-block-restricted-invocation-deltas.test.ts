@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { srdStatBlockCollection } from "../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 
 import {
   collectRestrictedInvocationClassificationRows,

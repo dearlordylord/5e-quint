@@ -1,7 +1,7 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.procedure
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { Match } from "effect";
 import {
   Integer,
@@ -41,6 +41,7 @@ import {
   type AuthoredExecutableProcedureEntry,
   type BattleStatBlockUnsupportedProcedureBinding,
 } from "./procedure-admission/stat-block-procedure-execution-decision.ts";
+import { mapReadonlyNonEmptyArray } from "./readonly-non-empty-array.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
@@ -144,38 +145,38 @@ export function battleStatBlockProjectionFailureMessage(
  */
 export function projectAuthoredStatBlock(
   record: StatBlockRecord,
-): Either.Either<
+): Result.Result<
   AuthoredStatBlockProjection,
   BattleStatBlockProjectionFailure
 > {
   const source = record.statBlock;
   const scalarProjection = authoredStatBlockScalarProjection(source);
-  if (Either.isLeft(scalarProjection)) {
-    return Either.left(scalarProjection.left);
+  if (Result.isFailure(scalarProjection)) {
+    return Result.fail(scalarProjection.failure);
   }
   const resources = runtimeResources(source.resources);
-  if (Either.isLeft(resources)) {
-    return Either.left(invalidResourceLimitFailure(resources.left));
+  if (Result.isFailure(resources)) {
+    return Result.fail(invalidResourceLimitFailure(resources.failure));
   }
   const admittedProcedures = admittedProcedureProjections(source);
-  if (Either.isLeft(admittedProcedures)) {
-    return Either.left(
-      unsupportedProcedureBindingFailure(admittedProcedures.left),
+  if (Result.isFailure(admittedProcedures)) {
+    return Result.fail(
+      unsupportedProcedureBindingFailure(admittedProcedures.failure),
     );
   }
-  const admitted = admittedProcedures.right;
+  const admitted = admittedProcedures.success;
   const runtime = runtimeProjection(
     record,
     source,
-    scalarProjection.right.size,
-    scalarProjection.right.speeds,
-    resources.right,
+    scalarProjection.success.size,
+    scalarProjection.success.speeds,
+    resources.success,
     admitted.flatMap((projection) =>
       projection.kind === "executable" ? [projection.runtime] : [],
     ),
-    scalarProjection.right.legendaryActionUses,
+    scalarProjection.success.legendaryActionUses,
   );
-  return Either.right({
+  return Result.succeed({
     runtime,
     presentation: presentationProjection(record, admitted),
   });
@@ -189,35 +190,35 @@ type AuthoredStatBlockScalarProjection = {
 
 function authoredStatBlockScalarProjection(
   source: StandaloneStatBlock,
-): Either.Either<
+): Result.Result<
   AuthoredStatBlockScalarProjection,
   BattleStatBlockProjectionFailure
 > {
   const size = literalSize(source.size);
-  if (size === null) return Either.left(failure("nonLiteralSize"));
-  const concreteSpeeds = source.speeds.filter(isStandaloneCreatureSpeed);
-  if (concreteSpeeds.length !== source.speeds.length) {
-    return Either.left(failure("unresolvedGmSpeedChoice"));
+  if (size === null) return Result.fail(failure("nonLiteralSize"));
+  if (!areStandaloneCreatureSpeeds(source.speeds)) {
+    return Result.fail(failure("unresolvedGmSpeedChoice"));
   }
+  const concreteSpeeds = source.speeds;
   if (concreteSpeeds.some((speed) => "availability" in speed)) {
-    return Either.left(failure("unsupportedFormRestrictedSpeed"));
+    return Result.fail(failure("unsupportedFormRestrictedSpeed"));
   }
   if (
     source.immunities !== undefined &&
     "qualifiedConditions" in source.immunities
   ) {
-    return Either.left(failure("unsupportedQualifiedConditionImmunity"));
+    return Result.fail(failure("unsupportedQualifiedConditionImmunity"));
   }
   const legendaryActionUses = authoredLegendaryActionUses(
     source.legendaryActions?.uses,
   );
-  if (Either.isLeft(legendaryActionUses)) {
-    return Either.left(legendaryActionUses.left);
+  if (Result.isFailure(legendaryActionUses)) {
+    return Result.fail(legendaryActionUses.failure);
   }
-  return Either.right({
+  return Result.succeed({
     size,
-    speeds: nonEmptyRuntimeValues(concreteSpeeds.map(runtimeSpeed)),
-    legendaryActionUses: legendaryActionUses.right,
+    speeds: mapReadonlyNonEmptyArray(concreteSpeeds, runtimeSpeed),
+    legendaryActionUses: legendaryActionUses.success,
   });
 }
 
@@ -282,21 +283,21 @@ function runtimeStatBlockProjection(
 export function projectAuthoredStatBlockWithCreatureType(
   record: StatBlockRecord,
   creatureType: BattleStatBlockExecutionSource["statBlock"]["creatureType"],
-): Either.Either<
+): Result.Result<
   AuthoredStatBlockProjection,
   BattleStatBlockProjectionFailure
 > {
   const projected = projectAuthoredStatBlock(record);
-  if (Either.isLeft(projected)) return projected;
-  return Either.right({
+  if (Result.isFailure(projected)) return projected;
+  return Result.succeed({
     runtime: {
-      ...projected.right.runtime,
+      ...projected.success.runtime,
       statBlock: {
-        ...projected.right.runtime.statBlock,
+        ...projected.success.runtime.statBlock,
         creatureType,
       },
     },
-    presentation: projected.right.presentation,
+    presentation: projected.success.presentation,
   });
 }
 
@@ -358,7 +359,7 @@ type AdmittedStatBlockProcedureProjection =
 
 function admittedProcedureProjections(
   source: StandaloneStatBlock,
-): Either.Either<
+): Result.Result<
   readonly AdmittedStatBlockProcedureProjection[],
   ReadonlyNonEmptyArray<BattleStatBlockUnsupportedProcedureBinding>
 > {
@@ -375,17 +376,17 @@ function admittedProcedureProjections(
         entry,
         supportedActionAttackOrdinals,
       );
-      if (Either.isLeft(projected)) {
-        issues.push(projected.left);
+      if (Result.isFailure(projected)) {
+        issues.push(projected.failure);
       } else {
-        projections.push(projected.right);
+        projections.push(projected.success);
       }
     }
   }
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
-    ? Either.right(projections)
-    : Either.left([firstIssue, ...remainingIssues]);
+    ? Result.succeed(projections)
+    : Result.fail([firstIssue, ...remainingIssues]);
 }
 
 type AuthoredProcedureSection = {
@@ -412,7 +413,7 @@ function admittedProcedureProjection(
   section: StatBlockActionProjectionSection,
   entry: StatBlockProcedureEntry,
   supportedActionAttackOrdinals: ReadonlySet<StatBlockProcedureOrdinal>,
-): Either.Either<
+): Result.Result<
   AdmittedStatBlockProcedureProjection,
   BattleStatBlockUnsupportedProcedureBinding
 > {
@@ -425,18 +426,18 @@ function admittedProcedureProjection(
     ),
   ).pipe(
     Match.when({ kind: "textOnly" }, ({ entry: textOnlyEntry }) =>
-      Either.right({
+      Result.succeed({
         kind: "textOnly" as const,
         presentation: textOnlyProcedurePresentation(section, textOnlyEntry),
       }),
     ),
     Match.when({ kind: "missingOwner" }, () =>
-      Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
+      Result.fail(procedureBindingIssue(section, entry.procedureOrdinal)),
     ),
     Match.when(
       { kind: "executable", procedureKind: "attack_roll" },
       ({ entry: executableEntry, runtime }) =>
-        Either.right({
+        Result.succeed({
           kind: "executable" as const,
           runtime,
           presentation: attackProcedurePresentation(
@@ -449,7 +450,7 @@ function admittedProcedureProjection(
     Match.when(
       { kind: "executable", procedureKind: "multiattack" },
       ({ entry: executableEntry, runtime }) =>
-        Either.right({
+        Result.succeed({
           kind: "executable" as const,
           runtime,
           presentation: multiattackProcedurePresentation(
@@ -462,7 +463,7 @@ function admittedProcedureProjection(
     Match.when(
       { kind: "executable", procedureKind: "action_option" },
       ({ entry: executableEntry, runtime }) =>
-        Either.right({
+        Result.succeed({
           kind: "executable" as const,
           runtime,
           presentation: bonusActionProcedurePresentation(
@@ -475,7 +476,7 @@ function admittedProcedureProjection(
     Match.when(
       { kind: "executable", procedureKind: "spellcasting" },
       ({ entry: executableEntry, runtime }) =>
-        Either.right({
+        Result.succeed({
           kind: "executable" as const,
           runtime,
           presentation: spellcastingProcedurePresentation(
@@ -603,26 +604,26 @@ function procedurePresentationBase(
 
 function runtimeResources(
   resources: NonNullable<StandaloneStatBlock["resources"]> | undefined,
-): Either.Either<
+): Result.Result<
   readonly BattleStatBlockRuntimeResource[],
   ReadonlyNonEmptyArray<BattleStatBlockInvalidResourceDeclaration>
 > {
-  if (resources === undefined) return Either.right([]);
+  if (resources === undefined) return Result.succeed([]);
   const projected: BattleStatBlockRuntimeResource[] = [];
   const issues: BattleStatBlockInvalidResourceDeclaration[] = [];
   for (const resource of resources) {
     const parsed = parseStatBlockRuntimeResource(resource);
-    if (Either.isLeft(parsed)) {
-      issues.push({ ordinal: resource.ordinal, reason: parsed.left });
+    if (Result.isFailure(parsed)) {
+      issues.push({ ordinal: resource.ordinal, reason: parsed.failure });
     } else {
-      projected.push(parsed.right);
+      projected.push(parsed.success);
     }
   }
   const [firstIssue, ...remainingIssues] = issues;
   if (firstIssue !== undefined) {
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
-  return Either.right(projected);
+  return Result.succeed(projected);
 }
 
 function runtimeSpeed(
@@ -631,7 +632,9 @@ function runtimeSpeed(
   return {
     kind: speed.kind,
     feet: speed.feet,
-    ...(speed.kind === "fly" && speed.hover === true ? { hover: true } : {}),
+    ...(speed.kind === "fly" && "hover" in speed && speed.hover === true
+      ? { hover: true }
+      : {}),
   };
 }
 
@@ -647,6 +650,12 @@ function isStandaloneCreatureSpeed(
     Match.when({ kind: "swim" }, () => true),
     Match.exhaustive,
   );
+}
+
+function areStandaloneCreatureSpeeds(
+  speeds: ReadonlyNonEmptyArray<StandaloneStatBlockSpeedEntry>,
+): speeds is ReadonlyNonEmptyArray<StandaloneCreatureSpeed> {
+  return speeds.every(isStandaloneCreatureSpeed);
 }
 
 function runtimeSense(
@@ -669,31 +678,20 @@ function authoredLegendaryActionUses(
   uses:
     | NonNullable<StandaloneStatBlock["legendaryActions"]>["uses"]
     | undefined,
-): Either.Either<
+): Result.Result<
   BattleStatBlockExecutionSource["legendaryActionUses"],
   BattleStatBlockProjectionFailure
 > {
-  if (uses === undefined) return Either.right(undefined);
+  if (uses === undefined) return Result.succeed(undefined);
   return Match.value(uses).pipe(
     Match.when({ kind: "fixed" }, ({ uses: fixedUses }) =>
-      Either.right(PositiveInteger(fixedUses)),
+      Result.succeed(PositiveInteger(fixedUses)),
     ),
     Match.when({ kind: "lair_bonus" }, () =>
-      Either.left(failure("unsupportedLairConditionalLegendaryActionUses")),
+      Result.fail(failure("unsupportedLairConditionalLegendaryActionUses")),
     ),
     Match.exhaustive,
   );
-}
-
-function nonEmptyRuntimeValues<T>(
-  values: readonly (T | null)[],
-): ReadonlyNonEmptyArray<T> {
-  const present = values.filter((value): value is T => value !== null);
-  const [first, ...rest] = present;
-  if (first === undefined) {
-    throw new Error("Projection requires a non-empty runtime collection.");
-  }
-  return [first, ...rest];
 }
 
 function failure(

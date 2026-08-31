@@ -6,7 +6,7 @@ import {
   type BattlePresentedCheckpointFrontierEnvelope,
   type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import {
@@ -353,14 +353,14 @@ async function runtimeProjection(
     const session = root.sessionStore.battleSession;
     if (session === null) return null;
     const envelope = battlePresentationEnvelopeForSession(root, session);
-    if (Either.isLeft(envelope)) {
+    if (Result.isFailure(envelope)) {
       throw new Error("Expected the live Battle to have a presentation.");
     }
-    return { session, envelope: envelope.right };
+    return { session, envelope: envelope.success };
   });
-  if (Either.isLeft(result) || result.right.value === null) {
+  if (Result.isFailure(result) || result.success.value === null) {
     throw new Error("Expected the live MCP Play Session to contain a Battle.");
   }
-  const { session, envelope } = result.right.value;
+  const { session, envelope } = result.success.value;
   return { session, runtimeEnvelope: envelope };
 }

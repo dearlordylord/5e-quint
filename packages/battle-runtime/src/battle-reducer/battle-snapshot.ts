@@ -1,6 +1,6 @@
 import { optionalProperty } from "../optional-property.ts";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { Match } from "effect";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
@@ -8,7 +8,7 @@ import type {
   BattleReadyResponseSnapshot,
 } from "../battle-subjects.ts";
 import type { BattleCompanionSnapshot } from "../companion-state.ts";
-import { battleCompanionEntries } from "../find-familiar-state.ts";
+import { battleCompanionEntries } from "../spawned-companion-state.ts";
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
@@ -79,6 +79,7 @@ function battleSnapshotProjectionFromCommittedState(state: BattleState): {
         ];
       },
     ),
+    storedLightEmitters: state.lightEmitters,
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
     turn: battleTurnSnapshot(state),
@@ -163,7 +164,7 @@ function presentFamiliarSnapshotFacts(
   const combatant = state.combatants.get(familiarId);
   if (combatant?.origin.kind !== "statBlock") {
     throw new Error(
-      "Present Find Familiar snapshot requires a Stat Block combatant.",
+      "Present spawned-companion snapshot requires a Stat Block combatant.",
     );
   }
   return {
@@ -178,7 +179,7 @@ export function interruptDecisionFrontier(
   const frame = currentInterruptCheckpoint(state);
   return frame === null ||
     frame.activeInterrupt !== undefined ||
-    !isNonEmptyReadonlyArray(frame.choices)
+    !isReadonlyArrayNonEmpty(frame.choices)
     ? null
     : {
         kind: "interruptDecision",

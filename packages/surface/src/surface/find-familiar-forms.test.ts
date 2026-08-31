@@ -1,19 +1,19 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  findFamiliarFormEligibilityForSpell,
-  isFindFamiliarCreatureTypeOverride,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
-  resolveFindFamiliarForm,
-  resolveFindFamiliarSelectedForm,
-  resolvePactOfTheChainFindFamiliarForm,
+  spawnedCompanionFormEligibilityForSpell,
+  isSpawnedCompanionCreatureTypeOverride,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  resolveSpawnedCompanionForm,
+  resolveSpawnedCompanionSelectedForm,
+  resolvePactOfTheChainSpawnedCompanionForm,
 } from "./find-familiar-forms.ts";
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { buildStatBlockCatalog } from "./stat-block-catalog.ts";
 import type { SpellRecord } from "./types.ts";
 import { srdUnitCollection } from "./unit-catalog.ts";
 
-function findFamiliarSpell(): SpellRecord {
+function spawnedCompanionSpell(): SpellRecord {
   for (const unit of srdUnitCollection.units) {
     if (
       unit.kind === "spell" &&
@@ -38,11 +38,11 @@ function statBlockCatalog() {
 
 describe("Find Familiar form selection", () => {
   test("admits the SRD form catalog and resolves each selection family", () => {
-    const spell = findFamiliarSpell();
+    const spell = spawnedCompanionSpell();
     const catalog = statBlockCatalog();
-    const eligibility = findFamiliarFormEligibilityForSpell(spell);
+    const eligibility = spawnedCompanionFormEligibilityForSpell(spell);
     const pactEligibility =
-      pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
+      pactOfTheChainSpawnedCompanionFormEligibilityForSpell(spell);
     expect(eligibility).not.toBeNull();
     expect(pactEligibility).not.toBeNull();
     if (eligibility === null || pactEligibility === null) return;
@@ -62,7 +62,7 @@ describe("Find Familiar form selection", () => {
     }
 
     expect(
-      resolveFindFamiliarForm({
+      resolveSpawnedCompanionForm({
         catalog,
         eligibility,
         selection: {
@@ -74,7 +74,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "resolved" });
 
     expect(
-      resolveFindFamiliarSelectedForm({
+      resolveSpawnedCompanionSelectedForm({
         catalog,
         eligibility,
         selection: {
@@ -86,7 +86,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "resolved" });
 
     expect(
-      resolvePactOfTheChainFindFamiliarForm({
+      resolvePactOfTheChainSpawnedCompanionForm({
         catalog,
         eligibility: pactEligibility,
         selection: {
@@ -98,7 +98,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "resolved" });
 
     expect(
-      resolvePactOfTheChainFindFamiliarForm({
+      resolvePactOfTheChainSpawnedCompanionForm({
         catalog,
         eligibility: pactEligibility,
         selection: {
@@ -131,22 +131,22 @@ describe("Find Familiar form selection", () => {
       return;
     }
 
-    expect(findFamiliarFormEligibilityForSpell(unrelatedSpell)).toBeNull();
+    expect(spawnedCompanionFormEligibilityForSpell(unrelatedSpell)).toBeNull();
     expect(
-      findFamiliarFormEligibilityForSpell(otherSpawnedCreature),
+      spawnedCompanionFormEligibilityForSpell(otherSpawnedCreature),
     ).toBeNull();
     expect(
-      pactOfTheChainFindFamiliarFormEligibilityForSpell(unrelatedSpell),
+      pactOfTheChainSpawnedCompanionFormEligibilityForSpell(unrelatedSpell),
     ).toBeNull();
   });
 
   test("reports ineligible choices and missing or non-CR-0-Beast records", () => {
-    const spell = findFamiliarSpell();
+    const spell = spawnedCompanionSpell();
     const catalog = statBlockCatalog();
     const emptyCatalogResult = buildStatBlockCatalog({ collections: [] });
-    const eligibility = findFamiliarFormEligibilityForSpell(spell);
+    const eligibility = spawnedCompanionFormEligibilityForSpell(spell);
     const pactEligibility =
-      pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
+      pactOfTheChainSpawnedCompanionFormEligibilityForSpell(spell);
     expect(emptyCatalogResult.tag).toBe("ok");
     expect(eligibility).not.toBeNull();
     expect(pactEligibility).not.toBeNull();
@@ -182,7 +182,7 @@ describe("Find Familiar form selection", () => {
     }
 
     expect(
-      resolveFindFamiliarForm({
+      resolveSpawnedCompanionForm({
         catalog,
         eligibility: {
           ...eligibility,
@@ -197,7 +197,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "issue" });
 
     expect(
-      resolveFindFamiliarSelectedForm({
+      resolveSpawnedCompanionSelectedForm({
         catalog,
         eligibility,
         selection: {
@@ -209,7 +209,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "issue" });
 
     expect(
-      resolveFindFamiliarSelectedForm({
+      resolveSpawnedCompanionSelectedForm({
         catalog: emptyCatalogResult.catalog,
         eligibility,
         selection: {
@@ -221,7 +221,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "issue" });
 
     expect(
-      resolveFindFamiliarSelectedForm({
+      resolveSpawnedCompanionSelectedForm({
         catalog,
         eligibility,
         selection: {
@@ -233,7 +233,7 @@ describe("Find Familiar form selection", () => {
     ).toMatchObject({ tag: "issue" });
 
     expect(
-      resolvePactOfTheChainFindFamiliarForm({
+      resolvePactOfTheChainSpawnedCompanionForm({
         catalog: emptyCatalogResult.catalog,
         eligibility: pactEligibility,
         selection: {
@@ -246,8 +246,8 @@ describe("Find Familiar form selection", () => {
   });
 
   test("recognizes only admitted creature-type overrides", () => {
-    expect(isFindFamiliarCreatureTypeOverride("celestial")).toBe(true);
-    expect(isFindFamiliarCreatureTypeOverride("beast")).toBe(false);
-    expect(isFindFamiliarCreatureTypeOverride(null)).toBe(false);
+    expect(isSpawnedCompanionCreatureTypeOverride("celestial")).toBe(true);
+    expect(isSpawnedCompanionCreatureTypeOverride("beast")).toBe(false);
+    expect(isSpawnedCompanionCreatureTypeOverride(null)).toBe(false);
   });
 });

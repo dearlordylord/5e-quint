@@ -129,7 +129,12 @@ let plagueArea =
 let Operation : Type =
       { trigger : { kind : Text }
       , effect : Effect
-      , usageLimit : Optional { kind : Text }
+      , usageLimit : Optional { kind : Text, limitGroup : Optional Text }
+      }
+
+let sharedSaveLimit =
+      { kind = "once_per_turn"
+      , limitGroup = Some "insect_plague_save_per_turn"
       }
 
 let insectPlague =
@@ -155,19 +160,21 @@ let insectPlague =
           , attachment = plagueArea
           , initialPhase =
               plagueSave
-                //  { attachment = plagueArea }
+                //  { attachment = plagueArea
+                    , usageLimit = sharedSaveLimit
+                    }
           , operations =
               [ { trigger = { kind = "passive" }
                 , effect = atomEffect areaTraits
-                , usageLimit = None { kind : Text }
+                , usageLimit = None { kind : Text, limitGroup : Optional Text }
                 }
               , { trigger = { kind = "on_creature_enters_area" }
                 , effect = plagueSave
-                , usageLimit = Some { kind = "once_per_turn" }
+                , usageLimit = Some sharedSaveLimit
                 }
               , { trigger = { kind = "on_creature_ends_turn_in_area" }
                 , effect = plagueSave
-                , usageLimit = Some { kind = "once_per_turn" }
+                , usageLimit = Some sharedSaveLimit
                 }
               ] : List Operation
           }

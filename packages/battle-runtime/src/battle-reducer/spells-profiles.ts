@@ -132,7 +132,7 @@ export function admittedSpellActs(
         : [],
     ),
     ...admittedSpellSources.flatMap((spell) =>
-      supportedPreparedHellishRebukeReactionSpellProfile(spell, [
+      supportedPreparedAfterDamageReactionSaveSpellProfile(spell, [
         ...admissionContext.spellCastOptions,
         ...(spell.mechanics.level === 0
           ? []
@@ -159,7 +159,7 @@ export function admittedSpellActs(
   return admittedInvocations;
 }
 
-export function supportedPreparedHellishRebukeReactionSpellProfile(
+export function supportedPreparedAfterDamageReactionSaveSpellProfile(
   spell: BattleSpellAdmissionSource,
   spellSlots: readonly import("./spell-procedure-profiles/profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {

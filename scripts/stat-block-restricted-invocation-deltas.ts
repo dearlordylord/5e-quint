@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { Either, Schema } from "effect";
-import { srdStatBlockCollection } from "../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
+import { Result, Schema } from "effect";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS,
   StatBlockSpellInvocationDeltasSchema,
@@ -135,9 +135,13 @@ type ProcedureSection =
   | "reactions"
   | "legendaryActions";
 
+type ProcedureEntry = NonNullable<
+  SrdStatBlockRecord["statBlock"]["actions"]
+>[number];
+
 function procedureSections(record: SrdStatBlockRecord): readonly {
   readonly section: ProcedureSection;
-  readonly entries: NonNullable<SrdStatBlockRecord["statBlock"]["actions"]>;
+  readonly entries: readonly ProcedureEntry[];
 }[] {
   return [
     { section: "actions", entries: record.statBlock.actions ?? [] },
@@ -436,7 +440,7 @@ function runSelfTest(repositoryRoot: string): boolean {
     },
     rows,
   });
-  const duplicateDelta = Schema.decodeUnknownEither(
+  const duplicateDelta = Schema.decodeUnknownResult(
     StatBlockSpellInvocationDeltasSchema,
   )([
     { kind: "target_limit", target: "self" },
@@ -451,7 +455,7 @@ function runSelfTest(repositoryRoot: string): boolean {
     duplicateBijection.issues.some(
       ({ kind }) => kind === "duplicateReconciliationRow",
     ) &&
-    Either.isLeft(duplicateDelta)
+    Result.isFailure(duplicateDelta)
   );
 }
 

@@ -6,9 +6,70 @@ module battleRuntimeObscuringAreaEffectsTests {
   import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
-  import battleRuntimeObscuringAreaEffects.* from "./battle-runtime-obscuring-area-effects"
+  import battleRuntimeMagicalDarknessPointOrigin.* from "./battle-runtime-magical-darkness-point-origin"
+
+  // Named SRD proof instantiation for the identity-free persistent-area core.
+  pure val fogCloudDurationTicks = 600
+  pure val fogCloudAreaId = 2
+  pure val fogCloudBaseRadiusFeet = 20
+  pure val fogCloudRadiusFeetPerSlotAboveFirst = 20
+
+  pure def fogCloudRadiusFeet(slotLevel: int): int =
+    persistentAreaSlotScaledDistanceFeet(
+      slotLevel,
+      1,
+      fogCloudBaseRadiusFeet,
+      fogCloudRadiusFeetPerSlotAboveFirst,
+    )
+
+  pure def activeEffectsWithoutFogCloudObscurement(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FogCloudObscurement(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def resolveFogCloud(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 1)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutFogCloudObscurement(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(FogCloudObscurement({
+              areaId: areaId,
+              radiusFeet: fogCloudRadiusFeet(slotLevel),
+              durationTicks: fogCloudDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def fogCloudObscurementActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | FogCloudObscurement(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def disperseFogCloudByStrongWind(state: BattleState, areaId: int): BattleState =
+    if (fogCloudObscurementActive(state, areaId))
+      breakConcentrationSpellEffects(state, Fighter)
+    else
+      state
+
   run test_fog_cloud_records_heavily_obscured_area_and_concentration = {
     val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
     all {
@@ -153,7 +214,7 @@ module battleRuntimeObscuringAreaEffectsTests {
       )
     val broken = breakConcentrationSpellEffects(resolved, Fighter)
     all {
-      assert(antimagicFieldOngoingSpellSuppressionActive(resolved, antimagicFieldAreaId)),
+      assert(magicSuppressionOngoingSpellEffectActive(resolved, antimagicFieldAreaId)),
       assert(resolved.lightEmitters == Set(continualFlameObjectEmitter(LightObjectTarget))),
       assert(battleRuntimeLightEmitters(resolved) == Set()),
       assert(battleRuntimeLightEmitters(broken) == Set(continualFlameObjectEmitter(LightObjectTarget))),
@@ -170,7 +231,7 @@ module battleRuntimeObscuringAreaEffectsTests {
         7,
       )
     all {
-      assert(not(antimagicFieldOngoingSpellSuppressionActive(resolved, antimagicFieldAreaId))),
+      assert(not(magicSuppressionOngoingSpellEffectActive(resolved, antimagicFieldAreaId))),
       assert(not(battleActorHasCommittedSpellSlotUse(resolved, Fighter))),
     }
   }

@@ -111,7 +111,7 @@ type SpikeGrowthRuntimeState = {
 
 type SpikeGrowthHazardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spikeGrowthHazard" }
+  { readonly kind: "areaMovementDistanceDamage" }
 >;
 
 const driverSchema = {
@@ -338,14 +338,14 @@ function discoverMovementDamage(
     spellCasterId,
   ).activeEffects.find(
     (effect): effect is SpikeGrowthHazardEffect =>
-      effect.kind === "spikeGrowthHazard" &&
+      effect.kind === "areaMovementDistanceDamage" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === spikeGrowthAreaId,
   );
   if (hazard === undefined) {
     throw new Error("Expected active Spike Growth hazard.");
   }
-  const fill = spikeGrowthMovementFill(movement, hazard.sourceProcedureRef);
+  const fill = spikeGrowthMovementFill(movement, hazard);
   const result = resolveBattleSubject({
     state: state.battle,
     subject,
@@ -416,7 +416,7 @@ function breakSpikeGrowthConcentration(
 
 function spikeGrowthMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  sourceProcedureRef: SpikeGrowthHazardEffect["sourceProcedureRef"],
+  hazard: SpikeGrowthHazardEffect,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
     movementCostFeet,
@@ -425,9 +425,10 @@ function spikeGrowthMovementFill(
       kind: "areaDifficultTerrain",
       sources: [
         {
-          kind: "spikeGrowthHazard",
+          kind: "areaMovementDistanceDamage",
+          effectRef: hazard.effectRef,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef,
+          sourceProcedureRef: hazard.sourceProcedureRef,
           areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(damageDistanceFeet),
         },
@@ -445,7 +446,7 @@ function spikeGrowthProjection(
   const target = requireCombatant(state.battle, spellTargetId);
   const hazard = caster.activeEffects.find(
     (effect): effect is SpikeGrowthHazardEffect =>
-      effect.kind === "spikeGrowthHazard" &&
+      effect.kind === "areaMovementDistanceDamage" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === spikeGrowthAreaId,
   );

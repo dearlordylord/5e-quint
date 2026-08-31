@@ -7,14 +7,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castPasswall,
   characterSheetId,
   characterSheetPasswallSurfaceId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -89,7 +89,7 @@ describe("Character Sheet runtime / Passwall", () => {
   });
 
   test("Passwall spends a level-5 prepared spell slot and returns a table-facing passage contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castPasswall({
         sheet: passwallWizardSheet({
           preparedSpells: ["passwall"],
@@ -134,9 +134,9 @@ describe("Character Sheet runtime / Passwall", () => {
       surface: passwallSurface,
       dimensions: { ...passwallDimensions, widthFeet: 6 },
     });
-    expect(Either.isLeft(overWide)).toBe(true);
-    if (Either.isLeft(overWide)) {
-      expect(overWide.left.message).toBe(
+    expect(Result.isFailure(overWide)).toBe(true);
+    if (Result.isFailure(overWide)) {
+      expect(overWide.failure.message).toBe(
         "Passwall width must be at most 5 feet.",
       );
     }
@@ -151,9 +151,9 @@ describe("Character Sheet runtime / Passwall", () => {
       dimensions: passwallDimensions,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Passwall requires prepared class Spell Access.",
       );
     }
@@ -162,7 +162,7 @@ describe("Character Sheet runtime / Passwall", () => {
 
 const passwallSelectedIdentityActions = {
   doCastPasswall: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castPasswall({
         sheet: passwallWizardSheet({
           preparedSpells: ["passwall"],
@@ -196,7 +196,7 @@ const passwallSelectedIdentityActions = {
 >;
 
 const passwallSurface = {
-  surfaceId: requireRight(
+  surfaceId: requireSuccess(
     characterSheetPasswallSurfaceId("surface:visible-stone-wall"),
   ),
   material: "stone",
@@ -229,7 +229,7 @@ function passwallWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:passwall-wizard-9"),
       build: {

@@ -8,30 +8,50 @@ import { Match } from "effect";
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
-  BattleCloudkillAreaMembershipTrigger,
-  BattleInsectPlagueAreaMembershipTrigger,
+  BattleTranslatingPersistentAreaSaveDamageTrigger as BattleTranslatingPersistentAreaMembershipTrigger,
+  BattleStationaryPersistentAreaSaveDamageTrigger as BattleStationaryPersistentAreaMembershipTrigger,
   BattleSubject,
 } from "../battle-subjects.ts";
 import type {
   BattleActiveEffect,
-  BattleCloudkillAreaHazardDamageRollHole,
-  BattleCloudkillAreaHazardSavingThrowOutcomeHole,
-  BattleCloudkillAreaHazardTrigger,
+  BattleTranslatingPersistentAreaSaveDamageRollHole,
+  BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole,
+  BattleTranslatingPersistentAreaSaveDamageTrigger,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
+  BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
-  BattleInsectPlagueAreaHazardDamageRollHole,
-  BattleInsectPlagueAreaHazardSavingThrowOutcomeHole,
-  BattleInsectPlagueAreaHazardTrigger,
+  BattleHandledInterruptOccurrence,
+  BattleHoleId,
+  BattleStationaryPersistentAreaSaveDamageRollHole,
+  BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole,
+  BattleStationaryPersistentAreaSaveDamageTrigger,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSavingThrowOutcome,
   BattleState,
+  BattleTurnAnchor,
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
-import type { BattleAreaId, CombatantId } from "../identity.ts";
+import type { BattleEffectExecutionRef, CombatantId } from "../identity.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
+import type {
+  SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
+  StationaryPersistentAreaSaveDamageSpellProcedureExecution,
+} from "../procedure-execution/spell-procedure-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  concentrationSavingThrowHole,
+  resolveSaveGatedConditionDamageRepeatSave,
+} from "./damage-apply.ts";
+import {
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
+} from "./attack-damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 import {
   rolledDiceFillForHole,
   savingThrowOutcomeFillForHole,
@@ -40,8 +60,14 @@ import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  markCloudkillAreaHazardSavedThisTurn,
-  markInsectPlagueAreaHazardSavedThisTurn,
+  projectReplayChildResult,
+  replayParentContinuationFor,
+  replayParentProcedureAt,
+  type ReplayParentContinuation,
+} from "./replay-continuation.ts";
+import {
+  markTranslatingPersistentAreaAreaHazardSavedThisTurn,
+  markStationaryPersistentAreaAreaHazardSavedThisTurn,
 } from "./spells-active-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -50,79 +76,199 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 
-type InsectPlagueAreaHazardEffect = Extract<
+type PersistentAreaSaveDamageOccurrence = Extract<
   BattleActiveEffect,
-  { readonly kind: "insectPlagueAreaHazard" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly appearanceOccurrence: BattleTurnAnchor;
+    readonly savedThisTurn: readonly CombatantId[];
+  }
 >;
 
-type CloudkillAreaHazardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "cloudkillAreaHazard" }
->;
-
-type InsectPlagueResolutionInput = BattleResolutionInput & {
-  readonly subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "insectPlagueAreaHazardSave";
-    }
-  >;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+type StationaryPersistentAreaAreaHazardEffect = Extract<
+  PersistentAreaSaveDamageOccurrence,
+  { readonly lifecycle: "stationary" }
+> & {
+  readonly save: {
+    readonly ability: StationaryPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+    readonly dc: StationaryPersistentAreaSaveDamageSpellProcedureExecution["dc"];
+  };
+  readonly damage: StationaryPersistentAreaSaveDamageSpellProcedureExecution["damage"];
 };
 
-type CloudkillResolutionInput = BattleResolutionInput & {
+export type TranslatingPersistentAreaAreaHazardEffect = Extract<
+  PersistentAreaSaveDamageOccurrence,
+  { readonly lifecycle: "sourceTurnTranslation" }
+> & {
+  readonly save: {
+    readonly ability: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+    readonly dc: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["dc"];
+  };
+  readonly damage: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+};
+
+export type TranslatingPersistentAreaMovementSaveDamageRequest = {
+  readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+  readonly subject: TranslatingPersistentAreaResolutionInput["subject"];
+};
+
+type PersistentAreaResolvedHoleIds = {
+  readonly save: BattleHoleId;
+  readonly damage: BattleHoleId;
+  readonly concentration: BattleHoleId | null;
+  readonly disposition: BattleHoleId | null;
+  readonly damageRepeatSaves: readonly BattleHoleId[];
+};
+
+type PersistentAreaResolutionContext =
+  | { readonly kind: "standalone" }
+  | {
+      readonly kind: "replayParent";
+      readonly parent: ReplayParentContinuation;
+      readonly replayPlan: TranslatingPersistentAreaMovementReplayPlan;
+      readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
+    };
+
+type PersistentAreaSaveDamageStep =
+  | {
+      readonly tag: "resolved";
+      readonly state: BattleState;
+      readonly holeIds: PersistentAreaResolvedHoleIds;
+      readonly matchedHandledPosition: boolean;
+    }
+  | {
+      readonly tag: "result";
+      readonly result: BattleResolutionResult;
+    };
+
+export type TranslatingPersistentAreaMovementSaveDamageSequenceResult =
+  | {
+      readonly tag: "resolved";
+      readonly state: BattleState;
+      readonly saveHoleIds: ReadonlySet<BattleHoleId>;
+      readonly damageHoleIds: ReadonlySet<BattleHoleId>;
+      readonly concentrationHoleIds: ReadonlySet<BattleHoleId>;
+      readonly dispositionHoleIds: ReadonlySet<BattleHoleId>;
+      readonly damageRepeatSaveHoleIds: ReadonlySet<BattleHoleId>;
+    }
+  | {
+      readonly tag: "result";
+      readonly result: BattleResolutionResult;
+    };
+
+type TranslatingPersistentAreaMovementReplayPlan =
+  | {
+      readonly kind: "turnBoundaryReplay";
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+      readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
+      readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
+      readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
+    }
+  | {
+      readonly kind: "advancedPrefixAtCheckpoint";
+      readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+    }
+  | {
+      readonly kind: "advancedPrefixAfterCheckpoint";
+      readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+    };
+
+const byTranslatingPersistentAreaMovementReplayPlanKind =
+  Match.discriminator("kind");
+
+type TranslatingPersistentAreaMovementRequestStep =
+  | { readonly tag: "stopped" }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | Extract<PersistentAreaSaveDamageStep, { readonly tag: "resolved" }>;
+
+type StationaryPersistentAreaResolutionInput = BattleResolutionInput & {
   readonly subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "cloudkillAreaHazardSave";
+      readonly command: "persistentAreaSaveDamageSave";
+      readonly areaMembershipTrigger: BattleStationaryPersistentAreaMembershipTrigger;
     }
   >;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly handledSaveFailedOccurrence?: Extract<
+    BattleHandledInterruptOccurrence,
+    { readonly trigger: "saveFailed" }
+  >;
+};
+
+type TranslatingPersistentAreaResolutionInput = BattleResolutionInput & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "persistentAreaSaveDamageSave";
+      readonly areaMembershipTrigger: BattleTranslatingPersistentAreaMembershipTrigger;
+    }
+  >;
+  readonly handledSaveFailedOccurrence?: Extract<
+    BattleHandledInterruptOccurrence,
+    { readonly trigger: "saveFailed" }
+  >;
 };
 
 type ParsedPersistentAreaSaveDamageProcedure =
   | {
-      readonly kind: "insectPlague";
-      readonly resolution: InsectPlagueResolutionInput;
+      readonly kind: "stationaryPersistentArea";
+      readonly resolution: StationaryPersistentAreaResolutionInput;
       readonly target: BattleCreatureState;
-      readonly effect: InsectPlagueAreaHazardEffect;
-      readonly trigger: BattleInsectPlagueAreaHazardTrigger;
+      readonly locatedEffect: {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: StationaryPersistentAreaAreaHazardEffect;
+      };
+      readonly trigger: BattleStationaryPersistentAreaSaveDamageTrigger;
     }
   | {
-      readonly kind: "cloudkill";
-      readonly resolution: CloudkillResolutionInput;
+      readonly kind: "translatingPersistentArea";
+      readonly resolution: TranslatingPersistentAreaResolutionInput;
       readonly target: BattleCreatureState;
-      readonly effect: CloudkillAreaHazardEffect;
-      readonly trigger: BattleCloudkillAreaHazardTrigger;
+      readonly locatedEffect: {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+      };
+      readonly trigger: BattleTranslatingPersistentAreaSaveDamageTrigger;
     };
 
 type PersistentAreaSaveDamageProcedureCandidate =
   | {
-      readonly kind: "insectPlague";
-      readonly resolution: InsectPlagueResolutionInput;
+      readonly kind: "stationaryPersistentArea";
+      readonly resolution: StationaryPersistentAreaResolutionInput;
       readonly target: BattleCreatureState | undefined;
-      readonly effect: InsectPlagueAreaHazardEffect | undefined;
-      readonly trigger: BattleInsectPlagueAreaHazardTrigger;
+      readonly locatedEffect:
+        | {
+            readonly effectOwnerId: CombatantId;
+            readonly effect: StationaryPersistentAreaAreaHazardEffect;
+          }
+        | undefined;
+      readonly trigger: BattleStationaryPersistentAreaSaveDamageTrigger;
     }
   | {
-      readonly kind: "cloudkill";
-      readonly resolution: CloudkillResolutionInput;
+      readonly kind: "translatingPersistentArea";
+      readonly resolution: TranslatingPersistentAreaResolutionInput;
       readonly target: BattleCreatureState | undefined;
-      readonly effect: CloudkillAreaHazardEffect | undefined;
-      readonly trigger: BattleCloudkillAreaHazardTrigger;
+      readonly locatedEffect:
+        | {
+            readonly effectOwnerId: CombatantId;
+            readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+          }
+        | undefined;
+      readonly trigger: BattleTranslatingPersistentAreaSaveDamageTrigger;
     };
 
 type PersistentAreaProcedureHoles =
   | {
-      readonly saveHole: BattleInsectPlagueAreaHazardSavingThrowOutcomeHole;
-      readonly damageHole: BattleInsectPlagueAreaHazardDamageRollHole;
+      readonly saveHole: BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole;
+      readonly damageHole: BattleStationaryPersistentAreaSaveDamageRollHole;
     }
   | {
-      readonly saveHole: BattleCloudkillAreaHazardSavingThrowOutcomeHole;
-      readonly damageHole: BattleCloudkillAreaHazardDamageRollHole;
+      readonly saveHole: BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole;
+      readonly damageHole: BattleTranslatingPersistentAreaSaveDamageRollHole;
     };
 
 type PersistentAreaProcedureParseResult =
@@ -138,26 +284,26 @@ type PersistentAreaProcedureParseResult =
       >;
     };
 
-export function resolveInsectPlagueAreaSaveDamage(
-  resolution: InsectPlagueResolutionInput,
+export function resolveStationaryPersistentAreaAreaSaveDamage(
+  resolution: StationaryPersistentAreaResolutionInput,
 ): BattleResolutionResult {
   const allowedFillIssue = persistentAreaAllowedFillIssue(
     resolution,
-    "Insect Plague",
+    "stationary persistent area",
   );
   if (allowedFillIssue !== null) {
     return allowedFillIssue;
   }
+  const locatedEffect = persistentAreaSaveDamageEffectForRef(
+    resolution.state,
+    resolution.subject.areaMembershipTrigger.effectRef,
+    "stationary",
+  );
   const parsed = parsePersistentAreaSaveDamageProcedure({
-    kind: "insectPlague",
+    kind: "stationaryPersistentArea",
     resolution,
     target: resolution.state.combatants.get(resolution.subject.actorId),
-    effect: activeEffectForArea(
-      resolution.state,
-      resolution.subject.areaMembershipTrigger.areaId,
-      (candidate): candidate is InsectPlagueAreaHazardEffect =>
-        candidate.kind === "insectPlagueAreaHazard",
-    ),
+    locatedEffect,
     trigger: persistentAreaTriggerFromMembershipFact(
       resolution.subject.areaMembershipTrigger,
     ),
@@ -167,26 +313,26 @@ export function resolveInsectPlagueAreaSaveDamage(
     : resolveParsedPersistentAreaSaveDamage(parsed.procedure);
 }
 
-export function resolveCloudkillAreaSaveDamage(
-  resolution: CloudkillResolutionInput,
+export function resolveTranslatingPersistentAreaAreaSaveDamage(
+  resolution: TranslatingPersistentAreaResolutionInput,
 ): BattleResolutionResult {
   const allowedFillIssue = persistentAreaAllowedFillIssue(
     resolution,
-    "Cloudkill",
+    "translating persistent area",
   );
   if (allowedFillIssue !== null) {
     return allowedFillIssue;
   }
+  const locatedEffect = persistentAreaSaveDamageEffectForRef(
+    resolution.state,
+    resolution.subject.areaMembershipTrigger.effectRef,
+    "sourceTurnTranslation",
+  );
   const parsed = parsePersistentAreaSaveDamageProcedure({
-    kind: "cloudkill",
+    kind: "translatingPersistentArea",
     resolution,
     target: resolution.state.combatants.get(resolution.subject.actorId),
-    effect: activeEffectForArea(
-      resolution.state,
-      resolution.subject.areaMembershipTrigger.areaId,
-      (candidate): candidate is CloudkillAreaHazardEffect =>
-        candidate.kind === "cloudkillAreaHazard",
-    ),
+    locatedEffect,
     trigger: persistentAreaTriggerFromMembershipFact(
       resolution.subject.areaMembershipTrigger,
     ),
@@ -194,22 +340,284 @@ export function resolveCloudkillAreaSaveDamage(
   return parsed.tag === "invalid"
     ? parsed.result
     : resolveParsedPersistentAreaSaveDamage(parsed.procedure);
+}
+
+function persistentAreaAppearanceTriggerMatchesCastOccurrence(
+  state: BattleState,
+  trigger:
+    | BattleStationaryPersistentAreaMembershipTrigger
+    | BattleTranslatingPersistentAreaMembershipTrigger,
+  effect:
+    | StationaryPersistentAreaAreaHazardEffect
+    | TranslatingPersistentAreaAreaHazardEffect,
+): boolean {
+  return (
+    trigger.kind === "appearsInArea" &&
+    effect.appearanceOccurrence.actorId === currentActorId(state) &&
+    effect.appearanceOccurrence.round === state.initiative.round
+  );
+}
+
+export function resolveTranslatingPersistentAreaMovementSaveDamageSequence(input: {
+  readonly advancedState: BattleState;
+  readonly parent: ReplayParentContinuation;
+  readonly requests: readonly TranslatingPersistentAreaMovementSaveDamageRequest[];
+  readonly replayPlan: TranslatingPersistentAreaMovementReplayPlan;
+}): TranslatingPersistentAreaMovementSaveDamageSequenceResult {
+  const saveHoleIds = new Set<BattleHoleId>();
+  const damageHoleIds = new Set<BattleHoleId>();
+  const concentrationHoleIds = new Set<BattleHoleId>();
+  const dispositionHoleIds = new Set<BattleHoleId>();
+  const damageRepeatSaveHoleIds = new Set<BattleHoleId>();
+  let parentPositionMatched = Match.value(input.replayPlan).pipe(
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "turnBoundaryReplay",
+      () => true,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      () => false,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      () => true,
+    ),
+    Match.exhaustive,
+  );
+  let state = input.advancedState;
+
+  for (const [requestIndex, request] of input.requests.entries()) {
+    const step = resolveTranslatingPersistentAreaMovementSaveDamageRequest({
+      state,
+      parent: input.parent,
+      request,
+      replayPlan: input.replayPlan,
+      isFirstRequest: requestIndex === 0,
+    });
+    if (step.tag === "stopped") break;
+    if (step.tag === "result") return step;
+    state = step.state;
+    addPersistentAreaResolvedHoleIds(
+      {
+        saveHoleIds,
+        damageHoleIds,
+        concentrationHoleIds,
+        dispositionHoleIds,
+        damageRepeatSaveHoleIds,
+      },
+      step.holeIds,
+    );
+    parentPositionMatched ||= step.matchedHandledPosition;
+  }
+
+  if (!parentPositionMatched) {
+    return invalidTranslatingPersistentAreaMovementSaveDamageSequence(
+      input.parent,
+    );
+  }
+  return {
+    tag: "resolved",
+    state,
+    saveHoleIds,
+    damageHoleIds,
+    concentrationHoleIds,
+    dispositionHoleIds,
+    damageRepeatSaveHoleIds,
+  };
+}
+
+function resolveTranslatingPersistentAreaMovementSaveDamageRequest(input: {
+  readonly state: BattleState;
+  readonly parent: ReplayParentContinuation;
+  readonly request: TranslatingPersistentAreaMovementSaveDamageRequest;
+  readonly replayPlan: TranslatingPersistentAreaMovementReplayPlan;
+  readonly isFirstRequest: boolean;
+}): TranslatingPersistentAreaMovementRequestStep {
+  const resumedRequestParent = () =>
+    replayParentContinuationFor({
+      state: input.state,
+      subject: input.parent.subject,
+      fills: input.parent.fills,
+    });
+  const requestParent = Match.value(input.replayPlan).pipe(
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "turnBoundaryReplay",
+      () => input.parent,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      resumedRequestParent,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      resumedRequestParent,
+    ),
+    Match.exhaustive,
+  );
+  const locatedActiveEffect = persistentAreaSaveDamageEffectForRef(
+    input.state,
+    input.request.effect.effectRef,
+    "sourceTurnTranslation",
+  );
+  if (!input.isFirstRequest && locatedActiveEffect === undefined) {
+    return { tag: "stopped" };
+  }
+  const parsed = parsePersistentAreaSaveDamageProcedure({
+    kind: "translatingPersistentArea",
+    resolution: {
+      state: input.state,
+      subject: input.request.subject,
+      fills: input.parent.fills,
+    },
+    target: input.state.combatants.get(input.request.subject.actorId),
+    locatedEffect: locatedActiveEffect,
+    trigger: persistentAreaTriggerFromMembershipFact(
+      input.request.subject.areaMembershipTrigger,
+    ),
+  });
+  if (parsed.tag === "invalid") {
+    return {
+      tag: "result",
+      result: projectReplayChildResult(requestParent, parsed.result),
+    };
+  }
+  return resolvePersistentAreaSaveDamageStep({
+    procedure: parsed.procedure,
+    context: {
+      kind: "replayParent",
+      parent: requestParent,
+      replayPlan: input.replayPlan,
+      occurrence: {
+        kind: "persistentAreaTranslationSaveDamageSequence",
+        effectRef: input.request.effect.effectRef,
+        targetId: input.request.subject.actorId,
+      },
+    },
+  });
+}
+
+function addPersistentAreaResolvedHoleIds(
+  target: {
+    readonly saveHoleIds: Set<BattleHoleId>;
+    readonly damageHoleIds: Set<BattleHoleId>;
+    readonly concentrationHoleIds: Set<BattleHoleId>;
+    readonly dispositionHoleIds: Set<BattleHoleId>;
+    readonly damageRepeatSaveHoleIds: Set<BattleHoleId>;
+  },
+  holeIds: PersistentAreaResolvedHoleIds,
+): void {
+  target.saveHoleIds.add(holeIds.save);
+  target.damageHoleIds.add(holeIds.damage);
+  if (holeIds.concentration !== null) {
+    target.concentrationHoleIds.add(holeIds.concentration);
+  }
+  if (holeIds.disposition !== null) {
+    target.dispositionHoleIds.add(holeIds.disposition);
+  }
+  for (const holeId of holeIds.damageRepeatSaves) {
+    target.damageRepeatSaveHoleIds.add(holeId);
+  }
+}
+
+function sameTranslatingPersistentAreaMovementSaveDamagePosition(
+  left: BattleStartTurnOccurrenceSequenceCheckpoint,
+  right: BattleStartTurnOccurrenceSequenceCheckpoint,
+): boolean {
+  return (
+    left.kind === right.kind &&
+    sameStartTurnOccurrenceSequence(left.sequence, right.sequence) &&
+    sameStartTurnSourceTurn(left.sourceTurn, right.sourceTurn) &&
+    sameTranslatingPersistentAreaMovementChild(left.child, right.child) &&
+    sameReadonlyArray(
+      left.completedPrefixHoleIds,
+      right.completedPrefixHoleIds,
+    ) &&
+    sameRoundDurationCohort(left.roundDurationCohort, right.roundDurationCohort)
+  );
+}
+
+function sameReadonlyArray<T>(
+  left: readonly T[],
+  right: readonly T[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
+function sameStartTurnOccurrenceSequence(
+  left: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"],
+  right: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"],
+): boolean {
+  return Match.value(left).pipe(
+    Match.when(
+      { kind: "single" },
+      ({ occurrenceId }) =>
+        right.kind === "single" && occurrenceId === right.occurrenceId,
+    ),
+    Match.when(
+      { kind: "ordered" },
+      ({ occurrenceIds }) =>
+        right.kind === "ordered" &&
+        sameReadonlyArray(occurrenceIds, right.occurrenceIds),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function sameStartTurnSourceTurn(
+  left: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  right: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+): boolean {
+  return left.actorId === right.actorId && left.round === right.round;
+}
+
+function sameTranslatingPersistentAreaMovementChild(
+  left: BattleStartTurnOccurrenceSequenceCheckpoint["child"],
+  right: BattleStartTurnOccurrenceSequenceCheckpoint["child"],
+): boolean {
+  return left.effectRef === right.effectRef && left.targetId === right.targetId;
+}
+
+function sameRoundDurationCohort(
+  left: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"],
+  right: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"],
+): boolean {
+  return (
+    sameReadonlyArray(left.activeEffectRefs, right.activeEffectRefs) &&
+    sameReadonlyArray(left.lightEmitterRefs, right.lightEmitterRefs)
+  );
+}
+
+function invalidTranslatingPersistentAreaMovementSaveDamageSequence(
+  parent: ReplayParentContinuation,
+): TranslatingPersistentAreaMovementSaveDamageSequenceResult {
+  return {
+    tag: "result",
+    result: invalidResult(
+      parent.state,
+      "staleSubject",
+      "translating persistent area movement damage could not continue from its current start-turn boundary.",
+    ),
+  };
 }
 
 function persistentAreaAllowedFillIssue(
   resolution: BattleResolutionInput,
-  procedureName: "Insect Plague" | "Cloudkill",
+  procedureName: "stationary persistent area" | "translating persistent area",
 ): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
   return resolution.fills.some(
     (fill) =>
       fill.kind !== "savingThrowOutcome" &&
       fill.kind !== "rolledDice" &&
-      fill.kind !== "concentrationSavingThrow",
+      fill.kind !== "concentrationSavingThrow" &&
+      fill.kind !== "attackDamageDisposition",
   )
     ? invalidResult(
         resolution.state,
         "invalidFill",
-        `${procedureName} save accepts only save, damage, and Concentration fills.`,
+        `${procedureName} save accepts only save, damage, damage disposition, and Concentration fills.`,
       )
     : null;
 }
@@ -217,13 +625,34 @@ function persistentAreaAllowedFillIssue(
 function parsePersistentAreaSaveDamageProcedure(
   candidate: PersistentAreaSaveDamageProcedureCandidate,
 ): PersistentAreaProcedureParseResult {
-  if (candidate.effect === undefined) {
+  const membershipTrigger = candidate.resolution.subject.areaMembershipTrigger;
+  if (
+    candidate.locatedEffect === undefined ||
+    candidate.locatedEffect.effect.areaId !== membershipTrigger.areaId
+  ) {
     return {
       tag: "invalid",
       result: invalidResult(
         candidate.resolution.state,
         "staleSubject",
         `${persistentAreaProcedureName(candidate.kind)} save is no longer available.`,
+      ),
+    };
+  }
+  if (
+    membershipTrigger.kind === "appearsInArea" &&
+    !persistentAreaAppearanceTriggerMatchesCastOccurrence(
+      candidate.resolution.state,
+      membershipTrigger,
+      candidate.locatedEffect.effect,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        candidate.resolution.state,
+        "staleSubject",
+        `${persistentAreaProcedureName(candidate.kind)} appearance save is outside its cast occurrence.`,
       ),
     };
   }
@@ -238,8 +667,7 @@ function parsePersistentAreaSaveDamageProcedure(
     };
   }
   if (
-    candidate.trigger !== "appearsInArea" &&
-    candidate.effect.savedThisTurn.includes(
+    candidate.locatedEffect.effect.savedThisTurn.includes(
       candidate.resolution.subject.actorId,
     )
   ) {
@@ -255,19 +683,19 @@ function parsePersistentAreaSaveDamageProcedure(
   return {
     tag: "parsed",
     procedure:
-      candidate.kind === "insectPlague"
+      candidate.kind === "stationaryPersistentArea"
         ? {
             kind: candidate.kind,
             resolution: candidate.resolution,
             target: candidate.target,
-            effect: candidate.effect,
+            locatedEffect: candidate.locatedEffect,
             trigger: candidate.trigger,
           }
         : {
             kind: candidate.kind,
             resolution: candidate.resolution,
             target: candidate.target,
-            effect: candidate.effect,
+            locatedEffect: candidate.locatedEffect,
             trigger: candidate.trigger,
           },
   };
@@ -276,143 +704,103 @@ function parsePersistentAreaSaveDamageProcedure(
 function resolveParsedPersistentAreaSaveDamage(
   procedure: ParsedPersistentAreaSaveDamageProcedure,
 ): BattleResolutionResult {
-  const { resolution, target, effect } = procedure;
-  const { saveHole, damageHole } = persistentAreaProcedureHoles(procedure);
-  const procedureName = persistentAreaProcedureName(procedure.kind);
-  const saveFills = resolution.fills.filter(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
-  );
-  const damageFills = resolution.fills.filter(
-    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
-      fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill set: each discovered persistent-area save and damage hole can be answered only once. */
-  if (saveFills.length > 1 || damageFills.length > 1) {
-    return invalidResult(
-      resolution.state,
-      "invalidFill",
-      `${procedureName} save received duplicate fills.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
-  if (saveFill === undefined) {
-    return needsHolesResult(resolution.state, resolution.subject, [saveHole]);
-  }
-  const parsedSave = parseSingleTargetPersistentAreaSave(
-    saveFill,
-    resolution.subject.actorId,
-    procedureName,
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: the save outcome must answer the discovered single-target hole for the triggering actor. */
-  if (parsedSave.tag === "invalid") {
-    return invalidResult(resolution.state, "invalidFill", parsedSave.message);
-  }
-  /* v8 ignore stop -- @preserve */
-  const saveOutcome = parsedSave.outcome;
-  if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      resolution.state,
-      {
-        trigger: "saveFailed",
-        targetId: resolution.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: resolution.subject,
-          fills: resolution.fills,
-        },
-      },
-      resolution.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
-  }
-
-  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
-  if (damageFill === undefined) {
-    return needsHolesResult(resolution.state, resolution.subject, [damageHole]);
-  }
-  const damageIssue = validateRolledDiceFillForDiceExpr(
-    damageFill,
-    effect.damage.expr,
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: the damage roll must match the exact expression carried by its discovered hole. */
-  if (damageIssue !== null) {
-    return invalidResult(resolution.state, "invalidFill", damageIssue);
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const adjustedDamage = persistentAreaAdjustedDamage({
-    state: resolution.state,
-    target,
-    effect,
-    damageFill,
-    saveSucceeded: saveOutcome.succeeded,
+  const step = resolvePersistentAreaSaveDamageStep({
+    procedure,
+    context: { kind: "standalone" },
   });
-  const concentrationHole = concentrationSavingThrowHole(
-    target,
-    adjustedDamage,
+  return Match.value(step).pipe(
+    Match.when({ tag: "result" }, ({ result }) => result),
+    Match.when({ tag: "resolved" }, ({ state }) => ({
+      tag: "resolved" as const,
+      state,
+      snapshot: snapshotBattle(state),
+    })),
+    Match.exhaustive,
   );
-  const concentrationFills =
-    concentrationHole === null
-      ? []
-      : resolution.fills.filter(
-          (
-            fill,
-          ): fill is Extract<
-            BattleFill,
-            { readonly kind: "concentrationSavingThrow" }
-          > =>
-            fill.kind === "concentrationSavingThrow" &&
-            fill.holeId === concentrationHole.holeId,
-        );
-  /* v8 ignore start -- @preserve -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
-  if (concentrationFills.length > 1) {
-    return invalidResult(
-      resolution.state,
-      "invalidFill",
-      `${procedureName} save received duplicate Concentration save fills.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const concentrationFill =
-    concentrationHole === null
-      ? undefined
-      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
-  if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsHolesResult(resolution.state, resolution.subject, [
-      concentrationHole,
-    ]);
-  }
+}
 
-  const consumedHoleIds = new Set([
-    saveHole.holeId,
-    damageHole.holeId,
-    ...(concentrationHole === null ? [] : [concentrationHole.holeId]),
-  ]);
-  /* v8 ignore start -- @preserve -- Malformed fill set: every supplied fill must answer a hole derived for this exact replay subject. */
-  if (resolution.fills.some((fill) => !consumedHoleIds.has(fill.holeId))) {
-    return invalidResult(
-      resolution.state,
-      "invalidFill",
-      `${procedureName} save received a fill for an unrelated hole.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
+function resolvePersistentAreaSaveDamageStep(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+}): PersistentAreaSaveDamageStep {
+  const { procedure, context } = input;
+  const { resolution } = procedure;
+  const { effect } = procedure.locatedEffect;
+  const { saveHole, damageHole } = persistentAreaProcedureHoles(
+    procedure,
+    context,
+  );
+  const procedureName = persistentAreaProcedureName(procedure.kind);
+  const saveStage = resolvePersistentAreaSaveStage({
+    procedure,
+    context,
+    saveHole,
+    damageHole,
+    procedureName,
+  });
+  if (saveStage.tag === "result") return saveStage;
+  const damageStage = resolvePersistentAreaDamageRollStage({
+    procedure,
+    context,
+    damageHole,
+    damageFills: saveStage.value.damageFills,
+    saveOutcome: saveStage.value.saveOutcome,
+  });
+  if (damageStage.tag === "result") return damageStage;
+  const concentrationStage = resolvePersistentAreaConcentrationStage({
+    procedure,
+    context,
+    procedureName,
+    adjustedDamage: damageStage.value.adjustedDamage,
+  });
+  if (concentrationStage.tag === "result") return concentrationStage;
+  const damageRepeatSaveStage = resolvePersistentAreaDamageRepeatSaveStage({
+    procedure,
+    context,
+    damageHole,
+    adjustedDamage: damageStage.value.adjustedDamage,
+  });
+  if (damageRepeatSaveStage.tag === "result") return damageRepeatSaveStage;
+  const dispositionStage = resolvePersistentAreaDispositionStage({
+    procedure,
+    context,
+    adjustedDamage: damageStage.value.adjustedDamage,
+  });
+  if (dispositionStage.tag === "result") return dispositionStage;
+
+  const holeIds = persistentAreaResolvedHoleIds({
+    saveHole,
+    damageHole,
+    concentration: concentrationStage.value,
+    dispositionHole: dispositionStage.value.hole,
+    damageRepeatSaveHoles: damageRepeatSaveStage.value.holes,
+  });
+  const consumedFillIssue = persistentAreaConsumedFillIssue({
+    procedure,
+    context,
+    procedureName,
+    holeIds,
+  });
+  if (consumedFillIssue !== null) return consumedFillIssue;
 
   const afterDamage = applyPreparedSlotSpellDamage(
     resolution.state,
     resolution.subject.actorId,
-    adjustedDamage,
+    damageStage.value.adjustedDamage,
     {
+      saveGatedConditionDamageRepeatSave: damageRepeatSaveStage.value.context,
       damageSourceId: effect.sourceCombatantId,
-      ...optionalProperty("concentrationSavingThrow", concentrationFill),
+      damageDisposition: damageDispositionForTarget(
+        dispositionStage.value.hole === null
+          ? []
+          : [dispositionStage.value.hole],
+        dispositionStage.value.fills,
+        resolution.subject.actorId,
+      ),
+      ...optionalProperty(
+        "concentrationSavingThrow",
+        persistentAreaConcentrationFill(concentrationStage.value),
+      ),
       spatialFacts: [],
     },
   );
@@ -420,42 +808,627 @@ function resolveParsedPersistentAreaSaveDamage(
   return {
     tag: "resolved",
     state: nextState,
-    snapshot: snapshotBattle(nextState),
+    holeIds,
+    matchedHandledPosition: saveStage.value.matchedHandledPosition,
   };
+}
+
+function persistentAreaResolvedHoleIds(input: {
+  readonly saveHole:
+    | BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole
+    | BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole;
+  readonly damageHole:
+    | BattleStationaryPersistentAreaSaveDamageRollHole
+    | BattleTranslatingPersistentAreaSaveDamageRollHole;
+  readonly concentration: PersistentAreaConcentrationAnswer;
+  readonly dispositionHole: ReturnType<
+    typeof zeroHitPointReplacementDispositionHole
+  >;
+  readonly damageRepeatSaveHoles: Extract<
+    ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+    { readonly tag: "ok" }
+  >["holes"];
+}): PersistentAreaResolvedHoleIds {
+  return {
+    save: input.saveHole.holeId,
+    damage: input.damageHole.holeId,
+    concentration: persistentAreaConcentrationHoleId(input.concentration),
+    disposition:
+      input.dispositionHole === null ? null : input.dispositionHole.holeId,
+    damageRepeatSaves: input.damageRepeatSaveHoles.map((hole) => hole.holeId),
+  };
+}
+
+type PersistentAreaStage<Value> =
+  | { readonly tag: "resolved"; readonly value: Value }
+  | Extract<PersistentAreaSaveDamageStep, { readonly tag: "result" }>;
+
+type PersistentAreaDamageFill = Extract<
+  BattleFill,
+  { readonly kind: "rolledDice" }
+>;
+
+type PersistentAreaConcentrationFill = Extract<
+  BattleFill,
+  { readonly kind: "concentrationSavingThrow" }
+>;
+
+type PersistentAreaConcentrationAnswer =
+  | { readonly tag: "notRequired" }
+  | {
+      readonly tag: "answered";
+      readonly hole: BattleConcentrationSavingThrowHole;
+      readonly fill: PersistentAreaConcentrationFill;
+    };
+
+function persistentAreaConcentrationHoleId(
+  answer: PersistentAreaConcentrationAnswer,
+): BattleHoleId | null {
+  return Match.value(answer).pipe(
+    Match.when({ tag: "notRequired" }, () => null),
+    Match.when({ tag: "answered" }, ({ hole }) => hole.holeId),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaConcentrationFill(
+  answer: PersistentAreaConcentrationAnswer,
+): PersistentAreaConcentrationFill | undefined {
+  return Match.value(answer).pipe(
+    Match.when({ tag: "notRequired" }, () => undefined),
+    Match.when({ tag: "answered" }, ({ fill }) => fill),
+    Match.exhaustive,
+  );
+}
+
+type PersistentAreaDispositionFill = Extract<
+  BattleFill,
+  { readonly kind: "attackDamageDisposition" }
+>;
+
+function resolvePersistentAreaSaveStage(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly saveHole:
+    | BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole
+    | BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole;
+  readonly damageHole:
+    | BattleStationaryPersistentAreaSaveDamageRollHole
+    | BattleTranslatingPersistentAreaSaveDamageRollHole;
+  readonly procedureName:
+    | "stationary persistent area"
+    | "translating persistent area";
+}): PersistentAreaStage<{
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly damageFills: readonly PersistentAreaDamageFill[];
+  readonly matchedHandledPosition: boolean;
+}> {
+  const { resolution } = input.procedure;
+  const { effect } = input.procedure.locatedEffect;
+  const saveFills = resolution.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId === input.saveHole.holeId,
+  );
+  const damageFills = resolution.fills.filter(
+    (fill): fill is PersistentAreaDamageFill =>
+      fill.kind === "rolledDice" && fill.holeId === input.damageHole.holeId,
+  );
+  /* v8 ignore start -- @preserve -- Malformed fill set: each discovered persistent-area save and damage hole can be answered only once. */
+  if (saveFills.length > 1 || damageFills.length > 1) {
+    return persistentAreaStepResult(
+      input.context,
+      invalidResult(
+        resolution.state,
+        "invalidFill",
+        `${input.procedureName} save received duplicate fills.`,
+      ),
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, input.saveHole);
+  if (saveFill === undefined) {
+    return persistentAreaStepResult(
+      input.context,
+      needsHolesResult(resolution.state, resolution.subject, [input.saveHole]),
+    );
+  }
+  const parsedSave = parseSingleTargetPersistentAreaSave(
+    saveFill,
+    resolution.subject.actorId,
+    input.procedureName,
+  );
+  /* v8 ignore start -- @preserve -- Malformed fill: the save outcome must answer the discovered single-target hole for the triggering actor. */
+  if (parsedSave.tag === "invalid") {
+    return persistentAreaStepResult(
+      input.context,
+      invalidResult(resolution.state, "invalidFill", parsedSave.message),
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const replayPosition = persistentAreaReplayPosition(input.context);
+  const matchedHandledPosition =
+    replayPosition !== undefined &&
+    persistentAreaHandledPositionMatches(input.context, replayPosition);
+  if (!parsedSave.outcome.succeeded) {
+    const reactionWindow = maybeOpenInterruptWindow(
+      resolution.state,
+      {
+        trigger: "saveFailed",
+        targetId: resolution.subject.actorId,
+        sourceProcedureRef: effect.sourceProcedureRef,
+        continuation: persistentAreaInterruptContinuation(
+          input.context,
+          resolution,
+          replayPosition,
+        ),
+      },
+      persistentAreaHandledInterruptTrigger(
+        input.context,
+        resolution.handledSaveFailedOccurrence,
+        resolution.subject.actorId,
+        effect.sourceProcedureRef,
+        matchedHandledPosition,
+      ),
+    );
+    if (reactionWindow !== null) {
+      return persistentAreaStepResult(input.context, reactionWindow);
+    }
+  }
+  return {
+    tag: "resolved",
+    value: {
+      saveOutcome: parsedSave.outcome,
+      damageFills,
+      matchedHandledPosition,
+    },
+  };
+}
+
+function resolvePersistentAreaDamageRollStage(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly damageHole:
+    | BattleStationaryPersistentAreaSaveDamageRollHole
+    | BattleTranslatingPersistentAreaSaveDamageRollHole;
+  readonly damageFills: readonly PersistentAreaDamageFill[];
+  readonly saveOutcome: BattleSavingThrowOutcome;
+}): PersistentAreaStage<{
+  readonly adjustedDamage: ReturnType<typeof persistentAreaAdjustedDamage>;
+}> {
+  const { resolution, target } = input.procedure;
+  const { effect } = input.procedure.locatedEffect;
+  const damageFill = rolledDiceFillForHole(input.damageFills, input.damageHole);
+  if (damageFill === undefined) {
+    return persistentAreaStepResult(
+      input.context,
+      needsHolesResult(resolution.state, resolution.subject, [
+        input.damageHole,
+      ]),
+    );
+  }
+  const damageIssue = validateRolledDiceFillForDiceExpr(
+    damageFill,
+    effect.damage.expr,
+  );
+  /* v8 ignore start -- @preserve -- Malformed fill: the damage roll must match the exact expression carried by its discovered hole. */
+  if (damageIssue !== null) {
+    return persistentAreaStepResult(
+      input.context,
+      invalidResult(resolution.state, "invalidFill", damageIssue),
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return {
+    tag: "resolved",
+    value: {
+      adjustedDamage: persistentAreaAdjustedDamage({
+        state: resolution.state,
+        target,
+        effect,
+        damageFill,
+        saveSucceeded: input.saveOutcome.succeeded,
+      }),
+    },
+  };
+}
+
+function resolvePersistentAreaConcentrationStage(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly procedureName:
+    | "stationary persistent area"
+    | "translating persistent area";
+  readonly adjustedDamage: ReturnType<typeof persistentAreaAdjustedDamage>;
+}): PersistentAreaStage<PersistentAreaConcentrationAnswer> {
+  const { resolution, target } = input.procedure;
+  const hole = persistentAreaConcentrationSavingThrowHole(
+    target,
+    input.adjustedDamage,
+    input.context,
+  );
+  if (hole === null) {
+    return { tag: "resolved", value: { tag: "notRequired" } };
+  }
+  const fills = resolution.fills.filter(
+    (fill): fill is PersistentAreaConcentrationFill =>
+      fill.kind === "concentrationSavingThrow" && fill.holeId === hole.holeId,
+  );
+  /* v8 ignore start -- @preserve -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
+  if (fills.length > 1) {
+    return persistentAreaStepResult(
+      input.context,
+      invalidResult(
+        resolution.state,
+        "invalidFill",
+        `${input.procedureName} save received duplicate Concentration save fills.`,
+      ),
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const fill = concentrationSavingThrowFillFor(fills, hole);
+  if (fill === undefined) {
+    return persistentAreaStepResult(
+      input.context,
+      needsHolesResult(resolution.state, resolution.subject, [hole]),
+    );
+  }
+  return { tag: "resolved", value: { tag: "answered", hole, fill } };
+}
+
+function resolvePersistentAreaDamageRepeatSaveStage(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly damageHole:
+    | BattleStationaryPersistentAreaSaveDamageRollHole
+    | BattleTranslatingPersistentAreaSaveDamageRollHole;
+  readonly adjustedDamage: ReturnType<typeof persistentAreaAdjustedDamage>;
+}): PersistentAreaStage<
+  Extract<
+    ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+    { readonly tag: "ok" }
+  >
+> {
+  const { resolution, target } = input.procedure;
+  const repeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: resolution.state,
+    target,
+    damageAmount: input.adjustedDamage,
+    fills: resolution.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: input.damageHole.holeId,
+      targetId: target.combatantId,
+    }),
+  });
+  return Match.value(repeatSave).pipe(
+    Match.when({ tag: "invalid" }, ({ message }) =>
+      persistentAreaStepResult(
+        input.context,
+        invalidResult(resolution.state, "invalidFill", message),
+      ),
+    ),
+    Match.when({ tag: "needsHoles" }, ({ missingHoles }) =>
+      persistentAreaStepResult(
+        input.context,
+        needsHolesResult(resolution.state, resolution.subject, missingHoles),
+      ),
+    ),
+    Match.when({ tag: "ok" }, (resolved) => ({
+      tag: "resolved" as const,
+      value: resolved,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function resolvePersistentAreaDispositionStage(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly adjustedDamage: ReturnType<typeof persistentAreaAdjustedDamage>;
+}): PersistentAreaStage<{
+  readonly hole: ReturnType<typeof zeroHitPointReplacementDispositionHole>;
+  readonly fills: readonly PersistentAreaDispositionFill[];
+}> {
+  const { resolution, target } = input.procedure;
+  const { effect } = input.procedure.locatedEffect;
+  const hole = zeroHitPointReplacementDispositionHole({
+    damageSourceId: effect.sourceCombatantId,
+    target,
+    damageAmount: input.adjustedDamage,
+  });
+  const fills =
+    hole === null
+      ? []
+      : resolution.fills.filter(
+          (fill): fill is PersistentAreaDispositionFill =>
+            fill.kind === "attackDamageDisposition" &&
+            fill.holeId === hole.holeId,
+        );
+  const issue = damageDispositionFillsValidation({
+    holes: hole === null ? [] : [hole],
+    fills,
+  });
+  if (issue !== null) {
+    return persistentAreaStepResult(
+      input.context,
+      invalidResult(resolution.state, "invalidFill", issue),
+    );
+  }
+  if (hole !== null && damageDispositionFillFor(fills, hole) === undefined) {
+    return persistentAreaStepResult(
+      input.context,
+      needsHolesResult(resolution.state, resolution.subject, [hole]),
+    );
+  }
+  return { tag: "resolved", value: { hole, fills } };
+}
+
+function persistentAreaConsumedFillIssue(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly procedureName:
+    | "stationary persistent area"
+    | "translating persistent area";
+  readonly holeIds: PersistentAreaResolvedHoleIds;
+}): Extract<PersistentAreaSaveDamageStep, { readonly tag: "result" }> | null {
+  const consumedHoleIds = new Set([input.holeIds.save, input.holeIds.damage]);
+  if (input.holeIds.concentration !== null) {
+    consumedHoleIds.add(input.holeIds.concentration);
+  }
+  if (input.holeIds.disposition !== null) {
+    consumedHoleIds.add(input.holeIds.disposition);
+  }
+  for (const holeId of input.holeIds.damageRepeatSaves) {
+    consumedHoleIds.add(holeId);
+  }
+  /* v8 ignore start -- @preserve -- Malformed fill set: every supplied fill must answer a hole derived for this exact replay subject. */
+  if (
+    persistentAreaContextOwnsAllFills(input.context) &&
+    input.procedure.resolution.fills.some(
+      (fill) => !consumedHoleIds.has(fill.holeId),
+    )
+  ) {
+    return persistentAreaStepResult(
+      input.context,
+      invalidResult(
+        input.procedure.resolution.state,
+        "invalidFill",
+        `${input.procedureName} save received a fill for an unrelated hole.`,
+      ),
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return null;
+}
+
+const byPersistentAreaResolutionContextKind = Match.discriminator("kind");
+
+function persistentAreaSourceTurnTranslationReplaySourceTurn(
+  replayPlan: TranslatingPersistentAreaMovementReplayPlan,
+): BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"] {
+  return Match.value(replayPlan).pipe(
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "turnBoundaryReplay",
+      ({ sourceTurn }) => sourceTurn,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      ({ checkpoint }) => checkpoint.sourceTurn,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      ({ checkpoint }) => checkpoint.sourceTurn,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaStepResult(
+  context: PersistentAreaResolutionContext,
+  result: BattleResolutionResult,
+): Extract<PersistentAreaSaveDamageStep, { readonly tag: "result" }> {
+  return {
+    tag: "result",
+    result: Match.value(context).pipe(
+      byPersistentAreaResolutionContextKind("standalone", () => result),
+      byPersistentAreaResolutionContextKind("replayParent", ({ parent }) =>
+        projectReplayChildResult(parent, result),
+      ),
+      Match.exhaustive,
+    ),
+  };
+}
+
+function persistentAreaReplayPosition(
+  context: PersistentAreaResolutionContext,
+): BattleStartTurnOccurrenceSequenceCheckpoint | undefined {
+  return Match.value(context).pipe(
+    byPersistentAreaResolutionContextKind("standalone", () => undefined),
+    byPersistentAreaResolutionContextKind(
+      "replayParent",
+      ({ occurrence, replayPlan }) =>
+        Match.value(replayPlan).pipe(
+          byTranslatingPersistentAreaMovementReplayPlanKind(
+            "turnBoundaryReplay",
+            ({
+              completedPrefixHoleIds,
+              roundDurationCohort,
+              sequence,
+              sourceTurn,
+            }) => ({
+              kind: "startTurnOccurrenceSequence" as const,
+              sequence,
+              completedPrefixHoleIds,
+              roundDurationCohort,
+              sourceTurn,
+              child: occurrence,
+            }),
+          ),
+          byTranslatingPersistentAreaMovementReplayPlanKind(
+            "advancedPrefixAtCheckpoint",
+            ({ checkpoint }) => ({ ...checkpoint, child: occurrence }),
+          ),
+          byTranslatingPersistentAreaMovementReplayPlanKind(
+            "advancedPrefixAfterCheckpoint",
+            ({ checkpoint }) => ({ ...checkpoint, child: occurrence }),
+          ),
+          Match.exhaustive,
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaHandledPositionMatches(
+  context: PersistentAreaResolutionContext,
+  position: BattleStartTurnOccurrenceSequenceCheckpoint,
+): boolean {
+  return Match.value(context).pipe(
+    byPersistentAreaResolutionContextKind("standalone", () => false),
+    byPersistentAreaResolutionContextKind("replayParent", ({ replayPlan }) =>
+      Match.value(replayPlan).pipe(
+        byTranslatingPersistentAreaMovementReplayPlanKind(
+          "turnBoundaryReplay",
+          () => false,
+        ),
+        byTranslatingPersistentAreaMovementReplayPlanKind(
+          "advancedPrefixAtCheckpoint",
+          ({ checkpoint }) =>
+            sameTranslatingPersistentAreaMovementSaveDamagePosition(
+              checkpoint,
+              position,
+            ),
+        ),
+        byTranslatingPersistentAreaMovementReplayPlanKind(
+          "advancedPrefixAfterCheckpoint",
+          () => false,
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaInterruptContinuation(
+  context: PersistentAreaResolutionContext,
+  resolution:
+    | StationaryPersistentAreaResolutionInput
+    | TranslatingPersistentAreaResolutionInput,
+  replayPosition: BattleStartTurnOccurrenceSequenceCheckpoint | undefined,
+) {
+  return Match.value(context).pipe(
+    byPersistentAreaResolutionContextKind("standalone", () => ({
+      kind: "replay" as const,
+      subject: resolution.subject,
+      fills: resolution.fills,
+    })),
+    byPersistentAreaResolutionContextKind("replayParent", ({ parent }) => {
+      if (replayPosition === undefined) {
+        return {
+          kind: "replay" as const,
+          subject: parent.subject,
+          fills: parent.fills,
+        };
+      }
+      return replayParentProcedureAt(parent, replayPosition);
+    }),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaHandledInterruptTrigger(
+  context: PersistentAreaResolutionContext,
+  standaloneHandledOccurrence:
+    | Extract<
+        BattleHandledInterruptOccurrence,
+        { readonly trigger: "saveFailed" }
+      >
+    | undefined,
+  targetId: CombatantId,
+  sourceProcedureRef: TranslatingPersistentAreaAreaHazardEffect["sourceProcedureRef"],
+  matchedHandledPosition: boolean,
+): BattleInterruptTrigger | undefined {
+  return Match.value(context).pipe(
+    byPersistentAreaResolutionContextKind("standalone", () =>
+      standaloneHandledOccurrence?.targetId === targetId &&
+      standaloneHandledOccurrence.sourceProcedureRef === sourceProcedureRef
+        ? "saveFailed"
+        : undefined,
+    ),
+    byPersistentAreaResolutionContextKind("replayParent", () =>
+      matchedHandledPosition ? "saveFailed" : undefined,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaContextOwnsAllFills(
+  context: PersistentAreaResolutionContext,
+): boolean {
+  return Match.value(context).pipe(
+    byPersistentAreaResolutionContextKind("standalone", () => true),
+    byPersistentAreaResolutionContextKind("replayParent", () => false),
+    Match.exhaustive,
+  );
 }
 
 const byPersistentAreaProcedureKind = Match.discriminator("kind");
 
 function persistentAreaProcedureHoles(
   procedure: ParsedPersistentAreaSaveDamageProcedure,
+  context: PersistentAreaResolutionContext,
 ): PersistentAreaProcedureHoles {
   return Match.value(procedure).pipe(
-    byPersistentAreaProcedureKind("insectPlague", (insectPlague) => ({
-      saveHole: insectPlagueAreaHazardSavingThrowOutcomeHole(
-        insectPlague.resolution.state,
-        insectPlague.resolution.subject.actorId,
-        insectPlague.effect,
-        insectPlague.trigger,
-      ),
-      damageHole: insectPlagueAreaHazardDamageRollHole(
-        insectPlague.resolution.subject.actorId,
-        insectPlague.effect,
-        insectPlague.trigger,
-      ),
-    })),
-    byPersistentAreaProcedureKind("cloudkill", (cloudkill) => ({
-      saveHole: cloudkillAreaHazardSavingThrowOutcomeHole(
-        cloudkill.resolution.state,
-        cloudkill.resolution.subject.actorId,
-        cloudkill.effect,
-        cloudkill.trigger,
-      ),
-      damageHole: cloudkillAreaHazardDamageRollHole(
-        cloudkill.resolution.subject.actorId,
-        cloudkill.effect,
-        cloudkill.trigger,
-      ),
-    })),
+    byPersistentAreaProcedureKind(
+      "stationaryPersistentArea",
+      (stationaryPersistentArea) => ({
+        saveHole: stationaryPersistentAreaSaveDamageSavingThrowOutcomeHole(
+          stationaryPersistentArea.resolution.state,
+          stationaryPersistentArea.resolution.subject.actorId,
+          stationaryPersistentArea.locatedEffect.effect,
+          stationaryPersistentArea.trigger,
+        ),
+        damageHole: stationaryPersistentAreaSaveDamageDamageRollHole(
+          stationaryPersistentArea.resolution.subject.actorId,
+          stationaryPersistentArea.locatedEffect.effect,
+          stationaryPersistentArea.trigger,
+        ),
+      }),
+    ),
+    byPersistentAreaProcedureKind(
+      "translatingPersistentArea",
+      (translatingPersistentArea) => ({
+        saveHole: translatingPersistentAreaSaveDamageSavingThrowOutcomeHole(
+          translatingPersistentArea.resolution.state,
+          translatingPersistentArea.resolution.subject.actorId,
+          translatingPersistentArea.locatedEffect.effect,
+          translatingPersistentArea.trigger,
+          context.kind === "replayParent"
+            ? persistentAreaSourceTurnTranslationReplaySourceTurn(
+                context.replayPlan,
+              )
+            : undefined,
+        ),
+        damageHole: translatingPersistentAreaSaveDamageDamageRollHole(
+          translatingPersistentArea.resolution.subject.actorId,
+          translatingPersistentArea.locatedEffect.effect,
+          translatingPersistentArea.trigger,
+          context.kind === "replayParent"
+            ? persistentAreaSourceTurnTranslationReplaySourceTurn(
+                context.replayPlan,
+              )
+            : undefined,
+        ),
+      }),
+    ),
     Match.exhaustive,
   );
 }
@@ -464,23 +1437,24 @@ function stateAfterPersistentAreaSaveDamage(
   procedure: ParsedPersistentAreaSaveDamageProcedure,
   state: BattleState,
 ): BattleState {
-  if (procedure.trigger === "appearsInArea") {
-    return state;
-  }
   return Match.value(procedure).pipe(
-    byPersistentAreaProcedureKind("insectPlague", (insectPlague) =>
-      markInsectPlagueAreaHazardSavedThisTurn(
-        state,
-        insectPlague.resolution.subject.actorId,
-        insectPlague.effect,
-      ),
+    byPersistentAreaProcedureKind(
+      "stationaryPersistentArea",
+      (stationaryPersistentArea) =>
+        markStationaryPersistentAreaAreaHazardSavedThisTurn(
+          state,
+          stationaryPersistentArea.resolution.subject.actorId,
+          stationaryPersistentArea.locatedEffect,
+        ),
     ),
-    byPersistentAreaProcedureKind("cloudkill", (cloudkill) =>
-      markCloudkillAreaHazardSavedThisTurn(
-        state,
-        cloudkill.resolution.subject.actorId,
-        cloudkill.effect,
-      ),
+    byPersistentAreaProcedureKind(
+      "translatingPersistentArea",
+      (translatingPersistentArea) =>
+        markTranslatingPersistentAreaAreaHazardSavedThisTurn(
+          state,
+          translatingPersistentArea.resolution.subject.actorId,
+          translatingPersistentArea.locatedEffect,
+        ),
     ),
     Match.exhaustive,
   );
@@ -488,8 +1462,10 @@ function stateAfterPersistentAreaSaveDamage(
 
 function persistentAreaProcedureName(
   kind: ParsedPersistentAreaSaveDamageProcedure["kind"],
-): "Insect Plague" | "Cloudkill" {
-  return kind === "insectPlague" ? "Insect Plague" : "Cloudkill";
+): "stationary persistent area" | "translating persistent area" {
+  return kind === "stationaryPersistentArea"
+    ? "stationary persistent area"
+    : "translating persistent area";
 }
 
 type ParsedSingleTargetSave =
@@ -499,7 +1475,7 @@ type ParsedSingleTargetSave =
 function parseSingleTargetPersistentAreaSave(
   fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
   targetId: CombatantId,
-  procedureName: "Insect Plague" | "Cloudkill",
+  procedureName: "stationary persistent area" | "translating persistent area",
 ): ParsedSingleTargetSave {
   if ("area" in fill.value) {
     return {
@@ -524,7 +1500,9 @@ function parseSingleTargetPersistentAreaSave(
 function persistentAreaAdjustedDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
-  readonly effect: InsectPlagueAreaHazardEffect | CloudkillAreaHazardEffect;
+  readonly effect:
+    | StationaryPersistentAreaAreaHazardEffect
+    | TranslatingPersistentAreaAreaHazardEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
 }): number {
@@ -539,34 +1517,142 @@ function persistentAreaAdjustedDamage(input: {
   );
 }
 
-function activeEffectForArea<
-  TEffect extends BattleActiveEffect & { readonly areaId: BattleAreaId },
->(
+function persistentAreaSaveDamageEffectForRef(
   state: BattleState,
-  areaId: BattleAreaId,
-  isExpectedEffect: (effect: BattleActiveEffect) => effect is TEffect,
-): TEffect | undefined {
-  for (const combatant of state.combatants.values()) {
-    const effect = combatant.activeEffects.find(
-      (candidate): candidate is TEffect =>
-        isExpectedEffect(candidate) && candidate.areaId === areaId,
-    );
-    if (effect !== undefined) return effect;
+  effectRef: BattleEffectExecutionRef,
+  expectedLifecycle: "stationary",
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: StationaryPersistentAreaAreaHazardEffect;
+    }
+  | undefined;
+function persistentAreaSaveDamageEffectForRef(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  expectedLifecycle: "sourceTurnTranslation",
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+    }
+  | undefined;
+function persistentAreaSaveDamageEffectForRef(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  expectedLifecycle: "stationary" | "sourceTurnTranslation",
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect:
+        | StationaryPersistentAreaAreaHazardEffect
+        | TranslatingPersistentAreaAreaHazardEffect;
+    }
+  | undefined {
+  const located = uniqueAppearanceTriggeredPersistentAreaEffect(
+    state,
+    effectRef,
+  );
+  if (located === undefined) return undefined;
+  const source = state.combatants.get(located.effect.sourceCombatantId);
+  if (source === undefined) return undefined;
+  const bound = boundPersistentAreaSaveDamageEffect(source, located.effect);
+  return projectAppearanceTriggeredPersistentAreaEffect(
+    located.effectOwnerId,
+    expectedLifecycle,
+    bound,
+  );
+}
+
+function projectAppearanceTriggeredPersistentAreaEffect(
+  effectOwnerId: CombatantId,
+  expectedLifecycle: "stationary" | "sourceTurnTranslation",
+  bound: ReturnType<typeof boundPersistentAreaSaveDamageEffect>,
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect:
+        | StationaryPersistentAreaAreaHazardEffect
+        | TranslatingPersistentAreaAreaHazardEffect;
+    }
+  | undefined {
+  if (expectedLifecycle === "stationary" && bound?.kind === "stationary") {
+    return {
+      effectOwnerId,
+      effect: {
+        ...bound.effect,
+        save: { ability: bound.facts.ability, dc: bound.facts.dc },
+        damage: bound.facts.damage,
+      },
+    };
   }
-  return undefined;
+  return expectedLifecycle === "sourceTurnTranslation" &&
+    bound?.kind === "sourceTurnTranslation"
+    ? {
+        effectOwnerId,
+        effect: {
+          ...bound.effect,
+          save: { ability: bound.facts.ability, dc: bound.facts.dc },
+          damage: bound.facts.damage,
+        },
+      }
+    : undefined;
+}
+
+function uniqueAppearanceTriggeredPersistentAreaEffect(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: PersistentAreaSaveDamageOccurrence;
+    }
+  | undefined {
+  let located:
+    | {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: PersistentAreaSaveDamageOccurrence;
+      }
+    | undefined;
+  for (const [effectOwnerId, combatant] of state.combatants) {
+    for (const candidate of combatant.activeEffects) {
+      if (candidate.effectRef !== effectRef) continue;
+      if (located !== undefined) return undefined;
+      if (!isAppearanceTriggeredPersistentAreaSaveDamage(candidate)) {
+        return undefined;
+      }
+      located = { effectOwnerId, effect: candidate };
+    }
+  }
+  return located;
+}
+
+function isAppearanceTriggeredPersistentAreaSaveDamage(
+  effect: BattleActiveEffect,
+): effect is PersistentAreaSaveDamageOccurrence {
+  if (effect.kind !== "persistentAreaSaveDamage") return false;
+  return Match.value(effect.lifecycle).pipe(
+    Match.when("stationary", () => true),
+    Match.when("sourceTurnTranslation", () => true),
+    Match.when("collisionReposition", () => false),
+    Match.when("directedReposition", () => false),
+    Match.exhaustive,
+  );
 }
 
 function persistentAreaTriggerFromMembershipFact(
-  trigger: BattleInsectPlagueAreaMembershipTrigger,
-): BattleInsectPlagueAreaHazardTrigger;
+  trigger: BattleStationaryPersistentAreaMembershipTrigger,
+): BattleStationaryPersistentAreaSaveDamageTrigger;
 function persistentAreaTriggerFromMembershipFact(
-  trigger: BattleCloudkillAreaMembershipTrigger,
-): BattleCloudkillAreaHazardTrigger;
+  trigger: BattleTranslatingPersistentAreaMembershipTrigger,
+): BattleTranslatingPersistentAreaSaveDamageTrigger;
 function persistentAreaTriggerFromMembershipFact(
   trigger:
-    | BattleInsectPlagueAreaMembershipTrigger
-    | BattleCloudkillAreaMembershipTrigger,
-): BattleInsectPlagueAreaHazardTrigger | BattleCloudkillAreaHazardTrigger {
+    | BattleStationaryPersistentAreaMembershipTrigger
+    | BattleTranslatingPersistentAreaMembershipTrigger,
+):
+  | BattleStationaryPersistentAreaSaveDamageTrigger
+  | BattleTranslatingPersistentAreaSaveDamageTrigger {
   return Match.value(trigger).pipe(
     byPersistentAreaMembershipTriggerKind(
       "appearsInArea",
@@ -592,16 +1678,18 @@ const byPersistentAreaMembershipTriggerKind = Match.discriminator("kind");
 
 type PersistentAreaHazardTriggerLabel =
   | "appearance"
-  | "cloud-movement"
+  | "area-translation"
   | "entry"
   | "end-turn";
 
 function persistentAreaSavingThrowHoleFacts(
   state: BattleState,
   targetId: CombatantId,
-  effect: InsectPlagueAreaHazardEffect | CloudkillAreaHazardEffect,
+  effect:
+    | StationaryPersistentAreaAreaHazardEffect
+    | TranslatingPersistentAreaAreaHazardEffect,
 ): Pick<
-  BattleInsectPlagueAreaHazardSavingThrowOutcomeHole,
+  BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole,
   "ability" | "dc" | "areaChoices" | "targetRollModes" | "targetFlatBonuses"
 > {
   return {
@@ -619,20 +1707,22 @@ function persistentAreaSavingThrowHoleFacts(
   };
 }
 
-export function insectPlagueAreaHazardSavingThrowOutcomeHole(
+export function stationaryPersistentAreaSaveDamageSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: InsectPlagueAreaHazardEffect,
-  trigger: BattleInsectPlagueAreaHazardTrigger,
-): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  effect: StationaryPersistentAreaAreaHazardEffect,
+  trigger: BattleStationaryPersistentAreaSaveDamageTrigger,
+): BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole {
+  const key = `battle:stationary-persistent-area-save-damage-save:${targetId}:${effect.effectRef}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} CON save`,
-    insectPlagueAreaHazard: {
+    persistentAreaSaveDamage: {
+      topology: "stationary",
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -643,20 +1733,22 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
   };
 }
 
-function insectPlagueAreaHazardDamageRollHole(
+function stationaryPersistentAreaSaveDamageDamageRollHole(
   targetId: CombatantId,
-  effect: InsectPlagueAreaHazardEffect,
-  trigger: BattleInsectPlagueAreaHazardTrigger,
-): BattleInsectPlagueAreaHazardDamageRollHole {
+  effect: StationaryPersistentAreaAreaHazardEffect,
+  trigger: BattleStationaryPersistentAreaSaveDamageTrigger,
+): BattleStationaryPersistentAreaSaveDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}:${expr}`;
+  const key = `battle:stationary-persistent-area-save-damage-damage:${targetId}:${effect.effectRef}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} damage (${expr})`,
-    insectPlagueAreaHazard: {
+    persistentAreaSaveDamage: {
+      topology: "stationary",
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -668,39 +1760,55 @@ function insectPlagueAreaHazardDamageRollHole(
 }
 
 function persistentAreaHazardTriggerLabel(
-  trigger: BattleInsectPlagueAreaHazardTrigger,
+  trigger: BattleStationaryPersistentAreaSaveDamageTrigger,
 ): PersistentAreaHazardTriggerLabel;
 function persistentAreaHazardTriggerLabel(
-  trigger: BattleCloudkillAreaHazardTrigger,
+  trigger: BattleTranslatingPersistentAreaSaveDamageTrigger,
 ): PersistentAreaHazardTriggerLabel;
 function persistentAreaHazardTriggerLabel(
   trigger:
-    | BattleInsectPlagueAreaHazardTrigger
-    | BattleCloudkillAreaHazardTrigger,
+    | BattleStationaryPersistentAreaSaveDamageTrigger
+    | BattleTranslatingPersistentAreaSaveDamageTrigger,
 ): PersistentAreaHazardTriggerLabel {
   return Match.value(trigger).pipe(
     Match.when("appearsInArea", () => "appearance" as const),
-    Match.when("movesIntoSpace", () => "cloud-movement" as const),
+    Match.when("movesIntoSpace", () => "area-translation" as const),
     Match.when("entersArea", () => "entry" as const),
     Match.when("endsTurnInArea", () => "end-turn" as const),
     Match.exhaustive,
   );
 }
 
-export function cloudkillAreaHazardSavingThrowOutcomeHole(
+function persistentAreaAppearanceOccurrenceKey(
+  effect:
+    | StationaryPersistentAreaAreaHazardEffect
+    | TranslatingPersistentAreaAreaHazardEffect,
+  trigger:
+    | BattleStationaryPersistentAreaSaveDamageTrigger
+    | BattleTranslatingPersistentAreaSaveDamageTrigger,
+): string {
+  return trigger === "appearsInArea"
+    ? `:${effect.appearanceOccurrence.actorId}:${effect.appearanceOccurrence.round}`
+    : "";
+}
+
+export function translatingPersistentAreaSaveDamageSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: CloudkillAreaHazardEffect,
-  trigger: BattleCloudkillAreaHazardTrigger,
-): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  effect: TranslatingPersistentAreaAreaHazardEffect,
+  trigger: BattleTranslatingPersistentAreaSaveDamageTrigger,
+  sourceTurn?: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+): BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole {
+  const key = `battle:translating-persistent-area-save-damage-save:${targetId}:${effect.effectRef}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}${persistentAreaSourceTurnTranslationSourceTurnKey(trigger, sourceTurn)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} CON save`,
-    cloudkillAreaHazard: {
+    persistentAreaSaveDamage: {
+      topology: "translating",
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -711,20 +1819,32 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
   };
 }
 
-function cloudkillAreaHazardDamageRollHole(
+export function persistentAreaSourceTurnTranslationSavingThrowHoleId(
+  checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
+): BattleHoleId {
+  const { child, sourceTurn } = checkpoint;
+  return holeId(
+    `battle:translating-persistent-area-save-damage-save:${child.targetId}:${child.effectRef}:movesIntoSpace:${sourceTurn.actorId}:${Number(sourceTurn.round)}`,
+  );
+}
+
+function translatingPersistentAreaSaveDamageDamageRollHole(
   targetId: CombatantId,
-  effect: CloudkillAreaHazardEffect,
-  trigger: BattleCloudkillAreaHazardTrigger,
-): BattleCloudkillAreaHazardDamageRollHole {
+  effect: TranslatingPersistentAreaAreaHazardEffect,
+  trigger: BattleTranslatingPersistentAreaSaveDamageTrigger,
+  sourceTurn?: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+): BattleTranslatingPersistentAreaSaveDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}:${expr}`;
+  const key = `battle:translating-persistent-area-save-damage-damage:${targetId}:${effect.effectRef}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}${persistentAreaSourceTurnTranslationSourceTurnKey(trigger, sourceTurn)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} damage (${expr})`,
-    cloudkillAreaHazard: {
+    persistentAreaSaveDamage: {
+      topology: "translating",
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -734,3 +1854,33 @@ function cloudkillAreaHazardDamageRollHole(
     critical: false,
   };
 }
+
+function persistentAreaSourceTurnTranslationSourceTurnKey(
+  trigger: BattleTranslatingPersistentAreaSaveDamageTrigger,
+  sourceTurn:
+    | BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"]
+    | undefined,
+): string {
+  return trigger === "movesIntoSpace" && sourceTurn !== undefined
+    ? `:${sourceTurn.actorId}:${Number(sourceTurn.round)}`
+    : "";
+}
+
+function persistentAreaConcentrationSavingThrowHole(
+  target: BattleCreatureState,
+  damageAmount: number,
+  context: PersistentAreaResolutionContext,
+): BattleConcentrationSavingThrowHole | null {
+  const base = concentrationSavingThrowHole(target, damageAmount);
+  if (base === null || context.kind === "standalone") return base;
+  const sourceTurn = persistentAreaSourceTurnTranslationReplaySourceTurn(
+    context.replayPlan,
+  );
+  const key = `battle:translatingPersistentArea-movement-concentration:${sourceTurn.actorId}:${Number(sourceTurn.round)}:${context.occurrence.effectRef}:${context.occurrence.targetId}`;
+  return {
+    ...base,
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+  };
+}
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE

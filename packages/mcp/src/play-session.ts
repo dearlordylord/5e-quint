@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
@@ -27,11 +27,13 @@ export const PLAY_SESSION_RESTORATION_GUIDANCE =
   "Create a new Play Session, then rebuild the desired state from model-visible or user-provided facts. The unavailable handle cannot be restored.";
 
 export const PlaySessionIdSchema = Schema.String.pipe(
-  Schema.pattern(
-    /^play-session:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+  Schema.check(
+    Schema.isPattern(
+      /^play-session:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    ),
   ),
   Schema.brand("PlaySessionId"),
-).annotations({
+).annotate({
   description:
     "Play Session handle returned by create_play_session; use it together with the returned guest access grant unless authenticated.",
 });
@@ -146,26 +148,26 @@ export type PlaySessionRegistry<
 > = {
   create(
     caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
-  ): Either.Either<PlaySessionCreation, PlaySessionCreationFailure>;
+  ): Result.Result<PlaySessionCreation, PlaySessionCreationFailure>;
   run<A>(
     playSessionId: PlaySessionId,
     caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
     operation: (root: McpPlaySessionRoot) => A | Promise<A>,
     commandRetention?: PlaySessionCommandRetention<A>,
-  ): Promise<Either.Either<PlaySessionRunResult<A>, AccessFailure>>;
+  ): Promise<Result.Result<PlaySessionRunResult<A>, AccessFailure>>;
   save(
     playSessionId: PlaySessionId,
     guestAccessGrant: GuestAccessGrant,
     principalId: PrincipalId,
-  ): Promise<Either.Either<PlaySessionTenureProjection, AccessFailure>>;
+  ): Promise<Result.Result<PlaySessionTenureProjection, AccessFailure>>;
   listSaved(
     principalId: PrincipalId,
-  ): Either.Either<readonly SavedPlaySessionSummary[], AccessFailure>;
+  ): Result.Result<readonly SavedPlaySessionSummary[], AccessFailure>;
   deleteSaved(
     playSessionId: PlaySessionId,
     principalId: PrincipalId,
   ): Promise<
-    Either.Either<{ readonly tag: "playSessionDeleted" }, AccessFailure>
+    Result.Result<{ readonly tag: "playSessionDeleted" }, AccessFailure>
   >;
 };
 
@@ -194,7 +196,7 @@ export function createPlaySessionRegistry(input: {
 
   return {
     create(caller) {
-      return Either.map(
+      return Result.map(
         availablePlaySessionId(playSessionIdFactory, liveSessions),
         (playSessionId) => {
           const root = input.createRoot(playSessionId);
@@ -238,17 +240,17 @@ export function createPlaySessionRegistry(input: {
     },
     async run(playSessionId, caller, operation, commandRetention) {
       const session = liveSessions.get(playSessionId);
-      if (session === undefined) return Either.left(PLAY_SESSION_UNAVAILABLE);
+      if (session === undefined) return Result.fail(PLAY_SESSION_UNAVAILABLE);
       const result = session.tail.then(async () => {
         const expired = playSessionIsExpired(session.tenure, now());
         if (expired || !callerAuthorizes(caller, session.tenure)) {
           if (expired) liveSessions.delete(playSessionId);
-          return Either.left(PLAY_SESSION_UNAVAILABLE);
+          return Result.fail(PLAY_SESSION_UNAVAILABLE);
         }
         const value = await operation(session.root);
         const succeeded = commandRetention?.succeeded?.(value) ?? true;
         if (!succeeded) {
-          return Either.right({
+          return Result.succeed({
             value,
             tenure: projectPlaySessionTenure(session.tenure),
           });
@@ -257,7 +259,7 @@ export function createPlaySessionRegistry(input: {
           ...session.tenure,
           lastActivityAtMs: now(),
         };
-        return Either.right({
+        return Result.succeed({
           value,
           tenure: projectPlaySessionTenure(session.tenure),
         });
@@ -270,7 +272,7 @@ export function createPlaySessionRegistry(input: {
     },
     async save(playSessionId, guestAccessGrant, principalId) {
       const session = liveSessions.get(playSessionId);
-      if (session === undefined) return Either.left(PLAY_SESSION_UNAVAILABLE);
+      if (session === undefined) return Result.fail(PLAY_SESSION_UNAVAILABLE);
       const result = session.tail.then(() => {
         const expired = playSessionIsExpired(session.tenure, now());
         if (
@@ -278,14 +280,14 @@ export function createPlaySessionRegistry(input: {
           !callerAuthorizes({ tag: "guest", guestAccessGrant }, session.tenure)
         ) {
           if (expired) liveSessions.delete(playSessionId);
-          return Either.left(PLAY_SESSION_UNAVAILABLE);
+          return Result.fail(PLAY_SESSION_UNAVAILABLE);
         }
         session.tenure = {
           tag: "saved",
           principalId,
           lastActivityAtMs: now(),
         };
-        return Either.right(projectPlaySessionTenure(session.tenure));
+        return Result.succeed(projectPlaySessionTenure(session.tenure));
       });
       session.tail = result.then(
         () => undefined,
@@ -299,7 +301,7 @@ export function createPlaySessionRegistry(input: {
           liveSessions.delete(playSessionId);
         }
       }
-      return Either.right(
+      return Result.succeed(
         Array.from(liveSessions.entries()).flatMap(
           ([playSessionId, session]) =>
             session.tenure.tag === "saved" &&
@@ -316,7 +318,7 @@ export function createPlaySessionRegistry(input: {
     },
     async deleteSaved(playSessionId, principalId) {
       const session = liveSessions.get(playSessionId);
-      if (session === undefined) return Either.left(PLAY_SESSION_UNAVAILABLE);
+      if (session === undefined) return Result.fail(PLAY_SESSION_UNAVAILABLE);
       const result = session.tail.then(() => {
         const expired = playSessionIsExpired(session.tenure, now());
         if (
@@ -326,10 +328,10 @@ export function createPlaySessionRegistry(input: {
           session.tenure.principalId !== principalId
         ) {
           if (expired) liveSessions.delete(playSessionId);
-          return Either.left(PLAY_SESSION_UNAVAILABLE);
+          return Result.fail(PLAY_SESSION_UNAVAILABLE);
         }
         liveSessions.delete(playSessionId);
-        return Either.right({ tag: "playSessionDeleted" } as const);
+        return Result.succeed({ tag: "playSessionDeleted" } as const);
       });
       session.tail = result.then(
         () => undefined,
@@ -356,12 +358,12 @@ function callerAuthorizes(
 function availablePlaySessionId(
   playSessionIdFactory: PlaySessionIdFactory,
   liveSessions: ReadonlyMap<PlaySessionId, LivePlaySession>,
-): Either.Either<PlaySessionId, PlaySessionCreationFailure> {
+): Result.Result<PlaySessionId, PlaySessionCreationFailure> {
   for (let attempt = 0; attempt < MAX_PLAY_SESSION_ID_ATTEMPTS; attempt += 1) {
     const playSessionId = playSessionIdFactory();
-    if (!liveSessions.has(playSessionId)) return Either.right(playSessionId);
+    if (!liveSessions.has(playSessionId)) return Result.succeed(playSessionId);
   }
-  return Either.left({
+  return Result.fail({
     tag: "playSessionCreationFailed",
     reason: "playSessionIdCollision",
     message: `Unable to allocate a unique Play Session handle after ${MAX_PLAY_SESSION_ID_ATTEMPTS} attempts.`,
@@ -370,18 +372,18 @@ function availablePlaySessionId(
 
 export function decodePlaySessionId(
   input: unknown,
-): Either.Either<PlaySessionId, string> {
-  return Either.mapLeft(
-    Schema.decodeUnknownEither(PlaySessionIdSchema)(input),
+): Result.Result<PlaySessionId, string> {
+  return Result.mapError(
+    Schema.decodeUnknownResult(PlaySessionIdSchema)(input),
     (issue) => issue.message,
   );
 }
 
 export function generatedPlaySessionId(): PlaySessionId {
   for (;;) {
-    const generated = Schema.decodeUnknownEither(PlaySessionIdSchema)(
+    const generated = Schema.decodeUnknownResult(PlaySessionIdSchema)(
       `play-session:${randomUUID()}`,
     );
-    if (Either.isRight(generated)) return generated.right;
+    if (Result.isSuccess(generated)) return generated.success;
   }
 }

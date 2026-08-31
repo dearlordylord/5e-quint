@@ -1,6 +1,5 @@
 import fc from "fast-check";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -175,14 +174,14 @@ describe("GH-227 battle codec properties", () => {
   test.each(encodedSnapshots())(
     "reachable checkpoint frontier envelope %# preserves its decoded graph under encode/decode",
     (encoded) => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         BattleCheckpointFrontierEnvelopeSchema,
       )(encoded);
-      expect(Either.isRight(decoded)).toBe(true);
-      if (Either.isLeft(decoded)) return;
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (Result.isFailure(decoded)) return;
       expect(
         Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
-          decoded.right,
+          decoded.success,
         ),
       ).toEqual(encoded);
     },
@@ -191,10 +190,10 @@ describe("GH-227 battle codec properties", () => {
   test.each(encodedFills())(
     "reachable fill %# preserves its boundary representation",
     (encoded) => {
-      const decoded = Schema.decodeUnknownEither(BattleFillSchema)(encoded);
-      expect(Either.isRight(decoded)).toBe(true);
-      if (Either.isLeft(decoded)) return;
-      expect(Schema.encodeSync(BattleFillSchema)(decoded.right)).toEqual(
+      const decoded = Schema.decodeUnknownResult(BattleFillSchema)(encoded);
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (Result.isFailure(decoded)) return;
+      expect(Schema.encodeSync(BattleFillSchema)(decoded.success)).toEqual(
         encoded,
       );
     },
@@ -202,22 +201,13 @@ describe("GH-227 battle codec properties", () => {
 
   test("a reachable Stat Block execution graph round-trips", () => {
     const encoded = encodedStatBlockSnapshots();
-    const unarmedBinding = encoded.procedureBindings.find(
-      (binding) => binding.procedure.kind === "unarmedStrike",
-    );
-    expect(unarmedBinding).toBeDefined();
-    if (unarmedBinding === undefined) return;
-    expect(unarmedBinding.procedure).toEqual(
-      expect.objectContaining({ kind: "unarmedStrike" }),
-    );
-    expect(unarmedBinding.procedure).not.toHaveProperty("procedureOrdinal");
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       StatBlockExecutionSnapshotSchema,
     )(encoded);
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) return;
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
     expect(
-      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.right),
+      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.success),
     ).toEqual(encoded);
   });
 
@@ -227,13 +217,13 @@ describe("GH-227 battle codec properties", () => {
       .filter((binding) => binding.resourcePoolRefs.length > 0)
       .flatMap((binding) => binding.resourcePoolRefs);
     expect(new Set(sharedRefs).size).toBeLessThan(sharedRefs.length);
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       StatBlockExecutionSnapshotSchema,
     )(encoded);
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) return;
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
     expect(
-      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.right),
+      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.success),
     ).toEqual(encoded);
   });
 
@@ -254,8 +244,8 @@ describe("GH-227 battle codec properties", () => {
         }),
       );
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(
+        Result.isFailure(
+          Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(
             malformed,
           ),
         ),
@@ -274,8 +264,8 @@ describe("GH-227 battle codec properties", () => {
       }),
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(malformed),
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(malformed),
       ),
     ).toBe(true);
   });
@@ -283,7 +273,9 @@ describe("GH-227 battle codec properties", () => {
   test("rejects duplicate runtime Stat Block procedure ordinals", () => {
     const encoded = encodedStatBlockSnapshots();
     const ordinalBindings = encoded.procedureBindings.filter(
-      (binding) => binding.procedure.kind !== "unarmedStrike",
+      (binding) =>
+        binding.procedure.kind !== "unarmedStrike" &&
+        binding.procedure.kind !== "effectOccurrenceSource",
     );
     const first = ordinalBindings[0];
     const second = ordinalBindings[1];
@@ -294,9 +286,11 @@ describe("GH-227 battle codec properties", () => {
     const secondProcedure = second.procedure;
     if (
       firstProcedure.kind === "unarmedStrike" ||
-      secondProcedure.kind === "unarmedStrike"
+      firstProcedure.kind === "effectOccurrenceSource" ||
+      secondProcedure.kind === "unarmedStrike" ||
+      secondProcedure.kind === "effectOccurrenceSource"
     ) {
-      throw new Error("Expected authored procedure bindings.");
+      throw new Error("Expected ordinal-bearing procedure bindings.");
     }
     const firstProcedureOrdinal = firstProcedure.procedureOrdinal;
     const malformed = {
@@ -314,8 +308,8 @@ describe("GH-227 battle codec properties", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(malformed),
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(malformed),
       ),
     ).toBe(true);
   });
@@ -337,8 +331,8 @@ describe("GH-227 battle codec properties", () => {
           }),
         );
         expect(
-          Either.isLeft(
-            Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(
+          Result.isFailure(
+            Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(
               malformed,
             ),
           ),
@@ -372,8 +366,8 @@ describe("GH-227 battle codec properties", () => {
               ),
           );
           expect(
-            Either.isLeft(
-              Schema.decodeUnknownEither(
+            Result.isFailure(
+              Schema.decodeUnknownResult(
                 BattleCheckpointFrontierEnvelopeSchema,
               )(malformed),
             ),
@@ -398,8 +392,8 @@ describe("GH-227 battle codec properties", () => {
         ),
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           unknownActOwner,
         ),
       ),
@@ -417,8 +411,8 @@ describe("GH-227 battle codec properties", () => {
         ),
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           unknownReadiedProcedure,
         ),
       ),

@@ -9,7 +9,7 @@
   },
   "id": "weapon_warhammer",
   "kind": "weapon",
-  "mastery": "push",
+  "masteryUnitId": "mastery_push",
   "name": "Warhammer",
   "properties": [
     {

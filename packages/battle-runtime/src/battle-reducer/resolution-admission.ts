@@ -44,16 +44,17 @@ export function admitBattleResolutionInput(
   return Match.value(input.subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: () => admitWithoutCharacterBinding(input),
-      pactOfTheChainFamiliarAttack: () => admitWithoutCharacterBinding(input),
+      companionAttack: () => admitWithoutCharacterBinding(input),
       bonusAction: () => admitWithoutCharacterBinding(input),
       monkFocusFlurryOfBlowsStrike: () => admitWithoutCharacterBinding(input),
       companionLifecycle: () => admitWithoutCharacterBinding(input),
-      findFamiliarSharedSenses: () => admitWithoutCharacterBinding(input),
+      spawnedCompanionSharedSenses: () => admitWithoutCharacterBinding(input),
       runtimeCommand: () => admitWithoutCharacterBinding(input),
       actionSpell: (subject) => admitSpellSubject(input, subject),
       bonusActionSpell: (subject) => admitSpellSubject(input, subject),
       bonusActionDashSpell: (subject) => admitSpellSubject(input, subject),
-      findFamiliarTouchSpell: (subject) => admitSpellSubject(input, subject),
+      spawnedCompanionTouchSpellProxy: (subject) =>
+        admitSpellSubject(input, subject),
       unitFeature: (subject) => admitUnitSubject(input, subject),
       unitFeatureHeldWeaponActivation: (subject) =>
         admitUnitSubject(input, subject),
@@ -77,7 +78,7 @@ type SpellProcedureSubject = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell";
+      | "spawnedCompanionTouchSpellProxy";
   }
 >;
 
@@ -156,7 +157,7 @@ function admitBonusActionStandardAction(
     characterUnitProcedureQueryForSubject(subject),
   );
   return unitProcedure === undefined
-    ? admitExpeditiousRetreatDash(input, actor, subject)
+    ? admitGrantedAlternateActionCost(input, actor, subject)
     : admitUnitBonusActionStandardAction(input, actor, subject, unitProcedure);
 }
 
@@ -245,7 +246,7 @@ function dashTemporaryHitPointsProcedure(
     : undefined;
 }
 
-function admitExpeditiousRetreatDash(
+function admitGrantedAlternateActionCost(
   input: BattleResolutionInput,
   actor: CharacterBattleCreatureState,
   subject: Extract<
@@ -258,10 +259,10 @@ function admitExpeditiousRetreatDash(
     subject.procedureRef,
     actor,
   );
-  if (spellProcedure?.procedure !== "expeditiousRetreatDash") {
+  if (spellProcedure?.procedure !== "grantedAlternateActionCost") {
     return { tag: "staleCharacterProcedure" };
   }
-  if (!expeditiousRetreatEffectIsActive(actor, subject)) {
+  if (!grantedAlternateActionCostEffectIsActive(actor, subject)) {
     return admittedBonusActionStandardActionRejection(input, {
       reason: "staleSubject",
       message:
@@ -271,12 +272,12 @@ function admitExpeditiousRetreatDash(
   return {
     tag: "admitted",
     input: asAdmittedBonusActionStandardAction(input, actor, {
-      kind: "expeditiousRetreatDash",
+      kind: "grantedAlternateActionCost",
     }),
   };
 }
 
-function expeditiousRetreatEffectIsActive(
+function grantedAlternateActionCostEffectIsActive(
   actor: CharacterBattleCreatureState,
   subject: Extract<
     UnitProcedureSubject,

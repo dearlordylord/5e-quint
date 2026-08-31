@@ -73,7 +73,7 @@ A non-empty, ordered collection of Oracle Cases decoded atomically and evaluated
 _Avoid_: Partial batch, correlated request set
 
 **Oracle Trace**:
-A source-owned, language-neutral ordered trace returned by evaluating an Oracle Case through the real production Character Creation-to-Battle workflow. It contains presentation-free workflow outcomes plus the exclusive Oracle Continuation Frontier, excluding internal helpers, replay bookkeeping, unstable prose, sessions, and caches.
+A source-owned, language-neutral ordered trace returned by evaluating an Oracle Case through the real production Character Creation-to-Battle workflow. It contains mechanics-relevant workflow outcomes plus the exclusive Oracle Continuation Frontier, excluding internal helpers, replay bookkeeping, unstable prose, sessions, and caches. A selected `CharacterBuildFact` may retain authored selection identity such as `authoredStartingItem.itemName`; that existing selected-build boundary is identity data, not a presentation field.
 _Avoid_: Internal execution trace, final observation only
 
 **Oracle Continuation Frontier**:

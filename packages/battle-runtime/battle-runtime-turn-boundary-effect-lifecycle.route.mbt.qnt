@@ -71,7 +71,7 @@ module battleRuntimeTurnBoundaryEffectLifecycleRouteMbt {
     recordSurface(
       TargetStartTurnResolvedRouteSurface,
       qRoute
-        .append(discoverBoundary(Set(RolledDiceHoleKind, SavingThrowOutcomeHoleKind)))
+        .append(discoverBoundary(Set(RolledDiceHoleKind)))
         .append(
           resolveBoundary(
             RolledDiceFillKind,

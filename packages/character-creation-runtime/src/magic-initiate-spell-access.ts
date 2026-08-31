@@ -2,22 +2,22 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
-  readBackgroundCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
-  readSpeciesCreationFacts,
   type MagicInitiateSpellAccessSourceFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import {
   classSpellListForClassName,
   type UnitCatalog,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import type {
   CharacterBuild,
   CharacterBuildMagicInitiateSpellAccess,
 } from "./types.ts";
+import { projectCharacterDefinition } from "./character-definition-projection.ts";
+import { projectCharacterCreationFeature } from "./character-feature-projection.ts";
 
 export type CharacterBuildMagicInitiateSpellAccessIssue = {
   readonly index?: number;
@@ -41,7 +41,7 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
   readonly value: unknown;
   readonly build: MagicInitiateSpellAccessBuildContext;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildMagicInitiateSpellAccess[],
   readonly [
     CharacterBuildMagicInitiateSpellAccessIssue,
@@ -49,7 +49,7 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
   ]
 > {
   if (!Array.isArray(input.value)) {
-    return Either.left([
+    return Result.fail([
       { message: "Character Build requires Magic Initiate Spell Accesses." },
     ]);
   }
@@ -68,8 +68,8 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
       grantInstances,
       unitLibrary: input.unitLibrary,
     });
-    if (Either.isLeft(parsed)) issues.push(...parsed.left);
-    else accesses.push(parsed.right);
+    if (Result.isFailure(parsed)) issues.push(...parsed.failure);
+    else accesses.push(parsed.success);
   });
 
   issues.push(
@@ -79,8 +79,8 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
 
   const firstIssue = issues[0];
   return firstIssue === undefined
-    ? Either.right(accesses)
-    : Either.left([firstIssue, ...issues.slice(1)]);
+    ? Result.succeed(accesses)
+    : Result.fail([firstIssue, ...issues.slice(1)]);
 }
 
 function magicInitiateGrantInstanceIssues(
@@ -148,29 +148,39 @@ export function characterBuildSpeciesOriginFeatUnitIds(input: {
 }): readonly UnitRecord["id"][] {
   const species = input.unitLibrary.getUnit(input.species);
   if (Option.isNone(species)) return [];
-  const speciesFacts = readSpeciesCreationFacts(species.value);
-  if (speciesFacts.tag !== "readable") return [];
+  const speciesProjection = projectCharacterDefinition(species.value);
+  if (
+    speciesProjection.tag !== "readable" ||
+    speciesProjection.value.kind !== "species"
+  ) {
+    return [];
+  }
 
   const originFeatSources = new Set(
-    Object.values(speciesFacts.value.traits).flatMap((traitUnitId) => {
-      const trait = input.unitLibrary.getUnit(traitUnitId);
-      if (
-        Option.isNone(trait) ||
-        trait.value.kind !== "species_trait" ||
-        trait.value.mechanics.family !== "passive"
-      ) {
-        return [];
-      }
-      return trait.value.mechanics.grants.some(
-        (grant) =>
-          grant.kind === "grant_feat" &&
-          ("category" in grant
-            ? grant.category === "origin"
-            : grant.categories.includes("origin")),
-      )
-        ? [trait.value.id]
-        : [];
-    }),
+    Object.values(speciesProjection.value.facts.traits).flatMap(
+      (traitUnitId) => {
+        const trait = input.unitLibrary.getUnit(traitUnitId);
+        if (Option.isNone(trait)) {
+          return [];
+        }
+        const projection = projectCharacterCreationFeature(trait.value);
+        if (
+          projection.tag !== "readable" ||
+          projection.value.kind !== "species_trait" ||
+          projection.value.facts.mechanics.family !== "passive"
+        )
+          return [];
+        return projection.value.facts.mechanics.grants.some(
+          (grant) =>
+            grant.kind === "grant_feat" &&
+            ("category" in grant
+              ? grant.category === "origin"
+              : grant.categories.includes("origin")),
+        )
+          ? [trait.value.id]
+          : [];
+      },
+    ),
   );
 
   return input.features.flatMap((feature) => {
@@ -181,9 +191,11 @@ export function characterBuildSpeciesOriginFeatUnitIds(input: {
       return [];
     }
     const selected = input.unitLibrary.getUnit(feature.unitId);
-    return Option.isSome(selected) &&
-      selected.value.kind === "feat" &&
-      selected.value.category === "origin"
+    if (Option.isNone(selected)) return [];
+    const projection = projectCharacterCreationFeature(selected.value);
+    return projection.tag === "readable" &&
+      projection.value.kind === "feat" &&
+      projection.value.facts.category === "origin"
       ? [selected.value.id]
       : [];
   });
@@ -194,7 +206,7 @@ function parseMagicInitiateSpellAccessEntry(input: {
   readonly index: number;
   readonly grantInstances: readonly MagicInitiateGrantInstance[];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildMagicInitiateSpellAccess,
   readonly [
     CharacterBuildMagicInitiateSpellAccessIssue,
@@ -203,7 +215,7 @@ function parseMagicInitiateSpellAccessEntry(input: {
 > {
   const issues: CharacterBuildMagicInitiateSpellAccessIssue[] = [];
   if (!isMagicInitiateSpellAccessInput(input.value)) {
-    return Either.left([
+    return Result.fail([
       {
         index: input.index,
         message:
@@ -250,8 +262,8 @@ function parseMagicInitiateSpellAccessEntry(input: {
 
   const firstIssue = issues[0];
   if (firstIssue !== undefined)
-    return Either.left([firstIssue, ...issues.slice(1)]);
-  return Either.right({
+    return Result.fail([firstIssue, ...issues.slice(1)]);
+  return Result.succeed({
     featUnitId,
     spellcastingAbility: input.value.spellcastingAbility,
     cantrips,
@@ -314,10 +326,13 @@ function magicInitiateGrantInstances(
   const grants: MagicInitiateGrantInstance[] = [];
   const background = unitLibrary.getUnit(build.background);
   if (Option.isSome(background)) {
-    const facts = readBackgroundCreationFacts(background.value);
-    if (facts.tag === "readable") {
+    const projection = projectCharacterDefinition(background.value);
+    if (
+      projection.tag === "readable" &&
+      projection.value.kind === "background"
+    ) {
       const grant = magicInitiateGrantInstance(
-        facts.value.originFeatId,
+        projection.value.facts.originFeatId,
         unitLibrary,
       );
       if (grant !== undefined) grants.push(grant);

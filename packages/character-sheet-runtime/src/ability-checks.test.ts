@@ -20,7 +20,7 @@ import {
   jackOfAllTradesRequiresBardLevelTwoFeatureTestName,
   jackOfAllTradesRequiresNoOtherProficiencyBonusTestName,
   primalKnowledgeAbilitySubstitutionProjectionTestName,
-  requireRight,
+  requireSuccess,
   secondStoryWorkProjectionTestName,
   skillProficiencyOverridesJackOfAllTradesTestName,
   unitLibrary,
@@ -43,11 +43,13 @@ function expectSecondStoryWorkProjection() {
   } as const;
 
   expect(
-    requireRight(characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary)),
+    requireSuccess(
+      characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary),
+    ),
   ).toEqual([]);
 
   expect(
-    requireRight(characterSheetLinkedSpeedGrants(rogueBuild, unitLibrary)),
+    requireSuccess(characterSheetLinkedSpeedGrants(rogueBuild, unitLibrary)),
   ).toEqual([
     {
       sourceUnitId: authoredUnitId("rogue_second_story_work"),
@@ -56,7 +58,7 @@ function expectSecondStoryWorkProjection() {
     },
   ]);
   expect(
-    requireRight(
+    requireSuccess(
       characterSheetJumpDistanceAbility({
         build: rogueBuild,
         unitLibrary,
@@ -85,7 +87,7 @@ describe("Character Sheet runtime / ability checks", () => {
     });
 
     expect(
-      requireRight(characterSheetLinkedSpeedGrants(rangerBuild, unitLibrary)),
+      requireSuccess(characterSheetLinkedSpeedGrants(rangerBuild, unitLibrary)),
     ).toEqual([
       {
         sourceUnitId: authoredUnitId("ranger_roving"),
@@ -107,10 +109,10 @@ describe("Character Sheet runtime / ability checks", () => {
       skill: "performance" as const,
       otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
     };
-    const result = requireRight(
+    const result = requireSuccess(
       characterSheetAbilityCheckProficiencyBonus(input),
     );
-    const roundedDown = requireRight(
+    const roundedDown = requireSuccess(
       characterSheetAbilityCheckProficiencyBonus({
         build: bardJackOfAllTradesBuild({ totalLevel: 5 }),
         unitLibrary,
@@ -126,7 +128,9 @@ describe("Character Sheet runtime / ability checks", () => {
       bonus: 1,
     });
     expect(
-      requireRight(characterSheetAbilityCheckProficiencyBonusProjection(input)),
+      requireSuccess(
+        characterSheetAbilityCheckProficiencyBonusProjection(input),
+      ),
     ).toEqual({
       proficiencyBonus: result,
       qRoute: [
@@ -141,7 +145,7 @@ describe("Character Sheet runtime / ability checks", () => {
   });
 
   test(skillProficiencyOverridesJackOfAllTradesTestName, () => {
-    const skillProficiency = requireRight(
+    const skillProficiency = requireSuccess(
       characterSheetAbilityCheckProficiencyBonus({
         build: bardJackOfAllTradesBuild({
           totalLevel: 5,
@@ -152,7 +156,7 @@ describe("Character Sheet runtime / ability checks", () => {
         otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
       }),
     );
-    const expertise = requireRight(
+    const expertise = requireSuccess(
       characterSheetAbilityCheckProficiencyBonus({
         build: bardJackOfAllTradesBuild({
           totalLevel: 5,
@@ -179,7 +183,7 @@ describe("Character Sheet runtime / ability checks", () => {
   });
 
   test(jackOfAllTradesRequiresNoOtherProficiencyBonusTestName, () => {
-    const result = requireRight(
+    const result = requireSuccess(
       characterSheetAbilityCheckProficiencyBonus({
         build: bardJackOfAllTradesBuild({ totalLevel: 5 }),
         unitLibrary,
@@ -192,7 +196,7 @@ describe("Character Sheet runtime / ability checks", () => {
   });
 
   test(jackOfAllTradesRequiresBardLevelTwoFeatureTestName, () => {
-    const result = requireRight(
+    const result = requireSuccess(
       characterSheetAbilityCheckProficiencyBonus({
         build: bardJackOfAllTradesBuild({ totalLevel: 1 }),
         unitLibrary,
@@ -211,7 +215,7 @@ describe("Character Sheet runtime / ability checks", () => {
     });
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetAbilityCheckAbility({
           build: barbarianBuild,
           unitLibrary,
@@ -222,7 +226,7 @@ describe("Character Sheet runtime / ability checks", () => {
       ),
     ).toEqual({ defaultAbility: "dex", optionalSubstitutions: [] });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetAbilityCheckAbility({
           build: barbarianBuild,
           unitLibrary,
@@ -242,7 +246,7 @@ describe("Character Sheet runtime / ability checks", () => {
       ],
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetAbilityCheckAbility({
           build: barbarianBuild,
           unitLibrary,

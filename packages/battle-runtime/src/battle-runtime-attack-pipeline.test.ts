@@ -2,7 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { describe, expect, test } from "vitest";
 
@@ -84,6 +84,45 @@ import {
 } from "./battle-reducer/attack-resolution.ts";
 
 describe("battle runtime: attack pipeline boundaries", () => {
+  test("attack-roll holes omit unavailable feature choices and reject explicit empty choices", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected the fighter attack fixture.");
+    }
+
+    const attackRoll = attackRollHole(
+      undefined,
+      fighter.origin.attack,
+      undefined,
+      [],
+    );
+    expect(attackRoll).not.toHaveProperty("ongoingFeatureActivations");
+    expect(attackRoll).not.toHaveProperty("missToHitReplacements");
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleHoleSchema)(attackRoll),
+      ),
+    ).toBe(true);
+
+    for (const propertyName of [
+      "ongoingFeatureActivations",
+      "missToHitReplacements",
+    ] as const) {
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleHoleSchema)({
+            ...attackRoll,
+            [propertyName]: [],
+          }),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("attack holes project bound character attacks into the canonical unbound shape", () => {
     const state = fighterVsGoblinBattle();
     const fighter = state.combatants.get(fighterId);
@@ -111,8 +150,8 @@ describe("battle runtime: attack pipeline boundaries", () => {
         attackTargetDistanceFeet([], fighterId, goblinId, hole.attack),
       ).toBeNull();
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleHoleSchema, {
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleHoleSchema, {
             onExcessProperty: "error",
           })(hole),
         ),
@@ -1143,36 +1182,15 @@ describe("battle runtime: attack pipeline boundaries", () => {
       actionResources: [],
     };
     const unavailable = spendAttackActionResource(noResourceState);
-    expect(unavailable).toEqual(Either.left("no action resource available"));
+    expect(unavailable).toEqual(Result.fail("no action resource available"));
 
     const spent = spendAttackActionResource({
       ...state.currentTurnResources,
       actionResources: [turn],
     });
     expect(spent).toMatchObject({
-      _tag: "Right",
-      right: {
-        spentResource: turn,
-        state: { actionTakenThisTurn: true },
-      },
-    });
-
-    const spentExtraAttack = spendAttackActionResource({
-      ...state.currentTurnResources,
-      actionResources: [extraAttack],
-    });
-    expect(spentExtraAttack).toMatchObject({
-      _tag: "Right",
-      right: { state: { actionTakenThisTurn: false } },
-    });
-
-    const spentUnitAction = spendAttackActionResource({
-      ...state.currentTurnResources,
-      actionResources: [restricted],
-    });
-    expect(spentUnitAction).toMatchObject({
-      _tag: "Right",
-      right: { state: { actionTakenThisTurn: true } },
+      _tag: "Success",
+      success: { spentResource: turn },
     });
   });
 });

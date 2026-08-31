@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import { decodePrincipalId, type PrincipalId } from "./play-session-access.ts";
@@ -16,7 +16,7 @@ export type PublicMcpOAuth = {
   };
   verifyAccessToken(
     token: string,
-  ): Promise<Either.Either<PrincipalId, PublicMcpOAuthIssue>>;
+  ): Promise<Result.Result<PrincipalId, PublicMcpOAuthIssue>>;
 };
 
 export type PublicMcpOAuthIssue = {
@@ -26,33 +26,33 @@ export type PublicMcpOAuthIssue = {
 };
 
 const PublicMcpOAuthConfigurationSchema = Schema.Struct({
-  resource: Schema.URL,
-  authorizationServer: Schema.URL,
-  issuer: Schema.NonEmptyTrimmedString,
-  jwksUrl: Schema.URL,
+  resource: Schema.URLFromString,
+  authorizationServer: Schema.URLFromString,
+  issuer: Schema.Trimmed.check(Schema.isNonEmpty()),
+  jwksUrl: Schema.URLFromString,
 });
 
 export function createPublicMcpOAuth(
   input: unknown,
-): Either.Either<PublicMcpOAuth, PublicMcpOAuthIssue> {
-  const configuration = Schema.decodeUnknownEither(
+): Result.Result<PublicMcpOAuth, PublicMcpOAuthIssue> {
+  const configuration = Schema.decodeUnknownResult(
     PublicMcpOAuthConfigurationSchema,
   )(input);
-  if (Either.isLeft(configuration)) {
-    return Either.left({
+  if (Result.isFailure(configuration)) {
+    return Result.fail({
       tag: "publicMcpOAuthIssue",
       reason: "invalidConfiguration",
-      message: configuration.left.message,
+      message: configuration.failure.message,
     });
   }
   const { resource, authorizationServer, issuer, jwksUrl } =
-    configuration.right;
+    configuration.success;
   const keySet = createRemoteJWKSet(jwksUrl);
   const resourceMetadataUrl = new URL(
     "/.well-known/oauth-protected-resource",
     resource,
   );
-  return Either.right({
+  return Result.succeed({
     resource,
     resourceMetadataUrl,
     protectedResourceMetadata: {
@@ -72,14 +72,14 @@ export function createPublicMcpOAuth(
           verified.payload.scp,
         );
         if (
-          Either.isLeft(principalId) ||
+          Result.isFailure(principalId) ||
           !scopes.includes(PLAY_SESSION_OAUTH_SCOPE)
         ) {
-          return Either.left(invalidTokenIssue());
+          return Result.fail(invalidTokenIssue());
         }
-        return Either.right(principalId.right);
+        return Result.succeed(principalId.success);
       } catch {
-        return Either.left(invalidTokenIssue());
+        return Result.fail(invalidTokenIssue());
       }
     },
   });

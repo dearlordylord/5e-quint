@@ -1,0 +1,601 @@
+import { Option, Result } from "effect";
+import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
+import type {
+  MasteryRecord,
+  SpellcastingClassRecord,
+  Provenance,
+  SrdProvenance,
+  SrdUnitRecord,
+  StartingEquipmentChoice,
+  UnitRecord,
+  WeaponRecord,
+} from "./types.ts";
+import {
+  unitMechanicsPath,
+  type UnitMechanicsPath,
+} from "./mechanics-graph-path.ts";
+
+export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
+
+export type UnitId = UnitRecord["id"];
+
+export type Srd521Provenance = SrdProvenance;
+
+export type Srd521Unit = SrdUnitRecord;
+
+export type SrdUnitCollection = {
+  readonly kind: "srdUnitCollection";
+  readonly provenance: Srd521CollectionProvenance;
+  readonly units: readonly Srd521Unit[];
+};
+
+export type UnitCatalog = {
+  readonly getUnit: (id: string) => Option.Option<UnitRecord>;
+  readonly listUnits: () => readonly UnitRecord[];
+  readonly requireUnit: (id: string) => UnitRecord;
+};
+
+type NonMasteryUnitRecord = Exclude<UnitRecord, MasteryRecord>;
+
+type WeaponMasteryReferenceIssueFields = {
+  readonly root: { readonly kind: "unit"; readonly id: UnitId };
+  readonly mechanicsPath: UnitMechanicsPath;
+  readonly fieldPath: "masteryUnitId";
+  readonly masteryUnitId: UnitId;
+};
+
+export type WeaponMasteryReferenceIssue =
+  | (WeaponMasteryReferenceIssueFields & {
+      readonly tag: "missing";
+    })
+  | (WeaponMasteryReferenceIssueFields & {
+      readonly tag: "wrongKind";
+      readonly actualKind: NonMasteryUnitRecord["kind"];
+    });
+
+export type WeaponMasteryReferenceGraph = {
+  readonly resolved: readonly WeaponMasteryReferenceResolution[];
+  readonly issues: readonly WeaponMasteryReferenceIssue[];
+};
+
+export type WeaponMasteryReferenceResolution = {
+  readonly weapon: WeaponRecord;
+  readonly mastery: MasteryRecord;
+};
+
+const WEAPON_MASTERY_REFERENCE_MECHANICS_PATH = unitMechanicsPath([
+  { kind: "singleton", role: "recordMechanics" },
+  { kind: "singleton", role: "reference" },
+]);
+
+function weaponMasteryReferenceIssueFields(
+  weapon: WeaponRecord,
+): WeaponMasteryReferenceIssueFields {
+  return {
+    root: { kind: "unit", id: weapon.id },
+    mechanicsPath: WEAPON_MASTERY_REFERENCE_MECHANICS_PATH,
+    fieldPath: "masteryUnitId",
+    masteryUnitId: weapon.masteryUnitId,
+  };
+}
+
+export function resolveWeaponMasteryReference(
+  weapon: WeaponRecord,
+  unitCatalog: UnitCatalog,
+): Result.Result<
+  WeaponMasteryReferenceResolution,
+  WeaponMasteryReferenceIssue
+> {
+  const referenced = unitCatalog.getUnit(weapon.masteryUnitId);
+  if (Option.isNone(referenced)) {
+    return Result.fail({
+      tag: "missing",
+      ...weaponMasteryReferenceIssueFields(weapon),
+    });
+  }
+  return referenced.value.kind === "mastery"
+    ? Result.succeed({ weapon, mastery: referenced.value })
+    : Result.fail({
+        tag: "wrongKind",
+        ...weaponMasteryReferenceIssueFields(weapon),
+        actualKind: referenced.value.kind,
+      });
+}
+
+export function inspectWeaponMasteryReferenceGraph(input: {
+  readonly weaponRoots: readonly WeaponRecord[];
+  readonly unitCatalog: UnitCatalog;
+}): WeaponMasteryReferenceGraph {
+  const resolutions = input.weaponRoots.map((weapon) => ({
+    weapon,
+    result: resolveWeaponMasteryReference(weapon, input.unitCatalog),
+  }));
+  return {
+    resolved: resolutions.flatMap(({ result }) =>
+      Result.match(result, {
+        onFailure: () => [],
+        onSuccess: (resolution) => [resolution],
+      }),
+    ),
+    issues: resolutions.flatMap(({ result }) =>
+      Result.match(result, {
+        onFailure: (issue) => [issue],
+        onSuccess: () => [],
+      }),
+    ),
+  };
+}
+
+export type AuthoredUnitReferenceResolution = {
+  readonly authoredReference: string;
+  readonly canonicalUnitId: UnitId;
+  readonly unit: UnitRecord;
+};
+
+/** Resolve source-authored punctuation variants only at the catalog boundary. */
+export function resolveAuthoredUnitReference(
+  authoredReference: string,
+  units: readonly UnitRecord[],
+): AuthoredUnitReferenceResolution | undefined {
+  const exact = units.find((unit) => unit.id === authoredReference);
+  if (exact !== undefined) {
+    return { authoredReference, canonicalUnitId: exact.id, unit: exact };
+  }
+
+  const key = authoredUnitReferenceKey(authoredReference);
+  const matches = units.filter(
+    (unit) => authoredUnitReferenceKey(unit.id) === key,
+  );
+  const [match] = matches;
+  return matches.length === 1 && match !== undefined
+    ? { authoredReference, canonicalUnitId: match.id, unit: match }
+    : undefined;
+}
+
+function authoredUnitReferenceKey(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0027\u2019]/g, "");
+}
+
+export type ClassSpellListName = SpellcastingClassRecord["className"];
+
+export type ClassSpellList = {
+  readonly cantrips: readonly UnitId[];
+  readonly leveled: readonly {
+    readonly spellId: UnitId;
+    readonly spellLevel: number;
+  }[];
+};
+
+function isSpellcastingClassRecord(
+  unit: UnitRecord,
+): unit is SpellcastingClassRecord {
+  return unit.kind === "class" && unit.spellcasting !== undefined;
+}
+
+function classSpellListFromRecord(
+  classRecord: SpellcastingClassRecord,
+): ClassSpellList {
+  const spellcasting = classRecord.spellcasting;
+  const leveled =
+    spellcasting.kind === "wizard_spellcasting_creation"
+      ? spellcasting.spellbookAccess.spells
+      : spellcasting.preparedAccess.spells;
+
+  return {
+    cantrips:
+      spellcasting.cantripAccess?.spellIds.map((id) => UnitIdSchema.make(id)) ??
+      [],
+    leveled: leveled.map((spell) => ({
+      ...spell,
+      spellId: UnitIdSchema.make(spell.spellId),
+    })),
+  };
+}
+
+export function classSpellListForSpellcastingClassRecord(
+  classRecord: SpellcastingClassRecord,
+): ClassSpellList {
+  return classSpellListFromRecord(classRecord);
+}
+
+export function spellcastingClassRecordForClassName(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+}): SpellcastingClassRecord | undefined {
+  return input.unitLibrary
+    .listUnits()
+    .find(
+      (unit): unit is SpellcastingClassRecord =>
+        isSpellcastingClassRecord(unit) && unit.className === input.className,
+    );
+}
+
+export function classSpellListForClassName(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+}): ClassSpellList | undefined {
+  const classRecord = spellcastingClassRecordForClassName(input);
+  return classRecord === undefined || !isSpellcastingClassRecord(classRecord)
+    ? undefined
+    : classSpellListFromRecord(classRecord);
+}
+
+export function classSpellListPreparedSpellLevel(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+  readonly spellId: UnitId;
+}): number | undefined {
+  return classSpellListForClassName(input)?.leveled.find(
+    (spell) => spell.spellId === input.spellId,
+  )?.spellLevel;
+}
+
+export function allCantripsFromClassSpellList(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+  readonly spellIds: readonly UnitId[];
+}): boolean {
+  const cantrips = new Set(classSpellListForClassName(input)?.cantrips ?? []);
+  return input.spellIds.every((spellId) => cantrips.has(spellId));
+}
+
+export function allCantripsFromAnyClassSpellList(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly spellIds: readonly UnitId[];
+}): boolean {
+  return input.spellIds.every((spellId) =>
+    input.unitLibrary
+      .listUnits()
+      .filter(isSpellcastingClassRecord)
+      .some((classRecord) =>
+        allCantripsFromClassSpellList({
+          className: classRecord.className,
+          spellIds: [spellId],
+          unitLibrary: input.unitLibrary,
+        }),
+      ),
+  );
+}
+
+export function allLeveledSpellsFromAnyClassSpellList(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly spells: readonly {
+    readonly spellId: UnitId;
+    readonly spellLevel: number;
+  }[];
+}): boolean {
+  return input.spells.every((spell) =>
+    input.unitLibrary
+      .listUnits()
+      .filter(isSpellcastingClassRecord)
+      .some(
+        (classRecord) =>
+          classSpellListPreparedSpellLevel({
+            className: classRecord.className,
+            spellId: spell.spellId,
+            unitLibrary: input.unitLibrary,
+          }) === spell.spellLevel,
+      ),
+  );
+}
+
+export type UnitCatalogBuildIssue =
+  | {
+      readonly code: "duplicateUnitId";
+      readonly unitId: UnitId;
+    }
+  | {
+      readonly code: "duplicateSpellcastingClassName";
+      readonly className: SpellcastingClassRecord["className"];
+      readonly unitIds: readonly [UnitId, UnitId];
+    }
+  | {
+      readonly code: "mixedProvenance";
+      readonly collectionKind: SrdUnitCollection["kind"];
+      readonly expected: Srd521CollectionProvenance;
+      readonly actual: Provenance;
+      readonly unitId: UnitId;
+    }
+  | {
+      readonly code: "unknownUnitReference";
+      readonly referringUnitId: UnitId;
+      readonly referencedUnitId: UnitId;
+    }
+  | {
+      readonly code: "invalidSubclassChoiceReference";
+      readonly classUnitId: UnitId;
+      readonly subclassUnitId: UnitId;
+      readonly expectedClassName: string;
+      readonly actualKind: UnitRecord["kind"];
+      readonly actualClassName?: string;
+    }
+  | {
+      readonly code: "invalidSpeciesTraitReference";
+      readonly speciesUnitId: UnitId;
+      readonly traitUnitId: UnitId;
+      readonly expectedSpecies: string;
+      readonly actualKind: UnitRecord["kind"];
+      readonly actualSpecies?: string;
+    };
+
+export type UnitCatalogBuildResult =
+  | { readonly tag: "ok"; readonly catalog: UnitCatalog }
+  | {
+      readonly tag: "invalid";
+      readonly issues: readonly UnitCatalogBuildIssue[];
+    };
+
+export function isSrd521Provenance(
+  value: Provenance,
+): value is Srd521Provenance {
+  return value.kind === "srd-5.2.1";
+}
+
+export function isSrd521Unit(unit: UnitRecord): unit is Srd521Unit {
+  return isSrd521Provenance(unit.provenance);
+}
+
+export function assertSrd521Unit(unit: UnitRecord): Srd521Unit {
+  /* v8 ignore start -- @preserve -- callers must establish SRD provenance before invoking this assertion; a non-SRD Unit violates that internal precondition */
+  if (!isSrd521Unit(unit)) {
+    throw new Error(`Unit is not SRD 5.2.1: ${unit.id}`);
+  }
+  /* v8 ignore stop -- @preserve */
+
+  return unit;
+}
+
+export function defineSrdUnitCollection(input: {
+  readonly units: readonly Srd521Unit[];
+}): SrdUnitCollection {
+  const collection = {
+    kind: "srdUnitCollection",
+    provenance: { kind: "srd-5.2.1" },
+    units: input.units,
+  } as const satisfies SrdUnitCollection;
+  const provenanceIssues = validateSrdUnitCollection(collection);
+
+  if (provenanceIssues.length > 0) {
+    throw new Error("SRD Unit collection contains non-SRD provenance");
+  }
+
+  return collection;
+}
+
+type UnitCatalogRecordState = {
+  readonly issues: UnitCatalogBuildIssue[];
+  readonly records: Map<UnitId, UnitRecord>;
+  readonly spellcastingClassOwners: Map<
+    SpellcastingClassRecord["className"],
+    UnitId
+  >;
+};
+
+const appendUnitCatalogRecord = (
+  state: UnitCatalogRecordState,
+  unit: UnitRecord,
+): void => {
+  if (state.records.has(unit.id)) {
+    state.issues.push({
+      code: "duplicateUnitId",
+      unitId: unit.id,
+    });
+    return;
+  }
+  state.records.set(unit.id, unit);
+  if (!isSpellcastingClassRecord(unit)) return;
+  const existingUnitId = state.spellcastingClassOwners.get(unit.className);
+  if (existingUnitId === undefined) {
+    state.spellcastingClassOwners.set(unit.className, unit.id);
+  } else {
+    state.issues.push({
+      code: "duplicateSpellcastingClassName",
+      className: unit.className,
+      unitIds: [existingUnitId, unit.id],
+    });
+  }
+};
+
+const collectUnitCatalogRecords = (
+  collections: readonly SrdUnitCollection[],
+): UnitCatalogRecordState => {
+  const state: UnitCatalogRecordState = {
+    issues: [],
+    records: new Map(),
+    spellcastingClassOwners: new Map(),
+  };
+  for (const collection of collections) {
+    state.issues.push(...validateSrdUnitCollection(collection));
+    for (const unit of collection.units) appendUnitCatalogRecord(state, unit);
+  }
+  return state;
+};
+
+const validateUnitCatalogReferences = (
+  collections: readonly SrdUnitCollection[],
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): UnitCatalogBuildIssue[] => {
+  const issues: UnitCatalogBuildIssue[] = [];
+  for (const collection of collections) {
+    for (const unit of collection.units) {
+      issues.push(...findUnknownStartingEquipmentRefs(unit, records));
+      issues.push(...findInvalidSubclassChoiceRefs(unit, records));
+      issues.push(...findInvalidSpeciesTraitRefs(unit, records));
+    }
+  }
+  return issues;
+};
+
+export function buildUnitCatalog(input: {
+  readonly collections: readonly SrdUnitCollection[];
+}): UnitCatalogBuildResult {
+  const state = collectUnitCatalogRecords(input.collections);
+  const issues = [
+    ...state.issues,
+    ...validateUnitCatalogReferences(input.collections, state.records),
+  ];
+  // Class feature grant refs are intentionally not catalog-validated yet:
+  // this first vertical slice can load partial class progressions while
+  // unimplemented higher-level feature Units are still absent. Consumers that
+  // need a granted feature Unit dereference it at the point of use. Once the
+  // catalog has an explicit supported-level horizon, validate all grant refs
+  // inside that horizon here.
+
+  if (issues.length > 0) {
+    return { tag: "invalid", issues };
+  }
+
+  return {
+    tag: "ok",
+    catalog: {
+      getUnit: (id) =>
+        Option.fromNullishOr(state.records.get(UnitIdSchema.make(id))),
+      listUnits: () => Array.from(state.records.values()),
+      requireUnit: (id) => state.records.get(UnitIdSchema.make(id))!,
+    },
+  };
+}
+
+function findInvalidSpeciesTraitRefs(
+  unit: UnitRecord,
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): readonly UnitCatalogBuildIssue[] {
+  if (unit.kind !== "species") {
+    return [];
+  }
+
+  const issues: UnitCatalogBuildIssue[] = [];
+  for (const rawTraitUnitId of Object.values(unit.traits)) {
+    const traitUnitId = UnitIdSchema.make(rawTraitUnitId);
+    const referenced = records.get(traitUnitId);
+    if (referenced == null) {
+      issues.push({
+        code: "unknownUnitReference",
+        referringUnitId: unit.id,
+        referencedUnitId: traitUnitId,
+      });
+      continue;
+    }
+    if (
+      referenced.kind === "species_trait" &&
+      referenced.species === unit.species
+    ) {
+      continue;
+    }
+
+    issues.push({
+      code: "invalidSpeciesTraitReference",
+      speciesUnitId: unit.id,
+      traitUnitId,
+      expectedSpecies: unit.species,
+      actualKind: referenced.kind,
+      /* v8 ignore next -- @preserve -- only malformed species-trait catalog composition reaches this diagnostic projection */
+      ...("species" in referenced ? { actualSpecies: referenced.species } : {}),
+    });
+  }
+
+  return issues;
+}
+
+function findUnknownStartingEquipmentRefs(
+  unit: UnitRecord,
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): readonly UnitCatalogBuildIssue[] {
+  if (!hasStartingEquipment(unit)) {
+    return [];
+  }
+
+  return unit.startingEquipment.flatMap((choice) =>
+    choice.kind === "item_bundle"
+      ? choice.items.flatMap((item) =>
+          item.kind === "unit_ref" && !records.has(item.unitId)
+            ? [
+                {
+                  code: "unknownUnitReference",
+                  referringUnitId: unit.id,
+                  referencedUnitId: item.unitId,
+                } satisfies UnitCatalogBuildIssue,
+              ]
+            : [],
+        )
+      : [],
+  );
+}
+
+function hasStartingEquipment(unit: UnitRecord): unit is UnitRecord & {
+  readonly startingEquipment: readonly StartingEquipmentChoice[];
+} {
+  return unit.kind === "class" || unit.kind === "background";
+}
+
+function findInvalidSubclassChoiceRefs(
+  unit: UnitRecord,
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): readonly UnitCatalogBuildIssue[] {
+  if (unit.kind !== "class") {
+    return [];
+  }
+
+  return unit.subclassChoices.flatMap((choice) =>
+    choice.options.flatMap(
+      (rawSubclassUnitId): readonly UnitCatalogBuildIssue[] => {
+        const subclassUnitId = UnitIdSchema.make(rawSubclassUnitId);
+        const referenced = records.get(subclassUnitId);
+        /* v8 ignore start -- @preserve -- an unresolved subclass id is malformed class-catalog composition */
+        if (referenced == null) {
+          return [
+            {
+              code: "unknownUnitReference",
+              referringUnitId: unit.id,
+              referencedUnitId: subclassUnitId,
+            } satisfies UnitCatalogBuildIssue,
+          ];
+        }
+        /* v8 ignore stop -- @preserve */
+        if (
+          referenced.kind === "subclass" &&
+          referenced.className === unit.className
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            code: "invalidSubclassChoiceReference",
+            classUnitId: unit.id,
+            subclassUnitId,
+            expectedClassName: unit.className,
+            actualKind: referenced.kind,
+            /* v8 ignore start -- @preserve -- only malformed subclass catalog composition reaches this diagnostic projection */
+            ...("className" in referenced
+              ? { actualClassName: referenced.className }
+              : {}),
+            /* v8 ignore stop -- @preserve */
+          } satisfies UnitCatalogBuildIssue,
+        ];
+      },
+    ),
+  );
+}
+
+function validateSrdUnitCollection(
+  collection: SrdUnitCollection,
+): readonly UnitCatalogBuildIssue[] {
+  return collection.units.flatMap((unit) =>
+    isSrd521Provenance(unit.provenance)
+      ? []
+      : [
+          {
+            code: "mixedProvenance",
+            collectionKind: collection.kind,
+            expected: collection.provenance,
+            actual: unit.provenance,
+            unitId: unit.id,
+          } satisfies UnitCatalogBuildIssue,
+        ],
+  );
+}

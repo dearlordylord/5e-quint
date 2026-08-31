@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -22,26 +22,26 @@ import {
   timeSpanDuration,
 } from "./elapsed-time.ts";
 
-function requireRight<T, E>(value: Either.Either<T, E>): T {
-  if (Either.isLeft(value)) {
-    throw new Error("expected Right");
+function requireSuccess<T, E>(value: Result.Result<T, E>): T {
+  if (Result.isFailure(value)) {
+    throw new Error("expected Success");
   }
-  return value.right;
+  return value.success;
 }
 
 describe("elapsed time algebra", () => {
   test("converts minutes and hours to canonical ticks", () => {
-    expect(Number(requireRight(elapsedTimeTicksFromMinutes(1)))).toBe(
+    expect(Number(requireSuccess(elapsedTimeTicksFromMinutes(1)))).toBe(
       ELAPSED_TIME_TICKS_PER_MINUTE,
     );
-    expect(Number(requireRight(elapsedTimeTicksFromHours(1)))).toBe(
+    expect(Number(requireSuccess(elapsedTimeTicksFromHours(1)))).toBe(
       ELAPSED_TIME_TICKS_PER_HOUR,
     );
-    expect(Number(requireRight(elapsedTimeTicksFromHours(8)))).toBe(4_800);
+    expect(Number(requireSuccess(elapsedTimeTicksFromHours(8)))).toBe(4_800);
   });
 
   test("keeps authored time-span units canonical", () => {
-    const duration = requireRight(
+    const duration = requireSuccess(
       timeSpanDuration({ unit: "minute", amount: 1 }),
     );
 
@@ -51,25 +51,46 @@ describe("elapsed time algebra", () => {
   });
 
   test("rejects fractional and unsupported elapsed-time values", () => {
-    expect(Either.isLeft(elapsedTimeTicksFromMinutes(1.5))).toBe(true);
+    const fractional = elapsedTimeTicksFromMinutes(1.5);
+    expect(Result.isFailure(fractional)).toBe(true);
+    if (Result.isFailure(fractional)) {
+      expect(fractional.failure).toEqual({
+        kind: "fractionalAmount",
+        amount: 1.5,
+      });
+    }
+
+    const unsupported = elapsedTimeTicksFromTimeSpanDuration({
+      unit: "second",
+      amount: 6,
+    });
+    expect(Result.isFailure(unsupported)).toBe(true);
+    if (Result.isFailure(unsupported)) {
+      expect(unsupported.failure).toEqual({
+        kind: "unsupportedUnit",
+        unit: "second",
+      });
+    }
     expect(
-      Either.isLeft(
-        elapsedTimeTicksFromTimeSpanDuration({ unit: "second", amount: 6 }),
+      Number(
+        requireSuccess(
+          elapsedTimeTicksFromTimeSpanDuration({ unit: "minute", amount: 2 }),
+        ),
       ),
-    ).toBe(true);
+    ).toBe(2 * ELAPSED_TIME_TICKS_PER_MINUTE);
   });
 
   test("parses positive elapsed-time ticks without admitting expired timers", () => {
-    expect(Number(requireRight(parsePositiveElapsedTimeTicks(1)))).toBe(1);
-    expect(Either.isLeft(parsePositiveElapsedTimeTicks(0))).toBe(true);
+    expect(Number(requireSuccess(parsePositiveElapsedTimeTicks(1)))).toBe(1);
+    expect(Result.isFailure(parsePositiveElapsedTimeTicks(0))).toBe(true);
   });
 
   test("formats the largest exact elapsed-time unit", () => {
     expect(
-      formatElapsedTimeTicks(requireRight(elapsedTimeTicksFromMinutes(10))),
+      formatElapsedTimeTicks(requireSuccess(elapsedTimeTicksFromMinutes(10))),
     ).toBe("10 minutes");
     expect(
-      formatElapsedTimeTicks(requireRight(elapsedTimeTicksFromHours(8))),
+      formatElapsedTimeTicks(requireSuccess(elapsedTimeTicksFromHours(8))),
     ).toBe("8 hours");
     expect(formatElapsedTimeTicks(elapsedTimeTicks(14_400))).toBe("1 day");
     expect(formatElapsedTimeTicks(elapsedTimeTicks(1))).toBe("1 round");
@@ -79,15 +100,15 @@ describe("elapsed time algebra", () => {
   test("parses timer and boundary domains with precise failures", () => {
     expect(isTimeSpanUnit("round")).toBe(true);
     expect(isTimeSpanUnit("second")).toBe(false);
-    expect(Number(requireRight(parseElapsedTimeTicks(0)))).toBe(0);
-    expect(Either.isLeft(parseElapsedTimeTicks(-1))).toBe(true);
-    expect(Either.isLeft(parseElapsedTimeTicks(1.5))).toBe(true);
-    expect(Either.isLeft(parsePositiveElapsedTimeTicks(1.5))).toBe(true);
-    expect(Number(requireRight(parsePositiveInt(2)))).toBe(2);
-    expect(Either.isLeft(parsePositiveInt(0))).toBe(true);
-    expect(Either.isLeft(parsePositiveInt(1.5))).toBe(true);
-    expect(Number(requireRight(parseBoundaryCrossingsRemaining(2)))).toBe(2);
-    expect(Either.isLeft(parseBoundaryCrossingsRemaining(0))).toBe(true);
+    expect(Number(requireSuccess(parseElapsedTimeTicks(0)))).toBe(0);
+    expect(Result.isFailure(parseElapsedTimeTicks(-1))).toBe(true);
+    expect(Result.isFailure(parseElapsedTimeTicks(1.5))).toBe(true);
+    expect(Result.isFailure(parsePositiveElapsedTimeTicks(1.5))).toBe(true);
+    expect(Number(requireSuccess(parsePositiveInt(2)))).toBe(2);
+    expect(Result.isFailure(parsePositiveInt(0))).toBe(true);
+    expect(Result.isFailure(parsePositiveInt(1.5))).toBe(true);
+    expect(Number(requireSuccess(parseBoundaryCrossingsRemaining(2)))).toBe(2);
+    expect(Result.isFailure(parseBoundaryCrossingsRemaining(0))).toBe(true);
     expect(
       Number(
         decrementBoundaryCrossingsRemaining(boundaryCrossingsRemaining(2)),
@@ -99,11 +120,13 @@ describe("elapsed time algebra", () => {
   });
 
   test("converts every time unit and describes every parse error", () => {
-    expect(Number(requireRight(elapsedTimeTicksFromUnit("round", 2)))).toBe(2);
-    expect(Number(requireRight(elapsedTimeTicksFromUnit("day", 2)))).toBe(
+    expect(Number(requireSuccess(elapsedTimeTicksFromUnit("round", 2)))).toBe(
+      2,
+    );
+    expect(Number(requireSuccess(elapsedTimeTicksFromUnit("day", 2)))).toBe(
       28_800,
     );
-    expect(Either.isLeft(elapsedTimeTicksFromUnit("day", -1))).toBe(true);
+    expect(Result.isFailure(elapsedTimeTicksFromUnit("day", -1))).toBe(true);
     expect(
       describeElapsedTimeParseError({
         kind: "unsupportedUnit",
@@ -122,11 +145,11 @@ describe("elapsed time algebra", () => {
     expect(
       describeElapsedTimeParseError({ kind: "nonPositiveAmount", amount: 0 }),
     ).toContain("0");
-    expect(Either.isLeft(timeSpanDuration({ unit: "minute", amount: 0 }))).toBe(
-      true,
-    );
-    expect(Either.isLeft(timeSpanDuration({ unit: "second", amount: 1 }))).toBe(
-      true,
-    );
+    expect(
+      Result.isFailure(timeSpanDuration({ unit: "minute", amount: 0 })),
+    ).toBe(true);
+    expect(
+      Result.isFailure(timeSpanDuration({ unit: "second", amount: 1 })),
+    ).toBe(true);
   });
 });

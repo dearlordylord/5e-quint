@@ -1,20 +1,20 @@
 import { Option } from "effect";
 
 import {
-  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,
   type CreatureType,
-  type FindFamiliarCreatureTypeOverride,
+  type SpawnedCompanionCreatureTypeOverride,
   StatBlockId,
 } from "@dnd/shared/game-facts";
 import type { StatBlockCatalog } from "./stat-block-catalog.ts";
 import type { SpellRecord, StatBlockRecord } from "./types.ts";
 
 export {
-  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
-  type FindFamiliarCreatureTypeOverride,
+  SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,
+  type SpawnedCompanionCreatureTypeOverride,
 };
 const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET = new Set<CreatureType>(
-  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,
 );
 
 type PactOfTheChainSpecialFormRefShape = {
@@ -68,63 +68,73 @@ type SpawnedCreatureMechanics = Extract<
   SpellRecord["mechanics"],
   { readonly family: "spawned_creature" }
 >;
+type SpellMechanicsSource = {
+  readonly mechanics:
+    | Pick<SpawnedCreatureMechanics, "family" | "creature" | "mode">
+    | {
+        readonly family: Exclude<
+          SpellRecord["mechanics"]["family"],
+          "spawned_creature"
+        >;
+      };
+};
 type FamiliarFormCatalogCreature = Extract<
   SpawnedCreatureMechanics["creature"],
   { readonly kind: "familiar_form_catalog" }
 >;
-export type FindFamiliarNormalFormRef =
+export type SpawnedCompanionNormalFormRef =
   FamiliarFormCatalogCreature["normalForms"][number];
 type SpawnedCreatureModeOption = NonNullable<
   SpawnedCreatureMechanics["mode"]
 >["options"][number];
-export type FindFamiliarCreatureTypeOverrideChoice = {
+export type SpawnedCompanionCreatureTypeOverrideChoice = {
   readonly optionId: SpawnedCreatureModeOption["id"];
   readonly displayName: SpawnedCreatureModeOption["displayName"];
-  readonly creatureType: FindFamiliarCreatureTypeOverride;
+  readonly creatureType: SpawnedCompanionCreatureTypeOverride;
 };
-export type FindFamiliarAdditionalFormEligibility = {
+export type SpawnedCompanionAdditionalFormEligibility = {
   readonly kind: "challengeRatingZeroBeast";
 };
 export type PactOfTheChainSpecialFormRef =
   (typeof PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS)[number];
 
-export type FindFamiliarFormSelection =
+export type SpawnedCompanionFormSelection =
   | {
       readonly tag: "normalNamedForm";
-      readonly formId: FindFamiliarNormalFormRef["formId"];
+      readonly formId: SpawnedCompanionNormalFormRef["formId"];
     }
   | {
       readonly tag: "challengeRatingZeroBeast";
       readonly statBlockId: StatBlockRecord["id"];
     };
 
-export type PactOfTheChainFindFamiliarFormSelection =
-  | FindFamiliarFormSelection
+export type PactOfTheChainSpawnedCompanionFormSelection =
+  | SpawnedCompanionFormSelection
   | {
       readonly tag: "pactOfTheChainSpecialForm";
       readonly formId: PactOfTheChainSpecialFormRef["formId"];
     };
 
-export type FindFamiliarFormEligibility = {
-  readonly normalForms: readonly FindFamiliarNormalFormRef[];
-  readonly additionalNormalFormEligibility: FindFamiliarAdditionalFormEligibility;
-  readonly creatureTypeOverrideChoices: readonly FindFamiliarCreatureTypeOverrideChoice[];
+export type SpawnedCompanionFormEligibility = {
+  readonly normalForms: readonly SpawnedCompanionNormalFormRef[];
+  readonly additionalNormalFormEligibility: SpawnedCompanionAdditionalFormEligibility;
+  readonly creatureTypeOverrideChoices: readonly SpawnedCompanionCreatureTypeOverrideChoice[];
 };
 
-export type PactOfTheChainFindFamiliarFormEligibility =
-  FindFamiliarFormEligibility & {
+export type PactOfTheChainSpawnedCompanionFormEligibility =
+  SpawnedCompanionFormEligibility & {
     readonly specialForms: readonly PactOfTheChainSpecialFormRef[];
   };
 
-export type FindFamiliarResolvedForm = {
+export type SpawnedCompanionResolvedForm = {
   readonly statBlock: StatBlockRecord;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
 };
 
-export type FindFamiliarFormResolution =
+export type SpawnedCompanionFormResolution =
   | {
       readonly tag: "resolved";
-      readonly form: FindFamiliarResolvedForm;
+      readonly form: SpawnedCompanionResolvedForm;
     }
   | {
       readonly tag: "issue";
@@ -134,16 +144,16 @@ export type FindFamiliarFormResolution =
 type CreatureTypeOverrideChoiceResolution =
   | {
       readonly tag: "resolved";
-      readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+      readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
     }
   | {
       readonly tag: "issue";
       readonly message: string;
     };
 
-export function findFamiliarFormEligibilityForSpell(
-  spell: SpellRecord,
-): FindFamiliarFormEligibility | null {
+export function spawnedCompanionFormEligibilityForSpell(
+  spell: SpellMechanicsSource,
+): SpawnedCompanionFormEligibility | null {
   if (
     spell.mechanics.family !== "spawned_creature" ||
     spell.mechanics.creature.kind !== "familiar_form_catalog"
@@ -152,13 +162,15 @@ export function findFamiliarFormEligibilityForSpell(
   }
   /* v8 ignore start -- @preserve -- duplicate normal-form ids are malformed Find Familiar authorship; the shipped record is decoded and uniqueness-audited */
   if (
-    !hasUniqueFindFamiliarNormalFormIds(spell.mechanics.creature.normalForms)
+    !hasUniqueSpawnedCompanionNormalFormIds(
+      spell.mechanics.creature.normalForms,
+    )
   ) {
     return null;
   }
   /* v8 ignore stop -- @preserve */
   const creatureTypeOverrideChoices =
-    findFamiliarCreatureTypeOverrideChoicesForSpell(spell);
+    spawnedCompanionCreatureTypeOverrideChoicesForSpell(spell);
   /* v8 ignore start -- @preserve -- a missing, duplicate, or incomplete override menu is malformed Find Familiar authorship */
   if (creatureTypeOverrideChoices === null) {
     return null;
@@ -173,10 +185,10 @@ export function findFamiliarFormEligibilityForSpell(
   };
 }
 
-export function pactOfTheChainFindFamiliarFormEligibilityForSpell(
-  spell: SpellRecord,
-): PactOfTheChainFindFamiliarFormEligibility | null {
-  const baseEligibility = findFamiliarFormEligibilityForSpell(spell);
+export function pactOfTheChainSpawnedCompanionFormEligibilityForSpell(
+  spell: SpellMechanicsSource,
+): PactOfTheChainSpawnedCompanionFormEligibility | null {
+  const baseEligibility = spawnedCompanionFormEligibilityForSpell(spell);
   return baseEligibility === null
     ? null
     : {
@@ -185,12 +197,12 @@ export function pactOfTheChainFindFamiliarFormEligibilityForSpell(
       };
 }
 
-export function resolveFindFamiliarForm(input: {
+export function resolveSpawnedCompanionForm(input: {
   readonly catalog: StatBlockCatalog;
-  readonly eligibility: FindFamiliarFormEligibility;
-  readonly selection: FindFamiliarFormSelection;
-  readonly creatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-}): FindFamiliarFormResolution {
+  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly selection: SpawnedCompanionFormSelection;
+  readonly creatureTypeOverrideChoiceId: SpawnedCompanionCreatureTypeOverrideChoice["optionId"];
+}): SpawnedCompanionFormResolution {
   const creatureTypeOverride = resolveCreatureTypeOverrideChoice({
     eligibility: input.eligibility,
     optionId: input.creatureTypeOverrideChoiceId,
@@ -199,7 +211,7 @@ export function resolveFindFamiliarForm(input: {
     return creatureTypeOverride;
   }
 
-  return resolveFindFamiliarSelectedForm({
+  return resolveSpawnedCompanionSelectedForm({
     catalog: input.catalog,
     eligibility: input.eligibility,
     selection: input.selection,
@@ -207,12 +219,12 @@ export function resolveFindFamiliarForm(input: {
   });
 }
 
-export function resolveFindFamiliarSelectedForm(input: {
+export function resolveSpawnedCompanionSelectedForm(input: {
   readonly catalog: StatBlockCatalog;
-  readonly eligibility: FindFamiliarFormEligibility;
-  readonly selection: FindFamiliarFormSelection;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-}): FindFamiliarFormResolution {
+  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly selection: SpawnedCompanionFormSelection;
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
+}): SpawnedCompanionFormResolution {
   if (input.selection.tag === "normalNamedForm") {
     const formId = input.selection.formId;
     const formRef = input.eligibility.normalForms.find(
@@ -238,14 +250,14 @@ export function resolveFindFamiliarSelectedForm(input: {
   });
 }
 
-export function resolvePactOfTheChainFindFamiliarForm(input: {
+export function resolvePactOfTheChainSpawnedCompanionForm(input: {
   readonly catalog: StatBlockCatalog;
-  readonly eligibility: PactOfTheChainFindFamiliarFormEligibility;
-  readonly selection: PactOfTheChainFindFamiliarFormSelection;
-  readonly creatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-}): FindFamiliarFormResolution {
+  readonly eligibility: PactOfTheChainSpawnedCompanionFormEligibility;
+  readonly selection: PactOfTheChainSpawnedCompanionFormSelection;
+  readonly creatureTypeOverrideChoiceId: SpawnedCompanionCreatureTypeOverrideChoice["optionId"];
+}): SpawnedCompanionFormResolution {
   if (input.selection.tag !== "pactOfTheChainSpecialForm") {
-    return resolveFindFamiliarForm({
+    return resolveSpawnedCompanionForm({
       catalog: input.catalog,
       eligibility: input.eligibility,
       selection: input.selection,
@@ -287,9 +299,9 @@ export function resolvePactOfTheChainFindFamiliarForm(input: {
       };
 }
 
-function findFamiliarCreatureTypeOverrideChoicesForSpell(
-  spell: SpellRecord,
-): readonly FindFamiliarCreatureTypeOverrideChoice[] | null {
+function spawnedCompanionCreatureTypeOverrideChoicesForSpell(
+  spell: SpellMechanicsSource,
+): readonly SpawnedCompanionCreatureTypeOverrideChoice[] | null {
   const mode =
     spell.mechanics.family === "spawned_creature"
       ? spell.mechanics.mode
@@ -300,16 +312,16 @@ function findFamiliarCreatureTypeOverrideChoicesForSpell(
   }
   /* v8 ignore stop -- @preserve */
 
-  const choices: FindFamiliarCreatureTypeOverrideChoice[] = [];
-  const creatureTypes = new Set<FindFamiliarCreatureTypeOverride>();
+  const choices: SpawnedCompanionCreatureTypeOverrideChoice[] = [];
+  const creatureTypes = new Set<SpawnedCompanionCreatureTypeOverride>();
   const optionIds = new Set<
-    FindFamiliarCreatureTypeOverrideChoice["optionId"]
+    SpawnedCompanionCreatureTypeOverrideChoice["optionId"]
   >();
   for (const option of mode.options) {
     const creatureType = option.overrides.creatureType;
     /* v8 ignore start -- @preserve -- unknown creature types and duplicate option/type identities are malformed mode-menu authorship */
     if (
-      !isFindFamiliarCreatureTypeOverride(creatureType) ||
+      !isSpawnedCompanionCreatureTypeOverride(creatureType) ||
       optionIds.has(option.id) ||
       creatureTypes.has(creatureType)
     ) {
@@ -325,7 +337,7 @@ function findFamiliarCreatureTypeOverrideChoicesForSpell(
     });
   }
   /* v8 ignore start -- @preserve -- the admitted mode menu must cover every canonical Find Familiar creature-type override */
-  return FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES.every((creatureType) =>
+  return SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES.every((creatureType) =>
     creatureTypes.has(creatureType),
   )
     ? choices
@@ -333,10 +345,10 @@ function findFamiliarCreatureTypeOverrideChoicesForSpell(
   /* v8 ignore stop -- @preserve */
 }
 
-function hasUniqueFindFamiliarNormalFormIds(
-  normalForms: readonly FindFamiliarNormalFormRef[],
+function hasUniqueSpawnedCompanionNormalFormIds(
+  normalForms: readonly SpawnedCompanionNormalFormRef[],
 ): boolean {
-  const formIds = new Set<FindFamiliarNormalFormRef["formId"]>();
+  const formIds = new Set<SpawnedCompanionNormalFormRef["formId"]>();
   for (const form of normalForms) {
     /* v8 ignore start -- @preserve -- duplicate normal-form identities are rejected as malformed Find Familiar authorship */
     if (formIds.has(form.formId)) {
@@ -349,8 +361,8 @@ function hasUniqueFindFamiliarNormalFormIds(
 }
 
 function resolveCreatureTypeOverrideChoice(input: {
-  readonly eligibility: FindFamiliarFormEligibility;
-  readonly optionId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
+  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly optionId: SpawnedCompanionCreatureTypeOverrideChoice["optionId"];
 }): CreatureTypeOverrideChoiceResolution {
   const choice = input.eligibility.creatureTypeOverrideChoices.find(
     (candidate) => candidate.optionId === input.optionId,
@@ -366,9 +378,9 @@ function resolveCreatureTypeOverrideChoice(input: {
       };
 }
 
-export function isFindFamiliarCreatureTypeOverride(
+export function isSpawnedCompanionCreatureTypeOverride(
   creatureType: unknown,
-): creatureType is FindFamiliarCreatureTypeOverride {
+): creatureType is SpawnedCompanionCreatureTypeOverride {
   return (
     typeof creatureType === "string" &&
     FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET.has(
@@ -380,8 +392,8 @@ export function isFindFamiliarCreatureTypeOverride(
 function resolveChallengeRatingZeroBeastStatBlock(input: {
   readonly catalog: StatBlockCatalog;
   readonly statBlockId: StatBlockRecord["id"];
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-}): FindFamiliarFormResolution {
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
+}): SpawnedCompanionFormResolution {
   const statBlock = getStatBlock(input.catalog, input.statBlockId);
   if (statBlock === null) {
     return {

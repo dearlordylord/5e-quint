@@ -19,14 +19,18 @@ type CantripSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly access: CantripSpellAccess }
 >;
+type AuthoredSpellInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly access: unknown; readonly spell: unknown }
+>;
 
 function isCantripSpellInvocation(
-  invocation: SupportedSpellInvocation,
+  invocation: AuthoredSpellInvocation,
 ): invocation is CantripSpellInvocation {
   return isCantripSpellAccess(invocation.access);
 }
 
-function invocationSourceRef(invocation: SupportedSpellInvocation) {
+function invocationSourceRef(invocation: AuthoredSpellInvocation) {
   return invocation.spell.castingSource.tag === "spellAccess"
     ? {
         tag: "spellAccess" as const,
@@ -36,7 +40,7 @@ function invocationSourceRef(invocation: SupportedSpellInvocation) {
 }
 
 export function supportedSpellInvocationRef(
-  invocation: SupportedSpellInvocation,
+  invocation: AuthoredSpellInvocation,
 ): SpellInvocationRef {
   return Match.value(invocation).pipe(
     Match.when({ access: { tag: "prepared" } }, (value) =>
@@ -86,11 +90,11 @@ export function supportedSpellInvocationRef(
             "objectContactDamageRepeat",
           ),
         ),
-        Match.when("spiritualWeaponRepeatAttack", () =>
+        Match.when("spatialMeleeSpellAttackProxy", () =>
           spellEffectInvocationRef(
             value.spell.id,
             value.access.sourceCombatantId,
-            "spiritualWeaponRepeatAttack",
+            "spatialMeleeSpellAttackProxy",
           ),
         ),
         Match.when("spellCreatedHeldObjectAttack", () =>

@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
 
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { projectAuthoredStatBlocks } from "./stat-block-raw-projection.test-support.ts";
 import { SrdStatBlockRecordSchema } from "./schema.ts";
 

@@ -12,7 +12,7 @@ import {
   armorClassBuild,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   unitLibrary,
   useHeroicWarriorAtCombatTurnStart,
 } from "./test-support.test-support.ts";
@@ -87,7 +87,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
   });
 
   test(fighterHeroicWarriorCombatTurnStartTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior"),
         build: championFighterLevelTenBuild(),
@@ -97,7 +97,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
       }),
     );
 
-    const next = requireRight(
+    const next = requireSuccess(
       useHeroicWarriorAtCombatTurnStart({ sheet, unitLibrary }),
     );
 
@@ -107,7 +107,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
   });
 
   test(fighterHeroicWarriorCombatTurnStartGateTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior-gate"),
         build: championFighterLevelTenBuild(),
@@ -121,14 +121,14 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
     expect(
       useHeroicWarriorAtCombatTurnStart({ sheet, unitLibrary }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Heroic Warrior requires starting the combat turn without Heroic Inspiration.",
       },
     });
 
-    const noFeatureSheet = requireRight(
+    const noFeatureSheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior-no-feature"),
         build: armorClassBuild({
@@ -147,8 +147,8 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Heroic Warrior requires a retained combat turn-start Heroic Inspiration feature.",
       },
@@ -158,7 +158,7 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
 
 const fighterHeroicWarriorSelectedIdentityActions = {
   doUseHeroicWarrior: (): FighterHeroicWarriorSelectedIdentityProjection => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:heroic-warrior-replay"),
         build: championFighterLevelTenBuild(),
@@ -168,7 +168,7 @@ const fighterHeroicWarriorSelectedIdentityActions = {
         unitLibrary,
       }),
     );
-    const next = requireRight(
+    const next = requireSuccess(
       useHeroicWarriorAtCombatTurnStart({ sheet, unitLibrary }),
     );
     if (next.heroicInspiration.tag !== "available") {

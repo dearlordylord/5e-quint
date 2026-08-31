@@ -4,7 +4,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
-  Either,
+  Result,
   abilityScoreAssignment,
   armorClassBuild,
   characterSheetArmorClass,
@@ -13,8 +13,8 @@ import {
   characterSheetUnarmoredArmorClassBase,
   currentArmorClass,
   draconicResilienceArmorClassProjectionTestName,
-  expectRight,
-  requireRight,
+  expectSuccess,
+  requireSuccess,
   unitLibrary,
 } from "./test-support.test-support.ts";
 
@@ -24,16 +24,16 @@ describe("Character Sheet runtime / armor class", () => {
       build: armorClassBuild({ startingClass: "class_fighter" }),
       unitLibrary,
     };
-    const state = requireRight(characterSheetArmorClassState(input));
+    const state = requireSuccess(characterSheetArmorClassState(input));
 
     expect(state.base).toMatchObject({
       kind: "ability_sum",
       source: "default_unarmored",
     });
     expect(currentArmorClass(state)).toBe(12);
-    expect(requireRight(characterSheetArmorClass(input))).toBe(12);
+    expect(requireSuccess(characterSheetArmorClass(input))).toBe(12);
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetUnarmoredArmorClassBase({
           ...input,
           wieldingShield: false,
@@ -46,7 +46,7 @@ describe("Character Sheet runtime / armor class", () => {
   });
 
   test("derives Barbarian Unarmored Defense and still allows Shield bonus", () => {
-    const state = requireRight(
+    const state = requireSuccess(
       characterSheetArmorClassState({
         build: armorClassBuild({
           startingClass: "class_barbarian",
@@ -70,7 +70,7 @@ describe("Character Sheet runtime / armor class", () => {
         startingClass: "class_sorcerer",
         advancements: ["class_sorcerer", "class_sorcerer"],
       }),
-      abilityScores: expectRight(
+      abilityScores: expectSuccess(
         abilityScoreAssignment({
           str: 8,
           dex: 14,
@@ -83,7 +83,7 @@ describe("Character Sheet runtime / armor class", () => {
     };
     expect(
       currentArmorClass(
-        requireRight(
+        requireSuccess(
           characterSheetArmorClassState({
             build: baseSorcererBuild,
             unitLibrary,
@@ -92,7 +92,7 @@ describe("Character Sheet runtime / armor class", () => {
       ),
     ).toBe(12);
 
-    const state = requireRight(
+    const state = requireSuccess(
       characterSheetArmorClassState({
         build: {
           ...baseSorcererBuild,
@@ -118,7 +118,7 @@ describe("Character Sheet runtime / armor class", () => {
   });
 
   test("suppresses Monk Unarmored Defense while wielding a Shield", () => {
-    const state = requireRight(
+    const state = requireSuccess(
       characterSheetArmorClassState({
         build: armorClassBuild({ startingClass: "class_monk", shield: true }),
         unitLibrary,
@@ -142,8 +142,8 @@ describe("Character Sheet runtime / armor class", () => {
     };
     const result = characterSheetArmorClassState(input);
 
-    expect(Either.isLeft(result)).toBe(true);
-    expect(Either.isLeft(characterSheetArmorClass(input))).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
+    expect(Result.isFailure(characterSheetArmorClass(input))).toBe(true);
   });
 
   test("rejects missing class-feature Units while deriving Armor Class base formulas", () => {
@@ -162,13 +162,13 @@ describe("Character Sheet runtime / armor class", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { message: "Unknown Unit id: missing_unarmored_defense" },
+      _tag: "Failure",
+      failure: { message: "Unknown Unit id: missing_unarmored_defense" },
     });
   });
 
   test("uses the selected Armor Class base formula for multiclass characters", () => {
-    const monkState = requireRight(
+    const monkState = requireSuccess(
       characterSheetArmorClassState({
         build: armorClassBuild({
           startingClass: "class_barbarian",
@@ -181,7 +181,7 @@ describe("Character Sheet runtime / armor class", () => {
         },
       }),
     );
-    const barbarianState = requireRight(
+    const barbarianState = requireSuccess(
       characterSheetArmorClassState({
         build: armorClassBuild({
           startingClass: "class_barbarian",
@@ -208,7 +208,7 @@ describe("Character Sheet runtime / armor class", () => {
   });
 
   test("uses worn armor instead of unarmored base formulas", () => {
-    const state = requireRight(
+    const state = requireSuccess(
       characterSheetArmorClassState({
         build: armorClassBuild({
           startingClass: "class_barbarian",
@@ -226,7 +226,7 @@ describe("Character Sheet runtime / armor class", () => {
   });
 
   test("retains main-hand and off-hand weapon use in Armor Class state", () => {
-    const state = requireRight(
+    const state = requireSuccess(
       characterSheetArmorClassState({
         build: armorClassBuild({
           startingClass: "class_fighter",
@@ -242,7 +242,7 @@ describe("Character Sheet runtime / armor class", () => {
   });
 
   test("projects Armor Class selected-reference qRoute through the public projection entrypoint", () => {
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetArmorClassProjection({
         build: armorClassBuild({
           startingClass: "class_barbarian",

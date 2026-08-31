@@ -566,7 +566,7 @@ const seededSdkScenarioRows = [
           'attackKind: "ranged_spell_attack"',
           'targeting: { kind: "singleCreatureOrObject" }',
           "rangeFeet: 120",
-          'kind: "sorcerousBurstDamageTypeChoice"',
+          'kind: "spellAttackDamageTypeChoice"',
           "expr: { dice: 1, dieSize: 8 }",
           'damageTypeChoices: expect.arrayContaining(["thunder"])',
           "maxDieAdditionalDiceLimit: 2",
@@ -1015,12 +1015,12 @@ const seededSdkScenarioRows = [
         needles: [
           "cantripCastActionSpellAct(",
           "thaumaturgySpellId",
-          '"thaumaturgyBoomingVoice"',
-          '"thaumaturgyActiveOneMinuteEffectCount"',
+          '"temporaryAbilityCheckRollMode"',
+          '"temporaryAbilityCheckRollModeActiveEffectCount"',
           "maximumActiveOneMinuteEffects: 3",
           "requiresTableSpellEffectCount: true",
           "noActiveThaumaturgyOneMinuteEffectsFill(countHole)",
-          'kind: "thaumaturgyBoomingVoice"',
+          'kind: "temporaryAbilityCheckRollMode"',
           "sourceProcedureRef: act.subject.procedureRef",
           "sourceCombatantId: input.casterId",
           'kind: "duration"',
@@ -1029,7 +1029,7 @@ const seededSdkScenarioRows = [
           "expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);",
           "expect(caster.concentration).toBeNull();",
           "input.expectedSpellSlots",
-          "thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(",
+          "temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(",
           "difficultyClass(13)",
           'ability: "cha"',
           'skill: "intimidation"',
@@ -1039,7 +1039,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function noActiveThaumaturgyOneMinuteEffectsFill",
         needles: [
-          'kind: "thaumaturgyActiveOneMinuteEffectCount"',
+          'kind: "temporaryAbilityCheckRollModeActiveEffectCount"',
           "value: { activeOneMinuteEffectCount: 0 }",
         ],
       },
@@ -1257,7 +1257,7 @@ const seededSdkScenarioRows = [
         anchor: "function assertLevelOneSanctuary",
         needles: [
           "sanctuaryBonusActionSpellSlotAct(",
-          '"sanctuaryTargetingInterdiction"',
+          '"targetingSaveInterdiction"',
           '"spellTargetList"',
           "minTargets: 1",
           "maxTargets: 1",
@@ -1268,7 +1268,7 @@ const seededSdkScenarioRows = [
           'actionCost: "bonusAction"',
           'targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 }',
           "rangeFeet: movementFeet(30)",
-          'kind: "sanctuaryWard"',
+          'kind: "targetingSaveInterdiction"',
           "sourceProcedureRef: act.subject.procedureRef",
           "sourceCombatantId: input.casterId",
           'save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } }',
@@ -1288,7 +1288,7 @@ const seededSdkScenarioRows = [
           'battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot"',
           "battleActSpellPresentation(candidate)?.invocation.spellId",
           "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
-          '"sanctuaryTargetingInterdiction"',
+          '"targetingSaveInterdiction"',
           "return act;",
         ],
       },
@@ -3036,7 +3036,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveArea",
         needles: [
-          'kind: "thunderwaveArea"',
+          'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
           "distanceFeet: movementFeet(10)",
           "battleTablePositionId(",
@@ -3132,7 +3132,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveArea",
         needles: [
-          'kind: "thunderwaveArea"',
+          'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
           "distanceFeet: movementFeet(10)",
           "battleTablePositionId(",
@@ -4453,7 +4453,7 @@ function blessResolutionHelperNeedle() {
     anchor: "function assertLevelOneBless",
     needles: [
       "const act = spellSlotActForProcedure(",
-      "const expectedEffect = expectedLevelOneBlessEffect(",
+      "const expectedEffectFacts = expectedLevelOneBlessEffectFacts(",
       "maxTargets: 3",
       'procedure: "rollModifier"',
       'actionCost: "magicAction"',
@@ -4461,7 +4461,8 @@ function blessResolutionHelperNeedle() {
       "effect: discoveryEffect",
       "blessTargetListFill(",
       "activeEffects",
-      "toEqual([expectedEffect])",
+      "...expectedEffectFacts,",
+      "effectRef: expect.any(String)",
       "caster.concentration",
       'effectKind: "spellEffect"',
       "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
@@ -4473,7 +4474,7 @@ function blessResolutionHelperNeedle() {
 
 function blessActiveEffectHelperNeedle() {
   return {
-    anchor: "function expectedLevelOneBlessEffect",
+    anchor: "function expectedLevelOneBlessEffectFacts",
     needles: [
       'kind: "d20RollModifier"',
       "sourceProcedureRef,",
@@ -4551,7 +4552,7 @@ function shieldOfFaithResolutionHelperNeedle() {
     needles: [
       "shieldOfFaithBonusActionSpellSlotAct(session, input.casterId)",
       "snapshotCombatant(",
-      "expectedLevelOneShieldOfFaithEffect(",
+      "const expectedEffectFacts = expectedLevelOneShieldOfFaithEffectFacts(",
       'tag: "bonusActionSpell"',
       "spellId: shieldOfFaithSpellId",
       'procedure: "scalarBuff"',
@@ -4559,7 +4560,8 @@ function shieldOfFaithResolutionHelperNeedle() {
       "choices: expect.arrayContaining([input.casterId, input.targetId])",
       "spellTargetFill(",
       "activeEffects",
-      "toEqual([expectedEffect])",
+      "...expectedEffectFacts,",
+      "effectRef: expect.any(String)",
       "initialTargetArmorClass + 2",
       "caster.concentration",
       'effectKind: "spellEffect"',
@@ -4574,7 +4576,7 @@ function shieldOfFaithResolutionHelperNeedle() {
 
 function shieldOfFaithActiveEffectHelperNeedle() {
   return {
-    anchor: "function expectedLevelOneShieldOfFaithEffect",
+    anchor: "function expectedLevelOneShieldOfFaithEffectFacts",
     needles: [
       'kind: "spellArmorClassBonus"',
       "sourceProcedureRef,",

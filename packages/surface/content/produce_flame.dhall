@@ -14,12 +14,12 @@
 -- Family: ongoing_effect (timed 10 min, early end on caster_recasts_spell).
 -- Attachment: self (flame in caster's hand).
 -- Two operations:
---   1. passive → emit_light (20 ft bright, 20 ft dim additional)
+--   1. passive → emit_bright_and_dim_illumination (20 ft bright, 20 ft dim additional)
 --   2. on_caster_spends_action (Magic action) → attack_roll (ranged spell
 --      attack), on hit: 1d8 fire damage (cantrip scaling at levels 5/11/17)
 --
 -- DHALL HOMOGENEITY NOTE: The two operations have structurally distinct
--- effect types (emit_light vs attack_roll). The Optional-field superset
+-- effect types (emit_bright_and_dim_illumination vs attack_roll). The Optional-field superset
 -- trick (--omit-empty) unifies them into a single Dhall record type. All
 -- fields are present in each element; None is stripped by dhall-to-json.
 --
@@ -54,7 +54,7 @@ let produceFlame =
           , attachment = { kind = "self" }
           , operations =
               -- Dhall requires a homogeneous list. The two operations carry
-              -- structurally different effects (emit_light vs attack_roll).
+              -- structurally different effects (emit_bright_and_dim_illumination vs attack_roll).
               -- Unified via Optional superset; --omit-empty strips None.
               [ { trigger =
                     { kind = "passive"
@@ -62,7 +62,7 @@ let produceFlame =
                         None { kind : Text, action : Text }
                     }
                 , effect =
-                    { kind = "emit_light"
+                    { kind = "emit_bright_and_dim_illumination"
                     , brightRadiusFeet = Some 20
                     , dimAdditionalFeet = Some 20
                     , attackKind = None Text

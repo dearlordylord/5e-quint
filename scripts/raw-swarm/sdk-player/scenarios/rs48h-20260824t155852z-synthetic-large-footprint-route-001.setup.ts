@@ -98,18 +98,16 @@ export const setupScenario: ScenarioSetup = (context) => {
   ];
   const initializedCombatants = [];
   for (const combatant of combatants) {
-    if (sdk.isLeft(combatant)) {
+    if (sdk.isFailure(combatant)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-          combatant.left,
-        ),
+        obstruction: sdk.battleStateInitIssueMessage(combatant.failure),
         observation: {
           capability: "canonical-stat-block-battle-initialization",
         },
       };
     }
-    initializedCombatants.push(combatant.right);
+    initializedCombatants.push(combatant.success);
   }
 
   const battle = sdk.startBattle({
@@ -118,10 +116,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ),
     combatants: initializedCombatants,
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: { capability: "canonical-battle-start" },
     };
   }

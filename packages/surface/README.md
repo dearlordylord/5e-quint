@@ -188,8 +188,15 @@ normal Unit boundary or the specific helpers:
 Use `surface/character-creation-readers` to read structural creation facts:
 
 - `readClassCreationFacts`
+- `readSubclassCreationFacts`
 - `readBackgroundCreationFacts`
 - `readSpeciesCreationFacts`
+
+That module also owns the structural `SubclassRecord` reader and the
+shape-specific class and species fact variants (including Wizard spellcasting
+and Dragonborn ancestry). These readers remain authored-Surface readers; the
+source-free Character Definition projection and graph admission belong to
+`@dnd/character-creation-runtime`.
 
 Character-creation records author SRD legality facts, not runtime projections.
 Examples include class creation facts, background ability-score increase rules,

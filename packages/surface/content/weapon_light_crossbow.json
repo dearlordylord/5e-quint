@@ -9,7 +9,7 @@
   },
   "id": "weapon_light_crossbow",
   "kind": "weapon",
-  "mastery": "slow",
+  "masteryUnitId": "mastery_slow",
   "name": "Light Crossbow",
   "properties": [
     {

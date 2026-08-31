@@ -3,18 +3,19 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-feather-fall-mitigation
 
 module battleRuntimeFeatherFall {
+  import battleRuntimeFallingCreatureMitigationReaction.* from "./battle-runtime-falling-creature-mitigation-reaction"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
 
   pure def featherFallMitigationActiveEffect(): ActiveEffect =
-    FeatherFallMitigation({ durationTicks: 10 })
+    FeatherFallMitigation({ durationTicks: fallingCreatureMitigationDurationTicks })
 
   pure def activeFeatherFallDescentRateCapFeetPerRound(effects: Set[ActiveEffect]): int =
-    if (effects.exists(effect => match effect {
+    fallingCreatureMitigationDescentRateCap(effects.exists(effect => match effect {
       | FeatherFallMitigation(_) => true
       | _ => false
-    })) 60 else 0
+    }))
 
   pure def activeEffectsWithoutFeatherFallMitigation(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -48,19 +49,22 @@ module battleRuntimeFeatherFall {
 
   pure def resolveFeatherFallSpell(
     state: BattleState,
-    reactor: Actor,
+    triggeringFallingCreature: Actor,
+    triggerWitness: FallingCreatureMitigationTriggerWitness[Actor],
     targets: Set[Actor],
     fallingTargets: Set[Actor],
     targetCount: int,
   ): BattleState =
-    if (
-      reactorCanReact(state, reactor) and
-      canActorExpendSpellSlotThisTurn(state, reactor) and
-      targets.size() >= 1 and
-      targetCount == targets.size() and
-      targetCount <= 5 and
-      targets.forall(target => fallingTargets.contains(target))
-    ) {
+    val reactor = fallingCreatureMitigationTriggerReactor(triggerWitness)
+    if (fallingCreatureMitigationReactionAdmitted(
+      triggerWitness,
+      triggeringFallingCreature,
+      reactorCanReact(state, reactor),
+      canActorExpendSpellSlotThisTurn(state, reactor),
+      targets.size(),
+      targetCount,
+      targets.forall(target => fallingTargets.contains(target)),
+    )) {
       val spentReaction = spendReaction(state, reactor)
       val effect = featherFallMitigationActiveEffect
       commitActorSpellSlotUse({
@@ -104,7 +108,7 @@ module battleRuntimeFeatherFall {
     } else {
       state
     }
-    if (mitigated)
+    if (fallingCreatureLandingPreventsFallConsequences(mitigated))
       FeatherFallLandingMitigated({ state: nextState })
     else
       FeatherFallLandingUnmitigated({ state: nextState })

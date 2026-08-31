@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { unitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
@@ -28,8 +28,8 @@ describe("battle action option codecs", () => {
     } as const;
 
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(CharacterWeaponAttackActionOptionSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(CharacterWeaponAttackActionOptionSchema)(
           attack,
         ),
       ),
@@ -38,7 +38,7 @@ describe("battle action option codecs", () => {
 
   test("rejects a damage-type choice with fewer than two choices", () => {
     const greataxe = testGreataxeAttack();
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       CharacterWeaponAttackActionOptionSchema,
     )({
       ...greataxe,
@@ -50,9 +50,9 @@ describe("battle action option codecs", () => {
       damageTypeChoices: ["slashing"],
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) {
-      expect(String(decoded.left)).toContain(
+    expect(Result.isFailure(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) {
+      expect(String(decoded.failure)).toContain(
         "Weapon attack damage type choices must contain at least two choices.",
       );
     }
@@ -65,8 +65,8 @@ describe("battle action option codecs", () => {
     expect(attacks.length).toBeGreaterThan(0);
     expect(
       attacks.every((attack) =>
-        Either.isRight(
-          Schema.decodeUnknownEither(SupportedAttackActionOptionSchema)(attack),
+        Result.isSuccess(
+          Schema.decodeUnknownResult(SupportedAttackActionOptionSchema)(attack),
         ),
       ),
     ).toBe(true);

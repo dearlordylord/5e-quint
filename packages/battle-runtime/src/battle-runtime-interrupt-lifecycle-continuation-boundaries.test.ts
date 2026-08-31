@@ -1,5 +1,6 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
+
 import { describe, expect, test } from "vitest";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   classLevel,
@@ -10,7 +11,9 @@ import {
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import {
   maybeOpenInterruptWindow,
+  interruptCheckpointFrame,
   openPrimaryAttackAfterDamageSequenceInterruptWindow,
+  spendReaction,
 } from "./battle-reducer/interrupt-execution.ts";
 import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
 import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
@@ -30,10 +33,13 @@ import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolve
 import type {
   BattleFallDamageLandingMitigationFrame,
   BattleFlySpeedGrantEndFallCleanupFrame,
-  EndedFlySpeedGrant,
+  BattleState,
 } from "./battle-state-execution.ts";
+import type { BattleSubject } from "./battle-subjects.ts";
 import {
   InterruptLifecycleExecution,
+  isInactiveInterruptCheckpoint,
+  reconcileInterruptCheckpointAfterStateChange,
   resolveActiveInterruptProcedure,
   resolveInterruptLifecycleDecision,
 } from "./battle-reducer/interrupt-lifecycle.ts";
@@ -42,9 +48,11 @@ import {
   attackDamageHoleAfterHit,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackExecutionSelectionForSubjectForTest,
   battleProcedureExecutionRefForTest,
   battleFrontierInterruptDecisionForState,
   battleId,
+  breakBattleConcentration,
   characterBattleFeatureInitForTest,
   characterSeed,
   cuttingWordsAttackOnlyUnit,
@@ -54,20 +62,30 @@ import {
   damageRollFill,
   fighterAttackSubject,
   fighterId,
+  fighterVsGoblinBattle,
   fighterTurnWithReadiedRay,
   findHole,
   goblinAttackSubject,
   goblinId,
+  hasCondition,
   interruptDecisionFill,
   reactionModifierChoice,
   requireHole,
+  requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
   rolledDiceGroup,
+  skeletonCreatureInit,
+  skeletonId,
+  statBlockAttackSubjectForTest,
   statBlockCreatureInit,
+  startBattleSessionRight,
   startBattleRight,
   snapshotBattle,
   targetFill,
+  testLongswordAttack,
+  wizardId,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type {
   AttackSpellDamageAddition,
@@ -75,8 +93,289 @@ import type {
   BattleInterruptedProcedure,
 } from "./battle-state-execution.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  knownWillingSpellTargetFill,
+  savingThrowOutcomeFill,
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { statBlockWithCreatureType } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  flyUnitId,
+  spellCasterId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 
 describe("battle runtime: interrupt lifecycle and continuation boundaries", () => {
+  test("closes an inactive checkpoint when its only responder spent a Reaction", () => {
+    const state = fighterVsGoblinBattle();
+    const opened = maybeOpenInterruptWindow(
+      state,
+      {
+        trigger: "opportunityAttack",
+        moverId: goblinId,
+        threats: [
+          {
+            reactorId: fighterId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state),
+            ),
+          },
+        ],
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "endTurn",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected an Opportunity Attack checkpoint.");
+    }
+    const frame = currentInterruptCheckpoint(opened.state);
+    if (frame === null || !isInactiveInterruptCheckpoint(frame)) {
+      throw new Error("Expected an inactive Opportunity Attack checkpoint.");
+    }
+    const resumedStates: BattleState[] = [];
+    const execution = InterruptLifecycleExecution.fromResolvers(
+      () => {
+        throw new Error("The synthetic checkpoint has no active procedure.");
+      },
+      ({ state: resumedState }) => {
+        resumedStates.push(resumedState);
+        return {
+          tag: "resolved" as const,
+          state: resumedState,
+          snapshot: snapshotBattle(resumedState),
+        };
+      },
+    );
+
+    const reconciliation = reconcileInterruptCheckpointAfterStateChange({
+      state: spendReaction(opened.state, fighterId),
+      frame,
+      execution,
+    });
+
+    expect(reconciliation.tag).toBe("closed");
+    if (reconciliation.tag === "closed") {
+      expect(resumedStates).toHaveLength(1);
+      expect(reconciliation.result.tag).toBe("resolved");
+      if (reconciliation.result.tag === "resolved") {
+        expect(
+          currentInterruptCheckpoint(reconciliation.result.state),
+        ).toBeNull();
+      }
+    }
+  });
+
+  test("retains a distinct responder after another responder spends a Reaction", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-interrupt-reconciliation-distinct-responder"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const opened = maybeOpenInterruptWindow(
+      state,
+      {
+        trigger: "opportunityAttack",
+        moverId: goblinId,
+        threats: [
+          {
+            reactorId: fighterId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state),
+            ),
+          },
+          {
+            reactorId: skeletonId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              statBlockAttackSubjectForTest(
+                state,
+                skeletonId,
+                "Shortsword",
+                "actions",
+              ),
+            ),
+          },
+        ],
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "endTurn",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected an Opportunity Attack checkpoint.");
+    }
+    const frame = currentInterruptCheckpoint(opened.state);
+    if (frame === null || !isInactiveInterruptCheckpoint(frame)) {
+      throw new Error("Expected an inactive Opportunity Attack checkpoint.");
+    }
+    const reconciliation = reconcileInterruptCheckpointAfterStateChange({
+      state: spendReaction(opened.state, fighterId),
+      frame,
+      execution: InterruptLifecycleExecution.fromResolvers(
+        () => {
+          throw new Error("The synthetic checkpoint has no active procedure.");
+        },
+        ({ state: resumedState }) => ({
+          tag: "resolved" as const,
+          state: resumedState,
+          snapshot: snapshotBattle(resumedState),
+        }),
+      ),
+    });
+
+    expect(reconciliation.tag).toBe("retained");
+    if (reconciliation.tag === "retained") {
+      expect(reconciliation.frame.eligibleResponders).toEqual([skeletonId]);
+      expect(reconciliation.frame.choices).toHaveLength(1);
+      expect(reconciliation.frame.offeredResponders).toEqual([]);
+    }
+  });
+
+  test("preserves a declined responder while reconciliation retains an unoffered responder", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-interrupt-reconciliation-declined-history"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const opened = maybeOpenInterruptWindow(
+      state,
+      {
+        trigger: "opportunityAttack",
+        moverId: goblinId,
+        threats: [
+          {
+            reactorId: fighterId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state),
+            ),
+          },
+          {
+            reactorId: skeletonId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              statBlockAttackSubjectForTest(
+                state,
+                skeletonId,
+                "Shortsword",
+                "actions",
+              ),
+            ),
+          },
+        ],
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "endTurn",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected an Opportunity Attack checkpoint.");
+    }
+    const frame = currentInterruptCheckpoint(opened.state);
+    if (frame === null || !isInactiveInterruptCheckpoint(frame)) {
+      throw new Error("Expected an inactive Opportunity Attack checkpoint.");
+    }
+    const declinedFrame = {
+      ...frame,
+      offeredResponders: [fighterId],
+    };
+    const declinedState: BattleState = {
+      ...opened.state,
+      interruptStack: [
+        ...opened.state.interruptStack.slice(0, -1),
+        interruptCheckpointFrame(declinedFrame),
+      ],
+    };
+    const execution = InterruptLifecycleExecution.fromResolvers(
+      () => {
+        throw new Error("The synthetic checkpoint has no active procedure.");
+      },
+      ({ state: resumedState }) => ({
+        tag: "resolved" as const,
+        state: resumedState,
+        snapshot: snapshotBattle(resumedState),
+      }),
+    );
+
+    const afterSpent = reconcileInterruptCheckpointAfterStateChange({
+      state: spendReaction(declinedState, fighterId),
+      frame: declinedFrame,
+      execution,
+    });
+    expect(afterSpent.tag).toBe("retained");
+    if (afterSpent.tag !== "retained") return;
+    expect(afterSpent.frame.offeredResponders).toEqual([fighterId]);
+    expect(afterSpent.frame.eligibleResponders).toEqual([skeletonId]);
+    expect(
+      afterSpent.frame.choices.some(
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "opportunityAttack" &&
+          choice.subject.reactorId === fighterId,
+      ),
+    ).toBe(false);
+
+    const fighter = afterSpent.state.combatants.get(fighterId);
+    if (fighter === undefined) {
+      throw new Error("Expected the Fighter combatant.");
+    }
+    const restoredState: BattleState = {
+      ...afterSpent.state,
+      combatants: new Map(afterSpent.state.combatants).set(fighterId, {
+        ...fighter,
+        reactionAvailable: true,
+      }),
+    };
+    const afterRestored = reconcileInterruptCheckpointAfterStateChange({
+      state: restoredState,
+      frame: afterSpent.frame,
+      execution,
+    });
+    expect(afterRestored.tag).toBe("retained");
+    if (afterRestored.tag === "retained") {
+      expect(afterRestored.frame.offeredResponders).toEqual([fighterId]);
+      expect(afterRestored.frame.eligibleResponders).toEqual([skeletonId]);
+      expect(afterRestored.frame.choices).toHaveLength(1);
+      expect(
+        afterRestored.frame.choices.some(
+          (choice) =>
+            choice.kind === "nestedProcedure" &&
+            choice.subject.command === "opportunityAttack" &&
+            choice.subject.reactorId === fighterId,
+        ),
+      ).toBe(false);
+    }
+  });
+
   test("opens a primary-attack follow-up continuation through an after-damage Reaction", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
     const subject = fighterAttackSubject(state);
@@ -139,9 +438,14 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
 
     const checkpoint = currentInterruptCheckpoint(result.state);
     const choice = checkpoint?.choices.find(
-      (candidate) => candidate.kind === "releaseReadiedSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedSpell",
     );
-    if (choice?.kind !== "releaseReadiedSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
       throw new Error("Expected a readied spell choice.");
     }
     const objectOutcomeExecution = InterruptLifecycleExecution.fromResolvers(
@@ -162,10 +466,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       state: result.state,
       fill: interruptDecisionFill(requireHole(result, "interruptDecision"), {
         kind: "resolve",
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: choice.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -208,7 +511,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     const replay = resolveBattleSubject({
       state: {
         ...state,
-        interruptStack: [replayContinuationFrame(continuation, "afterDamage")],
+        interruptStack: [
+          replayContinuationFrame(continuation, { trigger: "afterDamage" }),
+        ],
       },
       subject,
       fills: [],
@@ -217,14 +522,16 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       resolveComposedReplayContinuationFromState(
         state,
         continuation,
-        "afterDamage",
+        { trigger: "afterDamage" },
         [],
       ).tag,
     ).toBe("needsHoles");
     expect(
       battleCheckpointFrontierEnvelope({
         ...state,
-        interruptStack: [replayContinuationFrame(continuation, "afterDamage")],
+        interruptStack: [
+          replayContinuationFrame(continuation, { trigger: "afterDamage" }),
+        ],
       }).checkpoint.battleId,
     ).toBe(state.battleId);
     expect(replay).toMatchObject({
@@ -238,19 +545,23 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       "interruptDecision",
     );
     const choice = currentInterruptCheckpoint(replay.state)?.choices.find(
-      (candidate) => candidate.kind === "releaseReadiedSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedSpell",
     );
-    if (choice?.kind !== "releaseReadiedSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
       throw new Error("Expected a readied spell choice.");
     }
     const started = resolveBattleInterrupt({
       state: replay.state,
       fill: interruptDecisionFill(requireHole(replay, "interruptDecision"), {
         kind: "resolve",
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: choice.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -290,7 +601,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     const replayWithAdditions = resolveReplayContinuationFromState({
       state: started.state,
       continuation: nestedContinuation,
-      handledInterruptTrigger: "afterDamage",
+      handledInterruptOccurrence: { trigger: "afterDamage" },
       fills: [],
       execution: replayExecution,
     });
@@ -347,26 +658,53 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
   test("reports stale subjects for pending Fly cleanup and landing mitigation continuations", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
     const subject = fighterAttackSubject(state);
-    const endedEffect = {
-      kind: "specialSpeedGrant",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-fly-cleanup",
-      ),
-      sourceCombatantId: fighterId,
-      speedKind: "fly",
-      speed: { kind: "fixed", speedFeet: movementFeet(60) },
-      hover: true,
-      expiresAt: {
-        kind: "concentration",
-        combatantId: fighterId,
-        durationTicks: elapsedTimeTicks(1),
-      },
-    } satisfies EndedFlySpeedGrant;
-    const flyFrame = {
-      kind: "flySpeedGrantEndFallCleanup",
-      targetId: fighterId,
-      endedEffect,
-    } satisfies BattleFlySpeedGrantEndFallCleanupFrame;
+    const flySession = spellBattle({
+      preparedSpells: [spellRecord(flyUnitId)],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const flyAct = spellAct({
+      session: flySession,
+      spellId: flyUnitId,
+      slotLevel: 3,
+    });
+    const flyTarget = flyAct.initialHoles.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (flyTarget === undefined) {
+      throw new Error("Expected Fly target selection.");
+    }
+    const flyCast = resolveBattleSubject({
+      state: flySession.state,
+      subject: flyAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          flyTarget,
+          flyUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    if (flyCast.tag !== "resolved") {
+      throw new Error("Expected admitted Fly cast to resolve.");
+    }
+    const afterFlyEnded = breakBattleConcentration(
+      flyCast.state,
+      spellCasterId,
+    );
+    const flyFrame = afterFlyEnded.interruptStack.find(
+      (frame): frame is BattleFlySpeedGrantEndFallCleanupFrame =>
+        frame.kind === "grantedFlightEndFallCleanup" &&
+        frame.targetId === spellCasterId,
+    );
+    if (flyFrame === undefined) {
+      throw new Error("Expected production Fly cleanup frame.");
+    }
+    const flySubject = {
+      tag: "runtimeCommand",
+      actorId: spellCasterId,
+      command: "endTurn",
+    } satisfies BattleSubject;
     const fallFrame = {
       kind: "fallDamageLandingMitigation",
       targetId: fighterId,
@@ -393,22 +731,29 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       replayExecution,
       routeResolvers,
     );
-    for (const frame of [flyFrame, fallFrame]) {
+    for (const input of [
+      { state: afterFlyEnded, frame: flyFrame, subject: flySubject },
+      {
+        state: { ...state, interruptStack: [fallFrame] },
+        frame: fallFrame,
+        subject,
+      },
+    ]) {
       expect(
         battleCheckpointFrontierEnvelope({
           ...state,
-          interruptStack: [frame],
+          interruptStack: [input.frame],
         }).checkpoint.battleId,
       ).toBe(state.battleId);
       expect(
         resolveActiveInterruptContinuation({
-          state: { ...state, interruptStack: [frame] },
-          frame,
-          subject,
+          state: input.state,
+          frame: input.frame,
+          subject: input.subject,
           fills: [],
           execution,
         }),
-      ).toEqual({ tag: "notActiveContinuation", frame });
+      ).toEqual({ tag: "notActiveContinuation", frame: input.frame });
     }
   });
 
@@ -449,7 +794,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackRollReduction",
           fills: [
             {
@@ -530,7 +875,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackRollReduction",
           fills: [
             {
@@ -613,7 +958,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {
@@ -689,6 +1034,235 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       ],
     });
     expect(resumed.tag).toBe("resolved");
+  });
+
+  test("resumes interrupted positive attack damage through a durable condition repeat-save continuation", () => {
+    const modifier = cuttingWordsDamageOnlyUnit();
+    const conditionSpell = spellRecord("hideous_laughter");
+    const targetStatBlock = statBlockWithCreatureType("humanoid");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-interrupt-condition-damage-repeat-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Synthetic condition caster and damage responder",
+          initiative: 30,
+          classLevels: [
+            { className: "wizard", level: 1 },
+            { className: "bard", level: 3 },
+          ],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [conditionSpell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          resources: [cuttingWordsResource({ unit: modifier })],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(modifier, [
+              { className: "wizard", level: classLevel(1) },
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
+          characterUnitRefs: [
+            {
+              unit: modifier,
+              supportProfiles: [
+                REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+              ],
+            },
+          ],
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Synthetic attack owner",
+          initiative: 20,
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlockName: "Synthetic condition target",
+          initiative: 10,
+          statBlock: {
+            ...targetStatBlock,
+            statBlock: {
+              ...targetStatBlock.statBlock,
+              hp: { kind: "literal", value: 20 },
+            },
+          },
+          currentHp: 20,
+        }),
+      ],
+    });
+    const conditionAct = spellAct({
+      session,
+      spellId: "hideous_laughter",
+      slotLevel: 1,
+    });
+    const conditionTarget = findHole(
+      conditionAct.initialHoles,
+      "spellTargetList",
+    );
+    const conditionTargetFill = spellTargetListFill(
+      conditionTarget,
+      wizardId,
+      "hideous_laughter",
+      [goblinId],
+    );
+    const awaitingConditionSave = resolveBattleSubject({
+      state: session.state,
+      subject: conditionAct.subject,
+      fills: [conditionTargetFill],
+    });
+    if (awaitingConditionSave.tag !== "needsHoles") {
+      throw new Error("Expected the admitted condition spell save.");
+    }
+    const conditionSave = requireHole(
+      awaitingConditionSave,
+      "savingThrowOutcome",
+    );
+    const conditioned = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: conditionAct.subject,
+        fills: [
+          conditionTargetFill,
+          savingThrowOutcomeFill(conditionSave, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    const attackerTurn = requireResolved(
+      resolveBattleSubject({
+        state: conditioned.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: wizardId,
+          command: "endTurn",
+        },
+        fills: [],
+      }),
+    );
+    const subject = fighterAttackSubject(attackerTurn.state, "Longsword");
+    const target = attackInitialTargetHole(attackerTurn.state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      attackerTurn.state,
+      target,
+      subject,
+      goblinId,
+    );
+    const attackPrefix = [
+      targetFill(target, goblinId),
+      attackRollFill(attackRoll, {
+        total: 20,
+        naturalD20: 15,
+        rollMode: "advantage",
+      }),
+    ];
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: attackerTurn.state,
+        subject,
+        fills: attackPrefix,
+      }),
+      "rolledDice",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: attackerTurn.state,
+      subject,
+      fills: [...attackPrefix, damageRollFill(damage, 6)],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the attack-damage Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
+      modifier.id,
+      "damageRollReduction",
+    );
+    const pendingRepeatSave = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: wizardId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            procedureRef: choice.modifier.procedureRef,
+            modifierKind: "damageRollReduction",
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: choice.initialHoles[0]!.holeId,
+                value: [rolledDiceGroup([3])],
+              },
+            ],
+          },
+        },
+      ),
+    });
+    if (pendingRepeatSave.tag !== "needsHoles") {
+      throw new Error("Expected a damage-triggered condition repeat save.");
+    }
+    expect(pendingRepeatSave.state.interruptStack.at(-1)?.kind).toBe(
+      "attackDamageContinuationRepeatSave",
+    );
+    const repeatSave = requireHole(pendingRepeatSave, "savingThrowOutcome");
+    expect(repeatSave).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: goblinId,
+        trigger: "damage",
+      },
+    });
+
+    const interruptStackBeforeWrongFill =
+      pendingRepeatSave.state.interruptStack;
+    const wrongHole = resolveBattleSubject({
+      state: pendingRepeatSave.state,
+      subject,
+      fills: [
+        {
+          ...savingThrowOutcomeFill(repeatSave, [
+            { targetId: goblinId, succeeded: true },
+          ]),
+          holeId: holeId("wrong-attack-damage-repeat-save-hole"),
+        },
+      ],
+    });
+    expect(wrongHole).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage repeat save fill does not match the pending Saving Throw hole.",
+    });
+    expect(pendingRepeatSave.state.interruptStack).toEqual(
+      interruptStackBeforeWrongFill,
+    );
+
+    const resumed = requireResolved(
+      resolveBattleSubject({
+        state: pendingRepeatSave.state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(repeatSave, [
+            { targetId: goblinId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+    const resolvedTarget = resumed.state.combatants.get(goblinId);
+    expect(resolvedTarget?.hp).toBe(14);
+    expect(
+      resolvedTarget === undefined
+        ? true
+        : hasCondition(resolvedTarget.conditions, "prone"),
+    ).toBe(false);
+    expect(
+      resolvedTarget?.activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
+    ).toBe(false);
   });
 });
 

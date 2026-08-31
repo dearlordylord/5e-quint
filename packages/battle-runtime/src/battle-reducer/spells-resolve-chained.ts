@@ -11,7 +11,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import { damageAmount as toDamageAmount, Index } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
@@ -65,8 +65,8 @@ import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
 } from "./damage-apply.ts";
 import {
   addDamageAmountForType,
@@ -85,7 +85,10 @@ import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
 } from "./domain-constants.ts";
-import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import {
+  isSaveGatedConditionWithRepeatDamageRepeatSaveFill,
+  saveGatedConditionDamageOccurrenceKeyForChainedSpellStep,
+} from "./staged-condition-repeat-save.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -96,9 +99,9 @@ import {
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
-  sanctuaryTargetingInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
+  targetingSaveInterdictionCheck,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
+} from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   chainedSpellAttackRollHole,
@@ -162,7 +165,7 @@ export type ChainedSpellFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
-      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
         BattleFill,
         { readonly kind: "savingThrowOutcome" }
       >[];
@@ -237,7 +240,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
   let targeted: readonly CombatantId[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
   const concentrationHoles: BattleConcentrationSavingThrowHole[] = [];
-  const hideousLaughterDamageRepeatSaveHoleIds = new Set<string>();
+  const stagedConditionDamageRepeatSaveHoleIds = new Set<string>();
   const damageDispositionHoles: BattleAttackDamageDispositionHole[] = [];
   const maxLeaps = Number(spellInvocationCastLevel(input.invocation));
 
@@ -271,7 +274,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Chromatic Orb cannot target a creature more than once in the same casting.",
+        "chosen-damage bouncing attack cannot target a creature more than once in the same casting.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -298,14 +301,14 @@ export function resolveChainedSpellAttackDamageAct(input: {
         "invalidFill",
         stepIndex === 0
           ? "Spell target must be a combatant within the selected spell's supported range."
-          : "Chromatic Orb leap target must be different and within 30 feet of the previous target.",
+          : "chosen-damage bouncing attack leap target must be different and within 30 feet of the previous target.",
       );
     }
     /* v8 ignore stop -- @preserve */
     targeted = [...targeted, target.combatantId];
 
     const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const interdictionCheck = targetingSaveInterdictionCheck({
       state: replayState,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -314,22 +317,22 @@ export function resolveChainedSpellAttackDamageAct(input: {
       replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });
-    if (sanctuaryCheck.tag === "needsHoles") {
+    if (interdictionCheck.tag === "needsHoles") {
       return needsHolesResult(replayState, input.input.subject, [
-        sanctuaryCheck.hole,
+        interdictionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sanctuaryCheck.tag === "invalid") {
+    if (interdictionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        sanctuaryCheck.message,
+        interdictionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (sanctuaryCheck.tag === "lost") {
+    if (interdictionCheck.tag === "lost") {
       if (input.spendsCastResources === false) {
         return {
           tag: "resolved",
@@ -349,9 +352,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ),
       });
     }
-    if (sanctuaryCheck.tag === "newTarget") {
+    if (interdictionCheck.tag === "newTarget") {
       const replacementTarget = replayState.combatants.get(
-        sanctuaryCheck.targetId,
+        interdictionCheck.targetId,
       );
       const replacementIsLegal =
         replacementTarget !== undefined &&
@@ -361,13 +364,13 @@ export function resolveChainedSpellAttackDamageAct(input: {
               input.actorId,
               replacementTarget.combatantId,
               input.invocation,
-              sanctuaryCheck.spatialFacts,
+              interdictionCheck.spatialFacts,
             )
           : chainedSpellLeapTargetIsLegal(
               input.invocation,
               targeted[stepIndex - 1],
               replacementTarget.combatantId,
-              sanctuaryCheck.spatialFacts,
+              interdictionCheck.spatialFacts,
             ));
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementTarget === undefined || !replacementIsLegal) {
@@ -376,8 +379,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
           input.input.state,
           "invalidFill",
           stepIndex === 0
-            ? "Sanctuary replacement Chromatic Orb target must be legal for the selected spell."
-            : "Sanctuary replacement Chromatic Orb leap target must be different and within 30 feet of the previous target.",
+            ? "attack-redirection ward replacement chosen-damage bouncing attack target must be legal for the selected spell."
+            : "Attack-redirection ward replacement chosen-damage bouncing attack leap target must be different and within 30 feet of the previous target.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -393,19 +396,21 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original Chromatic Orb target fill.",
+          "attack-redirection ward replacement requires the original chosen-damage bouncing attack target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
       const fills = input.input.fills
-        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map(
           (fill): BattleFill =>
             fill === originalTargetFill
-              ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                  fill,
-                  replacement: sanctuaryCheck,
-                })
+              ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
+                  {
+                    fill,
+                    replacement: interdictionCheck,
+                  },
+                )
               : fill,
         );
       const replacementFillSet = chainedSpellFillSet(
@@ -617,16 +622,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Chromatic Orb chain cannot continue after a missed attack roll.",
+          "chosen-damage bouncing attack chain cannot continue after a missed attack roll.",
         );
       }
       /* v8 ignore stop -- @preserve */
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
-        hideousLaughterDamageRepeatSaveHoleIds,
-        hideousLaughterDamageRepeatSaveFills:
-          fillSet.hideousLaughterDamageRepeatSaves,
+        stagedConditionDamageRepeatSaveHoleIds,
+        stagedConditionDamageRepeatSaveFills:
+          fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
@@ -735,12 +740,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       target,
       sourcePenalty.damageByType,
     );
-    const damageEventKey = [
-      "battle:spell:chained-damage-event",
-      input.invocation.sourceProcedureRef,
-      stepIndex,
-      target.combatantId,
-    ].join(":");
+    const damageOccurrenceKey =
+      saveGatedConditionDamageOccurrenceKeyForChainedSpellStep({
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
+        stepIndex: Index(stepIndex),
+        targetId: target.combatantId,
+      });
     const concentrationLifecycleHoles =
       damageLifecycleConcentrationSavingThrowHoles({
         state: replayState,
@@ -803,42 +808,42 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ]);
       }
     }
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const stagedConditionLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: replayState,
         target,
         damageAmount,
-        damageEventKey,
+        damageOccurrenceKey: damageOccurrenceKey,
       });
-    const hideousLaughterLifecycleFills = matchingHoleIdFills(
-      fillSet.hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const stagedConditionLifecycleFills = matchingHoleIdFills(
+      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      stagedConditionLifecycleHoles,
     );
-    const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    const stagedConditionSaveCheck =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: replayState,
         target,
         damageAmount,
-        fills: hideousLaughterLifecycleFills,
-        damageEventKey,
+        fills: stagedConditionLifecycleFills,
+        damageOccurrenceKey: damageOccurrenceKey,
       });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    if (stagedConditionSaveCheck.tag === "needsHoles") {
       return needsHolesResult(replayState, input.input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...stagedConditionSaveCheck.holes,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
+    if (stagedConditionSaveCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        stagedConditionSaveCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    for (const hole of hideousLaughterSaveCheck.holes) {
-      hideousLaughterDamageRepeatSaveHoleIds.add(String(hole.holeId));
+    for (const hole of stagedConditionSaveCheck.holes) {
+      stagedConditionDamageRepeatSaveHoleIds.add(String(hole.holeId));
     }
     const damageDisposition = damageDispositionForTarget(
       dispositionHole === null ? [] : [dispositionHole],
@@ -887,10 +892,13 @@ export function resolveChainedSpellAttackDamageAct(input: {
       {
         concentrationSavingThrow: concentrationFill,
         damageDisposition,
-        wardingBondDamageShareConcentrationSavingThrows:
+        linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
-        hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
-        hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
+        saveGatedConditionDamageRepeatSave: {
+          kind: "repeatSave",
+          fills: stagedConditionLifecycleFills,
+          occurrenceKey: damageOccurrenceKey,
+        },
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts,
         ...optionalProperty(
@@ -920,16 +928,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Chromatic Orb chain can continue only after duplicate d8 damage faces and remaining leap budget.",
+          "chosen-damage bouncing attack chain can continue only after duplicate d8 damage faces and remaining leap budget.",
         );
       }
       /* v8 ignore stop -- @preserve */
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
-        hideousLaughterDamageRepeatSaveHoleIds,
-        hideousLaughterDamageRepeatSaveFills:
-          fillSet.hideousLaughterDamageRepeatSaves,
+        stagedConditionDamageRepeatSaveHoleIds,
+        stagedConditionDamageRepeatSaveFills:
+          fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
@@ -955,7 +963,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
   return invalidResult(
     input.input.state,
     "invalidFill",
-    "Chromatic Orb chain exceeded its spell-slot leap budget.",
+    "chosen-damage bouncing attack chain exceeded its spell-slot leap budget.",
   );
   /* v8 ignore stop -- @preserve */
 }
@@ -1043,7 +1051,7 @@ export function chainedSpellFillSet(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[] = [];
-  const hideousLaughterDamageRepeatSaves: Extract<
+  const saveGatedConditionWithRepeatDamageRepeatSaves: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [];
@@ -1062,7 +1070,7 @@ export function chainedSpellFillSet(
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
     }
-    if (fill.kind === "slowSomaticSpellFailureOutcome") {
+    if (fill.kind === "turnConstraintSomaticSpellFailureOutcome") {
       continue;
     }
 
@@ -1272,21 +1280,21 @@ export function chainedSpellFillSet(
     }
     if (
       fill.kind === "savingThrowOutcome" &&
-      isHideousLaughterDamageRepeatSaveFill(fill)
+      isSaveGatedConditionWithRepeatDamageRepeatSaveFill(fill)
     ) {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        hideousLaughterDamageRepeatSaves.some(
+        saveGatedConditionWithRepeatDamageRepeatSaves.some(
           (candidate) => candidate.holeId === fill.holeId,
         )
       ) {
         return {
           tag: "invalid",
-          message: "Hideous Laughter repeat save was filled twice.",
+          message: "Staged-condition repeat save was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
-      hideousLaughterDamageRepeatSaves.push(fill);
+      saveGatedConditionWithRepeatDamageRepeatSaves.push(fill);
       continue;
     }
     if (fill.kind === "attackDamageDisposition") {
@@ -1303,7 +1311,7 @@ export function chainedSpellFillSet(
       damageDispositions.push(fill);
       continue;
     }
-    if (fill.kind === "sanctuaryInterdictionOutcome") {
+    if (fill.kind === "targetingSaveInterdictionOutcome") {
       continue;
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: every fill kind emitted for a chained-spell replay is consumed by a preceding parser branch. */
@@ -1339,7 +1347,7 @@ export function chainedSpellFillSet(
     damageType,
     steps,
     concentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaves,
     damageDispositions,
     sourceDamageRollPenaltyRolls,
     reactionSpellTargetFacts,
@@ -1452,8 +1460,8 @@ export function validateChainedSpellFollowUpFills(input: {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
-  readonly hideousLaughterDamageRepeatSaveHoleIds: ReadonlySet<string>;
-  readonly hideousLaughterDamageRepeatSaveFills: readonly Extract<
+  readonly stagedConditionDamageRepeatSaveHoleIds: ReadonlySet<string>;
+  readonly stagedConditionDamageRepeatSaveFills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -1477,12 +1485,12 @@ export function validateChainedSpellFollowUpFills(input: {
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: replay accepts Hideous Laughter repeat saves only for event-scoped holes derived while applying chained damage. */
   if (
-    input.hideousLaughterDamageRepeatSaveFills.some(
+    input.stagedConditionDamageRepeatSaveFills.some(
       (fill) =>
-        !input.hideousLaughterDamageRepeatSaveHoleIds.has(String(fill.holeId)),
+        !input.stagedConditionDamageRepeatSaveHoleIds.has(String(fill.holeId)),
     )
   ) {
-    return "Hideous Laughter repeat save fills are only valid for a damaged target affected by Hideous Laughter.";
+    return "damage-triggered repeat-save condition repeat save fills are only valid for a damaged target affected by damage-triggered repeat-save condition.";
   }
   /* v8 ignore stop -- @preserve */
   return damageDispositionFillsValidation({
@@ -1550,15 +1558,13 @@ type ChainedSpellDamageContext = {
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
   readonly damageDisposition: BattleAttackDamageDisposition;
-  readonly wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
+  readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows: readonly Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
-  readonly hideousLaughterDamageRepeatSaves: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[];
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string;
+  readonly saveGatedConditionDamageRepeatSave: Parameters<
+    typeof applyBattleHitPointDamage
+  >[0]["saveGatedConditionDamageRepeatSave"];
   readonly damageSourceId: CombatantId;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
@@ -1581,10 +1587,9 @@ export function applyChainedSpellDamage(
     spatialFacts: context.spatialFacts,
     ...optionalProperty("relationshipDecisions", context.relationshipDecisions),
     concentrationSavingThrow: context.concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows:
-      context.wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves: context.hideousLaughterDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey:
-      context.hideousLaughterDamageRepeatSaveEventKey,
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+      context.linkedDefenseResistanceDamageShareConcentrationSavingThrows,
+    saveGatedConditionDamageRepeatSave:
+      context.saveGatedConditionDamageRepeatSave,
   });
 }

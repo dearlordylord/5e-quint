@@ -16,6 +16,7 @@
 //   Concentration, Blindsight, and Truesight.
 
 module battleRuntimeBlurAttackRollDefense {
+  import battleRuntimePerceptionGatedAttackRollDefense.* from "./battle-runtime-perception-gated-attack-roll-defense"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
@@ -34,12 +35,16 @@ module battleRuntimeBlurAttackRollDefense {
     attackerCanSeeTarget: bool,
     attackerPerceivesBlurredTargetWithBlindsightOrTruesight: bool,
   ): SpellAttackRollMode =
-    spellAttackRollModeFromBlurredActiveEffects(
-      attackerEffects,
-      targetEffects,
-      attackerCanSeeTarget,
+    match perceptionGatedAttackRollMode(
+      activeEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget),
+      activeEffectsGrantAttackRollDisadvantage(attackerEffects),
+      activeEffectsContainBlurAttackRollDefense(targetEffects),
       attackerPerceivesBlurredTargetWithBlindsightOrTruesight,
-    )
+    ) {
+      | PerceptionGatedAdvantageAttackRoll => AdvantageSpellAttackRoll
+      | PerceptionGatedDisadvantageAttackRoll => DisadvantageSpellAttackRoll
+      | PerceptionGatedNormalAttackRoll => NormalSpellAttackRoll
+    }
 
   pure def combatantWithBlurAttackRollDefenseApplied(caster: Combatant): Combatant = {
     val concentrationBase = breakConcentration(caster)

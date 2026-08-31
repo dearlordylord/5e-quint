@@ -16,7 +16,7 @@ import {
   type ResourceCount,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetResources,
@@ -65,7 +65,7 @@ export function replaceCharacterSheetSpellSlotSourceState(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellSlotState: CharacterSheetSpellSlotSourceState;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed slot-state input: the sheet has no ordinary Spell Slot projection. */
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -79,14 +79,14 @@ export function replaceCharacterSheetSpellSlotSourceState(input: {
     spellSlotState: input.spellSlotState,
   });
   /* v8 ignore start -- @preserve -- Malformed retained slot state: ordinary or created expenditure disagrees with build capacity. */
-  if (Either.isLeft(spellSlotState)) {
-    return Either.left(spellSlotState.left);
+  if (Result.isFailure(spellSlotState)) {
+    return Result.fail(spellSlotState.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
-    spellSlotExpenditures: spellSlotState.right.ordinarySpellSlotExpenditures,
-    createdSpellSlots: spellSlotState.right.createdSpellSlots,
+    spellSlotExpenditures: spellSlotState.success.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotState.success.createdSpellSlots,
   });
 }
 
@@ -105,15 +105,15 @@ export function characterSheetPactSlots(
 
 export function convertFontOfMagicSpellSlotToSorceryPoints(
   input: CharacterSheetFontOfMagicSlotToSorceryPointsInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const fontOfMagicFacts = requiredFontOfMagicFacts(
     input.sheet,
     input.unitLibrary,
     "Font of Magic conversion requires the Sorcerer Font of Magic feature.",
   );
-  if (Either.isLeft(fontOfMagicFacts))
-    return Either.left(fontOfMagicFacts.left);
-  const fontOfMagic = fontOfMagicFacts.right;
+  if (Result.isFailure(fontOfMagicFacts))
+    return Result.fail(fontOfMagicFacts.failure);
+  const fontOfMagic = fontOfMagicFacts.success;
   /* v8 ignore start -- @preserve -- Malformed Font of Magic input: the sheet has no ordinary Spell Slot state. */
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -127,7 +127,8 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
     spellLevel: input.spellLevel,
     spellSlotSource: input.spellSlotSource,
   });
-  if (Either.isLeft(spellSlotSpend)) return Either.left(spellSlotSpend.left);
+  if (Result.isFailure(spellSlotSpend))
+    return Result.fail(spellSlotSpend.failure);
 
   const sorceryPoints = sorceryPointPool(
     input.sheet,
@@ -135,9 +136,10 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
     fontOfMagic.unitId,
   );
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the admitted Font of Magic feature must reproject its Sorcery Point pool from the same catalog. */
-  if (Either.isLeft(sorceryPoints)) return Either.left(sorceryPoints.left);
+  if (Result.isFailure(sorceryPoints))
+    return Result.fail(sorceryPoints.failure);
   /* v8 ignore start -- @preserve -- Malformed Font of Magic input: the build lacks the shared Sorcery Point resource. */
-  if (sorceryPoints.right === undefined) {
+  if (sorceryPoints.success === undefined) {
     return characterSheetIssue(
       "Font of Magic conversion requires the shared Sorcery Point resource.",
     );
@@ -145,37 +147,37 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
   /* v8 ignore stop -- @preserve */
 
   const pointGain = resourceCount(input.spellLevel);
-  if (sorceryPoints.right.expended < pointGain) {
+  if (sorceryPoints.success.expended < pointGain) {
     return characterSheetIssue(
       "Font of Magic conversion would exceed the Sorcery Point maximum.",
     );
   }
 
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
-    spellSlotExpenditures: spellSlotSpend.right.ordinarySpellSlotExpenditures,
-    createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
+    spellSlotExpenditures: spellSlotSpend.success.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotSpend.success.createdSpellSlots,
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
-      unitId: sorceryPoints.right.unitId,
-      expended: resourceCount(sorceryPoints.right.expended - pointGain),
+      unitId: sorceryPoints.success.unitId,
+      expended: resourceCount(sorceryPoints.success.expended - pointGain),
     }),
   });
 }
 
 export function convertFontOfMagicSorceryPointsToSpellSlot(
   input: CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const fontOfMagicFacts = requiredFontOfMagicFacts(
     input.sheet,
     input.unitLibrary,
     "Font of Magic Spell Slot creation requires the Sorcerer Font of Magic feature.",
   );
   /* v8 ignore start -- @preserve -- Unsupported invocation input: Spell Slot creation is admitted only after retaining the Font of Magic feature profile. */
-  if (Either.isLeft(fontOfMagicFacts))
-    return Either.left(fontOfMagicFacts.left);
+  if (Result.isFailure(fontOfMagicFacts))
+    return Result.fail(fontOfMagicFacts.failure);
   /* v8 ignore stop -- @preserve */
-  const fontOfMagic = fontOfMagicFacts.right;
+  const fontOfMagic = fontOfMagicFacts.success;
   /* v8 ignore start -- @preserve -- Malformed Font of Magic input: the sheet has no ordinary Spell Slot state. */
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -207,23 +209,24 @@ export function convertFontOfMagicSorceryPointsToSpellSlot(
     fontOfMagic.unitId,
   );
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the admitted Font of Magic feature must reproject its Sorcery Point pool from the same catalog. */
-  if (Either.isLeft(sorceryPoints)) return Either.left(sorceryPoints.left);
+  if (Result.isFailure(sorceryPoints))
+    return Result.fail(sorceryPoints.failure);
   /* v8 ignore start -- @preserve -- Malformed Font of Magic input: the build lacks the shared Sorcery Point resource. */
-  if (sorceryPoints.right === undefined) {
+  if (sorceryPoints.success === undefined) {
     return characterSheetIssue(
       "Font of Magic Spell Slot creation requires the shared Sorcery Point resource.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const availableSorceryPoints =
-    sorceryPoints.right.count - sorceryPoints.right.expended;
+    sorceryPoints.success.count - sorceryPoints.success.expended;
   if (availableSorceryPoints < option.pointCost) {
     return characterSheetIssue(
       "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
     );
   }
 
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
     createdSpellSlots: addCreatedSpellSlot({
       createdSpellSlots: input.sheet.createdSpellSlots,
@@ -231,8 +234,10 @@ export function convertFontOfMagicSorceryPointsToSpellSlot(
     }),
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
-      unitId: sorceryPoints.right.unitId,
-      expended: resourceCount(sorceryPoints.right.expended + option.pointCost),
+      unitId: sorceryPoints.success.unitId,
+      expended: resourceCount(
+        sorceryPoints.success.expended + option.pointCost,
+      ),
     }),
   });
 }
@@ -241,11 +246,11 @@ function sorceryPointPool(
   sheet: CharacterSheet,
   unitLibrary: UnitCatalog,
   unitId: CharacterSheetSorceryPointPoolResourceState["unitId"],
-): Either.Either<
+): Result.Result<
   CharacterSheetSorceryPointPoolResourceState | undefined,
   CharacterSheetIssue
 > {
-  return Either.map(characterSheetResources(sheet, unitLibrary), (resources) =>
+  return Result.map(characterSheetResources(sheet, unitLibrary), (resources) =>
     resources.find(
       (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
         resource.tag === "pointPoolResource" && resource.unitId === unitId,
@@ -257,19 +262,19 @@ function requiredFontOfMagicFacts(
   sheet: CharacterSheet,
   unitLibrary: UnitCatalog,
   missingFeatureMessage: string,
-): Either.Either<CharacterBuildSorcererFontOfMagicFacts, CharacterSheetIssue> {
+): Result.Result<CharacterBuildSorcererFontOfMagicFacts, CharacterSheetIssue> {
   const facts = characterBuildSorcererFontOfMagicFacts({
     build: sheet.build,
     unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: Font of Magic facts cannot be projected from the retained build. */
-  if (Either.isLeft(facts)) {
-    return characterSheetIssue(facts.left.message);
+  if (Result.isFailure(facts)) {
+    return characterSheetIssue(facts.failure.message);
   }
   /* v8 ignore stop -- @preserve */
-  return facts.right === undefined
+  return facts.success === undefined
     ? characterSheetIssue(missingFeatureMessage)
-    : Either.right(facts.right);
+    : Result.succeed(facts.success);
 }
 
 export function ordinarySpellSlotStates(
@@ -299,7 +304,7 @@ export function spellSlotStateFromInput(
     readonly build: SpellcastingCharacterBuild;
     readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   return validateSpellSlotSourceState({
     build: input.build,
     unitLibrary: input.unitLibrary,
@@ -314,7 +319,7 @@ export function validateSpellSlotSourceState(input: {
   readonly build: SpellcastingCharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly spellSlotState: CharacterSheetSpellSlotSourceState;
-}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   const buildSlots = characterBuildSpellcastingSlotCapacity(input.build);
   const expenditureLevels = new Set<number>();
   for (const expenditure of input.spellSlotState
@@ -347,16 +352,16 @@ export function validateSpellSlotSourceState(input: {
     createdSpellSlots: input.spellSlotState.createdSpellSlots,
   });
   /* v8 ignore start -- @preserve -- Malformed created-slot state failed correlation with the admitted Font of Magic table. */
-  if (Either.isLeft(createdSpellSlots)) {
-    return Either.left(createdSpellSlots.left);
+  if (Result.isFailure(createdSpellSlots)) {
+    return Result.fail(createdSpellSlots.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     ordinarySpellSlotExpenditures:
       input.spellSlotState.ordinarySpellSlotExpenditures
         .filter((expenditure) => expenditure.expended > 0)
         .sort((a, b) => a.spellLevel - b.spellLevel),
-    createdSpellSlots: createdSpellSlots.right,
+    createdSpellSlots: createdSpellSlots.success,
   });
 }
 
@@ -364,7 +369,7 @@ export function pactSlotExpenditureFromInput(
   input: Pick<CharacterSheetInput, "pactSlots"> & {
     readonly build: SpellcastingCharacterBuild;
   },
-): Either.Either<
+): Result.Result<
   CharacterPactSlotExpenditure | undefined,
   CharacterSheetIssue
 > {
@@ -372,7 +377,7 @@ export function pactSlotExpenditureFromInput(
   if (pactMagic === undefined) {
     /* v8 ignore start -- @preserve -- Malformed sheet input: Pact Slot expenditure is retained by a build without Pact Magic capacity. */
     return input.pactSlots === undefined
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : characterSheetIssue(
           "Pact Slot state must match Pact Magic build capacity.",
         );
@@ -395,8 +400,8 @@ export function pactSlotExpenditureFromInput(
   }
   /* v8 ignore stop -- @preserve */
   return pactSlots.expended === resourceCount(0)
-    ? Either.right(undefined)
-    : Either.right({
+    ? Result.succeed(undefined)
+    : Result.succeed({
         expended: resourceCount(pactSlots.expended),
       });
 }
@@ -413,7 +418,7 @@ export function spendCharacterSheetSpellSlot(input: {
   readonly spellSlotSource:
     | CharacterSheetFontOfMagicSpellSlotSource
     | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed slot-spend input: the sheet has no ordinary Spell Slot state. */
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -427,13 +432,13 @@ export function spendCharacterSheetSpellSlot(input: {
     spellSlotSource: input.spellSlotSource,
     issueContext: "Spell Slot spend",
   });
-  return Either.isLeft(spellSlotSpend)
-    ? Either.left(spellSlotSpend.left)
-    : Either.right({
+  return Result.isFailure(spellSlotSpend)
+    ? Result.fail(spellSlotSpend.failure)
+    : Result.succeed({
         ...input.sheet,
         spellSlotExpenditures:
-          spellSlotSpend.right.ordinarySpellSlotExpenditures,
-        createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
+          spellSlotSpend.success.ordinarySpellSlotExpenditures,
+        createdSpellSlots: spellSlotSpend.success.createdSpellSlots,
       });
 }
 
@@ -443,7 +448,7 @@ function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
   readonly spellSlotSource:
     | CharacterSheetFontOfMagicSpellSlotSource
     | undefined;
-}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   return spellSlotSpendSourceState({
     ...input,
     issueContext: "Font of Magic conversion",
@@ -457,7 +462,7 @@ function spellSlotSpendSourceState(input: {
     | CharacterSheetFontOfMagicSpellSlotSource
     | undefined;
   readonly issueContext: string;
-}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   const ordinarySlot = ordinarySpellSlotStates(input.sheet).find(
     (slot) => slot.spellLevel === input.spellLevel,
   );
@@ -476,10 +481,10 @@ function spellSlotSpendSourceState(input: {
     createdAvailable,
     issueContext: input.issueContext,
   });
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
 
-  return source.right === "ordinary"
-    ? Either.right({
+  return source.success === "ordinary"
+    ? Result.succeed({
         ordinarySpellSlotExpenditures: replaceOrdinarySpellSlotExpenditure({
           expenditures: input.sheet.spellSlotExpenditures,
           spellLevel: input.spellLevel,
@@ -488,7 +493,7 @@ function spellSlotSpendSourceState(input: {
         }),
         createdSpellSlots: input.sheet.createdSpellSlots,
       })
-    : Either.right({
+    : Result.succeed({
         ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures,
         createdSpellSlots: input.sheet.createdSpellSlots.map((slot) =>
           slot.spellLevel === input.spellLevel
@@ -507,13 +512,13 @@ function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
   readonly createdSlot: CharacterSheetCreatedSpellSlotState | undefined;
   readonly createdAvailable: number;
   readonly issueContext: string;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetFontOfMagicSpellSlotSource,
   CharacterSheetIssue
 > {
   if (input.spellSlotSource === "ordinary") {
     return input.ordinaryAvailable > 0
-      ? Either.right("ordinary")
+      ? Result.succeed("ordinary")
       : characterSheetIssue(
           `${input.issueContext} requires an unexpended ordinary Spell Slot.`,
         );
@@ -526,15 +531,15 @@ function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    return Either.right("created");
+    return Result.succeed("created");
   }
   if (input.ordinaryAvailable > 0 && input.createdAvailable > 0) {
     return characterSheetIssue(
       `${input.issueContext} requires a Spell Slot source when ordinary and created Spell Slots are both available.`,
     );
   }
-  if (input.ordinaryAvailable > 0) return Either.right("ordinary");
-  if (input.createdAvailable > 0) return Either.right("created");
+  if (input.ordinaryAvailable > 0) return Result.succeed("ordinary");
+  if (input.createdAvailable > 0) return Result.succeed("created");
   /* v8 ignore start -- @preserve -- Malformed slot-spend input: the retained source is fully expended, or neither source exists. */
   if (input.ordinarySlot !== undefined && input.createdSlot === undefined) {
     return characterSheetIssue(
@@ -582,22 +587,22 @@ function validateCreatedSpellSlots(input: {
   readonly build: SpellcastingCharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
-}): Either.Either<
+}): Result.Result<
   readonly CharacterSheetCreatedSpellSlotState[],
   CharacterSheetIssue
 > {
-  if (input.createdSpellSlots.length === 0) return Either.right([]);
+  if (input.createdSpellSlots.length === 0) return Result.succeed([]);
   const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts({
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: created-slot state cannot project Font of Magic facts. */
-  if (Either.isLeft(fontOfMagicFacts)) {
-    return characterSheetIssue(fontOfMagicFacts.left.message);
+  if (Result.isFailure(fontOfMagicFacts)) {
+    return characterSheetIssue(fontOfMagicFacts.failure.message);
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed created-slot state: the build lacks the admitted Font of Magic feature. */
-  if (fontOfMagicFacts.right === undefined) {
+  if (fontOfMagicFacts.success === undefined) {
     return characterSheetIssue(
       "Created Spell Slot state requires the Sorcerer Font of Magic feature.",
     );
@@ -614,13 +619,13 @@ function validateCreatedSpellSlots(input: {
     /* v8 ignore stop -- @preserve */
     levels.add(createdSlot.spellLevel);
     const option = fontOfMagicSpellSlotCreationOption({
-      facts: fontOfMagicFacts.right,
+      facts: fontOfMagicFacts.success,
       spellLevel: createdSlot.spellLevel,
     });
     /* v8 ignore start -- @preserve -- Malformed created-slot state: a slot level is absent from or below the minimum level of the admitted creation table. */
     if (
       option === undefined ||
-      fontOfMagicFacts.right.spellSlotCreation.ownerClassLevel <
+      fontOfMagicFacts.success.spellSlotCreation.ownerClassLevel <
         option.minimumClassLevel
     ) {
       return characterSheetIssue(
@@ -629,7 +634,7 @@ function validateCreatedSpellSlots(input: {
     }
     /* v8 ignore stop -- @preserve */
   }
-  return Either.right(input.createdSpellSlots);
+  return Result.succeed(input.createdSpellSlots);
 }
 
 function addCreatedSpellSlot(input: {

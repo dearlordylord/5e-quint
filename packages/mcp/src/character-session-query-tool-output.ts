@@ -9,28 +9,33 @@ import {
   SkillSchema,
 } from "@dnd/surface/surface/schema";
 import { ARMOR_TRAINING_CATEGORIES } from "@dnd/surface/surface/types";
-import { Schema } from "effect";
+import { Schema, SchemaGetter } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
-const IntegerSchema = Schema.Number.pipe(Schema.int());
-const MovementFeetOutputSchema = Schema.transform(MovementFeet, Schema.Number, {
-  decode: (feet) => Number(feet),
-  encode: (feet) => MovementFeet.make(feet),
-  strict: true,
-});
-const ResourceCountOutputSchema = Schema.transform(
-  ResourceCount,
-  Schema.Number,
-  {
-    decode: (count) => Number(count),
-    encode: (count) => ResourceCount.make(count),
-    strict: true,
-  },
+const IntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
+const MovementFeetOutputSchema = MovementFeet.pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, MovementFeet>((feet) =>
+      Number(feet),
+    ),
+    encode: SchemaGetter.transform<MovementFeet, number>((feet) =>
+      MovementFeet.make(feet),
+    ),
+  }),
+);
+const ResourceCountOutputSchema = ResourceCount.pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, ResourceCount>((count) =>
+      Number(count),
+    ),
+    encode: SchemaGetter.transform<ResourceCount, number>((count) =>
+      ResourceCount.make(count),
+    ),
+  }),
 );
 const CharacterSheetProjectionRetainRouteSchema = Schema.Struct({
   kind: Schema.Literal("retainCharacterSheetSelectedReferences"),
@@ -47,19 +52,19 @@ const CharacterSheetAbilityCheckProjectionRouteSchema = Schema.Struct({
   subject: Schema.Literal("abilityCheckProjection"),
   owner: Schema.Literal("buildProjection"),
 });
-const CharacterSheetArmorClassProjectionRouteSchema = Schema.Tuple(
+const CharacterSheetArmorClassProjectionRouteSchema = Schema.Tuple([
   CharacterSheetProjectionRetainRouteSchema,
   Schema.Struct({
     kind: Schema.Literal("projectCharacterSheetFacts"),
     subject: Schema.Literal("armorClassProjection"),
     owner: Schema.Literal("buildProjection"),
   }),
-);
-const CharacterSheetWeaponMasteryProjectionRouteSchema = Schema.Tuple(
+]);
+const CharacterSheetWeaponMasteryProjectionRouteSchema = Schema.Tuple([
   CharacterSheetProjectionRetainRouteSchema,
   CharacterSheetFactsProjectionRouteSchema,
-);
-const ArmorClassBaseSchema = Schema.Union(
+]);
+const ArmorClassBaseSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("stat_block"),
     ac: ArmorClassSchema,
@@ -74,10 +79,10 @@ const ArmorClassBaseSchema = Schema.Union(
     kind: Schema.Literal("ability_sum"),
     base: ArmorClassSchema,
     abilityModifiers: Schema.NonEmptyArray(AbilitySchema),
-    source: Schema.Literal(
+    source: Schema.Literals([
       "unarmored_defense",
       "class_feature_base_plus_ability",
-    ),
+    ]),
     sourceUnitId: UnitId,
   }),
   Schema.Struct({
@@ -91,35 +96,35 @@ const ArmorClassBaseSchema = Schema.Union(
     formula: ArmorAcFormulaSchema,
     category: ArmorCategorySchema,
   }),
-);
-const ArmorClassBonusSchema = Schema.Union(
+]);
+const ArmorClassBonusSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("flat"),
     bonus: IntegerSchema,
-    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
+    sourceUnitId: Schema.optionalKey(UnitId),
   }),
   Schema.Struct({
     kind: Schema.Literal("shield"),
     bonus: IntegerSchema,
     handUse: Schema.Literal("shield"),
     trainingRequired: Schema.Literal("shield"),
-    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
+    sourceUnitId: Schema.optionalKey(UnitId),
   }),
   Schema.Struct({
     kind: Schema.Literal("unarmored_no_shield"),
     bonus: IntegerSchema,
-    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
+    sourceUnitId: Schema.optionalKey(UnitId),
   }),
   Schema.Struct({
     kind: Schema.Literal("wearing_armor"),
     bonus: IntegerSchema,
     categories: Schema.Array(ArmorCategorySchema),
-    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
+    sourceUnitId: Schema.optionalKey(UnitId),
   }),
-);
+]);
 const ArmorClassFloorSchema = Schema.Struct({
   floor: ArmorClassSchema,
-  sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
+  sourceUnitId: Schema.optionalKey(UnitId),
 });
 const ArmorClassStateSchema = Schema.Struct({
   abilityModifiers: Schema.Struct({
@@ -133,9 +138,9 @@ const ArmorClassStateSchema = Schema.Struct({
   base: ArmorClassBaseSchema,
   bonuses: Schema.Array(ArmorClassBonusSchema),
   floors: Schema.Array(ArmorClassFloorSchema),
-  armorTraining: Schema.Array(Schema.Literal(...ARMOR_TRAINING_CATEGORIES)),
-  leftHandUse: Schema.Literal(...HAND_USES),
-  rightHandUse: Schema.Literal(...HAND_USES),
+  armorTraining: Schema.Array(Schema.Literals(ARMOR_TRAINING_CATEGORIES)),
+  leftHandUse: Schema.Literals(HAND_USES),
+  rightHandUse: Schema.Literals(HAND_USES),
 });
 
 const CharacterSheetAbilityCheckAbilityProjectionSchema = Schema.Struct({
@@ -144,15 +149,13 @@ const CharacterSheetAbilityCheckAbilityProjectionSchema = Schema.Struct({
     Schema.Struct({
       ability: AbilitySchema,
       sourceUnitId: UnitId,
-      requiredActiveFeatureUnitId: Schema.optionalWith(UnitId, {
-        exact: true,
-      }),
+      requiredActiveFeatureUnitId: Schema.optionalKey(UnitId),
     }),
   ),
 });
 const CharacterSheetAbilityCheckProficiencyBonusProjectionSchema =
   Schema.Struct({
-    proficiencyBonus: Schema.Union(
+    proficiencyBonus: Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("none"),
         bonus: Schema.Literal(0),
@@ -173,8 +176,8 @@ const CharacterSheetAbilityCheckProficiencyBonusProjectionSchema =
         skill: SkillSchema,
         bonus: Schema.Number,
       }),
-    ),
-    qRoute: Schema.Tuple(CharacterSheetAbilityCheckProjectionRouteSchema),
+    ]),
+    qRoute: Schema.Tuple([CharacterSheetAbilityCheckProjectionRouteSchema]),
   });
 const CharacterSheetJumpDistanceAbilityProjectionSchema = Schema.Struct({
   defaultAbility: AbilitySchema,
@@ -188,11 +191,11 @@ const CharacterSheetJumpDistanceAbilityProjectionSchema = Schema.Struct({
 });
 const CharacterSheetLinkedSpeedGrantSchema = Schema.Struct({
   sourceUnitId: UnitId,
-  speedKind: Schema.Literal("fly", "swim", "climb", "burrow"),
-  feet: Schema.Union(
+  speedKind: Schema.Literals(["fly", "swim", "climb", "burrow"]),
+  feet: Schema.Union([
     MovementFeetOutputSchema,
     Schema.Struct({ kind: Schema.Literal("walk_speed") }),
-  ),
+  ]),
 });
 const CharacterSheetArmorClassProjectionSchema = Schema.Struct({
   state: ArmorClassStateSchema,
@@ -201,11 +204,11 @@ const CharacterSheetArmorClassProjectionSchema = Schema.Struct({
 });
 const CharacterSheetSpellAccessProjectionSchema = Schema.Array(
   Schema.Struct({
-    source: Schema.Literal("classFeature", "magicInitiate"),
+    source: Schema.Literals(["classFeature", "magicInitiate"]),
     sourceUnitId: UnitId,
     spellId: UnitId,
     spellcastingAbility: AbilitySchema,
-    preparation: Schema.Literal("alwaysPrepared", "learnedCantrip"),
+    preparation: Schema.Literals(["alwaysPrepared", "learnedCantrip"]),
   }),
 );
 const CharacterSheetKnownFormsProjectionSchema = Schema.Struct({
@@ -256,7 +259,7 @@ const CharacterSheetSpellbookRitualInvocationAcceptedResolveRouteSchema =
     kind: Schema.Literal("resolveCharacterSheetSubject"),
     subject: Schema.Literal("spellResource"),
     fill: Schema.Literal("projectionSelection"),
-    holes: Schema.Tuple(),
+    holes: Schema.Tuple([]),
     owner: Schema.Literal("selectedReference"),
   });
 const CharacterSheetSpellbookRitualInvocationRejectedResolveRouteSchema =
@@ -264,28 +267,28 @@ const CharacterSheetSpellbookRitualInvocationRejectedResolveRouteSchema =
     kind: Schema.Literal("resolveCharacterSheetSubject"),
     subject: Schema.Literal("spellResource"),
     fill: Schema.Literal("projectionSelection"),
-    holes: Schema.Tuple(Schema.Literal("projectionChoice")),
+    holes: Schema.Tuple([Schema.Literal("projectionChoice")]),
     owner: Schema.Literal("selectedReference"),
   });
-const CharacterSheetSpellbookRitualInvocationProjectionSchema = Schema.Union(
+const CharacterSheetSpellbookRitualInvocationProjectionSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("accepted"),
     invocation: CharacterSheetSpellbookRitualInvocationSchema,
-    qRoute: Schema.Tuple(
+    qRoute: Schema.Tuple([
       CharacterSheetSpellbookRitualInvocationRetainRouteSchema,
       CharacterSheetSpellbookRitualInvocationAcceptedResolveRouteSchema,
-    ),
+    ]),
   }),
   Schema.Struct({
     tag: Schema.Literal("rejected"),
     issue: CharacterSheetIssueSchema,
-    qRoute: Schema.Tuple(
+    qRoute: Schema.Tuple([
       CharacterSheetSpellbookRitualInvocationRetainRouteSchema,
       CharacterSheetSpellbookRitualInvocationRejectedResolveRouteSchema,
-    ),
+    ]),
   }),
-);
-const CharacterSessionQueryProjectionSchema = Schema.Union(
+]);
+const CharacterSessionQueryProjectionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("abilityCheckAbility"),
     projection: CharacterSheetAbilityCheckAbilityProjectionSchema,
@@ -330,7 +333,7 @@ const CharacterSessionQueryProjectionSchema = Schema.Union(
     kind: Schema.Literal("spellInvocation"),
     projection: CharacterSheetSpellbookRitualInvocationProjectionSchema,
   }),
-);
+]);
 
 export const CharacterSessionQueryOutputSchema = Schema.Struct({
   characterId: CharacterSheetIdSchema,

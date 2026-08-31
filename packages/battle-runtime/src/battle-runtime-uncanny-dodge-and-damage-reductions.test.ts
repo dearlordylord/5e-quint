@@ -110,7 +110,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -184,8 +184,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "reactionRollOrDamageReduction",
-          choice: expect.objectContaining({
+          kind: "reactionModifier",
+          responderId: fighterId,
+          modifier: expect.objectContaining({
             kind: "attackDamageReduction",
             procedureRef,
           }),
@@ -268,9 +269,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
 
     const hitModifierChoices = battleFrontierInterruptDecisionForState(
       hitReaction.result.state,
-    )!.choices.filter(
-      (choice) => choice.kind === "reactionRollOrDamageReduction",
-    );
+    )!.choices.filter((choice) => choice.kind === "reactionModifier");
     const firstHitModifierChoice = hitModifierChoices[0];
     if (firstHitModifierChoice === undefined) {
       throw new Error("Expected an attack-hit Reaction modifier choice.");
@@ -288,16 +287,16 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     expect(hitModifierChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "reactionRollOrDamageReduction",
-          choice: expect.objectContaining({ kind: "attackDamageReduction" }),
+          kind: "reactionModifier",
+          modifier: expect.objectContaining({ kind: "attackDamageReduction" }),
         }),
       ]),
     );
     expect(hitModifierChoices).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "reactionRollOrDamageReduction",
-          choice: expect.objectContaining({ kind: "damageRollReduction" }),
+          kind: "reactionModifier",
+          modifier: expect.objectContaining({ kind: "damageRollReduction" }),
         }),
       ]),
     );
@@ -329,14 +328,12 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     }
     const damageModifierChoices = battleFrontierInterruptDecisionForState(
       awaitingDamageReaction.state,
-    )!.choices.filter(
-      (choice) => choice.kind === "reactionRollOrDamageReduction",
-    );
+    )!.choices.filter((choice) => choice.kind === "reactionModifier");
     expect(damageModifierChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "reactionRollOrDamageReduction",
-          choice: expect.objectContaining({ kind: "damageRollReduction" }),
+          kind: "reactionModifier",
+          modifier: expect.objectContaining({ kind: "damageRollReduction" }),
         }),
       ]),
     );
@@ -438,9 +435,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       offeredResponders: [],
       choices: [
         {
-          kind: "reactionRollOrDamageReduction",
-          reactorId: fighterId,
-          choice: {
+          kind: "reactionModifier",
+          responderId: fighterId,
+          modifier: {
             kind: "damageRollReduction",
             procedureRef,
             reduction: {
@@ -477,6 +474,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         continuation: {
           kind: "damageOnly",
           concentrationSavingThrows: [],
+          saveGatedConditionWithRepeatDamageRepeatSaves: [],
           damageDisposition: { kind: "ordinaryDamage" },
           attackDamageRiders: [],
         },
@@ -552,9 +550,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       offeredResponders: [],
       choices: [
         {
-          kind: "reactionRollOrDamageReduction",
-          reactorId: skeletonId,
-          choice: {
+          kind: "reactionModifier",
+          responderId: skeletonId,
+          modifier: {
             kind: "attackDamageReduction",
             procedureRef,
             reduction: { kind: "halfDamage" },
@@ -562,9 +560,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           initialHoles: [],
         },
         {
-          kind: "reactionRollOrDamageReduction",
-          reactorId: fighterId,
-          choice: {
+          kind: "reactionModifier",
+          responderId: fighterId,
+          modifier: {
             kind: "damageRollReduction",
             procedureRef,
             reduction: {
@@ -591,6 +589,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         continuation: {
           kind: "damageOnly",
           concentrationSavingThrows: [],
+          saveGatedConditionWithRepeatDamageRepeatSaves: [],
           damageDisposition: { kind: "ordinaryDamage" },
           attackDamageRiders: [],
         },

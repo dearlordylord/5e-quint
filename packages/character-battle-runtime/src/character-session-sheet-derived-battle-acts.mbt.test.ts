@@ -4,6 +4,7 @@ import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleActSpellPresentation,
   battleId,
   combatantId,
@@ -43,14 +44,13 @@ import {
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -59,7 +59,23 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
-import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks" | "conditions"
+  >,
+) {
+  return expectSuccess(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
+    }),
+  );
+}
 
 type SheetDerivedOutcome =
   | "init"
@@ -495,7 +511,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const currentSession = requireSession(session);
         const state = requireAcceptedState(acceptedState);
         const character = requireCharacterCombatant(state);
-        const settled = expectRight(
+        const settled = expectSuccess(
           settleCharacterSheetFromBattle({
             battleSession: battleRuntimeSessionForTest({
               state,
@@ -596,7 +612,7 @@ function startSheetDerivedSession(
   input?: { readonly levelOneSlotsExpended?: number },
 ): SheetDerivedSession {
   const levelOneSlotsExpended = input?.levelOneSlotsExpended ?? 0;
-  const sheet = expectRight(
+  const sheet = expectSuccess(
     rebuildCharacterSheetCore({
       characterId: characterSheetId("character:sheet-derived-caster"),
       build,
@@ -617,7 +633,7 @@ function startSheetDerivedSession(
       unitLibrary,
     }),
   );
-  const characterInit = expectRight(
+  const characterInit = expectSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -629,7 +645,7 @@ function startSheetDerivedSession(
     }),
   );
   const targetInit = battleCreatureInitFromRidingHorse();
-  const battle = expectRight(
+  const battle = expectSuccess(
     startBattle({
       battleId: battleId("battle:sheet-derived-acts"),
       combatants: [characterInit, targetInit],
@@ -658,7 +674,7 @@ function sheetDerivedBuild(input?: {
   readonly wieldedWeapon?: boolean;
   readonly preparedSpell?: boolean;
 }): CharacterBuild {
-  const daggerUnitId = expectRight(
+  const daggerUnitId = expectSuccess(
     characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
   );
   const daggerItemId = characterEquipmentItemId({
@@ -677,7 +693,7 @@ function sheetDerivedBuild(input?: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -921,13 +937,6 @@ function damageRollFill(
       },
     ],
   };
-}
-
-function expectRight<A, E>(value: Either.Either<A, E>): A {
-  if (Either.isLeft(value)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(value.left)}.`);
-  }
-  return value.right;
 }
 
 function normalizeSheetDerivedQuintState(raw: unknown): SheetDerivedProjection {

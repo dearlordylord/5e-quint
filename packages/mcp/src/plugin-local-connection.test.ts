@@ -43,7 +43,7 @@ const InstalledPluginManifestSchema = Schema.Struct({
   interface: Schema.Struct({
     displayName: Schema.Literal("5.5e SRD Oracle"),
   }),
-  mcpServers: Schema.optionalWith(Schema.String, { exact: true }),
+  mcpServers: Schema.optionalKey(Schema.String),
 });
 
 const ForwardTestResultsSchema = Schema.Struct({
@@ -53,7 +53,7 @@ const ForwardTestResultsSchema = Schema.Struct({
   cases: Schema.Array(
     Schema.Struct({
       id: Schema.String,
-      activation: Schema.Literal("activate", "doNotActivate"),
+      activation: Schema.Literals(["activate", "doNotActivate"]),
       toolIntents: Schema.Array(Schema.String),
       result: Schema.String,
     }),
@@ -322,10 +322,10 @@ function signalMatchingProcesses(
   }
 }
 
-function decodeJsonFile<S extends Schema.Schema.AnyNoContext>(
+function decodeJsonFile<S extends Schema.ConstraintDecoder<unknown, never>>(
   schema: S,
   path: string,
-): Schema.Schema.Type<S> {
+): S["Type"] {
   return Schema.decodeUnknownSync(schema)(
     JSON.parse(readFileSync(path, "utf8")),
   );

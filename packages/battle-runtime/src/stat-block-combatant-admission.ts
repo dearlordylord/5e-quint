@@ -1,8 +1,7 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition, SurfaceCondition } from "@dnd/shared/game-facts";
 import { Hp, PositiveInteger } from "@dnd/shared/types";
-import { Brand } from "effect";
-import * as Either from "effect/Either";
+import { Brand, Result } from "effect";
 
 import { optionalProperty } from "./optional-property.ts";
 import type {
@@ -84,16 +83,16 @@ export function admitBattleStatBlockCombatant(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<
+}): Result.Result<
   AdmittedBattleStatBlockCombatant,
   StatBlockCombatantAdmissionIssue
 > {
   const source = battleStatBlockCombatantSource(input.statBlock);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   return admitBattleStatBlockCombatantSource({
     battleId: input.battleId,
     combatantId: input.combatantId,
-    source: source.right,
+    source: source.success,
     startingScopeOrdinal: input.startingScopeOrdinal,
   });
 }
@@ -103,18 +102,18 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly combatantId: CombatantId;
   readonly source: BattleStatBlockCombatantSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<
+}): Result.Result<
   AdmittedBattleStatBlockCombatant,
   StatBlockCombatantAdmissionIssue
 > {
   const resourceGraph = admitStatBlockResourceGraph(input.source);
-  if (Either.isLeft(resourceGraph)) {
-    return Either.left({
+  if (Result.isFailure(resourceGraph)) {
+    return Result.fail({
       tag: "statBlockResourceGraphIssue",
-      issues: resourceGraph.left,
+      issues: resourceGraph.failure,
     });
   }
-  const statBlock = resourceGraph.right;
+  const statBlock = resourceGraph.success;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.", {
       kind: "statBlockCombatantInvalid",
@@ -141,38 +140,16 @@ export function admitBattleStatBlockCombatantSource(input: {
     from,
   );
   const allocation = cohort.admissions[0];
-  return Either.right(
+  return Result.succeed(
     AdmittedBattleStatBlockCombatant({
       battleId: input.battleId,
       combatantId: input.combatantId,
       origin: {
         statBlockId: statBlock.id,
-        mechanics: {
-          creatureType: statBlock.statBlock.creatureType,
-          speeds: statBlock.statBlock.speeds,
-          abilityScores: statBlock.statBlock.abilityScores,
-          savingThrowModifiers: statBlock.statBlock.savingThrowModifiers ?? [],
-          skillModifiers: statBlock.statBlock.skillModifiers ?? [],
-          vulnerabilities:
-            statBlock.statBlock.vulnerabilities?.damageTypes ?? [],
-          resistances: statBlock.statBlock.resistances?.damageTypes ?? [],
-          immunities: {
-            damageTypes:
-              statBlock.statBlock.immunities !== undefined &&
-              "damageTypes" in statBlock.statBlock.immunities
-                ? statBlock.statBlock.immunities.damageTypes
-                : [],
-            conditions:
-              statBlock.statBlock.immunities !== undefined &&
-              "conditions" in statBlock.statBlock.immunities
-                ? statBlock.statBlock.immunities.conditions
-                : [],
-          },
-          specialSenses: statBlock.statBlock.senses ?? [],
-          initiativeModifier: statBlock.statBlock.initiativeModifier,
-          initiativeScore: statBlock.statBlock.initiativeScore,
-          passivePerception: statBlock.statBlock.passivePerception,
-        },
+        mechanics: statBlockCombatantMechanics(
+          statBlock.statBlock,
+          statBlock.statBlock.resistances?.damageTypes ?? [],
+        ),
         execution: allocation.execution,
       },
       initialization: {
@@ -188,9 +165,45 @@ export function admitBattleStatBlockCombatantSource(input: {
   );
 }
 
+function statBlockCombatantMechanics(
+  statBlock: BattleStatBlockCombatantFacts,
+  resistances: AdmittedBattleStatBlockCombatant["origin"]["mechanics"]["resistances"],
+): AdmittedBattleStatBlockCombatant["origin"]["mechanics"] {
+  return {
+    creatureType: statBlock.creatureType,
+    speeds: statBlock.speeds,
+    abilityScores: statBlock.abilityScores,
+    savingThrowModifiers: statBlock.savingThrowModifiers ?? [],
+    skillModifiers: statBlock.skillModifiers ?? [],
+    vulnerabilities: statBlock.vulnerabilities?.damageTypes ?? [],
+    resistances,
+    immunities: statBlockFixedImmunities(statBlock),
+    specialSenses: statBlock.senses ?? [],
+    initiativeModifier: statBlock.initiativeModifier,
+    initiativeScore: statBlock.initiativeScore,
+    passivePerception: statBlock.passivePerception,
+  };
+}
+
+function statBlockFixedImmunities(
+  statBlock: BattleStatBlockCombatantFacts,
+): AdmittedBattleStatBlockCombatant["origin"]["mechanics"]["immunities"] {
+  return {
+    damageTypes:
+      statBlock.immunities !== undefined &&
+      "damageTypes" in statBlock.immunities
+        ? statBlock.immunities.damageTypes
+        : [],
+    conditions:
+      statBlock.immunities !== undefined && "conditions" in statBlock.immunities
+        ? statBlock.immunities.conditions
+        : [],
+  };
+}
+
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSourceInput,
-): Either.Either<
+): Result.Result<
   BattleStatBlockCombatantSource,
   StatBlockCombatantAdmissionIssue
 > {
@@ -208,8 +221,8 @@ export function battleStatBlockCombatantSource(
       constraint: "literalMaximumHitPointsRequired",
     });
   }
-  const hp = PositiveInteger.either(statBlock.statBlock.hp.value);
-  if (Either.isLeft(hp)) {
+  const hp = PositiveInteger.result(statBlock.statBlock.hp.value);
+  if (Result.isFailure(hp)) {
     return issue(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
       {
@@ -229,31 +242,31 @@ export function battleStatBlockCombatantSource(
   const legendaryActionUses = parseStatBlockLegendaryActionUses(
     statBlock.legendaryActionUses,
   );
-  if (Either.isLeft(legendaryActionUses)) {
+  if (Result.isFailure(legendaryActionUses)) {
     return issue(
       "Battle runtime requires Stat Block Legendary Action uses to be a positive integer.",
     );
   }
   const resourceGraph = admitStatBlockResourceGraph(statBlock);
-  if (Either.isLeft(resourceGraph)) {
-    return Either.left({
+  if (Result.isFailure(resourceGraph)) {
+    return Result.fail({
       tag: "statBlockResourceGraphIssue",
-      issues: resourceGraph.left,
+      issues: resourceGraph.failure,
     } satisfies StatBlockResourceGraphCombatantAdmissionIssue);
   }
   const {
     legendaryActionUses: _unbrandedLegendaryActionUses,
     ...sourceWithoutLegendaryActionUses
   } = statBlock;
-  return Either.right(
+  return Result.succeed(
     BattleStatBlockCombatantSource({
       ...sourceWithoutLegendaryActionUses,
-      ...optionalProperty("legendaryActionUses", legendaryActionUses.right),
-      resources: resourceGraph.right.resources,
+      ...optionalProperty("legendaryActionUses", legendaryActionUses.success),
+      resources: resourceGraph.success.resources,
       statBlock: {
         ...statBlock.statBlock,
         ac: statBlock.statBlock.ac,
-        hp: { kind: "literal", value: hp.right },
+        hp: { kind: "literal", value: hp.success },
         size: statBlock.statBlock.size,
       },
     }),
@@ -263,10 +276,10 @@ export function battleStatBlockCombatantSource(
 function issue(
   message: string,
   facts?: BattleInitializationIssueFacts,
-): Either.Either<never, StatBlockCombatantAdmissionIssue> {
+): Result.Result<never, StatBlockCombatantAdmissionIssue> {
   return facts === undefined
-    ? Either.left({ tag: "battleStateInitIssue", message })
-    : Either.left({
+    ? Result.fail({ tag: "battleStateInitIssue", message })
+    : Result.fail({
         tag: "battleStateInitIssue",
         message,
         ...facts,

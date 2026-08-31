@@ -9,6 +9,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   conditionHadNonSpellSourceBeforeSpellEffect,
@@ -44,9 +45,9 @@ export function applyDirectConditionSpellEffects(
         invocation.activeEffect.condition,
       ),
     );
-    const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         ...invocation.activeEffect,
         sourceProcedureRef: invocation.sourceProcedureRef,
         conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
@@ -54,12 +55,18 @@ export function applyDirectConditionSpellEffects(
           invocation.activeEffect.condition,
         ),
       },
+    });
+    const activeEffects = [
+      ...allocation.owner.activeEffects.filter(
+        (effect) => !replacing.includes(effect),
+      ),
+      allocation.effect,
     ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(
         targetId,
-        battleCreatureWithSpellActiveEffects(target, activeEffects),
+        battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
       ),
     };
   }, state);

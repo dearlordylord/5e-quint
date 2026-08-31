@@ -14,28 +14,28 @@ import type {
   CombatantId,
 } from "./identity.ts";
 import type { WeaponId } from "@dnd/shared/game-facts";
-import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type {
   CreatureTraitEffect,
+  StatBlockCommunication,
   StatBlockProcedureOrdinal,
+  StatBlockProcedureResourceOrdinal,
   StatBlockTextOnlyReason,
+  WeaponRecord,
 } from "@dnd/surface/surface/types";
-import type { StatBlockCommunication } from "@dnd/surface/surface/types";
-import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
+import { Result } from "effect";
 import type {
-  FindFamiliarFormSelection,
-  PactOfTheChainFindFamiliarFormSelection,
+  SpawnedCompanionFormSelection,
+  PactOfTheChainSpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 export type RetainedCompanionBattleSelection =
   | {
-      readonly formAccess: "findFamiliar";
-      readonly selectedForm: FindFamiliarFormSelection;
+      readonly formAccess: "spawnedCompanion";
+      readonly selectedForm: SpawnedCompanionFormSelection;
     }
   | {
       readonly formAccess: "pactOfTheChain";
-      readonly selectedForm: PactOfTheChainFindFamiliarFormSelection;
+      readonly selectedForm: PactOfTheChainSpawnedCompanionFormSelection;
     };
 
 export type CharacterSpellPresentationSource = {
@@ -130,13 +130,13 @@ export type BattleStatBlockPresentationSource = {
 export function characterWeaponPresentationSource(
   context: CharacterBattleRuntimeContext,
   weaponUnitId: WeaponId,
-): Either.Either<WeaponRecord, CharacterWeaponPresentationSourceIssue> {
+): Result.Result<WeaponRecord, CharacterWeaponPresentationSourceIssue> {
   const matches = context.unitPresentationSources.flatMap(({ unit }) =>
     unit.kind === "weapon" && unit.id === weaponUnitId ? [unit] : [],
   );
   return matches.length === 1
-    ? Either.right(matches[0]!)
-    : Either.left({
+    ? Result.succeed(matches[0]!)
+    : Result.fail({
         tag: "characterWeaponPresentationSourceIssue",
         reason: matches.length === 0 ? "missing" : "ambiguous",
         weaponUnitId,
@@ -215,6 +215,28 @@ export function battleRuntimeSessionFollows(
     candidate === predecessor ||
     runtimeSessionPredecessors.get(candidate) === predecessor
   );
+}
+
+/**
+ * True when a runtime session is the same session or any descendant produced
+ * by this package's reducer/session transitions. This is distinct from
+ * battleRuntimeSessionFollows, which intentionally checks only one step for
+ * transition-local callers.
+ */
+export function battleRuntimeSessionDescendsFrom(
+  candidate: BattleRuntimeSession,
+  ancestor: BattleRuntimeSession,
+): boolean {
+  const visited = new Set<RuntimeSession>();
+  let current: RuntimeSession | undefined = candidate;
+  while (current !== undefined) {
+    if (current === ancestor) return true;
+    if (visited.has(current)) return false;
+    visited.add(current);
+    const predecessor = runtimeSessionPredecessors.get(current);
+    current = predecessor instanceof RuntimeSession ? predecessor : undefined;
+  }
+  return false;
 }
 
 /** Package-internal construction after state/context admission. */

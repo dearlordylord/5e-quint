@@ -1,9 +1,7 @@
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type {
-  BattleFill,
   BattleId,
   BattleRuntimeSession,
-  BattleSubject,
   InitialInitiativeSetup,
   snapshotBattle,
 } from "@dnd/battle-runtime";
@@ -17,7 +15,7 @@ import type {
   CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
-import type { Either } from "effect";
+import type { Result } from "effect";
 
 type CharacterId = CharacterSheetId;
 
@@ -60,15 +58,15 @@ export type CharacterSessionRegistry = {
   set(session: CharacterSession): void;
   setAll(
     sessions: readonly CharacterSession[],
-  ): Either.Either<void, CharacterSessionRegistryIssue>;
+  ): Result.Result<void, CharacterSessionRegistryIssue>;
   entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
   keys(): IterableIterator<CharacterId>;
 };
 
-export type PendingBattleFillSession = {
-  readonly baseSession: BattleRuntimeSession;
-  readonly subject: BattleSubject;
-  readonly fills: readonly BattleFill[];
+export type McpBattleTransactionStorageIssue = {
+  readonly tag: "battleStatePendingTransactionInvalid";
+  readonly battleId: BattleId;
+  readonly reason: "foreignTransaction" | "transactionSessionMismatch";
 };
 
 export type McpBattleState =
@@ -80,6 +78,7 @@ export type McpBattleState =
   | { readonly tag: "activeBattle"; readonly session: BattleRuntimeSession };
 
 export type McpBattleStateTransitionIssue =
+  | McpBattleTransactionStorageIssue
   | {
       readonly tag: "invalidBattleStateTransition";
       readonly from: McpBattleState["tag"];

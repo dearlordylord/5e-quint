@@ -8,8 +8,8 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result } from "effect";
 
 import { characterSheetHitPointMaximum } from "./hit-points.ts";
 import {
@@ -33,7 +33,7 @@ export function castArcaneHand(input: {
   readonly unitLibrary: UnitCatalog;
   readonly space: CharacterSheetArcaneHandSpace;
   readonly castLevel?: SpellSlotLevel;
-}): Either.Either<CharacterSheetArcaneHandResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetArcaneHandResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -52,25 +52,25 @@ export function castArcaneHand(input: {
         unitLibrary: input.unitLibrary,
       });
       /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: an admitted caster build must still yield its hit-point maximum. */
-      if (Either.isLeft(hitPointMaximum))
-        return Either.left(hitPointMaximum.left);
+      if (Result.isFailure(hitPointMaximum))
+        return Result.fail(hitPointMaximum.failure);
       /* v8 ignore stop -- @preserve */
       return arcaneHandInvocationFromSpell({
         spell: spell,
         space: input.space,
         castLevel,
-        hitPointMaximum: hitPointMaximum.right,
+        hitPointMaximum: hitPointMaximum.success,
       });
     },
   });
 }
 
 function arcaneHandInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly space: CharacterSheetArcaneHandSpace;
   readonly castLevel: SpellSlotLevel;
   readonly hitPointMaximum: HpType;
-}): Either.Either<CharacterSheetArcaneHandInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetArcaneHandInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Arcane Hand support profile required by this projector. */
   if (
@@ -85,7 +85,7 @@ function arcaneHandInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== ARCANE_HAND_DURATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "an eggshell and a glove"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Arcane Hand requires the supported level-5 magical hand profile.",
@@ -110,14 +110,14 @@ function arcaneHandInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact one-minute duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Arcane Hand requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "arcaneHand",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     castLevel: input.castLevel,
     spellSlotCost: {
@@ -128,7 +128,7 @@ function arcaneHandInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "action" },
     rangeFeet: ARCANE_HAND_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     hand: {
       objectId: input.space.objectId,

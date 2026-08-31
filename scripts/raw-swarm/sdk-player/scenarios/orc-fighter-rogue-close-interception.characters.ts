@@ -214,7 +214,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         obstruction: `The public SDK rejected ${plan.characterId}'s required ability assignment.`,
         observation: {
           characterId: plan.characterId,
-          issues: parsedScores.left,
+          issues: parsedScores.failure,
         },
       };
     }
@@ -236,7 +236,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
             kind: "abilityScores",
             holeId: hole.holeId,
             method: "standardArray",
-            value: parsedScores.right,
+            value: parsedScores.success,
           });
           continue;
         }
@@ -318,11 +318,11 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         obstruction: `The public SDK could not create a fresh Character Sheet for ${plan.characterId}.`,
         observation: {
           characterId: plan.characterId,
-          issues: sdk.characterSheetConstructionIssuesSummary(sheet.left),
+          issues: sdk.characterSheetConstructionIssuesSummary(sheet.failure),
         },
       };
     }
-    return sheet.right;
+    return sheet.success;
   };
 
   const fighter = composeSheet(fighterPlan);

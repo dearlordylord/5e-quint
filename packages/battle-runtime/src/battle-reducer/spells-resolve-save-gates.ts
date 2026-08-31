@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -19,10 +19,15 @@ import {
   type MovementFeet,
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+  type BattleSourcedEffectOccurrenceTemplate,
+} from "../effect-execution-ref.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import { isCantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import {
@@ -46,35 +51,36 @@ import {
 import {
   breakBattleConcentration,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import { deduplicateBattleHolesById } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import { targetingSaveInterdictionCheck } from "./targeting-save-interdiction.ts";
 import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
 import {
-  applyCommandPendingEffects,
+  applyCompelledNextTurnBehaviorEffects,
   applyFailedSaveAttackRollAdvantageEffects,
-  applyGreaseGroundHazardCastEffects,
-  applyHideousLaughterEffects,
-  applySleepPendingRepeatSaveEffects,
+  applyPersistentAreaSaveConditionCastEffects,
+  applySaveGatedConditionWithRepeatEffects,
+  applyStagedSaveConditionPendingRepeatEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
   applySaveGatedConditionImmunityEffects,
   applyResolvedSpellDamage,
   selectFailedSaveConditionEffect,
-  saveGatedAttackRollAdvantageInvocationIsFaerieFire,
+  saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea,
   saveGateDamageResultForOutcome,
-  commandOptionChoiceHole,
+  compelledBehaviorOptionChoiceHole,
   carefulSpellProtectedTargetsHoleId,
   carefulSpellProtectedTargetsHole,
   damageAmountByTypeAfterSaveDamageResult,
@@ -109,7 +115,7 @@ import {
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
@@ -121,7 +127,6 @@ import {
 } from "./movement-holes.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type BattleActiveEffect,
   type BattleAfterDamageEvent,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
@@ -136,7 +141,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
-  type BattleThunderwavePushDisposition,
+  type BattleImmediateAreaPushDisposition,
   type SpellTargeting,
   type BonusActionSpellBattleResolutionInput,
   type SaveDamageResult,
@@ -171,12 +176,13 @@ type SaveGatedSpellResolutionInput =
   | BonusActionSpellBattleResolutionInput;
 
 type AreaSavingThrowOutcomeValue = BattleSpellAreaSavingThrowOutcomeValue;
-type GreaseSavingThrowOutcomeValue = AreaSavingThrowOutcomeValue & {
-  readonly area: Extract<
-    BattleSpellAreaChoice,
-    { readonly kind: "greaseGroundArea" }
-  >;
-};
+type PersistentAreaSaveConditionSavingThrowOutcomeValue =
+  AreaSavingThrowOutcomeValue & {
+    readonly area: Extract<
+      BattleSpellAreaChoice,
+      { readonly kind: "persistentAreaSaveConditionArea" }
+    >;
+  };
 
 function assertAreaSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
@@ -190,14 +196,14 @@ function assertAreaSavingThrowOutcomes(
   /* v8 ignore stop -- @preserve */
 }
 
-function assertGreaseSavingThrowOutcomes(
+function assertPersistentAreaSaveConditionSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
-): asserts value is GreaseSavingThrowOutcomeValue {
+): asserts value is PersistentAreaSaveConditionSavingThrowOutcomeValue {
   assertAreaSavingThrowOutcomes(value);
-  /* v8 ignore start -- @preserve -- The immediately preceding save-outcome validator dispatches Grease to its ground-area validator; this assertion protects the narrowed reducer path if that contract changes. */
-  if (value.area.kind !== "greaseGroundArea") {
+  /* v8 ignore start -- @preserve -- The immediately preceding save-outcome validator dispatches the persistent ground-area condition family to its area validator; this assertion protects the narrowed reducer path if that contract changes. */
+  if (value.area.kind !== "persistentAreaSaveConditionArea") {
     throw new Error(
-      "Validated Grease outcomes must include ground-area facts.",
+      "Validated persistent ground-area condition outcomes must include area facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -262,12 +268,12 @@ export function saveMetamagicSelectionState(input: {
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
+        | "saveGatedTurnConstraintBundle"
+        | "compelledNextTurnBehavior"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea";
     }
   >;
   readonly fills: readonly BattleFill[];
@@ -503,12 +509,12 @@ function saveMetamagicSelectionFills(
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
+        | "saveGatedTurnConstraintBundle"
+        | "compelledNextTurnBehavior"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea";
     }
   >,
 ):
@@ -582,12 +588,12 @@ function saveMetamagicSelectionFills(
   };
 }
 
-export function resolveGreaseGroundHazardSpellAct(input: {
+export function resolvePersistentAreaSaveConditionSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "greaseGroundHazard" }
+    { readonly procedure: "persistentAreaSaveCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -602,7 +608,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Grease uses one ground-area Saving Throw fill.",
+      "ground-area prone hazard uses one ground-area Saving Throw fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -618,7 +624,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Grease does not use attack, damage, or Concentration fills.",
+      "ground-area prone hazard does not use attack, damage, or Concentration fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -679,7 +685,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  assertGreaseSavingThrowOutcomes(savingThrowOutcomes);
+  assertPersistentAreaSaveConditionSavingThrowOutcomes(savingThrowOutcomes);
   const area = savingThrowOutcomes.area;
 
   const failedTargets = failedSavingThrowTargetIds(
@@ -710,7 +716,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const nextState = applyGreaseGroundHazardCastEffects({
+  const nextState = applyPersistentAreaSaveConditionCastEffects({
     state: resourced.state,
     actorId: input.actorId,
     area,
@@ -728,46 +734,93 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   };
 }
 
-export function resolveSleepTargetAdmissionSpellAct(input: {
+type StagedSaveConditionSpellActInput = {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "sleepTargetAdmission" }
+    { readonly procedure: "stagedSaveCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
+};
+
+function stagedSaveConditionFillIssue(
+  fillSet: StagedSaveConditionSpellActInput["fillSet"],
+): string | null {
+  if (fillSet.targetId !== undefined || fillSet.targetList !== undefined) {
+    return "hit-point-budget condition target admission uses one point-origin Sphere Saving Throw fill.";
+  }
+  if (
+    fillSet.attackRoll !== undefined ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.damageDispositions.length > 0
+  ) {
+    return "hit-point-budget condition target admission does not use attack or damage fills.";
+  }
+  return null;
+}
+
+function resolveFilledStagedSaveConditionSpellAct(
+  input: StagedSaveConditionSpellActInput,
+  savingThrowOutcomes: NonNullable<
+    StagedSaveConditionSpellActInput["fillSet"]["savingThrowOutcomes"]
+  >,
+): BattleResolutionResult {
+  assertAreaSavingThrowOutcomes(savingThrowOutcomes);
+  const selectedTargetIds = savingThrowOutcomes.area.affectedTargetIds;
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
+  }
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyStagedSaveConditionPendingRepeatEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    [...selectedTargetIds],
+    input.fillSet.savingThrowRelationshipFacts,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveStagedSaveConditionSpellAct(
+  input: StagedSaveConditionSpellActInput,
+): BattleResolutionResult {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     input.input.state,
     input.actorId,
     input.invocation,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined
-  ) {
+  const fillIssue = stagedSaveConditionFillIssue(input.fillSet);
+  if (fillIssue !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Sleep target admission uses one point-origin Sphere Saving Throw fill.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Sleep target admission does not use attack or damage fills.",
-    );
+    return invalidResult(input.input.state, "invalidFill", fillIssue);
   }
   /* v8 ignore stop -- @preserve */
   if (input.fillSet.savingThrowOutcomes === undefined) {
@@ -792,54 +845,18 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  assertAreaSavingThrowOutcomes(input.fillSet.savingThrowOutcomes);
-  const selectedTargetIds =
-    input.fillSet.savingThrowOutcomes.area.affectedTargetIds;
-  const failedTargets = failedSavingThrowTargetIds(
-    input.fillSet.savingThrowOutcomes.outcomes,
+  return resolveFilledStagedSaveConditionSpellAct(
+    input,
+    input.fillSet.savingThrowOutcomes,
   );
-  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
-    input.input,
-    input.invocation.sourceProcedureRef,
-    failedTargets,
-  );
-  if (saveFailedReactionWindow !== null) {
-    return saveFailedReactionWindow;
-  }
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const effected = applySleepPendingRepeatSaveEffects(
-    resourced.state,
-    input.actorId,
-    failedTargets,
-    input.invocation,
-  );
-  const nextState = extendSavingThrowOngoingFeatures(
-    effected,
-    input.actorId,
-    [...selectedTargetIds],
-    input.fillSet.savingThrowRelationshipFacts,
-  );
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
-export function resolveHideousLaughterSpellAct(input: {
+export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "hideousLaughter" }
+    { readonly procedure: "saveGatedConditionWithRepeat" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -866,7 +883,7 @@ export function resolveHideousLaughterSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter uses target-list and Saving Throw outcome fills.",
+      "damage-triggered repeat-save condition uses target-list and Saving Throw outcome fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -961,7 +978,7 @@ export function resolveHideousLaughterSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyHideousLaughterEffects(
+  const effected = applySaveGatedConditionWithRepeatEffects(
     resourced.state,
     input.actorId,
     failedTargets,
@@ -1117,15 +1134,16 @@ function applyAbilityD20TestRollModeSaveGateEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        ...invocation.successEffect,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+      },
+    });
     combatants.set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          ...invocation.successEffect,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-        },
-      ],
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
     });
   }
   for (const targetId of failedTargetIds) {
@@ -1135,10 +1153,9 @@ function applyAbilityD20TestRollModeSaveGateEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    combatants.set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
+    const allocation = allocateBattleEffectOccurrencesForCreature({
+      owner: target,
+      effects: [
         {
           ...invocation.failedSaveEffect,
           sourceProcedureRef: invocation.sourceProcedureRef,
@@ -1148,6 +1165,10 @@ function applyAbilityD20TestRollModeSaveGateEffects(
           sourceProcedureRef: invocation.sourceProcedureRef,
         },
       ],
+    });
+    combatants.set(targetId, {
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, ...allocation.effects],
     });
   }
   return { ...state, combatants };
@@ -1238,7 +1259,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const interdictionCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -1247,22 +1268,22 @@ export function resolveSaveGateDamageSpellAct(input: {
       replacementTargetKind: "nonAttack",
       fills: input.input.fills,
     });
-    if (sanctuaryCheck.tag === "needsHoles") {
+    if (interdictionCheck.tag === "needsHoles") {
       return needsHolesResult(input.input.state, input.input.subject, [
-        sanctuaryCheck.hole,
+        interdictionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sanctuaryCheck.tag === "invalid") {
+    if (interdictionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        sanctuaryCheck.message,
+        interdictionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (sanctuaryCheck.tag === "lost") {
+    if (interdictionCheck.tag === "lost") {
       return resolveSaveGateDamageSpellCastResources(input, {
         state: input.input.state,
         actorId: input.actorId,
@@ -1276,9 +1297,9 @@ export function resolveSaveGateDamageSpellAct(input: {
         ),
       });
     }
-    if (sanctuaryCheck.tag === "newTarget") {
+    if (interdictionCheck.tag === "newTarget") {
       const replacementTarget = input.input.state.combatants.get(
-        sanctuaryCheck.targetId,
+        interdictionCheck.targetId,
       );
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
@@ -1288,14 +1309,14 @@ export function resolveSaveGateDamageSpellAct(input: {
           input.actorId,
           replacementTarget.combatantId,
           input.invocation,
-          sanctuaryCheck.spatialFacts,
+          interdictionCheck.spatialFacts,
         )
       ) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement spell target must be legal for the selected spell.",
+          "attack-redirection ward replacement spell target must be legal for the selected spell.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -1311,18 +1332,18 @@ export function resolveSaveGateDamageSpellAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original spell target fill.",
+          "attack-redirection ward replacement requires the original spell target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
       const rewrittenFills = input.input.fills
-        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map((fill) =>
           fill === originalTargetFill
             ? {
                 ...fill,
                 value: replacementTarget.combatantId,
-                spatialFacts: sanctuaryCheck.spatialFacts,
+                spatialFacts: interdictionCheck.spatialFacts,
               }
             : fill,
         );
@@ -1892,61 +1913,76 @@ export function resolveSaveGateDamageSpellAct(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = resolvedTargetDamages.map(
+  const saveGatedConditionWithRepeatSaveChecks = resolvedTargetDamages.map(
     ({ target, damageAmount }) => {
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: stateAfterCastConcentrationBreak,
-        target,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: stateAfterCastConcentrationBreak,
-        target,
-        damageAmount,
-        fills: fillsMatchingHoleIds(
-          input.fillSet.hideousLaughterDamageRepeatSaves,
-          holes,
-        ),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: stateAfterCastConcentrationBreak,
+          target,
+          damageAmount,
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: stateAfterCastConcentrationBreak,
+          target,
+          damageAmount,
+          fills: fillsMatchingHoleIds(
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+            holes,
+          ),
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
+        },
+      );
     },
   );
-  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
-    (check) => check.tag === "invalid",
-  );
+  const invalidSaveGatedConditionWithRepeatSaveCheck =
+    saveGatedConditionWithRepeatSaveChecks.find(
+      (check) => check.tag === "invalid",
+    );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+  if (invalidSaveGatedConditionWithRepeatSaveCheck?.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      invalidHideousLaughterSaveCheck.message,
+      invalidSaveGatedConditionWithRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
-    (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
-  );
-  if (missingHideousLaughterSaveHoles.length > 0) {
+  const missingSaveGatedConditionWithRepeatSaveHoles =
+    saveGatedConditionWithRepeatSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" ? [...check.holes] : [],
+    );
+  if (missingSaveGatedConditionWithRepeatSaveHoles.length > 0) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingHideousLaughterSaveHoles,
+      ...missingSaveGatedConditionWithRepeatSaveHoles,
     ]);
   }
-  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
-    hideousLaughterSaveChecks.flatMap((check) =>
+  const saveGatedConditionWithRepeatSaveHoleIds = new Set<BattleHoleId>(
+    saveGatedConditionWithRepeatSaveChecks.flatMap((check) =>
       check.tag === "ok" ? check.holes.map((hole) => hole.holeId) : [],
     ),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
-      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
+      (fill) => !saveGatedConditionWithRepeatSaveHoleIds.has(fill.holeId),
     )
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2024,15 +2060,21 @@ export function resolveSaveGateDamageSpellAct(input: {
       input.fillSet.concentrationSavingThrows,
       concentrationLifecycleHoles,
     );
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const saveGatedConditionWithRepeatLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target: currentTarget,
         damageAmount: resolvedDamage.damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget(
+          {
+            holeId: damageRoll.holeId,
+            targetId,
+          },
+        ),
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      input.fillSet.hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatLifecycleHoles,
     );
     return applyResolvedSpellDamage(
       state,
@@ -2045,9 +2087,16 @@ export function resolveSaveGateDamageSpellAct(input: {
       false,
       {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
-        wardingBondDamageShareConcentrationSavingThrows:
+        linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
-        hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+        saveGatedConditionDamageRepeatSave: {
+          kind: "repeatSave",
+          fills: saveGatedConditionWithRepeatLifecycleFills,
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+            holeId: damageRoll.holeId,
+            targetId,
+          }),
+        },
         damageDisposition: damageDispositionByTargetId.get(targetId),
         damageSourceId: input.actorId,
         spatialFacts: input.fillSet.targetSpatialFacts,
@@ -2257,8 +2306,8 @@ function potentCantripAppliesToSuccessfulSave(input: {
   );
 }
 
-type SpellConcentrationDurationEffect = Extract<
-  BattleActiveEffect,
+type SpellConcentrationDurationEffectTemplate = Extract<
+  BattleSourcedEffectOccurrenceTemplate,
   { readonly kind: "spellConcentrationDuration" }
 >;
 
@@ -2268,14 +2317,14 @@ function failedSaveConcentrationDurationEffect(input: {
     BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
-}): SpellConcentrationDurationEffect | null {
+}): SpellConcentrationDurationEffectTemplate | null {
   if (input.invocation.spellRuleFacts.duration.kind !== "concentration") {
     return null;
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     input.invocation.spellRuleFacts.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   return {
@@ -2285,7 +2334,7 @@ function failedSaveConcentrationDurationEffect(input: {
     expiresAt: {
       kind: "concentration",
       combatantId: input.actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
   };
 }
@@ -2293,7 +2342,7 @@ function failedSaveConcentrationDurationEffect(input: {
 function withFailedSaveConcentrationDuration(
   result: BattleResolutionResult,
   actorId: CombatantId,
-  effect: SpellConcentrationDurationEffect | null,
+  effect: SpellConcentrationDurationEffectTemplate | null,
   options: { readonly replaceExistingSameSpellDuration: boolean } = {
     replaceExistingSameSpellDuration: true,
   },
@@ -2307,20 +2356,24 @@ function withFailedSaveConcentrationDuration(
     return result;
   }
   /* v8 ignore stop -- @preserve */
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: actor,
+    effect,
+  });
   const state = {
     ...result.state,
     combatants: new Map(result.state.combatants).set(actorId, {
-      ...actor,
+      ...allocation.owner,
       activeEffects: [
         ...(options.replaceExistingSameSpellDuration
-          ? actor.activeEffects.filter(
+          ? allocation.owner.activeEffects.filter(
               (candidate) =>
                 candidate.kind !== "spellConcentrationDuration" ||
                 candidate.sourceProcedureRef !== effect.sourceProcedureRef ||
                 candidate.sourceCombatantId !== effect.sourceCombatantId,
             )
-          : actor.activeEffects),
-        effect,
+          : allocation.owner.activeEffects),
+        allocation.effect,
       ],
     }),
   };
@@ -2381,7 +2434,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       : invalidResult(
           input.state,
           "invalidFill",
-          "Dissonant Whispers movement is only valid after a failed save.",
+          "Failed-save forced reaction movement is only valid after a failed save.",
         );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2390,7 +2443,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Dissonant Whispers forced movement requires exactly one failed target.",
+      "Failed-save forced reaction movement requires exactly one failed target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2401,7 +2454,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       : invalidResult(
           input.state,
           "invalidFill",
-          "Dissonant Whispers movement is unavailable when the failed target has no Reaction.",
+          "Failed-save forced reaction movement is unavailable when the failed target has no Reaction.",
         );
   }
   const movementHole = readiedMovementHole(input.state, targetId);
@@ -2415,7 +2468,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Dissonant Whispers movement is unavailable when the failed target cannot move.",
+        "Failed-save forced reaction movement is unavailable when the failed target cannot move.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -2886,15 +2939,15 @@ function validateSaveGatedConditionImmunityTargets(
     );
   })
     ? null
-    : "Calm Emotions condition-immunity branch affects only Humanoids.";
+    : "emotion-suppression area condition-immunity branch affects only Humanoids.";
 }
 
-export function resolveCommandSpellAct(input: {
+export function resolveCompelledNextTurnBehaviorSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "command" }
+    { readonly procedure: "compelledNextTurnBehavior" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -2910,7 +2963,7 @@ export function resolveCommandSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Command requires a target list.",
+      "CompelledNextTurnBehavior requires a target list.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2936,9 +2989,9 @@ export function resolveCommandSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (input.fillSet.commandOptionChoice === undefined) {
+  if (input.fillSet.compelledBehaviorOptionChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      commandOptionChoiceHole(input.invocation),
+      compelledBehaviorOptionChoiceHole(input.invocation),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2952,7 +3005,7 @@ export function resolveCommandSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Command does not use attack, damage, or Concentration fills.",
+      "CompelledNextTurnBehavior does not use attack, damage, or Concentration fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -3039,12 +3092,12 @@ export function resolveCommandSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyCommandPendingEffects(
+  const effected = applyCompelledNextTurnBehaviorEffects(
     resourced.state,
     input.actorId,
     failedTargets,
     input.invocation,
-    input.fillSet.commandOptionChoice,
+    input.fillSet.compelledBehaviorOptionChoice,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,
@@ -3381,15 +3434,15 @@ export function validateSavingThrowOutcomes(
     });
   }
   const targeting = spellSavingThrowTargeting(invocation);
-  if (invocation.procedure === "sleepTargetAdmission") {
-    return validateSleepTargetAdmissionSavingThrowOutcomes({
+  if (invocation.procedure === "stagedSaveCondition") {
+    return validateStagedSaveConditionSavingThrowOutcomes({
       value,
       area: "area" in value ? value.area : undefined,
       state,
     });
   }
-  if (invocation.procedure === "greaseGroundHazard") {
-    return validateGreaseGroundHazardSavingThrowOutcomes({
+  if (invocation.procedure === "persistentAreaSaveCondition") {
+    return validatePersistentAreaSaveConditionSavingThrowOutcomes({
       value,
       area: "area" in value ? value.area : undefined,
       state,
@@ -3423,34 +3476,50 @@ export function validateSavingThrowOutcomes(
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
   /* v8 ignore stop -- @preserve */
-  if ("kind" in value.area && value.area.kind === "greaseGroundArea") {
-    return "Grease ground-area facts are only valid for Grease.";
+  if (
+    "kind" in value.area &&
+    value.area.kind === "persistentAreaSaveConditionArea"
+  ) {
+    return "Ground-area prone-hazard facts are only valid for the ground-area prone-hazard profile.";
   }
-  if ("kind" in value.area && value.area.kind === "gustOfWindLineArea") {
-    if (invocation.procedure !== "gustOfWindLine") {
-      return "Gust of Wind Line area facts are only valid for Gust of Wind.";
+  if (
+    "kind" in value.area &&
+    value.area.kind === "directionalPersistentAreaArea"
+  ) {
+    if (invocation.procedure !== "directionalPersistentArea") {
+      return "Directional persistent-line area facts are only valid for the directional persistent-line profile.";
     }
   }
-  if ("kind" in value.area && value.area.kind === "slowArea") {
-    if (invocation.procedure !== "slowActivePenalties") {
-      return "Slow area facts are only valid for Slow.";
+  if (
+    "kind" in value.area &&
+    value.area.kind === "saveGatedTurnConstraintBundleArea"
+  ) {
+    if (invocation.procedure !== "saveGatedTurnConstraintBundle") {
+      return "Turn-hindering area facts are only valid for the turn-hindering profile.";
     }
   }
-  if ("sleepNonSleeperFacts" in value.area) {
-    return "Sleep non-sleeper facts are only valid for Sleep target admission.";
+  if ("stagedConditionAutomaticSuccessFacts" in value.area) {
+    return "Hit-point-budget condition non-sleeper facts are only valid for its target admission.";
   }
-  if ("kind" in value.area && value.area.kind === "faerieFireArea") {
+  if (
+    "kind" in value.area &&
+    value.area.kind === "saveGatedTargetProjectionArea"
+  ) {
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
-      return "Faerie Fire object area facts are only valid for Faerie Fire.";
+      return "Visibility-granting object-area facts are only valid for the visibility-granting profile.";
     }
     /* v8 ignore start -- @preserve -- The typed save-gated attack-advantage procedure admits this area shape only for its corresponding execution facts; this defensive cross-check has no public counterexample. */
-    if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)) {
-      return "Faerie Fire object area facts are only valid for Faerie Fire.";
+    if (
+      !saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea(
+        invocation,
+      )
+    ) {
+      return "Visibility-granting object-area facts are only valid for the visibility-granting profile.";
     }
     /* v8 ignore stop -- @preserve */
     const affectedObjects = new Set(value.area.affectedObjectIds);
     if (affectedObjects.size !== value.area.affectedObjectIds.length) {
-      return "Faerie Fire area affected objects must not duplicate object ids.";
+      return "Visibility-granting area affected objects must not duplicate object ids.";
     }
   }
   if (!state.combatants.has(value.area.originAnchorId)) {
@@ -3472,7 +3541,7 @@ export function validateSavingThrowOutcomes(
     targeting.kind === "primaryTargetOriginEmanation" &&
     value.area.originAnchorId !== targetId
   ) {
-    return "Ice Knife burst area must originate from the primary target.";
+    return "attack-burst damage burst area must originate from the primary target.";
   }
   const affectedTargets = new Set(value.area.affectedTargetIds);
   if (affectedTargets.size !== value.area.affectedTargetIds.length) {
@@ -3483,37 +3552,37 @@ export function validateSavingThrowOutcomes(
     targetId !== undefined &&
     !affectedTargets.has(targetId)
   ) {
-    return "Ice Knife burst area must include the primary target.";
+    return "attack-burst damage burst area must include the primary target.";
   }
   if (
     targeting.kind === "pointOriginCubeExcludingCaster" &&
     affectedTargets.has(actorId)
   ) {
-    return "Entangle area affected targets must exclude the caster.";
+    return "Restraining ground-area affected targets must exclude the caster.";
   }
   if (
     "kind" in value.area &&
-    value.area.kind === "thunderwaveArea" &&
+    value.area.kind === "selfOriginCubePushArea" &&
     (!("postSaveAreaEffect" in invocation) ||
-      invocation.postSaveAreaEffect?.kind !== "thunderwave")
+      invocation.postSaveAreaEffect?.kind !== "selfOriginCubePush")
   ) {
-    return "Thunderwave push facts are only valid for Thunderwave.";
+    return "Forced-movement cube-burst push facts are only valid for the forced-movement cube-burst profile.";
   }
   if (
     "kind" in value.area &&
-    value.area.kind === "fireballArea" &&
+    value.area.kind === "pointOriginSphereSaveDamageArea" &&
     (!("postSaveAreaEffect" in invocation) ||
-      invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition")
+      invocation.postSaveAreaEffect?.kind !== "areaObjectIgnition")
   ) {
-    return "Fireball object ignition facts are only valid for Fireball.";
+    return "Object-igniting spherical-burst facts are only valid for the object-igniting spherical-burst profile.";
   }
   if (
     "kind" in value.area &&
-    value.area.kind === "shatterArea" &&
+    value.area.kind === "pointOriginSphereObjectDamageArea" &&
     (!("postSaveAreaEffect" in invocation) ||
-      invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage")
+      invocation.postSaveAreaEffect?.kind !== "areaObjectDamage")
   ) {
-    return "Shatter object damage facts are only valid for Shatter.";
+    return "Object-affecting thunder-burst facts are only valid for the object-affecting thunder-burst profile.";
   }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
@@ -3635,30 +3704,30 @@ function validatePostSaveAreaEffect(input: {
   if (input.invocation.postSaveAreaEffect === undefined) {
     /* v8 ignore start -- @preserve -- Malformed post-save area fill: discovery only requests Fireball, Shatter, or Thunderwave area facts when the invocation owns the matching post-save effect. These branches reject caller-mutated cross-spell facts. */
     if (input.area !== undefined && "kind" in input.area) {
-      if (input.area.kind === "fireballArea") {
-        return "Fireball object ignition facts are only valid for Fireball.";
+      if (input.area.kind === "pointOriginSphereSaveDamageArea") {
+        return "Object-igniting spherical-burst facts are only valid for the object-igniting spherical-burst profile.";
       }
-      if (input.area.kind === "shatterArea") {
-        return "Shatter object damage facts are only valid for Shatter.";
+      if (input.area.kind === "pointOriginSphereObjectDamageArea") {
+        return "Object-affecting thunder-burst facts are only valid for the object-affecting thunder-burst profile.";
       }
-      return "Thunderwave push facts are only valid for Thunderwave.";
+      return "Forced-movement cube-burst push facts are only valid for the forced-movement cube-burst profile.";
     }
     /* v8 ignore stop -- @preserve */
     return null;
   }
   const effect = input.invocation.postSaveAreaEffect;
-  if (effect.kind === "fireballObjectIgnition") {
-    return validateFireballAreaEffect(input.area);
+  if (effect.kind === "areaObjectIgnition") {
+    return validateObjectIgnitingSphericalBurstAreaEffect(input.area);
   }
-  if (effect.kind === "thunderwave") {
-    return validateThunderwaveAreaEffect({
+  if (effect.kind === "selfOriginCubePush") {
+    return validateForcedMovementCubeBurstAreaEffect({
       area: input.area,
       failedTargetIds: input.failedTargetIds,
       effect,
     });
   }
-  if (effect.kind === "shatterObjectDamage") {
-    return validateShatterAreaEffect(input.area);
+  if (effect.kind === "areaObjectDamage") {
+    return validateObjectAffectingThunderBurstAreaEffect(input.area);
   }
   /* v8 ignore start -- @preserve -- The post-save area-effect union is exhausted above; widening it without a validator arm fails compilation at this assignment. */
   const exhaustive: never = effect;
@@ -3666,19 +3735,19 @@ function validatePostSaveAreaEffect(input: {
   /* v8 ignore stop -- @preserve */
 }
 
-function validateFireballAreaEffect(
+function validateObjectIgnitingSphericalBurstAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Fireball area fill: discovery supplies Fireball-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
-  if (area === undefined || area.kind !== "fireballArea") {
-    return "Fireball requires caller-supplied object ignition area facts.";
+  if (area === undefined || area.kind !== "pointOriginSphereSaveDamageArea") {
+    return "object-igniting spherical burst requires caller-supplied object ignition area facts.";
   }
   /* v8 ignore stop -- @preserve */
   const objectIds = new Set<string>();
   for (const fact of area.objectIgnitionFacts) {
     /* v8 ignore start -- @preserve -- Malformed Fireball object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(fact.objectId)) {
-      return "Fireball object ignition facts must not duplicate objects.";
+      return "object-igniting spherical burst object ignition facts must not duplicate objects.";
     }
     /* v8 ignore stop -- @preserve */
     objectIds.add(fact.objectId);
@@ -3695,8 +3764,8 @@ function postSaveAreaObjectIgnitions(input: {
   >;
 }): readonly BattleObjectIgnitionOutcome[] {
   if (
-    input.invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition" ||
-    input.area?.kind !== "fireballArea"
+    input.invocation.postSaveAreaEffect?.kind !== "areaObjectIgnition" ||
+    input.area?.kind !== "pointOriginSphereSaveDamageArea"
   ) {
     return [];
   }
@@ -3714,19 +3783,19 @@ function postSaveAreaObjectIgnitions(input: {
   );
 }
 
-function validateShatterAreaEffect(
+function validateObjectAffectingThunderBurstAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Shatter area fill: discovery supplies Shatter-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
-  if (area === undefined || area.kind !== "shatterArea") {
-    return "Shatter requires caller-supplied nonmagical unattended object damage area facts.";
+  if (area === undefined || area.kind !== "pointOriginSphereObjectDamageArea") {
+    return "object-affecting thunder burst requires caller-supplied nonmagical unattended object damage area facts.";
   }
   /* v8 ignore stop -- @preserve */
   const objectIds = new Set<string>();
   for (const fact of area.nonmagicalUnattendedObjectDamageFacts) {
     /* v8 ignore start -- @preserve -- Malformed Shatter object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(fact.objectId)) {
-      return "Shatter object damage facts must not duplicate objects.";
+      return "object-affecting thunder burst object damage facts must not duplicate objects.";
     }
     /* v8 ignore stop -- @preserve */
     objectIds.add(fact.objectId);
@@ -3742,11 +3811,11 @@ function postSaveAreaObjectDamageFacts(input: {
   >;
 }): Extract<
   BattleSpellAreaChoice,
-  { readonly kind: "shatterArea" }
+  { readonly kind: "pointOriginSphereObjectDamageArea" }
 >["nonmagicalUnattendedObjectDamageFacts"] {
   if (
-    input.invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage" ||
-    input.area?.kind !== "shatterArea"
+    input.invocation.postSaveAreaEffect?.kind !== "areaObjectDamage" ||
+    input.area?.kind !== "pointOriginSphereObjectDamageArea"
   ) {
     return [];
   }
@@ -3757,7 +3826,7 @@ function postSaveAreaObjectDamages(input: {
   readonly facts: ReadonlyArray<
     Extract<
       BattleSpellAreaChoice,
-      { readonly kind: "shatterArea" }
+      { readonly kind: "pointOriginSphereObjectDamageArea" }
     >["nonmagicalUnattendedObjectDamageFacts"][number]
   >;
   readonly damageByType: ReadonlyMap<DamageType, number>;
@@ -3781,7 +3850,7 @@ function postSaveAreaObjectDamages(input: {
   };
 }
 
-function validateThunderwaveAreaEffect(input: {
+function validateForcedMovementCubeBurstAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly failedTargetIds: readonly CombatantId[];
   readonly effect: Extract<
@@ -3791,23 +3860,26 @@ function validateThunderwaveAreaEffect(input: {
         { readonly procedure: "saveGatedDamage" }
       >["postSaveAreaEffect"]
     >,
-    { readonly kind: "thunderwave" }
+    { readonly kind: "selfOriginCubePush" }
   >;
 }): string | null {
-  if (input.area === undefined || input.area.kind !== "thunderwaveArea") {
-    return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
+  if (
+    input.area === undefined ||
+    input.area.kind !== "selfOriginCubePushArea"
+  ) {
+    return "forced-movement cube burst requires caller-supplied push, object, and audible-boom area facts.";
   }
   const failedTargetIds = new Set(input.failedTargetIds);
   const pushedTargetIds = new Set<CombatantId>();
   for (const push of input.area.creaturePushes) {
     if (!failedTargetIds.has(push.targetId)) {
-      return "Thunderwave creature push facts must match failed-save targets.";
+      return "forced-movement cube burst creature push facts must match failed-save targets.";
     }
     if (pushedTargetIds.has(push.targetId)) {
-      return "Thunderwave creature push facts must not duplicate targets.";
+      return "forced-movement cube burst creature push facts must not duplicate targets.";
     }
     pushedTargetIds.add(push.targetId);
-    const dispositionValidation = validateThunderwavePushDisposition(
+    const dispositionValidation = validateForcedMovementPushDisposition(
       push.disposition,
       input.effect.creaturePush.distanceFeet,
     );
@@ -3816,15 +3888,15 @@ function validateThunderwaveAreaEffect(input: {
     }
   }
   if (pushedTargetIds.size !== failedTargetIds.size) {
-    return "Thunderwave creature push facts must cover every failed-save target.";
+    return "forced-movement cube burst creature push facts must cover every failed-save target.";
   }
   const objectIds = new Set<string>();
   for (const push of input.area.unsecuredObjectPushes) {
     if (objectIds.has(push.objectId)) {
-      return "Thunderwave unsecured-object push facts must not duplicate objects.";
+      return "forced-movement cube burst unsecured-object push facts must not duplicate objects.";
     }
     objectIds.add(push.objectId);
-    const dispositionValidation = validateThunderwavePushDisposition(
+    const dispositionValidation = validateForcedMovementPushDisposition(
       push.disposition,
       input.effect.unsecuredObjectPush.distanceFeet,
     );
@@ -3839,59 +3911,63 @@ function validateThunderwaveAreaEffect(input: {
   ) {
     return null;
   }
-  return "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+  return "forced-movement cube burst audible-boom fact must match the spell's thunderous boom within 300 feet.";
 }
 
-function validateThunderwavePushDisposition(
-  disposition: BattleThunderwavePushDisposition,
+function validateForcedMovementPushDisposition(
+  disposition: BattleImmediateAreaPushDisposition,
   distanceFeet: MovementFeet,
 ): string | null {
   if (disposition.distanceFeet !== distanceFeet) {
-    return "Thunderwave push disposition must use the spell's 10-foot distance.";
+    return "forced-movement cube burst push disposition must use the spell's 10-foot distance.";
   }
   return null;
 }
 
-function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
+function validateStagedSaveConditionSavingThrowOutcomes(input: {
   readonly value: BattleSpellSavingThrowOutcomeValue;
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
 }): string | null {
   if (input.area === undefined) {
-    return "Sleep Saving Throw outcomes require point-origin Sphere target facts.";
+    return "hit-point-budget condition Saving Throw outcomes require point-origin Sphere target facts.";
   }
   if (!input.state.combatants.has(input.area.originAnchorId)) {
-    return "Sleep point-origin Sphere origin anchor must be a combatant in this battle.";
+    return "hit-point-budget condition point-origin Sphere origin anchor must be a combatant in this battle.";
   }
   const selectedTargets = new Set(input.area.affectedTargetIds);
   if (selectedTargets.size !== input.area.affectedTargetIds.length) {
-    return "Sleep point-origin Sphere targets must not duplicate targets.";
+    return "hit-point-budget condition point-origin Sphere targets must not duplicate targets.";
   }
   if (input.area.affectedTargetIds.length === 0) {
-    return "Sleep must target at least one selected creature.";
+    return "hit-point-budget condition must target at least one selected creature.";
   }
   for (const targetId of selectedTargets) {
     if (!input.state.combatants.has(targetId)) {
-      return "Sleep point-origin Sphere target must be a combatant in this battle.";
+      return "hit-point-budget condition point-origin Sphere target must be a combatant in this battle.";
     }
   }
   const nonSleeperTargetIds = new Set<CombatantId>();
-  if ("sleepNonSleeperFacts" in input.area) {
-    for (const fact of input.area.sleepNonSleeperFacts ?? []) {
+  if ("stagedConditionAutomaticSuccessFacts" in input.area) {
+    for (const fact of input.area.stagedConditionAutomaticSuccessFacts ?? []) {
       if (!selectedTargets.has(fact.targetId)) {
-        return "Sleep non-sleeper facts must match selected Sphere targets.";
+        return "hit-point-budget condition non-sleeper facts must match selected Sphere targets.";
       }
       if (nonSleeperTargetIds.has(fact.targetId)) {
-        return "Sleep non-sleeper facts must not duplicate targets.";
+        return "hit-point-budget condition non-sleeper facts must not duplicate targets.";
       }
       nonSleeperTargetIds.add(fact.targetId);
     }
   }
   const autoSuccessTargetIds = new Set(
     input.area.affectedTargetIds.filter((targetId) =>
-      sleepTargetAutomaticallySucceeds(input.state, targetId, {
-        doesNotSleep: nonSleeperTargetIds.has(targetId),
-      }),
+      hitPointBudgetConditionTargetAutomaticallySucceeds(
+        input.state,
+        targetId,
+        {
+          doesNotSleep: nonSleeperTargetIds.has(targetId),
+        },
+      ),
     ),
   );
   const nonAutomaticTargetIds = input.area.affectedTargetIds.filter(
@@ -3900,18 +3976,18 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   const outcomeTargetIds = new Set<CombatantId>();
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
-      return "Sleep Saving Throw outcomes must match selected Sphere targets.";
+      return "hit-point-budget condition Saving Throw outcomes must match selected Sphere targets.";
     }
     if (autoSuccessTargetIds.has(outcome.targetId)) {
-      return "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
+      return "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
     }
     if (outcomeTargetIds.has(outcome.targetId)) {
-      return "Sleep Saving Throw outcomes must not duplicate targets.";
+      return "hit-point-budget condition Saving Throw outcomes must not duplicate targets.";
     }
     outcomeTargetIds.add(outcome.targetId);
   }
   if (outcomeTargetIds.size !== nonAutomaticTargetIds.length) {
-    return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+    return "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.";
   }
   if (
     nonAutomaticTargetIds.every((targetId) => outcomeTargetIds.has(targetId))
@@ -3919,60 +3995,76 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
     return null;
   }
   /* v8 ignore start -- @preserve -- The preceding subset, uniqueness, and equal-cardinality checks prove that every non-automatic target is present. */
-  return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+  return "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.";
   /* v8 ignore stop -- @preserve */
 }
 
-function validateGreaseGroundHazardSavingThrowOutcomes(input: {
+function validatePersistentAreaSaveConditionSavingThrowOutcomes(input: {
   readonly value: BattleSpellSavingThrowOutcomeValue;
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
 }): string | null {
   if (input.area === undefined) {
-    return "Grease Saving Throw outcomes require ground-area facts.";
+    return "ground-area prone hazard Saving Throw outcomes require ground-area facts.";
   }
-  if (input.area.kind !== "greaseGroundArea") {
-    return "Grease requires a ground-area id.";
+  if (input.area.kind !== "persistentAreaSaveConditionArea") {
+    return "ground-area prone hazard requires a ground-area id.";
   }
   if (!input.state.combatants.has(input.area.originAnchorId)) {
-    return "Grease ground-area origin anchor must be a combatant in this battle.";
+    return "ground-area prone hazard ground-area origin anchor must be a combatant in this battle.";
   }
+  return validatePersistentAreaSaveConditionTargets({
+    value: input.value,
+    area: input.area,
+    state: input.state,
+  });
+}
+
+function validatePersistentAreaSaveConditionTargets(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly area: Extract<
+    BattleSpellAreaChoice,
+    { readonly kind: "persistentAreaSaveConditionArea" }
+  >;
+  readonly state: BattleState;
+}): string | null {
   const selectedTargets = new Set(input.area.affectedTargetIds);
   if (selectedTargets.size !== input.area.affectedTargetIds.length) {
-    return "Grease ground-area affected targets must not duplicate targets.";
+    return "ground-area prone hazard ground-area affected targets must not duplicate targets.";
   }
   for (const targetId of selectedTargets) {
     if (!input.state.combatants.has(targetId)) {
-      return "Grease ground-area affected target must be a combatant in this battle.";
+      return "ground-area prone hazard ground-area affected target must be a combatant in this battle.";
     }
   }
   const outcomeTargetIds = new Set<CombatantId>();
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
-      return "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+      return "ground-area prone hazard Saving Throw outcomes must match the table-supplied ground-area affected targets.";
     }
     if (outcomeTargetIds.has(outcome.targetId)) {
-      return "Grease Saving Throw outcomes must not duplicate targets.";
+      return "ground-area prone hazard Saving Throw outcomes must not duplicate targets.";
     }
     outcomeTargetIds.add(outcome.targetId);
   }
   if (outcomeTargetIds.size === selectedTargets.size) {
     return null;
   }
-  return "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
+  return "ground-area prone hazard Saving Throw outcomes must cover every table-supplied ground-area affected target.";
 }
 
-function sleepTargetAutomaticallySucceeds(
+function hitPointBudgetConditionTargetAutomaticallySucceeds(
   state: BattleState,
   targetId: CombatantId,
   facts: { readonly doesNotSleep: boolean },
 ): boolean {
   return (
-    facts.doesNotSleep || sleepTargetHasExhaustionImmunity(state, targetId)
+    facts.doesNotSleep ||
+    hitPointBudgetConditionTargetHasExhaustionImmunity(state, targetId)
   );
 }
 
-function sleepTargetHasExhaustionImmunity(
+function hitPointBudgetConditionTargetHasExhaustionImmunity(
   state: BattleState,
   targetId: CombatantId,
 ): boolean {

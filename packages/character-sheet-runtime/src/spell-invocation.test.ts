@@ -16,7 +16,7 @@ import {
   ritualAdeptRejectsMissingFeatureTestName,
   ritualAdeptRejectsNonRitualSpellTestName,
   ritualAdeptRejectsPreparedOnlySpellTestName,
-  requireRight,
+  requireSuccess,
   spellbookRitualSheet,
   storedAvailableSheetInput,
   unitLibrary,
@@ -26,7 +26,7 @@ import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 describe("Character Sheet runtime / spell invocation", () => {
   test("a non-spellcasting build has no spellbook Ritual Access", () => {
     const build = armorClassBuild({ startingClass: "class_fighter" });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       parseCharacterSheet(
         storedAvailableSheetInput({
           characterId: "character:non-spellcaster-ritual",
@@ -36,7 +36,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       ),
     );
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build,
           unitLibrary,
@@ -63,8 +63,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Ritual spell invocation requires spellcasting Spell Access.",
       },
     });
@@ -72,7 +72,7 @@ describe("Character Sheet runtime / spell invocation", () => {
 
   test("invokes a Book of Shadows Ritual only while the book is on the character", () => {
     const bookSheet = (presence: "onPerson" | "notOnPerson") =>
-      requireRight(
+      requireSuccess(
         parseCharacterSheet(
           {
             ...storedAvailableSheetInput({
@@ -92,20 +92,19 @@ describe("Character Sheet runtime / spell invocation", () => {
       );
 
     expect(
-      characterSheetSpellInvocation({
-        sheet: bookSheet("onPerson"),
-        unitLibrary,
-        spellId: authoredUnitId("detect_magic"),
-        invocation: { kind: "ritual" },
-      }),
+      requireSuccess(
+        characterSheetSpellInvocation({
+          sheet: bookSheet("onPerson"),
+          unitLibrary,
+          spellId: authoredUnitId("detect_magic"),
+          invocation: { kind: "ritual" },
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        tag: "bookOfShadowsRitual",
-        spellId: "detect_magic",
-        requiredSpellAccess: "bookOfShadows",
-        requiresBookOfShadowsOnPerson: true,
-      },
+      tag: "bookOfShadowsRitual",
+      spellId: "detect_magic",
+      requiredSpellAccess: "bookOfShadows",
+      requiresBookOfShadowsOnPerson: true,
     });
     expect(
       characterSheetSpellInvocation({
@@ -115,8 +114,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Book of Shadows Ritual requires the book on your person.",
       },
     });
@@ -129,26 +128,25 @@ describe("Character Sheet runtime / spell invocation", () => {
     });
 
     expect(
-      characterSheetSpellInvocation({
-        sheet,
-        unitLibrary,
-        spellId: authoredUnitId("detect_magic"),
-        invocation: { kind: "ritual" },
-      }),
+      requireSuccess(
+        characterSheetSpellInvocation({
+          sheet,
+          unitLibrary,
+          spellId: authoredUnitId("detect_magic"),
+          invocation: { kind: "ritual" },
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        tag: "spellbookRitual",
-        spellId: "detect_magic",
-        spellLevel: 1,
-        spellcastingSourceUnitId: "class_wizard",
-        featureUnitId: "wizard_ritual_adept",
-        spellSlotCost: { kind: "none" },
-        preparationRequirement: "not_required",
-        requiredSpellAccess: "spellbook",
-        additionalCastingTimeMinutes: 10,
-        requiresReadingSpellbook: true,
-      },
+      tag: "spellbookRitual",
+      spellId: "detect_magic",
+      spellLevel: 1,
+      spellcastingSourceUnitId: "class_wizard",
+      featureUnitId: "wizard_ritual_adept",
+      spellSlotCost: { kind: "none" },
+      preparationRequirement: "not_required",
+      requiredSpellAccess: "spellbook",
+      additionalCastingTimeMinutes: 10,
+      requiresReadingSpellbook: true,
     });
     expect(characterSheetSpellSlots(sheet)).toEqual([
       { spellLevel: 1, count: 2, expended: 0 },
@@ -160,7 +158,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       }),
     ).toBe(true);
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -169,7 +167,7 @@ describe("Character Sheet runtime / spell invocation", () => {
     ).toMatchObject([
       {
         tag: "spellbookRitual",
-        spell: { id: "detect_magic" },
+        spell: { unitId: "detect_magic" },
         spellcastingSourceUnitId: "class_wizard",
         featureUnitId: "wizard_ritual_adept",
       },
@@ -216,8 +214,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Wizard Ritual Adept requires the spell in the spellbook.",
       },
     });
@@ -246,7 +244,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       ],
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -269,14 +267,14 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Ritual spell invocation requires a ritual-tagged Spell Definition.",
       },
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -300,14 +298,14 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
       },
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -337,8 +335,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
       },

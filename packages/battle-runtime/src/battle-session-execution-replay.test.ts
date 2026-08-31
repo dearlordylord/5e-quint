@@ -27,9 +27,53 @@ import {
   endBattleRuntimeTurn,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
+  currentBattleCheckpointFrontierEnvelope,
 } from "./battle-session-execution.ts";
 
 describe("battle runtime ordinary continuation replay", () => {
+  test("keeps an invalid result session correlated with its retry frontier", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-invalid-fill-after-resolved"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "endTurn",
+    } as const;
+    const preceding = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [],
+    });
+    expect(preceding.tag).toBe("resolved");
+    if (preceding.tag !== "resolved") return;
+
+    const attackSubject = fighterAttackSubject(session.state);
+    const invalid = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [
+        targetFill(
+          attackInitialTargetHole(session.state, attackSubject),
+          goblinId,
+        ),
+      ],
+    });
+    expect(invalid.tag).toBe("invalid");
+    if (invalid.tag !== "invalid") return;
+    // A resolved prefix is not committed by a rejected fill. Retry therefore
+    // remains rooted at the incoming session, not at the speculative next
+    // turn exposed by the prefix result.
+    expect(invalid.session).toBe(session);
+    expect(invalid.envelope).toEqual(
+      currentBattleCheckpointFrontierEnvelope(session),
+    );
+  });
+
   test("keeps the durable checkpoint and stable frontier across a rejected fill", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-ordinary-replay-checkpoint"),

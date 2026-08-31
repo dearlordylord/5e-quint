@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import backgroundAcolyteInput from "../../content/background_acolyte.json";
@@ -43,7 +43,7 @@ import {
   decodeClassRecordSync,
   decodeFeatRecordSync,
   decodeSpeciesRecordSync,
-  decodeUnitRecordEither,
+  decodeUnitRecordResult,
   decodeUnitRecordSync,
   EffectAtomSchema,
 } from "./schema.ts";
@@ -1036,7 +1036,7 @@ describe("character-creation Surface records", () => {
       },
     };
 
-    expect(Either.isLeft(decodeUnitRecordEither(invalidRecord))).toBe(true);
+    expect(Result.isFailure(decodeUnitRecordResult(invalidRecord))).toBe(true);
   });
 
   test("decodes class-container tool, filtered weapon, and mixed multiclass proficiency source facts", () => {
@@ -1995,6 +1995,7 @@ describe("character-creation Surface records", () => {
           recordId: "species_dragonborn",
           species: "dragonborn",
           creatureType: "humanoid",
+          draconicAncestry: speciesDragonbornInput.draconicAncestry,
           size: { kind: "fixed", size: "medium" },
           speed: { walkFeet: 30 },
           traits: {
@@ -2149,8 +2150,8 @@ describe("character-creation Surface records", () => {
 
   test("rejects malformed character creation records at the decode boundary", () => {
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classFighterInput,
           skillProficiencyChoice: {
             ...classFighterInput.skillProficiencyChoice,
@@ -2161,8 +2162,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWarlockInput,
           id: "bard_pact_magic_projection",
           kind: "class_feature",
@@ -2178,8 +2179,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(EffectAtomSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema))({
           kind: "grant_spell_access",
           spellId: "thaumaturgy",
           spellList: "cleric",
@@ -2191,8 +2192,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(EffectAtomSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema))({
           kind: "grant_spell_access_choice",
           spellList: "fighter",
           spellLevel: 0,
@@ -2203,8 +2204,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(EffectAtomSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema))({
           kind: "grant_spell_access_choice",
           spellId: "thaumaturgy",
           spellList: "cleric",
@@ -2216,8 +2217,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWarlockInput,
           id: "bard_eldritch_invocations",
           kind: "class_feature",
@@ -2243,8 +2244,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...speciesOrcInput,
           size: { kind: "fixed", size: "colossal" },
         }),
@@ -2252,8 +2253,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWizardInput,
           spellcasting: {
             ...classWizardInput.spellcasting,
@@ -2267,8 +2268,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWizardInput,
           spellcasting: {
             ...classWizardInput.spellcasting,
@@ -2287,8 +2288,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWizardInput,
           spellcasting: {
             ...classWizardInput.spellcasting,
@@ -2309,8 +2310,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWizardInput,
           spellcasting: {
             ...classWizardInput.spellcasting,
@@ -2324,8 +2325,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWizardInput,
           spellcasting: {
             ...classWizardInput.spellcasting,
@@ -2339,8 +2340,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classFighterInput,
           spellcasting: classWizardInput.spellcasting,
         }),
@@ -2350,7 +2351,7 @@ describe("character-creation Surface records", () => {
     const { spellcasting: _spellcasting, ...wizardWithoutSpellcasting } =
       classWizardInput;
     expect(
-      Either.isLeft(decodeUnitRecordEither(wizardWithoutSpellcasting)),
+      Result.isFailure(decodeUnitRecordResult(wizardWithoutSpellcasting)),
     ).toBe(true);
 
     const bardSpellcasting = listPreparedSpellcasting({
@@ -2370,16 +2371,16 @@ describe("character-creation Surface records", () => {
     });
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting("cleric", bardSpellcasting),
         ),
       ),
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting(
             "bard",
             listPreparedSpellcasting({
@@ -2403,8 +2404,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting("cleric", {
             ...listPreparedSpellcasting({
               className: "cleric",
@@ -2427,8 +2428,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting(
             "bard",
             listPreparedSpellcasting({
@@ -2447,8 +2448,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting("paladin", {
             ...listPreparedSpellcasting({
               className: "paladin",
@@ -2465,8 +2466,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting(
             "paladin",
             listPreparedSpellcasting({
@@ -2485,8 +2486,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting("bard", {
             ...bardSpellcasting,
             preparedAccess: {
@@ -2504,8 +2505,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither(
+      Result.isFailure(
+        decodeUnitRecordResult(
           classRecordWithSpellcasting("bard", {
             ...bardSpellcasting,
             preparedAccess: {
@@ -2523,8 +2524,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classWarlockInput,
           spellcasting: {
             ...classWarlockInput.spellcasting,
@@ -2543,12 +2544,12 @@ describe("character-creation Surface records", () => {
     const { armorTraining: _armorTraining, ...fighterWithoutArmorTraining } =
       classFighterInput;
     expect(
-      Either.isLeft(decodeUnitRecordEither(fighterWithoutArmorTraining)),
+      Result.isFailure(decodeUnitRecordResult(fighterWithoutArmorTraining)),
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classFighterInput,
           primaryAbilities: {
             abilities: ["str", "str"],
@@ -2559,8 +2560,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classFighterInput,
           primaryAbilities: {
             abilities: ["str"],
@@ -2571,8 +2572,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...fighterTacticalMindInput,
           className: "wizard",
         }),
@@ -2580,8 +2581,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...wizardRitualAdeptInput,
           className: "fighter",
         }),
@@ -2591,8 +2592,8 @@ describe("character-creation Surface records", () => {
 
   test("rejects mixed-species Orc trait aggregates at the decode boundary", () => {
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...speciesOrcInput,
           traits: {
             ...speciesOrcInput.traits,
@@ -2605,8 +2606,8 @@ describe("character-creation Surface records", () => {
 
   test("rejects mixed-species non-Orc trait aggregates at the decode boundary", () => {
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...speciesDwarfInput,
           traits: {
             ...speciesDwarfInput.traits,
@@ -2617,8 +2618,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...speciesGnomeInput,
           traits: {
             ...speciesGnomeInput.traits,
@@ -2631,8 +2632,8 @@ describe("character-creation Surface records", () => {
 
   test("rejects impossible character creation numbers at the decode boundary", () => {
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classFighterInput,
           hitPointDie: -10,
         }),
@@ -2640,8 +2641,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...classFighterInput,
           skillProficiencyChoice: {
             ...classFighterInput.skillProficiencyChoice,
@@ -2652,8 +2653,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...backgroundSoldierInput,
           abilityScoreIncrease: {
             ...backgroundSoldierInput.abilityScoreIncrease,
@@ -2664,8 +2665,8 @@ describe("character-creation Surface records", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...backgroundSoldierInput,
           startingEquipment: [
             {

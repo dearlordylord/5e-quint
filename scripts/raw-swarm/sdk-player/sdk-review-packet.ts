@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import {
   PlayerExecutionStateSchema,
@@ -159,17 +159,17 @@ function terminalExecutionArtifactRoles(input: {
   } catch {
     prefixValue = undefined;
   }
-  const prefix = Schema.decodeUnknownEither(
+  const prefix = Schema.decodeUnknownResult(
     Schema.Struct({ run: PlayerExecutionStateSchema }),
   )(prefixValue);
-  if (Either.isLeft(prefix)) {
+  if (Result.isFailure(prefix)) {
     return {
       tag: "invalid",
       message: "Review evidence packet player terminal evidence is invalid.",
     };
   }
   const readyArtifacts = sdkReviewPacketReadyArtifacts({
-    run: prefix.right.run,
+    run: prefix.success.run,
     finalArtifactExists: roles.includes(
       SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE,
     ),

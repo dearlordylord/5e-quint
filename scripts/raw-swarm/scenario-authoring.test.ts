@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -97,21 +97,21 @@ describe("Scenario authoring catalogue comparison", () => {
       },
     } as RetainedScenarioReviewInput;
     expect(
-      Either.isLeft(retainedScenarioReviewScenarioId(candidateReview)),
+      Result.isFailure(retainedScenarioReviewScenarioId(candidateReview)),
     ).toBe(true);
     expect(
       retainedScenarioReviewPlannedScenarioId(candidateReview),
-    ).toMatchObject({ _tag: "Right", right: "synthetic-planned-scenario" });
+    ).toMatchObject({ _tag: "Success", success: "synthetic-planned-scenario" });
   });
 
   test("splits the complete projection without truncating entries", () => {
     const projections = [projection("one"), projection("two")];
     const batches = batchScenarioCatalogueProjections(projections);
-    expect(Either.isRight(batches)).toBe(true);
-    if (Either.isRight(batches)) {
-      expect(batches.right.flat()).toEqual(projections);
+    expect(Result.isSuccess(batches)).toBe(true);
+    if (Result.isSuccess(batches)) {
+      expect(batches.success.flat()).toEqual(projections);
       expect(
-        batches.right.every(
+        batches.success.every(
           (batch) =>
             Buffer.byteLength(JSON.stringify(batch)) <=
             SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT,
@@ -123,7 +123,7 @@ describe("Scenario authoring catalogue comparison", () => {
   test("rejects a projection that cannot fit one bounded batch", () => {
     const oversized = projection("oversized", "x".repeat(40_000));
     const batches = batchScenarioCatalogueProjections([oversized]);
-    expect(Either.isLeft(batches)).toBe(true);
+    expect(Result.isFailure(batches)).toBe(true);
   });
 
   test("bounds the complete comparison prompt, including Candidate prose", () => {
@@ -135,16 +135,16 @@ describe("Scenario authoring catalogue comparison", () => {
       batchIndex: 0,
       batch: [projection("one")],
     });
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
     const bounded = scenarioCatalogueComparisonPrompt({
       candidate: "small candidate",
       candidateIndex: 0,
       batchIndex: 0,
       batch: [projection("one")],
     });
-    expect(Either.isRight(bounded)).toBe(true);
-    if (Either.isRight(bounded)) {
-      expect(Buffer.byteLength(bounded.right, "utf8")).toBeLessThanOrEqual(
+    expect(Result.isSuccess(bounded)).toBe(true);
+    if (Result.isSuccess(bounded)) {
+      expect(Buffer.byteLength(bounded.success, "utf8")).toBeLessThanOrEqual(
         SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT,
       );
     }
@@ -158,7 +158,7 @@ describe("Scenario authoring catalogue comparison", () => {
         "two",
       ] as ScenarioCatalogueComparison["comparedScenarioIds"],
     });
-    expect(Either.isLeft(missing)).toBe(true);
+    expect(Result.isFailure(missing)).toBe(true);
 
     const overlapWithoutDifferentiator = validateScenarioCatalogueComparison({
       comparison: comparison("purposefulOverlap", ["one"], {
@@ -168,7 +168,7 @@ describe("Scenario authoring catalogue comparison", () => {
         "one",
       ] as ScenarioCatalogueComparison["comparedScenarioIds"],
     });
-    expect(Either.isLeft(overlapWithoutDifferentiator)).toBe(true);
+    expect(Result.isFailure(overlapWithoutDifferentiator)).toBe(true);
 
     const redundantWithoutClosest = validateScenarioCatalogueComparison({
       comparison: comparison("redundant", ["one"], {
@@ -178,7 +178,7 @@ describe("Scenario authoring catalogue comparison", () => {
         "one",
       ] as ScenarioCatalogueComparison["comparedScenarioIds"],
     });
-    expect(Either.isLeft(redundantWithoutClosest)).toBe(true);
+    expect(Result.isFailure(redundantWithoutClosest)).toBe(true);
 
     const overlapWithEmptyCatalogue = validateScenarioCatalogueComparison({
       comparison: comparison("purposefulOverlap", [], {
@@ -186,7 +186,7 @@ describe("Scenario authoring catalogue comparison", () => {
       }),
       expectedScenarioIds: [],
     });
-    expect(Either.isLeft(overlapWithEmptyCatalogue)).toBe(true);
+    expect(Result.isFailure(overlapWithEmptyCatalogue)).toBe(true);
 
     const closestMatchOutsideCatalogue = validateScenarioCatalogueComparison({
       comparison: comparison("redundant", ["one"], {
@@ -202,7 +202,7 @@ describe("Scenario authoring catalogue comparison", () => {
         "one",
       ] as ScenarioCatalogueComparison["comparedScenarioIds"],
     });
-    expect(Either.isLeft(closestMatchOutsideCatalogue)).toBe(true);
+    expect(Result.isFailure(closestMatchOutsideCatalogue)).toBe(true);
   });
 
   test("rejects ids swapped between canonical batches", () => {
@@ -246,7 +246,7 @@ describe("Scenario authoring catalogue comparison", () => {
         { batchIndex: 1, scenarioIds: ["two"] },
       ],
     });
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   });
 
   test("rejects omitted, wrong, or duplicate model-retained top-level ids", () => {
@@ -261,7 +261,7 @@ describe("Scenario authoring catalogue comparison", () => {
         expectedScenarioIds: ["one"],
         expectedBatches: [{ batchIndex: 0, scenarioIds: ["one"] }],
       });
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Result.isFailure(result)).toBe(true);
     }
   });
 
@@ -294,8 +294,8 @@ describe("Scenario authoring catalogue comparison", () => {
       ],
     });
     expect(result).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         conclusion: "redundant",
         comparedScenarioIds: ["one", "two"],
         closestMatches: [{ scenarioId: "two" }],
@@ -307,8 +307,8 @@ describe("Scenario authoring catalogue comparison", () => {
         },
       },
     });
-    if (Either.isRight(result)) {
-      expect(result.right.basis).toMatchObject({
+    if (Result.isSuccess(result)) {
+      expect(result.success.basis).toMatchObject({
         tag: "compared",
         batches: [
           { batchIndex: 0, dimensions },
@@ -319,20 +319,20 @@ describe("Scenario authoring catalogue comparison", () => {
   });
 
   test("decodes only the declared comparison shape", () => {
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       ScenarioCatalogueComparisonSchema,
       {
         onExcessProperty: "error",
       },
     )(comparison("meaningfullyDistinct", ["one"]));
-    expect(Either.isRight(decoded)).toBe(true);
+    expect(Result.isSuccess(decoded)).toBe(true);
     expect(
-      Schema.decodeUnknownEither(ScenarioCatalogueComparisonSchema, {
+      Schema.decodeUnknownResult(ScenarioCatalogueComparisonSchema, {
         onExcessProperty: "error",
       })({
         ...comparison("meaningfullyDistinct", ["one"]),
         score: 0.5,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 });

@@ -1,6 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodePrincipalId } from "./play-session-access.ts";
@@ -118,13 +118,13 @@ describe("MCP tool annotations", () => {
 
   test("OAuth-enabled discovery classifies every public tool", async () => {
     const principalId = decodePrincipalId("principal:annotations-test");
-    if (Either.isLeft(principalId)) throw new Error(principalId.left);
+    if (Result.isFailure(principalId)) throw new Error(principalId.failure);
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer(undefined, undefined, {
       requestIdentity: {
         tag: "authenticated",
-        principalId: principalId.right,
+        principalId: principalId.success,
       },
     });
     const client = new Client({

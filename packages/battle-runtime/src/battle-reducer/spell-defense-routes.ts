@@ -70,7 +70,7 @@ export function wardedTargetInterdictionRouteForDiscoveredAct(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
 ): BattleReducerRouteEvents | undefined {
-  if (isSanctuaryTargetingInterdictionSubject(state, act.subject)) {
+  if (isTargetingSaveInterdictionSubject(state, act.subject)) {
     return [
       discoverBattleActsRoute(
         "wardedTargetInterdiction",
@@ -99,7 +99,7 @@ export function wardedTargetInterdictionRouteForResolution(
   if (fill === undefined) {
     return undefined;
   }
-  if (isSanctuaryTargetingInterdictionSubject(input.state, input.subject)) {
+  if (isTargetingSaveInterdictionSubject(input.state, input.subject)) {
     const routeFill = battleReducerRouteFill(fill);
     if (routeFill !== "spellTargetList") {
       return undefined;
@@ -118,7 +118,7 @@ export function wardedTargetInterdictionRouteForResolution(
     if (
       result.tag !== "resolved" ||
       !activeEffectKindsAdded(input.state, result.state).includes(
-        "sanctuaryWard",
+        "targetingSaveInterdiction",
       )
     ) {
       return [targetSelectionRoute];
@@ -128,20 +128,20 @@ export function wardedTargetInterdictionRouteForResolution(
       wardedTargetInterdictionResolveWithoutFill("battleActiveEffect"),
     ];
   }
-  if (fill.kind === "sanctuaryInterdictionOutcome") {
+  if (fill.kind === "targetingSaveInterdictionOutcome") {
     const replacementTarget =
       !fill.value.saveSucceeded && fill.value.outcome.kind === "newTarget";
     const route: BattleReducerRouteEvent[] = [
       discoverBattleActsRoute(
         "wardedTargetInterdiction",
         replacementTarget
-          ? ["sanctuaryInterdictionOutcome", "targetChoice"]
-          : ["sanctuaryInterdictionOutcome"],
+          ? ["targetingSaveInterdictionOutcome", "targetChoice"]
+          : ["targetingSaveInterdictionOutcome"],
         "battleActiveEffect",
       ),
       resolveBattleSubjectRoute(
         "wardedTargetInterdiction",
-        "sanctuaryInterdictionOutcome",
+        "targetingSaveInterdictionOutcome",
         replacementTarget ? ["targetChoice"] : [],
         "battleSavingThrowOutcome",
       ),
@@ -176,7 +176,7 @@ export function wardedTargetInterdictionRouteForResolution(
   const actorId = subjectActorId(input.subject);
   if (
     actorId === undefined ||
-    !sanctuaryWardRemoved(input.state, result, actorId)
+    !targetingSaveInterdictionRemoved(input.state, result, actorId)
   ) {
     return undefined;
   }
@@ -225,7 +225,7 @@ function wardedTargetInterdictionResolveWithoutFill(
   );
 }
 
-function sanctuaryWardRemoved(
+function targetingSaveInterdictionRemoved(
   state: BattleState,
   result: BattleResolutionResult,
   actorId: CombatantId,
@@ -234,8 +234,8 @@ function sanctuaryWardRemoved(
     return false;
   }
   return (
-    combatantHasSanctuaryWard(state, actorId) &&
-    !combatantHasSanctuaryWard(result.state, actorId)
+    combatantHasTargetingSaveInterdiction(state, actorId) &&
+    !combatantHasTargetingSaveInterdiction(result.state, actorId)
   );
 }
 
@@ -252,7 +252,7 @@ function areaEffectBypassesWardedTargetInterdiction(
   ) {
     return false;
   }
-  if (!battleHasSanctuaryWard(state)) {
+  if (!battleHasTargetingSaveInterdiction(state)) {
     return false;
   }
   if ("initialHoles" in source) {
@@ -276,7 +276,7 @@ function areaEffectBypassesWardedTargetInterdiction(
       (!("areaChoices" in savingThrowHole) ||
         savingThrowHole.areaChoices.some((areaChoice) =>
           areaChoice.affectedTargetIds.some((targetId) =>
-            combatantHasSanctuaryWard(state, targetId),
+            combatantHasTargetingSaveInterdiction(state, targetId),
           ),
         ))
     );
@@ -307,27 +307,29 @@ function areaEffectBypassesWardedTargetInterdiction(
       ? savingThrowFill.value.area.affectedTargetIds
       : savingThrowFill.value.outcomes.map((outcome) => outcome.targetId);
   return affectedTargetIds.some((targetId) =>
-    combatantHasSanctuaryWard(state, targetId),
+    combatantHasTargetingSaveInterdiction(state, targetId),
   );
 }
 
-function battleHasSanctuaryWard(state: BattleState): boolean {
+function battleHasTargetingSaveInterdiction(state: BattleState): boolean {
   for (const combatant of state.combatants.values()) {
-    if (combatantHasSanctuaryWard(state, combatant.combatantId)) {
+    if (combatantHasTargetingSaveInterdiction(state, combatant.combatantId)) {
       return true;
     }
   }
   return false;
 }
 
-function combatantHasSanctuaryWard(
+function combatantHasTargetingSaveInterdiction(
   state: BattleState,
   combatantId: CombatantId,
 ): boolean {
   return (
     state.combatants
       .get(combatantId)
-      ?.activeEffects.some((effect) => effect.kind === "sanctuaryWard") ?? false
+      ?.activeEffects.some(
+        (effect) => effect.kind === "targetingSaveInterdiction",
+      ) ?? false
   );
 }
 
@@ -507,7 +509,7 @@ function battleActiveEffectKindCounts(
   return counts;
 }
 
-function isSanctuaryTargetingInterdictionSubject(
+function isTargetingSaveInterdictionSubject(
   state: BattleState,
   subject:
     | BattleResolutionInput["subject"]
@@ -519,6 +521,6 @@ function isSanctuaryTargetingInterdictionSubject(
   return (
     subject.tag === "bonusActionSpell" &&
     spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "sanctuaryTargetingInterdiction"
+      "targetingSaveInterdiction"
   );
 }

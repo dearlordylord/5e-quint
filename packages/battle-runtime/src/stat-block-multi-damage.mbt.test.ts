@@ -1,4 +1,5 @@
 import { movementFeet } from "@dnd/shared/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
@@ -8,8 +9,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 
-import { Either } from "effect";
-import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
@@ -432,10 +432,10 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function statBlockCreature(input: {
@@ -449,7 +449,7 @@ function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
+      source: Result.getOrThrow(
         battleStatBlockCombatantSource(
           projectedStatBlockRuntimeSource(input.statBlock),
         ),

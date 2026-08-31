@@ -6,7 +6,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 
 import { Match } from "effect";
-import { optionalProperty } from "../optional-property.ts";
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
@@ -1185,7 +1188,7 @@ export function attackRollMissToHitReplacementHolePayloadForAttacker(
 ): Pick<BattleAttackRollHole, "missToHitReplacements"> {
   const missToHitReplacements =
     eligibleAttackRollMissToHitReplacements(attacker);
-  return missToHitReplacements.length === 0 ? {} : { missToHitReplacements };
+  return nonEmptyArrayProperty("missToHitReplacements", missToHitReplacements);
 }
 
 export function eligibleAttackRollMissToHitReplacements(

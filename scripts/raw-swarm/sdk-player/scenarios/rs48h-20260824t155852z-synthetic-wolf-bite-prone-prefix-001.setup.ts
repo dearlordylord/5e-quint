@@ -46,10 +46,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(bitingWolf)) {
+  if (sdk.isFailure(bitingWolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(bitingWolf.left),
+      obstruction: sdk.battleStateInitIssueMessage(bitingWolf.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -65,10 +65,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(targetWolf)) {
+  if (sdk.isFailure(targetWolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(targetWolf.left),
+      obstruction: sdk.battleStateInitIssueMessage(targetWolf.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -79,12 +79,12 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [bitingWolf.right, targetWolf.right],
+    combatants: [bitingWolf.success, targetWolf.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-battle-start",
@@ -102,7 +102,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     }),
   );
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -135,10 +135,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "scenario-session-composition",
@@ -148,7 +148,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId: SCENARIO_ID,
       initiativeScores: INITIATIVE_SCORES,

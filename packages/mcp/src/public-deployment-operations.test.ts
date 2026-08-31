@@ -40,7 +40,7 @@ describe("public MCP deployment operations", () => {
       "utf8",
     );
 
-    expect(dockerfile).toContain("FROM node:22-bookworm-slim AS builder");
+    expect(dockerfile).toContain("FROM node:22.19.0-bookworm-slim AS builder");
     expect(dockerfile).toContain("deploy --prod --legacy /srv/deploy");
     expect(dockerfile).toContain("COPY --from=builder");
     expect(deployDokku).toContain("public-mcp-image.yml");

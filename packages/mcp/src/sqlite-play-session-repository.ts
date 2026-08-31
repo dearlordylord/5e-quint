@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { decodePlaySessionId } from "./play-session.ts";
 import {
@@ -22,11 +22,11 @@ import { preparePlaySessionSchema } from "./sqlite-play-session-schema.ts";
 
 export function openSqlitePlaySessionRepository(
   databasePath: string,
-): Either.Either<PlaySessionRepository, PlaySessionRepositoryIssue> {
+): Result.Result<PlaySessionRepository, PlaySessionRepositoryIssue> {
   try {
-    return Either.right(createSqlitePlaySessionRepository(databasePath));
+    return Result.succeed(createSqlitePlaySessionRepository(databasePath));
   } catch (cause) {
-    return Either.left(unreadableRepositoryIssue(cause));
+    return Result.fail(unreadableRepositoryIssue(cause));
   }
 }
 
@@ -174,7 +174,7 @@ function createSqlitePlaySessionRepository(
 
   return {
     create(record, limits) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         const result = insert.run(
           record.playSessionId,
@@ -197,29 +197,29 @@ function createSqlitePlaySessionRepository(
           record.tenure.tag === "saved" ? record.tenure.principalId : null,
           limits.maximumSavedSessionsPerPrincipal,
         );
-        if (result.changes === 1) return Either.right({ tag: "created" });
-        return Either.right(
+        if (result.changes === 1) return Result.succeed({ tag: "created" });
+        return Result.succeed(
           select.get(record.playSessionId) === undefined
             ? { tag: "playSessionLimitExceeded" }
             : { tag: "playSessionIdCollision" },
         );
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     load(playSessionId) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         const row = select.get(playSessionId);
-        if (row === undefined) return Either.right({ tag: "absent" });
+        if (row === undefined) return Result.succeed({ tag: "absent" });
         const decoded = decodeStoredPlaySessionRecord(row, playSessionId);
-        return Either.map(decoded, (record) => ({ tag: "found", record }));
+        return Result.map(decoded, (record) => ({ tag: "found", record }));
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     commit(record, change) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         const result = commit.run(
           JSON.stringify(
@@ -236,17 +236,17 @@ function createSqlitePlaySessionRepository(
           record.playSessionId,
           record.revision,
         );
-        return Either.right(
+        return Result.succeed(
           result.changes === 1
             ? { tag: "committed" }
             : { tag: "revisionConflict" },
         );
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     save(record, tenure, maximumSavedSessionsPerPrincipal) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         return runSave({
           save,
@@ -257,47 +257,47 @@ function createSqlitePlaySessionRepository(
           maximumSavedSessionsPerPrincipal,
         });
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     listSaved(principalId) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         const records: RecoverablePlaySessionRecord[] = [];
         const issues: string[] = [];
         for (const row of listSaved.all(principalId)) {
           const decodedId = decodePlaySessionId(row.play_session_id);
-          if (Either.isLeft(decodedId)) {
-            issues.push(decodedId.left);
+          if (Result.isFailure(decodedId)) {
+            issues.push(decodedId.failure);
             continue;
           }
-          const decoded = decodeStoredPlaySessionRecord(row, decodedId.right);
-          if (Either.isLeft(decoded)) {
-            issues.push(decoded.left.message);
+          const decoded = decodeStoredPlaySessionRecord(row, decodedId.success);
+          if (Result.isFailure(decoded)) {
+            issues.push(decoded.failure.message);
             continue;
           }
-          records.push(decoded.right);
+          records.push(decoded.success);
         }
         if (issues.length > 0) {
-          return Either.left(invalidStoredRecordIssue(issues.join("\n")));
+          return Result.fail(invalidStoredRecordIssue(issues.join("\n")));
         }
-        return Either.right(records);
+        return Result.succeed(records);
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     delete(playSessionId, revision) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
-        return Either.right(
+        return Result.succeed(
           deleteRevision.run(playSessionId, revision).changes === 1,
         );
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     pruneGuestPressure(nowMs, maximumGuestSessions) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         const row = guestCount.get();
         const count =
@@ -306,25 +306,25 @@ function createSqlitePlaySessionRepository(
         if (excess > 0) {
           pruneGuest.run(nowMs - GUEST_PRESSURE_PROTECTION_MS, excess);
         }
-        return Either.right(undefined);
+        return Result.succeed(undefined);
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     pruneExpired(nowMs) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         pruneExpired.run(
           nowMs - GUEST_INACTIVITY_RETENTION_MS,
           nowMs - SAVED_INACTIVITY_RETENTION_MS,
         );
-        return Either.right(undefined);
+        return Result.succeed(undefined);
       } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     admitRequest(accessKeyDigest, nowMs, maximumRequestsPerWindow) {
-      if (closed) return Either.left(closedRepositoryIssue());
+      if (closed) return Result.fail(closedRepositoryIssue());
       try {
         database.exec("BEGIN IMMEDIATE");
         return runRateAdmission({
@@ -345,7 +345,7 @@ function createSqlitePlaySessionRepository(
         } catch {
           // The transaction may already have committed or failed to begin.
         }
-        return Either.left(unreadableRepositoryIssue(cause));
+        return Result.fail(unreadableRepositoryIssue(cause));
       }
     },
     close() {

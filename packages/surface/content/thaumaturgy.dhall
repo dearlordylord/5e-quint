@@ -8,15 +8,43 @@
 --    normal for 1 minute. For the duration, you have Advantage on
 --    Charisma (Intimidation) checks."
 --
--- Encoding decisions:
---   * The only battle-runtime-owned branch is Booming Voice's self Spell
---     Effect projecting Charisma (Intimidation) Ability Check Advantage.
---   * Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, and Tremors
---     are presentation/environment/object/table adjudication and remain
---     runtime-detached.
---   * The three-active-1-minute-effects cap is enforced by the runtime
---     through a caller-supplied total active-effect-count witness rather than
---     persistent utility state for the detached branches.
+-- The selected wonder is a typed mode. Only Booming Voice currently has a
+-- battle execution projection; the other modes remain table/environment facts.
+
+let Effect =
+      { kind : Text
+      , mode : Text
+      , affects : Text
+      , on : List Text
+      , abilityFilter : List Text
+      , skillFilter : { kind : Text, skills : List Text }
+      }
+
+let boomingVoiceEffect : Effect =
+      { kind = "modify_roll_advantage"
+      , mode = "advantage"
+      , affects = "self_roll"
+      , on = [ "ability_check" ]
+      , abilityFilter = [ "cha" ]
+      , skillFilter = { kind = "fixed", skills = [ "intimidation" ] }
+      }
+
+let Mode =
+      { id : Text
+      , displayName : Text
+      , effectDuration : Text
+      , effects : Optional (List Effect)
+      }
+
+let tableMode =
+      \(id : Text) ->
+      \(displayName : Text) ->
+      \(effectDuration : Text) ->
+        { id
+        , displayName
+        , effectDuration
+        , effects = None (List Effect)
+        } : Mode
 
 let thaumaturgy =
       { kind = "spell"
@@ -28,7 +56,7 @@ let thaumaturgy =
           }
 
       , mechanics =
-          { family = "ongoing_effect"
+          { family = "modal_ongoing_effect"
           , level = 0
           , school = "transmutation"
           , castingTime = { kind = "action" }
@@ -39,19 +67,25 @@ let thaumaturgy =
               , value = { unit = "minute", amount = 1 }
               }
           , attachment = { kind = "self" }
-          , operations =
-              [ { trigger = { kind = "passive" }
-                , effect =
-                    { kind = "modify_roll_advantage"
-                    , mode = "advantage"
-                    , affects = "self_roll"
-                    , on = [ "ability_check" ]
-                    , abilityFilter = [ "cha" ]
-                    , skillFilter =
-                        { kind = "fixed", skills = [ "intimidation" ] }
-                    }
-                }
-              ]
+          , mode =
+              { label = "minor wonder"
+              , options =
+                  [ tableMode "altered_eyes" "Altered Eyes" "spell_duration"
+                  , { id = "booming_voice"
+                    , displayName = "Booming Voice"
+                    , effectDuration = "spell_duration"
+                    , effects = Some [ boomingVoiceEffect ]
+                    } : Mode
+                  , tableMode "fire_play" "Fire Play" "spell_duration"
+                  , tableMode "invisible_hand" "Invisible Hand" "instantaneous"
+                  , tableMode "phantom_sound" "Phantom Sound" "instantaneous"
+                  , tableMode "tremors" "Tremors" "spell_duration"
+                  ]
+              }
+          , concurrentEffectLimit =
+              { maximumActive = 3
+              , appliesTo = "spell_duration_modes"
+              }
           }
       }
 

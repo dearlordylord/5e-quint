@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
@@ -36,9 +36,9 @@ type RuntimeDispatch = RuntimeMultiattackProcedure["dispatches"][number];
 function executionFor(source: RuntimeSource, id: string) {
   const actorId = combatantId(`stat-block-execution-${id}`);
   const admitted = battleStatBlockCombatantSource(source);
-  if (Either.isLeft(admitted)) {
+  if (Result.isFailure(admitted)) {
     throw new Error(
-      `Expected Stat Block source admission: ${JSON.stringify(admitted.left)}`,
+      `Expected Stat Block source admission: ${JSON.stringify(admitted.failure)}`,
     );
   }
   const initialized = {
@@ -46,7 +46,7 @@ function executionFor(source: RuntimeSource, id: string) {
     initiative: initiativeScore(10),
     creatureInit: {
       kind: "statBlock" as const,
-      source: admitted.right,
+      source: admitted.success,
       currentHp: Hp(source.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -64,13 +64,13 @@ function executionFor(source: RuntimeSource, id: string) {
     battleId: battleId(`stat-block-execution-${id}`),
     combatants: [initialized],
   });
-  if (Either.isLeft(started)) {
+  if (Result.isFailure(started)) {
     throw new Error(
-      `Expected Stat Block battle start: ${JSON.stringify(started.left)}`,
+      `Expected Stat Block battle start: ${JSON.stringify(started.failure)}`,
     );
   }
 
-  const combatant = started.right.state.combatants.get(actorId);
+  const combatant = started.success.state.combatants.get(actorId);
   if (combatant?.origin.kind !== "statBlock") {
     throw new Error("Expected the Stat Block combatant admission.");
   }
@@ -167,7 +167,7 @@ describe("Stat Block execution admission branch coverage", () => {
     });
 
     expect(admitted).toEqual(
-      Either.left([
+      Result.fail([
         { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
         {
           kind: "duplicateResourceOrdinal",

@@ -43,6 +43,7 @@ export const SURFACE_PROJECTION_KINDS = [
 export const SURFACE_UNIT_REFERENCE_RELATIONS = [
   "excluded-armor-reference",
   "item-reference",
+  "mastery-reference",
   "spell-reference",
   "subclass-choice",
   "unit-reference",
@@ -68,6 +69,17 @@ export const SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS = [
   "stat-block-reference",
 ] as const;
 
+/**
+ * A generic relation is not enough to determine the owning mechanics branch.
+ * These source roles are attached at the schema field that establishes the
+ * relation, then carried by the authored-link collector.
+ */
+export const SURFACE_LINK_SOURCE_ROLES = [
+  "generic",
+  "class-feature-grant",
+  "class-subclass-choice",
+] as const;
+
 export type SurfaceUnitReferenceRelation =
   (typeof SURFACE_UNIT_REFERENCE_RELATIONS)[number];
 export type SurfaceUnitDependencyRelation =
@@ -81,6 +93,11 @@ export type SurfaceProtocolKind = (typeof SURFACE_PROTOCOL_KINDS)[number];
 export type SurfaceProseEvidencePolicy =
   (typeof SURFACE_PROSE_EVIDENCE_POLICIES)[number];
 export type SurfaceProjectionKind = (typeof SURFACE_PROJECTION_KINDS)[number];
+export type SurfaceLinkSourceRole = (typeof SURFACE_LINK_SOURCE_ROLES)[number];
+export type SurfaceSpecializedLinkSourceRole = Exclude<
+  SurfaceLinkSourceRole,
+  "generic"
+>;
 
 export type SurfaceSchemaFieldRole =
   | {
@@ -106,6 +123,8 @@ export type SurfaceSchemaFieldRole =
       readonly category: "reference";
       readonly relation: SurfaceUnitReferenceRelation;
       readonly targetKind: "unit";
+      /** Absence is the single spelling of the generic source role. */
+      readonly sourceRole?: SurfaceSpecializedLinkSourceRole;
     }
   | {
       readonly category: "reference";
@@ -116,6 +135,8 @@ export type SurfaceSchemaFieldRole =
       readonly category: "dependency";
       readonly relation: SurfaceUnitDependencyRelation;
       readonly targetKind: "unit";
+      /** Absence is the single spelling of the generic source role. */
+      readonly sourceRole?: SurfaceSpecializedLinkSourceRole;
     }
   | {
       readonly category: "dependency";
@@ -128,12 +149,9 @@ export type SurfaceSchemaFieldRole =
     };
 
 function isStringSchemaAst(ast: AST.AST): boolean {
-  let current = ast;
-  while (AST.isRefinement(current) || AST.isTransformation(current)) {
-    current = current.from;
-  }
+  const current = AST.toType(ast);
   return (
-    current?._tag === "StringKeyword" ||
+    current?._tag === "String" ||
     (current?._tag === "Literal" && typeof current.literal === "string")
   );
 }
@@ -197,10 +215,21 @@ export function isSurfaceSchemaRole(
       role.category === "reference"
         ? SURFACE_STAT_BLOCK_REFERENCE_RELATIONS
         : SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS;
+    const linkKeys = ["category", "relation", "targetKind"] as const;
+    const linkKeysWithSourceRole = [...linkKeys, "sourceRole"] as const;
+    const hasSourceRole = Object.hasOwn(role, "sourceRole");
     return (
-      exactRoleKeys(role, ["category", "relation", "targetKind"]) &&
+      (exactRoleKeys(role, linkKeys) ||
+        exactRoleKeys(role, linkKeysWithSourceRole)) &&
       typeof role.relation === "string" &&
       typeof role.targetKind === "string" &&
+      (!hasSourceRole ||
+        (role.targetKind === "unit" &&
+          typeof role.sourceRole === "string" &&
+          role.sourceRole !== "generic" &&
+          SURFACE_LINK_SOURCE_ROLES.some(
+            (sourceRole) => sourceRole === role.sourceRole,
+          ))) &&
       ((role.targetKind === "unit" &&
         unitRelations.some((relation) => relation === role.relation)) ||
         (role.targetKind === "statBlock" &&
@@ -216,7 +245,9 @@ function surfaceSchemaRoleKey(value: unknown): string | undefined {
     return `${value.category}:${value.kind}`;
   }
   if (value.category === "reference" || value.category === "dependency") {
-    return `${value.category}:${value.targetKind}:${value.relation}`;
+    const sourceRole =
+      "sourceRole" in value ? (value.sourceRole ?? "generic") : "generic";
+    return `${value.category}:${value.targetKind}:${value.relation}:${sourceRole}`;
   }
   if (value.category === "projection") return `projection:${value.kind}`;
   if (value.category === "prose") return `prose:${value.evidence}`;
@@ -235,17 +266,14 @@ export function surfaceSchemaRolesEqual(
 export function readSurfaceSchemaRole(
   ast: AST.AST,
 ): SurfaceSchemaFieldRole | undefined {
-  /* v8 ignore start -- @preserve -- Effect AST variants expose annotations; absence requires a malformed or incompatible external AST object */
-  if (!("annotations" in ast)) return undefined;
-  /* v8 ignore stop -- @preserve */
-  const value = ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  const value = AST.resolveAt<unknown>(SURFACE_SCHEMA_ROLE_ANNOTATION)(ast);
   return isSurfaceSchemaRole(value) ? value : undefined;
 }
 
-export function surfaceSchemaRole<A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+export function surfaceSchemaRole<A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   role: SurfaceSchemaFieldRole,
-): Schema.Schema<A & string, I, R> {
+): Schema.Codec<A, I, RD, RE> {
   /* v8 ignore start -- @preserve -- this helper is typed for string schemas; a non-string AST requires malformed internal schema construction */
   if (!isStringSchemaAst(schema.ast)) {
     throw new Error("Surface schema roles can only annotate string schemas");
@@ -257,7 +285,9 @@ export function surfaceSchemaRole<A, I, R>(
     throw new Error("Invalid Surface schema role");
   }
   /* v8 ignore stop -- @preserve */
-  const existingRole = schema.ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  const existingRole = AST.resolveAt<unknown>(SURFACE_SCHEMA_ROLE_ANNOTATION)(
+    schema.ast,
+  );
   /* v8 ignore start -- @preserve -- one schema field has one authored role; applying a different second role is malformed schema composition */
   if (
     existingRole !== undefined &&
@@ -266,9 +296,14 @@ export function surfaceSchemaRole<A, I, R>(
     throw new Error("Conflicting Surface schema roles");
   }
   /* v8 ignore stop -- @preserve */
-  return schema.annotations({
+  const annotations = {
     [SURFACE_SCHEMA_ROLE_ANNOTATION]: role,
-  });
+  } as const;
+  const annotated = schema.pipe(
+    Schema.annotate(annotations),
+    Schema.annotateEncoded(annotations),
+  );
+  return annotated;
 }
 
 export { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
@@ -277,16 +312,16 @@ export { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 // surface families. Keep this file non-recursive so later families can import
 // stable building blocks without creating avoidable cycles.
 
-export const RollKindSchema = Schema.Literal(
+export const RollKindSchema = Schema.Literals([
   "attack_roll",
   "spell_attack_roll",
   "saving_throw",
   "ability_check",
   "initiative",
   "death_saving_throw",
-);
+]);
 
-export const WeaponPropertySchema = Schema.Literal(
+export const WeaponPropertySchema = Schema.Literals([
   "ammunition",
   "finesse",
   "heavy",
@@ -296,15 +331,15 @@ export const WeaponPropertySchema = Schema.Literal(
   "thrown",
   "two_handed",
   "versatile",
-);
+]);
 
-export const WeaponFilterSchema = Schema.Union(
+export const WeaponFilterSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("source_item"),
   }),
   Schema.Struct({
     kind: Schema.Literal("weapon_category"),
-    category: Schema.Literal("melee", "ranged"),
+    category: Schema.Literals(["melee", "ranged"]),
   }),
   Schema.Struct({
     kind: Schema.Literal("weapon_property"),
@@ -318,9 +353,9 @@ export const WeaponFilterSchema = Schema.Union(
       targetKind: "unit",
     }),
   }),
-);
+]);
 
-export const MagicalitySchema = Schema.Literal("magical", "nonmagical");
+export const MagicalitySchema = Schema.Literals(["magical", "nonmagical"]);
 
 export const ResistanceSourceFilterSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
@@ -332,22 +367,22 @@ export const SavingThrowSourceFilterSchema = Schema.Struct({
   kind: Schema.Literal("spell_or_other_magical_effect"),
 });
 
-export const AbilitySchema = Schema.Literal(...ABILITIES);
+export const AbilitySchema = Schema.Literals(ABILITIES);
 
-export const DamageTypeSchema = Schema.Literal(...DAMAGE_TYPES);
+export const DamageTypeSchema = Schema.Literals(DAMAGE_TYPES);
 
-export const AttackKindSchema = Schema.Literal(
+export const AttackKindSchema = Schema.Literals([
   "ranged_spell_attack",
   "melee_spell_attack",
-);
+]);
 
-export const ExileDestinationSchema = Schema.Literal(
+export const ExileDestinationSchema = Schema.Literals([
   "demiplane",
   "astral_plane",
   "ethereal_plane",
   "plane_of_origin",
   "different_plane",
-);
+]);
 
 export const ContainerStorageProfileSchema = Schema.Struct({
   maxWeightPounds: Schema.Number,
@@ -361,9 +396,9 @@ export const ContainerStorageProfileSchema = Schema.Struct({
   extradimensional: exactOptional(Schema.Literal(true)),
 });
 
-export const StandardActionKindSchema = Schema.Literal(
+export const StandardActionKindSchema = Schema.Literals([
   ...STANDARD_ACTION_KINDS,
-);
+]);
 
 export const AlternateActionCostSchema = Schema.Struct({
   from: Schema.Struct({
@@ -428,7 +463,7 @@ export const NON_WIZARD_CLASS_NAMES = [
   ),
 ] as const satisfies NonEmptyReadonlyArray<Exclude<ClassName, "wizard">>;
 
-export const ClassNameSchema = Schema.Literal(...CLASS_NAMES);
+export const ClassNameSchema = Schema.Literals(CLASS_NAMES);
 
 export const ClassRecordKindSchema = Schema.Literal("class");
 
@@ -438,53 +473,53 @@ export const BackgroundRecordKindSchema = Schema.Literal("background");
 
 export const SpeciesRecordKindSchema = Schema.Literal("species");
 
-export const RestKindSchema = Schema.Literal("short", "long");
+export const RestKindSchema = Schema.Literals(["short", "long"]);
 
-export const FeatCategorySchema = Schema.Literal(
+export const FeatCategorySchema = Schema.Literals([
   "general",
   "fighting_style",
   "epic_boon",
   "origin",
-);
+]);
 
-export const MagicItemRaritySchema = Schema.Literal(
+export const MagicItemRaritySchema = Schema.Literals([
   "common",
   "uncommon",
   "rare",
   "very_rare",
   "legendary",
   "artifact",
-);
+]);
 
-export const LevelAxisSchema = Schema.Literal(
+export const LevelAxisSchema = Schema.Literals([
   "proficiency_bonus",
   "character",
   "class",
   "slot",
   "subclass",
-);
+]);
 
-export const DiceDeltaSchema = Schema.Union(
+export const DiceDeltaSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fixed_number"),
     amount: Schema.Number,
-    sign: Schema.Literal("+", "-"),
+    sign: Schema.Literals(["+", "-"]),
   }),
   Schema.Struct({
     kind: Schema.Literal("fixed_dice"),
     dice: Schema.Number,
     dieSize: Schema.Number,
-    sign: Schema.Literal("+", "-"),
+    sign: Schema.Literals(["+", "-"]),
   }),
   Schema.Struct({
     kind: Schema.Literal("proficiency_bonus"),
-    sign: Schema.Literal("+", "-"),
+    sign: Schema.Literals(["+", "-"]),
     scale: exactOptional(Schema.Literal("half")),
   }),
   Schema.Struct({
     kind: Schema.Literal("ability_modifier"),
     ability: AbilitySchema,
-    sign: Schema.Literal("+", "-"),
+    sign: Schema.Literals(["+", "-"]),
     minimum: exactOptional(Schema.Number),
   }),
   Schema.Struct({
@@ -497,11 +532,11 @@ export const DiceDeltaSchema = Schema.Union(
         value: Schema.Number,
       }),
     ),
-    sign: Schema.Literal("+", "-"),
+    sign: Schema.Literals(["+", "-"]),
   }),
   Schema.Struct({
     kind: Schema.Literal("magic_item_rarity_bonus"),
-    sign: Schema.Literal("+", "-"),
+    sign: Schema.Literals(["+", "-"]),
     byRarity: Schema.Struct({
       common: Schema.Number,
       uncommon: Schema.Number,
@@ -511,19 +546,25 @@ export const DiceDeltaSchema = Schema.Union(
       artifact: Schema.Number,
     }),
   }),
-);
+]);
 
 export const DurationUpcastTierSchema = Schema.Struct({
-  atSlot: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  atSlot: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+  ),
+  amount: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+  ),
 });
 
 export const ReadonlyNonEmptyArrayDurationUpcastTierSchema =
   Schema.NonEmptyArray(DurationUpcastTierSchema);
 
 export const TimeSpanDurationValueSchema = Schema.Struct({
-  unit: Schema.Literal("round", "minute", "hour", "day"),
-  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  unit: Schema.Literals(["round", "minute", "hour", "day"]),
+  amount: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+  ),
   upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
 });
 
@@ -533,12 +574,12 @@ export const HalfClassLevelRoundedDownHoursDurationValueSchema = Schema.Struct({
 
 export const DurationValueSchema = TimeSpanDurationValueSchema;
 
-export const SkillSchema = Schema.Literal(...SURFACE_SKILLS);
+export const SkillSchema = Schema.Literals(SURFACE_SKILLS);
 
 export const ReadonlyNonEmptyArraySkillSchema =
   Schema.NonEmptyArray(SkillSchema);
 
-export const SkillFilterSchema = Schema.Union(
+export const SkillFilterSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     skills: ReadonlyNonEmptyArraySkillSchema,
@@ -547,21 +588,21 @@ export const SkillFilterSchema = Schema.Union(
     kind: Schema.Literal("choice"),
     options: ReadonlyNonEmptyArraySkillSchema,
   }),
-);
+]);
 
 export const WEAPON_PROFICIENCY_CATEGORIES = ["simple", "martial"] as const;
-export const WeaponProficiencyCategorySchema = Schema.Literal(
+export const WeaponProficiencyCategorySchema = Schema.Literals([
   ...WEAPON_PROFICIENCY_CATEGORIES,
-);
+]);
 
 export const TOOL_PROFICIENCY_CATEGORIES = [
   "artisan_tool",
   "gaming_set",
   "musical_instrument",
 ] as const;
-export const ToolProficiencyCategorySchema = Schema.Literal(
+export const ToolProficiencyCategorySchema = Schema.Literals([
   ...TOOL_PROFICIENCY_CATEGORIES,
-);
+]);
 
 export const ARMOR_TRAINING_CATEGORIES = [
   "light",
@@ -569,11 +610,15 @@ export const ARMOR_TRAINING_CATEGORIES = [
   "heavy",
   "shield",
 ] as const;
-export const ArmorTrainingCategorySchema = Schema.Literal(
+export const ArmorTrainingCategorySchema = Schema.Literals([
   ...ARMOR_TRAINING_CATEGORIES,
-);
+]);
 
-export const ArmorCategorySchema = Schema.Literal("light", "medium", "heavy");
+export const ArmorCategorySchema = Schema.Literals([
+  "light",
+  "medium",
+  "heavy",
+]);
 
 export const LightArmorAcFormulaSchema = Schema.Struct({
   kind: Schema.Literal("light_dex"),
@@ -590,15 +635,15 @@ export const HeavyArmorAcFormulaSchema = Schema.Struct({
   ac: Schema.Number,
 });
 
-export const ArmorAcFormulaSchema = Schema.Union(
+export const ArmorAcFormulaSchema = Schema.Union([
   LightArmorAcFormulaSchema,
   MediumArmorAcFormulaSchema,
   HeavyArmorAcFormulaSchema,
-);
+]);
 
-export const WeaponCategorySchema = Schema.Literal("simple", "martial");
+export const WeaponCategorySchema = Schema.Literals(["simple", "martial"]);
 
-export const WeaponProficiencySchema = Schema.Union(
+export const WeaponProficiencySchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("weapon_category"),
     category: WeaponProficiencyCategorySchema,
@@ -608,11 +653,11 @@ export const WeaponProficiencySchema = Schema.Union(
     category: WeaponProficiencyCategorySchema,
     anyOfProperties: Schema.NonEmptyArray(WeaponPropertySchema),
   }),
-);
+]);
 
-export const WeaponUsageSchema = Schema.Literal("melee", "ranged");
+export const WeaponUsageSchema = Schema.Literals(["melee", "ranged"]);
 
-export const WeaponDamageSchema = Schema.Union(
+export const WeaponDamageSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("dice"),
     dice: Schema.Number,
@@ -624,7 +669,7 @@ export const WeaponDamageSchema = Schema.Union(
     amount: Schema.Number,
     damageType: DamageTypeSchema,
   }),
-);
+]);
 
 export const WeaponRangeSchema = Schema.Struct({
   normal: Schema.Number,
@@ -633,7 +678,7 @@ export const WeaponRangeSchema = Schema.Struct({
 
 export { AmmunitionKindSchema };
 
-export const WeaponPropertyDetailSchema = Schema.Union(
+export const WeaponPropertyDetailSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("ammunition"),
     range: WeaponRangeSchema,
@@ -653,9 +698,9 @@ export const WeaponPropertyDetailSchema = Schema.Union(
     kind: Schema.Literal("versatile"),
     damage: WeaponDamageSchema,
   }),
-);
+]);
 
-export const WeaponMasteryNameSchema = Schema.Literal(
+export const WeaponMasteryNameSchema = Schema.Literals([
   "cleave",
   "graze",
   "nick",
@@ -664,10 +709,10 @@ export const WeaponMasteryNameSchema = Schema.Literal(
   "slow",
   "topple",
   "vex",
-);
+]);
 
 /* v8 ignore start -- @preserve -- these exported declarative schemas initialize during full-suite collection before V8 attributes their statements; schema-base.test.ts decodes every shape directly */
-export const ProficiencyGrantSubjectSchema = Schema.Union(
+export const ProficiencyGrantSubjectSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("skill"),
     skill: SkillSchema,
@@ -682,7 +727,7 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("tool"),
-    toolId: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+    toolId: surfaceSchemaRole(Schema.Trimmed.check(Schema.isNonEmpty()), {
       category: "projection",
       kind: "derived-reference",
     }),
@@ -691,12 +736,12 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
     kind: Schema.Literal("tool_category"),
     category: ToolProficiencyCategorySchema,
   }),
-);
+]);
 
-export const ToolProficiencyGrantSubjectSchema = Schema.Union(
+export const ToolProficiencyGrantSubjectSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("tool"),
-    toolId: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+    toolId: surfaceSchemaRole(Schema.Trimmed.check(Schema.isNonEmpty()), {
       category: "projection",
       kind: "derived-reference",
     }),
@@ -705,7 +750,7 @@ export const ToolProficiencyGrantSubjectSchema = Schema.Union(
     kind: Schema.Literal("tool_category"),
     category: ToolProficiencyCategorySchema,
   }),
-);
+]);
 
 export const ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema =
   Schema.NonEmptyArray(ProficiencyGrantSubjectSchema);
@@ -713,11 +758,10 @@ export const ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema =
   Schema.NonEmptyArray(ToolProficiencyGrantSubjectSchema);
 
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
 
-export const ClassLevelChoiceCountSchema = Schema.Union(
+export const ClassLevelChoiceCountSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("class_level_additional_choices"),
     initial: PositiveIntegerSchema,
@@ -737,7 +781,7 @@ export const ClassLevelChoiceCountSchema = Schema.Union(
       }),
     ),
   }),
-);
+]);
 
 const ProficiencyGrantChoiceSchema = Schema.Struct({
   count: PositiveIntegerSchema,
@@ -745,7 +789,7 @@ const ProficiencyGrantChoiceSchema = Schema.Struct({
 });
 
 const NamedProficiencyGrantChoiceSchema = Schema.Struct({
-  choiceKey: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+  choiceKey: surfaceSchemaRole(Schema.Trimmed.check(Schema.isNonEmpty()), {
     category: "protocol",
     kind: "choiceKey",
   }),
@@ -753,7 +797,7 @@ const NamedProficiencyGrantChoiceSchema = Schema.Struct({
 });
 /* v8 ignore stop -- @preserve */
 
-export const ProficiencyGrantSchema = Schema.Union(
+export const ProficiencyGrantSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("none"),
   }),
@@ -775,14 +819,14 @@ export const ProficiencyGrantSchema = Schema.Union(
     fixed: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
     choices: Schema.NonEmptyArray(NamedProficiencyGrantChoiceSchema),
   }),
-);
+]);
 
 const ToolProficiencyGrantChoiceSchema = Schema.Struct({
   count: PositiveIntegerSchema,
   options: ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema,
 });
 
-export const ToolProficiencyGrantSchema = Schema.Union(
+export const ToolProficiencyGrantSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("none"),
   }),
@@ -794,30 +838,30 @@ export const ToolProficiencyGrantSchema = Schema.Union(
     kind: Schema.Literal("choice"),
     ...ToolProficiencyGrantChoiceSchema.fields,
   }),
-);
+]);
 
-export const ConditionSchema = Schema.Literal(...SURFACE_CONDITIONS);
+export const ConditionSchema = Schema.Literals(SURFACE_CONDITIONS);
 
 export const ReadonlyNonEmptyArrayConditionSchema =
   Schema.NonEmptyArray(ConditionSchema);
 
-export const AreaShapeSchema = Schema.Literal(
+export const AreaShapeSchema = Schema.Literals([
   "sphere",
   "cone",
   "cube",
   "cylinder",
   "emanation",
   "line",
-);
+]);
 
-export const SenseKindSchema = Schema.Literal(
+export const SenseKindSchema = Schema.Literals([
   "darkvision",
   "blindsight",
   "tremorsense",
   "truesight",
-);
+]);
 
-export const CreatureTypeSchema = Schema.Literal(...CREATURE_TYPES);
+export const CreatureTypeSchema = Schema.Literals(CREATURE_TYPES);
 
 export const ReadonlyNonEmptyArrayCreatureTypeSchema =
   Schema.NonEmptyArray(CreatureTypeSchema);
@@ -858,12 +902,12 @@ export const LinkedSpeedSchema = Schema.Struct({
 });
 
 export const LinkedDamageSchema = Schema.Struct({
-  kind: Schema.Literal("damage_taken", "damage_dealt"),
-  scale: Schema.Literal("full", "half"),
+  kind: Schema.Literals(["damage_taken", "damage_dealt"]),
+  scale: Schema.Literals(["full", "half"]),
 });
 
 export const DiceAmountSchema = Schema.suspend(() =>
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("fixed"),
       expr: DiceExprSchema,
@@ -905,18 +949,18 @@ export const DiceAmountSchema = Schema.suspend(() =>
       kind: Schema.Literal("linked"),
       link: LinkedDamageSchema,
     }),
-  ),
-).annotations({ identifier: "DiceAmount" });
+  ]),
+).pipe(Schema.annotate({ identifier: "DiceAmount" }));
 
-export const SpellAccessModeSchema = Schema.Union(
-  Schema.Literal(
+export const SpellAccessModeSchema = Schema.Union([
+  Schema.Literals([
     "at_will",
     "once_per_long_rest",
     "prepared",
     "prepared_once_per_long_rest",
     "known",
     "known_once_per_long_rest",
-  ),
+  ]),
   Schema.Struct({
     kind: Schema.Literal("charge_cast"),
     baseCharges: Schema.Number,
@@ -924,18 +968,18 @@ export const SpellAccessModeSchema = Schema.Union(
     minLevel: Schema.Number,
     maxLevel: Schema.Number,
   }),
-);
+]);
 
-export const GrantedSpellTargetRestrictionSchema = Schema.Union(
+export const GrantedSpellTargetRestrictionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("self_only"),
   }),
   Schema.Struct({
     kind: Schema.Literal("visible_target_within_feet"),
     feet: Schema.Number,
-    origin: Schema.Literal("caster", "spell_sensor"),
+    origin: Schema.Literals(["caster", "spell_sensor"]),
   }),
-);
+]);
 
 export const GrantedSpellDurationOverrideSchema = Schema.Struct({
   removeConcentration: exactOptional(Schema.Literal(true)),
@@ -949,12 +993,12 @@ export const GrantedSpellDurationOverrideSchema = Schema.Struct({
 });
 
 export const ProvenanceSchema = Schema.Struct({
-  kind: Schema.Literal("srd-5.2.1", "xphb", "synthetic-test"),
+  kind: Schema.Literals(["srd-5.2.1", "xphb", "synthetic-test"]),
   section: surfaceSchemaRole(Schema.String, { category: "provenance" }),
 });
 
 export const UsageLimitSchema = Schema.Struct({
-  kind: Schema.Literal("once_per_turn", "once_per_round"),
+  kind: Schema.Literals(["once_per_turn", "once_per_round"]),
   limitGroup: exactOptional(
     surfaceSchemaRole(Schema.String, {
       category: "protocol",

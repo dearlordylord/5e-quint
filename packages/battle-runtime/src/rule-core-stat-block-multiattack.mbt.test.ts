@@ -33,7 +33,7 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, it } from "vitest";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -335,10 +335,12 @@ function statBlockCreature(input: {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (Either.isLeft(initialized)) {
-    throw new Error(authoredStatBlockBattleInitIssueMessage(initialized.left));
+  if (Result.isFailure(initialized)) {
+    throw new Error(
+      authoredStatBlockBattleInitIssueMessage(initialized.failure),
+    );
   }
-  return initialized.right;
+  return initialized.success;
 }
 
 function multiattackSubject(

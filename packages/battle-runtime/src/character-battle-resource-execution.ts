@@ -10,7 +10,7 @@ import type {
   PointPoolResource,
 } from "@dnd/surface/surface/types";
 import type { ClassName } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import type { BattleResourcePoolExecutionRef } from "./identity.ts";
 import { SORCERER_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
@@ -71,7 +71,7 @@ export type CharacterBattleMetamagicState = {
   readonly spellUseLimit: "one_per_spell_unless_option_allows_stacking";
   readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
 };
-export type PactOfTheChainFindFamiliarInvocationMode = {
+export type CompanionReactionInvocationMode = {
   readonly action: "magicAction";
   readonly resource: "noSpellSlot";
 };
@@ -91,7 +91,7 @@ export type CharacterBattleSpellcastingExecutionState = {
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
-  readonly pactOfTheChainFindFamiliarInvocationMode: PactOfTheChainFindFamiliarInvocationMode | null;
+  readonly pactOfTheChainSpawnedCompanionInvocationMode: CompanionReactionInvocationMode | null;
 };
 export type CharacterBattlePointPoolSpendIssue = {
   readonly tag: "characterBattlePointPoolSpendIssue";
@@ -100,29 +100,29 @@ export type CharacterBattlePointPoolSpendIssue = {
 export function spendCharacterPointPoolResource(input: {
   readonly resource: CharacterBattleResourceState;
   readonly points: ResourceCount;
-}): Either.Either<
+}): Result.Result<
   CharacterBattlePointPoolResourceState,
   CharacterBattlePointPoolSpendIssue
 > {
   if (!characterBattleResourceIsPointPool(input.resource)) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattlePointPoolSpendIssue",
       message: "Only point-pool character battle resources can spend points.",
     });
   }
   if (input.points <= 0) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattlePointPoolSpendIssue",
       message: "Point-pool spending requires a positive point cost.",
     });
   }
   if (input.resource.pointsRemaining < input.points) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattlePointPoolSpendIssue",
       message: "Point-pool resource has insufficient remaining points.",
     });
   }
-  return Either.right({
+  return Result.succeed({
     ...input.resource,
     pointsRemaining: resourceCount(
       Number(input.resource.pointsRemaining) - Number(input.points),

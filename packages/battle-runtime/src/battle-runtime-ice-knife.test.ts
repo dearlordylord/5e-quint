@@ -17,6 +17,7 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSeed,
   combatantId,
   concentrationSavingThrowFill,
@@ -76,27 +77,22 @@ describe("battle runtime: Ice Knife", () => {
     if (wizard === undefined) {
       throw new Error("Expected Wizard.");
     }
-    const state = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(wizardId, {
-        ...wizard,
-        activeEffects: [
-          ...wizard.activeEffects,
-          {
-            kind: "sourceDamageRollPenalty" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("ray_of_enfeeblement"),
-            ),
-            sourceCombatantId: primaryTargetId,
-            amount: { dice: 1 as const, dieSize: 8 as const },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: primaryTargetId,
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: baseState,
+      ownerId: wizardId,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("ray_of_enfeeblement"),
+        ),
+        sourceCombatantId: primaryTargetId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: primaryTargetId,
+        },
+      },
+    });
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
@@ -152,7 +148,11 @@ describe("battle runtime: Ice Knife", () => {
       "sourceDamageRollPenalty.damageRollHoleId",
       attackDamage.holeId,
     );
+    if (!("sourceDamageRollPenalty" in penalty)) {
+      throw new Error("Expected Ray of Enfeeblement damage penalty hole.");
+    }
     const stalePenalty = sourceDamageRollPenaltyRollHole({
+      effectRef: penalty.sourceDamageRollPenalty.effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("ray_of_enfeeblement"),
       ),
@@ -511,7 +511,7 @@ describe("battle runtime: Ice Knife", () => {
       "attackDamageDisposition",
     );
     expect(disposition).toMatchObject({
-      label: "Ice Knife attack damage disposition",
+      label: "Attack-burst initial damage disposition",
       targetId: primaryTargetId,
       choices: expect.arrayContaining([
         {
@@ -691,7 +691,7 @@ describe("battle runtime: Ice Knife", () => {
       "attackDamageDisposition",
     );
     expect(disposition).toMatchObject({
-      label: "Ice Knife burst damage disposition",
+      label: "Attack-burst secondary damage disposition",
       targetId: primaryTargetId,
       choices: expect.arrayContaining([
         {
@@ -792,7 +792,7 @@ describe("battle runtime: Ice Knife", () => {
     });
     expect(invalidAttackDamage).toMatchObject({
       tag: "invalid",
-      message: "Ice Knife damage must use an Ice Knife damage hole.",
+      message: "Attack-burst damage must use its matching damage hole.",
     });
     const missingPrimary = resolveBattleSubject({
       state,
@@ -815,7 +815,8 @@ describe("battle runtime: Ice Knife", () => {
     });
     expect(missingPrimary).toMatchObject({
       tag: "invalid",
-      message: "Ice Knife burst area must include the primary target.",
+      message:
+        "attack-burst damage burst area must include the primary target.",
     });
 
     const wrongOrigin = resolveBattleSubject({
@@ -839,7 +840,8 @@ describe("battle runtime: Ice Knife", () => {
     });
     expect(wrongOrigin).toMatchObject({
       tag: "invalid",
-      message: "Ice Knife burst area must originate from the primary target.",
+      message:
+        "attack-burst damage burst area must originate from the primary target.",
     });
   });
 

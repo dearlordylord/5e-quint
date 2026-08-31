@@ -40,7 +40,7 @@ import {
   rebuildCharacterSheetFixture,
   parseCharacterSheet,
   prayerOfHealingClericBuild,
-  requireRight,
+  requireSuccess,
   resourceCount,
   sorcererFontOfMagicBuild,
   sorcererFontOfMagicLongRestRecoveryTestName,
@@ -79,10 +79,9 @@ describe("Character Sheet runtime / resources", () => {
       ],
     });
 
-    expect(result).toMatchObject({
-      _tag: "Right",
-      right: [{ tag: "layOnHandsHealingPool", expended: 2 }],
-    });
+    expect(requireSuccess(result)).toEqual([
+      { tag: "layOnHandsHealingPool", expended: 2 },
+    ]);
   });
 
   test.each([
@@ -101,7 +100,7 @@ describe("Character Sheet runtime / resources", () => {
       },
     },
   ])("rejects a free-cast spend with an $name", ({ resource }) => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:free-cast-identity-gate"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
@@ -118,15 +117,15 @@ describe("Character Sheet runtime / resources", () => {
         resource,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Spell Access free cast requires matching Spell Access.",
       },
     });
   });
 
   test("projects no Monk-only facts for a non-Monk build", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:synthetic-no-monk-resources"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -135,19 +134,20 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetMonksFocusSaveDc(sheet, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: undefined,
-    });
     expect(
-      characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
-    ).toMatchObject({ _tag: "Right", right: undefined });
+      requireSuccess(characterSheetMonksFocusSaveDc(sheet, unitLibrary)),
+    ).toBeUndefined();
+    expect(
+      requireSuccess(
+        characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
+      ),
+    ).toBeUndefined();
   });
 
   test("projects omitted class-feature resource expenditures as zero from build-derived capacity", () => {
     const cases = [
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-paladin"),
             build: armorClassBuild({ startingClass: "class_paladin" }),
@@ -163,7 +163,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-ranger"),
             build: armorClassBuild({ startingClass: "class_ranger" }),
@@ -181,7 +181,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-druid"),
             build: armorClassBuild({
@@ -207,7 +207,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-monk"),
             build: armorClassBuild({
@@ -227,7 +227,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-sorcerer"),
             build: sorcererFontOfMagicBuild(),
@@ -246,12 +246,60 @@ describe("Character Sheet runtime / resources", () => {
     ];
 
     for (const { sheet, resource } of cases) {
-      expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-        _tag: "Right",
-        right: expect.arrayContaining([expect.objectContaining(resource)]),
-      });
+      expect(
+        requireSuccess(characterSheetResources(sheet, unitLibrary)),
+      ).toEqual(expect.arrayContaining([expect.objectContaining(resource)]));
       expect(sheet.resourceExpenditures).toEqual([]);
     }
+  });
+
+  test("increments a multi-use free-cast expenditure without duplicating it", () => {
+    const sheet = requireSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:ranger-free-cast-spend"),
+        build: armorClassBuild({ startingClass: "class_ranger" }),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const resource = {
+      sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+      spellId: authoredUnitId("hunters_mark"),
+    };
+
+    const once = requireSuccess(
+      spendCharacterSheetSpellAccessFreeCast({
+        sheet,
+        unitLibrary,
+        resource,
+      }),
+    );
+    const twice = requireSuccess(
+      spendCharacterSheetSpellAccessFreeCast({
+        sheet: once,
+        unitLibrary,
+        resource,
+      }),
+    );
+
+    expect(twice.resourceExpenditures).toEqual([
+      {
+        tag: "spellAccessFreeCast",
+        ...resource,
+        expended: resourceCount(2),
+      },
+    ]);
+    expect(characterSheetResources(twice, unitLibrary)).toMatchObject({
+      _tag: "Success",
+      success: [
+        expect.objectContaining({
+          ...resource,
+          count: 2,
+          expended: 2,
+        }),
+      ],
+    });
   });
 
   const overCapacityResourceCases = [
@@ -357,8 +405,8 @@ describe("Character Sheet runtime / resources", () => {
       });
 
       expect(sheet).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Character Sheet resource expenditure cannot exceed build resource capacity.",
         },
@@ -457,8 +505,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: { message: input.message },
+      _tag: "Failure",
+      failure: { message: input.message },
     });
   });
 
@@ -510,14 +558,14 @@ describe("Character Sheet runtime / resources", () => {
       );
 
       expect(sheet).toMatchObject({
-        _tag: "Left",
-        left: { message },
+        _tag: "Failure",
+        failure: { message },
       });
     },
   );
 
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-rest"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
@@ -535,38 +583,36 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: [
-        {
-          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
-          spellId: authoredUnitId("hunters_mark"),
-          count: 2,
-          expended: 1,
-        },
-      ],
-    });
+    expect(
+      requireSuccess(characterSheetResources(spent, unitLibrary)),
+    ).toMatchObject([
+      {
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
+        count: 2,
+        expended: 1,
+      },
+    ]);
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: [
-        {
-          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
-          spellId: authoredUnitId("hunters_mark"),
-          count: 2,
-          expended: 0,
-        },
-      ],
-    });
+    expect(
+      requireSuccess(characterSheetResources(rested, unitLibrary)),
+    ).toMatchObject([
+      {
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
+        count: 2,
+        expended: 0,
+      },
+    ]);
   });
 
   test("Long Rest restores the Paladin's Smite Divine Smite free-cast pool", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-smite-rest"),
         build: armorClassBuild({
@@ -587,9 +633,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
           spellId: authoredUnitId("divine_smite"),
@@ -597,16 +642,17 @@ describe("Character Sheet runtime / resources", () => {
           expended: 1,
         }),
       ]),
-    });
+    );
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(rested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
           spellId: authoredUnitId("divine_smite"),
@@ -614,7 +660,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(monksFocusShortRestRecoveryTestName, () => {
@@ -631,7 +677,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-focus-rest"),
         build: monkBuild,
@@ -648,9 +694,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -659,19 +704,22 @@ describe("Character Sheet runtime / resources", () => {
           resetCadence: { kind: "short_or_long_rest" },
         }),
       ]),
-    });
-    expect(characterSheetMonksFocusSaveDc(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: { unitId: MONK_MONKS_FOCUS_UNIT_ID, dc: 13 },
+    );
+    expect(
+      requireSuccess(characterSheetMonksFocusSaveDc(spent, unitLibrary)),
+    ).toMatchObject({
+      unitId: MONK_MONKS_FOCUS_UNIT_ID,
+      dc: 13,
     });
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
 
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -679,16 +727,17 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -696,7 +745,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererFontOfMagicLongRestRecoveryTestName, () => {
@@ -713,7 +762,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-rest"),
         build: sorcererBuild,
@@ -730,9 +779,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -745,16 +793,17 @@ describe("Character Sheet runtime / resources", () => {
           resetCadence: { kind: "long_rest" },
         }),
       ]),
-    });
+    );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -762,14 +811,14 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererSorcerousRestorationShortRestRecoveryTestName, () => {
     const sorcererBuild = sorcererFontOfMagicBuild({
       sorcererAdvancements: 4,
     });
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:sorcerer-sorcerous-restoration",
@@ -788,9 +837,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -799,9 +847,9 @@ describe("Character Sheet runtime / resources", () => {
           resetCadence: { kind: "long_rest" },
         }),
       ]),
-    });
+    );
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({
         sheet: spent,
         unitLibrary,
@@ -822,12 +870,13 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "sorcerousRestoration", usedSinceLongRest: true },
     ]);
     expect(
-      requireRight(parseCharacterSheet(shortRested, unitLibrary))
+      requireSuccess(parseCharacterSheet(shortRested, unitLibrary))
         .restFeatureUses,
     ).toEqual(shortRested.restFeatureUses);
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -835,7 +884,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 2,
         }),
       ]),
-    });
+    );
 
     expect(
       completeShortRest({
@@ -846,8 +895,8 @@ describe("Character Sheet runtime / resources", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Sorcerous Restoration cannot be used again until a Long Rest.",
       },
@@ -861,14 +910,14 @@ describe("Character Sheet runtime / resources", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Sorcerous Restoration cannot recover more than half Sorcerer level rounded down.",
       },
     });
 
-    const lowerLevelSpent = requireRight(
+    const lowerLevelSpent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:sorcerer-no-sorcerous-restoration",
@@ -896,21 +945,22 @@ describe("Character Sheet runtime / resources", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Sorcerous Restoration requires the Sorcerer level 5 feature.",
       },
     });
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(longRested.restFeatureUses).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -918,7 +968,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(uncannyMetabolismLongRestUseStateTestName, () => {
@@ -926,7 +976,7 @@ describe("Character Sheet runtime / resources", () => {
       startingClass: "class_monk",
       advancements: ["class_monk"],
     });
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-used"),
         build: monkBuild,
@@ -950,35 +1000,33 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(
-      characterSheetMonkUncannyMetabolismUseState(spent, unitLibrary),
+      requireSuccess(
+        characterSheetMonkUncannyMetabolismUseState(spent, unitLibrary),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
-        trigger: "roll_initiative",
-        optional: true,
-        oncePerLongRestUse: {
-          resetCadence: { kind: "long_rest" },
-        },
-        focusRecovery: {
-          resourceUnitId: MONK_MONKS_FOCUS_UNIT_ID,
-          recoversAllExpended: true,
-        },
-        healing: {
-          target: "self",
-          martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
-          martialArtsDie: {
-            dice: 1,
-            dieSize: 6,
-          },
-          monkLevelBonus: 2,
-        },
-        usedSinceLongRest: true,
+      unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+      trigger: "roll_initiative",
+      optional: true,
+      oncePerLongRestUse: {
+        resetCadence: { kind: "long_rest" },
       },
+      focusRecovery: {
+        resourceUnitId: MONK_MONKS_FOCUS_UNIT_ID,
+        recoversAllExpended: true,
+      },
+      healing: {
+        target: "self",
+        martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
+        martialArtsDie: {
+          dice: 1,
+          dieSize: 6,
+        },
+        monkLevelBonus: 2,
+      },
+      usedSinceLongRest: true,
     });
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -986,39 +1034,39 @@ describe("Character Sheet runtime / resources", () => {
           expended: 2,
         }),
       ]),
-    });
+    );
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
 
     expect(shortRested.restFeatureUses).toEqual([
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
           expended: 0,
         }),
       ]),
-    });
+    );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
 
     expect(longRested.restFeatureUses).toEqual([]);
     expect(
-      characterSheetMonkUncannyMetabolismUseState(longRested, unitLibrary),
+      requireSuccess(
+        characterSheetMonkUncannyMetabolismUseState(longRested, unitLibrary),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
-        usedSinceLongRest: false,
-      },
+      unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+      usedSinceLongRest: false,
     });
   });
 
@@ -1027,7 +1075,7 @@ describe("Character Sheet runtime / resources", () => {
       startingClass: "class_monk",
       advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
     });
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-initiative"),
         build: monkBuild,
@@ -1044,7 +1092,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    const recovered = requireRight(
+    const recovered = requireSuccess(
       useMonkUncannyMetabolismWhenRollingInitiative({
         sheet: spent,
         unitLibrary,
@@ -1059,20 +1107,20 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
     expect(
-      characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
+      requireSuccess(
+        characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        healing: {
-          martialArtsDie: { dice: 1, dieSize: 8 },
-          monkLevelBonus: 5,
-        },
-        usedSinceLongRest: true,
+      healing: {
+        martialArtsDie: { dice: 1, dieSize: 8 },
+        monkLevelBonus: 5,
       },
+      usedSinceLongRest: true,
     });
-    expect(characterSheetResources(recovered, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(recovered, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -1080,9 +1128,9 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
 
-    const nearMaximum = requireRight(
+    const nearMaximum = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-cap"),
         build: monkBuild,
@@ -1099,7 +1147,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    const capped = requireRight(
+    const capped = requireSuccess(
       useMonkUncannyMetabolismWhenRollingInitiative({
         sheet: nearMaximum,
         unitLibrary,
@@ -1119,7 +1167,7 @@ describe("Character Sheet runtime / resources", () => {
       startingClass: "class_monk",
       advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
     });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-gates"),
         build: monkBuild,
@@ -1136,13 +1184,13 @@ describe("Character Sheet runtime / resources", () => {
         martialArtsRoll: DieRollResult(9),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism Martial Arts die roll must be within d8.",
       },
     });
 
-    const used = requireRight(
+    const used = requireSuccess(
       useMonkUncannyMetabolismWhenRollingInitiative({
         sheet,
         unitLibrary,
@@ -1156,8 +1204,8 @@ describe("Character Sheet runtime / resources", () => {
         martialArtsRoll: DieRollResult(4),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism cannot be used again until a Long Rest.",
       },
     });
@@ -1179,8 +1227,8 @@ describe("Character Sheet runtime / resources", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Uncanny Metabolism rest feature use requires the Monk Uncanny Metabolism feature.",
       },

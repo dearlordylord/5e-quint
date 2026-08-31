@@ -70,6 +70,31 @@ describe("OAuth smoke assertions", () => {
       authorizeExistingBrowserSession(existingSessionInput()),
     ).rejects.toThrow("did not return an authorization code");
   });
+
+  test("keeps omitted token-response keys absent", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        Response.json({
+          redirect: true,
+          url: "https://chatgpt.com/oauth/callback?code=authorization-code",
+        }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          access_token: "access-token",
+          expires_in: 60,
+          scope: "openid email play-sessions",
+          token_type: "Bearer",
+        }),
+      );
+
+    const tokens = await authorizeExistingBrowserSession(
+      existingSessionInput(),
+    );
+
+    expect(tokens).not.toHaveProperty("id_token");
+    expect(tokens).not.toHaveProperty("refresh_token");
+  });
 });
 
 function authorizationInput() {

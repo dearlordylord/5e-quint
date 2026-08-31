@@ -4,8 +4,7 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { ClassName } from "@dnd/surface/surface/types";
-import { Brand, Either } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { Brand, Result } from "effect";
 
 export type CharacterBattleClassLevelInit = {
   readonly className: ClassName;
@@ -32,7 +31,7 @@ export type CharacterBattleClassLevelsIssue = {
 
 export function parseCharacterBattleClassLevels(
   classLevels: CharacterBattleClassLevelInits,
-): Either.Either<CharacterBattleClassLevels, CharacterBattleClassLevelsIssue> {
+): Result.Result<CharacterBattleClassLevels, CharacterBattleClassLevelsIssue> {
   const messages: string[] = [];
   const seenClassNames = new Set<ClassName>();
   for (const classLevel of classLevels) {
@@ -60,13 +59,13 @@ export function parseCharacterBattleClassLevels(
     messages.push("Total character level must not exceed 20.");
   }
   if (isNonEmptyReadonlyArray(messages)) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattleClassLevelsIssue",
       messages,
     });
   }
   const [firstClassLevel, ...remainingClassLevels] = classLevels;
-  return Either.right(
+  return Result.succeed(
     CharacterBattleClassLevels([
       {
         className: firstClassLevel.className,
@@ -78,6 +77,12 @@ export function parseCharacterBattleClassLevels(
       })),
     ]),
   );
+}
+
+function isNonEmptyReadonlyArray<T>(
+  values: readonly T[],
+): values is ReadonlyNonEmptyArray<T> {
+  return values.length > 0;
 }
 
 export function characterBattleLevel(

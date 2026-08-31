@@ -52,7 +52,54 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleStateWithAllocatedEffectOccurrencesForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
+
+function stateWithAllocatedObjectLight(input: {
+  readonly state: BattleState;
+  readonly sourceSpellLevel: number;
+  readonly emitter: Omit<
+    BattleTrackedOngoingSpellLightEmitter,
+    "effectRef" | "sourceSpellLevel"
+  > & {
+    readonly attachment: Extract<
+      BattleTrackedOngoingSpellLightEmitter["attachment"],
+      { readonly kind: "object" }
+    >;
+  };
+}): BattleState {
+  const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
+  if (sourceSpellLevel === null) {
+    throw new Error("Expected a supported object-light spell level.");
+  }
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: input.state,
+    occurrences: [
+      {
+        kind: "storedLightEmitter",
+        ownerId: input.emitter.sourceCombatantId,
+        emitter: {
+          ...input.emitter,
+          sourceSpellLevel,
+        },
+      },
+    ],
+  }).state;
+}
+
+function objectLightFixtureSourceEffectId(input: {
+  readonly sourceProcedureRef: BattleTrackedOngoingSpellLightEmitter["sourceProcedureRef"];
+  readonly objectId: Extract<
+    BattleTrackedOngoingSpellLightEmitter["attachment"],
+    { readonly kind: "object" }
+  >["objectId"];
+}) {
+  return battleSpellEffectOccurrenceId(
+    `${spellCasterId}:${input.sourceProcedureRef}:${input.objectId}:fixture`,
+  );
+}
 
 function distantMetamagicOption(): CharacterBattleMetamagicOptionFact {
   return {
@@ -468,30 +515,34 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       spellCasterId,
       cantripSpellInvocationRef(lightUnitId, "objectLight"),
     );
-    const state = {
-      ...baseSession.state,
-      lightEmitters: [
-        {
-          kind: "spellLightEmitter" as const,
+    const staleObjectId = battleObjectId("unit-profile-light-stale");
+    const state = stateWithAllocatedObjectLight({
+      state: baseSession.state,
+      sourceSpellLevel: 0,
+      emitter: {
+        kind: "spellLightEmitter" as const,
+        sourceProcedureRef: procedureRef,
+        sourceCombatantId: spellCasterId,
+        sourceEffectId: objectLightFixtureSourceEffectId({
           sourceProcedureRef: procedureRef,
-          sourceCombatantId: spellCasterId,
-          attachment: {
-            kind: "object" as const,
-            objectId: battleObjectId("unit-profile-light-stale"),
-          },
-          emission: {
-            kind: "brightAndDim" as const,
-            brightRadiusFeet: movementFeet(20),
-            dimAdditionalFeet: movementFeet(20),
-          },
-          opaqueCoverInteraction: { kind: "blocksEmission" as const },
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(1),
-          },
+          objectId: staleObjectId,
+        }),
+        attachment: {
+          kind: "object" as const,
+          objectId: staleObjectId,
         },
-      ],
-    };
+        emission: {
+          kind: "brightAndDim" as const,
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+        opaqueCoverInteraction: { kind: "blocksEmission" as const },
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(1),
+        },
+      },
+    });
     const act = spellAct({ session: baseSession, spellId: lightUnitId });
     const objectId = battleObjectId("unit-profile-light-recast");
 
@@ -734,24 +785,27 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       spellCasterId,
       spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
     );
-    const state: BattleState = {
-      ...baseSession.state,
-      lightEmitters: [
-        {
-          kind: "spellLightEmitter",
+    const state = stateWithAllocatedObjectLight({
+      state: baseSession.state,
+      sourceSpellLevel: 2,
+      emitter: {
+        kind: "spellLightEmitter",
+        sourceProcedureRef: procedureRef,
+        sourceCombatantId: spellCasterId,
+        sourceEffectId: objectLightFixtureSourceEffectId({
           sourceProcedureRef: procedureRef,
-          sourceCombatantId: spellCasterId,
-          attachment: { kind: "object", objectId: priorObjectId },
-          emission: {
-            kind: "brightAndDim",
-            brightRadiusFeet: movementFeet(20),
-            dimAdditionalFeet: movementFeet(20),
-          },
-          opaqueCoverInteraction: { kind: "blocksEmission" },
-          expiresAt: { kind: "untilDispelled" },
+          objectId: priorObjectId,
+        }),
+        attachment: { kind: "object", objectId: priorObjectId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
         },
-      ],
-    };
+        opaqueCoverInteraction: { kind: "blocksEmission" },
+        expiresAt: { kind: "untilDispelled" },
+      },
+    });
     const act = spellAct({
       session: baseSession,
       spellId: continualFlameUnitId,
@@ -800,30 +854,34 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       spellCasterId,
       cantripSpellInvocationRef(lightUnitId, "objectLight"),
     );
-    const twoRoundsRemaining: BattleState = {
-      ...session.state,
-      lightEmitters: [
-        {
-          kind: "spellLightEmitter",
+    const objectId = battleObjectId("unit-profile-light-expiring");
+    const twoRoundsRemaining = stateWithAllocatedObjectLight({
+      state: session.state,
+      sourceSpellLevel: 0,
+      emitter: {
+        kind: "spellLightEmitter",
+        sourceProcedureRef: procedureRef,
+        sourceCombatantId: spellCasterId,
+        sourceEffectId: objectLightFixtureSourceEffectId({
           sourceProcedureRef: procedureRef,
-          sourceCombatantId: spellCasterId,
-          attachment: {
-            kind: "object",
-            objectId: battleObjectId("unit-profile-light-expiring"),
-          },
-          emission: {
-            kind: "brightAndDim",
-            brightRadiusFeet: movementFeet(20),
-            dimAdditionalFeet: movementFeet(20),
-          },
-          opaqueCoverInteraction: { kind: "blocksEmission" },
-          expiresAt: {
-            kind: "duration",
-            durationTicks: elapsedTimeTicks(2),
-          },
+          objectId,
+        }),
+        attachment: {
+          kind: "object",
+          objectId,
         },
-      ],
-    };
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+        opaqueCoverInteraction: { kind: "blocksEmission" },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(2),
+        },
+      },
+    });
 
     const sameRound = resolveBattleSubject({
       state: twoRoundsRemaining,
@@ -903,24 +961,27 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
     );
     const objectId = battleObjectId("unit-profile-continual-flame-persistent");
-    const ongoingFlame: BattleState = {
-      ...session.state,
-      lightEmitters: [
-        {
-          kind: "spellLightEmitter",
+    const ongoingFlame = stateWithAllocatedObjectLight({
+      state: session.state,
+      sourceSpellLevel: 2,
+      emitter: {
+        kind: "spellLightEmitter",
+        sourceProcedureRef: procedureRef,
+        sourceCombatantId: spellCasterId,
+        sourceEffectId: objectLightFixtureSourceEffectId({
           sourceProcedureRef: procedureRef,
-          sourceCombatantId: spellCasterId,
-          attachment: { kind: "object", objectId },
-          emission: {
-            kind: "brightAndDim",
-            brightRadiusFeet: movementFeet(20),
-            dimAdditionalFeet: movementFeet(20),
-          },
-          opaqueCoverInteraction: { kind: "blocksEmission" },
-          expiresAt: { kind: "untilDispelled" },
+          objectId,
+        }),
+        attachment: { kind: "object", objectId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
         },
-      ],
-    };
+        opaqueCoverInteraction: { kind: "blocksEmission" },
+        expiresAt: { kind: "untilDispelled" },
+      },
+    });
 
     const sameRound = resolveBattleSubject({
       state: ongoingFlame,
@@ -974,26 +1035,24 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       `${spellCasterId}:${procedureRef}:${objectId}:object-light:1`,
     );
     const sourceSpellLevel = testBattleSpellEffectLevel(2);
-    const state: BattleState = {
-      ...baseSession.state,
-      lightEmitters: [
-        {
-          kind: "spellLightEmitter",
-          sourceProcedureRef: procedureRef,
-          sourceCombatantId: spellCasterId,
-          sourceEffectId: priorSourceEffectId,
-          sourceSpellLevel,
-          attachment: { kind: "object", objectId },
-          emission: {
-            kind: "brightAndDim",
-            brightRadiusFeet: movementFeet(20),
-            dimAdditionalFeet: movementFeet(20),
-          },
-          opaqueCoverInteraction: { kind: "blocksEmission" },
-          expiresAt: { kind: "untilDispelled" },
+    const state = stateWithAllocatedObjectLight({
+      state: baseSession.state,
+      sourceSpellLevel: 2,
+      emitter: {
+        kind: "spellLightEmitter",
+        sourceProcedureRef: procedureRef,
+        sourceCombatantId: spellCasterId,
+        sourceEffectId: priorSourceEffectId,
+        attachment: { kind: "object", objectId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
         },
-      ],
-    };
+        opaqueCoverInteraction: { kind: "blocksEmission" },
+        expiresAt: { kind: "untilDispelled" },
+      },
+    });
     const act = spellAct({
       session: baseSession,
       spellId: continualFlameUnitId,

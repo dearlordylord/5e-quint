@@ -29,8 +29,8 @@ import {
   canSpendUnarmedStrikeActionResource,
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
-import * as Either from "effect/Either";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
+import { Result } from "effect";
 import type {
   BattleMovementSpeedKind,
   BattleSubject,
@@ -38,18 +38,18 @@ import type {
 } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
 import {
-  findFamiliarCompanionEntryForOwner,
-  isPresentFindFamiliarCombatant,
-} from "../find-familiar-state.ts";
-import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-facts.ts";
+  spawnedCompanionEntryForOwner,
+  isPresentSpawnedCompanionCombatant,
+} from "../spawned-companion-state.ts";
+import { combatantHasPactOfTheChainSpawnedCompanion } from "../companion-reaction-feature-facts.ts";
 import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
 import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
   companionReappearancePlacementHole,
-  findFamiliarConnectionHole,
-  findFamiliarTouchDeliveryTargetHoles,
-} from "../find-familiar-companion-subjects.ts";
+  spawnedCompanionConnectionHole,
+  spawnedCompanionTouchDeliveryTargetHoles,
+} from "../companion-subjects.ts";
 import {
   attackActionOptionsForActor,
   martialArtsBonusUnarmedStrikeActionOptionForActor,
@@ -61,10 +61,10 @@ import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { helpAttackAllyChoices, helpAttackAllyHole } from "./help-attack.ts";
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
 import {
-  activeLevitatedCreatureTargetsControlledBy,
-  levitateAltitudeChangeHole,
-} from "./levitate-creature.ts";
-import { dragonsBreathExhaleActs } from "./dragons-breath-discovery.ts";
+  activeControlledVerticalSuspensionTargetsControlledBy,
+  controlledVerticalSuspensionAltitudeChangeHole,
+} from "./controlled-vertical-suspension.ts";
+import { grantedAreaSaveDamageActionActs } from "./granted-area-save-damage-discovery.ts";
 import {
   combatantCanTakeActions,
   combatantCanTakeReactions,
@@ -82,11 +82,11 @@ import {
   grappleTargetHole,
   hiddenSearchTargetChoices,
   hideAbilityCheckHole,
-  hypnoticPatternShakeAwakeTargetHole,
+  saveGatedAreaControlShakeAwakeTargetHole,
   searchTargetHole,
   shoveTargetChoices,
   shoveTargetHole,
-  sleepShakeAwakeTargetHole,
+  hitPointBudgetConditionShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 import {
   combatantCanMoveInState,
@@ -94,17 +94,17 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 import {
-  hypnoticPatternShakeAwakeTargetChoices,
+  saveGatedAreaControlShakeAwakeTargetChoices,
   protectionRelevantEffectSavingThrowOutcomeHole,
   protectionRelevantEffectsForTarget,
-  sleepShakeAwakeTargetChoices,
+  hitPointBudgetConditionShakeAwakeTargetChoices,
   spellRestraintEffectEntries,
 } from "./spell-condition-effects-helpers.ts";
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
@@ -113,27 +113,35 @@ import {
   statBlockAttackActionOptions,
 } from "../stat-block-execution-state.ts";
 import {
-  greaseGroundHazardSavingThrowOutcomeHole,
-  webRestraintSavingThrowOutcomeHole,
-  gustOfWindLineDirectionChoiceHole,
-  gustOfWindLineSavingThrowOutcomeHole,
-  flamingSphereRamMovementHole,
-  flamingSphereRepositionMovementHole,
-  flamingSphereSavingThrowOutcomeHole,
-  moonbeamSavingThrowOutcomeHole,
-  moonbeamRepositionMovementHole,
-  type GreaseGroundHazardEffect,
-  type WebRestraintHazardEffect,
-  type GustOfWindLineEffect,
-  type FlamingSphereEffect,
-  type MoonbeamEffect,
+  persistentAreaSaveConditionSavingThrowOutcomeHole,
+  persistentAreaSaveConditionEscapeSavingThrowOutcomeHole,
+  directionalPersistentAreaDirectionChoiceHole,
+  directionalPersistentAreaSavingThrowOutcomeHole,
+  ramMovablePersistentAreaRamMovementHole,
+  ramMovablePersistentAreaRepositionMovementHole,
+  ramMovablePersistentAreaSavingThrowOutcomeHole,
+  movablePersistentAreaSavingThrowOutcomeHole,
+  movablePersistentAreaRepositionMovementHole,
+  type PersistentAreaSaveConditionEffect,
+  type PersistentAreaSaveConditionEscapeEffect,
+  type DirectionalPersistentAreaEffect,
+  type RamMovablePersistentAreaEffect,
+  type MovablePersistentAreaEffect,
 } from "./persistent-spatial-spell-discovery.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
+import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
+import {
+  boundDirectionalPersistentAreaEffect,
+  boundPersistentAreaSaveConditionEffect,
+  boundPersistentAreaSaveConditionEscapeEffect,
+} from "./persistent-spell-area-binding.ts";
+import { boundFixedCostMovementReplacementEffect } from "./spell-modifier-binding.ts";
 import {
   canonicalHeldObjectIdsForActor,
-  commandDropHeldObjectFactsHole,
-  commandPendingEffectsForActor,
-  type CommandPendingEffect,
-} from "./command-procedure-discovery.ts";
+  executeCompelledDropHeldObjectFactsHole,
+  compelledNextTurnBehaviorEffectsForActor,
+  type CompelledNextTurnBehaviorEffect,
+} from "./compelled-behavior-discovery.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
@@ -147,10 +155,11 @@ import {
 import { supportedUnitFeatureActs } from "./unit-feature-discovery.ts";
 import { monkFocusActs } from "./monk-focus-discovery.ts";
 import {
-  isWardingBondEffect,
-  wardingBondSeparationFactsHole,
-} from "./warding-bond.ts";
+  isLinkedDefenseResistanceDamageShareEffect,
+  linkedDefenseResistanceDamageShareSeparationFactsHole,
+} from "./linked-defense-damage-share.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
+import { areaWindStrengthHole } from "./area-wind-strength.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -172,13 +181,16 @@ import type {
 } from "../battle-state-execution.ts";
 import type { SelfTransformationModeKind } from "./domain-constants.ts";
 
-type FogCloudObscurementEffect = Extract<
+type EnvironmentEndedPersistentAreaTraitEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "fogCloudObscurement" }
+  { readonly kind: "persistentAreaTrait" }
 >;
-type CloudkillAreaHazardEffect = Extract<
+type EnvironmentEndedPersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "cloudkillAreaHazard" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: "sourceTurnTranslation";
+  }
 >;
 export function discoverBattleActCandidatesWithExecutionRegistry(
   state: BattleState,
@@ -211,48 +223,48 @@ function discoverBattleActCandidatesInternal(
   );
 }
 
-function commandPendingActs(input: {
+function compelledBehaviorPendingActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly tableEventActs: readonly BattleActDiscoveryCandidate[];
-  readonly startTurnWebActs: readonly BattleActDiscoveryCandidate[];
+  readonly startTurnAreaControlActs: readonly BattleActDiscoveryCandidate[];
 }): readonly BattleActDiscoveryCandidate[] | null {
-  const pendingEffects = commandPendingEffectsForActor(
+  const pendingEffects = compelledNextTurnBehaviorEffectsForActor(
     input.state,
     input.actorId,
   );
-  const commandActs = (
+  const compelledBehaviorEffects = (
     option: Extract<
       (typeof pendingEffects)[number]["option"],
       "grovel" | "drop" | "approach" | "flee"
     >,
   ) => pendingEffects.filter((effect) => effect.option === option);
-  const commandGrovelEffects = commandActs("grovel");
-  if (commandGrovelEffects.length > 0) {
+  const grovelEffects = compelledBehaviorEffects("grovel");
+  if (grovelEffects.length > 0) {
     return [
       ...input.tableEventActs,
-      ...input.startTurnWebActs,
-      ...commandGrovelEffects.map((effect) => ({
+      ...input.startTurnAreaControlActs,
+      ...grovelEffects.map((effect) => ({
         subject: {
           tag: "runtimeCommand" as const,
           actorId: input.actorId,
-          command: "commandGrovel" as const,
+          command: "executeCompelledGrovel" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
         initialHoles: [],
       })),
     ];
   }
-  const commandDropEffects = commandActs("drop");
-  if (commandDropEffects.length > 0) {
+  const dropEffects = compelledBehaviorEffects("drop");
+  if (dropEffects.length > 0) {
     return [
       ...input.tableEventActs,
-      ...input.startTurnWebActs,
-      ...commandDropEffects.map((effect) => {
+      ...input.startTurnAreaControlActs,
+      ...dropEffects.map((effect) => {
         const subject = {
           tag: "runtimeCommand" as const,
           actorId: input.actorId,
-          command: "commandDrop" as const,
+          command: "executeCompelledDrop" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         };
         const canonicalObjectIds = canonicalHeldObjectIdsForActor(
@@ -263,43 +275,43 @@ function commandPendingActs(input: {
           subject,
           initialHoles:
             canonicalObjectIds === null
-              ? [commandDropHeldObjectFactsHole(subject)]
+              ? [executeCompelledDropHeldObjectFactsHole(subject)]
               : [],
         };
       }),
     ];
   }
-  const commandApproachEffects = commandActs("approach");
-  if (commandApproachEffects.length > 0) {
-    return commandMovementActs(input, commandApproachEffects, "approach");
+  const approachEffects = compelledBehaviorEffects("approach");
+  if (approachEffects.length > 0) {
+    return compelledMovementActs(input, approachEffects, "approach");
   }
-  const commandFleeEffects = commandActs("flee");
-  return commandFleeEffects.length > 0
-    ? commandMovementActs(input, commandFleeEffects, "flee")
+  const fleeEffects = compelledBehaviorEffects("flee");
+  return fleeEffects.length > 0
+    ? compelledMovementActs(input, fleeEffects, "flee")
     : null;
 }
 
-function commandMovementActs(
+function compelledMovementActs(
   input: {
     readonly state: BattleState;
     readonly actorId: CombatantId;
     readonly tableEventActs: readonly BattleActDiscoveryCandidate[];
-    readonly startTurnWebActs: readonly BattleActDiscoveryCandidate[];
+    readonly startTurnAreaControlActs: readonly BattleActDiscoveryCandidate[];
   },
-  effects: readonly CommandPendingEffect[],
-  command: "approach" | "flee",
+  effects: readonly CompelledNextTurnBehaviorEffect[],
+  option: "approach" | "flee",
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     ...input.tableEventActs,
-    ...input.startTurnWebActs,
+    ...input.startTurnAreaControlActs,
     ...effects.map((effect) => ({
       subject: {
         tag: "runtimeCommand" as const,
         actorId: input.actorId,
         command:
-          command === "approach"
-            ? ("commandApproach" as const)
-            : ("commandFlee" as const),
+          option === "approach"
+            ? ("executeCompelledApproach" as const)
+            : ("executeCompelledFlee" as const),
         effectRef: spellActiveEffectExecutionRef(effect),
       },
       initialHoles: combatantCanMoveInState(input.state, input.actorId)
@@ -309,26 +321,44 @@ function commandMovementActs(
   ];
 }
 
-function commandHaltActs(input: {
+function compelledHaltActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly acts: BattleActDiscoveryCandidate[];
-  readonly startTurnWebActs: readonly BattleActDiscoveryCandidate[];
+  readonly startTurnAreaControlActs: readonly BattleActDiscoveryCandidate[];
 }): readonly BattleActDiscoveryCandidate[] | null {
-  if (input.state.currentTurnResources.commandHalt === null) return null;
-  input.acts.push(...input.startTurnWebActs);
-  input.acts.push(...greaseGroundHazardEndTurnActs(input.state, input.actorId));
-  input.acts.push(...gustOfWindLineEndTurnSaveActs(input.state, input.actorId));
-  input.acts.push(...flamingSphereEndTurnSaveActs(input.state, input.actorId));
-  input.acts.push(...moonbeamEndTurnSaveActs(input.state, input.actorId));
+  if (input.state.currentTurnResources.compelledHalt === null) return null;
+  input.acts.push(...input.startTurnAreaControlActs);
   input.acts.push(
-    ...fogCloudStrongWindDispersalActs(input.state, input.actorId),
+    ...persistentAreaSaveConditionEndTurnActs(input.state, input.actorId),
   );
   input.acts.push(
-    ...cloudkillStrongWindDispersalActs(input.state, input.actorId),
+    ...directionalPersistentAreaEndTurnSaveActs(input.state, input.actorId),
   );
-  input.acts.push(...webAreaRemovalActs(input.state, input.actorId));
-  input.acts.push(...wardingBondSeparationActs(input.state, input.actorId));
+  input.acts.push(
+    ...ramMovablePersistentAreaEndTurnSaveActs(input.state, input.actorId),
+  );
+  input.acts.push(
+    ...movablePersistentAreaEndTurnSaveActs(input.state, input.actorId),
+  );
+  input.acts.push(
+    ...environmentEndedPersistentAreaTraitActs(input.state, input.actorId),
+  );
+  input.acts.push(
+    ...environmentEndedPersistentAreaSaveDamageActs(input.state, input.actorId),
+  );
+  input.acts.push(
+    ...persistentAreaSaveConditionEscapeAreaRemovalActs(
+      input.state,
+      input.actorId,
+    ),
+  );
+  input.acts.push(
+    ...linkedDefenseResistanceDamageShareSeparationActs(
+      input.state,
+      input.actorId,
+    ),
+  );
   input.acts.push(endTurnAct(input.actorId));
   input.acts.push(...readiedSpellReleaseActs(input.state, input.actorId));
   input.acts.push(...discoverLegendaryActionActs(input.state));
@@ -400,35 +430,36 @@ function discoverBattleActsWithoutRouteEvents(
   if (!state.combatants.has(actorId)) {
     return acts;
   }
-  const startTurnWebActs = webRestraintStartTurnSaveActs(state, actorId);
-  const commandActs = commandPendingActs({
+  const startTurnAreaControlActs =
+    persistentAreaSaveConditionEscapeStartTurnSaveActs(state, actorId);
+  const compelledActs = compelledBehaviorPendingActs({
     state,
     actorId,
     tableEventActs,
-    startTurnWebActs,
+    startTurnAreaControlActs,
   });
-  if (commandActs !== null) return commandActs;
-  const haltedActs = commandHaltActs({
+  if (compelledActs !== null) return compelledActs;
+  const haltedActs = compelledHaltActs({
     state,
     actorId,
     acts,
-    startTurnWebActs,
+    startTurnAreaControlActs,
   });
   if (haltedActs !== null) return haltedActs;
-  acts.push(...startTurnWebActs);
+  acts.push(...startTurnAreaControlActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
-  acts.push(...levitateAltitudeControlActs(state, actorId));
-  if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
-    acts.push(...dragonsBreathExhaleActs(state, actorId));
+  acts.push(...controlledVerticalSuspensionAltitudeControlActs(state, actorId));
+  if (!combatantInsideActiveMagicSuppressionEmanation(state, actorId)) {
+    acts.push(...grantedAreaSaveDamageActionActs(state, actorId));
   }
   appendOrdinaryAttackActs(state, actorId, acts);
-  acts.push(...pactOfTheChainFamiliarAttackActs(state, actorId));
+  acts.push(...companionAttackActs(state, actorId));
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));
-    acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
-    acts.push(...gustOfWindLineEndTurnSaveActs(state, actorId));
-    acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
-    acts.push(...moonbeamEndTurnSaveActs(state, actorId));
+    acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
+    acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
+    acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
+    acts.push(...movablePersistentAreaEndTurnSaveActs(state, actorId));
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
       initialHoles: [],
@@ -473,25 +504,31 @@ function discoverBattleActsWithoutRouteEvents(
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     hasTurnActionResource(state.currentTurnResources) &&
-    sleepShakeAwakeTargetChoices(state, actorId).length > 0
-  ) {
-    acts.push({
-      subject: { tag: "action", actorId, action: "shakeAwakeFromSleep" },
-      initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
-    });
-  }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    hasTurnActionResource(state.currentTurnResources) &&
-    hypnoticPatternShakeAwakeTargetChoices(state, actorId).length > 0
+    hitPointBudgetConditionShakeAwakeTargetChoices(state, actorId).length > 0
   ) {
     acts.push({
       subject: {
         tag: "action",
         actorId,
-        action: "shakeAwakeFromHypnoticPattern",
+        action: "shakeAwakeFromStagedCondition",
       },
-      initialHoles: [hypnoticPatternShakeAwakeTargetHole(state, actorId)],
+      initialHoles: [
+        hitPointBudgetConditionShakeAwakeTargetHole(state, actorId),
+      ],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    hasTurnActionResource(state.currentTurnResources) &&
+    saveGatedAreaControlShakeAwakeTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: {
+        tag: "action",
+        actorId,
+        action: "shakeAwakeFromAreaControl",
+      },
+      initialHoles: [saveGatedAreaControlShakeAwakeTargetHole(state, actorId)],
     });
   }
   if (
@@ -517,7 +554,7 @@ function discoverBattleActsWithoutRouteEvents(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !isPresentFindFamiliarCombatant(state, actorId) &&
+    !isPresentSpawnedCompanionCombatant(state, actorId) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendUnarmedStrikeActionResource(state.currentTurnResources) &&
     grappleTargetChoices(state, actorId).length > 0
@@ -529,7 +566,7 @@ function discoverBattleActsWithoutRouteEvents(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !isPresentFindFamiliarCombatant(state, actorId) &&
+    !isPresentSpawnedCompanionCombatant(state, actorId) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendUnarmedStrikeActionResource(state.currentTurnResources) &&
     shoveTargetChoices(state, actorId).length > 0
@@ -633,15 +670,15 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...companionProtocolActs(state, actorId, spellActs));
   acts.push(...spellActs);
   acts.push(...spellCreatedHeldObjectReleaseActs(state, actorId));
-  acts.push(...flamingSphereRepositionActs(state, actorId));
-  acts.push(...flamingSphereRamActs(state, actorId));
-  acts.push(...moonbeamRepositionActs(state, actorId));
-  acts.push(...gustOfWindLineDirectionChangeActs(state, actorId));
+  acts.push(...ramMovablePersistentAreaRepositionActs(state, actorId));
+  acts.push(...ramMovablePersistentAreaRamActs(state, actorId));
+  acts.push(...movablePersistentAreaRepositionActs(state, actorId));
+  acts.push(...directionalPersistentAreaDirectionChangeActs(state, actorId));
   acts.push(...movementActs(state, actorId));
-  acts.push(...greaseGroundHazardEntrySaveActs(state, actorId));
-  acts.push(...webRestraintEntrySaveActs(state, actorId));
-  acts.push(...webRestrainedNoLongerInAreaActs(state, actorId));
-  acts.push(...moonbeamCylinderExitActs(state, actorId));
+  acts.push(...persistentAreaSaveConditionEntrySaveActs(state, actorId));
+  acts.push(...persistentAreaSaveConditionEscapeEntrySaveActs(state, actorId));
+  acts.push(...persistentAreaSaveConditionEscapeDepartureActs(state, actorId));
+  acts.push(...movablePersistentAreaExitActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   if (standFromProneCostFeet(state, actorId) !== null) {
     acts.push({
@@ -649,14 +686,18 @@ function discoverBattleActsWithoutRouteEvents(
       initialHoles: [],
     });
   }
-  acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
-  acts.push(...gustOfWindLineEndTurnSaveActs(state, actorId));
-  acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
-  acts.push(...moonbeamEndTurnSaveActs(state, actorId));
-  acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
-  acts.push(...cloudkillStrongWindDispersalActs(state, actorId));
-  acts.push(...webAreaRemovalActs(state, actorId));
-  acts.push(...wardingBondSeparationActs(state, actorId));
+  acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
+  acts.push(...directionalPersistentAreaEndTurnSaveActs(state, actorId));
+  acts.push(...ramMovablePersistentAreaEndTurnSaveActs(state, actorId));
+  acts.push(...movablePersistentAreaEndTurnSaveActs(state, actorId));
+  acts.push(...environmentEndedPersistentAreaTraitActs(state, actorId));
+  acts.push(...environmentEndedPersistentAreaSaveDamageActs(state, actorId));
+  acts.push(
+    ...persistentAreaSaveConditionEscapeAreaRemovalActs(state, actorId),
+  );
+  acts.push(
+    ...linkedDefenseResistanceDamageShareSeparationActs(state, actorId),
+  );
   acts.push(...endConcentrationActs(state, actorId));
   const readyResponses = readyResponseChoices(state, actorId, acts);
   if (
@@ -682,7 +723,7 @@ function companionProtocolActs(
   actorId: CombatantId,
   spellActs: readonly BattleActDiscoveryCandidate[],
 ): readonly BattleActDiscoveryCandidate[] {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
+  const familiarEntry = spawnedCompanionEntryForOwner(state, actorId);
   if (familiarEntry === null) {
     return [];
   }
@@ -755,12 +796,12 @@ function companionProtocolActs(
   if (actorCanAct && canSpendBonusAction(state.currentTurnResources)) {
     acts.push({
       subject: {
-        tag: "findFamiliarSharedSenses",
+        tag: "spawnedCompanionSharedSenses",
         actorId,
         familiarId,
       },
       initialHoles: [
-        findFamiliarConnectionHole({
+        spawnedCompanionConnectionHole({
           ownerId: actorId,
           companionId: familiarId,
         }),
@@ -769,7 +810,7 @@ function companionProtocolActs(
   }
   if (combatantCanTakeReactions(familiarCombatant)) {
     acts.push(
-      ...findFamiliarTouchSpellActs({
+      ...spawnedCompanionTouchSpellProxyActs({
         state,
         actorId,
         companionId: familiarId,
@@ -780,7 +821,7 @@ function companionProtocolActs(
   return acts;
 }
 
-function findFamiliarTouchSpellActs(input: {
+function spawnedCompanionTouchSpellProxyActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly companionId: CombatantId;
@@ -814,7 +855,7 @@ function findFamiliarTouchSpellActs(input: {
       return [
         {
           subject: {
-            tag: "findFamiliarTouchSpell",
+            tag: "spawnedCompanionTouchSpellProxy",
             actorId: input.actorId,
             procedureRef: subject.procedureRef,
             companionId: input.companionId,
@@ -824,11 +865,11 @@ function findFamiliarTouchSpellActs(input: {
             ...optionalProperty("metamagic", subject.metamagic),
           },
           initialHoles: [
-            findFamiliarConnectionHole({
+            spawnedCompanionConnectionHole({
               ownerId: input.actorId,
               companionId: input.companionId,
             }),
-            ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
+            ...spawnedCompanionTouchDeliveryTargetHoles(act.initialHoles),
           ],
         },
       ];
@@ -853,7 +894,7 @@ function touchSpellDeliveryInvocation(
     : null;
 }
 
-function levitateAltitudeControlActs(
+function controlledVerticalSuspensionAltitudeControlActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -861,28 +902,37 @@ function levitateAltitudeControlActs(
   if (
     !combatantCanTakeActions(actor) ||
     !canSpendAction(state.currentTurnResources, "magic") ||
-    combatantInsideActiveAntimagicFieldAura(state, actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId)
   ) {
     return [];
   }
-  return activeLevitatedCreatureTargetsControlledBy(state, actorId).map(
-    ({ targetId, effect }) => ({
-      subject: {
-        tag: "runtimeCommand" as const,
-        actorId,
-        command: "levitateAltitudeControl" as const,
-        effectRef: spellActiveEffectExecutionRef(effect),
-        targetId,
-      },
-      initialHoles: [
-        levitateAltitudeChangeHole({
-          actorId,
-          targetId,
-          maxDistanceFeet: effect.maxAltitudeChangeFeet,
-        }),
-      ],
-    }),
-  );
+  return activeControlledVerticalSuspensionTargetsControlledBy(
+    state,
+    actorId,
+  ).flatMap(({ targetId, effect }) => {
+    const sourceProcedure = spellProcedureBoundToActiveEffect(state, effect);
+    return sourceProcedure?.procedure === "controlledVerticalSuspension"
+      ? [
+          {
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "controlledVerticalSuspensionAltitudeControl" as const,
+              effectRef: spellActiveEffectExecutionRef(effect),
+              targetId,
+            },
+            initialHoles: [
+              controlledVerticalSuspensionAltitudeChangeHole({
+                actorId,
+                targetId,
+                effectRef: effect.effectRef,
+                maxDistanceFeet: sourceProcedure.maxAltitudeChangeFeet,
+              }),
+            ],
+          },
+        ]
+      : [];
+  });
 }
 
 function spellCreatedHeldObjectReleaseActs(
@@ -914,7 +964,7 @@ function selfTransformationModeReplacementActs(
     activeEffect.sourceCombatantId !== actorId ||
     !combatantCanTakeActions(actor) ||
     !canSpendAction(state.currentTurnResources, "magic") ||
-    combatantInsideActiveAntimagicFieldAura(state, actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId)
   ) {
     return [];
   }
@@ -953,18 +1003,18 @@ function selfTransformationModeReplacementActs(
   });
 }
 
-function pactOfTheChainFamiliarAttackActs(
+function companionAttackActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   if (
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
     !canSpendAction(state.currentTurnResources, "attack") ||
-    !combatantHasPactOfTheChainFindFamiliar(state, actorId)
+    !combatantHasPactOfTheChainSpawnedCompanion(state, actorId)
   ) {
     return [];
   }
-  const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
+  const familiarEntry = spawnedCompanionEntryForOwner(state, actorId);
   if (familiarEntry?.companion.status !== "present") {
     return [];
   }
@@ -996,7 +1046,7 @@ function pactOfTheChainFamiliarAttackActs(
       : [
           {
             subject: {
-              tag: "pactOfTheChainFamiliarAttack" as const,
+              tag: "companionAttack" as const,
               actorId,
               familiarId,
               procedureRef: attack.procedureRef,
@@ -1102,116 +1152,174 @@ export function releaseGrappleActs(
   }));
 }
 
-function greaseGroundHazardEntrySaveActs(
+function persistentAreaSaveConditionEntrySaveActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] => {
-        if (effect.kind !== "greaseGroundHazard") {
+        if (effect.kind !== "persistentAreaSaveCondition") {
+          return [];
+        }
+        const boundEffect = boundPersistentAreaSaveConditionEffect(
+          state,
+          effect,
+        );
+        if (boundEffect === undefined) {
           return [];
         }
         return [
-          greaseGroundHazardSaveAct(state, actorId, effect, "entersArea"),
+          persistentAreaSaveConditionSaveAct(
+            state,
+            actorId,
+            boundEffect,
+            "entersArea",
+          ),
         ];
       },
     ),
   );
 }
 
-function greaseGroundHazardEndTurnActs(
+function persistentAreaSaveConditionEndTurnActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] => {
-        if (effect.kind !== "greaseGroundHazard") {
+        if (effect.kind !== "persistentAreaSaveCondition") {
+          return [];
+        }
+        const boundEffect = boundPersistentAreaSaveConditionEffect(
+          state,
+          effect,
+        );
+        if (boundEffect === undefined) {
           return [];
         }
         return [
-          greaseGroundHazardSaveAct(state, actorId, effect, "endsTurnInArea"),
+          persistentAreaSaveConditionSaveAct(
+            state,
+            actorId,
+            boundEffect,
+            "endsTurnInArea",
+          ),
         ];
       },
     ),
   );
 }
 
-function greaseGroundHazardSaveAct(
+function persistentAreaSaveConditionSaveAct(
   state: BattleState,
   actorId: CombatantId,
-  effect: GreaseGroundHazardEffect,
+  effect: PersistentAreaSaveConditionEffect,
   trigger: "entersArea" | "endsTurnInArea",
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "greaseGroundHazardSave",
+      command: "persistentAreaSaveConditionSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger,
     },
     initialHoles: [
-      greaseGroundHazardSavingThrowOutcomeHole(state, actorId, effect, trigger),
+      persistentAreaSaveConditionSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        trigger,
+      ),
     ],
   };
 }
 
-function activeWebRestraintHazards(
+function activePersistentAreaSaveConditionEscapeEffects(
   state: BattleState,
-): readonly WebRestraintHazardEffect[] {
+): readonly PersistentAreaSaveConditionEscapeEffect[] {
   return [...state.combatants].flatMap(([, combatant]) =>
-    combatant.activeEffects.filter(
-      (effect): effect is WebRestraintHazardEffect =>
-        effect.kind === "webRestraintHazard",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "persistentAreaSaveConditionEscape") {
+        return [];
+      }
+      const boundEffect = boundPersistentAreaSaveConditionEscapeEffect(
+        state,
+        effect,
+      );
+      return boundEffect === undefined ? [] : [boundEffect];
+    }),
   );
 }
 
-function webRestraintEntrySaveActs(
+function persistentAreaSaveConditionEscapeEntrySaveActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeWebRestraintHazards(state).flatMap((effect) =>
-    effect.entrySavedThisTurn.includes(actorId)
-      ? []
-      : [webRestraintSaveAct(state, actorId, effect, "entersArea")],
+  return activePersistentAreaSaveConditionEscapeEffects(state).flatMap(
+    (effect) =>
+      effect.entrySavedThisTurn.includes(actorId)
+        ? []
+        : [
+            persistentAreaSaveConditionEscapeSaveAct(
+              state,
+              actorId,
+              effect,
+              "entersArea",
+            ),
+          ],
   );
 }
 
-function webRestraintStartTurnSaveActs(
+function persistentAreaSaveConditionEscapeStartTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeWebRestraintHazards(state).flatMap((effect) =>
-    effect.startTurnSavedThisTurn.includes(actorId)
-      ? []
-      : [webRestraintSaveAct(state, actorId, effect, "startsTurnInArea")],
+  return activePersistentAreaSaveConditionEscapeEffects(state).flatMap(
+    (effect) =>
+      effect.startTurnSavedThisTurn.includes(actorId)
+        ? []
+        : [
+            persistentAreaSaveConditionEscapeSaveAct(
+              state,
+              actorId,
+              effect,
+              "startsTurnInArea",
+            ),
+          ],
   );
 }
 
-function webRestraintSaveAct(
+function persistentAreaSaveConditionEscapeSaveAct(
   state: BattleState,
   actorId: CombatantId,
-  effect: WebRestraintHazardEffect,
+  effect: PersistentAreaSaveConditionEscapeEffect,
   trigger: "entersArea" | "startsTurnInArea",
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "webRestraintSave",
+      command: "persistentAreaSaveConditionEscapeSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger,
     },
     initialHoles: [
-      webRestraintSavingThrowOutcomeHole(state, actorId, effect, trigger),
+      persistentAreaSaveConditionEscapeSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        trigger,
+      ),
     ],
   };
 }
 
-function webRestrainedNoLongerInAreaActs(
+function persistentAreaSaveConditionEscapeDepartureActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -1228,18 +1336,20 @@ function webRestrainedNoLongerInAreaActs(
       ) {
         return [];
       }
-      return activeWebRestraintHazards(state)
+      return activePersistentAreaSaveConditionEscapeEffects(state)
         .filter(
-          (web) =>
-            web.sourceCombatantId === effect.sourceCombatantId &&
-            web.sourceProcedureRef === effect.sourceProcedureRef,
+          (areaEffect) =>
+            areaEffect.sourceCombatantId === effect.sourceCombatantId &&
+            areaEffect.sourceProcedureRef === effect.sourceProcedureRef,
         )
-        .map((web) => ({
+        .map((areaEffect) => ({
           subject: {
             tag: "runtimeCommand" as const,
             actorId,
-            command: "webRestrainedNoLongerInArea" as const,
-            areaId: web.areaId,
+            command:
+              "endPersistentAreaSaveConditionEscapeForDeparture" as const,
+            areaId: areaEffect.areaId,
+            effectRef: areaEffect.effectRef,
           },
           initialHoles: [],
         }));
@@ -1247,47 +1357,54 @@ function webRestrainedNoLongerInAreaActs(
   );
 }
 
-function webAreaRemovalActs(
+function persistentAreaSaveConditionEscapeAreaRemovalActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeWebRestraintHazards(state).map((effect) => ({
-    subject: {
-      tag: "runtimeCommand" as const,
-      actorId,
-      command: "webAreaRemoved" as const,
-      areaId: effect.areaId,
-    },
-    initialHoles: [],
-  }));
-}
-
-function activeGustOfWindLineEffects(
-  state: BattleState,
-): readonly GustOfWindLineEffect[] {
-  return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is GustOfWindLineEffect =>
-        effect.kind === "gustOfWindLine",
-    ),
+  return activePersistentAreaSaveConditionEscapeEffects(state).map(
+    (effect) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "endPersistentAreaSaveConditionEscapeForAreaRemoval" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      },
+      initialHoles: [],
+    }),
   );
 }
 
-function gustOfWindLineEndTurnSaveActs(
+function activeDirectionalPersistentAreaEffects(
+  state: BattleState,
+): readonly DirectionalPersistentAreaEffect[] {
+  return [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "directionalPersistentArea") {
+        return [];
+      }
+      const boundEffect = boundDirectionalPersistentAreaEffect(state, effect);
+      return boundEffect === undefined ? [] : [boundEffect];
+    }),
+  );
+}
+
+function directionalPersistentAreaEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeGustOfWindLineEffects(state).map((effect) => ({
+  return activeDirectionalPersistentAreaEffects(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
       actorId,
-      command: "gustOfWindLineSave" as const,
+      command: "directionalPersistentAreaSave" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       directionId: effect.directionId,
       trigger: "endsTurnInLine" as const,
     },
     initialHoles: [
-      gustOfWindLineSavingThrowOutcomeHole(
+      directionalPersistentAreaSavingThrowOutcomeHole(
         state,
         actorId,
         effect,
@@ -1297,7 +1414,7 @@ function gustOfWindLineEndTurnSaveActs(
   }));
 }
 
-function gustOfWindLineDirectionChangeActs(
+function directionalPersistentAreaDirectionChangeActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -1307,28 +1424,31 @@ function gustOfWindLineDirectionChangeActs(
   ) {
     return [];
   }
-  return activeGustOfWindLineEffects(state).flatMap((effect) =>
+  return activeDirectionalPersistentAreaEffects(state).flatMap((effect) =>
     effect.sourceCombatantId === actorId &&
-    gustOfWindLineDirectionChangeIsLaterTurn(state, effect)
+    directionalPersistentAreaDirectionChangeIsLaterTurn(state, effect)
       ? [
           {
             subject: {
               tag: "runtimeCommand" as const,
               actorId,
-              command: "gustOfWindLineDirectionChange" as const,
+              command: "directionalPersistentAreaDirectionChange" as const,
               areaId: effect.areaId,
+              effectRef: effect.effectRef,
               directionId: effect.directionId,
             },
-            initialHoles: [gustOfWindLineDirectionChoiceHole(effect)],
+            initialHoles: [
+              directionalPersistentAreaDirectionChoiceHole(effect),
+            ],
           },
         ]
       : [],
   );
 }
 
-function gustOfWindLineDirectionChangeIsLaterTurn(
+function directionalPersistentAreaDirectionChangeIsLaterTurn(
   state: BattleState,
-  effect: GustOfWindLineEffect,
+  effect: DirectionalPersistentAreaEffect,
 ): boolean {
   return (
     effect.castTurn.actorId !== currentActorId(state) ||
@@ -1336,16 +1456,16 @@ function gustOfWindLineDirectionChangeIsLaterTurn(
   );
 }
 
-function flamingSphereEndTurnSaveActs(
+function ramMovablePersistentAreaEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeFlamingSphereEffects(state).map((effect) =>
-    flamingSphereSaveAct(state, actorId, effect),
+  return activeRamMovablePersistentAreaEffects(state).map((effect) =>
+    ramMovablePersistentAreaSaveAct(state, actorId, effect),
   );
 }
 
-function flamingSphereRamActs(
+function ramMovablePersistentAreaRamActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -1355,16 +1475,16 @@ function flamingSphereRamActs(
   ) {
     return [];
   }
-  return activeFlamingSphereEffects(state).flatMap((effect) =>
+  return activeRamMovablePersistentAreaEffects(state).flatMap((effect) =>
     effect.sourceCombatantId === actorId
       ? [...state.combatants.keys()].map((targetId) =>
-          flamingSphereRamAct(state, actorId, targetId, effect),
+          ramMovablePersistentAreaRamAct(state, actorId, targetId, effect),
         )
       : [],
   );
 }
 
-function flamingSphereRepositionActs(
+function ramMovablePersistentAreaRepositionActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -1374,28 +1494,39 @@ function flamingSphereRepositionActs(
   ) {
     return [];
   }
-  return activeFlamingSphereEffects(state).flatMap((effect) =>
+  return activeRamMovablePersistentAreaEffects(state).flatMap((effect) =>
     effect.sourceCombatantId === actorId
-      ? [flamingSphereRepositionAct(actorId, effect)]
+      ? [ramMovablePersistentAreaRepositionAct(actorId, effect)]
       : [],
   );
 }
 
-function activeFlamingSphereEffects(
+function activeRamMovablePersistentAreaEffects(
   state: BattleState,
-): readonly FlamingSphereEffect[] {
+): readonly RamMovablePersistentAreaEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is FlamingSphereEffect =>
-        effect.kind === "flamingSphere",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "persistentAreaSaveDamage") return [];
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return bound?.kind === "collisionReposition"
+        ? [
+            {
+              ...bound.effect,
+              lifecycle: bound.facts.lifecycle,
+              save: { ability: bound.facts.ability, dc: bound.facts.dc },
+              ramMaxMoveFeet: bound.facts.ramMaxMoveFeet,
+              damage: bound.facts.damage,
+            },
+          ]
+        : [];
+    }),
   );
 }
 
-function flamingSphereSaveAct(
+function ramMovablePersistentAreaSaveAct(
   state: BattleState,
   actorId: CombatantId,
-  effect: FlamingSphereEffect,
+  effect: RamMovablePersistentAreaEffect,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -1403,10 +1534,11 @@ function flamingSphereSaveAct(
       actorId,
       command: "movableZoneSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "endsTurnWithinFiveFeetOfSphere",
     },
     initialHoles: [
-      flamingSphereSavingThrowOutcomeHole(
+      ramMovablePersistentAreaSavingThrowOutcomeHole(
         state,
         actorId,
         effect,
@@ -1416,9 +1548,9 @@ function flamingSphereSaveAct(
   };
 }
 
-function flamingSphereRepositionAct(
+function ramMovablePersistentAreaRepositionAct(
   actorId: CombatantId,
-  effect: FlamingSphereEffect,
+  effect: RamMovablePersistentAreaEffect,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -1426,16 +1558,17 @@ function flamingSphereRepositionAct(
       actorId,
       command: "movableZoneReposition",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
-    initialHoles: [flamingSphereRepositionMovementHole(effect)],
+    initialHoles: [ramMovablePersistentAreaRepositionMovementHole(effect)],
   };
 }
 
-function flamingSphereRamAct(
+function ramMovablePersistentAreaRamAct(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  effect: FlamingSphereEffect,
+  effect: RamMovablePersistentAreaEffect,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
@@ -1444,11 +1577,12 @@ function flamingSphereRamAct(
       command: "movableZoneRam",
       targetId,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "rammedBySphere",
     },
     initialHoles: [
-      flamingSphereRamMovementHole(targetId, effect),
-      flamingSphereSavingThrowOutcomeHole(
+      ramMovablePersistentAreaRamMovementHole(targetId, effect),
+      ramMovablePersistentAreaSavingThrowOutcomeHole(
         state,
         targetId,
         effect,
@@ -1458,61 +1592,82 @@ function flamingSphereRamAct(
   };
 }
 
-function activeMoonbeamEffects(state: BattleState): readonly MoonbeamEffect[] {
+function activeMovablePersistentAreaEffects(
+  state: BattleState,
+): readonly MovablePersistentAreaEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "persistentAreaSaveDamage") return [];
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return bound?.kind === "directedReposition"
+        ? [
+            {
+              ...bound.effect,
+              lifecycle: bound.facts.lifecycle,
+              save: { ability: bound.facts.ability, dc: bound.facts.dc },
+              repositionMaxMoveFeet: bound.facts.repositionMaxMoveFeet,
+              damage: bound.facts.damage,
+            },
+          ]
+        : [];
+    }),
   );
 }
 
-function moonbeamEndTurnSaveActs(
+function movablePersistentAreaEndTurnSaveActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeMoonbeamEffects(state).map((effect) => ({
+  return activeMovablePersistentAreaEffects(state).map((effect) => ({
     subject: {
       tag: "runtimeCommand" as const,
       actorId,
       command: "movableZoneSave" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "endsTurnInArea" as const,
     },
     initialHoles: [
-      moonbeamSavingThrowOutcomeHole(state, actorId, effect, "endsTurnInArea"),
+      movablePersistentAreaSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        "endsTurnInArea",
+      ),
     ],
   }));
 }
 
-function moonbeamCylinderExitActs(
+function movablePersistentAreaExitActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return activeMoonbeamEffects(state)
+  return activeMovablePersistentAreaEffects(state)
     .filter((effect) => effect.shapeShiftSuppressed.includes(actorId))
     .map((effect) => ({
       subject: {
         tag: "runtimeCommand" as const,
         actorId,
-        command: "moonbeamCylinderExit" as const,
+        command: "persistentAreaSaveDamageExit" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       },
       initialHoles: [],
     }));
 }
 
-function moonbeamRepositionActs(
+function movablePersistentAreaRepositionActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
-    combatantInsideActiveAntimagicFieldAura(state, actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId)
   ) {
     return [];
   }
-  return activeMoonbeamEffects(state).flatMap((effect) =>
+  return activeMovablePersistentAreaEffects(state).flatMap((effect) =>
     effect.sourceCombatantId === actorId
       ? [
           {
@@ -1521,8 +1676,9 @@ function moonbeamRepositionActs(
               actorId,
               command: "movableZoneReposition" as const,
               areaId: effect.areaId,
+              effectRef: effect.effectRef,
             },
-            initialHoles: [moonbeamRepositionMovementHole(effect)],
+            initialHoles: [movablePersistentAreaRepositionMovementHole(effect)],
           },
         ]
       : [],
@@ -1553,93 +1709,121 @@ function protectionRelevantEffectSaveActs(
   });
 }
 
-function fogCloudStrongWindDispersalActs(
+function environmentEndedPersistentAreaTraitActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] =>
-        effect.kind === "fogCloudObscurement"
-          ? [fogCloudStrongWindDispersalAct(actorId, effect)]
+        effect.kind === "persistentAreaTrait"
+          ? [environmentEndedPersistentAreaTraitAct(actorId, effect)]
           : [],
     ),
   );
 }
 
-function fogCloudStrongWindDispersalAct(
+function environmentEndedPersistentAreaTraitAct(
   actorId: CombatantId,
-  effect: FogCloudObscurementEffect,
+  effect: EnvironmentEndedPersistentAreaTraitEffect,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "disperseFogCloud",
+      command: "endPersistentAreaTraitForEnvironment",
       areaId: effect.areaId,
     },
     initialHoles: [],
   };
 }
 
-function cloudkillStrongWindDispersalActs(
+function environmentEndedPersistentAreaSaveDamageActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [...state.combatants.values()].flatMap((combatant) =>
+  return [...state.combatants].flatMap(([effectOwnerId, combatant]) =>
     combatant.activeEffects.flatMap(
-      (effect): readonly BattleActDiscoveryCandidate[] =>
-        effect.kind === "cloudkillAreaHazard"
-          ? [cloudkillStrongWindDispersalAct(actorId, effect)]
-          : [],
+      (effect): readonly BattleActDiscoveryCandidate[] => {
+        if (effect.kind !== "persistentAreaSaveDamage") {
+          return [];
+        }
+        const source = state.combatants.get(effect.sourceCombatantId);
+        if (source === undefined) return [];
+        const bound = boundPersistentAreaSaveDamageEffect(source, effect);
+        if (bound?.kind !== "sourceTurnTranslation") return [];
+        return [
+          environmentEndedPersistentAreaSaveDamageAct(
+            actorId,
+            effectOwnerId,
+            bound.effect,
+          ),
+        ];
+      },
     ),
   );
 }
 
-function cloudkillStrongWindDispersalAct(
+function environmentEndedPersistentAreaSaveDamageAct(
   actorId: CombatantId,
-  effect: CloudkillAreaHazardEffect,
+  effectOwnerId: CombatantId,
+  effect: EnvironmentEndedPersistentAreaSaveDamageEffect,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "disperseCloudkill",
-      areaId: effect.areaId,
+      command: "endPersistentAreaSaveDamageForEnvironment",
+      effectOwnerId,
+      effectRef: spellActiveEffectExecutionRef(effect),
     },
-    initialHoles: [],
+    initialHoles: [
+      areaWindStrengthHole(
+        effect.areaId,
+        spellActiveEffectExecutionRef(effect),
+      ),
+    ],
   };
 }
 
-function wardingBondSeparationActs(
+function linkedDefenseResistanceDamageShareSeparationActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([targetId, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] =>
-        isWardingBondEffect(effect)
-          ? [wardingBondSeparationAct(actorId, targetId, effect)]
+        isLinkedDefenseResistanceDamageShareEffect(effect)
+          ? [
+              linkedDefenseResistanceDamageShareSeparationAct(
+                actorId,
+                targetId,
+                effect,
+              ),
+            ]
           : [],
     ),
   );
 }
 
-function wardingBondSeparationAct(
+function linkedDefenseResistanceDamageShareSeparationAct(
   actorId: CombatantId,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "linkedDefenseResistanceDamageShare" }
+  >,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "wardingBondSeparation",
+      command: "linkedDefenseResistanceDamageShareSeparation",
       effectRef: spellActiveEffectExecutionRef(effect),
       targetId,
     },
     initialHoles: [
-      wardingBondSeparationFactsHole({
+      linkedDefenseResistanceDamageShareSeparationFactsHole({
         sourceCombatantId: effect.sourceCombatantId,
         sourceProcedureRef: effect.sourceProcedureRef,
         targetId,
@@ -1667,11 +1851,11 @@ export function movementActs(
       subject: { tag: "runtimeCommand", actorId, command: "move" },
       initialHoles: [movementHoleForActor],
     },
-    ...jumpMovementReplacementActs(state, actorId, movementHoleForActor),
+    ...fixedCostMovementReplacementActs(state, actorId, movementHoleForActor),
   ];
 }
 
-function jumpMovementReplacementActs(
+function fixedCostMovementReplacementActs(
   state: BattleState,
   actorId: CombatantId,
   movementHoleForActor: ReturnType<typeof movementHole>,
@@ -1683,10 +1867,19 @@ function jumpMovementReplacementActs(
   return actor.activeEffects.flatMap(
     (effect): readonly BattleActDiscoveryCandidate[] => {
       if (
-        effect.kind !== "jumpMovementReplacement" ||
-        effect.usedThisTurn ||
+        effect.kind !== "fixedCostMovementReplacement" ||
+        effect.usedThisTurn
+      ) {
+        return [];
+      }
+      const boundEffect = boundFixedCostMovementReplacementEffect(
+        state,
+        effect,
+      );
+      if (
+        boundEffect === undefined ||
         Number(movementHoleForActor.movementBudgetFeet) <
-          Number(effect.movementCostFeet)
+          Number(boundEffect.movementCostFeet)
       ) {
         return [];
       }
@@ -1695,7 +1888,7 @@ function jumpMovementReplacementActs(
           subject: {
             tag: "runtimeCommand" as const,
             actorId,
-            command: "jumpMovementReplacement" as const,
+            command: "fixedCostMovementReplacement" as const,
             effectRef: spellActiveEffectExecutionRef(effect),
           },
           initialHoles: [movementHoleForActor],
@@ -1891,15 +2084,15 @@ export function hasTurnActionResource(state: ActionEconomyState): boolean {
 
 export function spendTurnAction<T extends ActionEconomyState>(
   state: T,
-): Either.Either<T, "no action resource available"> {
+): Result.Result<T, "no action resource available"> {
   const turnActionResourceIndex = state.actionResources.findIndex(
     (resource) => resource.source === "turn",
   );
   if (turnActionResourceIndex === -1 || !canSpendAction(state, "attack")) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
 
-  return Either.right(
+  return Result.succeed(
     spendActionResourceAtIndex(state, turnActionResourceIndex),
   );
 }

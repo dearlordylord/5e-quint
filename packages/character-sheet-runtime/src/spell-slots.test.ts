@@ -16,7 +16,7 @@ import {
   rebuildCharacterSheetFixture,
   replaceCharacterSheetSpellSlotSourceState,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   resourceCount,
   sorcererFontOfMagicBuild,
   sorcererFontOfMagicSlotConversionGateTestName,
@@ -33,7 +33,7 @@ import { replaceOrdinarySpellSlotExpenditure } from "./spell-slots.ts";
 
 describe("Character Sheet runtime / spell slots", () => {
   test("projects no Spell Slot state for a non-spellcasting sheet", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:synthetic-no-spell-slots"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -56,7 +56,7 @@ describe("Character Sheet runtime / spell slots", () => {
   });
 
   test("projects absent ordinary Spell Slot expenditure as zero against build capacity", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:wizard-zero-slots"),
         build: wizardBuild({ wizardAdvancements: 1 }),
@@ -73,7 +73,7 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 1, count: 3, expended: 0 },
     ]);
 
-    const replaced = requireRight(
+    const replaced = requireSuccess(
       replaceCharacterSheetSpellSlotSourceState({
         sheet,
         unitLibrary,
@@ -94,7 +94,7 @@ describe("Character Sheet runtime / spell slots", () => {
   });
 
   test("projects absent Pact Slot expenditure as zero against build capacity", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:warlock-zero-pact"),
         build: warlockMagicalCunningBuild({
@@ -115,7 +115,7 @@ describe("Character Sheet runtime / spell slots", () => {
   });
 
   test("projects level-10 Warlock Pact Slots without spell-level-6 access", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:warlock-level-10-pact"),
         build: warlockMagicalCunningBuild({
@@ -151,8 +151,8 @@ describe("Character Sheet runtime / spell slots", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Spell Slot state does not match build capacity for level 1.",
       },
     });
@@ -171,8 +171,8 @@ describe("Character Sheet runtime / spell slots", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spell Slot expenditure state must contain exactly spell level and expended count.",
       },
@@ -194,8 +194,8 @@ describe("Character Sheet runtime / spell slots", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Created Spell Slot state must contain exactly spell level, count, and expended count.",
       },
@@ -210,7 +210,7 @@ describe("Character Sheet runtime / spell slots", () => {
         { spellLevel: 2, count: 2 },
       ],
     });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-convert"),
         build: sorcererBuild,
@@ -229,7 +229,7 @@ describe("Character Sheet runtime / spell slots", () => {
       }),
     );
 
-    const converted = requireRight(
+    const converted = requireSuccess(
       convertFontOfMagicSpellSlotToSorceryPoints({
         sheet,
         unitLibrary,
@@ -241,9 +241,10 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 1, count: 4, expended: 0 },
       { spellLevel: 2, count: 2, expended: 2 },
     ]);
-    expect(characterSheetResources(converted, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(converted, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -251,12 +252,12 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 1,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererFontOfMagicSlotConversionGateTestName, () => {
     const sorcererBuild = sorcererFontOfMagicBuild();
-    const capped = requireRight(
+    const capped = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-capped"),
         build: sorcererBuild,
@@ -273,14 +274,14 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion would exceed the Sorcery Point maximum.",
       },
     });
 
-    const spentSlots = requireRight(
+    const spentSlots = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-no-slot"),
         build: sorcererBuild,
@@ -306,14 +307,14 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
       },
     });
 
-    const wizard = requireRight(
+    const wizard = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-wizard"),
         build: wizardBuild({ wizardAdvancements: 1 }),
@@ -332,8 +333,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion requires the Sorcerer Font of Magic feature.",
       },
@@ -349,7 +350,7 @@ describe("Character Sheet runtime / spell slots", () => {
         { spellLevel: 3, count: 2 },
       ],
     });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-create"),
         build: sorcererBuild,
@@ -368,13 +369,13 @@ describe("Character Sheet runtime / spell slots", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Spell Slot state does not match build capacity for level 3.",
       },
     });
 
-    const created = requireRight(
+    const created = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet,
         unitLibrary,
@@ -387,9 +388,10 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 2, count: 3, expended: 0 },
       { spellLevel: 3, count: 3, expended: 0 },
     ]);
-    expect(characterSheetResources(created, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(created, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -397,7 +399,7 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 5,
         }),
       ]),
-    });
+    );
 
     expect(
       convertFontOfMagicSpellSlotToSorceryPoints({
@@ -406,14 +408,14 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(3),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion requires a Spell Slot source when ordinary and created Spell Slots are both available.",
       },
     });
 
-    const createdSlotConverted = requireRight(
+    const createdSlotConverted = requireSuccess(
       convertFontOfMagicSpellSlotToSorceryPoints({
         sheet: created,
         unitLibrary,
@@ -431,10 +433,11 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 3, count: 3, expended: 1 },
     ]);
     expect(
-      characterSheetResources(createdSlotConverted, unitLibrary),
-    ).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      requireSuccess(
+        characterSheetResources(createdSlotConverted, unitLibrary),
+      ),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -442,7 +445,7 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 2,
         }),
       ]),
-    });
+    );
 
     if (
       !("spellSlotExpenditures" in created) ||
@@ -452,7 +455,7 @@ describe("Character Sheet runtime / spell slots", () => {
         "Expected Font of Magic sheet to carry Spell Slot state.",
       );
     }
-    const parsedWithExpendedCreatedSlot = requireRight(
+    const parsedWithExpendedCreatedSlot = requireSuccess(
       parseCharacterSheet(
         {
           ...created,
@@ -483,7 +486,7 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 3, count: 3, expended: 1 },
     ]);
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: created, unitLibrary }),
     );
 
@@ -492,9 +495,10 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 2, count: 3, expended: 0 },
       { spellLevel: 3, count: 2, expended: 0 },
     ]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -502,11 +506,11 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererFontOfMagicSlotCreationGateTestName, () => {
-    const levelTwoSorcerer = requireRight(
+    const levelTwoSorcerer = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-create-level"),
         build: sorcererFontOfMagicBuild(),
@@ -522,14 +526,14 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(2),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic Spell Slot creation requires Sorcerer level 3 for a level 2 Spell Slot.",
       },
     });
 
-    const lowPoints = requireRight(
+    const lowPoints = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-create-points"),
         build: sorcererFontOfMagicBuild({
@@ -558,8 +562,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(2),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
       },
@@ -572,8 +576,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(6),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic Spell Slot creation requires a Creating Spell Slots table entry.",
       },
@@ -581,7 +585,7 @@ describe("Character Sheet runtime / spell slots", () => {
   });
 
   test("adds another created slot at an existing created level", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-repeat-created-slot",
@@ -591,14 +595,14 @@ describe("Character Sheet runtime / spell slots", () => {
         unitLibrary,
       }),
     );
-    const first = requireRight(
+    const first = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet,
         unitLibrary,
         spellLevel: spellSlotLevel(1),
       }),
     );
-    const second = requireRight(
+    const second = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet: first,
         unitLibrary,
@@ -612,7 +616,7 @@ describe("Character Sheet runtime / spell slots", () => {
   });
 
   test("spends and creates slots across ordinary and created-only levels", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:synthetic-created-only-level"),
         build: sorcererFontOfMagicBuild({
@@ -624,7 +628,7 @@ describe("Character Sheet runtime / spell slots", () => {
       }),
     );
 
-    const createdLevelTwo = requireRight(
+    const createdLevelTwo = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet,
         unitLibrary,
@@ -636,14 +640,14 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 2, count: 1, expended: 0 },
     ]);
 
-    const spentCreatedLevelTwo = requireRight(
+    const spentCreatedLevelTwo = requireSuccess(
       convertFontOfMagicSpellSlotToSorceryPoints({
         sheet: createdLevelTwo,
         unitLibrary,
         spellLevel: spellSlotLevel(2),
       }),
     );
-    const spentOrdinaryLevelOne = requireRight(
+    const spentOrdinaryLevelOne = requireSuccess(
       convertFontOfMagicSpellSlotToSorceryPoints({
         sheet: spentCreatedLevelTwo,
         unitLibrary,
@@ -660,14 +664,14 @@ describe("Character Sheet runtime / spell slots", () => {
       ],
     });
 
-    const createdLevelOne = requireRight(
+    const createdLevelOne = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet: spentOrdinaryLevelOne,
         unitLibrary,
         spellLevel: spellSlotLevel(1),
       }),
     );
-    const createdLevelTwoAgain = requireRight(
+    const createdLevelTwoAgain = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet: createdLevelOne,
         unitLibrary,

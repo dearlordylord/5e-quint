@@ -36,7 +36,7 @@ import {
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
 
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
@@ -89,6 +89,7 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -194,7 +195,7 @@ type MetamagicBattleInput = {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
-  readonly counterspeller?: true;
+  readonly spellCastInterruptionReactioner?: true;
 };
 
 const INITIAL_SORCERY_POINTS = 4;
@@ -950,7 +951,7 @@ function resolveQuickenedConcentrationCounterspell(
   outcome: CounterspellOutcome,
 ): QuickenedSpellGovernorRuntimeState {
   const state = initialRuntimeState({
-    counterspeller: true,
+    spellCastInterruptionReactioner: true,
     preparedSpellIds: [parseSharedUnitId("bless")],
     casterSpellSlots: [{ spellLevel: 1, count: 1 }],
   });
@@ -962,7 +963,9 @@ function resolveQuickenedConcentrationCounterspell(
       subject: act.subject,
       fills: [
         spellTargetListFill(targetHole, "bless", [fighterId]),
-        spellCastReactionFactsFill([counterspellTriggerFact(state.battle)]),
+        spellCastReactionFactsFill([
+          spellCastInterruptionReactionTriggerFact(state.battle),
+        ]),
       ],
     }),
   );
@@ -980,7 +983,7 @@ function resolveQuickenedConcentrationCounterspell(
 
 function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): QuickenedSpellGovernorRuntimeState {
   const initial = initialRuntimeState({
-    counterspeller: true,
+    spellCastInterruptionReactioner: true,
     preparedSpellIds: [
       parseSharedUnitId("bless"),
       parseSharedUnitId("cure_wounds"),
@@ -1009,7 +1012,9 @@ function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): Quickened
       subject: act.subject,
       fills: [
         target,
-        spellCastReactionFactsFill([counterspellTriggerFact(state.battle)]),
+        spellCastReactionFactsFill([
+          spellCastInterruptionReactionTriggerFact(state.battle),
+        ]),
       ],
     }),
   );
@@ -1585,10 +1590,10 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
         initiative: 10,
         currentHp: INITIAL_TARGET_HP,
         maxHp: 20,
-        ...(input?.counterspeller === true
+        ...(input?.spellCastInterruptionReactioner === true
           ? {
               spellcasting: wizardSpellcasting({
-                preparedSpells: [spellRecord("counterspell")],
+                preparedSpells: [spellRecord("spellCastInterruptionReaction")],
                 spellSlots: [{ spellLevel: 3, count: 1 }],
               }),
             }
@@ -1606,7 +1611,7 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
 function magicActionSpent(state: BattleState): BattleState {
   return {
     ...state,
-    currentTurnResources: expectRight(
+    currentTurnResources: expectSuccess(
       spendAction(state.currentTurnResources, "magic"),
     ),
   };
@@ -1791,20 +1796,24 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(
+function spellCastInterruptionReactionTriggerFact(
   session: BattleRuntimeSession,
 ): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: fighterId,
     casterId: wizardId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       session,
       fighterId,
-      spellSlotInvocationRef("counterspell", 3, "counterspell"),
+      spellSlotInvocationRef(
+        "spellCastInterruptionReaction",
+        3,
+        "spellCastInterruptionReaction",
+      ),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1820,41 +1829,42 @@ function spellCastReactionFactsFill(
   };
 }
 
+type CounterspellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function requireCounterspellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   session: BattleRuntimeSession,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): CounterspellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== fighterId
-      ) {
-        return false;
-      }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        session,
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === "counterspell" &&
-        invocation.procedure === "counterspell" &&
-        Number(invocation.slotLevel) === 3
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is CounterspellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== fighterId
+    ) {
+      return false;
+    }
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      session,
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === "spellCastInterruptionReaction" &&
+      invocation.procedure === "spellCastInterruptionReaction" &&
+      Number(invocation.slotLevel) === 3
+    );
+  });
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
   }
@@ -1879,11 +1889,11 @@ function expectInvalid(result: BattleResolutionResult, message: string): void {
   expect(result).toMatchObject({ tag: "invalid", message });
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(result.left)}`);
+function expectSuccess<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
+    throw new Error(`Expected Success, got ${JSON.stringify(result.failure)}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function normalizeQuickenedSpellGovernorQuintState(

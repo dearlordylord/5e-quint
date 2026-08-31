@@ -14,7 +14,8 @@ import {
 } from "./identity.ts";
 import type {
   BattleSpellProcedureExecution,
-  DancingLightsRepositionSpellProcedureExecution,
+  BattleStoredSpellProcedureExecution,
+  RepositionMovableLightManifestationSpellProcedureExecution,
   HeldLightHurlSpellProcedureExecution,
   MarkedDamageRiderTransferSpellProcedureExecution,
   ObjectContactDamageRepeatSpellProcedureExecution,
@@ -22,7 +23,8 @@ import type {
   SpellCreatedHeldObjectReEvokeSpellProcedureExecution,
   SpellExecutableExecutionOf,
   SpellProcedureExecution,
-  SpiritualWeaponRepeatAttackSpellProcedureExecution,
+  RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution,
+  RuntimeSpellProcedureExecution,
 } from "./character-execution.ts";
 import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
@@ -122,44 +124,72 @@ export function characterStoredExecutionProcedureRef(
   )?.procedureRef;
 }
 
+type CharacterSnapshotProcedureBinding =
+  | Exclude<
+      CharacterProcedureBinding,
+      { readonly procedure: { readonly kind: "spellInvocation" } }
+    >
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedure: {
+        readonly kind: "spellInvocation";
+        readonly execution: BattleStoredSpellProcedureExecution;
+      };
+    };
+
+function characterProcedureBindingIsSnapshotEligible(
+  binding: CharacterProcedureBinding,
+): binding is CharacterSnapshotProcedureBinding {
+  return (
+    binding.procedure.kind !== "spellInvocation" ||
+    binding.procedure.execution.procedure !== "spawnedCompanionLifecycle"
+  );
+}
+
 export function characterProcedureBindingSnapshots(
   execution: CharacterExecutionState,
   executionFactsFor: (
-    invocation: SpellProcedureExecution,
+    invocation: BattleStoredSpellProcedureExecution,
   ) => SpellExecutionFacts,
 ) {
-  return execution.procedureBindings.map((binding) =>
-    Match.value(binding.procedure).pipe(
-      Match.when({ kind: "unitFeature" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: {
-          kind: procedure.kind,
-          source: procedure.source,
-          execution: procedure.execution,
-        },
-      })),
-      Match.when({ kind: "unitSupportProfile" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: {
-          kind: procedure.kind,
-          source: procedure.source,
-          execution: procedure.execution,
-        },
-      })),
-      Match.when({ kind: "spellInvocation" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: {
-          kind: procedure.kind,
-          executionFacts: executionFactsFor(procedure.execution),
-        },
-      })),
-      Match.when({ kind: "unavailableSpellInvocation" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: { kind: procedure.kind },
-      })),
-      Match.exhaustive,
-    ),
-  );
+  return execution.procedureBindings
+    .filter(characterProcedureBindingIsSnapshotEligible)
+    .map((binding) =>
+      Match.value(binding.procedure).pipe(
+        Match.when({ kind: "unitFeature" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            source: procedure.source,
+            execution: procedure.execution,
+          },
+        })),
+        Match.when({ kind: "unitSupportProfile" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            source: procedure.source,
+            execution: procedure.execution,
+          },
+        })),
+        Match.when({ kind: "spellInvocation" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            executionFacts: executionFactsFor(procedure.execution),
+          },
+        })),
+        Match.when({ kind: "unavailableSpellInvocation" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: { kind: procedure.kind },
+        })),
+        Match.when({ kind: "effectOccurrenceSource" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure,
+        })),
+        Match.exhaustive,
+      ),
+    );
 }
 
 export function unitSupportProfileKind(
@@ -217,14 +247,16 @@ export function characterUnitProcedure(
     : undefined;
 }
 
-export function characterExecutionWithSpiritualWeaponRepeatAttack(
+export function characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
   execution: CharacterExecutionState,
-  repeatExecution: SpiritualWeaponRepeatAttackSpellProcedureExecution,
+  repeatExecution: RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution,
 ): CharacterExecutionState {
   const alreadyBound = execution.procedureBindings.some(
     (binding) =>
       binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "spiritualWeaponRepeatAttack" &&
+      binding.procedure.execution.procedure ===
+        "spatialMeleeSpellAttackProxy" &&
+      binding.procedure.execution.operation === "repositionAndAttack" &&
       binding.procedure.execution.activeEffectRef ===
         repeatExecution.activeEffectRef &&
       binding.procedure.execution.activeEffectSourceProcedureRef ===
@@ -257,9 +289,9 @@ export function characterExecutionWithObjectContactDamageRepeat(
       ]);
 }
 
-export function characterExecutionWithDancingLightsReposition(
+export function characterExecutionWithMovableLightReposition(
   execution: CharacterExecutionState,
-  repositionExecution: DancingLightsRepositionSpellProcedureExecution,
+  repositionExecution: RepositionMovableLightManifestationSpellProcedureExecution,
 ): CharacterExecutionState {
   return characterExecutionWithDynamicSpellProcedures(execution, [
     repositionExecution,
@@ -297,13 +329,13 @@ export function characterExecutionWithSpellCreatedHeldObjectProcedures(
 function characterExecutionWithDynamicSpellProcedures(
   execution: CharacterExecutionState,
   procedures: readonly (
-    | DancingLightsRepositionSpellProcedureExecution
+    | RepositionMovableLightManifestationSpellProcedureExecution
     | HeldLightHurlSpellProcedureExecution
     | MarkedDamageRiderTransferSpellProcedureExecution
     | ObjectContactDamageRepeatSpellProcedureExecution
     | SpellCreatedHeldObjectAttackSpellProcedureExecution
     | SpellCreatedHeldObjectReEvokeSpellProcedureExecution
-    | SpiritualWeaponRepeatAttackSpellProcedureExecution
+    | RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution
   )[],
 ): CharacterExecutionState {
   const unbound = procedures.filter(
@@ -336,13 +368,13 @@ function characterExecutionWithDynamicSpellProcedures(
 function sameDynamicSpellProcedureExecution(
   left: SpellProcedureExecution,
   right:
-    | DancingLightsRepositionSpellProcedureExecution
+    | RepositionMovableLightManifestationSpellProcedureExecution
     | HeldLightHurlSpellProcedureExecution
     | MarkedDamageRiderTransferSpellProcedureExecution
     | ObjectContactDamageRepeatSpellProcedureExecution
     | SpellCreatedHeldObjectAttackSpellProcedureExecution
     | SpellCreatedHeldObjectReEvokeSpellProcedureExecution
-    | SpiritualWeaponRepeatAttackSpellProcedureExecution,
+    | RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution,
 ): boolean {
   return sameDomainValue(left, right);
 }
@@ -359,6 +391,9 @@ export function characterSpellProcedure(
     (candidate) => candidate.procedureRef === procedureRef,
   );
   if (binding?.procedure.kind !== "spellInvocation") return undefined;
+  if (binding.procedure.execution.procedure === "spawnedCompanionLifecycle") {
+    return undefined;
+  }
   const executable = executableSpellProcedureFromLiveEffects(
     execution,
     binding.procedure.execution,
@@ -381,22 +416,35 @@ export function characterSpellProcedureExecution(
     : undefined;
 }
 
+export function characterRetainedSpellProcedureExecution(
+  execution: CharacterExecutionState,
+  procedureRef: BattleProcedureExecutionRef,
+): SpellProcedureExecution | undefined {
+  const binding = execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  return binding?.procedure.kind === "spellInvocation" ||
+    binding?.procedure.kind === "unavailableSpellInvocation"
+    ? binding.procedure.execution
+    : undefined;
+}
+
 function executableSpellProcedureFromLiveEffects(
   execution: CharacterExecutionState,
-  stored: SpellProcedureExecution,
+  stored: BattleStoredSpellProcedureExecution,
   liveActor:
     | {
         readonly combatantId: CombatantId;
         readonly activeEffects: readonly BattleActiveEffect[];
       }
     | undefined,
-): SpellExecutableExecutionOf<SpellProcedureExecution> | undefined {
+): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
   if (
     stored.procedure === "markedDamageRider" &&
     stored.action === "transfer"
   ) {
     if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
+    const source = characterRetainedSpellProcedureExecution(
       execution,
       stored.activeEffectSourceProcedureRef,
     );
@@ -433,7 +481,7 @@ function executableSpellProcedureFromLiveEffects(
   }
   if (stored.procedure === "objectContactDamageRepeat") {
     if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
+    const source = characterRetainedSpellProcedureExecution(
       execution,
       stored.activeEffectSourceProcedureRef,
     );
@@ -464,44 +512,77 @@ function executableSpellProcedureFromLiveEffects(
         }
       : undefined;
   }
-  if (stored.procedure === "spiritualWeaponRepeatAttack") {
-    if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
+  if (isSpatialMeleeSpellAttackProxyReposition(stored)) {
+    return executableSpatialMeleeSpellAttackProxyReposition(
       execution,
-      stored.activeEffectSourceProcedureRef,
+      stored,
+      liveActor,
     );
-    const activeEffect = liveActor.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "spiritualWeapon" }
-      > =>
-        effect.kind === "spiritualWeapon" &&
-        effect.effectRef === stored.activeEffectRef &&
-        effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
-        effect.sourceCombatantId === liveActor.combatantId,
-    );
-    return activeEffect !== undefined &&
-      source?.procedure === "spiritualWeaponAttackProxy"
-      ? {
-          spellRuleFacts: source.spellRuleFacts,
-          access: {
-            tag: "spellEffect",
-            sourceCombatantId: liveActor.combatantId,
-          },
-          resource: { tag: "none" },
-          procedure: stored.procedure,
-          actionCost: "bonusAction",
-          activeEffect,
-          targeting: { kind: "singleCombatant" },
-          damage: activeEffect.damage,
-          attackKind: activeEffect.attackKind,
-          attackBonus: activeEffect.attackBonus,
-          forceReachFeet: activeEffect.forceReachFeet,
-          repeatMoveMaxFeet: activeEffect.repeatMoveMaxFeet,
-        }
-      : undefined;
   }
   return stored;
+}
+
+type SpatialMeleeSpellAttackProxyReposition = Extract<
+  BattleStoredSpellProcedureExecution,
+  { readonly procedure: "spatialMeleeSpellAttackProxy" }
+> & { readonly operation: "repositionAndAttack" };
+
+function isSpatialMeleeSpellAttackProxyReposition(
+  stored: BattleStoredSpellProcedureExecution,
+): stored is SpatialMeleeSpellAttackProxyReposition {
+  return (
+    stored.procedure === "spatialMeleeSpellAttackProxy" &&
+    stored.operation === "repositionAndAttack"
+  );
+}
+
+function executableSpatialMeleeSpellAttackProxyReposition(
+  execution: CharacterExecutionState,
+  stored: SpatialMeleeSpellAttackProxyReposition,
+  liveActor:
+    | {
+        readonly combatantId: CombatantId;
+        readonly activeEffects: readonly BattleActiveEffect[];
+      }
+    | undefined,
+): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
+  if (liveActor === undefined) return undefined;
+  const source = characterRetainedSpellProcedureExecution(
+    execution,
+    stored.activeEffectSourceProcedureRef,
+  );
+  if (source?.procedure !== "spatialMeleeSpellAttackProxy") return undefined;
+  if (source.operation !== "createAndAttack") return undefined;
+  const activeEffect = liveActor.activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spatialMeleeSpellAttackProxy" }
+    > =>
+      effect.kind === "spatialMeleeSpellAttackProxy" &&
+      effect.effectRef === stored.activeEffectRef &&
+      effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
+      effect.sourceCombatantId === liveActor.combatantId,
+  );
+  if (activeEffect === undefined) return undefined;
+  return {
+    spellRuleFacts: source.spellRuleFacts,
+    access: {
+      tag: "spellEffect",
+      sourceCombatantId: liveActor.combatantId,
+    },
+    resource: { tag: "none" },
+    procedure: stored.procedure,
+    operation: "repositionAndAttack",
+    actionCost: "bonusAction",
+    activeEffect,
+    targeting: { kind: "singleCombatant" },
+    repeatTargeting: stored.repeatTargeting,
+    damage: source.damage,
+    attackKind: source.attackKind,
+    attackBonus: source.attackBonus,
+    forceReachFeet: source.forceReachFeet,
+    repeatMoveMaxFeet: source.repeatMoveMaxFeet,
+  };
 }

@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
@@ -15,36 +15,36 @@ function isNonEmptyReadonlyArray<T>(
 
 export function traverseValidation<A, B, E>(
   values: ReadonlyNonEmptyArray<A>,
-  validate: (value: A, index: number) => Either.Either<B, E>,
-): Either.Either<ReadonlyNonEmptyArray<B>, ReadonlyNonEmptyArray<E>>;
+  validate: (value: A, index: number) => Result.Result<B, E>,
+): Result.Result<ReadonlyNonEmptyArray<B>, ReadonlyNonEmptyArray<E>>;
 export function traverseValidation<A, B, E>(
   values: ReadonlyArray<A>,
-  validate: (value: A, index: number) => Either.Either<B, E>,
-): Either.Either<ReadonlyArray<B>, ReadonlyNonEmptyArray<E>>;
+  validate: (value: A, index: number) => Result.Result<B, E>,
+): Result.Result<ReadonlyArray<B>, ReadonlyNonEmptyArray<E>>;
 export function traverseValidation<A, B, E>(
   values: ReadonlyArray<A>,
-  validate: (value: A, index: number) => Either.Either<B, E>,
-): Either.Either<ReadonlyArray<B>, ReadonlyNonEmptyArray<E>> {
+  validate: (value: A, index: number) => Result.Result<B, E>,
+): Result.Result<ReadonlyArray<B>, ReadonlyNonEmptyArray<E>> {
   const accumulated = values.reduce<ValidationAccumulator<B, E>>(
     (accumulator, value, index) => {
       const result = validate(value, index);
 
-      return Either.isLeft(result)
+      return Result.isFailure(result)
         ? {
             ...accumulator,
-            errors: [...accumulator.errors, result.left],
+            errors: [...accumulator.errors, result.failure],
           }
         : {
             ...accumulator,
-            values: [...accumulator.values, result.right],
+            values: [...accumulator.values, result.success],
           };
     },
     { values: [], errors: [] },
   );
 
   if (isNonEmptyReadonlyArray(accumulated.errors)) {
-    return Either.left(accumulated.errors);
+    return Result.fail(accumulated.errors);
   }
 
-  return Either.right(accumulated.values);
+  return Result.succeed(accumulated.values);
 }

@@ -13,6 +13,7 @@ import {
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
+  mbtPickSchemas,
   mbtTraceCount,
   numberFromQuintInt,
   quintStateRecord,
@@ -21,7 +22,6 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
@@ -85,34 +85,31 @@ type SeeInvisibilityObserverSightRuntimeState = {
   readonly etherealWitness: SeeInvisibilityEtherealWitness;
 };
 
-const boolSchema = Schema.standardSchemaV1(Schema.Boolean);
-const unknownSchema = Schema.standardSchemaV1(Schema.Unknown);
-
 const driverSchema = {
   init: {
-    targetHasInvisibleCondition: boolSchema,
-    targetHidden: boolSchema,
-    objectHasInvisibleCondition: boolSchema,
-    objectHasSightLine: boolSchema,
-    objectBlockedByOpaqueCover: boolSchema,
-    etherealTargetPlane: unknownSchema,
-    etherealHasSightLine: boolSchema,
-    etherealBlockedByOpaqueCover: boolSchema,
+    targetHasInvisibleCondition: mbtPickSchemas.bool,
+    targetHidden: mbtPickSchemas.bool,
+    objectHasInvisibleCondition: mbtPickSchemas.bool,
+    objectHasSightLine: mbtPickSchemas.bool,
+    objectBlockedByOpaqueCover: mbtPickSchemas.bool,
+    etherealTargetPlane: mbtPickSchemas.unknown,
+    etherealHasSightLine: mbtPickSchemas.bool,
+    etherealBlockedByOpaqueCover: mbtPickSchemas.bool,
   },
   doCastSeeInvisibility: {},
   doSetTargetFacts: {
-    targetHasInvisibleCondition: boolSchema,
-    targetHidden: boolSchema,
+    targetHasInvisibleCondition: mbtPickSchemas.bool,
+    targetHidden: mbtPickSchemas.bool,
   },
   doSetObjectWitness: {
-    objectHasInvisibleCondition: boolSchema,
-    objectHasSightLine: boolSchema,
-    objectBlockedByOpaqueCover: boolSchema,
+    objectHasInvisibleCondition: mbtPickSchemas.bool,
+    objectHasSightLine: mbtPickSchemas.bool,
+    objectBlockedByOpaqueCover: mbtPickSchemas.bool,
   },
   doSetEtherealWitness: {
-    etherealTargetPlane: unknownSchema,
-    etherealHasSightLine: boolSchema,
-    etherealBlockedByOpaqueCover: boolSchema,
+    etherealTargetPlane: mbtPickSchemas.unknown,
+    etherealHasSightLine: mbtPickSchemas.bool,
+    etherealBlockedByOpaqueCover: mbtPickSchemas.bool,
   },
   doMakeObserverEffectNearlyExpired: {},
   doDurationTick: {},

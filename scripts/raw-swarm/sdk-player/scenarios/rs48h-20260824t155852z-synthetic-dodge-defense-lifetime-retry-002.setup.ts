@@ -48,12 +48,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(skeletonResult)) {
+  if (sdk.isFailure(skeletonResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        skeletonResult.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(skeletonResult.failure),
       observation: {
         operation: "battleCreatureInitFromStatBlock",
         combatant: "Skeleton",
@@ -69,12 +67,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(goblinResult)) {
+  if (sdk.isFailure(goblinResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        goblinResult.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(goblinResult.failure),
       observation: {
         operation: "battleCreatureInitFromStatBlock",
         combatant: "Goblin Warrior",
@@ -84,18 +80,18 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battleResult = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [skeletonResult.right, goblinResult.right],
+    combatants: [skeletonResult.success, goblinResult.success],
   });
-  if (sdk.isLeft(battleResult)) {
+  if (sdk.isFailure(battleResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battleResult.left),
+      obstruction: sdk.battleStateInitIssueMessage(battleResult.failure),
       observation: { operation: "startBattle" },
     };
   }
 
   const sessionResult = sdk.createScenarioSession({
-    battle: battleResult.right,
+    battle: battleResult.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -121,17 +117,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(sessionResult)) {
+  if (sdk.isFailure(sessionResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(sessionResult.left),
+      obstruction: sdk.scenarioSessionIssueMessage(sessionResult.failure),
       observation: { operation: "createScenarioSession" },
     };
   }
 
   return {
     kind: "ready",
-    session: sessionResult.right,
+    session: sessionResult.success,
     observation: {
       scenarioId: SCENARIO_ID,
       spatialSource: "geometryDerived",

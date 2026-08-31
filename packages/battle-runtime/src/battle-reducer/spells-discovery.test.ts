@@ -50,7 +50,7 @@ describe("spell discovery readied spell classification", () => {
       isReadiedSpellInvocation(
         readiedGuardRelevantInvocation({
           procedure: "spellAttackDamage",
-          damage: { kind: "sorcerousBurstDamageTypeChoice" },
+          damage: { kind: "spellAttackDamageTypeChoice" },
         }),
       ),
     ).toBe(false);
@@ -58,7 +58,7 @@ describe("spell discovery readied spell classification", () => {
       isReadiedSpellInvocation(
         readiedGuardRelevantInvocation({
           procedure: "spellAttackDamage",
-          damage: { kind: "selectedSorcerousBurstDamage" },
+          damage: { kind: "selectedSpellAttackDamage" },
         }),
       ),
     ).toBe(true);

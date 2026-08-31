@@ -13,7 +13,7 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -56,11 +56,11 @@ const decodeReaction = (
 
 function requiredProjectionFailure(record: StatBlockRecord) {
   const result = projectAuthoredStatBlock(record);
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isRight(result)) {
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isSuccess(result)) {
     throw new Error("Expected the synthetic Stat Block projection to fail.");
   }
-  return result.left;
+  return result.failure;
 }
 
 function druidWildShapeKnownFormProfile(level = 2) {
@@ -192,9 +192,9 @@ describe("Stat Block projection boundary coverage", () => {
         ammunitionStocks: [],
         conditions: [],
       });
-      expect(Either.isLeft(initialized)).toBe(true);
-      if (Either.isRight(initialized)) continue;
-      expect(authoredStatBlockBattleInitIssueMessage(initialized.left)).toBe(
+      expect(Result.isFailure(initialized)).toBe(true);
+      if (Result.isSuccess(initialized)) continue;
+      expect(authoredStatBlockBattleInitIssueMessage(initialized.failure)).toBe(
         projectionCase.message,
       );
     }
@@ -214,9 +214,9 @@ describe("Stat Block projection boundary coverage", () => {
       ammunitionStocks: [],
       conditions: ["prone"],
     });
-    expect(Either.isLeft(battleInit)).toBe(true);
-    if (Either.isRight(battleInit)) return;
-    expect(authoredStatBlockBattleInitIssueMessage(battleInit.left)).toBe(
+    expect(Result.isFailure(battleInit)).toBe(true);
+    if (Result.isSuccess(battleInit)) return;
+    expect(authoredStatBlockBattleInitIssueMessage(battleInit.failure)).toBe(
       "Stat Block combatant is immune to initial prone condition.",
     );
   });
@@ -291,7 +291,7 @@ describe("Stat Block projection boundary coverage", () => {
           statBlock: { ...source.statBlock, actions: [timedAttack] },
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleStatBlockProjectionFailure",
           reason: "unsupportedProcedureBinding",
           issues: [
@@ -337,14 +337,14 @@ describe("Stat Block projection boundary coverage", () => {
     };
     const projection = projectAuthoredStatBlock(malformedDaily);
     expect(projection).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStatBlockProjectionFailure",
         reason: "invalidResourceLimit",
         issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
       }),
     );
-    if (Either.isRight(projection)) return;
-    expect(battleStatBlockProjectionFailureMessage(projection.left)).toBe(
+    if (Result.isSuccess(projection)) return;
+    expect(battleStatBlockProjectionFailureMessage(projection.failure)).toBe(
       "Stat Block authored projection failed: battle initialization requires valid Stat Block resource limits.",
     );
   });
@@ -372,12 +372,12 @@ describe("Stat Block projection boundary coverage", () => {
     };
 
     const projected = projectAuthoredStatBlock(withSaveProficiency);
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isRight(projected)) {
-      expect(projected.right.runtime.statBlock.saveProficiencies).toEqual([
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isSuccess(projected)) {
+      expect(projected.success.runtime.statBlock.saveProficiencies).toEqual([
         "dex",
       ]);
-      expect(projected.right.runtime.procedures).toEqual([]);
+      expect(projected.success.runtime.procedures).toEqual([]);
     }
   });
 
@@ -404,7 +404,7 @@ describe("Stat Block projection boundary coverage", () => {
       },
     };
     expect(projectAuthoredStatBlock(misplaced)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStatBlockProjectionFailure",
         reason: "unsupportedProcedureBinding",
         issues: [
@@ -479,7 +479,7 @@ describe("Stat Block projection boundary coverage", () => {
     };
 
     expect(projectAuthoredStatBlock(record)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStatBlockProjectionFailure",
         reason: "unsupportedProcedureBinding",
         issues: [
@@ -577,9 +577,9 @@ describe("Stat Block projection boundary coverage", () => {
       ammunitionStocks: [],
       conditions: [],
     });
-    expect(Either.isLeft(initialized)).toBe(true);
-    if (Either.isRight(initialized)) return;
-    expect(authoredStatBlockBattleInitIssueMessage(initialized.left)).toBe(
+    expect(Result.isFailure(initialized)).toBe(true);
+    if (Result.isSuccess(initialized)) return;
+    expect(authoredStatBlockBattleInitIssueMessage(initialized.failure)).toBe(
       "Stat Block authored projection failed in actions procedure 1, bonusActions procedure 2, reactions procedure 3: the procedure binding is not supported by battle execution.",
     );
   });
@@ -664,7 +664,7 @@ describe("Stat Block projection boundary coverage", () => {
         forms: [projectionCase.record],
       });
       expect(result).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleDruidWildShapeKnownFormsIssue",
           issues: [
             {
@@ -675,8 +675,8 @@ describe("Stat Block projection boundary coverage", () => {
           ],
         }),
       );
-      if (Either.isLeft(result)) {
-        expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+      if (Result.isFailure(result)) {
+        expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
           projectionCase.message,
         );
       }
@@ -695,7 +695,7 @@ describe("Stat Block projection boundary coverage", () => {
       forms: [source, source],
     });
     expect(duplicate).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [
           {
@@ -706,8 +706,8 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
-    if (Either.isLeft(duplicate)) {
-      expect(wildShapeKnownFormsIssueMessage(duplicate.left.issues)).toBe(
+    if (Result.isFailure(duplicate)) {
+      expect(wildShapeKnownFormsIssueMessage(duplicate.failure.issues)).toBe(
         "Druid Wild Shape battle initialization requires distinct available known forms.",
       );
     }
@@ -717,7 +717,7 @@ describe("Stat Block projection boundary coverage", () => {
       forms: [{ ...source, challengeRating: 1 }],
     });
     expect(tooDifficult).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [
           {
@@ -729,8 +729,8 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
-    if (Either.isLeft(tooDifficult)) {
-      expect(wildShapeKnownFormsIssueMessage(tooDifficult.left.issues)).toBe(
+    if (Result.isFailure(tooDifficult)) {
+      expect(wildShapeKnownFormsIssueMessage(tooDifficult.failure.issues)).toBe(
         "Druid Wild Shape battle forms cannot exceed the Druid's maximum Challenge Rating.",
       );
     }
@@ -768,7 +768,7 @@ describe("Stat Block projection boundary coverage", () => {
       profile,
       forms: [unsupportedTraitForm],
     });
-    expect(skipped).toEqual(Either.right([]));
+    expect(skipped).toEqual(Result.succeed([]));
 
     const flyingForm: StatBlockRecord = {
       ...source,
@@ -791,7 +791,7 @@ describe("Stat Block projection boundary coverage", () => {
       forms: [flyingForm],
     });
     expect(ineligible).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [
           {
@@ -803,8 +803,8 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
-    if (Either.isLeft(ineligible)) {
-      expect(wildShapeKnownFormsIssueMessage(ineligible.left.issues)).toBe(
+    if (Result.isFailure(ineligible)) {
+      expect(wildShapeKnownFormsIssueMessage(ineligible.failure.issues)).toBe(
         "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
       );
     }
@@ -837,7 +837,7 @@ describe("Stat Block projection boundary coverage", () => {
         forms: [gmFlyAlternativeForm],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [
           {
@@ -855,7 +855,7 @@ describe("Stat Block projection boundary coverage", () => {
       forms: [gmFlyAlternativeForm],
     });
     expect(unresolved).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [
           {
@@ -866,8 +866,8 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
-    if (Either.isLeft(unresolved)) {
-      expect(wildShapeKnownFormsIssueMessage(unresolved.left.issues)).toBe(
+    if (Result.isFailure(unresolved)) {
+      expect(wildShapeKnownFormsIssueMessage(unresolved.failure.issues)).toBe(
         "Druid Wild Shape battle forms require the GM's Table Decision selecting one authored Speed alternative.",
       );
     }
@@ -926,7 +926,7 @@ describe("Stat Block projection boundary coverage", () => {
       forms: [invalidLimitForm, graphFailureForm],
     });
     expect(result).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [
           {
@@ -957,14 +957,14 @@ describe("Stat Block projection boundary coverage", () => {
       ammunitionStocks: [],
       conditions: [],
     });
-    expect(Either.isLeft(initialized)).toBe(true);
-    if (Either.isLeft(initialized)) {
-      expect(authoredStatBlockBattleInitIssueMessage(initialized.left)).toBe(
+    expect(Result.isFailure(initialized)).toBe(true);
+    if (Result.isFailure(initialized)) {
+      expect(authoredStatBlockBattleInitIssueMessage(initialized.failure)).toBe(
         "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.; Battle runtime requires Stat Block procedure resource reference 99 to match a declared resource.",
       );
     }
-    if (Either.isLeft(result)) {
-      expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+    if (Result.isFailure(result)) {
+      expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
         "Druid Wild Shape battle forms require valid Stat Block resource limits.; resource declaration ordinal 1 is duplicated, resource reference 99 is missing",
       );
     }

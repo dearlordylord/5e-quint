@@ -1,5 +1,5 @@
 import { Brand, Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
@@ -1205,16 +1205,18 @@ function resourceDeclarationDisposition(
   resource: StatBlockProcedureResource,
 ): StatBlockProcedurePressureDisposition {
   const parsed = parseStatBlockRuntimeResource(resource);
-  return Either.isRight(parsed)
+  return Result.isSuccess(parsed)
     ? {
         kind: "executable",
         owner: "battle-runtime Stat Block resource pool" as const,
-        runtimeShape: parsed.right.limit.kind,
+        runtimeShape: parsed.success.limit.kind,
       }
     : {
         kind: "malformed",
         stage: "resourceDeclaration",
-        issues: [{ kind: "invalidResourceDeclaration", reason: parsed.left }],
+        issues: [
+          { kind: "invalidResourceDeclaration", reason: parsed.failure },
+        ],
       };
 }
 

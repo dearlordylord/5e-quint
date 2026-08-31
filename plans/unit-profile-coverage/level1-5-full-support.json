@@ -7116,8 +7116,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 117,
-      "numerator": 104,
-      "percent": "88.9%"
+      "numerator": 105,
+      "percent": "89.7%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 117,
@@ -7126,8 +7126,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 163,
-      "numerator": 137,
-      "percent": "84%"
+      "numerator": 138,
+      "percent": "84.7%"
     },
     "strictFinalSupport": {
       "denominator": 283,
@@ -11441,8 +11441,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 163,
-        "numerator": 137,
-        "percent": "84%"
+        "numerator": 138,
+        "percent": "84.7%"
       }
     },
     "units": [
@@ -13277,7 +13277,7 @@
             "profileId": "spell.invocation-fog-cloud-obscurement",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+              "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
             ]
           }
         ],
@@ -13395,10 +13395,10 @@
         "unitId": "guiding_bolt"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
@@ -13416,8 +13416,9 @@
             "profileId": "spell.invocation-haste-positive",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
               "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
-              "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+              "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt"
             ],
             "semanticOwnerPolicy": "profile-local-semantic-core"
           }
@@ -13580,7 +13581,7 @@
             "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
             ]
           }
         ],
@@ -13648,7 +13649,7 @@
             "profileId": "spell.invocation-hypnotic-pattern-control",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt"
             ]
           }
         ],
@@ -15434,8 +15435,7 @@
               "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
               "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-            ],
-            "semanticOwnerPolicy": "profile-local-semantic-core"
+            ]
           }
         ],
         "unitId": "shield"
@@ -15583,7 +15583,7 @@
             "profileId": "spell.invocation-sleep-target-admission",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
             ]
           },
           {
@@ -15599,7 +15599,7 @@
             "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
             ]
           }
         ],
@@ -15627,6 +15627,7 @@
             "profileId": "spell.invocation-slow-active-penalties",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
             ]
@@ -15801,8 +15802,7 @@
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-            ],
-            "semanticOwnerPolicy": "profile-local-semantic-core"
+            ]
           }
         ],
         "unitId": "spiritual_weapon"

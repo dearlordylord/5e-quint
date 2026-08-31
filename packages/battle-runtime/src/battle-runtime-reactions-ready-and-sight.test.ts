@@ -21,7 +21,7 @@ import {
   cantripSpellInvocationRef,
   concentrationSavingThrowFill,
   damageRollFill,
-  Either,
+  Result,
   fighterAttackSubject,
   fighterId,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
@@ -194,7 +194,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
             responderId: wizardId,
             choice: {
               kind: "releaseReadiedSpell",
-              readiedSpellCasterId: wizardId,
               procedureRef: subject.procedureRef,
               fills: [],
             },
@@ -213,7 +212,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: choice.subject.procedureRef,
             fills: [],
           },
@@ -320,7 +318,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: releaseChoice.subject.procedureRef,
             fills: [],
           },
@@ -565,8 +562,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("structured spell subjects reject Ready mode without a trigger", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSubjectSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSubjectSchema)({
           tag: "actionSpell",
           actorId: wizardId,
           invocation: cantripSpellInvocationRef(
@@ -690,7 +687,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: choice.subject.procedureRef,
             fills: [],
           },
@@ -760,7 +756,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("reaction decision schema parses nested reaction procedure fills", () => {
-    const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
+    const decoded = Schema.decodeUnknownResult(BattleFillSchema)({
       kind: "interruptDecision",
       holeId: "battle:interrupt:decision",
       value: {
@@ -768,7 +764,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         responderId: "wizard",
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: "wizard",
           fills: [
             {
               kind: "notARealFill",
@@ -780,7 +775,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       },
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("snapshot codecs preserve the Readied Spell procedure binding", () => {
@@ -814,18 +809,25 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     expect(encoded.frontier).toMatchObject({
       trigger: "attackHit",
       decisionHole: { trigger: "attackHit" },
-      choices: [expect.objectContaining({ kind: "releaseReadiedSpell" })],
+      choices: [
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+          }),
+        }),
+      ],
     });
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
           frontier: {
             ...encoded.frontier,
@@ -850,10 +852,13 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const pendingInterrupt = encoded.frontier;
     const releaseChoice = pendingInterrupt.choices.find(
-      (choice) => choice.kind === "releaseReadiedSpell",
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
+        choice.subject.command === "releaseReadiedSpell",
     );
     if (
-      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice?.kind !== "nestedProcedure" ||
       releaseChoice.subject.tag !== "runtimeCommand" ||
       releaseChoice.subject.command !== "releaseReadiedSpell"
     ) {
@@ -892,25 +897,22 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const replaceReleaseChoice = (input: {
       readonly procedureRef: string;
-      readonly reactorId?: string;
-      readonly casterId?: string;
+      readonly readiedSpellCasterId?: string;
     }) => ({
       ...encoded,
       frontier: {
         ...pendingInterrupt,
         choices: pendingInterrupt.choices.map((choice) =>
-          choice.kind === "releaseReadiedSpell" &&
+          choice.kind === "nestedProcedure" &&
           choice.subject.tag === "runtimeCommand" &&
           choice.subject.command === "releaseReadiedSpell"
             ? {
                 ...choice,
-                reactorId: input.reactorId ?? choice.reactorId,
-                readiedSpellCasterId:
-                  input.casterId ?? choice.readiedSpellCasterId,
                 subject: {
                   ...choice.subject,
                   readiedSpellCasterId:
-                    input.casterId ?? choice.subject.readiedSpellCasterId,
+                    input.readiedSpellCasterId ??
+                    choice.subject.readiedSpellCasterId,
                   procedureRef: input.procedureRef,
                 },
               }
@@ -977,15 +979,15 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({ procedureRef: unboundRef }),
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
           checkpoint: {
             ...encoded.checkpoint,
@@ -1006,32 +1008,32 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({ procedureRef: wrongKindRef }),
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({
             procedureRef: releaseChoice.subject.procedureRef,
-            reactorId: goblinId,
+            readiedSpellCasterId: goblinId,
           }),
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           releaseChoiceWithUnboundHole,
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           releaseChoiceWithMismatchedSourceHole,
         ),
       ),
@@ -1062,7 +1064,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         responderId: "synthetic-retaliator",
         choice: {
           kind: "retaliationAttack",
-          reactorId: "synthetic-retaliator",
           selection,
           fills: [targetSpatialFacts],
         },
@@ -1070,11 +1071,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
 
     expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleFillSchema)(decision)),
+      Result.isSuccess(Schema.decodeUnknownResult(BattleFillSchema)(decision)),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "interruptDecision",
           holeId: "battle:interrupt:decision",
           value: {
@@ -1093,7 +1094,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("attack sight spatial facts parse through target-choice fills", () => {
-    const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
+    const decoded = Schema.decodeUnknownResult(BattleFillSchema)({
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "goblin",
@@ -1111,10 +1112,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       ],
     });
 
-    expect(Either.isRight(decoded)).toBe(true);
+    expect(Result.isSuccess(decoded)).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "targetChoice",
           holeId: "battle:attack:target",
           value: "goblin",

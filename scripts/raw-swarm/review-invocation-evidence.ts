@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -88,7 +88,7 @@ export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   audit: ArtifactAuthoritySchema,
   packet: ArtifactAuthoritySchema,
   campaign: ArtifactAuthoritySchema,
-  prePlayReviews: Schema.Tuple(
+  prePlayReviews: Schema.Tuple([
     Schema.Struct({
       reviewStage: Schema.Literal("milestone"),
       sourceInput: ArtifactAuthoritySchema,
@@ -99,8 +99,8 @@ export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
       sourceInput: ArtifactAuthoritySchema,
       replayInput: ArtifactAuthoritySchema,
     }),
-  ),
-  invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
+  ]),
+  invocationLedgers: Schema.Tuple([ArtifactAuthoritySchema]),
   invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
   invocationRawArtifacts: Schema.Array(ArtifactAuthoritySchema),
 });
@@ -134,15 +134,15 @@ function scenarioReviewIdentity(packet: {
   const source = sources[0];
   if (sources.length !== 1 || source === undefined)
     fail("Review evidence packet requires one scenario review authority.");
-  const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+  const decoded = Schema.decodeUnknownResult(FinalScenarioReviewSchema, {
     onExcessProperty: "error",
   })(json(source.path));
-  if (Either.isLeft(decoded))
-    fail(`Scenario review authority is invalid: ${decoded.left.message}`);
+  if (Result.isFailure(decoded))
+    fail(`Scenario review authority is invalid: ${decoded.failure.message}`);
   return {
-    scenarioId: decoded.right.scenarioId,
-    scenarioSha256: decoded.right.scenarioSha256,
-    gitSha: decoded.right.gitSha,
+    scenarioId: decoded.success.scenarioId,
+    scenarioSha256: decoded.success.scenarioSha256,
+    gitSha: decoded.success.gitSha,
   };
 }
 
@@ -162,8 +162,8 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
   if (lines.length === 0) fail("Review invocation ledgers must be nonempty.");
   return lines.map((value) => {
     const decoded = parseModelInvocationLedgerEntry(value);
-    if (Either.isLeft(decoded)) fail(decoded.left.message);
-    return decoded.right;
+    if (Result.isFailure(decoded)) fail(decoded.failure.message);
+    return decoded.success;
   });
 }
 
@@ -179,12 +179,12 @@ function campaignAuthorityForControlledReview(
     repoRoot,
     retainedReviewInputPath,
   );
-  if (Either.isLeft(canonicalReviewInputPath)) {
+  if (Result.isFailure(canonicalReviewInputPath)) {
     fail(
-      `Controlled review invocations require a repository-owned retained review input: ${canonicalReviewInputPath.left}`,
+      `Controlled review invocations require a repository-owned retained review input: ${canonicalReviewInputPath.failure}`,
     );
   }
-  const reviewInputDirectory = dirname(canonicalReviewInputPath.right);
+  const reviewInputDirectory = dirname(canonicalReviewInputPath.success);
   const campaignDirectory = basename(reviewInputDirectory).endsWith(
     "-review-inputs",
   )
@@ -195,37 +195,37 @@ function campaignAuthorityForControlledReview(
     repoRoot,
     campaignPath,
   );
-  if (Either.isLeft(canonicalCampaignPath)) {
+  if (Result.isFailure(canonicalCampaignPath)) {
     fail(
-      `Controlled review invocations require the Campaign manifest adjacent to ${retainedReviewInputPath}: ${canonicalCampaignPath.left}`,
+      `Controlled review invocations require the Campaign manifest adjacent to ${retainedReviewInputPath}: ${canonicalCampaignPath.failure}`,
     );
   }
-  const bytes = readFileSync(canonicalCampaignPath.right);
+  const bytes = readFileSync(canonicalCampaignPath.success);
   const value: unknown = (() => {
     try {
       return JSON.parse(bytes.toString("utf8")) as unknown;
     } catch {
       fail(
-        `Controlled review Campaign manifest is malformed JSON: ${canonicalCampaignPath.right}`,
+        `Controlled review Campaign manifest is malformed JSON: ${canonicalCampaignPath.success}`,
       );
     }
   })();
-  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(ScenarioCampaignManifestSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Controlled review Campaign manifest is invalid: ${decoded.left.message}`,
+      `Controlled review Campaign manifest is invalid: ${decoded.failure.message}`,
     );
   }
   const relativePath = canonicalRepositoryReadRelativePath(
     repoRoot,
-    canonicalCampaignPath.right,
+    canonicalCampaignPath.success,
   );
-  if (Either.isLeft(relativePath)) fail(relativePath.left);
+  if (Result.isFailure(relativePath)) fail(relativePath.failure);
   return {
-    manifest: decoded.right,
-    authority: artifactAuthorityForBytes(relativePath.right, bytes),
+    manifest: decoded.success,
+    authority: artifactAuthorityForBytes(relativePath.success, bytes),
   };
 }
 
@@ -237,13 +237,14 @@ type RetainedReviewInputArtifact = Readonly<{
 function readRetainedReviewBytes(
   path: string,
   expectedStage: "milestone" | "final",
-): Either.Either<Buffer, string> {
+): Result.Result<Buffer, string> {
   const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
-  if (Either.isLeft(canonicalPath)) return Either.left(canonicalPath.left);
+  if (Result.isFailure(canonicalPath))
+    return Result.fail(canonicalPath.failure);
   try {
-    return Either.right(readFileSync(canonicalPath.right));
+    return Result.succeed(readFileSync(canonicalPath.success));
   } catch {
-    return Either.left(`Retained ${expectedStage} review input is unreadable.`);
+    return Result.fail(`Retained ${expectedStage} review input is unreadable.`);
   }
 }
 
@@ -252,34 +253,36 @@ function retainedReviewInputArtifact(
   expectedStage: "milestone" | "final",
 ): RetainedReviewInputArtifact {
   const bytes = readRetainedReviewBytes(path, expectedStage);
-  if (Either.isLeft(bytes)) fail(bytes.left);
-  const value: Either.Either<unknown, string> = (() => {
+  if (Result.isFailure(bytes)) fail(bytes.failure);
+  const value: Result.Result<unknown, string> = (() => {
     try {
-      return Either.right(JSON.parse(bytes.right.toString("utf8")) as unknown);
+      return Result.succeed(
+        JSON.parse(bytes.success.toString("utf8")) as unknown,
+      );
     } catch {
-      return Either.left(
+      return Result.fail(
         `Retained ${expectedStage} review input is malformed JSON.`,
       );
     }
   })();
-  if (Either.isLeft(value)) fail(value.left);
-  const decoded = Schema.decodeUnknownEither(
+  if (Result.isFailure(value)) fail(value.failure);
+  const decoded = Schema.decodeUnknownResult(
     RetainedScenarioReviewInputSchema,
     { onExcessProperty: "error" },
-  )(value.right);
-  if (Either.isLeft(decoded)) {
+  )(value.success);
+  if (Result.isFailure(decoded)) {
     fail(
-      `Retained ${expectedStage} review input is invalid: ${decoded.left.message}`,
+      `Retained ${expectedStage} review input is invalid: ${decoded.failure.message}`,
     );
   }
-  if (decoded.right.reviewStage !== expectedStage) {
+  if (decoded.success.reviewStage !== expectedStage) {
     fail(`Retained ${expectedStage} review input has the wrong stage.`);
   }
   const repositoryPath = canonicalRepositoryReadRelativePath(repoRoot, path);
-  if (Either.isLeft(repositoryPath)) fail(repositoryPath.left);
+  if (Result.isFailure(repositoryPath)) fail(repositoryPath.failure);
   return {
-    input: decoded.right,
-    authority: artifactAuthorityForBytes(repositoryPath.right, bytes.right),
+    input: decoded.success,
+    authority: artifactAuthorityForBytes(repositoryPath.success, bytes.success),
   };
 }
 
@@ -310,9 +313,9 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
       owner: input.replayOwner,
     }),
   );
-  if (Either.isLeft(binding)) fail(binding.left);
+  if (Result.isFailure(binding)) fail(binding.failure);
   validateRetainedScenarioReviewInvocation({
-    binding: binding.right,
+    binding: binding.success,
     eventSha256: input.eventAuthority.sha256,
     events: input.events,
   });
@@ -327,33 +330,33 @@ type InvocationEventEvidence = {
 
 function readInvocationEventEvidence(path: string): InvocationEventEvidence {
   const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
-  if (Either.isLeft(canonicalPath)) fail(canonicalPath.left);
-  const parsed = readCodexEventsWithSource(canonicalPath.right);
+  if (Result.isFailure(canonicalPath)) fail(canonicalPath.failure);
+  const parsed = readCodexEventsWithSource(canonicalPath.success);
   if (parsed.tag === "invalid") fail(parsed.message);
   const retention = codexRawRetentionEventFromEvents(parsed.events);
   if (retention.tag === "invalid") fail(retention.message);
   const repositoryPath = canonicalRepositoryReadRelativePath(repoRoot, path);
-  if (Either.isLeft(repositoryPath)) fail(repositoryPath.left);
+  if (Result.isFailure(repositoryPath)) fail(repositoryPath.failure);
   const rawArtifact = (() => {
     if (retention.event === undefined) return undefined;
     const artifact = readCodexRawRetentionArtifact({
-      eventPath: canonicalPath.right,
+      eventPath: canonicalPath.success,
       event: retention.event,
     });
-    if (Either.isLeft(artifact)) fail(artifact.left);
+    if (Result.isFailure(artifact)) fail(artifact.failure);
     const relativePath = canonicalRepositoryReadRelativePath(
       repoRoot,
-      artifact.right.path,
+      artifact.success.path,
     );
-    if (Either.isLeft(relativePath)) fail(relativePath.left);
+    if (Result.isFailure(relativePath)) fail(relativePath.failure);
     return artifactAuthorityForBytes(
-      relativePath.right,
-      artifact.right.contents,
+      relativePath.success,
+      artifact.success.contents,
     );
   })();
   return {
     authority: artifactAuthorityForBytes(
-      repositoryPath.right,
+      repositoryPath.success,
       parsed.rawContents,
     ),
     events: parsed.events,
@@ -621,20 +624,20 @@ function deriveManifest(input: {
       schemaVersion: sourceInput.schemaVersion,
       outputJsonSchema: sourceInput.outputJsonSchema,
     });
-    if (Either.isLeft(compatibility)) {
+    if (Result.isFailure(compatibility)) {
       fail(
         `Retained ${reviewStage} source input does not use a canonical composite-review schema.`,
       );
     }
-    const decodedSourceResult = compatibility.right.decodeResult(
+    const decodedSourceResult = compatibility.success.decodeResult(
       sourceInput.result,
     );
-    const decodedReplayResult = compatibility.right.decodeResult(
+    const decodedReplayResult = compatibility.success.decodeResult(
       replayInput.result,
     );
     if (
-      Either.isLeft(decodedSourceResult) ||
-      Either.isLeft(decodedReplayResult)
+      Result.isFailure(decodedSourceResult) ||
+      Result.isFailure(decodedReplayResult)
     ) {
       fail(
         `Retained ${reviewStage} input result does not match its canonical composite-review schema.`,
@@ -665,7 +668,7 @@ function deriveManifest(input: {
     );
     const output =
       events === undefined ? undefined : finalAgentMessage(events.events);
-    const decodedOutput = compatibility.right.decodeOutput(output);
+    const decodedOutput = compatibility.success.decodeOutput(output);
     if (entry !== undefined && events !== undefined) {
       validateRetainedScenarioReviewInvocationEvidence({
         retainedInput: replayInput,
@@ -682,9 +685,9 @@ function deriveManifest(input: {
       events === undefined ||
       entry.model !== replayInput.model ||
       entry.reasoningEffort !== replayInput.reasoningEffort ||
-      Either.isLeft(decodedOutput) ||
-      canonicalJson(decodedOutput.right.result) !==
-        canonicalJson(decodedReplayResult.right)
+      Result.isFailure(decodedOutput) ||
+      canonicalJson(decodedOutput.success.result) !==
+        canonicalJson(decodedReplayResult.success)
     ) {
       fail(
         `Retained ${reviewStage} replay input does not match its invocation evidence.`,
@@ -766,12 +769,12 @@ export function writeReviewInvocationEvidenceManifest(input: {
 export function readReviewInvocationEvidenceManifest(
   path: string,
 ): ReviewInvocationEvidenceManifest {
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     ReviewInvocationEvidenceManifestSchema,
     { onExcessProperty: "error" },
   )(json(path));
-  if (Either.isLeft(decoded)) fail(decoded.left.message);
-  const manifest = decoded.right;
+  if (Result.isFailure(decoded)) fail(decoded.failure.message);
+  const manifest = decoded.success;
   const derived = deriveManifest({
     transcriptPath: manifest.transcript.path,
     reviewPath: manifest.review.path,

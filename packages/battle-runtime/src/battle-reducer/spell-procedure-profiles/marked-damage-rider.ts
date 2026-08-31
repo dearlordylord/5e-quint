@@ -36,8 +36,8 @@ import {
   type DiceExpr,
   type EffectAtom,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { Result, Match } from "effect";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { characterExecutionWithMarkedDamageRiderTransfer } from "../../character-execution-queries.ts";
 import type { MarkedDamageRiderTransferSpellProcedureExecution } from "../../character-execution.ts";
@@ -56,7 +56,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
@@ -68,13 +68,13 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "../targeting-save-interdiction.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import {
   spellAbilityChoiceHole,
   spellAbilityChoiceHoleId,
 } from "../spells-damage-fills.ts";
-import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
+import { MARKED_TARGET_FINDING_SKILLS as MARKED_DAMAGE_RIDER_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spendSpellAccessFreeCastResource,
@@ -220,7 +220,7 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
       {
         kind: "findingAdvantage",
         ability: "wis",
-        skills: HUNTERS_MARK_FINDING_SKILLS,
+        skills: MARKED_DAMAGE_RIDER_FINDING_SKILLS,
       },
       "sameTurn",
     );
@@ -229,7 +229,7 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
   if (spell.mechanics.operations.length === 2) {
     const passive = spell.mechanics.operations[1];
     const passiveEffect = passive?.effect;
-    const abilityChoices = hexAbilityChoices(
+    const abilityChoices = markedDamageRiderAbilityChoices(
       passiveEffect?.kind === "modify_roll_advantage"
         ? passiveEffect
         : undefined,
@@ -284,7 +284,7 @@ function markedDamageRiderDamageProjection(
       };
 }
 
-function hexAbilityChoices(
+function markedDamageRiderAbilityChoices(
   effect: EffectAtom | undefined,
 ): readonly Ability[] | null {
   if (effect === undefined || effect.kind !== "modify_roll_advantage") {
@@ -335,13 +335,13 @@ function markedDamageRiderConcentrationExpirationForSlot(
     unit: "hour",
     amount,
   });
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   return {
     kind: "concentration",
     combatantId: actorId,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
   };
 }
 
@@ -519,7 +519,7 @@ function resolveMarkedDamageRider(
       kind: "bonusAction",
     },
   );
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -532,7 +532,7 @@ function resolveMarkedDamageRider(
         ...input.input.state,
         currentTurnResources:
           clearPendingAttackRollMissToHitReplacementSelection(
-            spent.right,
+            spent.success,
             input.actorId,
           ),
       },
@@ -552,7 +552,7 @@ function resolveMarkedDamageRider(
     input.actorId,
   );
   const turnResources = clearPendingAttackRollMissToHitReplacementSelection(
-    spent.right,
+    spent.success,
     input.actorId,
   );
   const resourced = Match.value(input.invocation.resource).pipe(
@@ -620,7 +620,7 @@ function spendMarkedDamageRiderSpellSlot(
     spellCastState.currentTurnResources,
     actorId,
   );
-  if (Either.isLeft(slotTurnResources)) {
+  if (Result.isFailure(slotTurnResources)) {
     return invalidResult(
       errorState,
       "staleSubject",
@@ -632,7 +632,7 @@ function spendMarkedDamageRiderSpellSlot(
     state: expendSpellSlot(
       {
         ...spellCastState,
-        currentTurnResources: slotTurnResources.right,
+        currentTurnResources: slotTurnResources.success,
       },
       actorId,
       slotLevel,
@@ -673,7 +673,7 @@ function applyMarkedDamageRiderSpellEffect(
           effectRef: invocation.activeEffect.effectRef,
           owner: caster,
         }
-      : allocateBattleActiveEffectRefForCreature({ owner: caster });
+      : allocateBattleEffectExecutionRefForCreature({ owner: caster });
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:
@@ -768,7 +768,7 @@ function markedDamageRiderActiveAbilityCheckBehavior(
 }
 
 const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -781,7 +781,7 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
         expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
-      abilityCheckBehavior: Schema.Union(
+      abilityCheckBehavior: Schema.Union([
         Schema.Struct({ kind: Schema.Literal("none") }),
         Schema.Struct({
           kind: Schema.Literal("chosenAbilityDisadvantage"),
@@ -790,24 +790,24 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
         Schema.Struct({
           kind: Schema.Literal("findingAdvantage"),
           ability: Schema.Literal("wis"),
-          skills: Schema.Tuple(
+          skills: Schema.Tuple([
             Schema.Literal("perception"),
             Schema.Literal("survival"),
-          ),
+          ]),
         }),
-      ),
-      retargetTiming: Schema.Literal("sameTurn", "laterTurn"),
+      ]),
+      retargetTiming: Schema.Literals(["sameTurn", "laterTurn"]),
       rangeFeet: MovementFeet,
       expiresAt: BattleActiveEffectExpirationSchema,
     }),
     Schema.Struct({
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("transfer"),
-      spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
-      activeEffectRef: BattleActiveEffectExecutionRef,
+      spellRuleFacts: Schema.optionalKey(Schema.Never),
+      activeEffectRef: BattleEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
-  ),
+  ]),
 );
 export const markedDamageRiderProfile: SpellProcedureDeclaration<
   "markedDamageRider",

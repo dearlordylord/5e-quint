@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { battleToolNames } from "./battle-tool-input.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -46,7 +46,7 @@ export function recoverableOperationResult(
   isError: boolean,
 ): unknown {
   if (
-    root.sessionStore.pendingBattleFills === null ||
+    root.sessionStore.getPendingBattleTransaction() === null ||
     root.sessionStore.battleState.tag !== "activeBattle"
   ) {
     return operationResult;
@@ -61,12 +61,12 @@ export function recoverableOperationResult(
     root,
     root.sessionStore.battleState.session,
   );
-  if (Either.isLeft(battle)) {
+  if (Result.isFailure(battle)) {
     return {
       error: "Battle presentation context is incomplete.",
       details: {
         code: "BATTLE_PRESENTATION_INCOMPLETE",
-        issues: battle.left,
+        issues: battle.failure,
         operationResult,
       },
     };
@@ -76,13 +76,13 @@ export function recoverableOperationResult(
       ...operationResult,
       details: {
         ...operationResult.details,
-        battleEnvelope: battle.right.envelope,
+        battleEnvelope: battle.success.envelope,
       },
     };
   }
   return {
     result: operationResult,
-    battleEnvelope: battle.right.envelope,
+    battleEnvelope: battle.success.envelope,
   };
 }
 
@@ -107,14 +107,14 @@ export function availablePlaySessionEnvelope(input: {
 }): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   const projection = mcpSessionSummary(input.projection);
   const unresolvedInputsResult = unresolvedInputsForEnvelope(input);
-  if (Either.isLeft(unresolvedInputsResult)) {
+  if (Result.isFailure(unresolvedInputsResult)) {
     return errorContent("MCP operation output projection failed.", {
       code: "INVALID_OPERATION_OUTPUT",
       operationName: input.operationName,
-      projectionIssue: unresolvedInputsResult.left,
+      projectionIssue: unresolvedInputsResult.failure,
     });
   }
-  const unresolvedInputs = unresolvedInputsResult.right;
+  const unresolvedInputs = unresolvedInputsResult.success;
   const nextOperations = nextOperationsForEnvelope(
     input,
     projection,
@@ -168,7 +168,7 @@ function unresolvedInputsForEnvelope(input: {
   readonly operationName: PlaySessionOperationName;
   readonly operationResult: unknown;
   readonly isError?: boolean;
-}): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+}): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const battleEnvelope = embeddedBattleEnvelope(input.operationResult);
   if (battleEnvelope !== undefined) {
     return unresolvedInputsFromBattleEnvelope(
@@ -176,7 +176,7 @@ function unresolvedInputsForEnvelope(input: {
       battleEnvelope.path,
     );
   }
-  if (input.isError === true) return Either.right([]);
+  if (input.isError === true) return Result.succeed([]);
   return unresolvedInputsFrom(input.operationName, input.operationResult);
 }
 

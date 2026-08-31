@@ -67,17 +67,18 @@ import {
   PositiveInteger,
   movementFeet,
 } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
-
 import { characterSheetBattleInit } from "./index.ts";
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
+
+export { requireSuccess };
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -190,7 +191,7 @@ export function battleSessionFromSheets(input: {
   >[0][];
 }): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
-    requireRight(
+    requireSuccess(
       characterSheetBattleInit({
         sheet: character.sheet,
         combatantId: character.combatantId,
@@ -202,13 +203,13 @@ export function battleSessionFromSheets(input: {
       }),
     ),
   );
-  return requireRight(
+  return requireSuccess(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
         ...characterInits,
         ...input.monsters.map((monster) =>
-          requireRight(battleCreatureInitFromStatBlock(monster)),
+          requireSuccess(battleCreatureInitFromStatBlock(monster)),
         ),
       ],
     }),
@@ -227,7 +228,7 @@ export function characterSheet(input: {
   return {
     combatantId: input.combatantId,
     initiative: input.initiative,
-    sheet: requireRight(
+    sheet: requireSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId(input.characterIdText),
         build: input.build,
@@ -274,7 +275,7 @@ function levelFiveBaseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment(
         input.abilityScores ?? {
           str: 16,
@@ -307,7 +308,7 @@ export function levelFiveMartialBuild(input: {
 }): CharacterBuild {
   const weaponItemId = characterEquipmentItemId({
     slot: "main",
-    unitId: requireRight(characterEquipmentItemUnitId(input.weaponUnitId)),
+    unitId: requireSuccess(characterEquipmentItemUnitId(input.weaponUnitId)),
   });
   return levelFiveBaseBuild({
     classUnitId: input.classUnitId,
@@ -540,7 +541,7 @@ function levelFiveFighterCreationFill(hole: CreationHole): CreationFill {
       kind: "abilityScores",
       holeId: hole.holeId,
       method: "standardArray",
-      value: requireRight(
+      value: requireSuccess(
         abilityScoreAssignment({
           str: 15,
           dex: 14,
@@ -768,7 +769,7 @@ function levelFiveWizardCreationFill(
       kind: "abilityScores",
       holeId: hole.holeId,
       method: "standardArray",
-      value: requireRight(
+      value: requireSuccess(
         abilityScoreAssignment({
           str: 8,
           dex: 14,
@@ -1070,14 +1071,14 @@ export function levelFiveSorcererBuild(
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1516,11 +1517,6 @@ export function requireCharacterCombatant(
 
 export function characterResources(combatant: CharacterCombatantState) {
   return combatant.origin.resources;
-}
-
-export function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
 }
 
 function rolledDiceGroup(

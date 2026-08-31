@@ -1,28 +1,28 @@
 import { DatabaseSync } from "node:sqlite";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 const EvidenceConfigurationSchema = Schema.Struct({
-  databasePath: Schema.NonEmptyTrimmedString,
+  databasePath: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 const RegistrationRowSchema = Schema.Struct({
-  mechanism: Schema.Literal("cimd", "dcr"),
+  mechanism: Schema.Literals(["cimd", "dcr"]),
   registrations: Schema.Number,
 });
 
-const configuration = Schema.decodeUnknownEither(EvidenceConfigurationSchema)({
+const configuration = Schema.decodeUnknownResult(EvidenceConfigurationSchema)({
   databasePath: process.env.DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH,
 });
-if (Either.isLeft(configuration)) {
-  process.stderr.write(`${configuration.left.message}\n`);
+if (Result.isFailure(configuration)) {
+  process.stderr.write(`${configuration.failure.message}\n`);
   process.exitCode = 1;
 } else {
-  const database = new DatabaseSync(configuration.right.databasePath, {
+  const database = new DatabaseSync(configuration.success.databasePath, {
     readOnly: true,
   });
   try {
-    const rows = Schema.decodeUnknownEither(
+    const rows = Schema.decodeUnknownResult(
       Schema.Array(RegistrationRowSchema),
     )(
       database
@@ -36,15 +36,15 @@ if (Either.isLeft(configuration)) {
         )
         .all(),
     );
-    if (Either.isLeft(rows)) {
-      process.stderr.write(`${rows.left.message}\n`);
+    if (Result.isFailure(rows)) {
+      process.stderr.write(`${rows.failure.message}\n`);
       process.exitCode = 1;
     } else {
       process.stdout.write(
         `${JSON.stringify(
           {
             tag: "betterAuthRegistrationEvidence",
-            registrations: rows.right,
+            registrations: rows.success,
           },
           null,
           2,

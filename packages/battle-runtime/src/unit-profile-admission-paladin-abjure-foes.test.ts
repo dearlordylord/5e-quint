@@ -10,7 +10,7 @@ import { describe, expect, test } from "vitest";
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount, movementFeet, type ClassLevel } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
@@ -318,6 +318,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
     expect(hasMoveAct(dodged, spellTargetId)).toBe(false);
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: resolved,
       target: failedTarget,
       damageAmount: damageAmount(1),
@@ -479,10 +480,10 @@ function abjureFoesBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function abjureFoesAct(session: BattleRuntimeSession) {
@@ -619,8 +620,8 @@ function requireAbjureFoesUnitRef(paladinLevel: ClassLevel) {
     unit: abjureFoesUnit,
     classLevels,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionSaveGatedConditionSupportForUnit(
     abjureFoesUnit,
@@ -629,6 +630,6 @@ function requireAbjureFoesUnitRef(paladinLevel: ClassLevel) {
   if (support === null || support === "unsupported") {
     throw new Error("Expected Abjure Foes save-gated condition support.");
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(support);
-  return unitRef.right;
+  expect(unitRef.success.supportProfiles).toContainEqual(support);
+  return unitRef.success;
 }

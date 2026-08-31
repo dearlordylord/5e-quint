@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { cantripSpellInvocationRef } from "./battle-subjects.ts";
 import { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
@@ -27,7 +28,6 @@ import {
   deathSavingThrowFill,
   discoverBattleActs,
   discoverBattleActCandidates,
-  Either,
   endTurn,
   fighterAttackSubject,
   fighterId,
@@ -421,14 +421,14 @@ describe("battle runtime: death saves and turns", () => {
       throw new Error("Expected the Knocked Out fighter.");
     }
     expect(combatantKnockedOutUnconscious(knockedOut)).toEqual(
-      Either.right(KNOCKED_OUT_UNCONSCIOUS),
+      Result.succeed(KNOCKED_OUT_UNCONSCIOUS),
     );
     const ordinary = state.combatants.get(wizardId);
     if (ordinary === undefined) {
       throw new Error("Expected the ordinary conscious caster.");
     }
     expect(combatantKnockedOutUnconscious(ordinary)).toEqual(
-      Either.right(null),
+      Result.succeed(null),
     );
     const healingWordAct = discoverBattleActs(session).find(
       (candidate) =>
@@ -544,7 +544,7 @@ describe("battle runtime: death saves and turns", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         kind: "positiveHpUnconsciousInvalid",
         combatantId: wizardId,
@@ -574,7 +574,7 @@ describe("battle runtime: death saves and turns", () => {
           ],
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleStateInitIssue",
           kind: "positiveHpUnconsciousInvalid",
           combatantId: secondWizardId,
@@ -1037,7 +1037,7 @@ describe("battle runtime: death saves and turns", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -1266,7 +1266,7 @@ describe("battle runtime: death saves and turns", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -1306,7 +1306,7 @@ describe("battle runtime: death saves and turns", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],

@@ -119,7 +119,7 @@ let halfDamage : EffectResult =
       }
 
 let sunlight : OngoingEffect =
-      { kind = "emit_light"
+      { kind = "emit_bright_and_dim_illumination"
       , damageType = None Text
       , amount = None DiceAmount
       , condition = None Text

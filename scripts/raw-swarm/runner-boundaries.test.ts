@@ -16,7 +16,7 @@ import { constants as osConstants, tmpdir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
 import { repoRoot } from "./transcript.ts";
@@ -5006,14 +5006,14 @@ printf '%s\n' 'Synthetic deterministic player evidence.' > evidence/agent-final.
             "utf8",
           ),
         );
-        const executionStart = Schema.decodeUnknownEither(
+        const executionStart = Schema.decodeUnknownResult(
           ExecutionStartRecordSchema,
           { onExcessProperty: "error" },
         )(executionStartInput);
-        expect(Either.isRight(executionStart)).toBe(true);
-        if (Either.isLeft(executionStart)) {
+        expect(Result.isSuccess(executionStart)).toBe(true);
+        if (Result.isFailure(executionStart)) {
           throw new Error(
-            `Invalid execution-start evidence: ${executionStart.left.message}`,
+            `Invalid execution-start evidence: ${executionStart.failure.message}`,
           );
         }
         const transcriptHeaderInput: unknown = JSON.parse(
@@ -5021,18 +5021,18 @@ printf '%s\n' 'Synthetic deterministic player evidence.' > evidence/agent-final.
             .trim()
             .split("\n")[0]!,
         );
-        const transcriptHeader = Schema.decodeUnknownEither(
+        const transcriptHeader = Schema.decodeUnknownResult(
           SdkPlayerTranscriptHeaderSchema,
           { onExcessProperty: "error" },
         )(transcriptHeaderInput);
-        expect(Either.isRight(transcriptHeader)).toBe(true);
-        if (Either.isLeft(transcriptHeader)) {
+        expect(Result.isSuccess(transcriptHeader)).toBe(true);
+        if (Result.isFailure(transcriptHeader)) {
           throw new Error(
-            `Invalid SDK transcript header: ${transcriptHeader.left.message}`,
+            `Invalid SDK transcript header: ${transcriptHeader.failure.message}`,
           );
         }
-        expect(transcriptHeader.right.startedAt).toBe(
-          executionStart.right.startedAt,
+        expect(transcriptHeader.success.startedAt).toBe(
+          executionStart.success.startedAt,
         );
         expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(true);
         expect(

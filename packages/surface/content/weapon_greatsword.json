@@ -9,7 +9,7 @@
   },
   "id": "weapon_greatsword",
   "kind": "weapon",
-  "mastery": "graze",
+  "masteryUnitId": "mastery_graze",
   "name": "Greatsword",
   "properties": [
     {

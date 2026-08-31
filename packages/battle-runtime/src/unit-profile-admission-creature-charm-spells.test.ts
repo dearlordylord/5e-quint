@@ -295,6 +295,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       damageSourceId: allyId,
       spatialFacts: [],
       relationshipDecisions: [
@@ -334,6 +335,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       damageSourceId: otherId,
       spatialFacts: [],
     });
@@ -403,6 +405,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     };
 
     const damaged = applyPreparedSlotSpellDamage(twoEffectState, beastId, 4, {
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       damageSourceId,
       spatialFacts: [],
       relationshipDecisions: [

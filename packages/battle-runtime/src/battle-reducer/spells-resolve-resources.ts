@@ -11,7 +11,7 @@ import {
   spendAction,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { Either } from "effect";
+import { Result } from "effect";
 import type {
   BattleResolutionResult,
   BattleExecutableSpellInvocation,
@@ -36,7 +36,7 @@ import {
   spendSpellMetamagicSorceryPoints,
 } from "./metamagic.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   markInvocationLevelOnePlusSpellCastThisTurn,
@@ -59,7 +59,7 @@ export function spendSpellCastMetamagicResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly applications: readonly CharacterBattleMetamagicOptionFact[];
-}): Either.Either<BattleState, string> {
+}): Result.Result<BattleState, string> {
   const stateWithQuickenedCommitment = {
     ...input.state,
     currentTurnResources: markQuickenedLevelOnePlusSpellCastForApplications(
@@ -119,8 +119,8 @@ export function spendSpellCastResources(input: {
     spellCastState.currentTurnResources,
     actionCost,
   );
-  if (Either.isLeft(spent)) {
-    return invalidResult(input.errorState, "staleSubject", spent.left);
+  if (Result.isFailure(spent)) {
+    return invalidResult(input.errorState, "staleSubject", spent.failure);
   }
   const shouldStartConcentration =
     input.startConcentration ?? spellRequiresConcentration(input.invocation);
@@ -132,7 +132,7 @@ export function spendSpellCastResources(input: {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
         markInvocationLevelOnePlusSpellCastThisTurn(
-          spent.right,
+          spent.success,
           input.actorId,
           input.invocation,
         ),
@@ -164,7 +164,7 @@ export function spendSpellCastResources(input: {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
         markInvocationLevelOnePlusSpellCastThisTurn(
-          spent.right,
+          spent.success,
           input.actorId,
           input.invocation,
         ),
@@ -181,10 +181,10 @@ export function spendSpellCastResources(input: {
     });
   }
   const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spent.right,
+    spent.success,
     input.actorId,
   );
-  if (Either.isLeft(slotTurnResources)) {
+  if (Result.isFailure(slotTurnResources)) {
     return invalidResult(
       input.errorState,
       "staleSubject",
@@ -202,7 +202,7 @@ export function spendSpellCastResources(input: {
   const resourced = {
     ...slotted,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      slotTurnResources.right,
+      slotTurnResources.success,
       input.actorId,
     ),
   };
@@ -219,18 +219,18 @@ export function spendSpellCastResources(input: {
 function spendSpellCastAction(
   resources: BattleTurnResources,
   actionCost: "magicAction" | "bonusAction",
-): Either.Either<BattleTurnResources, string> {
+): Result.Result<BattleTurnResources, string> {
   const spent =
     actionCost === "bonusAction"
       ? spendActivationResource(resources, { kind: "bonusAction" })
       : spendAction(resources, "magic");
-  return Either.isLeft(spent)
-    ? Either.left(
+  return Result.isFailure(spent)
+    ? Result.fail(
         actionCost === "bonusAction"
           ? "Bonus Action spell is no longer available for the current actor."
           : "Magic action is no longer available for the current actor.",
       )
-    : Either.right(spent.right);
+    : Result.succeed(spent.success);
 }
 
 function finishSpellCastResourceSpend(input: {
@@ -242,16 +242,20 @@ function finishSpellCastResourceSpend(input: {
   readonly shouldStartConcentration: boolean;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const metamagicSpend = spendSpellCastMetamagicResources(input);
-  if (Either.isLeft(metamagicSpend)) {
-    return invalidResult(input.errorState, "staleSubject", metamagicSpend.left);
+  if (Result.isFailure(metamagicSpend)) {
+    return invalidResult(
+      input.errorState,
+      "staleSubject",
+      metamagicSpend.failure,
+    );
   }
   const nextState = input.shouldStartConcentration
     ? startSpellEffectConcentration(
-        metamagicSpend.right,
+        metamagicSpend.success,
         input.actorId,
         input.invocation,
       )
-    : metamagicSpend.right;
+    : metamagicSpend.success;
   return {
     tag: "resolved",
     state: nextState,
@@ -329,10 +333,10 @@ export function commitSpellAccessFreeCastResourceUse(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-}): Either.Either<BattleState, string> {
+}): Result.Result<BattleState, string> {
   const actor = input.state.combatants.get(input.actorId);
   if (actor?.origin.kind !== "character") {
-    return Either.left(
+    return Result.fail(
       "Spell Access free cast is no longer available for the interrupted spell.",
     );
   }
@@ -342,11 +346,11 @@ export function commitSpellAccessFreeCastResourceUse(input: {
       resourceHasUsesRemaining(candidate),
   );
   if (resource === undefined) {
-    return Either.left(
+    return Result.fail(
       "Spell Access free cast is no longer available for the interrupted spell.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.actorId, {
       ...actor,

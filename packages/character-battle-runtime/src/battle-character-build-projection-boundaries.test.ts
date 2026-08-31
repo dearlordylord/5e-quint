@@ -66,8 +66,8 @@ describe("Character Build battle spell projection boundaries", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: expect.stringContaining(featureUnitId),
       },
     });
@@ -87,8 +87,8 @@ describe("Character Build battle spell projection boundaries", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterBattleSpellAccessProjectionIssue",
         accessIndex: 0,
         cause: "invalidSpellSelection",
@@ -114,8 +114,8 @@ describe("Character Build battle spell projection boundaries", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterBattleSpellAccessProjectionIssue",
         accessIndex: 0,
         cause: "invalidSpellSelection",

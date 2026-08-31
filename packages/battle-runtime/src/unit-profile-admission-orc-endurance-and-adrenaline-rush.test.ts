@@ -9,6 +9,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.zero-hit-point-replacement
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   acidSplashUnitId,
   orcAdrenalineRushUnitId,
@@ -51,7 +52,6 @@ import {
   bonusActionDashTemporaryHitPointsProfileForUnit,
   characterBattleResourceForUnit,
   discoverBattleActs,
-  Either,
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
   snapshotBattle,
@@ -69,7 +69,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
       }),
@@ -449,11 +449,11 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       });
       expect(supportResult).toEqual(
         unit.kind === "species_trait"
-          ? Either.left({
+          ? Result.fail({
               tag: "battleUnitSupportProfileIssue",
               message: `Unsupported battle zero-Hit-Point replacement Unit hook: ${unit.id}.`,
             })
-          : Either.right({ unit, supportProfiles: [] }),
+          : Result.succeed({ unit, supportProfiles: [] }),
       );
     }
   });
@@ -470,7 +470,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [adrenalineRushSupportProfile()],
       }),
@@ -704,7 +704,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
           unit,
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleUnitSupportProfileIssue",
           message: `Unsupported battle Bonus Action Dash Temporary Hit Points Unit hook: ${unit.id}.`,
         }),

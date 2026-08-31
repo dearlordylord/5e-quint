@@ -12,7 +12,7 @@
     "./surface/portable-surface": "./src/surface/portable-surface.ts",
     "./surface/mechanics-graph-path": "./src/surface/mechanics-graph-path.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
-    "./surface/installed-srd-stat-block-catalog": "./src/surface/installed-srd-stat-block-catalog.ts",
+    "./surface/stat-block-catalog-core": "./src/surface/stat-block-catalog-core.ts",
     "./surface/stat-block-catalog.test-support": "./src/surface/stat-block-catalog.test-support.ts",
     "./surface/stat-block-speed-readers": "./src/surface/stat-block-speed-readers.ts",
     "./surface/stat-block-identity": "./src/surface/stat-block-identity.ts",
@@ -20,8 +20,10 @@
     "./surface/stat-block-proficiency-bonus": "./src/surface/stat-block-proficiency-bonus.ts",
     "./surface/stat-block-scoped-fidelity": "./src/surface/stat-block-scoped-fidelity.ts",
     "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
+    "./surface/unit-catalog-core": "./src/surface/unit-catalog-core.ts",
     "./surface/types": "./src/surface/types.ts",
     "./surface/schema": "./src/surface/schema.ts",
+    "./surface/surface-relations": "./src/surface/surface-relations.ts",
     "./surface/source-section-anchor": "./src/surface/source-section-anchor.ts",
     "./surface/surface-catalog": "./src/surface/surface-catalog.ts"
   },
@@ -35,15 +37,15 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "ajv": "^8.18.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",
-    "effect": "^3.21.0"
+    "effect": "4.0.0-rc.112"
   }
 }

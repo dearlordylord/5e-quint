@@ -110,7 +110,7 @@ export function spellAttackProcedureRouteForDiscoveredAct(
       : holes,
     invocation.procedure === "spellAttackSequence"
       ? "battleSpellAttackProcedure"
-      : invocation.resource.tag === "spellSlot"
+      : spellInvocationUsesSpellSlot(invocation)
         ? "battleSpellSlotAndActionEconomy"
         : "battleActionEconomy",
   );
@@ -362,7 +362,7 @@ export function saveGatedSpellRouteForDiscoveredAct(
     discoverBattleActsRoute(
       "saveGatedSpell",
       battleReducerRouteHoles(act.initialHoles),
-      invocation.resource.tag === "spellSlot"
+      spellInvocationUsesSpellSlot(invocation)
         ? "battleSpellSlotAndActionEconomy"
         : "battleActionEconomy",
     ),
@@ -413,9 +413,16 @@ function isSlotSpellSubject(
   const invocation = spellInvocationForRouteSubject(state, subject);
   return (
     subject.tag === "actionSpell" &&
-    invocation?.resource.tag === "spellSlot" &&
+    invocation !== undefined &&
+    spellInvocationUsesSpellSlot(invocation) &&
     invocation.procedure === "repeatedDamageAllocation"
   );
+}
+
+function spellInvocationUsesSpellSlot(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForRouteSubject>>,
+): boolean {
+  return "resource" in invocation && invocation.resource.tag === "spellSlot";
 }
 
 function isSaveGatedSpellResolution(
@@ -456,7 +463,7 @@ function isSaveGatedSpellResolution(
 
 function isSaveGatedSpellProcedure(procedure: string): boolean {
   return (
-    procedure === "hypnoticPattern" ||
+    procedure === "saveGatedAreaControl" ||
     procedure === "saveGatedDamage" ||
     procedure === "saveGatedCondition"
   );

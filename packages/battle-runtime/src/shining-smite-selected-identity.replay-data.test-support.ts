@@ -5,7 +5,6 @@ import {
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
-import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
   shiningSmiteUnitId,
   spellCasterId,
@@ -88,7 +87,10 @@ export const shiningSmiteSelectedIdentityReplay = {
             const choice = battleFrontierInterruptDecisionForState(
               awaitingReaction.state,
             )?.choices.find((candidate) => {
-              if (candidate.kind !== "castAttackHitBonusActionSpell") {
+              if (
+                candidate.kind !== "nestedProcedure" ||
+                candidate.subject.command !== "castAttackHitBonusActionSpell"
+              ) {
                 return false;
               }
               return (
@@ -97,14 +99,15 @@ export const shiningSmiteSelectedIdentityReplay = {
                     state: awaitingReaction.state,
                     context: state.context,
                   }),
-                  candidate.reactorId,
+                  candidate.subject.casterId,
                   candidate.subject.procedureRef,
                 ).spellId === shiningSmiteUnitId
               );
             });
             if (
               choice === undefined ||
-              choice.kind !== "castAttackHitBonusActionSpell"
+              choice.kind !== "nestedProcedure" ||
+              choice.subject.command !== "castAttackHitBonusActionSpell"
             ) {
               throw new Error(
                 "Expected selected Shining Smite after-hit choice.",
@@ -117,7 +120,7 @@ export const shiningSmiteSelectedIdentityReplay = {
                   state: awaitingReaction.state,
                   context: state.context,
                 }),
-                choice.reactorId,
+                choice.subject.casterId,
                 selectedProcedureRef,
               ),
             ).toEqual(
@@ -183,9 +186,8 @@ export const shiningSmiteSelectedIdentityReplay = {
                 sourceCombatantId: spellCasterId,
                 attachment: { kind: "combatant", combatantId: spellTargetId },
                 emission: {
-                  kind: "brightAndDim",
-                  brightRadiusFeet: SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET,
-                  dimAdditionalFeet: movementFeet(0),
+                  kind: "bright",
+                  radiusFeet: movementFeet(5),
                 },
                 opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
                 expiresAt: {

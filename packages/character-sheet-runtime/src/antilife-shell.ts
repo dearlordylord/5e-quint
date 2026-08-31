@@ -4,8 +4,8 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result } from "effect";
 
 import {
   ANTILIFE_SHELL_ALLOWED_BARRIER_INTERACTION_VALUES,
@@ -29,7 +29,7 @@ export function castAntilifeShell(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly placement: CharacterSheetAntilifeShellBarrierPlacement;
-}): Either.Either<CharacterSheetAntilifeShellResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetAntilifeShellResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -46,9 +46,9 @@ export function castAntilifeShell(input: {
 }
 
 function antilifeShellInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly placement: CharacterSheetAntilifeShellBarrierPlacement;
-}): Either.Either<CharacterSheetAntilifeShellInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetAntilifeShellInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Antilife Shell support profile required by this projector. */
   if (
@@ -62,7 +62,7 @@ function antilifeShellInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== ANTILIFE_SHELL_DURATION_HOURS ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
+    spell.mechanics.components.material.kind !== "absent"
   ) {
     return characterSheetIssue(
       "Antilife Shell requires the supported level-5 creature barrier profile.",
@@ -87,14 +87,14 @@ function antilifeShellInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The authored Antilife Shell duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Antilife Shell requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "antilifeShell",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -104,7 +104,7 @@ function antilifeShellInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "action" },
     range: { kind: "self" },
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     placement: input.placement,
     barrier: {
@@ -128,7 +128,9 @@ function antilifeShellInvocationFromSpell(input: {
   });
 }
 
-function hasSupportedAntilifeShellAttachment(spell: SpellRecord): boolean {
+function hasSupportedAntilifeShellAttachment(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before attachment projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const attachment = spell.mechanics.attachment;
@@ -140,7 +142,9 @@ function hasSupportedAntilifeShellAttachment(spell: SpellRecord): boolean {
   );
 }
 
-function hasSupportedAntilifeShellOperation(spell: SpellRecord): boolean {
+function hasSupportedAntilifeShellOperation(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   return spell.mechanics.operations.some((operation) => {

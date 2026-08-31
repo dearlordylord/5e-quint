@@ -4,6 +4,7 @@ packages:
   - "packages/character-battle-runtime"
   - "packages/character-creation-runtime"
   - "packages/character-sheet-runtime"
+  - "packages/opaque-oracle"
   - "packages/mcp"
   - "packages/shared"
   - "packages/shared-algebras"
@@ -13,7 +14,7 @@ packages:
   - "packages/tactical-space-cli-prototype"
   - "packages/tactical-space-prototype"
 catalog:
-  "@firfi/quint-connect": "^2.1.0"
+  "@firfi/quint-connect": "2.0.2-effect4.2"
 allowBuilds:
   "@parcel/watcher": true
   esbuild: true

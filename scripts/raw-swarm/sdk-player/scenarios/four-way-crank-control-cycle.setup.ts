@@ -76,13 +76,11 @@ export const setupScenario: ScenarioSetup = (context) => {
     }),
   ];
 
-  const invalidCombatant = combatantInits.find(sdk.isLeft);
+  const invalidCombatant = combatantInits.find(sdk.isFailure);
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        invalidCombatant.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.failure),
       observation: {
         scenarioId: "four-way-crank-control-cycle",
         status: "stat-block-initialization-obstructed",
@@ -90,17 +88,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
   const combatants = combatantInits
-    .filter((combatant) => !sdk.isLeft(combatant))
-    .map((combatant) => combatant.right);
+    .filter((combatant) => !sdk.isFailure(combatant))
+    .map((combatant) => combatant.success);
 
   const started = sdk.startBattle({
     battleId: sdk.battleId("four-way-crank-control-cycle"),
     combatants,
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: {
         scenarioId: "four-way-crank-control-cycle",
         status: "battle-start-obstructed",
@@ -109,10 +107,10 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const adjacentDistance = sdk.scenarioDistanceFeet(5);
-  if (sdk.isLeft(adjacentDistance)) {
+  if (sdk.isFailure(adjacentDistance)) {
     return {
       kind: "obstructed",
-      obstruction: adjacentDistance.left.message,
+      obstruction: adjacentDistance.failure.message,
       observation: {
         scenarioId: "four-way-crank-control-cycle",
         status: "spatial-distance-obstructed",
@@ -121,7 +119,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
   const adjacentAnswer = (direction: ScenarioDirection) => ({
     direction,
-    distanceFeet: adjacentDistance.right,
+    distanceFeet: adjacentDistance.success,
     attackerCanSeeTarget: true,
     cover: "none" as const,
     traversal: "open" as const,
@@ -174,7 +172,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     },
   ] as const;
   const session = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: { kind: "tableAuthored", spatialDecisions },
     ambientIllumination: "brightLight",
     statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
@@ -184,10 +182,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
-        obstruction: sdk.scenarioSessionIssueMessage(session.left),
+        obstruction: sdk.scenarioSessionIssueMessage(session.failure),
         observation: {
           scenarioId: "four-way-crank-control-cycle",
           status: "scenario-session-obstructed",
@@ -195,7 +193,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       }
     : {
         kind: "ready",
-        session: session.right,
+        session: session.success,
         observation: {
           scenarioId: "four-way-crank-control-cycle",
           status: "ready",

@@ -54,10 +54,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(goblin)) {
+  if (sdk.isFailure(goblin)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(goblin.left),
+      obstruction: sdk.battleStateInitIssueMessage(goblin.failure),
       observation: { stage: "goblin-warrior-initialization" },
     };
   }
@@ -69,10 +69,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(skeleton)) {
+  if (sdk.isFailure(skeleton)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(skeleton.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
       observation: { stage: "skeleton-initialization" },
     };
   }
@@ -84,22 +84,22 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolf)) {
+  if (sdk.isFailure(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
+      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
       observation: { stage: "wolf-initialization" },
     };
   }
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(scenarioId),
-    combatants: [goblin.right, skeleton.right, wolf.right],
+    combatants: [goblin.success, skeleton.success, wolf.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: { stage: "battle-start" },
     };
   }
@@ -113,7 +113,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ).flat();
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: { cells, boundaries: [] },
@@ -137,17 +137,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: { stage: "scenario-session-composition" },
     };
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       setup: "geometry-derived-help-attack",
       delegatedChoices: [

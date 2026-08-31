@@ -4,7 +4,7 @@
 // This module owns the authored-to-execution support relation used by both
 // static mechanics admission and the runtime projection boundary. It has no
 // presentation dependency.
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { Match } from "effect";
 
 import { Integer, PositiveInteger } from "@dnd/shared/types";
@@ -35,6 +35,7 @@ import type {
   SupportedCreatureAttackRollMechanics,
 } from "../battle-action-options.ts";
 import { optionalProperty } from "../optional-property.ts";
+import { mapReadonlyNonEmptyArray } from "../readonly-non-empty-array.ts";
 
 export type BattleStatBlockUnsupportedProcedureBinding = {
   readonly section: StatBlockProcedureSection;
@@ -169,12 +170,12 @@ export function authoredStatBlockProcedureExecutionDecision(
         narrowedEntry,
         procedure,
       );
-      return Either.isRight(runtime)
+      return Result.isSuccess(runtime)
         ? {
             kind: "executable" as const,
             procedureKind: "attack_roll" as const,
             entry: narrowedEntry,
-            runtime: runtime.right,
+            runtime: runtime.success,
           }
         : {
             kind: "missingOwner" as const,
@@ -192,13 +193,13 @@ export function authoredStatBlockProcedureExecutionDecision(
               procedure,
               supportedActionAttackOrdinals,
             )
-          : Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
-      return Either.isRight(runtime)
+          : Result.fail(procedureBindingIssue(section, entry.procedureOrdinal));
+      return Result.isSuccess(runtime)
         ? {
             kind: "executable" as const,
             procedureKind: "multiattack" as const,
             entry: narrowedEntry,
-            runtime: runtime.right,
+            runtime: runtime.success,
           }
         : {
             kind: "missingOwner" as const,
@@ -216,13 +217,13 @@ export function authoredStatBlockProcedureExecutionDecision(
       const runtime =
         section === "bonusActions"
           ? runtimeBonusActionBinding(narrowedEntry, procedure)
-          : Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
-      return Either.isRight(runtime)
+          : Result.fail(procedureBindingIssue(section, entry.procedureOrdinal));
+      return Result.isSuccess(runtime)
         ? {
             kind: "executable" as const,
             procedureKind: "action_option" as const,
             entry: narrowedEntry,
-            runtime: runtime.right,
+            runtime: runtime.success,
           }
         : {
             kind: "missingOwner" as const,
@@ -263,12 +264,12 @@ export function authoredStatBlockProcedureExecutionDecision(
         narrowedEntry,
         procedure,
       );
-      return Either.isRight(runtime)
+      return Result.isSuccess(runtime)
         ? {
             kind: "executable" as const,
             procedureKind: "spellcasting" as const,
             entry: narrowedEntry,
-            runtime: runtime.right,
+            runtime: runtime.success,
           }
         : {
             kind: "missingOwner" as const,
@@ -318,7 +319,7 @@ function multiattackExecutionFailedFacts(
   }
   if (
     procedure.dispatches.some(({ count }) =>
-      Either.isLeft(parseStatBlockPositiveIntegerLiteral(count)),
+      Result.isFailure(parseStatBlockPositiveIntegerLiteral(count)),
     )
   ) {
     failedFacts.push("invalidMultiattackCount");
@@ -352,7 +353,7 @@ function runtimeAttackBinding(
   section: StatBlockProcedureSection,
   entry: AuthoredExecutableProcedureEntry,
   procedure: Extract<typeof entry.procedure, { readonly kind: "attack_roll" }>,
-): Either.Either<
+): Result.Result<
   Extract<BattleStatBlockRuntimeProcedure, { readonly kind: "attack" }>,
   BattleStatBlockUnsupportedProcedureBinding
 > {
@@ -361,9 +362,9 @@ function runtimeAttackBinding(
     (section !== "actions" && section !== "legendaryActions") ||
     !authoredAttackMechanicsAreSupported(attack)
   ) {
-    return Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
+    return Result.fail(procedureBindingIssue(section, entry.procedureOrdinal));
   }
-  return Either.right({
+  return Result.succeed({
     kind: "attack",
     section,
     procedureOrdinal: entry.procedureOrdinal,
@@ -377,7 +378,7 @@ function runtimeMultiattackBinding(
   entry: AuthoredExecutableProcedureEntry,
   procedure: Extract<typeof entry.procedure, { readonly kind: "multiattack" }>,
   supportedActionAttackOrdinals: ReadonlySet<StatBlockProcedureOrdinal>,
-): Either.Either<
+): Result.Result<
   Extract<BattleStatBlockRuntimeProcedure, { readonly kind: "multiattack" }>,
   BattleStatBlockUnsupportedProcedureBinding
 > {
@@ -386,29 +387,50 @@ function runtimeMultiattackBinding(
       supportedActionAttackOrdinals.has(procedureOrdinal),
     )
   ) {
-    return Either.left(
+    return Result.fail(
       procedureBindingIssue("actions", entry.procedureOrdinal),
     );
   }
-  const dispatches: BattleStatBlockRuntimeMultiattackDispatch[] = [];
-  for (const dispatch of procedure.dispatches) {
-    const count = parseStatBlockPositiveIntegerLiteral(dispatch.count);
-    if (Either.isLeft(count)) {
-      return Either.left(
+  const [firstAuthoredDispatch, ...remainingAuthoredDispatches] =
+    procedure.dispatches;
+  const firstDispatch = runtimeMultiattackDispatch(firstAuthoredDispatch);
+  if (Result.isFailure(firstDispatch)) {
+    return Result.fail(
+      procedureBindingIssue("actions", entry.procedureOrdinal),
+    );
+  }
+  const dispatches: [
+    BattleStatBlockRuntimeMultiattackDispatch,
+    ...BattleStatBlockRuntimeMultiattackDispatch[],
+  ] = [firstDispatch.success];
+  for (const dispatch of remainingAuthoredDispatches) {
+    const runtimeDispatch = runtimeMultiattackDispatch(dispatch);
+    if (Result.isFailure(runtimeDispatch)) {
+      return Result.fail(
         procedureBindingIssue("actions", entry.procedureOrdinal),
       );
     }
-    dispatches.push({
-      procedureOrdinal: dispatch.procedureOrdinal,
-      count: count.right.value,
-    });
+    dispatches.push(runtimeDispatch.success);
   }
-  return Either.right({
+  return Result.succeed({
     kind: "multiattack",
     section: "actions",
     procedureOrdinal: entry.procedureOrdinal,
-    dispatches: nonEmptyRuntimeValues(dispatches),
+    dispatches,
     resourceRefs: procedureResourceRefs(entry),
+  });
+}
+
+function runtimeMultiattackDispatch(
+  dispatch: AuthoredExecutableProcedureEntryByKind<"multiattack">["procedure"]["dispatches"][number],
+): Result.Result<BattleStatBlockRuntimeMultiattackDispatch, "invalidCount"> {
+  const count = parseStatBlockPositiveIntegerLiteral(dispatch.count);
+  if (Result.isFailure(count)) {
+    return Result.fail("invalidCount");
+  }
+  return Result.succeed({
+    procedureOrdinal: dispatch.procedureOrdinal,
+    count: count.success.value,
   });
 }
 
@@ -418,23 +440,22 @@ function runtimeBonusActionBinding(
     typeof entry.procedure,
     { readonly kind: "action_option" }
   >,
-): Either.Either<
+): Result.Result<
   Extract<
     BattleStatBlockRuntimeProcedure,
     { readonly kind: "bonusActionOption" }
   >,
   BattleStatBlockUnsupportedProcedureBinding
 > {
-  const options = procedure.options.filter(isSupportedBonusAction);
-  return options.length === procedure.options.length
-    ? Either.right({
+  return areSupportedBonusActions(procedure.options)
+    ? Result.succeed({
         kind: "bonusActionOption",
         section: "bonusActions",
         procedureOrdinal: entry.procedureOrdinal,
-        standardActions: nonEmptyRuntimeValues(options),
+        standardActions: procedure.options,
         resourceRefs: procedureResourceRefs(entry),
       })
-    : Either.left(
+    : Result.fail(
         procedureBindingIssue("bonusActions", entry.procedureOrdinal),
       );
 }
@@ -443,14 +464,14 @@ function runtimeSpellcastingBinding(
   section: StatBlockProcedureSection,
   entry: AuthoredExecutableProcedureEntryByKind<"spellcasting">,
   procedure: AuthoredExecutableProcedureEntryByKind<"spellcasting">["procedure"],
-): Either.Either<
+): Result.Result<
   Extract<BattleStatBlockRuntimeProcedure, { readonly kind: "spellcasting" }>,
   BattleStatBlockUnsupportedProcedureBinding
 > {
   if (section !== "actions" && section !== "bonusActions") {
-    return Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
+    return Result.fail(procedureBindingIssue(section, entry.procedureOrdinal));
   }
-  const groups = procedure.groups.map((group) =>
+  const groups = mapReadonlyNonEmptyArray(procedure.groups, (group) =>
     Match.value(group).pipe(
       Match.when({ kind: "at_will" }, ({ spells }) => ({
         kind: "at_will" as const,
@@ -465,7 +486,7 @@ function runtimeSpellcastingBinding(
       Match.exhaustive,
     ),
   );
-  return Either.right({
+  return Result.succeed({
     kind: "spellcasting",
     section,
     procedureOrdinal: entry.procedureOrdinal,
@@ -494,7 +515,7 @@ function runtimeSpellcastingBinding(
                 : ("required" as const),
           },
         }),
-    groups: nonEmptyRuntimeValues(groups),
+    groups,
     resourceRefs: [],
   });
 }
@@ -507,12 +528,10 @@ function runtimeSpellcastingInvocations(
     { readonly kind: "spellcasting" }
   >["groups"][number]["invocations"][number]
 > {
-  return nonEmptyRuntimeValues(
-    spells.map((spell) =>
-      spell.restriction === undefined
-        ? { kind: "unrestricted" as const }
-        : { kind: "restricted" as const },
-    ),
+  return mapReadonlyNonEmptyArray(spells, (spell) =>
+    spell.restriction === undefined
+      ? { kind: "unrestricted" as const }
+      : { kind: "restricted" as const },
   );
 }
 
@@ -561,20 +580,15 @@ function isSupportedBonusAction(
   );
 }
 
+function areSupportedBonusActions(
+  options: ReadonlyNonEmptyArray<StandardActionKind>,
+): options is ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction> {
+  return options.every(isSupportedBonusAction);
+}
+
 function traitModes(source: StandaloneStatBlock): {
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 } {
   const modes = supportedStatBlockTraitAttackRollModes(source.traits);
   return modes === undefined ? {} : { traitAttackRollModes: modes };
-}
-
-function nonEmptyRuntimeValues<T>(
-  values: readonly (T | null)[],
-): ReadonlyNonEmptyArray<T> {
-  const present = values.filter((value): value is T => value !== null);
-  const [first, ...rest] = present;
-  if (first === undefined) {
-    throw new Error("Projection requires a non-empty runtime collection.");
-  }
-  return [first, ...rest];
 }

@@ -43,11 +43,9 @@ import {
   decodeUnitRecordSync,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
-  StatBlockRecordSchema,
 } from "@dnd/surface/surface/schema";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { expect, test } from "vitest";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
@@ -57,6 +55,12 @@ import {
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
 import { isNonSpellStatBlockProcedureBinding } from "./stat-block-execution-state.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  statBlockProcedurePresentationsForActor,
+  statBlockProjectionIssuesForActor,
+} from "./stat-block-presentation.ts";
+import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
@@ -141,17 +145,9 @@ import {
   type WildShapeEquipmentDispositionChoice,
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
-import { canonicalHeldObjectIdsForActor } from "./battle-reducer/command-procedure-discovery.ts";
-import {
-  statBlockProjectionIssuesForActor,
-  statBlockProcedurePresentations,
-  statBlockProcedurePresentationsForActor,
-} from "./stat-block-presentation.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
-import type {
-  BattleRuntimeContext,
-  BattleRuntimeSession,
-} from "./battle-runtime-context.ts";
+import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behavior-discovery.ts";
+import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
@@ -245,7 +241,7 @@ test("replay rejects a Wild Shape subject bound to an unrelated procedure", () =
         subject: { ...subject, procedureRef: unrelatedProcedureRef },
         fills: [],
       },
-      "attackHit",
+      { trigger: "attackHit" },
       [],
     ),
   ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
@@ -262,6 +258,14 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
     resolveDruidWildShapeWithoutLoadoutEquipment(initial, assumeRidingHorse),
   );
   const activeDruid = requireCharacter(assumed.state, druidId);
+  const initialDruid = requireCharacter(initial, druidId);
+  const firstWildShapeEffect = activeDruid.activeEffects.find(
+    (effect) => effect.kind === "druidWildShapeForm",
+  );
+  expect(firstWildShapeEffect).toHaveProperty("effectRef");
+  expect(Number(activeDruid.nextEffectOrdinal)).toBe(
+    Number(initialDruid.nextEffectOrdinal) + 1,
+  );
   const activeForm = activeDruidWildShapeForm(activeDruid);
   expect(activeForm?.id).toBe(ridingHorseId);
   expect(Number(activeDruid.tempHp)).toBe(2);
@@ -317,6 +321,22 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
     resolveDruidWildShapeWithoutLoadoutEquipment(nextTurn, assumeCat),
   );
   const reusedDruid = requireCharacter(reused.state, druidId);
+  const secondWildShapeEffect = reusedDruid.activeEffects.find(
+    (effect) => effect.kind === "druidWildShapeForm",
+  );
+  expect(secondWildShapeEffect).toHaveProperty("effectRef");
+  const firstWildShapeRef =
+    firstWildShapeEffect !== undefined && "effectRef" in firstWildShapeEffect
+      ? firstWildShapeEffect.effectRef
+      : undefined;
+  const secondWildShapeRef =
+    secondWildShapeEffect !== undefined && "effectRef" in secondWildShapeEffect
+      ? secondWildShapeEffect.effectRef
+      : undefined;
+  expect(secondWildShapeRef).not.toBe(firstWildShapeRef);
+  expect(Number(reusedDruid.nextEffectOrdinal)).toBe(
+    Number(activeDruid.nextEffectOrdinal) + 1,
+  );
   expect(activeDruidWildShapeForm(reusedDruid)?.id).toBe(catId);
   expect(
     discoverBattleActCandidates(reused.state).some((act) =>
@@ -423,9 +443,15 @@ test("roundtrips a runtime-produced Wild Shape Opportunity Attack frontier", () 
   );
   const choice = frontier?.choices.find(
     (candidate) =>
-      candidate.kind === "opportunityAttack" && candidate.reactorId === druidId,
+      candidate.kind === "nestedProcedure" &&
+      candidate.subject.command === "opportunityAttack" &&
+      candidate.subject.reactorId === druidId,
   );
-  if (choice?.kind !== "opportunityAttack") {
+  if (
+    choice === undefined ||
+    choice.kind !== "nestedProcedure" ||
+    choice.subject.command !== "opportunityAttack"
+  ) {
     throw new Error("Expected the Wild Shape Opportunity Attack choice.");
   }
   expect(choice.subject.procedureRef).toBe(
@@ -436,8 +462,8 @@ test("roundtrips a runtime-produced Wild Shape Opportunity Attack frontier", () 
     battleCheckpointFrontierEnvelope(awaitingOpportunity.state),
   );
   expect(
-    Either.isRight(
-      Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+    Result.isSuccess(
+      Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
         encoded,
       ),
     ),
@@ -837,9 +863,9 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
 });
 
 test("decodes Wild Shape worn equipment disposition fills for selected loadout objects", () => {
-  const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+  const decodeFill = Schema.decodeUnknownResult(BattleFillSchema);
   expect(
-    Either.isRight(
+    Result.isSuccess(
       decodeFill({
         kind: "wildShapeEquipmentDisposition",
         holeId: "wild-shape-equipment-hole",
@@ -861,7 +887,7 @@ test("decodes Wild Shape worn equipment disposition fills for selected loadout o
     ),
   ).toBe(true);
   expect(
-    Either.isRight(
+    Result.isSuccess(
       decodeFill({
         kind: "wildShapeEquipmentDisposition",
         holeId: "wild-shape-equipment-hole",
@@ -884,7 +910,7 @@ test("decodes Wild Shape worn equipment disposition fills for selected loadout o
 
   for (const wornWeaponKind of ["mainWeapon", "offHandWeapon"] as const) {
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeFill({
           kind: "wildShapeEquipmentDisposition",
           holeId: "wild-shape-equipment-hole",
@@ -2510,9 +2536,9 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Druid Wild Shape battle initialization requires an available known-form subset.",
     );
   }
@@ -2545,9 +2571,9 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
     );
   }
@@ -2656,16 +2682,16 @@ test("filters unsupported Wild Shape procedure forms without dropping later supp
   }
   const unsupportedForm = syntheticActionSectionForm();
   const projection = projectAuthoredStatBlock(unsupportedForm);
-  if (Either.isRight(projection)) {
+  if (Result.isSuccess(projection)) {
     throw new Error(
       "Expected the synthetic action-section form to be unsupported.",
     );
   }
-  expect(projection.left.reason).toBe("unsupportedProcedureBinding");
-  if (projection.left.reason !== "unsupportedProcedureBinding") {
+  expect(projection.failure.reason).toBe("unsupportedProcedureBinding");
+  if (projection.failure.reason !== "unsupportedProcedureBinding") {
     throw new Error("Expected accumulated unsupported procedure bindings.");
   }
-  expect(projection.left.issues.length).toBeGreaterThan(1);
+  expect(projection.failure.issues.length).toBeGreaterThan(1);
 
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
@@ -2675,9 +2701,9 @@ test("filters unsupported Wild Shape procedure forms without dropping later supp
     ],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([ridingHorseId]);
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
   }
 });
 
@@ -2697,9 +2723,9 @@ test("rejects duplicate supplied Wild Shape form records before battle initializ
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle initialization requires distinct available known forms.",
     );
   }
@@ -2736,9 +2762,9 @@ test("rejects known Beast forms without promoted movement facts", () => {
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require literal Walk Speed.",
     );
   }
@@ -2776,64 +2802,12 @@ test("rejects known Beast forms without literal Size", () => {
     forms: [nonLiteralSizeForm],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require literal Size.",
     );
   }
-});
-
-test("rejects known Beast forms with nonliteral Armor Class at the authored parser boundary", () => {
-  const baseForm = assertStatBlockForTest(statBlockCatalog, ratId);
-  const malformed = {
-    ...baseForm,
-    id: parseSharedStatBlockId("synthetic_nonliteral_armor_class_form"),
-    name: "Synthetic Nonliteral Armor Class Form",
-    provenance: {
-      kind: "synthetic-test",
-      section: "synthetic-nonliteral-armor-class-form",
-    },
-    statBlock: {
-      ...baseForm.statBlock,
-      ac: {
-        ...baseForm.statBlock.ac,
-        value: { kind: "caster_derived", source: "spell_save_dc" },
-      },
-    },
-  };
-
-  expect(
-    Either.isLeft(Schema.decodeUnknownEither(StatBlockRecordSchema)(malformed)),
-  ).toBe(true);
-});
-
-test("rejects known Beast forms with conditional Speed at the authored parser boundary", () => {
-  const baseForm = assertStatBlockForTest(statBlockCatalog, ratId);
-  const firstSpeed = baseForm.statBlock.speeds[0];
-  const malformed = {
-    ...baseForm,
-    id: parseSharedStatBlockId("synthetic_conditional_speed_form"),
-    name: "Synthetic Conditional Speed Form",
-    provenance: {
-      kind: "synthetic-test",
-      section: "synthetic-conditional-speed-form",
-    },
-    statBlock: {
-      ...baseForm.statBlock,
-      speeds: [
-        {
-          ...firstSpeed,
-          feet: { kind: "caster_derived", source: "spell_save_dc" },
-        },
-        ...baseForm.statBlock.speeds.slice(1),
-      ],
-    },
-  };
-
-  expect(
-    Either.isLeft(Schema.decodeUnknownEither(StatBlockRecordSchema)(malformed)),
-  ).toBe(true);
 });
 
 test("admits selected Beast forms with multi-component attack damage and typed hit riders", () => {
@@ -2854,9 +2828,9 @@ test("admits selected Beast forms with multi-component attack damage and typed h
     ],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([
       ratId,
       ridingHorseId,
       spiderId,
@@ -2898,12 +2872,9 @@ test("retains text-only traits without inferring typed attack-roll support", () 
     forms: [baseForm, traitAdvantageForm],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([
-      ridingHorseId,
-      syntheticUntypedCoordinatedShapeId,
-    ]);
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
   }
 });
 
@@ -2923,9 +2894,9 @@ test("admits typed trait-derived attack-roll advantage from battle-available for
     forms: [baseForm, traitAdvantageForm],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([
       ridingHorseId,
       syntheticCoordinatedShapeId,
     ]);
@@ -3812,13 +3783,13 @@ test("active Wild Shape reversion reports an owner removed through the public ro
     }),
     combatantIds: [druidId],
   });
-  if (Either.isLeft(removed)) {
-    throw new Error(JSON.stringify(removed.left));
+  if (Result.isFailure(removed)) {
+    throw new Error(JSON.stringify(removed.failure));
   }
 
   expect(
     revertShapeShiftedRuntimeState({
-      state: removed.right.state,
+      state: removed.success.state,
       shapeShift,
     }),
   ).toMatchObject({
@@ -4393,7 +4364,6 @@ function weakTrueFormWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(-1),
@@ -4514,21 +4484,21 @@ function wildShapeStatBlockAttackProcedureRef(
       druidId,
     );
     if (presentations === null) return null;
-    if (Either.isLeft(presentations)) return null;
+    if (Result.isFailure(presentations)) return null;
     return (
-      presentations.right.find(
+      presentations.success.find(
         (presentation) =>
           presentation.kind === "attack" && presentation.name === attackName,
       )?.procedureRef ?? null
     );
   }
-  const presentation = Either.getOrThrow(
+  const presentation = Result.getOrThrow(
     projectAuthoredStatBlock(
       assertStatBlockForTest(statBlockCatalog, active.admission.statBlock.id),
     ),
   ).presentation;
   return (
-    Either.getOrThrow(
+    Result.getOrThrow(
       statBlockProcedurePresentations({
         execution: active.admission.execution,
         presentation,

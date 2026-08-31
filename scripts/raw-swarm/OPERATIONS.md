@@ -199,6 +199,27 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
+The Effect 4 public declaration graph is a reviewed deterministic measurement:
+523 declaration files and 3,965,396 bytes. The file gate admits exactly those
+523 files, so any added file requires review. The reviewed byte gate is 10 MiB,
+leaving 6,520,364 bytes of explicit margin. Deterministic verification asserts
+the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
+both limits; raising either bound requires a new measured graph and review. The
+canonical measurement is owned beside the declaration emitter in
+`sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
+distribution test.
+
+The SR-00 integration added twelve reviewed declaration owners while reducing
+the complete bundle by 109,296 bytes. `battle-runtime-transaction`,
+`character-display`, and `workflow-horizon` are public transaction, display,
+and workflow contracts. `battle-mechanical-attack-options`,
+`interrupt-checkpoint-identity`, `usage-limit-admission`, `semantic-refinement`,
+and `structural-value` are implementation dependencies of retained public
+roots. `stat-block-catalog-core`, `stat-block-catalog-data`, `unit-catalog-core`,
+and `unit-catalog-data` are the core/data pairs created by the intentional
+Surface catalog split. These files are not additional model-facing SDK context,
+and the split replaces the former monolithic catalog declarations.
+
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
 legacy context-read exception. The fixed benchmark's historical

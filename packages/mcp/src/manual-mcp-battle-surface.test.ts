@@ -1,7 +1,7 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
@@ -15,6 +15,7 @@ import {
   battleId,
   battleObjectId,
   admitCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponAttackExecutionWeapon,
   characterId,
   combatantId,
   initiativeScore,
@@ -26,6 +27,7 @@ import {
   type CharacterBattleClassLevelInits,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
+import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
 import {
   Hp,
   abilityModifier,
@@ -66,9 +68,9 @@ describe("manual MCP battle surface coverage", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Character fighter weapon weapon_longsword has missing authored presentation source.",
     );
   });
@@ -819,11 +821,14 @@ describe("manual MCP battle surface coverage", () => {
       subject: fallingSubject,
       reactionSpellTargetFacts: [
         {
-          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          kind: "fallingCreatureMitigationTrigger",
           reactorId: "fighter",
-          fallingCreatureId: "ally",
           sourceProcedureRef: featherFallProcedureRef,
-          rangeFeet: 60,
+          witness: {
+            kind: "visibleCreatureFalls",
+            fallingCreatureId: "ally",
+            distanceFeet: 60,
+          },
         },
       ],
     });
@@ -865,7 +870,7 @@ describe("manual MCP battle surface coverage", () => {
                 value: { targetIds: ["ally"] },
                 spatialFacts: [
                   {
-                    kind: "featherFallTargetFallingWithinRange",
+                    kind: "fallingCreatureTargetWithinRange",
                     casterId: "fighter",
                     targetId: "ally",
                     sourceProcedureRef: featherFallProcedureRef,
@@ -896,7 +901,7 @@ describe("manual MCP battle surface coverage", () => {
       root.sessionStore.battleSession?.state.combatants
         .get(allyId)
         ?.activeEffects.some(
-          (effect) => effect.kind === "featherFallMitigation",
+          (effect) => effect.kind === "fallingCreatureMitigationReaction",
         ),
     ).toBe(true);
   });
@@ -914,7 +919,10 @@ describe("manual MCP battle surface coverage", () => {
             sourceClassName: "warlock",
             abilityModifier: 3,
             invocationSpellAccesses: [
-              { tag: "pactOfTheChainFindFamiliar", spellId: "find_familiar" },
+              {
+                tag: "pactOfTheChainSpawnedCompanion",
+                spellId: "find_familiar",
+              },
             ],
             slots: [{ spellLevel: 1, count: 1 }],
           }),
@@ -931,7 +939,7 @@ describe("manual MCP battle surface coverage", () => {
     if (chainWarlock?.origin.kind !== "character") return;
     expect(chainSpellcasting?.invocationSpellAccesses).toEqual([
       expect.objectContaining({
-        tag: "pactOfTheChainFindFamiliar",
+        tag: "pactOfTheChainSpawnedCompanion",
         spell: expect.objectContaining({ id: "find_familiar" }),
       }),
     ]);
@@ -1182,14 +1190,17 @@ type BattleInterruptFrontier = Extract<
 type PresentedInterruptChoice = BattleInterruptFrontier["choices"][number];
 type TriggeredSpellChoiceBase = Extract<
   PresentedInterruptChoice["choice"],
-  { readonly kind: "castTriggeredReactionSpell" }
+  { readonly kind: "nestedProcedure" }
 >;
 type TriggeredSpellChoice = Omit<TriggeredSpellChoiceBase, "subject"> & {
   readonly subject: Extract<
     TriggeredSpellChoiceBase["subject"],
-    { readonly procedureRef: unknown }
+    {
+      readonly command: "castTriggeredReactionSpell";
+    }
   >;
 };
+
 type NeedsHolesResult = Extract<
   BattleResolutionOutput["result"],
   { readonly tag: "needsHoles" }
@@ -1227,8 +1238,9 @@ function requireTriggeredSpellChoice(
   ).choices.filter((presented) => {
     const choice = presented.choice;
     if (
-      choice.kind !== "castTriggeredReactionSpell" ||
-      choice.reactorId !== reactorId
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell" ||
+      choice.subject.reactorId !== reactorId
     ) {
       return false;
     }
@@ -1250,11 +1262,11 @@ function requireTriggeredSpellChoice(
   if (matchingChoices.length !== 1 || presented === undefined) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
   }
-  if (presented.choice.kind !== "castTriggeredReactionSpell") {
+  if (
+    presented.choice.kind !== "nestedProcedure" ||
+    presented.choice.subject.command !== "castTriggeredReactionSpell"
+  ) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
-  }
-  if (!("procedureRef" in presented.choice.subject)) {
-    throw new Error(`Expected ${spellId} choice procedure.`);
   }
   return { ...presented.choice, subject: presented.choice.subject };
 }
@@ -1335,9 +1347,9 @@ function startBattleRight(
     battleId: battleId(`battle:${crypto.randomUUID()}`),
     combatants,
   });
-  if (Either.isLeft(result))
-    throw new Error(battleStateInitIssueMessage(result.left));
-  return result.right;
+  if (Result.isFailure(result))
+    throw new Error(battleStateInitIssueMessage(result.failure));
+  return result.success;
 }
 
 function statBlock(
@@ -1363,7 +1375,7 @@ function statBlock(
             creatureType: input.creatureType,
           },
         };
-  const init = Either.getOrThrow(
+  const init = Result.getOrThrow(
     battleCreatureInitFromStatBlock({
       combatantId: input.combatantId,
       statBlock: battleStatBlock,
@@ -1428,6 +1440,7 @@ function character(
     attack === null
       ? attack
       : reconcileMcpCharacterWeaponAttack(
+          root,
           attack,
           selectedLoadout.weapon,
           input.weaponMasteries,
@@ -1538,7 +1551,6 @@ function weaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability,
     abilityModifier: abilityModifier(mod),
@@ -1548,6 +1560,7 @@ function weaponAttack(
 }
 
 function reconcileMcpCharacterWeaponAttack(
+  root: Root,
   attack: CharacterWeaponAttackActionOption,
   loadoutWeapon:
     | NonNullable<CharacterCreatureInit["selectedLoadout"]["weapon"]>
@@ -1558,16 +1571,41 @@ function reconcileMcpCharacterWeaponAttack(
     loadoutWeapon === undefined
       ? attack.weaponObjectId
       : battleObjectId(loadoutWeapon.itemId);
-  const hasWeaponMastery =
+  const masteryIsSelected =
     weaponMasteries === undefined
-      ? attack.hasWeaponMastery
+      ? "masteryProperty" in attack.weapon
       : weaponMasteries.some(
           (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
         );
+  if (!masteryIsSelected) {
+    const weapon =
+      "masteryProperty" in attack.weapon
+        ? (({ masteryProperty: _property, ...withoutMastery }) =>
+            withoutMastery)(attack.weapon)
+        : attack.weapon;
+    return { ...attack, weapon, weaponObjectId: loadoutObjectId };
+  }
+  if ("masteryProperty" in attack.weapon) {
+    return { ...attack, weaponObjectId: loadoutObjectId };
+  }
+  const weapon = root.unitLibrary.requireUnit(attack.weapon.weaponUnitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(`Expected weapon Unit: ${attack.weapon.weaponUnitId}`);
+  }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(weapon, root.unitLibrary),
+  );
+  const admitted = Result.getOrThrow(
+    admitResolvedCharacterWeaponAttackExecutionWeapon(
+      resolution,
+      loadoutObjectId,
+      [{ weaponUnitId: weapon.id }],
+    ),
+  );
   return {
     ...attack,
+    weapon: admitted.weapon,
     weaponObjectId: loadoutObjectId,
-    hasWeaponMastery,
   };
 }
 
@@ -1595,7 +1633,9 @@ function spellcasting(
       readonly spellcastingFocus: "book_of_shadows";
     }[];
     readonly invocationSpellAccesses?: readonly {
-      readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
+      readonly tag:
+        | "armorOfShadowsMageArmor"
+        | "pactOfTheChainSpawnedCompanion";
       readonly spellId: string;
     }[];
     readonly slots?: readonly {

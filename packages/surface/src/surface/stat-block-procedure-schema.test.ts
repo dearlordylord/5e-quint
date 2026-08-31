@@ -20,7 +20,10 @@ import {
   StatBlockSpellcastingComponentsSchema,
 } from "./schema-spell.ts";
 
-const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
+const decode = <S extends Schema.ConstraintDecoder<unknown>>(
+  schema: S,
+  input: unknown,
+): S["Type"] =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
 
 const syntheticStandaloneStatBlock = {

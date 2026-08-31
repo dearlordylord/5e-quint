@@ -8,7 +8,7 @@
   },
   "id": "weapon_blowgun",
   "kind": "weapon",
-  "mastery": "vex",
+  "masteryUnitId": "mastery_vex",
   "name": "Blowgun",
   "properties": [
     {

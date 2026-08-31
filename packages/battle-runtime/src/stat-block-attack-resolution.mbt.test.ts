@@ -5,7 +5,7 @@ import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { isDeepStrictEqual } from "node:util";
 
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 import { describe, it } from "vitest";
 
 import type {
@@ -368,7 +368,7 @@ assertScenarioConfigurationCoverage();
 function singleBaseDamageSelection(
   notation: "rolled" | "static",
 ): StatBlockAttackDamageSelection {
-  return Either.getOrThrow(
+  return Result.getOrThrow(
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(
@@ -384,7 +384,7 @@ function twoBaseDamageSelection(input: {
   readonly firstBaseComponent: "rolled" | "static";
   readonly secondBaseComponent: "rolled" | "static";
 }): StatBlockAttackDamageSelection {
-  return Either.getOrThrow(
+  return Result.getOrThrow(
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(
@@ -406,7 +406,7 @@ function baseAndAdvantageBonusDamageSelection(input: {
   readonly baseComponent: "rolled" | "static";
   readonly advantageBonusComponent: "rolled" | "static";
 }): StatBlockAttackDamageSelection {
-  return Either.getOrThrow(
+  return Result.getOrThrow(
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(

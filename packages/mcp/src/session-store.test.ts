@@ -12,6 +12,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  settleBattleRuntimeTransaction,
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -26,10 +27,14 @@ import {
 import { Hp } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -42,10 +47,14 @@ import { createMcpPlaySessionRoot } from "./composition-root.ts";
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
-if (unitCatalogResult.tag !== "ok") {
-  throw new Error("MCP session store test Unit catalog must build.");
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
+  throw new Error("MCP session store test catalogs must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
   statBlockId("stat_block_rat"),
   statBlockId("stat_block_riding_horse"),
@@ -69,7 +78,9 @@ describe("MCP character sessions", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(store.selectStatBlock(selected.id)).toMatchObject({ _tag: "Right" });
+    expect(store.selectStatBlock(selected.id)).toMatchObject({
+      _tag: "Success",
+    });
     retained = false;
     expect(store.getSelectedStatBlock()).toBeNull();
   });
@@ -86,8 +97,8 @@ describe("MCP character sessions", () => {
       unitLibrary,
     });
     expect(missingKnownForms).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSessionIssue",
         message:
           "Wild Shape known forms require selected Beast Stat Block identities.",
@@ -103,13 +114,14 @@ describe("MCP character sessions", () => {
       conditions: [],
       companion: { tag: "none" },
       unitLibrary,
+      statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
 
-    expect(Either.isRight(session)).toBe(true);
-    if (Either.isRight(session)) {
+    expect(Result.isSuccess(session)).toBe(true);
+    if (Result.isSuccess(session)) {
       expect(
-        characterSheetDruidWildShapeKnownForms(session.right)?.statBlockIds,
+        characterSheetDruidWildShapeKnownForms(session.success)?.statBlockIds,
       ).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS);
     }
   });
@@ -130,6 +142,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -143,6 +156,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -150,7 +164,7 @@ describe("MCP character sessions", () => {
     store.characters.set(second);
 
     expect(store.characters.setAll([first, first])).toEqual(
-      Either.left({
+      Result.fail({
         tag: "duplicateCharacterSession",
         characterId: first.characterId,
       }),
@@ -168,11 +182,12 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
     expect(store.characters.setAll([first, unknown])).toEqual(
-      Either.left({
+      Result.fail({
         tag: "unknownCharacterSession",
         characterId: unknown.characterId,
       }),
@@ -197,6 +212,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -228,7 +244,7 @@ describe("MCP character sessions", () => {
         characterSessions: [character],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateCharacterSessionChanged",
         affectedCharacterIds: [character.characterId],
       }),
@@ -240,14 +256,14 @@ describe("MCP character sessions", () => {
         nextBattleState: { tag: "activeBattle", session: active },
         characterSessions: [replacement],
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(
       store.commitBattleStart({
         nextBattleState: { tag: "activeBattle", session: active },
         characterSessions: [replacement],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "activeBattle",
         to: "activeBattle",
@@ -268,7 +284,7 @@ describe("MCP character sessions", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateCharacterSessionChanged",
         affectedCharacterIds: [character.characterId],
       }),
@@ -289,7 +305,7 @@ describe("MCP character sessions", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateSessionChanged",
         battleId: active.state.battleId,
       }),
@@ -304,6 +320,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -315,7 +332,7 @@ describe("MCP character sessions", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateCharacterSettlementMismatch",
         expectedCharacterId: character.characterId,
         nextCharacterId: mismatchedSettlement.characterId,
@@ -327,7 +344,7 @@ describe("MCP character sessions", () => {
         characterSettlements: [],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateCharacterRosterMismatch",
         battleCharacterIds: [character.characterId],
         transitionCharacterIds: [],
@@ -342,7 +359,7 @@ describe("MCP character sessions", () => {
           { expected: expectedInBattle, next: replacement },
         ],
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(store.battleState).toEqual({ tag: "none" });
     expect(store.characters.get(character.characterId)).toBe(replacement);
     expect(
@@ -351,7 +368,7 @@ describe("MCP character sessions", () => {
         characterSettlements: [],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "none",
@@ -363,7 +380,7 @@ describe("MCP character sessions", () => {
         characterSessions: [],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateCharacterRosterMismatch",
         battleCharacterIds: [character.characterId],
         transitionCharacterIds: [],
@@ -398,7 +415,7 @@ describe("MCP character sessions", () => {
         characterSessions: [replacement, mismatchedSettlement],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateCharacterRosterMismatch",
         battleCharacterIds: [character.characterId, character.characterId],
         transitionCharacterIds: [
@@ -452,7 +469,7 @@ describe("MCP character sessions", () => {
         nextBattleState: { tag: "initialInitiativeSetup", setup: ownedSetup },
         characterSessions: [],
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(atomicSetupStore.battleState).toEqual({
       tag: "initialInitiativeSetup",
       setup: ownedSetup,
@@ -463,7 +480,7 @@ describe("MCP character sessions", () => {
         combatantId: combatant.combatantId,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "activeBattle",
@@ -476,24 +493,24 @@ describe("MCP character sessions", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "initialInitiativeSetup",
       }),
     );
     expect(store.finalizeInitialInitiativeSetup()).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "activeBattle",
       }),
     );
     expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     expect(store.storeActiveBattle(foreignActive)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "initialInitiativeSetup",
         to: "activeBattle",
@@ -507,7 +524,7 @@ describe("MCP character sessions", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "initialInitiativeSwapRejected",
         message: "Initiative Swap requires a distinct willing ally.",
       }),
@@ -516,14 +533,14 @@ describe("MCP character sessions", () => {
 
     const active = expectRight(store.finalizeInitialInitiativeSetup());
     expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "activeBattle",
         to: "initialInitiativeSetup",
       }),
     );
     expect(store.storeActiveBattle(foreignActive)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateBattleOwnershipConflict",
         expectedBattleId: active.state.battleId,
         actualBattleId: foreignActive.state.battleId,
@@ -606,7 +623,7 @@ describe("MCP character sessions", () => {
         combatants: [initial],
       }),
     );
-    expect(store.storeActiveBattle(active)).toEqual(Either.right(undefined));
+    expect(store.storeActiveBattle(active)).toEqual(Result.succeed(undefined));
 
     const stale = expectRight(
       store.planActiveBattleRosterTransition({
@@ -621,12 +638,12 @@ describe("MCP character sessions", () => {
       }),
     );
     expect(store.commitActiveBattleRosterTransition(intervening.plan)).toEqual(
-      Either.right(intervening.prospectiveBattle),
+      Result.succeed(intervening.prospectiveBattle),
     );
     const afterIntervening = deepStoreState(store);
 
     expect(store.commitActiveBattleRosterTransition(stale.plan)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleRosterPlanBattleChanged",
         battleId: active.state.battleId,
       }),
@@ -638,7 +655,7 @@ describe("MCP character sessions", () => {
       unitLibrary: root.unitLibrary,
     });
     expect(foreignStore.storeActiveBattle(active)).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     const foreignPlan = expectRight(
       foreignStore.planActiveBattleRosterTransition({
@@ -647,7 +664,7 @@ describe("MCP character sessions", () => {
       }),
     );
     expect(store.commitActiveBattleRosterTransition(foreignPlan.plan)).toEqual(
-      Either.left({ tag: "battleRosterUnknownPlan" }),
+      Result.fail({ tag: "battleRosterUnknownPlan" }),
     );
     expect(deepStoreState(store)).toEqual(afterIntervening);
   });
@@ -668,6 +685,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -702,7 +720,7 @@ describe("MCP character sessions", () => {
         combatants: [characterInit, goblin],
       }),
     );
-    expect(store.storeActiveBattle(active)).toEqual(Either.right(undefined));
+    expect(store.storeActiveBattle(active)).toEqual(Result.succeed(undefined));
     store.characters.set({
       tag: "inBattle",
       sheet: character,
@@ -725,6 +743,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -732,7 +751,7 @@ describe("MCP character sessions", () => {
     const beforeCommit = deepStoreState(store);
 
     expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleRosterPlanCharacterChanged",
         characterIds: [character.characterId],
       }),
@@ -740,7 +759,7 @@ describe("MCP character sessions", () => {
     expect(deepStoreState(store)).toEqual(beforeCommit);
   });
 
-  test("rejects a roster plan after pending-fill session identity changes", () => {
+  test("rejects a roster plan after atomic battle transaction advancement", () => {
     const root = createMcpPlaySessionRoot();
     const store = createMcpSessionStore({
       statBlockCatalog: root.statBlockCatalog,
@@ -782,7 +801,7 @@ describe("MCP character sessions", () => {
         combatants: [goblin],
       }),
     );
-    expect(store.storeActiveBattle(active)).toEqual(Either.right(undefined));
+    expect(store.storeActiveBattle(active)).toEqual(Result.succeed(undefined));
     const planned = expectRight(
       store.planActiveBattleRosterTransition({
         kind: "addStatBlock",
@@ -793,15 +812,27 @@ describe("MCP character sessions", () => {
     if (subjectAct === undefined) {
       throw new Error("Expected an active battle subject for pending fills.");
     }
-    store.pendingBattleFills = {
-      subject: subjectAct.subject,
-      fills: [],
-      baseSession: active,
-    };
+    const pending = settleBattleRuntimeTransaction({
+      session: active,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: subjectAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected a pending battle transaction for the plan.");
+    }
+    expect(pending.transaction).toBeDefined();
+    expect(store.storeBattleTransactionResult(active, pending)).toEqual(
+      Result.succeed(undefined),
+    );
     const beforeCommit = deepStoreState(store);
 
     expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
-      Either.left({ tag: "battleRosterPlanFillsChanged" }),
+      Result.fail({ tag: "battleRosterPlanFillsChanged" }),
     );
     expect(deepStoreState(store)).toEqual(beforeCommit);
   });
@@ -813,7 +844,7 @@ function deepStoreState(store: ReturnType<typeof createMcpSessionStore>) {
     battleState: store.battleState,
     battleSession: store.battleSession,
     characters: Array.from(store.characters.entries()),
-    pendingBattleFills: store.pendingBattleFills,
+    pendingBattleTransaction: store.getPendingBattleTransaction(),
   });
 }
 
@@ -872,11 +903,11 @@ function druidWildShapeBuild(): CharacterBuild {
   };
 }
 
-function expectRight<T, E>(value: Either.Either<T, E>): T {
-  if (Either.isLeft(value)) {
-    throw new Error(`Expected right: ${JSON.stringify(value.left)}`);
+function expectRight<T, E>(value: Result.Result<T, E>): T {
+  if (Result.isFailure(value)) {
+    throw new Error(`Expected success: ${JSON.stringify(value.failure)}`);
   }
-  return value.right;
+  return value.success;
 }
 
 function expectStatBlockCombatant(

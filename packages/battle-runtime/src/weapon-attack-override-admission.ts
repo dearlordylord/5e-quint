@@ -5,7 +5,7 @@ import {
   type CharacterLevel,
   type DamageDieSize,
 } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
 import type { BoundCharacterWeaponAttackActionOption } from "./battle-action-options.ts";
 import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
@@ -136,13 +136,13 @@ function weaponAttackOverrideProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  return damageExpr === null || Either.isLeft(durationTicks)
+  return damageExpr === null || Result.isFailure(durationTicks)
     ? null
     : {
         damage: { expr: damageExpr },
         expiresAt: {
           kind: "duration",
-          durationTicks: durationTicks.right,
+          durationTicks: durationTicks.success,
         },
       };
 }

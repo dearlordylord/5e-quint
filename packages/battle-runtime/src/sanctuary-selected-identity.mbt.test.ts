@@ -2,7 +2,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-SANCTUARY sanctuary
 // UNIT-IDENTITY-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -65,6 +65,10 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import {
+  boundTargetingSaveInterdictionEffect,
+  type BoundTargetingSaveInterdictionEffect,
+} from "./battle-reducer/spell-modifier-binding.ts";
 import {
   damageRollFillWithGroups,
   requireResultHole,
@@ -171,20 +175,17 @@ type ResolvedBattleResult = Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
 >;
-type SanctuaryWardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "sanctuaryWard" }
->;
+type SanctuaryWardEffect = BoundTargetingSaveInterdictionEffect;
 
 const sanctuaryUnitId = "sanctuary";
 const burningHandsUnitId = "burning_hands";
 const fireBoltUnitId = "fire_bolt";
-const flamingSphereUnitId = "flaming_sphere";
+const persistentAreaSaveDamageUnitId = "flaming_sphere";
 const longstriderUnitId = "longstrider";
 type SanctuarySelectedIdentityActionSpellUnitId =
   | typeof burningHandsUnitId
   | typeof fireBoltUnitId
-  | typeof flamingSphereUnitId
+  | typeof persistentAreaSaveDamageUnitId
   | typeof longstriderUnitId;
 type SanctuarySelectedIdentitySpellUnitId =
   | typeof sanctuaryUnitId
@@ -1059,7 +1060,7 @@ function projectAreaEffectExclusion(): SanctuarySelectedIdentityProjection {
     "Expected area-effect spell to continue to damage roll.",
   );
   requireHole(needsDamage.holes, "rolledDice");
-  if (hasHole(needsDamage.holes, "sanctuaryInterdictionOutcome")) {
+  if (hasHole(needsDamage.holes, "targetingSaveInterdictionOutcome")) {
     throw new Error("Area-effect spell must not request Sanctuary outcome.");
   }
 
@@ -1219,7 +1220,7 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [srdSpellRecord(flamingSphereUnitId)],
+        preparedSpells: [srdSpellRecord(persistentAreaSaveDamageUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -1229,10 +1230,10 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
       characterCreature(replacementId, "Replacement", 9),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function characterCreature(
@@ -1378,7 +1379,7 @@ function wardedFlamingSphereRamState(): BattleState {
 function castFlamingSphereAsAttacker(
   session: BattleRuntimeSession,
 ): BattleState {
-  const act = actionSpellAct(session, flamingSphereUnitId);
+  const act = actionSpellAct(session, persistentAreaSaveDamageUnitId);
   const resolved = requireResolved(
     resolveBattleSubject({
       state: session.state,
@@ -1394,7 +1395,7 @@ function castFlamingSphereAsAttacker(
 function resolveWardedFlamingSphereRamDamage(
   state: BattleState,
 ): ResolvedBattleResult {
-  const act = flamingSphereRamAct(state, wardedId);
+  const act = persistentAreaSaveDamageRamAct(state, wardedId);
   const movementFill = flamingSphereRamMovementFill(
     requireHole(act.initialHoles, "movableZoneRamMovement"),
   );
@@ -1422,7 +1423,7 @@ function resolveWardedFlamingSphereRamDamage(
   );
 }
 
-function flamingSphereRamAct(
+function persistentAreaSaveDamageRamAct(
   state: BattleState,
   targetId: CombatantId,
 ): FlamingSphereRamAct {
@@ -1589,19 +1590,26 @@ function savingThrowOutcomeFill(
 }
 
 function sanctuaryOutcomeFill(
-  hole: Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }>,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >,
   value: Extract<
     BattleFill,
-    { readonly kind: "sanctuaryInterdictionOutcome" }
+    { readonly kind: "targetingSaveInterdictionOutcome" }
   >["value"],
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  return { kind: "sanctuaryInterdictionOutcome", holeId: hole.holeId, value };
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  return {
+    kind: "targetingSaveInterdictionOutcome",
+    holeId: hole.holeId,
+    value,
+  };
 }
 
 function sanctuaryInterdictionHole(
   result: NeedsHolesBattleResult,
-): Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  const hole = requireHole(result.holes, "sanctuaryInterdictionOutcome");
+): Extract<BattleHole, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  const hole = requireHole(result.holes, "targetingSaveInterdictionOutcome");
   if (hole.ability !== "wis") {
     throw new Error(`Expected Sanctuary Wisdom save, got ${hole.ability}.`);
   }
@@ -1665,7 +1673,15 @@ function sanctuaryWard(
   state: BattleState,
   combatantIdValue: CombatantId,
 ): SanctuaryWardEffect | undefined {
-  return combatant(state, combatantIdValue).activeEffects.find(
-    (effect): effect is SanctuaryWardEffect => effect.kind === "sanctuaryWard",
+  const effect = combatant(state, combatantIdValue).activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "targetingSaveInterdiction" }
+    > => effect.kind === "targetingSaveInterdiction",
   );
+  return effect === undefined
+    ? undefined
+    : boundTargetingSaveInterdictionEffect(state, effect);
 }

@@ -7,9 +7,11 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-die-floor
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   greatWeaponFightingUnitId,
   spellCasterId,
@@ -30,14 +32,12 @@ import {
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   battleAttackDamageDieFloorSupportForUnit,
   battleUnitRefWithSupportProfiles,
-  Either,
   elapsedTimeTicks,
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import type {
-  BattleActiveEffect,
   BattleCreatureInit,
   BattleFill,
   BattleRuntimeSession,
@@ -52,7 +52,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(greatWeaponFightingUnitId),
         supportProfiles: [ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE],
       }),
@@ -93,9 +93,9 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     );
   });
 
-  test("two-handed Melee weapon attacks apply the selected floor before target resistance", () => {
+  test("two-handed Melee weapon attacks apply the selected floor before a low-level injected target resistance", () => {
     const attack = zeroAbilityWeaponAttack("weapon_greataxe");
-    const state = withTargetSlashingResistance(
+    const state = withLowLevelInjectedTargetSlashingResistance(
       greatWeaponFightingBattle({
         attack,
         selectedLoadout: mainWeaponLoadout(
@@ -436,31 +436,33 @@ function resolveWeaponHit(input: {
   });
 }
 
-function withTargetSlashingResistance(
+function withLowLevelInjectedTargetSlashingResistance(
   session: BattleRuntimeSession,
 ): BattleRuntimeSession {
-  const target = session.state.combatants.get(spellTargetId);
-  if (target === undefined) {
-    throw new Error("Expected target combatant.");
-  }
-  const resistance = {
-    kind: "damageResistance",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_gwf_resistance"),
-    ),
-    sourceCombatantId: spellTargetId,
-    damageType: "slashing",
-    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-  } as const satisfies BattleActiveEffect;
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: {
+          kind: "damageResistance",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "low-level-injected-slashing-resistance",
+          ),
+          sourceCombatantId: spellTargetId,
+          damageType: "slashing",
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+    ],
+  });
   return battleRuntimeSessionForTest({
     ...session,
-    state: {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [...target.activeEffects, resistance],
-      }),
-    },
+    state: allocated.state,
   });
 }
 

@@ -1,5 +1,4 @@
-import * as Either from "effect/Either";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -40,10 +39,10 @@ describe("battle snapshot frontier presentation", () => {
 
   test("presents the durable snapshot from the live session", () => {
     const presented = battlePresentedSnapshot(session);
-    expect(Either.isRight(presented)).toBe(true);
-    if (Either.isLeft(presented)) return;
+    expect(Result.isSuccess(presented)).toBe(true);
+    if (Result.isFailure(presented)) return;
     expect(
-      presented.right.combatants.map(({ combatantId, displayName }) => ({
+      presented.success.combatants.map(({ combatantId, displayName }) => ({
         combatantId,
         displayName,
       })),
@@ -56,16 +55,16 @@ describe("battle snapshot frontier presentation", () => {
   test("preserves canonical act subjects and holes while joining presentation", () => {
     const mechanical = currentBattleCheckpointFrontierEnvelope(session);
     const presented = battlePresentedCheckpointFrontierEnvelope(session);
-    expect(Either.isRight(presented)).toBe(true);
-    if (Either.isLeft(presented)) {
+    expect(Result.isSuccess(presented)).toBe(true);
+    if (Result.isFailure(presented)) {
       throw new Error("Expected a presented checkpoint frontier envelope.");
     }
     expect(mechanical.frontier.kind).toBe("acts");
-    expect(presented.right.frontier.kind).toBe("acts");
+    expect(presented.success.frontier.kind).toBe("acts");
     if (mechanical.frontier.kind !== "acts") {
       throw new Error("Expected a mechanical Acts frontier.");
     }
-    if (presented.right.frontier.kind !== "acts") {
+    if (presented.success.frontier.kind !== "acts") {
       throw new Error("Expected a presented Acts frontier.");
     }
 
@@ -73,7 +72,7 @@ describe("battle snapshot frontier presentation", () => {
       BattlePresentedCheckpointFrontierEnvelopeSchema,
     )(
       Schema.encodeSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
-        presented.right,
+        presented.success,
       ),
     );
     expect(decoded.frontier.kind).toBe("acts");
@@ -95,11 +94,13 @@ describe("battle snapshot frontier presentation", () => {
         presentation,
       })),
     ).toEqual(
-      presented.right.frontier.acts.map(({ label, summary, presentation }) => ({
-        label,
-        summary,
-        presentation,
-      })),
+      presented.success.frontier.acts.map(
+        ({ label, summary, presentation }) => ({
+          label,
+          summary,
+          presentation,
+        }),
+      ),
     );
   });
 
@@ -133,8 +134,8 @@ describe("battle snapshot frontier presentation", () => {
       resolution.envelope,
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -144,16 +145,16 @@ describe("battle snapshot frontier presentation", () => {
       session,
       resolution.envelope,
     );
-    expect(Either.isRight(presented)).toBe(true);
-    if (Either.isLeft(presented)) return;
-    expect(presented.right.frontier).toEqual(resolution.envelope.frontier);
+    expect(Result.isSuccess(presented)).toBe(true);
+    if (Result.isFailure(presented)) return;
+    expect(presented.success.frontier).toEqual(resolution.envelope.frontier);
   });
 
   test("retains modifier-only interrupt choices without an authored join", () => {
     const choice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: fighterId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: fighterId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: battleProcedureExecutionRefForTest(
           "snapshot-presentation-modifier",
@@ -164,9 +165,9 @@ describe("battle snapshot frontier presentation", () => {
     } as const satisfies BattleInterruptProcedureChoice;
 
     const result = presentBattleInterruptChoices(session, [choice]);
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right).toEqual([{ choice }]);
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success).toEqual([{ choice }]);
 
     const mechanical = currentBattleCheckpointFrontierEnvelope(session);
     const presentedEnvelope = presentBattleCheckpointFrontierEnvelope(session, {
@@ -188,9 +189,9 @@ describe("battle snapshot frontier presentation", () => {
         stackDepth: battleReplayStackDepth(1),
       },
     });
-    expect(Either.isRight(presentedEnvelope)).toBe(true);
-    if (Either.isRight(presentedEnvelope)) {
-      expect(presentedEnvelope.right.frontier).toMatchObject({
+    expect(Result.isSuccess(presentedEnvelope)).toBe(true);
+    if (Result.isSuccess(presentedEnvelope)) {
+      expect(presentedEnvelope.success.frontier).toMatchObject({
         kind: "interruptDecision",
         choices: [{ choice }],
       });
@@ -199,9 +200,9 @@ describe("battle snapshot frontier presentation", () => {
 
   test("round-trips a modifier-only interrupt choice without presentation", () => {
     const choice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: fighterId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: fighterId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: battleProcedureExecutionRefForTest(
           "snapshot-presentation-modifier-codec",
@@ -211,11 +212,11 @@ describe("battle snapshot frontier presentation", () => {
       initialHoles: [],
     } as const satisfies BattleInterruptProcedureChoice;
     const presented = battlePresentedCheckpointFrontierEnvelope(session);
-    if (Either.isLeft(presented)) {
+    if (Result.isFailure(presented)) {
       throw new Error("Expected a presented checkpoint frontier envelope.");
     }
     const envelope = {
-      checkpoint: presented.right.checkpoint,
+      checkpoint: presented.success.checkpoint,
       frontier: {
         kind: "interruptDecision",
         trigger: "afterDamage",
@@ -241,8 +242,8 @@ describe("battle snapshot frontier presentation", () => {
       throw new Error("Expected an encoded interrupt-decision frontier.");
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(
+      Result.isFailure(
+        Schema.decodeUnknownResult(
           BattlePresentedCheckpointFrontierEnvelopeSchema,
         )({
           ...encoded,
@@ -273,8 +274,7 @@ describe("battle snapshot frontier presentation", () => {
 
   test("requires and round-trips presentation for a subject-bearing interrupt choice", () => {
     const choice = {
-      kind: "releaseReadiedAction",
-      reactorId: fighterId,
+      kind: "nestedProcedure",
       initialHoles: [],
       subject: {
         tag: "runtimeCommand",
@@ -285,14 +285,14 @@ describe("battle snapshot frontier presentation", () => {
     } as const satisfies BattleInterruptProcedureChoice;
     const presentation = { kind: "intrinsic" } as const;
     expect(presentBattleInterruptChoices(session, [choice])).toEqual(
-      Either.right([{ choice, presentation }]),
+      Result.succeed([{ choice, presentation }]),
     );
     const presented = battlePresentedCheckpointFrontierEnvelope(session);
-    if (Either.isLeft(presented)) {
+    if (Result.isFailure(presented)) {
       throw new Error("Expected a presented checkpoint frontier envelope.");
     }
     const envelope = {
-      checkpoint: presented.right.checkpoint,
+      checkpoint: presented.success.checkpoint,
       frontier: {
         kind: "interruptDecision",
         trigger: "reportedReadyTrigger",
@@ -318,8 +318,8 @@ describe("battle snapshot frontier presentation", () => {
       throw new Error("Expected an encoded interrupt-decision frontier.");
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(
+      Result.isFailure(
+        Schema.decodeUnknownResult(
           BattlePresentedCheckpointFrontierEnvelopeSchema,
         )({
           ...encoded,
@@ -352,8 +352,7 @@ describe("battle snapshot frontier presentation", () => {
 
   test("returns a typed failure instead of dropping a choice without presentation", () => {
     const choice = {
-      kind: "castTriggeredReactionSpell",
-      reactorId: fighterId,
+      kind: "nestedProcedure",
       initialHoles: [],
       subject: {
         tag: "runtimeCommand",
@@ -368,12 +367,12 @@ describe("battle snapshot frontier presentation", () => {
 
     const result = presentBattleInterruptChoices(session, [choice]);
     expect(result).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleInterruptChoicePresentationIssue",
           reason: "missingSubjectPresentation",
-          reactorId: fighterId,
-          choiceKind: "castTriggeredReactionSpell",
+          responderId: fighterId,
+          choiceKind: "nestedProcedure",
           subject: choice.subject,
         },
       ]),

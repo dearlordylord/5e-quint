@@ -100,10 +100,10 @@
               "numerator": 47
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 5,
               "focused-mbt": 56,
-              "runtime-test": 14
+              "runtime-test": 18
             }
           },
           "id": "mbt-parity-evidence",
@@ -480,10 +480,10 @@
               "numerator": 50
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 8,
               "focused-mbt": 56,
-              "runtime-test": 14
+              "runtime-test": 18
             }
           },
           "id": "mbt-parity-evidence",
@@ -863,10 +863,10 @@
               "numerator": 74
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
-              "runtime-test": 23
+              "runtime-test": 27
             }
           },
           "id": "mbt-parity-evidence",
@@ -1107,10 +1107,10 @@
               "numerator": 74
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
-              "runtime-test": 23
+              "runtime-test": 27
             }
           },
           "id": "mbt-parity-evidence",
@@ -1330,8 +1330,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
               "denominator": 78,
@@ -1351,10 +1351,10 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -1578,8 +1578,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
               "denominator": 78,
@@ -1599,10 +1599,10 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -1826,8 +1826,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
               "denominator": 78,
@@ -1847,10 +1847,10 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -2074,8 +2074,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
               "denominator": 78,
@@ -2095,10 +2095,10 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -2322,8 +2322,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
               "denominator": 78,
@@ -2343,10 +2343,10 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -2558,8 +2558,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
               "denominator": 78,
@@ -2579,10 +2579,10 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 3,
+              "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",

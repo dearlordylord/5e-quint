@@ -5,6 +5,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   combatantId,
@@ -53,14 +54,14 @@ import {
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -68,7 +69,23 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
-import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks" | "conditions"
+  >,
+) {
+  return requireSuccess(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
+    }),
+  );
+}
 
 const featureResourceScenarios = [
   "init",
@@ -239,7 +256,7 @@ function layOnHandsRestoresHpAndRemovesPoisonedProjection(): FeatureResourceProj
     currentHp: 3,
     conditions: ["poisoned"],
   });
-  const result = requireRight(
+  const result = requireSuccess(
     applyLayOnHands({
       source,
       target,
@@ -283,13 +300,13 @@ function rejectLayOnHandsOverspendProjection(): FeatureResourceProjection {
     restoreHp: Hp(1),
     removePoisoned: true,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Lay On Hands over-spend rejection.");
   }
   return projectFromParts({
     outcome: "lay-on-hands-overspend-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sourceCurrentHp: characterSheetCurrentHp(sheet),
     targetCurrentHp: characterSheetCurrentHp(sheet),
     targetPoisoned: sheet.conditions.some(
@@ -307,7 +324,7 @@ function longRestClearsLayOnHandsPoolProjection(): FeatureResourceProjection {
     build: baseBuild({ startingClass: "class_paladin" }),
     currentHp: 6,
   });
-  const spent = requireRight(
+  const spent = requireSuccess(
     applyLayOnHands({
       source,
       target: source,
@@ -316,7 +333,7 @@ function longRestClearsLayOnHandsPoolProjection(): FeatureResourceProjection {
       removePoisoned: false,
     }),
   ).source;
-  const rested = requireRight(completeLongRestForSheet(spent));
+  const rested = requireSuccess(completeLongRestForSheet(spent));
   return projectFromParts({
     outcome: "long-rest-clears-lay-on-hands-pool",
     accepted: true,
@@ -363,8 +380,8 @@ function shortRestRecoversUseCountPoolsProjection(): FeatureResourceProjection {
       },
     ],
   });
-  const restedDruid = requireRight(completeShortRestForSheet(druid));
-  const restedMonk = requireRight(completeShortRestForSheet(monk));
+  const restedDruid = requireSuccess(completeShortRestForSheet(druid));
+  const restedMonk = requireSuccess(completeShortRestForSheet(monk));
   return projectFromParts({
     outcome: "short-rest-recovers-use-count-pools",
     accepted: true,
@@ -396,7 +413,7 @@ function longRestClearsPointPoolAndUseStateProjection(): FeatureResourceProjecti
       },
     ],
   });
-  const rested = requireRight(completeLongRestForSheet(sheet));
+  const rested = requireSuccess(completeLongRestForSheet(sheet));
   return projectFromParts({
     outcome: "long-rest-clears-point-pool-and-use-state",
     accepted: true,
@@ -438,7 +455,7 @@ function fontOfMagicSlotToPointsProjection(): FeatureResourceProjection {
       },
     ],
   });
-  const converted = requireRight(
+  const converted = requireSuccess(
     convertFontOfMagicSpellSlotToSorceryPoints({
       sheet,
       unitLibrary,
@@ -471,13 +488,13 @@ function rejectFontOfMagicAmbiguousSlotSourceProjection(): FeatureResourceProjec
     unitLibrary,
     spellLevel: spellSlotLevel(3),
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Font of Magic ambiguous slot-source rejection.");
   }
   return projectFromParts({
     outcome: "font-of-magic-ambiguous-slot-source-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sorceryPointCapacity: resourceCapacity(
       created,
       "pointPoolResource",
@@ -540,13 +557,13 @@ function rejectFontOfMagicInsufficientPointsProjection(): FeatureResourceProject
     unitLibrary,
     spellLevel: spellSlotLevel(2),
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Font of Magic insufficient-points rejection.");
   }
   return projectFromParts({
     outcome: "font-of-magic-insufficient-points-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sorceryPointCapacity: resourceCapacity(
       sheet,
       "pointPoolResource",
@@ -575,7 +592,7 @@ function shortRestPreservesUncannyUseStateProjection(): FeatureResourceProjectio
       },
     ],
   });
-  const rested = requireRight(completeShortRestForSheet(sheet));
+  const rested = requireSuccess(completeShortRestForSheet(sheet));
   return projectFromParts({
     outcome: "short-rest-preserves-uncanny-use-state",
     accepted: true,
@@ -604,7 +621,7 @@ function longRestClearsUncannyUseStateProjection(): FeatureResourceProjection {
       },
     ],
   });
-  const rested = requireRight(completeLongRestForSheet(sheet));
+  const rested = requireSuccess(completeLongRestForSheet(sheet));
   return projectFromParts({
     outcome: "long-rest-clears-uncanny-use-state",
     accepted: true,
@@ -633,7 +650,7 @@ function uncannyMetabolismRecoversFocusAndHealsProjection(): FeatureResourceProj
       },
     ],
   });
-  const recovered = requireRight(
+  const recovered = requireSuccess(
     useMonkUncannyMetabolismWhenRollingInitiative({
       sheet,
       unitLibrary,
@@ -657,7 +674,7 @@ function uncannyMetabolismRecoversFocusAndHealsProjection(): FeatureResourceProj
 }
 
 function rejectUncannyMetabolismRepeatUseProjection(): FeatureResourceProjection {
-  const used = requireRight(
+  const used = requireSuccess(
     useMonkUncannyMetabolismWhenRollingInitiative({
       sheet: sheetFixture({
         characterIdText: "character:uncanny-repeat",
@@ -681,13 +698,13 @@ function rejectUncannyMetabolismRepeatUseProjection(): FeatureResourceProjection
     unitLibrary,
     martialArtsRoll: DieRollResult(4),
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected repeated Uncanny Metabolism use rejection.");
   }
   return projectFromParts({
     outcome: "uncanny-metabolism-repeat-use-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sourceCurrentHp: characterSheetCurrentHp(used),
     temporaryHitPoints: characterSheetTempHp(used),
     monkFocusExpended: resourceExpended(
@@ -719,7 +736,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       },
     ],
   });
-  const characterInit = requireRight(
+  const characterInit = requireSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -734,7 +751,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
     throw new Error("Expected character battle creature init.");
   }
 
-  const battle = requireRight(
+  const battle = requireSuccess(
     startBattle({
       battleId: battleId("battle:metamagic-feature-resource-bridge"),
       combatants: [
@@ -766,7 +783,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   ) {
     throw new Error("Metamagic must use the shared Sorcery Point resource.");
   }
-  const spentSorceryPoints = requireRight(
+  const spentSorceryPoints = requireSuccess(
     spendCharacterPointPoolResource({
       resource: sorceryPoints,
       points: resourceCount(2),
@@ -775,7 +792,9 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const spentSorcerer: BattleCreatureState = {
     ...sorcerer,
     hp: characterSheetCurrentHp(sheet),
-    maxHp: requireRight(characterSheetHitPointMaximum({ sheet, unitLibrary })),
+    maxHp: requireSuccess(
+      characterSheetHitPointMaximum({ sheet, unitLibrary }),
+    ),
     tempHp: characterSheetTempHp(sheet),
     positiveHpUnconscious: null,
     origin: {
@@ -787,7 +806,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       ),
     },
   };
-  const handoff = requireRight(
+  const handoff = requireSuccess(
     settleCharacterSheetFromBattle({
       sheet,
       battleSession: battleRuntimeSessionForTest({
@@ -843,7 +862,7 @@ function fontOfMagicCreatedLevel3Sheet(): CharacterSheet {
     }),
     currentHp: 24,
   });
-  return requireRight(
+  return requireSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet,
       unitLibrary,
@@ -853,8 +872,8 @@ function fontOfMagicCreatedLevel3Sheet(): CharacterSheet {
 }
 
 function completeShortRestForSheet(sheet: CharacterSheet) {
-  const rest = requireRight(startShortRest({ sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  const completion = requireSuccess(
     finishShortRest({
       rest,
       restedTicks: elapsedTimeTicks(600),
@@ -864,10 +883,10 @@ function completeShortRestForSheet(sheet: CharacterSheet) {
 }
 
 function completeLongRestForSheet(sheet: CharacterSheet) {
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({
       rest,
       restedTicks: elapsedTimeTicks(4800),
@@ -893,7 +912,7 @@ function sheetFixture(
     >
   >,
 ): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
@@ -915,6 +934,7 @@ function sheetFixture(
       ...(input.druidWildShapeKnownFormStatBlockIds === undefined
         ? {}
         : {
+            statBlockCatalog,
             druidWildShapeKnownFormStatBlockIds:
               input.druidWildShapeKnownFormStatBlockIds,
           }),
@@ -939,7 +959,7 @@ function baseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1018,14 +1038,14 @@ function sorcererMetamagicBuild(): CharacterBuild {
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1047,7 +1067,7 @@ function resourceCapacity(
   tag: "layOnHandsHealingPool" | "useCountResource" | "pointPoolResource",
   unitId?: string,
 ): number {
-  const resource = requireRight(
+  const resource = requireSuccess(
     characterSheetResources(sheet, unitLibrary),
   ).find(
     (candidate) =>
@@ -1072,7 +1092,7 @@ function resourceExpended(
   tag: "layOnHandsHealingPool" | "useCountResource" | "pointPoolResource",
   unitId?: string,
 ): number {
-  const resource = requireRight(
+  const resource = requireSuccess(
     characterSheetResources(sheet, unitLibrary),
   ).find(
     (candidate) =>
@@ -1336,11 +1356,6 @@ function nullaryVariantTag(raw: unknown, field: string): string {
     if (typeof tag === "string") return tag;
   }
   throw new Error(`Expected Quint variant field ${field}.`);
-}
-
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
 }
 
 function recordField(

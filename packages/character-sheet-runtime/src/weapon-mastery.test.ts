@@ -1,6 +1,6 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -10,7 +10,7 @@ import {
 } from "./index.ts";
 import {
   armorClassBuild,
-  requireRight,
+  requireSuccess,
   unitLibrary,
   weaponMasteryBuild,
 } from "./test-support.test-support.ts";
@@ -22,7 +22,7 @@ const unownedClassIssue =
 
 describe("Character Sheet runtime / Weapon Mastery selected references", () => {
   test("projects the selected proficient weapons and Surface choice profile", () => {
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetWeaponMasterySelectedReferenceProjection({
         sheet: freshSheet(
           weaponMasteryBuild({
@@ -67,9 +67,9 @@ describe("Character Sheet runtime / Weapon Mastery selected references", () => {
       featureUnitId: authoredUnitId("paladin_lay_on_hands"),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(projectionIssue);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(projectionIssue);
     }
   });
 
@@ -80,9 +80,9 @@ describe("Character Sheet runtime / Weapon Mastery selected references", () => {
       featureUnitId: authoredUnitId("paladin_weapon_mastery"),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(unownedClassIssue);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(unownedClassIssue);
     }
   });
 });
@@ -90,7 +90,7 @@ describe("Character Sheet runtime / Weapon Mastery selected references", () => {
 function freshSheet(
   build: Parameters<typeof createFreshCharacterSheet>[0]["build"],
 ) {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId("character:weapon-mastery-projection"),
       build,

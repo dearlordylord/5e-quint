@@ -42,12 +42,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(skeletonInit)) {
+  if (sdk.isFailure(skeletonInit)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        skeletonInit.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(skeletonInit.failure),
       observation: {
         scenarioId,
         blockedOperation: "battleCreatureInitFromStatBlock",
@@ -63,10 +61,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolfInit)) {
+  if (sdk.isFailure(wolfInit)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolfInit.left),
+      obstruction: sdk.battleStateInitIssueMessage(wolfInit.failure),
       observation: {
         scenarioId,
         blockedOperation: "battleCreatureInitFromStatBlock",
@@ -77,18 +75,18 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(scenarioId),
-    combatants: [skeletonInit.right, wolfInit.right],
+    combatants: [skeletonInit.success, wolfInit.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: { scenarioId, blockedOperation: "startBattle" },
     };
   }
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -115,17 +113,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: { scenarioId, blockedOperation: "createScenarioSession" },
     };
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId,
       initiative: { Skeleton: 16, Wolf: 11 },

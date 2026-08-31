@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -94,7 +94,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         session,
         spellCasterId,
-        spellSlotInvocationRef(commandUnitId, 1, "command"),
+        spellSlotInvocationRef(commandUnitId, 1, "compelledNextTurnBehavior"),
       ),
       mode: { tag: "cast" },
     });
@@ -111,14 +111,16 @@ describe("QMBT14 deterministic Command control option admission", () => {
         maxTargets: 2,
       }),
     );
-    expect(requireHole(levelTwo.initialHoles, "commandOptionChoice")).toEqual(
+    expect(
+      requireHole(levelTwo.initialHoles, "compelledBehaviorOptionChoice"),
+    ).toEqual(
       expect.objectContaining({
         choices: ["grovel", "halt", "drop", "approach", "flee"],
       }),
     );
     expect(spellActInvocation(session, levelTwo)).toEqual(
       expect.objectContaining({
-        procedure: "command",
+        procedure: "compelledNextTurnBehavior",
         actionCost: "magicAction",
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "wis",
@@ -138,7 +140,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -147,9 +152,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "grovel",
     };
@@ -180,7 +185,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     }
     expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "grovel",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -202,7 +207,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: spellTargetId,
-          command: "commandGrovel",
+          command: "executeCompelledGrovel",
         }),
         initialHoles: [],
       }),
@@ -244,7 +249,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -253,9 +261,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "grovel",
     };
@@ -294,7 +302,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (
       grovelAct === undefined ||
       grovelAct.subject.tag !== "runtimeCommand" ||
-      grovelAct.subject.command !== "commandGrovel"
+      grovelAct.subject.command !== "executeCompelledGrovel"
     ) {
       throw new Error("Expected Command Grovel act.");
     }
@@ -314,18 +322,33 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (awaitingSave.tag !== "needsHoles") {
       throw new Error("Expected Command Grovel save frontier.");
     }
-    expect(awaitingSave.state).toEqual({
-      ...committedState,
+    expect(awaitingSave.state).toMatchObject({
       subjectResolutionPhase: {
         kind: "subjectContinuation",
         subject: grovelAct.subject,
       },
     });
+    expect(requireCombatant(awaitingSave.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+    });
+    expect(
+      requireCombatant(awaitingSave.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "compelledNextTurnBehavior",
+          option: "grovel",
+        }),
+      ]),
+    );
     expect(awaitingSave.snapshot).toEqual(snapshotBattle(awaitingSave.state));
     expect(requireCombatant(committedState, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ prone: false }),
       activeEffects: expect.arrayContaining([
-        expect.objectContaining({ kind: "commandPending", option: "grovel" }),
+        expect.objectContaining({
+          kind: "compelledNextTurnBehavior",
+          option: "grovel",
+        }),
       ]),
     });
     const saveHole = requireResultHole(awaitingSave, "savingThrowOutcome");
@@ -375,7 +398,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -384,9 +410,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "grovel",
     };
@@ -412,7 +438,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       requireCombatant(declined.state, spellTargetId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "grovel",
         sourceCombatantId: spellCasterId,
       }),
@@ -438,7 +464,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -447,9 +476,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "halt",
     };
@@ -476,7 +505,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     }
     expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "halt",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -492,8 +521,8 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    expect(targetTurn.state.currentTurnResources.commandHalt).toEqual({
-      kind: "commandHalt",
+    expect(targetTurn.state.currentTurnResources.compelledHalt).toEqual({
+      kind: "compelledHalt",
     });
     expect(targetTurn.state.currentTurnResources.actionResources).toEqual([]);
     expect(targetTurn.state.currentTurnResources.currentHasBonusAction).toBe(
@@ -552,7 +581,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
             (candidate.subject.tag === "runtimeCommand" &&
               (candidate.subject.command === "move" ||
                 candidate.subject.command === "standFromProne" ||
-                candidate.subject.command === "jumpMovementReplacement"))),
+                candidate.subject.command === "fixedCostMovementReplacement"))),
       ),
     ).toBe(false);
     expect(haltedActs).toEqual(
@@ -613,10 +642,8 @@ describe("QMBT14 deterministic Command control option admission", () => {
       subject: {
         tag: "runtimeCommand",
         actorId: spellTargetId,
-        command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRefForTest(
-          "stale-command-grovel",
-        ),
+        command: "executeCompelledGrovel",
+        effectRef: battleEffectExecutionRefForTest("stale-command-grovel"),
       },
       fills: [],
     });
@@ -670,8 +697,8 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(awaitingHaltSave.snapshot).toEqual(
       snapshotBattle(awaitingHaltSave.state),
     );
-    expect(awaitingHaltSave.state.currentTurnResources.commandHalt).toEqual({
-      kind: "commandHalt",
+    expect(awaitingHaltSave.state.currentTurnResources.compelledHalt).toEqual({
+      kind: "compelledHalt",
     });
     const haltEndTurnSave = requireResultHole(
       awaitingHaltSave,
@@ -692,7 +719,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(requireCombatant(ended.state, spellTargetId).activeEffects).toEqual(
       [],
     );
-    expect(ended.state.currentTurnResources.commandHalt).toBeNull();
+    expect(ended.state.currentTurnResources.compelledHalt).toBeNull();
   });
   test("command Drop consumes canonical character held-object facts, emits dropped-object outcomes, and ends turn", () => {
     const spell = spellRecord(commandUnitId);
@@ -707,7 +734,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -716,9 +746,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "drop",
     };
@@ -758,7 +788,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: spellTargetId,
-          command: "commandDrop",
+          command: "executeCompelledDrop",
         }),
         initialHoles: [],
       }),
@@ -771,7 +801,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     const dropSubject = targetActs[0]!.subject;
     if (
       dropSubject.tag !== "runtimeCommand" ||
-      dropSubject.command !== "commandDrop"
+      dropSubject.command !== "executeCompelledDrop"
     ) {
       throw new Error("Expected Command Drop subject.");
     }
@@ -788,13 +818,22 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (awaitingEndTurnSave.tag !== "needsHoles") {
       throw new Error("Expected Command Drop save frontier.");
     }
-    expect(awaitingEndTurnSave.state).toEqual({
-      ...committedWithSave,
+    expect(awaitingEndTurnSave.state).toMatchObject({
       subjectResolutionPhase: {
         kind: "subjectContinuation",
         subject: dropSubject,
       },
     });
+    expect(
+      requireCombatant(awaitingEndTurnSave.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "compelledNextTurnBehavior",
+          option: "drop",
+        }),
+      ]),
+    );
     expect(awaitingEndTurnSave).not.toHaveProperty("droppedObjects");
     expect(awaitingEndTurnSave.snapshot).toEqual(
       snapshotBattle(awaitingEndTurnSave.state),
@@ -847,6 +886,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (dropped.tag !== "resolved") {
       throw new Error("Expected Command Drop to resolve.");
     }
+    expect(dropped.droppedObjects).toHaveLength(1);
     expect(
       requireCombatant(dropped.state, spellTargetId).activeEffects,
     ).toEqual([]);
@@ -879,7 +919,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -888,9 +931,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "drop",
     };
@@ -925,7 +968,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: statBlockTargetId,
-          command: "commandDrop",
+          command: "executeCompelledDrop",
         }),
         initialHoles: [expect.objectContaining({ kind: "heldObjectFacts" })],
       }),
@@ -933,7 +976,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (
       dropAct === undefined ||
       dropAct.subject.tag !== "runtimeCommand" ||
-      dropAct.subject.command !== "commandDrop"
+      dropAct.subject.command !== "executeCompelledDrop"
     ) {
       throw new Error("Expected Command Drop act.");
     }
@@ -1009,7 +1052,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -1018,9 +1064,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "grovel",
     };
@@ -1066,7 +1112,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -1075,9 +1124,9 @@ describe("QMBT14 deterministic Command control option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "grovel",
     };
@@ -1104,7 +1153,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     }
     expect(requireCombatant(cast.state, spellCasterId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "grovel",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -1121,10 +1170,8 @@ describe("QMBT14 deterministic Command control option admission", () => {
       subject: {
         tag: "runtimeCommand",
         actorId: spellCasterId,
-        command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRefForTest(
-          "premature-command-grovel",
-        ),
+        command: "executeCompelledGrovel",
+        effectRef: battleEffectExecutionRefForTest("premature-command-grovel"),
       },
       fills: [],
     });
@@ -1148,7 +1195,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     const grovelAct = casterActs.find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "commandGrovel" &&
+        candidate.subject.command === "executeCompelledGrovel" &&
         candidate.subject.actorId === spellCasterId,
     );
     expect(grovelAct).toBeDefined();

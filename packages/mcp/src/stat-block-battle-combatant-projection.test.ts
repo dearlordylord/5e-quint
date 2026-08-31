@@ -11,7 +11,7 @@ import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option, Schema } from "effect";
+import { Option, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
@@ -41,9 +41,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Unknown Stat Block combatant.",
       details: {
         code: "UNKNOWN_STAT_BLOCK_COMBATANT",
@@ -87,9 +87,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error:
         "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.",
       details: {
@@ -119,9 +119,9 @@ describe("MCP Stat Block battle combatant projection", () => {
 
     const projected = projectStatBlockBattleCombatant({ root, combatant });
 
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    expect(projected.right).toMatchObject({
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
+    expect(projected.success).toMatchObject({
       tag: "encounterCombatant",
       creatureInit: {
         combatantId: combatant.combatantId,
@@ -173,9 +173,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
@@ -245,9 +245,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
@@ -290,9 +290,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
@@ -343,9 +343,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
@@ -367,9 +367,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(swarm),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
@@ -417,9 +417,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
@@ -464,9 +464,9 @@ describe("MCP Stat Block battle combatant projection", () => {
       combatant: statBlockCombatant(invalid),
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(jsonContentPayload(projected.left)).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(jsonContentPayload(projected.failure)).toEqual({
       error: "Stat Block projection failed.",
       details: {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",

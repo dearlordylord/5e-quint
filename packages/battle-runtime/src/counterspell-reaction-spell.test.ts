@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   abilityModifier,
@@ -25,11 +25,13 @@ import {
   battleId,
   characterId,
   combatantId,
+  battlePendingTransactionView,
   discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   startBattle,
+  settleBattleRuntimeTransaction,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -42,11 +44,12 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { counterspellCapableReactors } from "./battle-reducer/counterspell-reaction-discovery.ts";
+import { spellCastInterruptionReactionCapableReactors } from "./battle-reducer/spell-cast-interruption-reaction-discovery.ts";
 import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,
   spellAccessFreeCastSpellInvocationRef,
+  type BattleInterruptSubject,
 } from "./battle-subjects.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
@@ -68,19 +71,49 @@ const acidSplashUnitId = "acid_splash";
 const expeditiousRetreatUnitId = "expeditious_retreat";
 const flameBladeUnitId = "flame_blade";
 const magicMissileUnitId = "magic_missile";
-const counterspellUnitId = "counterspell";
+const spellCastInterruptionReactionUnitId = "counterspell";
 const shieldUnitId = "shield";
-const casterId = combatantId("counterspell-triggering-caster");
-const counterspellerId = combatantId("counterspell-reactor");
-const secondCounterspellerId = combatantId("counterspell-second-reactor");
+const casterId = combatantId("spellCastInterruptionReaction-triggering-caster");
+const spellCastInterruptionReactionerId = combatantId(
+  "spellCastInterruptionReaction-reactor",
+);
+const secondCounterspellerId = combatantId(
+  "spellCastInterruptionReaction-second-reactor",
+);
+
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
 
 describe("Counterspell Reaction spell", () => {
   test("does not admit a Counterspell reactor without an available spell slot", () => {
     const session = battleWithCounterspell({
-      counterspellerSlots: [{ spellLevel: 3, count: 0 }],
+      spellCastInterruptionReactionerSlots: [{ spellLevel: 3, count: 0 }],
     });
 
-    expect(counterspellCapableReactors(session.state)).toEqual([]);
+    expect(spellCastInterruptionReactionCapableReactors(session.state)).toEqual(
+      [],
+    );
   });
 
   test("an inherited attack trigger does not suppress the distinct spell-cast window", () => {
@@ -91,12 +124,12 @@ describe("Counterspell Reaction spell", () => {
         session,
         state: session.state,
         slotLevel: 1,
-        targetId: counterspellerId,
+        targetId: spellCastInterruptionReactionerId,
         handledInterruptTrigger: "attackHit",
-        counterspellFacts: [
-          counterspellTriggerFact({
+        spellCastInterruptionReactionFacts: [
+          spellCastInterruptionReactionTriggerFact({
             session,
-            reactorId: counterspellerId,
+            reactorId: spellCastInterruptionReactionerId,
             casterId,
           }),
         ],
@@ -113,18 +146,18 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -132,10 +165,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -147,7 +184,9 @@ describe("Counterspell Reaction spell", () => {
       throw new Error("Expected Counterspell to resolve.");
     }
     expect(hasTurnAction(resolved.state)).toBe(false);
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 30,
       reactionAvailable: false,
       origin: expect.objectContaining({
@@ -187,18 +226,18 @@ describe("Counterspell Reaction spell", () => {
       state: session.state,
       slotLevel: 1,
       invocationRef,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -206,10 +245,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -234,30 +277,33 @@ describe("Counterspell Reaction spell", () => {
 
   test("spends Counterspell itself through a source-scoped free cast", () => {
     const session = battleWithCounterspell({
-      counterspellerSpellAccessFreeCast: true,
+      spellCastInterruptionReactionerSpellAccessFreeCast: true,
     });
-    const counterspeller = session.state.combatants.get(counterspellerId);
-    if (counterspeller?.origin.kind !== "character") {
+    const spellCastInterruptionReactioner = session.state.combatants.get(
+      spellCastInterruptionReactionerId,
+    );
+    if (spellCastInterruptionReactioner?.origin.kind !== "character") {
       throw new Error("Expected character Counterspell reactor.");
     }
-    const resourcePoolRef = counterspeller.origin.resources[0]?.resourcePoolRef;
+    const resourcePoolRef =
+      spellCastInterruptionReactioner.origin.resources[0]?.resourcePoolRef;
     if (resourcePoolRef === undefined) {
       throw new Error("Expected Counterspell free-cast resource.");
     }
     const invocationRef = spellAccessFreeCastSpellInvocationRef(
-      counterspellUnitId,
+      spellCastInterruptionReactionUnitId,
       resourcePoolRef,
-      "counterspell",
+      "spellCastInterruptionReaction",
     );
     const awaitingReaction = startMagicMissile({
       session,
       state: session.state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
           invocationRef,
         }),
@@ -265,7 +311,7 @@ describe("Counterspell Reaction spell", () => {
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
       { tag: "spellAccessFreeCast", resourcePoolRef },
@@ -274,10 +320,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -288,7 +338,9 @@ describe("Counterspell Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected source-scoped Counterspell to resolve.");
     }
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       reactionAvailable: false,
       origin: expect.objectContaining({
         resources: expect.arrayContaining([
@@ -314,18 +366,18 @@ describe("Counterspell Reaction spell", () => {
       session,
       state: session.state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -333,7 +385,11 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        triggeredReactionSpellDecision(counterspellerId, choice, []),
+        triggeredReactionSpellDecision(
+          spellCastInterruptionReactionerId,
+          choice,
+          [],
+        ),
       ),
     });
     expect(incomplete).toMatchObject({
@@ -351,14 +407,14 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
-        counterspellTriggerFact({
+        spellCastInterruptionReactionTriggerFact({
           session,
           reactorId: secondCounterspellerId,
           casterId,
@@ -367,7 +423,7 @@ describe("Counterspell Reaction spell", () => {
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -376,10 +432,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -407,18 +467,18 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 4,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -426,10 +486,10 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, true),
+          spellCastInterruptionReactionSavingThrowFills(choice, casterId, true),
         ),
       ),
     });
@@ -455,7 +515,9 @@ describe("Counterspell Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected continued Magic Missile to resolve.");
     }
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 18,
       reactionAvailable: false,
       origin: expect.objectContaining({
@@ -497,18 +559,18 @@ describe("Counterspell Reaction spell", () => {
       state: session.state,
       slotLevel: 1,
       invocationRef,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -516,10 +578,10 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, true),
+          spellCastInterruptionReactionSavingThrowFills(choice, casterId, true),
         ),
       ),
     });
@@ -569,18 +631,18 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 4,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -588,10 +650,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -602,7 +668,9 @@ describe("Counterspell Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected failed save Counterspell to resolve.");
     }
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 30,
       reactionAvailable: false,
       origin: expect.objectContaining({
@@ -630,10 +698,10 @@ describe("Counterspell Reaction spell", () => {
       includeSecondCounterspeller: true,
     });
     const state = session.state;
-    const counterspellFacts = [
-      counterspellTriggerFact({
+    const spellCastInterruptionReactionFacts = [
+      spellCastInterruptionReactionTriggerFact({
         session,
-        reactorId: counterspellerId,
+        reactorId: spellCastInterruptionReactionerId,
         casterId,
       }),
     ];
@@ -641,12 +709,12 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts,
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts,
     });
     const firstChoice = requireCounterspellChoice(
       awaitingFirstCounterspell,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -657,7 +725,7 @@ describe("Counterspell Reaction spell", () => {
       requireHole(firstChoice.initialHoles, "targetSpatialFacts"),
     ).toMatchObject({
       spellBeingCast: {
-        casterId: counterspellerId,
+        casterId: spellCastInterruptionReactionerId,
         sourceProcedureRef: firstChoice.subject.procedureRef,
         castLevel: 3,
         components: ["S"],
@@ -668,18 +736,23 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingFirstCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingFirstCounterspell.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           firstChoice,
-          counterspellSavingThrowFills(firstChoice, casterId, false, [
-            spellCastReactionFactsFill([
-              counterspellTriggerFact({
-                session,
-                reactorId: secondCounterspellerId,
-                casterId: counterspellerId,
-              }),
-            ]),
-          ]),
+          spellCastInterruptionReactionSavingThrowFills(
+            firstChoice,
+            casterId,
+            false,
+            [
+              spellCastReactionFactsFill([
+                spellCastInterruptionReactionTriggerFact({
+                  session,
+                  reactorId: secondCounterspellerId,
+                  casterId: spellCastInterruptionReactionerId,
+                }),
+              ]),
+            ],
+          ),
         ),
       ),
     });
@@ -700,10 +773,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingSecondCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingSecondCounterspell.holes, "interruptDecision"),
-        counterspellDecision(
+        spellCastInterruptionReactionDecision(
           secondCounterspellerId,
           secondChoice,
-          counterspellSavingThrowFills(secondChoice, counterspellerId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            secondChoice,
+            spellCastInterruptionReactionerId,
+            false,
+          ),
         ),
       ),
     });
@@ -726,7 +803,9 @@ describe("Counterspell Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected resumed Magic Missile to resolve.");
     }
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 24,
       reactionAvailable: false,
       origin: expect.objectContaining({
@@ -758,11 +837,157 @@ describe("Counterspell Reaction spell", () => {
     });
   });
 
+  test("retains the triggering spell fills when nested Counterspell responders unwind through a transaction", () => {
+    const session = battleWithCounterspell({
+      casterSlots: [{ spellLevel: 1, count: 1 }],
+      includeSecondCounterspeller: true,
+    });
+    const subject = magicMissileSubject(session, 1);
+    const targetAllocationResult = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [],
+    });
+    if (targetAllocationResult.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile target allocation hole.");
+    }
+    const targetAllocation = requireHole(
+      targetAllocationResult.holes,
+      "spellTargetAllocation",
+    );
+    const firstCounterspellFact = spellCastInterruptionReactionTriggerFact({
+      session,
+      reactorId: spellCastInterruptionReactionerId,
+      casterId,
+    });
+    const first = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject,
+        fills: [
+          magicMissileTargetAllocationFill({
+            hole: targetAllocation,
+            casterId,
+            targetId: spellCastInterruptionReactionerId,
+            dartCount: targetAllocation.allocationCount,
+          }),
+          spellCastReactionFactsFill([firstCounterspellFact]),
+        ],
+      },
+    });
+    if (first.tag !== "needsHoles") {
+      throw new Error("Expected the first Counterspell transaction window.");
+    }
+    const firstFrontier = battleFrontierInterruptDecisionForState(
+      first.resolution.session.state,
+    );
+    const firstChoice = firstFrontier?.choices.find(
+      (choice): choice is TriggeredReactionSpellChoice =>
+        isTriggeredReactionSpellChoice(choice) &&
+        choice.subject.reactorId === spellCastInterruptionReactionerId,
+    );
+    if (firstChoice === undefined) {
+      throw new Error("Expected the first Counterspell choice.");
+    }
+    const secondCounterspellFact = spellCastInterruptionReactionTriggerFact({
+      session,
+      reactorId: secondCounterspellerId,
+      casterId: spellCastInterruptionReactionerId,
+    });
+    const second = settleBattleRuntimeTransaction({
+      session: first.resolution.session,
+      transaction: first.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          requireHole(
+            first.resolution.envelope.frontier.kind === "interruptDecision"
+              ? [first.resolution.envelope.frontier.decisionHole]
+              : [],
+            "interruptDecision",
+          ),
+          spellCastInterruptionReactionDecision(
+            spellCastInterruptionReactionerId,
+            firstChoice,
+            spellCastInterruptionReactionSavingThrowFills(
+              firstChoice,
+              casterId,
+              false,
+              [spellCastReactionFactsFill([secondCounterspellFact])],
+            ),
+          ),
+        ),
+      },
+    });
+    if (second.tag !== "needsHoles") {
+      throw new Error("Expected the nested Counterspell transaction window.");
+    }
+    const secondFrontier = battleFrontierInterruptDecisionForState(
+      second.resolution.session.state,
+    );
+    const secondChoice = secondFrontier?.choices.find(
+      (choice): choice is TriggeredReactionSpellChoice =>
+        isTriggeredReactionSpellChoice(choice) &&
+        choice.subject.reactorId === secondCounterspellerId,
+    );
+    if (secondChoice === undefined) {
+      throw new Error("Expected the second Counterspell choice.");
+    }
+    const resumed = settleBattleRuntimeTransaction({
+      session: second.resolution.session,
+      transaction: second.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          requireHole(
+            second.resolution.envelope.frontier.kind === "interruptDecision"
+              ? [second.resolution.envelope.frontier.decisionHole]
+              : [],
+            "interruptDecision",
+          ),
+          spellCastInterruptionReactionDecision(
+            secondCounterspellerId,
+            secondChoice,
+            spellCastInterruptionReactionSavingThrowFills(
+              secondChoice,
+              spellCastInterruptionReactionerId,
+              false,
+            ),
+          ),
+        ),
+      },
+    });
+    if (resumed.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile to resume after Counterspell.");
+    }
+    if (resumed.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected Magic Missile's ordinary damage frontier.");
+    }
+    const transactionView = battlePendingTransactionView(resumed.transaction);
+    expect(transactionView).toMatchObject({
+      _tag: "Some",
+      value: {
+        subject,
+        fills: [
+          expect.objectContaining({ kind: "spellTargetAllocation" }),
+          expect.objectContaining({ kind: "targetSpatialFacts" }),
+        ],
+      },
+    });
+    expect(resumed.frontier.holes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
+    );
+  });
+
   test("allows Counterspell to end Shield before Shield affects the triggering spell", () => {
     const session = battleWithCounterspell({
       casterSlots: [{ spellLevel: 1, count: 1 }],
-      counterspellerPreparedSpells: [srdSpellRecord(shieldUnitId)],
-      counterspellerSlots: [{ spellLevel: 1, count: 1 }],
+      spellCastInterruptionReactionerPreparedSpells: [
+        srdSpellRecord(shieldUnitId),
+      ],
+      spellCastInterruptionReactionerSlots: [{ spellLevel: 1, count: 1 }],
       includeSecondCounterspeller: true,
     });
     const state = session.state;
@@ -770,15 +995,15 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [],
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [],
     });
     const shieldChoice = requireTriggeredReactionSpellChoice({
       session,
       result: awaitingShield,
-      reactorId: counterspellerId,
+      reactorId: spellCastInterruptionReactionerId,
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
       slotLevel: 1,
     });
 
@@ -786,15 +1011,19 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingShield.state,
       fill: interruptDecisionFill(
         requireHole(awaitingShield.holes, "interruptDecision"),
-        triggeredReactionSpellDecision(counterspellerId, shieldChoice, [
-          spellCastReactionFactsFill([
-            counterspellTriggerFact({
-              session,
-              reactorId: secondCounterspellerId,
-              casterId: counterspellerId,
-            }),
-          ]),
-        ]),
+        triggeredReactionSpellDecision(
+          spellCastInterruptionReactionerId,
+          shieldChoice,
+          [
+            spellCastReactionFactsFill([
+              spellCastInterruptionReactionTriggerFact({
+                session,
+                reactorId: secondCounterspellerId,
+                casterId: spellCastInterruptionReactionerId,
+              }),
+            ]),
+          ],
+        ),
       ),
     });
     expect(awaitingCounterspell).toMatchObject({
@@ -803,7 +1032,7 @@ describe("Counterspell Reaction spell", () => {
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Counterspell to interrupt Shield casting.");
     }
-    const counterspellChoice = requireCounterspellChoice(
+    const spellCastInterruptionReactionChoice = requireCounterspellChoice(
       awaitingCounterspell,
       secondCounterspellerId,
       3,
@@ -814,12 +1043,12 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingCounterspell.holes, "interruptDecision"),
-        counterspellDecision(
+        spellCastInterruptionReactionDecision(
           secondCounterspellerId,
-          counterspellChoice,
-          counterspellSavingThrowFills(
-            counterspellChoice,
-            counterspellerId,
+          spellCastInterruptionReactionChoice,
+          spellCastInterruptionReactionSavingThrowFills(
+            spellCastInterruptionReactionChoice,
+            spellCastInterruptionReactionerId,
             false,
           ),
         ),
@@ -846,7 +1075,9 @@ describe("Counterspell Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected resumed Magic Missile to resolve.");
     }
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 24,
       reactionAvailable: false,
       armorClass: 10,
@@ -873,23 +1104,25 @@ describe("Counterspell Reaction spell", () => {
   test("declining nested Counterspell replays Shield without reopening its spell-cast window", () => {
     const session = battleWithCounterspell({
       casterSlots: [{ spellLevel: 1, count: 1 }],
-      counterspellerPreparedSpells: [srdSpellRecord(shieldUnitId)],
-      counterspellerSlots: [{ spellLevel: 1, count: 1 }],
+      spellCastInterruptionReactionerPreparedSpells: [
+        srdSpellRecord(shieldUnitId),
+      ],
+      spellCastInterruptionReactionerSlots: [{ spellLevel: 1, count: 1 }],
       includeSecondCounterspeller: true,
     });
     const awaitingShield = startMagicMissile({
       session,
       state: session.state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [],
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [],
     });
     const shieldChoice = requireTriggeredReactionSpellChoice({
       session,
       result: awaitingShield,
-      reactorId: counterspellerId,
+      reactorId: spellCastInterruptionReactionerId,
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
       slotLevel: 1,
     });
 
@@ -897,15 +1130,19 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingShield.state,
       fill: interruptDecisionFill(
         requireHole(awaitingShield.holes, "interruptDecision"),
-        triggeredReactionSpellDecision(counterspellerId, shieldChoice, [
-          spellCastReactionFactsFill([
-            counterspellTriggerFact({
-              session,
-              reactorId: secondCounterspellerId,
-              casterId: counterspellerId,
-            }),
-          ]),
-        ]),
+        triggeredReactionSpellDecision(
+          spellCastInterruptionReactionerId,
+          shieldChoice,
+          [
+            spellCastReactionFactsFill([
+              spellCastInterruptionReactionTriggerFact({
+                session,
+                reactorId: secondCounterspellerId,
+                casterId: spellCastInterruptionReactionerId,
+              }),
+            ]),
+          ],
+        ),
       ),
     });
     expect(awaitingCounterspell).toMatchObject({
@@ -947,7 +1184,9 @@ describe("Counterspell Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Magic Missile to resolve after Shield replay.");
     }
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 30,
       reactionAvailable: false,
       armorClass: 15,
@@ -990,9 +1229,9 @@ describe("Counterspell Reaction spell", () => {
       subject,
       fills: [
         spellCastReactionFactsFill([
-          counterspellTriggerFact({
+          spellCastInterruptionReactionTriggerFact({
             session,
-            reactorId: counterspellerId,
+            reactorId: spellCastInterruptionReactionerId,
             casterId,
           }),
         ]),
@@ -1009,7 +1248,7 @@ describe("Counterspell Reaction spell", () => {
 
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -1017,10 +1256,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -1032,7 +1275,9 @@ describe("Counterspell Reaction spell", () => {
       throw new Error("Expected Counterspell to end Acid Splash.");
     }
     expect(hasTurnAction(resolved.state)).toBe(false);
-    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+    expect(
+      snapshotCombatant(resolved, spellCastInterruptionReactionerId),
+    ).toMatchObject({
       hp: 30,
       reactionAvailable: false,
       origin: expect.objectContaining({
@@ -1059,7 +1304,7 @@ describe("Counterspell Reaction spell", () => {
         spellSlotInvocationRef(
           expeditiousRetreatUnitId,
           1,
-          "expeditiousRetreatDash",
+          "grantedAlternateActionCost",
         ),
       ),
     );
@@ -1068,9 +1313,9 @@ describe("Counterspell Reaction spell", () => {
       subject,
       fills: [
         spellCastReactionFactsFill([
-          counterspellTriggerFact({
+          spellCastInterruptionReactionTriggerFact({
             session,
-            reactorId: counterspellerId,
+            reactorId: spellCastInterruptionReactionerId,
             casterId,
           }),
         ]),
@@ -1086,7 +1331,7 @@ describe("Counterspell Reaction spell", () => {
     }
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -1095,10 +1340,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -1143,9 +1392,9 @@ describe("Counterspell Reaction spell", () => {
         subject,
         fills: [
           spellCastReactionFactsFill([
-            counterspellTriggerFact({
+            spellCastInterruptionReactionTriggerFact({
               session,
-              reactorId: counterspellerId,
+              reactorId: spellCastInterruptionReactionerId,
               casterId,
             }),
           ]),
@@ -1163,11 +1412,11 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
       ],
@@ -1176,7 +1425,7 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        { kind: "decline", responderId: counterspellerId },
+        { kind: "decline", responderId: spellCastInterruptionReactionerId },
       ),
     });
     expect(declined).toMatchObject({
@@ -1206,7 +1455,7 @@ describe("Counterspell Reaction spell", () => {
     const session = battleWithCounterspell({
       casterPreparedSpells: [
         srdSpellRecord(magicMissileUnitId),
-        srdSpellRecord(counterspellUnitId),
+        srdSpellRecord(spellCastInterruptionReactionUnitId),
       ],
       casterSlots: [
         { spellLevel: 1, count: 1 },
@@ -1218,23 +1467,23 @@ describe("Counterspell Reaction spell", () => {
       session,
       state,
       slotLevel: 1,
-      targetId: counterspellerId,
-      counterspellFacts: [
-        counterspellTriggerFact({
+      targetId: spellCastInterruptionReactionerId,
+      spellCastInterruptionReactionFacts: [
+        spellCastInterruptionReactionTriggerFact({
           session,
-          reactorId: counterspellerId,
+          reactorId: spellCastInterruptionReactionerId,
           casterId,
         }),
-        counterspellTriggerFact({
+        spellCastInterruptionReactionTriggerFact({
           session,
           reactorId: casterId,
-          casterId: counterspellerId,
+          casterId: spellCastInterruptionReactionerId,
         }),
       ],
     });
     const choice = requireCounterspellChoice(
       awaitingReaction,
-      counterspellerId,
+      spellCastInterruptionReactionerId,
       3,
       session,
     );
@@ -1243,10 +1492,14 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(
-          counterspellerId,
+        spellCastInterruptionReactionDecision(
+          spellCastInterruptionReactionerId,
           choice,
-          counterspellSavingThrowFills(choice, casterId, false),
+          spellCastInterruptionReactionSavingThrowFills(
+            choice,
+            casterId,
+            false,
+          ),
         ),
       ),
     });
@@ -1293,43 +1546,57 @@ function battleWithCounterspell(
     readonly casterCantrips?: readonly SpellRecord[] | undefined;
     readonly casterPreparedSpells?: readonly SpellRecord[] | undefined;
     readonly casterSlots?: CharacterSpellcastingInit["spellSlots"] | undefined;
-    readonly counterspellerPreparedSpells?: readonly SpellRecord[] | undefined;
-    readonly counterspellerSlots?:
+    readonly spellCastInterruptionReactionerPreparedSpells?:
+      | readonly SpellRecord[]
+      | undefined;
+    readonly spellCastInterruptionReactionerSlots?:
       | CharacterSpellcastingInit["spellSlots"]
       | undefined;
     readonly includeSecondCounterspeller?: boolean | undefined;
     readonly casterSpellAccessFreeCast?: boolean | undefined;
-    readonly counterspellerSpellAccessFreeCast?: boolean | undefined;
+    readonly spellCastInterruptionReactionerSpellAccessFreeCast?:
+      | boolean
+      | undefined;
   } = {},
 ): BattleRuntimeSession {
-  const counterspell = srdSpellRecord(counterspellUnitId);
+  const spellCastInterruptionReaction = srdSpellRecord(
+    spellCastInterruptionReactionUnitId,
+  );
   const magicMissile = srdSpellRecord(magicMissileUnitId);
   const magicInitiateFreeCastSource = {
-    id: authoredUnitId("feat_synthetic_counterspell_dabbler"),
+    id: authoredUnitId("feat_synthetic_spellCastInterruptionReaction_dabbler"),
     kind: "feat",
     category: "origin",
     name: "Synthetic Counterspell Dabbler",
-    provenance: { kind: "synthetic-test", section: "counterspell regression" },
+    provenance: {
+      kind: "synthetic-test",
+      section: "spellCastInterruptionReaction regression",
+    },
     mechanics: { family: "magic_initiate", spellList: "wizard" },
   } as const;
-  const counterspellFreeCastSource = {
+  const spellCastInterruptionReactionFreeCastSource = {
     acquiredAtLevel: 3,
     className: "wizard",
-    id: authoredUnitId("wizard_synthetic_counterspell_reserve"),
+    id: authoredUnitId(
+      "wizard_synthetic_spellCastInterruptionReaction_reserve",
+    ),
     kind: "class_feature",
     name: "Synthetic Counterspell Reserve",
-    provenance: { kind: "synthetic-test", section: "counterspell regression" },
+    provenance: {
+      kind: "synthetic-test",
+      section: "spellCastInterruptionReaction regression",
+    },
     mechanics: {
       family: "passive",
       grants: [
         {
           kind: "grant_spell_access",
           mode: "prepared",
-          spellId: counterspell.id,
+          spellId: spellCastInterruptionReaction.id,
         },
         {
           kind: "grant_spell_free_casts",
-          spellId: counterspell.id,
+          spellId: spellCastInterruptionReaction.id,
           count: 1,
           resetCadence: "long_rest",
         },
@@ -1337,7 +1604,7 @@ function battleWithCounterspell(
     },
   } as const satisfies UnitRecord;
   const result = startBattle({
-    battleId: battleId("counterspell-reaction-spell"),
+    battleId: battleId("spellCastInterruptionReaction-reaction-spell"),
     combatants: [
       characterCreature({
         combatantId: casterId,
@@ -1404,16 +1671,16 @@ function battleWithCounterspell(
         },
       }),
       characterCreature({
-        combatantId: counterspellerId,
+        combatantId: spellCastInterruptionReactionerId,
         displayName: "Counterspell reactor",
         initiative: 10,
         resources:
-          input.counterspellerSpellAccessFreeCast === true
+          input.spellCastInterruptionReactionerSpellAccessFreeCast === true
             ? [
                 {
-                  unit: counterspellFreeCastSource,
+                  unit: spellCastInterruptionReactionFreeCastSource,
                   spellAccessFreeCast: {
-                    spellId: counterspell.id,
+                    spellId: spellCastInterruptionReaction.id,
                     count: 1,
                   },
                   usesRemaining: 1,
@@ -1421,28 +1688,38 @@ function battleWithCounterspell(
               ]
             : [],
         characterUnitRefs:
-          input.counterspellerSpellAccessFreeCast === true
-            ? [{ unit: counterspellFreeCastSource, supportProfiles: [] }]
+          input.spellCastInterruptionReactionerSpellAccessFreeCast === true
+            ? [
+                {
+                  unit: spellCastInterruptionReactionFreeCastSource,
+                  supportProfiles: [],
+                },
+              ]
             : [],
         spellcasting:
-          input.counterspellerSpellAccessFreeCast === true
+          input.spellCastInterruptionReactionerSpellAccessFreeCast === true
             ? {
                 ...wizardSpellcasting({ preparedSpells: [], spellSlots: [] }),
                 featurePreparedSpells: [
                   {
-                    sourceUnitId: counterspellFreeCastSource.id,
-                    spell: counterspell,
+                    sourceUnitId:
+                      spellCastInterruptionReactionFreeCastSource.id,
+                    spell: spellCastInterruptionReaction,
                   },
                 ],
               }
-            : input.counterspellerPreparedSpells === undefined &&
-                input.counterspellerSlots === undefined
-              ? counterspellSpellcasting(counterspell)
+            : input.spellCastInterruptionReactionerPreparedSpells ===
+                  undefined &&
+                input.spellCastInterruptionReactionerSlots === undefined
+              ? spellCastInterruptionReactionSpellcasting(
+                  spellCastInterruptionReaction,
+                )
               : wizardSpellcasting({
-                  preparedSpells: input.counterspellerPreparedSpells ?? [
-                    counterspell,
-                  ],
-                  spellSlots: input.counterspellerSlots ?? [
+                  preparedSpells:
+                    input.spellCastInterruptionReactionerPreparedSpells ?? [
+                      spellCastInterruptionReaction,
+                    ],
+                  spellSlots: input.spellCastInterruptionReactionerSlots ?? [
                     { spellLevel: 3, count: 1 },
                   ],
                 }),
@@ -1453,23 +1730,25 @@ function battleWithCounterspell(
               combatantId: secondCounterspellerId,
               displayName: "Second Counterspell reactor",
               initiative: 5,
-              spellcasting: counterspellSpellcasting(counterspell),
+              spellcasting: spellCastInterruptionReactionSpellcasting(
+                spellCastInterruptionReaction,
+              ),
             }),
           ]
         : []),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(JSON.stringify(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(JSON.stringify(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
-function counterspellSpellcasting(
-  counterspell: SpellRecord,
+function spellCastInterruptionReactionSpellcasting(
+  spellCastInterruptionReaction: SpellRecord,
 ): CharacterSpellcastingInit {
   return wizardSpellcasting({
-    preparedSpells: [counterspell],
+    preparedSpells: [spellCastInterruptionReaction],
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
 }
@@ -1580,7 +1859,7 @@ function startMagicMissile(input: {
   >[2];
   readonly targetId: CombatantId;
   readonly handledInterruptTrigger?: "attackHit";
-  readonly counterspellFacts: readonly CounterspellTriggerFact[];
+  readonly spellCastInterruptionReactionFacts: readonly CounterspellTriggerFact[];
 }): StartedMagicMissile {
   const subject = magicMissileSubject(
     input.session,
@@ -1613,7 +1892,7 @@ function startMagicMissile(input: {
       : { handledInterruptTrigger: input.handledInterruptTrigger }),
     fills: [
       targetAllocationFill,
-      spellCastReactionFactsFill(input.counterspellFacts),
+      spellCastReactionFactsFill(input.spellCastInterruptionReactionFacts),
     ],
   });
   expect(result).toMatchObject({
@@ -1648,10 +1927,10 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionReactionTriggerFact(input: {
   readonly session: BattleRuntimeSession;
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
@@ -1660,14 +1939,18 @@ function counterspellTriggerFact(input: {
   >[2];
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       input.session,
       input.reactorId,
       input.invocationRef ??
-        spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+        spellSlotInvocationRef(
+          spellCastInterruptionReactionUnitId,
+          3,
+          "spellCastInterruptionReaction",
+        ),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1754,16 +2037,13 @@ function requireCounterspellChoice(
   slotLevel: number,
   session: BattleRuntimeSession,
   resource?: CounterspellFreeCastChoiceResource,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     session,
     result,
     reactorId,
-    spellId: counterspellUnitId,
-    procedure: "counterspell",
+    spellId: spellCastInterruptionReactionUnitId,
+    procedure: "spellCastInterruptionReaction",
     slotLevel,
     ...(resource === undefined ? {} : { resource }),
   });
@@ -1787,68 +2067,52 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
   readonly resource?: CounterspellFreeCastChoiceResource;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const expectedFreeCastResource = input.resource;
   const choice = battleFrontierInterruptDecisionForState(
     input.result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId
-      ) {
-        return false;
-      }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          state: input.result.state,
-          context: input.session.context,
-        }),
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        (expectedFreeCastResource === undefined
-          ? invocation.tag === "spellSlot" &&
-            Number(invocation.slotLevel) === input.slotLevel
-          : invocation.tag === "spellAccessFreeCast" &&
-            invocation.resourcePoolRef ===
-              expectedFreeCastResource.resourcePoolRef)
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      !isTriggeredReactionSpellChoice(candidate) ||
+      candidate.subject.reactorId !== input.reactorId
+    ) {
+      return false;
+    }
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        state: input.result.state,
+        context: input.session.context,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      (expectedFreeCastResource === undefined
+        ? invocation.tag === "spellSlot" &&
+          Number(invocation.slotLevel) === input.slotLevel
+        : invocation.tag === "spellAccessFreeCast" &&
+          invocation.resourcePoolRef ===
+            expectedFreeCastResource.resourcePoolRef)
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction choice.`);
   }
   return choice;
 }
 
-function counterspellDecision(
+function spellCastInterruptionReactionDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return triggeredReactionSpellDecision(reactorId, choice, fills);
 }
 
-function counterspellSavingThrowFills(
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+function spellCastInterruptionReactionSavingThrowFills(
+  choice: TriggeredReactionSpellChoice,
   triggeringCasterId: CombatantId,
   succeeded: boolean,
   additionalFills: readonly BattleFill[] = [],
@@ -1864,10 +2128,7 @@ function counterspellSavingThrowFills(
 
 function triggeredReactionSpellDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {

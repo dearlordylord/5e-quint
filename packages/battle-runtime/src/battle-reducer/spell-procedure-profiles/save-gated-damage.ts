@@ -37,8 +37,8 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import type { TriggeredReactionSaveGatedDamageResolution } from "./resolution-contract.ts";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
+import { invalidResult } from "../result-helpers.ts";
 import {
   AbilitySchema,
   CantripSpellAccessSchema,
@@ -226,21 +226,44 @@ function readiedSaveGatedDamageActs(
 function resolveSaveGatedDamage(
   input: SaveGatedDamageResolveInput,
 ): BattleResolutionResult {
-  if (isTriggeredReactionSaveGatedDamageResolution(input)) {
-    return resolveTriggeredReactionSaveGatedDamage(
-      { ...input.input, invocation: input.invocation },
-      input.fillSet,
-    );
-  }
-  return resolveSaveGateDamageSpellAct(spellProcedureResolutionContext(input));
-}
-
-function isTriggeredReactionSaveGatedDamageResolution(
-  input: SaveGatedDamageResolveInput,
-): input is TriggeredReactionSaveGatedDamageResolution {
-  return (
-    input.input.subject.tag === "runtimeCommand" &&
-    input.input.subject.command === "castTriggeredReactionSpell"
+  return Match.value(input).pipe(
+    Match.when(
+      {
+        invocation: {
+          access: { tag: "prepared" },
+          castingTime: { kind: "reaction" },
+          resource: { tag: "spellSlot" },
+        },
+        input: {
+          subject: {
+            tag: "runtimeCommand",
+            command: "castTriggeredReactionSpell",
+          },
+        },
+      },
+      (triggered) =>
+        resolveTriggeredReactionSaveGatedDamage(
+          { ...triggered.input, invocation: triggered.invocation },
+          triggered.fillSet,
+        ),
+    ),
+    Match.when({ input: { subject: { tag: "actionSpell" } } }, (ordinary) =>
+      resolveSaveGateDamageSpellAct(spellProcedureResolutionContext(ordinary)),
+    ),
+    Match.when(
+      { input: { subject: { tag: "bonusActionSpell" } } },
+      (ordinary) =>
+        resolveSaveGateDamageSpellAct(
+          spellProcedureResolutionContext(ordinary),
+        ),
+    ),
+    Match.orElse(() =>
+      invalidResult(
+        input.input.state,
+        "unsupportedSubject",
+        "Save-gated damage procedure requires a spell-cast resolution lane.",
+      ),
+    ),
   );
 }
 
@@ -262,7 +285,7 @@ const SaveGatedDamageCommonFields = {
     damageType: DamageTypeSchema,
   }),
   additionalDamageComponents: Schema.Array(SpellDamageSchema),
-  successDamage: Schema.Literal("none", "half"),
+  successDamage: Schema.Literals(["none", "half"]),
   rangeFeet: MovementFeet,
   failedSavePostDamageRiders: Schema.Array(
     SpellFailedSavePostDamageRiderSchema,
@@ -272,13 +295,11 @@ const SaveGatedDamageCommonFields = {
   ),
   failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
   saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
-  postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
-    exact: true,
-  }),
+  postSaveAreaEffect: Schema.optionalKey(SpellPostSaveAreaEffectSchema),
 } as const;
 
-const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+export const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Union([
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -288,13 +309,13 @@ const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
-      castingTime: Schema.Union(
+      castingTime: Schema.Union([
         ActionSpellInvocationCastingTimeSchema,
         ReactionSpellInvocationCastingTimeSchema,
-      ),
+      ]),
       ...SaveGatedDamageCommonFields,
     }),
-  ),
+  ]),
 );
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",

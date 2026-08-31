@@ -3,8 +3,8 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   HALLOW_MATERIAL_COMPONENTS,
@@ -34,7 +34,7 @@ export function castHallow(input: {
   readonly area: CharacterSheetHallowArea;
   readonly wardCreatureTypes: CharacterSheetHallowCreatureTypes;
   readonly extraEffect: CharacterSheetHallowExtraEffect;
-}): Either.Either<CharacterSheetHallowResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetHallowResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -146,12 +146,12 @@ function hallowExtraEffectCreatureTypesIssue(
 }
 
 function hallowInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetHallowCasting;
   readonly area: CharacterSheetHallowArea;
   readonly wardCreatureTypes: CharacterSheetHallowCreatureTypes;
   readonly extraEffect: CharacterSheetHallowExtraEffect;
-}): Either.Either<CharacterSheetHallowInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetHallowInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Hallow support profile required by this projector. */
   if (
@@ -164,11 +164,11 @@ function hallowInvocationFromSpell(input: {
     !spell.mechanics.duration.endsOn?.some((end) => end === "dispel") ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !==
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !==
       HALLOW_MATERIAL_COMPONENTS.consumedIncenseCostGpMinimum ||
-    !("materialConsumed" in spell.mechanics.components) ||
-    spell.mechanics.components.materialConsumed !== true
+    spell.mechanics.components.material.consumed !== true
   ) {
     return characterSheetIssue(
       "Hallow requires the supported level-5 durable area profile.",
@@ -194,9 +194,9 @@ function hallowInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "hallow",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

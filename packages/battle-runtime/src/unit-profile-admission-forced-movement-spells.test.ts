@@ -31,7 +31,7 @@ import {
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
-  thunderwaveArea,
+  selfOriginCubePushArea,
   thunderwaveSavingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
@@ -99,7 +99,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
         rangeFeet: 0,
         failedSavePostDamageRiders: [],
         postSaveAreaEffect: {
-          kind: "thunderwave",
+          kind: "selfOriginCubePush",
           creaturePush: {
             distanceFeet: 10,
             originDirection: "away_from_caster",
@@ -323,7 +323,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
               { targetId: spellTargetId, succeeded: false },
             ]).value,
             area: {
-              ...thunderwaveArea([spellTargetId], [spellTargetId]),
+              ...selfOriginCubePushArea([spellTargetId], [spellTargetId]),
               creaturePushes: [],
             },
           },
@@ -334,13 +334,13 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
     expect(invalid).toMatchObject({
       tag: "invalid",
       message:
-        "Thunderwave creature push facts must cover every failed-save target.",
+        "forced-movement cube burst creature push facts must cover every failed-save target.",
     });
   });
 
   test.each(
     (() => {
-      const area = thunderwaveArea([spellTargetId], [spellTargetId]);
+      const area = selfOriginCubePushArea([spellTargetId], [spellTargetId]);
       return [
         {
           caseName: "a creature push for a target that did not fail",
@@ -352,7 +352,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
             })),
           },
           message:
-            "Thunderwave creature push facts must match failed-save targets.",
+            "forced-movement cube burst creature push facts must match failed-save targets.",
         },
         {
           caseName: "duplicate creature pushes",
@@ -361,7 +361,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
             creaturePushes: [...area.creaturePushes, ...area.creaturePushes],
           },
           message:
-            "Thunderwave creature push facts must not duplicate targets.",
+            "forced-movement cube burst creature push facts must not duplicate targets.",
         },
         {
           caseName: "a creature push with the wrong distance",
@@ -376,7 +376,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
             })),
           },
           message:
-            "Thunderwave push disposition must use the spell's 10-foot distance.",
+            "forced-movement cube burst push disposition must use the spell's 10-foot distance.",
         },
         {
           caseName: "duplicate unsecured-object pushes",
@@ -388,7 +388,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
             ],
           },
           message:
-            "Thunderwave unsecured-object push facts must not duplicate objects.",
+            "forced-movement cube burst unsecured-object push facts must not duplicate objects.",
         },
         {
           caseName: "an incorrect audible radius",
@@ -400,7 +400,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
             },
           },
           message:
-            "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.",
+            "forced-movement cube burst audible-boom fact must match the spell's thunderous boom within 300 feet.",
         },
       ] as const;
     })(),
@@ -679,7 +679,8 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dissonant Whispers movement is only valid after a failed save.",
+      message:
+        "Failed-save forced reaction movement is only valid after a failed save.",
     });
 
     const targetWithoutReaction = {
@@ -702,7 +703,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Dissonant Whispers movement is unavailable when the failed target has no Reaction.",
+        "Failed-save forced reaction movement is unavailable when the failed target has no Reaction.",
     });
   });
 

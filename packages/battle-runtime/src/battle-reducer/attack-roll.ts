@@ -31,6 +31,7 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -56,6 +57,8 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  weaponMasteryExecutionPropertyForSupportProfile,
+  type WeaponMasteryPropertySupportProfile,
   type TacticalMasterReplacementMasteryProperty,
 } from "../unit-feature-execution-constants.ts";
 import {
@@ -71,7 +74,7 @@ import {
   type BattleShovePushOutcome,
   type BattleTargetChoiceHole,
   type BattleUnitFeatureDecisionHole,
-  type BattleLightEmitter,
+  type BattleLightEmitterMechanicalFacts,
   type BattleObjectOutline,
   type BattleSavingThrowRelationshipFact,
   type BattleState,
@@ -108,7 +111,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./magic-suppression-ongoing-effect.ts";
 import {
   activeOngoingFeatureOccurrenceFromExecution,
   extendOngoingFeatureToEndOfNextTurn,
@@ -170,25 +173,6 @@ import {
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
 
-const WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE = [
-  { supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE, property: "push" },
-  { supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE, property: "sap" },
-  { supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE, property: "slow" },
-  {
-    supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-    property: "topple",
-  },
-  {
-    supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-    property: "cleave",
-  },
-] as const satisfies ReadonlyArray<{
-  readonly supportProfile: string;
-  readonly property: CharacterWeaponAttackActionOption["weapon"]["mastery"];
-}>;
-type WeaponMasteryPropertySupportProfile =
-  (typeof WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE)[number]["supportProfile"];
-
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -209,10 +193,10 @@ export function attackRollHole(
     attack: unboundAttackActionOption(attack),
     attackBonus: attackActionBonusWithPassiveFeatureBonus(attacker, attack),
     ...optionalProperty("rollMode", rollMode),
-    ...(ongoingFeatureActivations === undefined ||
-    ongoingFeatureActivations.length === 0
-      ? {}
-      : { ongoingFeatureActivations }),
+    ...nonEmptyArrayProperty(
+      "ongoingFeatureActivations",
+      ongoingFeatureActivations ?? [],
+    ),
     ...(attacker === undefined
       ? {}
       : attackRollMissToHitReplacementHolePayloadForAttacker(attacker)),
@@ -554,7 +538,7 @@ export function objectInvisibleBenefitDenied(
 }
 
 function objectLightEmitterDeniesInvisibleBenefit(
-  emitter: BattleLightEmitter,
+  emitter: BattleLightEmitterMechanicalFacts,
   targetObjectId: BattleObjectId,
 ): boolean {
   return (
@@ -865,7 +849,7 @@ export function activeEffectGrantsAttackRollMode(
           (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
             attackUsesAbility(context.attack, effect.ability)) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+            !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
               effectRef: effect.sourceEffectRef,
@@ -875,21 +859,22 @@ export function activeEffectGrantsAttackRollMode(
     target?.activeEffects.some(
       (effect) =>
         (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
-        (effect.kind === "faerieFireOutline" &&
+        (effect.kind === "saveGatedTargetProjection" &&
           mode === "advantage" &&
           attackerCanSeeTarget) ||
-        (effect.kind === "shiningSmiteIllumination" && mode === "advantage") ||
+        (effect.kind === "afterHitDamageAndIllumination" &&
+          mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
           effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
           effect.protectedAgainstCreatureTypes.includes(
             attackerCreatureType,
           )) ||
-        (effect.kind === "blurred" &&
+        (effect.kind === "perceptionGatedAttackRollDefense" &&
           mode === "disadvantage" &&
           attacker !== undefined &&
           target !== undefined &&
-          !attackerPerceivesBlurredTargetWithBypassSense(
+          !attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
             context.targetSpatialFacts ?? [],
             attacker.combatantId,
             target.combatantId,
@@ -898,14 +883,14 @@ export function activeEffectGrantsAttackRollMode(
   );
 }
 
-function attackerPerceivesBlurredTargetWithBypassSense(
+function attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
   facts: readonly BattleTargetSpatialFact[],
   attackerId: CombatantId,
   targetId: CombatantId,
 ): boolean {
   return facts.some(
     (fact) =>
-      fact.kind === "attackAttackerPerceivesBlurredTargetWithSense" &&
+      fact.kind === "attackerPerceivesObscuredTargetWithSense" &&
       fact.attackerId === attackerId &&
       fact.targetId === targetId,
   );
@@ -998,8 +983,18 @@ export function applyWeaponMasterySapOnHit(
   if (selection === null || target === undefined) {
     return state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "nextAttackRollBySelf",
+      sourceProcedureRef: selection.procedureRef,
+      sourceCombatantId: attackerId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
+    },
+  });
   const activeEffects = [
-    ...target.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           effect.kind === "nextAttackRollBySelf" &&
@@ -1008,18 +1003,12 @@ export function applyWeaponMasterySapOnHit(
           effect.sourceCombatantId === attackerId
         ),
     ),
-    {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: attackerId,
-      mode: "disadvantage",
-      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
-    } as const,
+    allocation.effect,
   ];
   return {
     ...state,
     combatants: new Map(state.combatants).set(targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -1084,7 +1073,8 @@ export function tacticalMasterAttackWithReplacement<
   if (!isTacticalMasterReplacementMasteryProperty(input.decision.value)) {
     return {
       tag: "invalid",
-      message: "Tactical Master replacement choice is not Push, Sap, or Slow.",
+      message:
+        "Tactical Master replacement choice is not one of the supported mastery options.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -1201,8 +1191,18 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   if (selection === null || target === undefined) {
     return input.state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "unitFeatureSpeedDelta",
+      sourceProcedureRef: selection.procedureRef,
+      sourceCombatantId: input.attackerId,
+      deltaFeet: movementDeltaFeet(-10),
+      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
+    },
+  });
   const activeEffects = [
-    ...target.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           effect.kind === "unitFeatureSpeedDelta" &&
@@ -1210,18 +1210,12 @@ export function applyWeaponMasterySlowAfterDamage(input: {
           effect.sourceProcedureRef === selection.procedureRef
         ),
     ),
-    {
-      kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: input.attackerId,
-      deltaFeet: movementDeltaFeet(-10),
-      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
-    } as const,
+    allocation.effect,
   ];
   return {
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -1760,7 +1754,7 @@ function tacticalMasterReplacementSelection(
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }
-  if (!attack.hasWeaponMastery) {
+  if (!("masteryProperty" in attack.weapon)) {
     return null;
   }
   const binding = attacker.origin.execution.procedureBindings.find(
@@ -1795,7 +1789,7 @@ function weaponAttackWithMasteryProperty<
         ...attack,
         weapon: {
           ...attack.weapon,
-          mastery: property,
+          masteryProperty: property,
         },
       };
 }
@@ -1820,19 +1814,19 @@ function selectedWeaponMasteryProperty(input: {
   readonly supportProfile: WeaponMasteryPropertySupportProfile;
 }): SelectedWeaponMasteryProperty | null {
   const attack = input.attack;
-  const property = weaponMasteryPropertyForSupportProfile(input.supportProfile);
+  const property = weaponMasteryExecutionPropertyForSupportProfile(
+    input.supportProfile,
+  );
   if (
-    property === null ||
+    property === undefined ||
     attack.kind !== "weapon" ||
-    attack.weapon.mastery !== property
+    !("masteryProperty" in attack.weapon) ||
+    attack.weapon.masteryProperty !== property
   ) {
     return null;
   }
   const attacker = input.state.combatants.get(input.attackerId);
   if (!isCharacterBattleCreatureState(attacker)) {
-    return null;
-  }
-  if (!attack.hasWeaponMastery) {
     return null;
   }
   const binding = attacker.origin.execution.procedureBindings.find(
@@ -1843,15 +1837,6 @@ function selectedWeaponMasteryProperty(input: {
   return binding === undefined
     ? null
     : { attack, procedureRef: binding.procedureRef };
-}
-
-function weaponMasteryPropertyForSupportProfile(
-  supportProfile: WeaponMasteryPropertySupportProfile,
-): CharacterWeaponAttackActionOption["weapon"]["mastery"] | null {
-  for (const entry of WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE) {
-    if (entry.supportProfile === supportProfile) return entry.property;
-  }
-  return null;
 }
 
 export function consumeSelfAttackRollEffects(

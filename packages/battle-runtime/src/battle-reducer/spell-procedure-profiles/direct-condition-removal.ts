@@ -282,12 +282,12 @@ const DirectConditionRemovalInvocationSchema = spellProcedureExecutionSchema(
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Literal(1),
     }),
-    conditionChoices: Schema.Tuple(
+    conditionChoices: Schema.Tuple([
       Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[0]),
       Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[1]),
       Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[2]),
       Schema.Literal(DIRECT_CONDITION_REMOVAL_CONDITIONS[3]),
-    ),
+    ]),
     rangeFeet: MovementFeet,
   }),
 );

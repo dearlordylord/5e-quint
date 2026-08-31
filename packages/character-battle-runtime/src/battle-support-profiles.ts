@@ -16,10 +16,12 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,
   UnitRecord,
-  WeaponMasteryName,
 } from "@dnd/surface/surface/types";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import {
+  resolveWeaponMasteryReference,
+  type UnitCatalog,
+} from "@dnd/surface/surface/unit-catalog";
+import { Option, Result } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
@@ -31,16 +33,6 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
 
 type AuthoredBattleUnitRef = Omit<BattleUnitRef, "unit"> & {
   readonly unit: UnitRecord;
-};
-
-const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
-  Record<WeaponMasteryName, UnitRecord["id"]>
-> = {
-  cleave: authoredUnitId("mastery_cleave"),
-  push: authoredUnitId("mastery_push"),
-  sap: authoredUnitId("mastery_sap"),
-  slow: authoredUnitId("mastery_slow"),
-  topple: authoredUnitId("mastery_topple"),
 };
 
 const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
@@ -59,24 +51,24 @@ export function characterBattleSupportProjection(
   unitLibrary: UnitCatalog,
   weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[],
   classLevels?: CharacterBattleCreatureInit["classLevels"],
-): Either.Either<
+): Result.Result<
   CharacterBattleSupportProjection,
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
 > {
   const selectedWeaponMasteries =
     weaponMasteries === undefined
       ? characterBattleWeaponMasterySelections(build, unitLibrary)
-      : Either.right(weaponMasteries);
-  if (Either.isLeft(selectedWeaponMasteries)) {
-    return Either.left(selectedWeaponMasteries.left);
+      : Result.succeed(weaponMasteries);
+  if (Result.isFailure(selectedWeaponMasteries)) {
+    return Result.fail(selectedWeaponMasteries.failure);
   }
   const sourceFacts = battleSupportProfileSourceFactsForBuild(
     build,
     unitLibrary,
   );
-  if (Either.isLeft(sourceFacts)) {
-    return Either.left([
-      sourceFacts.left,
+  if (Result.isFailure(sourceFacts)) {
+    return Result.fail([
+      sourceFacts.failure,
     ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
   }
   const buildUnitRefs = traverseValidation(
@@ -86,44 +78,48 @@ export function characterBattleSupportProjection(
         unitRef,
         unitLibrary,
         classLevels,
-        sourceFacts.right,
+        sourceFacts.success,
       ),
   );
-  if (Either.isLeft(buildUnitRefs)) {
-    return Either.left(buildUnitRefs.left);
+  if (Result.isFailure(buildUnitRefs)) {
+    return Result.fail(buildUnitRefs.failure);
   }
 
-  const replacementMasteryUnitIds = buildUnitRefs.right.some(
+  const replacementMasteryUnitIds = buildUnitRefs.success.some(
     battleUnitRefHasTacticalMasterReplacementSupport,
   )
     ? TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS
     : [];
+  const selectedMasteryUnitIds =
+    battleSupportedMasteryUnitIdsForSelectedWeapons(
+      selectedWeaponMasteries.success,
+      unitLibrary,
+    );
+  if (Result.isFailure(selectedMasteryUnitIds)) {
+    return Result.fail(selectedMasteryUnitIds.failure);
+  }
   const battleMasteryUnitRefs = traverseValidation(
-    [
-      ...battleSupportedMasteryUnitIdsForSelectedWeapons(
-        selectedWeaponMasteries.right,
-        unitLibrary,
-      ),
-      ...replacementMasteryUnitIds,
-    ].map((unitId) => ({ unitId })),
+    [...selectedMasteryUnitIds.success, ...replacementMasteryUnitIds].map(
+      (unitId) => ({ unitId }),
+    ),
     (unitRef) =>
       withBattleSupportProfiles(
         unitRef,
         unitLibrary,
         classLevels,
-        sourceFacts.right,
+        sourceFacts.success,
       ),
   );
-  if (Either.isLeft(battleMasteryUnitRefs)) {
-    return Either.left(battleMasteryUnitRefs.left);
+  if (Result.isFailure(battleMasteryUnitRefs)) {
+    return Result.fail(battleMasteryUnitRefs.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     unitRefs: uniqueBattleUnitRefs([
-      ...buildUnitRefs.right,
-      ...battleMasteryUnitRefs.right,
+      ...buildUnitRefs.success,
+      ...battleMasteryUnitRefs.success,
     ]),
-    sourceFacts: sourceFacts.right,
+    sourceFacts: sourceFacts.success,
   });
 }
 
@@ -142,26 +138,26 @@ function characterBattleSupportUnitRefs(
       classUnitId: source.sourceUnitId,
       unitLibrary,
     });
-    if (Either.isLeft(className)) {
+    if (Result.isFailure(className)) {
       return source;
     }
     return {
       ...source,
       cantrips: omitRuntimeDetachedClassSpellChoices({
         unitLibrary,
-        sourceClassName: className.right,
+        sourceClassName: className.success,
         spellIds: source.cantrips,
         choiceKind: "cantrip",
       }),
       spellbook: omitRuntimeDetachedClassSpellChoices({
         unitLibrary,
-        sourceClassName: className.right,
+        sourceClassName: className.success,
         spellIds: source.spellbook,
         choiceKind: "leveledSpell",
       }),
       preparedSpells: omitRuntimeDetachedClassSpellChoices({
         unitLibrary,
-        sourceClassName: className.right,
+        sourceClassName: className.success,
         spellIds: source.preparedSpells,
         choiceKind: "leveledSpell",
       }),
@@ -189,8 +185,8 @@ export type BattleSupportProfileIssue = {
 
 function battleSupportProfileIssue(
   message: string,
-): Either.Either<never, BattleSupportProfileIssue> {
-  return Either.left({ tag: "battleSupportProfileIssue", message });
+): Result.Result<never, BattleSupportProfileIssue> {
+  return Result.fail({ tag: "battleSupportProfileIssue", message });
 }
 
 function withBattleSupportProfiles(
@@ -198,7 +194,7 @@ function withBattleSupportProfiles(
   unitLibrary: UnitCatalog,
   classLevels: CharacterBattleCreatureInit["classLevels"] | undefined,
   sourceFacts: BattleUnitSupportProfileSourceFacts | undefined,
-): Either.Either<AuthoredBattleUnitRef, BattleSupportProfileIssue> {
+): Result.Result<AuthoredBattleUnitRef, BattleSupportProfileIssue> {
   const unitOption = unitLibrary.getUnit(unitRef.unitId);
   if (Option.isNone(unitOption)) {
     return battleSupportProfileIssue(
@@ -211,10 +207,10 @@ function withBattleSupportProfiles(
     ...(classLevels === undefined ? {} : { classLevels }),
     ...(sourceFacts === undefined ? {} : { sourceFacts }),
   });
-  return Either.isLeft(battleUnitRef)
-    ? battleSupportProfileIssue(battleUnitRef.left.message)
-    : Either.right({
-        ...battleUnitRef.right,
+  return Result.isFailure(battleUnitRef)
+    ? battleSupportProfileIssue(battleUnitRef.failure.message)
+    : Result.succeed({
+        ...battleUnitRef.success,
         unit: unitOption.value,
       });
 }
@@ -222,12 +218,12 @@ function withBattleSupportProfiles(
 export function battleSupportProfileSourceFactsForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   BattleUnitSupportProfileSourceFacts | undefined,
   BattleSupportProfileIssue
 > {
   const draconicAncestry = build.speciesChoiceFacts?.draconicAncestry;
-  if (draconicAncestry === undefined) return Either.right(undefined);
+  if (draconicAncestry === undefined) return Result.succeed(undefined);
 
   const speciesUnit = unitLibrary.getUnit(build.species);
   if (Option.isNone(speciesUnit)) {
@@ -249,7 +245,7 @@ export function battleSupportProfileSourceFactsForBuild(
       `Character Build Draconic Ancestry fact must reference the selected species source table: ${build.species}.`,
     );
   }
-  return Either.right({ draconicAncestryDamageType: selected.damageType });
+  return Result.succeed({ draconicAncestryDamageType: selected.damageType });
 }
 
 function draconicAncestryDamageTypeSource(
@@ -263,7 +259,7 @@ function draconicAncestryDamageTypeSource(
 export function characterBattleWeaponMasterySelections(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   readonly CharacterBattleWeaponMasterySelection[],
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
 > {
@@ -309,29 +305,52 @@ export function characterBattleWeaponMasterySelections(
 
   const firstIssue = issues[0];
   if (firstIssue !== undefined) {
-    return Either.left([
+    return Result.fail([
       firstIssue,
       ...issues.slice(1),
     ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
   }
 
-  return Either.right(uniqueWeaponMasterySelections(selections));
+  return Result.succeed(uniqueWeaponMasterySelections(selections));
 }
 
 function battleSupportedMasteryUnitIdsForSelectedWeapons(
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
   unitLibrary: UnitCatalog,
-): readonly UnitRecord["id"][] {
-  const unitIds = weaponMasteries.flatMap((mastery) => {
-    const weapon = unitLibrary.getUnit(mastery.weaponUnitId);
-    if (Option.isNone(weapon) || weapon.value.kind !== "weapon") {
-      return [];
+): Result.Result<
+  readonly UnitRecord["id"][],
+  ReadonlyNonEmptyArray<BattleSupportProfileIssue>
+> {
+  const unitIds = traverseValidation(weaponMasteries, (selection) => {
+    const weapon = unitLibrary.getUnit(selection.weaponUnitId);
+    if (Option.isNone(weapon)) {
+      return battleSupportProfileIssue(
+        `Unknown selected Weapon Mastery weapon Unit: ${selection.weaponUnitId}.`,
+      );
     }
-    const masteryUnitId =
-      BATTLE_SUPPORTED_MASTERY_UNIT_IDS[weapon.value.mastery];
-    return masteryUnitId === undefined ? [] : [masteryUnitId];
+    if (weapon.value.kind !== "weapon") {
+      return battleSupportProfileIssue(
+        `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
+      );
+    }
+    const resolution = resolveWeaponMasteryReference(weapon.value, unitLibrary);
+    if (Result.isFailure(resolution)) {
+      const issue = resolution.failure;
+      return battleSupportProfileIssue(
+        issue.tag === "missing"
+          ? `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`
+          : `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,
+      );
+    }
+    return Result.succeed(resolution.success.mastery.id);
   });
-  return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
+  return Result.isFailure(unitIds)
+    ? Result.fail(unitIds.failure)
+    : Result.succeed(
+        unitIds.success.filter(
+          (unitId, index) => unitIds.success.indexOf(unitId) === index,
+        ),
+      );
 }
 
 function uniqueBattleUnitRefs(

@@ -1,33 +1,35 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  attackBonus,
   classLevel,
   Hp,
   movementFeet,
   Round,
   NonNegativeInteger,
 } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution-admission.ts";
+import { characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack } from "./character-execution-admission.ts";
+import {
+  allocateBattleEffectExecutionRefForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 import {
   battleProcedureExecutionRef,
   type BattleProcedureExecutionRef,
@@ -67,7 +69,6 @@ import {
   discoverBattleActs,
   endTurn,
   startBattle,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -75,6 +76,7 @@ import {
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
 
 const antimagicFieldAreaId = battleAreaId(
   "unit-profile-antimagic-action-interdiction-area",
@@ -90,7 +92,7 @@ describe("Antimagic Field action interdiction", () => {
   test("origin-included aura blocks action and Bonus Action spell discovery", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -108,7 +110,7 @@ describe("Antimagic Field action interdiction", () => {
   test("origin-excluded aura does not block the origin creature", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: false,
         nonOriginCombatantIds: [],
@@ -124,7 +126,7 @@ describe("Antimagic Field action interdiction", () => {
   test("non-origin aura membership blocks the current actor without geometry state", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -141,7 +143,7 @@ describe("Antimagic Field action interdiction", () => {
     const act = spellAct({ session: base, spellId: rayOfFrostUnitId });
     const stale = activeAntimagicAuraSession(
       base,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -157,7 +159,7 @@ describe("Antimagic Field action interdiction", () => {
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Spellcasting is blocked inside an Antimagic Field aura.",
+      message: "Spellcasting is blocked inside a magic-suppression area.",
     });
   });
 
@@ -166,7 +168,7 @@ describe("Antimagic Field action interdiction", () => {
     const act = preserveLifeAct(base);
     const stale = activeAntimagicAuraSession(
       base,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -183,7 +185,7 @@ describe("Antimagic Field action interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
@@ -192,13 +194,12 @@ describe("Antimagic Field action interdiction", () => {
     const attack = spellAct({ session: base, spellId: flameBladeUnitId });
     const stale = activeAntimagicAuraSession(
       base,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
       }),
     );
-
     expect(
       maybeSpellAct({ session: stale, spellId: flameBladeUnitId }),
     ).toBeUndefined();
@@ -211,28 +212,39 @@ describe("Antimagic Field action interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
-  test("does not interdict non-spell Bonus Action spell-effect discovery or stale resolution", () => {
-    const base = spiritualWeaponRepeatBattle();
+  test("does not classify a suppressed non-spell Bonus Action effect as a Magic Action", () => {
+    const base = spatialMeleeSpellAttackProxyRepeatBattle();
     const repeat = bonusSpellAct({
       session: base,
       spellId: spiritualWeaponUnitId,
     });
+    const proxy = base.state.combatants
+      .get(spellCasterId)
+      ?.activeEffects.find(
+        (effect) => effect.kind === "spatialMeleeSpellAttackProxy",
+      );
+    if (proxy === undefined || proxy.kind !== "spatialMeleeSpellAttackProxy") {
+      throw new Error("Expected spatial melee spell-attack proxy effect.");
+    }
     const stale = activeAntimagicAuraSession(
       base,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
       }),
+      [magicSuppressionOngoingSpellEffectRefForActiveEffect(proxy)],
     );
-
     expect(
-      maybeBonusSpellAct({ session: stale, spellId: spiritualWeaponUnitId }),
-    ).toBeDefined();
+      maybeBonusSpellAct({
+        session: stale,
+        spellId: spiritualWeaponUnitId,
+      }),
+    ).toBeUndefined();
     expect(
       resolveBattleSubject({
         state: stale.state,
@@ -242,16 +254,16 @@ describe("Antimagic Field action interdiction", () => {
     ).not.toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
   test("interdicts runtime-command Magic Action discovery and stale resolution", () => {
     const base = levitateCasterControlBattle();
-    const altitudeAct = levitateAltitudeControlAct(base);
+    const altitudeAct = controlledVerticalSuspensionAltitudeControlAct(base);
     const stale = activeAntimagicAuraSession(
       base,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -262,7 +274,8 @@ describe("Antimagic Field action interdiction", () => {
       discoverBattleActs(stale).some(
         (candidate) =>
           candidate.subject.tag === "runtimeCommand" &&
-          candidate.subject.command === "levitateAltitudeControl",
+          candidate.subject.command ===
+            "controlledVerticalSuspensionAltitudeControl",
       ),
     ).toBe(false);
     expect(
@@ -274,14 +287,14 @@ describe("Antimagic Field action interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
   test("interdicts stale triggered Reaction spell subjects", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -303,14 +316,14 @@ describe("Antimagic Field action interdiction", () => {
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Spellcasting is blocked inside an Antimagic Field aura.",
+      message: "Spellcasting is blocked inside a magic-suppression area.",
     });
   });
 
   test("combatant removal prunes removed non-origin members without dropping the aura witness", () => {
     const session = activeAntimagicAuraSession(
       preserveLifeBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: true,
         nonOriginCombatantIds: [spellTargetId, secondTargetId],
@@ -322,17 +335,17 @@ describe("Antimagic Field action interdiction", () => {
       combatantIds: [spellTargetId],
     });
 
-    expect(Either.isRight(removed)).toBe(true);
-    if (Either.isLeft(removed)) {
-      throw new Error(battleStateInitIssueMessage(removed.left));
+    expect(Result.isSuccess(removed)).toBe(true);
+    if (Result.isFailure(removed)) {
+      throw new Error(battleStateInitIssueMessage(removed.failure));
     }
     expect(
-      removed.right.combatants.get(spellCasterId)?.activeEffects,
+      removed.success.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "antimagicFieldOngoingSpellSuppression",
+        kind: "magicSuppressionEmanation",
         auraMembership: {
-          kind: "antimagicFieldAuraMembership",
+          kind: "magicSuppressionEmanationMembership",
           originIncluded: true,
           nonOriginCombatantIds: [secondTargetId],
         },
@@ -340,7 +353,7 @@ describe("Antimagic Field action interdiction", () => {
     );
     expect(
       preserveLifeActOrUndefined(
-        battleRuntimeSessionForTest({ ...session, state: removed.right }),
+        battleRuntimeSessionForTest({ ...session, state: removed.success }),
       ),
     ).toBeUndefined();
   });
@@ -379,7 +392,7 @@ function flameBladeAttackBattle(): BattleRuntimeSession {
   return battleRuntimeSessionForTest({ ...session, state: cast.state });
 }
 
-function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
+function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
   const session = spellBattle({
     preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -391,29 +404,44 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
   const sourceBinding = caster.origin.execution.procedureBindings.find(
     (binding) =>
       binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "spiritualWeaponAttackProxy",
+      binding.procedure.execution.procedure === "spatialMeleeSpellAttackProxy",
   );
   if (
     sourceBinding?.procedure.kind !== "spellInvocation" ||
-    sourceBinding.procedure.execution.procedure !== "spiritualWeaponAttackProxy"
+    sourceBinding.procedure.execution.procedure !==
+      "spatialMeleeSpellAttackProxy"
   ) {
     throw new Error("Expected Spiritual Weapon source procedure binding.");
   }
-  const activeEffect = spiritualWeaponActiveEffect(sourceBinding.procedureRef);
-  const execution = characterExecutionWithSpiritualWeaponRepeatAttack(
-    caster.origin.execution,
-    {
-      procedure: "spiritualWeaponRepeatAttack",
-      activeEffectRef: activeEffect.effectRef,
-      activeEffectSourceProcedureRef: sourceBinding.procedureRef,
-    },
+  const effectAllocation = allocateBattleEffectExecutionRefForCreature({
+    owner: caster,
+  });
+  const activeEffect = {
+    ...spatialMeleeSpellAttackProxyActiveEffectTemplate(
+      sourceBinding.procedureRef,
+    ),
+    effectRef: effectAllocation.effectRef,
+  };
+  expect(Number(effectAllocation.owner.nextEffectOrdinal)).toBe(
+    Number(caster.nextEffectOrdinal) + 1,
   );
+  const execution =
+    characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
+      caster.origin.execution,
+      {
+        procedure: "spatialMeleeSpellAttackProxy",
+        operation: "repositionAndAttack",
+        activeEffectRef: activeEffect.effectRef,
+        activeEffectSourceProcedureRef: sourceBinding.procedureRef,
+        repeatTargeting: { kind: "unrestricted" },
+      },
+    );
   return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
+        ...effectAllocation.owner,
         activeEffects: [...caster.activeEffects, activeEffect],
         origin: { ...caster.origin, execution },
       }),
@@ -421,38 +449,23 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
   });
 }
 
-function spiritualWeaponActiveEffect(
+function spatialMeleeSpellAttackProxyActiveEffectTemplate(
   sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
-  const sourceSpellLevel = parseBattleSpellEffectLevel(2);
-  if (sourceSpellLevel === null) {
-    throw new Error("Expected valid Spiritual Weapon spell effect level.");
-  }
+): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spatialMeleeSpellAttackProxy" }
+> {
   return {
-    kind: "spiritualWeapon",
-    effectRef: battleActiveEffectExecutionRefForTest(
-      "antimagic-action-spiritual-weapon",
-    ),
+    kind: "spatialMeleeSpellAttackProxy",
     sourceProcedureRef,
     sourceCombatantId: spellCasterId,
-    sourceSpellLevel,
     forcePositionId: battleTablePositionId(
       "antimagic-action-spiritual-weapon-force",
     ),
-    forceReachFeet: movementFeet(5),
-    repeatMoveMaxFeet: movementFeet(20),
-    repeatTargeting: { kind: "unrestricted" },
     startedOn: {
       actorId: spellTargetId,
       round: Round(1),
     },
-    damage: {
-      kind: "fixedSpellAttackDamage",
-      expr: { dice: 1, dieSize: 8, flat: 3 },
-      damageType: "force",
-    },
-    attackKind: "melee_spell_attack",
-    attackBonus: attackBonus(5),
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,
@@ -490,7 +503,7 @@ function levitateCasterControlBattle(): BattleRuntimeSession {
   }
   const initialRiseHole = requireHole(
     needsInitialRise.holes,
-    "levitateInitialRise",
+    "controlledVerticalSuspensionInitialRise",
   );
   const cast = resolveBattleSubject({
     state: session.state,
@@ -502,11 +515,11 @@ function levitateCasterControlBattle(): BattleRuntimeSession {
         spellCasterId,
         spellTargetId,
       ),
-      levitateInitialRiseFill(initialRiseHole, 20),
+      controlledVerticalSuspensionInitialRiseFill(initialRiseHole, 20),
     ],
   });
   if (cast.tag !== "resolved") {
-    throw new Error("Expected Levitate to resolve.");
+    throw new Error("Expected controlled vertical suspension to resolve.");
   }
   const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
@@ -525,11 +538,14 @@ function levitateCasterControlBattle(): BattleRuntimeSession {
   });
 }
 
-function levitateAltitudeControlAct(session: BattleRuntimeSession) {
+function controlledVerticalSuspensionAltitudeControlAct(
+  session: BattleRuntimeSession,
+) {
   const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "levitateAltitudeControl",
+      candidate.subject.command ===
+        "controlledVerticalSuspensionAltitudeControl",
   );
   if (act === undefined) {
     throw new Error("Expected Levitate altitude control act.");
@@ -537,12 +553,18 @@ function levitateAltitudeControlAct(session: BattleRuntimeSession) {
   return act;
 }
 
-function levitateInitialRiseFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateInitialRise" }>,
+function controlledVerticalSuspensionInitialRiseFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionInitialRise" }
+  >,
   distanceFeet: number,
-): Extract<BattleFill, { readonly kind: "levitateInitialRise" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionInitialRise" }
+> {
   return {
-    kind: "levitateInitialRise",
+    kind: "controlledVerticalSuspensionInitialRise",
     holeId: hole.holeId,
     value: { distanceFeet: movementFeet(distanceFeet) },
   };
@@ -551,25 +573,27 @@ function levitateInitialRiseFill(
 function activeAntimagicAuraSession(
   session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
+  suppressedOngoingSpellEffects: readonly import("./index.ts").BattleMagicSuppressionOngoingSpellEffectRef[] = [],
 ): BattleRuntimeSession {
-  const combatants = new Map(session.state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = session.state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const state = battleStateWithAllocatedEffectForTest({
+    state: session.state,
+    ownerId: aura.sourceCombatantId,
+    effect: magicSuppressionEmanationEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+      suppressedOngoingSpellEffects,
+    }),
   });
+  expect(
+    Number(state.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, combatants },
+    state,
   });
 }
 
@@ -608,10 +632,10 @@ function preserveLifeBattle(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function preserveLifeAct(session: BattleRuntimeSession) {
@@ -637,15 +661,15 @@ function preserveLifeUnitRefWithSupport() {
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionHealingPoolSupportForUnit(preserveLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Preserve Life Magic Action support.");
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(support);
-  return unitRef.right;
+  expect(unitRef.success.supportProfiles).toContainEqual(support);
+  return unitRef.success;
 }
 
 function requireCounterspellProcedureRef(state: BattleState) {

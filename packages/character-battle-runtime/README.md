@@ -27,6 +27,9 @@ Owned boundary functions:
   class-spell-list selections without an installed Spell Definition remain on
   the Character Sheet but are omitted from the battle spellcasting projection;
   unknown identities outside that source spell list are rejected.
+- Callers inspect the `composeBattleRoster` admissions and issues, then pass the
+  admitted combatants to `@dnd/battle-runtime` `startBattle`; this package does
+  not retain a second battle-start wrapper or session registry.
 - `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
   the build has multiple available class-feature AC formulas; the choice is
   forwarded to Character Sheet AC projection before battle state is created.

@@ -7,7 +7,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, test } from "vitest";
 
 import { readRunnerOwnedJsonLines } from "./artifact-authority.ts";
@@ -27,7 +27,7 @@ test("rejects an in-repository symlink authority that resolves outside", () => {
       resolve(root, "authorities/linked.md"),
     );
     const result = canonicalRepositoryReadPath(root, "authorities/linked.md");
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });
     rmSync(outside, { recursive: true, force: true });
@@ -45,15 +45,17 @@ test("rejects an external prospective output and an escaping output symlink", ()
       resolve(root, "outputs/linked.json"),
     );
     expect(
-      Either.isLeft(
+      Result.isFailure(
         canonicalRepositoryOutputPath(root, resolve(outside, "new.json")),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(canonicalRepositoryOutputPath(root, "outputs/linked.json")),
+      Result.isFailure(
+        canonicalRepositoryOutputPath(root, "outputs/linked.json"),
+      ),
     ).toBe(true);
     expect(
-      Either.isRight(canonicalRepositoryOutputPath(root, "outputs/new.json")),
+      Result.isSuccess(canonicalRepositoryOutputPath(root, "outputs/new.json")),
     ).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });

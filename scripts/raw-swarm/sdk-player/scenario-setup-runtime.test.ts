@@ -6,8 +6,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import fc from "fast-check";
-import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { describe, expect, expectTypeOf, test } from "vitest";
+import { Result } from "effect";
 import {
   GRAPPLE_TARGET_REACH_FEET,
   battleAttackExecutionScopeRef,
@@ -43,6 +43,10 @@ import { initiativeEntries } from "../../../packages/shared-algebras/src/initiat
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
 import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
 import {
+  characterBattleRuntimeIssueMessage,
+  characterSheetBattleInit,
+} from "../../../packages/character-battle-runtime/src/index.ts";
+import {
   characterSheetId,
   createFreshCharacterSheet,
 } from "../../../packages/character-sheet-runtime/src/index.ts";
@@ -61,6 +65,7 @@ import {
 import { repoRoot, sha256Canonical } from "../transcript.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import type { ScenarioSetupSdk } from "./scenario-setup-contract.ts";
 import { jsonValue } from "./json-value.ts";
 import {
   createScenarioSession,
@@ -72,6 +77,7 @@ import {
   scenarioBattleSubject,
   scenarioCreatureSpellTargetFills,
   scenarioTableSpatialFactFills,
+  scenarioAreaControlShakeAwakePhysicalReachabilityFact,
   scenarioTableSpatialFactDistanceWithinLimit,
   scenarioRangedAttackEnemyWithinProximity,
   scenarioAttackTargetFills,
@@ -142,25 +148,13 @@ const spatialFactBoundaryCases: readonly {
       ),
   },
   {
-    name: "Sleep wake",
+    name: "Staged-condition wake",
     accepts: (distanceFeet) =>
       scenarioTableSpatialFactDistanceWithinLimit(
         {
-          kind: "sleepShakeAwakeTarget",
+          kind: "stagedConditionShakeAwakeTarget",
           actorId: combatantId("boundary-waker"),
           targetId: combatantId("boundary-sleeping"),
-        },
-        distanceFeet,
-      ),
-  },
-  {
-    name: "Hypnotic wake",
-    accepts: (distanceFeet) =>
-      scenarioTableSpatialFactDistanceWithinLimit(
-        {
-          kind: "hypnoticPatternShakeAwakeTarget",
-          actorId: combatantId("boundary-waker"),
-          targetId: combatantId("boundary-hypnotized"),
         },
         distanceFeet,
       ),
@@ -184,6 +178,15 @@ const spatialFactBoundaryCases: readonly {
 ];
 
 describe("scenario setup public-SDK boundary", () => {
+  test("keeps setup SDK function protocols equal to their runtime owners", () => {
+    expectTypeOf(characterSheetBattleInit).toEqualTypeOf<
+      ScenarioSetupSdk["characterSheetBattleInit"]
+    >();
+    expectTypeOf(characterBattleRuntimeIssueMessage).toEqualTypeOf<
+      ScenarioSetupSdk["characterBattleRuntimeIssueMessage"]
+    >();
+  });
+
   test.each(spatialFactBoundaryCases)(
     "$name accepts exactly 5 feet and rejects 6 feet",
     ({ accepts }) => {
@@ -194,8 +197,8 @@ describe("scenario setup public-SDK boundary", () => {
 
   test("rejects fractional table-authored distances instead of truncating them", () => {
     expect(scenarioDistanceFeet(5.5)).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-distance-feet",
         value: 5.5,
       },
@@ -222,8 +225,8 @@ describe("scenario setup public-SDK boundary", () => {
     const allyId = combatantId("skeleton");
     const enemyId = combatantId("goblin-warrior");
     const distanceFeet = scenarioDistanceFeet(5);
-    expect(Either.isRight(distanceFeet)).toBe(true);
-    if (Either.isLeft(distanceFeet)) return;
+    expect(Result.isSuccess(distanceFeet)).toBe(true);
+    if (Result.isFailure(distanceFeet)) return;
     const helpDecision = tableAuthoredSpatialDecision({
       decisionId: "wolf-helps-against-goblin",
       question: {
@@ -233,14 +236,25 @@ describe("scenario setup public-SDK boundary", () => {
       },
       answer: {
         direction: "east",
-        distanceFeet: distanceFeet.right,
+        distanceFeet: distanceFeet.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
       },
     });
-    expect(Either.isRight(helpDecision)).toBe(true);
-    if (Either.isLeft(helpDecision)) return;
+    expect(Result.isSuccess(helpDecision)).toBe(true);
+    if (Result.isFailure(helpDecision)) return;
+    const areaControlReachabilityDecision = tableAuthoredSpatialDecision({
+      decisionId: "wolf-can-physically-shake-goblin",
+      question: {
+        kind: "areaControlShakeAwakeTarget",
+        actorId: helperId,
+        targetId: enemyId,
+      },
+      answer: { kind: "physicalReachability" },
+    });
+    expect(Result.isSuccess(areaControlReachabilityDecision)).toBe(true);
+    if (Result.isFailure(areaControlReachabilityDecision)) return;
 
     const battlefield = setup.session.battlefield;
     const sessionForSpatialSource = (
@@ -260,8 +274,8 @@ describe("scenario setup public-SDK boundary", () => {
           battlefield.opportunityAttackEnemyRelationships,
         objects: battlefield.objects,
       });
-      expect(Either.isRight(session)).toBe(true);
-      return Either.isRight(session) ? session.right : undefined;
+      expect(Result.isSuccess(session)).toBe(true);
+      return Result.isSuccess(session) ? session.success : undefined;
     };
     const tableSession = sessionForSpatialSource({
       kind: "tableAuthored",
@@ -269,7 +283,8 @@ describe("scenario setup public-SDK boundary", () => {
         ...setup.session.battlefield.spatial.tableAuthoredDecisions.map(
           ({ decision }) => decision,
         ),
-        helpDecision.right,
+        helpDecision.success,
+        areaControlReachabilityDecision.success,
       ],
     });
     const geometrySession = sessionForSpatialSource({
@@ -291,6 +306,48 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(tableSession).toBeDefined();
     expect(geometrySession).toBeDefined();
+    if (tableSession !== undefined) {
+      expect(
+        scenarioAreaControlShakeAwakePhysicalReachabilityFact(tableSession, {
+          kind: "areaControlShakeAwakeTarget",
+          actorId: helperId,
+          targetId: enemyId,
+        }),
+      ).toMatchObject({
+        _tag: "Success",
+        success: {
+          kind: "areaControlShakeAwakePhysicalReachability",
+          actorId: helperId,
+          targetId: enemyId,
+        },
+      });
+      expect(
+        scenarioAreaControlShakeAwakePhysicalReachabilityFact(tableSession, {
+          kind: "areaControlShakeAwakeTarget",
+          actorId: helperId,
+          targetId: allyId,
+        }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { message: expect.stringContaining("Table-authored") },
+      });
+    }
+    if (geometrySession !== undefined) {
+      expect(
+        scenarioAreaControlShakeAwakePhysicalReachabilityFact(geometrySession, {
+          kind: "areaControlShakeAwakeTarget",
+          actorId: helperId,
+          targetId: enemyId,
+        }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          message: expect.stringContaining(
+            "geometry distance is not a rules criterion",
+          ),
+        },
+      });
+    }
 
     for (const session of [geometrySession, tableSession]) {
       if (session === undefined) continue;
@@ -338,8 +395,8 @@ describe("scenario setup public-SDK boundary", () => {
         ],
       });
       expect(projected).toMatchObject({
-        _tag: "Right",
-        right: [
+        _tag: "Success",
+        success: [
           allyFill,
           {
             kind: "helpAttackEnemyDecision",
@@ -348,12 +405,12 @@ describe("scenario setup public-SDK boundary", () => {
           },
         ],
       });
-      if (Either.isLeft(projected)) continue;
+      if (Result.isFailure(projected)) continue;
       expect(
         resolveBattleRuntimeSubject({
           session: session.battle,
           subject: helpAct.subject,
-          fills: projected.right,
+          fills: projected.success,
         }).tag,
       ).toBe("resolved");
     }
@@ -388,8 +445,8 @@ describe("scenario setup public-SDK boundary", () => {
       });
 
     expect(decisionFor(String(canonicalProcedureRef))).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         question: {
           sourceProcedureRef: String(canonicalProcedureRef),
         },
@@ -401,8 +458,8 @@ describe("scenario setup public-SDK boundary", () => {
       ordinal: 0,
     });
     expect(decisionFor(malformedNestedProcedureRef)).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining(
           "canonical Battle procedure execution reference",
@@ -416,8 +473,8 @@ describe("scenario setup public-SDK boundary", () => {
           expect(
             decisionFor(`${String(canonicalProcedureRef)}${suffix}`),
           ).toMatchObject({
-            _tag: "Left",
-            left: {
+            _tag: "Failure",
+            failure: {
               tag: "invalid-spatial-decision",
               message: expect.stringContaining(
                 "canonical Battle procedure execution reference",
@@ -559,15 +616,15 @@ export const setupScenario = (context) =>
         conditions: [],
         unitLibrary: unitCatalog.catalog,
       });
-      expect(Either.isRight(createdSheet)).toBe(true);
-      if (Either.isLeft(createdSheet)) return;
+      expect(Result.isSuccess(createdSheet)).toBe(true);
+      if (Result.isFailure(createdSheet)) return;
       const charactersPath = resolve(directory, "characters.ts");
       const invalidCharactersPath = resolve(directory, "invalid-characters.ts");
       writeFileSync(
         invalidCharactersPath,
         `export const composeScenarioCharacters = () => ({
   kind: "ready",
-  characterSheets: ${JSON.stringify([createdSheet.right, {}, createdSheet.right])},
+  characterSheets: ${JSON.stringify([createdSheet.success, {}, createdSheet.success])},
   observation: { attempted: 3 },
 });
 `,
@@ -583,8 +640,8 @@ export const setupScenario = (context) =>
         charactersPath,
         `export const composeScenarioCharacters = () => ({
   kind: "ready",
-  characterSheets: ${JSON.stringify([createdSheet.right])},
-  observation: { characterIds: [${JSON.stringify(createdSheet.right.characterId)}] },
+  characterSheets: ${JSON.stringify([createdSheet.success])},
+  observation: { characterIds: [${JSON.stringify(createdSheet.success.characterId)}] },
 });
 `,
       );
@@ -603,7 +660,7 @@ export const setupScenario = (context) =>
       const characters = await evaluateScenarioCharacters(charactersPath);
       expect(characters).toMatchObject({
         tag: "ready",
-        characterSheets: [{ characterId: createdSheet.right.characterId }],
+        characterSheets: [{ characterId: createdSheet.success.characterId }],
       });
       if (characters.tag !== "ready") return;
 
@@ -620,7 +677,7 @@ export const setupScenario = (context) =>
           combatantId("external-fighter"),
           readySetup.session.battle.state,
           {
-            formAccess: "findFamiliar",
+            formAccess: "spawnedCompanion",
             selectedForm: { tag: "normalNamedForm", formId: "cat" },
           },
         );
@@ -635,8 +692,8 @@ export const setupScenario = (context) =>
           foreignContextBattle,
         ),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: "spatial-decision-lineage-conflict",
           decisionId: "scenario-session",
           message:
@@ -734,8 +791,8 @@ export const setupScenario = (context) =>
 
     const tableSessionAtDistance = (distanceFeet: number) => {
       const authoredDistance = scenarioDistanceFeet(distanceFeet);
-      expect(Either.isRight(authoredDistance)).toBe(true);
-      if (Either.isLeft(authoredDistance)) return undefined;
+      expect(Result.isSuccess(authoredDistance)).toBe(true);
+      if (Result.isFailure(authoredDistance)) return undefined;
       return createScenarioSession({
         battle: result.session.battle,
         ...result.session.battlefield,
@@ -751,7 +808,7 @@ export const setupScenario = (context) =>
               },
               answer: {
                 direction: relation.relation.direction,
-                distanceFeet: authoredDistance.right,
+                distanceFeet: authoredDistance.success,
                 attackerCanSeeTarget: relation.relation.attackerCanSeeTarget,
                 cover: relation.relation.cover,
                 traversal: relation.relation.traversal,
@@ -763,11 +820,11 @@ export const setupScenario = (context) =>
     };
 
     const atLimit = tableSessionAtDistance(Number(GRAPPLE_TARGET_REACH_FEET));
-    expect(atLimit).toMatchObject({ _tag: "Right" });
-    if (atLimit === undefined || Either.isLeft(atLimit)) return;
+    expect(atLimit).toMatchObject({ _tag: "Success" });
+    if (atLimit === undefined || Result.isFailure(atLimit)) return;
     expect(
       scenarioTableSpatialFactFills({
-        session: atLimit.right,
+        session: atLimit.success,
         subject: grappleAct.subject,
         fills: [
           {
@@ -779,18 +836,18 @@ export const setupScenario = (context) =>
         ],
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: [{ spatialFacts: [{ kind: "grappleTargetWithinReach" }] }],
+      _tag: "Success",
+      success: [{ spatialFacts: [{ kind: "grappleTargetWithinReach" }] }],
     });
 
     const beyondLimit = tableSessionAtDistance(
       Number(GRAPPLE_TARGET_REACH_FEET) + 1,
     );
-    expect(beyondLimit).toMatchObject({ _tag: "Right" });
-    if (beyondLimit === undefined || Either.isLeft(beyondLimit)) return;
+    expect(beyondLimit).toMatchObject({ _tag: "Success" });
+    if (beyondLimit === undefined || Result.isFailure(beyondLimit)) return;
     expect(
       scenarioTableSpatialFactFills({
-        session: beyondLimit.right,
+        session: beyondLimit.success,
         subject: grappleAct.subject,
         fills: [
           {
@@ -802,8 +859,8 @@ export const setupScenario = (context) =>
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: expect.stringContaining("outside the supported 5-foot"),
       },
     });
@@ -899,11 +956,11 @@ export const setupScenario = (context) =>
         setup.session.battlefield.opportunityAttackEnemyRelationships,
       objects: setup.session.battlefield.objects,
     });
-    expect(Either.isRight(adjacentScenario)).toBe(true);
-    if (Either.isLeft(adjacentScenario)) return;
+    expect(Result.isSuccess(adjacentScenario)).toBe(true);
+    if (Result.isFailure(adjacentScenario)) return;
 
     const adjacentAttackActs = scenarioBattleActs(
-      adjacentScenario.right,
+      adjacentScenario.success,
     ).filter(
       ({ subject }) =>
         subject.tag === "action" &&
@@ -983,10 +1040,10 @@ export const setupScenario = (context) =>
         setup.session.battlefield.opportunityAttackEnemyRelationships,
       objects: setup.session.battlefield.objects,
     });
-    expect(Either.isRight(adjacentScenario)).toBe(true);
-    if (Either.isLeft(adjacentScenario)) return;
+    expect(Result.isSuccess(adjacentScenario)).toBe(true);
+    if (Result.isFailure(adjacentScenario)) return;
 
-    const adjacentActs = scenarioBattleActs(adjacentScenario.right).filter(
+    const adjacentActs = scenarioBattleActs(adjacentScenario.success).filter(
       ({ subject }) =>
         subject.tag === "action" &&
         subject.actorId === wolf &&
@@ -1078,10 +1135,10 @@ export const setupScenario = (context) =>
       opportunityAttackEnemyRelationships: [],
       objects: [],
     });
-    expect(Either.isRight(adjacentScenario)).toBe(true);
-    if (Either.isLeft(adjacentScenario)) return;
+    expect(Result.isSuccess(adjacentScenario)).toBe(true);
+    if (Result.isFailure(adjacentScenario)) return;
     const boundScenario = scenarioSessionWithTableD20TestCircumstance({
-      session: adjacentScenario.right,
+      session: adjacentScenario.success,
       binding: {
         selection: {
           kind: "nextD20TestForActor",
@@ -1092,22 +1149,22 @@ export const setupScenario = (context) =>
         source: "disadvantage",
       },
     });
-    expect(Either.isRight(boundScenario)).toBe(true);
-    if (Either.isLeft(boundScenario)) return;
+    expect(Result.isSuccess(boundScenario)).toBe(true);
+    if (Result.isFailure(boundScenario)) return;
     const horseTurnEnded = endBattleRuntimeTurn({
-      session: boundScenario.right.battle,
+      session: boundScenario.success.battle,
       actorId: horseId,
       fills: [],
     });
     expect(horseTurnEnded.tag).toBe("resolved");
     if (horseTurnEnded.tag !== "resolved") return;
     const wolfTurnSession = scenarioSessionWithBattleResult(
-      boundScenario.right,
+      boundScenario.success,
       horseTurnEnded.session,
     );
-    expect(Either.isRight(wolfTurnSession)).toBe(true);
-    if (Either.isLeft(wolfTurnSession)) return;
-    const session = wolfTurnSession.right;
+    expect(Result.isSuccess(wolfTurnSession)).toBe(true);
+    if (Result.isFailure(wolfTurnSession)) return;
+    const session = wolfTurnSession.success;
     const attackAct = scenarioBattleActs(session).find(
       ({ subject }) =>
         subject.tag === "action" &&
@@ -1133,14 +1190,14 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Either.isRight(targetFills)).toBe(true);
-    if (Either.isLeft(targetFills)) return;
+    expect(Result.isSuccess(targetFills)).toBe(true);
+    if (Result.isFailure(targetFills)) return;
 
     const preliminary =
       resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
         session: session.battle,
         subject: attackAct.subject,
-        fills: targetFills.right,
+        fills: targetFills.success,
         d20TestResolutionId: scenarioD20TestResolutionId(session),
         tableD20TestCircumstanceDecisions: [],
       });
@@ -1152,7 +1209,7 @@ export const setupScenario = (context) =>
     const preparation = scenarioD20TestCircumstancePreparation({
       session,
       subject: attackAct.subject,
-      fills: targetFills.right,
+      fills: targetFills.success,
       requests: preliminary.d20TestCircumstanceRequests,
     });
     expect(preparation.decisions).toHaveLength(1);
@@ -1164,7 +1221,7 @@ export const setupScenario = (context) =>
     const admitted = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
       session: session.battle,
       subject: attackAct.subject,
-      fills: targetFills.right,
+      fills: targetFills.success,
       d20TestResolutionId: scenarioD20TestResolutionId(session),
       tableD20TestCircumstanceDecisions: preparation.decisions,
     });
@@ -1187,7 +1244,7 @@ export const setupScenario = (context) =>
       session: session.battle,
       subject: attackAct.subject,
       fills: [
-        ...targetFills.right,
+        ...targetFills.success,
         {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
@@ -1238,12 +1295,12 @@ export const setupScenario = (context) =>
         subject: canonicalSubject,
         fills: scenarioBattleFills(setup.session, canonicalSubject, [fill]),
       });
-      expect(Either.isRight(projected)).toBe(true);
-      if (Either.isLeft(projected)) return undefined;
+      expect(Result.isSuccess(projected)).toBe(true);
+      if (Result.isFailure(projected)) return undefined;
       return resolveBattleRuntimeSubject({
         session: setup.session.battle,
         subject: canonicalSubject,
-        fills: projected.right,
+        fills: projected.success,
       });
     };
     const firstBattleResolution = resolveRetainedCall();
@@ -1264,14 +1321,17 @@ export const setupScenario = (context) =>
       setup.session,
       replayedBattleResolution.session,
     );
-    expect(Either.isRight(firstSuccessor)).toBe(true);
-    expect(Either.isRight(replayedSuccessor)).toBe(true);
-    if (Either.isLeft(firstSuccessor) || Either.isLeft(replayedSuccessor)) {
+    expect(Result.isSuccess(firstSuccessor)).toBe(true);
+    expect(Result.isSuccess(replayedSuccessor)).toBe(true);
+    if (
+      Result.isFailure(firstSuccessor) ||
+      Result.isFailure(replayedSuccessor)
+    ) {
       return;
     }
 
-    expect(sha256Canonical(jsonValue(replayedSuccessor.right))).toBe(
-      sha256Canonical(jsonValue(firstSuccessor.right)),
+    expect(sha256Canonical(jsonValue(replayedSuccessor.success))).toBe(
+      sha256Canonical(jsonValue(firstSuccessor.success)),
     );
 
     const foreignContext = battleRuntimeContextFromCharacterAdmission(
@@ -1286,8 +1346,8 @@ export const setupScenario = (context) =>
     expect(
       scenarioSessionWithBattleResult(setup.session, foreignContextBattle),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "spatial-decision-lineage-conflict",
         decisionId: "scenario-session",
         message:
@@ -1319,8 +1379,8 @@ export const setupScenario = (context) =>
     const authoredDistance = scenarioDistanceFeet(
       Number(geometryRelation.relation.distanceFeet),
     );
-    expect(Either.isRight(authoredDistance)).toBe(true);
-    if (Either.isLeft(authoredDistance)) return;
+    expect(Result.isSuccess(authoredDistance)).toBe(true);
+    if (Result.isFailure(authoredDistance)) return;
 
     const ordinaryAttack = discoverBattleActs(setup.session.battle).find(
       ({ subject }) => subject.tag === "action" && subject.action === "attack",
@@ -1359,9 +1419,9 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Either.isRight(projectedAttack)).toBe(true);
-    if (Either.isLeft(projectedAttack)) return;
-    expect(projectedAttack.right).toEqual([
+    expect(Result.isSuccess(projectedAttack)).toBe(true);
+    if (Result.isFailure(projectedAttack)) return;
+    expect(projectedAttack.success).toEqual([
       expect.objectContaining({
         kind: "targetChoice",
         holeId: attackTargetHole.holeId,
@@ -1371,7 +1431,7 @@ export const setupScenario = (context) =>
             kind: "attackTargetDistance",
             actorId: attackTargetHole.attack.actorId,
             targetId: attackTarget,
-            distanceFeet: authoredDistance.right,
+            distanceFeet: authoredDistance.success,
           }),
         ],
       }),
@@ -1399,9 +1459,9 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(playerSightOverride).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(playerSightOverride)) {
-      expect(playerSightOverride.right[0]?.spatialFacts).not.toEqual(
+    expect(playerSightOverride).toMatchObject({ _tag: "Success" });
+    if (Result.isSuccess(playerSightOverride)) {
+      expect(playerSightOverride.success[0]?.spatialFacts).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({ kind: "attackAttackerCannotSeeTarget" }),
           expect.objectContaining({ kind: "attackTargetCannotSeeAttacker" }),
@@ -1414,7 +1474,7 @@ export const setupScenario = (context) =>
       question: { kind: "relation" as const, sourceId, targetId },
       answer: {
         direction: geometryRelation.relation.direction,
-        distanceFeet: authoredDistance.right,
+        distanceFeet: authoredDistance.success,
         attackerCanSeeTarget: geometryRelation.relation.attackerCanSeeTarget,
         cover: geometryRelation.relation.cover,
         traversal: geometryRelation.relation.traversal,
@@ -1438,10 +1498,10 @@ export const setupScenario = (context) =>
         spatialDecisions: [tableRelationDecision],
       },
     });
-    expect(Either.isRight(tableSession)).toBe(true);
-    if (Either.isLeft(tableSession)) return;
+    expect(Result.isSuccess(tableSession)).toBe(true);
+    if (Result.isFailure(tableSession)) return;
 
-    expect(tableSession.right.battlefield.spatial).toMatchObject({
+    expect(tableSession.success.battlefield.spatial).toMatchObject({
       kind: "tableAuthored",
       tableAuthoredDecisions: [
         {
@@ -1454,12 +1514,12 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Object.keys(tableSession.right.battlefield)).not.toEqual(
+    expect(Object.keys(tableSession.success.battlefield)).not.toEqual(
       expect.arrayContaining(["arena", "space"]),
     );
     expect(
       scenarioRelation({
-        session: tableSession.right,
+        session: tableSession.success,
         sourceId,
         targetId,
       }),
@@ -1474,28 +1534,28 @@ export const setupScenario = (context) =>
       },
     });
     const unrelatedSameBattleSession = battleRuntimeSessionFromAdmittedContext(
-      tableSession.right.battle.state,
-      tableSession.right.battle.context,
+      tableSession.success.battle.state,
+      tableSession.success.battle.context,
     );
     const unrelatedSessionResult = scenarioSessionWithBattleResult(
-      tableSession.right,
+      tableSession.success,
       unrelatedSameBattleSession,
     );
     expect(unrelatedSessionResult).toMatchObject({
-      _tag: "Left",
-      left: { tag: "spatial-decision-lineage-conflict" },
+      _tag: "Failure",
+      failure: { tag: "spatial-decision-lineage-conflict" },
     });
-    if (tableSession.right.battlefield.spatial.kind === "tableAuthored") {
+    if (tableSession.success.battlefield.spatial.kind === "tableAuthored") {
       const staleDecision =
-        tableSession.right.battlefield.spatial.tableAuthoredDecisions[0];
+        tableSession.success.battlefield.spatial.tableAuthoredDecisions[0];
       expect(staleDecision).toBeDefined();
       if (staleDecision !== undefined) {
         const staleSession = {
-          ...tableSession.right,
+          ...tableSession.success,
           battlefield: {
-            ...tableSession.right.battlefield,
+            ...tableSession.success.battlefield,
             spatial: {
-              ...tableSession.right.battlefield.spatial,
+              ...tableSession.success.battlefield.spatial,
               tableAuthoredDecisions: [
                 {
                   ...staleDecision,
@@ -1534,8 +1594,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(duplicateDecision).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [{ tag: "duplicate-spatial-decision" }],
       },
     });
@@ -1560,8 +1620,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(contradictoryDecision).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [{ tag: "contradictory-spatial-decision" }],
       },
     });
@@ -1573,8 +1633,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(malformedDecision).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [{ tag: "invalid-spatial-decision" }],
       },
     });
@@ -1584,8 +1644,8 @@ export const setupScenario = (context) =>
       question: { ...tableRelationDecision.question, sourceId: "" },
     });
     expect(blankRelationIdentity).toMatchObject({
-      _tag: "Left",
-      left: { tag: "invalid-spatial-decision" },
+      _tag: "Failure",
+      failure: { tag: "invalid-spatial-decision" },
     });
 
     const tableRoute = [{ x: 1, y: 0 }] as const;
@@ -1629,8 +1689,8 @@ export const setupScenario = (context) =>
       opportunityAttackEnemyRelationships: [],
       objects: [],
     });
-    expect(Either.isRight(tableMovementSession)).toBe(true);
-    if (Either.isLeft(tableMovementSession)) return;
+    expect(Result.isSuccess(tableMovementSession)).toBe(true);
+    if (Result.isFailure(tableMovementSession)) return;
 
     const malformedMovementCost = tableAuthoredSpatialDecision({
       decisionId: "malformed-movement-cost",
@@ -1641,8 +1701,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(malformedMovementCost).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("finite non-negative movement cost"),
       },
@@ -1656,8 +1716,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(fractionalMovementCost).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("movement cost"),
       },
@@ -1677,8 +1737,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(malformedMovementThreat).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("malformed Opportunity Attack threat"),
       },
@@ -1694,8 +1754,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(blankThreatReactor).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("malformed Opportunity Attack threat"),
       },
@@ -1733,8 +1793,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(mixedThreatFields).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("malformed Opportunity Attack threat"),
       },
@@ -1760,8 +1820,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(malformedTraversalIdentity).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("invalid occupied-space"),
       },
@@ -1778,8 +1838,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(malformedPostMoveFingerprint).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("canonical table spatial fingerprint"),
       },
@@ -1801,9 +1861,9 @@ export const setupScenario = (context) =>
         traversal: geometryRelation.relation.traversal,
       },
     });
-    expect(trimmedProcedureRef).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(trimmedProcedureRef)) {
-      expect(trimmedProcedureRef.right.question).toMatchObject({
+    expect(trimmedProcedureRef).toMatchObject({ _tag: "Success" });
+    if (Result.isSuccess(trimmedProcedureRef)) {
+      expect(trimmedProcedureRef.success.question).toMatchObject({
         sourceProcedureRef: String(characterAttackProcedureRef),
       });
     }
@@ -1825,8 +1885,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(whitespaceProcedureRef).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining(
           "canonical Battle procedure execution reference",
@@ -1834,10 +1894,10 @@ export const setupScenario = (context) =>
       },
     });
     if (
-      tableMovementSession.right.battlefield.spatial.kind === "tableAuthored"
+      tableMovementSession.success.battlefield.spatial.kind === "tableAuthored"
     ) {
       const acceptedMovement =
-        tableMovementSession.right.battlefield.spatial
+        tableMovementSession.success.battlefield.spatial
           .tableAuthoredDecisions[0];
       expect(acceptedMovement).toBeDefined();
       if (acceptedMovement !== undefined) {
@@ -1886,8 +1946,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(duplicateDecisionIdAcrossQuestions).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [
           {
             tag: "duplicate-spatial-decision",
@@ -1918,8 +1978,8 @@ export const setupScenario = (context) =>
       },
     });
     expect(duplicateNestedDecisionId).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [
           {
             tag: "duplicate-spatial-decision",
@@ -1967,8 +2027,8 @@ export const setupScenario = (context) =>
       objects: [],
     });
     expect(unknownNestedPostMoveTarget).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [
           {
             tag: "invalid-spatial-decision",
@@ -1980,10 +2040,10 @@ export const setupScenario = (context) =>
     });
 
     const lineageConflictSession = {
-      ...tableMovementSession.right,
+      ...tableMovementSession.success,
       lineage: {
-        ...tableMovementSession.right.lineage,
-        battleRuntimeSessionIdentity: `${tableMovementSession.right.lineage.battleRuntimeSessionIdentity}:foreign`,
+        ...tableMovementSession.success.lineage,
+        battleRuntimeSessionIdentity: `${tableMovementSession.success.lineage.battleRuntimeSessionIdentity}:foreign`,
       },
     } as ScenarioSession;
     const lineageConflictMovementPlan = planScenarioMovement({
@@ -1998,8 +2058,8 @@ export const setupScenario = (context) =>
       fills: [],
     });
     expect(lineageConflictMovementPlan).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "spatial-decision-lineage-conflict",
         decisionId: "table-movement",
         question: { kind: "movementRoute", moverId: sourceId },
@@ -2010,7 +2070,7 @@ export const setupScenario = (context) =>
     });
 
     const tableMovementPlan = planScenarioMovement({
-      session: tableMovementSession.right,
+      session: tableMovementSession.success,
       subject: {
         tag: "runtimeCommand",
         actorId: sourceId,
@@ -2021,31 +2081,31 @@ export const setupScenario = (context) =>
       fills: [],
     });
     expect(tableMovementPlan).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         fills: [{ kind: "movement", value: { movementCostFeet: 5 } }],
         session: {
           movementResolution: { kind: "tableAuthoredPending" },
         },
       },
     });
-    if (Either.isLeft(tableMovementPlan)) return;
+    if (Result.isFailure(tableMovementPlan)) return;
     const resolvedTableMovement = resolveBattleRuntimeSubject({
-      session: tableMovementPlan.right.session.battle,
-      subject: tableMovementPlan.right.subject,
-      fills: tableMovementPlan.right.fills,
+      session: tableMovementPlan.success.session.battle,
+      subject: tableMovementPlan.success.subject,
+      fills: tableMovementPlan.success.fills,
     });
     expect(resolvedTableMovement.tag).toBe("resolved");
     if (resolvedTableMovement.tag !== "resolved") return;
     const committedTableMovement = scenarioSessionWithBattleResult(
-      tableMovementPlan.right.session,
+      tableMovementPlan.success.session,
       resolvedTableMovement.session,
       resolvedTableMovement.objectDamages,
       resolvedTableMovement.movements,
     );
     expect(committedTableMovement).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         movementResolution: { kind: "idle" },
         battlefield: {
           spatial: {
@@ -2076,8 +2136,8 @@ export const setupScenario = (context) =>
       spatial: mixedGeometrySpatial,
     });
     expect(mixedGeometry).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [
           {
             tag: "contradictory-spatial-decision",
@@ -2157,11 +2217,11 @@ export const setupScenario = (context) =>
       });
 
     const liveScenario = scenarioWithOccupant(setup.session.battle);
-    expect(Either.isRight(liveScenario)).toBe(true);
-    if (Either.isLeft(liveScenario)) return;
-    expect(plan(liveScenario.right)).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("skeleton") },
+    expect(Result.isSuccess(liveScenario)).toBe(true);
+    if (Result.isFailure(liveScenario)) return;
+    expect(plan(liveScenario.success)).toMatchObject({
+      _tag: "Failure",
+      failure: { message: expect.stringContaining("skeleton") },
     });
 
     const incapacitatedBattle = battleRuntimeSessionWithState(
@@ -2178,12 +2238,12 @@ export const setupScenario = (context) =>
       },
     );
     const incapacitatedScenario = scenarioWithOccupant(incapacitatedBattle);
-    expect(Either.isRight(incapacitatedScenario)).toBe(true);
-    if (Either.isLeft(incapacitatedScenario)) return;
-    const incapacitatedPlan = plan(incapacitatedScenario.right);
+    expect(Result.isSuccess(incapacitatedScenario)).toBe(true);
+    if (Result.isFailure(incapacitatedScenario)) return;
+    const incapacitatedPlan = plan(incapacitatedScenario.success);
     expect(incapacitatedPlan).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         fills: [
           {
             kind: "movement",
@@ -2198,12 +2258,12 @@ export const setupScenario = (context) =>
         ],
       },
     });
-    if (Either.isRight(incapacitatedPlan)) {
+    if (Result.isSuccess(incapacitatedPlan)) {
       expect(
         resolveBattleRuntimeSubject({
-          session: incapacitatedPlan.right.session.battle,
-          subject: incapacitatedPlan.right.subject,
-          fills: incapacitatedPlan.right.fills,
+          session: incapacitatedPlan.success.session.battle,
+          subject: incapacitatedPlan.success.subject,
+          fills: incapacitatedPlan.success.fills,
         }),
       ).toMatchObject({
         tag: "resolved",
@@ -2219,15 +2279,15 @@ export const setupScenario = (context) =>
     }
     expect(
       planScenarioMovement({
-        session: incapacitatedScenario.right,
+        session: incapacitatedScenario.success,
         subject: movementSubject,
         route: [{ x: 1, y: 0 }],
         speedKind: "walk",
         fills: [],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("cannot willingly end") },
+      _tag: "Failure",
+      failure: { message: expect.stringContaining("cannot willingly end") },
     });
 
     const deadBattle = battleRuntimeSessionWithState(setup.session.battle, {
@@ -2238,11 +2298,11 @@ export const setupScenario = (context) =>
       ),
     });
     const deadScenario = scenarioWithOccupant(deadBattle);
-    expect(Either.isRight(deadScenario)).toBe(true);
-    if (Either.isLeft(deadScenario)) return;
-    expect(plan(deadScenario.right)).toMatchObject({
-      _tag: "Right",
-      right: {
+    expect(Result.isSuccess(deadScenario)).toBe(true);
+    if (Result.isFailure(deadScenario)) return;
+    expect(plan(deadScenario.success)).toMatchObject({
+      _tag: "Success",
+      success: {
         fills: [
           {
             kind: "movement",
@@ -2263,21 +2323,21 @@ export const setupScenario = (context) =>
               { ...occupant, size: "tiny" },
             ),
           }),
-        ).pipe(Either.getOrThrow),
+        ).pipe(Result.getOrThrow),
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: { fills: [{ value: { movementCostFeet: 10 } }] },
+      _tag: "Success",
+      success: { fills: [{ value: { movementCostFeet: 10 } }] },
     });
     expect(
       plan(
         scenarioWithOccupant(setup.session.battle, true).pipe(
-          Either.getOrThrow,
+          Result.getOrThrow,
         ),
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: { fills: [{ value: { movementCostFeet: 10 } }] },
+      _tag: "Success",
+      success: { fills: [{ value: { movementCostFeet: 10 } }] },
     });
     const deadAndIncapacitated = battleRuntimeSessionWithState(
       setup.session.battle,
@@ -2294,22 +2354,22 @@ export const setupScenario = (context) =>
       },
     );
     expect(
-      plan(scenarioWithOccupant(deadAndIncapacitated).pipe(Either.getOrThrow)),
+      plan(scenarioWithOccupant(deadAndIncapacitated).pipe(Result.getOrThrow)),
     ).toMatchObject({
-      _tag: "Right",
-      right: { fills: [{ value: { movementCostFeet: 10 } }] },
+      _tag: "Success",
+      success: { fills: [{ value: { movementCostFeet: 10 } }] },
     });
     expect(
       planScenarioMovement({
-        session: deadScenario.right,
+        session: deadScenario.success,
         subject: movementSubject,
         route: [{ x: 1, y: 0 }],
         speedKind: "walk",
         fills: [],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("corpse") },
+      _tag: "Failure",
+      failure: { message: expect.stringContaining("corpse") },
     });
   }, 120_000);
 
@@ -2352,17 +2412,17 @@ export const setupScenario = (context) =>
       objects: [],
     } as const;
     const scenario = createScenarioSession(scenarioInput);
-    expect(Either.isRight(scenario)).toBe(true);
-    if (Either.isLeft(scenario)) return;
+    expect(Result.isSuccess(scenario)).toBe(true);
+    if (Result.isFailure(scenario)) return;
     const planned = planScenarioMovement({
-      session: scenario.right,
+      session: scenario.success,
       subject: { tag: "runtimeCommand", actorId: moverId, command: "move" },
       route: [{ x: -1, y: 0 }],
       speedKind: "walk",
       fills: [],
     });
     const expectedThreats = scenarioOpportunityAttackExecutionCandidates({
-      session: scenario.right,
+      session: scenario.success,
       reactorId,
       moverId,
     }).map(({ reactorId: candidateReactorId, selection }) => ({
@@ -2374,10 +2434,10 @@ export const setupScenario = (context) =>
       ...scenarioInput,
       statBlockDamageSelectionPolicy: { preferredComponentNotation: "static" },
     });
-    expect(Either.isRight(staticScenario)).toBe(true);
-    if (Either.isRight(staticScenario)) {
+    expect(Result.isSuccess(staticScenario)).toBe(true);
+    if (Result.isSuccess(staticScenario)) {
       const staticThreats = scenarioOpportunityAttackExecutionCandidates({
-        session: staticScenario.right,
+        session: staticScenario.success,
         reactorId,
         moverId,
       });
@@ -2394,18 +2454,18 @@ export const setupScenario = (context) =>
         ),
       ).toBe(true);
       const staticPlan = planScenarioMovement({
-        session: staticScenario.right,
+        session: staticScenario.success,
         subject: { tag: "runtimeCommand", actorId: moverId, command: "move" },
         route: [{ x: -1, y: 0 }],
         speedKind: "walk",
         fills: [],
       });
-      expect(Either.isRight(staticPlan)).toBe(true);
-      if (Either.isRight(staticPlan)) {
+      expect(Result.isSuccess(staticPlan)).toBe(true);
+      if (Result.isSuccess(staticPlan)) {
         const staticResolution = resolveBattleRuntimeSubject({
-          session: staticPlan.right.session.battle,
-          subject: staticPlan.right.subject,
-          fills: staticPlan.right.fills,
+          session: staticPlan.success.session.battle,
+          subject: staticPlan.success.subject,
+          fills: staticPlan.success.fills,
         });
         expect(staticResolution).toMatchObject({
           tag: "needsHoles",
@@ -2428,8 +2488,8 @@ export const setupScenario = (context) =>
       }
     }
     expect(planned).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         fills: [
           {
             kind: "movement",
@@ -2440,11 +2500,11 @@ export const setupScenario = (context) =>
         ],
       },
     });
-    if (Either.isLeft(planned)) return;
+    if (Result.isFailure(planned)) return;
     const resolution = resolveBattleRuntimeSubject({
-      session: planned.right.session.battle,
-      subject: planned.right.subject,
-      fills: planned.right.fills,
+      session: planned.success.session.battle,
+      subject: planned.success.subject,
+      fills: planned.success.fills,
     });
     expect(resolution).toMatchObject({
       tag: "needsHoles",
@@ -2512,9 +2572,9 @@ export const setupScenario = (context) =>
       opportunityAttackEnemyRelationships: [],
       objects: [],
     });
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left.issues).toEqual([
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure.issues).toEqual([
       expect.objectContaining({
         tag: "missing-placement",
         tokenId: "goblin-warrior",
@@ -2573,9 +2633,9 @@ export const setupScenario = (context) =>
       opportunityAttackEnemyRelationships: [],
       objects: [object, object],
     });
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left.issues.map(({ tag }) => tag)).toEqual([
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure.issues.map(({ tag }) => tag)).toEqual([
       "arena-definition",
       "combatant-object-id-collision",
       "duplicate-object-id",
@@ -2643,12 +2703,12 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Either.isRight(composed)).toBe(true);
-    if (Either.isLeft(composed)) return;
+    expect(Result.isSuccess(composed)).toBe(true);
+    if (Result.isFailure(composed)) return;
 
     expect(
       scenarioRelation({
-        session: composed.right,
+        session: composed.success,
         sourceId: combatantId("goblin-warrior"),
         targetId: combatantId("skeleton"),
       }),
@@ -2661,14 +2721,14 @@ export const setupScenario = (context) =>
       },
     });
 
-    const attack = discoverBattleActs(composed.right.battle).find(
+    const attack = discoverBattleActs(composed.success.battle).find(
       ({ subject }) => subject.tag === "action" && subject.action === "attack",
     );
     expect(attack).toBeDefined();
     if (attack === undefined) return;
-    const scenarioActs = scenarioBattleActs(composed.right);
+    const scenarioActs = scenarioBattleActs(composed.success);
     expect(scenarioActs).not.toEqual([]);
-    const rawReadyAct = discoverBattleActs(composed.right.battle).find(
+    const rawReadyAct = discoverBattleActs(composed.success.battle).find(
       ({ subject }) => subject.tag === "action" && subject.action === "ready",
     );
     const rawReadyHole = rawReadyAct?.initialHoles.find(
@@ -2721,7 +2781,7 @@ export const setupScenario = (context) =>
       scenarioReadyHole !== undefined
     ) {
       const projectedReadyFills = scenarioBattleFills(
-        composed.right,
+        composed.success,
         scenarioReadyAct.subject,
         [
           {
@@ -2751,7 +2811,7 @@ export const setupScenario = (context) =>
       }
       expect(
         resolveBattleRuntimeSubject({
-          session: composed.right.battle,
+          session: composed.success.battle,
           subject: scenarioReadyAct.subject,
           fills: projectedReadyFills,
         }).tag,
@@ -2763,7 +2823,7 @@ export const setupScenario = (context) =>
       !("attackAbility" in attack.subject)
     ) {
       const rawStatBlockAttacks = discoverBattleActs(
-        composed.right.battle,
+        composed.success.battle,
       ).flatMap(({ subject }) =>
         subject.tag === "action" &&
         subject.action === "attack" &&
@@ -2791,7 +2851,7 @@ export const setupScenario = (context) =>
       expect(rawStaticAttack).toBeDefined();
       if (rawStaticAttack !== undefined) {
         const projectedAttack = scenarioBattleSubject(
-          composed.right,
+          composed.success,
           rawStaticAttack,
         );
         expect(
@@ -2806,7 +2866,7 @@ export const setupScenario = (context) =>
       }
     }
     const frontier = resolveBattleRuntimeSubject({
-      session: composed.right.battle,
+      session: composed.success.battle,
       subject: attack.subject,
       fills: [],
     });
@@ -2820,7 +2880,7 @@ export const setupScenario = (context) =>
     expect(targetHole?.kind).toBe("targetChoice");
     if (targetHole?.kind !== "targetChoice") return;
     const projected = scenarioObjectAttackFills({
-      session: composed.right,
+      session: composed.success,
       subject: attack.subject,
       fills: [
         {
@@ -2831,9 +2891,9 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    expect(projected.right).toEqual([
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
+    expect(projected.success).toEqual([
       {
         kind: "objectTargetChoice",
         holeId: targetHole.holeId,
@@ -3005,20 +3065,20 @@ export const setupScenario = (context) =>
       ],
     });
     expect(forgedOccludedTarget).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      success: [
         {
           kind: "spellTargetAllocation",
           spatialFacts: [],
         },
       ],
     });
-    if (Either.isLeft(forgedOccludedTarget)) return;
+    if (Result.isFailure(forgedOccludedTarget)) return;
     expect(
       resolveBattleRuntimeSubject({
         session: result.session.battle,
         subject: magicMissileAct.subject,
-        fills: forgedOccludedTarget.right,
+        fills: forgedOccludedTarget.success,
       }).tag,
     ).toBe("invalid");
 
@@ -3039,8 +3099,8 @@ export const setupScenario = (context) =>
       ],
     });
     expect(projectedVisibleTarget).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      success: [
         {
           kind: "spellTargetAllocation",
           spatialFacts: [
@@ -3053,7 +3113,7 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    if (Either.isLeft(projectedVisibleTarget)) return;
+    if (Result.isFailure(projectedVisibleTarget)) return;
 
     const genericTargetActs = discoverBattleActs(result.session.battle);
     const scalarTargetAct = genericTargetActs.find(
@@ -3083,7 +3143,7 @@ export const setupScenario = (context) =>
     const pointOriginAct = genericTargetActs.find(
       (act) =>
         battleActSpellPresentation(act)?.invocation.procedure ===
-        "greaseGroundHazard",
+        "persistentAreaSaveCondition",
     );
     expect(pointOriginAct).toBeDefined();
     if (pointOriginAct === undefined) return;
@@ -3143,10 +3203,10 @@ export const setupScenario = (context) =>
         result.session.battlefield.opportunityAttackEnemyRelationships,
       objects: result.session.battlefield.objects,
     });
-    expect(tableWithoutSpellDecision).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(tableWithoutSpellDecision)) {
+    expect(tableWithoutSpellDecision).toMatchObject({ _tag: "Success" });
+    if (Result.isSuccess(tableWithoutSpellDecision)) {
       const missingSpellDecision = scenarioCreatureSpellTargetFills({
-        session: tableWithoutSpellDecision.right,
+        session: tableWithoutSpellDecision.success,
         subject: ordinarySpellAttackAct.subject,
         fills: [
           {
@@ -3158,8 +3218,8 @@ export const setupScenario = (context) =>
         ],
       });
       expect(missingSpellDecision).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: "spell-target-projection",
           message: expect.stringContaining("requires a Table-authored"),
         },
@@ -3185,15 +3245,15 @@ export const setupScenario = (context) =>
       ],
     });
     expect(forgedOrdinaryTarget).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      success: [
         {
           kind: "targetChoice",
           spatialFacts: [],
         },
       ],
     });
-    if (Either.isLeft(forgedOrdinaryTarget)) return;
+    if (Result.isFailure(forgedOrdinaryTarget)) return;
 
     const visibleOrdinaryTarget = ordinaryTargetHole.choices.find(
       (targetId) => {
@@ -3258,18 +3318,18 @@ export const setupScenario = (context) =>
         result.session.battlefield.opportunityAttackEnemyRelationships,
       objects: result.session.battlefield.objects,
     });
-    expect(staleSpellDecisionSession).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(staleSpellDecisionSession)) {
-      const spatial = staleSpellDecisionSession.right.battlefield.spatial;
+    expect(staleSpellDecisionSession).toMatchObject({ _tag: "Success" });
+    if (Result.isSuccess(staleSpellDecisionSession)) {
+      const spatial = staleSpellDecisionSession.success.battlefield.spatial;
       expect(spatial.kind).toBe("tableAuthored");
       if (spatial.kind === "tableAuthored") {
         const staleDecision = spatial.tableAuthoredDecisions[0];
         expect(staleDecision).toBeDefined();
         if (staleDecision !== undefined) {
           const staleSession = {
-            ...staleSpellDecisionSession.right,
+            ...staleSpellDecisionSession.success,
             battlefield: {
-              ...staleSpellDecisionSession.right.battlefield,
+              ...staleSpellDecisionSession.success.battlefield,
               spatial: {
                 ...spatial,
                 tableAuthoredDecisions: [
@@ -3299,8 +3359,8 @@ export const setupScenario = (context) =>
             ],
           });
           expect(staleSpellProjection).toMatchObject({
-            _tag: "Left",
-            left: {
+            _tag: "Failure",
+            failure: {
               tag: "spell-target-projection",
               message: expect.stringContaining("stale"),
             },
@@ -3354,10 +3414,10 @@ export const setupScenario = (context) =>
         result.session.battlefield.opportunityAttackEnemyRelationships,
       objects: result.session.battlefield.objects,
     });
-    expect(mismatchedSpellDecision).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(mismatchedSpellDecision)) {
+    expect(mismatchedSpellDecision).toMatchObject({ _tag: "Success" });
+    if (Result.isSuccess(mismatchedSpellDecision)) {
       const mismatchedProjection = scenarioCreatureSpellTargetFills({
-        session: mismatchedSpellDecision.right,
+        session: mismatchedSpellDecision.success,
         subject: ordinarySpellAttackAct.subject,
         fills: [
           {
@@ -3369,8 +3429,8 @@ export const setupScenario = (context) =>
         ],
       });
       expect(mismatchedProjection).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: "spell-target-projection",
           message: expect.stringContaining("requires a Table-authored"),
         },
@@ -3388,10 +3448,10 @@ export const setupScenario = (context) =>
             spatialFacts: [],
           },
         ],
-      }).pipe(Either.map((fills) => fills[0])),
+      }).pipe(Result.map((fills) => fills[0])),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         kind: "targetChoice",
         spatialFacts: [
           {
@@ -3428,19 +3488,21 @@ export const setupScenario = (context) =>
         },
       ],
     );
-    expect(Either.isRight(damaged)).toBe(true);
-    if (Either.isRight(damaged)) {
-      expect(damaged.right.battlefield.objects[0]?.damageDisposition).toEqual({
-        kind: "hitPoints",
-        hitPoints: 0,
-      });
+    expect(Result.isSuccess(damaged)).toBe(true);
+    if (Result.isSuccess(damaged)) {
+      expect(damaged.success.battlefield.objects[0]?.damageDisposition).toEqual(
+        {
+          kind: "hitPoints",
+          hitPoints: 0,
+        },
+      );
       expect(result.session.battlefield.objects[0]?.damageDisposition).toEqual({
         kind: "hitPoints",
         hitPoints: 30,
       });
       expect(
         scenarioRelation({
-          session: damaged.right,
+          session: damaged.success,
           sourceId: combatantId("beacon-warden-ember"),
           targetId: crystalId,
         }),
@@ -3471,8 +3533,8 @@ export const setupScenario = (context) =>
       ],
     );
     expect(staleDamage).toMatchObject({
-      _tag: "Left",
-      left: { tag: "object-damage-state-conflict" },
+      _tag: "Failure",
+      failure: { tag: "object-damage-state-conflict" },
     });
     expect(
       resultSpatial.arena.cells
@@ -3560,10 +3622,10 @@ export const setupScenario = (context) =>
       objects: [],
     } as const;
     const twoThreatScenario = createScenarioSession(twoThreatInput);
-    expect(Either.isRight(twoThreatScenario)).toBe(true);
-    if (Either.isLeft(twoThreatScenario)) return;
+    expect(Result.isSuccess(twoThreatScenario)).toBe(true);
+    if (Result.isFailure(twoThreatScenario)) return;
     const twoThreatPlan = planScenarioMovement({
-      session: twoThreatScenario.right,
+      session: twoThreatScenario.success,
       subject: {
         tag: "runtimeCommand",
         actorId: twoThreatMoverId,
@@ -3573,10 +3635,10 @@ export const setupScenario = (context) =>
       speedKind: "walk",
       fills: [],
     });
-    expect(Either.isRight(twoThreatPlan)).toBe(true);
+    expect(Result.isSuccess(twoThreatPlan)).toBe(true);
     const expectedThreats = twoThreatReactorIds.flatMap((reactorId) =>
       scenarioOpportunityAttackExecutionCandidates({
-        session: twoThreatScenario.right,
+        session: twoThreatScenario.success,
         reactorId,
         moverId: twoThreatMoverId,
       }).map(({ reactorId: candidateReactorId, selection }) => ({
@@ -3585,8 +3647,8 @@ export const setupScenario = (context) =>
         ...selection,
       })),
     );
-    if (Either.isRight(twoThreatPlan)) {
-      const movementFill = twoThreatPlan.right.fills[0];
+    if (Result.isSuccess(twoThreatPlan)) {
+      const movementFill = twoThreatPlan.success.fills[0];
       expect(movementFill?.kind).toBe("movement");
       if (movementFill?.kind !== "movement") return;
       expect(expectedThreats).toHaveLength(4);
@@ -3634,8 +3696,8 @@ export const setupScenario = (context) =>
       opportunityAttackEnemyRelationships: [],
     });
     expect(unknownTableMovementThreat).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         issues: [
           {
             tag: "invalid-spatial-decision",
@@ -3676,8 +3738,8 @@ export const setupScenario = (context) =>
           opportunityAttackEnemyRelationships: relationshipCase.relationships,
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           issues: [{ tag: relationshipCase.expectedTag }],
         },
       });
@@ -3691,10 +3753,10 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Either.isRight(reverseRelationshipScenario)).toBe(true);
-    if (Either.isRight(reverseRelationshipScenario)) {
+    expect(Result.isSuccess(reverseRelationshipScenario)).toBe(true);
+    if (Result.isSuccess(reverseRelationshipScenario)) {
       const reversePlan = planScenarioMovement({
-        session: reverseRelationshipScenario.right,
+        session: reverseRelationshipScenario.success,
         subject: {
           tag: "runtimeCommand",
           actorId: twoThreatMoverId,
@@ -3705,8 +3767,8 @@ export const setupScenario = (context) =>
         fills: [],
       });
       expect(reversePlan).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           fills: [{ value: { provokedOpportunityAttacks: [] } }],
         },
       });
@@ -3734,11 +3796,11 @@ export const setupScenario = (context) =>
         { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
       ],
     });
-    expect(Either.isRight(blockedSightScenario)).toBe(true);
-    if (Either.isRight(blockedSightScenario)) {
+    expect(Result.isSuccess(blockedSightScenario)).toBe(true);
+    if (Result.isSuccess(blockedSightScenario)) {
       expect(
         planScenarioMovement({
-          session: blockedSightScenario.right,
+          session: blockedSightScenario.success,
           subject: {
             tag: "runtimeCommand",
             actorId: twoThreatMoverId,
@@ -3749,8 +3811,8 @@ export const setupScenario = (context) =>
           fills: [],
         }),
       ).toMatchObject({
-        _tag: "Right",
-        right: { fills: [{ value: { provokedOpportunityAttacks: [] } }] },
+        _tag: "Success",
+        success: { fills: [{ value: { provokedOpportunityAttacks: [] } }] },
       });
     }
     const dimScenario = createScenarioSession({
@@ -3758,11 +3820,11 @@ export const setupScenario = (context) =>
       ambientIllumination: "dimLight",
       statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     });
-    expect(Either.isRight(dimScenario)).toBe(true);
-    if (Either.isRight(dimScenario)) {
+    expect(Result.isSuccess(dimScenario)).toBe(true);
+    if (Result.isSuccess(dimScenario)) {
       expect(
         planScenarioMovement({
-          session: dimScenario.right,
+          session: dimScenario.success,
           subject: {
             tag: "runtimeCommand",
             actorId: twoThreatMoverId,
@@ -3773,8 +3835,8 @@ export const setupScenario = (context) =>
           fills: [],
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: { message: expect.stringContaining("bright-light") },
+        _tag: "Failure",
+        failure: { message: expect.stringContaining("bright-light") },
       });
     }
     const largeReactor = result.session.battle.state.combatants.get(
@@ -3795,11 +3857,11 @@ export const setupScenario = (context) =>
         { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
       ],
     });
-    expect(Either.isRight(largeScenario)).toBe(true);
-    if (Either.isRight(largeScenario)) {
+    expect(Result.isSuccess(largeScenario)).toBe(true);
+    if (Result.isSuccess(largeScenario)) {
       expect(
         planScenarioMovement({
-          session: largeScenario.right,
+          session: largeScenario.success,
           subject: {
             tag: "runtimeCommand",
             actorId: twoThreatMoverId,
@@ -3810,13 +3872,13 @@ export const setupScenario = (context) =>
           fills: [],
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: { message: expect.stringContaining("Small or Medium") },
+        _tag: "Failure",
+        failure: { message: expect.stringContaining("Small or Medium") },
       });
     }
     expect(
       planScenarioMovement({
-        session: twoThreatScenario.right,
+        session: twoThreatScenario.success,
         subject: {
           tag: "runtimeCommand",
           actorId: twoThreatMoverId,
@@ -3831,8 +3893,8 @@ export const setupScenario = (context) =>
         fills: [],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("more than once") },
+      _tag: "Failure",
+      failure: { message: expect.stringContaining("more than once") },
     });
     const moveSubject = {
       tag: "runtimeCommand" as const,
@@ -3846,28 +3908,28 @@ export const setupScenario = (context) =>
       speedKind: "walk",
       fills: [],
     });
-    expect(Either.isRight(plannedMove)).toBe(true);
-    if (Either.isRight(plannedMove)) {
-      expect(plannedMove.right.fills[0]).toMatchObject({
+    expect(Result.isSuccess(plannedMove)).toBe(true);
+    if (Result.isSuccess(plannedMove)) {
+      expect(plannedMove.success.fills[0]).toMatchObject({
         kind: "movement",
         value: { movementCostFeet: 5 },
       });
       const interrupted = scenarioSessionWithBattleResult(
-        plannedMove.right.session,
-        plannedMove.right.session.battle,
+        plannedMove.success.session,
+        plannedMove.success.session.battle,
       );
       expect(interrupted).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           movementResolution: { kind: "geometryDerivedPending" },
           battlefield: {
             spatial: { kind: "geometryDerived", space: { revision: 11 } },
           },
         },
       });
-      if (Either.isRight(interrupted)) {
+      if (Result.isSuccess(interrupted)) {
         const resumed = continueScenarioMovement({
-          session: interrupted.right,
+          session: interrupted.success,
           fills: [
             {
               kind: "rolledDice",
@@ -3877,8 +3939,8 @@ export const setupScenario = (context) =>
           ],
         });
         expect(resumed).toMatchObject({
-          _tag: "Right",
-          right: {
+          _tag: "Success",
+          success: {
             subject: moveSubject,
             fills: [
               { kind: "movement", value: { movementCostFeet: 5 } },
@@ -3897,9 +3959,9 @@ export const setupScenario = (context) =>
         });
       }
       const battleMove = resolveBattleRuntimeSubject({
-        session: plannedMove.right.session.battle,
+        session: plannedMove.success.session.battle,
         subject: moveSubject,
-        fills: plannedMove.right.fills,
+        fills: plannedMove.success.fills,
       });
       expect(battleMove).toMatchObject({
         tag: "resolved",
@@ -3907,16 +3969,16 @@ export const setupScenario = (context) =>
       });
       if (battleMove.tag === "resolved") {
         const moved = scenarioSessionWithBattleResult(
-          plannedMove.right.session,
+          plannedMove.success.session,
           battleMove.session,
           battleMove.objectDamages,
           battleMove.movements,
         );
-        expect(Either.isRight(moved)).toBe(true);
-        if (Either.isRight(moved)) {
+        expect(Result.isSuccess(moved)).toBe(true);
+        if (Result.isSuccess(moved)) {
           expect(
             scenarioRelation({
-              session: moved.right,
+              session: moved.success,
               sourceId: moveSubject.actorId,
               targetId: crystalId,
             }),
@@ -3925,7 +3987,7 @@ export const setupScenario = (context) =>
             relation: { distanceFeet: 10 },
           });
           expect(resultSpatial.space.revision).toBe(11);
-          const movedSpatial = moved.right.battlefield.spatial;
+          const movedSpatial = moved.success.battlefield.spatial;
           expect(movedSpatial.kind).toBe("geometryDerived");
           if (movedSpatial.kind !== "geometryDerived") return;
           expect(movedSpatial.space.revision).toBe(12);
@@ -3940,8 +4002,8 @@ export const setupScenario = (context) =>
       fills: [],
     });
     expect(blockedByCrystal).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "scenario-movement-rejected",
         message: expect.stringContaining("beacon-crystal"),
       },
@@ -3957,8 +4019,8 @@ export const setupScenario = (context) =>
       fills: [],
     });
     expect(difficultTerrain).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         fills: [{ kind: "movement", value: { movementCostFeet: 15 } }],
       },
     });
@@ -4075,8 +4137,8 @@ export const setupScenario = (context) =>
     const authoredAttackDistance = scenarioDistanceFeet(
       Number(GRAPPLE_TARGET_REACH_FEET),
     );
-    expect(Either.isRight(authoredAttackDistance)).toBe(true);
-    if (Either.isLeft(authoredAttackDistance)) return;
+    expect(Result.isSuccess(authoredAttackDistance)).toBe(true);
+    if (Result.isFailure(authoredAttackDistance)) return;
 
     const objectAttack = attackActs
       .map((act) => {
@@ -4196,7 +4258,7 @@ export const setupScenario = (context) =>
       return;
     const grappleRelation = {
       direction: "east" as const,
-      distanceFeet: authoredAttackDistance.right,
+      distanceFeet: authoredAttackDistance.success,
       attackerCanSeeTarget: true,
       cover: "none" as const,
       traversal: "open" as const,
@@ -4214,7 +4276,7 @@ export const setupScenario = (context) =>
         },
         answer: {
           direction: attackAnswer.relation.direction,
-          distanceFeet: authoredAttackDistance.right,
+          distanceFeet: authoredAttackDistance.success,
           attackerCanSeeTarget: attackAnswer.relation.attackerCanSeeTarget,
           cover: attackAnswer.relation.cover,
           traversal: attackAnswer.relation.traversal,
@@ -4293,16 +4355,16 @@ export const setupScenario = (context) =>
         geometrySession.battlefield.opportunityAttackEnemyRelationships,
       objects: geometrySession.battlefield.objects,
     });
-    expect(Either.isRight(tableSession)).toBe(true);
-    if (Either.isLeft(tableSession)) return;
+    expect(Result.isSuccess(tableSession)).toBe(true);
+    if (Result.isFailure(tableSession)) return;
 
     const tableGrappleFrontier = resolveBattleRuntimeSubject({
-      session: tableSession.right.battle,
+      session: tableSession.success.battle,
       subject: grappleAct.subject,
       fills: [],
     });
     const tableShoveFrontier = resolveBattleRuntimeSubject({
-      session: tableSession.right.battle,
+      session: tableSession.success.battle,
       subject: shoveAct.subject,
       fills: [],
     });
@@ -4341,7 +4403,7 @@ export const setupScenario = (context) =>
       ],
     ] as const) {
       const projectedSpatialFact = scenarioTableSpatialFactFills({
-        session: tableSession.right,
+        session: tableSession.success,
         subject,
         fills: [
           {
@@ -4353,8 +4415,8 @@ export const setupScenario = (context) =>
         ],
       });
       expect(projectedSpatialFact).toMatchObject({
-        _tag: "Right",
-        right: [{ spatialFacts: [{ kind: expectedKind }] }],
+        _tag: "Success",
+        success: [{ spatialFacts: [{ kind: expectedKind }] }],
       });
     }
 
@@ -4365,31 +4427,31 @@ export const setupScenario = (context) =>
       spatialFacts: [],
     };
     const projectedAttack = scenarioAttackTargetFills({
-      session: tableSession.right,
+      session: tableSession.success,
       subject: creatureAttack.act.subject,
       fills: [attackFill],
     });
-    expect(Either.isRight(projectedAttack)).toBe(true);
-    if (Either.isLeft(projectedAttack)) return;
-    expect(projectedAttack.right[0]).toMatchObject({
+    expect(Result.isSuccess(projectedAttack)).toBe(true);
+    if (Result.isFailure(projectedAttack)) return;
+    expect(projectedAttack.success[0]).toMatchObject({
       spatialFacts: [
         expect.objectContaining({
           kind: "attackTargetDistance",
           targetId: attackTarget,
-          distanceFeet: authoredAttackDistance.right,
+          distanceFeet: authoredAttackDistance.success,
         }),
       ],
     });
     expect(
       scenarioAttackTargetFills({
-        session: tableSession.right,
+        session: tableSession.success,
         subject: creatureAttack.act.subject,
         fills: [attackFill],
       }),
     ).toEqual(projectedAttack);
 
     const projectedSpell = scenarioCreatureSpellTargetFills({
-      session: tableSession.right,
+      session: tableSession.success,
       subject: ordinarySpellAttackAct.subject,
       fills: [
         {
@@ -4401,8 +4463,8 @@ export const setupScenario = (context) =>
       ],
     });
     expect(projectedSpell).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      success: [
         {
           spatialFacts: [
             {
@@ -4415,10 +4477,10 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    if (Either.isLeft(projectedSpell)) return;
+    if (Result.isFailure(projectedSpell)) return;
 
     const projectedObject = scenarioObjectAttackFills({
-      session: tableSession.right,
+      session: tableSession.success,
       subject: objectAttack.act.subject,
       fills: [
         {
@@ -4429,9 +4491,9 @@ export const setupScenario = (context) =>
         },
       ],
     });
-    expect(Either.isRight(projectedObject)).toBe(true);
-    if (Either.isLeft(projectedObject)) return;
-    expect(projectedObject.right[0]).toMatchObject({
+    expect(Result.isSuccess(projectedObject)).toBe(true);
+    if (Result.isFailure(projectedObject)) return;
+    expect(projectedObject.success[0]).toMatchObject({
       spatialFacts: [
         {
           kind: "attackObjectTarget",
@@ -4476,17 +4538,17 @@ export const setupScenario = (context) =>
       opportunityAttackEnemyRelationships: [],
       objects: geometrySession.battlefield.objects,
     });
-    expect(Either.isRight(mismatchedSession)).toBe(true);
-    if (Either.isLeft(mismatchedSession)) return;
+    expect(Result.isSuccess(mismatchedSession)).toBe(true);
+    if (Result.isFailure(mismatchedSession)) return;
     expect(
       scenarioAttackTargetFills({
-        session: mismatchedSession.right,
+        session: mismatchedSession.success,
         subject: creatureAttack.act.subject,
         fills: [attackFill],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("requires") },
+      _tag: "Failure",
+      failure: { message: expect.stringContaining("requires") },
     });
   }, 120_000);
 

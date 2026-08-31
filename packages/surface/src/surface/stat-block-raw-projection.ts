@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   ABILITIES,
@@ -297,18 +297,18 @@ const assess = <Value>(
 
 const decodeProjectionValue = <Value, Encoded>(
   context: ProjectionIssueContext,
-  schema: Schema.Schema<Value, Encoded, never>,
+  schema: Schema.Codec<Value, Encoded, never, never>,
   candidate: unknown,
   field: string,
   dependencyFallback: Value,
 ): Value => {
-  const decoded = Schema.decodeUnknownEither(schema)(candidate);
-  return Either.isRight(decoded)
-    ? decoded.right
+  const decoded = Schema.decodeUnknownResult(schema)(candidate);
+  return Result.isSuccess(decoded)
+    ? decoded.success
     : malformedEvidence(
         context,
         field,
-        String(decoded.left),
+        String(decoded.failure),
         "canonical Surface domain value",
         dependencyFallback,
       );
@@ -316,16 +316,16 @@ const decodeProjectionValue = <Value, Encoded>(
 
 const decodeEvidenceValue = <Value, Encoded>(
   context: ProjectionIssueContext,
-  schema: Schema.Schema<Value, Encoded, never>,
+  schema: Schema.Codec<Value, Encoded, never, never>,
   candidate: unknown,
   evidence: string,
   field: string,
   expected: string,
   dependencyFallback: Value,
 ): Value => {
-  const decoded = Schema.decodeUnknownEither(schema)(candidate);
-  return Either.isRight(decoded)
-    ? decoded.right
+  const decoded = Schema.decodeUnknownResult(schema)(candidate);
+  return Result.isSuccess(decoded)
+    ? decoded.success
     : malformedEvidence(context, field, evidence, expected, dependencyFallback);
 };
 
@@ -345,36 +345,42 @@ const positiveIntegerEvidence = (
   );
 
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
-const SignedIntegerSchema = Schema.Number.pipe(Schema.int());
-const NonEmptyStringSchema = Schema.NonEmptyTrimmedString;
-const ProcedureSectionSchema = Schema.Literal(...PROCEDURE_SECTIONS);
-const AttackAbilitySchema = Schema.Literal(...ATTACK_ABILITY_NAMES);
+const SignedIntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
+const NonEmptyStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+);
+const ProcedureSectionSchema = Schema.Literals(PROCEDURE_SECTIONS);
+const AttackAbilitySchema = Schema.Literals(ATTACK_ABILITY_NAMES);
 const DEPENDENCY_FALLBACK_IMMUNITY = Schema.decodeUnknownSync(
   CreatureImmunityListSchema,
 )({ conditions: ["blinded"] });
 
-const ResourceLimitProjectionSchema = Schema.Union(
+const ResourceLimitProjectionSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal("daily"),
     uses: PositiveIntegerSchema,
-    ownership: Schema.Literal("shared", "each"),
+    ownership: Schema.Literals(["shared", "each"]),
   }),
   strictStruct({
     kind: Schema.Literal("recharge"),
-    minimumRoll: Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
-    ownership: Schema.Literal("shared", "each"),
+    minimumRoll: Schema.Number.pipe(
+      Schema.check(
+        Schema.isInt(),
+        Schema.isBetween({ minimum: 2, maximum: 6 }),
+      ),
+    ),
+    ownership: Schema.Literals(["shared", "each"]),
   }),
   strictStruct({
     kind: Schema.Literal("recharge_after_rest"),
     rest: Schema.Literal("short_or_long"),
-    ownership: Schema.Literal("shared", "each"),
+    ownership: Schema.Literals(["shared", "each"]),
   }),
-);
+]);
 
-const DamageAmountProjectionSchema = Schema.Union(
+const DamageAmountProjectionSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal("static"),
     static: PositiveIntegerSchema,
@@ -391,7 +397,7 @@ const DamageAmountProjectionSchema = Schema.Union(
       abilityModifier: exactOptional(AbilitySchema),
     }),
   }),
-);
+]);
 
 const DamageProjectionSchema = strictStruct({
   kind: Schema.Literal("damage"),
@@ -399,7 +405,7 @@ const DamageProjectionSchema = strictStruct({
   amount: DamageAmountProjectionSchema,
 });
 
-const AttackEffectProjectionSchema = Schema.Union(
+const AttackEffectProjectionSchema = Schema.Union([
   DamageProjectionSchema,
   strictStruct({
     kind: Schema.Literal("conditional_bonus_damage"),
@@ -415,32 +421,37 @@ const AttackEffectProjectionSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("apply_condition"),
     condition: ConditionSchema,
-    expiresAt: Schema.Literal("source_next_turn_end", "target_next_turn_end"),
+    expiresAt: Schema.Literals([
+      "source_next_turn_end",
+      "target_next_turn_end",
+    ]),
   }),
-);
+]);
 
-const AttackAbilityEvidenceSchema = Schema.Union(
+const AttackAbilityEvidenceSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal("resolved"),
     ability: AttackAbilitySchema,
   }),
   strictStruct({
     kind: Schema.Literal("unresolved"),
-    candidates: Schema.Tuple(
-      [AttackAbilitySchema, AttackAbilitySchema],
-      AttackAbilitySchema,
+    candidates: Schema.TupleWithRest(
+      Schema.Tuple([AttackAbilitySchema, AttackAbilitySchema]),
+      [AttackAbilitySchema],
     ).pipe(
-      Schema.filter(
-        (candidates) => new Set(candidates).size === candidates.length,
-        {
-          /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after duplicate unresolved-ability evidence */
-          message: () =>
-            "Unresolved attack evidence requires at least two distinct abilities.",
-        },
+      Schema.check(
+        Schema.makeFilter(
+          (candidates) => new Set(candidates).size === candidates.length,
+          {
+            /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after duplicate unresolved-ability evidence */
+            message:
+              "Unresolved attack evidence requires at least two distinct abilities.",
+          },
+        ),
       ),
     ),
   }),
-);
+]);
 
 const SpellProjectionSchema = strictStruct({
   spellId: NonEmptyStringSchema,
@@ -449,18 +460,18 @@ const SpellProjectionSchema = strictStruct({
   restriction: exactOptional(NonEmptyStringSchema),
 });
 
-const SpellcastingGroupProjectionSchema = Schema.Union(
+const SpellcastingGroupProjectionSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal("at_will"),
     spells: nonEmpty(SpellProjectionSchema),
-    resourceLimits: Schema.Tuple(),
+    resourceLimits: Schema.Tuple([]),
   }),
   strictStruct({
     kind: Schema.Literal("limited"),
     spells: nonEmpty(SpellProjectionSchema),
     resourceLimits: nonEmpty(ResourceLimitProjectionSchema),
   }),
-);
+]);
 
 const ProcedureBaseFields = {
   section: ProcedureSectionSchema,
@@ -472,13 +483,15 @@ const RangedAttackRangeSchema = strictStruct({
   normal: PositiveIntegerSchema,
   long: PositiveIntegerSchema,
 }).pipe(
-  Schema.filter(({ normal, long }) => normal <= long, {
-    /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after malformed range ordering */
-    message: () => "Normal attack range cannot exceed long range.",
-  }),
+  Schema.check(
+    Schema.makeFilter(({ normal, long }) => normal <= long, {
+      /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after malformed range ordering */
+      message: "Normal attack range cannot exceed long range.",
+    }),
+  ),
 );
 
-const ProcedureProjectionSchema = Schema.Union(
+const ProcedureProjectionSchema = Schema.Union([
   strictStruct({
     ...ProcedureBaseFields,
     kind: Schema.Literal("textOnly"),
@@ -514,7 +527,7 @@ const ProcedureProjectionSchema = Schema.Union(
     kind: Schema.Literal("save"),
     ability: AbilitySchema,
     dc: PositiveIntegerSchema,
-    area: Schema.Union(
+    area: Schema.Union([
       strictStruct({
         kind: Schema.Literal("line"),
         lengthFeet: PositiveIntegerSchema,
@@ -524,7 +537,7 @@ const ProcedureProjectionSchema = Schema.Union(
         kind: Schema.Literal("cone"),
         lengthFeet: PositiveIntegerSchema,
       }),
-    ),
+    ]),
     onFail: DamageProjectionSchema,
     onSuccess: Schema.Literal("half_damage"),
     multiattackCount: exactOptional(PositiveIntegerSchema),
@@ -550,67 +563,67 @@ const ProcedureProjectionSchema = Schema.Union(
     ability: AbilitySchema,
     spellSaveDc: exactOptional(PositiveIntegerSchema),
     spellAttackBonus: exactOptional(SignedIntegerSchema),
-    components: Schema.Union(
+    components: Schema.Union([
       strictStruct({ kind: Schema.Literal("spell_definition") }),
       strictStruct({
         kind: Schema.Literal("fixed"),
         v: Schema.Boolean,
         s: Schema.Boolean,
-        m: Schema.Union(Schema.Literal(false), NonEmptyStringSchema),
+        m: Schema.Union([Schema.Literal(false), NonEmptyStringSchema]),
       }),
-    ),
+    ]),
     groups: nonEmpty(SpellcastingGroupProjectionSchema),
   }),
-);
+]);
 
-const VulnerabilityProjectionSchema = Schema.Union(
+const VulnerabilityProjectionSchema = Schema.Union([
   strictStruct({ kind: Schema.Literal("none") }),
   CreatureVulnerabilityListSchema,
-);
-const ResistanceProjectionSchema = Schema.Union(
+]);
+const ResistanceProjectionSchema = Schema.Union([
   strictStruct({ kind: Schema.Literal("none") }),
   CreatureResistanceListSchema,
-);
+]);
 
 export const StatBlockScopedFidelityProjectionSchema = strictStruct({
   generalFacts: strictStruct({
     challengeRating: ChallengeRatingSchema,
     sizeAndSwarm: StandaloneStatBlockSizeAndSwarmSchema,
     creatureType: CreatureTypeSchema,
-    creatureTypeTags: Schema.Union(
-      Schema.Tuple(),
+    creatureTypeTags: Schema.Union([
+      Schema.Tuple([]),
       StandaloneStatBlockCreatureTypeTagsSchema,
-    ),
+    ]),
     alignment: StatBlockAlignmentSchema,
     ac: StatBlockArmorClassSchema,
     hp: StandaloneStatBlockValueSchema,
     speeds: nonEmpty(StandaloneStatBlockSpeedEntrySchema),
     abilityScores: StandaloneStatBlockAbilityScoresSchema,
     initiative: StatBlockInitiativeSchema,
-    savingThrowModifiers: Schema.Union(
-      Schema.Tuple(),
+    savingThrowModifiers: Schema.Union([
+      Schema.Tuple([]),
       CreatureSavingThrowModifiersSchema,
-    ),
+    ]),
     saveProficiencies: Schema.Array(AbilitySchema),
     skillModifiers: Schema.Array(CreatureSkillModifierSchema),
     vulnerabilities: VulnerabilityProjectionSchema,
     resistances: ResistanceProjectionSchema,
-    immunities: Schema.Union(
+    immunities: Schema.Union([
       strictStruct({ kind: Schema.Literal("none") }),
       strictStruct({
         kind: Schema.Literal("some"),
         value: CreatureImmunityListSchema,
       }),
-    ),
-    senses: Schema.Union(
-      Schema.Tuple(),
+    ]),
+    senses: Schema.Union([
+      Schema.Tuple([]),
       nonEmpty(StandaloneCreatureSenseSchema),
-    ),
+    ]),
     passivePerception: StatBlockPassivePerceptionSchema,
-    gear: Schema.Union(Schema.Tuple(), nonEmpty(StatBlockGearEntrySchema)),
+    gear: Schema.Union([Schema.Tuple([]), nonEmpty(StatBlockGearEntrySchema)]),
     communication: StatBlockCommunicationSchema,
     legendaryActionUses: exactOptional(
-      Schema.Union(
+      Schema.Union([
         strictStruct({
           kind: Schema.Literal("fixed"),
           uses: PositiveIntegerSchema,
@@ -620,7 +633,7 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
           usesOutsideLair: PositiveIntegerSchema,
           additionalUsesInLair: PositiveIntegerSchema,
         }),
-      ),
+      ]),
     ),
   }),
   resources: Schema.Array(ResourceLimitProjectionSchema),
@@ -636,17 +649,19 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
   ),
   procedures: Schema.Array(ProcedureProjectionSchema),
 }).pipe(
-  Schema.filter(
-    (projection) =>
-      (projection.generalFacts.legendaryActionUses !== undefined) ===
-      projection.procedures.some(
-        ({ section }) => section === "Legendary Actions",
-      ),
-    {
-      /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after contradictory legendary-action projection */
-      message: () =>
-        "Legendary Action uses and a nonempty Legendary Action section must occur together.",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (projection) =>
+        (projection.generalFacts.legendaryActionUses !== undefined) ===
+        projection.procedures.some(
+          ({ section }) => section === "Legendary Actions",
+        ),
+      {
+        /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after contradictory legendary-action projection */
+        message:
+          "Legendary Action uses and a nonempty Legendary Action section must occur together.",
+      },
+    ),
   ),
 );
 
@@ -2612,12 +2627,11 @@ const parseCommunication = (
     parseCommunicationCandidate(issueContext, lines, contextLabel),
   );
   if (candidate === undefined) return { kind: "none" };
-  return Schema.decodeUnknownEither(StatBlockCommunicationSchema)(
-    candidate,
-  ).pipe(
-    Either.match({
+  return Result.match(
+    Schema.decodeUnknownResult(StatBlockCommunicationSchema)(candidate),
+    {
       /* v8 ignore start -- @preserve -- the candidate is assembled from the same decoded domain fields required by StatBlockCommunicationSchema */
-      onLeft: (error) =>
+      onFailure: (error) =>
         malformedEvidence(
           issueContext,
           "communication",
@@ -2626,8 +2640,8 @@ const parseCommunication = (
           { kind: "none" },
         ),
       /* v8 ignore stop -- @preserve */
-      onRight: (communication) => communication,
-    }),
+      onSuccess: (communication) => communication,
+    },
   );
 };
 
@@ -3205,7 +3219,12 @@ const parseRawResourceLimits = (
         kind: "recharge",
         minimumRoll: decodeEvidenceValue(
           issueContext,
-          Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
+          Schema.Number.pipe(
+            Schema.check(
+              Schema.isInt(),
+              Schema.isBetween({ minimum: 2, maximum: 6 }),
+            ),
+          ),
           Number(recharge[1]),
           matchCapture(recharge, 1),
           `resources.${normalizedProcedureName(name)}.minimumRoll`,
@@ -5734,30 +5753,28 @@ function projectionResult(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     StatBlockScopedFidelityProjectionSchema,
   )(projection);
-  return decoded.pipe(
-    Either.match({
-      /* v8 ignore start -- @preserve -- the internally constructed projection has the same canonical schema as this defensive boundary decode */
-      onLeft: (error): StatBlockScopedProjectionResult => {
-        const issue: StatBlockScopedProjectionIssue = {
-          kind: "projection-schema-rejected",
-          anchor: issueAnchor(context, "projection"),
-          message: String(error),
-        };
-        return {
-          tag: "failed",
-          failure: { tag: "projection-issues", issues: [issue] },
-        };
-      },
-      /* v8 ignore stop -- @preserve */
-      onRight: (decodedProjection): StatBlockScopedProjectionResult => ({
-        tag: "projected",
-        projection: decodedProjection,
-      }),
+  return Result.match(decoded, {
+    /* v8 ignore start -- @preserve -- the internally constructed projection has the same canonical schema as this defensive boundary decode */
+    onFailure: (error): StatBlockScopedProjectionResult => {
+      const issue: StatBlockScopedProjectionIssue = {
+        kind: "projection-schema-rejected",
+        anchor: issueAnchor(context, "projection"),
+        message: String(error),
+      };
+      return {
+        tag: "failed",
+        failure: { tag: "projection-issues", issues: [issue] },
+      };
+    },
+    /* v8 ignore stop -- @preserve */
+    onSuccess: (decodedProjection): StatBlockScopedProjectionResult => ({
+      tag: "projected",
+      projection: decodedProjection,
     }),
-  );
+  });
 }
 
 export function projectRawStatBlock(

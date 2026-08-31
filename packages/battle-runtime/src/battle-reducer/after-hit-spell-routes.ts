@@ -1,4 +1,4 @@
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   AdmittedBattleResolutionInput,
   AttackSpellDamageAddition,
@@ -11,6 +11,8 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
+import { interruptChoiceResponderId } from "../battle-state-execution.ts";
+import type { BattleInterruptSubject } from "../battle-subjects.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
   battleReducerRouteFill,
@@ -37,8 +39,13 @@ import { isEndTurnSubject } from "./reducer-route-subject-query.ts";
 
 type AfterHitSpellChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
-  { readonly kind: "castAttackHitBonusActionSpell" }
->;
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castAttackHitBonusActionSpell" }
+  >;
+};
 type AfterHitSpellSelection = Extract<
   BattleInterruptProcedureSelection,
   { readonly kind: "castAttackHitBonusActionSpell" }
@@ -71,15 +78,16 @@ export function afterHitSpellDiscoveryRoutesForResolution(
     }
     const invocation = spellInvocationForInterruptChoice(
       result.state,
-      choice.reactorId,
+      interruptChoiceResponderId(choice),
       choice.subject.procedureRef,
     );
     /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
     if (invocation === undefined) continue;
-    if (invocation.resource.tag === "spellSlot") {
+    const resourceTag = afterHitSpellResourceTag(invocation);
+    if (resourceTag === "spellSlot") {
       owners.add("battleSpellSlotAndActionEconomy");
     }
-    if (invocation.resource.tag === "spellAccessFreeCast") {
+    if (resourceTag === "spellAccessFreeCast") {
       owners.add("battleFeatureResource");
     }
     if (invocation.procedure === "afterHitDamageAndIllumination") {
@@ -150,7 +158,7 @@ export function afterHitSpellRouteForInterrupt(input: {
       ? undefined
       : spellInvocationForInterruptChoice(
           input.before,
-          selectedChoice.reactorId,
+          interruptChoiceResponderId(selectedChoice),
           selectedChoice.subject.procedureRef,
         );
   /* v8 ignore next -- @preserve -- The selected after-hit choice is admitted from the same procedure binding retained by the frame. */
@@ -174,7 +182,8 @@ export function afterHitSpellRouteForInterrupt(input: {
     ),
   ];
 
-  if (invocation.resource.tag === "spellSlot") {
+  const resourceTag = afterHitSpellResourceTag(invocation);
+  if (resourceTag === "spellSlot") {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -187,7 +196,7 @@ export function afterHitSpellRouteForInterrupt(input: {
       ),
     );
   }
-  if (invocation.resource.tag === "spellAccessFreeCast") {
+  if (resourceTag === "spellAccessFreeCast") {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -264,6 +273,16 @@ export function afterHitSpellRouteForInterrupt(input: {
   return nonEmptyRouteEvents(route);
 }
 
+function afterHitSpellResourceTag(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForInterruptChoice>>,
+): "spellSlot" | "spellAccessFreeCast" | undefined {
+  if (!("resource" in invocation)) return undefined;
+  if (invocation.resource.tag === "spellSlot") return "spellSlot";
+  return invocation.resource.tag === "spellAccessFreeCast"
+    ? "spellAccessFreeCast"
+    : undefined;
+}
+
 export function afterHitSpellEscapeRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
@@ -336,7 +355,7 @@ function isAfterHitSpellConcentrationTeardownSubject(
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
-        effect.kind === "shiningSmiteIllumination" &&
+        effect.kind === "afterHitDamageAndIllumination" &&
         effect.sourceProcedureRef === concentration.sourceProcedureRef &&
         effect.sourceCombatantId === subject.actorId,
     ),
@@ -346,7 +365,11 @@ function isAfterHitSpellConcentrationTeardownSubject(
 function isAfterHitSpellChoice(
   choice: BattleInterruptCheckpoint["choices"][number],
 ): choice is AfterHitSpellChoice {
-  return choice.kind === "castAttackHitBonusActionSpell";
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castAttackHitBonusActionSpell"
+  );
 }
 
 function isAfterHitSpellSelection(

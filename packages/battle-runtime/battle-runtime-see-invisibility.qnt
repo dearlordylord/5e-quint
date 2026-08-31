@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-see-invisible-observer-sight
 
 module battleRuntimeSeeInvisibility {
+  import battleRuntimeObserverSightGrant.* from "./battle-runtime-observer-sight-grant"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -70,13 +71,11 @@ module battleRuntimeSeeInvisibility {
     target: Combatant,
     viewerSource: Actor,
   ): bool =
-    target.hidden == NotHidden and (
-      not(activeEffectsContainInvisibilityCondition(target.activeEffects)) or
-      activeEffectsDenyInvisibleBenefit(target.activeEffects) or
-      activeEffectsContainSeeInvisibleAndEtherealFrom(
-        viewer.activeEffects,
-        viewerSource,
-      )
+    observerSightGrantRevealsInvisibleCreature(
+      activeEffectsContainSeeInvisibleAndEtherealFrom(viewer.activeEffects, viewerSource),
+      target.hidden != NotHidden,
+      activeEffectsContainInvisibilityCondition(target.activeEffects),
+      activeEffectsDenyInvisibleBenefit(target.activeEffects),
     )
 
   pure def seeInvisibleRevealsInvisibleObject(
@@ -86,13 +85,12 @@ module battleRuntimeSeeInvisibility {
     hasSightLine: bool,
     blockedByOpaqueCover: bool,
   ): bool =
-    activeEffectsContainSeeInvisibleAndEtherealFrom(
-      observer.activeEffects,
-      observerSource,
-    ) and
-    objectHasInvisibleCondition and
-    hasSightLine and
-    not(blockedByOpaqueCover)
+    observerSightGrantRevealsInvisibleObject(
+      activeEffectsContainSeeInvisibleAndEtherealFrom(observer.activeEffects, observerSource),
+      objectHasInvisibleCondition,
+      hasSightLine,
+      blockedByOpaqueCover,
+    )
 
   pure def seeInvisibleRevealsEtherealWitness(
     observer: Combatant,
@@ -101,13 +99,12 @@ module battleRuntimeSeeInvisibility {
     hasSightLine: bool,
     blockedByOpaqueCover: bool,
   ): bool =
-    activeEffectsContainSeeInvisibleAndEtherealFrom(
-      observer.activeEffects,
-      observerSource,
-    ) and
-    targetPlane == EtherealPlane and
-    hasSightLine and
-    not(blockedByOpaqueCover)
+    observerSightGrantRevealsOtherPlaneWitness(
+      activeEffectsContainSeeInvisibleAndEtherealFrom(observer.activeEffects, observerSource),
+      targetPlane == EtherealPlane,
+      hasSightLine,
+      blockedByOpaqueCover,
+    )
 
   pure def resolveSeeInvisibilitySpell(
     state: BattleState,

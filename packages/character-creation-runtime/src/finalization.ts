@@ -9,7 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey character-creation.species-lineage-choice
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -21,15 +21,9 @@ import {
 } from "@dnd/shared/types";
 import {
   MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
-  readBackgroundCreationFacts,
-  readClassCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
-  readSpeciesCreationFacts,
-  type ClassCreationFacts,
-  type SpeciesCreationFacts,
   type SurfaceReadIssue,
   type UnitReaderResult,
-  type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
@@ -59,7 +53,6 @@ import {
 import { characterBuildSpeciesOriginFeatUnitIds } from "./magic-initiate-spell-access.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
-  classUnitId,
   classLevelForUnit,
   computeTotalLevel,
   progressionClassUnitIds,
@@ -83,6 +76,18 @@ import {
   startingEquipmentChoiceHole,
   startingEquipmentUnitIds,
 } from "./discovery.ts";
+import {
+  projectCharacterDefinition,
+  type CharacterDefinitionBackgroundFacts,
+  type CharacterDefinitionClassFacts,
+  type CharacterDefinitionProjection,
+  type CharacterDefinitionSpeciesFacts,
+} from "./character-definition-projection.ts";
+import {
+  projectCharacterCreationFeature,
+  type CharacterCreationSpeciesTraitFacts,
+} from "./character-feature-projection.ts";
+import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
   decodeProficiencyGrantSubjectOptionId,
@@ -261,6 +266,13 @@ type BackgroundAbilityScoreIncreaseDelta = {
   readonly increase: number;
 };
 
+type ClassCreationFacts = CharacterDefinitionClassFacts;
+type SpeciesCreationFacts = CharacterDefinitionSpeciesFacts;
+type WizardClassCreationFacts = Extract<
+  CharacterDefinitionClassFacts,
+  { readonly className: "wizard" }
+>;
+
 type ClassFactsByUnitId = ReadonlyMap<UnitRecord["id"], ClassCreationFacts>;
 type FinalizationIssues = NonEmptyReadonlyArray<CreationFinalizationIssue>;
 type ProjectionIssues = NonEmptyReadonlyArray<CharacterBuildProjectionIssue>;
@@ -302,28 +314,28 @@ export function finalizeCharacterDraft(input: {
     input.unitLibrary,
     supportProfile,
   );
-  if (Either.isLeft(supportedSelections)) {
+  if (Result.isFailure(supportedSelections)) {
     return {
       tag: "invalid",
-      issues: supportedSelections.left,
+      issues: supportedSelections.failure,
     };
   }
 
   const build = buildCharacterBuild({
-    supportedSelections: supportedSelections.right,
+    supportedSelections: supportedSelections.success,
     unitLibrary: input.unitLibrary,
     supportProfile,
   });
-  if (Either.isLeft(build)) {
+  if (Result.isFailure(build)) {
     return {
       tag: "invalid",
-      issues: build.left,
+      issues: build.failure,
     };
   }
 
   return {
     tag: "ready",
-    build: build.right,
+    build: build.success,
   };
 }
 
@@ -422,7 +434,7 @@ export function executableSupportIssues(
     ...dependencyIssues(dependencies.species),
     ...dependencies.classFactsByUnitId.issues,
     ...dependencies.selectedFeatUnits.issues,
-    ...(Either.isRight(dependencies.background)
+    ...(Result.isSuccess(dependencies.background)
       ? [
           ...expectedValueIssue(
             supportedBackgroundUnitIds(supportProfile).includes(
@@ -441,7 +453,7 @@ export function executableSupportIssues(
           ),
         ]
       : []),
-    ...(Either.isRight(dependencies.species)
+    ...(Result.isSuccess(dependencies.species)
       ? [
           ...expectedValueIssue(
             finalizableSpeciesUnitIds().includes(selections.species),
@@ -450,14 +462,14 @@ export function executableSupportIssues(
           ...expectedValueIssue(
             speciesSizeSelectionMatchesSurface(
               selections,
-              dependencies.species.right.speciesFacts,
+              dependencies.species.success.speciesFacts,
             ),
             { tag: "speciesSizeMismatch" },
           ),
           ...expectedValueIssue(
             draconicAncestrySelectionMatchesSurface(
               selections,
-              dependencies.species.right.speciesUnit,
+              dependencies.species.success.speciesFacts,
             ),
             { tag: "draconicAncestryMismatch" },
           ),
@@ -488,8 +500,8 @@ export function executableSupportIssues(
         selections.alignment.order === supportProfile.manifest.alignment.order,
       { tag: "manifestAlignmentMismatch" },
     ),
-    ...(Either.isRight(dependencies.background) &&
-    Either.isRight(dependencies.species) &&
+    ...(Result.isSuccess(dependencies.background) &&
+    Result.isSuccess(dependencies.species) &&
     dependencies.classFactsByUnitId.issues.length === 0 &&
     dependencies.selectedFeatUnits.issues.length === 0
       ? expectedValueIssue(
@@ -497,11 +509,11 @@ export function executableSupportIssues(
           { tag: "unsupportedChoices" },
         )
       : []),
-    ...(Either.isRight(dependencies.background)
+    ...(Result.isSuccess(dependencies.background)
       ? expectedValueIssue(
           selectedFeatPrerequisitesSupported(
             selections,
-            dependencies.background.right.scoresAfterBackground,
+            dependencies.background.success.scoresAfterBackground,
             dependencies.selectedFeatUnits.value,
           ),
           { tag: "selectedFeatPrerequisitesNotMet" },
@@ -551,11 +563,12 @@ function magicInitiateSpellListsAreDistinct(
 ): boolean {
   const background = unitLibrary.getUnit(selections.background);
   const backgroundFacts = Option.isSome(background)
-    ? readBackgroundCreationFacts(background.value)
+    ? projectCharacterDefinition(background.value)
     : undefined;
   const backgroundFeatUnitIds =
-    backgroundFacts?.tag === "readable"
-      ? [backgroundFacts.value.originFeatId]
+    backgroundFacts?.tag === "readable" &&
+    backgroundFacts.value.kind === "background"
+      ? [backgroundFacts.value.facts.originFeatId]
       : [];
   const features = finalizedClassChoiceFeaturesForSupportedChoices(
     unitChoiceSelections(selections),
@@ -577,11 +590,11 @@ function magicInitiateSpellListsAreDistinct(
 }
 
 type ExecutableSupportDependencies = {
-  readonly background: Either.Either<
+  readonly background: Result.Result<
     { readonly scoresAfterBackground: AbilityScoreAssignment },
     ProjectionIssues
   >;
-  readonly species: Either.Either<
+  readonly species: Result.Result<
     {
       readonly speciesFacts: SpeciesCreationFacts;
       readonly speciesUnit: UnitRecord;
@@ -618,15 +631,15 @@ function executableSupportDependencies(
 }
 
 function dependencyIssues<T>(
-  dependency: Either.Either<T, ProjectionIssues>,
+  dependency: Result.Result<T, ProjectionIssues>,
 ): readonly CharacterBuildProjectionIssue[] {
-  return Either.isLeft(dependency) ? dependency.left : [];
+  return Result.isFailure(dependency) ? dependency.failure : [];
 }
 
 function backgroundSupportDependencies(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   { readonly scoresAfterBackground: AbilityScoreAssignment },
   ProjectionIssues
 > {
@@ -635,36 +648,46 @@ function backgroundSupportDependencies(
     selections.background,
     "background",
   );
-  if (Either.isLeft(backgroundUnit)) {
-    return Either.left([backgroundUnit.left]);
+  if (Result.isFailure(backgroundUnit)) {
+    return Result.fail([backgroundUnit.failure]);
   }
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
+  const backgroundProjection = projectForFinalization(
+    backgroundUnit.success,
     selections.background,
     "background",
   );
   /* v8 ignore start -- @preserve -- The selected background was admitted as readable from this catalog before score projection. */
-  if (Either.isLeft(backgroundFacts)) {
-    return Either.left([backgroundFacts.left]);
+  if (
+    Result.isFailure(backgroundProjection) ||
+    backgroundProjection.success.kind !== "background"
+  ) {
+    return Result.fail([
+      Result.isFailure(backgroundProjection)
+        ? backgroundProjection.failure
+        : unsupportedCharacterDefinitionKind(
+            selections.background,
+            "background",
+          ),
+    ]);
   }
   /* v8 ignore stop -- @preserve */
   const scoresAfterBackground = applyBackgroundAbilityScoreIncrease(
     selections.abilityScoreGeneration.assignedScores,
     selections.backgroundAbilityScoreIncrease,
-    backgroundFacts.right.abilityScoreIncrease.abilities,
+    backgroundProjection.success.facts.abilityScoreIncrease.abilities,
   );
-  if (Either.isLeft(scoresAfterBackground)) {
-    return Either.left([scoresAfterBackground.left]);
+  if (Result.isFailure(scoresAfterBackground)) {
+    return Result.fail([scoresAfterBackground.failure]);
   }
-  return Either.right({
-    scoresAfterBackground: scoresAfterBackground.right,
+  return Result.succeed({
+    scoresAfterBackground: scoresAfterBackground.success,
   });
 }
 
 function speciesSupportDependencies(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   {
     readonly speciesFacts: SpeciesCreationFacts;
     readonly speciesUnit: UnitRecord;
@@ -676,18 +699,23 @@ function speciesSupportDependencies(
     selections.species,
     "species",
   );
-  if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
-  const speciesFacts = readableForFinalization(
-    readSpeciesCreationFacts(speciesUnit.right),
+  if (Result.isFailure(speciesUnit)) return Result.fail([speciesUnit.failure]);
+  const speciesProjection = projectForFinalization(
+    speciesUnit.success,
     selections.species,
     "species",
   );
   /* v8 ignore start -- @preserve -- The selected species was admitted as readable from this catalog before dependency projection. */
-  return Either.isLeft(speciesFacts)
-    ? Either.left([speciesFacts.left])
-    : Either.right({
-        speciesFacts: speciesFacts.right,
-        speciesUnit: speciesUnit.right,
+  return Result.isFailure(speciesProjection) ||
+    speciesProjection.success.kind !== "species"
+    ? Result.fail([
+        Result.isFailure(speciesProjection)
+          ? speciesProjection.failure
+          : unsupportedCharacterDefinitionKind(selections.species, "species"),
+      ])
+    : Result.succeed({
+        speciesFacts: speciesProjection.success.facts,
+        speciesUnit: speciesUnit.success,
       });
   /* v8 ignore stop -- @preserve */
 }
@@ -704,8 +732,8 @@ function selectedFeatUnitsForFinalization(
       const featUnitId = option.unitRef?.unitId;
       if (featUnitId === undefined || units.has(featUnitId)) continue;
       const unit = unitForFinalization(unitLibrary, featUnitId, "feat");
-      if (Either.isLeft(unit)) issues.push(unit.left);
-      else units.set(featUnitId, unit.right);
+      if (Result.isFailure(unit)) issues.push(unit.failure);
+      else units.set(featUnitId, unit.success);
     }
   }
   return { value: units, issues };
@@ -725,9 +753,11 @@ function selectedFeatPrerequisitesSupported(
       if (featUnitId === undefined) return true;
       const featUnit = selectedFeatUnits.get(featUnitId);
       if (featUnit === undefined) return true;
+      const projection = projectCharacterCreationFeature(featUnit);
       if (
-        featUnit.kind !== "feat" ||
-        featUnit.mechanics.family !== "grappler"
+        projection.tag !== "readable" ||
+        projection.value.kind !== "feat" ||
+        projection.value.facts.mechanics.family !== "grappler"
       ) {
         return true;
       }
@@ -763,16 +793,17 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
     startingClassUnitId(selections.progression),
   );
   if (Option.isNone(classUnit)) return false;
-  const classFacts = readClassCreationFacts(classUnit.value);
+  const classProjection = projectCharacterDefinition(classUnit.value);
   if (
-    classFacts.tag !== "readable" ||
-    !isWizardClassCreationFacts(classFacts.value)
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class" ||
+    !isWizardClassCreationFacts(classProjection.value.facts)
   ) {
     return true;
   }
 
   const spellcasting = classSpellcastingCreationAtLevel(
-    classFacts.value.spellcasting,
+    classProjection.value.facts.spellcasting,
     classLevelForUnit(
       selections.progression,
       startingClassUnitId(selections.progression),
@@ -836,7 +867,7 @@ function executableSupportSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
   supportProfile: CharacterCreationSupportProfile,
-): Either.Either<
+): Result.Result<
   ExecutableSupportSelections,
   NonEmptyReadonlyArray<CreationFinalizationIssue>
 > {
@@ -844,10 +875,10 @@ function executableSupportSelections(
     ...executableSupportIssues(selections, unitLibrary, supportProfile),
   ]);
   if (issues != null) {
-    return Either.left(issues);
+    return Result.fail(issues);
   }
 
-  return Either.right({
+  return Result.succeed({
     selections,
     progression: selections.progression,
     unitChoices: unitChoiceSelections(selections),
@@ -898,9 +929,9 @@ function draconicAncestrySelectionMatchesSurface(
     FinalizedCharacterSelections,
     "species" | "draconicAncestry"
   >,
-  speciesUnit: UnitRecord,
+  speciesFacts: SpeciesCreationFacts,
 ): boolean {
-  const source = draconicAncestryDamageTypeSource(speciesUnit);
+  const source = draconicAncestryDamageTypeSource(speciesFacts);
   if (source === undefined) {
     return selections.draconicAncestry === undefined;
   }
@@ -912,10 +943,10 @@ function draconicAncestrySelectionMatchesSurface(
 }
 
 function draconicAncestryDamageTypeSource(
-  unit: UnitRecord,
+  facts: SpeciesCreationFacts,
 ): DragonbornSpeciesRecord["draconicAncestry"]["damageType"] | undefined {
-  return unit.kind === "species" && "draconicAncestry" in unit
-    ? unit.draconicAncestry.damageType
+  return "draconicAncestry" in facts
+    ? facts.draconicAncestry.damageType
     : undefined;
 }
 
@@ -925,19 +956,24 @@ function finalizedSpeciesChoiceFacts(
     "choices" | "draconicAncestry"
   >,
   species: UnitRecord,
+  speciesFacts: SpeciesCreationFacts,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   CharacterBuildSpeciesChoiceFacts | undefined,
   FinalizationIssues
 > {
-  const draconicSource = draconicAncestryDamageTypeSource(species);
-  const lineageSource = speciesLineageChoiceSource(species, unitLibrary);
+  const draconicSource = draconicAncestryDamageTypeSource(speciesFacts);
+  const lineageSource = speciesLineageChoiceSource(
+    species,
+    speciesFacts,
+    unitLibrary,
+  );
   /* v8 ignore start -- @preserve -- Support admission rejects unreadable, conflicting, or absent species-choice sources before projection. */
-  if (Either.isLeft(lineageSource)) {
-    return Either.left(lineageSource.left);
+  if (Result.isFailure(lineageSource)) {
+    return Result.fail(lineageSource.failure);
   }
-  if (draconicSource !== undefined && lineageSource.right !== undefined) {
-    return Either.left([
+  if (draconicSource !== undefined && lineageSource.success !== undefined) {
+    return Result.fail([
       illegalFinalizationIssue({
         tag: "conflictingSpeciesChoiceSources",
         speciesUnitId: species.id,
@@ -951,13 +987,16 @@ function finalizedSpeciesChoiceFacts(
       draconicSource,
     );
   }
-  if (lineageSource.right !== undefined) {
-    return finalizedGnomishLineageChoiceFacts(selections, lineageSource.right);
+  if (lineageSource.success !== undefined) {
+    return finalizedGnomishLineageChoiceFacts(
+      selections,
+      lineageSource.success,
+    );
   }
 
   return selections.draconicAncestry === undefined
-    ? Either.right(undefined)
-    : Either.left([
+    ? Result.succeed(undefined)
+    : Result.fail([
         illegalFinalizationIssue({
           tag: "missingDraconicAncestrySource",
           speciesUnitId: species.id,
@@ -970,13 +1009,13 @@ function finalizedDraconicAncestryChoiceFacts(
   selections: Pick<FinalizedCharacterSelections, "draconicAncestry">,
   species: UnitRecord,
   source: DragonbornSpeciesRecord["draconicAncestry"]["damageType"],
-): Either.Either<CharacterBuildSpeciesChoiceFacts, FinalizationIssues> {
+): Result.Result<CharacterBuildSpeciesChoiceFacts, FinalizationIssues> {
   const selected = source.options.find(
     (option) => option.id === selections.draconicAncestry,
   );
   /* v8 ignore start -- @preserve -- Support admission retains a Draconic Ancestry id only after matching this exact species option roster. */
   if (selected === undefined || selections.draconicAncestry === undefined) {
-    return Either.left([
+    return Result.fail([
       illegalFinalizationIssue({
         tag: "invalidDraconicAncestrySelection",
         speciesUnitId: species.id,
@@ -985,7 +1024,7 @@ function finalizedDraconicAncestryChoiceFacts(
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     draconicAncestry: {
       kind: "draconicAncestry",
       ancestorId: selections.draconicAncestry,
@@ -1000,32 +1039,29 @@ type SpeciesLineageChoiceSource = {
 
 function speciesLineageChoiceSource(
   species: UnitRecord,
+  speciesFacts: SpeciesCreationFacts,
   unitLibrary: UnitCatalog,
-): Either.Either<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
-  const facts = readSpeciesCreationFacts(species);
-  /* v8 ignore start -- @preserve -- Species-choice projection receives readable species facts with installed trait references from support admission. */
-  if (facts.tag !== "readable") {
-    return Either.right(undefined);
-  }
-
-  const sources = Object.values(facts.value.traits).flatMap((traitUnitId) => {
+): Result.Result<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
+  const sources = Object.values(speciesFacts.traits).flatMap((traitUnitId) => {
     const traitUnit = unitLibrary.getUnit(traitUnitId);
-    if (Option.isNone(traitUnit) || traitUnit.value.kind !== "species_trait") {
+    if (Option.isNone(traitUnit)) {
       return [];
     }
-    return traitUnit.value.mechanics.family === "species_lineage_choice"
+    const trait = projectCharacterCreationFeature(traitUnit.value);
+    return trait.tag === "readable" &&
+      trait.value.kind === "species_trait" &&
+      trait.value.facts.mechanics.family === "species_lineage_choice"
       ? [
           {
             traitUnitId: traitUnit.value.id,
-            mechanics: traitUnit.value.mechanics,
+            mechanics: trait.value.facts.mechanics,
           },
         ]
       : [];
   });
-  /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- The supported species catalog admits at most one trait carrying Gnomish Lineage mechanics. */
   if (sources.length > 1) {
-    return Either.left([
+    return Result.fail([
       illegalFinalizationIssue({
         tag: "multipleSpeciesLineageSources",
         speciesUnitId: species.id,
@@ -1034,13 +1070,13 @@ function speciesLineageChoiceSource(
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right(sources[0]);
+  return Result.succeed(sources[0]);
 }
 
 function finalizedGnomishLineageChoiceFacts(
   selections: Pick<FinalizedCharacterSelections, "choices">,
   source: SpeciesLineageChoiceSource,
-): Either.Either<CharacterBuildSpeciesChoiceFacts, FinalizationIssues> {
+): Result.Result<CharacterBuildSpeciesChoiceFacts, FinalizationIssues> {
   const lineageId = selectedGnomishLineageId(selections, source);
   const spellcastingAbility = selectedGnomishLineageSpellcastingAbility(
     selections,
@@ -1048,7 +1084,7 @@ function finalizedGnomishLineageChoiceFacts(
   );
   /* v8 ignore start -- @preserve -- Support admission retains both lineage choices only after matching the installed trait's option rosters. */
   if (lineageId === undefined || spellcastingAbility === undefined) {
-    return Either.left([
+    return Result.fail([
       illegalFinalizationIssue({
         tag: "invalidGnomishLineageSelection",
         traitUnitId: source.traitUnitId,
@@ -1057,7 +1093,7 @@ function finalizedGnomishLineageChoiceFacts(
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     gnomishLineage: {
       kind: "gnomishLineage",
       lineageId,
@@ -1516,12 +1552,12 @@ export function isSupportedBackgroundAbilityScoreIncrease(
   const backgroundOption = unitLibrary.getUnit(backgroundUnitId);
   if (Option.isNone(backgroundOption)) return false;
   const background = backgroundOption.value;
-  const facts = readBackgroundCreationFacts(background);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(background);
+  if (projection.tag !== "readable" || projection.value.kind !== "background") {
     return false;
   }
 
-  const eligible = facts.value.abilityScoreIncrease.abilities;
+  const eligible = projection.value.facts.abilityScoreIncrease.abilities;
   if (selection.kind === "oneEach") {
     return backgroundAbilityScoreIncreaseFitsCap(
       baseScores,
@@ -1542,8 +1578,8 @@ export function isSupportedBackgroundAbilityScoreIncrease(
 function allClassFactsForFinalization(
   progression: CharacterProgression,
   unitLibrary: UnitCatalog,
-): Either.Either<ClassFactsByUnitId, ProjectionIssues> {
-  return Either.map(
+): Result.Result<ClassFactsByUnitId, ProjectionIssues> {
+  return Result.map(
     traverseValidation(progressionClassUnitIds(progression), (classUnitId) =>
       classFactsEntryForFinalization(unitLibrary, classUnitId),
     ),
@@ -1559,8 +1595,8 @@ function classFactsForSupport(
   const issues: CharacterBuildProjectionIssue[] = [];
   for (const classUnitId of progressionClassUnitIds(progression)) {
     const entry = classFactsEntryForFinalization(unitLibrary, classUnitId);
-    if (Either.isLeft(entry)) issues.push(entry.left);
-    else entries.push(entry.right);
+    if (Result.isFailure(entry)) issues.push(entry.failure);
+    else entries.push(entry.success);
   }
   return { value: new Map(entries), issues };
 }
@@ -1568,20 +1604,24 @@ function classFactsForSupport(
 function classFactsEntryForFinalization(
   unitLibrary: UnitCatalog,
   classUnitId: UnitRecord["id"],
-): Either.Either<
+): Result.Result<
   readonly [UnitRecord["id"], ClassCreationFacts],
   CharacterBuildProjectionIssue
 > {
   const classUnit = unitForFinalization(unitLibrary, classUnitId, "class");
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  const facts = readableForFinalization(
-    readClassCreationFacts(classUnit.right),
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
+  const projection = projectForFinalization(
+    classUnit.success,
     classUnitId,
     "class",
   );
-  return Either.isLeft(facts)
-    ? Either.left(facts.left)
-    : Either.right([classUnitId, facts.right]);
+  if (Result.isFailure(projection)) return Result.fail(projection.failure);
+  if (projection.success.kind !== "class") {
+    return Result.fail(
+      unsupportedCharacterDefinitionKind(classUnitId, "class"),
+    );
+  }
+  return Result.succeed([classUnitId, projection.success.facts]);
 }
 
 function fixedMulticlassProficiencySubjects(
@@ -1615,7 +1655,7 @@ export function buildCharacterBuild(input: {
   readonly supportedSelections: ExecutableSupportSelections;
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile: CharacterCreationSupportProfile;
-}): Either.Either<CharacterBuild, FinalizationIssues> {
+}): Result.Result<CharacterBuild, FinalizationIssues> {
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
   const selectedClassUnitId = startingClassUnitId(progression);
@@ -1624,14 +1664,14 @@ export function buildCharacterBuild(input: {
     input.unitLibrary,
   );
   /* v8 ignore start -- @preserve -- The support gate already read every class in this progression from this catalog. */
-  if (Either.isLeft(classFactsByUnitId)) {
-    return Either.left(classFactsByUnitId.left);
+  if (Result.isFailure(classFactsByUnitId)) {
+    return Result.fail(classFactsByUnitId.failure);
   }
   /* v8 ignore stop -- @preserve */
-  const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
+  const classFacts = classFactsByUnitId.success.get(selectedClassUnitId);
   /* v8 ignore start -- @preserve -- The support gate already established facts for the starting class id. */
   if (classFacts == null) {
-    return Either.left([
+    return Result.fail([
       characterBuildProjectionIssue({
         tag: "missingStartingClassFacts",
         projection: "characterBuild",
@@ -1646,16 +1686,23 @@ export function buildCharacterBuild(input: {
     "background",
   );
   /* v8 ignore start -- @preserve -- The support gate already resolved this selected background in the same catalog. */
-  if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
+  if (Result.isFailure(backgroundUnit))
+    return Result.fail([backgroundUnit.failure]);
   /* v8 ignore stop -- @preserve */
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
+  const backgroundProjection = projectForFinalization(
+    backgroundUnit.success,
     selections.background,
     "background",
   );
   /* v8 ignore start -- @preserve -- The support gate already parsed this selected background's creation facts. */
-  if (Either.isLeft(backgroundFacts))
-    return Either.left([backgroundFacts.left]);
+  if (Result.isFailure(backgroundProjection)) {
+    return Result.fail([backgroundProjection.failure]);
+  }
+  if (backgroundProjection.success.kind !== "background") {
+    return Result.fail([
+      unsupportedCharacterDefinitionKind(selections.background, "background"),
+    ]);
+  }
   /* v8 ignore stop -- @preserve */
   const speciesUnit = unitForFinalization(
     input.unitLibrary,
@@ -1663,61 +1710,70 @@ export function buildCharacterBuild(input: {
     "species",
   );
   /* v8 ignore start -- @preserve -- The support gate already resolved this selected species in the same catalog. */
-  if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
+  if (Result.isFailure(speciesUnit)) return Result.fail([speciesUnit.failure]);
   /* v8 ignore stop -- @preserve */
-  const speciesFacts = readableForFinalization(
-    readSpeciesCreationFacts(speciesUnit.right),
+  const speciesProjection = projectForFinalization(
+    speciesUnit.success,
     selections.species,
     "species",
   );
   /* v8 ignore start -- @preserve -- The support gate already parsed this selected species's creation facts. */
-  if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
+  if (Result.isFailure(speciesProjection)) {
+    return Result.fail([speciesProjection.failure]);
+  }
+  if (speciesProjection.success.kind !== "species") {
+    return Result.fail([
+      unsupportedCharacterDefinitionKind(selections.species, "species"),
+    ]);
+  }
   /* v8 ignore stop -- @preserve */
   const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
     selections,
-    speciesUnit.right,
+    speciesUnit.success,
+    speciesProjection.success.facts,
     input.unitLibrary,
   );
   /* v8 ignore start -- @preserve -- The support gate already proved the species source agrees with its selected choices. */
-  if (Either.isLeft(speciesChoiceFacts)) {
-    return Either.left(speciesChoiceFacts.left);
+  if (Result.isFailure(speciesChoiceFacts)) {
+    return Result.fail(speciesChoiceFacts.failure);
   }
   /* v8 ignore stop -- @preserve */
   const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
     selections.backgroundAbilityScoreIncrease,
-    backgroundFacts.right.abilityScoreIncrease.abilities,
+    backgroundProjection.success.facts.abilityScoreIncrease.abilities,
   );
   /* v8 ignore start -- @preserve -- The support gate already admitted this background increase against these scores. */
-  if (Either.isLeft(finalScores)) return Either.left([finalScores.left]);
+  if (Result.isFailure(finalScores)) return Result.fail([finalScores.failure]);
   /* v8 ignore stop -- @preserve */
   const featureScores = applyClassFeatureAbilityScoreIncreases(
-    finalScores.right,
+    finalScores.success,
     selections,
   );
   /* v8 ignore start -- @preserve -- Supported choice holes and feat prerequisites already establish these feature increases. */
-  if (Either.isLeft(featureScores)) return Either.left(featureScores.left);
+  if (Result.isFailure(featureScores))
+    return Result.fail(featureScores.failure);
   /* v8 ignore stop -- @preserve */
-  const finalAbilityScores = featureScores.right;
+  const finalAbilityScores = featureScores.success;
   const proficiencyChoices = selectedBuildProficiencyChoiceSubjects(
     selections,
     input.unitLibrary,
   );
   /* v8 ignore start -- @preserve -- The support gate already decoded all selected proficiency option ids. */
-  if (Either.isLeft(proficiencyChoices)) {
-    return Either.left(proficiencyChoices.left);
+  if (Result.isFailure(proficiencyChoices)) {
+    return Result.fail(proficiencyChoices.failure);
   }
   /* v8 ignore stop -- @preserve */
   const buildSpellcasting = finalizedBuildSpellcasting({
-    classFactsByUnitId: classFactsByUnitId.right,
+    classFactsByUnitId: classFactsByUnitId.success,
     selections,
     supportedSelections: input.supportedSelections,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- The support gate already checked authored spellcasting facts and selected spells. */
-  if (Either.isLeft(buildSpellcasting)) {
-    return Either.left(buildSpellcasting.left);
+  if (Result.isFailure(buildSpellcasting)) {
+    return Result.fail(buildSpellcasting.failure);
   }
   /* v8 ignore stop -- @preserve */
   const abilityCheckBonusFeatures =
@@ -1726,15 +1782,15 @@ export function buildCharacterBuild(input: {
       input.unitLibrary,
     );
   /* v8 ignore start -- @preserve -- Support admission retains only acquisition choices whose mechanics project supported ability-check bonuses. */
-  if (Either.isLeft(abilityCheckBonusFeatures)) {
-    return Either.left(abilityCheckBonusFeatures.left);
+  if (Result.isFailure(abilityCheckBonusFeatures)) {
+    return Result.fail(abilityCheckBonusFeatures.failure);
   }
   /* v8 ignore stop -- @preserve */
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...finalizedClassChoiceFeaturesForSupportedChoices(
       input.supportedSelections.unitChoices,
     ),
-    ...abilityCheckBonusFeatures.right,
+    ...abilityCheckBonusFeatures.success,
   ];
   const magicInitiateSpellAccesses = finalizedMagicInitiateSpellAccesses(
     selections,
@@ -1748,8 +1804,8 @@ export function buildCharacterBuild(input: {
     unitChoices: input.supportedSelections.unitChoices,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(classFeatureLanguages)) {
-    return Either.left(classFeatureLanguages.left);
+  if (Result.isFailure(classFeatureLanguages)) {
+    return Result.fail(classFeatureLanguages.failure);
   }
   const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
@@ -1758,32 +1814,32 @@ export function buildCharacterBuild(input: {
     input.supportProfile,
   );
   /* v8 ignore start -- @preserve -- Support admission validates every retained loadout and owned equipment id before build projection. */
-  if (Either.isLeft(buildEquipment)) {
-    return Either.left(buildEquipment.left);
+  if (Result.isFailure(buildEquipment)) {
+    return Result.fail(buildEquipment.failure);
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     progression,
     background: selections.background,
     species: selections.species,
     ...(selections.speciesSize === undefined
       ? {}
       : { speciesSize: selections.speciesSize }),
-    ...(speciesChoiceFacts.right === undefined
+    ...(speciesChoiceFacts.success === undefined
       ? {}
-      : { speciesChoiceFacts: speciesChoiceFacts.right }),
+      : { speciesChoiceFacts: speciesChoiceFacts.success }),
     originLanguages: selections.languages,
-    classFeatureLanguages: classFeatureLanguages.right,
+    classFeatureLanguages: classFeatureLanguages.success,
     alignment: selections.alignment,
     abilityScores: finalAbilityScores,
-    proficiencyChoices: proficiencyChoices.right,
+    proficiencyChoices: proficiencyChoices.success,
     features: buildFeatures,
-    ...(buildSpellcasting.right == null
+    ...(buildSpellcasting.success == null
       ? {}
-      : { spellcasting: buildSpellcasting.right }),
+      : { spellcasting: buildSpellcasting.success }),
     magicInitiateSpellAccesses,
-    equipment: buildEquipment.right,
+    equipment: buildEquipment.success,
   });
 }
 
@@ -1796,8 +1852,11 @@ function finalizedMagicInitiateSpellAccesses(
     ...(() => {
       const background = unitLibrary.getUnit(selections.background);
       if (Option.isNone(background)) return [];
-      const facts = readBackgroundCreationFacts(background.value);
-      return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+      const projection = projectCharacterDefinition(background.value);
+      return projection.tag === "readable" &&
+        projection.value.kind === "background"
+        ? [projection.value.facts.originFeatId]
+        : [];
     })(),
     ...characterBuildSpeciesOriginFeatUnitIds({
       species: selections.species,
@@ -1983,21 +2042,21 @@ export function characterBuildHitPoints(
     "progression" | "species" | "abilityScores" | "features"
   >,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildHitPoints, ProjectionIssues> {
+): Result.Result<CharacterBuildHitPoints, ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
     build.progression,
     unitLibrary,
   );
-  if (Either.isLeft(classFactsByUnitId)) {
-    return Either.left(classFactsByUnitId.left);
+  if (Result.isFailure(classFactsByUnitId)) {
+    return Result.fail(classFactsByUnitId.failure);
   }
 
-  const startingClassFacts = classFactsByUnitId.right.get(
+  const startingClassFacts = classFactsByUnitId.success.get(
     startingClassUnitId(build.progression),
   );
   /* v8 ignore start -- @preserve -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
   if (startingClassFacts == null) {
-    return Either.left([
+    return Result.fail([
       characterBuildProjectionIssue({
         tag: "missingStartingClassFacts",
         projection: "hitPoints",
@@ -2011,8 +2070,8 @@ export function characterBuildHitPoints(
     build,
     unitLibrary,
   );
-  if (Either.isLeft(hitPointMaximumGrantBonus)) {
-    return Either.left(hitPointMaximumGrantBonus.left);
+  if (Result.isFailure(hitPointMaximumGrantBonus)) {
+    return Result.fail(hitPointMaximumGrantBonus.failure);
   }
 
   const constitutionModifier = abilityModifier(build.abilityScores.con);
@@ -2021,19 +2080,19 @@ export function characterBuildHitPoints(
     constitutionModifier,
     fixedHigherLevelHitPointDice: build.progression.advancements.flatMap(
       (advancement) => {
-        const facts = classFactsByUnitId.right.get(advancement.classUnitId);
+        const facts = classFactsByUnitId.success.get(advancement.classUnitId);
         /* v8 ignore start -- @preserve -- allClassFactsForFinalization populated this map from the same progression advancements. */
         return facts == null ? [] : [facts.hitPointDie];
         /* v8 ignore stop -- @preserve */
       },
     ),
-    hitPointMaximumBonus: hitPointMaximumGrantBonus.right,
+    hitPointMaximumBonus: hitPointMaximumGrantBonus.success,
   });
 
-  return Either.right({
+  return Result.succeed({
     maximum: hp(maximum),
     hitDice: progressionClassLevels(build.progression).flatMap((entry) => {
-      const facts = classFactsByUnitId.right.get(entry.classUnitId);
+      const facts = classFactsByUnitId.success.get(entry.classUnitId);
       /* v8 ignore start -- @preserve -- allClassFactsForFinalization populated this map from the same progression class ids. */
       return facts == null
         ? []
@@ -2052,7 +2111,7 @@ export function characterBuildHitPoints(
 function hitPointMaximumGrantBonusTotal(
   build: Pick<CharacterBuild, "progression" | "species" | "features">,
   unitLibrary: UnitCatalog,
-): Either.Either<number, ProjectionIssues> {
+): Result.Result<number, ProjectionIssues> {
   let total = 0;
   const issues: CharacterBuildProjectionIssue[] = [];
 
@@ -2060,12 +2119,12 @@ function hitPointMaximumGrantBonusTotal(
     build,
     unitLibrary,
   );
-  if (Either.isLeft(speciesTraitIds)) {
-    issues.push(speciesTraitIds.left);
+  if (Result.isFailure(speciesTraitIds)) {
+    issues.push(speciesTraitIds.failure);
   }
   const sourceUnitIds = uniqueValues([
     ...characterBuildFeatureUnitIds(build, unitLibrary),
-    ...(Either.isRight(speciesTraitIds) ? speciesTraitIds.right : []),
+    ...(Result.isSuccess(speciesTraitIds) ? speciesTraitIds.success : []),
   ]);
   for (const sourceUnitId of sourceUnitIds) {
     const projection = hitPointMaximumGrantBonusForSourceUnit({
@@ -2079,8 +2138,8 @@ function hitPointMaximumGrantBonusTotal(
 
   const collectedIssues = nonEmptyReadonlyArray(issues);
   return collectedIssues === undefined
-    ? Either.right(total)
-    : Either.left(collectedIssues);
+    ? Result.succeed(total)
+    : Result.fail(collectedIssues);
 }
 
 type HitPointMaximumGrantProjection = {
@@ -2105,26 +2164,30 @@ function hitPointMaximumGrantBonusForSourceUnit(input: {
       ],
     };
   }
-  if (
-    unit.value.kind !== "class_feature" &&
-    unit.value.kind !== "species_trait"
-  ) {
+  const feature = projectCharacterCreationFeature(unit.value);
+  if (feature.tag !== "readable") {
     return { total: 0, issues: [] };
   }
+  const sourceClassLevelResult =
+    feature.value.kind === "class_feature"
+      ? characterBuildClassFeatureOwnerLevel({
+          build: input.build,
+          unitLibrary: input.unitLibrary,
+          feature: feature.value.facts,
+        })
+      : undefined;
   const sourceClassLevel =
-    unit.value.kind === "class_feature"
-      ? classLevelForUnit(
-          input.build.progression,
-          classUnitId(authoredUnitId(`class_${unit.value.className}`)),
-        )
+    sourceClassLevelResult !== undefined &&
+    Result.isSuccess(sourceClassLevelResult)
+      ? sourceClassLevelResult.success
       : undefined;
   const components: PassiveMechanics[] =
-    unit.value.mechanics.family === "composite"
-      ? unit.value.mechanics.parts.filter(
+    feature.value.facts.mechanics.family === "composite"
+      ? feature.value.facts.mechanics.parts.filter(
           (part): part is PassiveMechanics => part.family === "passive",
         )
-      : unit.value.mechanics.family === "passive"
-        ? [unit.value.mechanics]
+      : feature.value.facts.mechanics.family === "passive"
+        ? [feature.value.facts.mechanics]
         : [];
   return hitPointMaximumGrantBonusForComponents({
     components,
@@ -2218,21 +2281,21 @@ export function characterBuildProficiencies(
     "progression" | "background" | "proficiencyChoices"
   >,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildProficiencies, ProjectionIssues> {
+): Result.Result<CharacterBuildProficiencies, ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
     build.progression,
     unitLibrary,
   );
-  if (Either.isLeft(classFactsByUnitId)) {
-    return Either.left(classFactsByUnitId.left);
+  if (Result.isFailure(classFactsByUnitId)) {
+    return Result.fail(classFactsByUnitId.failure);
   }
 
-  const startingClassFacts = classFactsByUnitId.right.get(
+  const startingClassFacts = classFactsByUnitId.success.get(
     startingClassUnitId(build.progression),
   );
   /* v8 ignore start -- @preserve -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
   if (startingClassFacts == null) {
-    return Either.left([
+    return Result.fail([
       characterBuildProjectionIssue({
         tag: "missingStartingClassFacts",
         projection: "proficiencies",
@@ -2247,39 +2310,47 @@ export function characterBuildProficiencies(
     build.background,
     "background",
   );
-  if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
+  if (Result.isFailure(backgroundUnit))
+    return Result.fail([backgroundUnit.failure]);
+  const backgroundProjection = projectForFinalization(
+    backgroundUnit.success,
     build.background,
     "background",
   );
-  if (Either.isLeft(backgroundFacts))
-    return Either.left([backgroundFacts.left]);
+  if (Result.isFailure(backgroundProjection)) {
+    return Result.fail([backgroundProjection.failure]);
+  }
+  if (backgroundProjection.success.kind !== "background") {
+    return Result.fail([
+      unsupportedCharacterDefinitionKind(build.background, "background"),
+    ]);
+  }
 
   const multiclassSubjects = fixedMulticlassProficiencySubjects(
     {
       progression: build.progression,
     },
-    classFactsByUnitId.right,
+    classFactsByUnitId.success,
   );
   const multiclassTools =
     finalizedBuildSurfaceToolProficiencyIds(multiclassSubjects);
   /* v8 ignore start -- @preserve -- Supported multiclass tool grants already carry ids admitted by the shared tool codec. */
-  if (Either.isLeft(multiclassTools)) return Either.left(multiclassTools.left);
+  if (Result.isFailure(multiclassTools))
+    return Result.fail(multiclassTools.failure);
   /* v8 ignore stop -- @preserve */
   const startingClassTools = finalizedBuildSurfaceToolProficiencyIds(
     fixedToolProficiencySubjects(startingClassFacts.toolProficiencies),
   );
   /* v8 ignore start -- @preserve -- Supported starting-class tool grants already carry ids admitted by the shared tool codec. */
-  if (Either.isLeft(startingClassTools)) {
-    return Either.left(startingClassTools.left);
+  if (Result.isFailure(startingClassTools)) {
+    return Result.fail(startingClassTools.failure);
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     savingThrows: startingClassFacts.savingThrowProficiencies,
     skills: uniqueValues([
-      ...backgroundFacts.right.skillProficiencies,
+      ...backgroundProjection.success.facts.skillProficiencies,
       ...build.proficiencyChoices.flatMap((subject) =>
         subject.kind === "skill" || subject.kind === "skill_expertise"
           ? [subject.skill]
@@ -2310,8 +2381,8 @@ export function characterBuildProficiencies(
       ),
     ),
     tools: uniqueValues([
-      ...startingClassTools.right,
-      ...multiclassTools.right,
+      ...startingClassTools.success,
+      ...multiclassTools.success,
       ...build.proficiencyChoices.flatMap((subject) =>
         subject.kind === "tool" ? [subject.toolId] : [],
       ),
@@ -2322,21 +2393,21 @@ export function characterBuildProficiencies(
 export function characterBuildArmorTraining(
   build: Pick<CharacterBuild, "progression" | "proficiencyChoices">,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly ArmorTrainingCategory[], ProjectionIssues> {
+): Result.Result<readonly ArmorTrainingCategory[], ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
     build.progression,
     unitLibrary,
   );
-  if (Either.isLeft(classFactsByUnitId)) {
-    return Either.left(classFactsByUnitId.left);
+  if (Result.isFailure(classFactsByUnitId)) {
+    return Result.fail(classFactsByUnitId.failure);
   }
 
-  const startingClassFacts = classFactsByUnitId.right.get(
+  const startingClassFacts = classFactsByUnitId.success.get(
     startingClassUnitId(build.progression),
   );
   /* v8 ignore start -- @preserve -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
   if (startingClassFacts == null) {
-    return Either.left([
+    return Result.fail([
       characterBuildProjectionIssue({
         tag: "missingStartingClassFacts",
         projection: "armorTraining",
@@ -2350,9 +2421,9 @@ export function characterBuildArmorTraining(
     {
       progression: build.progression,
     },
-    classFactsByUnitId.right,
+    classFactsByUnitId.success,
   );
-  return Either.right(
+  return Result.succeed(
     uniqueValues([
       ...startingClassFacts.armorTraining,
       ...multiclassSubjects.flatMap((subject) =>
@@ -2376,9 +2447,11 @@ export function characterBuildFeatureUnitIds(
     ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
       if (Option.isNone(unit)) return [];
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") return [];
-      return facts.value.featureGrants
+      const projection = projectCharacterDefinition(unit.value);
+      if (projection.tag !== "readable" || projection.value.kind !== "class") {
+        return [];
+      }
+      return projection.value.facts.featureGrants
         .filter(
           (grant) =>
             grant.level <= classLevelForUnit(build.progression, classUnitId),
@@ -2401,19 +2474,23 @@ function selectedSubclassFeatureGrantUnitIds(input: {
 }): readonly UnitRecord["id"][] {
   return input.selectedClassChoiceUnitIds.flatMap((unitId) => {
     const unit = input.unitLibrary.getUnit(unitId);
-    if (Option.isNone(unit) || unit.value.kind !== "subclass") {
+    if (Option.isNone(unit)) {
+      return [];
+    }
+    const projection = projectCharacterDefinition(unit.value);
+    if (projection.tag !== "readable" || projection.value.kind !== "subclass") {
       return [];
     }
     const classUnitId = classUnitIdForSubclass({
       build: input.build,
-      subclass: unit.value,
+      subclassClassName: projection.value.facts.className,
       unitLibrary: input.unitLibrary,
     });
     if (classUnitId === undefined) {
       return [];
     }
     const classLevel = classLevelForUnit(input.build.progression, classUnitId);
-    return unit.value.featureGrants
+    return projection.value.facts.featureGrants
       .filter((grant) => grant.level <= classLevel)
       .map((grant) => grant.unitId);
   });
@@ -2421,7 +2498,10 @@ function selectedSubclassFeatureGrantUnitIds(input: {
 
 function classUnitIdForSubclass(input: {
   readonly build: Pick<CharacterBuild, "progression">;
-  readonly subclass: Extract<UnitRecord, { readonly kind: "subclass" }>;
+  readonly subclassClassName: Extract<
+    UnitRecord,
+    { readonly kind: "subclass" }
+  >["className"];
   readonly unitLibrary: UnitCatalog;
 }): UnitRecord["id"] | undefined {
   return progressionClassUnitIds(input.build.progression).find(
@@ -2430,7 +2510,7 @@ function classUnitIdForSubclass(input: {
       return (
         Option.isSome(unit) &&
         unit.value.kind === "class" &&
-        unit.value.className === input.subclass.className
+        unit.value.className === input.subclassClassName
       );
     },
   );
@@ -2444,7 +2524,7 @@ function finalizedClassFeatureLanguages(
     readonly unitChoices: readonly UnitChoiceSelection[];
     readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<
+): Result.Result<
   readonly CharacterBuildClassFeatureLanguage[],
   ProjectionIssues
 > {
@@ -2456,19 +2536,22 @@ function finalizedClassFeatureLanguages(
 
   for (const unitId of characterBuildFeatureUnitIds(input, input.unitLibrary)) {
     const unit = input.unitLibrary.getUnit(unitId);
-    if (
-      Option.isNone(unit) ||
-      unit.value.kind !== "class_feature" ||
-      unit.value.mechanics.family !== "passive"
-    ) {
+    if (Option.isNone(unit)) {
       continue;
     }
+    const feature = projectCharacterCreationFeature(unit.value);
+    if (
+      feature.tag !== "readable" ||
+      feature.value.kind !== "class_feature" ||
+      feature.value.facts.mechanics.family !== "passive"
+    )
+      continue;
 
-    for (const grant of unit.value.mechanics.grants) {
+    for (const grant of feature.value.facts.mechanics.grants) {
       if (grant.kind === "grant_language") {
         const language = languageFromSurfaceLanguageId(grant.languageId);
         /* v8 ignore start -- @preserve -- Supported passive language grants carry only Surface language ids admitted by the codec. */
-        if (Either.isLeft(language)) {
+        if (Result.isFailure(language)) {
           issues.push(
             characterBuildProjectionIssue({
               tag: "unsupportedClassFeatureLanguage",
@@ -2479,23 +2562,23 @@ function finalizedClassFeatureLanguages(
           continue;
         }
 
-        if (knownLanguages.has(language.right)) {
+        if (knownLanguages.has(language.success)) {
           issues.push(
             characterBuildProjectionIssue({
               tag: "duplicateClassFeatureLanguage",
               featureUnitId: unitId,
-              language: language.right,
+              language: language.success,
             }),
           );
           continue;
         }
         /* v8 ignore stop -- @preserve */
 
-        knownLanguages.add(language.right);
+        knownLanguages.add(language.success);
         classFeatureLanguages.push({
           kind: "classFeatureLanguageGrant",
           sourceUnitId: unitId,
-          language: language.right,
+          language: language.success,
         });
         continue;
       }
@@ -2550,7 +2633,7 @@ function finalizedClassFeatureLanguages(
         selection,
       )) {
         const language = option.language;
-        if (Either.isLeft(language)) {
+        if (Result.isFailure(language)) {
           issues.push(
             characterBuildProjectionIssue({
               tag: "unsupportedClassFeatureLanguageChoice",
@@ -2561,23 +2644,23 @@ function finalizedClassFeatureLanguages(
           continue;
         }
 
-        if (knownLanguages.has(language.right)) {
+        if (knownLanguages.has(language.success)) {
           issues.push(
             characterBuildProjectionIssue({
               tag: "duplicateClassFeatureLanguageChoice",
               featureUnitId: unitId,
-              language: language.right,
+              language: language.success,
             }),
           );
           continue;
         }
         /* v8 ignore stop -- @preserve */
 
-        knownLanguages.add(language.right);
+        knownLanguages.add(language.success);
         classFeatureLanguages.push({
           kind: "classFeatureLanguageChoice",
           sourceUnitId: unitId,
-          language: language.right,
+          language: language.success,
         });
       }
     }
@@ -2585,8 +2668,8 @@ function finalizedClassFeatureLanguages(
 
   const nonEmptyIssues = nonEmptyReadonlyArray(issues);
   return nonEmptyIssues === undefined
-    ? Either.right(classFeatureLanguages)
-    : Either.left(nonEmptyIssues);
+    ? Result.succeed(classFeatureLanguages)
+    : Result.fail(nonEmptyIssues);
 }
 
 function classFeatureLanguageChoiceSelection(
@@ -2647,27 +2730,39 @@ export function allFinalizedChoicesSupported(
   const selectedClassUnitId = startingClassUnitId(selections.progression);
   const classUnit = unitLibrary.getUnit(selectedClassUnitId);
   if (Option.isNone(classUnit)) return false;
-  const classFacts = readClassCreationFacts(classUnit.value);
-  if (classFacts.tag !== "readable") return false;
+  const classProjection = projectCharacterDefinition(classUnit.value);
+  if (
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class"
+  ) {
+    return false;
+  }
   const classFactsByUnitId = allClassFactsForFinalization(
     selections.progression,
     unitLibrary,
   );
-  if (Either.isLeft(classFactsByUnitId)) return false;
+  if (Result.isFailure(classFactsByUnitId)) return false;
   const backgroundUnit = unitLibrary.getUnit(selections.background);
   if (Option.isNone(backgroundUnit)) return false;
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (backgroundFacts.tag !== "readable") return false;
+  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
+  if (
+    backgroundProjection.tag !== "readable" ||
+    backgroundProjection.value.kind !== "background"
+  ) {
+    return false;
+  }
+  const classFacts = classProjection.value.facts;
+  const backgroundFacts = backgroundProjection.value.facts;
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selectedClassUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-      classFacts.value.startingEquipment,
+      classFacts.startingEquipment,
     ),
   );
   const backgroundEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selections.background, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-      backgroundFacts.value.startingEquipment,
+      backgroundFacts.startingEquipment,
     ),
   );
   /* v8 ignore start -- @preserve -- Supported class and background equipment choices each produce a Unit-sourced choice hole. */
@@ -2680,9 +2775,9 @@ export function allFinalizedChoicesSupported(
   /* v8 ignore stop -- @preserve */
   const supportedHoles = supportedFinalizationChoiceHoles({
     selections,
-    classFacts: classFacts.value,
-    classFactsByUnitId: classFactsByUnitId.right,
-    backgroundFacts: backgroundFacts.value,
+    classFacts,
+    classFactsByUnitId: classFactsByUnitId.success,
+    backgroundFacts,
     unitLibrary,
     classEquipmentHole,
     backgroundEquipmentHole,
@@ -2732,7 +2827,7 @@ export function allFinalizedChoicesSupported(
           choice,
           selectedClassUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
-          classFacts.value.startingEquipment,
+          classFacts.startingEquipment,
           supportProfile,
         );
       }
@@ -2744,7 +2839,7 @@ export function allFinalizedChoicesSupported(
           choice,
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
-          backgroundFacts.value.startingEquipment,
+          backgroundFacts.startingEquipment,
           supportProfile,
         );
       }
@@ -2846,10 +2941,7 @@ type SupportedFinalizationChoiceHoleInput = {
   readonly selections: FinalizedCharacterSelections;
   readonly classFacts: ClassCreationFacts;
   readonly classFactsByUnitId: ClassFactsByUnitId;
-  readonly backgroundFacts: Extract<
-    ReturnType<typeof readBackgroundCreationFacts>,
-    { readonly tag: "readable" }
-  >["value"];
+  readonly backgroundFacts: CharacterDefinitionBackgroundFacts;
   readonly unitLibrary: UnitCatalog;
   readonly classEquipmentHole: UnitChoiceCreationHole;
   readonly backgroundEquipmentHole: UnitChoiceCreationHole;
@@ -3121,31 +3213,32 @@ function speciesTraitGrantChoiceHolesForFinalization(
 ): readonly ChoiceCreationHole[] {
   const background = input.unitLibrary.getUnit(input.selections.background);
   const backgroundFacts = Option.isSome(background)
-    ? readBackgroundCreationFacts(background.value)
+    ? projectCharacterDefinition(background.value)
     : undefined;
   const excludedMagicInitiateSpellLists = magicInitiateSpellListsForUnitIds(
-    backgroundFacts?.tag === "readable"
-      ? [backgroundFacts.value.originFeatId]
+    backgroundFacts?.tag === "readable" &&
+      backgroundFacts.value.kind === "background"
+      ? [backgroundFacts.value.facts.originFeatId]
       : [],
     input.unitLibrary,
   );
   return selectedSpeciesTraitUnitsForFinalization(input).flatMap((trait) => {
-    if (trait.mechanics.family === "species_lineage_choice") {
-      return speciesLineageChoiceHoles(trait.id, trait.mechanics);
+    if (trait.facts.mechanics.family === "species_lineage_choice") {
+      return speciesLineageChoiceHoles(trait.unitId, trait.facts.mechanics);
     }
 
-    if (trait.mechanics.family !== "passive") {
+    if (trait.facts.mechanics.family !== "passive") {
       return [];
     }
 
-    return trait.mechanics.grants.flatMap((grant) =>
-      passiveGrantChoiceHoles(trait.id, grant, input.unitLibrary, {
+    return trait.facts.mechanics.grants.flatMap((grant) =>
+      passiveGrantChoiceHoles(trait.unitId, grant, input.unitLibrary, {
         ownedSkillProficiencies: selectedSkillProficiencies(
           input.selections,
           input.unitLibrary,
           (selection) =>
             selection.kind === "unitChoice" &&
-            selection.source.unitId === trait.id &&
+            selection.source.unitId === trait.unitId &&
             selection.source.choiceKey === SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         ),
         ownedToolProficiencies: selectedAndFixedToolProficiencies({
@@ -3154,7 +3247,7 @@ function speciesTraitGrantChoiceHolesForFinalization(
           classFactsByUnitId: input.classFactsByUnitId,
           shouldIgnoreSelection: (selection) =>
             selection.kind === "unitChoice" &&
-            selection.source.unitId === trait.id &&
+            selection.source.unitId === trait.unitId &&
             selection.source.choiceKey === SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         }),
         proficiencyChoiceKey: SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
@@ -3198,7 +3291,10 @@ function selectedSpeciesTraitUnitsForFinalization(
     SupportedFinalizationChoiceHoleInput,
     "selections" | "unitLibrary"
   >,
-): readonly Extract<UnitRecord, { readonly kind: "species_trait" }>[] {
+): readonly {
+  readonly unitId: UnitRecord["id"];
+  readonly facts: CharacterCreationSpeciesTraitFacts;
+}[] {
   if (
     !speciesUnitIdsWithSupportedTraitChoices().includes(
       input.selections.species,
@@ -3212,15 +3308,17 @@ function selectedSpeciesTraitUnitsForFinalization(
   if (Option.isNone(speciesUnit)) {
     return [];
   }
-  const facts = readSpeciesCreationFacts(speciesUnit.value);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(speciesUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "species") {
     return [];
   }
 
-  return Object.values(facts.value.traits).flatMap((traitUnitId) => {
+  return Object.values(projection.value.facts.traits).flatMap((traitUnitId) => {
     const traitUnit = input.unitLibrary.getUnit(traitUnitId);
-    return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
-      ? [traitUnit.value]
+    if (Option.isNone(traitUnit)) return [];
+    const trait = projectCharacterCreationFeature(traitUnit.value);
+    return trait.tag === "readable" && trait.value.kind === "species_trait"
+      ? [{ unitId: traitUnit.value.id, facts: trait.value.facts }]
       : [];
   });
   /* v8 ignore stop -- @preserve */
@@ -3269,17 +3367,21 @@ function selectedSubclassFeatureGrantChoiceHoles(input: {
 
     return selectedSubclassIds.flatMap((subclassId) => {
       const subclass = input.unitLibrary.getUnit(subclassId);
-      /* v8 ignore start -- @preserve -- Support admission retains only an installed subclass owned by the selected class. */
+      /* v8 ignore start -- @preserve -- Support admission retains only an installed subclass owned by the selected class and projects its creation facts. */
+      if (Option.isNone(subclass)) {
+        return [];
+      }
+      const subclassProjection = projectCharacterDefinition(subclass.value);
       if (
-        Option.isNone(subclass) ||
-        subclass.value.kind !== "subclass" ||
-        subclass.value.className !== facts.className
+        subclassProjection.tag !== "readable" ||
+        subclassProjection.value.kind !== "subclass" ||
+        subclassProjection.value.facts.className !== facts.className
       ) {
         return [];
       }
       /* v8 ignore stop -- @preserve */
 
-      return subclass.value.featureGrants
+      return subclassProjection.value.facts.featureGrants
         .filter((grant) => grant.level <= classLevel)
         .flatMap((grant) =>
           classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
@@ -3343,7 +3445,7 @@ function multiclassProficiencyChoiceHole(
 ): readonly UnitChoiceCreationHole[] {
   const choiceKey = unitChoiceKey(choiceKeyText);
   /* v8 ignore start -- @preserve -- Supported multiclass proficiency facts carry a canonical nonempty choice key. */
-  if (Either.isLeft(choiceKey)) {
+  if (Result.isFailure(choiceKey)) {
     return [];
   }
   /* v8 ignore stop -- @preserve */
@@ -3351,7 +3453,7 @@ function multiclassProficiencyChoiceHole(
   return compact([
     requireUnitChoiceCreationHole(
       choiceHole({
-        source: unitSource(classUnitId, choiceKey.right),
+        source: unitSource(classUnitId, choiceKey.success),
         cardinality: exactChoiceCardinality(count),
         options,
       }),
@@ -3520,22 +3622,27 @@ function isSupportedCoinEquipmentSelection(
   const classUnit = unitLibrary.getUnit(startingClassId);
   const backgroundUnit = unitLibrary.getUnit(selections.background);
   if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) return false;
-  const classFacts = readClassCreationFacts(classUnit.value);
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
+  const classProjection = projectCharacterDefinition(classUnit.value);
+  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
+  if (
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class" ||
+    backgroundProjection.tag !== "readable" ||
+    backgroundProjection.value.kind !== "background"
+  ) {
     return false;
   }
   const classChoice = selectedStartingEquipmentForBuild(
     selections,
     startingClassId,
     CLASS_EQUIPMENT_CHOICE_KEY,
-    classFacts.value.startingEquipment,
+    classProjection.value.facts.startingEquipment,
   );
   const backgroundChoice = selectedStartingEquipmentForBuild(
     selections,
     selections.background,
     BACKGROUND_EQUIPMENT_CHOICE_KEY,
-    backgroundFacts.value.startingEquipment,
+    backgroundProjection.value.facts.startingEquipment,
   );
   return isCoinGrantStartingEquipmentChoices(classChoice, backgroundChoice);
 }
@@ -3652,9 +3759,11 @@ function characterBuildDerivedFeatureUnitIds(
     ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
       if (Option.isNone(unit)) return [];
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") return [];
-      return facts.value.featureGrants
+      const projection = projectCharacterDefinition(unit.value);
+      if (projection.tag !== "readable" || projection.value.kind !== "class") {
+        return [];
+      }
+      return projection.value.facts.featureGrants
         .filter(
           (grant) =>
             grant.level <= classLevelForUnit(build.progression, classUnitId),
@@ -3673,15 +3782,22 @@ function characterBuildSelectedSubclassFeatureUnitIds(
   return build.features.flatMap((feature) => {
     if (feature.kind !== "selectedClassChoice") return [];
     const unit = unitLibrary.getUnit(feature.unitId);
-    if (Option.isNone(unit) || unit.value.kind !== "subclass") return [];
-    const subclassUnit = unit.value;
+    if (Option.isNone(unit)) return [];
+    const subclassProjection = projectCharacterDefinition(unit.value);
+    if (
+      subclassProjection.tag !== "readable" ||
+      subclassProjection.value.kind !== "subclass"
+    ) {
+      return [];
+    }
+    const subclassFacts = subclassProjection.value.facts;
     const classLevel = progressionClassUnitIds(build.progression).reduce(
       (level, classUnitId) => {
         const classUnit = unitLibrary.getUnit(classUnitId);
         if (
           Option.isSome(classUnit) &&
           classUnit.value.kind === "class" &&
-          classUnit.value.className === subclassUnit.className
+          classUnit.value.className === subclassFacts.className
         ) {
           return classLevelForUnit(build.progression, classUnitId);
         }
@@ -3689,7 +3805,7 @@ function characterBuildSelectedSubclassFeatureUnitIds(
       },
       0,
     );
-    return subclassUnit.featureGrants
+    return subclassFacts.featureGrants
       .filter((grant) => grant.level <= classLevel)
       .map((grant) => grant.unitId);
   });
@@ -3701,8 +3817,10 @@ function backgroundOriginFeatUnitIds(
 ): readonly UnitRecord["id"][] {
   const unit = unitLibrary.getUnit(build.background);
   if (Option.isNone(unit)) return [];
-  const facts = readBackgroundCreationFacts(unit.value);
-  return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+  const projection = projectCharacterDefinition(unit.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? [projection.value.facts.originFeatId]
+    : [];
 }
 
 function speciesTraitUnitIds(
@@ -3711,30 +3829,36 @@ function speciesTraitUnitIds(
 ): readonly UnitRecord["id"][] {
   const unit = unitLibrary.getUnit(build.species);
   if (Option.isNone(unit)) return [];
-  const facts = readSpeciesCreationFacts(unit.value);
-  return facts.tag === "readable"
-    ? Object.values(facts.value.traits).map(authoredUnitId)
+  const projection = projectCharacterDefinition(unit.value);
+  return projection.tag === "readable" && projection.value.kind === "species"
+    ? Object.values(projection.value.facts.traits).map(authoredUnitId)
     : [];
 }
 
 function speciesTraitUnitIdsForHitPointProjection(
   build: Pick<CharacterBuild, "species">,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly UnitRecord["id"][], CharacterBuildProjectionIssue> {
+): Result.Result<readonly UnitRecord["id"][], CharacterBuildProjectionIssue> {
   const speciesUnit = unitForFinalization(
     unitLibrary,
     build.species,
     "species",
   );
-  if (Either.isLeft(speciesUnit)) return Either.left(speciesUnit.left);
-  const speciesFacts = readableForFinalization(
-    readSpeciesCreationFacts(speciesUnit.right),
+  if (Result.isFailure(speciesUnit)) return Result.fail(speciesUnit.failure);
+  const speciesProjection = projectForFinalization(
+    speciesUnit.success,
     build.species,
     "species",
   );
-  if (Either.isLeft(speciesFacts)) return Either.left(speciesFacts.left);
-  return Either.right(
-    Object.values(speciesFacts.right.traits).map(authoredUnitId),
+  if (Result.isFailure(speciesProjection))
+    return Result.fail(speciesProjection.failure);
+  if (speciesProjection.success.kind !== "species") {
+    return Result.fail(
+      unsupportedCharacterDefinitionKind(build.species, "species"),
+    );
+  }
+  return Result.succeed(
+    Object.values(speciesProjection.success.facts.traits).map(authoredUnitId),
   );
 }
 
@@ -3786,12 +3910,12 @@ function selectedSorcererMetamagicOptionFeatures(input: {
 }): readonly CharacterBuildFeature[] {
   return input.optionIds.flatMap((optionId) => {
     const parsed = sorcererMetamagicOptionId(optionId);
-    return Either.isRight(parsed)
+    return Result.isSuccess(parsed)
       ? [
           {
             kind: "selectedSorcererMetamagicOption" as const,
             selectedFromUnitId: input.selectedFromUnitId,
-            optionId: parsed.right,
+            optionId: parsed.success,
           },
         ]
       : [];
@@ -3801,7 +3925,7 @@ function selectedSorcererMetamagicOptionFeatures(input: {
 function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
   unitChoices: readonly UnitChoiceSelection[],
   unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterBuildFeature[], ProjectionIssues> {
+): Result.Result<readonly CharacterBuildFeature[], ProjectionIssues> {
   const features: CharacterBuildFeature[] = [];
   const issues: CharacterBuildProjectionIssue[] = [];
   for (const selection of unitChoices) {
@@ -3848,8 +3972,8 @@ function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
   const collectedIssues = nonEmptyReadonlyArray(issues);
   /* v8 ignore start -- @preserve -- Support admission retains only acquisition grants that project a supported ability-check bonus. */
   return collectedIssues == null
-    ? Either.right(features)
-    : Either.left(collectedIssues);
+    ? Result.succeed(features)
+    : Result.fail(collectedIssues);
   /* v8 ignore stop -- @preserve */
 }
 
@@ -3900,7 +4024,7 @@ function fixedModifyRollAbilityFilter(
 export function finalizedBuildEquipment(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuildEquipment, ProjectionIssues> {
+): Result.Result<CharacterBuildEquipment, ProjectionIssues> {
   return finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
     loadoutChoiceSelections(selections),
@@ -3914,7 +4038,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
   loadoutChoices: readonly LoadoutChoiceSelection[],
   unitLibrary: UnitCatalog,
   supportProfile: CharacterCreationSupportProfile,
-): Either.Either<CharacterBuildEquipment, ProjectionIssues> {
+): Result.Result<CharacterBuildEquipment, ProjectionIssues> {
   const loadout = loadoutChoices.reduce<CharacterBuildLoadout>(
     (equipment, selection) => {
       const loadoutChoice = supportedLoadoutChoiceForSource(
@@ -3977,8 +4101,8 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
       const itemUnitId = characterEquipmentItemUnitId(unitId);
       const unit = unitLibrary.getUnit(unitId);
       /* v8 ignore start -- @preserve -- Supported equipment selections retain only ids accepted by the equipment-item id constructor. */
-      if (Either.isLeft(itemUnitId) || Option.isNone(unit)) {
-        return Either.left(
+      if (Result.isFailure(itemUnitId) || Option.isNone(unit)) {
+        return Result.fail(
           characterBuildProjectionIssue({
             tag: "unsupportedEquipmentUnitId",
             equipmentUnitId: unitId,
@@ -3990,7 +4114,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
         unit.value.kind !== "shield" &&
         unit.value.kind !== "weapon"
       ) {
-        return Either.left(
+        return Result.fail(
           characterBuildProjectionIssue({
             tag: "unsupportedEquipmentUnitId",
             equipmentUnitId: unitId,
@@ -3999,20 +4123,20 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
       }
       const costCopperPieces = goldPieceValueInCopperPieces(unit.value.costGp);
       return Option.isNone(costCopperPieces)
-        ? Either.left(
+        ? Result.fail(
             characterBuildProjectionIssue({
               tag: "unsupportedEquipmentCost",
               equipmentUnitId: unitId,
               costGp: unit.value.costGp,
             }),
           )
-        : Either.right({
+        : Result.succeed({
             costCopperPieces: costCopperPieces.value,
             item: {
               kind: "catalogItem",
               itemId: characterEquipmentItemId({
                 slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
-                unitId: itemUnitId.right,
+                unitId: itemUnitId.success,
               }),
               quantity: PositiveInteger(1),
             } satisfies CharacterBuildOwnedEquipmentItem,
@@ -4021,25 +4145,25 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     },
   );
   /* v8 ignore start -- @preserve -- Supported equipment selections retain only ids accepted by the item-id projection above. */
-  if (Either.isLeft(purchased)) {
-    return Either.left(purchased.left);
+  if (Result.isFailure(purchased)) {
+    return Result.fail(purchased.failure);
   }
   /* v8 ignore stop -- @preserve */
 
   const starting = finalizedStartingEquipment(selections, unitLibrary);
-  if (Either.isLeft(starting)) {
-    return Either.left(starting.left);
+  if (Result.isFailure(starting)) {
+    return Result.fail(starting.failure);
   }
 
-  const availableCopperPieces = starting.right.currencyCopperPieces;
-  const purchaseCostComponents = purchased.right.map(
+  const availableCopperPieces = starting.success.currencyCopperPieces;
+  const purchaseCostComponents = purchased.success.map(
     ({ costCopperPieces }) => costCopperPieces,
   );
   const purchaseCostCopperPieces = sumCopperPieceAmounts(
     purchaseCostComponents,
   );
   if (Option.isNone(purchaseCostCopperPieces)) {
-    return Either.left([
+    return Result.fail([
       characterBuildProjectionIssue({
         tag: "currencySumOutsideCopperPieceAmountRange",
         source: "selectedEquipmentPurchases",
@@ -4048,7 +4172,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     ]);
   }
   if (purchaseCostCopperPieces.value > availableCopperPieces) {
-    return Either.left([
+    return Result.fail([
       characterBuildProjectionIssue({
         tag: "startingCurrencyInsufficientForEquipmentPurchases",
         availableCp: availableCopperPieces,
@@ -4057,13 +4181,13 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     ]);
   }
 
-  return Either.right({
+  return Result.succeed({
     startingEquipmentCurrencyRemainderCp: copperPieceAmount(
       availableCopperPieces - purchaseCostCopperPieces.value,
     ),
     owned: combineCatalogEquipment([
-      ...purchased.right.map(({ item }) => item),
-      ...starting.right.items,
+      ...purchased.success.map(({ item }) => item),
+      ...starting.success.items,
     ]),
     loadout,
   });
@@ -4096,31 +4220,31 @@ function startingCurrencyCopperPieces(
     readonly sourceUnitId: UnitRecord["id"];
     readonly choice: StartingEquipmentChoice | undefined;
   }[],
-): Either.Either<CopperPieceAmount, ProjectionIssues> {
+): Result.Result<CopperPieceAmount, ProjectionIssues> {
   const amounts = traverseValidation(choices, ({ sourceUnitId, choice }) => {
     const coinsGp = choice?.coinsGp ?? 0;
     const amount = goldPieceValueInCopperPieces(coinsGp);
     return Option.isNone(amount)
-      ? Either.left(
+      ? Result.fail(
           characterBuildProjectionIssue({
             tag: "unsupportedStartingCurrency",
             sourceUnitId,
             coinsGp,
           }),
         )
-      : Either.right(amount.value);
+      : Result.succeed(amount.value);
   });
-  if (Either.isLeft(amounts)) {
-    return Either.left(amounts.left);
+  if (Result.isFailure(amounts)) {
+    return Result.fail(amounts.failure);
   }
-  const total = sumCopperPieceAmounts(amounts.right);
+  const total = sumCopperPieceAmounts(amounts.success);
   return Option.isSome(total)
-    ? Either.right(total.value)
-    : Either.left([
+    ? Result.succeed(total.value)
+    : Result.fail([
         characterBuildProjectionIssue({
           tag: "currencySumOutsideCopperPieceAmountRange",
           source: "startingEquipmentGrants",
-          components: amounts.right,
+          components: amounts.success,
         }),
       ]);
 }
@@ -4128,7 +4252,7 @@ function startingCurrencyCopperPieces(
 function finalizedStartingEquipment(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   {
     readonly items: readonly CharacterBuildOwnedEquipmentItem[];
     readonly currencyCopperPieces: CopperPieceAmount;
@@ -4141,13 +4265,13 @@ function finalizedStartingEquipment(
     unitLibrary,
     startingClassId,
   );
-  if (Either.isLeft(choices)) return Either.left(choices.left);
-  const currencyCopperPieces = startingCurrencyCopperPieces(choices.right);
-  if (Either.isLeft(currencyCopperPieces)) {
-    return Either.left(currencyCopperPieces.left);
+  if (Result.isFailure(choices)) return Result.fail(choices.failure);
+  const currencyCopperPieces = startingCurrencyCopperPieces(choices.success);
+  if (Result.isFailure(currencyCopperPieces)) {
+    return Result.fail(currencyCopperPieces.failure);
   }
   const selectedToolIds = selectedBackgroundToolProficiencies(selections);
-  const items = choices.right.flatMap(({ choice }) =>
+  const items = choices.success.flatMap(({ choice }) =>
     choice?.kind === "item_bundle" ? choice.items : [],
   );
   const projected = traverseValidation(items, (item) =>
@@ -4155,19 +4279,19 @@ function finalizedStartingEquipment(
       Match.when({ kind: "unit_ref" }, (unitRef) => {
         const unitId = authoredUnitId(unitRef.unitId);
         const itemUnitId = characterEquipmentItemUnitId(unitId);
-        return Either.isLeft(itemUnitId)
-          ? Either.left(
+        return Result.isFailure(itemUnitId)
+          ? Result.fail(
               characterBuildProjectionIssue({
                 tag: "unsupportedEquipmentUnitId",
                 equipmentUnitId: unitId,
               }),
             )
-          : Either.right<CharacterBuildOwnedEquipmentItem[]>([
+          : Result.succeed<CharacterBuildOwnedEquipmentItem[]>([
               {
                 kind: "catalogItem",
                 itemId: characterEquipmentItemId({
                   slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
-                  unitId: itemUnitId.right,
+                  unitId: itemUnitId.success,
                 }),
                 quantity: PositiveInteger(unitRef.quantity ?? 1),
               },
@@ -4178,19 +4302,19 @@ function finalizedStartingEquipment(
         (authoredCatalogItem) => {
           const unitId = authoredUnitId(authoredCatalogItem.unitId);
           const itemUnitId = characterEquipmentItemUnitId(unitId);
-          return Either.isLeft(itemUnitId)
-            ? Either.left(
+          return Result.isFailure(itemUnitId)
+            ? Result.fail(
                 characterBuildProjectionIssue({
                   tag: "unsupportedEquipmentUnitId",
                   equipmentUnitId: unitId,
                 }),
               )
-            : Either.right<CharacterBuildOwnedEquipmentItem[]>([
+            : Result.succeed<CharacterBuildOwnedEquipmentItem[]>([
                 {
                   kind: "authoredCatalogItem",
                   itemId: characterEquipmentItemId({
                     slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
-                    unitId: itemUnitId.right,
+                    unitId: itemUnitId.success,
                   }),
                   authoredItemId: authoredCatalogItem.authoredItemId,
                   spellcastingFocusKind:
@@ -4201,7 +4325,7 @@ function finalizedStartingEquipment(
         },
       ),
       Match.when({ kind: "draft_owned_item" }, (authoredItem) =>
-        Either.right<CharacterBuildOwnedEquipmentItem[]>([
+        Result.succeed<CharacterBuildOwnedEquipmentItem[]>([
           {
             kind: "authoredStartingItem",
             itemName: authoredItem.itemName,
@@ -4210,7 +4334,7 @@ function finalizedStartingEquipment(
         ]),
       ),
       Match.when({ kind: "selected_tool_proficiency" }, () =>
-        Either.right<CharacterBuildOwnedEquipmentItem[]>(
+        Result.succeed<CharacterBuildOwnedEquipmentItem[]>(
           selectedToolIds.map((toolProficiencyId) => ({
             kind: "selectedToolItem",
             toolProficiencyId,
@@ -4221,11 +4345,11 @@ function finalizedStartingEquipment(
       Match.exhaustive,
     ),
   );
-  return Either.isLeft(projected)
-    ? Either.left(projected.left)
-    : Either.right({
-        items: projected.right.flat(),
-        currencyCopperPieces: currencyCopperPieces.right,
+  return Result.isFailure(projected)
+    ? Result.fail(projected.failure)
+    : Result.succeed({
+        items: projected.success.flat(),
+        currencyCopperPieces: currencyCopperPieces.success,
       });
 }
 
@@ -4239,14 +4363,11 @@ function startingEquipmentChoiceForBuild(input: {
   readonly unitLibrary: UnitCatalog;
   readonly sourceUnitId: UnitRecord["id"];
   readonly lookupRole: CreationFinalizationLookupUnitRole;
-  readonly readableRole: CreationFinalizationReadableUnitRole;
+  readonly definitionKind: "class" | "background";
   readonly choiceKey:
     | typeof CLASS_EQUIPMENT_CHOICE_KEY
     | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
-  readonly readFacts: (unit: UnitRecord) => UnitReaderResult<{
-    readonly startingEquipment: readonly StartingEquipmentChoice[];
-  }>;
-}): Either.Either<
+}): Result.Result<
   StartingEquipmentChoiceForBuild,
   CharacterBuildProjectionIssue
 > {
@@ -4255,28 +4376,37 @@ function startingEquipmentChoiceForBuild(input: {
     input.sourceUnitId,
     input.lookupRole,
   );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  const facts = readableForFinalization(
-    input.readFacts(unit.right),
+  if (Result.isFailure(unit)) return Result.fail(unit.failure);
+  const projection = projectForFinalization(
+    unit.success,
     input.sourceUnitId,
-    input.readableRole,
+    input.definitionKind,
   );
-  return Either.map(facts, ({ startingEquipment }) => ({
+  if (Result.isFailure(projection)) return Result.fail(projection.failure);
+  if (projection.success.kind !== input.definitionKind) {
+    return Result.fail(
+      unsupportedCharacterDefinitionKind(
+        input.sourceUnitId,
+        input.definitionKind,
+      ),
+    );
+  }
+  return Result.succeed({
     sourceUnitId: input.sourceUnitId,
     choice: selectedStartingEquipmentForBuild(
       input.selections,
       input.sourceUnitId,
       input.choiceKey,
-      startingEquipment,
+      projection.success.facts.startingEquipment,
     ),
-  }));
+  });
 }
 
 function startingEquipmentChoicesForBuild(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
   startingClassId: UnitRecord["id"],
-): Either.Either<
+): Result.Result<
   readonly [StartingEquipmentChoiceForBuild, StartingEquipmentChoiceForBuild],
   ProjectionIssues
 > {
@@ -4285,27 +4415,25 @@ function startingEquipmentChoicesForBuild(
     unitLibrary,
     sourceUnitId: startingClassId,
     lookupRole: "class",
-    readableRole: "class",
+    definitionKind: "class",
     choiceKey: CLASS_EQUIPMENT_CHOICE_KEY,
-    readFacts: readClassCreationFacts,
   });
   const backgroundChoice = startingEquipmentChoiceForBuild({
     selections,
     unitLibrary,
     sourceUnitId: selections.background,
     lookupRole: "background",
-    readableRole: "background",
+    definitionKind: "background",
     choiceKey: BACKGROUND_EQUIPMENT_CHOICE_KEY,
-    readFacts: readBackgroundCreationFacts,
   });
-  if (Either.isLeft(classChoice) && Either.isLeft(backgroundChoice)) {
-    return Either.left([classChoice.left, backgroundChoice.left]);
+  if (Result.isFailure(classChoice) && Result.isFailure(backgroundChoice)) {
+    return Result.fail([classChoice.failure, backgroundChoice.failure]);
   }
-  if (Either.isLeft(classChoice)) return Either.left([classChoice.left]);
-  if (Either.isLeft(backgroundChoice)) {
-    return Either.left([backgroundChoice.left]);
+  if (Result.isFailure(classChoice)) return Result.fail([classChoice.failure]);
+  if (Result.isFailure(backgroundChoice)) {
+    return Result.fail([backgroundChoice.failure]);
   }
-  return Either.right([classChoice.right, backgroundChoice.right]);
+  return Result.succeed([classChoice.success, backgroundChoice.success]);
 }
 
 function selectedStartingEquipmentForBuild(
@@ -4363,7 +4491,7 @@ export function finalizedBuildSpellcasting(input: {
   readonly selections: FinalizedCharacterSelections;
   readonly supportedSelections: ExecutableSupportSelections;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterBuildSpellcasting | undefined, FinalizationIssues> {
+}): Result.Result<CharacterBuildSpellcasting | undefined, FinalizationIssues> {
   const startingUnitId = startingClassUnitId(input.selections.progression);
   const projections = [...input.classFactsByUnitId].flatMap(
     ([classUnitId, classFacts]) => {
@@ -4386,29 +4514,29 @@ export function finalizedBuildSpellcasting(input: {
     projections.map((projection) => projection.source),
   );
   if (sources === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
 
   const spellcastingSlotPool = singleSpellcastingSlotPool(projections);
   /* v8 ignore start -- @preserve -- Support admission rejects incompatible duplicate ordinary or Pact Magic pool projections. */
-  if (Either.isLeft(spellcastingSlotPool)) {
-    return Either.left([spellcastingSlotPool.left]);
+  if (Result.isFailure(spellcastingSlotPool)) {
+    return Result.fail([spellcastingSlotPool.failure]);
   }
   const pactMagicSlotPool = singlePactMagicSlotPool(projections);
-  if (Either.isLeft(pactMagicSlotPool)) {
-    return Either.left([pactMagicSlotPool.left]);
+  if (Result.isFailure(pactMagicSlotPool)) {
+    return Result.fail([pactMagicSlotPool.failure]);
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     sources,
     slotPools: {
-      ...(spellcastingSlotPool.right === undefined
+      ...(spellcastingSlotPool.success === undefined
         ? {}
-        : { spellcasting: spellcastingSlotPool.right }),
-      ...(pactMagicSlotPool.right === undefined
+        : { spellcasting: spellcastingSlotPool.success }),
+      ...(pactMagicSlotPool.success === undefined
         ? {}
-        : { pactMagic: pactMagicSlotPool.right }),
+        : { pactMagic: pactMagicSlotPool.success }),
     },
   });
 }
@@ -4572,7 +4700,7 @@ function selectedClassFeatureAcquisitionCantripUnitRefs(input: {
 
 function singleSpellcastingSlotPool(
   projections: readonly FinalizedSpellcastingSourceProjection[],
-): Either.Either<
+): Result.Result<
   CharacterBuildSpellcastingSlotPool | undefined,
   CreationFinalizationIssue
 > {
@@ -4583,13 +4711,13 @@ function singleSpellcastingSlotPool(
   );
   const first = pools[0];
   if (first === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   if (pools.length === 1) {
-    return Either.right(first);
+    return Result.succeed(first);
     /* v8 ignore start -- @preserve -- Support admission rejects a second ordinary spell-slot pool before finalization. */
   }
-  return Either.left(
+  return Result.fail(
     illegalFinalizationIssue({ tag: "multipleSpellcastingSlotPools" }),
   );
 }
@@ -4597,7 +4725,7 @@ function singleSpellcastingSlotPool(
 
 function singlePactMagicSlotPool(
   projections: readonly FinalizedSpellcastingSourceProjection[],
-): Either.Either<
+): Result.Result<
   CharacterBuildPactMagicSlotPool | undefined,
   CreationFinalizationIssue
 > {
@@ -4608,13 +4736,13 @@ function singlePactMagicSlotPool(
   );
   const first = pools[0];
   if (first === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   if (pools.length === 1) {
-    return Either.right(first);
+    return Result.succeed(first);
     /* v8 ignore start -- @preserve -- Support admission rejects a second Pact Magic slot pool before finalization. */
   }
-  return Either.left(
+  return Result.fail(
     illegalFinalizationIssue({ tag: "multiplePactMagicSlotPools" }),
   );
 }
@@ -4709,14 +4837,43 @@ export function optionalUnitId(
   return unitId == null ? [] : [unitId];
 }
 
+/**
+ * Finalization's root lookup boundary projects a Character Definition once;
+ * downstream helpers receive this source-free projection rather than
+ * re-reading the authored Unit shape.
+ */
+function projectForFinalization(
+  unit: UnitRecord,
+  unitId: UnitRecord["id"],
+  role: CreationFinalizationReadableUnitRole,
+): Result.Result<CharacterDefinitionProjection, CharacterBuildProjectionIssue> {
+  return readableForFinalization(
+    projectCharacterDefinition(unit),
+    unitId,
+    role,
+  );
+}
+
+function unsupportedCharacterDefinitionKind(
+  unitId: UnitRecord["id"],
+  role: CreationFinalizationReadableUnitRole,
+): CharacterBuildProjectionIssue {
+  return characterBuildProjectionIssue({
+    tag: "unreadableUnit",
+    role,
+    unitId,
+    issues: [{ code: "unsupportedUnitKind" }],
+  });
+}
+
 function readableForFinalization<T>(
   result: UnitReaderResult<T>,
   unitId: UnitRecord["id"],
   role: CreationFinalizationReadableUnitRole,
-): Either.Either<T, CharacterBuildProjectionIssue> {
+): Result.Result<T, CharacterBuildProjectionIssue> {
   if (result.tag === "unreadable") {
     const [firstIssue, ...remainingIssues] = result.issues;
-    return Either.left(
+    return Result.fail(
       characterBuildProjectionIssue({
         tag: "unreadableUnit",
         role,
@@ -4729,7 +4886,7 @@ function readableForFinalization<T>(
     );
   }
 
-  return Either.right(result.value);
+  return Result.succeed(result.value);
 }
 
 function surfaceReadIssueCause(
@@ -4762,11 +4919,11 @@ function unitForFinalization(
   unitLibrary: UnitCatalog,
   unitId: UnitRecord["id"],
   role: CreationFinalizationLookupUnitRole,
-): Either.Either<UnitRecord, CharacterBuildProjectionIssue> {
+): Result.Result<UnitRecord, CharacterBuildProjectionIssue> {
   const unit = unitLibrary.getUnit(unitId);
   return Option.isSome(unit)
-    ? Either.right(unit.value)
-    : Either.left(
+    ? Result.succeed(unit.value)
+    : Result.fail(
         characterBuildProjectionIssue({ tag: "unknownUnit", role, unitId }),
       );
 }
@@ -4775,18 +4932,18 @@ export function applyBackgroundAbilityScoreIncrease(
   baseScores: AbilityScoreAssignment,
   selection: BackgroundAbilityScoreIncreaseSelection,
   eligibleAbilities: readonly Ability[],
-): Either.Either<AbilityScoreAssignment, CharacterBuildProjectionIssue> {
+): Result.Result<AbilityScoreAssignment, CharacterBuildProjectionIssue> {
   const deltas = backgroundAbilityScoreIncreaseDeltas(
     selection,
     eligibleAbilities,
   );
   const capIssue = backgroundAbilityScoreIncreaseCapIssue(baseScores, deltas);
   if (capIssue != null) {
-    return Either.left(capIssue);
+    return Result.fail(capIssue);
   }
 
   if (selection.kind === "oneEach") {
-    return Either.right(
+    return Result.succeed(
       eligibleAbilities.reduce(
         (scores, ability) => ({
           ...scores,
@@ -4797,7 +4954,7 @@ export function applyBackgroundAbilityScoreIncrease(
     );
   }
 
-  return Either.right({
+  return Result.succeed({
     ...baseScores,
     [selection.plusTwo]: abilityScore(baseScores[selection.plusTwo] + 2),
     [selection.plusOne]: abilityScore(baseScores[selection.plusOne] + 1),
@@ -4807,7 +4964,7 @@ export function applyBackgroundAbilityScoreIncrease(
 function applyClassFeatureAbilityScoreIncreases(
   baseScores: AbilityScoreAssignment,
   selections: FinalizedCharacterSelections,
-): Either.Either<AbilityScoreAssignment, ProjectionIssues> {
+): Result.Result<AbilityScoreAssignment, ProjectionIssues> {
   const deltasWithCaps: AbilityScoreIncreaseDeltaWithCap[] = [];
   const decodingIssues: CharacterBuildProjectionIssue[] = [];
   for (const selection of selections.choices) {
@@ -4822,18 +4979,18 @@ function applyClassFeatureAbilityScoreIncreases(
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeAbilityScoreIncreaseOptionId(optionId);
       /* v8 ignore start -- @preserve -- Supported class-feature score choices are decoded before finalization and retain codec-emitted ids. */
-      if (Either.isLeft(decoded)) {
-        decodingIssues.push(choiceOptionCodecProjectionIssue(decoded.left));
+      if (Result.isFailure(decoded)) {
+        decodingIssues.push(choiceOptionCodecProjectionIssue(decoded.failure));
         continue;
       }
       /* v8 ignore stop -- @preserve */
-      deltasWithCaps.push(...decoded.right);
+      deltasWithCaps.push(...decoded.success);
     }
   }
   const collectedDecodingIssues = nonEmptyReadonlyArray(decodingIssues);
   /* v8 ignore start -- @preserve -- Supported score-increase choices retain only ids emitted by the score-increase codec. */
   if (collectedDecodingIssues != null) {
-    return Either.left(collectedDecodingIssues);
+    return Result.fail(collectedDecodingIssues);
   }
   /* v8 ignore stop -- @preserve */
 
@@ -4863,10 +5020,10 @@ function applyClassFeatureAbilityScoreIncreases(
   }
   const collectedCapIssues = nonEmptyReadonlyArray(capIssues);
   if (collectedCapIssues != null) {
-    return Either.left(collectedCapIssues);
+    return Result.fail(collectedCapIssues);
   }
 
-  return Either.right(scores);
+  return Result.succeed(scores);
 }
 
 function backgroundAbilityScoreIncreaseDeltas(
@@ -4957,7 +5114,7 @@ function skillsFromChoiceSelection(
 function selectedBuildProficiencyChoiceSubjects(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   readonly CharacterBuildProficiencyChoiceSubject[],
   ProjectionIssues
 > {
@@ -4966,17 +5123,17 @@ function selectedBuildProficiencyChoiceSubjects(
     unitLibrary,
   );
   /* v8 ignore start -- @preserve -- Support admission already decoded every retained proficiency and tool option id. */
-  if (Either.isLeft(unitProficiencySubjects)) {
-    return Either.left(unitProficiencySubjects.left);
+  if (Result.isFailure(unitProficiencySubjects)) {
+    return Result.fail(unitProficiencySubjects.failure);
   }
 
   const toolProficiencies = finalizedBuildToolProficiencies(selections);
-  if (Either.isLeft(toolProficiencies)) {
-    return Either.left(toolProficiencies.left);
+  if (Result.isFailure(toolProficiencies)) {
+    return Result.fail(toolProficiencies.failure);
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right([
+  return Result.succeed([
     ...skillsFromChoiceSelection(
       selections.choices.find(
         (selection): selection is UnitChoiceSelection =>
@@ -4990,12 +5147,12 @@ function selectedBuildProficiencyChoiceSubjects(
           ),
       ),
     ).map((skill) => ({ kind: "skill" as const, skill })),
-    ...toolProficiencies.right.map((toolId) => ({
+    ...toolProficiencies.success.map((toolId) => ({
       kind: "tool" as const,
       toolId,
     })),
     ...decodedClassToolProficiencySubjects(selections),
-    ...unitProficiencySubjects.right,
+    ...unitProficiencySubjects.success,
   ]);
 }
 
@@ -5013,8 +5170,8 @@ function decodedClassToolProficiencySubjects(
     )
       ? choiceSelectionOptionIds(selection).flatMap((optionId) => {
           const subject = decodeProficiencyGrantSubjectOptionId(optionId);
-          return Either.isRight(subject) && subject.right.kind === "tool"
-            ? [subject.right]
+          return Result.isSuccess(subject) && subject.success.kind === "tool"
+            ? [subject.success]
             : [];
         })
       : [],
@@ -5029,7 +5186,7 @@ function fixedToolProficiencySubjects(
 
 function finalizedBuildToolProficiencies(
   selections: FinalizedCharacterSelections,
-): Either.Either<readonly ToolProficiencyId[], ProjectionIssues> {
+): Result.Result<readonly ToolProficiencyId[], ProjectionIssues> {
   const toolSelection = selections.choices.find(
     (selection) =>
       selection.kind === "unitChoice" &&
@@ -5044,7 +5201,7 @@ function finalizedBuildToolProficiencies(
     for (const optionId of choiceSelectionOptionIds(toolSelection)) {
       /* v8 ignore start -- @preserve -- Supported background tool choices are decoded before finalization and retain only admitted tool ids. */
       if (!isCharacterBuildToolProficiencyId(String(optionId))) {
-        return Either.left([
+        return Result.fail([
           characterBuildProjectionIssue({
             tag: "unsupportedToolProficiency",
             source: "background",
@@ -5053,26 +5210,26 @@ function finalizedBuildToolProficiencies(
         ]);
       }
       const parsed = parseToolProficiencyId(String(optionId));
-      if (Either.isLeft(parsed)) {
-        return Either.left([choiceOptionCodecProjectionIssue(parsed.left)]);
+      if (Result.isFailure(parsed)) {
+        return Result.fail([choiceOptionCodecProjectionIssue(parsed.failure)]);
       }
       /* v8 ignore stop -- @preserve */
-      backgroundToolIds.push(parsed.right);
+      backgroundToolIds.push(parsed.success);
     }
   }
 
-  return Either.right(uniqueValues(backgroundToolIds));
+  return Result.succeed(uniqueValues(backgroundToolIds));
 }
 
 function finalizedBuildSurfaceToolProficiencyIds(
   subjects: readonly ProficiencyGrantSubject[],
-): Either.Either<readonly ToolProficiencyId[], ProjectionIssues> {
+): Result.Result<readonly ToolProficiencyId[], ProjectionIssues> {
   const toolIds: ToolProficiencyId[] = [];
   for (const subject of subjects) {
     if (subject.kind !== "tool") continue;
     /* v8 ignore start -- @preserve -- Supported Surface tool grants retain only ids accepted by the shared tool codec. */
     if (!isCharacterBuildToolProficiencyId(subject.toolId)) {
-      return Either.left([
+      return Result.fail([
         characterBuildProjectionIssue({
           tag: "unsupportedToolProficiency",
           source: "surfaceGrant",
@@ -5081,19 +5238,19 @@ function finalizedBuildSurfaceToolProficiencyIds(
       ]);
     }
     const parsed = parseToolProficiencyId(subject.toolId);
-    if (Either.isLeft(parsed)) {
-      return Either.left([choiceOptionCodecProjectionIssue(parsed.left)]);
+    if (Result.isFailure(parsed)) {
+      return Result.fail([choiceOptionCodecProjectionIssue(parsed.failure)]);
     }
     /* v8 ignore stop -- @preserve */
-    toolIds.push(parsed.right);
+    toolIds.push(parsed.success);
   }
-  return Either.right(toolIds);
+  return Result.succeed(toolIds);
 }
 
 function decodedUnitProficiencySubjects(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   readonly CharacterBuildProficiencyChoiceSubject[],
   ProjectionIssues
 > {
@@ -5123,12 +5280,12 @@ function decodedUnitProficiencySubjects(
       for (const optionId of choiceSelectionOptionIds(selection)) {
         const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
         /* v8 ignore start -- @preserve -- Supported proficiency selections retain only ids emitted by the shared proficiency codec. */
-        if (Either.isLeft(decoded)) {
-          issues.push(choiceOptionCodecProjectionIssue(decoded.left));
+        if (Result.isFailure(decoded)) {
+          issues.push(choiceOptionCodecProjectionIssue(decoded.failure));
           continue;
         }
         /* v8 ignore stop -- @preserve */
-        subjects.push(decoded.right);
+        subjects.push(decoded.success);
       }
       continue;
     }
@@ -5155,20 +5312,20 @@ function decodedUnitProficiencySubjects(
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
       /* v8 ignore start -- @preserve -- Supported multiclass proficiency selections retain only ids emitted by the shared proficiency codec. */
-      if (Either.isLeft(decoded)) {
-        issues.push(choiceOptionCodecProjectionIssue(decoded.left));
+      if (Result.isFailure(decoded)) {
+        issues.push(choiceOptionCodecProjectionIssue(decoded.failure));
         continue;
       }
       /* v8 ignore stop -- @preserve */
-      subjects.push(decoded.right);
+      subjects.push(decoded.success);
     }
   }
 
   const collectedIssues = nonEmptyReadonlyArray(issues);
   /* v8 ignore start -- @preserve -- Supported proficiency choices retain only ids emitted by the shared proficiency codec. */
   return collectedIssues == null
-    ? Either.right(subjects)
-    : Either.left(collectedIssues);
+    ? Result.succeed(subjects)
+    : Result.fail(collectedIssues);
   /* v8 ignore stop -- @preserve */
 }
 
@@ -5349,8 +5506,10 @@ function backgroundSkillProficiencies(
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
-  const facts = readBackgroundCreationFacts(backgroundUnit.value);
-  return facts.tag === "readable" ? facts.value.skillProficiencies : [];
+  const projection = projectCharacterDefinition(backgroundUnit.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? projection.value.facts.skillProficiencies
+    : [];
   /* v8 ignore stop -- @preserve */
 }
 
@@ -5364,17 +5523,22 @@ function classFeatureAcquisitionChoiceMechanicsForSelection(
   unitLibrary: UnitCatalog,
 ): ClassFeatureAcquisitionChoiceMechanics | undefined {
   const feature = unitLibrary.getUnit(selection.source.unitId);
-  if (
-    Option.isNone(feature) ||
-    feature.value.kind !== "class_feature" ||
-    feature.value.mechanics.family !== "class_feature_acquisition_choice"
-  ) {
+  if (Option.isNone(feature)) {
     return undefined;
   }
-  const featureChoiceKey = unitChoiceKey(feature.value.mechanics.choiceKey);
-  return Either.isRight(featureChoiceKey) &&
-    featureChoiceKey.right === selection.source.choiceKey
-    ? feature.value.mechanics
+  const projection = projectCharacterCreationFeature(feature.value);
+  if (
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature" ||
+    projection.value.facts.mechanics.family !==
+      "class_feature_acquisition_choice"
+  )
+    return undefined;
+  const mechanics = projection.value.facts.mechanics;
+  const featureChoiceKey = unitChoiceKey(mechanics.choiceKey);
+  return Result.isSuccess(featureChoiceKey) &&
+    featureChoiceKey.success === selection.source.choiceKey
+    ? mechanics
     : undefined;
 }
 
@@ -5406,7 +5570,7 @@ function classFeatureAcquisitionFixedProficiencySubjects(
         proficiencyGrantSubjectOptionId(subject),
       );
       /* v8 ignore start -- @preserve -- Supported fixed proficiency grants use subjects emitted by the shared proficiency codec. */
-      return Either.isRight(decoded) ? [decoded.right] : [];
+      return Result.isSuccess(decoded) ? [decoded.success] : [];
       /* v8 ignore stop -- @preserve */
     });
 }
@@ -5421,15 +5585,19 @@ function characterBuildResourcesForUnit(
   unit: UnitRecord,
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CharacterBuildResource[] {
+  const projection = projectCharacterCreationFeature(unit);
   if (
-    unit.kind === "class_feature" &&
+    projection.tag === "readable" &&
+    projection.value.kind === "class_feature" &&
     supportsCharacterBuildResourceUnitId(unit.id, supportProfile) &&
-    (unit.mechanics.family === "activation" ||
-      unit.mechanics.family === "resource_container" ||
-      unit.mechanics.family === "resource_pool") &&
-    unit.mechanics.resource !== undefined
+    (projection.value.facts.mechanics.family === "activation" ||
+      projection.value.facts.mechanics.family === "resource_container" ||
+      projection.value.facts.mechanics.family === "resource_pool") &&
+    projection.value.facts.mechanics.resource !== undefined
   ) {
-    return [{ unitId: unit.id, resource: unit.mechanics.resource }];
+    return [
+      { unitId: unit.id, resource: projection.value.facts.mechanics.resource },
+    ];
   }
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {

@@ -11,11 +11,19 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 import { abilityModifier, Hp } from "@dnd/shared/types";
+import { Result } from "effect";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import {
+  advanceToActorNextTurnForTest,
+  castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
+} from "./spell-effect-fixture.test-support.ts";
+import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  spellSlotInvocationRef,
 } from "./index.ts";
 import {
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
@@ -58,8 +66,6 @@ import {
   discoverBattleActCandidates,
   battleFrontierInterruptDecisionForState,
   discoverBattleActs,
-  Either,
-  elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
   fighterGrapplesGoblin,
@@ -623,12 +629,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     ]);
     expect(
-      Schema.decodeUnknownEither(BattleFillSchema)({
+      Schema.decodeUnknownResult(BattleFillSchema)({
         kind: "readyDeclaration",
         holeId: act.initialHoles[0]?.holeId,
         value: { trigger: "   ", response: { kind: "movement" } },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("Disengage suppresses Opportunity Attacks for current-turn Movement", () => {
@@ -665,7 +671,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("BattleFillSchema decodes creature-space traversal Movement facts", () => {
-    const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+    const decodeFill = Schema.decodeUnknownResult(BattleFillSchema);
     const unoccupiedDestination = decodeFill({
       kind: "movement",
       holeId: "battle:movement",
@@ -689,10 +695,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       },
     });
 
-    if (Either.isLeft(unoccupiedDestination)) {
-      throw new Error(String(unoccupiedDestination.left));
+    if (Result.isFailure(unoccupiedDestination)) {
+      throw new Error(String(unoccupiedDestination.failure));
     }
-    expect(unoccupiedDestination.right).toMatchObject({
+    expect(unoccupiedDestination.success).toMatchObject({
       kind: "movement",
       value: {
         creatureSpaceTraversal: {
@@ -711,7 +717,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       },
     });
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeFill({
           kind: "movement",
           holeId: "battle:movement",
@@ -733,7 +739,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toBe(true);
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeFill({
           kind: "movement",
           holeId: "battle:movement",
@@ -763,8 +769,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
   test("BattleFillSchema rejects empty Grapple Drag Movement facts", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "movement",
           holeId: "battle:movement",
           value: {
@@ -783,7 +789,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("BattleFillSchema admits only non-empty procedure-specific roll relationship facts", () => {
-    const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+    const decodeFill = Schema.decodeUnknownResult(BattleFillSchema);
     const valid = decodeFill({
       kind: "targetChoice",
       holeId: "battle:attack:target",
@@ -817,9 +823,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       ],
     });
 
-    expect(Either.isRight(valid)).toBe(true);
-    expect(Either.isLeft(empty)).toBe(true);
-    expect(Either.isLeft(wrongProcedure)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
+    expect(Result.isFailure(empty)).toBe(true);
+    expect(Result.isFailure(wrongProcedure)).toBe(true);
   });
 
   test("Halfling Nimbleness Movement facts admit traversal through a larger occupied creature space", () => {
@@ -1686,7 +1692,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const greased = castGroundHazardForMovementTest(areaId);
     const greaseEffect = greased.combatants
       .get(wizardId)
-      ?.activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+      ?.activeEffects.find(
+        (effect) => effect.kind === "persistentAreaSaveCondition",
+      );
     if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
       throw new Error("Expected the admitted Grease ground hazard.");
     }
@@ -1703,7 +1711,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       kind: "areaDifficultTerrain" as const,
       sources: [
         {
-          kind: "greaseGroundHazard" as const,
+          kind: "persistentAreaSaveCondition" as const,
+          effectRef: greaseEffect.effectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: greaseEffect.sourceProcedureRef,
           areaId,
@@ -1760,9 +1769,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const effect = moved.combatants
       .get(wizardId)
       ?.activeEffects.find(
-        (candidate) => candidate.kind === "greaseGroundHazard",
+        (candidate) => candidate.kind === "persistentAreaSaveCondition",
       );
-    expect(effect).toMatchObject({ kind: "greaseGroundHazard", areaId });
+    expect(effect).toMatchObject({
+      kind: "persistentAreaSaveCondition",
+      areaId,
+    });
     expect(effect).not.toHaveProperty("originAnchorId");
     expect(effect).not.toHaveProperty("affectedTargetIds");
     expect(effect).not.toHaveProperty("shape");
@@ -1771,6 +1783,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
     const areaId = battleAreaId("test-expiring-grease-area");
     const greased = castGroundHazardForMovementTest(areaId);
+    const greaseEffect = greased.combatants
+      .get(wizardId)
+      ?.activeEffects.find(
+        (effect) => effect.kind === "persistentAreaSaveCondition",
+      );
+    if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
+      throw new Error("Expected the admitted Grease ground hazard.");
+    }
     let expired = greased;
     for (let i = 0; i < 20; i += 1) {
       expired = requireResolved(
@@ -1786,7 +1806,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         .get(wizardId)
         ?.activeEffects.some(
           (effect) =>
-            effect.kind === "greaseGroundHazard" && effect.areaId === areaId,
+            effect.kind === "persistentAreaSaveCondition" &&
+            effect.areaId === areaId,
         ),
     ).toBe(false);
 
@@ -1812,7 +1833,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
               kind: "areaDifficultTerrain",
               sources: [
                 {
-                  kind: "greaseGroundHazard",
+                  kind: "persistentAreaSaveCondition",
+                  effectRef: greaseEffect.effectRef,
                   sourceCombatantId: wizardId,
                   sourceProcedureRef: expect.any(String),
                   areaId,
@@ -1894,21 +1916,30 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       awaitingReaction.state,
     )?.choices.find(
       (choice) =>
-        choice.kind === "releaseReadiedMovement" &&
-        choice.readiedMovementActorId === fighterId,
+        choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
+        choice.subject.command === "releaseReadiedMovement" &&
+        choice.subject.readiedMovementActorId === fighterId,
     );
     expect(
       battleFrontierInterruptDecisionForState(awaitingReaction.state)?.choices,
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "releaseReadiedMovement",
-          reactorId: fighterId,
-          readiedMovementActorId: fighterId,
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedMovement",
+            readiedMovementActorId: fighterId,
+          }),
         }),
       ]),
     );
-    if (readiedChoice === undefined) {
+    if (
+      readiedChoice === undefined ||
+      readiedChoice.kind !== "nestedProcedure" ||
+      readiedChoice.subject.tag !== "runtimeCommand" ||
+      readiedChoice.subject.command !== "releaseReadiedMovement"
+    ) {
       throw new Error("Expected a readied movement Reaction choice.");
     }
     expect(() =>
@@ -1942,7 +1973,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           responderId: fighterId,
           choice: {
             kind: "releaseReadiedMovement",
-            readiedMovementActorId: fighterId,
             fills: [readiedMove],
           },
         }),
@@ -1971,7 +2001,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedMovement",
-          readiedMovementActorId: fighterId,
           fills: [provokingReadiedMove],
         },
       }),
@@ -1991,7 +2020,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedMovement",
-          readiedMovementActorId: fighterId,
           fills: [readiedMove],
         },
       }),
@@ -2062,10 +2090,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       reported.state,
     )?.choices.find(
       (candidate) =>
-        candidate.kind === "releaseReadiedAttack" &&
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "releaseReadiedAttack" &&
         candidate.subject.targetId === goblinId,
     );
-    if (choice?.kind !== "releaseReadiedAttack") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "releaseReadiedAttack"
+    ) {
       throw new Error("Expected the chosen readied Attack response.");
     }
     const targetSpatialFacts = {
@@ -2087,7 +2121,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAttack",
-          reactorId: fighterId,
           targetId: goblinId,
           procedureRef: attackResponse.selection.procedureRef,
           fills: [targetSpatialFacts],
@@ -2167,7 +2200,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAction",
-          reactorId: fighterId,
           fills: [],
         },
       }),
@@ -2246,7 +2278,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAction",
-          reactorId: fighterId,
           fills: [],
         },
       }),
@@ -2339,7 +2370,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAttack",
-          reactorId: fighterId,
           targetId: goblinId,
           procedureRef: attackResponse.selection.procedureRef,
           fills: [targetSpatialFacts],
@@ -3635,12 +3665,22 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Fast Wrestler drag cost uses current target size after size changes", () => {
-    const state = startBattleRight({
+    const sizeChangeSession = startBattleSessionRight({
       battleId: battleId("battle-grappler-fast-wrestler-current-size"),
       combatants: [
         characterSeed({
           initiative: 20,
+          classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: grapplerUnitRefs(),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          initiative: 15,
+          classLevels: [{ className: "wizard", level: 3 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("enlarge_reduce")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
         }),
         skeletonCreatureInit({ initiative: 10 }),
       ],
@@ -3651,12 +3691,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       action: "grapple",
     };
     const target = requireHole(
-      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      resolveBattleSubject({
+        state: sizeChangeSession.state,
+        subject: grappleSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const outcome = requireHole(
       resolveBattleSubject({
-        state,
+        state: sizeChangeSession.state,
         subject: grappleSubject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -3664,7 +3708,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
     const grappled = requireResolved(
       resolveBattleSubject({
-        state,
+        state: sizeChangeSession.state,
         subject: grappleSubject,
         fills: [
           targetFill(target, skeletonId),
@@ -3672,32 +3716,55 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         ],
       }),
     ).state;
-    const skeleton = grappled.combatants.get(skeletonId);
-    if (skeleton === undefined) {
-      throw new Error("Expected skeleton target.");
-    }
-    const enlarged = {
-      ...grappled,
-      combatants: new Map(grappled.combatants).set(skeletonId, {
-        ...skeleton,
-        activeEffects: [
-          ...skeleton.activeEffects,
-          {
-            kind: "spellCreatureSizeChange" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spellRecord("enlarge_reduce").id),
-            ),
-            sourceCombatantId: fighterId,
-            direction: "increase" as const,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(60),
-            },
-          },
-        ],
+    expect(grappled.grapples).toContainEqual(
+      expect.objectContaining({ grapplerId: fighterId, targetId: skeletonId }),
+    );
+    const wizardTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const wizardSession = battleRuntimeSessionForTest({
+      ...sizeChangeSession,
+      state: wizardTurn,
+    });
+    const expectedSizeChange = spellSlotInvocationRef(
+      "enlarge_reduce",
+      2,
+      "creatureSizeIncrease",
+    );
+    const sizeChangeAct = requireActorAdmittedSpellActForTest({
+      session: wizardSession,
+      actorId: wizardId,
+      subjectTag: "actionSpell",
+      invocationRef: expectedSizeChange,
+    });
+    const sizeTarget = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: sizeChangeAct.subject,
+        fills: [],
       }),
-    };
+      "targetChoice",
+    );
+    const enlarged = advanceToActorNextTurnForTest(
+      requireResolved(
+        resolveBattleSubject({
+          state: wizardTurn,
+          subject: sizeChangeAct.subject,
+          fills: [
+            knownWillingSpellTargetFill(
+              sizeTarget,
+              "enlarge_reduce",
+              wizardId,
+              skeletonId,
+            ),
+          ],
+        }),
+      ).state,
+      fighterId,
+    );
+    expect(enlarged.grapples).toContainEqual(
+      expect.objectContaining({ grapplerId: fighterId, targetId: skeletonId }),
+    );
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -4272,26 +4339,53 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("staged verbal spell damage keeps the caster revealed while requesting Concentration saves", () => {
-    const session = wizardVsSkeletonBattle();
+    const baseSession = startBattleSessionRight({
+      battleId: battleId("battle-hidden-caster-concentration-save"),
+      combatants: [
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Concentrating Target",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 5 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Hidden Missile Caster",
+          initiative: 10,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 1 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("magic_missile")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+      ],
+    });
+    const concentratingTargetTurn = castFlyAndAdvanceToCasterTurnForTest({
+      session: baseSession,
+      casterId: skeletonId,
+      targetId: skeletonId,
+    }).state;
+    const wizardTurn = requireResolved(
+      endTurn({ state: concentratingTargetTurn, actorId: skeletonId }),
+    ).state;
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: wizardTurn,
+    });
     const state = session.state;
     const wizard = state.combatants.get(wizardId)!;
-    const skeleton = state.combatants.get(skeletonId)!;
     const hiddenState: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(wizardId, {
-          ...wizard,
-          hidden: { discoveryDc: difficultyClass(17) },
-        })
-        .set(skeletonId, {
-          ...skeleton,
-          concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            effectKind: "spellEffect",
-          },
-        }),
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: difficultyClass(17) },
+      }),
     };
     const subject = findAct(session, magicSubject("magic_missile")).subject;
     const target = requireHole(
@@ -4402,7 +4496,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           },
           fills: [],
         },
-        "attackHit",
+        { trigger: "attackHit" },
         [],
       ),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
@@ -4520,7 +4614,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       ROGUE_CUNNING_ACTION_SUPPORT_PROFILE,
     );
     expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
-      Either.right([ROGUE_CUNNING_ACTION_SUPPORT_PROFILE]),
+      Result.succeed([ROGUE_CUNNING_ACTION_SUPPORT_PROFILE]),
     );
   });
 

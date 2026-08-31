@@ -174,7 +174,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       kind: "obstructed",
       obstruction:
         "The public SDK rejected the standard array needed by the four Wizard builds.",
-      observation: { stage: "abilityScores", issues: abilityScores.left },
+      observation: { stage: "abilityScores", issues: abilityScores.failure },
     };
   }
 
@@ -238,7 +238,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         kind: "abilityScores",
         holeId: hole.holeId,
         method: "standardArray",
-        value: abilityScores.right,
+        value: abilityScores.success,
       };
     }
     const requestedOptionIds = wantedOptionIds(hole);
@@ -378,11 +378,11 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         obstruction: `The public SDK finalized ${plan.id} but could not create its fresh Character Sheet.`,
         observation: {
           characterId: plan.id,
-          issues: sdk.characterSheetConstructionIssuesSummary(sheet.left),
+          issues: sdk.characterSheetConstructionIssuesSummary(sheet.failure),
         },
       };
     }
-    characterSheets.push(sheet.right);
+    characterSheets.push(sheet.success);
   }
 
   return {

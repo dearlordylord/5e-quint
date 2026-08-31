@@ -1,7 +1,7 @@
 // This admission leaf changes no rule semantics. It only relates the decoded
 // authored Stat Block graph to the execution support facts already owned by
 // battle-runtime.
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { Match } from "effect";
 
 import { PositiveInteger } from "@dnd/shared/types";
@@ -346,7 +346,7 @@ function inspectResources(
       ordinals.add(ordinal);
     }
     const parsed = parseStatBlockRuntimeResource(resource);
-    if (Either.isLeft(parsed)) {
+    if (Result.isFailure(parsed)) {
       addIssue(
         issues,
         "unsupported_mechanics",

@@ -44,13 +44,18 @@ import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
   holeInstanceKey,
+  type HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   type Ability,
   DieRollResult,
+  Hp,
   movementFeet,
   type Round as RoundType,
 } from "@dnd/shared/types";
+import { Match } from "effect";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole,
@@ -58,17 +63,23 @@ import type {
   BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
   BattleCreatureState,
+  BattleConcentrationSavingThrowHole,
+  BattlePersistentAreaSourceTurnTranslationHole,
+  BattleStartTurnOccurrenceOrderHole,
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
-  BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
+  BattleHole,
   BattleHoleId,
+  BattleObjectOutcomeAccumulation,
   BattleResolutionInput,
   BattleResolutionResult,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowRollModeProjection,
-  BattleSleepRepeatSavingThrowOutcomeHole,
-  BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
+  BattleStagedConditionRepeatSavingThrowOutcomeHole,
+  BattleTurnConstraintEndTurnSavingThrowOutcomeHole,
   BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnEndDamageRollHole,
@@ -83,7 +94,13 @@ import type {
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import { characterBattleResourceIsUseCount } from "../character-battle-resource-execution.ts";
-import { type BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  battleStartTurnOccurrenceId,
+  type BattleEffectExecutionRef,
+  type BattleProcedureExecutionRef,
+  type BattleStartTurnOccurrenceId,
+  CombatantId,
+} from "../identity.ts";
 import { refreshStatBlockStartTurnExecution } from "../stat-block-execution-state.ts";
 import {
   damageDispositionFillFor,
@@ -96,7 +113,7 @@ import {
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { applyCommandHaltAtTurnStart } from "./command-halt.ts";
+import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   d20TestNaturalOneRerollDieDecisionRequired,
@@ -112,8 +129,8 @@ import {
   breakCombatantConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   deathSavingThrowHole,
   fillsMatchingHoleIds,
   processStatBlockRechargeRolls,
@@ -128,23 +145,36 @@ import {
 } from "./druid-wild-shape.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
-  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
-} from "./fly-speed-grant-end-fall-cleanup.ts";
-import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
+  grantedFlightEndFallCleanupFramesForExpiredEffects,
+} from "./granted-flight-end-fall-cleanup.ts";
+import {
+  saveGatedConditionDamageOccurrenceKeyForHole,
+  saveGatedConditionDamageOccurrenceKeyForStartTurn,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
+  type SaveGatedConditionDamageOccurrenceKey,
+} from "./staged-condition-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
+import {
+  persistentAreaSourceTurnTranslationSavingThrowHoleId,
+  resolveTranslatingPersistentAreaMovementSaveDamageSequence,
+  type TranslatingPersistentAreaAreaHazardEffect,
+  type TranslatingPersistentAreaMovementSaveDamageRequest,
+  type TranslatingPersistentAreaMovementSaveDamageSequenceResult,
+} from "./persistent-area-save-damage.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
+import { isBattleContinuationComparableFill } from "./battle-fill-equality.ts";
+import {
+  projectReplayChildResult,
+  replayParentContinuationFor,
+  type ReplayParentContinuation,
+} from "./replay-continuation.ts";
 import { invalidResult } from "./result-helpers.ts";
-import {
-  battleStateWithReconciledCurrentActorSlowTurnRestriction,
-  slowActionOrBonusActionTurnResources,
-} from "./slow-active-penalties-turn-restriction.ts";
-import {
-  slowActivePenaltiesEffects,
-  type SlowActivePenaltiesEffect,
-} from "./slow-active-penalties-effects.ts";
+import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "./save-gated-turn-constraint-runtime.ts";
+import { battleStateWithReconciledCurrentActorSlowTurnRestriction } from "./slow-active-penalties-turn-restriction.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
-  combatantsAfterHideousLaughterSpellEndedIfNoEffects,
+  combatantsAfterSaveGatedConditionWithRepeatSpellEndedIfNoEffects,
   conditionHadNonSpellSourceBeforeSpellEffect,
   conditionsAfterApplyingSpellConditionEffects,
   conditionsAfterExpiringSpellConditionEffects,
@@ -160,11 +190,11 @@ import {
 import { spellGrantedActionResourceTurnResources } from "./spell-granted-action-resource.ts";
 import {
   expireBattleLightEmitters,
-  resetAllCloudkillSavedThisTurn,
-  resetAllInsectPlagueSavedThisTurn,
-  resetAllMoonbeamSavedThisTurn,
-  resetAllSleetStormSavedThisTurn,
-  resetAllWebSavedThisTurn,
+  resetAllTranslatingPersistentAreaSavedThisTurn,
+  resetAllStationaryPersistentAreaSavedThisTurn,
+  resetAllMovablePersistentAreaSavedThisTurn,
+  resetAllPersistentAreaSaveCompositeSavedThisTurn,
+  resetAllPersistentAreaSaveConditionEscapeSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 import {
@@ -173,8 +203,14 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import type { HideousLaughterEffect } from "./hideous-laughter-repeat-save.ts";
-import { hideousLaughterEffects } from "./hideous-laughter-repeat-save.ts";
+import type { SaveGatedConditionWithRepeatEffect } from "./staged-condition-repeat-save.ts";
+import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
+import {
+  boundSaveGatedTurnConstraintBundleEffect,
+  boundStagedSaveConditionPendingRepeatEffect,
+  type BoundSaveGatedTurnConstraintBundleEffect,
+  type BoundStagedSaveConditionPendingRepeatEffect,
+} from "./spell-modifier-binding.ts";
 import { resetBattleTurnResources } from "./turn-resource-reset.ts";
 import {
   collectTurnBoundaryHoleFills,
@@ -185,11 +221,11 @@ type ResolvedTurnBoundaryFills = {
   readonly state: BattleState;
   readonly deathSavingThrowRoll: DieRollResult | undefined;
   readonly statBlockRechargeRolls: readonly BattleStatBlockRechargeRollResult[];
-  readonly sleepRepeatSaves: readonly Extract<
+  readonly hitPointBudgetConditionRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly hideousLaughterRepeatSaves: readonly Extract<
+  readonly saveGatedConditionWithRepeatRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -205,7 +241,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly slowActivePenaltiesEndTurnSaves: readonly Extract<
+  readonly saveGatedTurnConstraintBundleEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -225,7 +261,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly turnBoundaryHideousLaughterDamageRepeatSaves: readonly Extract<
+  readonly turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -237,25 +273,888 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[];
+  readonly spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement: readonly SpellTurnStartDamageEffect[];
+  readonly turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement: readonly BattleProcedureExecutionRef[];
+  readonly deferStatBlockRecharge: boolean;
 };
+
+type TranslatingPersistentAreaStartTurnMovement = {
+  readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+  readonly distanceFeet: BattlePersistentAreaSourceTurnTranslationHole["distanceFeet"];
+  readonly directionRequirement: BattlePersistentAreaSourceTurnTranslationHole["directionRequirement"];
+};
+
+function translatingPersistentAreaStartTurnMovementEffects(
+  state: BattleState,
+  sourceCombatantId: CombatantId,
+): readonly TranslatingPersistentAreaStartTurnMovement[] {
+  return [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.flatMap((effect) => {
+      if (
+        effect.kind !== "persistentAreaSaveDamage" ||
+        effect.sourceCombatantId !== sourceCombatantId
+      ) {
+        return [];
+      }
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return bound?.kind === "sourceTurnTranslation"
+        ? [
+            {
+              effect: {
+                ...bound.effect,
+                save: { ability: bound.facts.ability, dc: bound.facts.dc },
+                damage: bound.facts.damage,
+              },
+              distanceFeet: bound.facts.lifecycle.distanceFeet,
+              directionRequirement: bound.facts.lifecycle.direction,
+            },
+          ]
+        : [];
+    }),
+  );
+}
+
+function translatingPersistentAreaStartTurnMovementHole(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  movement: TranslatingPersistentAreaStartTurnMovement,
+): BattlePersistentAreaSourceTurnTranslationHole {
+  const { effect } = movement;
+  const key = translatingPersistentAreaStartTurnMovementHoleKey(
+    sourceTurn,
+    effect.effectRef,
+  );
+  return {
+    kind: "persistentAreaSourceTurnTranslation",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: "TranslatingPersistentArea start-turn movement",
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceProcedureRef: effect.sourceProcedureRef,
+    effectRef: effect.effectRef,
+    areaId: effect.areaId,
+    distanceFeet: movement.distanceFeet,
+    directionRequirement: movement.directionRequirement,
+    requiresTableSpatialFact: true,
+  };
+}
+
+function translatingPersistentAreaStartTurnMovementHoleKey(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  effectRef: TranslatingPersistentAreaAreaHazardEffect["effectRef"],
+): string {
+  return `battle:translatingPersistentArea-start-turn-movement:${effectRef}:${Number(sourceTurn.round)}`;
+}
+
+type StartTurnOccurrenceOption =
+  BattleStartTurnOccurrenceOrderHole["occurrences"][number];
+
+type StartTurnOccurrenceTraversal =
+  | { readonly kind: "none" }
+  | BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
+
+function startTurnOccurrenceTraversal(
+  occurrenceIds: readonly StartTurnOccurrenceOption["occurrenceId"][],
+): StartTurnOccurrenceTraversal {
+  const first = occurrenceIds[0];
+  if (first === undefined) return { kind: "none" };
+  const second = occurrenceIds[1];
+  return second === undefined
+    ? { kind: "single", occurrenceId: first }
+    : {
+        kind: "ordered",
+        occurrenceIds: [first, second, ...occurrenceIds.slice(2)],
+      };
+}
+
+function temporaryHitPointChoiceHole(input: {
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly occurrenceId: StartTurnOccurrenceOption["occurrenceId"];
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
+  readonly sourceCombatantId: CombatantId;
+  readonly existingTemporaryHitPoints: number;
+  readonly grantedTemporaryHitPoints: number;
+}): Extract<BattleHole, { readonly kind: "temporaryHitPointChoice" }> {
+  const key = `battle:temporary-hit-point-choice:${input.sourceTurn.actorId}:${Number(input.sourceTurn.round)}:${input.occurrenceId}`;
+  return {
+    kind: "temporaryHitPointChoice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: "Choose which Temporary Hit Points to keep",
+    sourceCombatantId: input.sourceCombatantId,
+    sourceProcedureRef: input.sourceProcedureRef,
+    effectRef: input.effectRef,
+    sourceTurn: input.sourceTurn,
+    occurrenceId: input.occurrenceId,
+    existingTemporaryHitPoints: Hp(input.existingTemporaryHitPoints),
+    grantedTemporaryHitPoints: Hp(input.grantedTemporaryHitPoints),
+  };
+}
+
+type StartTurnOccurrenceHandle =
+  | { readonly kind: "deathSavingThrow" }
+  | { readonly kind: "statBlockRecharge" }
+  | {
+      readonly kind: "turnStartTemporaryHitPoints";
+      readonly effect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "turnStartTemporaryHitPoints" }
+      >;
+    }
+  | {
+      readonly kind: "spellConditionTurnStartDamage";
+      readonly effect: Extract<
+        SpellTurnStartDamageEffect,
+        { readonly kind: "spellCondition" }
+      >;
+    }
+  | {
+      readonly kind: "spellTurnStartDamageAndSave";
+      readonly effect: Extract<
+        SpellTurnStartDamageEffect,
+        { readonly kind: "spellTurnStartDamageAndSave" }
+      >;
+    }
+  | {
+      readonly kind: "persistentAreaSourceTurnTranslation";
+      readonly movement: TranslatingPersistentAreaStartTurnMovement;
+    };
+
+type StartTurnOccurrenceIdentity =
+  | { readonly kind: "deathSavingThrow" }
+  | { readonly kind: "statBlockRecharge" }
+  | {
+      readonly kind: "turnStartTemporaryHitPoints";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "spellConditionTurnStartDamage";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "spellTurnStartDamageAndSave";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "persistentAreaSourceTurnTranslation";
+      readonly effectRef: BattleEffectExecutionRef;
+    };
+
+function startTurnOccurrenceLabel(
+  identity: StartTurnOccurrenceIdentity,
+): string {
+  return Match.value(identity).pipe(
+    Match.when(
+      { kind: "deathSavingThrow" },
+      () => "Resolve Death Saving Throw",
+    ),
+    Match.when(
+      { kind: "statBlockRecharge" },
+      () => "Resolve stat-block recharge",
+    ),
+    Match.when(
+      { kind: "turnStartTemporaryHitPoints" },
+      () => "Grant start-turn Temporary Hit Points",
+    ),
+    Match.when(
+      { kind: "spellConditionTurnStartDamage" },
+      () => "Resolve start-turn spell damage",
+    ),
+    Match.when(
+      { kind: "spellTurnStartDamageAndSave" },
+      () => "Resolve start-turn spell damage",
+    ),
+    Match.when(
+      { kind: "persistentAreaSourceTurnTranslation" },
+      () => "Move TranslatingPersistentArea",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function startTurnOccurrenceOption(
+  identity: StartTurnOccurrenceIdentity,
+): StartTurnOccurrenceOption {
+  return {
+    occurrenceId: battleStartTurnOccurrenceId(
+      startTurnOccurrenceIdentityKey(identity),
+    ),
+    kind: identity.kind,
+    label: startTurnOccurrenceLabel(identity),
+  };
+}
+
+function startTurnOccurrenceIdentityKey(
+  identity: StartTurnOccurrenceIdentity,
+): string {
+  const framed = (value: string): string => `${value.length}:${value}`;
+  return Match.value(identity).pipe(
+    Match.when({ kind: "deathSavingThrow" }, () => framed("deathSavingThrow")),
+    Match.when({ kind: "statBlockRecharge" }, () =>
+      framed("statBlockRecharge"),
+    ),
+    Match.when({ kind: "turnStartTemporaryHitPoints" }, ({ effectRef }) =>
+      ["turnStartTemporaryHitPoints", effectRef].map(framed).join(""),
+    ),
+    Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effectRef }) =>
+      ["spellConditionTurnStartDamage", effectRef].map(framed).join(""),
+    ),
+    Match.when({ kind: "spellTurnStartDamageAndSave" }, ({ effectRef }) =>
+      ["spellTurnStartDamageAndSave", effectRef].map(framed).join(""),
+    ),
+    Match.when(
+      { kind: "persistentAreaSourceTurnTranslation" },
+      ({ effectRef }) =>
+        ["persistentAreaSourceTurnTranslation", effectRef].map(framed).join(""),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaSourceTurnTranslationOccurrenceOption(
+  effect: Pick<TranslatingPersistentAreaAreaHazardEffect, "effectRef">,
+): StartTurnOccurrenceOption {
+  return startTurnOccurrenceOption({
+    kind: "persistentAreaSourceTurnTranslation",
+    effectRef: effect.effectRef,
+  });
+}
+
+function startTurnOccurrenceOptionForHandle(
+  handle: StartTurnOccurrenceHandle,
+): StartTurnOccurrenceOption {
+  return Match.value(handle).pipe(
+    Match.when({ kind: "deathSavingThrow" }, () =>
+      startTurnOccurrenceOption({ kind: "deathSavingThrow" }),
+    ),
+    Match.when({ kind: "statBlockRecharge" }, () =>
+      startTurnOccurrenceOption({ kind: "statBlockRecharge" }),
+    ),
+    Match.when({ kind: "turnStartTemporaryHitPoints" }, ({ effect }) =>
+      startTurnOccurrenceOption({
+        kind: "turnStartTemporaryHitPoints",
+        effectRef: effect.effectRef,
+      }),
+    ),
+    Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effect }) =>
+      spellTurnStartDamageOccurrenceOption(effect),
+    ),
+    Match.when({ kind: "spellTurnStartDamageAndSave" }, ({ effect }) =>
+      spellTurnStartDamageOccurrenceOption(effect),
+    ),
+    Match.when(
+      { kind: "persistentAreaSourceTurnTranslation" },
+      ({ movement }) =>
+        persistentAreaSourceTurnTranslationOccurrenceOption(movement.effect),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function startTurnOccurrenceHandlesForState(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly StartTurnOccurrenceHandle[] {
+  const actor = state.combatants.get(actorId);
+  return [
+    ...(startTurnDeathSavingThrowRequired(actor)
+      ? [{ kind: "deathSavingThrow" as const }]
+      : []),
+    ...(statBlockRechargeRollHole(actor) === null
+      ? []
+      : [{ kind: "statBlockRecharge" as const }]),
+    ...(actor?.activeEffects.flatMap((effect) =>
+      effect.kind === "turnStartTemporaryHitPoints"
+        ? [{ kind: "turnStartTemporaryHitPoints" as const, effect }]
+        : [],
+    ) ?? []),
+    ...spellTurnStartDamageEffects(actor).map(
+      (effect): StartTurnOccurrenceHandle =>
+        effect.kind === "spellCondition"
+          ? { kind: "spellConditionTurnStartDamage", effect }
+          : { kind: "spellTurnStartDamageAndSave", effect },
+    ),
+    ...translatingPersistentAreaStartTurnMovementEffects(state, actorId).map(
+      (movement): StartTurnOccurrenceHandle => ({
+        kind: "persistentAreaSourceTurnTranslation",
+        movement,
+      }),
+    ),
+  ];
+}
+
+function startTurnOccurrenceOrderHole(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  occurrences: BattleStartTurnOccurrenceOrderHole["occurrences"],
+): BattleStartTurnOccurrenceOrderHole {
+  const key = startTurnOccurrenceOrderHoleKey(sourceTurn);
+  return {
+    kind: "startTurnOccurrenceOrder",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: "Choose simultaneous start-turn occurrence order",
+    actorId: sourceTurn.actorId,
+    occurrences,
+  };
+}
+
+function startTurnOccurrenceOrderHoleKey(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+): string {
+  return `battle:start-turn-occurrence-order:${sourceTurn.actorId}:${Number(sourceTurn.round)}`;
+}
+
+type TranslatingPersistentAreaMovementFill = Extract<
+  BattleFill,
+  { readonly kind: "persistentAreaSourceTurnTranslation" }
+>;
+
+type TranslatingPersistentAreaMovementBoundary = {
+  readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+  readonly hole: BattlePersistentAreaSourceTurnTranslationHole;
+};
+
+type TranslatingPersistentAreaMovementBoundaryRequest =
+  TranslatingPersistentAreaMovementBoundary & {
+    readonly fill: TranslatingPersistentAreaMovementFill;
+  };
+
+function persistentAreaSourceTurnTranslationAffectedCombatantIssue(
+  state: BattleState,
+  fills: readonly TranslatingPersistentAreaMovementFill[],
+): "duplicate" | "missing" | null {
+  if (
+    fills.some(
+      (fill) =>
+        new Set(fill.value.affectedCombatantIdsInResolutionOrder).size !==
+        fill.value.affectedCombatantIdsInResolutionOrder.length,
+    )
+  ) {
+    return "duplicate";
+  }
+  return fills.some((fill) =>
+    fill.value.affectedCombatantIdsInResolutionOrder.some(
+      (combatantId) => !state.combatants.has(combatantId),
+    ),
+  )
+    ? "missing"
+    : null;
+}
+
+type TranslatingPersistentAreaMovementSaveSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageSave";
+  }
+>;
+
+function persistentAreaSourceTurnTranslationSaveSubject(
+  targetId: CombatantId,
+  effect: TranslatingPersistentAreaAreaHazardEffect,
+): TranslatingPersistentAreaMovementSaveSubject {
+  return {
+    tag: "runtimeCommand",
+    actorId: targetId,
+    command: "persistentAreaSaveDamageSave",
+    areaMembershipTrigger: {
+      kind: "areaMovesIntoSpace",
+      areaId: effect.areaId,
+      effectRef: effect.effectRef,
+    },
+  };
+}
+
+function persistentAreaSourceTurnTranslationSaveDamageRequests(
+  requests: readonly TranslatingPersistentAreaMovementBoundaryRequest[],
+): readonly TranslatingPersistentAreaMovementSaveDamageRequest[] {
+  return requests.flatMap(({ effect, fill }) => {
+    return fill.value.affectedCombatantIdsInResolutionOrder.map((targetId) => ({
+      effect,
+      subject: persistentAreaSourceTurnTranslationSaveSubject(targetId, effect),
+    }));
+  });
+}
+
+function persistentAreaSourceTurnTranslationCheckpointMatchesRequest(
+  checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
+  request: TranslatingPersistentAreaMovementSaveDamageRequest,
+): boolean {
+  return (
+    request.effect.effectRef === checkpoint.child.effectRef &&
+    request.subject.actorId === checkpoint.child.targetId
+  );
+}
+
+function completeTranslatingPersistentAreaMovementSequenceResume(
+  state: BattleState,
+  fills: readonly BattleFill[],
+  checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
+  parent: ReplayParentContinuation,
+  previouslyAcceptedHoleIds: readonly BattleHoleId[],
+): BattleResolutionResult {
+  return resolveStartTurnOccurrenceSuffixAfterMovement({
+    state,
+    fills,
+    checkpoint,
+    parent,
+    previouslyAcceptedHoleIds,
+  });
+}
+
+function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
+  readonly state: BattleState;
+  readonly fills: readonly BattleFill[];
+  readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+  readonly parent: ReplayParentContinuation;
+  readonly previouslyAcceptedHoleIds: readonly BattleHoleId[];
+}): BattleResolutionResult {
+  const { checkpoint } = input;
+  const retainedSequence = validateRetainedStartTurnSequence(input);
+  if (retainedSequence.tag === "invalid") return retainedSequence.result;
+  const completedPrefix = validateCompletedStartTurnPrefix(input);
+  if (completedPrefix.tag === "invalid") return completedPrefix.result;
+  const suffix = resolveOrderedStartTurnOccurrences({
+    state: input.state,
+    subject: input.parent.subject,
+    sourceTurn: checkpoint.sourceTurn,
+    roundDurationCohort: checkpoint.roundDurationCohort,
+    traversal: startTurnOccurrenceTraversal(
+      retainedSequence.value.occurrenceIds.slice(
+        retainedSequence.value.currentIndex + 1,
+      ),
+    ),
+    context: {
+      kind: "replay",
+      previouslyAcceptedMovementFillHoleIds: [
+        holeId(
+          translatingPersistentAreaStartTurnMovementHoleKey(
+            checkpoint.sourceTurn,
+            checkpoint.child.effectRef,
+          ),
+        ),
+      ],
+    },
+    fills: input.fills,
+    parent: input.parent,
+  });
+  if (suffix.tag === "result") return suffix.result;
+  const acceptedHoleIds = new Set<BattleHoleId>([
+    ...input.previouslyAcceptedHoleIds,
+    ...suffix.acceptedHoleIds,
+    ...completedPrefix.value,
+    ...retainedSequence.value.orderHoleIds,
+  ]);
+  if (hasUnacceptedEndTurnFill(input.fills, acceptedHoleIds)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn replay received a fill unrelated to its retained start-turn occurrences.",
+    );
+  }
+  const completedState = applyRoundDurationTickAfterStartTurnOccurrences(
+    suffix.state,
+    checkpoint.roundDurationCohort,
+  );
+  return {
+    tag: "resolved",
+    state: completedState,
+    snapshot: snapshotBattle(completedState),
+  };
+}
+
+type StartTurnContinuationValidation<Value> =
+  | { readonly tag: "valid"; readonly value: Value }
+  | { readonly tag: "invalid"; readonly result: BattleResolutionResult };
+
+function validateRetainedStartTurnSequence(input: {
+  readonly state: BattleState;
+  readonly fills: readonly BattleFill[];
+  readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+}): StartTurnContinuationValidation<{
+  readonly occurrenceIds: readonly BattleStartTurnOccurrenceId[];
+  readonly currentIndex: number;
+  readonly orderHoleIds: readonly BattleHoleId[];
+}> {
+  const { checkpoint } = input;
+  const orderHoleId = holeId(
+    startTurnOccurrenceOrderHoleKey(checkpoint.sourceTurn),
+  );
+  const orderFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "startTurnOccurrenceOrder" }
+    > =>
+      fill.kind === "startTurnOccurrenceOrder" && fill.holeId === orderHoleId,
+  );
+  const sequence = Match.value(checkpoint.sequence).pipe(
+    Match.when({ kind: "single" }, ({ occurrenceId }) => {
+      if (
+        occurrenceId !==
+          persistentAreaSourceTurnTranslationOccurrenceOption(checkpoint.child)
+            .occurrenceId ||
+        orderFills.length > 0
+      ) {
+        return {
+          tag: "invalid" as const,
+          result: invalidResult(
+            input.state,
+            "staleSubject",
+            "Single start-turn occurrence continuation does not match its retained occurrence.",
+          ),
+        };
+      }
+      return {
+        tag: "valid" as const,
+        value: { occurrenceIds: [occurrenceId], orderHoleIds: [] },
+      };
+    }),
+    Match.when({ kind: "ordered" }, ({ occurrenceIds }) => {
+      if (orderFills.length === 0) {
+        return {
+          tag: "invalid" as const,
+          result: invalidResult(
+            input.state,
+            "staleSubject",
+            "Ordered start-turn occurrence continuation lost its retained order.",
+          ),
+        };
+      }
+      if (orderFills.length !== 1) {
+        return {
+          tag: "invalid" as const,
+          result: invalidResult(
+            input.state,
+            "staleSubject",
+            "Start-turn occurrence continuation requires its exact retained order.",
+          ),
+        };
+      }
+      if (
+        !sameStartTurnOccurrenceIds(
+          orderFills[0].value.occurrenceIds,
+          occurrenceIds,
+        )
+      ) {
+        return {
+          tag: "invalid" as const,
+          result: invalidResult(
+            input.state,
+            "staleSubject",
+            "Start-turn occurrence continuation order differs from its canonical checkpoint.",
+          ),
+        };
+      }
+      return {
+        tag: "valid" as const,
+        value: { occurrenceIds, orderHoleIds: [orderHoleId] },
+      };
+    }),
+    Match.exhaustive,
+  );
+  if (sequence.tag === "invalid") return sequence;
+  const currentOccurrenceId =
+    persistentAreaSourceTurnTranslationOccurrenceOption(
+      checkpoint.child,
+    ).occurrenceId;
+  const currentIndex =
+    sequence.value.occurrenceIds.indexOf(currentOccurrenceId);
+  if (currentIndex === -1) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        "Start-turn occurrence continuation is not a member of its retained order.",
+      ),
+    };
+  }
+  return {
+    tag: "valid",
+    value: { ...sequence.value, currentIndex },
+  };
+}
+
+function sameStartTurnOccurrenceIds(
+  left: readonly BattleStartTurnOccurrenceId[],
+  right: readonly BattleStartTurnOccurrenceId[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((occurrenceId, index) => occurrenceId === right[index])
+  );
+}
+
+function validateCompletedStartTurnPrefix(input: {
+  readonly state: BattleState;
+  readonly fills: readonly BattleFill[];
+  readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+}): StartTurnContinuationValidation<ReadonlySet<BattleHoleId>> {
+  const completedPrefixHoleIds = new Set(
+    input.checkpoint.completedPrefixHoleIds,
+  );
+  if (
+    completedPrefixHoleIds.size !==
+    input.checkpoint.completedPrefixHoleIds.length
+  ) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        "Start-turn occurrence continuation records each completed prefix hole once.",
+      ),
+    };
+  }
+  for (const completedHoleId of completedPrefixHoleIds) {
+    const submittedFills = input.fills.filter(
+      (fill) => fill.holeId === completedHoleId,
+    );
+    if (
+      submittedFills.length !== 1 ||
+      !isBattleContinuationComparableFill(submittedFills[0])
+    ) {
+      return {
+        tag: "invalid",
+        result: invalidResult(
+          input.state,
+          "staleSubject",
+          "Start-turn occurrence continuation prefix must preserve each recorded fill exactly once.",
+        ),
+      };
+    }
+  }
+  return { tag: "valid", value: completedPrefixHoleIds };
+}
+function resolveTranslatingPersistentAreaMovementSequenceResume(input: {
+  readonly resolution: EndTurnResolutionInput;
+  readonly parent: ReplayParentContinuation;
+  readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+}): BattleResolutionResult {
+  const { checkpoint, resolution } = input;
+  const sourceTurnIssue =
+    persistentAreaSourceTurnTranslationResumeSourceTurnIssue(
+      resolution.state,
+      checkpoint,
+    );
+  if (sourceTurnIssue !== null) return sourceTurnIssue;
+
+  const boundaries = translatingPersistentAreaStartTurnMovementEffects(
+    resolution.state,
+    checkpoint.sourceTurn.actorId,
+  ).map(
+    (movement): TranslatingPersistentAreaMovementBoundary => ({
+      effect: movement.effect,
+      hole: translatingPersistentAreaStartTurnMovementHole(
+        checkpoint.sourceTurn,
+        movement,
+      ),
+    }),
+  );
+  const movementFills = resolution.fills.filter(
+    (fill): fill is TranslatingPersistentAreaMovementFill =>
+      fill.kind === "persistentAreaSourceTurnTranslation",
+  );
+  const checkpointBoundary = boundaries.find(
+    ({ effect }) => effect.effectRef === checkpoint.child.effectRef,
+  );
+  if (checkpointBoundary === undefined) {
+    return completeTranslatingPersistentAreaMovementSequenceResume(
+      resolution.state,
+      resolution.fills,
+      checkpoint,
+      input.parent,
+      [persistentAreaSourceTurnTranslationSavingThrowHoleId(checkpoint)],
+    );
+  }
+  const checkpointMovementFills = movementFills.filter(
+    (fill) => fill.holeId === checkpointBoundary.hole.holeId,
+  );
+  if (checkpointMovementFills.length !== 1) {
+    return invalidResult(
+      resolution.state,
+      "staleSubject",
+      "TranslatingPersistentArea movement continuation no longer has its exact movement facts.",
+    );
+  }
+  const affectedCombatantIssue =
+    persistentAreaSourceTurnTranslationAffectedCombatantIssue(
+      resolution.state,
+      checkpointMovementFills,
+    );
+  if (affectedCombatantIssue !== null) {
+    return invalidResult(
+      resolution.state,
+      "invalidFill",
+      persistentAreaSourceTurnTranslationAffectedCombatantMessage(
+        affectedCombatantIssue,
+      ),
+    );
+  }
+  const requests = persistentAreaSourceTurnTranslationSaveDamageRequests([
+    {
+      ...checkpointBoundary,
+      fill: checkpointMovementFills[0]!,
+    },
+  ]);
+  const pending = persistentAreaSourceTurnTranslationPendingResumeRequests({
+    state: resolution.state,
+    checkpoint,
+    requests,
+  });
+  if (pending.tag === "invalid") return pending.result;
+  if (pending.tag === "complete") {
+    return completeTranslatingPersistentAreaMovementSequenceResume(
+      resolution.state,
+      resolution.fills,
+      checkpoint,
+      input.parent,
+      [persistentAreaSourceTurnTranslationSavingThrowHoleId(checkpoint)],
+    );
+  }
+  const checkpointRequestPending =
+    persistentAreaSourceTurnTranslationCheckpointMatchesRequest(
+      checkpoint,
+      pending.firstRequest,
+    );
+  const resumed = resolveTranslatingPersistentAreaMovementSaveDamageSequence({
+    advancedState: resolution.state,
+    parent: input.parent,
+    requests: pending.requests,
+    replayPlan: persistentAreaSourceTurnTranslationResumeReplayPlan(
+      checkpoint,
+      checkpointRequestPending,
+    ),
+  });
+  if (resumed.tag === "result") {
+    return resumed.result;
+  }
+  return completeTranslatingPersistentAreaMovementSequenceResume(
+    resumed.state,
+    resolution.fills,
+    checkpoint,
+    input.parent,
+    [
+      ...resumed.saveHoleIds,
+      ...resumed.damageHoleIds,
+      ...resumed.concentrationHoleIds,
+      ...resumed.dispositionHoleIds,
+      ...resumed.damageRepeatSaveHoleIds,
+    ],
+  );
+}
+
+function persistentAreaSourceTurnTranslationResumeReplayPlan(
+  checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
+  checkpointRequestPending: boolean,
+): Parameters<
+  typeof resolveTranslatingPersistentAreaMovementSaveDamageSequence
+>[0]["replayPlan"] {
+  return checkpointRequestPending
+    ? { kind: "advancedPrefixAtCheckpoint", checkpoint }
+    : { kind: "advancedPrefixAfterCheckpoint", checkpoint };
+}
+
+function persistentAreaSourceTurnTranslationResumeSourceTurnIssue(
+  state: BattleState,
+  checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
+): BattleResolutionResult | null {
+  if (
+    currentActorId(state) === checkpoint.sourceTurn.actorId &&
+    state.initiative.round === checkpoint.sourceTurn.round
+  ) {
+    return null;
+  }
+  return invalidResult(
+    state,
+    "staleSubject",
+    "TranslatingPersistentArea movement continuation no longer matches its source turn.",
+  );
+}
+
+function persistentAreaSourceTurnTranslationAffectedCombatantMessage(
+  issue: NonNullable<
+    ReturnType<typeof persistentAreaSourceTurnTranslationAffectedCombatantIssue>
+  >,
+): string {
+  return issue === "duplicate"
+    ? "TranslatingPersistentArea movement affected combatants must be unique."
+    : "TranslatingPersistentArea movement affected combatants must exist in the battle.";
+}
+
+type TranslatingPersistentAreaMovementPendingResumeRequests =
+  | { readonly tag: "complete" }
+  | { readonly tag: "invalid"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "pending";
+      readonly requests: readonly TranslatingPersistentAreaMovementSaveDamageRequest[];
+      readonly firstRequest: TranslatingPersistentAreaMovementSaveDamageRequest;
+    };
+
+function persistentAreaSourceTurnTranslationPendingResumeRequests(input: {
+  readonly state: BattleState;
+  readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
+  readonly requests: readonly TranslatingPersistentAreaMovementSaveDamageRequest[];
+}): TranslatingPersistentAreaMovementPendingResumeRequests {
+  const checkpointIndex = input.requests.findIndex((request) =>
+    persistentAreaSourceTurnTranslationCheckpointMatchesRequest(
+      input.checkpoint,
+      request,
+    ),
+  );
+  if (checkpointIndex === -1) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        "TranslatingPersistentArea movement continuation no longer has its exact affected occurrence.",
+      ),
+    };
+  }
+  const requests = input.requests
+    .slice(checkpointIndex)
+    .filter(
+      (request) =>
+        !request.effect.savedThisTurn.includes(request.subject.actorId),
+    );
+  if (requests.length === 0) return { tag: "complete" };
+  const firstRequest = requests[0];
+  if (firstRequest === undefined) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "staleSubject",
+        "TranslatingPersistentArea movement continuation lost its pending occurrence.",
+      ),
+    };
+  }
+  return { tag: "pending", requests, firstRequest };
+}
 
 function resolveEndTurn({
   state,
   deathSavingThrowRoll,
   statBlockRechargeRolls,
-  sleepRepeatSaves,
-  hideousLaughterRepeatSaves,
+  hitPointBudgetConditionRepeatSaves,
+  saveGatedConditionWithRepeatRepeatSaves,
   spellConditionEndTurnSaves,
   spellConditionCountedEndTurnSaves,
   unitFeatureConditionEndTurnSaves,
-  slowActivePenaltiesEndTurnSaves,
+  saveGatedTurnConstraintBundleEndTurnSaves,
   abilityD20TestRollModeEndTurnSaves,
   spellTurnEndDamageRolls,
   spellTurnStartDamageRolls,
   spellTurnStartSaves,
-  turnBoundaryHideousLaughterDamageRepeatSaves,
+  turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
   concentrationSavingThrows,
   damageDispositions,
+  spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement,
+  turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement,
+  deferStatBlockRecharge,
 }: ResolvedTurnBoundaryFills): Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
@@ -297,7 +1196,7 @@ function resolveEndTurn({
   const helpAttacks = state.helpAttacks.filter(
     (help) => help.expiresAt.combatantId !== nextActorId,
   );
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   let combatantsAfterExpiredReadiedSpells = afterDeathSavingThrow;
   for (const casterId of expiringReadiedSpellCasterIds) {
@@ -310,8 +1209,8 @@ function resolveEndTurn({
       casterId,
     );
     combatantsAfterExpiredReadiedSpells = broken.value;
-    flySpeedGrantEndFallCleanupFrames.push(
-      ...broken.flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames.push(
+      ...broken.grantedFlightEndFallCleanupFrames,
     );
   }
   const combatantsAfterEndTurnOngoingFeatures = expireEndOfTurnOngoingFeatures(
@@ -319,28 +1218,31 @@ function resolveEndTurn({
     currentActorId(state),
     state.initiative.round,
   );
-  const stateAfterSleepRepeatSaves = applySleepRepeatSaveFills(
-    {
-      ...state,
-      combatants: combatantsAfterEndTurnOngoingFeatures,
-      readiedSpells,
-      readiedResponses,
-      helpAttacks,
-    },
-    currentActorId(state),
-    state.initiative.round,
-    sleepRepeatSaves,
-  );
-  const combatantsAfterSleepRepeatSaves = stateAfterSleepRepeatSaves.combatants;
-  const combatantsAfterHideousLaughterRepeatSaves =
-    applyHideousLaughterRepeatSaveFills(
-      combatantsAfterSleepRepeatSaves,
+  const stateAfterHitPointBudgetConditionRepeatSaves =
+    applyHitPointBudgetConditionRepeatSaveFills(
+      {
+        ...state,
+        combatants: combatantsAfterEndTurnOngoingFeatures,
+        readiedSpells,
+        readiedResponses,
+        helpAttacks,
+      },
       currentActorId(state),
-      hideousLaughterRepeatSaves,
+      state.initiative.round,
+      hitPointBudgetConditionRepeatSaves,
+    );
+  const combatantsAfterHitPointBudgetConditionRepeatSaves =
+    stateAfterHitPointBudgetConditionRepeatSaves.combatants;
+  const combatantsAfterSaveGatedConditionWithRepeatRepeatSaves =
+    applySaveGatedConditionWithRepeatRepeatSaveFills(
+      stateAfterHitPointBudgetConditionRepeatSaves,
+      combatantsAfterHitPointBudgetConditionRepeatSaves,
+      currentActorId(state),
+      saveGatedConditionWithRepeatRepeatSaves,
     );
   const combatantsAfterSpellConditionRepeatSaves =
     applySpellConditionEndTurnSaveFills(
-      combatantsAfterHideousLaughterRepeatSaves,
+      combatantsAfterSaveGatedConditionWithRepeatRepeatSaves,
       currentActorId(state),
       spellConditionEndTurnSaves,
     );
@@ -356,15 +1258,16 @@ function resolveEndTurn({
       currentActorId(state),
       unitFeatureConditionEndTurnSaves,
     );
-  const combatantsAfterSlowActivePenaltyRepeatSaves =
-    applySlowActivePenaltiesEndTurnSaveFills(
+  const combatantsAfterSaveGatedTurnConstraintRepeatSaves =
+    applySaveGatedTurnConstraintBundleEndTurnSaveFills(
+      { ...state, combatants: combatantsAfterUnitFeatureConditionRepeatSaves },
       combatantsAfterUnitFeatureConditionRepeatSaves,
       currentActorId(state),
-      slowActivePenaltiesEndTurnSaves,
+      saveGatedTurnConstraintBundleEndTurnSaves,
     );
   const combatantsAfterAbilityD20TestRepeatSaves =
     applyAbilityD20TestRollModeEndTurnSaveFills(
-      combatantsAfterSlowActivePenaltyRepeatSaves,
+      combatantsAfterSaveGatedTurnConstraintRepeatSaves,
       currentActorId(state),
       abilityD20TestRollModeEndTurnSaves,
     );
@@ -378,7 +1281,7 @@ function resolveEndTurn({
     spellTurnEndDamageRolls,
     concentrationSavingThrows,
     damageDispositions,
-    turnBoundaryHideousLaughterDamageRepeatSaves,
+    turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
   ).combatants;
   const combatantsAfterEndEffects = expireEndOfTurnEffects(
     combatantsAfterSpellTurnEndDamage,
@@ -392,10 +1295,7 @@ function resolveEndTurn({
       emitter.expiresAt.combatantId === currentActorId(state) &&
       emitter.expiresAt.round === state.initiative.round,
   );
-  const lightEmittersAfterDurationTick =
-    Number(initiative.round) > Number(state.initiative.round)
-      ? tickDurationBattleLightEmitters(lightEmittersAfterEndEffects)
-      : lightEmittersAfterEndEffects;
+  const lightEmittersAfterDurationTick = lightEmittersAfterEndEffects;
   const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
     combatantsAfterEndEffects,
     nextActorId,
@@ -404,24 +1304,30 @@ function resolveEndTurn({
     combatantsAfterStartOngoingFeatures,
     nextActorId,
   );
-  const combatantsAfterMoonbeamReset = resetAllMoonbeamSavedThisTurn(
-    combatantsAfterStartEffects,
-  );
-  const combatantsAfterWebSaveReset = resetAllWebSavedThisTurn(
-    combatantsAfterMoonbeamReset,
-  );
-  const combatantsAfterSleetStormSaveReset = resetAllSleetStormSavedThisTurn(
-    combatantsAfterWebSaveReset,
-  );
-  const combatantsAfterInsectPlagueSaveReset =
-    resetAllInsectPlagueSavedThisTurn(combatantsAfterSleetStormSaveReset);
-  const combatantsAfterCloudkillSaveReset = resetAllCloudkillSavedThisTurn(
-    combatantsAfterInsectPlagueSaveReset,
-  );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
-    combatantsAfterCloudkillSaveReset,
-    nextActorId,
-  );
+  const combatantsAfterMovablePersistentAreaReset =
+    resetAllMovablePersistentAreaSavedThisTurn(combatantsAfterStartEffects);
+  const combatantsAfterPersistentAreaSaveConditionEscapeSaveReset =
+    resetAllPersistentAreaSaveConditionEscapeSavedThisTurn(
+      combatantsAfterMovablePersistentAreaReset,
+    );
+  const combatantsAfterPersistentAreaSaveCompositeSaveReset =
+    resetAllPersistentAreaSaveCompositeSavedThisTurn(
+      combatantsAfterPersistentAreaSaveConditionEscapeSaveReset,
+    );
+  const combatantsAfterStationaryPersistentAreaSaveReset =
+    resetAllStationaryPersistentAreaSavedThisTurn(
+      combatantsAfterPersistentAreaSaveCompositeSaveReset,
+    );
+  const combatantsAfterTranslatingPersistentAreaSaveReset =
+    resetAllTranslatingPersistentAreaSavedThisTurn(
+      combatantsAfterStationaryPersistentAreaSaveReset,
+    );
+  const combatantsAfterStartTurnEffects =
+    applyStartOfTurnTemporaryHitPointEffects(
+      combatantsAfterTranslatingPersistentAreaSaveReset,
+      nextActorId,
+      turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement,
+    );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
     {
       ...state,
@@ -433,59 +1339,53 @@ function resolveEndTurn({
     spellTurnStartSaves,
     concentrationSavingThrows,
     damageDispositions,
-    turnBoundaryHideousLaughterDamageRepeatSaves,
+    turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
+    spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement,
   ).combatants;
-  const durationTickState = {
-    ...state,
-    initiative,
-    combatants: combatantsAfterSpellTurnStartDamage,
+  const durationTick = {
+    value: combatantsAfterSpellTurnStartDamage,
+    grantedFlightEndFallCleanupFrames: [],
+    spellEndTargetStatePromotionIds: [],
   };
-  const durationTick =
-    Number(initiative.round) > Number(state.initiative.round)
-      ? tickBattleStateDurationEffects(durationTickState, {
-          spellEndTargetStatePromotionTiming:
-            END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
-        })
-      : {
-          value: durationTickState,
-          flySpeedGrantEndFallCleanupFrames: [],
-          spellEndTargetStatePromotionIds: [],
-        };
-  const combatantsAfterDurationTick = durationTick.value.combatants;
-  flySpeedGrantEndFallCleanupFrames.push(
-    ...durationTick.flySpeedGrantEndFallCleanupFrames,
+  const combatantsAfterDurationTick = durationTick.value;
+  grantedFlightEndFallCleanupFrames.push(
+    ...durationTick.grantedFlightEndFallCleanupFrames,
   );
-  const combatantsAfterRecharge = processStatBlockRechargeRolls(
-    combatantsAfterDurationTick,
-    nextActorId,
-    statBlockRechargeRolls,
-  );
+  const combatantsAfterRecharge = deferStatBlockRecharge
+    ? combatantsAfterDurationTick
+    : processStatBlockRechargeRolls(
+        combatantsAfterDurationTick,
+        nextActorId,
+        statBlockRechargeRolls,
+      );
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const resetTurnResources = spellGrantedActionResourceTurnResources(
-    resetBattleTurnResources(durationTick.value.currentTurnResources),
+    resetBattleTurnResources(state.currentTurnResources),
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
-  const stateAfterCommandHalt = applyCommandHaltAtTurnStart({
-    ...stateAfterSleepRepeatSaves,
+  const stateAfterCompelledHalt = applyCompelledHaltAtTurnStart({
+    ...stateAfterHitPointBudgetConditionRepeatSaves,
     combatants: combatantsAfterDamageReductionReset,
     initiative,
     currentTurnResources: resetTurnResources,
   });
-  const currentTurnResourcesAfterSlow = slowActionOrBonusActionTurnResources(
-    stateAfterCommandHalt.currentTurnResources,
-    stateAfterCommandHalt.combatants.get(nextActorId),
-  );
+  const currentTurnResourcesAfterSaveGatedTurnConstraint =
+    saveGatedTurnConstraintActionOrBonusActionTurnResources(
+      stateAfterCompelledHalt,
+      stateAfterCompelledHalt.currentTurnResources,
+      stateAfterCompelledHalt.combatants.get(nextActorId),
+    );
   const currentTurnResourcesAfterActionRestriction =
     moveActionBonusActionTurnResources(
-      currentTurnResourcesAfterSlow,
-      stateAfterCommandHalt.combatants.get(nextActorId),
+      currentTurnResourcesAfterSaveGatedTurnConstraint,
+      stateAfterCompelledHalt.combatants.get(nextActorId),
     );
   const nextState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
-      ...stateAfterSleepRepeatSaves,
+      ...stateAfterHitPointBudgetConditionRepeatSaves,
       initiative,
-      combatants: stateAfterCommandHalt.combatants,
+      combatants: stateAfterCompelledHalt.combatants,
       lightEmitters: lightEmittersAfterDurationTick,
       currentTurnResources: currentTurnResourcesAfterActionRestriction,
       readiedSpells,
@@ -496,7 +1396,7 @@ function resolveEndTurn({
         consumed: false,
       },
     },
-    flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames,
   );
   const nextStateWithSpellEndTargetStateConcentrationBreaks =
     battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
@@ -511,6 +1411,66 @@ function resolveEndTurn({
       nextStateWithSpellEndTargetStateConcentrationBreaks,
     ),
   };
+}
+
+function roundDurationCohort(
+  state: BattleState,
+): BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"] {
+  const wrapsRound =
+    Number(nextInitiative(state.initiative).round) >
+    Number(state.initiative.round);
+  if (!wrapsRound) return { activeEffectRefs: [], lightEmitterRefs: [] };
+  return {
+    activeEffectRefs: [...state.combatants].flatMap(([, combatant]) =>
+      combatant.activeEffects
+        .filter(isTickingDurationActiveEffect)
+        .map((effect) => effect.effectRef),
+    ),
+    lightEmitterRefs: state.lightEmitters.flatMap((emitter) =>
+      emitter.kind !== "objectInvisibleRevealLightEmitter" &&
+      emitter.expiresAt.kind === "duration"
+        ? [emitter.effectRef]
+        : [],
+    ),
+  };
+}
+
+function applyRoundDurationTickAfterStartTurnOccurrences(
+  state: BattleState,
+  cohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"],
+): BattleState {
+  if (
+    cohort.activeEffectRefs.length === 0 &&
+    cohort.lightEmitterRefs.length === 0
+  )
+    return state;
+  const activeEffectRefs = new Set(cohort.activeEffectRefs);
+  const durationTick = tickDurationEffects(
+    state.combatants,
+    {
+      state,
+      spellEndTargetStatePromotionTiming:
+        END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
+    },
+    activeEffectRefs,
+  );
+  const lightEmitterRefs = new Set(cohort.lightEmitterRefs);
+  const stateAfterTick = battleStateWithFlySpeedGrantEndFallCleanupFrames(
+    {
+      ...state,
+      combatants: durationTick.value,
+      lightEmitters: state.lightEmitters.flatMap((emitter) =>
+        lightEmitterRefs.has(emitter.effectRef)
+          ? tickDurationBattleLightEmitters([emitter])
+          : [emitter],
+      ),
+    },
+    durationTick.grantedFlightEndFallCleanupFrames,
+  );
+  return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+    stateAfterTick,
+    durationTick.spellEndTargetStatePromotionIds,
+  );
 }
 
 function moveActionBonusActionTurnResources(
@@ -545,7 +1505,7 @@ function resetSpellDamageReductionsForNewTurn(
     [...combatants].map(([id, combatant]) => {
       const activeEffects = combatant.activeEffects.map((effect) =>
         (effect.kind === "spellDamageReduction" ||
-          effect.kind === "jumpMovementReplacement") &&
+          effect.kind === "fixedCostMovementReplacement") &&
         effect.usedThisTurn
           ? { ...effect, usedThisTurn: false }
           : effect,
@@ -588,36 +1548,34 @@ function expireStartOfTurnEffects(
   );
 }
 
-function applyStartOfTurnActiveEffects(
+function applyStartOfTurnTemporaryHitPointEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
+  sourceProcedureRefs: readonly BattleProcedureExecutionRef[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const actor = combatants.get(actorId);
-  /* v8 ignore start -- @preserve -- Defensive inconsistent-state guard: battle admission and turn reducers keep every initiative combatant in the combatant map before start-of-turn effects run. */
-  if (actor === undefined) {
-    return combatants;
-  }
-  /* v8 ignore stop -- @preserve */
-  const temporaryHitPoints = actor.activeEffects
-    .filter(
+  return sourceProcedureRefs.reduce((nextCombatants, sourceProcedureRef) => {
+    const actor = nextCombatants.get(actorId);
+    /* v8 ignore start -- @preserve -- Defensive inconsistent-state guard: battle admission and turn reducers keep every initiative combatant in the combatant map before start-of-turn effects run. */
+    if (actor === undefined) return nextCombatants;
+    /* v8 ignore stop -- @preserve */
+    const effect = actor.activeEffects.find(
       (
-        effect,
-      ): effect is Extract<
+        candidate,
+      ): candidate is Extract<
         BattleActiveEffect,
         { readonly kind: "turnStartTemporaryHitPoints" }
-      > => effect.kind === "turnStartTemporaryHitPoints",
-    )
-    .reduce(
-      (highest, effect) => Math.max(highest, effect.amount),
-      Number(actor.tempHp),
+      > =>
+        candidate.kind === "turnStartTemporaryHitPoints" &&
+        candidate.sourceProcedureRef === sourceProcedureRef,
     );
-  if (temporaryHitPoints === Number(actor.tempHp)) {
-    return combatants;
-  }
-  return new Map(combatants).set(
-    actorId,
-    applyTemporaryHitPoints(actor, temporaryHitPoints),
-  );
+    if (effect === undefined || effect.amount <= Number(actor.tempHp)) {
+      return nextCombatants;
+    }
+    return new Map(nextCombatants).set(
+      actorId,
+      applyTemporaryHitPoints(actor, effect.amount),
+    );
+  }, combatants);
 }
 
 function spellTurnStartDamageEffects(
@@ -645,6 +1603,49 @@ type SpellTurnStartDamageEffect =
       BattleActiveEffect,
       { readonly kind: "spellTurnStartDamageAndSave" }
     >;
+
+function spellTurnStartDamageOccurrenceOption(
+  effect: SpellTurnStartDamageEffect,
+): StartTurnOccurrenceOption {
+  return startTurnOccurrenceOption(
+    effect.kind === "spellCondition"
+      ? {
+          kind: "spellConditionTurnStartDamage",
+          effectRef: effect.effectRef,
+        }
+      : {
+          kind: "spellTurnStartDamageAndSave",
+          effectRef: effect.effectRef,
+        },
+  );
+}
+
+function spellTurnStartDamageConcentrationSavingThrowHoles(input: {
+  readonly state: BattleState;
+  readonly target: BattleCreatureState;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly damageAmount: number;
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+}): readonly BattleConcentrationSavingThrowHole[] {
+  const occurrenceId = spellTurnStartDamageOccurrenceOption(
+    input.effect,
+  ).occurrenceId;
+  return damageLifecycleConcentrationSavingThrowHoles({
+    state: input.state,
+    target: input.target,
+    damageAmount: input.damageAmount,
+  }).map((hole) => {
+    const key = `battle:spell-turn-start-damage-concentration:${input.sourceTurn.actorId}:${Number(input.sourceTurn.round)}:${occurrenceId}:${hole.combatantId}`;
+    return {
+      ...hole,
+      holeId: holeId(key),
+      holeInstanceKey: holeInstanceKey(key),
+    };
+  });
+}
 
 function spellTurnEndDamageEffects(
   combatant: BattleCreatureState | undefined,
@@ -674,7 +1675,7 @@ function spellTurnEndDamageRollHole(
   effect: SpellTurnEndDamageEffect,
 ): BattleSpellTurnEndDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:spell-turn-end-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${expr}`;
+  const key = `battle:spell-turn-end-damage:${targetId}:${effect.effectRef}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -682,6 +1683,7 @@ function spellTurnEndDamageRollHole(
     label: `Spell turn-end damage (${expr})`,
     spellTurnEndDamage: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       damage: effect.damage,
@@ -713,6 +1715,47 @@ function spellTurnEndDamageAmount(
   );
 }
 
+function spellTurnEndDamageDownstreamHoles<
+  Hole extends {
+    readonly holeId: BattleHoleId;
+    readonly holeInstanceKey: HoleInstanceKey;
+  },
+>(effect: SpellTurnEndDamageEffect, holes: readonly Hole[]): readonly Hole[] {
+  return holes.map((hole) => {
+    const key = `battle:spell-turn-end-damage-downstream:${effect.effectRef}:${hole.holeId}`;
+    return {
+      ...hole,
+      damageOccurrence: {
+        kind: "spellTurnEndDamage" as const,
+        effectRef: effect.effectRef,
+      },
+      holeId: holeId(key),
+      holeInstanceKey: holeInstanceKey(key),
+    };
+  });
+}
+
+function spellTurnEndDamageDownstreamFillsForRawHoles<
+  Hole extends {
+    readonly holeId: BattleHoleId;
+    readonly holeInstanceKey: HoleInstanceKey;
+  },
+  Fill extends { readonly holeId: BattleHoleId },
+>(
+  effect: SpellTurnEndDamageEffect,
+  rawHoles: readonly Hole[],
+  fills: readonly Fill[],
+): readonly Fill[] {
+  const exactHoles = spellTurnEndDamageDownstreamHoles(effect, rawHoles);
+  return rawHoles.flatMap((rawHole, index) => {
+    const exactHole = exactHoles[index];
+    const fill = fills.find(
+      (candidate) => candidate.holeId === exactHole?.holeId,
+    );
+    return fill === undefined ? [] : [{ ...fill, holeId: rawHole.holeId }];
+  });
+}
+
 function spellTurnStartDamageForEffect(
   effect: SpellTurnStartDamageEffect,
 ): SpellTurnStartDamage {
@@ -735,19 +1778,22 @@ function spellTurnStartDamageTrigger(
 }
 
 function spellTurnStartDamageRollHole(
-  targetId: CombatantId,
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: SpellTurnStartDamageEffect,
 ): BattleSpellTurnStartDamageRollHole {
   const damage = spellTurnStartDamageForEffect(effect);
   const expr = `${damage.expr.dice}d${damage.expr.dieSize}`;
-  const key = `battle:spell-turn-start-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${expr}`;
+  const occurrenceId =
+    spellTurnStartDamageOccurrenceOption(effect).occurrenceId;
+  const key = `battle:spell-turn-start-damage:${sourceTurn.actorId}:${Number(sourceTurn.round)}:${occurrenceId}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `Spell turn-start damage (${expr})`,
     spellTurnStartDamage: {
-      targetId,
+      targetId: sourceTurn.actorId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       trigger: spellTurnStartDamageTrigger(effect),
@@ -789,15 +1835,16 @@ function applySpellTurnStartDamage(
   concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined,
-  wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
+  linkedDefenseResistanceDamageShareConcentrationSavingThrows: readonly Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[],
   damageDisposition: ReturnType<typeof damageDispositionForTarget>,
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
+  saveGatedConditionWithRepeatDamageRepeatSaveOccurrenceKey: SaveGatedConditionDamageOccurrenceKey,
 ): BattleState {
   return applyPreparedSlotSpellDamage(
     state,
@@ -805,9 +1852,14 @@ function applySpellTurnStartDamage(
     spellTurnStartDamageAmount(state, target, effect, roll),
     {
       concentrationSavingThrow,
-      wardingBondDamageShareConcentrationSavingThrows,
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows,
       damageDisposition,
-      hideousLaughterDamageRepeatSaves,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: saveGatedConditionWithRepeatDamageRepeatSaves,
+        occurrenceKey:
+          saveGatedConditionWithRepeatDamageRepeatSaveOccurrenceKey,
+      },
       damageSourceId: effect.sourceCombatantId,
       spatialFacts: [],
     },
@@ -815,21 +1867,22 @@ function applySpellTurnStartDamage(
 }
 
 function spellTurnStartSavingThrowOutcomeHole(
-  targetId: CombatantId,
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: Extract<
     BattleActiveEffect,
     { readonly kind: "spellTurnStartDamageAndSave" }
   >,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSpellTurnStartSavingThrowOutcomeHole {
-  const key = spellTurnStartSavingThrowOutcomeHoleKey(targetId, effect);
+  const key = spellTurnStartSavingThrowOutcomeHoleKey(sourceTurn, effect);
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `Turn-start ${effect.save.ability.toUpperCase()} save`,
     spellTurnStartSave: {
-      targetId,
+      targetId: sourceTurn.actorId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       save: effect.save,
@@ -843,23 +1896,25 @@ function spellTurnStartSavingThrowOutcomeHole(
 }
 
 function spellTurnStartSavingThrowOutcomeHoleKey(
-  targetId: CombatantId,
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: Extract<
     BattleActiveEffect,
     { readonly kind: "spellTurnStartDamageAndSave" }
   >,
 ): string {
-  return `battle:spell-turn-start-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
+  const occurrenceId =
+    spellTurnStartDamageOccurrenceOption(effect).occurrenceId;
+  return `battle:spell-turn-start-save:${sourceTurn.actorId}:${Number(sourceTurn.round)}:${occurrenceId}`;
 }
 
 export function spellTurnStartSavingThrowOutcomeHoleId(
-  targetId: CombatantId,
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: Extract<
     BattleActiveEffect,
     { readonly kind: "spellTurnStartDamageAndSave" }
   >,
 ): BattleHoleId {
-  return holeId(spellTurnStartSavingThrowOutcomeHoleKey(targetId, effect));
+  return holeId(spellTurnStartSavingThrowOutcomeHoleKey(sourceTurn, effect));
 }
 
 function spellTurnStartSavingThrowOutcomeFor(
@@ -888,10 +1943,8 @@ function validateSpellTurnStartSavingThrowOutcome(
   return "Turn-start spell Saving Throw outcome must match the starting-turn target.";
 }
 
-type SleepPendingRepeatSaveEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "sleepPendingRepeatSave" }
->;
+type StagedSaveConditionPendingRepeatEffect =
+  BoundStagedSaveConditionPendingRepeatEffect;
 
 type SpellConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
@@ -913,13 +1966,25 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
 
+export type SaveGatedTurnConstraintBundleEffect =
+  BoundSaveGatedTurnConstraintBundleEffect;
+
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
-    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
-    | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
+    | Extract<
+        BattleActiveEffect,
+        { readonly kind: "stagedSaveConditionPendingRepeat" }
+      >
+    | Extract<
+        BattleActiveEffect,
+        { readonly kind: "stagedSaveConditionApplied" }
+      >
     | Extract<BattleActiveEffect, { readonly kind: "spellDashBonusAction" }>
-    | Extract<BattleActiveEffect, { readonly kind: "commandPending" }>
+    | Extract<
+        BattleActiveEffect,
+        { readonly kind: "compelledNextTurnBehavior" }
+      >
   >,
   { readonly expiresAt: BattleActiveEffectExpiration }
 > & {
@@ -936,32 +2001,42 @@ function activeEffectsMatching<Effect extends BattleActiveEffect>(
   return combatant?.activeEffects.filter(isEffect) ?? [];
 }
 
-function sleepPendingRepeatSaveEffects(
+function stagedSaveConditionPendingRepeatEffects(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
   actorId: CombatantId,
   round: RoundType,
-): readonly SleepPendingRepeatSaveEffect[] {
-  return activeEffectsMatching(
-    combatant,
-    (effect): effect is SleepPendingRepeatSaveEffect =>
-      effect.kind === "sleepPendingRepeatSave" &&
-      effect.repeatAt.combatantId === actorId &&
-      effect.repeatAt.round === round,
-  );
+): readonly StagedSaveConditionPendingRepeatEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.flatMap((effect) => {
+        if (
+          effect.kind !== "stagedSaveConditionPendingRepeat" ||
+          effect.repeatAt.combatantId !== actorId ||
+          effect.repeatAt.round !== round
+        ) {
+          return [];
+        }
+        const boundEffect = boundStagedSaveConditionPendingRepeatEffect(
+          state,
+          effect,
+        );
+        return boundEffect === undefined ? [] : [boundEffect];
+      });
 }
 
-function sleepRepeatSavingThrowOutcomeHole(
+function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
-  effect: SleepPendingRepeatSaveEffect,
+  effect: StagedSaveConditionPendingRepeatEffect,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
-): BattleSleepRepeatSavingThrowOutcomeHole {
-  const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
+): BattleStagedConditionRepeatSavingThrowOutcomeHole {
+  const key = `battle:hit-point-budget-condition-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Repeat WIS save",
-    sleepRepeatSave: {
+    stagedConditionRepeatSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -975,12 +2050,12 @@ function sleepRepeatSavingThrowOutcomeHole(
   };
 }
 
-function sleepRepeatSavingThrowOutcomeFor(
+function hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleSleepRepeatSavingThrowOutcomeHole,
+  hole: BattleStagedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -998,19 +2073,20 @@ function endTurnSavingThrowFlatBonuses(
       );
 }
 
-export function sleepRepeatSaveSavingThrowHoleIds(
+export function hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
   state: BattleState,
   actorId: CombatantId,
 ): ReadonlySet<BattleHoleId> {
   const actor = state.combatants.get(actorId);
   return new Set(
     [
-      ...sleepPendingRepeatSaveEffects(
+      ...stagedSaveConditionPendingRepeatEffects(
+        state,
         actor,
         actorId,
         state.initiative.round,
       ).map((effect) =>
-        sleepRepeatSavingThrowOutcomeHole(
+        hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
           endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
@@ -1027,12 +2103,11 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
   const actor = state.combatants.get(actorId);
   return new Set(
     [
-      ...hideousLaughterEffects(actor).map((effect) =>
-        hideousLaughterRepeatSavingThrowOutcomeHole(
+      ...saveGatedConditionWithRepeatEffects(state, actor).map((effect) =>
+        saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
-          "endTurn",
-          undefined,
+          { trigger: "endTurn" },
           endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
         ),
       ),
@@ -1258,12 +2333,30 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+function saveGatedTurnConstraintBundleEffects(
+  state: BattleState,
+  combatant: BattleCreatureState | undefined,
+): readonly SaveGatedTurnConstraintBundleEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.flatMap((effect) => {
+        if (effect.kind !== "saveGatedTurnConstraintBundle") {
+          return [];
+        }
+        const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
+          state,
+          effect,
+        );
+        return boundEffect === undefined ? [] : [boundEffect];
+      });
+}
+
+function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
-  effect: SlowActivePenaltiesEffect,
+  effect: SaveGatedTurnConstraintBundleEffect,
   state?: BattleState,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
-): BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole {
+): BattleTurnConstraintEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:slow-active-penalties-end-turn-save",
     targetId,
@@ -1277,7 +2370,7 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "End-turn WIS save",
-    slowActivePenaltiesEndTurnSave: {
+    turnConstraintEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -1296,12 +2389,12 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
   };
 }
 
-function slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
+  hole: BattleTurnConstraintEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -1366,27 +2459,27 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function hideousLaughterRepeatSavingThrowOutcomeFor(
+function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  hole: BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function validateSleepRepeatSavingThrowOutcome(
+function validateSingleTargetSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Sleep repeat-save hole is single-target and cannot carry area geometry or an outcome for a different combatant. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a single-target save hole cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Sleep repeat Saving Throw outcome must not include area facts.";
+    return "Single-target Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Sleep repeat Saving Throw outcome must match the ending-turn target.";
+    : "Single-target Saving Throw outcome must match the expected target.";
   /* v8 ignore stop -- @preserve */
 }
 
@@ -1404,21 +2497,21 @@ function validateSpellConditionEndTurnSavingThrowOutcome(
   /* v8 ignore stop -- @preserve */
 }
 
-function validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
+function validateSaveGatedTurnConstraintBundleEndTurnSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed fill: a Slow end-turn save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Slow end-turn Saving Throw outcome must not include area facts.";
+    return "turn-hindering effect end-turn Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Slow end-turn Saving Throw outcome must match the ending-turn target.";
+    : "turn-hindering effect end-turn Saving Throw outcome must match the ending-turn target.";
   /* v8 ignore stop -- @preserve */
 }
 
-function applySleepRepeatSaveFills(
+function applyHitPointBudgetConditionRepeatSaveFills(
   state: BattleState,
   actorId: CombatantId,
   round: RoundType,
@@ -1428,7 +2521,12 @@ function applySleepRepeatSaveFills(
   >[],
 ): BattleState {
   const actor = state.combatants.get(actorId);
-  const effects = sleepPendingRepeatSaveEffects(actor, actorId, round);
+  const effects = stagedSaveConditionPendingRepeatEffects(
+    state,
+    actor,
+    actorId,
+    round,
+  );
   if (actor === undefined || effects.length === 0) {
     return state;
   }
@@ -1438,13 +2536,19 @@ function applySleepRepeatSaveFills(
     if (target === undefined) {
       return nextState;
     }
-    const hole = sleepRepeatSavingThrowOutcomeHole(actorId, effect);
-    const save = sleepRepeatSavingThrowOutcomeFor(saves, hole);
+    const hole = hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
+      actorId,
+      effect,
+    );
+    const save = hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
     if (save === undefined) {
       return nextState;
     }
     const activeEffectsWithoutPending = target.activeEffects.filter(
-      (candidate) => candidate !== effect,
+      (candidate) => candidate.effectRef !== effect.effectRef,
     );
     const conditionsWithoutPending =
       conditionsAfterExpiringSpellConditionEffects(
@@ -1479,9 +2583,10 @@ function applySleepRepeatSaveFills(
           };
     const unconsciousEffect: Extract<
       BattleActiveEffect,
-      { readonly kind: "sleepUnconscious" }
+      { readonly kind: "stagedSaveConditionApplied" }
     > = {
-      kind: "sleepUnconscious" as const,
+      kind: "stagedSaveConditionApplied" as const,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
@@ -1505,21 +2610,21 @@ function applySleepRepeatSaveFills(
         ),
       ),
     );
-    const stateWithSleepFailure = {
+    const stateWithHitPointBudgetConditionFailure = {
       ...nextState,
       combatants: nextMap,
     };
     const broken = breakCombatantConcentration(
-      stateWithSleepFailure,
+      stateWithHitPointBudgetConditionFailure,
       nextMap,
       actorId,
     );
     const brokenState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
       {
-        ...stateWithSleepFailure,
+        ...stateWithHitPointBudgetConditionFailure,
         combatants: broken.value,
       },
-      broken.flySpeedGrantEndFallCleanupFrames,
+      broken.grantedFlightEndFallCleanupFrames,
     );
     return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
       brokenState,
@@ -1528,7 +2633,8 @@ function applySleepRepeatSaveFills(
   }, state);
 }
 
-function applyHideousLaughterRepeatSaveFills(
+function applySaveGatedConditionWithRepeatRepeatSaveFills(
+  state: BattleState,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   saves: readonly Extract<
@@ -1537,21 +2643,27 @@ function applyHideousLaughterRepeatSaveFills(
   >[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
-  const effects = hideousLaughterEffects(actor);
+  const effects = saveGatedConditionWithRepeatEffects(
+    { ...state, combatants },
+    actor,
+  );
   if (actor === undefined || effects.length === 0) {
     return combatants;
   }
   return effects.reduce((nextCombatants, effect) => {
-    const hole = hideousLaughterRepeatSavingThrowOutcomeHole(
+    const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
       actorId,
       effect,
-      "endTurn",
+      { trigger: "endTurn" },
     );
-    const save = hideousLaughterRepeatSavingThrowOutcomeFor(saves, hole);
+    const save = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
     if (save?.value.outcomes[0]?.succeeded !== true) {
       return nextCombatants;
     }
-    return removeHideousLaughterEffectFromCombatants(
+    return removeSaveGatedConditionWithRepeatEffectFromCombatants(
       nextCombatants,
       actorId,
       effect,
@@ -1667,7 +2779,8 @@ function applyUnitFeatureConditionEndTurnSaveFills(
   }, combatants);
 }
 
-function applySlowActivePenaltiesEndTurnSaveFills(
+function applySaveGatedTurnConstraintBundleEndTurnSaveFills(
+  state: BattleState,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   saves: readonly Extract<
@@ -1676,20 +2789,26 @@ function applySlowActivePenaltiesEndTurnSaveFills(
   >[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
-  const effects = slowActivePenaltiesEffects(actor);
+  const effects = saveGatedTurnConstraintBundleEffects(
+    { ...state, combatants },
+    actor,
+  );
   if (actor === undefined || effects.length === 0) {
     return combatants;
   }
   return effects.reduce((nextCombatants, effect) => {
-    const hole = slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+    const hole = saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
       actorId,
       effect,
     );
-    const save = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(saves, hole);
+    const save = saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
     if (save?.value.outcomes[0]?.succeeded !== true) {
       return nextCombatants;
     }
-    return removeSlowActivePenaltiesEffectFromCombatants(
+    return removeSaveGatedTurnConstraintBundleEffectFromCombatants(
       nextCombatants,
       actorId,
       effect,
@@ -1744,7 +2863,7 @@ function removeAbilityD20TestRollModeEffectFromCombatants(
         ...target,
         activeEffects: target.activeEffects.filter(
           (effect) =>
-            effect !== expiringEffect &&
+            effect.effectRef !== expiringEffect.effectRef &&
             !(
               effect.kind === "sourceDamageRollPenalty" &&
               effect.sourceProcedureRef === expiringEffect.sourceProcedureRef &&
@@ -1775,7 +2894,7 @@ function removeSpellConditionEffectFromCombatants(
       expiringEffect,
       (target) => {
         const activeEffects = target.activeEffects.filter(
-          (effect) => effect !== expiringEffect,
+          (effect) => effect.effectRef !== expiringEffect.effectRef,
         );
         return battleCreatureWithActiveEffectsAndConditions(
           target,
@@ -1814,7 +2933,9 @@ function updateSpellConditionCountedEndTurnSaveEffect(
     (target) => ({
       ...target,
       activeEffects: target.activeEffects.map((candidate) =>
-        candidate === effect ? { ...effect, ...patch } : candidate,
+        candidate.effectRef === effect.effectRef
+          ? { ...effect, ...patch }
+          : candidate,
       ),
     }),
   ).combatants;
@@ -1831,7 +2952,7 @@ function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
     expiringEffect,
     (target) => {
       const activeEffects = target.activeEffects.filter(
-        (effect) => effect !== expiringEffect,
+        (effect) => effect.effectRef !== expiringEffect.effectRef,
       );
       return battleCreatureWithActiveEffectsAndConditions(
         target,
@@ -1846,10 +2967,10 @@ function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
   ).combatants;
 }
 
-function removeSlowActivePenaltiesEffectFromCombatants(
+function removeSaveGatedTurnConstraintBundleEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
-  expiringEffect: SlowActivePenaltiesEffect,
+  expiringEffect: SaveGatedTurnConstraintBundleEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return afterActiveEffectOccurrenceUpdate(
     updateCombatantWithActiveEffectOccurrence(
@@ -1859,7 +2980,7 @@ function removeSlowActivePenaltiesEffectFromCombatants(
       (target) => ({
         ...target,
         activeEffects: target.activeEffects.filter(
-          (effect) => effect !== expiringEffect,
+          (effect) => effect.effectRef !== expiringEffect.effectRef,
         ),
       }),
     ),
@@ -1871,10 +2992,10 @@ function removeSlowActivePenaltiesEffectFromCombatants(
   );
 }
 
-function removeHideousLaughterEffectFromCombatants(
+function removeSaveGatedConditionWithRepeatEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
-  expiringEffect: HideousLaughterEffect,
+  expiringEffect: SaveGatedConditionWithRepeatEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return afterActiveEffectOccurrenceUpdate(
     updateCombatantWithActiveEffectOccurrence(
@@ -1883,7 +3004,7 @@ function removeHideousLaughterEffectFromCombatants(
       expiringEffect,
       (target) => {
         const activeEffects = target.activeEffects.filter(
-          (effect) => effect !== expiringEffect,
+          (effect) => effect.effectRef !== expiringEffect.effectRef,
         );
         return battleCreatureWithActiveEffectsAndConditions(
           target,
@@ -1897,7 +3018,7 @@ function removeHideousLaughterEffectFromCombatants(
       },
     ),
     (updatedCombatants) =>
-      combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+      combatantsAfterSaveGatedConditionWithRepeatSpellEndedIfNoEffects(
         updatedCombatants,
         expiringEffect,
       ),
@@ -1937,7 +3058,9 @@ export function updateCombatantWithActiveEffectOccurrence<
   const target = combatants.get(targetId);
   if (
     target === undefined ||
-    !target.activeEffects.some((effect) => effect === effectOccurrence)
+    !target.activeEffects.some(
+      (effect) => effect.effectRef === effectOccurrence.effectRef,
+    )
   ) {
     return { tag: "unchanged", combatants };
   }
@@ -1974,7 +3097,7 @@ function removeSpellTurnStartDamageAndSaveEffect(
     combatants: new Map(state.combatants).set(targetId, {
       ...target,
       activeEffects: target.activeEffects.filter(
-        (candidate) => candidate !== effect,
+        (candidate) => candidate.effectRef !== effect.effectRef,
       ),
     }),
   };
@@ -1996,15 +3119,19 @@ function applyStartTurnSpellDamageFills(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[],
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
+  effects: readonly SpellTurnStartDamageEffect[] = spellTurnStartDamageEffects(
+    state.combatants.get(actorId),
+  ),
 ): BattleState {
-  const actor = state.combatants.get(actorId);
-  const effects = spellTurnStartDamageEffects(actor);
   return effects.reduce((nextState, effect) => {
-    const hole = spellTurnStartDamageRollHole(actorId, effect);
+    const hole = spellTurnStartDamageRollHole(
+      { actorId, round: state.initiative.round },
+      effect,
+    );
     const roll = spellTurnStartDamageRollFor(rolls, hole);
     const target = nextState.combatants.get(actorId);
     if (roll === undefined || target === undefined) {
@@ -2016,36 +3143,44 @@ function applyStartTurnSpellDamageFills(
       effect,
       roll,
     );
-    const concentrationHole = concentrationSavingThrowHole(
-      target,
-      damageAmount,
-    );
     const concentrationLifecycleHoles =
-      damageLifecycleConcentrationSavingThrowHoles({
+      spellTurnStartDamageConcentrationSavingThrowHoles({
         state: nextState,
         target,
+        effect,
         damageAmount,
+        sourceTurn: {
+          actorId,
+          round: nextState.initiative.round,
+        },
       });
+    const concentrationHole = concentrationLifecycleHoles.find(
+      (candidate) => candidate.combatantId === actorId,
+    );
     const concentrationLifecycleFills = fillsMatchingHoleIds(
       concentrationSavingThrows,
       concentrationLifecycleHoles,
     );
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const saveGatedConditionWithRepeatLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: nextState,
         target,
         damageAmount,
+        damageOccurrenceKey: startTurnDamageOccurrenceKey(
+          { actorId, round: state.initiative.round },
+          effect,
+        ),
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
+      saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatLifecycleHoles,
     );
     const damaged = applySpellTurnStartDamage(
       nextState,
       target,
       effect,
       roll,
-      concentrationHole === null
+      concentrationHole === undefined
         ? undefined
         : concentrationSavingThrowFillFor(
             concentrationLifecycleFills,
@@ -2053,22 +3188,560 @@ function applyStartTurnSpellDamageFills(
           ),
       concentrationLifecycleFills,
       damageDispositionForTarget(
-        startTurnDamageDispositionHoles(nextState, actorId, [{ effect, roll }]),
+        startTurnDamageDispositionHoles(
+          nextState,
+          { actorId, round: nextState.initiative.round },
+          [{ effect, roll }],
+        ),
         damageDispositions,
         actorId,
       ),
-      hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatLifecycleFills,
+      startTurnDamageOccurrenceKey(
+        { actorId, round: state.initiative.round },
+        effect,
+      ),
     );
     if (effect.kind !== "spellTurnStartDamageAndSave") {
       return damaged;
     }
-    const saveHole = spellTurnStartSavingThrowOutcomeHole(actorId, effect);
+    const saveHole = spellTurnStartSavingThrowOutcomeHole(
+      { actorId, round: state.initiative.round },
+      effect,
+    );
     const save = spellTurnStartSavingThrowOutcomeFor(saves, saveHole);
     const succeeded = save?.value.outcomes[0]?.succeeded === true;
     return succeeded
       ? removeSpellTurnStartDamageAndSaveEffect(damaged, actorId, effect)
       : damaged;
   }, state);
+}
+
+type StartTurnOccurrenceStep =
+  | {
+      readonly tag: "advanced";
+      readonly state: BattleState;
+      readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
+    }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult };
+
+function activeSpellTurnStartDamageEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  offered: SpellTurnStartDamageEffect,
+): SpellTurnStartDamageEffect | undefined {
+  const actor = state.combatants.get(actorId);
+  return spellTurnStartDamageEffects(actor).find(
+    (candidate) => candidate.effectRef === offered.effectRef,
+  );
+}
+
+function startTurnDamageOccurrenceKey(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  effect: SpellTurnStartDamageEffect,
+): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKeyForStartTurn({
+    actorId: sourceTurn.actorId,
+    round: sourceTurn.round,
+    occurrenceId: spellTurnStartDamageOccurrenceOption(effect).occurrenceId,
+  });
+}
+
+function resolveSpellTurnStartDamageOccurrence(input: {
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly subject: BattleSubject;
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly offeredEffect: SpellTurnStartDamageEffect;
+  readonly fills: readonly BattleFill[];
+}): StartTurnOccurrenceStep {
+  const effect = activeSpellTurnStartDamageEffect(
+    input.state,
+    input.sourceTurn.actorId,
+    input.offeredEffect,
+  );
+  if (effect === undefined) {
+    return { tag: "advanced", state: input.state, acceptedHoleIds: new Set() };
+  }
+  const target = input.state.combatants.get(input.sourceTurn.actorId);
+  if (target === undefined) {
+    return { tag: "advanced", state: input.state, acceptedHoleIds: new Set() };
+  }
+  const rollStage = resolveStartTurnDamageRoll({ input, effect, target });
+  if (rollStage.tag === "result") return rollStage;
+  const concentrationStage = resolveStartTurnDamageConcentrationFills({
+    input,
+    effect,
+    target,
+    damageAmount: rollStage.value.damageAmount,
+  });
+  if (concentrationStage.tag === "result") return concentrationStage;
+  const dispositionStage = resolveStartTurnDamageDispositionFills({
+    input,
+    effect,
+    roll: rollStage.value.roll,
+  });
+  if (dispositionStage.tag === "result") return dispositionStage;
+  const hideousStage = resolveStartTurnDamageSaveGatedConditionWithRepeatFills({
+    input,
+    effect,
+    target,
+    damageAmount: rollStage.value.damageAmount,
+  });
+  if (hideousStage.tag === "result") return hideousStage;
+  const endingSaveStage = resolveStartTurnDamageEndingSave({
+    input,
+    effect,
+    savingThrowFills: hideousStage.value.savingThrowFills,
+  });
+  if (endingSaveStage.tag === "result") return endingSaveStage;
+  return applyResolvedStartTurnDamageOccurrence({
+    input,
+    effectResolution: endingSaveStage.value,
+    target,
+    ...rollStage.value,
+    ...concentrationStage.value,
+    ...dispositionStage.value,
+    ...hideousStage.value,
+  });
+}
+
+type StartTurnDamageStage<Value> =
+  | { readonly tag: "resolved"; readonly value: Value }
+  | Extract<StartTurnOccurrenceStep, { readonly tag: "result" }>;
+
+type StartTurnDamageRollFill = Extract<
+  BattleFill,
+  { readonly kind: "rolledDice" }
+>;
+type StartTurnDamageConcentrationFill = Extract<
+  BattleFill,
+  { readonly kind: "concentrationSavingThrow" }
+>;
+type StartTurnDamageDispositionFill = Extract<
+  BattleFill,
+  { readonly kind: "attackDamageDisposition" }
+>;
+type StartTurnDamageSavingThrowFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+
+type StartTurnDamageEffectResolution =
+  | {
+      readonly tag: "damageOnly";
+      readonly effect: Extract<
+        SpellTurnStartDamageEffect,
+        { readonly kind: "spellCondition" }
+      >;
+    }
+  | {
+      readonly tag: "damageAndEndingSave";
+      readonly effect: Extract<
+        SpellTurnStartDamageEffect,
+        { readonly kind: "spellTurnStartDamageAndSave" }
+      >;
+      readonly hole: BattleSpellTurnStartSavingThrowOutcomeHole;
+      readonly fill: StartTurnDamageSavingThrowFill;
+    };
+
+type StartTurnDamageOccurrenceInput = Parameters<
+  typeof resolveSpellTurnStartDamageOccurrence
+>[0];
+
+function resolveStartTurnDamageRoll(input: {
+  readonly input: StartTurnDamageOccurrenceInput;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly target: BattleCreatureState;
+}): StartTurnDamageStage<{
+  readonly rollHole: BattleSpellTurnStartDamageRollHole;
+  readonly roll: StartTurnDamageRollFill;
+  readonly damageAmount: ReturnType<typeof spellTurnStartDamageAmount>;
+}> {
+  const rollHole = spellTurnStartDamageRollHole(
+    input.input.sourceTurn,
+    input.effect,
+  );
+  const rollFills = input.input.fills.filter(
+    (fill): fill is StartTurnDamageRollFill =>
+      fill.kind === "rolledDice" && fill.holeId === rollHole.holeId,
+  );
+  if (rollFills.length === 0) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.input.resultState, input.input.subject, [
+        rollHole,
+      ]),
+    };
+  }
+  if (rollFills.length !== 1) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.resultState,
+        "invalidFill",
+        "Start-turn damage roll must answer its exact occurrence once.",
+      ),
+    };
+  }
+  const roll = rollFills[0];
+  const issue = validateRolledDiceFillForDiceExpr(
+    roll,
+    spellTurnStartDamageForEffect(input.effect).expr,
+  );
+  if (issue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.input.resultState, "invalidFill", issue),
+    };
+  }
+  return {
+    tag: "resolved",
+    value: {
+      rollHole,
+      roll,
+      damageAmount: spellTurnStartDamageAmount(
+        input.input.state,
+        input.target,
+        input.effect,
+        roll,
+      ),
+    },
+  };
+}
+
+function resolveStartTurnDamageConcentrationFills(input: {
+  readonly input: StartTurnDamageOccurrenceInput;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly target: BattleCreatureState;
+  readonly damageAmount: ReturnType<typeof spellTurnStartDamageAmount>;
+}): StartTurnDamageStage<{
+  readonly concentrationHoles: readonly BattleConcentrationSavingThrowHole[];
+  readonly exactConcentrationFills: readonly StartTurnDamageConcentrationFill[];
+}> {
+  const concentrationHoles = spellTurnStartDamageConcentrationSavingThrowHoles({
+    state: input.input.state,
+    target: input.target,
+    effect: input.effect,
+    damageAmount: input.damageAmount,
+    sourceTurn: input.input.sourceTurn,
+  });
+  const concentrationFills = input.input.fills.filter(
+    (fill): fill is StartTurnDamageConcentrationFill =>
+      fill.kind === "concentrationSavingThrow",
+  );
+  const exactConcentrationFills = fillsMatchingHoleIds(
+    concentrationFills,
+    concentrationHoles,
+  );
+  const missingHoles = concentrationHoles.filter(
+    (hole) =>
+      concentrationSavingThrowFillFor(exactConcentrationFills, hole) ===
+      undefined,
+  );
+  if (missingHoles.length > 0) {
+    return {
+      tag: "result",
+      result: needsHolesResult(
+        input.input.resultState,
+        input.input.subject,
+        missingHoles,
+      ),
+    };
+  }
+  if (exactConcentrationFills.length !== concentrationHoles.length) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.resultState,
+        "invalidFill",
+        "Start-turn damage Concentration fills must answer each exact occurrence once.",
+      ),
+    };
+  }
+  return {
+    tag: "resolved",
+    value: { concentrationHoles, exactConcentrationFills },
+  };
+}
+
+function resolveStartTurnDamageDispositionFills(input: {
+  readonly input: StartTurnDamageOccurrenceInput;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly roll: StartTurnDamageRollFill;
+}): StartTurnDamageStage<{
+  readonly dispositionHoles: readonly BattleAttackDamageDispositionHole[];
+  readonly exactDispositionFills: readonly StartTurnDamageDispositionFill[];
+}> {
+  const dispositionHoles = startTurnDamageDispositionHoles(
+    input.input.state,
+    input.input.sourceTurn,
+    [{ effect: input.effect, roll: input.roll }],
+  );
+  const fills = input.input.fills.filter(
+    (fill): fill is StartTurnDamageDispositionFill =>
+      fill.kind === "attackDamageDisposition",
+  );
+  const exactDispositionFills = fillsMatchingHoleIds(fills, dispositionHoles);
+  const issue = damageDispositionFillsValidation({
+    holes: dispositionHoles,
+    fills: exactDispositionFills,
+  });
+  if (issue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.input.resultState, "invalidFill", issue),
+    };
+  }
+  const missingHoles = dispositionHoles.filter(
+    (hole) =>
+      damageDispositionFillFor(exactDispositionFills, hole) === undefined,
+  );
+  if (missingHoles.length > 0) {
+    return {
+      tag: "result",
+      result: needsHolesResult(
+        input.input.resultState,
+        input.input.subject,
+        missingHoles,
+      ),
+    };
+  }
+  return {
+    tag: "resolved",
+    value: { dispositionHoles, exactDispositionFills },
+  };
+}
+
+function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
+  readonly input: StartTurnDamageOccurrenceInput;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly target: BattleCreatureState;
+  readonly damageAmount: ReturnType<typeof spellTurnStartDamageAmount>;
+}): StartTurnDamageStage<{
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
+  readonly hideousHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
+  readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
+  readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
+}> {
+  const damageOccurrenceKey = startTurnDamageOccurrenceKey(
+    input.input.sourceTurn,
+    input.effect,
+  );
+  const hideousHoles =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+      state: input.input.state,
+      target: input.target,
+      damageAmount: input.damageAmount,
+      damageOccurrenceKey: damageOccurrenceKey,
+    });
+  const savingThrowFills = input.input.fills.filter(
+    (fill): fill is StartTurnDamageSavingThrowFill =>
+      fill.kind === "savingThrowOutcome",
+  );
+  const exactHideousFills = fillsMatchingHoleIds(
+    savingThrowFills,
+    hideousHoles,
+  );
+  const check =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+      state: input.input.state,
+      target: input.target,
+      damageAmount: input.damageAmount,
+      fills: exactHideousFills,
+      damageOccurrenceKey: damageOccurrenceKey,
+    });
+  return Match.value(check).pipe(
+    Match.when({ tag: "invalid" }, ({ message }) => ({
+      tag: "result" as const,
+      result: invalidResult(input.input.resultState, "invalidFill", message),
+    })),
+    Match.when({ tag: "needsHoles" }, ({ holes }) => ({
+      tag: "result" as const,
+      result: needsHolesResult(
+        input.input.resultState,
+        input.input.subject,
+        holes,
+      ),
+    })),
+    Match.when({ tag: "ok" }, () => ({
+      tag: "resolved" as const,
+      value: {
+        damageOccurrenceKey,
+        hideousHoles,
+        exactHideousFills,
+        savingThrowFills,
+      },
+    })),
+    Match.exhaustive,
+  );
+}
+
+function resolveStartTurnDamageEndingSave(input: {
+  readonly input: StartTurnDamageOccurrenceInput;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
+}): StartTurnDamageStage<StartTurnDamageEffectResolution> {
+  if (input.effect.kind !== "spellTurnStartDamageAndSave") {
+    return {
+      tag: "resolved",
+      value: { tag: "damageOnly", effect: input.effect },
+    };
+  }
+  const hole = spellTurnStartSavingThrowOutcomeHole(
+    input.input.sourceTurn,
+    input.effect,
+    savingThrowFlatBonusProjections(
+      input.input.state,
+      input.effect.save.ability,
+    ).filter(
+      (projection) => projection.targetId === input.input.sourceTurn.actorId,
+    ),
+  );
+  const exactSaveFills = input.savingThrowFills.filter(
+    (fill) => fill.holeId === hole.holeId,
+  );
+  if (exactSaveFills.length > 1) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.resultState,
+        "invalidFill",
+        "Start-turn ending save must answer its exact occurrence once.",
+      ),
+    };
+  }
+  const fill = spellTurnStartSavingThrowOutcomeFor(
+    input.savingThrowFills,
+    hole,
+  );
+  if (fill === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.input.resultState, input.input.subject, [
+        hole,
+      ]),
+    };
+  }
+  const issue = validateSpellTurnStartSavingThrowOutcome(
+    fill.value,
+    input.input.sourceTurn.actorId,
+  );
+  if (issue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.input.resultState, "invalidFill", issue),
+    };
+  }
+  return {
+    tag: "resolved",
+    value: {
+      tag: "damageAndEndingSave",
+      effect: input.effect,
+      hole,
+      fill,
+    },
+  };
+}
+
+function applyResolvedStartTurnDamageOccurrence(input: {
+  readonly input: StartTurnDamageOccurrenceInput;
+  readonly effectResolution: StartTurnDamageEffectResolution;
+  readonly target: BattleCreatureState;
+  readonly rollHole: BattleSpellTurnStartDamageRollHole;
+  readonly roll: StartTurnDamageRollFill;
+  readonly damageAmount: ReturnType<typeof spellTurnStartDamageAmount>;
+  readonly concentrationHoles: readonly BattleConcentrationSavingThrowHole[];
+  readonly exactConcentrationFills: readonly StartTurnDamageConcentrationFill[];
+  readonly dispositionHoles: readonly BattleAttackDamageDispositionHole[];
+  readonly exactDispositionFills: readonly StartTurnDamageDispositionFill[];
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
+  readonly hideousHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
+  readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
+}): StartTurnOccurrenceStep {
+  const effect = startTurnDamageEffectForResolution(input.effectResolution);
+  const rawConcentrationHoles = damageLifecycleConcentrationSavingThrowHoles({
+    state: input.input.state,
+    target: input.target,
+    damageAmount: input.damageAmount,
+  });
+  const rawConcentrationFills = rawConcentrationHoles.flatMap((rawHole) => {
+    const exactHole = input.concentrationHoles.find(
+      (hole) => hole.combatantId === rawHole.combatantId,
+    );
+    const fill =
+      exactHole === undefined
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            input.exactConcentrationFills,
+            exactHole,
+          );
+    return fill === undefined ? [] : [{ ...fill, holeId: rawHole.holeId }];
+  });
+  const mainConcentrationHole = rawConcentrationHoles.find(
+    (hole) => hole.combatantId === input.input.sourceTurn.actorId,
+  );
+  const damaged = applySpellTurnStartDamage(
+    input.input.state,
+    input.target,
+    effect,
+    input.roll,
+    mainConcentrationHole === undefined
+      ? undefined
+      : concentrationSavingThrowFillFor(
+          rawConcentrationFills,
+          mainConcentrationHole,
+        ),
+    rawConcentrationFills,
+    damageDispositionForTarget(
+      input.dispositionHoles,
+      input.exactDispositionFills,
+      input.input.sourceTurn.actorId,
+    ),
+    input.exactHideousFills,
+    input.damageOccurrenceKey,
+  );
+  const nextState = startTurnDamageStateAfterEndingSave(
+    damaged,
+    input.input.sourceTurn.actorId,
+    input.effectResolution,
+  );
+  const acceptedHoleIds = new Set<BattleHoleId>([
+    input.rollHole.holeId,
+    ...input.concentrationHoles.map((hole) => hole.holeId),
+    ...input.dispositionHoles.map((hole) => hole.holeId),
+    ...input.hideousHoles.map((hole) => hole.holeId),
+  ]);
+  if (input.effectResolution.tag === "damageAndEndingSave") {
+    acceptedHoleIds.add(input.effectResolution.hole.holeId);
+  }
+  return { tag: "advanced", state: nextState, acceptedHoleIds };
+}
+
+function startTurnDamageStateAfterEndingSave(
+  damaged: BattleState,
+  actorId: CombatantId,
+  resolution: StartTurnDamageEffectResolution,
+): BattleState {
+  return Match.value(resolution).pipe(
+    Match.when({ tag: "damageOnly" }, () => damaged),
+    Match.when({ tag: "damageAndEndingSave" }, ({ effect, fill }) =>
+      fill.value.outcomes[0]?.succeeded === true
+        ? removeSpellTurnStartDamageAndSaveEffect(damaged, actorId, effect)
+        : damaged,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function startTurnDamageEffectForResolution(
+  resolution: StartTurnDamageEffectResolution,
+): SpellTurnStartDamageEffect {
+  return Match.value(resolution).pipe(
+    Match.when({ tag: "damageOnly" }, ({ effect }) => effect),
+    Match.when({ tag: "damageAndEndingSave" }, ({ effect }) => effect),
+    Match.exhaustive,
+  );
 }
 
 function applyEndTurnSpellDamageFills(
@@ -2084,7 +3757,7 @@ function applyEndTurnSpellDamageFills(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[],
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
@@ -2108,49 +3781,732 @@ function applyEndTurnSpellDamageFills(
       target,
       damageAmount,
     );
-    const concentrationLifecycleHoles =
+    const rawConcentrationLifecycleHoles =
       damageLifecycleConcentrationSavingThrowHoles({
         state: nextState,
         target,
         damageAmount,
       });
-    const concentrationLifecycleFills = fillsMatchingHoleIds(
-      concentrationSavingThrows,
-      concentrationLifecycleHoles,
-    );
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const exactConcentrationHole =
+      concentrationHole === null
+        ? null
+        : spellTurnEndDamageDownstreamHoles(effect, [concentrationHole])[0]!;
+    const concentrationLifecycleFills =
+      spellTurnEndDamageDownstreamFillsForRawHoles(
+        effect,
+        rawConcentrationLifecycleHoles,
+        concentrationSavingThrows,
+      );
+    const rawSaveGatedConditionWithRepeatLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: nextState,
         target,
         damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          roll.holeId,
+        ),
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const saveGatedConditionWithRepeatLifecycleFills =
+      spellTurnEndDamageDownstreamFillsForRawHoles(
+        effect,
+        rawSaveGatedConditionWithRepeatLifecycleHoles,
+        saveGatedConditionWithRepeatDamageRepeatSaves,
+      );
+    const exactConcentrationFill =
+      exactConcentrationHole === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            concentrationSavingThrows,
+            exactConcentrationHole,
+          );
+    const concentrationFill =
+      exactConcentrationFill === undefined || concentrationHole === null
+        ? undefined
+        : { ...exactConcentrationFill, holeId: concentrationHole.holeId };
+    const rawDispositionHoles = endTurnDamageDispositionRawHoles(
+      nextState,
+      actorId,
+      [{ effect, roll }],
+    );
+    const rawDispositionFills = spellTurnEndDamageDownstreamFillsForRawHoles(
+      effect,
+      rawDispositionHoles,
+      damageDispositions,
     );
     return applyPreparedSlotSpellDamage(nextState, actorId, damageAmount, {
-      concentrationSavingThrow:
-        concentrationHole === null
-          ? undefined
-          : concentrationSavingThrowFillFor(
-              concentrationLifecycleFills,
-              concentrationHole,
-            ),
-      wardingBondDamageShareConcentrationSavingThrows:
+      concentrationSavingThrow: concentrationFill,
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionForTarget(
-        endTurnDamageDispositionHoles(nextState, actorId, [{ effect, roll }]),
-        damageDispositions,
+        rawDispositionHoles,
+        rawDispositionFills,
         actorId,
       ),
-      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: saveGatedConditionWithRepeatLifecycleFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          roll.holeId,
+        ),
+      },
       damageSourceId: effect.sourceCombatantId,
       spatialFacts: [],
     });
   }, state);
 }
 
+type OrderedStartTurnOccurrenceSequenceResult =
+  | {
+      readonly tag: "advanced";
+      readonly state: BattleState;
+      readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
+      readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementSaveHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementDamageHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementConcentrationHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementDispositionHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementDamageRepeatSaveHoleIds: ReadonlySet<BattleHoleId>;
+    }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult };
+
+function resolveOrderedStartTurnOccurrences(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
+  readonly traversal: StartTurnOccurrenceTraversal;
+  readonly fills: readonly BattleFill[];
+  readonly parent: ReplayParentContinuation;
+  readonly context:
+    | {
+        readonly kind: "root";
+        readonly resultState: BattleState;
+        readonly offeredHandles: readonly StartTurnOccurrenceHandle[];
+      }
+    | {
+        readonly kind: "replay";
+        readonly previouslyAcceptedMovementFillHoleIds: readonly BattleHoleId[];
+      };
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const accumulation = orderedStartTurnOccurrenceAccumulation(input);
+  const movementFills = input.fills.filter(
+    (fill): fill is TranslatingPersistentAreaMovementFill =>
+      fill.kind === "persistentAreaSourceTurnTranslation",
+  );
+  for (const occurrenceId of startTurnOccurrenceTraversalIds(input.traversal)) {
+    const handle = startTurnOccurrenceHandleForId(
+      input,
+      accumulation.state,
+      occurrenceId,
+    );
+    if (handle === undefined) continue;
+    const step = resolveOrderedStartTurnOccurrenceHandle({
+      input,
+      state: accumulation.state,
+      resultState: orderedStartTurnResultState(
+        input.context,
+        accumulation.state,
+      ),
+      handle,
+      movementFills,
+      acceptedHoleIds: accumulation.acceptedHoleIds,
+      matchedMovementFillHoleIds: accumulation.matchedMovementFillHoleIds,
+    });
+    if (step.tag === "result") return step;
+    accumulation.state = step.state;
+    mergeOrderedStartTurnOccurrenceStep(accumulation, step);
+  }
+  return accumulation;
+}
+
+type OrderedStartTurnOccurrenceInput = Parameters<
+  typeof resolveOrderedStartTurnOccurrences
+>[0];
+type OrderedStartTurnOccurrenceAdvanced = Extract<
+  OrderedStartTurnOccurrenceSequenceResult,
+  { readonly tag: "advanced" }
+>;
+type OrderedStartTurnOccurrenceAccumulation = {
+  tag: "advanced";
+  state: BattleState;
+  acceptedHoleIds: Set<BattleHoleId>;
+  matchedMovementFillHoleIds: Set<BattleHoleId>;
+  movementSaveHoleIds: Set<BattleHoleId>;
+  movementDamageHoleIds: Set<BattleHoleId>;
+  movementConcentrationHoleIds: Set<BattleHoleId>;
+  movementDispositionHoleIds: Set<BattleHoleId>;
+  movementDamageRepeatSaveHoleIds: Set<BattleHoleId>;
+};
+
+function orderedStartTurnOccurrenceAccumulation(
+  input: OrderedStartTurnOccurrenceInput,
+): OrderedStartTurnOccurrenceAccumulation {
+  const acceptedHoleIds = new Set<BattleHoleId>();
+  const matchedMovementFillHoleIds = new Set<BattleHoleId>();
+  if (input.context.kind === "replay") {
+    for (const id of input.context.previouslyAcceptedMovementFillHoleIds) {
+      matchedMovementFillHoleIds.add(id);
+      acceptedHoleIds.add(id);
+    }
+  }
+  return {
+    tag: "advanced",
+    state: input.state,
+    acceptedHoleIds,
+    matchedMovementFillHoleIds,
+    movementSaveHoleIds: new Set(),
+    movementDamageHoleIds: new Set(),
+    movementConcentrationHoleIds: new Set(),
+    movementDispositionHoleIds: new Set(),
+    movementDamageRepeatSaveHoleIds: new Set(),
+  };
+}
+
+function startTurnOccurrenceTraversalIds(
+  traversal: StartTurnOccurrenceTraversal,
+): readonly BattleStartTurnOccurrenceId[] {
+  return Match.value(traversal).pipe(
+    Match.when({ kind: "none" }, () => []),
+    Match.when({ kind: "single" }, ({ occurrenceId }) => [occurrenceId]),
+    Match.when({ kind: "ordered" }, ({ occurrenceIds }) => occurrenceIds),
+    Match.exhaustive,
+  );
+}
+
+function startTurnOccurrenceHandleForId(
+  input: OrderedStartTurnOccurrenceInput,
+  state: BattleState,
+  occurrenceId: BattleStartTurnOccurrenceId,
+): StartTurnOccurrenceHandle | undefined {
+  const offeredHandle =
+    input.context.kind === "root"
+      ? input.context.offeredHandles.find(
+          (candidate) =>
+            startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
+            occurrenceId,
+        )
+      : undefined;
+  return (
+    offeredHandle ??
+    startTurnOccurrenceHandlesForState(state, input.sourceTurn.actorId).find(
+      (candidate) =>
+        startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
+        occurrenceId,
+    )
+  );
+}
+
+function orderedStartTurnResultState(
+  context: OrderedStartTurnOccurrenceInput["context"],
+  prefixState: BattleState,
+): BattleState {
+  return context.kind === "replay" ? prefixState : context.resultState;
+}
+
+function ordinaryStartTurnOccurrenceAdvance(
+  state: BattleState,
+  acceptedHoleIds: ReadonlySet<BattleHoleId> = new Set(),
+): OrderedStartTurnOccurrenceAdvanced {
+  return {
+    tag: "advanced",
+    state,
+    acceptedHoleIds,
+    matchedMovementFillHoleIds: new Set(),
+    movementSaveHoleIds: new Set(),
+    movementDamageHoleIds: new Set(),
+    movementConcentrationHoleIds: new Set(),
+    movementDispositionHoleIds: new Set(),
+    movementDamageRepeatSaveHoleIds: new Set(),
+  };
+}
+
+function resolveOrderedStartTurnOccurrenceHandle(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly handle: StartTurnOccurrenceHandle;
+  readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
+  readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
+  readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  return Match.value(input.handle).pipe(
+    Match.when({ kind: "deathSavingThrow" }, () =>
+      resolveOrderedDeathSavingThrowOccurrence(input),
+    ),
+    Match.when({ kind: "statBlockRecharge" }, () =>
+      resolveOrderedStatBlockRechargeOccurrence(input),
+    ),
+    Match.when({ kind: "turnStartTemporaryHitPoints" }, (handle) =>
+      resolveOrderedTemporaryHitPointOccurrence({ ...input, handle }),
+    ),
+    Match.when({ kind: "spellConditionTurnStartDamage" }, (handle) =>
+      resolveOrderedSpellTurnStartDamageOccurrence({ ...input, handle }),
+    ),
+    Match.when({ kind: "spellTurnStartDamageAndSave" }, (handle) =>
+      resolveOrderedSpellTurnStartDamageOccurrence({ ...input, handle }),
+    ),
+    Match.when({ kind: "persistentAreaSourceTurnTranslation" }, (handle) =>
+      resolveOrderedTranslatingPersistentAreaMovementOccurrence({
+        ...input,
+        handle,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveOrderedDeathSavingThrowOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const actor = input.state.combatants.get(input.input.sourceTurn.actorId);
+  if (!startTurnDeathSavingThrowRequired(actor)) {
+    return ordinaryStartTurnOccurrenceAdvance(input.state);
+  }
+  const hole = deathSavingThrowHole(input.input.sourceTurn.actorId);
+  const fills = input.input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "deathSavingThrow" }> =>
+      fill.kind === "deathSavingThrow" && fill.holeId === hole.holeId,
+  );
+  if (fills.length === 0) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+    };
+  }
+  if (fills.length !== 1) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Death Saving Throw must answer its exact ordered occurrence once.",
+      ),
+    };
+  }
+  const fill = fills[0]!;
+  if (
+    d20TestNaturalOneRerollDieDecisionRequired({
+      actor,
+      originalNaturalD20: Number(fill.value),
+      decision: fill.d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.resultState, input.input.subject, [
+        d20TestNaturalOneRerollHoleWithOption(hole),
+      ]),
+    };
+  }
+  const issue = d20TestNaturalOneRerollDieIssue({
+    actor,
+    originalNaturalD20: Number(fill.value),
+    decision: fill.d20TestNaturalOneReroll,
+  });
+  if (issue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.resultState, "invalidFill", issue),
+    };
+  }
+  return ordinaryStartTurnOccurrenceAdvance(
+    {
+      ...input.state,
+      combatants: applyStartTurnDeathSavingThrow(
+        input.state.combatants,
+        input.input.sourceTurn.actorId,
+        effectiveD20TestNaturalOneRerollDeathSavingThrow(fill).value,
+      ),
+    },
+    new Set([hole.holeId]),
+  );
+}
+
+function resolveOrderedStatBlockRechargeOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const hole = statBlockRechargeRollHole(
+    input.state.combatants.get(input.input.sourceTurn.actorId),
+  );
+  if (hole === null) return ordinaryStartTurnOccurrenceAdvance(input.state);
+  const fills = input.input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "statBlockRechargeRoll" }
+    > => fill.kind === "statBlockRechargeRoll" && fill.holeId === hole.holeId,
+  );
+  if (fills.length === 0) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+    };
+  }
+  if (
+    fills.length !== 1 ||
+    !statBlockRechargeRollFillMatchesHole(fills[0]!.value, hole)
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Stat Block Recharge roll must match its exact ordered occurrence once.",
+      ),
+    };
+  }
+  return ordinaryStartTurnOccurrenceAdvance(
+    {
+      ...input.state,
+      combatants: processStatBlockRechargeRolls(
+        input.state.combatants,
+        input.input.sourceTurn.actorId,
+        fills[0]!.value,
+      ),
+    },
+    new Set([hole.holeId]),
+  );
+}
+
+function resolveOrderedTemporaryHitPointOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly handle: Extract<
+    StartTurnOccurrenceHandle,
+    { readonly kind: "turnStartTemporaryHitPoints" }
+  >;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const actor = input.state.combatants.get(input.input.sourceTurn.actorId);
+  const exactEffect = actor?.activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "turnStartTemporaryHitPoints" }
+    > =>
+      effect.kind === "turnStartTemporaryHitPoints" &&
+      effect.effectRef === input.handle.effect.effectRef,
+  );
+  if (exactEffect === undefined || actor === undefined) {
+    return ordinaryStartTurnOccurrenceAdvance(input.state);
+  }
+  const grantedTemporaryHitPoints = Math.max(0, exactEffect.amount);
+  if (grantedTemporaryHitPoints === 0) {
+    return ordinaryStartTurnOccurrenceAdvance(input.state);
+  }
+  if (Number(actor.tempHp) === 0) {
+    return ordinaryStartTurnOccurrenceAdvance({
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(
+        input.input.sourceTurn.actorId,
+        applyTemporaryHitPoints(actor, grantedTemporaryHitPoints),
+      ),
+    });
+  }
+  const occurrenceId = startTurnOccurrenceOptionForHandle(
+    input.handle,
+  ).occurrenceId;
+  const hole = temporaryHitPointChoiceHole({
+    sourceTurn: input.input.sourceTurn,
+    occurrenceId,
+    sourceProcedureRef: exactEffect.sourceProcedureRef,
+    effectRef: exactEffect.effectRef,
+    sourceCombatantId: exactEffect.sourceCombatantId,
+    existingTemporaryHitPoints: Number(actor.tempHp),
+    grantedTemporaryHitPoints,
+  });
+  const fills = input.input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "temporaryHitPointChoice" }
+    > => fill.kind === "temporaryHitPointChoice" && fill.holeId === hole.holeId,
+  );
+  if (fills.length === 0) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+    };
+  }
+  if (fills.length !== 1) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Temporary Hit Point choice must answer its exact occurrence once.",
+      ),
+    };
+  }
+  const state = temporaryHitPointStateAfterOrderedChoice({
+    state: input.state,
+    actor,
+    actorId: input.input.sourceTurn.actorId,
+    grantedTemporaryHitPoints,
+    choice: fills[0]!.value,
+  });
+  return ordinaryStartTurnOccurrenceAdvance(state, new Set([hole.holeId]));
+}
+
+function temporaryHitPointStateAfterOrderedChoice(input: {
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly grantedTemporaryHitPoints: number;
+  readonly choice: Extract<
+    BattleFill,
+    { readonly kind: "temporaryHitPointChoice" }
+  >["value"];
+}): BattleState {
+  return input.choice === "replaceWithGranted"
+    ? {
+        ...input.state,
+        combatants: new Map(input.state.combatants).set(input.actorId, {
+          ...input.actor,
+          tempHp: Hp(input.grantedTemporaryHitPoints),
+        }),
+      }
+    : input.state;
+}
+
+function resolveOrderedSpellTurnStartDamageOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly handle: Extract<
+    StartTurnOccurrenceHandle,
+    {
+      readonly kind:
+        | "spellConditionTurnStartDamage"
+        | "spellTurnStartDamageAndSave";
+    }
+  >;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const step = resolveSpellTurnStartDamageOccurrence({
+    state: input.state,
+    resultState: input.resultState,
+    subject: input.input.subject,
+    sourceTurn: input.input.sourceTurn,
+    offeredEffect: input.handle.effect,
+    fills: input.input.fills,
+  });
+  return step.tag === "result"
+    ? step
+    : ordinaryStartTurnOccurrenceAdvance(step.state, step.acceptedHoleIds);
+}
+
+type OrderedTranslatingPersistentAreaMovementFillStage =
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | { readonly tag: "skipped" }
+  | {
+      readonly tag: "resolved";
+      readonly effect: TranslatingPersistentAreaMovementBoundary["effect"];
+      readonly hole: BattlePersistentAreaSourceTurnTranslationHole;
+      readonly fill: TranslatingPersistentAreaMovementFill;
+    };
+
+function resolveOrderedTranslatingPersistentAreaMovementFill(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly handle: Extract<
+    StartTurnOccurrenceHandle,
+    { readonly kind: "persistentAreaSourceTurnTranslation" }
+  >;
+  readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
+  readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
+}): OrderedTranslatingPersistentAreaMovementFillStage {
+  const movement = translatingPersistentAreaStartTurnMovementEffects(
+    input.state,
+    input.input.sourceTurn.actorId,
+  ).find(
+    (candidate) =>
+      candidate.effect.effectRef === input.handle.movement.effect.effectRef,
+  );
+  if (movement === undefined) return { tag: "skipped" };
+  const { effect } = movement;
+  const hole = translatingPersistentAreaStartTurnMovementHole(
+    input.input.sourceTurn,
+    movement,
+  );
+  const matchingFills = input.movementFills.filter(
+    (fill) => fill.holeId === hole.holeId,
+  );
+  if (matchingFills.length === 0) {
+    if (
+      input.movementFills.some(
+        (fill) => !input.matchedMovementFillHoleIds.has(fill.holeId),
+      )
+    ) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.resultState,
+          "invalidFill",
+          "TranslatingPersistentArea movement fill does not match the next ordered occurrence.",
+        ),
+      };
+    }
+    return {
+      tag: "result",
+      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+    };
+  }
+  if (matchingFills.length !== 1) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "TranslatingPersistentArea movement fills must match each ordered occurrence exactly once.",
+      ),
+    };
+  }
+  const fill = matchingFills[0]!;
+  const affectedIssue =
+    persistentAreaSourceTurnTranslationAffectedCombatantIssue(input.state, [
+      fill,
+    ]);
+  if (affectedIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        persistentAreaSourceTurnTranslationAffectedCombatantMessage(
+          affectedIssue,
+        ),
+      ),
+    };
+  }
+  return { tag: "resolved", effect, hole, fill };
+}
+
+function resolveOrderedTranslatingPersistentAreaMovementOccurrence(input: {
+  readonly input: OrderedStartTurnOccurrenceInput;
+  readonly state: BattleState;
+  readonly resultState: BattleState;
+  readonly handle: Extract<
+    StartTurnOccurrenceHandle,
+    { readonly kind: "persistentAreaSourceTurnTranslation" }
+  >;
+  readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
+  readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
+  readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const movement = resolveOrderedTranslatingPersistentAreaMovementFill(input);
+  if (movement.tag === "result") return movement;
+  if (movement.tag === "skipped") {
+    return ordinaryStartTurnOccurrenceAdvance(input.state);
+  }
+  if (input.input.traversal.kind === "none") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "staleSubject",
+        "TranslatingPersistentArea movement lost its owning start-turn occurrence sequence.",
+      ),
+    };
+  }
+  const resolution = resolveTranslatingPersistentAreaMovementSaveDamageSequence(
+    {
+      advancedState: input.state,
+      parent: input.input.parent,
+      requests: persistentAreaSourceTurnTranslationSaveDamageRequests([
+        movement,
+      ]),
+      replayPlan: {
+        kind: "turnBoundaryReplay",
+        sourceTurn: input.input.sourceTurn,
+        sequence: input.input.traversal,
+        completedPrefixHoleIds: [...input.acceptedHoleIds].sort(),
+        roundDurationCohort: input.input.roundDurationCohort,
+      },
+    },
+  );
+  if (resolution.tag === "result") return resolution;
+  return persistentAreaSourceTurnTranslationOccurrenceAdvance(
+    movement.fill,
+    resolution,
+  );
+}
+
+function persistentAreaSourceTurnTranslationOccurrenceAdvance(
+  fill: TranslatingPersistentAreaMovementFill,
+  resolution: Extract<
+    TranslatingPersistentAreaMovementSaveDamageSequenceResult,
+    { readonly tag: "resolved" }
+  >,
+): OrderedStartTurnOccurrenceAdvanced {
+  const acceptedHoleIds = new Set<BattleHoleId>([fill.holeId]);
+  for (const id of resolution.saveHoleIds) acceptedHoleIds.add(id);
+  for (const id of resolution.damageHoleIds) acceptedHoleIds.add(id);
+  for (const id of resolution.concentrationHoleIds) acceptedHoleIds.add(id);
+  for (const id of resolution.dispositionHoleIds) acceptedHoleIds.add(id);
+  for (const id of resolution.damageRepeatSaveHoleIds) acceptedHoleIds.add(id);
+  return {
+    tag: "advanced",
+    state: resolution.state,
+    acceptedHoleIds,
+    matchedMovementFillHoleIds: new Set([fill.holeId]),
+    movementSaveHoleIds: resolution.saveHoleIds,
+    movementDamageHoleIds: resolution.damageHoleIds,
+    movementConcentrationHoleIds: resolution.concentrationHoleIds,
+    movementDispositionHoleIds: resolution.dispositionHoleIds,
+    movementDamageRepeatSaveHoleIds: resolution.damageRepeatSaveHoleIds,
+  };
+}
+
+function mergeOrderedStartTurnOccurrenceStep(
+  target: OrderedStartTurnOccurrenceAccumulation,
+  step: OrderedStartTurnOccurrenceAdvanced,
+): void {
+  for (const id of step.acceptedHoleIds) target.acceptedHoleIds.add(id);
+  for (const id of step.matchedMovementFillHoleIds) {
+    target.matchedMovementFillHoleIds.add(id);
+  }
+  for (const id of step.movementSaveHoleIds) target.movementSaveHoleIds.add(id);
+  for (const id of step.movementDamageHoleIds) {
+    target.movementDamageHoleIds.add(id);
+  }
+  for (const id of step.movementConcentrationHoleIds) {
+    target.movementConcentrationHoleIds.add(id);
+  }
+  for (const id of step.movementDispositionHoleIds) {
+    target.movementDispositionHoleIds.add(id);
+  }
+  for (const id of step.movementDamageRepeatSaveHoleIds) {
+    target.movementDamageRepeatSaveHoleIds.add(id);
+  }
+}
+
 function endTurnDamageDispositionHoles(
+  state: BattleState,
+  actorId: CombatantId,
+  damageRolls: readonly {
+    readonly effect: SpellTurnEndDamageEffect;
+    readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  }[],
+): readonly BattleAttackDamageDispositionHole[] {
+  return damageRolls.flatMap(({ effect, roll }) =>
+    spellTurnEndDamageDownstreamHoles(
+      effect,
+      endTurnDamageDispositionRawHoles(state, actorId, [{ effect, roll }]),
+    ),
+  );
+}
+
+function endTurnDamageDispositionRawHoles(
   state: BattleState,
   actorId: CombatantId,
   damageRolls: readonly {
@@ -2163,34 +4519,41 @@ function endTurnDamageDispositionHoles(
     if (target === undefined) {
       return [];
     }
-    return (
-      zeroHitPointReplacementDispositionHole({
-        damageSourceId: effect.sourceCombatantId,
-        target,
-        damageAmount: spellTurnEndDamageAmount(state, target, effect, roll),
-      }) ?? []
-    );
+    const dispositionHole = zeroHitPointReplacementDispositionHole({
+      damageSourceId: effect.sourceCombatantId,
+      target,
+      damageAmount: spellTurnEndDamageAmount(state, target, effect, roll),
+    });
+    return dispositionHole === null ? [] : [dispositionHole];
   });
 }
 
 function startTurnDamageDispositionHoles(
   state: BattleState,
-  actorId: CombatantId,
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   damageRolls: readonly {
     readonly effect: SpellTurnStartDamageEffect;
     readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   }[],
 ): readonly BattleAttackDamageDispositionHole[] {
   return damageRolls.flatMap(({ effect, roll }) => {
-    const target = state.combatants.get(actorId);
+    const target = state.combatants.get(sourceTurn.actorId);
     if (target === undefined) {
       return [];
     }
+    const occurrenceId =
+      spellTurnStartDamageOccurrenceOption(effect).occurrenceId;
+    const key = `battle:spell-turn-start-damage-disposition:${sourceTurn.actorId}:${Number(sourceTurn.round)}:${occurrenceId}`;
     return (
       zeroHitPointReplacementDispositionHole({
         damageSourceId: effect.sourceCombatantId,
         target,
         damageAmount: spellTurnStartDamageAmount(state, target, effect, roll),
+        holeKey: {
+          holeId: holeId(key),
+          holeInstanceKey: holeInstanceKey(key),
+          label: "Start-turn spell damage disposition",
+        },
       }) ?? []
     );
   });
@@ -2238,7 +4601,7 @@ export function tickBattleStateDurationEffects(
       ...state,
       combatants: ticked.value,
     }),
-    flySpeedGrantEndFallCleanupFrames: ticked.flySpeedGrantEndFallCleanupFrames,
+    flySpeedGrantEndFallCleanupFrames: ticked.grantedFlightEndFallCleanupFrames,
     spellEndTargetStatePromotionIds: ticked.spellEndTargetStatePromotionIds,
   };
 }
@@ -2251,94 +4614,33 @@ type DurationTickContext = {
 export function tickDurationEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   context?: DurationTickContext,
+  cohortEffectRefs?: ReadonlySet<BattleEffectExecutionRef>,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const expiredConcentrationSources: ConcentrationEffectSource[] = [];
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   const spellEndTargetStatePromotionIds: CombatantId[] = [];
-  const tickedCombatants = new Map(
-    [...combatants].map(([id, combatant]) => {
-      const expiring: BattleActiveEffect[] = [];
-      const activeEffects: BattleActiveEffect[] = [];
-      for (const effect of combatant.activeEffects) {
-        if (!isTickingDurationActiveEffect(effect)) {
-          activeEffects.push(effect);
-          continue;
-        }
-        const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
-        if (remainingTicks <= 0) {
-          expiring.push(effect);
-          if (
-            "sourceProcedureRef" in effect &&
-            "expiresAt" in effect &&
-            effect.expiresAt.kind === "concentration"
-          ) {
-            expiredConcentrationSources.push({
-              combatantId: effect.expiresAt.combatantId,
-              sourceProcedureRef: effect.sourceProcedureRef,
-            });
-          }
-          continue;
-        }
-        // `isTickingDurationActiveEffect` proves this is a BattleActiveEffect
-        // whose expiration can be ticked. Replacing only the branded duration
-        // count preserves the original discriminant and variant fields; TS
-        // cannot re-correlate that nested update across the union, so this cast
-        // restores the already-proven union type.
-        const ticked = {
-          ...effect,
-          expiresAt: {
-            ...effect.expiresAt,
-            durationTicks: elapsedTimeTicks(remainingTicks),
-          },
-        } as BattleActiveEffect;
-        activeEffects.push(ticked);
-      }
-      if (
-        context !== undefined &&
-        expiring.some(spellEndTargetStatePromotesIncapacitated)
-      ) {
-        spellEndTargetStatePromotionIds.push(id);
-      }
-      flySpeedGrantEndFallCleanupFrames.push(
-        ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
-      );
-      const nextCombatantBase: BattleCreatureState =
-        combatant.positiveHpUnconscious === null
-          ? {
-              ...combatant,
-              activeEffects,
-              conditions: conditionsAfterExpiringSpellConditionEffects(
-                combatant.conditions,
-                activeEffects,
-                expiring,
-              ),
-            }
-          : { ...combatant, activeEffects };
-      const nextCombatantWithHeldObjectState =
-        battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
-          nextCombatantBase,
-        );
-      const nextCombatantWithEndState =
-        context === undefined
-          ? nextCombatantWithHeldObjectState
-          : battleCreatureWithSpellEndTargetStatePromotions({
-              state: context.state,
-              combatant: nextCombatantWithHeldObjectState,
-              expiringEffects: expiring,
-              timing: context.spellEndTargetStatePromotionTiming,
-            });
-      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
-        nextCombatantWithEndState,
-        expiring,
-      );
-      return [id, nextCombatant];
-    }),
-  );
+  const tickedCombatants = new Map<CombatantId, BattleCreatureState>();
+  for (const [id, combatant] of combatants) {
+    const ticked = tickCombatantDurationEffects({
+      id,
+      combatant,
+      context,
+      cohortEffectRefs,
+    });
+    tickedCombatants.set(id, ticked.combatant);
+    expiredConcentrationSources.push(...ticked.expiredConcentrationSources);
+    grantedFlightEndFallCleanupFrames.push(
+      ...ticked.grantedFlightEndFallCleanupFrames,
+    );
+    spellEndTargetStatePromotionIds.push(
+      ...ticked.spellEndTargetStatePromotionIds,
+    );
+  }
   const concentrationExpired =
     expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames(
       tickedCombatants,
@@ -2347,14 +4649,135 @@ export function tickDurationEffects(
     );
   return {
     value: concentrationExpired.value,
-    flySpeedGrantEndFallCleanupFrames: [
-      ...flySpeedGrantEndFallCleanupFrames,
-      ...concentrationExpired.flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames: [
+      ...grantedFlightEndFallCleanupFrames,
+      ...concentrationExpired.grantedFlightEndFallCleanupFrames,
     ],
     spellEndTargetStatePromotionIds: [
       ...spellEndTargetStatePromotionIds,
       ...concentrationExpired.spellEndTargetStatePromotionIds,
     ],
+  };
+}
+
+type TickedDurationEffectPartition = {
+  readonly activeEffects: readonly BattleActiveEffect[];
+  readonly expiringEffects: readonly BattleActiveEffect[];
+  readonly expiredConcentrationSources: readonly ConcentrationEffectSource[];
+};
+
+function partitionTickingDurationEffects(
+  combatant: BattleCreatureState,
+  cohortEffectRefs: ReadonlySet<BattleEffectExecutionRef> | undefined,
+): TickedDurationEffectPartition {
+  const activeEffects: BattleActiveEffect[] = [];
+  const expiringEffects: BattleActiveEffect[] = [];
+  const expiredConcentrationSources: ConcentrationEffectSource[] = [];
+  for (const effect of combatant.activeEffects) {
+    if (
+      !isTickingDurationActiveEffect(effect) ||
+      (cohortEffectRefs !== undefined &&
+        !cohortEffectRefs.has(effect.effectRef))
+    ) {
+      activeEffects.push(effect);
+      continue;
+    }
+    const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
+    if (remainingTicks <= 0) {
+      expiringEffects.push(effect);
+      const source = expiredConcentrationSourceForDurationEffect(effect);
+      if (source !== null) expiredConcentrationSources.push(source);
+      continue;
+    }
+    // `isTickingDurationActiveEffect` proves this is a BattleActiveEffect whose
+    // expiration can be ticked. Replacing only the branded duration count
+    // preserves the original discriminant and variant fields; TS cannot
+    // re-correlate that nested update across the union, so this cast restores
+    // the already-proven union type.
+    const ticked = {
+      ...effect,
+      expiresAt: {
+        ...effect.expiresAt,
+        durationTicks: elapsedTimeTicks(remainingTicks),
+      },
+    } as BattleActiveEffect;
+    activeEffects.push(ticked);
+  }
+  return { activeEffects, expiringEffects, expiredConcentrationSources };
+}
+
+function expiredConcentrationSourceForDurationEffect(
+  effect: BattleActiveEffect,
+): ConcentrationEffectSource | null {
+  if (
+    "sourceProcedureRef" in effect &&
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "concentration"
+  ) {
+    return {
+      combatantId: effect.expiresAt.combatantId,
+      sourceProcedureRef: effect.sourceProcedureRef,
+    };
+  }
+  return null;
+}
+
+function tickCombatantDurationEffects(input: {
+  readonly id: CombatantId;
+  readonly combatant: BattleCreatureState;
+  readonly context: DurationTickContext | undefined;
+  readonly cohortEffectRefs: ReadonlySet<BattleEffectExecutionRef> | undefined;
+}): {
+  readonly combatant: BattleCreatureState;
+  readonly expiredConcentrationSources: readonly ConcentrationEffectSource[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
+} {
+  const partition = partitionTickingDurationEffects(
+    input.combatant,
+    input.cohortEffectRefs,
+  );
+  const nextCombatantBase: BattleCreatureState =
+    input.combatant.positiveHpUnconscious === null
+      ? {
+          ...input.combatant,
+          activeEffects: partition.activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            input.combatant.conditions,
+            partition.activeEffects,
+            partition.expiringEffects,
+          ),
+        }
+      : { ...input.combatant, activeEffects: partition.activeEffects };
+  const nextCombatantWithHeldObjectState =
+    battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+      nextCombatantBase,
+    );
+  const nextCombatantWithEndState =
+    input.context === undefined
+      ? nextCombatantWithHeldObjectState
+      : battleCreatureWithSpellEndTargetStatePromotions({
+          state: input.context.state,
+          combatant: nextCombatantWithHeldObjectState,
+          expiringEffects: partition.expiringEffects,
+          timing: input.context.spellEndTargetStatePromotionTiming,
+        });
+  return {
+    combatant: applyHitPointMaximumIncreaseExpiration(
+      nextCombatantWithEndState,
+      partition.expiringEffects,
+    ),
+    expiredConcentrationSources: partition.expiredConcentrationSources,
+    grantedFlightEndFallCleanupFrames:
+      grantedFlightEndFallCleanupFramesForExpiredEffects(
+        input.id,
+        partition.expiringEffects,
+      ),
+    spellEndTargetStatePromotionIds:
+      input.context !== undefined &&
+      partition.expiringEffects.some(spellEndTargetStatePromotesIncapacitated)
+        ? [input.id]
+        : [],
   };
 }
 
@@ -2367,8 +4790,8 @@ function activeEffectDurationTicks(
   effect: BattleActiveEffect,
 ): DurationActiveEffect["expiresAt"]["durationTicks"] | null {
   if (
-    effect.kind === "sleepPendingRepeatSave" ||
-    effect.kind === "sleepUnconscious" ||
+    effect.kind === "stagedSaveConditionPendingRepeat" ||
+    effect.kind === "stagedSaveConditionApplied" ||
     !("expiresAt" in effect)
   ) {
     return null;
@@ -2405,7 +4828,7 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
   context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const uniqueSources = [
@@ -2418,11 +4841,11 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
   ];
   const initial: {
     readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-    readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+    readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
     readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
   } = {
     value: combatants,
-    flySpeedGrantEndFallCleanupFrames: [],
+    grantedFlightEndFallCleanupFrames: [],
     spellEndTargetStatePromotionIds: [],
   };
   return uniqueSources.reduce((current, source) => {
@@ -2434,9 +4857,9 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
       );
     return {
       value: expired.value,
-      flySpeedGrantEndFallCleanupFrames: [
-        ...current.flySpeedGrantEndFallCleanupFrames,
-        ...expired.flySpeedGrantEndFallCleanupFrames,
+      grantedFlightEndFallCleanupFrames: [
+        ...current.grantedFlightEndFallCleanupFrames,
+        ...expired.grantedFlightEndFallCleanupFrames,
       ],
       spellEndTargetStatePromotionIds: [
         ...current.spellEndTargetStatePromotionIds,
@@ -2452,10 +4875,10 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
   context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const value = new Map(
@@ -2469,8 +4892,8 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
       ) {
         spellEndTargetStatePromotionIds.push(id);
       }
-      flySpeedGrantEndFallCleanupFrames.push(
-        ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
+      grantedFlightEndFallCleanupFrames.push(
+        ...grantedFlightEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
@@ -2523,7 +4946,7 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
   );
   return {
     value,
-    flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames,
     spellEndTargetStatePromotionIds,
   };
 }
@@ -2623,8 +5046,78 @@ function expireOngoingFeatures(
   );
 }
 
+type EndTurnResolutionInput = BattleResolutionInput & {
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+};
+
+type DelegatedEndTurnParentInput = BattleResolutionInput & {
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+  readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
+};
+
 export function resolveEndTurnCommand(
-  input: BattleResolutionInput,
+  input: EndTurnResolutionInput,
+): BattleResolutionResult {
+  const parent = replayParentContinuationFor(input);
+  const result = resolveEndTurnCommandForParent(input, parent);
+  return input.replayParentPosition === undefined
+    ? projectReplayChildResult(parent, result)
+    : result;
+}
+
+export function resolveDelegatedEndTurnCommand(
+  parentInput: DelegatedEndTurnParentInput,
+  endTurnInput: BattleResolutionInput,
+): BattleResolutionResult {
+  return resolveDelegatedEndTurnCommandWithReplayState(
+    parentInput,
+    endTurnInput,
+    endTurnInput.state,
+  );
+}
+
+export function resolveStagedDelegatedEndTurnCommand(
+  parentInput: DelegatedEndTurnParentInput,
+  endTurnInput: BattleResolutionInput,
+): BattleResolutionResult {
+  return resolveDelegatedEndTurnCommandWithReplayState(
+    parentInput,
+    endTurnInput,
+    parentInput.state,
+  );
+}
+
+function resolveDelegatedEndTurnCommandWithReplayState(
+  parentInput: DelegatedEndTurnParentInput,
+  endTurnInput: BattleResolutionInput,
+  ordinaryReplayState: BattleState,
+): BattleResolutionResult {
+  const parent = replayParentContinuationFor({
+    state: ordinaryReplayState,
+    subject: parentInput.subject,
+    fills: parentInput.fills,
+    ...(parentInput.replayObjectOutcomes === undefined
+      ? {}
+      : { objectOutcomes: parentInput.replayObjectOutcomes }),
+  });
+  const result = resolveEndTurnCommandForParent(
+    {
+      ...endTurnInput,
+      ...(parentInput.replayParentPosition === undefined
+        ? {}
+        : { replayParentPosition: parentInput.replayParentPosition }),
+    },
+    parent,
+  );
+  return parentInput.replayParentPosition === undefined
+    ? projectReplayChildResult(parent, result)
+    : result;
+}
+
+function resolveEndTurnCommandForParent(
+  input: EndTurnResolutionInput,
+  parent: ReplayParentContinuation,
 ): BattleResolutionResult {
   const unsupportedFill = input.fills.find(
     (fill) => !isEndTurnFillKind(fill.kind),
@@ -2639,45 +5132,57 @@ export function resolveEndTurnCommand(
   }
   /* v8 ignore stop -- @preserve */
 
+  if (input.replayParentPosition !== undefined) {
+    return resolveTranslatingPersistentAreaMovementSequenceResume({
+      resolution: input,
+      parent,
+      checkpoint: input.replayParentPosition,
+    });
+  }
+
   const initiative = nextInitiative(input.state.initiative);
   const nextActorId = currentActing(initiative);
   const nextActor = input.state.combatants.get(nextActorId);
   const actorId = currentActorId(input.state);
   const actor = input.state.combatants.get(actorId);
-  const sleepRepeatSaveRequests = sleepPendingRepeatSaveEffects(
-    actor,
-    actorId,
-    input.state.initiative.round,
-  ).map((effect) => ({
-    effect,
-    hole: sleepRepeatSavingThrowOutcomeHole(
+  const hitPointBudgetConditionRepeatSaveRequests =
+    stagedSaveConditionPendingRepeatEffects(
+      input.state,
+      actor,
       actorId,
+      input.state.initiative.round,
+    ).map((effect) => ({
       effect,
-      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
-    ),
-  }));
-  const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
-    (request) => request.hole,
-  );
-  const hideousLaughterRepeatSaveRequests = hideousLaughterEffects(actor).map(
-    (effect) => ({
-      effect,
-      hole: hideousLaughterRepeatSavingThrowOutcomeHole(
+      hole: hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
         actorId,
         effect,
-        "endTurn",
-        undefined,
         endTurnSavingThrowFlatBonuses(
           input.state,
           actorId,
           effect.save.ability,
         ),
       ),
-    }),
-  );
-  const hideousLaughterRepeatSaveHoles = hideousLaughterRepeatSaveRequests.map(
-    (request) => request.hole,
-  );
+    }));
+  const hitPointBudgetConditionRepeatSaveHoles =
+    hitPointBudgetConditionRepeatSaveRequests.map((request) => request.hole);
+  const saveGatedConditionWithRepeatRepeatSaveRequests =
+    saveGatedConditionWithRepeatEffects(input.state, actor).map((effect) => ({
+      effect,
+      hole: saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        { trigger: "endTurn" },
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
+      ),
+    }));
+  const saveGatedConditionWithRepeatRepeatSaveHoles =
+    saveGatedConditionWithRepeatRepeatSaveRequests.map(
+      (request) => request.hole,
+    );
   const spellConditionEndTurnSaveRequests = spellConditionEndTurnSaveEffects(
     actor,
   ).map((effect) => ({
@@ -2722,19 +5227,24 @@ export function resolveEndTurnCommand(
     }));
   const unitFeatureConditionEndTurnSaveHoles =
     unitFeatureConditionEndTurnSaveRequests.map((request) => request.hole);
-  const slowActivePenaltiesEndTurnSaveRequests = slowActivePenaltiesEffects(
-    actor,
-  ).map((effect) => ({
-    effect,
-    hole: slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
-      actorId,
+  const saveGatedTurnConstraintBundleEndTurnSaveRequests =
+    saveGatedTurnConstraintBundleEffects(input.state, actor).map((effect) => ({
       effect,
-      input.state,
-      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
-    ),
-  }));
-  const slowActivePenaltiesEndTurnSaveHoles =
-    slowActivePenaltiesEndTurnSaveRequests.map((request) => request.hole);
+      hole: saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        input.state,
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
+      ),
+    }));
+  const saveGatedTurnConstraintBundleEndTurnSaveHoles =
+    saveGatedTurnConstraintBundleEndTurnSaveRequests.map(
+      (request) => request.hole,
+    );
   const abilityD20TestEndTurnSaveRequests =
     abilityD20TestRollModeEndTurnSaveEffects(actor).map((effect) => ({
       effect,
@@ -2764,58 +5274,154 @@ export function resolveEndTurnCommand(
   const endTurnDamageHoles = endTurnDamageRequests.map(
     (request) => request.hole,
   );
-  const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
-  const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
-  const startTurnDamageRequests = startTurnDamageEffects.map((effect) => ({
-    effect,
-    hole: spellTurnStartDamageRollHole(nextActorId, effect),
-  }));
-  const startTurnDamageHoles = startTurnDamageRequests.map(
-    (request) => request.hole,
+  const nextSourceTurn = {
+    actorId: nextActorId,
+    round: initiative.round,
+  };
+  const boundaryRoundDurationCohort = roundDurationCohort(input.state);
+  const startTurnOccurrenceHandles = startTurnOccurrenceHandlesForState(
+    input.state,
+    nextActorId,
   );
-  const startTurnSaveRequests = startTurnDamageEffects.flatMap((effect) =>
-    effect.kind === "spellTurnStartDamageAndSave"
-      ? [
-          {
-            effect,
-            hole: spellTurnStartSavingThrowOutcomeHole(
-              nextActorId,
-              effect,
-              /* v8 ignore next -- @preserve -- Internal turn-boundary invariant: this callback only runs for a start-turn effect read from nextActor, so nextActor cannot be absent here. */
-              nextActor === undefined
-                ? []
-                : savingThrowFlatBonusProjections(
-                    input.state,
-                    effect.save.ability,
-                  ).filter((projection) => projection.targetId === nextActorId),
-            ),
-          },
-        ]
-      : [],
+  const startTurnOccurrences = startTurnOccurrenceHandles.map(
+    startTurnOccurrenceOptionForHandle,
   );
-  const startTurnSaveHoles = startTurnSaveRequests.map(
-    (request) => request.hole,
+  if (
+    new Set(startTurnOccurrences.map(({ occurrenceId }) => occurrenceId))
+      .size !== startTurnOccurrences.length
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Start-turn occurrences must have unique execution identities.",
+    );
+  }
+  const startTurnOccurrenceOrderHoles =
+    startTurnOccurrences.length < 2
+      ? []
+      : [
+          startTurnOccurrenceOrderHole(nextSourceTurn, [
+            startTurnOccurrences[0]!,
+            startTurnOccurrences[1]!,
+            ...startTurnOccurrences.slice(2),
+          ]),
+        ];
+  const startTurnOccurrenceOrderFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "startTurnOccurrenceOrder" }
+    > => fill.kind === "startTurnOccurrenceOrder",
   );
+  const unmatchedStartTurnOccurrenceOrderFill =
+    startTurnOccurrenceOrderFills.find(
+      (fill) =>
+        !startTurnOccurrenceOrderHoles.some(
+          (hole) => hole.holeId === fill.holeId,
+        ),
+    );
+  if (
+    unmatchedStartTurnOccurrenceOrderFill !== undefined ||
+    startTurnOccurrenceOrderHoles.some(
+      (hole) =>
+        startTurnOccurrenceOrderFills.filter(
+          (fill) => fill.holeId === hole.holeId,
+        ).length > 1,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Start-turn occurrence ordering fills must match the current turn boundary exactly once.",
+    );
+  }
+  const startTurnOccurrenceOrderFill = startTurnOccurrenceOrderFills[0];
+  if (startTurnOccurrenceOrderFill !== undefined) {
+    const expectedIds = new Set(
+      startTurnOccurrences.map(({ occurrenceId }) => occurrenceId),
+    );
+    const submittedIds = startTurnOccurrenceOrderFill.value.occurrenceIds;
+    if (
+      submittedIds.length !== expectedIds.size ||
+      new Set(submittedIds).size !== submittedIds.length ||
+      submittedIds.some((id) => !expectedIds.has(id))
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Start-turn occurrence order must be an exact permutation of the offered occurrences.",
+      );
+    }
+  }
+  const missingStartTurnOccurrenceOrderHoles =
+    startTurnOccurrenceOrderHoles.filter(
+      (hole) =>
+        !startTurnOccurrenceOrderFills.some(
+          (fill) => fill.holeId === hole.holeId,
+        ),
+    );
+  if (missingStartTurnOccurrenceOrderHoles.length > 0) {
+    if (
+      input.fills.some(
+        (fill) => fill.kind === "persistentAreaSourceTurnTranslation",
+      )
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Start-turn movement fills require the exact occurrence order first.",
+      );
+    }
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingStartTurnOccurrenceOrderHoles,
+    );
+  }
+  const matchedStartTurnOccurrenceHandles =
+    startTurnOccurrenceOrderFill === undefined
+      ? startTurnOccurrenceHandles
+      : startTurnOccurrenceOrderFill.value.occurrenceIds.map(
+          (occurrenceId) =>
+            startTurnOccurrenceHandles[
+              startTurnOccurrences.findIndex(
+                (occurrence) => occurrence.occurrenceId === occurrenceId,
+              )
+            ],
+        );
+  if (
+    matchedStartTurnOccurrenceHandles.some((handle) => handle === undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Start-turn occurrence order contains an unknown occurrence.",
+    );
+  }
+  const orderedStartTurnOccurrenceHandles =
+    matchedStartTurnOccurrenceHandles.filter(
+      (handle): handle is StartTurnOccurrenceHandle => handle !== undefined,
+    );
   const initialHoles = [
-    ...sleepRepeatSaveHoles,
-    ...hideousLaughterRepeatSaveHoles,
+    ...hitPointBudgetConditionRepeatSaveHoles,
+    ...saveGatedConditionWithRepeatRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
     ...unitFeatureConditionEndTurnSaveHoles,
-    ...slowActivePenaltiesEndTurnSaveHoles,
+    ...saveGatedTurnConstraintBundleEndTurnSaveHoles,
     ...abilityD20TestEndTurnSaveHoles,
     ...endTurnDamageHoles,
-    ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
-    ...(rechargeHole === null ? [] : [rechargeHole]),
-    ...startTurnDamageHoles,
-    ...startTurnSaveHoles,
   ];
-  if (initialHoles.length > 0 && input.fills.length === 0) {
+  const missingInitialHoles = initialHoles.filter(
+    (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
+  );
+  if (missingInitialHoles.length > 0) {
     return {
       tag: "needsHoles",
       state: input.state,
       subject: input.subject,
-      holes: initialHoles,
+      holes: missingInitialHoles,
       snapshot: snapshotBattle(input.state),
     };
   }
@@ -2872,20 +5478,32 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const sleepRepeatSaveCollection = collectTurnBoundaryHoleFills(
-    sleepRepeatSaveRequests,
-    (hole) => sleepRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
-  );
-  const sleepRepeatSaves = sleepRepeatSaveCollection.resolved.map(
-    ({ fill }) => fill,
-  );
-  const hideousLaughterRepeatSaveCollection = collectTurnBoundaryHoleFills(
-    hideousLaughterRepeatSaveRequests,
-    (hole) =>
-      hideousLaughterRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
-  );
-  const hideousLaughterRepeatSaves =
-    hideousLaughterRepeatSaveCollection.resolved.map(({ fill }) => fill);
+  const hitPointBudgetConditionRepeatSaveCollection =
+    collectTurnBoundaryHoleFills(
+      hitPointBudgetConditionRepeatSaveRequests,
+      (hole) =>
+        hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
+  const hitPointBudgetConditionRepeatSaves =
+    hitPointBudgetConditionRepeatSaveCollection.resolved.map(
+      ({ fill }) => fill,
+    );
+  const saveGatedConditionWithRepeatRepeatSaveCollection =
+    collectTurnBoundaryHoleFills(
+      saveGatedConditionWithRepeatRepeatSaveRequests,
+      (hole) =>
+        saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
+  const saveGatedConditionWithRepeatRepeatSaves =
+    saveGatedConditionWithRepeatRepeatSaveCollection.resolved.map(
+      ({ fill }) => fill,
+    );
   const spellConditionEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     spellConditionEndTurnSaveRequests,
     (hole) =>
@@ -2915,16 +5533,19 @@ export function resolveEndTurnCommand(
     );
   const unitFeatureConditionEndTurnSaves =
     unitFeatureConditionEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const slowActivePenaltiesEndTurnSaveCollection = collectTurnBoundaryHoleFills(
-    slowActivePenaltiesEndTurnSaveRequests,
-    (hole) =>
-      slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        hole,
-      ),
-  );
-  const slowActivePenaltiesEndTurnSaves =
-    slowActivePenaltiesEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const saveGatedTurnConstraintBundleEndTurnSaveCollection =
+    collectTurnBoundaryHoleFills(
+      saveGatedTurnConstraintBundleEndTurnSaveRequests,
+      (hole) =>
+        saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
+  const saveGatedTurnConstraintBundleEndTurnSaves =
+    saveGatedTurnConstraintBundleEndTurnSaveCollection.resolved.map(
+      ({ fill }) => fill,
+    );
   const abilityD20TestEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     abilityD20TestEndTurnSaveRequests,
     (hole) =>
@@ -2936,14 +5557,17 @@ export function resolveEndTurnCommand(
   const abilityD20TestEndTurnSaves =
     abilityD20TestEndTurnSaveCollection.resolved.map(({ fill }) => fill);
   const missingEndTurnSaveHoles = firstMissingEndTurnSaveHoleFrontier({
-    sleepRepeat: sleepRepeatSaveCollection.missingHoles,
-    hideousLaughterRepeat: hideousLaughterRepeatSaveCollection.missingHoles,
+    hitPointBudgetConditionRepeat:
+      hitPointBudgetConditionRepeatSaveCollection.missingHoles,
+    saveGatedConditionWithRepeatRepeat:
+      saveGatedConditionWithRepeatRepeatSaveCollection.missingHoles,
     spellCondition: spellConditionEndTurnSaveCollection.missingHoles,
     countedSpellCondition:
       spellConditionCountedEndTurnSaveCollection.missingHoles,
     unitFeatureCondition:
       unitFeatureConditionEndTurnSaveCollection.missingHoles,
-    slowActivePenalties: slowActivePenaltiesEndTurnSaveCollection.missingHoles,
+    saveGatedTurnConstraintBundle:
+      saveGatedTurnConstraintBundleEndTurnSaveCollection.missingHoles,
     abilityD20TestRollMode: abilityD20TestEndTurnSaveCollection.missingHoles,
   });
   if (missingEndTurnSaveHoles.length > 0) {
@@ -2963,22 +5587,14 @@ export function resolveEndTurnCommand(
   const endTurnDamageRollRequests = endTurnDamageRollCollection.resolved.map(
     ({ request, fill: roll }) => ({ ...request, roll }),
   );
-  const startTurnDamageRollCollection = collectTurnBoundaryHoleFills(
-    startTurnDamageRequests,
-    (hole) => spellTurnStartDamageRollFor(input.fills, hole),
-  );
-  const startTurnDamageRolls = startTurnDamageRollCollection.resolved.map(
-    ({ fill }) => fill,
-  );
-  const startTurnDamageRollRequests =
-    startTurnDamageRollCollection.resolved.map(({ request, fill: roll }) => ({
-      ...request,
-      roll,
-    }));
+  const startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement: readonly {
+    readonly effect: SpellTurnStartDamageEffect;
+    readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  }[] = [];
   const missingTurnBoundaryDamageHoles =
     firstMissingTurnBoundaryDamageHoleFrontier({
       endTurn: endTurnDamageRollCollection.missingHoles,
-      startTurn: startTurnDamageRollCollection.missingHoles,
+      startTurn: [],
     });
   if (missingTurnBoundaryDamageHoles.length > 0) {
     return needsHolesResult(
@@ -2988,27 +5604,15 @@ export function resolveEndTurnCommand(
     );
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
-    [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
+    endTurnDamageHoles.map((hole) => hole.holeId),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fills.some(
+    input.fills.filter(
       (fill) =>
         fill.kind === "rolledDice" &&
-        !turnBoundaryDamageHoleIds.has(fill.holeId),
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "End Turn rolled dice fills must match a requested turn-boundary damage hole.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fills.filter((fill) => fill.kind === "rolledDice").length !==
-    endTurnDamageRolls.length + startTurnDamageRolls.length
+        turnBoundaryDamageHoleIds.has(fill.holeId),
+    ).length !== endTurnDamageRolls.length
   ) {
     return invalidResult(
       input.state,
@@ -3017,21 +5621,7 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const startTurnSaveCollection = collectTurnBoundaryHoleFills(
-    startTurnSaveRequests,
-    (hole) =>
-      spellTurnStartSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
-  );
-  const startTurnSaves = startTurnSaveCollection.resolved.map(
-    ({ fill }) => fill,
-  );
-  const missingStartTurnSaveHoles = startTurnSaveCollection.missingHoles;
-  if (missingStartTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingStartTurnSaveHoles,
-    ]);
-  }
-  const endTurnHideousLaughterDamageRepeatSaveChecks =
+  const endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks =
     endTurnDamageRollRequests.map((request) => {
       /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: endTurnDamageRollRequests can contain an entry only when that effect was read from actor. */
       if (actor === undefined) {
@@ -3044,151 +5634,184 @@ export function resolveEndTurnCommand(
         request.effect,
         request.roll,
       );
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target: actor,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target: actor,
-        damageAmount,
-        fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
-      });
+      const rawHoles =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.state,
+          target: actor,
+          damageAmount,
+          damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            request.roll.holeId,
+          ),
+        });
+      const check =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+          state: input.state,
+          target: actor,
+          damageAmount,
+          fills: spellTurnEndDamageDownstreamFillsForRawHoles(
+            request.effect,
+            rawHoles,
+            savingThrowOutcomeFills,
+          ),
+          damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            request.roll.holeId,
+          ),
+        });
+      return check.tag === "invalid"
+        ? check
+        : {
+            ...check,
+            holes: spellTurnEndDamageDownstreamHoles(
+              request.effect,
+              check.holes,
+            ),
+          };
     });
-  const invalidEndTurnHideousLaughterDamageRepeatSaveCheck =
-    endTurnHideousLaughterDamageRepeatSaveChecks.find(
+  const invalidEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck =
+    endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
     );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidEndTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
+  if (
+    invalidEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck?.tag ===
+    "invalid"
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      invalidEndTurnHideousLaughterDamageRepeatSaveCheck.message,
+      invalidEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const endTurnHideousLaughterDamageRepeatSaveHoles =
-    endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
+  const endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) =>
+        check.tag === "needsHoles" || check.tag === "ok"
+          ? [...check.holes]
+          : [],
     );
-  const missingEndTurnHideousLaughterDamageRepeatSaveHoles =
-    endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
+  const missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
-  if (missingEndTurnHideousLaughterDamageRepeatSaveHoles.length > 0) {
+  if (
+    missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.length > 0
+  ) {
     return needsHolesResult(input.state, input.subject, [
-      ...missingEndTurnHideousLaughterDamageRepeatSaveHoles,
+      ...missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     ]);
   }
-  const startTurnHideousLaughterDamageRepeatSaveChecks =
-    startTurnDamageRollRequests.map((request) => {
-      /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: startTurnDamageRollRequests can contain an entry only when that effect was read from nextActor. */
-      if (nextActor === undefined) {
-        return { tag: "ok" as const, holes: [] };
-      }
-      /* v8 ignore stop -- @preserve */
-      const damageAmount = spellTurnStartDamageAmount(
-        input.state,
-        nextActor,
-        request.effect,
-        request.roll,
-      );
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target: nextActor,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target: nextActor,
-        damageAmount,
-        fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
-      });
-    });
-  const invalidStartTurnHideousLaughterDamageRepeatSaveCheck =
-    startTurnHideousLaughterDamageRepeatSaveChecks.find(
+  const startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks =
+    startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.map(
+      (request) => {
+        /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: startTurnDamageRollRequests can contain an entry only when that effect was read from nextActor. */
+        if (nextActor === undefined) {
+          return { tag: "ok" as const, holes: [] };
+        }
+        /* v8 ignore stop -- @preserve */
+        const damageAmount = spellTurnStartDamageAmount(
+          input.state,
+          nextActor,
+          request.effect,
+          request.roll,
+        );
+        const holes =
+          damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+            state: input.state,
+            target: nextActor,
+            damageAmount,
+            damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+              request.roll.holeId,
+            ),
+          });
+        return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+          {
+            state: input.state,
+            target: nextActor,
+            damageAmount,
+            fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+            damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+              request.roll.holeId,
+            ),
+          },
+        );
+      },
+    );
+  const invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
     );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidStartTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
+  if (
+    invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck?.tag ===
+    "invalid"
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      invalidStartTurnHideousLaughterDamageRepeatSaveCheck.message,
+      invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const startTurnHideousLaughterDamageRepeatSaveHoles =
-    startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
+  const startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) =>
+        check.tag === "needsHoles" || check.tag === "ok"
+          ? [...check.holes]
+          : [],
     );
-  const missingStartTurnHideousLaughterDamageRepeatSaveHoles =
-    startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
+  const missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
-  if (missingStartTurnHideousLaughterDamageRepeatSaveHoles.length > 0) {
+  if (
+    missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.length > 0
+  ) {
     return needsHolesResult(input.state, input.subject, [
-      ...missingStartTurnHideousLaughterDamageRepeatSaveHoles,
+      ...missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     ]);
   }
-  const startTurnHideousLaughterDamageRepeatSaves = fillsMatchingHoleIds(
-    savingThrowOutcomeFills,
-    startTurnHideousLaughterDamageRepeatSaveHoles,
-  );
-  const endTurnHideousLaughterDamageRepeatSaves = fillsMatchingHoleIds(
-    savingThrowOutcomeFills,
-    endTurnHideousLaughterDamageRepeatSaveHoles,
-  );
-  const turnBoundaryHideousLaughterDamageRepeatSaves = [
-    ...endTurnHideousLaughterDamageRepeatSaves,
-    ...startTurnHideousLaughterDamageRepeatSaves,
+  const startTurnSaveGatedConditionWithRepeatDamageRepeatSaves =
+    fillsMatchingHoleIds(
+      savingThrowOutcomeFills,
+      startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    );
+  const endTurnSaveGatedConditionWithRepeatDamageRepeatSaves =
+    fillsMatchingHoleIds(
+      savingThrowOutcomeFills,
+      endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    );
+  const turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves = [
+    ...endTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
+    ...startTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
   ];
   const savingThrowOutcomeHoleIds = new Set<BattleHoleId>(
     [
-      ...sleepRepeatSaveHoles,
-      ...hideousLaughterRepeatSaveHoles,
+      ...hitPointBudgetConditionRepeatSaveHoles,
+      ...saveGatedConditionWithRepeatRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
       ...spellConditionCountedEndTurnSaveRequests.map(
         (request) => request.hole,
       ),
       ...unitFeatureConditionEndTurnSaveHoles,
-      ...slowActivePenaltiesEndTurnSaveHoles,
+      ...saveGatedTurnConstraintBundleEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
-      ...startTurnSaveHoles,
-      ...endTurnHideousLaughterDamageRepeatSaveHoles,
-      ...startTurnHideousLaughterDamageRepeatSaveHoles,
+      ...endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fills.some(
-      (fill) =>
-        fill.kind === "savingThrowOutcome" &&
-        !savingThrowOutcomeHoleIds.has(fill.holeId),
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "End Turn Saving Throw outcome fills must match a requested end-turn or turn-start spell save hole.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    savingThrowOutcomeFills.length !==
-    sleepRepeatSaves.length +
-      hideousLaughterRepeatSaves.length +
+    savingThrowOutcomeFills.filter((fill) =>
+      savingThrowOutcomeHoleIds.has(fill.holeId),
+    ).length !==
+    hitPointBudgetConditionRepeatSaves.length +
+      saveGatedConditionWithRepeatRepeatSaves.length +
       spellConditionEndTurnSaves.length +
       spellConditionCountedEndTurnSaves.length +
       unitFeatureConditionEndTurnSaves.length +
-      slowActivePenaltiesEndTurnSaves.length +
+      saveGatedTurnConstraintBundleEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
-      startTurnSaves.length +
-      endTurnHideousLaughterDamageRepeatSaves.length +
-      startTurnHideousLaughterDamageRepeatSaves.length
+      endTurnSaveGatedConditionWithRepeatDamageRepeatSaves.length
   ) {
     return invalidResult(
       input.state,
@@ -3197,8 +5820,8 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  for (const { fill } of sleepRepeatSaveCollection.resolved) {
-    const validation = validateSleepRepeatSavingThrowOutcome(
+  for (const { fill } of hitPointBudgetConditionRepeatSaveCollection.resolved) {
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -3208,19 +5831,24 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const { fill } of slowActivePenaltiesEndTurnSaveCollection.resolved) {
-    const validation = validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
-      fill.value,
-      actorId,
-    );
+  for (const {
+    fill,
+  } of saveGatedTurnConstraintBundleEndTurnSaveCollection.resolved) {
+    const validation =
+      validateSaveGatedTurnConstraintBundleEndTurnSavingThrowOutcome(
+        fill.value,
+        actorId,
+      );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const { fill } of hideousLaughterRepeatSaveCollection.resolved) {
-    const validation = validateSleepRepeatSavingThrowOutcome(
+  for (const {
+    fill,
+  } of saveGatedConditionWithRepeatRepeatSaveCollection.resolved) {
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -3274,13 +5902,14 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const fill of startTurnHideousLaughterDamageRepeatSaves) {
-    const hole = startTurnHideousLaughterDamageRepeatSaveHoles.find(
-      (candidate) => candidate.holeId === fill.holeId,
-    );
-    const validation = validateSleepRepeatSavingThrowOutcome(
+  for (const fill of startTurnSaveGatedConditionWithRepeatDamageRepeatSaves) {
+    const hole =
+      startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.find(
+        (candidate) => candidate.holeId === fill.holeId,
+      );
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
-      hole?.hideousLaughterRepeatSave.targetId ?? nextActorId,
+      hole?.saveGatedConditionRepeatSave.targetId ?? nextActorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
@@ -3288,24 +5917,13 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const fill of endTurnHideousLaughterDamageRepeatSaves) {
-    const hole = endTurnHideousLaughterDamageRepeatSaveHoles.find(
+  for (const fill of endTurnSaveGatedConditionWithRepeatDamageRepeatSaves) {
+    const hole = endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.find(
       (candidate) => candidate.holeId === fill.holeId,
     );
-    const validation = validateSleepRepeatSavingThrowOutcome(
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
-      hole?.hideousLaughterRepeatSave.targetId ?? actorId,
-    );
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (validation !== null) {
-      return invalidResult(input.state, "invalidFill", validation);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
-  for (const { fill } of startTurnSaveCollection.resolved) {
-    const validation = validateSpellTurnStartSavingThrowOutcome(
-      fill.value,
-      nextActorId,
+      hole?.saveGatedConditionRepeatSave.targetId ?? actorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
@@ -3324,7 +5942,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const request of startTurnDamageRollRequests) {
+  for (const request of startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement) {
     const damage = spellTurnStartDamageForEffect(request.effect);
     const validation = validateRolledDiceFillForDiceExpr(
       request.roll,
@@ -3344,38 +5962,44 @@ export function resolveEndTurnCommand(
         return [];
       }
       /* v8 ignore stop -- @preserve */
-      return damageLifecycleConcentrationSavingThrowHoles({
-        state: input.state,
-        target,
-        damageAmount: spellTurnEndDamageAmount(
-          input.state,
+      return spellTurnEndDamageDownstreamHoles(
+        request.effect,
+        damageLifecycleConcentrationSavingThrowHoles({
+          state: input.state,
           target,
-          request.effect,
-          request.roll,
-        ),
-      });
+          damageAmount: spellTurnEndDamageAmount(
+            input.state,
+            target,
+            request.effect,
+            request.roll,
+          ),
+        }),
+      );
     },
   );
-  const startTurnConcentrationHoles = startTurnDamageRollRequests.flatMap(
-    (request) => {
-      const target = nextActor;
-      /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: a start-turn damage request exists only when its target nextActor supplied the source effect. */
-      if (target === undefined) {
-        return [];
-      }
-      /* v8 ignore stop -- @preserve */
-      return damageLifecycleConcentrationSavingThrowHoles({
-        state: input.state,
-        target,
-        damageAmount: spellTurnStartDamageAmount(
-          input.state,
+  const startTurnConcentrationHoles =
+    startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.flatMap(
+      (request) => {
+        const target = nextActor;
+        /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: a start-turn damage request exists only when its target nextActor supplied the source effect. */
+        if (target === undefined) {
+          return [];
+        }
+        /* v8 ignore stop -- @preserve */
+        return spellTurnStartDamageConcentrationSavingThrowHoles({
+          state: input.state,
           target,
-          request.effect,
-          request.roll,
-        ),
-      });
-    },
-  );
+          effect: request.effect,
+          damageAmount: spellTurnStartDamageAmount(
+            input.state,
+            target,
+            request.effect,
+            request.roll,
+          ),
+          sourceTurn: nextSourceTurn,
+        });
+      },
+    );
   const turnBoundaryConcentrationHoles = [
     ...endTurnConcentrationHoles,
     ...startTurnConcentrationHoles,
@@ -3397,23 +6021,9 @@ export function resolveEndTurnCommand(
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fills.some(
-      (fill) =>
-        fill.kind === "concentrationSavingThrow" &&
-        !concentrationHoleIds.has(fill.holeId),
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Concentration Saving Throw fill is only valid for a concentrating turn-boundary damage target.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    concentrationSavingThrowFills.length !==
-    turnBoundaryConcentrationHoles.length
+    concentrationSavingThrowFills.filter((fill) =>
+      concentrationHoleIds.has(fill.holeId),
+    ).length !== turnBoundaryConcentrationHoles.length
   ) {
     return invalidResult(
       input.state,
@@ -3426,13 +6036,14 @@ export function resolveEndTurnCommand(
     ...endTurnDamageRollRequests.flatMap((request) =>
       endTurnDamageDispositionHoles(input.state, actorId, [request]),
     ),
-    ...startTurnDamageRollRequests.flatMap((request) =>
-      startTurnDamageDispositionHoles(input.state, nextActorId, [request]),
+    ...startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.flatMap(
+      (request) =>
+        startTurnDamageDispositionHoles(input.state, nextSourceTurn, [request]),
     ),
   ];
   const damageDispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
-    fills: damageDispositionFills,
+    fills: fillsMatchingHoleIds(damageDispositionFills, damageDispositionHoles),
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
@@ -3454,36 +6065,6 @@ export function resolveEndTurnCommand(
       missingDamageDispositionHoles,
     );
   }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    (needsDeathSavingThrow &&
-      deathSavingThrowFill?.kind !== "deathSavingThrow") ||
-    (!needsDeathSavingThrow && deathSavingThrowFill !== undefined)
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      needsDeathSavingThrow
-        ? "End Turn requires a Death Saving Throw fill for the next actor."
-        : "End Turn does not accept battle fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    (rechargeHole !== null &&
-      rechargeRollFill?.kind !== "statBlockRechargeRoll") ||
-    (rechargeHole === null && rechargeRollFill !== undefined)
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      rechargeHole !== null
-        ? "End Turn requires a Stat Block Recharge roll fill for the next actor."
-        : "End Turn does not accept a Stat Block Recharge roll fill.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     deathSavingThrowFill?.kind === "deathSavingThrow" &&
@@ -3549,36 +6130,115 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveDeathSavingThrowFill =
-    deathSavingThrowFill?.kind === "deathSavingThrow"
-      ? effectiveD20TestNaturalOneRerollDeathSavingThrow(deathSavingThrowFill)
-      : undefined;
-
-  return resolveEndTurn({
+  const advancedTurn = resolveEndTurn({
     state: input.state,
-    deathSavingThrowRoll: effectiveDeathSavingThrowFill?.value,
-    statBlockRechargeRolls:
-      rechargeRollFill?.kind === "statBlockRechargeRoll"
-        ? rechargeRollFill.value
-        : [],
-    sleepRepeatSaves,
-    hideousLaughterRepeatSaves,
+    deathSavingThrowRoll: undefined,
+    statBlockRechargeRolls: [],
+    hitPointBudgetConditionRepeatSaves,
+    saveGatedConditionWithRepeatRepeatSaves,
     spellConditionEndTurnSaves,
     spellConditionCountedEndTurnSaves,
     unitFeatureConditionEndTurnSaves,
-    slowActivePenaltiesEndTurnSaves,
+    saveGatedTurnConstraintBundleEndTurnSaves,
     abilityD20TestRollModeEndTurnSaves: abilityD20TestEndTurnSaves,
     spellTurnEndDamageRolls: endTurnDamageRolls,
-    spellTurnStartDamageRolls: startTurnDamageRolls,
-    spellTurnStartSaves: startTurnSaves,
-    turnBoundaryHideousLaughterDamageRepeatSaves,
-    concentrationSavingThrows: concentrationSavingThrowFills,
+    spellTurnStartDamageRolls: [],
+    spellTurnStartSaves: [],
+    turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
+    concentrationSavingThrows: concentrationSavingThrowFills.filter((fill) =>
+      concentrationHoleIds.has(fill.holeId),
+    ),
     damageDispositions: damageDispositionFills,
+    spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement: [],
+    turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement:
+      [],
+    deferStatBlockRecharge: true,
   });
+  const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
+    state: advancedTurn.state,
+    subject: input.subject,
+    sourceTurn: nextSourceTurn,
+    roundDurationCohort: boundaryRoundDurationCohort,
+    traversal: startTurnOccurrenceTraversal(
+      orderedStartTurnOccurrenceHandles.map(
+        (handle) => startTurnOccurrenceOptionForHandle(handle).occurrenceId,
+      ),
+    ),
+    context: {
+      kind: "root",
+      resultState: input.state,
+      offeredHandles: orderedStartTurnOccurrenceHandles,
+    },
+    fills: input.fills,
+    parent,
+  });
+  if (orderedOccurrenceResolution.tag === "result") {
+    return orderedOccurrenceResolution.result;
+  }
+  const persistentAreaSourceTurnTranslationFills = input.fills.filter(
+    (fill): fill is TranslatingPersistentAreaMovementFill =>
+      fill.kind === "persistentAreaSourceTurnTranslation",
+  );
+  if (
+    persistentAreaSourceTurnTranslationFills.some(
+      (fill) =>
+        !orderedOccurrenceResolution.matchedMovementFillHoleIds.has(
+          fill.holeId,
+        ),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "TranslatingPersistentArea movement fill does not belong to an applicable ordered occurrence.",
+    );
+  }
+  const orderedOccurrenceHoleIds = orderedOccurrenceResolution.acceptedHoleIds;
+  const movementAffectedResolution = {
+    tag: "resolved" as const,
+    state: orderedOccurrenceResolution.state,
+    saveHoleIds: orderedOccurrenceResolution.movementSaveHoleIds,
+    damageHoleIds: orderedOccurrenceResolution.movementDamageHoleIds,
+    concentrationHoleIds:
+      orderedOccurrenceResolution.movementConcentrationHoleIds,
+    dispositionHoleIds: orderedOccurrenceResolution.movementDispositionHoleIds,
+    damageRepeatSaveHoleIds:
+      orderedOccurrenceResolution.movementDamageRepeatSaveHoleIds,
+  };
+  const acceptedEndTurnHoleIds = new Set<BattleHoleId>([
+    ...savingThrowOutcomeHoleIds,
+    ...turnBoundaryDamageHoleIds,
+    ...concentrationHoleIds,
+    ...damageDispositionHoles.map((hole) => hole.holeId),
+    ...orderedOccurrenceHoleIds,
+    ...(startTurnOccurrenceOrderFill === undefined
+      ? []
+      : [startTurnOccurrenceOrderFill.holeId]),
+  ]);
+  if (hasUnacceptedEndTurnFill(input.fills, acceptedEndTurnHoleIds)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn received a fill unrelated to its current turn-boundary holes.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const finalState = applyRoundDurationTickAfterStartTurnOccurrences(
+    movementAffectedResolution.state,
+    boundaryRoundDurationCohort,
+  );
+  return {
+    tag: "resolved",
+    state: finalState,
+    snapshot: snapshotBattle(finalState),
+  };
 }
 
 const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
+  "persistentAreaSourceTurnTranslation",
+  "startTurnOccurrenceOrder",
+  "temporaryHitPointChoice",
   "concentrationSavingThrow",
   "deathSavingThrow",
   "rolledDice",
@@ -3589,6 +6249,17 @@ const END_TURN_FILL_KINDS = [
 const END_TURN_FILL_KIND_SET: ReadonlySet<BattleFill["kind"]> = new Set(
   END_TURN_FILL_KINDS,
 );
+
+function hasUnacceptedEndTurnFill(
+  fills: readonly BattleFill[],
+  acceptedHoleIds: ReadonlySet<BattleHoleId>,
+): boolean {
+  return fills.some(
+    (fill) =>
+      END_TURN_FILL_KIND_SET.has(fill.kind) &&
+      !acceptedHoleIds.has(fill.holeId),
+  );
+}
 
 export function isEndTurnFillKind(kind: BattleFill["kind"]): boolean {
   return END_TURN_FILL_KIND_SET.has(kind);

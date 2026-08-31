@@ -2,7 +2,7 @@ import { battleId, characterId } from "@dnd/battle-runtime";
 import { armorClassBuild } from "../../character-sheet-runtime/src/test-support.test-support.ts";
 import { unitId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
@@ -29,7 +29,7 @@ describe("spell-rest benefit recipient validation", () => {
         ],
       }),
     ).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "unknownCharacterSession",
           targetCharacterId: "character:missing-recipient",
@@ -62,10 +62,10 @@ describe("spell-rest benefit recipient validation", () => {
       ],
     });
 
-    expect(Either.isRight(validated)).toBe(true);
-    if (Either.isLeft(validated)) return;
+    expect(Result.isSuccess(validated)).toBe(true);
+    if (Result.isFailure(validated)) return;
     expect(
-      validated.right.map(({ recipient: input, sheet }) => ({
+      validated.success.map(({ recipient: input, sheet }) => ({
         inputCharacterId: input.characterId,
         sheetCharacterId: sheet.characterId,
       })),
@@ -150,6 +150,6 @@ function testSession(
     companion: { tag: "none" },
     unitLibrary: root.unitLibrary,
   });
-  if (Either.isLeft(session)) throw new Error(session.left.message);
-  return session.right;
+  if (Result.isFailure(session)) throw new Error(session.failure.message);
+  return session.success;
 }

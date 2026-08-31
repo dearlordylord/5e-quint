@@ -2,7 +2,7 @@ import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, PositiveInteger } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -25,7 +25,7 @@ import {
   attackDamageDispositionHoleAfterDamage,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
   combatantId,
@@ -238,7 +238,7 @@ describe("battle runtime: attack rolls and damage", () => {
         ...rolledAttack.attack,
         onHit: {
           ...rolledAttack.attack.onHit,
-          damage: Either.getOrThrow(
+          damage: Result.getOrThrow(
             parseSelectedStatBlockAttackDamage({
               baseComponents: [
                 firstDamageComponent,
@@ -281,9 +281,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const markedRider = {
       kind: "spellMarkedDamageRider",
-      effectRef: battleActiveEffectExecutionRefForTest(
-        "synthetic-statblock-mark",
-      ),
+      effectRef: battleEffectExecutionRefForTest("synthetic-statblock-mark"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-statblock-mark-source",
       ),

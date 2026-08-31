@@ -51,13 +51,13 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  magicWeaponTargetItemFill,
+  weaponAttackDamageEnhancementTargetItemFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   battleReducerStartRouteEvent,
   endTurn,
   type BattleActiveEffect,
@@ -79,7 +79,7 @@ type WeaponHostedScenario =
   | "trueStrikeRadiantHit"
   | "shillelaghHeldWeaponOverride"
   | "divineFavorWeaponDamageRider"
-  | "magicWeaponEnhancement"
+  | "weaponAttackDamageEnhancement"
   | "done";
 
 type WeaponHostedPhase =
@@ -187,7 +187,7 @@ type PendingInvocation =
       readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
     }
   | {
-      readonly tag: "magicWeaponTarget";
+      readonly tag: "weaponAttackDamageEnhancementTarget";
       readonly subject: Extract<
         BattleSubject,
         { readonly tag: "bonusActionSpell" }
@@ -207,7 +207,7 @@ const WEAPON_HOSTED_SCENARIO_BY_TAG = {
   TrueStrikeRadiantHit: "trueStrikeRadiantHit",
   ShillelaghHeldWeaponOverride: "shillelaghHeldWeaponOverride",
   DivineFavorWeaponDamageRider: "divineFavorWeaponDamageRider",
-  MagicWeaponEnhancement: "magicWeaponEnhancement",
+  MagicWeaponEnhancement: "weaponAttackDamageEnhancement",
   Done: "done",
 } as const satisfies Readonly<Record<string, WeaponHostedScenario>>;
 
@@ -383,7 +383,7 @@ function createWeaponHostedDriver() {
         state = cleanDivineFavorDuration(state);
       },
       doStartMagicWeapon: () => {
-        state = initialRuntimeState("magicWeaponEnhancement");
+        state = initialRuntimeState("weaponAttackDamageEnhancement");
       },
       doDiscoverMagicWeapon: () => {
         state = discoverMagicWeapon(state);
@@ -944,18 +944,21 @@ function routeWeaponDamageRiderDamage(): readonly ReducerRouteEvent[] {
 
 function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
   const discovered = discoverMagicWeapon(
-    initialRuntimeState("magicWeaponEnhancement"),
+    initialRuntimeState("weaponAttackDamageEnhancement"),
   );
-  if (discovered.pending.tag !== "magicWeaponTarget") {
+  if (discovered.pending.tag !== "weaponAttackDamageEnhancementTarget") {
     throw new Error("Expected pending Magic Weapon target.");
   }
-  const target = requireHole(discovered.holes, "magicWeaponTargetItem");
+  const target = requireHole(
+    discovered.holes,
+    "weaponAttackDamageEnhancementTargetItem",
+  );
   const result = requireResolved(
     resolveBattleSubject({
       state: discovered.battle.state,
       subject: discovered.pending.subject,
       fills: [
-        magicWeaponTargetItemFill(target, {
+        weaponAttackDamageEnhancementTargetItemFill(target, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1054,7 +1057,7 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
 
 function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
   const enhanced = fillMagicWeaponTarget(
-    discoverMagicWeapon(initialRuntimeState("magicWeaponEnhancement")),
+    discoverMagicWeapon(initialRuntimeState("weaponAttackDamageEnhancement")),
   );
   const caster = requireCombatant(enhanced.battle.state, spellCasterId);
   const expiringState: BattleState = {
@@ -1062,7 +1065,7 @@ function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
     combatants: new Map(enhanced.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellMagicWeaponEnhancement"
+        effect.kind === "weaponAttackDamageEnhancement"
           ? {
               ...effect,
               expiresAt: {
@@ -1570,7 +1573,10 @@ function discoverMagicWeapon(
     ...state,
     phase: "weaponTargetNeeded",
     holes: act.initialHoles,
-    pending: { tag: "magicWeaponTarget", subject: act.subject },
+    pending: {
+      tag: "weaponAttackDamageEnhancementTarget",
+      subject: act.subject,
+    },
     lastResult: "needsHoles",
   };
 }
@@ -1578,16 +1584,19 @@ function discoverMagicWeapon(
 function fillMagicWeaponTarget(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
-  if (state.pending.tag !== "magicWeaponTarget") {
+  if (state.pending.tag !== "weaponAttackDamageEnhancementTarget") {
     throw new Error("Expected pending Magic Weapon target.");
   }
-  const target = requireHole(state.holes, "magicWeaponTargetItem");
+  const target = requireHole(
+    state.holes,
+    "weaponAttackDamageEnhancementTargetItem",
+  );
   const cast = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
       subject: state.pending.subject,
       fills: [
-        magicWeaponTargetItemFill(target, {
+        weaponAttackDamageEnhancementTargetItemFill(target, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1596,14 +1605,14 @@ function fillMagicWeaponTarget(
     "Expected Magic Weapon to resolve.",
   );
   expect(
-    battleWeaponItemHasMagicWeaponEnhancement(
+    battleWeaponItemHasWeaponAttackDamageEnhancement(
       cast.state,
       spellCasterId,
       battleObjectId("main:weapon_longsword"),
     ),
   ).toBe(true);
   expect(
-    battleWeaponItemMagicWeaponEnhancementBonus(
+    battleWeaponItemWeaponAttackDamageEnhancementBonus(
       cast.state,
       spellCasterId,
       battleObjectId("main:weapon_longsword"),
@@ -1628,7 +1637,7 @@ function cleanMagicWeaponDuration(
     combatants: new Map(state.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellMagicWeaponEnhancement"
+        effect.kind === "weaponAttackDamageEnhancement"
           ? {
               ...effect,
               expiresAt: {
@@ -1666,7 +1675,8 @@ function weaponHostedProjection(
     scenario: state.scenario,
     phase: state.phase,
     targetHp:
-      state.scenario === "magicWeaponEnhancement" || state.scenario === "done"
+      state.scenario === "weaponAttackDamageEnhancement" ||
+      state.scenario === "done"
         ? 20
         : Number(requireCombatant(state.battle.state, spellTargetId).hp),
     bonusActionAvailable:
@@ -1686,7 +1696,7 @@ function weaponHostedProjection(
     damageTypeChoiceApplied: damageTypeChoiceApplied(state),
     damageRiderPresent: damageRiderPresent(state),
     weaponEnhancementBonus:
-      battleWeaponItemMagicWeaponEnhancementBonus(
+      battleWeaponItemWeaponAttackDamageEnhancementBonus(
         state.battle.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
@@ -1715,8 +1725,8 @@ function activeEffectPresent(
         effect.sourceCombatantId === spellCasterId,
     );
   }
-  if (scenario === "magicWeaponEnhancement") {
-    return battleWeaponItemHasMagicWeaponEnhancement(
+  if (scenario === "weaponAttackDamageEnhancement") {
+    return battleWeaponItemHasWeaponAttackDamageEnhancement(
       battle,
       spellCasterId,
       battleObjectId("main:weapon_longsword"),
@@ -1782,7 +1792,8 @@ function battleHolesToWeaponHostedHoles(
       if (hole.kind === "targetChoice") return "TargetChoice";
       if (hole.kind === "attackRoll") return "AttackRoll";
       if (hole.kind === "rolledDice") return "AttackDamageRoll";
-      if (hole.kind === "magicWeaponTargetItem") return "MagicWeaponTargetItem";
+      if (hole.kind === "weaponAttackDamageEnhancementTargetItem")
+        return "MagicWeaponTargetItem";
       throw new Error(
         `Unexpected weapon-hosted ${pending.tag} hole ${hole.kind}.`,
       );

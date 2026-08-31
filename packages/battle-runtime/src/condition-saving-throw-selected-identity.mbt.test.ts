@@ -10,13 +10,13 @@ import {
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
-// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveStagedConditionRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_monster doResolveHoldMonsterFailedSavingThrow doResolveHoldMonsterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -35,7 +35,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
+import saveGatedAreaControlInput from "../../surface/content/hypnotic_pattern.json";
 
 import {
   battleId,
@@ -120,7 +120,7 @@ if (unitCatalogResult.tag !== "ok") {
   );
 }
 const unitLibrary = unitCatalogResult.catalog;
-const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
+const saveGatedAreaControlSpell = decodeHypnoticPatternSpellRecord();
 
 it("observes selected condition-saving-throw qRoute through public reducer events", () => {
   expect(resolveBlindnessDeafnessFailedSavingThrowRoute("blinded")).toEqual(
@@ -157,7 +157,7 @@ it("observes selected condition-saving-throw qRoute through public reducer event
       initialRoute: saveGatedConditionTargetListRoute(),
     }),
   );
-  expect(resolveHideousLaughterRepeatSavingThrowSuccessRoute()).toEqual(
+  expect(resolveStagedConditionRepeatSavingThrowSuccessRoute()).toEqual(
     repeatSaveSuccessCleanupRoute({
       initialRoute: [battleReducerStartRouteEvent()],
     }),
@@ -254,10 +254,10 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: "hideous_laughter",
       procedures: [
         {
-          actionName: "doResolveHideousLaughterRepeatSavingThrowSuccess",
+          actionName: "doResolveStagedConditionRepeatSavingThrowSuccess",
           discover: () =>
             resolvedProjection(
-              resolveHideousLaughterRepeatSavingThrowSuccess(),
+              resolveStagedConditionRepeatSavingThrowSuccess(),
             ),
         },
       ],
@@ -473,7 +473,7 @@ function resolveHoldSpellRepeatSavingThrowSuccess(
   });
 }
 
-function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResult {
+function resolveStagedConditionRepeatSavingThrowSuccess(): BattleResolutionResult {
   const session = conditionSpellBattle(
     srdSpellRecord("hideous_laughter"),
     "wizard",
@@ -733,7 +733,7 @@ function resolveHoldSpellRepeatSavingThrowSuccessRoute(
   ];
 }
 
-function resolveHideousLaughterRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
+function resolveStagedConditionRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
   const session = conditionSpellBattle(
     srdSpellRecord("hideous_laughter"),
     "wizard",
@@ -865,15 +865,22 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
     }),
   );
   const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
-  const deathSave = requireHole(repeat.holes, "deathSavingThrow");
-  const resolved = requireResolvedResult(
+  const repeatSaveFill = savingThrowOutcomeFill(repeatSave, [
+    { targetId, succeeded: false },
+  ]);
+  const deathSaveFrontier = requireNeedsHolesResult(
     resolveBattleSubject({
       state: repeat.state,
       subject,
-      fills: [
-        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
-        deathSavingThrowFill(deathSave, 10),
-      ],
+      fills: [repeatSaveFill],
+    }),
+  );
+  const deathSave = requireHole(deathSaveFrontier.holes, "deathSavingThrow");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: deathSaveFrontier.state,
+      subject,
+      fills: [repeatSaveFill, deathSavingThrowFill(deathSave, 10)],
     }),
   );
   return [
@@ -882,6 +889,7 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
     ...routeEventsOf(cast),
     ...optionalRouteEventsOf(targetTurn),
     ...routeEventsOf(repeat),
+    ...routeEventsOf(deathSaveFrontier),
     ...routeEventsOf(resolved),
   ];
 }
@@ -1140,7 +1148,7 @@ function expectedProjection(
 
 function srdSpellRecord(unitId: ConditionSavingThrowSpellUnitId): SpellRecord {
   if (unitId === "hypnotic_pattern") {
-    return hypnoticPatternSpell;
+    return saveGatedAreaControlSpell;
   }
   const unit = unitLibrary.requireUnit(unitId);
   if (unit.kind !== "spell") {
@@ -1150,7 +1158,7 @@ function srdSpellRecord(unitId: ConditionSavingThrowSpellUnitId): SpellRecord {
 }
 
 function decodeHypnoticPatternSpellRecord(): SpellRecord {
-  const unit = decodeUnitRecordSync(hypnoticPatternInput);
+  const unit = decodeUnitRecordSync(saveGatedAreaControlInput);
   if (unit.kind !== "spell") {
     throw new Error("Expected Hypnotic Pattern fixture to decode as a Spell.");
   }
@@ -1204,10 +1212,10 @@ function conditionSpellBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function conditionSpellCreature(input: {
@@ -1310,7 +1318,7 @@ function savingThrowOutcomeFill(
         battleProcedureExecutionRefForTest("hypnotic_pattern")
         ? {
             area: {
-              kind: "hypnoticPatternArea",
+              kind: "saveGatedAreaControlArea",
               originAnchorId: casterId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
               cubeSideFeet: 30,

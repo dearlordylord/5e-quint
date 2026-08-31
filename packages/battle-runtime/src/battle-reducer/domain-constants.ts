@@ -23,8 +23,8 @@ export const GRAPPLE_TARGET_REACH_FEET = movementFeet(5);
 export const SHOVE_TARGET_REACH_FEET = movementFeet(5);
 export const SHOVE_PUSH_DISTANCE_FEET = movementFeet(5);
 export const PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET = movementFeet(5);
-export const SLEEP_SHAKE_AWAKE_ADJACENCY_FEET = movementFeet(5);
-export const HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET = movementFeet(5);
+export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET =
+  movementFeet(5);
 export const HELP_ATTACK_TARGET_ADJACENCY_FEET = movementFeet(5);
 export const RANGED_ATTACK_ENEMY_PROXIMITY_FEET = movementFeet(5);
 export const BATTLE_D20_ROLL_MODIFIER_DIE_SIZES = [1, 4] as const;
@@ -51,7 +51,7 @@ export const SPELL_CONDITION_ABILITY_CHECK_ACTORS = [
   "target",
   "targetOrCreatureWithinReach",
 ] as const;
-export const COMMAND_OPTIONS = [
+export const COMPELLED_BEHAVIOR_OPTIONS = [
   "grovel",
   "halt",
   "drop",
@@ -73,36 +73,37 @@ export type SelfTransformationNonNaturalWeaponModeKind =
   (typeof SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS)[number];
 export const SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND =
   "naturalWeapons" satisfies SelfTransformationModeKind;
-export const BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS = [
+export const BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS = [
   "ordinarySpell",
   "artifact",
   "deity",
 ] as const;
-export type BattleAntimagicFieldOngoingSpellEffectSourceKind =
-  (typeof BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS)[number];
-export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
+export type BattleMagicSuppressionOngoingSpellEffectSourceKind =
+  (typeof BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS)[number];
+export const PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES = [
   "blindsight",
   "truesight",
 ] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
-export type BlurAttackRollBypassSense =
-  (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
-export const MIRROR_IMAGE_UNAFFECTED_SENSES = BLUR_ATTACK_ROLL_BYPASS_SENSES;
-export type MirrorImageUnaffectedSense =
-  (typeof MIRROR_IMAGE_UNAFFECTED_SENSES)[number];
-export const MIRROR_IMAGE_UNAFFECTED_BY = [
+export type PerceptionGatedAttackRollDefenseBypassSense =
+  (typeof PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES)[number];
+export const DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES =
+  PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES;
+export type DuplicateHitInterceptionUnaffectedSense =
+  (typeof DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES)[number];
+export const DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY = [
   "blinded",
-  ...MIRROR_IMAGE_UNAFFECTED_SENSES,
+  ...DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES,
 ] as const satisfies ReadonlyArray<Condition | CreatureSense["kind"]>;
-export const MIRROR_IMAGE_DUPLICATE_COUNTS = [1, 2, 3] as const;
-export type MirrorImageDuplicateCount =
-  (typeof MIRROR_IMAGE_DUPLICATE_COUNTS)[number];
-export const MIRROR_IMAGE_INITIAL_DUPLICATES =
-  3 satisfies MirrorImageDuplicateCount;
-export const MIRROR_IMAGE_DUPLICATE_DIE_SIZE = 6;
-export const MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST = 3;
-export const MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX =
-  "battle:mirror-image:duplicate-roll:";
-export const CHROMATIC_ORB_DAMAGE_TYPES = [
+export const DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS = [1, 2, 3] as const;
+export type DuplicateHitInterceptionDuplicateCount =
+  (typeof DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS)[number];
+export const DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES =
+  3 satisfies DuplicateHitInterceptionDuplicateCount;
+export const DUPLICATE_HIT_INTERCEPTION_DIE_SIZE = 6;
+export const DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST = 3;
+export const DUPLICATE_HIT_INTERCEPTION_ROLL_HOLE_KEY_PREFIX =
+  "battle:duplicate-hit-interception:roll:";
+export const CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES = [
   "acid",
   "cold",
   "fire",
@@ -110,23 +111,25 @@ export const CHROMATIC_ORB_DAMAGE_TYPES = [
   "poison",
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
-export const CHROMATIC_ORB_LEAP_RANGE_FEET = movementFeet(30);
-export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
+export const CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET = movementFeet(30);
+export const CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
 ] as const;
-export const HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
-  "battle:hideous-laughter-repeat-save:end-turn:";
-export const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
-  "battle:hideous-laughter-repeat-save:damage:";
-export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
-export const SLOW_ACTIVE_PENALTIES_SPEED_RATIO = {
+export const STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:staged-condition-repeat-save:end-turn:";
+export const STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:staged-condition-repeat-save:damage:";
+export const STAGED_CONDITION_DURATION_TICKS = elapsedTimeTicks(10);
+export const SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO = {
   numerator: 1,
   denominator: 2,
 } as const;
-export const SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA = -2;
-export const SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA = -2;
-export const SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT = 25;
+export const SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA = -2;
+export const SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA = -2;
+export const SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT = 25;
+export const SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT =
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT;
 export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:decision",
 );
@@ -220,52 +223,58 @@ export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
   "paralyzed",
   "poisoned",
 ] as const satisfies ReadonlyArray<Condition>;
-export const HUNTERS_MARK_FINDING_SKILLS = [
+export const MARKED_TARGET_FINDING_SKILLS = [
   "perception",
   "survival",
 ] as const satisfies ReadonlyArray<Skill>;
-export const THAUMATURGY_BOOMING_VOICE_DURATION_TICKS = elapsedTimeTicks(10);
-export const THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL =
+export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS =
+  elapsedTimeTicks(10);
+export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL =
   "intimidation" as const satisfies Skill;
-export const THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS = 3;
-export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
+export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS = 3;
+export const MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
   "battle:spell:active-one-minute-effect-count",
 );
-export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE =
+export const MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE =
   holeInstanceKey("battle:spell:active-one-minute-effect-count");
-export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID = holeId(
-  "battle:spell:booming-voice:influence-ability-check",
-);
-export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
+export const MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID =
+  holeId("battle:spell:booming-voice:influence-ability-check");
+export const MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
   holeInstanceKey("battle:spell:booming-voice:influence-ability-check");
-export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
-export const WARDING_BOND_SAVING_THROW_BONUS = 1;
-export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);
-export const WARDING_BOND_CONNECTION_RANGE_FEET = movementFeet(60);
-export const WARDING_BOND_SEPARATION_FACTS_HOLE_ID = holeId(
-  "battle:spell:warding-bond:separation-facts",
+export const LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS = 1;
+export const LINKED_DEFENSE_DAMAGE_SHARE_SAVING_THROW_BONUS = 1;
+export const LINKED_DEFENSE_DAMAGE_SHARE_CAST_RANGE_FEET = movementFeet(5);
+export const LINKED_DEFENSE_DAMAGE_SHARE_CONNECTION_RANGE_FEET =
+  movementFeet(60);
+export const LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_ID = holeId(
+  "battle:linked-defense-damage-share:separation-facts",
 );
-export const WARDING_BOND_SEPARATION_FACTS_HOLE_INSTANCE = holeInstanceKey(
-  "battle:spell:warding-bond:separation-facts",
-);
-export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
+export const LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_INSTANCE =
+  holeInstanceKey("battle:linked-defense-damage-share:separation-facts");
+export const CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },
   { atLevel: 17, value: 4 },
 ] as const;
-export const ELDRITCH_BLAST_BEAM_COUNTS = [
+export const CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS = [
   1,
-  ...ELDRITCH_BLAST_BEAM_COUNT_TIERS.map((tier) => tier.value),
+  ...CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS.map((tier) => tier.value),
 ] as const;
-export type EldritchBlastBeamCount =
-  (typeof ELDRITCH_BLAST_BEAM_COUNTS)[number];
-export const SCORCHING_RAY_RAY_COUNTS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
-export type ScorchingRayRayCount = (typeof SCORCHING_RAY_RAY_COUNTS)[number];
+export type MultiBeamSpellAttackBeamCount =
+  (typeof CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[number];
+export const SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS = [
+  3, 4, 5, 6, 7, 8, 9, 10,
+] as const;
+export type MultiRaySpellAttackRayCount =
+  (typeof SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[number];
 
-export function scorchingRayRayCount(
+export function multiRaySpellAttackRayCount(
   value: number,
-): ScorchingRayRayCount | null {
-  return SCORCHING_RAY_RAY_COUNTS.find((count) => count === value) ?? null;
+): MultiRaySpellAttackRayCount | null {
+  return (
+    SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS.find((count) => count === value) ??
+    null
+  );
 }
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID =
   holeId("battle:attack-damage-reduction-zero-damage-redirect:target");
@@ -358,7 +367,7 @@ export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID = holeId(
 );
 export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:hunters-prey:horde-breaker:damage-disposition");
-export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
+export const CREATURE_TYPE_PROTECTION_CREATURE_TYPES = [
   "aberration",
   "celestial",
   "elemental",
@@ -366,14 +375,14 @@ export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "fiend",
   "undead",
 ] as const satisfies ReadonlyArray<CreatureType>;
-export const DISPEL_EVIL_AND_GOOD_CREATURE_TYPES = [
+export const CREATURE_TYPE_DISMISSAL_CREATURE_TYPES = [
   "celestial",
   "elemental",
   "fey",
   "fiend",
   "undead",
 ] as const satisfies ReadonlyArray<CreatureType>;
-export const PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS = [
+export const CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS = [
   "charmed",
   "frightened",
 ] as const satisfies ReadonlyArray<Condition>;

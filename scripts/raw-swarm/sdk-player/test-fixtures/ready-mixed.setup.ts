@@ -31,7 +31,7 @@ export const setupScenario: ScenarioSetup = ({
   const statBlock = statBlocks.find(
     (candidate) => candidate.id === "stat_block_skeleton",
   );
-  if (sdk.isLeft(character) || statBlock === undefined) {
+  if (sdk.isFailure(character) || statBlock === undefined) {
     return {
       kind: "obstructed",
       obstruction: "Mixed composition projection failed.",
@@ -45,26 +45,26 @@ export const setupScenario: ScenarioSetup = ({
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(monster)) {
+  if (sdk.isFailure(monster)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(monster.left),
+      obstruction: sdk.battleStateInitIssueMessage(monster.failure),
       observation: { phase: "stat-block" },
     };
   }
   const started = sdk.startBattle({
     battleId: sdk.battleId("external-mixed-session"),
-    combatants: [character.right, monster.right],
+    combatants: [character.success, monster.success],
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: { phase: "start" },
     };
   }
   const session = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -76,8 +76,8 @@ export const setupScenario: ScenarioSetup = ({
         boundaries: [],
       },
       placements: [
-        { tokenId: character.right.combatantId, coordinate: { x: 0, y: 0 } },
-        { tokenId: monster.right.combatantId, coordinate: { x: 1, y: 0 } },
+        { tokenId: character.success.combatantId, coordinate: { x: 0, y: 0 } },
+        { tokenId: monster.success.combatantId, coordinate: { x: 1, y: 0 } },
       ],
       spatialDecisions: [],
     },
@@ -86,32 +86,32 @@ export const setupScenario: ScenarioSetup = ({
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       {
-        attackerId: character.right.combatantId,
-        enemyId: monster.right.combatantId,
+        attackerId: character.success.combatantId,
+        enemyId: monster.success.combatantId,
       },
       {
-        attackerId: monster.right.combatantId,
-        enemyId: character.right.combatantId,
+        attackerId: monster.success.combatantId,
+        enemyId: character.success.combatantId,
       },
     ],
     movementAllyRelationships: [],
     opportunityAttackEnemyRelationships: [
       {
-        reactorId: character.right.combatantId,
-        moverId: monster.right.combatantId,
+        reactorId: character.success.combatantId,
+        moverId: monster.success.combatantId,
       },
     ],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
-        obstruction: sdk.scenarioSessionIssueMessage(session.left),
+        obstruction: sdk.scenarioSessionIssueMessage(session.failure),
         observation: { phase: "scenario-session" },
       }
     : {
         kind: "ready",
-        session: session.right,
+        session: session.success,
         observation: { combatants: 2 },
       };
 };

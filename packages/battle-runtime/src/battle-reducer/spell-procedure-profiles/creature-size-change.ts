@@ -33,7 +33,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { EffectAtom, OngoingEffect } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -55,6 +55,7 @@ import {
   creatureSizeChangeProcedure,
 } from "../creature-size-change-effects.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import {
   invalidResult,
@@ -71,6 +72,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -206,7 +208,7 @@ function creatureSizeChangeSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return [];
   }
   return phase.onFail.options.flatMap(
@@ -225,7 +227,7 @@ function creatureSizeChangeSpellProjection(
         actorId,
         spell,
         option.effects,
-        durationTicks.right,
+        durationTicks.success,
       );
       if (activeEffect === null) {
         return [];
@@ -478,17 +480,25 @@ function applyCreatureSizeChangeEffect(
   );
   const target = state.combatants.get(targetId);
   if (target === undefined) return state;
+  const allocation = allocateBattleEffectExecutionRefForCreature({
+    owner: target,
+  });
   const nextEffect = {
     ...activeEffect,
+    effectRef: allocation.effectRef,
     sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
-  };
+  } as const;
   const replacement = activeEffectsWithCreatureSizeChangeReplaced(
-    target.activeEffects,
+    allocation.owner.activeEffects,
     nextEffect,
   );
+  const allocatedState = {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, allocation.owner),
+  };
   return replaceTargetActiveEffectsEndingDisplacedConcentrations(
-    state,
+    allocatedState,
     targetId,
     replacement.activeEffects,
     replacement.displacedEffects,
@@ -559,9 +569,10 @@ const CreatureSizeChangeExecutionSchemaFields = {
     maxTargets: Schema.Literal(1),
   }),
   activeEffect: Schema.Struct({
+    ...BattleEffectOccurrenceTemplateSchemaFields,
     kind: Schema.Literal("spellCreatureSizeChange"),
     sourceCombatantId: CombatantId,
-    direction: Schema.Literal("increase", "decrease"),
+    direction: Schema.Literals(["increase", "decrease"]),
     expiresAt: Schema.Struct({
       kind: Schema.Literal("concentration"),
       combatantId: CombatantId,

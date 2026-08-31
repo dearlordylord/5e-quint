@@ -4,9 +4,9 @@ const BATTLE_SPELL_EFFECT_LEVEL_MIN = 0;
 const BATTLE_SPELL_EFFECT_LEVEL_MAX = 9;
 
 export const BattleSpellEffectLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(BATTLE_SPELL_EFFECT_LEVEL_MIN),
-  Schema.lessThanOrEqualTo(BATTLE_SPELL_EFFECT_LEVEL_MAX),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(BATTLE_SPELL_EFFECT_LEVEL_MIN)),
+  Schema.check(Schema.isLessThanOrEqualTo(BATTLE_SPELL_EFFECT_LEVEL_MAX)),
   Schema.brand("BattleSpellEffectLevel"),
 );
 export type BattleSpellEffectLevel = typeof BattleSpellEffectLevel.Type;

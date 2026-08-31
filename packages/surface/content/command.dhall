@@ -10,7 +10,7 @@
 --   cast. Higher-level slots affect one additional creature per slot
 --   level above 1.
 --
--- SURFACE WIDENING REFERENCE (SRDINV42). The command_target_next_turn
+-- SURFACE WIDENING REFERENCE (SRDINV42). The compelled_target_next_turn
 -- atom records the authored option grammar without deriving route
 -- geometry, pathfinding, held-item identity, or runtime turn execution.
 
@@ -54,7 +54,7 @@ let command =
                 , ability = "wis"
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail =
-                    { kind = "command_target_next_turn"
+                    { kind = "compelled_target_next_turn"
                     , execution = "target_next_turn"
                     , options =
                         { approach =

@@ -9,7 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { abilityScoreToMod, type DieRollResult } from "@dnd/shared/types";
 import type {
@@ -623,19 +623,19 @@ export function spendSpellMetamagicSorceryPoints(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly applications: readonly CharacterBattleMetamagicOptionFact[];
-}): Either.Either<BattleState, string> {
+}): Result.Result<BattleState, string> {
   if (input.applications.length === 0) {
-    return Either.right(input.state);
+    return Result.succeed(input.state);
   }
   const actor = input.state.combatants.get(input.actorId);
   if (actor?.origin.kind !== "character") {
-    return Either.left(
+    return Result.fail(
       "Metamagic selection requires a character with known Metamagic options.",
     );
   }
   const metamagic = actor.origin.metamagic;
   if (metamagic === undefined) {
-    return Either.left(
+    return Result.fail(
       "Metamagic selection requires a character with known Metamagic options.",
     );
   }
@@ -645,16 +645,16 @@ export function spendSpellMetamagicSorceryPoints(input: {
       characterBattleResourceIsPointPool(candidate),
   );
   if (resource === undefined) {
-    return Either.left("Metamagic requires its shared Sorcery Point resource.");
+    return Result.fail("Metamagic requires its shared Sorcery Point resource.");
   }
   const spent = spendCharacterPointPoolResource({
     resource,
     points: metamagicSorceryPointCost(input.applications),
   });
-  if (Either.isLeft(spent)) {
-    return Either.left("Metamagic requires enough unexpended Sorcery Points.");
+  if (Result.isFailure(spent)) {
+    return Result.fail("Metamagic requires enough unexpended Sorcery Points.");
   }
-  return Either.right({
+  return Result.succeed({
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.actorId, {
       ...actor,
@@ -663,7 +663,7 @@ export function spendSpellMetamagicSorceryPoints(input: {
         resources: actor.origin.resources.map((candidate) =>
           candidate.resourcePoolRef === metamagic.sorceryPointResourcePoolRef &&
           characterBattleResourceIsPointPool(candidate)
-            ? spent.right
+            ? spent.success
             : candidate,
         ),
       },

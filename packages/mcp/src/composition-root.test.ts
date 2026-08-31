@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { srdStatBlockCatalog } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 
 import {
   createMcpApplicationServices,

@@ -9,6 +9,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection CRPI-READY-028 rogue_second_story_work
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.acrobatic-movement
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   barbarianExtraAttackUnitId,
   barbarianFastMovementUnitId,
@@ -63,7 +64,6 @@ import {
   decodeUnitRecordSync,
   difficultyClass,
   discoverBattleActCandidates,
-  Either,
   movementDeltaFeet,
   movementFeet,
   parseSupportedUnitFeatureProfile,
@@ -104,7 +104,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
           unit,
         }),
       ).toEqual(
-        Either.right({
+        Result.succeed({
           unit,
           supportProfiles: [extraAttackSupportProfile],
         }),
@@ -423,7 +423,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
         unit: adjacentUnit,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message:
           "Unsupported battle Attack action attack-count scaling Unit hook: test_extra_attack_additional_4.",
@@ -441,15 +441,15 @@ function syntheticExtraAttackBattleUnitRef(
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit,
       supportProfiles: [{ ...extraAttackSupportProfile, additionalAttacks }],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function syntheticExtraAttackUnit(
@@ -534,7 +534,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(barbarianFastMovementUnitId),
         supportProfiles: [fastMovementSupportProfile()],
       }),
@@ -647,7 +647,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
           unit: adjacentUnit,
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleUnitSupportProfileIssue",
           message: `Unsupported battle passive Speed bonus Unit hook: ${adjacentUnit.id}.`,
         }),
@@ -674,7 +674,7 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkUnarmoredMovementUnitId),
         supportProfiles: [monkUnarmoredMovementSupportProfile()],
       }),
@@ -808,7 +808,7 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
           unit: adjacentUnit,
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleUnitSupportProfileIssue",
           message: `Unsupported battle passive Speed bonus Unit hook: ${adjacentUnit.id}.`,
         }),
@@ -835,7 +835,7 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkAcrobaticMovementUnitId),
         supportProfiles: [acrobaticMovementSupportProfile()],
       }),
@@ -1064,7 +1064,7 @@ describe("CRPI-READY-028 deterministic Second-Story Work admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rogueSecondStoryWorkUnitId),
         supportProfiles: [secondStoryWorkSupportProfile()],
       }),
@@ -1143,7 +1143,7 @@ describe("QMBT44 deterministic Roving admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rangerRovingUnitId),
         supportProfiles: [rovingSupportProfile()],
       }),
@@ -1381,13 +1381,13 @@ function acrobaticMovementBattle(
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(monkAcrobaticMovementUnitId),
       supportProfiles: [acrobaticMovementSupportProfile()],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
 
   const result = startBattle({
@@ -1397,7 +1397,7 @@ function acrobaticMovementBattle(
         combatantId: spellCasterId,
         displayName: "Acrobatic Movement Monk",
         initiative: 20,
-        characterUnitRefs: input.selected === false ? [] : [unitRef.right],
+        characterUnitRefs: input.selected === false ? [] : [unitRef.success],
         classLevels: [{ className: "monk", level: classLevel(9) }],
         ...(input.armorClass === undefined
           ? {}
@@ -1413,11 +1413,11 @@ function acrobaticMovementBattle(
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function acrobaticMovementHole(
@@ -1453,13 +1453,13 @@ function secondStoryWorkBattle(): BattleState {
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(rogueSecondStoryWorkUnitId),
       supportProfiles: [secondStoryWorkSupportProfile()],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
 
   const result = startBattle({
@@ -1469,7 +1469,7 @@ function secondStoryWorkBattle(): BattleState {
         combatantId: secondStoryWorkActorId,
         displayName: "Second-Story Work Rogue",
         initiative: 20,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
         classLevels: [{ className: "rogue", level: classLevel(3) }],
         unitFeatures: [
           characterBattleFeatureInitForTest(unit, [
@@ -1484,11 +1484,11 @@ function secondStoryWorkBattle(): BattleState {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function secondStoryWorkMovementHole(state: BattleState) {

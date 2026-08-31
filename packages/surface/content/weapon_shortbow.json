@@ -9,7 +9,7 @@
   },
   "id": "weapon_shortbow",
   "kind": "weapon",
-  "mastery": "vex",
+  "masteryUnitId": "mastery_vex",
   "name": "Shortbow",
   "properties": [
     {

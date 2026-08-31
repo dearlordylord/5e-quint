@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import {
@@ -23,16 +23,18 @@ function fail(message: string): never {
 
 function repositoryReadPath(path: string): string {
   const result = canonicalRepositoryReadPath(repoRoot, path);
-  return Either.isRight(result)
-    ? result.right
-    : fail(`Replay authority is not repository-owned: ${path}: ${result.left}`);
+  return Result.isSuccess(result)
+    ? result.success
+    : fail(
+        `Replay authority is not repository-owned: ${path}: ${result.failure}`,
+      );
 }
 
 function repositoryOutputPath(path: string): string {
   const result = canonicalRepositoryOutputPath(repoRoot, path);
-  return Either.isRight(result)
-    ? result.right
-    : fail(`Replay output is not repository-owned: ${path}: ${result.left}`);
+  return Result.isSuccess(result)
+    ? result.success
+    : fail(`Replay output is not repository-owned: ${path}: ${result.failure}`);
 }
 
 export function matchedCallCountFromReplayOutput(
@@ -142,7 +144,7 @@ function main(args: readonly string[]): void {
     scenarioSha256: parsed.value.header.scenarioSha256,
     scenarioReviewSha256: parsed.value.header.scenarioReviewSha256,
   });
-  if (Either.isLeft(stagePlanEvidence)) fail(stagePlanEvidence.left);
+  if (Result.isFailure(stagePlanEvidence)) fail(stagePlanEvidence.failure);
   const replaySupervisor = repositoryReadPath(
     resolve(evidenceSetPath, "replay-supervisor.mjs"),
   );
@@ -172,20 +174,20 @@ function main(args: readonly string[]): void {
     matchedCallCount,
     status: "succeeded",
   };
-  const decodedReplayResult = Schema.decodeUnknownEither(
+  const decodedReplayResult = Schema.decodeUnknownResult(
     SdkReplayResultEvidenceSchema,
     { onExcessProperty: "error" },
   )(replayResult);
-  if (Either.isLeft(decodedReplayResult)) {
+  if (Result.isFailure(decodedReplayResult)) {
     fail(
-      `Replay-result authority is invalid: ${decodedReplayResult.left.message}`,
+      `Replay-result authority is invalid: ${decodedReplayResult.failure.message}`,
     );
   }
   retainReplayResultEvidence({
     path: repositoryOutputPath(
       resolve(evidenceSetPath, "evidence/replay-result.json"),
     ),
-    evidence: decodedReplayResult.right,
+    evidence: decodedReplayResult.success,
   });
   process.stdout.write(result.stdout);
 }

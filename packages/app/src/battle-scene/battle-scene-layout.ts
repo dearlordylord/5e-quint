@@ -1,5 +1,5 @@
 import type { BattlePresentedCreatureSnapshot, BattlePresentedSnapshot, CombatantId } from "@dnd/battle-runtime"
-import { Either } from "effect"
+import { Result } from "effect"
 
 import type {
   BattleGridPosition,
@@ -170,7 +170,7 @@ export function computeWizardBattleScene(input: {
   readonly step: WizardBattleDemoStep
   readonly stepIndex: number
   readonly config?: LayoutConfig
-}): Either.Either<BattleSceneProjection, BattleScenePresentationIssue> {
+}): Result.Result<BattleSceneProjection, BattleScenePresentationIssue> {
   const config = input.config ?? DEFAULT_LAYOUT_CONFIG
   const initiativeCreatures = input.snapshot.combatants.map((combatant) =>
     initiativeCreatureSnapshot(combatant, input.meta, input.snapshot.currentActorId, input.step.cue.reactingId)
@@ -179,14 +179,14 @@ export function computeWizardBattleScene(input: {
     (combatant) => combatant.combatantId === input.snapshot.currentActorId
   )
   if (activeCreature === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleScenePresentationIssue",
       reason: "missingCurrentActor",
       combatantId: input.snapshot.currentActorId
     })
   }
 
-  return Either.right({
+  return Result.succeed({
     activeCreatureName: activeCreature.displayName,
     initiativeCreatures,
     layout: {

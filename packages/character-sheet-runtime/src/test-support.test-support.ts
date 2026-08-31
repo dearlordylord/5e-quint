@@ -39,8 +39,13 @@ import {
   srdUnitCollection,
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+  type StatBlockCatalog,
+} from "@dnd/surface/surface/stat-block-catalog";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import {
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
@@ -89,6 +94,7 @@ import {
   completeShortRest as completeShortRestCore,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
+  createFreshCharacterSheet as createFreshCharacterSheetCore,
   rebuildCharacterSheet as rebuildCharacterSheetCore,
   replaceCharacterSheetSpellSlotSourceState,
   finishLongRest,
@@ -97,7 +103,8 @@ import {
   characterSheetTempHp,
   interruptLongRest as interruptLongRestCore,
   interruptShortRest as interruptShortRestCore,
-  parseCharacterSheet,
+  parseCharacterSheet as parseCharacterSheetCore,
+  parseFreshCharacterSheet as parseFreshCharacterSheetCore,
   startLongRest,
   startShortRest,
   timePassed,
@@ -199,7 +206,7 @@ export {
   currentArmorClass,
   DRUID_WILD_SHAPE_UNIT_ID,
   DieRollResult,
-  Either,
+  Result,
   eldritchInvocationId,
   elapsedTimeTicks,
   Hp,
@@ -322,7 +329,6 @@ export {
   characterSheetTreeStrideTreeKind,
   characterSheetTempHp,
   AWAKEN_MATERIAL_COMPONENTS,
-  parseCharacterSheet,
   removeSelfRestorationConditionAtTurnEnd,
   resolveTreeStrideTransit,
   startLongRest,
@@ -359,10 +365,42 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Character Sheet runtime test Unit catalog must build.");
 }
 export const unitLibrary = unitCatalogResult.catalog;
+export const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (statBlockCatalogResult.tag !== "ok") {
+  throw new Error(
+    "Character Sheet runtime test Stat Block catalog must build.",
+  );
+}
+export const statBlockCatalog = statBlockCatalogResult.catalog;
 export const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 
+export function parseCharacterSheet(
+  value: unknown,
+  catalog: UnitCatalog,
+  statBlocks: StatBlockCatalog = statBlockCatalog,
+) {
+  return parseCharacterSheetCore(value, catalog, statBlocks);
+}
+
+export function createFreshCharacterSheet(input: CharacterSheetInput) {
+  return createFreshCharacterSheetCore({
+    ...input,
+    statBlockCatalog: input.statBlockCatalog ?? statBlockCatalog,
+  });
+}
+
+export function parseFreshCharacterSheet(
+  value: unknown,
+  catalog: UnitCatalog,
+  statBlocks: StatBlockCatalog = statBlockCatalog,
+) {
+  return parseFreshCharacterSheetCore(value, catalog, statBlocks);
+}
+
 export function characterSheetHitPointMaximum(sheet: CharacterSheet) {
-  return requireRight(
+  return requireSuccess(
     characterSheetHitPointMaximumCore({
       sheet,
       unitLibrary,
@@ -486,6 +524,7 @@ export function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
     companion: { tag: "none" },
     conditions: [],
     hitPointMaximumReduction: Hp(0),
+    statBlockCatalog,
     ...input,
   });
 }
@@ -497,8 +536,8 @@ export function completeShortRest(
   },
 ) {
   const { sheet, restedTicks, ...benefits } = input;
-  const rest = requireRight(startShortRest({ sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  const completion = requireSuccess(
     finishShortRest({
       rest,
       restedTicks: restedTicks ?? CHARACTER_SHEET_SHORT_REST_TICKS,
@@ -517,14 +556,20 @@ export function completeLongRest(
     readonly timing?: CharacterSheetLongRestStartTiming;
   },
 ) {
-  const { sheet, restedTicks, timing, ...benefits } = input;
-  const rest = requireRight(
+  const {
+    sheet,
+    restedTicks,
+    timing,
+    statBlockCatalog: inputStatBlockCatalog,
+    ...benefits
+  } = input;
+  const rest = requireSuccess(
     startLongRest({
       sheet,
       timing: timing ?? { tag: "noPriorLongRest" },
     }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({
       rest,
       restedTicks: restedTicks ?? rest.requiredRestTicks,
@@ -533,6 +578,7 @@ export function completeLongRest(
   return completeLongRestCore({
     ...benefits,
     completion,
+    statBlockCatalog: inputStatBlockCatalog ?? statBlockCatalog,
   });
 }
 
@@ -546,8 +592,8 @@ export function completeShortRestArcaneRecoveryWithRoute(
   },
 ) {
   const { sheet, restedTicks, ...benefits } = input;
-  const rest = requireRight(startShortRest({ sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  const completion = requireSuccess(
     finishShortRest({
       rest,
       restedTicks: restedTicks ?? CHARACTER_SHEET_SHORT_REST_TICKS,
@@ -566,14 +612,20 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
     readonly timing?: CharacterSheetLongRestStartTiming;
   },
 ) {
-  const { sheet, restedTicks, timing, ...benefits } = input;
-  const rest = requireRight(
+  const {
+    sheet,
+    restedTicks,
+    timing,
+    statBlockCatalog: inputStatBlockCatalog,
+    ...benefits
+  } = input;
+  const rest = requireSuccess(
     startLongRest({
       sheet,
       timing: timing ?? { tag: "noPriorLongRest" },
     }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({
       rest,
       restedTicks: restedTicks ?? rest.requiredRestTicks,
@@ -582,6 +634,7 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
   return completeLongRestArcaneRecoveryResetWithRouteCore({
     ...benefits,
     completion,
+    statBlockCatalog: inputStatBlockCatalog ?? statBlockCatalog,
   });
 }
 
@@ -595,14 +648,20 @@ export function completeLongRestWeaponMasteryReselectionWithRoute(
     readonly timing?: CharacterSheetLongRestStartTiming;
   },
 ) {
-  const { sheet, restedTicks, timing, ...benefits } = input;
-  const rest = requireRight(
+  const {
+    sheet,
+    restedTicks,
+    timing,
+    statBlockCatalog: inputStatBlockCatalog,
+    ...benefits
+  } = input;
+  const rest = requireSuccess(
     startLongRest({
       sheet,
       timing: timing ?? { tag: "noPriorLongRest" },
     }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({
       rest,
       restedTicks: restedTicks ?? rest.requiredRestTicks,
@@ -611,6 +670,7 @@ export function completeLongRestWeaponMasteryReselectionWithRoute(
   return completeLongRestWeaponMasteryReselectionWithRouteCore({
     ...benefits,
     completion,
+    statBlockCatalog: inputStatBlockCatalog ?? statBlockCatalog,
   });
 }
 
@@ -619,7 +679,7 @@ export function interruptShortRest(input: {
   readonly interruption: CharacterSheetShortRestInterruption;
 }) {
   return interruptShortRestCore({
-    rest: requireRight(startShortRest({ sheet: input.sheet })),
+    rest: requireSuccess(startShortRest({ sheet: input.sheet })),
     interruption: input.interruption,
   });
 }
@@ -650,7 +710,7 @@ export function interruptLongRest(
       cumulativeRestedTicks: restedTicks,
       elapsedSincePreviousInterruptionTicks: restedTicks,
     },
-    rest: requireRight(
+    rest: requireSuccess(
       startLongRest({
         sheet,
         timing: startTiming ?? { tag: "noPriorLongRest" },
@@ -660,7 +720,7 @@ export function interruptLongRest(
 }
 
 export function stableSheet(characterIdText: string): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId(characterIdText),
       build,
@@ -685,7 +745,7 @@ export function spellbookRitualSheet(input: {
   readonly startingClass?: string;
   readonly spellcastingSourceUnitId?: string;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId(input.characterIdText),
       build: {
@@ -826,9 +886,11 @@ export function prayerOfHealingDirectPhase(
   return phase as PrayerOfHealingDirectPhase;
 }
 
-export function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+export function requireSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isSuccess(result)) return result.success;
+  throw new Error(
+    `Expected Result success, got ${JSON.stringify(result.failure)}.`,
+  );
 }
 
 export function weaponMasteryBuild(input: {
@@ -1041,7 +1103,7 @@ export function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "armor",
-          unitId: expectRight(
+          unitId: expectSuccess(
             characterEquipmentItemUnitId(authoredUnitId(input.armor)),
           ),
         });
@@ -1049,7 +1111,7 @@ export function armorClassBuild(input: {
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
-          unitId: expectRight(
+          unitId: expectSuccess(
             characterEquipmentItemUnitId(authoredUnitId("equipment_shield")),
           ),
         })
@@ -1059,7 +1121,7 @@ export function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "main",
-          unitId: expectRight(
+          unitId: expectSuccess(
             characterEquipmentItemUnitId(authoredUnitId(input.weapon)),
           ),
         });
@@ -1068,7 +1130,7 @@ export function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "off",
-          unitId: expectRight(
+          unitId: expectSuccess(
             characterEquipmentItemUnitId(authoredUnitId(input.offHandWeapon)),
           ),
         });
@@ -1085,7 +1147,7 @@ export function armorClassBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1201,7 +1263,7 @@ export function sorcererFontOfMagicBuild(
 }
 
 export function testSorcererMetamagicOptionId(optionId: string) {
-  return requireRight(sorcererMetamagicOptionId(optionId));
+  return requireSuccess(sorcererMetamagicOptionId(optionId));
 }
 
 export function warlockSpellcastingWithCantrips(
@@ -1351,7 +1413,9 @@ export function prayerOfHealingClericBuild(): CharacterBuild {
   };
 }
 
-export function expectRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+export function expectSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isSuccess(result)) return result.success;
+  throw new Error(
+    `Expected Result success, got ${JSON.stringify(result.failure)}.`,
+  );
 }

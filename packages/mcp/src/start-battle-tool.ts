@@ -8,7 +8,7 @@ import {
   type BattleRosterEntry,
   type BattleRosterIssue,
 } from "@dnd/character-battle-runtime";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -68,8 +68,8 @@ function composeStartBattleCompanions(input: {
 }) {
   return composeBattleCompanionRoster({
     session:
-      input.session !== undefined && Either.isRight(input.session)
-        ? input.session.right
+      input.session !== undefined && Result.isSuccess(input.session)
+        ? input.session.success
         : undefined,
     owners: input.combatants.characterSessions.map(
       ({ index, character, session: characterSession }) => ({
@@ -102,8 +102,8 @@ function completeStartBattle(
     ...battleRosterIssues(combatants.composition).flatMap((issue) =>
       battleRosterIssuePayload(issue),
     ),
-    ...(session !== undefined && Either.isLeft(session)
-      ? battleRuntimeIssuePayload(session.left)
+    ...(session !== undefined && Result.isFailure(session)
+      ? battleRuntimeIssuePayload(session.failure)
       : []),
     ...battleCompanionIssues(companionRoster).flatMap(
       battleCompanionRosterIssuePayload,
@@ -262,7 +262,7 @@ export function projectBattleCombatant(input: {
   readonly root: McpPlaySessionRoot;
   readonly combatant: BattleCombatantToolInput;
   readonly ownerPath?: readonly (string | number)[];
-}): Either.Either<BattleRosterAdmission, ToolError> {
+}): Result.Result<BattleRosterAdmission, ToolError> {
   const rosterEntry = rosterEntryForToolCombatant({
     root: input.root,
     combatant: input.combatant,
@@ -270,7 +270,7 @@ export function projectBattleCombatant(input: {
   });
   const composition = composeBattleRoster([rosterEntry.rosterEntry]);
   if (composition.tag === "rejected") {
-    return Either.left(
+    return Result.fail(
       battleStartIssuesContent(
         composition.issues.flatMap((issue) =>
           battleRosterIssuePayload(
@@ -281,7 +281,7 @@ export function projectBattleCombatant(input: {
       ),
     );
   }
-  return Either.right(composition.admissions[0]);
+  return Result.succeed(composition.admissions[0]);
 }
 
 function rosterEntryForToolCombatant(input: {

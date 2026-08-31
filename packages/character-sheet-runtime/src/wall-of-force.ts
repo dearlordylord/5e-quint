@@ -4,8 +4,10 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { OngoingEffect, SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { OngoingEffect } from "@dnd/surface/surface/types";
+import { Result } from "effect";
+
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 
 import {
   characterSheetIssue,
@@ -34,7 +36,7 @@ export function castWallOfForce(input: {
   readonly unitLibrary: UnitCatalog;
   readonly placement: CharacterSheetWallOfForcePlacement;
   readonly shape: CharacterSheetWallOfForceShape;
-}): Either.Either<CharacterSheetWallOfForceResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetWallOfForceResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -86,10 +88,10 @@ function wallOfForceShapeIssue(
 }
 
 function wallOfForceInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly placement: CharacterSheetWallOfForcePlacement;
   readonly shape: CharacterSheetWallOfForceShape;
-}): Either.Either<CharacterSheetWallOfForceInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetWallOfForceInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Wall of Force support profile required by this projector. */
   if (
@@ -104,7 +106,7 @@ function wallOfForceInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== WALL_OF_FORCE_DURATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "a shard of glass"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Wall of Force requires the supported level-5 force barrier profile.",
@@ -127,14 +129,14 @@ function wallOfForceInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Wall of Force requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "wallOfForce",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -144,7 +146,7 @@ function wallOfForceInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "action" },
     rangeFeet: WALL_OF_FORCE_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     placement: input.placement,
     shape: input.shape,
@@ -168,7 +170,9 @@ function wallOfForceInvocationFromSpell(input: {
   });
 }
 
-function hasSupportedInitialBarrierPhase(spell: SpellRecord): boolean {
+function hasSupportedInitialBarrierPhase(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Wall of Force data: admission requires ongoing-effect mechanics before barrier projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const phase = spell.mechanics.initialPhase;
@@ -235,7 +239,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function hasRequiredBarrierOperations(spell: SpellRecord): boolean {
+function hasRequiredBarrierOperations(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Wall of Force data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const effects = spell.mechanics.operations.map(

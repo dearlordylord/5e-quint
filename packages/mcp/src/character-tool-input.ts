@@ -7,7 +7,7 @@ import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
 } from "@dnd/shared/game-facts";
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   decodeToolArgs,
@@ -32,38 +32,36 @@ import {
 const EmptyArgsSchema = Schema.Struct({});
 
 const DraftIdArgsSchema = Schema.Struct({
-  draftId: Schema.String.annotations({
+  draftId: Schema.String.annotate({
     description: "Character Draft id returned by create_character_draft.",
   }),
 });
 
 const CharacterSessionIdArgsSchema = Schema.Struct({
-  characterId: Schema.String.annotations({
+  characterId: Schema.String.annotate({
     description:
       "Character Session id returned by finalize_character or list_characters.",
   }),
 });
 
 const FinalizeCharacterArgsSchema = Schema.Struct({
-  draftId: Schema.String.annotations({
+  draftId: Schema.String.annotate({
     description: "Character Draft id returned by create_character_draft.",
   }),
-  druidWildShapeKnownFormStatBlockIds: Schema.optionalWith(
-    Schema.Array(StatBlockId).annotations({
+  druidWildShapeKnownFormStatBlockIds: Schema.optionalKey(
+    Schema.Array(StatBlockId).annotate({
       description:
         "Selected Beast Stat Block ids for a Druid Wild Shape character. Required when the finalized draft has Wild Shape.",
     }),
-    { exact: true },
   ),
 });
 
 const CreateCharacterDraftArgsSchema = Schema.Struct({
-  draftId: Schema.optionalWith(
-    Schema.String.annotations({
+  draftId: Schema.optionalKey(
+    Schema.String.annotate({
       description:
         "Optional caller-provided Character Draft id. Omit to let the runtime assign one.",
     }),
-    { exact: true },
   ),
 });
 
@@ -148,7 +146,7 @@ export const fillCreationHolesInputSchema = mcpObjectJsonSchema(
   FillCreationHolesArgsSchema,
 );
 export const applyCharacterSessionOperationInputSchema = mcpObjectJsonSchema(
-  ApplyCharacterSessionOperationArgsSchema,
+  Schema.toType(ApplyCharacterSessionOperationArgsSchema),
 );
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 export const characterSessionIdInputSchema = mcpObjectJsonSchema(
@@ -161,13 +159,13 @@ export function decodeCharacterToolCall(input: {
 }): ToolInputResult<CharacterToolCall> {
   return Match.value(input.name).pipe(
     Match.when(characterToolNames.createCharacterDraft, () =>
-      Either.map(decodeCreateCharacterDraftArgs(input.args), (args) => ({
+      Result.map(decodeCreateCharacterDraftArgs(input.args), (args) => ({
         name: characterToolNames.createCharacterDraft,
         args,
       })),
     ),
     Match.when(characterToolNames.discoverCreationHoles, () =>
-      Either.map(
+      Result.map(
         decodeDraftIdArg(input.args, characterToolNames.discoverCreationHoles),
         (draftId) => ({
           name: characterToolNames.discoverCreationHoles,
@@ -176,7 +174,7 @@ export function decodeCharacterToolCall(input: {
       ),
     ),
     Match.when(characterToolNames.fillCreationHoles, () =>
-      Either.map(
+      Result.map(
         decodeFillCreationHolesArgs(
           input.args,
           characterToolNames.fillCreationHoles,
@@ -188,13 +186,13 @@ export function decodeCharacterToolCall(input: {
       ),
     ),
     Match.when(characterToolNames.finalizeCharacter, () =>
-      Either.map(decodeFinalizeCharacterArgs(input.args), (args) => ({
+      Result.map(decodeFinalizeCharacterArgs(input.args), (args) => ({
         name: characterToolNames.finalizeCharacter,
         args,
       })),
     ),
     Match.when(characterToolNames.applyCharacterSessionOperation, () =>
-      Either.map(
+      Result.map(
         decodeApplyCharacterSessionOperationArgs(input.args),
         (args) => ({
           name: characterToolNames.applyCharacterSessionOperation,
@@ -203,13 +201,13 @@ export function decodeCharacterToolCall(input: {
       ),
     ),
     Match.when(characterToolNames.listCharacters, () =>
-      Either.map(decodeEmptyArgs(input.args), (args) => ({
+      Result.map(decodeEmptyArgs(input.args), (args) => ({
         name: characterToolNames.listCharacters,
         args,
       })),
     ),
     Match.when(characterToolNames.inspectCharacterSession, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           CharacterSessionIdArgsSchema,
           input.args,
@@ -222,7 +220,7 @@ export function decodeCharacterToolCall(input: {
       ),
     ),
     Match.when(characterToolNames.queryCharacterSession, () =>
-      Either.map(decodeQueryCharacterSessionArgs(input.args), (args) => ({
+      Result.map(decodeQueryCharacterSessionArgs(input.args), (args) => ({
         name: characterToolNames.queryCharacterSession,
         args,
       })),
@@ -235,7 +233,7 @@ function decodeApplyCharacterSessionOperationArgs(
   args: unknown,
 ): ToolInputResult<ApplyCharacterSessionOperationToolInput> {
   return decodeToolArgs(
-    ApplyCharacterSessionOperationArgsSchema,
+    Schema.toType(ApplyCharacterSessionOperationArgsSchema),
     args,
     characterToolNames.applyCharacterSessionOperation,
   );
@@ -249,7 +247,7 @@ function decodeCreateCharacterDraftArgs(
     args,
     characterToolNames.createCharacterDraft,
   );
-  return Either.map(record, (value) =>
+  return Result.map(record, (value) =>
     value.draftId === undefined
       ? {}
       : { draftId: characterDraftId(value.draftId) },
@@ -263,7 +261,7 @@ function decodeDraftIdArg(
   toolName: DraftIdToolName,
 ): ToolInputResult<CharacterDraftId> {
   const record = decodeToolArgs(DraftIdArgsSchema, args, toolName);
-  return Either.map(record, (value) => characterDraftId(value.draftId));
+  return Result.map(record, (value) => characterDraftId(value.draftId));
 }
 
 function decodeFinalizeCharacterArgs(
@@ -274,7 +272,7 @@ function decodeFinalizeCharacterArgs(
     args,
     characterToolNames.finalizeCharacter,
   );
-  return Either.map(record, (value) => ({
+  return Result.map(record, (value) => ({
     draftId: characterDraftId(value.draftId),
     ...(value.druidWildShapeKnownFormStatBlockIds === undefined
       ? {}
@@ -291,5 +289,5 @@ function decodeEmptyArgs(args: unknown): ToolInputResult<EmptyToolInput> {
     args,
     characterToolNames.listCharacters,
   );
-  return Either.map(decoded, () => ({}));
+  return Result.map(decoded, () => ({}));
 }

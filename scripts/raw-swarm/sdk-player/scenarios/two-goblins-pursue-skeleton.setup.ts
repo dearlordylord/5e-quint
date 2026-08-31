@@ -50,13 +50,11 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
 
   const creatureInits = [nearerGoblin, skeleton, fartherGoblin] as const;
-  const invalidCreature = creatureInits.find(sdk.isLeft);
+  const invalidCreature = creatureInits.find(sdk.isFailure);
   if (invalidCreature !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        invalidCreature.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(invalidCreature.failure),
       observation: {
         scenarioId: "two-goblins-pursue-skeleton",
         status: "invalid-canonical-combatant",
@@ -67,13 +65,13 @@ export const setupScenario: ScenarioSetup = (context) => {
   const battle = sdk.startBattle({
     battleId: sdk.battleId("two-goblins-pursue-skeleton"),
     combatants: creatureInits
-      .filter((result) => !sdk.isLeft(result))
-      .map((result) => result.right),
+      .filter((result) => !sdk.isFailure(result))
+      .map((result) => result.success),
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         scenarioId: "two-goblins-pursue-skeleton",
         status: "invalid-canonical-battle",
@@ -84,7 +82,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   return {
     kind: "obstructed",
     obstruction:
-      "The canonical battle can be started after the controller supplies Initiative, but the public scenario-session surface cannot faithfully compose the required spatial facts. Preserving the fixed 60-by-15-foot passage, all three fixed placements, the portcullis, its north-end opening, and later movement-route questions requires a geometryDerived spatial source. That source is required to be the sole source for supported cover questions, while the scenario explicitly makes Three-Quarters Cover through the portcullis a Table-authored ruling that is not derived by tactical-space. A geometryDerived session cannot also accept that Table decision, and a tableAuthored session cannot retain the arena or placements. Either source would discard a scenario-fixed fact or change its ownership.",
+      "The canonical battle can be started after the controller supplies Initiative, but the public scenario-session surface cannot faithfully compose the required spatial facts. Preserving the fixed 60-by-15-foot passage, all three fixed placements, the portcullis, its north-end opening, and later movement-route questions requires a geometryDerived spatial source. That source is required to be the sole source for supported cover questions, while the scenario explicitly makes Three-Quarters Cover through the portcullis a Table-authored ruling that is not derived by tactical-space. A geometryDerived session cannot also accept that Table decision, and a tableAuthored session cannot retain the arena or placements. Result source would discard a scenario-fixed fact or change its ownership.",
     observation: {
       scenarioId: "two-goblins-pursue-skeleton",
       status: "blocked-on-spatial-source-composition",

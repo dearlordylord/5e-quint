@@ -157,6 +157,8 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-hole-kinds.qnt",
   "battle-runtime-acid-arrow.qnt",
   "battle-runtime-command-ordering.qnt",
+  "battle-runtime-compelled-next-turn-behavior.qnt",
+  "battle-runtime-duplicate-hit-interception.qnt",
   "battle-runtime-hit-point-restoration-ordering.qnt",
   "battle-runtime-magic-missile-facts.qnt",
   "battle-runtime-mirror-image-constants.qnt",
@@ -209,6 +211,11 @@ const ALLOWLIST = {
     classification: "computed oracle",
     rationale:
       "active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
+  },
+  "battle-runtime-insect-plague-area-hazard.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "multi-step traces compute active-area lifecycle, the shared per-turn trigger ledger, target vitals, duration, and concentration cleanup from mutable reducer state",
   },
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": {
     classification: "computed oracle",

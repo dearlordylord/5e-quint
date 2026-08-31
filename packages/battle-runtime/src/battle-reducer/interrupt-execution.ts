@@ -4,7 +4,7 @@
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { type BattleSubject } from "../battle-subjects.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
@@ -27,8 +27,8 @@ import {
 import { reactionRollOrDamageReductionChoices } from "./reaction-modifiers.ts";
 import { triggeredReactionSpellChoices } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 import { afterHitSaveGatedConditionSavingThrowOutcomeHole } from "./after-hit-save-gated-condition-hole.ts";
 import { isAttackHitBonusActionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import {
@@ -43,6 +43,7 @@ import {
 } from "./readied-initial-holes.ts";
 import { readiedAttackOption } from "./ready.ts";
 import { interruptDecisionHole, snapshotBattle } from "./battle-snapshot.ts";
+import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 export {
   battleSnapshotProjection,
   battleTurnSnapshot,
@@ -59,6 +60,7 @@ import type {
   BattleAttackHostSubject,
   BattleFill,
   BattleAttackDamageContinuationConcentrationFrame,
+  BattleAttackDamageContinuationRepeatSaveFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackHitTriggerKind,
   BattleDroppedObjectOutcome,
@@ -148,9 +150,9 @@ function stateForOpeningInterruptCheckpoint(
     castingState.currentTurnResources,
     combatantId,
   );
-  return Either.isLeft(claimed)
+  return Result.isFailure(claimed)
     ? null
-    : { ...castingState, currentTurnResources: claimed.right };
+    : { ...castingState, currentTurnResources: claimed.success };
 }
 
 type AttackHitBonusActionSpellInvocation = Extract<
@@ -344,6 +346,17 @@ export function attackDamageContinuationConcentrationFrame(
   };
 }
 
+export function attackDamageContinuationRepeatSaveFrame(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+  handledInterruptTrigger: BattleInterruptTrigger,
+): BattleAttackDamageContinuationRepeatSaveFrame {
+  return {
+    kind: "attackDamageContinuationRepeatSave",
+    continuation,
+    handledInterruptTrigger,
+  };
+}
+
 export function interruptedProcedureSubject(
   procedure: BattleInterruptedProcedure,
 ): BattleSubject {
@@ -358,11 +371,13 @@ export function interruptedProcedureSupportsAttackDamageChanges(
   BattleInterruptedProcedure,
   {
     readonly kind: "replay";
+    readonly parentPosition?: never;
     readonly glyphStoredSpellReleaseReplay?: never;
   }
 > {
   return (
     procedure.kind === "replay" &&
+    procedure.parentPosition === undefined &&
     procedure.glyphStoredSpellReleaseReplay === undefined
   );
 }
@@ -541,7 +556,7 @@ function openPreparedInterruptWindowWithChoices(
   ],
 ): BattleOpenedInterruptWindowResult {
   const eligibleResponders = [
-    ...new Set(choices.map((choice) => choice.reactorId)),
+    ...new Set(choices.map(interruptChoiceResponderId)),
   ];
   const frameCommon = {
     eligibleResponders,
@@ -617,9 +632,7 @@ export function readiedSpellReactionChoices(
       }
       return [
         {
-          kind: "releaseReadiedSpell" as const,
-          reactorId: casterId,
-          readiedSpellCasterId: casterId,
+          kind: "nestedProcedure" as const,
           initialHoles: readiedSpellInitialHoles(state, casterId, readiedSpell),
           subject: {
             tag: "runtimeCommand" as const,
@@ -653,9 +666,7 @@ export function readiedMovementReactionChoices(
     initialHoles.length > 0
     ? [
         {
-          kind: "releaseReadiedMovement",
-          reactorId: readiedMovementActorId,
-          readiedMovementActorId,
+          kind: "nestedProcedure",
           initialHoles,
           subject: {
             tag: "runtimeCommand",
@@ -681,8 +692,7 @@ export function readiedActionReactionChoices(
     combatantCanTakeReactions(reactor)
     ? [
         {
-          kind: "releaseReadiedAction",
-          reactorId,
+          kind: "nestedProcedure",
           initialHoles: [],
           subject: {
             tag: "runtimeCommand",
@@ -721,8 +731,7 @@ export function readiedAttackReactionChoices(
       ? []
       : [
           {
-            kind: "releaseReadiedAttack" as const,
-            reactorId,
+            kind: "nestedProcedure" as const,
             initialHoles: [],
             subject: {
               tag: "runtimeCommand" as const,
@@ -793,7 +802,7 @@ export function attackHitBonusActionSpellReactionChoices(
     target === undefined ||
     !combatantCanTakeActions(actor) ||
     !canSpendBonusAction(state.currentTurnResources) ||
-    combatantInsideActiveAntimagicFieldAura(state, frame.attackerId)
+    combatantInsideActiveMagicSuppressionEmanation(state, frame.attackerId)
   ) {
     return [];
   }
@@ -834,8 +843,7 @@ export function attackHitBonusActionSpellReactionChoices(
           : [];
       return [
         {
-          kind: "castAttackHitBonusActionSpell" as const,
-          reactorId: frame.attackerId,
+          kind: "nestedProcedure" as const,
           initialHoles,
           subject: {
             tag: "runtimeCommand" as const,
@@ -888,8 +896,7 @@ export function opportunityAttackReactionChoices(
     if (selection === undefined) return [];
     return [
       {
-        kind: "opportunityAttack" as const,
-        reactorId,
+        kind: "nestedProcedure" as const,
         initialHoles: [],
         subject: {
           tag: "runtimeCommand" as const,
@@ -943,8 +950,7 @@ export function retaliationReactionAttackChoices(
     reactorId,
     frame.damageSourceId,
   ).map((selection) => ({
-    kind: "retaliationAttack" as const,
-    reactorId,
+    kind: "nestedProcedure" as const,
     initialHoles: [],
     subject: {
       tag: "runtimeCommand" as const,

@@ -59,7 +59,7 @@ let light =
                         }
                     }
                 , effects =
-                    [ { kind = "emit_light"
+                    [ { kind = "emit_bright_and_dim_illumination"
                       , brightRadiusFeet = 20
                       , dimAdditionalFeet = 20
                       }

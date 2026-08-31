@@ -27,7 +27,7 @@ import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import {
   attackExecutionSelectionForOption,
   boundAttackExecutionSelectionKey,
@@ -59,7 +59,7 @@ import {
   type BattleHoleId,
   type BattleState,
   type CharacterBattleCreatureState,
-  type MagicWeaponEnhancementBonus,
+  type WeaponAttackDamageEnhancementBonus,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
 } from "../battle-state-execution.ts";
@@ -71,6 +71,7 @@ import {
   hasStatBlockMultiattackContinuationResource,
   statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
+import { weaponAttackDamageEnhancementBonus } from "./spell-modifier-binding.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
@@ -190,6 +191,7 @@ export function attackDamageDispositionHole(input: {
   return choices.length > 1
     ? {
         kind: "attackDamageDisposition",
+        damageOccurrence: { kind: "untrackedDamage" },
         holeId: ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
         holeInstanceKey: ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
         label: "Attack damage disposition",
@@ -217,6 +219,7 @@ export function zeroHitPointReplacementDispositionHole(input: {
   return choices.length > 1
     ? {
         kind: "attackDamageDisposition",
+        damageOccurrence: { kind: "untrackedDamage" },
         holeId:
           input.holeKey?.holeId ??
           damageDispositionHoleIdForTarget(input.target.combatantId),
@@ -231,7 +234,7 @@ export function zeroHitPointReplacementDispositionHole(input: {
     : null;
 }
 
-export function iceKnifeDamageDispositionHoleKey(
+export function attackBurstDamageDispositionHoleKey(
   part: "attack" | "burst",
   targetId: CombatantId,
 ): {
@@ -240,14 +243,16 @@ export function iceKnifeDamageDispositionHoleKey(
   readonly label: string;
 } {
   return {
-    holeId: holeId(`battle:ice-knife:${part}:damage-disposition:${targetId}`),
+    holeId: holeId(
+      `battle:attack-burst:${part}:damage-disposition:${targetId}`,
+    ),
     holeInstanceKey: holeInstanceKey(
-      `battle:ice-knife:${part}:damage-disposition:${targetId}`,
+      `battle:attack-burst:${part}:damage-disposition:${targetId}`,
     ),
     label:
       part === "attack"
-        ? "Ice Knife attack damage disposition"
-        : "Ice Knife burst damage disposition",
+        ? "Attack-burst initial damage disposition"
+        : "Attack-burst secondary damage disposition",
   };
 }
 
@@ -399,7 +404,7 @@ export function attackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BoundSupportedAttackActionOption[] {
-  if (isPresentFindFamiliarCombatant(state, actorId)) {
+  if (isPresentSpawnedCompanionCombatant(state, actorId)) {
     return [];
   }
   const actor = state.combatants.get(actorId);
@@ -769,7 +774,7 @@ function weaponAttackWithActiveSpellEffects(
   attack: CharacterWeaponAttackActionOption,
   attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption {
-  return weaponAttackWithMagicWeaponEnhancement(
+  return weaponAttackWithWeaponAttackDamageEnhancement(
     state,
     actor.combatantId,
     weaponAttackWithActiveSacredWeapon(
@@ -1007,19 +1012,19 @@ function activeSpellWeaponAttackOverrideEffectForWeapon(
   );
 }
 
-function weaponAttackWithMagicWeaponEnhancement(
+function weaponAttackWithWeaponAttackDamageEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   attack: BoundCharacterWeaponAttackActionOption,
   attachedWeaponItemId: BattleObjectId | undefined,
 ): BoundCharacterWeaponAttackActionOption;
-function weaponAttackWithMagicWeaponEnhancement(
+function weaponAttackWithWeaponAttackDamageEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
   attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption;
-function weaponAttackWithMagicWeaponEnhancement(
+function weaponAttackWithWeaponAttackDamageEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
@@ -1028,7 +1033,7 @@ function weaponAttackWithMagicWeaponEnhancement(
   if (attachedWeaponItemId === undefined) {
     return attack;
   }
-  const bonus = battleWeaponItemMagicWeaponEnhancementBonus(
+  const bonus = battleWeaponItemWeaponAttackDamageEnhancementBonus(
     state,
     holderCombatantId,
     attachedWeaponItemId,
@@ -1047,7 +1052,7 @@ function weaponAttackWithMagicWeaponEnhancement(
     ...(attack.alternateAbilityChoices === undefined
       ? {}
       : {
-          alternateAbilityChoices: magicWeaponAlternateAbilityChoices(
+          alternateAbilityChoices: enhancedWeaponAlternateAbilityChoices(
             attack.alternateAbilityChoices,
             bonus,
           ),
@@ -1055,20 +1060,20 @@ function weaponAttackWithMagicWeaponEnhancement(
   };
 }
 
-function magicWeaponAlternateAbilityChoices(
+function enhancedWeaponAlternateAbilityChoices(
   choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
-  bonus: MagicWeaponEnhancementBonus,
+  bonus: WeaponAttackDamageEnhancementBonus,
 ): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
   const [first, ...rest] = choices;
   return [
-    magicWeaponAbilityChoice(first, bonus),
-    ...rest.map((choice) => magicWeaponAbilityChoice(choice, bonus)),
+    enhancedWeaponAbilityChoice(first, bonus),
+    ...rest.map((choice) => enhancedWeaponAbilityChoice(choice, bonus)),
   ];
 }
 
-function magicWeaponAbilityChoice(
+function enhancedWeaponAbilityChoice(
   choice: CharacterWeaponAttackAbilityChoice,
-  bonus: MagicWeaponEnhancementBonus,
+  bonus: WeaponAttackDamageEnhancementBonus,
 ): CharacterWeaponAttackAbilityChoice {
   return {
     ...choice,
@@ -1085,24 +1090,24 @@ function isSpellWeaponAttackOverrideEffect(
   return effect.kind === "spellWeaponAttackOverride";
 }
 
-type SpellMagicWeaponEnhancementEffect = Extract<
+type WeaponAttackDamageEnhancementEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spellMagicWeaponEnhancement" }
+  { readonly kind: "weaponAttackDamageEnhancement" }
 >;
 
-type MagicWeaponEnhancementExclusion = {
+type WeaponAttackDamageEnhancementExclusion = {
   readonly exceptSourceCombatantId?: CombatantId;
   readonly exceptSourceProcedureRef?: BattleProcedureExecutionRef;
 };
 
-export function battleWeaponItemHasMagicWeaponEnhancement(
+export function battleWeaponItemHasWeaponAttackDamageEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   weaponItemId: BattleObjectId,
-  exclusion: MagicWeaponEnhancementExclusion = {},
+  exclusion: WeaponAttackDamageEnhancementExclusion = {},
 ): boolean {
   return (
-    battleWeaponItemMagicWeaponEnhancementBonus(
+    battleWeaponItemWeaponAttackDamageEnhancementBonus(
       state,
       holderCombatantId,
       weaponItemId,
@@ -1111,37 +1116,41 @@ export function battleWeaponItemHasMagicWeaponEnhancement(
   );
 }
 
-export function battleWeaponItemMagicWeaponEnhancementBonus(
+export function battleWeaponItemWeaponAttackDamageEnhancementBonus(
   state: BattleState,
   holderCombatantId: CombatantId,
   weaponItemId: BattleObjectId,
-  exclusion: MagicWeaponEnhancementExclusion = {},
-): MagicWeaponEnhancementBonus | null {
+  exclusion: WeaponAttackDamageEnhancementExclusion = {},
+): WeaponAttackDamageEnhancementBonus | null {
   const bonuses = [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is SpellMagicWeaponEnhancementEffect =>
-        isSpellMagicWeaponEnhancementEffect(effect) &&
-        effect.holderCombatantId === holderCombatantId &&
-        effect.weaponItemId === weaponItemId &&
-        !spellMagicWeaponEnhancementEffectExcluded(effect, exclusion),
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (
+        !isWeaponAttackDamageEnhancementEffect(effect) ||
+        effect.holderCombatantId !== holderCombatantId ||
+        effect.weaponItemId !== weaponItemId ||
+        weaponAttackDamageEnhancementEffectExcluded(effect, exclusion)
+      ) {
+        return [];
+      }
+      const bonus = weaponAttackDamageEnhancementBonus(state, effect);
+      return bonus === undefined ? [] : [bonus];
+    }),
   );
-  return bonuses.reduce<MagicWeaponEnhancementBonus | null>(
-    (highest, effect) =>
-      highest === null || effect.bonus > highest ? effect.bonus : highest,
+  return bonuses.reduce<WeaponAttackDamageEnhancementBonus | null>(
+    (highest, bonus) => (highest === null || bonus > highest ? bonus : highest),
     null,
   );
 }
 
-function isSpellMagicWeaponEnhancementEffect(
+function isWeaponAttackDamageEnhancementEffect(
   effect: BattleActiveEffect,
-): effect is SpellMagicWeaponEnhancementEffect {
-  return effect.kind === "spellMagicWeaponEnhancement";
+): effect is WeaponAttackDamageEnhancementEffect {
+  return effect.kind === "weaponAttackDamageEnhancement";
 }
 
-function spellMagicWeaponEnhancementEffectExcluded(
-  effect: SpellMagicWeaponEnhancementEffect,
-  exclusion: MagicWeaponEnhancementExclusion,
+function weaponAttackDamageEnhancementEffectExcluded(
+  effect: WeaponAttackDamageEnhancementEffect,
+  exclusion: WeaponAttackDamageEnhancementExclusion,
 ): boolean {
   return (
     exclusion.exceptSourceCombatantId !== undefined &&

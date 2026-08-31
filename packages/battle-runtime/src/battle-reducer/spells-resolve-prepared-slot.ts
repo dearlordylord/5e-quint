@@ -32,10 +32,11 @@ import {
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   addDamageAmountForType,
@@ -52,8 +53,8 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  sanctuaryTargetingInterdictionCheck,
-} from "./sanctuary-targeting-interdiction.ts";
+  targetingSaveInterdictionCheck,
+} from "./targeting-save-interdiction.ts";
 import {
   applyPreparedSlotSpellDamage,
   repeatedDamageAllocationNegatedForTarget,
@@ -145,7 +146,7 @@ export function resolvePreparedSlotSpellAct(input: {
   /* v8 ignore stop -- @preserve */
 
   for (const allocation of targetAllocation.allocations) {
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const interdictionCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -154,27 +155,27 @@ export function resolvePreparedSlotSpellAct(input: {
       replacementTargetKind: "nonAttack",
       fills: input.input.fills,
     });
-    if (sanctuaryCheck.tag === "notWarded") {
+    if (interdictionCheck.tag === "notWarded") {
       continue;
     }
-    if (sanctuaryCheck.tag === "saveSucceeded") {
+    if (interdictionCheck.tag === "saveSucceeded") {
       continue;
     }
-    if (sanctuaryCheck.tag === "needsHoles") {
+    if (interdictionCheck.tag === "needsHoles") {
       return needsHolesResult(input.input.state, input.input.subject, [
-        sanctuaryCheck.hole,
+        interdictionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sanctuaryCheck.tag === "invalid") {
+    if (interdictionCheck.tag === "invalid") {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        sanctuaryCheck.message,
+        interdictionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (sanctuaryCheck.tag === "lost") {
+    if (interdictionCheck.tag === "lost") {
       return input.spendsCastResources === false
         ? {
             tag: "resolved",
@@ -190,26 +191,26 @@ export function resolvePreparedSlotSpellAct(input: {
     }
 
     const replacementFacts = spellAllocationSpatialFacts(
-      sanctuaryCheck.spatialFacts,
+      interdictionCheck.spatialFacts,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (replacementFacts === null) {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement Magic Missile target must include allocation-compatible spell target facts.",
+        "attack-redirection ward replacement multi-projectile automatic-hit spell target must include allocation-compatible spell target facts.",
       );
     }
     /* v8 ignore stop -- @preserve */
     const replacementTarget = input.input.state.combatants.get(
-      sanctuaryCheck.targetId,
+      interdictionCheck.targetId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (replacementTarget === undefined) {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement Magic Missile target must be a combatant in this battle.",
+        "attack-redirection ward replacement multi-projectile automatic-hit spell target must be a combatant in this battle.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -228,7 +229,7 @@ export function resolvePreparedSlotSpellAct(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement requires the original Magic Missile allocation fill.",
+        "attack-redirection ward replacement requires the original multi-projectile automatic-hit spell allocation fill.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -255,7 +256,7 @@ export function resolvePreparedSlotSpellAct(input: {
       ...replacementFacts,
     ];
     const fills = input.input.fills
-      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+      .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
       .map(
         (fill): BattleFill =>
           fill === originalAllocationFill
@@ -516,7 +517,7 @@ export function resolvePreparedSlotSpellAct(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = targetAllocation.allocations.map(
+  const stagedConditionSaveChecks = targetAllocation.allocations.map(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
       /* v8 ignore start -- @preserve -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
@@ -526,57 +527,70 @@ export function resolvePreparedSlotSpellAct(input: {
       /* v8 ignore stop -- @preserve */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.input.state,
-        target,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.input.state,
-        target,
-        damageAmount,
-        fills: fillsMatchingHoleIds(
-          input.fillSet.hideousLaughterDamageRepeatSaves,
-          holes,
-        ),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.input.state,
+          target,
+          damageAmount,
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: input.input.state,
+          target,
+          damageAmount,
+          fills: fillsMatchingHoleIds(
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+            holes,
+          ),
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
+        },
+      );
     },
   );
-  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
+  const invalidStagedConditionSaveCheck = stagedConditionSaveChecks.find(
     (check) => check.tag === "invalid",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+  if (invalidStagedConditionSaveCheck?.tag === "invalid") {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      invalidHideousLaughterSaveCheck.message,
+      invalidStagedConditionSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
+  const missingStagedConditionSaveHoles = stagedConditionSaveChecks.flatMap(
     (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
   );
-  if (missingHideousLaughterSaveHoles.length > 0) {
+  if (missingStagedConditionSaveHoles.length > 0) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingHideousLaughterSaveHoles,
+      ...missingStagedConditionSaveHoles,
     ]);
   }
-  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
-    hideousLaughterSaveChecks.flatMap((check) =>
+  const stagedConditionSaveHoleIds = new Set<BattleHoleId>(
+    stagedConditionSaveChecks.flatMap((check) =>
       check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
     ),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
-      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
+      (fill) => !stagedConditionSaveHoleIds.has(fill.holeId),
     )
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -654,15 +668,20 @@ export function resolvePreparedSlotSpellAct(input: {
         input.fillSet.concentrationSavingThrows,
         concentrationLifecycleHoles,
       );
-      const hideousLaughterLifecycleHoles =
-        damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+      const stagedConditionLifecycleHoles =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
           state,
           target,
           damageAmount,
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
         });
-      const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
-        hideousLaughterLifecycleHoles,
+      const stagedConditionLifecycleFills = fillsMatchingHoleIds(
+        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        stagedConditionLifecycleHoles,
       );
       return applyPreparedSlotSpellDamage(
         state,
@@ -676,14 +695,21 @@ export function resolvePreparedSlotSpellAct(input: {
                   concentrationLifecycleFills,
                   concentrationSave,
                 ),
-          wardingBondDamageShareConcentrationSavingThrows:
+          linkedDefenseResistanceDamageShareConcentrationSavingThrows:
             concentrationLifecycleFills,
           damageDisposition: damageDispositionForTarget(
             damageDispositionHoles,
             input.fillSet.damageDispositions,
             allocation.targetId,
           ),
-          hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+          saveGatedConditionDamageRepeatSave: {
+            kind: "repeatSave",
+            fills: stagedConditionLifecycleFills,
+            occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
+          },
           damageSourceId: input.actorId,
           spatialFacts: input.fillSet.targetSpatialFacts,
           ...optionalProperty(

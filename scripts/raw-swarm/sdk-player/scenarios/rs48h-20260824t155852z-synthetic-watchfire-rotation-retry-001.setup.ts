@@ -147,11 +147,11 @@ export const setupScenario: ScenarioSetup = (context) => {
       ammunitionStocks: input.ammunitionStocks,
       conditions: [],
     });
-    if (context.sdk.isLeft(initialized)) {
+    if (context.sdk.isFailure(initialized)) {
       return {
         kind: "obstructed",
-        obstruction: context.sdk.authoredStatBlockBattleInitIssueMessage(
-          initialized.left,
+        obstruction: context.sdk.battleStateInitIssueMessage(
+          initialized.failure,
         ),
         observation: {
           setup: "stat-block-combatant-initialization",
@@ -159,17 +159,17 @@ export const setupScenario: ScenarioSetup = (context) => {
         },
       };
     }
-    combatants.push(initialized.right);
+    combatants.push(initialized.success);
   }
 
   const battle = context.sdk.startBattle({
     battleId: context.sdk.battleId(SCENARIO_ID),
     combatants,
   });
-  if (context.sdk.isLeft(battle)) {
+  if (context.sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: context.sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: context.sdk.battleStateInitIssueMessage(battle.failure),
       observation: { setup: "battle-start" },
     };
   }
@@ -183,7 +183,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   );
 
   const session = context.sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -226,17 +226,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     ],
     objects: [],
   });
-  if (context.sdk.isLeft(session)) {
+  if (context.sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: context.sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: context.sdk.scenarioSessionIssueMessage(session.failure),
       observation: { setup: "scenario-session-composition" },
     };
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       setup: "ready",
       geometrySource: "geometryDerived",

@@ -28,8 +28,8 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime.test-support.ts";
-import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
-import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "./effect-execution-ref.ts";
+import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import { describe, expect, test } from "vitest";
 import type {
   BattleSubject,
@@ -286,7 +286,8 @@ describe("battle runtime: Color Spray and Entangle", () => {
     });
     expect(casterIncluded).toMatchObject({
       tag: "invalid",
-      message: "Entangle area affected targets must exclude the caster.",
+      message:
+        "Restraining ground-area affected targets must exclude the caster.",
     });
   });
 

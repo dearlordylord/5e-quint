@@ -31,7 +31,7 @@ import {
   BattleHoleSchema,
   BattleSubjectSchema,
   battleId,
-  Either,
+  Result,
   elapsedTimeTicks,
   endTurn,
   discoverBattleActs,
@@ -751,8 +751,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseHole.spell,
@@ -766,8 +766,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseHole.spell,
@@ -798,8 +798,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseHole.spell,
@@ -810,8 +810,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseHole.spell,
@@ -845,15 +845,16 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       },
     };
 
-    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(hole);
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)(hole);
 
-    if (Either.isLeft(decoded)) {
-      throw new Error(String(decoded.left));
+    if (Result.isFailure(decoded)) {
+      throw new Error(String(decoded.failure));
     }
-    expect(decoded.right).toMatchObject({
+    expect(decoded.success).toMatchObject({
       kind: "savingThrowOutcome",
       targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
     });
+    expect(Schema.encodeSync(BattleHoleSchema)(decoded.success)).toEqual(hole);
   });
 
   test("spell target-list codec preserves the willing-target evidence request", () => {
@@ -872,18 +873,21 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       requiresTableSpatialFact: true,
       requiresKnownWillingTargets: true,
     };
-    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(encoded);
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)(encoded);
 
-    if (Either.isLeft(decoded)) throw new Error(String(decoded.left));
-    expect(decoded.right).toMatchObject({
+    if (Result.isFailure(decoded)) throw new Error(String(decoded.failure));
+    expect(decoded.success).toMatchObject({
       kind: "spellTargetList",
       requiresKnownWillingTargets: true,
     });
+    expect(Schema.encodeSync(BattleHoleSchema)(decoded.success)).toEqual(
+      encoded,
+    );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...encoded,
-          procedure: "jumpMovementReplacement",
+          procedure: "fixedCostMovementReplacement",
         }),
       ),
     ).toBe(true);
@@ -899,7 +903,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       mode: { tag: "cast" as const },
     },
     {
-      tag: "findFamiliarTouchSpell" as const,
+      tag: "spawnedCompanionTouchSpellProxy" as const,
       companionId: goblinId,
       spellAction: "action" as const,
       mode: { tag: "cast" as const },
@@ -908,8 +912,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     "$tag replay subject codec rejects redundant component weapon identity",
     (subject) => {
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(BattleSubjectSchema)({
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleSubjectSchema)({
             ...subject,
             actorId: wizardId,
             procedureRef: battleProcedureExecutionRefForTest(
@@ -924,8 +928,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
 
   test("rolled-dice codec rejects positional Empowered Spell die identity", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "rolledDice",
           holeId: holeId("battle:test:empowered-spell"),
           spellDamageReroll: {
@@ -953,10 +957,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         targetId: goblinId,
       },
     };
-    const decodedHole = Schema.decodeUnknownEither(BattleHoleSchema)(hole);
-    expect(Either.isRight(decodedHole)).toBe(true);
-    if (Either.isRight(decodedHole)) {
-      expect(decodedHole.right).toMatchObject({
+    const decodedHole = Schema.decodeUnknownResult(BattleHoleSchema)(hole);
+    expect(Result.isSuccess(decodedHole)).toBe(true);
+    if (Result.isSuccess(decodedHole)) {
+      expect(decodedHole.success).toMatchObject({
         brutalStrikeForcefulBlow: {
           kind: "brutalStrikeForcefulBlowStraightTowardTarget",
           targetId: goblinId,
@@ -983,14 +987,14 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         },
       },
     };
-    const decodedFill = Schema.decodeUnknownEither(BattleFillSchema)(fill);
-    expect(Either.isRight(decodedFill)).toBe(true);
-    if (Either.isRight(decodedFill)) {
-      expect(Schema.encodeSync(BattleFillSchema)(decodedFill.right)).toEqual(
+    const decodedFill = Schema.decodeUnknownResult(BattleFillSchema)(fill);
+    expect(Result.isSuccess(decodedFill)).toBe(true);
+    if (Result.isSuccess(decodedFill)) {
+      expect(Schema.encodeSync(BattleFillSchema)(decodedFill.success)).toEqual(
         fill,
       );
     }
-    const ordinaryMovementWithSegments = Schema.decodeUnknownEither(
+    const ordinaryMovementWithSegments = Schema.decodeUnknownResult(
       BattleFillSchema,
     )({
       ...fill,
@@ -1001,15 +1005,15 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         additionalSpeedSegments: [],
       },
     });
-    expect(Either.isLeft(ordinaryMovementWithSegments)).toBe(true);
-    if (Either.isLeft(ordinaryMovementWithSegments)) {
-      expect(String(ordinaryMovementWithSegments.left)).toContain(
-        "Additional speed segments require Forceful Blow movement, which cannot carry a jump, levitation, or command movement protocol.",
+    expect(Result.isFailure(ordinaryMovementWithSegments)).toBe(true);
+    if (Result.isFailure(ordinaryMovementWithSegments)) {
+      expect(String(ordinaryMovementWithSegments.failure)).toContain(
+        "Additional speed segments require Forceful Blow movement and cannot carry another movement-replacement or compelled-movement protocol.",
       );
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           ...fill,
           value: {
             ...fill.value,
@@ -1021,13 +1025,13 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           ...fill,
           value: {
             ...fill.value,
-            commandFlee: {
-              kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+            compelledFlee: {
+              kind: "compelledFleeFastestAvailableRouteAwayFromSource",
             },
           },
         }),
@@ -1039,12 +1043,12 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const invalidGreaseArea = {
       originAnchorId: wizardId,
       affectedTargetIds: [goblinId],
-      kind: "greaseGroundArea",
+      kind: "persistentAreaSaveConditionArea",
     };
     const greaseInvocation = {
       access: { tag: "prepared" },
       resource: { tag: "spellSlot", slotLevel: 1 },
-      procedure: "greaseGroundHazard",
+      procedure: "persistentAreaSaveCondition",
       spell: { id: "grease" },
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
@@ -1054,8 +1058,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           kind: "savingThrowOutcome",
           holeId: holeId("battle:test:invalid-grease-area-hole"),
           holeInstanceKey: holeInstanceKey(
@@ -1071,8 +1075,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "savingThrowOutcome",
           holeId: "battle:test:invalid-grease-area-fill",
           value: {
@@ -1086,9 +1090,9 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
 
   test("Sanctuary interdiction codec admits only Wisdom save holes", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
-          kind: "sanctuaryInterdictionOutcome",
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
+          kind: "targetingSaveInterdictionOutcome",
           holeId: holeId("battle:test:invalid-sanctuary-save"),
           holeInstanceKey: holeInstanceKey(
             "battle:test:invalid-sanctuary-save",
@@ -1113,9 +1117,9 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
 
   test("Sanctuary replacement target fills reject malformed spatial facts", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
-          kind: "sanctuaryInterdictionOutcome",
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          kind: "targetingSaveInterdictionOutcome",
           holeId: holeId("battle:test:invalid-sanctuary-replacement-fact"),
           value: {
             saveSucceeded: false,
@@ -1175,7 +1179,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     };
 
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(BattleHoleSchema)(baseHole)),
+      Result.isFailure(Schema.decodeUnknownResult(BattleHoleSchema)(baseHole)),
     ).toBe(true);
   });
 });

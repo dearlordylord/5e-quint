@@ -1,6 +1,6 @@
 import type { StatementSync } from "node:sqlite";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   PLAY_SESSION_RATE_LIMIT_WINDOW_MS,
@@ -34,7 +34,7 @@ export type RateAdmissionInput = {
 
 export function runRateAdmission(
   input: RateAdmissionInput,
-): Either.Either<
+): Result.Result<
   PlaySessionRepositoryRateAdmission,
   PlaySessionRepositoryIssue
 > {
@@ -44,32 +44,35 @@ export function runRateAdmission(
   if (current === undefined) {
     statements.insert.run(accessKeyDigest, nowMs);
     database.exec("COMMIT");
-    return Either.right({ tag: "admitted" });
+    return Result.succeed({ tag: "admitted" });
   }
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     Schema.Struct({
-      window_started_at_ms: Schema.NonNegativeInt,
-      request_count: Schema.Positive,
+      window_started_at_ms: Schema.Number.check(
+        Schema.isInt(),
+        Schema.isGreaterThanOrEqualTo(0),
+      ),
+      request_count: Schema.Number.check(Schema.isGreaterThan(0)),
     }),
   )(current);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     database.exec("ROLLBACK");
-    return Either.left(invalidStoredRecordIssue(decoded.left.message));
+    return Result.fail(invalidStoredRecordIssue(decoded.failure.message));
   }
   const expired =
     nowMs >=
-    decoded.right.window_started_at_ms + PLAY_SESSION_RATE_LIMIT_WINDOW_MS;
+    decoded.success.window_started_at_ms + PLAY_SESSION_RATE_LIMIT_WINDOW_MS;
   if (
     !expired &&
-    decoded.right.request_count >= input.maximumRequestsPerWindow
+    decoded.success.request_count >= input.maximumRequestsPerWindow
   ) {
     database.exec("COMMIT");
-    return Either.right({
+    return Result.succeed({
       tag: "rateExceeded",
       retryAfterSeconds: Math.max(
         1,
         Math.ceil(
-          (decoded.right.window_started_at_ms +
+          (decoded.success.window_started_at_ms +
             PLAY_SESSION_RATE_LIMIT_WINDOW_MS -
             nowMs) /
             1_000,
@@ -78,12 +81,12 @@ export function runRateAdmission(
     });
   }
   statements.update.run(
-    expired ? nowMs : decoded.right.window_started_at_ms,
-    expired ? 1 : decoded.right.request_count + 1,
+    expired ? nowMs : decoded.success.window_started_at_ms,
+    expired ? 1 : decoded.success.request_count + 1,
     accessKeyDigest,
   );
   database.exec("COMMIT");
-  return Either.right({ tag: "admitted" });
+  return Result.succeed({ tag: "admitted" });
 }
 
 export type SaveInput = {
@@ -97,7 +100,7 @@ export type SaveInput = {
 
 export function runSave(
   input: SaveInput,
-): Either.Either<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue> {
+): Result.Result<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue> {
   const result = input.save.run(
     input.tenure.principalId,
     input.tenure.lastActivityAtMs,
@@ -106,28 +109,29 @@ export function runSave(
     input.tenure.principalId,
     input.maximumSavedSessionsPerPrincipal,
   );
-  if (result.changes !== 0) return Either.right({ tag: "saved" });
+  if (result.changes !== 0) return Result.succeed({ tag: "saved" });
   return resolveSaveConflict(input);
 }
 
 export function resolveSaveConflict(
   input: SaveInput,
-): Either.Either<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue> {
+): Result.Result<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue> {
   const current = input.select.get(input.record.playSessionId);
-  if (current === undefined) return Either.right({ tag: "revisionConflict" });
+  if (current === undefined) return Result.succeed({ tag: "revisionConflict" });
   const decodedCurrent = decodeStoredPlaySessionRecord(
     current,
     input.record.playSessionId,
   );
-  if (Either.isLeft(decodedCurrent)) return Either.left(decodedCurrent.left);
+  if (Result.isFailure(decodedCurrent))
+    return Result.fail(decodedCurrent.failure);
   if (
-    decodedCurrent.right.revision !== input.record.revision ||
-    decodedCurrent.right.tenure.tag !== "guest"
+    decodedCurrent.success.revision !== input.record.revision ||
+    decodedCurrent.success.tenure.tag !== "guest"
   ) {
-    return Either.right({ tag: "revisionConflict" });
+    return Result.succeed({ tag: "revisionConflict" });
   }
   const savedRecords = input.listSaved.all(input.tenure.principalId);
-  return Either.right(
+  return Result.succeed(
     savedRecords.length >= input.maximumSavedSessionsPerPrincipal
       ? { tag: "savedSessionQuotaExceeded" }
       : { tag: "revisionConflict" },

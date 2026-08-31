@@ -1,9 +1,14 @@
 import { createRequire } from "node:module";
 import * as AST from "effect/SchemaAST";
-import type { SurfaceSchemaFieldRole } from "./schema-base.ts";
-import { Schema } from "effect";
+import {
+  surfaceSchemaRole,
+  type SurfaceSchemaFieldRole,
+} from "./schema-base.ts";
+import { Schema, SchemaGetter } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+
+import { walkSurfaceSchemaValue } from "./surface-relations-internal.ts";
 
 const require = createRequire(import.meta.url);
 const traversal = require("../../../../scripts/srd521-surface-authored-corpus-audit.cjs");
@@ -21,7 +26,6 @@ const {
   SURFACE_SCHEMA_ROLE_ANNOTATION,
   isSurfaceSchemaRole,
   readSurfaceSchemaRole,
-  surfaceSchemaRole,
 } = require("./schema-base.ts");
 const {
   FeatureChoiceMechanicsSchema,
@@ -47,7 +51,8 @@ const unionMemberRoleOf = (ast: AST.AST) => {
 };
 
 const fieldSchema = (schema: { readonly ast: AST.AST }, name: string) => {
-  const field = AST.getPropertySignatures(schema.ast).find(
+  if (!AST.isObjects(schema.ast)) throw new Error("expected object schema");
+  const field = schema.ast.propertySignatures.find(
     (candidate) => candidate.name === name,
   );
   if (field === undefined) throw new Error(`missing schema field: ${name}`);
@@ -57,12 +62,25 @@ const fieldSchema = (schema: { readonly ast: AST.AST }, name: string) => {
 const unionFieldSchema = (schema: { readonly ast: AST.AST }, name: string) => {
   const members = AST.isUnion(schema.ast) ? schema.ast.types : [schema.ast];
   for (const member of members) {
-    const field = AST.getPropertySignatures(member).find(
+    if (!AST.isObjects(member)) continue;
+    const field = member.propertySignatures.find(
       (candidate) => candidate.name === name,
     );
     if (field !== undefined) return field.type;
   }
   throw new Error(`missing schema field: ${name}`);
+};
+
+const inspectSurfaceSchemaValue = <A>(schema: Schema.Schema<A>, value: A) => {
+  const visits: Array<{
+    readonly path: string;
+    readonly value: unknown;
+    readonly role: SurfaceSchemaFieldRole;
+  }> = [];
+  const issues = walkSurfaceSchemaValue(schema, value, (path, current, role) =>
+    visits.push({ path, value: current, role }),
+  );
+  return { issues, visits };
 };
 
 describe("Surface authored string role traversal", () => {
@@ -80,12 +98,35 @@ describe("Surface authored string role traversal", () => {
         targetKind: "unit",
         relation: "spell-reference",
         category: "dependency",
-      }).ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION],
+      }).ast.annotations?.[SURFACE_SCHEMA_ROLE_ANNOTATION],
     ).toEqual({
       category: "dependency",
       relation: "spell-reference",
       targetKind: "unit",
     });
+  });
+
+  it("resolves roles attached to checked string annotations", () => {
+    const checked = surfaceSchemaRole(
+      Schema.String.pipe(Schema.check(Schema.isMinLength(2))),
+      { category: "prose", evidence: "summary" },
+    );
+    expect(checked.ast.annotations?.[SURFACE_SCHEMA_ROLE_ANNOTATION]).toBe(
+      undefined,
+    );
+    expect(
+      AST.resolveAt<unknown>(SURFACE_SCHEMA_ROLE_ANNOTATION)(checked.ast),
+    ).toEqual({ category: "prose", evidence: "summary" });
+
+    const roles: string[] = [];
+    traversal.walkSurfaceValue(
+      Schema.Struct({ text: checked }),
+      { text: "checked" },
+      (_path: string, _value: string, role: { readonly category: string }) => {
+        roles.push(role.category);
+      },
+    );
+    expect(roles).toEqual(["prose"]);
   });
 
   it("accepts only closed, category-consistent authored relation roles", () => {
@@ -202,26 +243,66 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("traverses primitive reference-array members", () => {
-    const references = traversal.collectAuthoredRelations(
-      traversal.readSurfaceRecords(),
+    const referenceArray = Schema.Array(
+      surfaceSchemaRole(Schema.String, {
+        category: "reference",
+        relation: "spell-list",
+        targetKind: "unit",
+      }),
     );
+    const references: Array<{
+      readonly fieldPath: string;
+      readonly targetRecordId: string;
+    }> = [];
+
+    traversal.walkSurfaceValue(
+      referenceArray,
+      ["synthetic_spell_alpha", "synthetic_spell_beta"],
+      (
+        fieldPath: string,
+        targetRecordId: string,
+        role: SurfaceSchemaFieldRole,
+      ) => {
+        if (role.category === "reference") {
+          references.push({ fieldPath, targetRecordId });
+        }
+      },
+    );
+
+    expect(references).toEqual([
+      {
+        fieldPath: "value[0]",
+        targetRecordId: "synthetic_spell_alpha",
+      },
+      {
+        fieldPath: "value[1]",
+        targetRecordId: "synthetic_spell_beta",
+      },
+    ]);
+
+    const productionTraversal = inspectSurfaceSchemaValue(referenceArray, [
+      "synthetic_spell_alpha",
+      "synthetic_spell_beta",
+    ]);
+    expect(productionTraversal.issues).toEqual([]);
     expect(
-      references.some((reference: { readonly fieldPath: string }) =>
-        /\[\d+\]$/.test(reference.fieldPath),
-      ),
-    ).toBe(true);
-    expect(
-      references.some(
-        (reference: { readonly targetRecordId: string }) =>
-          reference.targetRecordId === "find_familiar",
-      ),
-    ).toBe(true);
-    expect(
-      references.some(
-        (reference: { readonly targetRecordId: string }) =>
-          reference.targetRecordId === "sorcerer_font_of_magic",
-      ),
-    ).toBe(true);
+      productionTraversal.visits.map(({ path, value, role }) => ({
+        path,
+        value,
+        category: role.category,
+      })),
+    ).toEqual([
+      {
+        path: "value[0]",
+        value: "synthetic_spell_alpha",
+        category: "reference",
+      },
+      {
+        path: "value[1]",
+        value: "synthetic_spell_beta",
+        category: "reference",
+      },
+    ]);
   });
 
   it("rejects excess string-bearing content at the production decode boundary", () => {
@@ -291,8 +372,164 @@ describe("Surface authored string role traversal", () => {
     );
   }, 15_000);
 
+  it("reports schema traversal contract violations as typed issues", () => {
+    const unowned = inspectSurfaceSchemaValue(Schema.String, "unowned");
+    const conflicting = inspectSurfaceSchemaValue(
+      Schema.Struct({
+        target: surfaceSchemaRole(Schema.String, {
+          category: "reference",
+          relation: "unit-reference",
+          targetKind: "unit",
+        }),
+      }).pipe(
+        Schema.annotate({
+          [SURFACE_SCHEMA_ROLE_ANNOTATION]: {
+            category: "prose",
+            evidence: "summary",
+          },
+        }),
+      ),
+      { target: "synthetic_unit" },
+    );
+    const unsupported = inspectSurfaceSchemaValue(
+      Schema.instanceOf(Date),
+      new Date(0),
+    );
+
+    expect(unowned.issues).toEqual([
+      expect.objectContaining({ code: "unownedString", path: "value" }),
+    ]);
+    expect(conflicting.issues).toEqual([
+      expect.objectContaining({
+        code: "conflictingRole",
+        path: "value.target",
+      }),
+    ]);
+    expect(unsupported.issues).toEqual([
+      expect.objectContaining({ code: "unsupportedSchemaAst", path: "value" }),
+    ]);
+  });
+
+  it("selects primitive, object, and tuple union branches by decoded shape", () => {
+    const primitive = Schema.Union([
+      surfaceSchemaRole(Schema.String, {
+        category: "identity",
+        kind: "label",
+      }),
+      Schema.Number,
+      Schema.Boolean,
+    ]);
+    expect(inspectSurfaceSchemaValue(primitive, "label").visits).toHaveLength(
+      1,
+    );
+    expect(inspectSurfaceSchemaValue(primitive, 1).visits).toEqual([]);
+    expect(inspectSurfaceSchemaValue(primitive, true).visits).toEqual([]);
+    expect(
+      inspectSurfaceSchemaValue(
+        Schema.Union([Schema.Unknown, Schema.Literal("literal")]),
+        null,
+      ),
+    ).toEqual({ issues: [], visits: [] });
+
+    const objectOrString = Schema.Union([
+      Schema.Struct({ required: Schema.Number }),
+      surfaceSchemaRole(Schema.String, {
+        category: "prose",
+        evidence: "summary",
+      }),
+    ]);
+    expect(
+      inspectSurfaceSchemaValue(objectOrString, "decoded string").visits[0],
+    ).toMatchObject({ path: "value", value: "decoded string" });
+
+    const tupleOrString = Schema.Union([
+      Schema.Tuple([
+        surfaceSchemaRole(Schema.String, {
+          category: "prose",
+          evidence: "summary",
+        }),
+      ]),
+      surfaceSchemaRole(Schema.String, {
+        category: "identity",
+        kind: "label",
+      }),
+    ]);
+    expect(
+      inspectSurfaceSchemaValue(tupleOrString, "decoded scalar").visits,
+    ).toEqual([
+      expect.objectContaining({ path: "value", value: "decoded scalar" }),
+    ]);
+  });
+
+  it("visits a shared decoded object once for the same schema and role", () => {
+    const schema = Schema.Array(
+      Schema.Struct({
+        label: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+    );
+    const shared = { label: "shared label" };
+    const result = inspectSurfaceSchemaValue(schema, [shared, shared]);
+
+    expect(result.issues).toEqual([]);
+    expect(result.visits).toEqual([
+      expect.objectContaining({
+        path: "value[0].label",
+        value: "shared label",
+      }),
+    ]);
+  });
+
+  it("traverses refinement, transformation, and suspension output shapes", () => {
+    const refined = surfaceSchemaRole(
+      Schema.String.pipe(Schema.check(Schema.isMinLength(1))),
+      {
+        category: "prose",
+        evidence: "summary",
+      },
+    );
+    const transformedText = surfaceSchemaRole(Schema.String, {
+      category: "prose",
+      evidence: "summary",
+    });
+    const transformed = transformedText.pipe(
+      Schema.decodeTo(Schema.Struct({ text: transformedText }), {
+        decode: SchemaGetter.transform<{ readonly text: string }, string>(
+          (value) => ({ text: value }),
+        ),
+        encode: SchemaGetter.transform<string, { readonly text: string }>(
+          (value) => value.text,
+        ),
+      }),
+    );
+    const suspended = Schema.suspend(() =>
+      Schema.Struct({
+        text: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+    );
+
+    expect(inspectSurfaceSchemaValue(refined, "refined").visits).toEqual([
+      expect.objectContaining({ path: "value", value: "refined" }),
+    ]);
+    expect(
+      inspectSurfaceSchemaValue(transformed, { text: "decoded" }).visits,
+    ).toEqual([
+      expect.objectContaining({ path: "value.text", value: "decoded" }),
+    ]);
+    expect(
+      inspectSurfaceSchemaValue(suspended, { text: "suspended" }).visits,
+    ).toEqual([
+      expect.objectContaining({ path: "value.text", value: "suspended" }),
+    ]);
+  });
+
   it("does not traverse an incompatible tagged branch", () => {
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("tagged"),
         text: surfaceSchemaRole(Schema.String, {
@@ -304,7 +541,7 @@ describe("Surface authored string role traversal", () => {
         kind: Schema.Literal("tagged"),
         text: Schema.Number,
       }),
-    );
+    ]);
     const roles: string[] = [];
     traversal.walkSurfaceValue(
       schema,
@@ -319,27 +556,27 @@ describe("Surface authored string role traversal", () => {
   it("uses tuple shape and element compatibility for union reachability", () => {
     const roles: string[] = [];
     traversal.walkSurfaceValue(
-      Schema.Union(
+      Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("same"),
-          items: Schema.Tuple(
+          items: Schema.Tuple([
             surfaceSchemaRole(Schema.String, {
               category: "prose",
               evidence: "summary",
             }),
-          ),
+          ]),
         }),
         Schema.Struct({
           kind: Schema.Literal("same"),
-          items: Schema.Tuple(
+          items: Schema.Tuple([
             surfaceSchemaRole(Schema.String, {
               category: "identity",
               kind: "label",
             }),
             Schema.Number,
-          ),
+          ]),
         }),
-      ),
+      ]),
       { kind: "same", items: ["valid"] },
       (path: string, _value: string, role: { readonly category: string }) => {
         roles.push(`${path}:${role.category}`);
@@ -349,7 +586,7 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("matches union branches to the decoder's excess-property rules", () => {
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       Schema.Struct({
         text: surfaceSchemaRole(Schema.String, {
           category: "prose",
@@ -363,7 +600,7 @@ describe("Surface authored string role traversal", () => {
         }),
         extra: Schema.Number,
       }),
-    );
+    ]);
     const roles: string[] = [];
     traversal.walkSurfaceValue(
       schema,
@@ -376,12 +613,15 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("matches refinement-sensitive union reachability", () => {
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       Schema.Struct({
-        text: surfaceSchemaRole(Schema.String.pipe(Schema.minLength(2)), {
-          category: "prose",
-          evidence: "summary",
-        }),
+        text: surfaceSchemaRole(
+          Schema.String.pipe(Schema.check(Schema.isMinLength(2))),
+          {
+            category: "prose",
+            evidence: "summary",
+          },
+        ),
       }),
       Schema.Struct({
         text: surfaceSchemaRole(Schema.String, {
@@ -389,7 +629,7 @@ describe("Surface authored string role traversal", () => {
           kind: "label",
         }),
       }),
-    );
+    ]);
     const roles: string[] = [];
     traversal.walkSurfaceValue(
       schema,
@@ -411,7 +651,7 @@ describe("Surface authored string role traversal", () => {
         }),
       }),
     );
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       suspendedBranch,
       Schema.Struct({
         kind: Schema.Literal("b"),
@@ -420,7 +660,7 @@ describe("Surface authored string role traversal", () => {
           kind: "label",
         }),
       }),
-    );
+    ]);
     const roles: string[] = [];
     traversal.walkSurfaceValue(
       schema,
@@ -442,7 +682,7 @@ describe("Surface authored string role traversal", () => {
         }),
       }),
     );
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       suspendedBranch,
       Schema.Struct({
         kind: surfaceSchemaRole(Schema.String, {
@@ -454,7 +694,7 @@ describe("Surface authored string role traversal", () => {
           kind: "label",
         }),
       }),
-    );
+    ]);
     expect(() =>
       traversal.walkSurfaceValue(
         schema,
@@ -474,7 +714,7 @@ describe("Surface authored string role traversal", () => {
         required: Schema.Number,
       }),
     );
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("same"),
         nested: nestedRequired,
@@ -482,13 +722,13 @@ describe("Surface authored string role traversal", () => {
       Schema.Struct({
         kind: Schema.Literal("same"),
         nested: Schema.Struct({
-          text: surfaceSchemaRole(Schema.String, {
+          text: surfaceSchemaRole<string, string, never, never>(Schema.String, {
             category: "identity",
             kind: "label",
           }),
         }),
       }),
-    );
+    ]);
     const roles: string[] = [];
     traversal.walkSurfaceValue(
       schema,
@@ -501,11 +741,12 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("keeps recursive competing branches decoder-compatible", () => {
-    const proseRecursive: Schema.Schema.Any = Schema.suspend(() =>
-      Schema.Union(
+    type RecursiveCodec = Schema.Codec<unknown, unknown>;
+    const proseRecursive: RecursiveCodec = Schema.suspend(() =>
+      Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("leaf"),
-          text: surfaceSchemaRole(Schema.String, {
+          text: surfaceSchemaRole<string, string, never, never>(Schema.String, {
             category: "prose",
             evidence: "summary",
           }),
@@ -514,13 +755,13 @@ describe("Surface authored string role traversal", () => {
           kind: Schema.Literal("next"),
           next: proseRecursive,
         }),
-      ),
+      ]),
     );
-    const identityRecursive: Schema.Schema.Any = Schema.suspend(() =>
-      Schema.Union(
+    const identityRecursive: RecursiveCodec = Schema.suspend(() =>
+      Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("leaf"),
-          text: surfaceSchemaRole(Schema.String, {
+          text: surfaceSchemaRole<string, string, never, never>(Schema.String, {
             category: "identity",
             kind: "label",
           }),
@@ -530,7 +771,7 @@ describe("Surface authored string role traversal", () => {
           kind: Schema.Literal("next"),
           next: identityRecursive,
         }),
-      ),
+      ]),
     );
     let value: { kind: "next"; next: unknown } = {
       kind: "next",
@@ -541,7 +782,7 @@ describe("Surface authored string role traversal", () => {
     }
     const roles: string[] = [];
     traversal.walkSurfaceValue(
-      Schema.Union(proseRecursive, identityRecursive),
+      Schema.Union([proseRecursive, identityRecursive]),
       value,
       (_path: string, _value: string, role: { readonly category: string }) => {
         roles.push(role.category);
@@ -552,15 +793,24 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("traverses decoded transformation outputs", () => {
-    const text = surfaceSchemaRole(Schema.String, {
-      category: "prose",
-      evidence: "summary",
-    });
-    const schema = Schema.transform(text, Schema.Struct({ text }), {
-      strict: true,
-      decode: (value) => ({ text: value }),
-      encode: (value) => value.text,
-    });
+    const text = surfaceSchemaRole<string, string, never, never>(
+      Schema.String,
+      {
+        category: "prose",
+        evidence: "summary",
+      },
+    );
+    const target = Schema.Struct({ text: Schema.String });
+    const schema = text.pipe(
+      Schema.decodeTo(target, {
+        decode: SchemaGetter.transform<{ readonly text: string }, string>(
+          (value) => ({ text: value }),
+        ),
+        encode: SchemaGetter.transform<string, { readonly text: string }>(
+          (value) => value.text,
+        ),
+      }),
+    );
     const roles: string[] = [];
     traversal.walkSurfaceValue(
       schema,
@@ -573,17 +823,23 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("rejects an unowned decoded transformation output", () => {
-    const schema = Schema.transform(
-      surfaceSchemaRole(Schema.String, {
+    const schemaSource = surfaceSchemaRole<string, string, never, never>(
+      Schema.String,
+      {
         category: "prose",
         evidence: "summary",
-      }),
-      Schema.Struct({ text: Schema.String }),
-      {
-        strict: true,
-        decode: (value: unknown) => ({ text: String(value) }),
-        encode: (value) => value.text,
       },
+    );
+    const target = Schema.Struct({ text: Schema.String });
+    const schema = schemaSource.pipe(
+      Schema.decodeTo(target, {
+        decode: SchemaGetter.transform<{ readonly text: string }, string>(
+          (value) => ({ text: value }),
+        ),
+        encode: SchemaGetter.transform<string, { readonly text: string }>(
+          (value) => value.text,
+        ),
+      }),
     );
     expect(() =>
       traversal.walkSchemaShape(schema.ast, "Synthetic", () => {}),
@@ -592,25 +848,36 @@ describe("Surface authored string role traversal", () => {
 
   it("selects competing transformation unions by decoded shape", () => {
     const source = Schema.String;
-    const branch = (kind: "a" | "b", role: SurfaceSchemaFieldRole) =>
-      Schema.transform(
-        source,
-        Schema.Struct({
-          kind: Schema.Literal(kind),
-          text: surfaceSchemaRole(Schema.String, role),
+    const branch = <const Kind extends "a" | "b">(
+      kind: Kind,
+      role: SurfaceSchemaFieldRole,
+    ) => {
+      const target = Schema.Struct({
+        kind: Schema.Literal(kind),
+        text: surfaceSchemaRole<string, string, never, never>(
+          Schema.String,
+          role,
+        ),
+      });
+      return source.pipe(
+        Schema.decodeTo(target, {
+          decode: SchemaGetter.transform<
+            { readonly kind: Kind; readonly text: string },
+            string
+          >((value) => ({ kind, text: value })),
+          encode: SchemaGetter.transform<
+            string,
+            { readonly kind: Kind; readonly text: string }
+          >((value) => value.text),
         }),
-        {
-          strict: true,
-          decode: (value) => ({ kind, text: value }),
-          encode: (value) => String(value.text),
-        },
       );
+    };
     const roles: string[] = [];
     traversal.walkSurfaceValue(
-      Schema.Union(
+      Schema.Union([
         branch("a", { category: "prose", evidence: "summary" }),
         branch("b", { category: "identity", kind: "label" }),
-      ),
+      ]),
       { kind: "a", text: "decoded" },
       (_path: string, _value: string, role: { readonly category: string }) => {
         roles.push(role.category);
@@ -629,23 +896,28 @@ describe("Surface authored string role traversal", () => {
               evidence: "summary",
             }),
           );
-          const rest =
+          const schema =
             repeatedCount > 0 || postRestCount > 0
-              ? [
-                  surfaceSchemaRole(Schema.String, {
-                    category: "reference",
-                    relation: "unit-reference",
-                    targetKind: "unit",
-                  }),
-                  ...Array.from({ length: postRestCount }, () =>
-                    surfaceSchemaRole(Schema.String, {
-                      category: "identity",
-                      kind: "label",
-                    }),
+              ? Schema.TupleWithRest(Schema.Tuple(fixed), [
+                  surfaceSchemaRole<string, string, never, never>(
+                    Schema.String,
+                    {
+                      category: "reference",
+                      relation: "unit-reference",
+                      targetKind: "unit",
+                    },
                   ),
-                ]
-              : [];
-          const schema = Schema.Tuple(fixed, ...rest);
+                  ...Array.from({ length: postRestCount }, () =>
+                    surfaceSchemaRole<string, string, never, never>(
+                      Schema.String,
+                      {
+                        category: "identity",
+                        kind: "label",
+                      },
+                    ),
+                  ),
+                ])
+              : Schema.Tuple(fixed);
           const value = [
             ...Array.from({ length: fixedCount }, () => "fixed"),
             ...Array.from({ length: repeatedCount }, () => "repeated"),
@@ -683,8 +955,60 @@ describe("Surface authored string role traversal", () => {
     }
   });
 
+  it("walks every variadic reference before a trailing identity", () => {
+    const schema = Schema.TupleWithRest(Schema.Tuple([]), [
+      surfaceSchemaRole<string, string, never, never>(Schema.String, {
+        category: "reference",
+        relation: "unit-reference",
+        targetKind: "unit",
+      }),
+      surfaceSchemaRole<string, string, never, never>(Schema.String, {
+        category: "identity",
+        kind: "label",
+      }),
+    ]);
+    const value = Schema.decodeUnknownSync(schema)([
+      "reference-one",
+      "reference-two",
+      "reference-three",
+      "trailing-identity",
+    ]);
+
+    const inspected = inspectSurfaceSchemaValue(schema, value);
+
+    expect(inspected.issues).toEqual([]);
+    expect(
+      inspected.visits.map(({ path, value: visited, role }) => ({
+        path,
+        value: visited,
+        role: role.category,
+      })),
+    ).toEqual([
+      {
+        path: "value[0]",
+        value: "reference-one",
+        role: "reference",
+      },
+      {
+        path: "value[1]",
+        value: "reference-two",
+        role: "reference",
+      },
+      {
+        path: "value[2]",
+        value: "reference-three",
+        role: "reference",
+      },
+      {
+        path: "value[3]",
+        value: "trailing-identity",
+        role: "identity",
+      },
+    ]);
+  });
+
   it("rejects overlapping tagged branches with conflicting roles", () => {
-    const schema = Schema.Union(
+    const schema = Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("same"),
         text: surfaceSchemaRole(Schema.String, {
@@ -699,7 +1023,7 @@ describe("Surface authored string role traversal", () => {
           kind: "label",
         }),
       }),
-    );
+    ]);
     expect(() =>
       traversal.walkSurfaceValue(
         schema,
@@ -726,7 +1050,7 @@ describe("Surface authored string role traversal", () => {
     });
     expect(() =>
       traversal.walkSurfaceValue(
-        Schema.Union(tagged, unrestricted),
+        Schema.Union([tagged, unrestricted]),
         { kind: "same", text: "ambiguous" },
         () => {},
       ),
@@ -735,20 +1059,20 @@ describe("Surface authored string role traversal", () => {
 
   it("resolves literal/unrestricted overlap to one role regardless of order", () => {
     for (const schema of [
-      Schema.Union(
+      Schema.Union([
         surfaceSchemaRole(Schema.String, {
           category: "prose",
           evidence: "summary",
         }),
         Schema.Literal("same"),
-      ),
-      Schema.Union(
+      ]),
+      Schema.Union([
         Schema.Literal("same"),
         surfaceSchemaRole(Schema.String, {
           category: "prose",
           evidence: "summary",
         }),
-      ),
+      ]),
     ]) {
       const roles: string[] = [];
       traversal.walkSurfaceValue(
@@ -764,6 +1088,40 @@ describe("Surface authored string role traversal", () => {
       );
       expect(roles).toEqual(["prose"]);
     }
+  });
+
+  it("terminates null AST branches without requiring a string role", () => {
+    const schema = Schema.Struct({
+      resetCadence: Schema.Struct({
+        regain: Schema.NullOr(
+          surfaceSchemaRole(Schema.String, {
+            category: "prose",
+            evidence: "summary",
+          }),
+        ),
+      }),
+    });
+    expect(() =>
+      traversal.walkSchemaShape(schema.ast, "Synthetic", () => {}),
+    ).not.toThrow();
+    const roles: string[] = [];
+    traversal.walkSurfaceValue(
+      schema,
+      { resetCadence: { regain: null } },
+      (_path: string, _value: string, role: { readonly category: string }) => {
+        roles.push(role.category);
+      },
+    );
+    expect(roles).toEqual([]);
+
+    traversal.walkSurfaceValue(
+      schema,
+      { resetCadence: { regain: "restored" } },
+      (_path: string, _value: string, role: { readonly category: string }) => {
+        roles.push(role.category);
+      },
+    );
+    expect(roles).toEqual(["prose"]);
   });
 
   it("traverses every decoded Surface string path", () => {

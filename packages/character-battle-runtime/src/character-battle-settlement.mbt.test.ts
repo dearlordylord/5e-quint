@@ -5,6 +5,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   characterId,
@@ -45,14 +46,15 @@ import {
   EMPTY_CONDITION_STATE,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import type { BattleEffectExecutionRef } from "@dnd/shared/types";
+import { Brand, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -61,7 +63,23 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForTest } from "./sdk-integration.test-support.ts";
 
-import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks" | "conditions"
+  >,
+) {
+  return requireSuccess(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
+    }),
+  );
+}
 
 const settlementScenarios = [
   "init",
@@ -258,7 +276,7 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
       },
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       battleSession: battleSessionWithCombatant(
         battle.session,
@@ -307,7 +325,7 @@ function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
       },
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       battleSession: battleSessionWithCombatant(
         battle.session,
@@ -351,7 +369,7 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     sheet: mixedSheet,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error(
       "Expected mixed Spell Slot and Pact Slot handoff rejection.",
     );
@@ -359,7 +377,7 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
   return projectFromParts({
     outcome: "mixed-spell-and-pact-slot-settlement-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 3,
   });
 }
@@ -389,7 +407,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
   if (sorceryPoints === undefined) {
     throw new Error("Expected battle Sorcery Point point-pool resource.");
   }
-  const spentSorceryPoints = requireRight(
+  const spentSorceryPoints = requireSuccess(
     spendCharacterPointPoolResource({
       resource: sorceryPoints,
       points: resourceCount(2),
@@ -407,7 +425,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
       ),
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       battleSession: battleSessionWithCombatant(
         battle.session,
@@ -434,7 +452,7 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     build: sorcererMetamagicBuild(),
     currentHp: 24,
   });
-  const withCreatedSlot = requireRight(
+  const withCreatedSlot = requireSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet,
       unitLibrary,
@@ -472,13 +490,13 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     sheet: withCreatedSlot,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected ambiguous created Spell Slot handoff rejection.");
   }
   return projectFromParts({
     outcome: "ambiguous-created-spell-slot-source-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     createdLevel3Capacity: createdSpellSlotCapacity(withCreatedSlot, 3),
     createdLevel3Expended: createdSpellSlotExpended(withCreatedSlot, 3),
     replayIndex: 5,
@@ -513,13 +531,13 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     sheet,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected mismatched identity handoff rejection.");
   }
   return projectFromParts({
     outcome: "mismatched-character-identity-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 6,
   });
 }
@@ -546,13 +564,13 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     sheet,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected maximum HP drift handoff rejection.");
   }
   return projectFromParts({
     outcome: "maximum-hp-drift-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 7,
   });
 }
@@ -581,6 +599,13 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
       ...combatant.activeEffects,
       {
         kind: "druidWildShapeForm",
+        effectRef: Brand.nominal<BattleEffectExecutionRef>()(
+          JSON.stringify({
+            kind: "effectOccurrence",
+            ownerScopeRef: formAdmission.execution.scopeRef,
+            ordinal: 0,
+          }),
+        ),
         sourceProcedureRef: battleProcedureExecutionRefForTest(
           "settlement-active-wild-shape",
         ),
@@ -604,13 +629,13 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     sheet,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected active Wild Shape handoff rejection.");
   }
   return projectFromParts({
     outcome: "active-wild-shape-handoff-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 8,
   });
 }
@@ -658,13 +683,13 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
     sheet,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected active battle-state handoff rejection.");
   }
   return projectFromParts({
     outcome: "active-battle-state-handoff-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 9,
   });
 }
@@ -720,13 +745,13 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     sheet: stableSheet,
     unitLibrary,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected in-progress Stable recovery handoff rejection.");
   }
   return projectFromParts({
     outcome: "stable-recovery-progress-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     zeroHpState: "stable",
     stableRecoveryElapsed: 1,
     replayIndex: 10,
@@ -775,7 +800,7 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
       },
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       battleSession: battleSessionWithCombatant(
         battle.session,
@@ -801,7 +826,7 @@ function startCharacterBattle(input: {
   readonly combatantId: ReturnType<typeof combatantId>;
   readonly sheet: CharacterSheet;
 }): CharacterBattleSession {
-  const characterInit = requireRight(
+  const characterInit = requireSuccess(
     characterSheetBattleInit({
       sheet: input.sheet,
       unitLibrary,
@@ -812,7 +837,7 @@ function startCharacterBattle(input: {
       ammunitionStocks: [],
     }),
   );
-  const session = requireRight(
+  const session = requireSuccess(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
@@ -1012,7 +1037,7 @@ function sheetFixture(
     >
   >,
 ): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
@@ -1052,7 +1077,7 @@ function sheetFixture(
 }
 
 function characterBuildMaximumHp(build: CharacterBuild): number {
-  return requireRight(characterBuildHitPoints(build, unitLibrary)).maximum;
+  return requireSuccess(characterBuildHitPoints(build, unitLibrary)).maximum;
 }
 
 function syntheticOngoingFeatureSourceKey(id: string): OngoingFeatureSourceKey {
@@ -1122,7 +1147,7 @@ function mixedSpellAndPactSlotBuild(): CharacterBuild {
     ...build,
     // Keep this synthetic mixed-slot build at the same derived HP maximum as
     // the wizard source sheet so this scenario isolates slot-source rejection.
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1195,14 +1220,14 @@ function sorcererMetamagicBuild(): CharacterBuild {
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1227,7 +1252,7 @@ function baseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1466,11 +1491,6 @@ function nullaryVariantTag(raw: unknown, field: string): string {
     if (typeof tag === "string") return tag;
   }
   throw new Error(`Expected Quint variant field ${field}.`);
-}
-
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
 }
 
 function recordField(

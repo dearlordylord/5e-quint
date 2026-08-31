@@ -5,6 +5,7 @@
 module battleRuntimeGreaseGroundHazard {
   import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -15,6 +16,7 @@ module battleRuntimeGreaseGroundHazard {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   pure val greaseDurationTicks = 10
+  pure val greaseLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val greaseAreaId = 1
   pure val noHeightenedSpellTarget = NoHeightenedSpellTarget
 
@@ -43,10 +45,10 @@ module battleRuntimeGreaseGroundHazard {
     })
 
   pure def combatantAfterGreaseSave(target: Combatant, savingThrowSucceeded: bool): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else
+    if (persistentAreaConditionApplies(savingThrowSucceeded))
       { ...target, prone: true }
+    else
+      target
 
   pure def greaseGroundHazard(
     areaId: int,
@@ -126,7 +128,11 @@ module battleRuntimeGreaseGroundHazard {
     if (not(areaEffectTriggerCanResolve(
       greaseGroundHazardActive(state, areaId),
       true,
-      GreaseGroundHazardEveryTriggerProfile,
+      everyQualifiedAreaTriggerProfile(Set(
+        AreaAppearsInSpace,
+        CreatureEntersArea,
+        CreatureEndsTurnInArea,
+      )),
       greaseGroundHazardSaveTriggerTiming(trigger),
     )))
       state

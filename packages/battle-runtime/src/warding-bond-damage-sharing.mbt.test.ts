@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import {
   resolveWardingBondCleanup,
   resolveWardingBondSharedDamage,
-  wardingBondDamageSharingInitialState,
+  linkedDefenseResistanceDamageShareDamageSharingInitialState,
   type WardingBondDamageSharingState,
 } from "./battle-reducer/warding-bond-damage-sharing.test-support.ts";
 
@@ -25,7 +25,7 @@ function initialState(input: {
   readonly wardHitPoints: number;
   readonly bondPresent: boolean;
 }): WardingBondDamageSharingState {
-  return wardingBondDamageSharingInitialState(input);
+  return linkedDefenseResistanceDamageShareDamageSharingInitialState(input);
 }
 
 const driverSchema = {
@@ -84,7 +84,7 @@ function createWardingBondDamageSharingDriver() {
   });
 }
 
-const wardingBondDamageSharingStateCheck = stateCheck(
+const linkedDefenseResistanceDamageShareDamageSharingStateCheck = stateCheck(
   normalizeWardingBondDamageSharingQuintState,
   compareWardingBondDamageSharingState,
 );
@@ -168,7 +168,7 @@ describe("Warding Bond damage-sharing MBT parity", () => {
       backend: "typescript",
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: wardingBondDamageSharingStateCheck,
+      stateCheck: linkedDefenseResistanceDamageShareDamageSharingStateCheck,
     });
   }, 120_000);
 });

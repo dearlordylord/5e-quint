@@ -2,13 +2,17 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { isDeepStrictEqual } = require("node:util");
 require("tsx/cjs");
-const { Either, Schema } = require("effect");
+const { Result, Schema } = require("effect");
+const SchemaAST = require("effect/SchemaAST");
 const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");
 const {
   PublishedSrdSurfaceSchema,
   StatBlockRecordSchema,
   UnitRecordSchema,
 } = require("../packages/surface/src/surface/schema.ts");
+const {
+  srdSurface,
+} = require("../packages/surface/src/surface/surface-catalog.ts");
 const {
   CLASS_NAMES,
   SURFACE_SCHEMA_ROLE_ANNOTATION,
@@ -32,7 +36,7 @@ const STRUCTURAL_VOCABULARY_ROLE = Object.freeze({
 });
 
 function schemaRoleAt(ast) {
-  const annotation = ast?.annotations?.[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  const annotation = SchemaAST.resolveAt(SURFACE_SCHEMA_ROLE_ANNOTATION)(ast);
   if (annotation === undefined) return undefined;
   if (!isSurfaceSchemaRole(annotation)) {
     throw new Error("Surface schema role annotation is malformed");
@@ -48,17 +52,9 @@ function rolesEqual(left, right) {
 function schemaStringRole(ast, inheritedRole) {
   const role = schemaRoleAt(ast) ?? inheritedRole;
   if (role !== undefined) return role;
-  return ast?._tag === "Literal" && typeof ast.literal === "string"
+  return SchemaAST.isLiteral(ast) && typeof ast.literal === "string"
     ? STRUCTURAL_VOCABULARY_ROLE
     : undefined;
-}
-
-function schemaChild(ast) {
-  return ast.type ?? ast.from;
-}
-
-function decodedSchemaChild(ast) {
-  return ast.to ?? ast.type ?? ast.from;
 }
 
 const suspendAstCache = new WeakMap();
@@ -66,9 +62,31 @@ const suspendAstCache = new WeakMap();
 function suspendedAst(ast) {
   const cached = suspendAstCache.get(ast);
   if (cached !== undefined) return cached;
-  const resolved = ast.f();
+  const resolved = ast.thunk();
   suspendAstCache.set(ast, resolved);
   return resolved;
+}
+
+function decodedSchemaAst(ast) {
+  return SchemaAST.toType(ast);
+}
+
+function encodedSchemaAst(ast) {
+  return SchemaAST.toEncoded(ast);
+}
+
+function schemaRolesAt(ast) {
+  const roles = [];
+  for (const candidate of [ast, decodedSchemaAst(ast), encodedSchemaAst(ast)]) {
+    const role = schemaRoleAt(candidate);
+    if (
+      role !== undefined &&
+      !roles.some((existing) => rolesEqual(existing, role))
+    ) {
+      roles.push(role);
+    }
+  }
+  return roles;
 }
 
 function walkSchemaShape(
@@ -78,13 +96,14 @@ function walkSchemaShape(
   inheritedRole,
   state = { seen: new WeakMap() },
 ) {
-  if (!ast || typeof ast !== "object") {
+  if (!SchemaAST.isAST(ast)) {
     throw new Error(
       `Surface schema traversal reached a non-AST node at ${pathName}`,
     );
   }
 
-  const ownRole = schemaRoleAt(ast);
+  const branch = decodedSchemaAst(ast);
+  const ownRole = schemaRoleAt(branch) ?? schemaRoleAt(ast);
   if (
     ownRole !== undefined &&
     inheritedRole !== undefined &&
@@ -98,91 +117,67 @@ function walkSchemaShape(
   seenRoles.add(role);
   state.seen.set(ast, seenRoles);
 
-  switch (ast._tag) {
-    case "Literal":
-      if (typeof ast.literal === "string") {
-        visitString(pathName, schemaStringRole(ast, inheritedRole), ast);
-      }
-      return;
-    case "StringKeyword": {
-      const stringRole = schemaStringRole(ast, inheritedRole);
-      if (stringRole === undefined) {
-        throw new Error(
-          `Surface schema string has no role at ${pathName}; annotate the schema owner`,
-        );
-      }
-      visitString(pathName, stringRole, ast);
-      return;
+  if (SchemaAST.isLiteral(branch)) {
+    if (typeof branch.literal === "string") {
+      visitString(pathName, schemaStringRole(branch, role), branch);
     }
-    case "BooleanKeyword":
-    case "NumberKeyword":
-    case "NeverKeyword":
-    case "UnknownKeyword":
-      return;
-    case "Refinement":
-    case "OptionalType":
-      walkSchemaShape(schemaChild(ast), pathName, visitString, role, state);
-      return;
-    case "Transformation":
+    return;
+  }
+  if (SchemaAST.isString(branch)) {
+    const stringRole = schemaStringRole(branch, role);
+    if (stringRole === undefined) {
+      throw new Error(
+        `Surface schema string has no role at ${pathName}; annotate the schema owner`,
+      );
+    }
+    visitString(pathName, stringRole, branch);
+    return;
+  }
+  if (
+    SchemaAST.isNull(branch) ||
+    SchemaAST.isBoolean(branch) ||
+    SchemaAST.isNumber(branch) ||
+    SchemaAST.isNever(branch) ||
+    SchemaAST.isUnknown(branch) ||
+    SchemaAST.isAny(branch)
+  ) {
+    return;
+  }
+  if (SchemaAST.isSuspend(branch)) {
+    return;
+  }
+  if (SchemaAST.isUnion(branch)) {
+    for (const type of branch.types) {
+      walkSchemaShape(type, pathName, visitString, role, state);
+    }
+    return;
+  }
+  if (SchemaAST.isArrays(branch)) {
+    for (const element of [...branch.elements, ...branch.rest]) {
+      walkSchemaShape(element, `${pathName}[]`, visitString, role, state);
+    }
+    return;
+  }
+  if (SchemaAST.isObjects(branch)) {
+    if (branch.indexSignatures.length > 0) {
+      throw new Error(
+        `Surface schema traversal cannot prove ownership for an index signature at ${pathName}`,
+      );
+    }
+    for (const property of branch.propertySignatures) {
       walkSchemaShape(
-        decodedSchemaChild(ast),
-        pathName,
+        property.type,
+        `${pathName}.${String(property.name)}`,
         visitString,
         role,
         state,
       );
-      return;
-    case "Suspend":
-      // A suspend is the schema recursion boundary. Decoded-value traversal
-      // expands it with pair-aware memoization; forcing Effect's recursive AST
-      // here can eagerly materialize an unbounded transformed graph.
-      return;
-    case "Union":
-      for (const type of ast.types) {
-        walkSchemaShape(type, pathName, visitString, role, state);
-      }
-      return;
-    case "TupleType":
-      for (const element of ast.elements) {
-        walkSchemaShape(
-          element.type ?? element,
-          `${pathName}[]`,
-          visitString,
-          role,
-          state,
-        );
-      }
-      for (const element of ast.rest) {
-        walkSchemaShape(
-          element.type ?? element,
-          `${pathName}[]`,
-          visitString,
-          role,
-          state,
-        );
-      }
-      return;
-    case "TypeLiteral":
-      if ((ast.indexSignatures ?? []).length > 0) {
-        throw new Error(
-          `Surface schema traversal cannot prove ownership for an index signature at ${pathName}`,
-        );
-      }
-      for (const property of ast.propertySignatures) {
-        walkSchemaShape(
-          property.type,
-          `${pathName}.${String(property.name)}`,
-          visitString,
-          role,
-          state,
-        );
-      }
-      return;
-    default:
-      throw new Error(
-        `Surface schema traversal does not support AST shape ${String(ast._tag)} at ${pathName}`,
-      );
+    }
+    return;
   }
+  throw new Error(
+    `Surface schema traversal does not support AST shape ${String(branch._tag)} at ${pathName}`,
+  );
 }
 
 function assertSurfaceSchemaStringRoles() {
@@ -195,17 +190,11 @@ function assertSurfaceSchemaStringRoles() {
 }
 
 function unwrappedSchemaAst(ast) {
-  let current = ast;
-  while (current && ["Transformation", "OptionalType"].includes(current._tag)) {
-    current = decodedSchemaChild(current);
-  }
-  return current;
+  return SchemaAST.isAST(ast) ? decodedSchemaAst(ast) : ast;
 }
 
 function structuralSchemaAst(ast) {
-  let current = unwrappedSchemaAst(ast);
-  while (current?._tag === "Refinement") current = current.from;
-  return current;
+  return unwrappedSchemaAst(ast);
 }
 
 const literalValuesCache = new WeakMap();
@@ -221,9 +210,9 @@ function literalValues(ast) {
     if (!current || typeof current !== "object") continue;
     if (seen.has(current)) continue;
     seen.add(current);
-    if (current._tag === "Literal") {
+    if (SchemaAST.isLiteral(current)) {
       values.push(current.literal);
-    } else if (current._tag === "Union") {
+    } else if (SchemaAST.isUnion(current)) {
       for (const type of current.types) pending.push(type);
     }
   }
@@ -234,9 +223,9 @@ function literalValues(ast) {
 function isLiteralDiscriminatorProperty(ast) {
   const branch = structuralSchemaAst(ast);
   if (!branch || typeof branch !== "object") return false;
-  if (branch._tag === "Literal") return true;
+  if (SchemaAST.isLiteral(branch)) return true;
   return (
-    branch._tag === "Union" &&
+    SchemaAST.isUnion(branch) &&
     branch.types.length > 0 &&
     branch.types.every((type) => isLiteralDiscriminatorProperty(type))
   );
@@ -252,6 +241,13 @@ function tupleElementAt(tuple, index, valueLength) {
 }
 
 const branchMatchCache = new WeakMap();
+
+function checkPasses(check, value, ast) {
+  if (check._tag === "Filter") {
+    return check.run(value, ast, {}) === undefined;
+  }
+  return check.checks.every((nested) => checkPasses(nested, value, ast));
+}
 
 function branchMatchStatus(ast, value) {
   const local = new Map();
@@ -300,21 +296,17 @@ function branchMatchStatus(ast, value) {
   const dependencies = (schemaAst, current) => {
     const branch = unwrappedSchemaAst(schemaAst);
     if (!branch || typeof branch !== "object") return [];
-    if (branch._tag === "Refinement")
-      return [{ ast: branch.from, value: current }];
-    if (branch._tag === "Suspend")
+    if (SchemaAST.isSuspend(branch))
       return [{ ast: suspendedAst(branch), value: current }];
-    if (branch._tag === "Union")
+    if (SchemaAST.isUnion(branch))
       return branch.types.map((type) => ({ ast: type, value: current }));
-    if (branch._tag === "TupleType" && Array.isArray(current))
+    if (SchemaAST.isArrays(branch) && Array.isArray(current))
       return current.flatMap((item, index) => {
         const element = tupleElementAt(branch, index, current.length);
-        return element === undefined
-          ? []
-          : [{ ast: element.type ?? element, value: item }];
+        return element === undefined ? [] : [{ ast: element, value: item }];
       });
     if (
-      branch._tag === "TypeLiteral" &&
+      SchemaAST.isObjects(branch) &&
       current &&
       typeof current === "object" &&
       !Array.isArray(current)
@@ -330,30 +322,32 @@ function branchMatchStatus(ast, value) {
   const directStatus = (schemaAst, current) => {
     const branch = unwrappedSchemaAst(schemaAst);
     if (!branch || typeof branch !== "object") return "unknown";
-    if (branch._tag === "Literal")
+    if (SchemaAST.isLiteral(branch))
       return current === branch.literal ? "match" : "no-match";
-    if (branch._tag === "StringKeyword")
+    if (SchemaAST.isString(branch))
       return typeof current === "string" ? "match" : "no-match";
-    if (branch._tag === "NumberKeyword")
+    if (SchemaAST.isNull(branch))
+      return current === null ? "match" : "no-match";
+    if (SchemaAST.isNumber(branch))
       return typeof current === "number" ? "match" : "no-match";
-    if (branch._tag === "BooleanKeyword")
+    if (SchemaAST.isBoolean(branch))
       return typeof current === "boolean" ? "match" : "no-match";
-    if (branch._tag === "TupleType") {
+    if (SchemaAST.isArrays(branch)) {
       if (!Array.isArray(current)) return "no-match";
       const required =
-        branch.elements.filter((element) => !element.isOptional).length +
-        Math.max(0, branch.rest.length - 1);
+        branch.elements.filter((element) => !SchemaAST.isOptional(element))
+          .length + Math.max(0, branch.rest.length - 1);
       if (current.length < required) return "no-match";
       return branch.rest.length === 0 && current.length > branch.elements.length
         ? "no-match"
         : undefined;
     }
-    if (branch._tag !== "TypeLiteral") return undefined;
+    if (!SchemaAST.isObjects(branch)) return undefined;
     if (!current || typeof current !== "object" || Array.isArray(current))
       return "no-match";
     for (const property of branch.propertySignatures) {
       if (
-        !property.isOptional &&
+        !SchemaAST.isOptional(property.type) &&
         !Object.prototype.hasOwnProperty.call(current, property.name)
       )
         return "no-match";
@@ -367,7 +361,8 @@ function branchMatchStatus(ast, value) {
     }
     const discriminators = branch.propertySignatures.filter(
       (property) =>
-        !property.isOptional && isLiteralDiscriminatorProperty(property.type),
+        !SchemaAST.isOptional(property.type) &&
+        isLiteralDiscriminatorProperty(property.type),
     );
     return discriminators.length > 0 &&
       !discriminators.some((property) =>
@@ -386,26 +381,13 @@ function branchMatchStatus(ast, value) {
           getResult(dependency.ast, dependency.value) ?? "unknown",
       );
       let result = directStatus(task.ast, task.value);
-      if (branch?._tag === "Refinement") {
-        const underlying = statuses[0] ?? "unknown";
-        if (underlying === "no-match") result = "no-match";
-        else {
-          try {
-            result =
-              branch.filter(task.value, {}, branch)._tag === "Some"
-                ? "no-match"
-                : underlying;
-          } catch {
-            result = "unknown";
-          }
-        }
-      } else if (branch?._tag === "Union") {
+      if (SchemaAST.isUnion(branch)) {
         result = statuses.includes("match")
           ? "match"
           : statuses.includes("unknown")
             ? "unknown"
             : "no-match";
-      } else if (branch?._tag === "Suspend") {
+      } else if (SchemaAST.isSuspend(branch)) {
         result = statuses[0] ?? "unknown";
       } else if (result === undefined) {
         result = statuses.includes("no-match")
@@ -413,6 +395,13 @@ function branchMatchStatus(ast, value) {
           : statuses.includes("unknown")
             ? "unknown"
             : "match";
+      }
+      if (
+        result !== "no-match" &&
+        branch?.checks !== undefined &&
+        !branch.checks.every((check) => checkPasses(check, task.value, branch))
+      ) {
+        result = "no-match";
       }
       putResult(task.ast, task.value, result);
       continue;
@@ -439,21 +428,22 @@ function branchHasLiteralDiscriminator(ast) {
   if (cached !== undefined) return cached;
   const branch = structuralSchemaAst(ast);
   if (!branch || typeof branch !== "object") return false;
-  if (branch._tag === "Suspend") {
+  if (SchemaAST.isSuspend(branch)) {
     const result = branchHasLiteralDiscriminator(suspendedAst(branch));
     discriminatorCache.set(ast, result);
     return result;
   }
-  if (branch._tag === "Union") {
+  if (SchemaAST.isUnion(branch)) {
     const result = branch.types.some(branchHasLiteralDiscriminator);
     discriminatorCache.set(ast, result);
     return result;
   }
   const result =
-    branch._tag === "TypeLiteral" &&
+    SchemaAST.isObjects(branch) &&
     branch.propertySignatures.some(
       (property) =>
-        !property.isOptional && isLiteralDiscriminatorProperty(property.type),
+        !SchemaAST.isOptional(property.type) &&
+        isLiteralDiscriminatorProperty(property.type),
     );
   discriminatorCache.set(ast, result);
   return result;
@@ -462,12 +452,12 @@ function branchHasLiteralDiscriminator(ast) {
 function branchDiscriminatorMatches(ast, value) {
   const branch = structuralSchemaAst(ast);
   if (!branch || typeof branch !== "object") return false;
-  if (branch._tag === "Suspend")
+  if (SchemaAST.isSuspend(branch))
     return branchDiscriminatorMatches(suspendedAst(branch), value);
-  if (branch._tag === "Union")
+  if (SchemaAST.isUnion(branch))
     return branch.types.some((type) => branchDiscriminatorMatches(type, value));
   if (
-    branch._tag !== "TypeLiteral" ||
+    !SchemaAST.isObjects(branch) ||
     !value ||
     typeof value !== "object" ||
     Array.isArray(value)
@@ -477,7 +467,10 @@ function branchDiscriminatorMatches(ast, value) {
   let hasDiscriminator = false;
   let hasPresentDiscriminator = false;
   for (const property of branch.propertySignatures) {
-    if (property.isOptional || !isLiteralDiscriminatorProperty(property.type))
+    if (
+      SchemaAST.isOptional(property.type) ||
+      !isLiteralDiscriminatorProperty(property.type)
+    )
       continue;
     const values = literalValues(property.type);
     hasDiscriminator = true;
@@ -536,7 +529,12 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
     const task = pending.pop();
     const { ast, current, currentPath, inheritedRole } = task;
     if (current === undefined) continue;
-    const ownRole = schemaRoleAt(ast);
+    const branch = decodedSchemaAst(ast);
+    const localRoles = schemaRolesAt(ast);
+    if (localRoles.length > 1) {
+      throw new Error(`Surface schema roles conflict at ${currentPath}`);
+    }
+    const ownRole = localRoles[0];
     if (
       ownRole !== undefined &&
       inheritedRole !== undefined &&
@@ -547,115 +545,102 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
     const role = ownRole ?? inheritedRole;
     const objectLike = current !== null && typeof current === "object";
     if (objectLike) {
-      const seenForAst = seenObjects.get(ast) ?? new WeakMap();
+      const seenForAst = seenObjects.get(branch) ?? new WeakMap();
       const roles = seenForAst.get(current) ?? new Set();
       if ([...roles].some((seenRole) => rolesEqual(seenRole, role))) continue;
       roles.add(role);
       seenForAst.set(current, roles);
-      seenObjects.set(ast, seenForAst);
+      seenObjects.set(branch, seenForAst);
     }
 
-    switch (ast._tag) {
-      case "Literal":
-        if (typeof current === "string" && typeof ast.literal === "string") {
-          const stringRole = schemaStringRole(ast, inheritedRole);
-          if (stringRole === undefined) break;
+    if (SchemaAST.isLiteral(branch)) {
+      if (typeof current === "string" && typeof branch.literal === "string") {
+        const stringRole = schemaStringRole(branch, role);
+        if (stringRole !== undefined) {
           observations.push({
             path: currentPath,
             value: current,
             role: stringRole,
-            ast,
-          });
-        }
-        break;
-      case "StringKeyword":
-        if (typeof current === "string") {
-          const stringRole = schemaStringRole(ast, inheritedRole);
-          if (stringRole === undefined) {
-            throw new Error(
-              `Surface value string has no schema role at ${currentPath}`,
-            );
-          }
-          observations.push({
-            path: currentPath,
-            value: current,
-            role: stringRole,
-            ast,
-          });
-        }
-        break;
-      case "BooleanKeyword":
-      case "NumberKeyword":
-      case "NeverKeyword":
-      case "UnknownKeyword":
-        break;
-      case "Refinement":
-      case "Transformation":
-      case "OptionalType":
-        pending.push({
-          ast: decodedSchemaChild(ast),
-          current,
-          currentPath,
-          inheritedRole: role,
-        });
-        break;
-      case "Suspend":
-        pending.push({
-          ast: suspendedAst(ast),
-          current,
-          currentPath,
-          inheritedRole: role,
-        });
-        break;
-      case "Union": {
-        for (const branch of matchingUnionBranches(ast.types, current)) {
-          pending.push({
             ast: branch,
-            current,
-            currentPath,
-            inheritedRole: role,
           });
         }
-        break;
       }
-      case "TupleType":
-        if (Array.isArray(current)) {
-          for (let index = current.length - 1; index >= 0; index -= 1) {
-            const element = tupleElementAt(ast, index, current.length);
-            if (element !== undefined) {
-              pending.push({
-                ast: element.type ?? element,
-                current: current[index],
-                currentPath: `${currentPath}[${index}]`,
-                inheritedRole: role,
-              });
-            }
+    } else if (SchemaAST.isString(branch)) {
+      if (typeof current === "string") {
+        const stringRole = schemaStringRole(branch, role);
+        if (stringRole === undefined) {
+          throw new Error(
+            `Surface value string has no schema role at ${currentPath}`,
+          );
+        }
+        observations.push({
+          path: currentPath,
+          value: current,
+          role: stringRole,
+          ast: branch,
+        });
+      }
+    } else if (
+      SchemaAST.isNull(branch) ||
+      SchemaAST.isBoolean(branch) ||
+      SchemaAST.isNumber(branch) ||
+      SchemaAST.isNever(branch) ||
+      SchemaAST.isUnknown(branch) ||
+      SchemaAST.isAny(branch)
+    ) {
+      // Primitive non-string values do not carry authored text.
+    } else if (SchemaAST.isSuspend(branch)) {
+      pending.push({
+        ast: suspendedAst(branch),
+        current,
+        currentPath,
+        inheritedRole: role,
+      });
+    } else if (SchemaAST.isUnion(branch)) {
+      for (const member of matchingUnionBranches(branch.types, current)) {
+        pending.push({
+          ast: member,
+          current,
+          currentPath,
+          inheritedRole: role,
+        });
+      }
+    } else if (SchemaAST.isArrays(branch)) {
+      if (Array.isArray(current)) {
+        for (let index = current.length - 1; index >= 0; index -= 1) {
+          const element = tupleElementAt(branch, index, current.length);
+          if (element !== undefined) {
+            pending.push({
+              ast: element,
+              current: current[index],
+              currentPath: `${currentPath}[${index}]`,
+              inheritedRole: role,
+            });
           }
         }
-        break;
-      case "TypeLiteral":
-        if (current && typeof current === "object" && !Array.isArray(current)) {
-          for (
-            let index = ast.propertySignatures.length - 1;
-            index >= 0;
-            index -= 1
-          ) {
-            const property = ast.propertySignatures[index];
-            if (Object.prototype.hasOwnProperty.call(current, property.name)) {
-              pending.push({
-                ast: property.type,
-                current: current[property.name],
-                currentPath: `${currentPath}.${String(property.name)}`,
-                inheritedRole: role,
-              });
-            }
+      }
+    } else if (SchemaAST.isObjects(branch)) {
+      if (current && typeof current === "object" && !Array.isArray(current)) {
+        for (
+          let index = branch.propertySignatures.length - 1;
+          index >= 0;
+          index -= 1
+        ) {
+          const property = branch.propertySignatures[index];
+          if (Object.prototype.hasOwnProperty.call(current, property.name)) {
+            pending.push({
+              ast: property.type,
+              current: current[property.name],
+              currentPath: `${currentPath}.${String(property.name)}`,
+              inheritedRole: role,
+            });
           }
         }
-        break;
-      default:
-        throw new Error(
-          `Surface value traversal does not support AST shape ${String(ast._tag)} at ${currentPath}`,
-        );
+      }
+    } else {
+      throw new Error(
+        `Surface value traversal does not support AST shape ${String(branch._tag)} at ${currentPath}`,
+      );
     }
   }
 
@@ -719,15 +704,15 @@ function collectDecodedStringPaths(value, path = "value", paths = new Set()) {
 function decodeSurfaceRecord(record) {
   const schema =
     record.kind === "statBlock" ? StatBlockRecordSchema : UnitRecordSchema;
-  const decoded = Schema.decodeUnknownEither(schema, {
+  const decoded = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   })(record.value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error(
       `Surface record failed schema decoding at ${record.contentPath}`,
     );
   }
-  return { ...record, value: decoded.right };
+  return { ...record, value: decoded.success };
 }
 
 function normalizeAnchor(value) {
@@ -2630,6 +2615,13 @@ function canonicalProjectionOfPublishedRecord(record) {
   );
 }
 
+function canonicalRedistributableRecordKeys() {
+  return [
+    ...srdSurface.units.map((record) => ["unit", record.id]),
+    ...srdSurface.statBlocks.map((record) => ["statBlock", record.id]),
+  ];
+}
+
 function publishedSurfaceMembership(workspaceRoot, records, publication) {
   const issues = [];
   const loaded = loadPublishedSurface(workspaceRoot, publication);
@@ -2644,19 +2636,19 @@ function publishedSurfaceMembership(workspaceRoot, records, publication) {
     return { unitIds, statBlockIds, issues };
   }
 
-  const decoded = Schema.decodeUnknownEither(PublishedSrdSurfaceSchema, {
+  const decoded = Schema.decodeUnknownResult(PublishedSrdSurfaceSchema, {
     onExcessProperty: "error",
   })(loaded.value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     issues.push({
       code: "published-surface-invalid",
       contentPath: "packages/surface/publication/srd-surface.json",
-      message: String(decoded.left),
+      message: decoded.failure.message,
     });
     return { unitIds, statBlockIds, issues };
   }
 
-  const value = decoded.right;
+  const value = decoded.success;
   const canonicalRecords = new Map(
     records.map((record) => [recordIdentityKey(record), record.value]),
   );
@@ -2707,6 +2699,24 @@ function publishedSurfaceMembership(workspaceRoot, records, publication) {
         });
       }
     }
+  }
+
+  const canonicalRecordsByIdentity = new Map(
+    records.map((record) => [recordIdentityKey(record), record]),
+  );
+  for (const [family, id] of canonicalRedistributableRecordKeys()) {
+    if (unitIds.has(id) && family === "unit") continue;
+    if (statBlockIds.has(id) && family === "statBlock") continue;
+    const canonical = canonicalRecordsByIdentity.get(`${family}:${id}`);
+    issues.push({
+      code: "canonical-record-missing-from-publication",
+      contentPath:
+        canonical?.contentPath ??
+        "packages/surface/publication/srd-surface.json",
+      recordId: id,
+      recordKind: family,
+      message: `Canonical ${family} ${id} is missing from the published Surface catalog`,
+    });
   }
 
   return { unitIds, statBlockIds, issues };

@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard spell.invocation-gust-of-wind-line spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   canSpendBonusAction,
   spendAction,
@@ -14,12 +14,14 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleRuntimeCommand,
-  BattleSleetStormAreaMembershipTrigger,
+  BattlePersistentAreaSaveCompositeTrigger as BattlePersistentAreaSaveCompositeMembershipTrigger,
+  BattleStationaryPersistentAreaSaveDamageTrigger as BattleStationaryPersistentAreaSaveDamageMembershipTrigger,
+  BattleTranslatingPersistentAreaSaveDamageTrigger as BattleTranslatingPersistentAreaSaveDamageMembershipTrigger,
   BattleSubject,
 } from "../battle-subjects.ts";
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   type BattleAreaId,
+  type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -27,29 +29,33 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleFill,
-  BattleFlamingSphereDamageRollHole,
-  BattleFlamingSphereRamMovementHole,
-  BattleFlamingSphereTrigger,
-  BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  BattleHandledInterruptOccurrence,
+  BattleCollisionRepositionPersistentAreaSaveDamageRollHole,
+  BattlePersistentAreaSaveDamageRamMovementHole,
+  BattleCollisionRepositionPersistentAreaSaveDamageTrigger,
+  BattlePersistentAreaSaveConditionSavingThrowOutcomeHole,
   BattleHole,
-  BattleMoonbeamDamageRollHole,
-  BattleMoonbeamSaveTrigger,
+  BattleDirectedRepositionPersistentAreaSaveDamageRollHole,
+  BattleDirectedRepositionPersistentAreaSaveDamageTrigger,
   BattleMovableZoneRepositionMovementHole,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleSavingThrowOutcome,
   BattleSavingThrowOutcomeValue,
   BattleSpellAreaChoice,
-  BattleSleetStormAreaHazardSavingThrowOutcomeHole,
-  BattleSleetStormAreaHazardTrigger,
+  BattlePersistentAreaSaveCompositeSavingThrowOutcomeHole,
+  BattlePersistentAreaSaveCompositeTrigger,
   BattleState,
-  BattleWebRestraintTrigger,
+  BattlePersistentAreaSaveConditionEscapeTrigger,
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
+  resolveSaveGatedConditionDamageRepeatSave,
+  type SaveGatedConditionDamageRepeatSaveContext,
 } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import {
@@ -64,80 +70,106 @@ import { snapshotBattle } from "./battle-snapshot.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
 import {
-  flamingSphereDamageAfterSave,
-  flamingSphereMoveDistanceAccepted,
-} from "./flaming-sphere-hazard-ram.ts";
+  ramMovablePersistentAreaDamageAfterSave,
+  ramMovablePersistentAreaMoveDistanceAccepted,
+} from "./collision-reposition-area-hazard.ts";
 import {
-  moonbeamDamageAfterSave,
-  moonbeamMoveDistanceAccepted,
-} from "./moonbeam-movable-zone.ts";
+  movablePersistentAreaDamageAfterSave,
+  movablePersistentAreaMoveDistanceAccepted,
+} from "./directed-reposition-area.ts";
 import {
-  resolveCloudkillAreaSaveDamage,
-  resolveInsectPlagueAreaSaveDamage,
+  resolveTranslatingPersistentAreaAreaSaveDamage,
+  resolveStationaryPersistentAreaAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
-import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
+import { validateDirectionalPersistentAreaAreaPushFacts } from "./directional-area-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
-import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
+import {
+  isEndTurnFillKind,
+  resolveDelegatedEndTurnCommand,
+  resolveStagedDelegatedEndTurnCommand,
+} from "./turn-boundary-lifecycle.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import {
   applyPreparedSlotSpellDamage,
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import {
-  applyGreaseProneToTarget,
-  applySleetStormAreaHazardFailedSaveEffect,
-  applyWebRestrainedCondition,
-  markSleetStormAreaHazardSavedThisTurn,
-  markMoonbeamSavedThisTurn,
-  addMoonbeamShapeShiftSuppression,
-  removeMoonbeamShapeShiftSuppression,
-  replaceGustOfWindLineDirection,
-  markWebSavedThisTurn,
-  removeWebRestrainedCondition,
+  applyPersistentAreaSaveConditionProneToTarget,
+  applyPersistentAreaSaveCompositeFailedSaveEffect,
+  applyPersistentAreaSaveConditionEscapeRestrainedCondition,
+  markPersistentAreaSaveCompositeSavedThisTurn,
+  markMovablePersistentAreaSavedThisTurn,
+  addMovablePersistentAreaShapeShiftSuppression,
+  removeMovablePersistentAreaShapeShiftSuppression,
+  replaceDirectionalPersistentAreaDirection,
+  markPersistentAreaSaveConditionEscapeSavedThisTurn,
+  removePersistentAreaSaveConditionEscapeRestrainedCondition,
 } from "./spells-active-effects.ts";
 import {
-  greaseGroundHazardSavingThrowOutcomeHole,
-  flamingSphereRamMovementHole,
-  flamingSphereRepositionMovementHole,
-  flamingSphereSavingThrowOutcomeHole,
-  flamingSphereTriggerLabel,
-  gustOfWindLineDirectionChoiceHole,
-  gustOfWindLineSavingThrowOutcomeHole,
-  moonbeamRepositionMovementHole,
-  moonbeamSavingThrowOutcomeHole,
-  moonbeamTriggerLabel,
-  webRestraintSavingThrowOutcomeHole,
-  type FlamingSphereEffect,
-  type GreaseGroundHazardEffect,
-  type GustOfWindLineEffect,
-  type MoonbeamEffect,
-  type WebRestraintHazardEffect,
+  persistentAreaSaveConditionSavingThrowOutcomeHole,
+  ramMovablePersistentAreaRamMovementHole,
+  ramMovablePersistentAreaRepositionMovementHole,
+  ramMovablePersistentAreaSavingThrowOutcomeHole,
+  ramMovablePersistentAreaTriggerLabel,
+  directionalPersistentAreaDirectionChoiceHole,
+  directionalPersistentAreaSavingThrowOutcomeHole,
+  movablePersistentAreaRepositionMovementHole,
+  movablePersistentAreaSavingThrowOutcomeHole,
+  movablePersistentAreaTriggerLabel,
+  persistentAreaSaveConditionEscapeSavingThrowOutcomeHole,
+  type RamMovablePersistentAreaEffect,
+  type PersistentAreaSaveConditionEffect,
+  type DirectionalPersistentAreaEffect,
+  type MovablePersistentAreaEffect,
+  type PersistentAreaSaveConditionEscapeEffect,
 } from "./persistent-spatial-spell-discovery.ts";
+import {
+  boundDirectionalPersistentAreaEffect,
+  boundPersistentAreaSaveCompositeEffect,
+  boundPersistentAreaSaveConditionEffect,
+  boundPersistentAreaSaveConditionEscapeEffect,
+  type BoundPersistentAreaSaveCompositeEffect,
+} from "./persistent-spell-area-binding.ts";
+import {
+  boundPersistentAreaSaveDamageEffect,
+  type BoundPersistentAreaSaveDamageEffect,
+} from "./persistent-area-save-damage-binding.ts";
 
-export type SleetStormAreaHazardEffect = Extract<
+export type PersistentAreaSaveCompositeEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "sleetStormAreaHazard" }
+  { readonly kind: "persistentAreaSaveComposite" }
 >;
 
+type ResolvedPersistentAreaSaveCompositeEffect =
+  BoundPersistentAreaSaveCompositeEffect;
+
 const PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS = [
-  "greaseGroundHazardSave",
-  "webRestraintSave",
-  "sleetStormAreaHazardSave",
-  "insectPlagueAreaHazardSave",
-  "cloudkillAreaHazardSave",
-  "webRestrainedNoLongerInArea",
-  "webAreaRemoved",
-  "gustOfWindLineSave",
-  "gustOfWindLineDirectionChange",
+  "persistentAreaSaveConditionSave",
+  "persistentAreaSaveConditionEscapeSave",
+  "persistentAreaSaveCompositeSave",
+  "persistentAreaSaveDamageSave",
+  "endPersistentAreaSaveConditionEscapeForDeparture",
+  "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+  "directionalPersistentAreaSave",
+  "directionalPersistentAreaDirectionChange",
   "movableZoneSave",
   "movableZoneReposition",
   "movableZoneRam",
-  "moonbeamCylinderExit",
+  "persistentAreaSaveDamageExit",
 ] as const satisfies ReadonlyArray<BattleRuntimeCommand>;
 
 type PersistentSpatialSpellProcedureCommand =
   (typeof PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS)[number];
+
+type PersistentSpatialReplayRoute = {
+  readonly handledSaveFailedOccurrence?: Extract<
+    BattleHandledInterruptOccurrence,
+    { readonly trigger: "saveFailed" }
+  >;
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+};
 
 type PersistentSpatialSpellProcedureSubject = Extract<
   BattleSubject,
@@ -155,28 +187,44 @@ type MovableZoneSaveSubject = Extract<
   }
 >;
 
-type FlamingSphereSaveSubject = Extract<
+type RamMovablePersistentAreaSaveSubject = Extract<
   MovableZoneSaveSubject,
   { readonly trigger: "endsTurnWithinFiveFeetOfSphere" }
 >;
 
-type MoonbeamSaveSubject = Extract<
+type MovablePersistentAreaSaveSubject = Extract<
   MovableZoneSaveSubject,
-  { readonly trigger: BattleMoonbeamSaveTrigger }
+  { readonly trigger: BattleDirectedRepositionPersistentAreaSaveDamageTrigger }
 >;
 
 type PersistentSpatialSaveFailedReplaySubject = Extract<
   PersistentSpatialSpellProcedureSubject,
   {
     readonly command:
-      | "greaseGroundHazardSave"
-      | "webRestraintSave"
-      | "sleetStormAreaHazardSave"
-      | "gustOfWindLineSave"
+      | "persistentAreaSaveConditionSave"
+      | "persistentAreaSaveConditionEscapeSave"
+      | "persistentAreaSaveCompositeSave"
+      | "directionalPersistentAreaSave"
       | "movableZoneSave"
       | "movableZoneRam";
   }
 >;
+
+function persistentSpatialReplayEffectRef(
+  subject: PersistentSpatialSaveFailedReplaySubject,
+): BattleEffectExecutionRef {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      persistentAreaSaveConditionSave: ({ effectRef }) => effectRef,
+      persistentAreaSaveConditionEscapeSave: ({ effectRef }) => effectRef,
+      persistentAreaSaveCompositeSave: ({ areaMembershipTrigger }) =>
+        areaMembershipTrigger.effectRef,
+      directionalPersistentAreaSave: ({ effectRef }) => effectRef,
+      movableZoneSave: ({ effectRef }) => effectRef,
+      movableZoneRam: ({ effectRef }) => effectRef,
+    }),
+  );
+}
 
 function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
   readonly state: BattleState;
@@ -184,24 +232,42 @@ function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly replaySubject: PersistentSpatialSaveFailedReplaySubject;
   readonly replayFills: readonly BattleFill[];
-  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+  readonly handledSaveFailedOccurrence:
+    | Extract<
+        BattleHandledInterruptOccurrence,
+        { readonly trigger: "saveFailed" }
+      >
+    | undefined;
+  readonly replayParentPosition:
+    | BattleStartTurnOccurrenceSequenceCheckpoint
+    | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   if (input.outcome.succeeded) {
     return null;
   }
+  const effectRef = persistentSpatialReplayEffectRef(input.replaySubject);
+  const handledThisOccurrence =
+    input.handledSaveFailedOccurrence?.targetId === input.outcome.targetId &&
+    input.handledSaveFailedOccurrence.sourceProcedureRef ===
+      input.sourceProcedureRef &&
+    input.handledSaveFailedOccurrence.effectRef === effectRef;
   return maybeOpenInterruptWindow(
     input.state,
     {
       trigger: "saveFailed",
       targetId: input.outcome.targetId,
       sourceProcedureRef: input.sourceProcedureRef,
+      effectRef,
       continuation: {
         kind: "replay",
         subject: input.replaySubject,
         fills: input.replayFills,
+        ...(input.replayParentPosition === undefined
+          ? {}
+          : { parentPosition: input.replayParentPosition }),
       },
     },
-    input.handledInterruptTrigger,
+    handledThisOccurrence ? "saveFailed" : undefined,
   );
 }
 
@@ -216,172 +282,213 @@ export function isPersistentSpatialSpellProcedureSubject(
   );
 }
 
-export function persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(
+export function isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(
   subject: BattleSubject,
 ): boolean {
-  return (
-    subject.tag === "runtimeCommand" &&
-    (subject.command === "insectPlagueAreaHazardSave" ||
-      subject.command === "cloudkillAreaHazardSave") &&
-    subject.areaMembershipTrigger.kind === "appearsInArea"
-  );
+  if (subject.tag !== "runtimeCommand") return false;
+  if (subject.command === "persistentAreaSaveDamageSave") {
+    return Match.value(subject.areaMembershipTrigger.kind).pipe(
+      Match.when("appearsInArea", () => true),
+      Match.when("areaMovesIntoSpace", () => true),
+      Match.when("firstEntryOnTurn", () => true),
+      Match.when("turnEndInArea", () => false),
+      Match.exhaustive,
+    );
+  }
+  return false;
 }
 
 export function resolvePersistentSpatialSpellProcedureCommand(
-  input: BattleResolutionInputForSubject<PersistentSpatialSpellProcedureSubject> & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  input: BattleResolutionInputForSubject<PersistentSpatialSpellProcedureSubject> &
+    PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   return Match.value(input.subject).pipe(
-    Match.when({ command: "greaseGroundHazardSave" }, (subject) =>
-      resolveGreaseGroundHazardSaveCommand({
+    Match.when({ command: "persistentAreaSaveConditionSave" }, (subject) =>
+      resolvePersistentAreaSaveConditionSaveCommand({
         ...input,
         subject,
       }),
     ),
-    Match.when({ command: "webRestraintSave" }, (subject) =>
-      resolveWebRestraintSaveCommand({ ...input, subject }),
+    Match.when(
+      { command: "persistentAreaSaveConditionEscapeSave" },
+      (subject) =>
+        resolvePersistentAreaSaveConditionEscapeSaveCommand({
+          ...input,
+          subject,
+        }),
     ),
-    Match.when({ command: "sleetStormAreaHazardSave" }, (subject) =>
-      resolveSleetStormAreaHazardSaveCommand({ ...input, subject }),
+    Match.when({ command: "persistentAreaSaveCompositeSave" }, (subject) =>
+      resolvePersistentAreaSaveCompositeSaveCommand({ ...input, subject }),
     ),
-    Match.when({ command: "insectPlagueAreaHazardSave" }, (subject) =>
-      resolveInsectPlagueAreaHazardSaveCommand({ ...input, subject }),
+    Match.when({ command: "persistentAreaSaveDamageSave" }, (subject) =>
+      resolvePersistentAreaSaveDamageCommand({ ...input, subject }),
     ),
-    Match.when({ command: "cloudkillAreaHazardSave" }, (subject) =>
-      resolveCloudkillAreaHazardSaveCommand({ ...input, subject }),
+    Match.when(
+      { command: "endPersistentAreaSaveConditionEscapeForDeparture" },
+      (subject) =>
+        resolvePersistentAreaSaveConditionEscapeRestrainedNoLongerInAreaCommand(
+          {
+            ...input,
+            subject,
+          },
+        ),
     ),
-    Match.when({ command: "webRestrainedNoLongerInArea" }, (subject) =>
-      resolveWebRestrainedNoLongerInAreaCommand({ ...input, subject }),
+    Match.when(
+      { command: "endPersistentAreaSaveConditionEscapeForAreaRemoval" },
+      (subject) =>
+        resolvePersistentAreaSaveConditionEscapeAreaRemovedCommand({
+          ...input,
+          subject,
+        }),
     ),
-    Match.when({ command: "webAreaRemoved" }, (subject) =>
-      resolveWebAreaRemovedCommand({ ...input, subject }),
+    Match.when({ command: "directionalPersistentAreaSave" }, (subject) =>
+      resolveDirectionalPersistentAreaSaveCommand({ ...input, subject }),
     ),
-    Match.when({ command: "gustOfWindLineSave" }, (subject) =>
-      resolveGustOfWindLineSaveCommand({ ...input, subject }),
-    ),
-    Match.when({ command: "gustOfWindLineDirectionChange" }, (subject) =>
-      resolveGustOfWindLineDirectionChangeCommand({ ...input, subject }),
+    Match.when(
+      { command: "directionalPersistentAreaDirectionChange" },
+      (subject) =>
+        resolveDirectionalPersistentAreaDirectionChangeCommand({
+          ...input,
+          subject,
+        }),
     ),
     Match.when({ command: "movableZoneSave" }, (subject) => {
       if (subject.trigger === "endsTurnWithinFiveFeetOfSphere") {
-        return resolveFlamingSphereSaveCommand({
+        return resolveRamMovablePersistentAreaSaveCommand({
           ...input,
           subject,
         });
       }
-      return resolveMoonbeamSaveCommand({
+      return resolveMovablePersistentAreaSaveCommand({
         ...input,
         subject,
       });
     }),
     Match.when({ command: "movableZoneReposition" }, (subject) => {
-      const flamingSphere = flamingSphereEffectFor(input.state, subject);
-      if (flamingSphere !== undefined) {
-        return resolveFlamingSphereRepositionCommand({ ...input, subject });
+      const ramMovablePersistentArea = ramMovablePersistentAreaEffectFor(
+        input.state,
+        subject,
+      );
+      if (ramMovablePersistentArea !== undefined) {
+        return resolveRamMovablePersistentAreaRepositionCommand({
+          ...input,
+          subject,
+        });
       }
-      return resolveMoonbeamRepositionCommand({ ...input, subject });
+      return resolveMovablePersistentAreaRepositionCommand({
+        ...input,
+        subject,
+      });
     }),
     Match.when({ command: "movableZoneRam" }, (subject) =>
-      resolveFlamingSphereRamCommand({ ...input, subject }),
+      resolveRamMovablePersistentAreaRamCommand({ ...input, subject }),
     ),
-    Match.when({ command: "moonbeamCylinderExit" }, (subject) =>
-      resolveMoonbeamCylinderExitCommand({ ...input, subject }),
+    Match.when({ command: "persistentAreaSaveDamageExit" }, (subject) =>
+      resolveMovablePersistentAreaCylinderExitCommand({ ...input, subject }),
     ),
     Match.exhaustive,
   );
 }
 
-function greaseGroundHazardEffectFor(
+function persistentAreaSaveConditionEffectFor(
   state: BattleState,
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "greaseGroundHazardSave";
+      readonly command: "persistentAreaSaveConditionSave";
     }
   >,
-): GreaseGroundHazardEffect | undefined {
-  return activeEffectForArea(
+): PersistentAreaSaveConditionEffect | undefined {
+  const effect = activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
-    (effect): effect is GreaseGroundHazardEffect =>
-      effect.kind === "greaseGroundHazard",
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveCondition" }
+    > => effect.kind === "persistentAreaSaveCondition",
   );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveConditionEffect(state, effect);
 }
 
 function activeEffectForArea<
   TEffect extends BattleActiveEffect & { readonly areaId: BattleAreaId },
 >(
   state: BattleState,
+  effectRef: BattleEffectExecutionRef,
   areaId: BattleAreaId,
   isExpectedEffect: (effect: BattleActiveEffect) => effect is TEffect,
 ): TEffect | undefined {
   for (const combatant of state.combatants.values()) {
     const effect = combatant.activeEffects.find(
       (candidate): candidate is TEffect =>
-        isExpectedEffect(candidate) && candidate.areaId === areaId,
+        candidate.effectRef === effectRef &&
+        isExpectedEffect(candidate) &&
+        candidate.areaId === areaId,
     );
     if (effect !== undefined) return effect;
   }
   return undefined;
 }
 
-function greaseGroundHazardSavingThrowOutcomeFor(
+function persistentAreaSaveConditionSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  hole: BattlePersistentAreaSaveConditionSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function validateGreaseGroundHazardSavingThrowOutcome(
+function validatePersistentAreaSaveConditionSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Grease entry save is single-target and cannot carry area geometry or an outcome for a different combatant. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a PersistentAreaSaveCondition entry save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Grease ground-hazard Saving Throw outcome must not include area facts.";
+    return "PersistentAreaSaveCondition ground-hazard Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+    : "PersistentAreaSaveCondition ground-hazard Saving Throw outcome must match the triggering target.";
   /* v8 ignore stop -- @preserve */
 }
 
-function resolveGreaseGroundHazardSaveCommand(
+function resolvePersistentAreaSaveConditionSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "greaseGroundHazardSave";
+        readonly command: "persistentAreaSaveConditionSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   if (input.subject.trigger === "endsTurnInArea") {
-    return resolveGreaseGroundHazardEndTurnSaveCommand(input);
+    return resolvePersistentAreaSaveConditionEndTurnSaveCommand(input);
   }
-  return resolveGreaseGroundHazardEntrySaveCommand(input);
+  return resolvePersistentAreaSaveConditionEntrySaveCommand(input);
 }
 
-function resolveGreaseGroundHazardEntrySaveCommand(
+function resolvePersistentAreaSaveConditionEntrySaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "greaseGroundHazardSave";
+        readonly command: "persistentAreaSaveConditionSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Grease hazard subject exposes at most its one Saving Throw outcome hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered PersistentAreaSaveCondition hazard subject exposes at most its one Saving Throw outcome hole. */
   if (
     input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
     input.fills.length > 1
@@ -389,25 +496,28 @@ function resolveGreaseGroundHazardEntrySaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Grease ground-hazard save accepts exactly one Saving Throw outcome fill.",
+      "PersistentAreaSaveCondition ground-hazard save accepts exactly one Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = greaseGroundHazardEffectFor(input.state, input.subject);
+  const effect = persistentAreaSaveConditionEffectFor(
+    input.state,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Grease ground-hazard save is no longer available.",
+      "PersistentAreaSaveCondition ground-hazard save is no longer available.",
     );
   }
-  const hole = greaseGroundHazardSavingThrowOutcomeHole(
+  const hole = persistentAreaSaveConditionSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
     input.subject.trigger,
   );
-  const savingThrowFill = greaseGroundHazardSavingThrowOutcomeFor(
+  const savingThrowFill = persistentAreaSaveConditionSavingThrowOutcomeFor(
     input.fills.filter(
       (
         fill,
@@ -419,11 +529,11 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   if (savingThrowFill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
-  const validation = validateGreaseGroundHazardSavingThrowOutcome(
+  const validation = validatePersistentAreaSaveConditionSavingThrowOutcome(
     savingThrowFill.value,
     input.subject.actorId,
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: the Grease save outcome must answer the discovered single-target hole for the triggering actor. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the PersistentAreaSaveCondition save outcome must answer the discovered single-target hole for the triggering actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
@@ -436,14 +546,18 @@ function resolveGreaseGroundHazardEntrySaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
   }
   const nextState = outcome.succeeded
     ? input.state
-    : applyGreaseProneToTarget(input.state, input.subject.actorId);
+    : applyPersistentAreaSaveConditionProneToTarget(
+        input.state,
+        input.subject.actorId,
+      );
   return {
     tag: "resolved",
     state: nextState,
@@ -451,85 +565,156 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   };
 }
 
-function webRestraintHazardEffectFor(
+function persistentAreaSaveConditionEscapeEffectFor(
   state: BattleState,
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
       readonly command:
-        | "webRestraintSave"
-        | "webRestrainedNoLongerInArea"
-        | "webAreaRemoved";
+        | "persistentAreaSaveConditionEscapeSave"
+        | "endPersistentAreaSaveConditionEscapeForDeparture"
+        | "endPersistentAreaSaveConditionEscapeForAreaRemoval";
     }
   >,
-): WebRestraintHazardEffect | undefined {
-  return activeEffectForArea(
+): PersistentAreaSaveConditionEscapeEffect | undefined {
+  const effect = activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
-    (effect): effect is WebRestraintHazardEffect =>
-      effect.kind === "webRestraintHazard",
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveConditionEscape" }
+    > => effect.kind === "persistentAreaSaveConditionEscape",
   );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveConditionEscapeEffect(state, effect);
 }
 
-function validateWebRestraintSavingThrowOutcome(
+function validatePersistentAreaSaveConditionEscapeSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Web restraint save is single-target and cannot carry area geometry or an outcome for a different combatant. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a PersistentAreaSaveConditionEscape restraint save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Web Restraint Saving Throw outcome must not include area facts.";
+    return "PersistentAreaSaveConditionEscape Restraint Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Web Restraint Saving Throw outcome must match the triggering target.";
+    : "PersistentAreaSaveConditionEscape Restraint Saving Throw outcome must match the triggering target.";
   /* v8 ignore stop -- @preserve */
 }
 
-function webRestraintSaveAlreadyResolved(
-  effect: WebRestraintHazardEffect,
+function persistentAreaSaveConditionEscapeSaveAlreadyResolved(
+  effect: PersistentAreaSaveConditionEscapeEffect,
   targetId: CombatantId,
-  trigger: BattleWebRestraintTrigger,
+  trigger: BattlePersistentAreaSaveConditionEscapeTrigger,
 ): boolean {
   return trigger === "entersArea"
     ? effect.entrySavedThisTurn.includes(targetId)
     : effect.startTurnSavedThisTurn.includes(targetId);
 }
 
-function resolveWebRestraintSaveCommand(
+function isSingleSavingThrowFillSet(fills: readonly BattleFill[]): boolean {
+  return (
+    fills.length <= 1 &&
+    fills.every((fill) => fill.kind === "savingThrowOutcome")
+  );
+}
+
+function applyPersistentAreaSaveConditionEscapeOutcome(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: PersistentAreaSaveConditionEscapeEffect;
+  readonly succeeded: boolean;
+}): BattleState {
+  if (input.succeeded) return input.state;
+  return applyPersistentAreaSaveConditionEscapeRestrainedCondition(
+    input.state,
+    input.targetId,
+    input.effect,
+  );
+}
+
+function resolvePersistentAreaSaveConditionEscapeOutcome(input: {
+  readonly resolution: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "persistentAreaSaveConditionEscapeSave";
+      }
+    >;
+  } & PersistentSpatialReplayRoute;
+  readonly effect: PersistentAreaSaveConditionEscapeEffect;
+  readonly outcome: BattleSavingThrowOutcome;
+}): BattleResolutionResult {
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.resolution.state,
+      outcome: input.outcome,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
+      replaySubject: input.resolution.subject,
+      replayFills: input.resolution.fills,
+      handledSaveFailedOccurrence: input.resolution.handledSaveFailedOccurrence,
+      replayParentPosition: input.resolution.replayParentPosition,
+    });
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  const marked = markPersistentAreaSaveConditionEscapeSavedThisTurn(
+    input.resolution.state,
+    input.resolution.subject.actorId,
+    input.effect,
+    input.resolution.subject.trigger,
+  );
+  const nextState = applyPersistentAreaSaveConditionEscapeOutcome({
+    state: marked,
+    targetId: input.resolution.subject.actorId,
+    effect: input.effect,
+    succeeded: input.outcome.succeeded,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolvePersistentAreaSaveConditionEscapeSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "webRestraintSave";
+        readonly command: "persistentAreaSaveConditionEscapeSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Web restraint subject exposes at most its one Saving Throw outcome hole. */
-  if (
-    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
-    input.fills.length > 1
-  ) {
+  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered PersistentAreaSaveConditionEscape restraint subject exposes at most its one Saving Throw outcome hole. */
+  if (!isSingleSavingThrowFillSet(input.fills)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Web Restraint save accepts exactly one Saving Throw outcome fill.",
+      "PersistentAreaSaveConditionEscape Restraint save accepts exactly one Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  const effect = persistentAreaSaveConditionEscapeEffectFor(
+    input.state,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Web Restraint save is no longer available.",
+      "PersistentAreaSaveConditionEscape Restraint save is no longer available.",
     );
   }
   if (
-    webRestraintSaveAlreadyResolved(
+    persistentAreaSaveConditionEscapeSaveAlreadyResolved(
       effect,
       input.subject.actorId,
       input.subject.trigger,
@@ -538,10 +723,10 @@ function resolveWebRestraintSaveCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Web Restraint save was already resolved for this target this turn.",
+      "PersistentAreaSaveConditionEscape Restraint save was already resolved for this target this turn.",
     );
   }
-  const hole = webRestraintSavingThrowOutcomeHole(
+  const hole = persistentAreaSaveConditionEscapeSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
@@ -556,86 +741,70 @@ function resolveWebRestraintSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Web Restraint save requires a Saving Throw outcome fill.",
+      "PersistentAreaSaveConditionEscape Restraint save requires a Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed fill: the supplied Saving Throw outcome must answer the exact hole derived from this Web restraint subject. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the supplied Saving Throw outcome must answer the exact hole derived from this PersistentAreaSaveConditionEscape restraint subject. */
   if (savingThrowFill.holeId !== hole.holeId) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Web Restraint save requires the matching Saving Throw outcome fill.",
+      "PersistentAreaSaveConditionEscape Restraint save requires the matching Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const validation = validateWebRestraintSavingThrowOutcome(
-    savingThrowFill.value,
-    input.subject.actorId,
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: the Web save outcome must answer the discovered single-target hole for the triggering actor. */
+  const validation =
+    validatePersistentAreaSaveConditionEscapeSavingThrowOutcome(
+      savingThrowFill.value,
+      input.subject.actorId,
+    );
+  /* v8 ignore start -- @preserve -- Malformed fill: the PersistentAreaSaveConditionEscape save outcome must answer the discovered single-target hole for the triggering actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const outcome = savingThrowFill.value.outcomes[0]!;
-  const saveFailedReactionWindow =
-    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
-      state: input.state,
-      outcome,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      replaySubject: input.subject,
-      replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
-  if (saveFailedReactionWindow !== null) {
-    return saveFailedReactionWindow;
-  }
-  const marked = markWebSavedThisTurn(
-    input.state,
-    input.subject.actorId,
+  return resolvePersistentAreaSaveConditionEscapeOutcome({
+    resolution: input,
     effect,
-    input.subject.trigger,
-  );
-  const nextState = !outcome.succeeded
-    ? applyWebRestrainedCondition(marked, input.subject.actorId, effect)
-    : marked;
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+    outcome: savingThrowFill.value.outcomes[0]!,
+  });
 }
 
-function sleetStormAreaHazardEffectFor(
+function persistentAreaSaveCompositeEffectFor(
   state: BattleState,
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "sleetStormAreaHazardSave";
+      readonly command: "persistentAreaSaveCompositeSave";
     }
   >,
-): SleetStormAreaHazardEffect | undefined {
-  return activeEffectForArea(
+): ResolvedPersistentAreaSaveCompositeEffect | undefined {
+  const effect = activeEffectForArea(
     state,
+    subject.areaMembershipTrigger.effectRef,
     subject.areaMembershipTrigger.areaId,
-    (effect): effect is SleetStormAreaHazardEffect =>
-      effect.kind === "sleetStormAreaHazard",
+    (effect): effect is PersistentAreaSaveCompositeEffect =>
+      effect.kind === "persistentAreaSaveComposite",
   );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveCompositeEffect(state, effect);
 }
 
-const bySleetStormAreaMembershipTriggerKind = Match.discriminator("kind");
+const byPersistentAreaSaveCompositeAreaMembershipTriggerKind =
+  Match.discriminator("kind");
 
-function sleetStormAreaHazardTriggerFromMembershipFact(
-  trigger: BattleSleetStormAreaMembershipTrigger,
-): BattleSleetStormAreaHazardTrigger {
+function persistentAreaSaveCompositeTriggerFromMembershipFact(
+  trigger: BattlePersistentAreaSaveCompositeMembershipTrigger,
+): BattlePersistentAreaSaveCompositeTrigger {
   return Match.value(trigger).pipe(
-    bySleetStormAreaMembershipTriggerKind(
+    byPersistentAreaSaveCompositeAreaMembershipTriggerKind(
       "firstEntryOnTurn",
       () => "entersArea" as const,
     ),
-    bySleetStormAreaMembershipTriggerKind(
+    byPersistentAreaSaveCompositeAreaMembershipTriggerKind(
       "turnStartInArea",
       () => "startsTurnInArea" as const,
     ),
@@ -643,20 +812,21 @@ function sleetStormAreaHazardTriggerFromMembershipFact(
   );
 }
 
-export function sleetStormAreaHazardSavingThrowOutcomeHole(
+export function persistentAreaSaveCompositeSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: SleetStormAreaHazardEffect,
-  trigger: BattleSleetStormAreaHazardTrigger,
-): BattleSleetStormAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  effect: ResolvedPersistentAreaSaveCompositeEffect,
+  trigger: BattlePersistentAreaSaveCompositeTrigger,
+): BattlePersistentAreaSaveCompositeSavingThrowOutcomeHole {
+  const key = `battle:persistent-area-save-composite-area-hazard-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
-    sleetStormAreaHazard: {
+    persistentAreaSaveComposite: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -677,70 +847,128 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
   };
 }
 
-function validateSleetStormAreaHazardSavingThrowOutcome(
+function validatePersistentAreaSaveCompositeSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Sleet Storm membership save is single-target and cannot carry area geometry or an outcome for a different combatant. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a persistent-area save-composite membership save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Sleet Storm Saving Throw outcome must not include area facts.";
+    return "persistent-area save-composite Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Sleet Storm Saving Throw outcome must match the triggering target.";
+    : "persistent-area save-composite Saving Throw outcome must match the triggering target.";
   /* v8 ignore stop -- @preserve */
 }
 
-function sleetStormAreaHazardSaveAlreadyResolved(
-  effect: SleetStormAreaHazardEffect,
+function persistentAreaSaveCompositeSaveAlreadyResolved(
+  effect: ResolvedPersistentAreaSaveCompositeEffect,
   targetId: CombatantId,
 ): boolean {
   return effect.savedThisTurn.includes(targetId);
 }
 
-function resolveSleetStormAreaHazardSaveCommand(
+function applyPersistentAreaSaveCompositeOutcome(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+}): BattleState {
+  return input.succeeded
+    ? input.state
+    : applyPersistentAreaSaveCompositeFailedSaveEffect(
+        input.state,
+        input.targetId,
+      );
+}
+
+function resolvePersistentAreaSaveCompositeOutcome(input: {
+  readonly resolution: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "persistentAreaSaveCompositeSave";
+      }
+    >;
+  } & PersistentSpatialReplayRoute;
+  readonly effect: ResolvedPersistentAreaSaveCompositeEffect;
+  readonly outcome: BattleSavingThrowOutcome;
+}): BattleResolutionResult {
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.resolution.state,
+      outcome: input.outcome,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
+      replaySubject: input.resolution.subject,
+      replayFills: input.resolution.fills,
+      handledSaveFailedOccurrence: input.resolution.handledSaveFailedOccurrence,
+      replayParentPosition: input.resolution.replayParentPosition,
+    });
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  const marked = markPersistentAreaSaveCompositeSavedThisTurn(
+    input.resolution.state,
+    input.resolution.subject.actorId,
+    input.effect,
+  );
+  const nextState = applyPersistentAreaSaveCompositeOutcome({
+    state: marked,
+    targetId: input.resolution.subject.actorId,
+    succeeded: input.outcome.succeeded,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolvePersistentAreaSaveCompositeSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "sleetStormAreaHazardSave";
+        readonly command: "persistentAreaSaveCompositeSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Sleet Storm subject exposes at most its one Saving Throw outcome hole. */
-  if (
-    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
-    input.fills.length > 1
-  ) {
+  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered persistent-area save-composite subject exposes at most its one Saving Throw outcome hole. */
+  if (!isSingleSavingThrowFillSet(input.fills)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Sleet Storm save accepts exactly one Saving Throw outcome fill.",
+      "persistent-area save-composite save accepts exactly one Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = sleetStormAreaHazardEffectFor(input.state, input.subject);
+  const effect = persistentAreaSaveCompositeEffectFor(
+    input.state,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Sleet Storm save is no longer available.",
+      "persistent-area save-composite save is no longer available.",
     );
   }
-  const trigger = sleetStormAreaHazardTriggerFromMembershipFact(
+  const trigger = persistentAreaSaveCompositeTriggerFromMembershipFact(
     input.subject.areaMembershipTrigger,
   );
-  if (sleetStormAreaHazardSaveAlreadyResolved(effect, input.subject.actorId)) {
+  if (
+    persistentAreaSaveCompositeSaveAlreadyResolved(
+      effect,
+      input.subject.actorId,
+    )
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Sleet Storm save was already resolved for this target this turn.",
+      "persistent-area save-composite save was already resolved for this target this turn.",
     );
   }
-  const hole = sleetStormAreaHazardSavingThrowOutcomeHole(
+  const hole = persistentAreaSaveCompositeSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
@@ -755,115 +983,174 @@ function resolveSleetStormAreaHazardSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Sleet Storm save requires a Saving Throw outcome fill.",
+      "persistent-area save-composite save requires a Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed fill: the supplied Saving Throw outcome must answer the exact hole derived from this Sleet Storm subject. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the supplied Saving Throw outcome must answer the exact hole derived from this persistent-area save-composite subject. */
   if (savingThrowFill.holeId !== hole.holeId) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Sleet Storm save requires the matching Saving Throw outcome fill.",
+      "persistent-area save-composite save requires the matching Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const validation = validateSleetStormAreaHazardSavingThrowOutcome(
+  const validation = validatePersistentAreaSaveCompositeSavingThrowOutcome(
     savingThrowFill.value,
     input.subject.actorId,
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: the Sleet Storm save outcome must answer the discovered single-target hole for the triggering actor. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the persistent-area save-composite save outcome must answer the discovered single-target hole for the triggering actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const outcome = savingThrowFill.value.outcomes[0]!;
-  const saveFailedReactionWindow =
-    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
-      state: input.state,
-      outcome,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      replaySubject: input.subject,
-      replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
-  if (saveFailedReactionWindow !== null) {
-    return saveFailedReactionWindow;
-  }
-  const marked = markSleetStormAreaHazardSavedThisTurn(
-    input.state,
-    input.subject.actorId,
+  return resolvePersistentAreaSaveCompositeOutcome({
+    resolution: input,
     effect,
+    outcome: savingThrowFill.value.outcomes[0]!,
+  });
+}
+
+type PersistentAreaSaveDamageSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageSave";
+  }
+>;
+
+function persistentAreaSaveDamageLifecycleFor(
+  state: BattleState,
+  subject: PersistentAreaSaveDamageSubject,
+): "stationary" | "sourceTurnTranslation" | undefined {
+  const binding = persistentAreaSaveDamageBindingForArea(
+    state,
+    subject.areaMembershipTrigger.effectRef,
+    subject.areaMembershipTrigger.areaId,
   );
-  const nextState = outcome.succeeded
-    ? marked
-    : applySleetStormAreaHazardFailedSaveEffect(marked, input.subject.actorId);
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return binding?.kind === "stationary" ||
+    binding?.kind === "sourceTurnTranslation"
+    ? binding.kind
+    : undefined;
 }
 
-function resolveInsectPlagueAreaHazardSaveCommand(
+function persistentAreaSaveDamageBindingForArea(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  areaId: BattleAreaId,
+): BoundPersistentAreaSaveDamageEffect | undefined {
+  const effect = activeEffectForArea(
+    state,
+    effectRef,
+    areaId,
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveDamage" }
+    > => candidate.kind === "persistentAreaSaveDamage",
+  );
+  if (effect === undefined) return undefined;
+  const owner = state.combatants.get(effect.sourceCombatantId);
+  return owner === undefined
+    ? undefined
+    : boundPersistentAreaSaveDamageEffect(owner, effect);
+}
+
+function resolvePersistentAreaSaveDamageCommand(
+  input: BattleResolutionInput & {
+    readonly subject: PersistentAreaSaveDamageSubject;
+  } & PersistentSpatialReplayRoute,
+): BattleResolutionResult {
+  const lifecycle = persistentAreaSaveDamageLifecycleFor(
+    input.state,
+    input.subject,
+  );
+  const trigger = input.subject.areaMembershipTrigger;
+  const staleSubject = (message: string): BattleResolutionResult =>
+    invalidResult(input.state, "staleSubject", message);
+  const stationary = (
+    areaMembershipTrigger: BattleStationaryPersistentAreaSaveDamageMembershipTrigger,
+  ): BattleResolutionResult =>
+    resolveStationaryPersistentAreaAreaSaveDamage({
+      ...input,
+      subject: { ...input.subject, areaMembershipTrigger },
+    });
+  const translating = (
+    areaMembershipTrigger: BattleTranslatingPersistentAreaSaveDamageMembershipTrigger,
+  ): BattleResolutionResult =>
+    resolveTranslatingPersistentAreaAreaSaveDamage({
+      ...input,
+      subject: { ...input.subject, areaMembershipTrigger },
+    });
+
+  return Match.value(lifecycle).pipe(
+    Match.when(undefined, () =>
+      staleSubject("Persistent-area save damage is no longer available."),
+    ),
+    Match.when("stationary", () =>
+      Match.value(trigger).pipe(
+        Match.when({ kind: "appearsInArea" }, stationary),
+        Match.when({ kind: "firstEntryOnTurn" }, stationary),
+        Match.when({ kind: "turnEndInArea" }, stationary),
+        Match.when({ kind: "areaMovesIntoSpace" }, () =>
+          staleSubject(
+            "Stationary persistent-area save damage cannot replay an area-movement occurrence.",
+          ),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when("sourceTurnTranslation", () =>
+      Match.value(trigger).pipe(
+        Match.when({ kind: "appearsInArea" }, translating),
+        Match.when({ kind: "firstEntryOnTurn" }, translating),
+        Match.when({ kind: "turnEndInArea" }, translating),
+        Match.when({ kind: "areaMovesIntoSpace" }, () =>
+          staleSubject(
+            "Source-turn translating area movement saves resolve only through the source's start-turn boundary.",
+          ),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolvePersistentAreaSaveConditionEscapeRestrainedNoLongerInAreaCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "insectPlagueAreaHazardSave";
-      }
-    >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
-): BattleResolutionResult {
-  return resolveInsectPlagueAreaSaveDamage(input);
-}
-
-function resolveCloudkillAreaHazardSaveCommand(
-  input: BattleResolutionInput & {
-    readonly subject: Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "cloudkillAreaHazardSave";
-      }
-    >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
-): BattleResolutionResult {
-  return resolveCloudkillAreaSaveDamage(input);
-}
-
-function resolveWebRestrainedNoLongerInAreaCommand(
-  input: BattleResolutionInput & {
-    readonly subject: Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "webRestrainedNoLongerInArea";
+        readonly command: "endPersistentAreaSaveConditionEscapeForDeparture";
       }
     >;
   },
 ): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed fill set: Web no-longer-in-area cleanup is a discovered no-input transition and exposes no holes. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: PersistentAreaSaveConditionEscape no-longer-in-area cleanup is a discovered no-input transition and exposes no holes. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Web no-longer-in-area cleanup uses no fills.",
+      "PersistentAreaSaveConditionEscape no-longer-in-area cleanup uses no fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  const effect = persistentAreaSaveConditionEscapeEffectFor(
+    input.state,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Web Restraint cleanup is no longer available.",
+      "PersistentAreaSaveConditionEscape Restraint cleanup is no longer available.",
     );
   }
-  const nextState = removeWebRestrainedCondition({
+  const nextState = removePersistentAreaSaveConditionEscapeRestrainedCondition({
     state: input.state,
     targetId: input.subject.actorId,
     sourceCombatantId: effect.sourceCombatantId,
@@ -873,7 +1160,7 @@ function resolveWebRestrainedNoLongerInAreaCommand(
     ? invalidResult(
         input.state,
         "staleSubject",
-        "Web Restraint cleanup is no longer available.",
+        "PersistentAreaSaveConditionEscape Restraint cleanup is no longer available.",
       )
     : {
         tag: "resolved",
@@ -882,32 +1169,35 @@ function resolveWebRestrainedNoLongerInAreaCommand(
       };
 }
 
-function resolveWebAreaRemovedCommand(
+function resolvePersistentAreaSaveConditionEscapeAreaRemovedCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "webAreaRemoved";
+        readonly command: "endPersistentAreaSaveConditionEscapeForAreaRemoval";
       }
     >;
   },
 ): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed fill set: Web area removal is a discovered no-input transition and exposes no holes. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: PersistentAreaSaveConditionEscape area removal is a discovered no-input transition and exposes no holes. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Web area removal uses no fills.",
+      "PersistentAreaSaveConditionEscape area removal uses no fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  const effect = persistentAreaSaveConditionEscapeEffectFor(
+    input.state,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Web area is no longer active.",
+      "PersistentAreaSaveConditionEscape area is no longer active.",
     );
   }
   const nextState = breakBattleConcentration(
@@ -921,43 +1211,54 @@ function resolveWebAreaRemovedCommand(
   };
 }
 
-function gustOfWindLineEffectFor(
+function directionalPersistentAreaEffectFor(
   state: BattleState,
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "gustOfWindLineSave" | "gustOfWindLineDirectionChange";
+      readonly command:
+        | "directionalPersistentAreaSave"
+        | "directionalPersistentAreaDirectionChange";
     }
   >,
-): GustOfWindLineEffect | undefined {
-  return activeEffectForArea(
+): DirectionalPersistentAreaEffect | undefined {
+  const effect = activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
-    (effect): effect is GustOfWindLineEffect =>
-      effect.kind === "gustOfWindLine" &&
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "directionalPersistentArea" }
+    > =>
+      effect.kind === "directionalPersistentArea" &&
       effect.directionId === subject.directionId,
   );
+  return effect === undefined
+    ? undefined
+    : boundDirectionalPersistentAreaEffect(state, effect);
 }
 
-function validateGustOfWindLineSavingThrowOutcome(
+function validateDirectionalPersistentAreaSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
-  effect: GustOfWindLineEffect,
+  effect: DirectionalPersistentAreaEffect,
 ): string | null {
   if (!("area" in value)) {
-    /* v8 ignore next -- @preserve -- Gust of Wind discovery always supplies the active Line area; this rejects only a caller-mutated missing-area witness. */
-    return "Gust of Wind Line Saving Throw outcome requires Line area facts.";
+    /* v8 ignore next -- @preserve -- directional persistent area discovery always supplies the active Line area; this rejects only a caller-mutated missing-area witness. */
+    return "directional persistent area Line Saving Throw outcome requires Line area facts.";
   }
   const area: BattleSpellAreaChoice = value.area;
   if (
-    area.kind !== "gustOfWindLineArea" ||
+    area.kind !== "directionalPersistentAreaArea" ||
     area.areaId !== effect.areaId ||
     area.directionId !== effect.directionId ||
     area.originAnchorId !== effect.sourceCombatantId
   ) {
-    /* v8 ignore next -- @preserve -- Gust of Wind discovery binds this area to the active Line; this rejects only a caller-mutated geometry or source identity. */
-    return "Gust of Wind Line Saving Throw outcome must match the active Line area.";
+    /* v8 ignore next -- @preserve -- directional persistent area discovery binds this area to the active Line; this rejects only a caller-mutated geometry or source identity. */
+    return "directional persistent area Line Saving Throw outcome must match the active Line area.";
   }
   if (
     area.affectedTargetIds.length !== 1 ||
@@ -965,37 +1266,36 @@ function validateGustOfWindLineSavingThrowOutcome(
     value.outcomes.length !== 1 ||
     value.outcomes[0]?.targetId !== targetId
   ) {
-    /* v8 ignore next -- @preserve -- Gust of Wind discovery selects the ending-turn target exactly once; this rejects only a caller-mutated target or outcome cardinality. */
-    return "Gust of Wind Line Saving Throw outcome must match the ending-turn target.";
+    /* v8 ignore next -- @preserve -- directional persistent area discovery selects the ending-turn target exactly once; this rejects only a caller-mutated target or outcome cardinality. */
+    return "directional persistent area Line Saving Throw outcome must match the ending-turn target.";
   }
-  return validateGustOfWindLineAreaPushFacts({
+  return validateDirectionalPersistentAreaAreaPushFacts({
     area,
     failedTargetIds: value.outcomes[0]?.succeeded === true ? [] : [targetId],
     pushDistanceFeet: effect.pushDistanceFeet,
   });
 }
 
-function resolveGustOfWindLineSaveCommand(
+function resolveDirectionalPersistentAreaSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "gustOfWindLineSave";
+        readonly command: "directionalPersistentAreaSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
-  const effect = gustOfWindLineEffectFor(input.state, input.subject);
+  const effect = directionalPersistentAreaEffectFor(input.state, input.subject);
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Gust of Wind Line save is no longer available.",
+      "directional persistent area Line save is no longer available.",
     );
   }
-  const hole = gustOfWindLineSavingThrowOutcomeHole(
+  const hole = directionalPersistentAreaSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
@@ -1009,7 +1309,7 @@ function resolveGustOfWindLineSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn in Gust of Wind received duplicate Gust of Wind Saving Throw outcome fills.",
+      "End Turn in directional persistent area received duplicate directional persistent area Saving Throw outcome fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1022,7 +1322,7 @@ function resolveGustOfWindLineSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn in Gust of Wind requires a Gust of Wind Saving Throw outcome fill.",
+      "End Turn in directional persistent area requires a directional persistent area Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1034,20 +1334,14 @@ function resolveGustOfWindLineSaveCommand(
   const endTurnFills = input.fills.filter(
     (fill) => fill.holeId !== hole.holeId,
   );
-  const endTurnProbe = resolveEndTurnCommand({
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   if (matchingGustFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole,
-      endTurnProbe,
     });
   }
-  const validation = validateGustOfWindLineSavingThrowOutcome(
+  const validation = validateDirectionalPersistentAreaSavingThrowOutcome(
     matchingGustFill.value,
     input.subject.actorId,
     effect,
@@ -1057,13 +1351,6 @@ function resolveGustOfWindLineSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
   const outcome = matchingGustFill.value.outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
@@ -1072,33 +1359,31 @@ function resolveGustOfWindLineSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
   }
-  const endTurnResult = resolveEndTurnCommand({
+  return resolveDelegatedEndTurnCommand(input, {
     state: input.state,
     subject: endTurnSubject,
     fills: endTurnFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, subject: input.subject }
-    : endTurnResult;
 }
 
-function resolveGustOfWindLineDirectionChangeCommand(
+function resolveDirectionalPersistentAreaDirectionChangeCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "gustOfWindLineDirectionChange";
+        readonly command: "directionalPersistentAreaDirectionChange";
       }
     >
   >,
 ): BattleResolutionResult {
-  const effect = gustOfWindLineEffectFor(input.state, input.subject);
+  const effect = directionalPersistentAreaEffectFor(input.state, input.subject);
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
     effect === undefined ||
@@ -1111,35 +1396,37 @@ function resolveGustOfWindLineDirectionChangeCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Gust of Wind Line direction change is no longer available.",
+      "directional persistent area Line direction change is no longer available.",
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fills.some((fill) => fill.kind !== "gustOfWindLineDirectionChoice")
+    input.fills.some(
+      (fill) => fill.kind !== "directionalPersistentAreaDirectionChoice",
+    )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Gust of Wind Line direction change accepts only direction-choice fills.",
+      "directional persistent area Line direction change accepts only direction-choice fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const hole = gustOfWindLineDirectionChoiceHole(effect);
+  const hole = directionalPersistentAreaDirectionChoiceHole(effect);
   const directionFills = input.fills.filter(
     (
       fill,
     ): fill is Extract<
       BattleFill,
-      { readonly kind: "gustOfWindLineDirectionChoice" }
-    > => fill.kind === "gustOfWindLineDirectionChoice",
+      { readonly kind: "directionalPersistentAreaDirectionChoice" }
+    > => fill.kind === "directionalPersistentAreaDirectionChoice",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!everyFillUsesHoleId(directionFills, hole.holeId)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Gust of Wind Line direction change received a fill for an unrelated hole.",
+      "directional persistent area Line direction change received a fill for an unrelated hole.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1148,7 +1435,7 @@ function resolveGustOfWindLineDirectionChangeCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Gust of Wind Line direction change received duplicate fills.",
+      "directional persistent area Line direction change received duplicate fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1159,21 +1446,22 @@ function resolveGustOfWindLineDirectionChangeCommand(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     /* v8 ignore next -- @preserve -- Defensive internal guard: the availability check above and this spend read the same turn resources, with no intervening state transition. */
     return invalidResult(
       input.state,
       "staleSubject",
-      "Gust of Wind Line direction change requires an available Bonus Action.",
+      "directional persistent area Line direction change requires an available Bonus Action.",
     );
   }
-  const nextState = replaceGustOfWindLineDirection({
+  const nextState = replaceDirectionalPersistentAreaDirection({
     state: {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
     },
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
+    effectRef: effect.effectRef,
     areaId: effect.areaId,
     directionId: directionFill.value.directionId,
   });
@@ -1184,7 +1472,7 @@ function resolveGustOfWindLineDirectionChangeCommand(
   };
 }
 
-function flamingSphereEffectFor(
+function ramMovablePersistentAreaEffectFor(
   state: BattleState,
   subject: Extract<
     BattleSubject,
@@ -1196,27 +1484,49 @@ function flamingSphereEffectFor(
         | "movableZoneRam";
     }
   >,
-): FlamingSphereEffect | undefined {
-  return activeEffectForArea(
+): RamMovablePersistentAreaEffect | undefined {
+  const binding = persistentAreaSaveDamageBindingForArea(
     state,
+    subject.effectRef,
     subject.areaId,
-    (effect): effect is FlamingSphereEffect => effect.kind === "flamingSphere",
+  );
+  return binding?.kind === "collisionReposition"
+    ? {
+        ...binding.effect,
+        lifecycle: binding.facts.lifecycle,
+        save: { ability: binding.facts.ability, dc: binding.facts.dc },
+        ramMaxMoveFeet: binding.facts.ramMaxMoveFeet,
+        damage: binding.facts.damage,
+      }
+    : undefined;
+}
+
+function movableZoneRepositionIsAvailable(
+  state: BattleState,
+  actorId: CombatantId,
+  effect: { readonly sourceCombatantId: CombatantId } | undefined,
+): effect is { readonly sourceCombatantId: CombatantId } {
+  return (
+    effect !== undefined &&
+    actorId === effect.sourceCombatantId &&
+    actorId === currentActorId(state)
   );
 }
 
-function flamingSphereDamageRollHole(
+function ramMovablePersistentAreaDamageRollHole(
   targetId: CombatantId,
-  effect: FlamingSphereEffect,
-  trigger: BattleFlamingSphereTrigger,
-): BattleFlamingSphereDamageRollHole {
-  const key = `battle:flaming-sphere-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  effect: RamMovablePersistentAreaEffect,
+  trigger: BattleCollisionRepositionPersistentAreaSaveDamageTrigger,
+): BattleCollisionRepositionPersistentAreaSaveDamageRollHole {
+  const key = `battle:ram-movable-persistent-area-damage:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${flamingSphereTriggerLabel(trigger)} damage`,
+    label: `${ramMovablePersistentAreaTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -1227,11 +1537,11 @@ function flamingSphereDamageRollHole(
   };
 }
 
-function validateFlamingSphereSavingThrowOutcome(
+function validateRamMovablePersistentAreaSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Flaming Sphere ram save hole is single-target and cannot carry area geometry. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a ram-movable persistent area ram save hole is single-target and cannot carry area geometry. */
   if ("area" in value) {
     return "Movable zone saving throw outcome must not include area facts.";
   }
@@ -1239,20 +1549,20 @@ function validateFlamingSphereSavingThrowOutcome(
   if (value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId) {
     return null;
   }
-  /* v8 ignore next -- @preserve -- Malformed fill: the discovered Flaming Sphere ram save hole names exactly its triggering target. */
+  /* v8 ignore next -- @preserve -- Malformed fill: the discovered ram-movable persistent area ram save hole names exactly its triggering target. */
   return "Movable zone saving throw outcome must match the triggering target.";
 }
 
-function validateFlamingSphereDamageRoll(
+function validateRamMovablePersistentAreaDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  hole: BattleFlamingSphereDamageRollHole,
+  hole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole,
 ): string | null {
   return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
-function validateFlamingSphereRamMovement(
+function validateRamMovablePersistentAreaRamMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRamMovement" }>,
-  hole: BattleFlamingSphereRamMovementHole,
+  hole: BattlePersistentAreaSaveDamageRamMovementHole,
 ): string | null {
   if (
     Number(fill.value.moveFeet) <= 0 ||
@@ -1260,7 +1570,7 @@ function validateFlamingSphereRamMovement(
   ) {
     return "Movable zone ram movement distance must be a positive integer.";
   }
-  return flamingSphereMoveDistanceAccepted({
+  return ramMovablePersistentAreaMoveDistanceAccepted({
     moveFeet: Number(fill.value.moveFeet),
     maxMoveFeet: Number(hole.movableZone.maxMoveFeet),
   })
@@ -1268,8 +1578,8 @@ function validateFlamingSphereRamMovement(
     : "Movable zone ram movement distance exceeds the spell's maximum.";
 }
 
-/* v8 ignore start -- @preserve -- Malformed Flaming Sphere reposition fill: discovery fixes the movement hole and offers positive whole-foot movement no greater than the active spell maximum. */
-function validateFlamingSphereRepositionMovement(
+/* v8 ignore start -- @preserve -- Malformed ram-movable persistent area reposition fill: discovery fixes the movement hole and offers positive whole-foot movement no greater than the active spell maximum. */
+function validateRamMovablePersistentAreaRepositionMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
@@ -1282,7 +1592,7 @@ function validateFlamingSphereRepositionMovement(
   ) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
-  return flamingSphereMoveDistanceAccepted({
+  return ramMovablePersistentAreaMoveDistanceAccepted({
     moveFeet: Number(fill.value.moveFeet),
     maxMoveFeet: Number(hole.movableZone.maxMoveFeet),
   })
@@ -1291,17 +1601,17 @@ function validateFlamingSphereRepositionMovement(
 }
 /* v8 ignore stop -- @preserve */
 
-function flamingSphereAdjustedDamage(input: {
+function ramMovablePersistentAreaAdjustedDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
-  readonly effect: FlamingSphereEffect;
+  readonly effect: RamMovablePersistentAreaEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
 }): number {
   const rolledDamage =
     rolledDiceTotal(input.damageFill.value) +
     (input.effect.damage.expr.flat ?? 0);
-  const saveAdjustedDamage = flamingSphereDamageAfterSave({
+  const saveAdjustedDamage = ramMovablePersistentAreaDamageAfterSave({
     rolledDamage,
     savingThrowSucceeded: input.saveSucceeded,
   });
@@ -1313,20 +1623,24 @@ function flamingSphereAdjustedDamage(input: {
   );
 }
 
-function applyFlamingSphereDamage(input: {
+function applyRamMovablePersistentAreaDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
-  readonly effect: FlamingSphereEffect;
+  readonly effect: RamMovablePersistentAreaEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly damageRepeatSave: Extract<
+    SaveGatedConditionDamageRepeatSaveContext,
+    { readonly kind: "repeatSave" }
+  >;
 }): BattleState {
   return applyPreparedSlotSpellDamage(
     input.state,
     input.target.combatantId,
-    flamingSphereAdjustedDamage({
+    ramMovablePersistentAreaAdjustedDamage({
       state: input.state,
       target: input.target,
       effect: input.effect,
@@ -1334,6 +1648,7 @@ function applyFlamingSphereDamage(input: {
       saveSucceeded: input.saveSucceeded,
     }),
     {
+      saveGatedConditionDamageRepeatSave: input.damageRepeatSave,
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
       spatialFacts: [],
@@ -1341,29 +1656,217 @@ function applyFlamingSphereDamage(input: {
   );
 }
 
-function resolveFlamingSphereSaveCommand(
-  input: BattleResolutionInput & {
-    readonly subject: FlamingSphereSaveSubject;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+type RamMovablePersistentAreaSaveInput = BattleResolutionInput & {
+  readonly subject: RamMovablePersistentAreaSaveSubject;
+} & PersistentSpatialReplayRoute;
+
+function ramMovablePersistentAreaSaveFillKindsAreValid(
+  fills: readonly BattleFill[],
+): boolean {
+  return fills.every(
+    (fill) =>
+      fill.kind === "savingThrowOutcome" ||
+      fill.kind === "rolledDice" ||
+      fill.kind === "concentrationSavingThrow" ||
+      isEndTurnFillKind(fill.kind),
+  );
+}
+
+function hasDuplicateRamMovablePersistentAreaSaveFills(
+  saveFills: readonly BattleFill[],
+  damageFills: readonly BattleFill[],
+): boolean {
+  return saveFills.length > 1 || damageFills.length > 1;
+}
+
+type PersistentAreaConcentrationFillResolution =
+  | {
+      readonly tag: "ok";
+      readonly fill:
+        | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+        | undefined;
+    }
+  | { readonly tag: "resolution"; readonly result: BattleResolutionResult };
+
+function resolvePersistentAreaConcentrationFill(input: {
+  readonly resolution: BattleResolutionInput;
+  readonly target: BattleCreatureState;
+  readonly adjustedDamage: number;
+  readonly duplicateMessage: string;
+}): PersistentAreaConcentrationFillResolution {
+  const hole = concentrationSavingThrowHole(input.target, input.adjustedDamage);
+  if (hole === null) return { tag: "ok", fill: undefined };
+  const fills = input.resolution.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > =>
+      fill.kind === "concentrationSavingThrow" && fill.holeId === hole.holeId,
+  );
+  if (fills.length > 1) {
+    return {
+      tag: "resolution",
+      result: invalidResult(
+        input.resolution.state,
+        "invalidFill",
+        input.duplicateMessage,
+      ),
+    };
+  }
+  const fill = concentrationSavingThrowFillFor(fills, hole);
+  return fill === undefined
+    ? {
+        tag: "resolution",
+        result: needsSpatialProcedureHole({
+          state: input.resolution.state,
+          subject: input.resolution.subject,
+          hole,
+        }),
+      }
+    : { tag: "ok", fill };
+}
+
+function resolveRamMovablePersistentAreaSaveDamage(input: {
+  readonly resolution: RamMovablePersistentAreaSaveInput;
+  readonly effect: RamMovablePersistentAreaEffect;
+  readonly target: BattleCreatureState;
+  readonly damageHole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole;
+  readonly damageFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[];
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly candidateEndTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const damageFill = rolledDiceFillForHole(input.damageFills, input.damageHole);
+  if (damageFill === undefined) {
+    return needsSpatialProcedureHole({
+      state: input.resolution.state,
+      subject: input.resolution.subject,
+      hole: input.damageHole,
+    });
+  }
+  const damageValidation = validateRamMovablePersistentAreaDamageRoll(
+    damageFill,
+    input.damageHole,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      damageValidation,
+    );
+  }
+  const adjustedDamage = ramMovablePersistentAreaAdjustedDamage({
+    state: input.resolution.state,
+    target: input.target,
+    effect: input.effect,
+    damageFill,
+    saveSucceeded: input.saveOutcome.succeeded,
+  });
+  const concentration = resolvePersistentAreaConcentrationFill({
+    resolution: input.resolution,
+    target: input.target,
+    adjustedDamage,
+    duplicateMessage:
+      "Movable zone end-within-5-feet save received duplicate sphere fills.",
+  });
+  if (concentration.tag === "resolution") return concentration.result;
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.resolution.state,
+    target: input.target,
+    damageAmount: adjustedDamage,
+    fills: input.resolution.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: input.damageHole.holeId,
+      targetId: input.target.combatantId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      damageRepeatSave.message,
+    );
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return needsHolesResult(
+      input.resolution.state,
+      input.resolution.subject,
+      damageRepeatSave.missingHoles,
+    );
+  }
+  const repeatSaveHoleIds = new Set(
+    damageRepeatSave.holes.map((hole) => hole.holeId),
+  );
+  const damaged = applyRamMovablePersistentAreaDamage({
+    state: input.resolution.state,
+    target: input.target,
+    effect: input.effect,
+    damageFill,
+    saveSucceeded: input.saveOutcome.succeeded,
+    concentrationSavingThrow: concentration.fill,
+    damageRepeatSave: damageRepeatSave.context,
+  });
+  return resolveStagedDelegatedEndTurnCommand(input.resolution, {
+    state: damaged,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: input.resolution.subject.actorId,
+      command: "endTurn",
+    },
+    fills: input.candidateEndTurnFills.filter(
+      (fill) => !repeatSaveHoleIds.has(fill.holeId),
+    ),
+  });
+}
+
+function resolveRamMovablePersistentAreaSaveAfterSavingThrow(input: {
+  readonly resolution: RamMovablePersistentAreaSaveInput;
+  readonly effect: RamMovablePersistentAreaEffect;
+  readonly target: BattleCreatureState;
+  readonly damageHole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole;
+  readonly damageFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[];
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly candidateEndTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.resolution.state,
+      outcome: input.saveOutcome,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
+      replaySubject: input.resolution.subject,
+      replayFills: input.resolution.fills,
+      handledSaveFailedOccurrence: input.resolution.handledSaveFailedOccurrence,
+      replayParentPosition: input.resolution.replayParentPosition,
+    });
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  return resolveRamMovablePersistentAreaSaveDamage(input);
+}
+
+function resolveRamMovablePersistentAreaSaveCommand(
+  input: RamMovablePersistentAreaSaveInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fills.some(
-      (fill) =>
-        fill.kind !== "savingThrowOutcome" &&
-        fill.kind !== "rolledDice" &&
-        fill.kind !== "concentrationSavingThrow",
-    )
-  ) {
+  if (!ramMovablePersistentAreaSaveFillKindsAreValid(input.fills)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movable zone save accepts only save, damage, and Concentration fills.",
+      "Movable zone save accepts only save, damage, Concentration, and delegated End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = flamingSphereEffectFor(input.state, input.subject);
+  const effect = ramMovablePersistentAreaEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
   if (effect === undefined) {
     return invalidResult(
@@ -1372,7 +1875,7 @@ function resolveFlamingSphereSaveCommand(
       "Movable zone save is no longer available.",
     );
   }
-  /* v8 ignore start -- @preserve -- Spatial-procedure invariant: a Flaming Sphere save subject is routed here only after its target combatant has been found in the current state. */
+  /* v8 ignore start -- @preserve -- Spatial-procedure invariant: a ram-movable persistent area save subject is routed here only after its target combatant has been found in the current state. */
   if (target === undefined) {
     return invalidResult(
       input.state,
@@ -1381,13 +1884,13 @@ function resolveFlamingSphereSaveCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const saveHole = flamingSphereSavingThrowOutcomeHole(
+  const saveHole = ramMovablePersistentAreaSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
     input.subject.trigger,
   );
-  const damageHole = flamingSphereDamageRollHole(
+  const damageHole = ramMovablePersistentAreaDamageRollHole(
     input.subject.actorId,
     effect,
     input.subject.trigger,
@@ -1403,7 +1906,7 @@ function resolveFlamingSphereSaveCommand(
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (saveFills.length > 1 || damageFills.length > 1) {
+  if (hasDuplicateRamMovablePersistentAreaSaveFills(saveFills, damageFills)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -1412,32 +1915,21 @@ function resolveFlamingSphereSaveCommand(
   }
   /* v8 ignore stop -- @preserve */
   const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
-  const endTurnSubject = {
-    tag: "runtimeCommand" as const,
-    actorId: input.subject.actorId,
-    command: "endTurn" as const,
-  };
-  const endTurnFills = input.fills.filter(
+  const candidateEndTurnFills = input.fills.filter(
     (fill) =>
       fill.holeId !== saveHole.holeId &&
       fill.holeId !== damageHole.holeId &&
       fill.holeId !== concentrationHoleId,
   );
-  const endTurnProbe = resolveEndTurnCommand({
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: saveHole,
-      endTurnProbe,
     });
   }
-  const saveValidation = validateFlamingSphereSavingThrowOutcome(
+  const saveValidation = validateRamMovablePersistentAreaSavingThrowOutcome(
     saveFill.value,
     input.subject.actorId,
   );
@@ -1447,107 +1939,18 @@ function resolveFlamingSphereSaveCommand(
   }
   /* v8 ignore stop -- @preserve */
   const saveOutcome = saveFill.value.outcomes[0]!;
-  const saveFailedReactionWindow =
-    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
-      state: input.state,
-      outcome: saveOutcome,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      replaySubject: input.subject,
-      replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
-  if (saveFailedReactionWindow !== null) {
-    return saveFailedReactionWindow;
-  }
-  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
-  if (damageFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
-      state: input.state,
-      subject: input.subject,
-      hole: damageHole,
-      endTurnProbe,
-    });
-  }
-  const damageValidation = validateFlamingSphereDamageRoll(
-    damageFill,
+  return resolveRamMovablePersistentAreaSaveAfterSavingThrow({
+    resolution: input,
+    target,
+    effect,
     damageHole,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (damageValidation !== null) {
-    return invalidResult(input.state, "invalidFill", damageValidation);
-  }
-  /* v8 ignore stop -- @preserve */
-  const adjustedDamage = flamingSphereAdjustedDamage({
-    state: input.state,
-    target,
-    effect,
-    damageFill,
-    saveSucceeded: saveOutcome.succeeded,
+    damageFills,
+    saveOutcome,
+    candidateEndTurnFills,
   });
-  const concentrationHole = concentrationSavingThrowHole(
-    target,
-    adjustedDamage,
-  );
-  const concentrationFills =
-    concentrationHole === null
-      ? []
-      : input.fills.filter(
-          (
-            fill,
-          ): fill is Extract<
-            BattleFill,
-            { readonly kind: "concentrationSavingThrow" }
-          > =>
-            fill.kind === "concentrationSavingThrow" &&
-            fill.holeId === concentrationHole.holeId,
-        );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (concentrationFills.length > 1) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movable zone end-within-5-feet save received duplicate sphere fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const concentrationFill =
-    concentrationHole === null
-      ? undefined
-      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
-  if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
-      state: input.state,
-      subject: input.subject,
-      hole: concentrationHole,
-      endTurnProbe,
-    });
-  }
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
-  const damaged = applyFlamingSphereDamage({
-    state: input.state,
-    target,
-    effect,
-    damageFill,
-    saveSucceeded: saveOutcome.succeeded,
-    concentrationSavingThrow: concentrationFill,
-  });
-  const endTurnResult = resolveEndTurnCommand({
-    state: damaged,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, subject: input.subject }
-    : endTurnResult;
 }
 
-function resolveFlamingSphereRepositionCommand(
+function resolveRamMovablePersistentAreaRepositionCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
@@ -1569,11 +1972,13 @@ function resolveFlamingSphereRepositionCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = flamingSphereEffectFor(input.state, input.subject);
+  const effect = ramMovablePersistentAreaEffectFor(input.state, input.subject);
   if (
-    effect === undefined ||
-    input.subject.actorId !== effect.sourceCombatantId ||
-    input.subject.actorId !== currentActorId(input.state)
+    !movableZoneRepositionIsAvailable(
+      input.state,
+      input.subject.actorId,
+      effect,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -1584,7 +1989,7 @@ function resolveFlamingSphereRepositionCommand(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1592,7 +1997,7 @@ function resolveFlamingSphereRepositionCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const movementHole = flamingSphereRepositionMovementHole(effect);
+  const movementHole = ramMovablePersistentAreaRepositionMovementHole(effect);
   const movementFills = input.fills.filter(
     (
       fill,
@@ -1623,7 +2028,7 @@ function resolveFlamingSphereRepositionCommand(
   if (movementFill === undefined) {
     return needsHolesResult(input.state, input.subject, [movementHole]);
   }
-  const movementValidation = validateFlamingSphereRepositionMovement(
+  const movementValidation = validateRamMovablePersistentAreaRepositionMovement(
     movementFill,
     movementHole,
   );
@@ -1634,7 +2039,7 @@ function resolveFlamingSphereRepositionCommand(
   /* v8 ignore stop -- @preserve */
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -1643,28 +2048,429 @@ function resolveFlamingSphereRepositionCommand(
   };
 }
 
-function resolveFlamingSphereRamCommand(
-  input: BattleResolutionInput & {
-    readonly subject: Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "movableZoneRam";
-      }
-    >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
-): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+type RamMovablePersistentAreaRamInput = BattleResolutionInput & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneRam";
+    }
+  >;
+} & PersistentSpatialReplayRoute;
+
+function ramMovablePersistentAreaRamFillKindsAreValid(
+  fills: readonly BattleFill[],
+): boolean {
+  return fills.every(
+    (fill) =>
+      fill.kind === "savingThrowOutcome" ||
+      fill.kind === "rolledDice" ||
+      fill.kind === "movableZoneRamMovement" ||
+      fill.kind === "concentrationSavingThrow",
+  );
+}
+
+function ramMovablePersistentAreaRamContextFor(
+  input: RamMovablePersistentAreaRamInput,
+):
+  | {
+      readonly effect: RamMovablePersistentAreaEffect;
+      readonly target: BattleCreatureState;
+    }
+  | undefined {
+  const effect = ramMovablePersistentAreaEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.targetId);
+  return effect !== undefined &&
+    target !== undefined &&
+    input.subject.actorId === effect.sourceCombatantId &&
+    input.subject.actorId === currentActorId(input.state)
+    ? { effect, target }
+    : undefined;
+}
+
+function ramMovablePersistentAreaRamFillCollectionIsValid(input: {
+  readonly movementFills: readonly BattleFill[];
+  readonly saveFills: readonly BattleFill[];
+  readonly damageFills: readonly BattleFill[];
+  readonly movementHoleId: BattleHole["holeId"];
+  readonly damageHoleId: BattleHole["holeId"];
+}): "valid" | "unrelated" | "duplicate" {
+  if (!everyFillUsesHoleId(input.movementFills, input.movementHoleId)) {
+    return "unrelated";
+  }
+  if (!everyFillUsesHoleId(input.damageFills, input.damageHoleId)) {
+    return "unrelated";
+  }
+  if (input.movementFills.length > 1) return "duplicate";
+  if (input.saveFills.length > 1) return "duplicate";
+  if (input.damageFills.length > 1) return "duplicate";
+  return "valid";
+}
+
+type RamMovablePersistentAreaDamagePreparation =
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "prepared";
+      readonly damageFill:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
+      readonly concentrationHole: ReturnType<
+        typeof concentrationSavingThrowHole
+      >;
+      readonly concentrationFill:
+        | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+        | undefined;
+    };
+
+function ramMovablePersistentAreaDamageAbsentFillSetIsValid(input: {
+  readonly concentrationFillCount: number;
+  readonly hasAdditionalSavingThrowFill: boolean;
+}): boolean {
+  return (
+    input.concentrationFillCount === 0 && !input.hasAdditionalSavingThrowFill
+  );
+}
+
+function prepareRamMovablePersistentAreaDamage(input: {
+  readonly state: BattleState;
+  readonly target: BattleCreatureState;
+  readonly effect: RamMovablePersistentAreaEffect;
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly damageHole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole;
+  readonly damageFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[];
+  readonly concentrationFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+  readonly hasAdditionalSavingThrowFill: boolean;
+}): RamMovablePersistentAreaDamagePreparation {
+  const damageFill = rolledDiceFillForHole(input.damageFills, input.damageHole);
+  if (damageFill === undefined) {
+    return !ramMovablePersistentAreaDamageAbsentFillSetIsValid({
+      concentrationFillCount: input.concentrationFills.length,
+      hasAdditionalSavingThrowFill: input.hasAdditionalSavingThrowFill,
+    })
+      ? {
+          tag: "invalid",
+          message: "Movable zone ram received a fill for an unrelated hole.",
+        }
+      : {
+          tag: "prepared",
+          damageFill: undefined,
+          concentrationHole: null,
+          concentrationFill: undefined,
+        };
+  }
+  const validation = validateRamMovablePersistentAreaDamageRoll(
+    damageFill,
+    input.damageHole,
+  );
+  if (validation !== null) return { tag: "invalid", message: validation };
+  const concentrationHole = concentrationSavingThrowHole(
+    input.target,
+    ramMovablePersistentAreaAdjustedDamage({
+      state: input.state,
+      target: input.target,
+      effect: input.effect,
+      damageFill,
+      saveSucceeded: input.saveOutcome.succeeded,
+    }),
+  );
+  if (concentrationHole === null) {
+    return input.concentrationFills.length > 0
+      ? {
+          tag: "invalid",
+          message: "Movable zone ram received a fill for an unrelated hole.",
+        }
+      : {
+          tag: "prepared",
+          damageFill,
+          concentrationHole,
+          concentrationFill: undefined,
+        };
+  }
   if (
-    input.fills.some(
+    !everyFillUsesHoleId(input.concentrationFills, concentrationHole.holeId)
+  ) {
+    return {
+      tag: "invalid",
+      message: "Movable zone ram received a fill for an unrelated hole.",
+    };
+  }
+  if (input.concentrationFills.length > 1) {
+    return {
+      tag: "invalid",
+      message: "Movable zone ram received duplicate sphere fills.",
+    };
+  }
+  return {
+    tag: "prepared",
+    damageFill,
+    concentrationHole,
+    concentrationFill: concentrationSavingThrowFillFor(
+      input.concentrationFills,
+      concentrationHole,
+    ),
+  };
+}
+
+function resolvePreparedRamMovablePersistentAreaDamage(input: {
+  readonly resolution: RamMovablePersistentAreaRamInput;
+  readonly target: BattleCreatureState;
+  readonly effect: RamMovablePersistentAreaEffect;
+  readonly saveHoleId: BattleHole["holeId"];
+  readonly damageHole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly concentrationFill:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+  readonly saveOutcome: BattleSavingThrowOutcome;
+}): BattleResolutionResult {
+  const adjustedDamage = ramMovablePersistentAreaAdjustedDamage({
+    state: input.resolution.state,
+    target: input.target,
+    effect: input.effect,
+    damageFill: input.damageFill,
+    saveSucceeded: input.saveOutcome.succeeded,
+  });
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.resolution.state,
+    target: input.target,
+    damageAmount: adjustedDamage,
+    fills: input.resolution.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: input.damageHole.holeId,
+      targetId: input.target.combatantId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      damageRepeatSave.message,
+    );
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return needsHolesResult(
+      input.resolution.state,
+      input.resolution.subject,
+      damageRepeatSave.missingHoles,
+    );
+  }
+  const acceptedRepeatSaveHoleIds = new Set(
+    damageRepeatSave.holes.map((hole) => hole.holeId),
+  );
+  if (
+    input.resolution.fills.some(
       (fill) =>
-        fill.kind !== "savingThrowOutcome" &&
-        fill.kind !== "rolledDice" &&
-        fill.kind !== "movableZoneRamMovement" &&
-        fill.kind !== "concentrationSavingThrow",
+        fill.kind === "savingThrowOutcome" &&
+        fill.holeId !== input.saveHoleId &&
+        !acceptedRepeatSaveHoleIds.has(fill.holeId),
     )
   ) {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      "Movable zone ram received a repeat save fill for an unrelated damage occurrence.",
+    );
+  }
+  const damaged = applyRamMovablePersistentAreaDamage({
+    state: input.resolution.state,
+    target: input.target,
+    effect: input.effect,
+    damageFill: input.damageFill,
+    saveSucceeded: input.saveOutcome.succeeded,
+    concentrationSavingThrow: input.concentrationFill,
+    damageRepeatSave: damageRepeatSave.context,
+  });
+  const spent = spendActivationResource(damaged.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Result.isFailure(spent)) {
+    return invalidResult(
+      input.resolution.state,
+      "staleSubject",
+      "Movable zone ram requires an available Bonus Action.",
+    );
+  }
+  const nextState = { ...damaged, currentTurnResources: spent.success };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveRamMovablePersistentAreaRamAfterSavingThrow(input: {
+  readonly resolution: RamMovablePersistentAreaRamInput;
+  readonly target: BattleCreatureState;
+  readonly effect: RamMovablePersistentAreaEffect;
+  readonly saveHoleId: BattleHole["holeId"];
+  readonly damageHole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole;
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly damagePreparation: RamMovablePersistentAreaDamagePreparation;
+}): BattleResolutionResult {
+  if (input.damagePreparation.tag === "invalid") {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      input.damagePreparation.message,
+    );
+  }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.resolution.state,
+      outcome: input.saveOutcome,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
+      replaySubject: input.resolution.subject,
+      replayFills: input.resolution.fills,
+      handledSaveFailedOccurrence: input.resolution.handledSaveFailedOccurrence,
+      replayParentPosition: input.resolution.replayParentPosition,
+    });
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  if (input.damagePreparation.damageFill === undefined) {
+    return needsHolesResult(input.resolution.state, input.resolution.subject, [
+      input.damageHole,
+    ]);
+  }
+  if (
+    input.damagePreparation.concentrationHole !== null &&
+    input.damagePreparation.concentrationFill === undefined
+  ) {
+    return needsHolesResult(input.resolution.state, input.resolution.subject, [
+      input.damagePreparation.concentrationHole,
+    ]);
+  }
+  return resolvePreparedRamMovablePersistentAreaDamage({
+    resolution: input.resolution,
+    target: input.target,
+    effect: input.effect,
+    saveHoleId: input.saveHoleId,
+    damageHole: input.damageHole,
+    damageFill: input.damagePreparation.damageFill,
+    concentrationFill: input.damagePreparation.concentrationFill,
+    saveOutcome: input.saveOutcome,
+  });
+}
+
+function resolveRamMovablePersistentAreaMovementAndSave(input: {
+  readonly resolution: RamMovablePersistentAreaRamInput;
+  readonly target: BattleCreatureState;
+  readonly effect: RamMovablePersistentAreaEffect;
+  readonly movementHole: BattlePersistentAreaSaveDamageRamMovementHole;
+  readonly saveHole: ReturnType<
+    typeof ramMovablePersistentAreaSavingThrowOutcomeHole
+  >;
+  readonly damageHole: BattleCollisionRepositionPersistentAreaSaveDamageRollHole;
+  readonly movementFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "movableZoneRamMovement" }
+  >[];
+  readonly saveFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
+  readonly damageFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[];
+  readonly concentrationFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+}): BattleResolutionResult {
+  const collection = ramMovablePersistentAreaRamFillCollectionIsValid({
+    movementFills: input.movementFills,
+    saveFills: input.saveFills,
+    damageFills: input.damageFills,
+    movementHoleId: input.movementHole.holeId,
+    damageHoleId: input.damageHole.holeId,
+  });
+  if (collection === "unrelated") {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      "Movable zone ram received a fill for an unrelated hole.",
+    );
+  }
+  if (collection === "duplicate") {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      "Movable zone ram received duplicate sphere fills.",
+    );
+  }
+  const movementFill = input.movementFills[0];
+  if (movementFill === undefined) {
+    return needsHolesResult(input.resolution.state, input.resolution.subject, [
+      input.movementHole,
+    ]);
+  }
+  const movementValidation = validateRamMovablePersistentAreaRamMovement(
+    movementFill,
+    input.movementHole,
+  );
+  if (movementValidation !== null) {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      movementValidation,
+    );
+  }
+  const saveFill = savingThrowOutcomeFillForHole(
+    input.saveFills,
+    input.saveHole,
+  );
+  if (saveFill === undefined) {
+    return needsHolesResult(input.resolution.state, input.resolution.subject, [
+      input.saveHole,
+    ]);
+  }
+  const saveValidation = validateRamMovablePersistentAreaSavingThrowOutcome(
+    saveFill.value,
+    input.resolution.subject.targetId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.resolution.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  return resolveRamMovablePersistentAreaRamAfterSavingThrow({
+    resolution: input.resolution,
+    target: input.target,
+    effect: input.effect,
+    saveHoleId: input.saveHole.holeId,
+    damageHole: input.damageHole,
+    saveOutcome,
+    damagePreparation: prepareRamMovablePersistentAreaDamage({
+      state: input.resolution.state,
+      target: input.target,
+      effect: input.effect,
+      damageHole: input.damageHole,
+      damageFills: input.damageFills,
+      concentrationFills: input.concentrationFills,
+      hasAdditionalSavingThrowFill: input.resolution.fills.some(
+        (fill) =>
+          fill.kind === "savingThrowOutcome" &&
+          fill.holeId !== input.saveHole.holeId,
+      ),
+      saveOutcome,
+    }),
+  });
+}
+
+function resolveRamMovablePersistentAreaRamCommand(
+  input: RamMovablePersistentAreaRamInput,
+): BattleResolutionResult {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (!ramMovablePersistentAreaRamFillKindsAreValid(input.fills)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -1672,20 +2478,15 @@ function resolveFlamingSphereRamCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = flamingSphereEffectFor(input.state, input.subject);
-  const target = input.state.combatants.get(input.subject.targetId);
-  if (
-    effect === undefined ||
-    target === undefined ||
-    input.subject.actorId !== effect.sourceCombatantId ||
-    input.subject.actorId !== currentActorId(input.state)
-  ) {
+  const context = ramMovablePersistentAreaRamContextFor(input);
+  if (context === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Movable zone ram is no longer available.",
     );
   }
+  const { effect, target } = context;
   if (!canSpendBonusAction(input.state.currentTurnResources)) {
     return invalidResult(
       input.state,
@@ -1693,17 +2494,17 @@ function resolveFlamingSphereRamCommand(
       "Movable zone ram requires an available Bonus Action.",
     );
   }
-  const saveHole = flamingSphereSavingThrowOutcomeHole(
+  const saveHole = ramMovablePersistentAreaSavingThrowOutcomeHole(
     input.state,
     input.subject.targetId,
     effect,
     input.subject.trigger,
   );
-  const movementHole = flamingSphereRamMovementHole(
+  const movementHole = ramMovablePersistentAreaRamMovementHole(
     input.subject.targetId,
     effect,
   );
-  const damageHole = flamingSphereDamageRollHole(
+  const damageHole = ramMovablePersistentAreaDamageRollHole(
     input.subject.targetId,
     effect,
     input.subject.trigger,
@@ -1720,7 +2521,7 @@ function resolveFlamingSphereRamCommand(
     (
       fill,
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome",
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
   );
   const damageFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
@@ -1735,169 +2536,21 @@ function resolveFlamingSphereRamCommand(
     > => fill.kind === "concentrationSavingThrow",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !everyFillUsesHoleId(movementFills, movementHole.holeId) ||
-    !everyFillUsesHoleId(saveFills, saveHole.holeId) ||
-    !everyFillUsesHoleId(damageFills, damageHole.holeId)
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movable zone ram received a fill for an unrelated hole.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    movementFills.length > 1 ||
-    saveFills.length > 1 ||
-    damageFills.length > 1
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movable zone ram received duplicate sphere fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const movementFill = movementFills[0];
-  if (movementFill === undefined) {
-    return needsHolesResult(input.state, input.subject, [movementHole]);
-  }
-  const movementValidation = validateFlamingSphereRamMovement(
-    movementFill,
-    movementHole,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (movementValidation !== null) {
-    return invalidResult(input.state, "invalidFill", movementValidation);
-  }
-  /* v8 ignore stop -- @preserve */
-  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
-  if (saveFill === undefined) {
-    return needsHolesResult(input.state, input.subject, [saveHole]);
-  }
-  const saveValidation = validateFlamingSphereSavingThrowOutcome(
-    saveFill.value,
-    input.subject.targetId,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (saveValidation !== null) {
-    return invalidResult(input.state, "invalidFill", saveValidation);
-  }
-  /* v8 ignore stop -- @preserve */
-  const saveOutcome = saveFill.value.outcomes[0]!;
-  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
-  if (damageFill === undefined) {
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (concentrationFills.length > 0) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Movable zone ram received a fill for an unrelated hole.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-  } else {
-    const damageValidation = validateFlamingSphereDamageRoll(
-      damageFill,
-      damageHole,
-    );
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (damageValidation !== null) {
-      return invalidResult(input.state, "invalidFill", damageValidation);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
-  const concentrationHole =
-    damageFill === undefined
-      ? null
-      : concentrationSavingThrowHole(
-          target,
-          flamingSphereAdjustedDamage({
-            state: input.state,
-            target,
-            effect,
-            damageFill,
-            saveSucceeded: saveOutcome.succeeded,
-          }),
-        );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    concentrationHole === null
-      ? concentrationFills.length > 0
-      : !everyFillUsesHoleId(concentrationFills, concentrationHole.holeId)
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movable zone ram received a fill for an unrelated hole.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (concentrationFills.length > 1) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movable zone ram received duplicate sphere fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const concentrationFill =
-    concentrationHole === null
-      ? undefined
-      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
-  const saveFailedReactionWindow =
-    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
-      state: input.state,
-      outcome: saveOutcome,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      replaySubject: input.subject,
-      replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
-  if (saveFailedReactionWindow !== null) {
-    return saveFailedReactionWindow;
-  }
-  if (damageFill === undefined) {
-    return needsHolesResult(input.state, input.subject, [damageHole]);
-  }
-  if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsHolesResult(input.state, input.subject, [concentrationHole]);
-  }
-  const damaged = applyFlamingSphereDamage({
-    state: input.state,
+  return resolveRamMovablePersistentAreaMovementAndSave({
+    resolution: input,
     target,
     effect,
-    damageFill,
-    saveSucceeded: saveOutcome.succeeded,
-    concentrationSavingThrow: concentrationFill,
+    movementHole,
+    saveHole,
+    damageHole,
+    movementFills,
+    saveFills,
+    damageFills,
+    concentrationFills,
   });
-  const spent = spendActivationResource(damaged.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  /* v8 ignore start -- @preserve -- Defensive internal guard: admission proves the Bonus Action, and synchronous Flaming Sphere damage preserves current turn resources before this spend. */
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Movable zone ram requires an available Bonus Action.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const nextState = {
-    ...damaged,
-    currentTurnResources: spent.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
-function moonbeamEffectFor(
+function movablePersistentAreaEffectFor(
   state: BattleState,
   subject: Extract<
     BattleSubject,
@@ -1906,30 +2559,40 @@ function moonbeamEffectFor(
       readonly command:
         | "movableZoneSave"
         | "movableZoneReposition"
-        | "moonbeamCylinderExit";
+        | "persistentAreaSaveDamageExit";
     }
   >,
-): MoonbeamEffect | undefined {
-  return activeEffectForArea(
+): MovablePersistentAreaEffect | undefined {
+  const binding = persistentAreaSaveDamageBindingForArea(
     state,
+    subject.effectRef,
     subject.areaId,
-    (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
   );
+  return binding?.kind === "directedReposition"
+    ? {
+        ...binding.effect,
+        lifecycle: binding.facts.lifecycle,
+        save: { ability: binding.facts.ability, dc: binding.facts.dc },
+        repositionMaxMoveFeet: binding.facts.repositionMaxMoveFeet,
+        damage: binding.facts.damage,
+      }
+    : undefined;
 }
 
-function moonbeamDamageRollHole(
+function movablePersistentAreaDamageRollHole(
   targetId: CombatantId,
-  effect: MoonbeamEffect,
-  trigger: BattleMoonbeamSaveTrigger,
-): BattleMoonbeamDamageRollHole {
-  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  effect: MovablePersistentAreaEffect,
+  trigger: BattleDirectedRepositionPersistentAreaSaveDamageTrigger,
+): BattleDirectedRepositionPersistentAreaSaveDamageRollHole {
+  const key = `battle:movablePersistentArea-damage:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${moonbeamTriggerLabel(trigger)} damage`,
+    label: `${movablePersistentAreaTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -1940,11 +2603,11 @@ function moonbeamDamageRollHole(
   };
 }
 
-function validateMoonbeamSavingThrowOutcome(
+function validateMovablePersistentAreaSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Moonbeam membership save hole is single-target and cannot carry area geometry. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a MovablePersistentArea membership save hole is single-target and cannot carry area geometry. */
   if ("area" in value) {
     return "Movable zone saving throw outcome must not include area facts.";
   }
@@ -1952,19 +2615,19 @@ function validateMoonbeamSavingThrowOutcome(
   if (value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId) {
     return null;
   }
-  /* v8 ignore next -- @preserve -- Malformed fill: the discovered Moonbeam save hole names exactly its triggering target. */
+  /* v8 ignore next -- @preserve -- Malformed fill: the discovered MovablePersistentArea save hole names exactly its triggering target. */
   return "Movable zone saving throw outcome must match the triggering target.";
 }
 
-function validateMoonbeamDamageRoll(
+function validateMovablePersistentAreaDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  hole: BattleMoonbeamDamageRollHole,
+  hole: BattleDirectedRepositionPersistentAreaSaveDamageRollHole,
 ): string | null {
   return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
-/* v8 ignore start -- @preserve -- Malformed Moonbeam reposition fill: discovery fixes the movement hole and offers positive whole-foot movement no greater than the active spell maximum. */
-function validateMoonbeamRepositionMovement(
+/* v8 ignore start -- @preserve -- Malformed MovablePersistentArea reposition fill: discovery fixes the movement hole and offers positive whole-foot movement no greater than the active spell maximum. */
+function validateMovablePersistentAreaRepositionMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
@@ -1974,7 +2637,7 @@ function validateMoonbeamRepositionMovement(
   if (!Number.isInteger(fill.value.moveFeet)) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
-  return moonbeamMoveDistanceAccepted({
+  return movablePersistentAreaMoveDistanceAccepted({
     moveFeet: Number(fill.value.moveFeet),
     maxMoveFeet: Number(hole.movableZone.maxMoveFeet),
   })
@@ -1985,10 +2648,10 @@ function validateMoonbeamRepositionMovement(
 }
 /* v8 ignore stop -- @preserve */
 
-function moonbeamAdjustedDamage(input: {
+function movablePersistentAreaAdjustedDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
-  readonly effect: MoonbeamEffect;
+  readonly effect: MovablePersistentAreaEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
 }): number {
@@ -1998,7 +2661,7 @@ function moonbeamAdjustedDamage(input: {
   return damageAmountAfterTargetAdjustments(
     input.state,
     input.target,
-    moonbeamDamageAfterSave({
+    movablePersistentAreaDamageAfterSave({
       rolledDamage,
       savingThrowSucceeded: input.saveSucceeded,
     }),
@@ -2006,20 +2669,24 @@ function moonbeamAdjustedDamage(input: {
   );
 }
 
-function applyMoonbeamDamage(input: {
+function applyMovablePersistentAreaDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
-  readonly effect: MoonbeamEffect;
+  readonly effect: MovablePersistentAreaEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly damageRepeatSave: Extract<
+    SaveGatedConditionDamageRepeatSaveContext,
+    { readonly kind: "repeatSave" }
+  >;
 }): BattleState {
   return applyPreparedSlotSpellDamage(
     input.state,
     input.target.combatantId,
-    moonbeamAdjustedDamage({
+    movablePersistentAreaAdjustedDamage({
       state: input.state,
       target: input.target,
       effect: input.effect,
@@ -2027,6 +2694,7 @@ function applyMoonbeamDamage(input: {
       saveSucceeded: input.saveSucceeded,
     }),
     {
+      saveGatedConditionDamageRepeatSave: input.damageRepeatSave,
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
       spatialFacts: [],
@@ -2034,10 +2702,10 @@ function applyMoonbeamDamage(input: {
   );
 }
 
-function applyMoonbeamShapeShiftRider(input: {
+function applyMovablePersistentAreaShapeShiftRider(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
-  readonly effect: MoonbeamEffect;
+  readonly effect: MovablePersistentAreaEffect;
   readonly saveSucceeded: boolean;
 }): BattleState {
   if (input.saveSucceeded) {
@@ -2050,78 +2718,326 @@ function applyMoonbeamShapeShiftRider(input: {
   if (reversion.tag !== "reverted") {
     return reversion.state;
   }
-  return addMoonbeamShapeShiftSuppression(
+  return addMovablePersistentAreaShapeShiftSuppression(
     reversion.state,
     input.targetId,
     input.effect,
   );
 }
 
-function resolveMoonbeamSaveCommand(
-  input: BattleResolutionInput & {
-    readonly subject: MoonbeamSaveSubject;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
-): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+type MovablePersistentAreaSaveInput = BattleResolutionInput & {
+  readonly subject: MovablePersistentAreaSaveSubject;
+} & PersistentSpatialReplayRoute;
+
+function movablePersistentAreaSaveContextFor(
+  input: MovablePersistentAreaSaveInput,
+):
+  | {
+      readonly effect: MovablePersistentAreaEffect;
+      readonly target: BattleCreatureState;
+    }
+  | undefined {
+  const effect = movablePersistentAreaEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.actorId);
+  return effect === undefined || target === undefined
+    ? undefined
+    : { effect, target };
+}
+
+function movablePersistentAreaSaveFillKindsAreValid(
+  fills: readonly BattleFill[],
+  isEndTurn: boolean,
+): boolean {
+  return fills.every(
+    (fill) =>
+      fill.kind === "savingThrowOutcome" ||
+      fill.kind === "rolledDice" ||
+      fill.kind === "concentrationSavingThrow" ||
+      (isEndTurn && isEndTurnFillKind(fill.kind)),
+  );
+}
+
+function resolveAlreadySavedMovablePersistentArea(input: {
+  readonly resolution: MovablePersistentAreaSaveInput;
+  readonly isEndTurn: boolean;
+  readonly effect: MovablePersistentAreaEffect;
+}): BattleResolutionResult | null {
+  if (!input.effect.savedThisTurn.includes(input.resolution.subject.actorId)) {
+    return null;
+  }
+  if (input.isEndTurn) {
+    return resolveDelegatedEndTurnCommand(input.resolution, {
+      state: input.resolution.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: input.resolution.subject.actorId,
+        command: "endTurn",
+      },
+      fills: input.resolution.fills,
+    });
+  }
+  return {
+    tag: "resolved",
+    state: input.resolution.state,
+    snapshot: snapshotBattle(input.resolution.state),
+  };
+}
+
+function movablePersistentAreaCandidateEndTurnFills(input: {
+  readonly fills: readonly BattleFill[];
+  readonly isEndTurn: boolean;
+  readonly saveHoleId: BattleHole["holeId"];
+  readonly damageHoleId: BattleHole["holeId"];
+  readonly concentrationHoleId: BattleHole["holeId"] | undefined;
+}): readonly BattleFill[] {
+  if (!input.isEndTurn) return [];
+  return input.fills.filter(
+    (fill) =>
+      fill.holeId !== input.saveHoleId &&
+      fill.holeId !== input.damageHoleId &&
+      fill.holeId !== input.concentrationHoleId,
+  );
+}
+
+function hasUnrelatedMovablePersistentAreaRepeatSaveFill(input: {
+  readonly fills: readonly BattleFill[];
+  readonly isEndTurn: boolean;
+  readonly saveHoleId: BattleHole["holeId"];
+  readonly repeatSaveHoleIds: ReadonlySet<BattleHole["holeId"]>;
+}): boolean {
+  if (input.isEndTurn) return false;
+  return input.fills.some(
+    (fill) =>
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId !== input.saveHoleId &&
+      !input.repeatSaveHoleIds.has(fill.holeId),
+  );
+}
+
+function finishMovablePersistentAreaSave(input: {
+  readonly resolution: MovablePersistentAreaSaveInput;
+  readonly effect: MovablePersistentAreaEffect;
+  readonly target: BattleCreatureState;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly concentrationFill:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+  readonly damageRepeatSave: Extract<
+    ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+    { readonly tag: "ok" }
+  >;
+  readonly isEndTurn: boolean;
+  readonly endTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const afterDamage = applyMovablePersistentAreaDamage({
+    state: input.resolution.state,
+    target: input.target,
+    effect: input.effect,
+    damageFill: input.damageFill,
+    saveSucceeded: input.saveOutcome.succeeded,
+    concentrationSavingThrow: input.concentrationFill,
+    damageRepeatSave: input.damageRepeatSave.context,
+  });
+  const afterShapeShiftRider = applyMovablePersistentAreaShapeShiftRider({
+    state: afterDamage,
+    targetId: input.resolution.subject.actorId,
+    effect: input.effect,
+    saveSucceeded: input.saveOutcome.succeeded,
+  });
+  const afterMark = markMovablePersistentAreaSavedThisTurn(
+    afterShapeShiftRider,
+    input.resolution.subject.actorId,
+    input.effect,
+  );
+  if (input.isEndTurn) {
+    return resolveStagedDelegatedEndTurnCommand(input.resolution, {
+      state: afterMark,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: input.resolution.subject.actorId,
+        command: "endTurn",
+      },
+      fills: input.endTurnFills,
+    });
+  }
+  return {
+    tag: "resolved",
+    state: afterMark,
+    snapshot: snapshotBattle(afterMark),
+  };
+}
+
+function resolveMovablePersistentAreaSaveDamage(input: {
+  readonly resolution: MovablePersistentAreaSaveInput;
+  readonly effect: MovablePersistentAreaEffect;
+  readonly target: BattleCreatureState;
+  readonly damageHole: BattleDirectedRepositionPersistentAreaSaveDamageRollHole;
+  readonly damageFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[];
+  readonly saveHoleId: BattleHole["holeId"];
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly isEndTurn: boolean;
+  readonly candidateEndTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const damageFill = rolledDiceFillForHole(input.damageFills, input.damageHole);
+  if (damageFill === undefined) {
+    return needsSpatialProcedureHole({
+      state: input.resolution.state,
+      subject: input.resolution.subject,
+      hole: input.damageHole,
+    });
+  }
+  const damageValidation = validateMovablePersistentAreaDamageRoll(
+    damageFill,
+    input.damageHole,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      damageValidation,
+    );
+  }
+  const adjustedDamage = movablePersistentAreaAdjustedDamage({
+    state: input.resolution.state,
+    target: input.target,
+    effect: input.effect,
+    damageFill,
+    saveSucceeded: input.saveOutcome.succeeded,
+  });
+  const concentration = resolvePersistentAreaConcentrationFill({
+    resolution: input.resolution,
+    target: input.target,
+    adjustedDamage,
+    duplicateMessage:
+      "Movable zone save received duplicate concentration save fills.",
+  });
+  if (concentration.tag === "resolution") return concentration.result;
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.resolution.state,
+    target: input.target,
+    damageAmount: adjustedDamage,
+    fills: input.resolution.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: input.damageHole.holeId,
+      targetId: input.target.combatantId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      damageRepeatSave.message,
+    );
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return needsHolesResult(
+      input.resolution.state,
+      input.resolution.subject,
+      damageRepeatSave.missingHoles,
+    );
+  }
+  const repeatSaveHoleIds = new Set(
+    damageRepeatSave.holes.map((hole) => hole.holeId),
+  );
   if (
-    input.fills.some(
-      (fill) =>
-        fill.kind !== "savingThrowOutcome" &&
-        fill.kind !== "rolledDice" &&
-        fill.kind !== "concentrationSavingThrow",
-    )
+    hasUnrelatedMovablePersistentAreaRepeatSaveFill({
+      fills: input.resolution.fills,
+      isEndTurn: input.isEndTurn,
+      saveHoleId: input.saveHoleId,
+      repeatSaveHoleIds,
+    })
   ) {
+    return invalidResult(
+      input.resolution.state,
+      "invalidFill",
+      "Movable zone save received a repeat save fill for an unrelated damage occurrence.",
+    );
+  }
+  return finishMovablePersistentAreaSave({
+    ...input,
+    damageFill,
+    concentrationFill: concentration.fill,
+    damageRepeatSave,
+    endTurnFills: input.candidateEndTurnFills.filter(
+      (fill) => !repeatSaveHoleIds.has(fill.holeId),
+    ),
+  });
+}
+
+function resolveMovablePersistentAreaAfterSave(input: {
+  readonly resolution: MovablePersistentAreaSaveInput;
+  readonly effect: MovablePersistentAreaEffect;
+  readonly target: BattleCreatureState;
+  readonly damageHole: BattleDirectedRepositionPersistentAreaSaveDamageRollHole;
+  readonly damageFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[];
+  readonly saveHoleId: BattleHole["holeId"];
+  readonly saveOutcome: BattleSavingThrowOutcome;
+  readonly isEndTurn: boolean;
+  readonly candidateEndTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.resolution.state,
+      outcome: input.saveOutcome,
+      sourceProcedureRef: input.effect.sourceProcedureRef,
+      replaySubject: input.resolution.subject,
+      replayFills: input.resolution.fills,
+      handledSaveFailedOccurrence: input.resolution.handledSaveFailedOccurrence,
+      replayParentPosition: input.resolution.replayParentPosition,
+    });
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  return resolveMovablePersistentAreaSaveDamage(input);
+}
+
+function resolveMovablePersistentAreaSaveCommand(
+  input: MovablePersistentAreaSaveInput,
+): BattleResolutionResult {
+  const isEndTurn = input.subject.trigger === "endsTurnInArea";
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (!movablePersistentAreaSaveFillKindsAreValid(input.fills, isEndTurn)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movable zone save accepts only save, damage, and Concentration fills.",
+      "Movable zone save accepts only its save, damage, Concentration, and applicable delegated End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = moonbeamEffectFor(input.state, input.subject);
-  const target = input.state.combatants.get(input.subject.actorId);
-  if (
-    effect === undefined ||
-    /* v8 ignore next -- @preserve -- Defensive internal guard: the spatial-procedure boundary rejects an absent movable-zone target before routing this subject here. */
-    target === undefined
-  ) {
+  const context = movablePersistentAreaSaveContextFor(input);
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the spatial-procedure boundary rejects an absent movable-zone target before routing this subject here. */
+  if (context === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Movable zone save is no longer available.",
     );
   }
-  const isEndTurn = input.subject.trigger === "endsTurnInArea";
-  const endTurnSubject = {
-    tag: "runtimeCommand" as const,
-    actorId: input.subject.actorId,
-    command: "endTurn" as const,
-  };
-  if (effect.savedThisTurn.includes(input.subject.actorId)) {
-    if (isEndTurn) {
-      const endTurnResult = resolveEndTurnCommand({
-        state: input.state,
-        subject: endTurnSubject,
-        fills: input.fills,
-      });
-      return endTurnResult.tag === "needsHoles"
-        ? { ...endTurnResult, subject: input.subject }
-        : endTurnResult;
-    }
-    return {
-      tag: "resolved",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-    };
-  }
-  const saveHole = moonbeamSavingThrowOutcomeHole(
+  /* v8 ignore stop -- @preserve */
+  const { effect, target } = context;
+  const alreadySaved = resolveAlreadySavedMovablePersistentArea({
+    resolution: input,
+    isEndTurn,
+    effect,
+  });
+  if (alreadySaved !== null) return alreadySaved;
+  const saveHole = movablePersistentAreaSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
     input.subject.trigger,
   );
-  const damageHole = moonbeamDamageRollHole(
+  const damageHole = movablePersistentAreaDamageRollHole(
     input.subject.actorId,
     effect,
     input.subject.trigger,
@@ -2137,7 +3053,7 @@ function resolveMoonbeamSaveCommand(
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (saveFills.length > 1 || damageFills.length > 1) {
+  if (hasDuplicateRamMovablePersistentAreaSaveFills(saveFills, damageFills)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -2146,31 +3062,22 @@ function resolveMoonbeamSaveCommand(
   }
   /* v8 ignore stop -- @preserve */
   const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
-  const endTurnFills = isEndTurn
-    ? input.fills.filter(
-        (fill) =>
-          fill.holeId !== saveHole.holeId &&
-          fill.holeId !== damageHole.holeId &&
-          fill.holeId !== concentrationHoleId,
-      )
-    : [];
-  const endTurnProbe = isEndTurn
-    ? resolveEndTurnCommand({
-        state: input.state,
-        subject: endTurnSubject,
-        fills: endTurnFills,
-      })
-    : null;
+  const candidateEndTurnFills = movablePersistentAreaCandidateEndTurnFills({
+    fills: input.fills,
+    isEndTurn,
+    saveHoleId: saveHole.holeId,
+    damageHoleId: damageHole.holeId,
+    concentrationHoleId,
+  });
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: saveHole,
-      endTurnProbe,
     });
   }
-  const saveValidation = validateMoonbeamSavingThrowOutcome(
+  const saveValidation = validateMovablePersistentAreaSavingThrowOutcome(
     saveFill.value,
     input.subject.actorId,
   );
@@ -2179,129 +3086,26 @@ function resolveMoonbeamSaveCommand(
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
   /* v8 ignore stop -- @preserve */
-  const saveOutcome = saveFill.value.outcomes[0]!;
-  const saveFailedReactionWindow =
-    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
-      state: input.state,
-      outcome: saveOutcome,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      replaySubject: input.subject,
-      replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
-  if (saveFailedReactionWindow !== null) {
-    return saveFailedReactionWindow;
-  }
-  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
-  if (damageFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
-      state: input.state,
-      subject: input.subject,
-      hole: damageHole,
-      endTurnProbe,
-    });
-  }
-  const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (damageValidation !== null) {
-    return invalidResult(input.state, "invalidFill", damageValidation);
-  }
-  /* v8 ignore stop -- @preserve */
-  const adjustedDamage = moonbeamAdjustedDamage({
-    state: input.state,
+  return resolveMovablePersistentAreaAfterSave({
+    resolution: input,
+    effect,
     target,
-    effect,
-    damageFill,
-    saveSucceeded: saveOutcome.succeeded,
+    damageHole,
+    damageFills,
+    saveHoleId: saveHole.holeId,
+    saveOutcome: saveFill.value.outcomes[0]!,
+    isEndTurn,
+    candidateEndTurnFills,
   });
-  const concentrationHole = concentrationSavingThrowHole(
-    target,
-    adjustedDamage,
-  );
-  const concentrationFills =
-    concentrationHole === null
-      ? []
-      : input.fills.filter(
-          (
-            fill,
-          ): fill is Extract<
-            BattleFill,
-            { readonly kind: "concentrationSavingThrow" }
-          > =>
-            fill.kind === "concentrationSavingThrow" &&
-            fill.holeId === concentrationHole.holeId,
-        );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (concentrationFills.length > 1) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movable zone save received duplicate concentration save fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const concentrationFill =
-    concentrationHole === null
-      ? undefined
-      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
-  if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
-      state: input.state,
-      subject: input.subject,
-      hole: concentrationHole,
-      endTurnProbe,
-    });
-  }
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
-  const afterDamage = applyMoonbeamDamage({
-    state: input.state,
-    target,
-    effect,
-    damageFill,
-    saveSucceeded: saveOutcome.succeeded,
-    concentrationSavingThrow: concentrationFill,
-  });
-  const afterShapeShiftRider = applyMoonbeamShapeShiftRider({
-    state: afterDamage,
-    targetId: input.subject.actorId,
-    effect,
-    saveSucceeded: saveOutcome.succeeded,
-  });
-  const afterMark = markMoonbeamSavedThisTurn(
-    afterShapeShiftRider,
-    input.subject.actorId,
-    effect,
-  );
-  if (isEndTurn) {
-    const endTurnResult = resolveEndTurnCommand({
-      state: afterMark,
-      subject: endTurnSubject,
-      fills: endTurnFills,
-    });
-    return endTurnResult.tag === "needsHoles"
-      ? { ...endTurnResult, subject: input.subject }
-      : endTurnResult;
-  }
-  return {
-    tag: "resolved",
-    state: afterMark,
-    snapshot: snapshotBattle(afterMark),
-  };
 }
 
-function resolveMoonbeamCylinderExitCommand(
+function resolveMovablePersistentAreaCylinderExitCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "moonbeamCylinderExit";
+        readonly command: "persistentAreaSaveDamageExit";
       }
     >;
   },
@@ -2311,11 +3115,11 @@ function resolveMoonbeamCylinderExitCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Moonbeam Cylinder exit cleanup uses no fills.",
+      "MovablePersistentArea Cylinder exit cleanup uses no fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = moonbeamEffectFor(input.state, input.subject);
+  const effect = movablePersistentAreaEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
     !effect.shapeShiftSuppressed.includes(input.subject.actorId)
@@ -2323,10 +3127,10 @@ function resolveMoonbeamCylinderExitCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Moonbeam shape-shift suppression is no longer active.",
+      "MovablePersistentArea shape-shift suppression is no longer active.",
     );
   }
-  const nextState = removeMoonbeamShapeShiftSuppression(
+  const nextState = removeMovablePersistentAreaShapeShiftSuppression(
     input.state,
     input.subject.actorId,
     effect,
@@ -2338,7 +3142,7 @@ function resolveMoonbeamCylinderExitCommand(
   };
 }
 
-function resolveMoonbeamRepositionCommand(
+function resolveMovablePersistentAreaRepositionCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
@@ -2360,11 +3164,13 @@ function resolveMoonbeamRepositionCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effect = moonbeamEffectFor(input.state, input.subject);
+  const effect = movablePersistentAreaEffectFor(input.state, input.subject);
   if (
-    effect === undefined ||
-    input.subject.actorId !== effect.sourceCombatantId ||
-    input.subject.actorId !== currentActorId(input.state)
+    !movableZoneRepositionIsAvailable(
+      input.state,
+      input.subject.actorId,
+      effect,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -2372,7 +3178,7 @@ function resolveMoonbeamRepositionCommand(
       "Movable zone reposition is no longer available.",
     );
   }
-  const movementHole = moonbeamRepositionMovementHole(effect);
+  const movementHole = movablePersistentAreaRepositionMovementHole(effect);
   const movementFills = input.fills.filter(
     (
       fill,
@@ -2403,7 +3209,7 @@ function resolveMoonbeamRepositionCommand(
   if (movementFill === undefined) {
     return needsHolesResult(input.state, input.subject, [movementHole]);
   }
-  const movementValidation = validateMoonbeamRepositionMovement(
+  const movementValidation = validateMovablePersistentAreaRepositionMovement(
     movementFill,
     movementHole,
   );
@@ -2413,7 +3219,7 @@ function resolveMoonbeamRepositionCommand(
   }
   /* v8 ignore stop -- @preserve */
   const spendResult = spendAction(input.state.currentTurnResources, "magic");
-  if (Either.isLeft(spendResult)) {
+  if (Result.isFailure(spendResult)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2422,7 +3228,7 @@ function resolveMoonbeamRepositionCommand(
   }
   const nextState = {
     ...input.state,
-    currentTurnResources: spendResult.right,
+    currentTurnResources: spendResult.success,
   };
   return {
     tag: "resolved",
@@ -2431,88 +3237,65 @@ function resolveMoonbeamRepositionCommand(
   };
 }
 
-function needsSpatialProcedureHoleWithEndTurnFrontier(input: {
+function needsSpatialProcedureHole(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly hole: BattleHole;
-  readonly endTurnProbe: BattleResolutionResult | null;
 }): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted spatial procedure and End Turn hole contracts were supplied. */
-  if (input.endTurnProbe?.tag === "invalid") {
-    return input.endTurnProbe;
-  }
-  /* v8 ignore stop -- @preserve */
-  return needsHolesResult(input.state, input.subject, [
-    input.hole,
-    ...(input.endTurnProbe?.tag === "needsHoles"
-      ? input.endTurnProbe.holes
-      : []),
-  ]);
+  return needsHolesResult(input.state, input.subject, [input.hole]);
 }
 
-function pendingSpatialProcedureEndTurnResult(
-  endTurnProbe: BattleResolutionResult | null,
-  subject: BattleSubject,
-): BattleResolutionResult | null {
-  if (endTurnProbe?.tag === "needsHoles") {
-    return { ...endTurnProbe, subject };
-  }
-  /* v8 ignore start -- @preserve -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted spatial procedure and End Turn hole contracts were supplied. */
-  if (endTurnProbe?.tag === "invalid") {
-    return endTurnProbe;
-  }
-  /* v8 ignore stop -- @preserve */
-  return null;
-}
-
-function resolveGreaseGroundHazardEndTurnSaveCommand(
+function resolvePersistentAreaSaveConditionEndTurnSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "greaseGroundHazardSave";
+        readonly command: "persistentAreaSaveConditionSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
-  const effect = greaseGroundHazardEffectFor(input.state, input.subject);
+  const effect = persistentAreaSaveConditionEffectFor(
+    input.state,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Grease ground-hazard save is no longer available.",
+      "PersistentAreaSaveCondition ground-hazard save is no longer available.",
     );
   }
-  const hole = greaseGroundHazardSavingThrowOutcomeHole(
+  const hole = persistentAreaSaveConditionSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
     input.subject.trigger,
   );
-  const matchingGreaseFills = input.fills.filter(
+  const matchingPersistentAreaSaveConditionFills = input.fills.filter(
     (fill) => fill.holeId === hole.holeId,
   );
-  /* v8 ignore start -- @preserve -- Malformed fill set: the end-turn Grease save hole can be answered only once. */
-  if (matchingGreaseFills.length > 1) {
+  /* v8 ignore start -- @preserve -- Malformed fill set: the end-turn PersistentAreaSaveCondition save hole can be answered only once. */
+  if (matchingPersistentAreaSaveConditionFills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn in Grease received duplicate Grease Saving Throw outcome fills.",
+      "End Turn in PersistentAreaSaveCondition received duplicate PersistentAreaSaveCondition Saving Throw outcome fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const [matchingGreaseFill] = matchingGreaseFills;
-  /* v8 ignore start -- @preserve -- Malformed fill: the value answering the Grease save hole must be a Saving Throw outcome. */
+  const [matchingPersistentAreaSaveConditionFill] =
+    matchingPersistentAreaSaveConditionFills;
+  /* v8 ignore start -- @preserve -- Malformed fill: the value answering the PersistentAreaSaveCondition save hole must be a Saving Throw outcome. */
   if (
-    matchingGreaseFill !== undefined &&
-    matchingGreaseFill.kind !== "savingThrowOutcome"
+    matchingPersistentAreaSaveConditionFill !== undefined &&
+    matchingPersistentAreaSaveConditionFill.kind !== "savingThrowOutcome"
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn in Grease requires a Grease Saving Throw outcome fill.",
+      "End Turn in PersistentAreaSaveCondition requires a PersistentAreaSaveCondition Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2524,36 +3307,23 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   const endTurnFills = input.fills.filter(
     (fill) => fill.holeId !== hole.holeId,
   );
-  const endTurnProbe = resolveEndTurnCommand({
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
-  if (matchingGreaseFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+  if (matchingPersistentAreaSaveConditionFill === undefined) {
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole,
-      endTurnProbe,
     });
   }
-  const validation = validateGreaseGroundHazardSavingThrowOutcome(
-    matchingGreaseFill.value,
+  const validation = validatePersistentAreaSaveConditionSavingThrowOutcome(
+    matchingPersistentAreaSaveConditionFill.value,
     input.subject.actorId,
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: the end-turn Grease save outcome must answer the discovered single-target hole for the ending actor. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the end-turn PersistentAreaSaveCondition save outcome must answer the discovered single-target hole for the ending actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
-  const outcome = matchingGreaseFill.value.outcomes[0]!;
+  const outcome = matchingPersistentAreaSaveConditionFill.value.outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
       state: input.state,
@@ -2561,20 +3331,21 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
   }
   const nextState = outcome.succeeded
     ? input.state
-    : applyGreaseProneToTarget(input.state, input.subject.actorId);
-  const endTurnResult = resolveEndTurnCommand({
+    : applyPersistentAreaSaveConditionProneToTarget(
+        input.state,
+        input.subject.actorId,
+      );
+  return resolveDelegatedEndTurnCommand(input, {
     state: nextState,
     subject: endTurnSubject,
     fills: endTurnFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, subject: input.subject }
-    : endTurnResult;
 }

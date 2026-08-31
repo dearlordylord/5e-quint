@@ -5,25 +5,24 @@ import type {
 } from "../../battle-state-execution.ts";
 import type {
   BattleSpellProcedureExecution,
+  BattleSpellProcedureKey,
   SpellProcedureExecutionByProcedure,
-  SpellProcedureKey,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
+import type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 import type {
   SpellProcedureExecutionResolution,
   StoredGlyphSpellProcedureResolution,
 } from "./resolution-contract.ts";
 export type { SpellProcedureExecutionResolution } from "./resolution-contract.ts";
 
-export type RegisteredSpellProcedure = SpellProcedureKey;
+export type RegisteredSpellProcedure = BattleSpellProcedureKey;
 
 export type RegisteredSpellProcedureExecution<
   Procedure extends RegisteredSpellProcedure,
 > = {
   readonly procedure: Procedure;
-  readonly executionSchema: {
-    readonly Type: SpellProcedureExecutionByProcedure[Procedure];
-  };
+  readonly executionSchema: SpellProcedureExecutionCodec<Procedure>;
   readonly discoverCastAct: (
     state: BattleState,
     actorId: CombatantId,

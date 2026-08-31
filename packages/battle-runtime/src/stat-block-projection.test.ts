@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spellcasting.procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
@@ -58,10 +58,12 @@ function initializedStatBlock(source: StatBlockRecord) {
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (Either.isLeft(initialized)) {
-    throw new Error(`Expected Stat Block initialization: ${initialized.left}`);
+  if (Result.isFailure(initialized)) {
+    throw new Error(
+      `Expected Stat Block initialization: ${initialized.failure}`,
+    );
   }
-  return initialized.right;
+  return initialized.success;
 }
 
 function startedStatBlock(source: StatBlockRecord) {
@@ -69,10 +71,10 @@ function startedStatBlock(source: StatBlockRecord) {
     battleId: battleId("stat-block-projection"),
     combatants: [initializedStatBlock(source)],
   });
-  if (Either.isLeft(started)) {
-    throw new Error(`Expected Stat Block battle start: ${started.left}`);
+  if (Result.isFailure(started)) {
+    throw new Error(`Expected Stat Block battle start: ${started.failure}`);
   }
-  return started.right;
+  return started.success;
 }
 
 function mechanicalActs(session: ReturnType<typeof startedStatBlock>) {
@@ -108,15 +110,15 @@ describe("generic Stat Block projection", () => {
       conditions: [],
     });
 
-    expect(Either.isRight(initialized)).toBe(true);
-    if (Either.isLeft(initialized)) return;
-    expect(initialized.right.creatureInit.kind).toBe("statBlock");
-    if (initialized.right.creatureInit.kind !== "statBlock") return;
-    expect(initialized.right.creatureInit.source.procedures).not.toHaveLength(
+    expect(Result.isSuccess(initialized)).toBe(true);
+    if (Result.isFailure(initialized)) return;
+    expect(initialized.success.creatureInit.kind).toBe("statBlock");
+    if (initialized.success.creatureInit.kind !== "statBlock") return;
+    expect(initialized.success.creatureInit.source.procedures).not.toHaveLength(
       0,
     );
-    if (initialized.right.creatureInit.kind !== "statBlock") return;
-    expect(initialized.right.creatureInit.presentation.displayName).toBe(
+    if (initialized.success.creatureInit.kind !== "statBlock") return;
+    expect(initialized.success.creatureInit.presentation.displayName).toBe(
       source.name,
     );
   });
@@ -138,8 +140,8 @@ describe("generic Stat Block projection", () => {
     });
 
     expect(initialized).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "statBlockProjectionFailure",
         failure: { reason: "nonLiteralSize" },
       },
@@ -155,10 +157,10 @@ describe("generic Stat Block projection", () => {
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
     });
-    expect(Either.isRight(initialized)).toBe(true);
-    if (Either.isLeft(initialized)) return;
-    if (initialized.right.creatureInit.kind !== "statBlock") return;
-    expect(initialized.right.creatureInit.presentation.displayName).toBe(
+    expect(Result.isSuccess(initialized)).toBe(true);
+    if (Result.isFailure(initialized)) return;
+    if (initialized.success.creatureInit.kind !== "statBlock") return;
+    expect(initialized.success.creatureInit.presentation.displayName).toBe(
       source.name,
     );
   });
@@ -208,8 +210,8 @@ describe("generic Stat Block projection", () => {
       statBlockId("stat_block_cat"),
     );
     const projected = projectAuthoredStatBlock(cat);
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
 
     const [admission] = statBlockExecutionAdmissionCohort(
       battleId("static-only-authored-damage"),
@@ -295,9 +297,9 @@ describe("generic Stat Block projection", () => {
     };
 
     const projected = projectAuthoredStatBlock(withUnsupportedDispatch);
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [{ section: "actions", procedureOrdinal: authoredOrdinal(3) }],
@@ -338,9 +340,9 @@ describe("generic Stat Block projection", () => {
         actions: [unsupportedAttack, multiattack],
       },
     });
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [
@@ -359,7 +361,7 @@ describe("generic Stat Block projection", () => {
     );
 
     expect(projected).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStatBlockProjectionFailure",
         reason: "unsupportedProcedureBinding",
         issues: [
@@ -434,11 +436,11 @@ describe("generic Stat Block projection", () => {
     };
 
     const projected = projectAuthoredStatBlock(reusedAcrossSections);
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left.reason).toBe("unsupportedProcedureBinding");
-    if (projected.left.reason !== "unsupportedProcedureBinding") return;
-    expect(projected.left.issues).toEqual([
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure.reason).toBe("unsupportedProcedureBinding");
+    if (projected.failure.reason !== "unsupportedProcedureBinding") return;
+    expect(projected.failure.issues).toEqual([
       {
         section: "bonusActions",
         procedureOrdinal: actionAttack.procedureOrdinal,
@@ -470,12 +472,12 @@ describe("generic Stat Block projection", () => {
         actions: [...(source.statBlock.actions ?? []), textOnly],
       },
     });
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    expect(projected.right.runtime.procedures).not.toContainEqual(
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
+    expect(projected.success.runtime.procedures).not.toContainEqual(
       expect.objectContaining({ procedureOrdinal: textOnly.procedureOrdinal }),
     );
-    expect(projected.right.presentation.orderedProcedures).toContainEqual({
+    expect(projected.success.presentation.orderedProcedures).toContainEqual({
       section: "actions",
       procedureOrdinal: textOnly.procedureOrdinal,
       name: textOnly.name,
@@ -508,9 +510,9 @@ describe("generic Stat Block projection", () => {
         bonusActions: [supportedBonusAction],
       },
     });
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    expect(projected.right.runtime.procedures).toEqual(
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
+    expect(projected.success.runtime.procedures).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "attack" }),
         expect.objectContaining({ kind: "multiattack" }),
@@ -542,9 +544,9 @@ describe("generic Stat Block projection", () => {
       },
     });
 
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    const runtimeProcedure = projected.right.runtime.procedures.find(
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
+    const runtimeProcedure = projected.success.runtime.procedures.find(
       (procedure) => procedure.kind === "spellcasting",
     );
     expect(runtimeProcedure).toEqual({
@@ -603,13 +605,13 @@ describe("generic Stat Block projection", () => {
     const original = project(originalEntry);
     const renamed = project(renamedEntry);
 
-    expect(Either.isRight(original)).toBe(true);
-    expect(Either.isRight(renamed)).toBe(true);
-    if (Either.isLeft(original) || Either.isLeft(renamed)) return;
-    const originalRuntime = original.right.runtime.procedures.find(
+    expect(Result.isSuccess(original)).toBe(true);
+    expect(Result.isSuccess(renamed)).toBe(true);
+    if (Result.isFailure(original) || Result.isFailure(renamed)) return;
+    const originalRuntime = original.success.runtime.procedures.find(
       (procedure) => procedure.kind === "spellcasting",
     );
-    const renamedRuntime = renamed.right.runtime.procedures.find(
+    const renamedRuntime = renamed.success.runtime.procedures.find(
       (procedure) => procedure.kind === "spellcasting",
     );
     expect(originalRuntime).toEqual(renamedRuntime);
@@ -633,9 +635,9 @@ describe("generic Stat Block projection", () => {
       },
     });
 
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [

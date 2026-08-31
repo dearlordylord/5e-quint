@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -135,22 +135,22 @@ describe("Stat Block per-component damage selection properties", () => {
             advantageBonusNotation,
           );
           const parsedSelection = statBlockAttackDamageSelection(selections);
-          expect(Either.isRight(parsedSelection)).toBe(true);
-          if (Either.isLeft(parsedSelection)) return;
-          const selection = parsedSelection.right;
+          expect(Result.isSuccess(parsedSelection)).toBe(true);
+          if (Result.isFailure(parsedSelection)) return;
+          const selection = parsedSelection.success;
           const encoded = Schema.encodeSync(StatBlockAttackDamageSelection)(
             selection,
           );
-          const decoded = Schema.decodeUnknownEither(
+          const decoded = Schema.decodeUnknownResult(
             StatBlockAttackDamageSelection,
           )(encoded);
 
-          expect(Either.isRight(decoded)).toBe(true);
-          if (Either.isLeft(decoded)) return;
+          expect(Result.isSuccess(decoded)).toBe(true);
+          if (Result.isFailure(decoded)) return;
           expect(
-            statBlockAttackDamageSelectionsEqual(selection, decoded.right),
+            statBlockAttackDamageSelectionsEqual(selection, decoded.success),
           ).toBe(true);
-          expect(statBlockAttackDamageSelectionKey(decoded.right)).toBe(
+          expect(statBlockAttackDamageSelectionKey(decoded.success)).toBe(
             statBlockAttackDamageSelectionKey(selection),
           );
         },
@@ -161,12 +161,12 @@ describe("Stat Block per-component damage selection properties", () => {
 
   it.each(INVALID_COMPONENT_ROLE_SELECTIONS)("$name", ({ selection }) => {
     const result = statBlockAttackDamageSelection(selection);
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   });
 
   it("rejects a malformed zero base ordinal at the raw boundary", () => {
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseStatBlockAttackDamageSelection([
           {
             componentRef: { kind: "baseDamageComponent", ordinal: 0 },
@@ -181,7 +181,7 @@ describe("Stat Block per-component damage selection properties", () => {
     "returns a typed failure for invalid base ordinal %s",
     (input) => {
       expect(
-        Either.isLeft(parseStatBlockBaseDamageComponentOrdinal(input)),
+        Result.isFailure(parseStatBlockBaseDamageComponentOrdinal(input)),
       ).toBe(true);
     },
   );
@@ -218,7 +218,7 @@ describe("Stat Block per-component damage selection properties", () => {
           },
         ],
       }),
-    ).toEqual(Either.left({ kind: "nonCanonicalStatBlockAttackDamageRoles" }));
+    ).toEqual(Result.fail({ kind: "nonCanonicalStatBlockAttackDamageRoles" }));
   });
 
   it("omits a projected damage component with no admitted notation", () => {
@@ -310,7 +310,7 @@ describe("Stat Block per-component damage selection properties", () => {
             { componentRef, notation: firstNotation },
             { componentRef, notation: secondNotation },
           ]);
-          expect(Either.isLeft(decoded)).toBe(true);
+          expect(Result.isFailure(decoded)).toBe(true);
         },
       ),
       { numRuns: 100 },
@@ -417,12 +417,12 @@ function projectedDamage(
 
 function statBlockBaseDamageComponentOrdinalAtIndex(index: number) {
   const ordinal = parseStatBlockBaseDamageComponentOrdinal(index + 1);
-  if (Either.isLeft(ordinal)) {
+  if (Result.isFailure(ordinal)) {
     throw new Error(
       "A zero-based array index must produce a positive ordinal.",
     );
   }
-  return ordinal.right;
+  return ordinal.success;
 }
 
 function projectedDamageComponent(

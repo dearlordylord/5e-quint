@@ -15,8 +15,10 @@ const {
   scanClaimFiles,
 } = require("./unit-profile-coverage-claim-scan.cjs");
 const {
+  discoverInventory,
   hasExecutableMechanics,
   hasVariantMagicMechanics,
+  resolveSrdUnitCollectionSource,
 } = require("./unit-profile-coverage-discovery.cjs");
 const {
   buildLevel16FullSupport,
@@ -100,6 +102,119 @@ function writeFixtureJson(root, relativePath, value) {
   const absolutePath = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function writeFixtureSource(root, relativePath, source) {
+  const absolutePath = path.join(root, relativePath);
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, source);
+}
+
+function assertSplitCatalogDiscovery(root) {
+  const publicCatalogPath = "packages/surface/src/surface/unit-catalog.ts";
+  const dataCatalogPath = "packages/surface/src/surface/unit-catalog-data.ts";
+  writeFixtureSource(
+    root,
+    publicCatalogPath,
+    [
+      'export * from "./unit-catalog-core.ts";',
+      'export { srdUnitCollection } from "./unit-catalog-data.ts";',
+      "",
+    ].join("\n"),
+  );
+  writeFixtureSource(
+    root,
+    "packages/surface/src/surface/unit-catalog-core.ts",
+    "export type UnitCatalog = unknown;\n",
+  );
+  writeFixtureSource(
+    root,
+    dataCatalogPath,
+    [
+      'import fixtureInput from "../../content/fixture_unit.json";',
+      "export const srdUnitCollection = defineSrdUnitCollection({",
+      "  units: [fixtureInput].map((unit) => unit),",
+      "});",
+      "",
+    ].join("\n"),
+  );
+  writeFixtureJson(root, "packages/surface/content/fixture_unit.json", {
+    id: "fixture_unit",
+    kind: "spell",
+    provenance: { kind: "srd-5.2.1" },
+    mechanics: { family: "fixture" },
+  });
+
+  const collection = {
+    id: "srd-5.2.1",
+    discovery: {
+      kind: "surface-srd-unit-catalog",
+      sourcePath: publicCatalogPath,
+    },
+  };
+  const resolved = resolveSrdUnitCollectionSource(root, publicCatalogPath);
+  if (resolved.sourcePath !== dataCatalogPath) {
+    fail(
+      `Self-test failed: expected split Unit catalog discovery to resolve ${dataCatalogPath}, got ${resolved.sourcePath}.`,
+    );
+  }
+  const discovered = discoverInventory(root, [collection]);
+  if (
+    discovered.length !== 1 ||
+    discovered[0].unitId !== "fixture_unit" ||
+    discovered[0].sourceRecordPath !==
+      "packages/surface/content/fixture_unit.json"
+  ) {
+    fail(
+      `Self-test failed: expected split Unit catalog discovery to retain the data owner and content record, got ${JSON.stringify(discovered)}.`,
+    );
+  }
+
+  const starCatalogPath = "packages/surface/src/surface/unit-catalog-star.ts";
+  const unrelatedCatalogPath =
+    "packages/surface/src/surface/unit-catalog-unrelated.ts";
+  const cycleCatalogPath = "packages/surface/src/surface/unit-catalog-cycle.ts";
+  writeFixtureSource(
+    root,
+    starCatalogPath,
+    [
+      'export * from "./unit-catalog-unrelated.ts";',
+      'export * from "./unit-catalog-data.ts";',
+      "",
+    ].join("\n"),
+  );
+  writeFixtureSource(
+    root,
+    unrelatedCatalogPath,
+    'export * from "./unit-catalog-cycle.ts";\n',
+  );
+  writeFixtureSource(
+    root,
+    cycleCatalogPath,
+    'export * from "./unit-catalog-unrelated.ts";\n',
+  );
+  const starCollection = {
+    ...collection,
+    discovery: {
+      ...collection.discovery,
+      sourcePath: starCatalogPath,
+    },
+  };
+  const starResolved = resolveSrdUnitCollectionSource(root, starCatalogPath);
+  if (starResolved.sourcePath !== dataCatalogPath) {
+    fail(
+      `Self-test failed: expected star-export discovery to skip unrelated cycles and resolve ${dataCatalogPath}, got ${starResolved.sourcePath}.`,
+    );
+  }
+  const starDiscovered = discoverInventory(root, [starCollection]);
+  if (
+    starDiscovered.length !== 1 ||
+    starDiscovered[0].unitId !== "fixture_unit"
+  ) {
+    fail(
+      `Self-test failed: expected star-export discovery to reach the later Unit collection owner, got ${JSON.stringify(starDiscovered)}.`,
+    );
+  }
 }
 
 function installedFixtureUnit(unitId, kind, sourceRecordPath) {
@@ -1806,6 +1921,7 @@ function runSelfTest(root) {
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
   );
   try {
+    assertSplitCatalogDiscovery(tempDir);
     const ignoredRalphArtifactPath = path.join(tempDir, ".ralph", "ignored.md");
     fs.mkdirSync(path.dirname(ignoredRalphArtifactPath), { recursive: true });
     const ignoredProfileClaimMarker = ["UNIT", "PROFILE", "COVERAGE"].join("-");

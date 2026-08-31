@@ -1,22 +1,21 @@
 import type {
   BattleCreatureState,
+  BattlePendingTransaction,
   BattleRuntimeSession,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
   addBattleRuntimeCombatant,
   battleStateInitIssueMessage,
+  battlePendingTransactionView,
   removeBattleRuntimeCombatants,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import type { SrdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Match } from "effect";
+import { Match, Option, Result } from "effect";
 
-import type {
-  CharacterSessionRegistry,
-  PendingBattleFillSession,
-} from "./session-store.ts";
+import type { CharacterSessionRegistry } from "./session-store.ts";
 import {
   createActiveBattleRosterTransitionPlan,
   type ActiveBattleRosterTransitionPlan,
@@ -37,16 +36,16 @@ export type BattleRosterTransitionPlanner = {
   plan(
     operation: McpBattleRosterOperation,
     activeBattle: BattleRuntimeSession,
-    pendingBattleFills: PendingBattleFillSession | null,
-  ): Either.Either<
+    pendingBattleTransaction: BattlePendingTransaction | null,
+  ): Result.Result<
     ActiveBattleRosterTransitionPreview,
     McpBattleRosterTransitionIssue
   >;
   commit(
     plan: ActiveBattleRosterTransitionPlan,
     activeBattle: BattleRuntimeSession,
-    pendingBattleFills: PendingBattleFillSession | null,
-  ): Either.Either<BattleRuntimeSession, McpBattleRosterTransitionIssue>;
+    pendingBattleTransaction: BattlePendingTransaction | null,
+  ): Result.Result<BattleRuntimeSession, McpBattleRosterTransitionIssue>;
 };
 
 export function createBattleRosterTransitionPlanner(input: {
@@ -56,11 +55,17 @@ export function createBattleRosterTransitionPlanner(input: {
   readonly storeIdentity: object;
 }): BattleRosterTransitionPlanner {
   return {
-    plan(operation, activeBattle, pendingBattleFills) {
-      if (pendingBattleFills !== null) {
-        return Either.left({
+    plan(operation, activeBattle, pendingBattleTransaction) {
+      if (pendingBattleTransaction !== null) {
+        const pendingView = battlePendingTransactionView(
+          pendingBattleTransaction,
+        );
+        if (Option.isNone(pendingView)) {
+          return Result.fail({ tag: "battleRosterUnknownPendingTransaction" });
+        }
+        return Result.fail({
           tag: "battleRosterPendingBattleFills",
-          pendingSubject: pendingBattleFills.subject,
+          pendingSubject: pendingView.value.subject,
         });
       }
       return planActiveBattleRosterTransition({
@@ -69,25 +74,25 @@ export function createBattleRosterTransitionPlanner(input: {
         activeBattle,
       });
     },
-    commit(plan, activeBattle, pendingBattleFills) {
+    commit(plan, activeBattle, pendingBattleTransaction) {
       const data = activeBattleRosterTransitionPlanData.get(plan);
       if (data === undefined || data.storeIdentity !== input.storeIdentity) {
-        return Either.left({ tag: "battleRosterUnknownPlan" });
+        return Result.fail({ tag: "battleRosterUnknownPlan" });
       }
       if (activeBattle !== data.activeBattle) {
-        return Either.left({
+        return Result.fail({
           tag: "battleRosterPlanBattleChanged",
           battleId: data.activeBattle.state.battleId,
         });
       }
-      if (pendingBattleFills !== data.pendingBattleFills) {
-        return Either.left({ tag: "battleRosterPlanFillsChanged" });
+      if (pendingBattleTransaction !== data.pendingBattleTransaction) {
+        return Result.fail({ tag: "battleRosterPlanFillsChanged" });
       }
       const misalignedCharacterIds = data.characterSessionTransitions
         .filter((transition) => !transitionCharacterIdsAlign(transition))
         .flatMap(transitionCharacterIds);
       if (misalignedCharacterIds.length > 0) {
-        return Either.left({
+        return Result.fail({
           tag: "battleRosterPlanCharacterChanged",
           characterIds: [...new Set(misalignedCharacterIds)],
         });
@@ -100,7 +105,7 @@ export function createBattleRosterTransitionPlanner(input: {
         )
         .map(transitionCharacterId);
       if (changedCharacterIds.length > 0) {
-        return Either.left({
+        return Result.fail({
           tag: "battleRosterPlanCharacterChanged",
           characterIds: changedCharacterIds,
         });
@@ -108,17 +113,17 @@ export function createBattleRosterTransitionPlanner(input: {
       const committed = input.characters.setAll(
         data.characterSessionTransitions.map(({ next }) => next),
       );
-      if (Either.isLeft(committed)) {
-        return Either.left({
+      if (Result.isFailure(committed)) {
+        return Result.fail({
           tag: "battleStateCharacterSessionRegistryConflict",
-          registryIssue: committed.left,
+          registryIssue: committed.failure,
           affectedCharacterIds: data.characterSessionTransitions.map(
             transitionCharacterId,
           ),
         });
       }
       activeBattleRosterTransitionPlanData.delete(plan);
-      return Either.right(data.result.prospectiveBattle);
+      return Result.succeed(data.result.prospectiveBattle);
     },
   };
 }
@@ -130,7 +135,7 @@ function planActiveBattleRosterTransition(input: {
   readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
-}): Either.Either<
+}): Result.Result<
   ActiveBattleRosterTransitionPreview,
   McpBattleRosterTransitionIssue
 > {
@@ -156,7 +161,7 @@ function planAddCharacterBattleCombatant(input: {
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
   readonly storeIdentity: object;
-}): Either.Either<
+}): Result.Result<
   ActiveBattleRosterTransitionPreview,
   McpBattleRosterTransitionIssue
 > {
@@ -164,14 +169,14 @@ function planAddCharacterBattleCombatant(input: {
   const characterId = operation.combatant.creatureInit.characterId;
   const currentSession = input.characters.get(characterId);
   if (currentSession === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterCharacterSessionMissing",
       combatantId: operation.combatant.combatantId,
       characterId,
     });
   }
   if (currentSession.tag === "inBattle") {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterCharacterAlreadyInBattle",
       characterId: currentSession.sheet.characterId,
       battleId: currentSession.battleId,
@@ -181,15 +186,15 @@ function planAddCharacterBattleCombatant(input: {
     session: input.activeBattle,
     combatant: operation.combatant,
   });
-  if (Either.isLeft(admitted)) {
-    return Either.left({
+  if (Result.isFailure(admitted)) {
+    return Result.fail({
       tag: "battleRosterCombatantAdmissionFailed",
       combatantId: operation.combatant.combatantId,
       ownerPath: ["operation", "combatant"],
-      message: battleStateInitIssueMessage(admitted.left),
+      message: battleStateInitIssueMessage(admitted.failure),
     });
   }
-  return Either.right(
+  return Result.succeed(
     activeBattleRosterTransitionPlan({
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
@@ -203,8 +208,8 @@ function planAddCharacterBattleCombatant(input: {
           }),
         },
       ],
-      pendingBattleFills: null,
-      result: { kind: "add", prospectiveBattle: admitted.right },
+      pendingBattleTransaction: null,
+      result: { kind: "add", prospectiveBattle: admitted.success },
     }),
   );
 }
@@ -216,7 +221,7 @@ function planAddStatBlockBattleCombatant(input: {
   >;
   readonly activeBattle: BattleRuntimeSession;
   readonly storeIdentity: object;
-}): Either.Either<
+}): Result.Result<
   ActiveBattleRosterTransitionPreview,
   McpBattleRosterTransitionIssue
 > {
@@ -224,21 +229,21 @@ function planAddStatBlockBattleCombatant(input: {
     session: input.activeBattle,
     combatant: input.operation.combatant,
   });
-  if (Either.isLeft(admitted)) {
-    return Either.left({
+  if (Result.isFailure(admitted)) {
+    return Result.fail({
       tag: "battleRosterCombatantAdmissionFailed",
       combatantId: input.operation.combatant.combatantId,
       ownerPath: ["operation", "combatant"],
-      message: battleStateInitIssueMessage(admitted.left),
+      message: battleStateInitIssueMessage(admitted.failure),
     });
   }
-  return Either.right(
+  return Result.succeed(
     activeBattleRosterTransitionPlan({
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
       characterSessionTransitions: [],
-      pendingBattleFills: null,
-      result: { kind: "add", prospectiveBattle: admitted.right },
+      pendingBattleTransaction: null,
+      result: { kind: "add", prospectiveBattle: admitted.success },
     }),
   );
 }
@@ -253,7 +258,7 @@ function planRemoveBattleCombatant(input: {
   readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
-}): Either.Either<
+}): Result.Result<
   ActiveBattleRosterTransitionPreview,
   McpBattleRosterTransitionIssue
 > {
@@ -261,7 +266,7 @@ function planRemoveBattleCombatant(input: {
     input.operation.combatantId,
   );
   if (combatant === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterCombatantNotFound",
       combatantId: input.operation.combatantId,
     });
@@ -270,38 +275,38 @@ function planRemoveBattleCombatant(input: {
     ...input,
     combatant,
   });
-  if (Either.isLeft(settled)) return Either.left(settled.left);
+  if (Result.isFailure(settled)) return Result.fail(settled.failure);
   const removed = removeBattleRuntimeCombatants({
     session: input.activeBattle,
     combatantIds: [input.operation.combatantId],
   });
-  if (Either.isLeft(removed)) {
-    return Either.left({
+  if (Result.isFailure(removed)) {
+    return Result.fail({
       tag: "battleRosterCombatantRemovalFailed",
       combatantId: input.operation.combatantId,
-      message: battleStateInitIssueMessage(removed.left),
+      message: battleStateInitIssueMessage(removed.failure),
     });
   }
   const removedCombatantIds = nonEmptyCombatantIds(
     [...input.activeBattle.state.combatants.keys()].filter(
-      (id) => !removed.right.state.combatants.has(id),
+      (id) => !removed.success.state.combatants.has(id),
     ),
   );
   if (removedCombatantIds === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterRemovalEmpty",
       combatantId: input.operation.combatantId,
     });
   }
-  return Either.right(
+  return Result.succeed(
     activeBattleRosterTransitionPlan({
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
-      characterSessionTransitions: settled.right,
-      pendingBattleFills: null,
+      characterSessionTransitions: settled.success,
+      pendingBattleTransaction: null,
       result: {
         kind: "remove",
-        prospectiveBattle: removed.right,
+        prospectiveBattle: removed.success,
         removedCombatantIds,
       },
     }),
@@ -314,30 +319,30 @@ function settledCharacterSessionForBattleRemoval(input: {
   readonly characters: CharacterSessionRegistry;
   readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   ActiveBattleRosterTransitionPlanData["characterSessionTransitions"],
   McpBattleRosterTransitionIssue
 > {
   if (input.combatant.origin.kind !== "character") {
-    return Either.right([]);
+    return Result.succeed([]);
   }
   const characterId = input.combatant.origin.characterId;
   const session = input.characters.get(characterId);
   if (session === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterCharacterSessionMissing",
       combatantId: input.combatant.combatantId,
       characterId,
     });
   }
   if (session.tag !== "inBattle") {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterCharacterSessionNotInBattle",
       characterId,
     });
   }
   if (session.battleId !== input.activeBattle.state.battleId) {
-    return Either.left({
+    return Result.fail({
       tag: "battleRosterCharacterBattleOwnershipConflict",
       characterId,
       expectedBattleId: input.activeBattle.state.battleId,
@@ -351,18 +356,18 @@ function settledCharacterSessionForBattleRemoval(input: {
     unitLibrary: input.unitLibrary,
     statBlockCatalog: input.statBlockCatalog,
   });
-  if (Either.isLeft(settled)) {
-    return Either.left({
+  if (Result.isFailure(settled)) {
+    return Result.fail({
       tag: "battleRosterSettlementInvalid",
       characterId,
-      message: settled.left.message,
+      message: settled.failure.message,
     });
   }
-  return Either.right([
+  return Result.succeed([
     {
       kind: "leaveBattle",
       expected: session,
-      next: settled.right,
+      next: settled.success,
     },
   ]);
 }

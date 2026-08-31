@@ -33,7 +33,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //   - rollModifierSpellProjection + projection sub-helpers
 //     (rollModifierActiveEffect, rollModifierAbilityCheckRollModeEffect,
 //     rollModifierSpellTargeting, rollModifierSkillFilter) — entangled with
-//     scalarBuff and thaumaturgyBoomingVoice; full extraction is a separate
+//     scalarBuff and temporaryAbilityCheckRollMode; full extraction is a separate
 //     sweep.
 //   - rollModifierSpellTargetSelection / EffectSelection / AffectedTargets —
 //     ~400 lines in spells-resolve-target-selection.ts. Moveable later.
@@ -44,6 +44,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { spellSlotLevel } from "@dnd/shared/types";
 
 import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   type BattleActDiscoveryCandidate,
@@ -90,6 +91,7 @@ import type {
 } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -111,26 +113,28 @@ import {
 } from "../domain-constants.ts";
 
 const D20RollModifierEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("d20RollModifier"),
   sourceCombatantId: CombatantId,
-  on: Schema.Array(Schema.Literal(...BATTLE_D20_ROLL_MODIFIER_KINDS)),
-  delta: Schema.Union(
+  on: Schema.Array(Schema.Literals(BATTLE_D20_ROLL_MODIFIER_KINDS)),
+  delta: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("fixedNumber"),
       amount: Schema.Number,
-      sign: Schema.Literal("+", "-"),
+      sign: Schema.Literals(["+", "-"]),
     }),
     Schema.Struct({
       dice: Schema.Number,
-      dieSize: Schema.Literal(...BATTLE_D20_ROLL_MODIFIER_DIE_SIZES),
-      sign: Schema.Literal("+", "-"),
+      dieSize: Schema.Literals(BATTLE_D20_ROLL_MODIFIER_DIE_SIZES),
+      sign: Schema.Literals(["+", "-"]),
     }),
-  ),
-  skill: Schema.NullOr(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+  ]),
+  skill: Schema.NullOr(Schema.Literals(BATTLE_SURFACE_SKILLS)),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
 
 const AbilityCheckRollModeEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("abilityCheckRollMode"),
   sourceCombatantId: CombatantId,
   mode: Schema.Literal("advantage"),
@@ -259,20 +263,24 @@ function applyRollModifierEffectsByTarget(
     if (target === undefined) {
       return nextState;
     }
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: { ...selectedEffect, sourceProcedureRef },
+    });
     const activeEffects = [
-      ...target.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             effect.kind === selectedEffect.kind &&
             effect.sourceProcedureRef === sourceProcedureRef
           ),
       ),
-      { ...selectedEffect, sourceProcedureRef },
+      allocation.effect,
     ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
+        ...allocation.owner,
         activeEffects,
       }),
     };
@@ -401,11 +409,11 @@ function resolveRollModifier(
 }
 
 const RollModifierInvocationCommonFields = {
-  access: Schema.Union(PreparedSpellAccessSchema, CantripSpellAccessSchema),
-  resource: Schema.Union(
+  access: Schema.Union([PreparedSpellAccessSchema, CantripSpellAccessSchema]),
+  resource: Schema.Union([
     LeveledSpellInvocationResourceSchema,
     NoSpellInvocationResourceSchema,
-  ),
+  ]),
   procedure: Schema.Literal("rollModifier"),
   spellRuleFacts: SpellRuleExecutionFactsSchema,
   actionCost: Schema.Literal("magicAction"),
@@ -415,26 +423,24 @@ const RollModifierInvocationCommonFields = {
 } as const;
 
 const RollModifierInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: D20RollModifierEffectSchema,
       skillChoices: Schema.NullOr(
-        Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+        Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
       ),
-      abilityChoices: Schema.Literal(null),
-      abilityChoiceApplication: Schema.optionalWith(Schema.Never, {
-        exact: true,
-      }),
+      abilityChoices: Schema.Null,
+      abilityChoiceApplication: Schema.optionalKey(Schema.Never),
     }),
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: AbilityCheckRollModeEffectSchema,
-      skillChoices: Schema.Literal(null),
-      abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
-      abilityChoiceApplication: Schema.Literal("single", "perTarget"),
+      skillChoices: Schema.Null,
+      abilityChoices: Schema.Array(Schema.Literals(BATTLE_SURFACE_ABILITIES)),
+      abilityChoiceApplication: Schema.Literals(["single", "perTarget"]),
     }),
-  ),
+  ]),
 );
 export const rollModifierProfile: SpellProcedureDeclaration<
   "rollModifier",

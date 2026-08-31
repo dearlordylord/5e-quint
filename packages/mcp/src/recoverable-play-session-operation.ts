@@ -1,4 +1,4 @@
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
@@ -30,7 +30,7 @@ import {
 
 export async function runRecoverableOperation<A>(
   context: RunAttemptContext<A>,
-): Promise<Either.Either<PlaySessionRunResult<A>, PlaySessionAccessFailure>> {
+): Promise<Result.Result<PlaySessionRunResult<A>, PlaySessionAccessFailure>> {
   for (
     let attempt = 0;
     attempt < MAX_CONCURRENT_COMMIT_ATTEMPTS;
@@ -48,7 +48,7 @@ export async function runRecoverableOperation<A>(
     if (decision.tag === "retry") continue;
     return decision.value;
   }
-  return Either.left(concurrentWriteFailure());
+  return Result.fail(concurrentWriteFailure());
 }
 
 async function runAttempt<A>(
@@ -62,7 +62,7 @@ async function runAttempt<A>(
     Match.when({ tag: "failure" }, ({ failure }) =>
       Promise.resolve({
         tag: "result" as const,
-        result: Either.left(failure),
+        result: Result.fail(failure),
       }),
     ),
     Match.when({ tag: "ready" }, ({ record }) =>
@@ -74,22 +74,22 @@ async function runAttempt<A>(
 
 function loadRunRecord<A>(context: RunAttemptContext<A>): RunLoadAttempt {
   const loaded = context.runtime.input.repository.load(context.playSessionId);
-  if (Either.isLeft(loaded)) {
-    return { tag: "failure", failure: accessFailure(loaded.left) };
+  if (Result.isFailure(loaded)) {
+    return { tag: "failure", failure: accessFailure(loaded.failure) };
   }
-  if (loaded.right.tag === "absent") {
+  if (loaded.success.tag === "absent") {
     return { tag: "failure", failure: PLAY_SESSION_UNAVAILABLE };
   }
-  const record = loaded.right.record;
+  const record = loaded.success.record;
   if (playSessionIsExpired(record.tenure, context.runtime.now())) {
     const deleted = context.runtime.input.repository.delete(
       context.playSessionId,
       record.revision,
     );
-    if (Either.isLeft(deleted)) {
-      return { tag: "failure", failure: accessFailure(deleted.left) };
+    if (Result.isFailure(deleted)) {
+      return { tag: "failure", failure: accessFailure(deleted.failure) };
     }
-    return deleted.right
+    return deleted.success
       ? { tag: "failure", failure: PLAY_SESSION_UNAVAILABLE }
       : { tag: "retry" };
   }
@@ -104,16 +104,16 @@ async function runReadyAttempt<A>(
 ): Promise<RunAttemptResult<A>> {
   const rateFailure = admitRunRequest(context, record);
   if (rateFailure !== undefined) {
-    return { tag: "result", result: Either.left(rateFailure) };
+    return { tag: "result", result: Result.fail(rateFailure) };
   }
   const reconstructed = rootFromRecord(context.runtime.replayServices, record);
-  if (Either.isLeft(reconstructed)) {
+  if (Result.isFailure(reconstructed)) {
     return {
       tag: "result",
-      result: Either.left(accessFailure(reconstructed.left)),
+      result: Result.fail(accessFailure(reconstructed.failure)),
     };
   }
-  return commitRunOperation(context, record, reconstructed.right);
+  return commitRunOperation(context, record, reconstructed.success);
 }
 
 function admitRunRequest<A>(
@@ -127,7 +127,7 @@ function admitRunRequest<A>(
     context.runtime.now(),
     context.runtime.maximumRequestsPerMinute,
   );
-  if (Either.isLeft(admitted)) return admitted.left;
+  if (Result.isFailure(admitted)) return admitted.failure;
   context.requestRateAdmitted = true;
   return undefined;
 }
@@ -155,7 +155,7 @@ async function commitRunOperation<A>(
       );
       return retentionFailure === undefined
         ? commitSucceededRun(context, record, root, operationResult, command)
-        : { tag: "result" as const, result: Either.left(retentionFailure) };
+        : { tag: "result" as const, result: Result.fail(retentionFailure) };
     }),
     Match.exhaustive,
   );
@@ -191,7 +191,7 @@ function nonRetainedRunResult<A>(
 ): RunAttemptResult<A> {
   return {
     tag: "result",
-    result: Either.right({
+    result: Result.succeed({
       value: operationResult,
       tenure: projectPlaySessionTenure(record.tenure),
     }),
@@ -231,13 +231,13 @@ function commitSucceededRun<A>(
     tenure,
     ...(command === undefined ? {} : { operation: command }),
   });
-  if (Either.isLeft(committed)) {
+  if (Result.isFailure(committed)) {
     return {
       tag: "result",
-      result: Either.left(accessFailure(committed.left)),
+      result: Result.fail(accessFailure(committed.failure)),
     };
   }
-  if (committed.right.tag === "revisionConflict") return { tag: "retry" };
+  if (committed.success.tag === "revisionConflict") return { tag: "retry" };
   publishCurrentProjection(
     context.runtime.input.applicationServices,
     context.runtime.publications,
@@ -246,7 +246,7 @@ function commitSucceededRun<A>(
   );
   return {
     tag: "result",
-    result: Either.right({
+    result: Result.succeed({
       value: operationResult,
       tenure: projectPlaySessionTenure(tenure),
     }),

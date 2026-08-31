@@ -11,7 +11,7 @@ import {
   goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
-  fogCloudAreaFill,
+  persistentAreaTraitAreaFill,
   fogCloudBattle,
   characterSeed,
   statBlockCreatureInit,
@@ -63,7 +63,7 @@ describe("battle runtime: Fog Cloud", () => {
           "fog_cloud" &&
         battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1 &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "fogCloudObscurement",
+          "persistentAreaTrait",
     );
     if (levelOneAct === undefined) {
       throw new Error("Expected level-1 Fog Cloud action spell act.");
@@ -81,7 +81,7 @@ describe("battle runtime: Fog Cloud", () => {
     }
     const levelThree = supportedSpellActs(session.state, wizard).find(
       (invocation) =>
-        invocation.procedure === "fogCloudObscurement" &&
+        invocation.procedure === "persistentAreaTrait" &&
         invocation.resource.tag === "spellSlot" &&
         invocation.resource.slotLevel === 3,
     );
@@ -101,11 +101,10 @@ describe("battle runtime: Fog Cloud", () => {
 
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "fogCloudObscurement",
+        kind: "persistentAreaTrait",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         areaId: "fog-1",
-        radiusFeet: movementFeet(20),
         expiresAt: {
           kind: "concentration",
           combatantId: wizardId,
@@ -151,7 +150,7 @@ describe("battle runtime: Fog Cloud", () => {
     const command = discoverBattleActs(cast.session).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "disperseFogCloud" &&
+        candidate.subject.command === "endPersistentAreaTraitForEnvironment" &&
         candidate.subject.areaId === "fog-1",
     );
     if (command === undefined) {
@@ -177,7 +176,7 @@ describe("battle runtime: Fog Cloud", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Fog Cloud area is no longer active.",
+      message: "persistent-area trait area is no longer active.",
     });
   });
 
@@ -191,6 +190,7 @@ describe("battle runtime: Fog Cloud", () => {
       throw new Error("Expected the Fog Cloud caster to be concentrating.");
     }
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: cast.session.state,
       target: priorCaster,
       damageAmount: Number(priorCaster.hp),
@@ -255,7 +255,7 @@ function castFogCloudSession(
     resolveBattleSubject({
       session,
       subject,
-      fills: [fogCloudAreaFill(area, areaId)],
+      fills: [persistentAreaTraitAreaFill(area, areaId)],
     }),
   );
   return {

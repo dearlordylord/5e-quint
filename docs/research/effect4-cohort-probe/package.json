@@ -1,0 +1,26 @@
+{
+  "name": "effect4-cohort-probe",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vitest.config.mts --pool=threads --maxWorkers=1",
+    "runtime": "tsc -p tsconfig.json --outDir dist && node dist/probe.js",
+    "verify-cohort": "node ../../../scripts/check-effect4-cohort.mjs --project ."
+  },
+  "dependencies": {
+    "@effect/platform-node": "4.0.0-rc.112",
+    "@effect/vitest": "4.0.0-rc.112",
+    "@firfi/itf-trace-parser": "0.2.0-effect4.1",
+    "effect": "4.0.0-rc.112",
+    "redis": "6.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.15",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

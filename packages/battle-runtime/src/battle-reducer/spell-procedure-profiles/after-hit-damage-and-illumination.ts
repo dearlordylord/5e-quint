@@ -12,7 +12,8 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // illumination effect to the struck target.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Shining Smite":
+//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md, after-hit
+//     illumination spell:
 //     Bonus Action immediately after a Melee weapon or Unarmed Strike hit;
 //     Self; Concentration up to 1 minute; extra Radiant damage from the
 //     attack; target sheds Bright Light, attack rolls against it have
@@ -26,8 +27,8 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // What stays in shared infrastructure:
 //   - The attack-hit interrupt checkpoint and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
-//   - The Shining Smite light-emitter projection constant stays in
-//     spells-active-effects.ts with the light-emitter projection code.
+//   - Illumination emission is retained in the admitted procedure binding;
+//     the durable target effect retains only its lifecycle and source ref.
 //   - The metamagic table entry remains Wave 9 migration work.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -35,7 +36,7 @@ import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type AfterHitDamageAndIlluminationSpellInvocation,
@@ -46,23 +47,25 @@ import {
   type BattleState,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "../spells-active-effects.ts";
 import {
   sameStringSet,
   supportedSpellSlotDamageFacts,
 } from "../spells-execution-facts.ts";
+import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
   DamageTypeSchema,
+  BrightRadiusIlluminationEmissionFactsSchema,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -70,8 +73,9 @@ import {
 type AfterHitDamageAndIlluminationInvocation =
   AfterHitDamageAndIlluminationSpellInvocation;
 
-const ShiningSmiteIlluminationEffectSchema = Schema.Struct({
-  kind: Schema.Literal("shiningSmiteIllumination"),
+const AfterHitDamageAndIlluminationEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
+  kind: Schema.Literal("afterHitDamageAndIllumination"),
   sourceCombatantId: CombatantId,
   expiresAt: Schema.Struct({
     kind: Schema.Literal("concentration"),
@@ -115,8 +119,9 @@ function admitAfterHitDamageAndIllumination(
         expr: damageExpr,
         damageType: projection.damageType,
       },
+      illumination: projection.illumination,
       activeEffect: {
-        kind: "shiningSmiteIllumination",
+        kind: "afterHitDamageAndIllumination",
         sourceCombatantId: ctx.actor.combatantId,
         expiresAt: projection.expiresAt,
       },
@@ -130,26 +135,29 @@ function afterHitDamageAndIlluminationSpellProjection(
 ): {
   readonly damageAmount: SurfaceDiceAmount;
   readonly damageType: Extract<DamageType, "radiant">;
+  readonly illumination: AfterHitDamageAndIlluminationSpellInvocation["illumination"];
   readonly expiresAt: AfterHitDamageAndIlluminationSpellInvocation["activeEffect"]["expiresAt"];
 } | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const mechanics = spell.mechanics;
+  if (!hasAfterHitDamageAndIlluminationInvocationShape(mechanics)) {
+    return null;
+  }
+  if (mechanics.duration.kind !== "concentration") {
+    return null;
+  }
+  if (mechanics.attachment.kind !== "hole") {
+    return null;
+  }
+  if (mechanics.attachment.value.kind !== "target") {
+    return null;
+  }
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !==
-      "melee_weapon_or_unarmed_strike" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "target" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    spell.mechanics.operations.length !== 3 ||
-    !spell.mechanics.operations.every(
-      (operation) => operation.trigger.kind === "passive",
-    )
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.duration.upTo.amount !== 1 ||
+    mechanics.attachment.value.selection.mode !== "one"
   ) {
     return null;
   }
@@ -160,7 +168,19 @@ function afterHitDamageAndIlluminationSpellProjection(
   const operationEffects = spell.mechanics.operations.map(
     (operation) => operation.effect,
   );
-  const light = operationEffects.find((effect) => effect.kind === "emit_light");
+  const illuminationEffect = operationEffects.find(
+    (effect) =>
+      effect.kind === "emit_bright_and_dim_illumination" ||
+      effect.kind === "emit_bright_illumination",
+  );
+  const illumination =
+    illuminationEffect?.kind === "emit_bright_and_dim_illumination" ||
+    illuminationEffect?.kind === "emit_bright_illumination"
+      ? illuminationEmissionFactsFromSurface({
+          effect: illuminationEffect,
+          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+        })
+      : null;
   const attackAdvantage = operationEffects.find(
     (effect) => effect.kind === "modify_roll_advantage",
   );
@@ -168,7 +188,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     (effect) => effect.kind === "suppress_condition_benefit",
   );
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
+    mechanics.duration.upTo,
   );
   if (
     initialPhase?.kind !== "direct" ||
@@ -179,9 +199,8 @@ function afterHitDamageAndIlluminationSpellProjection(
     damage?.kind !== "damage" ||
     damage.damageType !== "radiant" ||
     damage.amount === undefined ||
-    light?.kind !== "emit_light" ||
-    light.brightRadiusFeet !== SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET ||
-    (light.dimAdditionalFeet ?? 0) !== 0 ||
+    (illumination?.emission.kind !== "bright" &&
+      illumination?.emission.kind !== "brightAndDim") ||
     attackAdvantage?.kind !== "modify_roll_advantage" ||
     attackAdvantage.mode !== "advantage" ||
     attackAdvantage.affects !== "rolls_against_self" ||
@@ -189,7 +208,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     !sameStringSet(attackAdvantage.on, ["attack_roll"]) ||
     suppressInvisible?.kind !== "suppress_condition_benefit" ||
     suppressInvisible.condition !== "invisible" ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -197,12 +216,44 @@ function afterHitDamageAndIlluminationSpellProjection(
   return {
     damageAmount: damage.amount,
     damageType: "radiant",
+    illumination: {
+      emission: illumination.emission,
+      opaqueCoverInteraction: {
+        kind: illumination.opaqueCoverInteraction.kind,
+      },
+    },
     expiresAt: {
       kind: "concentration",
       combatantId: actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
   };
+}
+
+type OngoingEffectSpellMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+
+function hasAfterHitDamageAndIlluminationInvocationShape(
+  mechanics: OngoingEffectSpellMechanics,
+): boolean {
+  if (mechanics.castingTime.kind !== "bonus_action") {
+    return false;
+  }
+  const trigger = mechanics.castingTime.trigger;
+  if (trigger?.kind !== "after_hit_with") {
+    return false;
+  }
+  return [
+    mechanics.level === 2,
+    trigger.attack === "melee_weapon_or_unarmed_strike",
+    mechanics.range.kind === "self",
+    mechanics.operations.length === 3,
+    mechanics.operations.every(
+      (operation) => operation.trigger.kind === "passive",
+    ),
+  ].every(Boolean);
 }
 
 function discoverAfterHitDamageAndIlluminationCastAct(): readonly BattleActDiscoveryCandidate[] {
@@ -221,7 +272,7 @@ function applyAfterHitDamageAndIlluminationSpellEffect(
     state,
     targetId,
     (effect) =>
-      effect.kind === "shiningSmiteIllumination" &&
+      effect.kind === "afterHitDamageAndIllumination" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
     {
@@ -273,7 +324,8 @@ const AfterHitDamageAndIlluminationInvocationSchema =
         expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
-      activeEffect: ShiningSmiteIlluminationEffectSchema,
+      illumination: BrightRadiusIlluminationEmissionFactsSchema,
+      activeEffect: AfterHitDamageAndIlluminationEffectSchema,
     }),
   );
 export const afterHitDamageAndIlluminationProfile = {

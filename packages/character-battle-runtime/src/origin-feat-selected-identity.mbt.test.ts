@@ -36,18 +36,20 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
+
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 import {
   characterBattleInitiativeScore,
@@ -370,14 +372,14 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     rollTotal: 14,
     proficiencyBonusChoice: "add",
   });
-  if (Either.isLeft(score)) {
-    throw new Error(characterBattleRuntimeIssueMessage(score.left));
+  if (Result.isFailure(score)) {
+    throw new Error(characterBattleRuntimeIssueMessage(score.failure));
   }
 
   return {
     ...criminalAlertOriginFeatProjection(),
     outcome: "alert-initiative-handoff",
-    initiativeScore: score.right,
+    initiativeScore: score.success,
   };
 }
 
@@ -393,11 +395,11 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     initiative: alertInitiativeScoreForBuild(build),
     ammunitionStocks: [],
   });
-  if (Either.isLeft(projection)) {
-    throw new Error(characterBattleRuntimeIssueMessage(projection.left));
+  if (Result.isFailure(projection)) {
+    throw new Error(characterBattleRuntimeIssueMessage(projection.failure));
   }
 
-  return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
+  return selectedReferenceRouteEvents(projection.success.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
   );
 }
@@ -441,8 +443,8 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
     battleId: battleId("battle:origin-feat-runtime-entry"),
     combatants: roster.admissions.map((admission) => admission.combatant),
   });
-  if (Either.isLeft(session)) {
-    throw new Error(characterBattleRuntimeIssueMessage(session.left));
+  if (Result.isFailure(session)) {
+    throw new Error(characterBattleRuntimeIssueMessage(session.failure));
   }
 
   return selectedReferenceRouteEvents(
@@ -461,18 +463,19 @@ function selectedReferenceRouteEvents(
 }
 
 function characterSheetForBuild(build: CharacterBuild) {
-  const sheet = createFreshCharacterSheet({
+  const sheet = rebuildCharacterSheet({
     characterId: characterSheetId("character:origin-feat"),
     build,
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
+    companion: { tag: "none" },
     unitLibrary,
   });
-  if (Either.isLeft(sheet)) {
-    throw new Error(JSON.stringify(sheet.left));
+  if (Result.isFailure(sheet)) {
+    throw new Error(JSON.stringify(sheet.failure));
   }
-  return sheet.right;
+  return sheet.success;
 }
 
 function alertInitiativeScoreForBuild(build: CharacterBuild) {
@@ -482,10 +485,10 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     rollTotal: 14,
     proficiencyBonusChoice: "add",
   });
-  if (Either.isLeft(score)) {
-    throw new Error(characterBattleRuntimeIssueMessage(score.left));
+  if (Result.isFailure(score)) {
+    throw new Error(characterBattleRuntimeIssueMessage(score.failure));
   }
-  return score.right;
+  return score.success;
 }
 
 type FighterBackgroundFixtureInput = {
@@ -511,7 +514,7 @@ function finalizedFighterBuildForBackground(
   });
   if (finalized.tag !== "ready") {
     throw new Error(
-      `Expected ${input.backgroundUnitId} origin feat draft to finalize, received ${finalized.tag}.`,
+      `Expected ${input.backgroundUnitId} origin feat draft to finalize, received ${finalized.tag}${finalized.tag === "incomplete" ? ` with holes ${JSON.stringify(finalized.holes.map((hole) => hole.holeId))}` : ` with issues ${JSON.stringify(finalized.issues)}`}.`,
     );
   }
   const unitRefIds = characterBuildUnitRefs(finalized.build, unitLibrary).map(
@@ -555,7 +558,7 @@ function completeFighterDraftForBackground(
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: expectRight(
+          value: expectSuccess(
             abilityScoreAssignment({
               str: 15,
               dex: 14,
@@ -712,12 +715,12 @@ function unitChoiceHoleId(
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
   const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId));
-  if (Either.isLeft(parsedUnitId)) {
+  if (Result.isFailure(parsedUnitId)) {
     throw new Error(`Invalid unit choice source Unit id ${unitId}.`);
   }
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: parsedUnitId.right,
+    unitId: parsedUnitId.success,
     choiceKey,
   });
 }
@@ -729,12 +732,12 @@ function loadoutHoleId(
   const parsedEquipmentUnitId = loadoutEquipmentUnitId(
     authoredUnitId(equipmentUnitId),
   );
-  if (Either.isLeft(parsedEquipmentUnitId)) {
+  if (Result.isFailure(parsedEquipmentUnitId)) {
     throw new Error(`Invalid loadout equipment Unit id ${equipmentUnitId}.`);
   }
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: parsedEquipmentUnitId.right,
+    equipmentUnitId: parsedEquipmentUnitId.success,
     slot,
   });
 }
@@ -832,12 +835,4 @@ function numberFromQuintInt(raw: unknown, field: string): number {
   if (typeof raw === "number") return raw;
   if (typeof raw === "bigint") return Number(raw);
   throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(String(result.left));
-  }
-  return result.right;
 }

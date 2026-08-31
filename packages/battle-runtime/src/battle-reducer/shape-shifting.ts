@@ -291,7 +291,8 @@ export function combatantShapeShiftingSuppressed(
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
-        effect.kind === "moonbeam" &&
+        effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle === "directedReposition" &&
         effect.shapeShiftSuppressed.includes(combatantId),
     ),
   );

@@ -19,14 +19,16 @@ type TargetSpatialFactsFill = Extract<
 >;
 type CounterspellTriggerFact = Extract<
   TargetSpatialFactsFill["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-const counterspellTriggerFact: CounterspellTriggerFact = {
-  kind: "counterspellTriggerCasterVisibleWithinRange",
+const spellCastInterruptionReactionTriggerFact: CounterspellTriggerFact = {
+  kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
   reactorId: spellTargetId,
   casterId: spellCasterId,
-  sourceProcedureRef: battleProcedureExecutionRefForTest("counterspell"),
+  sourceProcedureRef: battleProcedureExecutionRefForTest(
+    "spellCastInterruptionReaction",
+  ),
   rangeFeet: movementFeet(60),
 };
 
@@ -60,11 +62,11 @@ describe("weapon attack override fill input", () => {
   test("projects populated spell-cast Reaction facts", () => {
     expect(
       parseWeaponAttackOverrideFillInput([
-        reactionFactsFill([counterspellTriggerFact]),
+        reactionFactsFill([spellCastInterruptionReactionTriggerFact]),
       ]),
     ).toEqual({
       tag: "parsed",
-      input: { reactionFacts: [counterspellTriggerFact] },
+      input: { reactionFacts: [spellCastInterruptionReactionTriggerFact] },
     });
   });
 

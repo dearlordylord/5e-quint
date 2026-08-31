@@ -1,9 +1,9 @@
 import { removeFromInitiative } from "@dnd/shared-algebras/initiative-algebra";
-import * as Either from "effect/Either";
 import * as Option from "effect/Option";
+import { Result } from "effect";
 
 import type { BattleCompanionState } from "../companion-state.ts";
-import { battleCompanionEntries } from "../find-familiar-state.ts";
+import { battleCompanionEntries } from "../spawned-companion-state.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
   type CombatantId,
@@ -45,12 +45,12 @@ function retiredExecutionScopeOwnership(
 export function removeBattleCombatants(input: {
   readonly state: BattleState;
   readonly combatantIds: readonly CombatantId[];
-}): Either.Either<BattleState, BattleStateInitIssue> {
-  const removeIds = combatantIdsWithPresentFindFamiliarDependents(
+}): Result.Result<BattleState, BattleStateInitIssue> {
+  const removeIds = combatantIdsWithPresentSpawnedCompanionDependents(
     input.state,
     input.combatantIds,
   );
-  if (removeIds.size === 0) return Either.right(input.state);
+  if (removeIds.size === 0) return Result.succeed(input.state);
   const removalIssue = combatantRemovalIssue(input.state, removeIds);
   if (removalIssue !== null) return battleStateInitIssue(removalIssue);
   const executionScopeCursors = new Map(input.state.executionScopeCursors);
@@ -92,7 +92,7 @@ export function removeBattleCombatants(input: {
             removeIds.has(effect.sourceCombatantId)
               ? []
               : [
-                  effect.kind === "antimagicFieldOngoingSpellSuppression"
+                  effect.kind === "magicSuppressionEmanation"
                     ? {
                         ...effect,
                         auraMembership: {
@@ -109,7 +109,7 @@ export function removeBattleCombatants(input: {
         },
       ]),
   );
-  return Either.right(
+  return Result.succeed(
     normalizeBattleGrapples({
       ...input.state,
       initiative: initiativeOption.value,
@@ -195,7 +195,7 @@ function hidePrerequisiteReferencedCombatantIds(
     : [combatantId];
 }
 
-function combatantIdsWithPresentFindFamiliarDependents(
+function combatantIdsWithPresentSpawnedCompanionDependents(
   state: BattleState,
   combatantIds: readonly CombatantId[],
 ): ReadonlySet<CombatantId> {

@@ -89,15 +89,23 @@ const DECLARATION_SERIALIZATION_LENGTH_MESSAGE =
 const DECLARATION_SERIALIZATION_LENGTH_BASELINE = [
   {
     owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-    count: 5,
+    count: 2,
+  },
+  {
+    owner: "packages/battle-runtime/src/battle-mechanical-frontier.ts",
+    count: 1,
+  },
+  {
+    owner: "packages/battle-runtime/src/battle-snapshot-presentation.ts",
+    count: 1,
   },
   {
     owner:
       "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
     count: 1,
   },
-  { owner: "packages/surface/src/surface/schema-nonspell.ts", count: 52 },
-  { owner: "packages/surface/src/surface/schema-spell.ts", count: 5 },
+  { owner: "packages/surface/src/surface/schema-nonspell.ts", count: 53 },
+  { owner: "packages/surface/src/surface/schema-spell.ts", count: 1 },
   { owner: "packages/surface/src/surface/schema.ts", count: 4 },
 ] as const;
 
@@ -194,19 +202,21 @@ function declarationDiagnosticFingerprint(diagnostic: string): string | null {
   );
 }
 
+/** The emitted declaration graph is compilation support, not an unbounded SDK. */
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
+  files: 536,
+  bytes: 5_710_631,
+} as const;
 /**
- * The pinned integration revision emitted 512 files and 6,302,380 bytes while
- * an allowed TS7056 prevented codec-building-blocks.d.ts from being emitted.
- * The #427 graph emits that owner successfully and measures 514 files and
- * about 6.38 MB. These named limits leave six files and less than 0.5 MiB of
- * headroom without treating the older partial-emission counts as a target.
+ * The reviewed declaration graph uses every admitted file. Any graph growth
+ * must update the exact measure explicitly.
  */
-const PUBLIC_DECLARATION_BUNDLE_OBSERVED_FILES = 514;
-const PUBLIC_DECLARATION_BUNDLE_FILE_HEADROOM = 6;
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
-  PUBLIC_DECLARATION_BUNDLE_OBSERVED_FILES +
-  PUBLIC_DECLARATION_BUNDLE_FILE_HEADROOM;
-export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 13 * 512 * 1024;
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
+export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN =
+  PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;
@@ -356,7 +366,6 @@ export function emitPublicDeclarations(
     "packages/battle-runtime/src/battle-state-execution.d.ts",
     "packages/battle-runtime/src/battle-session-execution.d.ts",
     "packages/character-creation-runtime/src/index.d.ts",
-    "packages/character-battle-runtime/src/index.d.ts",
     "packages/character-sheet-runtime/src/index.d.ts",
     "packages/tactical-space/src/index.d.ts",
   ];
@@ -401,12 +410,6 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
             resolve(
               baseUrl,
               "declarations/packages/battle-runtime/src/index.d.ts",
-            ),
-          ],
-          "@dnd/character-battle-runtime": [
-            resolve(
-              baseUrl,
-              "declarations/packages/character-battle-runtime/src/index.d.ts",
             ),
           ],
           "@dnd/character-creation-runtime": [

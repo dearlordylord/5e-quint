@@ -27,12 +27,14 @@ import {
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
+  type BattleAreaId,
   type BattleObjectId,
   type CombatantId,
 } from "../identity.ts";
 import { statBlockExecutionSnapshot } from "../stat-block-execution-state.ts";
 import {
   type BattleActiveEffect,
+  type BattleActiveEffectOccurrenceLocation,
   type BattleCharacterResourceSnapshot,
   type BattleCreatureOriginSnapshot,
   type BattleCreatureSnapshot,
@@ -52,8 +54,8 @@ export {
 } from "./creature-hit-point-state.ts";
 
 import {
-  SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
-  WARDING_BOND_ARMOR_CLASS_BONUS,
+  SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+  LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS,
 } from "./domain-constants.ts";
 import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
 import {
@@ -170,6 +172,227 @@ function combatantCanStillHoldBoundWeaponItem(
   );
 }
 
+export type BattleActiveEffectOccurrenceSpatialClass =
+  | "nonSpatial"
+  | "area"
+  | "line"
+  | "object"
+  | "anchored";
+
+export type BattleActiveEffectOccurrenceSpatialProjection =
+  | {
+      readonly spatialClass: "nonSpatial";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "nonSpatial" }
+      >;
+    }
+  | {
+      readonly spatialClass: "area";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "area" }
+      >;
+    }
+  | {
+      readonly spatialClass: "line";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "line" }
+      >;
+    }
+  | {
+      readonly spatialClass: "object";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "object" }
+      >;
+    }
+  | {
+      readonly spatialClass: "anchored";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "area" | "object" }
+      >;
+    };
+
+function spatialProjectionHandler<
+  SpatialClass extends BattleActiveEffectOccurrenceSpatialClass,
+  Effect,
+>(
+  spatialClass: SpatialClass,
+  project: (
+    effect: Effect,
+  ) => Extract<
+    BattleActiveEffectOccurrenceSpatialProjection,
+    { readonly spatialClass: SpatialClass }
+  >,
+): ((
+  effect: Effect,
+) => Extract<
+  BattleActiveEffectOccurrenceSpatialProjection,
+  { readonly spatialClass: SpatialClass }
+>) & { readonly spatialClass: SpatialClass } {
+  return Object.assign(project, { spatialClass });
+}
+
+const nonSpatialActiveEffectOccurrence = spatialProjectionHandler(
+  "nonSpatial",
+  () => ({
+    spatialClass: "nonSpatial" as const,
+    location: { kind: "nonSpatial" as const },
+  }),
+);
+
+const areaActiveEffectOccurrence = spatialProjectionHandler(
+  "area",
+  (effect: { readonly areaId: BattleAreaId }) => ({
+    spatialClass: "area" as const,
+    location: { kind: "area" as const, areaId: effect.areaId },
+  }),
+);
+
+const activeEffectOccurrenceSpatialProjectionHandlers = {
+  magicSuppressionEmanation: areaActiveEffectOccurrence,
+  persistentAreaSaveDamage: areaActiveEffectOccurrence,
+  persistentAreaTrait: areaActiveEffectOccurrence,
+  persistentAreaSaveCondition: areaActiveEffectOccurrence,
+  persistentAreaSaveConditionEscape: areaActiveEffectOccurrence,
+  persistentAreaSaveComposite: areaActiveEffectOccurrence,
+  areaMovementDistanceDamage: areaActiveEffectOccurrence,
+  magicalDarknessPointOrigin: areaActiveEffectOccurrence,
+  directionalPersistentArea: spatialProjectionHandler("line", (line) => ({
+    spatialClass: "line" as const,
+    location: {
+      kind: "line" as const,
+      areaId: line.areaId,
+      directionId: line.directionId,
+    },
+  })),
+  spellObjectContactDamage: spatialProjectionHandler(
+    "object",
+    ({ objectId }) => ({
+      spatialClass: "object" as const,
+      location: { kind: "object" as const, objectId },
+    }),
+  ),
+  glyphDurableOccurrence: spatialProjectionHandler(
+    "anchored",
+    ({ anchor }) => ({
+      spatialClass: "anchored" as const,
+      location: Match.value(anchor).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          surface: ({ areaId }) => ({ kind: "area" as const, areaId }),
+          closeableObject: ({ objectId }) => ({
+            kind: "object" as const,
+            objectId,
+          }),
+        }),
+      ),
+    }),
+  ),
+  abilityCheckRollMode: nonSpatialActiveEffectOccurrence,
+  abilityD20TestRollModeEndTurnSave: nonSpatialActiveEffectOccurrence,
+  bardicInspirationDie: nonSpatialActiveEffectOccurrence,
+  perceptionGatedAttackRollDefense: nonSpatialActiveEffectOccurrence,
+  brutalStrikeHamstring: nonSpatialActiveEffectOccurrence,
+  compelledNextTurnBehavior: nonSpatialActiveEffectOccurrence,
+  conditionImmunity: nonSpatialActiveEffectOccurrence,
+  conditionSavingThrowRollMode: nonSpatialActiveEffectOccurrence,
+  creatureTypeProtection: nonSpatialActiveEffectOccurrence,
+  d20RollModifier: nonSpatialActiveEffectOccurrence,
+  damageResistance: nonSpatialActiveEffectOccurrence,
+  movableLightManifestation: nonSpatialActiveEffectOccurrence,
+  grantedAreaSaveDamageAction: nonSpatialActiveEffectOccurrence,
+  druidWildShapeForm: nonSpatialActiveEffectOccurrence,
+  saveGatedTargetProjection: nonSpatialActiveEffectOccurrence,
+  fallingCreatureMitigationReaction: nonSpatialActiveEffectOccurrence,
+  spawnedCompanionSharedSenses: nonSpatialActiveEffectOccurrence,
+  heldLight: nonSpatialActiveEffectOccurrence,
+  saveGatedConditionWithRepeat: nonSpatialActiveEffectOccurrence,
+  hitPointMaximumIncrease: nonSpatialActiveEffectOccurrence,
+  hitPointRegainPrevented: nonSpatialActiveEffectOccurrence,
+  saveGatedAreaControl: nonSpatialActiveEffectOccurrence,
+  invisibleBenefitDenied: nonSpatialActiveEffectOccurrence,
+  fixedCostMovementReplacement: nonSpatialActiveEffectOccurrence,
+  duplicateHitInterception: nonSpatialActiveEffectOccurrence,
+  nextAttackRollAgainstSelf: nonSpatialActiveEffectOccurrence,
+  nextAttackRollBySelf: nonSpatialActiveEffectOccurrence,
+  opportunityAttackDenied: nonSpatialActiveEffectOccurrence,
+  paladinSacredWeapon: nonSpatialActiveEffectOccurrence,
+  possession: nonSpatialActiveEffectOccurrence,
+  targetingSaveInterdiction: nonSpatialActiveEffectOccurrence,
+  savingThrowRollMode: nonSpatialActiveEffectOccurrence,
+  seeInvisibleAndEthereal: nonSpatialActiveEffectOccurrence,
+  selfAttackRollAndAbilityCheckRollMode: nonSpatialActiveEffectOccurrence,
+  selfSpeedZero: nonSpatialActiveEffectOccurrence,
+  selfTransformation: nonSpatialActiveEffectOccurrence,
+  afterHitDamageAndIllumination: nonSpatialActiveEffectOccurrence,
+  stagedSaveConditionPendingRepeat: nonSpatialActiveEffectOccurrence,
+  stagedSaveConditionApplied: nonSpatialActiveEffectOccurrence,
+  saveGatedTurnConstraintBundle: nonSpatialActiveEffectOccurrence,
+  slowActivePenalties: nonSpatialActiveEffectOccurrence,
+  sourceDamageRollPenalty: nonSpatialActiveEffectOccurrence,
+  specialSpeedGrant: nonSpatialActiveEffectOccurrence,
+  speedDelta: nonSpatialActiveEffectOccurrence,
+  speedHalved: nonSpatialActiveEffectOccurrence,
+  speedRatio: nonSpatialActiveEffectOccurrence,
+  spellArmorClassBonus: nonSpatialActiveEffectOccurrence,
+  spellArmorClassFloor: nonSpatialActiveEffectOccurrence,
+  spellBaseArmorClass: nonSpatialActiveEffectOccurrence,
+  spellConcentrationDuration: nonSpatialActiveEffectOccurrence,
+  spellCondition: nonSpatialActiveEffectOccurrence,
+  spellConditionCountedEndTurnSave: nonSpatialActiveEffectOccurrence,
+  spellConditionEndTurnSave: nonSpatialActiveEffectOccurrence,
+  spellConditionRepeatSave: nonSpatialActiveEffectOccurrence,
+  spellCreatedHeldObject: nonSpatialActiveEffectOccurrence,
+  spellCreatureSizeChange: nonSpatialActiveEffectOccurrence,
+  spellDamageReduction: nonSpatialActiveEffectOccurrence,
+  spellDashBonusAction: nonSpatialActiveEffectOccurrence,
+  spellEndTargetState: nonSpatialActiveEffectOccurrence,
+  spellGrantedActionResource: nonSpatialActiveEffectOccurrence,
+  controlledVerticalSuspension: nonSpatialActiveEffectOccurrence,
+  weaponAttackDamageEnhancement: nonSpatialActiveEffectOccurrence,
+  spellMarkedDamageRider: nonSpatialActiveEffectOccurrence,
+  spellShapeShiftedForm: nonSpatialActiveEffectOccurrence,
+  spellSpeedZero: nonSpatialActiveEffectOccurrence,
+  spellTurnEndDamage: nonSpatialActiveEffectOccurrence,
+  spellTurnStartDamageAndSave: nonSpatialActiveEffectOccurrence,
+  spellWeaponAttackOverride: nonSpatialActiveEffectOccurrence,
+  spellWeaponDamageRider: nonSpatialActiveEffectOccurrence,
+  spatialMeleeSpellAttackProxy: nonSpatialActiveEffectOccurrence,
+  targetActionEndedSpellCondition: nonSpatialActiveEffectOccurrence,
+  temporaryAbilityCheckRollMode: nonSpatialActiveEffectOccurrence,
+  turnStartTemporaryHitPoints: nonSpatialActiveEffectOccurrence,
+  unitFeatureCondition: nonSpatialActiveEffectOccurrence,
+  unitFeatureConditionEndTurnSave: nonSpatialActiveEffectOccurrence,
+  unitFeatureSpeedDelta: nonSpatialActiveEffectOccurrence,
+  linkedDefenseResistanceDamageShare: nonSpatialActiveEffectOccurrence,
+} satisfies {
+  readonly [Kind in BattleActiveEffect["kind"]]: ((
+    effect: Extract<BattleActiveEffect, { readonly kind: Kind }>,
+  ) => BattleActiveEffectOccurrenceSpatialProjection) & {
+    readonly spatialClass: BattleActiveEffectOccurrenceSpatialClass;
+  };
+};
+
+/** Structural class used when validating an encoded snapshot without effect payloads. */
+export function battleActiveEffectOccurrenceSpatialClass(
+  kind: BattleActiveEffect["kind"],
+): BattleActiveEffectOccurrenceSpatialClass {
+  return activeEffectOccurrenceSpatialProjectionHandlers[kind].spatialClass;
+}
+
+export function battleActiveEffectOccurrenceSpatialProjection(
+  effect: BattleActiveEffect,
+): BattleActiveEffectOccurrenceSpatialProjection {
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("kind")(
+      activeEffectOccurrenceSpatialProjectionHandlers,
+    ),
+  );
+}
+
 function activeEffectBoundHeldWeaponItemId(
   effect: BattleActiveEffect,
 ): BattleObjectId | null {
@@ -190,9 +413,16 @@ export function combatantSnapshot(
     hp: combatant.hp,
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
-    activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
-      "effectRef" in effect ? [effect.effectRef] : [],
-    ),
+    nextEffectOrdinal: combatant.nextEffectOrdinal,
+    activeEffectOccurrences: combatant.activeEffects.map((effect) => {
+      const spatial = battleActiveEffectOccurrenceSpatialProjection(effect);
+      return {
+        kind: "activeEffect" as const,
+        effectRef: effect.effectRef,
+        activeEffectKind: effect.kind,
+        location: spatial.location,
+      };
+    }),
     armorClass: currentArmorClass(activeEffectArmorClass(state, combatant)),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
@@ -236,7 +466,7 @@ export function combatantOriginSnapshot(
         scopeRef: origin.execution.scopeRef,
         procedureBindings: characterProcedureBindingSnapshots(
           origin.execution,
-          (invocation) => spellExecutionFacts(invocation),
+          spellExecutionFacts,
         ),
       },
       attackExecution: {
@@ -316,26 +546,30 @@ export function activeEffectArmorClass(
   const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
     effect.kind === "spellArmorClassBonus"
       ? [{ kind: "flat" as const, bonus: armorClassDelta(effect.bonus) }]
-      : effect.kind === "wardingBond"
+      : effect.kind === "linkedDefenseResistanceDamageShare"
         ? [
             {
               kind: "flat" as const,
-              bonus: armorClassDelta(WARDING_BOND_ARMOR_CLASS_BONUS),
+              bonus: armorClassDelta(
+                LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS,
+              ),
             },
           ]
         : [],
   );
-  const slowActivePenaltyEffect = combatant.activeEffects.find(
-    (effect) => effect.kind === "slowActivePenalties",
+  const turnConstraintPenaltyEffect = combatant.activeEffects.find(
+    (effect) => effect.kind === "saveGatedTurnConstraintBundle",
   );
   const armorClassBonuses =
-    slowActivePenaltyEffect === undefined
+    turnConstraintPenaltyEffect === undefined
       ? spellArmorClassBonuses
       : [
           ...spellArmorClassBonuses,
           {
             kind: "flat" as const,
-            bonus: armorClassDelta(SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA),
+            bonus: armorClassDelta(
+              SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+            ),
           },
         ];
   const withBonuses =

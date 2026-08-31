@@ -65,9 +65,9 @@ import type {
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type {
-  FindFamiliarCreatureTypeOverride,
-  FindFamiliarCreatureTypeOverrideChoice,
-  PactOfTheChainFindFamiliarFormSelection,
+  SpawnedCompanionCreatureTypeOverride,
+  SpawnedCompanionCreatureTypeOverrideChoice,
+  PactOfTheChainSpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 import {
   type ChargePoolResource,
@@ -76,11 +76,12 @@ import {
   type DruidCircleLandChoice,
   type PointPoolResource,
   type RestResetCadence,
-  type SpellRecord,
   type UnitRecord,
   type UseCountResource,
 } from "@dnd/surface/surface/types";
-import { Brand, Either, Option, Schema } from "effect";
+import { Brand, Result, Option, Schema } from "effect";
+
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 
 export const WEAPON_PROFICIENCY_CATEGORY_VALUES = [
   "simple",
@@ -204,7 +205,10 @@ export const FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES = [
 export type CharacterSheetFontOfMagicSpellSlotSource =
   (typeof FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES)[number];
 
-export const CharacterSheetIdSchema = Schema.NonEmptyTrimmedString.pipe(
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+);
+export const CharacterSheetIdSchema = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("CharacterId"),
 );
 export type CharacterSheetId = typeof CharacterSheetIdSchema.Type;
@@ -213,7 +217,7 @@ export const characterSheetId: (value: string) => CharacterSheetId =
   CharacterSheetIdSchema.make;
 
 export const CharacterSheetRetainedCompanionId =
-  Schema.NonEmptyTrimmedString.pipe(
+  NonEmptyTrimmedStringSchema.pipe(
     Schema.brand("CharacterSheetRetainedCompanionId"),
   );
 export type CharacterSheetRetainedCompanionId =
@@ -221,9 +225,9 @@ export type CharacterSheetRetainedCompanionId =
 
 export function parseCharacterSheetRetainedCompanionId(
   value: string,
-): Either.Either<CharacterSheetRetainedCompanionId, CharacterSheetIssue> {
-  return Either.mapLeft(
-    Schema.decodeUnknownEither(CharacterSheetRetainedCompanionId)(value),
+): Result.Result<CharacterSheetRetainedCompanionId, CharacterSheetIssue> {
+  return Result.mapError(
+    Schema.decodeUnknownResult(CharacterSheetRetainedCompanionId)(value),
     () => ({
       tag: "characterSheetIssue",
       message: "Retained companion id must be non-empty and trimmed.",
@@ -238,10 +242,10 @@ const CharacterSheetTelepathicBondTargetId =
 
 export function characterSheetTelepathicBondTargetId(
   value: string,
-): Either.Either<CharacterSheetTelepathicBondTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetTelepathicBondTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Telepathic Bond target requires target id.")
-    : Either.right(CharacterSheetTelepathicBondTargetId(value));
+    : Result.succeed(CharacterSheetTelepathicBondTargetId(value));
 }
 
 export type CharacterSheetScryingTargetId = string &
@@ -251,10 +255,10 @@ const CharacterSheetScryingTargetId =
 
 export function characterSheetScryingTargetId(
   value: string,
-): Either.Either<CharacterSheetScryingTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetScryingTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Scrying target requires target id.")
-    : Either.right(CharacterSheetScryingTargetId(value));
+    : Result.succeed(CharacterSheetScryingTargetId(value));
 }
 
 export type CharacterSheetScryingLocationId = string &
@@ -264,10 +268,10 @@ const CharacterSheetScryingLocationId =
 
 export function characterSheetScryingLocationId(
   value: string,
-): Either.Either<CharacterSheetScryingLocationId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetScryingLocationId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Scrying location requires location id.")
-    : Either.right(CharacterSheetScryingLocationId(value));
+    : Result.succeed(CharacterSheetScryingLocationId(value));
 }
 
 export type CharacterSheetSeemingTargetId = string &
@@ -277,10 +281,10 @@ const CharacterSheetSeemingTargetId =
 
 export function characterSheetSeemingTargetId(
   value: string,
-): Either.Either<CharacterSheetSeemingTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSeemingTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Seeming target requires target id.")
-    : Either.right(CharacterSheetSeemingTargetId(value));
+    : Result.succeed(CharacterSheetSeemingTargetId(value));
 }
 
 export type CharacterSheetDreamTargetId = string &
@@ -290,10 +294,10 @@ const CharacterSheetDreamTargetId =
 
 export function characterSheetDreamTargetId(
   value: string,
-): Either.Either<CharacterSheetDreamTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetDreamTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Dream target requires target id.")
-    : Either.right(CharacterSheetDreamTargetId(value));
+    : Result.succeed(CharacterSheetDreamTargetId(value));
 }
 
 export type CharacterSheetDreamMessengerId = string &
@@ -303,10 +307,10 @@ const CharacterSheetDreamMessengerId =
 
 export function characterSheetDreamMessengerId(
   value: string,
-): Either.Either<CharacterSheetDreamMessengerId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetDreamMessengerId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Dream messenger requires messenger id.")
-    : Either.right(CharacterSheetDreamMessengerId(value));
+    : Result.succeed(CharacterSheetDreamMessengerId(value));
 }
 
 export type CharacterSheetTeleportationCircleSigilSequenceId = string &
@@ -316,7 +320,7 @@ const CharacterSheetTeleportationCircleSigilSequenceId =
 
 export function characterSheetTeleportationCircleSigilSequenceId(
   value: string,
-): Either.Either<
+): Result.Result<
   CharacterSheetTeleportationCircleSigilSequenceId,
   CharacterSheetIssue
 > {
@@ -324,7 +328,7 @@ export function characterSheetTeleportationCircleSigilSequenceId(
     ? characterSheetIssue(
         "Teleportation Circle destination requires sigil sequence id.",
       )
-    : Either.right(CharacterSheetTeleportationCircleSigilSequenceId(value));
+    : Result.succeed(CharacterSheetTeleportationCircleSigilSequenceId(value));
 }
 
 export type CharacterSheetPasswallSurfaceId = string &
@@ -334,10 +338,10 @@ const CharacterSheetPasswallSurfaceId =
 
 export function characterSheetPasswallSurfaceId(
   value: string,
-): Either.Either<CharacterSheetPasswallSurfaceId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetPasswallSurfaceId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Passwall surface requires surface id.")
-    : Either.right(CharacterSheetPasswallSurfaceId(value));
+    : Result.succeed(CharacterSheetPasswallSurfaceId(value));
 }
 
 export type CharacterSheetWallOfForceBarrierId = string &
@@ -347,10 +351,10 @@ const CharacterSheetWallOfForceBarrierId =
 
 export function characterSheetWallOfForceBarrierId(
   value: string,
-): Either.Either<CharacterSheetWallOfForceBarrierId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetWallOfForceBarrierId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Wall of Force barrier requires barrier id.")
-    : Either.right(CharacterSheetWallOfForceBarrierId(value));
+    : Result.succeed(CharacterSheetWallOfForceBarrierId(value));
 }
 
 export type CharacterSheetAntilifeShellBarrierId = string &
@@ -360,10 +364,10 @@ const CharacterSheetAntilifeShellBarrierId =
 
 export function characterSheetAntilifeShellBarrierId(
   value: string,
-): Either.Either<CharacterSheetAntilifeShellBarrierId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetAntilifeShellBarrierId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Antilife Shell barrier requires barrier id.")
-    : Either.right(CharacterSheetAntilifeShellBarrierId(value));
+    : Result.succeed(CharacterSheetAntilifeShellBarrierId(value));
 }
 
 export type CharacterSheetWallOfStoneWallId = string &
@@ -373,10 +377,10 @@ const CharacterSheetWallOfStoneWallId =
 
 export function characterSheetWallOfStoneWallId(
   value: string,
-): Either.Either<CharacterSheetWallOfStoneWallId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetWallOfStoneWallId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Wall of Stone wall requires wall id.")
-    : Either.right(CharacterSheetWallOfStoneWallId(value));
+    : Result.succeed(CharacterSheetWallOfStoneWallId(value));
 }
 
 export type CharacterSheetTreeStrideTreeId = string &
@@ -386,10 +390,10 @@ const CharacterSheetTreeStrideTreeId =
 
 export function characterSheetTreeStrideTreeId(
   value: string,
-): Either.Either<CharacterSheetTreeStrideTreeId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetTreeStrideTreeId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Tree Stride tree requires tree id.")
-    : Either.right(CharacterSheetTreeStrideTreeId(value));
+    : Result.succeed(CharacterSheetTreeStrideTreeId(value));
 }
 
 export type CharacterSheetTreeStrideTreeKind = string &
@@ -399,10 +403,10 @@ const CharacterSheetTreeStrideTreeKind =
 
 export function characterSheetTreeStrideTreeKind(
   value: string,
-): Either.Either<CharacterSheetTreeStrideTreeKind, CharacterSheetIssue> {
+): Result.Result<CharacterSheetTreeStrideTreeKind, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Tree Stride tree requires tree kind.")
-    : Either.right(CharacterSheetTreeStrideTreeKind(value));
+    : Result.succeed(CharacterSheetTreeStrideTreeKind(value));
 }
 
 export type CharacterSheetCreationObjectId = string &
@@ -412,10 +416,10 @@ const CharacterSheetCreationObjectId =
 
 export function characterSheetCreationObjectId(
   value: string,
-): Either.Either<CharacterSheetCreationObjectId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetCreationObjectId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Creation object requires object id.")
-    : Either.right(CharacterSheetCreationObjectId(value));
+    : Result.succeed(CharacterSheetCreationObjectId(value));
 }
 
 export type CharacterSheetTelekinesisTargetId = string &
@@ -425,10 +429,10 @@ const CharacterSheetTelekinesisTargetId =
 
 export function characterSheetTelekinesisTargetId(
   value: string,
-): Either.Either<CharacterSheetTelekinesisTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetTelekinesisTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Telekinesis target requires target id.")
-    : Either.right(CharacterSheetTelekinesisTargetId(value));
+    : Result.succeed(CharacterSheetTelekinesisTargetId(value));
 }
 
 export type CharacterSheetArcaneHandObjectId = string &
@@ -438,10 +442,10 @@ const CharacterSheetArcaneHandObjectId =
 
 export function characterSheetArcaneHandObjectId(
   value: string,
-): Either.Either<CharacterSheetArcaneHandObjectId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetArcaneHandObjectId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Arcane Hand object requires object id.")
-    : Either.right(CharacterSheetArcaneHandObjectId(value));
+    : Result.succeed(CharacterSheetArcaneHandObjectId(value));
 }
 
 export type CharacterSheetSpellLifecycleObjectId = string &
@@ -451,10 +455,10 @@ const CharacterSheetSpellLifecycleObjectId =
 
 export function characterSheetSpellLifecycleObjectId(
   value: string,
-): Either.Either<CharacterSheetSpellLifecycleObjectId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellLifecycleObjectId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Spell lifecycle object requires object id.")
-    : Either.right(CharacterSheetSpellLifecycleObjectId(value));
+    : Result.succeed(CharacterSheetSpellLifecycleObjectId(value));
 }
 
 export type CharacterSheetSpellLifecycleCreatureId = string &
@@ -464,10 +468,10 @@ const CharacterSheetSpellLifecycleCreatureId =
 
 export function characterSheetSpellLifecycleCreatureId(
   value: string,
-): Either.Either<CharacterSheetSpellLifecycleCreatureId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellLifecycleCreatureId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Spell lifecycle creature requires creature id.")
-    : Either.right(CharacterSheetSpellLifecycleCreatureId(value));
+    : Result.succeed(CharacterSheetSpellLifecycleCreatureId(value));
 }
 
 export type CharacterSheetHallowAreaId = string &
@@ -476,10 +480,10 @@ const CharacterSheetHallowAreaId = Brand.nominal<CharacterSheetHallowAreaId>();
 
 export function characterSheetHallowAreaId(
   value: string,
-): Either.Either<CharacterSheetHallowAreaId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetHallowAreaId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Hallow area requires area id.")
-    : Either.right(CharacterSheetHallowAreaId(value));
+    : Result.succeed(CharacterSheetHallowAreaId(value));
 }
 
 export type CharacterSheetAwakenTargetId = string &
@@ -489,10 +493,10 @@ const CharacterSheetAwakenTargetId =
 
 export function characterSheetAwakenTargetId(
   value: string,
-): Either.Either<CharacterSheetAwakenTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetAwakenTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Awaken target requires target id.")
-    : Either.right(CharacterSheetAwakenTargetId(value));
+    : Result.succeed(CharacterSheetAwakenTargetId(value));
 }
 
 export type CharacterSheetGeasTargetId = string &
@@ -501,10 +505,10 @@ const CharacterSheetGeasTargetId = Brand.nominal<CharacterSheetGeasTargetId>();
 
 export function characterSheetGeasTargetId(
   value: string,
-): Either.Either<CharacterSheetGeasTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetGeasTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Geas target requires target id.")
-    : Either.right(CharacterSheetGeasTargetId(value));
+    : Result.succeed(CharacterSheetGeasTargetId(value));
 }
 
 export type CharacterSheetDominatePersonTargetId = string &
@@ -514,10 +518,10 @@ const CharacterSheetDominatePersonTargetId =
 
 export function characterSheetDominatePersonTargetId(
   value: string,
-): Either.Either<CharacterSheetDominatePersonTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetDominatePersonTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Dominate Person target requires target id.")
-    : Either.right(CharacterSheetDominatePersonTargetId(value));
+    : Result.succeed(CharacterSheetDominatePersonTargetId(value));
 }
 
 export type CharacterSheetModifyMemoryTargetId = string &
@@ -527,17 +531,17 @@ const CharacterSheetModifyMemoryTargetId =
 
 export function characterSheetModifyMemoryTargetId(
   value: string,
-): Either.Either<CharacterSheetModifyMemoryTargetId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetModifyMemoryTargetId, CharacterSheetIssue> {
   return value.length === 0
     ? characterSheetIssue("Modify Memory target requires target id.")
-    : Either.right(CharacterSheetModifyMemoryTargetId(value));
+    : Result.succeed(CharacterSheetModifyMemoryTargetId(value));
 }
 
 export type CharacterSheetCompanionCreatureTypeOverride =
-  FindFamiliarCreatureTypeOverride;
+  SpawnedCompanionCreatureTypeOverride;
 
 export type CharacterSheetCompanionFormSelection =
-  PactOfTheChainFindFamiliarFormSelection;
+  PactOfTheChainSpawnedCompanionFormSelection;
 
 export { RETAINED_COMPANION_PROTOCOL_TAGS, retainedCompanionProtocolFacts };
 
@@ -623,7 +627,7 @@ export type CharacterSheetRetainedCompanionCreationInput = {
   readonly companionId: CharacterSheetRetainedCompanionId;
   readonly source: CharacterSheetRetainedCompanionCreationSource;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly creatureTypeOverrideChoiceId?: FindFamiliarCreatureTypeOverrideChoice["optionId"];
+  readonly creatureTypeOverrideChoiceId?: SpawnedCompanionCreatureTypeOverrideChoice["optionId"];
 };
 
 export type SpellcastingCharacterBuild = CharacterBuild & {
@@ -1412,17 +1416,17 @@ export type CharacterSheetIssue = {
 
 export function characterSheetIssue(
   message: string,
-): Either.Either<never, CharacterSheetIssue> {
-  return Either.left({ tag: "characterSheetIssue", message });
+): Result.Result<never, CharacterSheetIssue> {
+  return Result.fail({ tag: "characterSheetIssue", message });
 }
 
 export function getRequiredUnit(
   unitLibrary: UnitCatalog,
   unitId: UnitRecord["id"],
-): Either.Either<UnitRecord, CharacterSheetIssue> {
+): Result.Result<UnitRecord, CharacterSheetIssue> {
   const unit = unitLibrary.getUnit(unitId);
   return Option.isSome(unit)
-    ? Either.right(unit.value)
+    ? Result.succeed(unit.value)
     : characterSheetIssue(`Unknown Unit id: ${unitId}`);
 }
 
@@ -1746,7 +1750,7 @@ export type CharacterSheetSpellbookRitualAccessInput = {
 
 export type CharacterSheetSpellbookRitualAccess = {
   readonly tag: "spellbookRitual";
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spellcastingSourceUnitId: UnitRecord["id"];
   readonly featureUnitId: UnitRecord["id"];
 };
@@ -1754,7 +1758,7 @@ export type CharacterSheetSpellbookRitualAccess = {
 export type CharacterSheetSpellbookRitualInvocation = {
   readonly tag: "spellbookRitual";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellcastingSourceUnitId: UnitRecord["id"];
   readonly featureUnitId: UnitRecord["id"];
   readonly spellSlotCost: { readonly kind: "none" };
@@ -1817,7 +1821,7 @@ export type CharacterSheetSpellbookRitualInvocationProjection =
 export type CharacterSheetBookOfShadowsRitualInvocation = {
   readonly tag: "bookOfShadowsRitual";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellcastingSourceUnitId: UnitRecord["id"];
   readonly spellSlotCost: { readonly kind: "none" };
   readonly preparationRequirement: "prepared";
@@ -1829,7 +1833,7 @@ export type CharacterSheetBookOfShadowsRitualInvocation = {
 export type CharacterSheetContactPatronInvocation = {
   readonly tag: "contactPatron";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly featureUnitId: UnitRecord["id"];
   readonly freeCastResource: CharacterSheetSpellAccessFreeCastKey;
   readonly spellSlotCost: { readonly kind: "none" };
@@ -1859,7 +1863,7 @@ export type CharacterSheetContactPatronResult = {
 export type CharacterSheetDivineInterventionInvocation = {
   readonly tag: "divineIntervention";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly featureUnitId: UnitRecord["id"];
   readonly spellList: "cleric";
   readonly activationAction: "magic";
@@ -1881,7 +1885,7 @@ export type CharacterSheetDivineInterventionResult = {
 export type CharacterSheetCommuneInvocation = {
   readonly tag: "commune";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -1917,7 +1921,7 @@ export type CharacterSheetCommuneWithNatureFactCategory =
 export type CharacterSheetCommuneWithNatureInvocation = {
   readonly tag: "communeWithNature";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -1994,7 +1998,7 @@ export type CharacterSheetLegendLoreOutcome =
 export type CharacterSheetLegendLoreInvocation = {
   readonly tag: "legendLore";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2024,7 +2028,7 @@ export type CharacterSheetTelepathicBondTarget = {
 export type CharacterSheetTelepathicBondInvocation = {
   readonly tag: "telepathicBond";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2157,7 +2161,7 @@ export type CharacterSheetScryingOutcome =
 export type CharacterSheetScryingInvocation = {
   readonly tag: "scrying";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2251,7 +2255,7 @@ export type CharacterSheetSeemingTargetOutcome =
 export type CharacterSheetSeemingInvocation = {
   readonly tag: "seeming";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2359,7 +2363,7 @@ export type CharacterSheetDreamOutcome =
 export type CharacterSheetDreamInvocation = {
   readonly tag: "dream";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2460,7 +2464,7 @@ export type CharacterSheetAwakenCharmContract = {
 export type CharacterSheetAwakenInvocation = {
   readonly tag: "awaken";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2559,7 +2563,7 @@ export type CharacterSheetGeasOutcome =
 export type CharacterSheetGeasInvocation = {
   readonly tag: "geas";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2624,7 +2628,7 @@ export type CharacterSheetDominatePersonOutcome =
 export type CharacterSheetDominatePersonInvocation = {
   readonly tag: "dominate_person";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2709,7 +2713,7 @@ export type CharacterSheetModifyMemoryOutcome =
 export type CharacterSheetModifyMemoryInvocation = {
   readonly tag: "modify_memory";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2754,7 +2758,7 @@ export type CharacterSheetMisleadCasting = {
 export type CharacterSheetMisleadInvocation = {
   readonly tag: "mislead";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2825,7 +2829,7 @@ export type CharacterSheetTeleportationCircleDestination = {
 export type CharacterSheetTeleportationCircleInvocation = {
   readonly tag: "teleportationCircle";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2886,7 +2890,7 @@ export type CharacterSheetPasswallDimensions = {
 export type CharacterSheetPasswallInvocation = {
   readonly tag: "passwall";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2932,7 +2936,7 @@ export type CharacterSheetWallOfForcePlacement = {
 export type CharacterSheetWallOfForceInvocation = {
   readonly tag: "wallOfForce";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2988,7 +2992,7 @@ export type CharacterSheetAntilifeShellBarrierPlacement = {
 export type CharacterSheetAntilifeShellInvocation = {
   readonly tag: "antilifeShell";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3041,7 +3045,7 @@ export type CharacterSheetWallOfStonePlacement = {
 export type CharacterSheetWallOfStoneInvocation = {
   readonly tag: "wallOfStone";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3100,7 +3104,7 @@ export type CharacterSheetTreeStrideDestinationTree =
 export type CharacterSheetTreeStrideInvocation = {
   readonly tag: "treeStride";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3154,7 +3158,7 @@ export type CharacterSheetCreationObject = {
 export type CharacterSheetCreationInvocation = {
   readonly tag: "creation";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3241,7 +3245,7 @@ export type CharacterSheetTelekinesisEffect =
 export type CharacterSheetTelekinesisInvocation = {
   readonly tag: "telekinesis";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3281,7 +3285,7 @@ export type CharacterSheetArcaneHandSpace = {
 export type CharacterSheetArcaneHandInvocation = {
   readonly tag: "arcaneHand";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3395,7 +3399,7 @@ export type CharacterSheetAnimatedObjectContract = {
 export type CharacterSheetAnimateObjectsInvocation = {
   readonly tag: "animateObjects";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3446,7 +3450,7 @@ export type CharacterSheetConjureElementalSpirit = {
 export type CharacterSheetConjureElementalInvocation = {
   readonly tag: "conjureElemental";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3509,7 +3513,7 @@ export type CharacterSheetSummonDragonSpirit = {
 export type CharacterSheetSummonDragonInvocation = {
   readonly tag: "summonDragon";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3594,7 +3598,7 @@ export type CharacterSheetPlanarBindingTarget = {
 export type CharacterSheetPlanarBindingInvocation = {
   readonly tag: "planarBinding";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3711,7 +3715,7 @@ export type CharacterSheetHallowExtraEffect =
 export type CharacterSheetHallowInvocation = {
   readonly tag: "hallow";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;

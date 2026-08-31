@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 
 import type {
@@ -29,13 +29,13 @@ export function createCharacterSessionRegistry(): CharacterSessionRegistry {
       for (const session of nextSessions) {
         const id = characterSessionId(session);
         if (nextIds.has(id)) {
-          return Either.left({
+          return Result.fail({
             tag: "duplicateCharacterSession",
             characterId: id,
           } satisfies CharacterSessionRegistryIssue);
         }
         if (!sessions.has(id)) {
-          return Either.left({
+          return Result.fail({
             tag: "unknownCharacterSession",
             characterId: id,
           } satisfies CharacterSessionRegistryIssue);
@@ -47,7 +47,7 @@ export function createCharacterSessionRegistry(): CharacterSessionRegistry {
         next.set(characterSessionId(session), session);
       }
       sessions = next;
-      return Either.right(undefined);
+      return Result.succeed(undefined);
     },
     entries(): IterableIterator<readonly [CharacterId, CharacterSession]> {
       return sessions.entries();

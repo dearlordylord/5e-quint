@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
@@ -32,7 +32,11 @@ const relationAnswer = {
   traversal: "open" as const,
 };
 
-function nonMovementDecision(kind: string): unknown {
+function nonMovementDecision(kind: string): Readonly<{
+  readonly decisionId: string;
+  readonly question: unknown;
+  readonly answer: unknown;
+}> {
   const questionByKind: Readonly<Record<string, unknown>> = {
     relation: {
       kind,
@@ -68,12 +72,12 @@ function nonMovementDecision(kind: string): unknown {
       shoverId: "normalization-actor",
       targetId: "normalization-target",
     },
-    sleepShakeAwakeTarget: {
+    stagedConditionShakeAwakeTarget: {
       kind,
       actorId: "normalization-actor",
       targetId: "normalization-target",
     },
-    hypnoticPatternShakeAwakeTarget: {
+    areaControlShakeAwakeTarget: {
       kind,
       actorId: "normalization-actor",
       targetId: "normalization-target",
@@ -87,7 +91,10 @@ function nonMovementDecision(kind: string): unknown {
   return {
     decisionId: `normalize-${kind}`,
     question: questionByKind[kind],
-    answer: relationAnswer,
+    answer:
+      kind === "areaControlShakeAwakeTarget"
+        ? { kind: "physicalReachability" }
+        : relationAnswer,
   };
 }
 
@@ -122,19 +129,40 @@ describe("table-authored spatial decision normalization", () => {
     "attackTarget",
     "grappleTarget",
     "shoveTarget",
-    "sleepShakeAwakeTarget",
-    "hypnoticPatternShakeAwakeTarget",
+    "stagedConditionShakeAwakeTarget",
+    "areaControlShakeAwakeTarget",
     "helpAttackTarget",
   ])("normalizes the %s question member", (kind) => {
     const normalized = tableAuthoredSpatialDecision(nonMovementDecision(kind));
 
     expect(normalized).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         decisionId: `normalize-${kind}`,
         question: { kind },
       },
     });
+  });
+
+  test("rejects geometry fields on physical-reachability decisions", () => {
+    for (const answer of [
+      relationAnswer,
+      { kind: "physicalReachability", distanceFeet: 5 },
+    ]) {
+      const { decisionId, question } = nonMovementDecision(
+        "areaControlShakeAwakeTarget",
+      );
+      expect(
+        tableAuthoredSpatialDecision({ decisionId, question, answer }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          message: expect.stringContaining(
+            "physicalReachability answer with no geometry fields",
+          ),
+        },
+      });
+    }
   });
 
   test("normalizes the movement-route member and its table state", () => {
@@ -146,8 +174,8 @@ describe("table-authored spatial decision normalization", () => {
     );
 
     expect(normalized).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         question: { kind: "movementRoute" },
         answer: {
           postMoveSpatialState: {
@@ -166,7 +194,7 @@ describe("table-authored spatial decision normalization", () => {
     });
     expect(
       tableAuthoredSpatialDecision(movementDecision(validFingerprint)),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
 
     for (const invalidFingerprint of [
       "",
@@ -177,9 +205,9 @@ describe("table-authored spatial decision normalization", () => {
       const normalized = tableAuthoredSpatialDecision(
         movementDecision(invalidFingerprint),
       );
-      expect(Either.isLeft(normalized)).toBe(true);
-      if (Either.isLeft(normalized)) {
-        expect(normalized.left).toMatchObject({
+      expect(Result.isFailure(normalized)).toBe(true);
+      if (Result.isFailure(normalized)) {
+        expect(normalized.failure).toMatchObject({
           tag: "invalid-spatial-decision",
           message: expect.stringContaining(
             "canonical table spatial fingerprint",

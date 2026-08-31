@@ -1,7 +1,7 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type { McpApplicationServices } from "./composition-root.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
@@ -266,21 +266,21 @@ async function handleMcpRoute(
     return { status: 404, outcome: "rejected" };
   }
   const request = await webRequest(input.incoming, input.hostname);
-  if (Either.isLeft(request)) {
+  if (Result.isFailure(request)) {
     await writePublicHttpResponse(
       input.outgoing,
       new Response("Request body is too large", { status: 413 }),
     );
     return { status: 413, outcome: "rejected" };
   }
-  const toolName = await publicMcpToolName(request.right);
-  const identity = await requestIdentity(request.right, input.oauth);
-  if (Either.isLeft(identity)) {
+  const toolName = await publicMcpToolName(request.success);
+  const identity = await requestIdentity(request.success, input.oauth);
+  if (Result.isFailure(identity)) {
     await writePublicHttpResponse(
       input.outgoing,
       new Response("Unauthorized", {
         status: 401,
-        headers: { "WWW-Authenticate": identity.left.challenge },
+        headers: { "WWW-Authenticate": identity.failure.challenge },
       }),
     );
     return { status: 401, outcome: "rejected" };
@@ -290,7 +290,7 @@ async function handleMcpRoute(
     undefined,
     {
       playSessionRepository: input.playSessionRepository,
-      requestIdentity: identity.right,
+      requestIdentity: identity.success,
     },
   );
   const transport = new WebStandardStreamableHTTPServerTransport({
@@ -298,7 +298,7 @@ async function handleMcpRoute(
   });
   try {
     await host.server.connect(transport);
-    const response = await transport.handleRequest(request.right);
+    const response = await transport.handleRequest(request.success);
     response.headers.set(
       "traceparent",
       `00-${trace.traceId}-${trace.spanId}-01`,
@@ -321,15 +321,15 @@ async function handleMcpRoute(
 async function webRequest(
   incoming: IncomingMessage,
   hostname: string,
-): Promise<Either.Either<Request, { readonly tag: "requestTooLarge" }>> {
+): Promise<Result.Result<Request, { readonly tag: "requestTooLarge" }>> {
   const body = await requestBody(incoming);
-  if (Either.isLeft(body)) return Either.left(body.left);
+  if (Result.isFailure(body)) return Result.fail(body.failure);
   const headers = requestHeaders(incoming);
-  return Either.right(
+  return Result.succeed(
     new Request(new URL(incoming.url ?? "/", `http://${hostname}`).toString(), {
       headers,
       ...optionalRequestMethod(incoming.method),
-      ...optionalRequestBody(body.right),
+      ...optionalRequestBody(body.success),
     }),
   );
 }
@@ -358,29 +358,29 @@ function requestHeaders(incoming: IncomingMessage): Headers {
 
 async function requestBody(
   incoming: IncomingMessage,
-): Promise<Either.Either<Uint8Array, { readonly tag: "requestTooLarge" }>> {
+): Promise<Result.Result<Uint8Array, { readonly tag: "requestTooLarge" }>> {
   const chunks: Buffer[] = [];
   let byteLength = 0;
   for await (const chunk of incoming) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     byteLength += buffer.byteLength;
     if (byteLength > PUBLIC_MCP_MAX_REQUEST_BYTES) {
-      return Either.left({ tag: "requestTooLarge" });
+      return Result.fail({ tag: "requestTooLarge" });
     }
     chunks.push(buffer);
   }
-  return Either.right(Buffer.concat(chunks));
+  return Result.succeed(Buffer.concat(chunks));
 }
 
 async function requestIdentity(
   request: Request,
   oauth: PublicMcpOAuth | undefined,
 ): Promise<
-  Either.Either<PlaySessionRequestIdentity, { readonly challenge: string }>
+  Result.Result<PlaySessionRequestIdentity, { readonly challenge: string }>
 > {
   const authorization = request.headers.get("authorization");
   if (authorization === null) {
-    return Either.right({
+    return Result.succeed({
       tag: "anonymous",
       savedPlaySessions:
         oauth === undefined
@@ -393,12 +393,12 @@ async function requestIdentity(
   }
   const match = /^Bearer ([^\s]+)$/u.exec(authorization);
   if (oauth === undefined || match?.[1] === undefined) {
-    return Either.left({ challenge: oauthChallenge(oauth, "invalid_token") });
+    return Result.fail({ challenge: oauthChallenge(oauth, "invalid_token") });
   }
   const verified = await oauth.verifyAccessToken(match[1]);
-  return Either.isRight(verified)
-    ? Either.right({ tag: "authenticated", principalId: verified.right })
-    : Either.left({ challenge: oauthChallenge(oauth, "invalid_token") });
+  return Result.isSuccess(verified)
+    ? Result.succeed({ tag: "authenticated", principalId: verified.success })
+    : Result.fail({ challenge: oauthChallenge(oauth, "invalid_token") });
 }
 
 function oauthChallenge(

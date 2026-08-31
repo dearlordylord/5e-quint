@@ -17,7 +17,7 @@ import type {
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
@@ -226,7 +226,7 @@ type DruidWildShapeKnownFormDisposition =
 export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly forms: readonly StatBlockRecord[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
-}): Either.Either<
+}): Result.Result<
   readonly BattleDruidWildShapeKnownForm[],
   BattleDruidWildShapeKnownFormsIssue
 > {
@@ -245,8 +245,8 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
   }
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
-    ? Either.right(parsed)
-    : Either.left({
+    ? Result.succeed(parsed)
+    : Result.fail({
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [firstIssue, ...remainingIssues],
       });
@@ -295,30 +295,30 @@ function admitDruidWildShapeKnownForm(
     return { kind: "skip" };
   }
   const projected = projectAuthoredStatBlock(form);
-  if (Either.isLeft(projected)) {
-    return wildShapeProjectionDisposition(form.id, projected.left);
+  if (Result.isFailure(projected)) {
+    return wildShapeProjectionDisposition(form.id, projected.failure);
   }
   const formProjection = battleDruidWildShapeFormProjectionStatBlock(
-    projected.right,
+    projected.success,
   );
-  if (Either.isLeft(formProjection)) {
-    return { kind: "issue", issue: formProjection.left };
+  if (Result.isFailure(formProjection)) {
+    return { kind: "issue", issue: formProjection.failure };
   }
-  const resourceGraph = admitStatBlockResourceGraph(formProjection.right);
-  if (Either.isLeft(resourceGraph)) {
+  const resourceGraph = admitStatBlockResourceGraph(formProjection.success);
+  if (Result.isFailure(resourceGraph)) {
     return {
       kind: "issue",
       issue: {
         tag: "battleDruidWildShapeKnownFormIssue",
         statBlockId: form.id,
         reason: "resourceGraph",
-        issues: resourceGraph.left,
+        issues: resourceGraph.failure,
       },
     };
   }
   return {
     kind: "admitted",
-    form: battleDruidWildShapeKnownForm(resourceGraph.right),
+    form: battleDruidWildShapeKnownForm(resourceGraph.success),
   };
 }
 
@@ -478,33 +478,33 @@ export function wildShapeKnownFormsIssueMessage(
 
 function battleDruidWildShapeFormProjectionStatBlock(
   projection: AuthoredStatBlockProjection,
-): Either.Either<
+): Result.Result<
   BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
   const speeds = battleDruidWildShapeFormProjectionSpeeds(
     projection.runtime.statBlock.speeds,
   );
-  if (Either.isLeft(speeds)) {
-    return Either.left({
+  if (Result.isFailure(speeds)) {
+    return Result.fail({
       tag: "battleDruidWildShapeKnownFormIssue",
       statBlockId: projection.runtime.id,
       reason: "missingWalkSpeed",
     });
   }
-  return Either.right({
+  return Result.succeed({
     ...projection.runtime,
     presentation: projection.presentation,
     statBlock: {
       ...projection.runtime.statBlock,
-      speeds: speeds.right,
+      speeds: speeds.success,
     },
   });
 }
 
 function battleDruidWildShapeFormProjectionSpeeds(
   speeds: AuthoredStatBlockProjection["runtime"]["statBlock"]["speeds"],
-): Either.Either<BattleDruidWildShapeFormSpeeds, "missingWalkSpeed"> {
+): Result.Result<BattleDruidWildShapeFormSpeeds, "missingWalkSpeed"> {
   const literalSpeeds: LiteralStatBlockSpeed[] = speeds.map((speed) => ({
     kind: speed.kind,
     feet: speed.feet,
@@ -513,9 +513,9 @@ function battleDruidWildShapeFormProjectionSpeeds(
     (speed): speed is LiteralWalkStatBlockSpeed => speed.kind === "walk",
   );
   if (walkSpeed === undefined) {
-    return Either.left("missingWalkSpeed");
+    return Result.fail("missingWalkSpeed");
   }
-  return Either.right([
+  return Result.succeed([
     walkSpeed,
     ...literalSpeeds.filter((speed) => speed !== walkSpeed),
   ]);
@@ -644,39 +644,39 @@ export type BattleCreatureInit =
 
 export function battleCreatureInitFromStatBlock(
   input: AuthoredStatBlockBattleInitInput,
-): Either.Either<
+): Result.Result<
   StatBlockBattleCombatantInit,
   AuthoredStatBlockBattleInitIssue
 > {
   const projected = projectAuthoredStatBlock(input.statBlock);
-  if (Either.isLeft(projected)) {
-    return Either.left({
+  if (Result.isFailure(projected)) {
+    return Result.fail({
       tag: "statBlockProjectionFailure",
-      failure: projected.left,
+      failure: projected.failure,
     });
   }
-  const source = battleStatBlockCombatantSource(projected.right.runtime);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  const source = battleStatBlockCombatantSource(projected.success.runtime);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   return battleCreatureInitFromRuntimeStatBlock({
     ...input,
-    statBlock: source.right,
-    presentation: projected.right.presentation,
+    statBlock: source.success,
+    presentation: projected.success.presentation,
   });
 }
 
 function battleCreatureInitFromRuntimeStatBlock(
   input: RuntimeStatBlockBattleInitInput,
-): Either.Either<StatBlockBattleCombatantInit, StatBlockBattleInitIssue> {
+): Result.Result<StatBlockBattleCombatantInit, StatBlockBattleInitIssue> {
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
     input.statBlock,
     input.conditions,
     input.combatantId,
   );
   if (initialConditionImmunityIssue !== null) {
-    return Either.left(initialConditionImmunityIssue);
+    return Result.fail(initialConditionImmunityIssue);
   }
   const maxHp = toHp(input.statBlock.statBlock.hp.value);
-  return Either.right({
+  return Result.succeed({
     combatantId: input.combatantId,
     initiative: input.initiative,
     creatureInit: {

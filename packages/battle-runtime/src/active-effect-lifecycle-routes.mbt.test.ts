@@ -550,7 +550,7 @@ function sleepRepeatSaveResolve(
   });
 }
 
-function sleepRepeatSaveResolveWithoutFill(
+function hitPointBudgetConditionRepeatSaveResolveWithoutFill(
   owner: ReducerRouteOwnerGroup,
 ): ReducerRouteEvent {
   return resolveRouteWithoutFill({
@@ -583,34 +583,50 @@ function createSleepRepeatSaveRouteDriver() {
             routeHoles(),
             "battleConditionLifecycle",
           ),
-          sleepRepeatSaveResolveWithoutFill("battleActiveEffect"),
-          sleepRepeatSaveResolveWithoutFill("battleConcentration"),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleActiveEffect",
+          ),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleConcentration",
+          ),
         ]);
       },
       doBreakConcentrationBeforeRepeat: () => {
         state = routeState("concentrationBrokenBeforeRepeat", [
           ...state.route,
-          sleepRepeatSaveResolveWithoutFill("battleConcentration"),
-          sleepRepeatSaveResolveWithoutFill("battleActiveEffect"),
-          sleepRepeatSaveResolveWithoutFill("battleConditionLifecycle"),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleConcentration",
+          ),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleActiveEffect",
+          ),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleConditionLifecycle",
+          ),
         ]);
       },
       doEndCasterTurn: () => {
         state = routeState("casterTurnEndedWithEffect", [
           ...state.route,
-          sleepRepeatSaveResolveWithoutFill("battleTurnBoundary"),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleTurnBoundary",
+          ),
         ]);
       },
       doEndCasterTurnAfterConcentrationBreak: () => {
         state = routeState("casterTurnEndedAfterConcentrationBreak", [
           ...state.route,
-          sleepRepeatSaveResolveWithoutFill("battleTurnBoundary"),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleTurnBoundary",
+          ),
         ]);
       },
       doEndTargetTurnAfterConcentrationBreak: () => {
         state = routeState("targetTurnEndedAfterConcentrationBreak", [
           ...state.route,
-          sleepRepeatSaveResolveWithoutFill("battleTurnBoundary"),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleTurnBoundary",
+          ),
         ]);
       },
       doDiscoverRepeatSave: () => {
@@ -630,7 +646,9 @@ function createSleepRepeatSaveRouteDriver() {
             routeHoles(),
             "battleConditionLifecycle",
           ),
-          sleepRepeatSaveResolveWithoutFill("battleActiveEffect"),
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            "battleActiveEffect",
+          ),
         ]);
       },
       doFillRepeatSaveFailure: () => {

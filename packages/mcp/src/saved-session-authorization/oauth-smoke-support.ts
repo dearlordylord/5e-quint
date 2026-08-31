@@ -1,56 +1,56 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import { isAnonymousVaultEmail } from "./vault-identity.ts";
 
 export const AuthorizationServerMetadataSchema = Schema.Struct({
-  issuer: Schema.NonEmptyTrimmedString,
-  authorization_endpoint: Schema.URL,
-  token_endpoint: Schema.URL,
-  userinfo_endpoint: Schema.URL,
-  jwks_uri: Schema.URL,
-  registration_endpoint: Schema.URL,
+  issuer: Schema.Trimmed.check(Schema.isNonEmpty()),
+  authorization_endpoint: Schema.URLFromString,
+  token_endpoint: Schema.URLFromString,
+  userinfo_endpoint: Schema.URLFromString,
+  jwks_uri: Schema.URLFromString,
+  registration_endpoint: Schema.URLFromString,
   client_id_metadata_document_supported: Schema.Boolean,
 });
 
 export const RegisteredClientSchema = Schema.Struct({
-  client_id: Schema.NonEmptyTrimmedString,
-  redirect_uris: Schema.Array(Schema.URL),
+  client_id: Schema.Trimmed.check(Schema.isNonEmpty()),
+  redirect_uris: Schema.Array(Schema.URLFromString),
   token_endpoint_auth_method: Schema.Literal("none"),
 });
 
 export const RedirectResultSchema = Schema.Struct({
   redirect: Schema.Boolean,
-  url: Schema.NonEmptyTrimmedString,
+  url: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 const TokenResponseSchema = Schema.Struct({
-  access_token: Schema.NonEmptyTrimmedString,
+  access_token: Schema.Trimmed.check(Schema.isNonEmpty()),
   expires_in: Schema.Number,
-  id_token: Schema.optional(Schema.NonEmptyTrimmedString),
-  refresh_token: Schema.optional(Schema.NonEmptyTrimmedString),
-  scope: Schema.NonEmptyTrimmedString,
-  token_type: Schema.NonEmptyTrimmedString,
+  id_token: Schema.optionalKey(Schema.Trimmed.check(Schema.isNonEmpty())),
+  refresh_token: Schema.optionalKey(Schema.Trimmed.check(Schema.isNonEmpty())),
+  scope: Schema.Trimmed.check(Schema.isNonEmpty()),
+  token_type: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 export const RefreshTokenResponseSchema = Schema.Struct({
-  access_token: Schema.NonEmptyTrimmedString,
+  access_token: Schema.Trimmed.check(Schema.isNonEmpty()),
   expires_in: Schema.Number,
-  refresh_token: Schema.NonEmptyTrimmedString,
-  scope: Schema.NonEmptyTrimmedString,
-  token_type: Schema.NonEmptyTrimmedString,
+  refresh_token: Schema.Trimmed.check(Schema.isNonEmpty()),
+  scope: Schema.Trimmed.check(Schema.isNonEmpty()),
+  token_type: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 export const SessionResponseSchema = Schema.Struct({
-  user: Schema.Struct({ id: Schema.NonEmptyTrimmedString }),
+  user: Schema.Struct({ id: Schema.Trimmed.check(Schema.isNonEmpty()) }),
 });
 
 export const PublicClientSchema = Schema.Struct({
-  client_id: Schema.NonEmptyTrimmedString,
-  client_name: Schema.NonEmptyTrimmedString,
+  client_id: Schema.Trimmed.check(Schema.isNonEmpty()),
+  client_name: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 export function assertTokenLifetime(
@@ -155,14 +155,14 @@ async function verifyChatGptUserInfo(
   const userInfoUnknown: unknown = await userInfoResponse.json();
   const userInfo = decodeUnknown(
     Schema.Struct({
-      sub: Schema.NonEmptyTrimmedString,
-      email: Schema.NonEmptyTrimmedString,
+      sub: Schema.Trimmed.check(Schema.isNonEmpty()),
+      email: Schema.Trimmed.check(Schema.isNonEmpty()),
       email_verified: Schema.Literal(false),
     }),
     userInfoUnknown,
   );
   const userInfoRecord = decodeUnknown(
-    Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+    Schema.Record(Schema.String, Schema.Unknown),
     userInfoUnknown,
   );
   const claims = Object.keys(userInfoRecord).sort().join(" ");
@@ -286,18 +286,20 @@ export async function requestBody(
   return Buffer.concat(chunks);
 }
 
-export async function decodeJson<A, I>(
-  schema: Schema.Schema<A, I>,
-  response: Response,
-): Promise<A> {
+export async function decodeJson<
+  S extends Schema.ConstraintDecoder<unknown, never>,
+>(schema: S, response: Response): Promise<S["Type"]> {
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${await response.text()}`);
   }
   return decodeUnknown(schema, await response.json());
 }
 
-function decodeUnknown<A, I>(schema: Schema.Schema<A, I>, value: unknown): A {
-  const decoded = Schema.decodeUnknownEither(schema)(value);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+function decodeUnknown<S extends Schema.ConstraintDecoder<unknown, never>>(
+  schema: S,
+  value: unknown,
+): S["Type"] {
+  const decoded = Schema.decodeUnknownResult(schema)(value);
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }

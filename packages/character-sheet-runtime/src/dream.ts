@@ -4,8 +4,8 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result } from "effect";
 
 import {
   DREAM_MATERIAL_COMPONENTS,
@@ -37,7 +37,7 @@ export function castDream(input: {
   readonly target: CharacterSheetDreamTarget;
   readonly messenger: CharacterSheetDreamMessenger;
   readonly mode: CharacterSheetDreamMode;
-}): Either.Either<CharacterSheetDreamResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDreamResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -101,12 +101,12 @@ function dreamModeIssue(mode: CharacterSheetDreamMode): string | null {
 }
 
 function dreamInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetDreamCasting;
   readonly target: CharacterSheetDreamTarget;
   readonly messenger: CharacterSheetDreamMessenger;
   readonly mode: CharacterSheetDreamMode;
-}): Either.Either<CharacterSheetDreamInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDreamInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Dream support profile required by this projector. */
   if (
@@ -120,7 +120,7 @@ function dreamInvocationFromSpell(input: {
     spell.mechanics.duration.value.amount !== DREAM_DURATION_HOURS ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "a handful of sand"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Dream requires the supported level-5 Illusion session profile.",
@@ -144,14 +144,14 @@ function dreamInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The exact eight-hour duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Dream requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "dream",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -164,7 +164,7 @@ function dreamInvocationFromSpell(input: {
       amount: DREAM_CASTING_TIME_MINUTES,
     },
     range: "special",
-    duration: duration.right,
+    duration: duration.success,
     materialComponents: input.casting.materialComponents,
     target: input.target,
     messenger: input.messenger,

@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
@@ -29,15 +29,23 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { MovementFeet, type DifficultyClass } from "@dnd/shared/types";
+import {
+  MovementFeet,
+  type DamageType,
+  type DifficultyClass,
+} from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
 } from "../character-battle-resource-execution.ts";
 import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+} from "../effect-execution-ref.ts";
 import {
   combatantCanSee,
   currentActorId,
@@ -58,6 +66,7 @@ import {
   applyBattleHitPointDamage,
   applyHpHealing,
   breakBattleConcentration,
+  resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
 import { damageAmountByTypeAfterTargetAdjustments } from "./damage-helpers.ts";
 import {
@@ -68,7 +77,7 @@ import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-f
 import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { spendReaction } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
@@ -89,6 +98,7 @@ import {
 } from "./ongoing-feature-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { scoreModifier } from "./domain-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
   type ResolvedWildShapeEquipmentDisposition,
@@ -334,30 +344,37 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon requires a selected held Melee weapon.",
     );
   }
-  const resource = actor.origin.resources.find(
-    (candidate) =>
-      candidate.resourcePoolRef ===
-      unitFeature.sacredWeapon.spends.resourcePoolRef,
+  const resource = availableSacredWeaponResource(
+    actor,
+    unitFeature.sacredWeapon.spends.resourcePoolRef,
   );
-  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+  if (resource === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Sacred Weapon has no Channel Divinity uses remaining.",
     );
   }
-  const spentAction = Either.getOrThrow(
-    spendActivationResource(input.state.currentTurnResources, {
+  const spentAction = spendActivationResource(
+    input.state.currentTurnResources,
+    {
       kind: "action",
       action: unitFeature.sacredWeapon.activationCost.action,
-    }),
+    },
   );
+  if (Result.isFailure(spentAction)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon requires an available action.",
+    );
+  }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
     unit: unitFeature.sacredWeapon.duration.unit,
     amount: unitFeature.sacredWeapon.duration.amount,
   });
   /* v8 ignore start -- @preserve -- Admitted Sacred Weapon invariant: the support-profile parser accepts the SRD one-minute duration before producing execution facts. */
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -365,10 +382,23 @@ export function resolveUnitFeatureHeldWeaponActivation(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: actor,
+    effect: {
+      kind: "paladinSacredWeapon",
+      sourceProcedureRef: input.subject.procedureRef,
+      sourceCombatantId: actor.combatantId,
+      weaponItemId: input.subject.weaponItemId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: durationTicks.success,
+      },
+    },
+  });
   const nextActor: CharacterBattleCreatureState = {
-    ...actor,
+    ...allocation.owner,
     activeEffects: [
-      ...actor.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             effect.kind === "paladinSacredWeapon" &&
@@ -376,16 +406,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
             effect.sourceCombatantId === actor.combatantId
           ),
       ),
-      {
-        kind: "paladinSacredWeapon",
-        sourceProcedureRef: input.subject.procedureRef,
-        sourceCombatantId: actor.combatantId,
-        weaponItemId: input.subject.weaponItemId,
-        expiresAt: {
-          kind: "duration",
-          durationTicks: durationTicks.right,
-        },
-      },
+      allocation.effect,
     ],
     origin: {
       ...actor.origin,
@@ -399,7 +420,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   };
   const nextState = {
     ...input.state,
-    currentTurnResources: spentAction,
+    currentTurnResources: spentAction.success,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -410,6 +431,18 @@ export function resolveUnitFeatureHeldWeaponActivation(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function availableSacredWeaponResource(
+  actor: CharacterBattleCreatureState,
+  resourcePoolRef: CharacterBattleResourceState["resourcePoolRef"],
+): CharacterBattleResourceState | undefined {
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  return resource !== undefined && resourceHasUsesRemaining(resource)
+    ? resource
+    : undefined;
 }
 
 function resolvePaladinSacredWeaponDismissUnitFeature(
@@ -480,15 +513,41 @@ function resolveRogueSteadyAimUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Steady Aim Bonus Action is no longer available.",
     );
   }
+  const allocation = allocateBattleEffectOccurrencesForCreature({
+    owner: actor,
+    effects: [
+      {
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: input.subject.procedureRef,
+        sourceCombatantId: actor.combatantId,
+        mode: unitFeature.steadyAim.attackRoll.mode,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: actor.combatantId,
+          round: input.state.initiative.round,
+        },
+      },
+      {
+        kind: "selfSpeedZero",
+        sourceProcedureRef: input.subject.procedureRef,
+        sourceCombatantId: actor.combatantId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: actor.combatantId,
+          round: input.state.initiative.round,
+        },
+      },
+    ],
+  });
   const activeEffects = [
-    ...actor.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           "sourceProcedureRef" in effect &&
@@ -498,33 +557,13 @@ function resolveRogueSteadyAimUnitFeature(
             effect.kind === "selfSpeedZero")
         ),
     ),
-    {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: input.subject.procedureRef,
-      sourceCombatantId: actor.combatantId,
-      mode: unitFeature.steadyAim.attackRoll.mode,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actor.combatantId,
-        round: input.state.initiative.round,
-      },
-    } as const,
-    {
-      kind: "selfSpeedZero",
-      sourceProcedureRef: input.subject.procedureRef,
-      sourceCombatantId: actor.combatantId,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actor.combatantId,
-        round: input.state.initiative.round,
-      },
-    } as const,
+    ...allocation.effects,
   ];
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(actor.combatantId, {
-      ...actor,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -557,7 +596,7 @@ function resolveMagicActionHealingPoolUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -628,7 +667,7 @@ function resolveMagicActionHealingPoolUnitFeature(
   }
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants,
   };
   return {
@@ -679,7 +718,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -758,7 +797,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterSpend = extendSavingThrowOngoingFeatures(
     {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
         actorAfterResourceSpend,
@@ -768,51 +807,170 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     savingThrowTargetIds,
     relationshipFacts,
   );
-  const damageRollTotal = rolledDiceTotal(fills.value.damageRoll.value);
-  const savingThrows = fills.value.savingThrows;
-  const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
-      if (target === undefined) {
-        return state;
-      }
-      /* v8 ignore stop -- @preserve */
-      const outcome = validation.outcomesByTargetId.get(targetId);
-      const damageBeforeTargetAdjustments =
-        outcome?.succeeded === true
-          ? Math.floor(damageRollTotal / 2)
-          : damageRollTotal;
-      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+  return resolveMagicActionAreaSaveDamageHealingAfterSpend({
+    input,
+    actor,
+    damageType: unitFeature.damageHealing.damage.damageType,
+    damageTargetIds: validation.damageTargetIds,
+    outcomesByTargetId: validation.outcomesByTargetId,
+    healingTargetId: validation.healingTargetId,
+    damageRoll: fills.value.damageRoll,
+    healingRoll: fills.value.healingRoll,
+    savingThrows: fills.value.savingThrows,
+    damageRepeatSaves: fills.value.damageRepeatSaves,
+    stateAfterSpend,
+  });
+}
+
+type UnitFeatureAreaDamageRepeatSave = Extract<
+  ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+  { readonly tag: "ok" }
+>;
+
+type UnitFeatureAreaDamageEntry = {
+  readonly targetId: CombatantId;
+  readonly damageAmount: number;
+  readonly damageRepeatSave: UnitFeatureAreaDamageRepeatSave;
+};
+
+function resolveUnitFeatureAreaDamageEntries(input: {
+  readonly state: BattleState;
+  readonly damageTargetIds: readonly CombatantId[];
+  readonly outcomesByTargetId: ReadonlyMap<
+    CombatantId,
+    BattleSavingThrowOutcome
+  >;
+  readonly damageRollTotal: number;
+  readonly damageType: DamageType;
+  readonly damageRollHoleId: BattleHoleId;
+  readonly damageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
+  readonly unmatchedFillMessage: string;
+}):
+  | {
+      readonly tag: "ok";
+      readonly entries: readonly UnitFeatureAreaDamageEntry[];
+    }
+  | Extract<
+      ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+      { readonly tag: "invalid" | "needsHoles" }
+    > {
+  const entries: UnitFeatureAreaDamageEntry[] = [];
+  for (const targetId of input.damageTargetIds) {
+    const target = input.state.combatants.get(targetId);
+    /* v8 ignore start -- @preserve -- Validation proves every affected target exists in the current battle. */
+    if (target === undefined) continue;
+    /* v8 ignore stop -- @preserve */
+    const damageRollTotal =
+      input.outcomesByTargetId.get(targetId)?.succeeded === true
+        ? Math.floor(input.damageRollTotal / 2)
+        : input.damageRollTotal;
+    const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      input.state,
+      target,
+      new Map([[input.damageType, damageRollTotal]]),
+    );
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: input.state,
+      target,
+      damageAmount,
+      fills: input.damageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: input.damageRollHoleId,
+        targetId,
+      }),
+    });
+    if (damageRepeatSave.tag !== "ok") return damageRepeatSave;
+    entries.push({ targetId, damageAmount, damageRepeatSave });
+  }
+  const acceptedHoleIds = new Set(
+    entries.flatMap((entry) =>
+      entry.damageRepeatSave.holes.map((hole) => hole.holeId),
+    ),
+  );
+  if (
+    input.damageRepeatSaves.some((fill) => !acceptedHoleIds.has(fill.holeId))
+  ) {
+    return { tag: "invalid", message: input.unmatchedFillMessage };
+  }
+  return { tag: "ok", entries };
+}
+
+function applyUnitFeatureAreaDamageEntries(input: {
+  readonly state: BattleState;
+  readonly entries: readonly UnitFeatureAreaDamageEntry[];
+  readonly damageSourceId: CombatantId;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+}): BattleState {
+  return input.entries.reduce<BattleState>((state, entry) => {
+    const target = state.combatants.get(entry.targetId);
+    /* v8 ignore start -- @preserve -- Damage-entry discovery proves every target exists, and damage application preserves combatant-map membership. */
+    if (target === undefined) return state;
+    /* v8 ignore stop -- @preserve */
+    return normalizeBattleGrapples(
+      applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: entry.damageRepeatSave.context,
         state,
         target,
-        new Map([
-          [
-            unitFeature.damageHealing.damage.damageType,
-            damageBeforeTargetAdjustments,
-          ],
-        ]),
-      );
-      return normalizeBattleGrapples(
-        applyBattleHitPointDamage({
-          state,
-          target,
-          damageAmount,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: actor.combatantId,
-          spatialFacts: savingThrows.spatialFacts ?? [],
-        }),
-      );
-    },
-    stateAfterSpend,
-  );
-  const healingTarget = stateAfterDamage.combatants.get(
-    validation.healingTargetId,
-  );
-  /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves the healing target exists, and damage application preserves combatant-map membership. */
+        damageAmount: entry.damageAmount,
+        deathFailuresAtZeroHp: 1,
+        damageSourceId: input.damageSourceId,
+        spatialFacts: input.spatialFacts,
+      }),
+    );
+  }, input.state);
+}
+
+function resolveMagicActionAreaSaveDamageHealingAfterSpend(input: {
+  readonly input: UnitFeatureBattleResolutionInput;
+  readonly actor: CharacterBattleCreatureState;
+  readonly stateAfterSpend: BattleState;
+  readonly damageTargetIds: readonly CombatantId[];
+  readonly outcomesByTargetId: ReadonlyMap<
+    CombatantId,
+    BattleSavingThrowOutcome
+  >;
+  readonly healingTargetId: CombatantId;
+  readonly damageType: DamageType;
+  readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill;
+  readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill;
+  readonly savingThrows: MagicActionAreaSaveDamageHealingSavingThrowFill;
+  readonly damageRepeatSaves: readonly MagicActionAreaSaveDamageHealingSavingThrowFill[];
+}): BattleResolutionResult {
+  const damage = resolveUnitFeatureAreaDamageEntries({
+    state: input.input.state,
+    damageTargetIds: input.damageTargetIds,
+    outcomesByTargetId: input.outcomesByTargetId,
+    damageRollTotal: rolledDiceTotal(input.damageRoll.value),
+    damageType: input.damageType,
+    damageRollHoleId: input.damageRoll.holeId,
+    damageRepeatSaves: input.damageRepeatSaves,
+    unmatchedFillMessage:
+      "Magic Action damage repeat save fill does not match a damaged target.",
+  });
+  if (damage.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", damage.message);
+  }
+  if (damage.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      damage.missingHoles,
+    );
+  }
+  const stateAfterDamage = applyUnitFeatureAreaDamageEntries({
+    state: input.stateAfterSpend,
+    entries: damage.entries,
+    damageSourceId: input.actor.combatantId,
+    spatialFacts: input.savingThrows.spatialFacts ?? [],
+  });
+  const healingTarget = stateAfterDamage.combatants.get(input.healingTargetId);
+  /* v8 ignore start -- @preserve -- Validation proves the healing target exists, and damage application preserves combatant-map membership. */
   if (healingTarget === undefined) {
     return invalidResult(
-      input.state,
+      input.input.state,
       "staleSubject",
       "Magic Action healing target is no longer in the battle.",
     );
@@ -821,11 +979,8 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterHealing = {
     ...stateAfterDamage,
     combatants: new Map(stateAfterDamage.combatants).set(
-      validation.healingTargetId,
-      applyHpHealing(
-        healingTarget,
-        rolledDiceTotal(fills.value.healingRoll.value),
-      ),
+      input.healingTargetId,
+      applyHpHealing(healingTarget, rolledDiceTotal(input.healingRoll.value)),
     ),
   };
   return {
@@ -922,7 +1077,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -945,7 +1100,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
   const stateAfterSpend = extendSavingThrowOngoingFeatures(
     {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
         actorAfterResourceSpend,
@@ -1009,7 +1164,7 @@ export function resolveDruidWildShapeUnitFeature(
       kind: "bonusAction",
     });
     /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
-    if (Either.isLeft(spent)) {
+    if (Result.isFailure(spent)) {
       return invalidResult(
         input.state,
         "staleSubject",
@@ -1018,7 +1173,7 @@ export function resolveDruidWildShapeUnitFeature(
     }
     /* v8 ignore stop -- @preserve */
     const nextState = dismissDruidWildShapeForm({
-      state: { ...input.state, currentTurnResources: spent.right },
+      state: { ...input.state, currentTurnResources: spent.success },
       actorId: actor.combatantId,
     });
     return {
@@ -1036,7 +1191,7 @@ export function resolveDruidWildShapeUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Druid Wild Shape is suppressed while the creature remains in the Moonbeam Cylinder.",
+      "Druid Wild Shape is suppressed while the creature remains in the movable radiant cylinder Cylinder.",
     );
   }
   if (!resourceHasUsesRemaining(resource)) {
@@ -1129,7 +1284,7 @@ export function resolveDruidWildShapeUnitFeature(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1151,7 +1306,7 @@ export function resolveDruidWildShapeUnitFeature(
   };
   const stateWithResourceSpend = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -1243,7 +1398,7 @@ export function resolveBardicInspirationGrantUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
+  if (!resourceHasUsesRemaining(resource) || Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1380,20 +1535,24 @@ export function resolveBardicInspirationGrantUnitFeature(
       ),
     },
   };
-  const nextTarget: BattleCreatureState = {
-    ...target,
-    activeEffects: [
-      ...target.activeEffects,
-      {
-        kind: "bardicInspirationDie",
-        sourceProcedureRef: input.subject.procedureRef,
-        sourceCombatantId: input.subject.actorId,
-        dieSize: unitFeature.dieSize,
-        expiresAt: {
-          kind: "duration",
-          durationTicks: unitFeature.durationTicks,
-        },
+  const targetAllocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "bardicInspirationDie",
+      sourceProcedureRef: input.subject.procedureRef,
+      sourceCombatantId: input.subject.actorId,
+      dieSize: unitFeature.dieSize,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: unitFeature.durationTicks,
       },
+    },
+  });
+  const nextTarget: BattleCreatureState = {
+    ...targetAllocation.owner,
+    activeEffects: [
+      ...targetAllocation.owner.activeEffects,
+      targetAllocation.effect,
     ],
   };
   const combatants = new Map(input.state.combatants)
@@ -1402,7 +1561,7 @@ export function resolveBardicInspirationGrantUnitFeature(
   const nextState = {
     ...input.state,
     combatants,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -1825,6 +1984,7 @@ type AttackActionAreaSaveDamageReplacementFillSet = {
   readonly damageRoll:
     | AttackActionAreaSaveDamageReplacementRollFill
     | undefined;
+  readonly damageRepeatSaves: readonly AttackActionAreaSaveDamageReplacementSavingThrowFill[];
 };
 
 function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
@@ -1910,7 +2070,7 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   }
 
   const spent = spendAttackActionResource(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1935,10 +2095,10 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
       currentTurnResources: openClassFeatureExtraAttackResource({
         state: {
           ...input.state,
-          currentTurnResources: spent.right.state,
+          currentTurnResources: spent.success.state,
         },
         actorId: actor.combatantId,
-        spentResource: spent.right.spentResource,
+        spentResource: spent.success.spentResource,
       }),
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
@@ -1967,43 +2127,60 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const damageRollTotal = rolledDiceTotal(damageRoll.value);
-  const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
-      if (target === undefined) {
-        return state;
-      }
-      /* v8 ignore stop -- @preserve */
-      const outcome = validation.outcomesByTargetId.get(targetId);
-      const damageBeforeTargetAdjustments =
-        outcome?.succeeded === true
-          ? Math.floor(damageRollTotal / 2)
-          : damageRollTotal;
-      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
-        state,
-        target,
-        new Map([
-          [
-            unitFeature.breath.damage.damageType.value,
-            damageBeforeTargetAdjustments,
-          ],
-        ]),
-      );
-      return normalizeBattleGrapples(
-        applyBattleHitPointDamage({
-          state,
-          target,
-          damageAmount,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: actor.combatantId,
-          spatialFacts: fills.value.savingThrows?.spatialFacts ?? [],
-        }),
-      );
-    },
+  return resolveAttackActionAreaSaveDamageAfterSpend({
+    input,
+    actor,
     stateAfterSpend,
-  );
+    damageTargetIds: validation.damageTargetIds,
+    outcomesByTargetId: validation.outcomesByTargetId,
+    damageType: unitFeature.breath.damage.damageType.value,
+    damageRoll,
+    damageRepeatSaves: fills.value.damageRepeatSaves,
+    savingThrows: fills.value.savingThrows,
+  });
+}
+
+function resolveAttackActionAreaSaveDamageAfterSpend(input: {
+  readonly input: UnitFeatureBattleResolutionInput;
+  readonly actor: CharacterBattleCreatureState;
+  readonly stateAfterSpend: BattleState;
+  readonly damageTargetIds: readonly CombatantId[];
+  readonly outcomesByTargetId: ReadonlyMap<
+    CombatantId,
+    BattleSavingThrowOutcome
+  >;
+  readonly damageType: DamageType;
+  readonly damageRoll: AttackActionAreaSaveDamageReplacementRollFill;
+  readonly damageRepeatSaves: readonly AttackActionAreaSaveDamageReplacementSavingThrowFill[];
+  readonly savingThrows: AttackActionAreaSaveDamageReplacementSavingThrowFill;
+}): BattleResolutionResult {
+  const damage = resolveUnitFeatureAreaDamageEntries({
+    state: input.input.state,
+    damageTargetIds: input.damageTargetIds,
+    outcomesByTargetId: input.outcomesByTargetId,
+    damageRollTotal: rolledDiceTotal(input.damageRoll.value),
+    damageType: input.damageType,
+    damageRollHoleId: input.damageRoll.holeId,
+    damageRepeatSaves: input.damageRepeatSaves,
+    unmatchedFillMessage:
+      "Area damage replacement repeat save fill does not match a damaged target.",
+  });
+  if (damage.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", damage.message);
+  }
+  if (damage.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      damage.missingHoles,
+    );
+  }
+  const stateAfterDamage = applyUnitFeatureAreaDamageEntries({
+    state: input.stateAfterSpend,
+    entries: damage.entries,
+    damageSourceId: input.actor.combatantId,
+    spatialFacts: input.savingThrows.spatialFacts ?? [],
+  });
   return {
     tag: "resolved",
     state: stateAfterDamage,
@@ -2026,7 +2203,14 @@ function attackActionAreaSaveDamageReplacementFills(
     | AttackActionAreaSaveDamageReplacementSavingThrowFill
     | undefined;
   let damageRoll: AttackActionAreaSaveDamageReplacementRollFill | undefined;
-  for (const fill of fills) {
+  const damageRepeatSaves = unitFeatureDamageRepeatSaveFills(
+    fills,
+    attackActionAreaSaveDamageReplacementSavingThrowHoleId(procedureRef),
+  );
+  const damageRepeatSaveSet = new Set<BattleFill>(damageRepeatSaves);
+  for (const fill of fills.filter(
+    (candidate) => !damageRepeatSaveSet.has(candidate),
+  )) {
     if (
       fill.kind === "savingThrowOutcome" &&
       fill.holeId ===
@@ -2079,7 +2263,23 @@ function attackActionAreaSaveDamageReplacementFills(
     };
     /* v8 ignore stop -- @preserve */
   }
-  return { tag: "ok", value: { savingThrows, damageRoll } };
+  return {
+    tag: "ok",
+    value: { savingThrows, damageRoll, damageRepeatSaves },
+  };
+}
+
+function unitFeatureDamageRepeatSaveFills(
+  fills: readonly BattleFill[],
+  primarySavingThrowHoleId: BattleHoleId,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[] {
+  return fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId !== primarySavingThrowHoleId,
+  );
 }
 
 function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
@@ -2293,6 +2493,7 @@ type MagicActionAreaSaveDamageHealingFillSet = {
     | undefined;
   readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  readonly damageRepeatSaves: readonly MagicActionAreaSaveDamageHealingSavingThrowFill[];
 };
 
 type MagicActionSaveGatedConditionSavingThrowFill = Extract<
@@ -2494,32 +2695,35 @@ function applyMagicActionSaveGatedConditionFailures(
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) continue;
-    const activeEffect = {
-      kind: "unitFeatureCondition" as const,
-      sourceProcedureRef,
-      sourceCombatantId: actorId,
-      condition: unitFeature.condition.onFail.condition,
-      conditionHadNonSpellSource: hasCondition(
-        target.conditions,
-        unitFeature.condition.onFail.condition,
-      ),
-      earlyEnd: { kind: "targetTakesAnyDamage" as const },
-      turnRestriction: { kind: "moveActionOrBonusAction" as const },
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: unitFeature.condition.onFail.durationTicks,
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "unitFeatureCondition",
+        sourceProcedureRef,
+        sourceCombatantId: actorId,
+        condition: unitFeature.condition.onFail.condition,
+        conditionHadNonSpellSource: hasCondition(
+          target.conditions,
+          unitFeature.condition.onFail.condition,
+        ),
+        earlyEnd: { kind: "targetTakesAnyDamage" },
+        turnRestriction: { kind: "moveActionOrBonusAction" },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: unitFeature.condition.onFail.durationTicks,
+        },
       },
-    };
+    });
     const nextTarget = {
       ...battleCreatureStateWithKnockOutPreservedConditions(
-        target,
+        allocation.owner,
         applyCondition(
           target.conditions,
           unitFeature.condition.onFail.condition,
         ),
       ),
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureCondition" &&
@@ -2528,7 +2732,7 @@ function applyMagicActionSaveGatedConditionFailures(
               candidate.condition === unitFeature.condition.onFail.condition
             ),
         ),
-        activeEffect,
+        allocation.effect,
       ],
     };
     combatants.set(targetId, nextTarget);
@@ -2560,7 +2764,14 @@ function magicActionAreaSaveDamageHealingFills(
   let healingTarget: MagicActionAreaSaveDamageHealingTargetFill | undefined;
   let damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   let healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
-  for (const fill of fills) {
+  const damageRepeatSaves = unitFeatureDamageRepeatSaveFills(
+    fills,
+    magicActionAreaSaveDamageHealingSavingThrowHoleId(procedureRef),
+  );
+  const damageRepeatSaveSet = new Set<BattleFill>(damageRepeatSaves);
+  for (const fill of fills.filter(
+    (candidate) => !damageRepeatSaveSet.has(candidate),
+  )) {
     if (
       fill.kind === "savingThrowOutcome" &&
       fill.holeId ===
@@ -2661,7 +2872,13 @@ function magicActionAreaSaveDamageHealingFills(
   }
   return {
     tag: "ok",
-    value: { savingThrows, healingTarget, damageRoll, healingRoll },
+    value: {
+      savingThrows,
+      healingTarget,
+      damageRoll,
+      healingRoll,
+      damageRepeatSaves,
+    },
   };
 }
 
@@ -3131,11 +3348,11 @@ export function resolveExtraActionGrantUnitFeature(
     input.subject.procedureRef,
     unitFeature.restriction,
   );
-  if (Either.isLeft(granted)) {
+  if (Result.isFailure(granted)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      granted.left === "unit-granted action resource already granted"
+      granted.failure === "unit-granted action resource already granted"
         ? "This Unit feature has already granted an action this turn."
         : "This Unit feature cannot grant an action for the current turn.",
     );
@@ -3162,7 +3379,7 @@ export function resolveExtraActionGrantUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: granted.right,
+    currentTurnResources: granted.success,
   };
   return {
     tag: "resolved",
@@ -3180,7 +3397,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
+  if (!resourceHasUsesRemaining(resource) || Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3222,7 +3439,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -3265,7 +3482,7 @@ export function resolveOngoingFeatureUnitFeature(
 
   const currentTurnResources =
     unitFeature.activationTrigger === "bonusAction"
-      ? Either.getOrThrow(
+      ? Result.getOrThrow(
           spendActivationResource(input.state.currentTurnResources, {
             kind: "bonusAction",
           }),

@@ -6,10 +6,12 @@ import { battleActDruidWildShapePresentation } from "./battle-act-composition.ts
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   characterSeed,
+  deathSavingThrowFill,
   discoverBattleActs,
   requireNeedsHoles,
   requireResolved,
   startBattleSessionRight,
+  wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -17,28 +19,32 @@ import {
   battleId,
   breakBattleConcentration,
   endTurn,
+  hasCondition,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import {
   flamingSphereAreaFill,
   flamingSphereEndTurnAct,
   flamingSphereRepositionAct,
-  gustOfWindLineDirectionChangeAct,
-  gustOfWindLineDirectionChoiceFill,
-  gustOfWindLineEndTurnSaveAct,
-  gustOfWindLineSavingThrowOutcomeFill,
-  greaseGroundHazardEndTurnAct,
+  directionalPersistentAreaDirectionChangeAct,
+  directionalPersistentAreaDirectionChoiceFill,
+  directionalPersistentAreaEndTurnSaveAct,
+  directionalPersistentAreaSavingThrowOutcomeFill,
+  persistentAreaSaveConditionEndTurnAct,
   greaseSavingThrowOutcomeFill,
   moonbeamAreaFill,
   moonbeamEndTurnSaveAct,
+  savingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
+  spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   flamingSphereUnitId,
   greaseUnitId,
   gustOfWindUnitId,
   moonbeamUnitId,
+  saveGatedConditionWithRepeatUnitId,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -73,7 +79,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(castSave, [
+          directionalPersistentAreaSavingThrowOutcomeFill(castSave, [
             { targetId: spellTargetId, succeeded: true },
           ]),
         ],
@@ -82,7 +88,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const saveAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
     const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
 
     expect(
@@ -91,7 +97,7 @@ describe("persistent spatial spell boundary procedures", () => {
         subject: saveAct.subject,
         fills: [
           {
-            ...gustOfWindLineSavingThrowOutcomeFill(save, [
+            ...directionalPersistentAreaSavingThrowOutcomeFill(save, [
               { targetId: spellTargetId, succeeded: true },
             ]),
             value: { outcomes: [{ targetId: spellTargetId, succeeded: true }] },
@@ -101,7 +107,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line Saving Throw outcome requires Line area facts.",
+        "directional persistent area Line Saving Throw outcome requires Line area facts.",
     });
 
     expect(
@@ -109,7 +115,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: targetTurn.state,
         subject: saveAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             save,
             [{ targetId: spellTargetId, succeeded: true }],
             { areaId: battleAreaId("wrong-gust-line") },
@@ -119,7 +125,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line Saving Throw outcome must match the active Line area.",
+        "directional persistent area Line Saving Throw outcome must match the active Line area.",
     });
 
     expect(
@@ -127,7 +133,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: targetTurn.state,
         subject: saveAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(save, [
+          directionalPersistentAreaSavingThrowOutcomeFill(save, [
             { targetId: spellCasterId, succeeded: true },
           ]),
         ],
@@ -135,7 +141,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line Saving Throw outcome must match the ending-turn target.",
+        "directional persistent area Line Saving Throw outcome must match the ending-turn target.",
     });
   });
 
@@ -158,7 +164,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(castAct.initialHoles, "savingThrowOutcome"),
             [{ targetId: spellTargetId, succeeded: true }],
           ),
@@ -168,12 +174,12 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const saveAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
     const pending = resolveBattleSubject({
       state: targetTurn.state,
       subject: saveAct.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(
+        directionalPersistentAreaSavingThrowOutcomeFill(
           requireHole(saveAct.initialHoles, "savingThrowOutcome"),
           [{ targetId: spellTargetId, succeeded: true }],
         ),
@@ -202,7 +208,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(castAct.initialHoles, "savingThrowOutcome"),
             [],
           ),
@@ -212,31 +218,31 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const saveAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
     const resolvedTargetTurn = requireResolved(
       resolveBattleSubject({
         state: targetTurn.state,
         subject: saveAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(saveAct.initialHoles, "savingThrowOutcome"),
             [{ targetId: spellTargetId, succeeded: true }],
           ),
         ],
       }),
     );
-    const directionAct = gustOfWindLineDirectionChangeAct(
+    const directionAct = directionalPersistentAreaDirectionChangeAct(
       resolvedTargetTurn.state,
     );
     const directionHole = requireHole(
       directionAct.initialHoles,
-      "gustOfWindLineDirectionChoice",
+      "directionalPersistentAreaDirectionChoice",
     );
     const changed = requireResolved(
       resolveBattleSubject({
         state: resolvedTargetTurn.state,
         subject: directionAct.subject,
-        fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+        fills: [directionalPersistentAreaDirectionChoiceFill(directionHole)],
       }),
     );
     expect(changed.state.currentTurnResources.currentHasBonusAction).toBe(
@@ -247,12 +253,13 @@ describe("persistent spatial spell boundary procedures", () => {
       resolveBattleSubject({
         state: changed.state,
         subject: directionAct.subject,
-        fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+        fills: [directionalPersistentAreaDirectionChoiceFill(directionHole)],
       }),
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Gust of Wind Line direction change is no longer available.",
+      message:
+        "directional persistent area Line direction change is no longer available.",
     });
 
     expect(
@@ -264,11 +271,12 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Gust of Wind Line direction change is no longer available.",
+      message:
+        "directional persistent area Line direction change is no longer available.",
     });
   });
 
-  test("Flaming Sphere validates damage then yields to the next actor's Death Save frontier before mutation", () => {
+  test("Flaming Sphere keeps damage staged while the next actor's Death Save frontier is open", () => {
     const initial = spellBattle({
       preparedSpells: [spellRecord(flamingSphereUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -342,6 +350,26 @@ describe("persistent spatial spell boundary procedures", () => {
     expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
       targetTurn.state.combatants.get(spellTargetId)?.hp,
     );
+    const committed = requireResolved(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: saveAct.subject,
+        fills: [
+          failedSave,
+          damageFill,
+          deathSavingThrowFill(
+            requireHole(resolved.holes, "deathSavingThrow"),
+            10,
+          ),
+        ],
+      }),
+    );
+    expect(committed.state.combatants.get(spellTargetId)?.hp).toBe(7);
+    expect(committed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: spellTargetId, hp: 7 }),
+      ]),
+    );
   });
 
   test("Flaming Sphere reposition becomes stale when Concentration ends", () => {
@@ -413,7 +441,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
   });
 
-  test("Moonbeam validates damage then yields to the next actor's Death Save frontier before mutation", () => {
+  test("Moonbeam keeps damage staged while the next actor's Death Save frontier is open", () => {
     const initial = spellBattle({
       preparedSpells: [spellRecord(moonbeamUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -485,6 +513,191 @@ describe("persistent spatial spell boundary procedures", () => {
     expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
       targetTurn.state.combatants.get(spellTargetId)?.hp,
     );
+    const committed = requireResolved(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: saveAct.subject,
+        fills: [
+          failedSave,
+          damageFill,
+          deathSavingThrowFill(
+            requireHole(resolved.holes, "deathSavingThrow"),
+            10,
+          ),
+        ],
+      }),
+    );
+    expect(committed.state.combatants.get(spellTargetId)?.hp).toBe(25);
+    expect(committed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: spellTargetId, hp: 25 }),
+      ]),
+    );
+  });
+
+  test("Moonbeam positive damage resolves an admitted condition damage repeat save", () => {
+    const conditionSpell = spellRecord(saveGatedConditionWithRepeatUnitId);
+    const session = startBattleSessionRight({
+      battleId: battleId("persistent-spatial-condition-damage-repeat-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Synthetic condition caster",
+          initiative: 30,
+          classLevels: [{ className: "wizard", level: 1 }],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [conditionSpell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: spellCasterId,
+          displayName: "Synthetic movable-zone caster",
+          initiative: 20,
+          classLevels: [{ className: "druid", level: 3 }],
+          attack: null,
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [spellRecord(moonbeamUnitId)],
+              spellSlots: [{ spellLevel: 2, count: 1 }],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "druid",
+              abilityModifier: 3,
+            },
+          },
+        }),
+        characterSeed({
+          combatantId: spellTargetId,
+          displayName: "Synthetic condition target",
+          initiative: 10,
+          classLevels: [{ className: "fighter", level: 1 }],
+          attack: null,
+          currentHp: 30,
+          maxHp: 30,
+        }),
+      ],
+    });
+    const conditionAct = spellAct({
+      session,
+      spellId: saveGatedConditionWithRepeatUnitId,
+      slotLevel: 1,
+    });
+    const conditionTarget = requireHole(
+      conditionAct.initialHoles,
+      "spellTargetList",
+    );
+    const conditionTargetFill = spellTargetListFill(
+      conditionTarget,
+      wizardId,
+      saveGatedConditionWithRepeatUnitId,
+      [spellTargetId],
+    );
+    const conditionSave = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: conditionAct.subject,
+        fills: [conditionTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const conditioned = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: conditionAct.subject,
+        fills: [
+          conditionTargetFill,
+          savingThrowOutcomeFill(conditionSave, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    const zoneCasterTurn = requireResolved(
+      endTurn({ state: conditioned.state, actorId: wizardId }),
+    );
+    const zoneAct = spellAct({
+      session: battleRuntimeSessionForTest({
+        ...session,
+        state: zoneCasterTurn.state,
+      }),
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const zone = requireResolved(
+      resolveBattleSubject({
+        state: zoneCasterTurn.state,
+        subject: zoneAct.subject,
+        fills: [
+          moonbeamAreaFill(
+            requireHole(zoneAct.initialHoles, "spellAreaChoice"),
+          ),
+        ],
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: zone.state, actorId: spellCasterId }),
+    );
+    const damageAct = moonbeamEndTurnSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: targetTurn.state }),
+    );
+    const zoneSaveFill = singleTargetSavingThrowOutcomeFill(
+      requireHole(damageAct.initialHoles, "savingThrowOutcome"),
+      spellTargetId,
+      false,
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: damageAct.subject,
+        fills: [zoneSaveFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[2, 3]]);
+    const pendingRepeatSave = requireNeedsHoles(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: damageAct.subject,
+        fills: [zoneSaveFill, damageFill],
+      }),
+    );
+    const repeatSave = requireHole(
+      pendingRepeatSave.holes,
+      "savingThrowOutcome",
+    );
+    expect(repeatSave).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: spellTargetId,
+        trigger: "damage",
+      },
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: pendingRepeatSave.state,
+        subject: damageAct.subject,
+        fills: [
+          zoneSaveFill,
+          damageFill,
+          savingThrowOutcomeFill(repeatSave, [
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+    const target = resolved.state.combatants.get(spellTargetId);
+    expect(target?.hp).toBe(25);
+    expect(
+      target === undefined ? true : hasCondition(target.conditions, "prone"),
+    ).toBe(false);
+    expect(
+      target?.activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
+    ).toBe(false);
   });
 
   test("Moonbeam repeats no damage in the same turn but still returns End Turn holes", () => {
@@ -545,14 +758,33 @@ describe("persistent spatial spell boundary procedures", () => {
       }),
       "rolledDice",
     );
+    const entersDamageFill = damageRollFillWithGroups(entersDamage, [[2, 3]]);
+    const unrelatedDeathSave = deathSavingThrowFill(
+      requireHole(
+        requireNeedsHoles(
+          endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+        ).holes,
+        "deathSavingThrow",
+      ),
+      10,
+    );
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: entersSubject,
+        fills: [entersSaveFill, entersDamageFill, unrelatedDeathSave],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Movable zone save accepts only its save, damage, Concentration, and applicable delegated End Turn fills.",
+    });
     const entered = requireResolved(
       resolveBattleSubject({
         state: targetTurn.state,
         subject: entersSubject,
-        fills: [
-          entersSaveFill,
-          damageRollFillWithGroups(entersDamage, [[2, 3]]),
-        ],
+        fills: [entersSaveFill, entersDamageFill],
       }),
     );
 
@@ -574,7 +806,7 @@ describe("persistent spatial spell boundary procedures", () => {
 
   test("Moonbeam Cylinder exit is stale after its suppression is cleared", () => {
     const initial = startBattleSessionRight({
-      battleId: battleId("persistent-spatial-moonbeam-exit"),
+      battleId: battleId("persistent-spatial-persistentAreaSaveDamage-exit"),
       combatants: [
         characterSeed({
           combatantId: spellTargetId,
@@ -725,7 +957,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "moonbeamCylinderExit" &&
+        candidate.subject.command === "persistentAreaSaveDamageExit" &&
         candidate.subject.actorId === spellTargetId,
     );
     if (exitAct === undefined) {
@@ -747,7 +979,8 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Moonbeam shape-shift suppression is no longer active.",
+      message:
+        "MovablePersistentArea shape-shift suppression is no longer active.",
     });
   });
 
@@ -779,7 +1012,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = greaseGroundHazardEndTurnAct(
+    const saveAct = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({ ...initial, state: targetTurn.state }),
       spellTargetId,
     );

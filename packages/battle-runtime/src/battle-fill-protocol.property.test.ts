@@ -1233,7 +1233,7 @@ describe("battle fill protocol boundary owners", () => {
       throw new Error("Expected canonical Slow invocation.");
     }
     const ignoredFill = {
-      kind: "slowSomaticSpellFailureOutcome" as const,
+      kind: "turnConstraintSomaticSpellFailureOutcome" as const,
       holeId: holeId("boundary-slow-failure"),
       value: { spellFailed: false },
     };
@@ -1362,7 +1362,7 @@ describe("battle fill protocol boundary owners", () => {
       commandAct,
       wizardId,
     );
-    if (commandInvocation?.procedure !== "command") {
+    if (commandInvocation?.procedure !== "compelledNextTurnBehavior") {
       throw new Error("Expected canonical Command target-list invocation.");
     }
     const commandTargetHole = commandAct.initialHoles.find(
@@ -1377,7 +1377,7 @@ describe("battle fill protocol boundary owners", () => {
     const commandTarget = spellTargetListFill(
       commandTargetHole,
       wizardId,
-      "command",
+      "compelledNextTurnBehavior",
       [skeletonId],
     );
     expect(
@@ -1653,7 +1653,7 @@ describe("battle fill protocol boundary owners", () => {
       holeId: directDamage.holeId,
     } as Extract<BattleFill, { readonly kind: "rolledDice" }>;
     expect(validateSpellBurstDamageFill(wrongBurst, iceInvocation)).toBe(
-      "Ice Knife burst damage must use the burst damage hole.",
+      "attack-burst damage burst damage must use the burst damage hole.",
     );
 
     const cureAct = findAct(session, magicSubject("cure_wounds"));
@@ -1746,11 +1746,15 @@ describe("battle fill protocol boundary owners", () => {
         runtimeInvocation,
         missingTargetDamage,
         false,
-        { spatialFacts: [] },
+        {
+          saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+          spatialFacts: [],
+        },
       ),
     ).toBe(session.state);
     expect(
       applyPreparedSlotSpellDamage(session.state, missingTarget, 1, {
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         spatialFacts: [],
       }),
     ).toBe(session.state);

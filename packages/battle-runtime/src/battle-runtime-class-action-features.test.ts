@@ -9,7 +9,7 @@ import {
   unitId as parseSharedUnitId,
 } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import * as Either from "effect/Either";
+import { castFlyAndAdvanceToCasterTurnForTest } from "./spell-effect-fixture.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
@@ -18,6 +18,7 @@ import * as Either from "effect/Either";
 import { classLevel } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
+import { Result } from "effect";
 import {
   battleActUnitPresentation,
   battleActSpellPresentation,
@@ -86,6 +87,7 @@ import {
   spellSaveDcForCaster,
   startBattle,
   startBattleSessionRight,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
@@ -195,7 +197,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -365,7 +367,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -423,7 +425,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -607,7 +609,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -766,6 +768,20 @@ describe("battle runtime: class action features", () => {
 
     const aimed = requireResolved(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    );
+    const actorBeforeAim = state.combatants.get(fighterId);
+    const actorAfterAim = aimed.state.combatants.get(fighterId);
+    const steadyAimRefs =
+      actorAfterAim?.activeEffects.flatMap((effect) =>
+        (effect.kind === "nextAttackRollBySelf" ||
+          effect.kind === "selfSpeedZero") &&
+        "effectRef" in effect
+          ? [effect.effectRef]
+          : [],
+      ) ?? [];
+    expect(new Set(steadyAimRefs).size).toBe(2);
+    expect(Number(actorAfterAim?.nextEffectOrdinal)).toBe(
+      Number(actorBeforeAim?.nextEffectOrdinal) + 2,
     );
     expect(aimed.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(
@@ -1056,31 +1072,31 @@ describe("battle runtime: class action features", () => {
           initiative: 20,
           classLevels: [
             { className: "barbarian", level: 1 },
-            { className: "wizard", level: 1 },
+            { className: "wizard", level: 5 },
           ],
           resources: [rageResource()],
-          spellcasting: wizardSpellcasting(),
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const state = session.state;
-    const concentratingActor = state.combatants.get(fighterId);
-    if (concentratingActor === undefined) {
-      throw new Error("Expected barbarian caster.");
+    const concentratingState = castFlyAndAdvanceToCasterTurnForTest({
+      session,
+      casterId: fighterId,
+      targetId: fighterId,
+    }).state;
+    const flyEffectRef = concentratingState.combatants
+      .get(fighterId)
+      ?.activeEffects.find(
+        (effect) =>
+          effect.kind === "specialSpeedGrant" && effect.speedKind === "fly",
+      )?.effectRef;
+    if (flyEffectRef === undefined) {
+      throw new Error("Expected the production-cast Fly occurrence.");
     }
-    const concentratingState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...concentratingActor,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("mage_armor"),
-          ),
-          effectKind: "spellEffect" as const,
-        },
-      }),
-    };
     const rayOfFrostProcedureRef = requireCharacterSpellProcedureRefForTest(
       battleRuntimeSessionForTest({ ...session, state: concentratingState }),
       fighterId,
@@ -1103,6 +1119,11 @@ describe("battle runtime: class action features", () => {
       }),
     );
     expect(raging.state.combatants.get(fighterId)?.concentration).toBeNull();
+    expect(
+      raging.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.effectRef === flyEffectRef),
+    ).toBe(false);
     expect(
       discoverBattleActCandidates(raging.state).map((act) => act.subject),
     ).not.toEqual(
@@ -2642,7 +2663,7 @@ describe("battle runtime: class action features", () => {
     if (!isCharacterBattleCreatureState(ragingActor)) {
       throw new Error("Expected the raging fixture to be a character.");
     }
-    const projectedWolf = Either.getOrThrow(
+    const projectedWolf = Result.getOrThrow(
       projectAuthoredStatBlock(
         assertStatBlockForTest(
           statBlockCatalog,
@@ -3684,46 +3705,41 @@ describe("battle runtime: class action features", () => {
 
   test("Brutal Strike Forceful Blow pushes, moves, and replays combined Punch and Grab once", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
-    const baseState = startBattleRight({
+    const forcefulSession = startBattleSessionRight({
       battleId: battleId("battle-barbarian-brutal-strike-forceful-blow"),
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "barbarian", level: 9 }],
+          classLevels: [
+            { className: "barbarian", level: 9 },
+            { className: "wizard", level: 5 },
+          ],
           unitFeatures: [recklessAttackFeature()],
           characterUnitRefs: [
             supportedBattleUnitRef(brutalStrikeUnit),
             ...grapplerUnitRefs(),
           ],
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [spellRecord("fly")],
+              spellSlots: [{ spellLevel: 3, count: 1 }],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "wizard",
+              abilityModifier: 3,
+            },
+          },
         }),
         characterSeed({ combatantId: wizardId, initiative: 15 }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const actor = baseState.combatants.get(fighterId);
-    if (actor === undefined) {
-      throw new Error("Expected the Forceful Blow actor.");
-    }
-    const state = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(fighterId, {
-        ...actor,
-        activeEffects: [
-          ...actor.activeEffects,
-          {
-            kind: "specialSpeedGrant",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic-forceful-blow-fly-speed",
-            ),
-            sourceCombatantId: fighterId,
-            speedKind: "fly",
-            speed: { kind: "fixed", speedFeet: movementFeet(40) },
-            hover: true,
-            expiresAt: { kind: "untilDispelled" },
-          } as const,
-        ],
-      }),
-    } satisfies BattleState;
+    const state = castFlyAndAdvanceToCasterTurnForTest({
+      session: forcefulSession,
+      casterId: fighterId,
+      targetId: fighterId,
+    }).state;
     const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
@@ -3907,10 +3923,10 @@ describe("battle runtime: class action features", () => {
     const movement = findHole(afterMovementAccepted.holes, "movement");
     expect(movement).toMatchObject({
       actorId: fighterId,
-      movementBudgetFeet: movementFeet(20),
+      movementBudgetFeet: movementFeet(30),
       speedKinds: [
         { kind: "walk", movementBudgetFeet: movementFeet(15) },
-        { kind: "fly", movementBudgetFeet: movementFeet(20) },
+        { kind: "fly", movementBudgetFeet: movementFeet(30) },
       ],
       brutalStrikeForcefulBlow: {
         kind: "brutalStrikeForcefulBlowStraightTowardTarget",
@@ -3934,10 +3950,11 @@ describe("battle runtime: class action features", () => {
         provokedOpportunityAttacks: [],
       });
       const {
-        jumpMovementReplacement: _jumpMovementReplacement,
-        levitatedMovement: _levitatedMovement,
-        commandApproach: _commandApproach,
-        commandFlee: _commandFlee,
+        fixedCostMovementReplacement: _fixedCostMovementReplacement,
+        controlledVerticalSuspensionMovement:
+          _controlledVerticalSuspensionMovement,
+        compelledApproach: _executeCompelledApproach,
+        compelledFlee: _executeCompelledFlee,
         brutalStrikeForcefulBlow: _brutalStrikeForcefulBlow,
         ...movementValue
       } = fill.value;
@@ -4059,29 +4076,31 @@ describe("battle runtime: class action features", () => {
     if (targetCombatant === undefined) {
       throw new Error("Expected the Hamstring target.");
     }
-    const priorHamstring = {
-      kind: "brutalStrikeHamstring" as const,
-      sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-        session,
-        wizardId,
-        brutalStrikeUnit.id,
-      ),
-      sourceCombatantId: wizardId,
-      effect: {
-        kind: "hamstringBlow" as const,
-        deltaFeet: movementDeltaFeet(-15),
-        stacking: "mostRecentOnly" as const,
-        expires: "startOfYourNextTurn" as const,
-      },
-      expiresAt: { kind: "startOfSourceTurn" as const },
-    };
-    const state = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(goblinId, {
-        ...targetCombatant,
-        activeEffects: [...targetCombatant.activeEffects, priorHamstring],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: session.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: {
+            kind: "brutalStrikeHamstring",
+            sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+              session,
+              wizardId,
+              brutalStrikeUnit.id,
+            ),
+            sourceCombatantId: wizardId,
+            effect: {
+              kind: "hamstringBlow",
+              deltaFeet: movementDeltaFeet(-15),
+              stacking: "mostRecentOnly",
+              expires: "startOfYourNextTurn",
+            },
+            expiresAt: { kind: "startOfSourceTurn" },
+          },
+        },
+      ],
+    }).state;
     const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
@@ -4166,7 +4185,7 @@ describe("battle runtime: class action features", () => {
           (effect) => effect.kind === "brutalStrikeHamstring",
         ) ?? [];
     expect(hamstrings).toEqual([
-      {
+      expect.objectContaining({
         kind: "brutalStrikeHamstring",
         sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
           session,
@@ -4181,7 +4200,7 @@ describe("battle runtime: class action features", () => {
           expires: "startOfYourNextTurn",
         },
         expiresAt: { kind: "startOfSourceTurn" },
-      },
+      }),
     ]);
     const hamstrungTarget = resolved.state.combatants.get(goblinId);
     if (hamstrungTarget === undefined) {

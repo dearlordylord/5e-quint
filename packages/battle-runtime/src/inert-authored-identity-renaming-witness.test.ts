@@ -62,7 +62,7 @@ import type { BattleFill, BattleHole, BattleSubject } from "./index.ts";
  * Excluded fields:
  *   - Authored Unit identity such as `weaponUnitId` used at composition time for
  *     Weapon Mastery / Tactical Master eligibility. These are admitted as
- *     parsed mechanical facts (`hasWeaponMastery`) and are identical between
+ *     parsed mechanical facts (the admitted mastery property) and are identical between
  *     original and renamed states; the underlying Unit ids are not renamed by
  *     this witness because doing so would change which mechanical facts are
  *     admitted at composition time.
@@ -142,6 +142,7 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     hidden: combatant.hidden,
     dodging: combatant.dodging,
     zeroHpLifecycle: combatant.zeroHpLifecycle,
+    nextEffectOrdinal: combatant.nextEffectOrdinal,
   };
   if (combatant.origin.kind !== "character") {
     return {
@@ -216,7 +217,8 @@ function snapshotCombatantMechanicalProjection(
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
-    activeEffectRefs: combatant.activeEffectRefs,
+    nextEffectOrdinal: combatant.nextEffectOrdinal,
+    activeEffectOccurrences: combatant.activeEffectOccurrences,
     armorClass: combatant.armorClass,
     size: combatant.size,
     zeroHpLifecycle: combatant.zeroHpLifecycle,
@@ -317,7 +319,7 @@ function renameInertIdentityFields(state: BattleState): BattleState {
 function renameSnapshotInertIdentityFields(
   snapshot: BattleSnapshot,
 ): BattleSnapshot {
-  const syntheticStatBlockId = "synthetic-stat-block-id-witness";
+  const syntheticStatBlockId = statBlockId("synthetic-stat-block-id-witness");
 
   return {
     ...snapshot,

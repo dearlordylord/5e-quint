@@ -25,7 +25,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { type BattleCreatureState } from "../battle-state-execution.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
@@ -461,8 +461,8 @@ export function saveMetamagicSupportIssue(input: {
   ) {
     return "Save-affecting Metamagic is supported only for action-time spell casts.";
   }
-  if (input.invocation.procedure === "sleepTargetAdmission") {
-    return "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.";
+  if (input.invocation.procedure === "stagedSaveCondition") {
+    return "Save-affecting Metamagic is not supported for hit-point-budget condition target admission because hit-point-budget condition uses a two-stage admission and repeat-save lifecycle.";
   }
   if (!spellInvocationSupportsSaveMetamagic(input.invocation)) {
     return "Selected Metamagic option effect is not supported for this spell procedure.";
@@ -516,10 +516,10 @@ function spellInvocationSupportsSaveMetamagic(
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedConditionImmunity" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
-    invocation.procedure === "hideousLaughter" ||
-    invocation.procedure === "command" ||
-    invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "gustOfWindLine"
+    invocation.procedure === "saveGatedConditionWithRepeat" ||
+    invocation.procedure === "compelledNextTurnBehavior" ||
+    invocation.procedure === "persistentAreaSaveCondition" ||
+    invocation.procedure === "directionalPersistentArea"
   );
 }
 
@@ -592,6 +592,7 @@ export function distantSpellRangeProjectionIssue(input: {
 export function distantSpellRangeModifierFact(
   invocation: RuntimeSpellProcedure,
 ): DistantSpellRangeModifierFact | null {
+  if (!distantSpellProcedureSupportsRangeProjection(invocation)) return null;
   const range = invocation.spellRuleFacts.range;
   if (range.kind === "touch") {
     return {
@@ -621,7 +622,10 @@ export function distantSpellRangeModifierForApplications(
 
 function distantSpellProcedureSupportsRangeProjection(
   invocation: RuntimeSpellProcedure,
-): boolean {
+): invocation is Extract<
+  RuntimeSpellProcedure,
+  { readonly procedure: "objectLight" }
+> {
   return invocation.procedure === "objectLight";
 }
 
@@ -657,6 +661,9 @@ export function extendedSpellDurationProjectionIssue(input: {
 export function extendedSpellDurationModifierFact(
   invocation: RuntimeSpellProcedure,
 ): ExtendedSpellDurationModifierFact | null {
+  if (!extendedSpellProcedureSupportsDurationProjection(invocation)) {
+    return null;
+  }
   const duration = invocation.spellRuleFacts.duration;
   const baseDuration =
     duration.kind === "timed"
@@ -664,14 +671,14 @@ export function extendedSpellDurationModifierFact(
       : duration.kind === "concentration"
         ? elapsedTimeTicksFromTimeSpanDuration(duration.upTo)
         : null;
-  if (baseDuration === null || Either.isLeft(baseDuration)) {
+  if (baseDuration === null || Result.isFailure(baseDuration)) {
     return null;
   }
-  if (Number(baseDuration.right) < ELAPSED_TIME_TICKS_PER_MINUTE) {
+  if (Number(baseDuration.success) < ELAPSED_TIME_TICKS_PER_MINUTE) {
     return null;
   }
   const durationTicks = elapsedTimeTicks(
-    Math.min(Number(baseDuration.right) * 2, ELAPSED_TIME_TICKS_PER_DAY),
+    Math.min(Number(baseDuration.success) * 2, ELAPSED_TIME_TICKS_PER_DAY),
   );
   return duration.kind === "concentration"
     ? {
@@ -725,18 +732,10 @@ export function subtleSpellComponentProjectionIssue(input: {
 export function subtleSpellComponentProjectionFact(
   invocation: RuntimeSpellProcedure,
 ): SubtleSpellComponentProjectionFact | null {
+  if (!("spellRuleFacts" in invocation)) return null;
   const components = invocation.spellRuleFacts.components;
-  const suppressedComponents: SubtleSpellSuppressedComponentFact[] = [
-    ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
-    ...(components.somatic ? ([{ kind: "somatic" }] as const) : []),
-    ...(components.hasMaterial && !components.hasPricedOrConsumedMaterial
-      ? ([{ kind: "material" }] as const)
-      : []),
-  ];
-  const preservedComponents: readonly SubtleSpellPreservedComponentFact[] =
-    components.hasMaterial && components.hasPricedOrConsumedMaterial
-      ? [{ kind: "material", preservation: "pricedOrConsumed" }]
-      : [];
+  const suppressedComponents = subtleSpellSuppressedComponents(components);
+  const preservedComponents = subtleSpellPreservedComponents(components);
   const nonEmptySuppressed = readonlyNonEmptyArray(suppressedComponents);
   if (nonEmptySuppressed !== null) {
     return { suppressedComponents: nonEmptySuppressed, preservedComponents };
@@ -745,6 +744,32 @@ export function subtleSpellComponentProjectionFact(
   return nonEmptyPreserved === null
     ? null
     : { suppressedComponents: [], preservedComponents: nonEmptyPreserved };
+}
+
+function subtleSpellSuppressedComponents(
+  components: Extract<
+    RuntimeSpellProcedure,
+    { readonly spellRuleFacts: unknown }
+  >["spellRuleFacts"]["components"],
+): readonly SubtleSpellSuppressedComponentFact[] {
+  return [
+    ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
+    ...(components.somatic ? ([{ kind: "somatic" }] as const) : []),
+    ...(components.hasMaterial && !components.hasPricedOrConsumedMaterial
+      ? ([{ kind: "material" }] as const)
+      : []),
+  ];
+}
+
+function subtleSpellPreservedComponents(
+  components: Extract<
+    RuntimeSpellProcedure,
+    { readonly spellRuleFacts: unknown }
+  >["spellRuleFacts"]["components"],
+): readonly SubtleSpellPreservedComponentFact[] {
+  return components.hasMaterial && components.hasPricedOrConsumedMaterial
+    ? [{ kind: "material", preservation: "pricedOrConsumed" }]
+    : [];
 }
 
 export function subtleSpellComponentProjectionForApplications(
@@ -767,7 +792,12 @@ function readonlyNonEmptyArray<T>(
 
 function extendedSpellProcedureSupportsDurationProjection(
   invocation: RuntimeSpellProcedure,
-): boolean {
+): invocation is Extract<
+  RuntimeSpellProcedure,
+  {
+    readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
+  }
+> {
   return (
     invocation.procedure === "creatureSizeIncrease" ||
     invocation.procedure === "creatureSizeDecrease"
@@ -861,7 +891,7 @@ export function transmutedSpellDamageInvocation<
   if (
     invocation.procedure === "spellAttackDamage" &&
     (invocation.damage.kind === "fixedSpellAttackDamage" ||
-      invocation.damage.kind === "selectedSorcerousBurstDamage")
+      invocation.damage.kind === "selectedSpellAttackDamage")
   ) {
     // TypeScript cannot preserve the exact generic invocation subtype through
     // this nested spread. The procedure and damage-kind guards establish the
@@ -888,7 +918,7 @@ function transmutableSpellInvocationDamageType(
   if (
     invocation.procedure === "spellAttackDamage" &&
     (invocation.damage.kind === "fixedSpellAttackDamage" ||
-      invocation.damage.kind === "selectedSorcerousBurstDamage") &&
+      invocation.damage.kind === "selectedSpellAttackDamage") &&
     isTransmutedSpellDamageType(invocation.damage.damageType)
   ) {
     return invocation.damage.damageType;
@@ -928,27 +958,39 @@ function isTransmutedSpellDamageType(
 function twinnedSpellEffectiveTargetCount(
   invocation: RuntimeSpellProcedure,
 ): number | null {
-  if (
-    invocation.resource.tag !== "spellSlot" ||
-    Number(invocation.resource.slotLevel) >= 9 ||
-    !("targeting" in invocation) ||
-    invocation.targeting.kind !== "targetList" ||
-    typeof invocation.targeting.maxTargets !== "number"
-  ) {
-    return null;
-  }
+  const slotLevel = twinnedSpellSlotLevel(invocation);
+  if (slotLevel === null) return null;
+  const maxTargets = twinnedSpellTargetCount(invocation);
+  if (maxTargets === null || !("spellRuleFacts" in invocation)) return null;
   const countByEffectiveLevel = twinnedTargetCountFromExecutionFacts(
     invocation.spellRuleFacts.twinnedTargetCount,
   );
   if (countByEffectiveLevel === null) return null;
-  const currentCount = countByEffectiveLevel(invocation.resource.slotLevel);
-  const nextEffectiveLevel = spellSlotLevel(
-    Number(invocation.resource.slotLevel) + 1,
-  );
+  const currentCount = countByEffectiveLevel(slotLevel);
+  const nextEffectiveLevel = spellSlotLevel(Number(slotLevel) + 1);
   const nextCount = countByEffectiveLevel(nextEffectiveLevel);
-  return currentCount === invocation.targeting.maxTargets &&
-    nextCount === currentCount + 1
+  return currentCount === maxTargets && nextCount === currentCount + 1
     ? nextCount
+    : null;
+}
+
+function twinnedSpellSlotLevel(
+  invocation: RuntimeSpellProcedure,
+): ReturnType<typeof spellSlotLevel> | null {
+  if (!("resource" in invocation)) return null;
+  if (invocation.resource.tag !== "spellSlot") return null;
+  return Number(invocation.resource.slotLevel) < 9
+    ? invocation.resource.slotLevel
+    : null;
+}
+
+function twinnedSpellTargetCount(
+  invocation: RuntimeSpellProcedure,
+): number | null {
+  if (!("targeting" in invocation)) return null;
+  if (invocation.targeting.kind !== "targetList") return null;
+  return typeof invocation.targeting.maxTargets === "number"
+    ? invocation.targeting.maxTargets
     : null;
 }
 

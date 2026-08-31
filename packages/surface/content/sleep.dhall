@@ -2,12 +2,28 @@
 -- §C2 validation ref — two-stage escalating save chain via
 -- RepeatSaveSpec.onFailAgain.
 --
--- PARTIAL.
---   • Non-sleeper / Exhaustion-immune auto-success predicate is
---     deferred (needs a per-target save-ability-filter, sibling
---     widening).
---   • "someone within 5 ft uses an action to shake it out" is a
---     caller-initiated action, narrative — DM agenda.
+let FailureEffect =
+      { kind : Text
+      , condition : Optional Text
+      , actor : Optional Text
+      , cost : Optional Text
+      , method : Optional Text
+      , outcome : Optional Text
+      }
+
+let noFailureFields : FailureEffect =
+      { kind = ""
+      , condition = None Text
+      , actor = None Text
+      , cost = None Text
+      , method = None Text
+      , outcome = None Text
+      }
+
+let TargetPredicate =
+      { kind : Text
+      , condition : Optional Text
+      }
 
 let sleep =
       { kind = "spell"
@@ -48,10 +64,31 @@ let sleep =
                 , ability = "wis"
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail =
-                    { kind = "apply_condition"
-                    , condition = "incapacitated"
+                    { kind = "composite"
+                    , effects =
+                        [ noFailureFields
+                            //  { kind = "apply_condition"
+                                , condition = Some "incapacitated"
+                                }
+                        , noFailureFields
+                            //  { kind = "target_effect_escape_action"
+                                , actor = Some "another_creature"
+                                , cost = Some "action"
+                                , method = Some "shake_awake"
+                                , outcome = Some "end_current_effect"
+                                }
+                        ]
                     }
                 , onSuccess = { kind = "none" }
+                , autoSuccessIfTarget =
+                    { kind = "any"
+                    , predicates =
+                        [ { kind = "does_not_sleep", condition = None Text }
+                        , { kind = "has_condition_immunity"
+                          , condition = Some "exhaustion"
+                          }
+                        ] : List TargetPredicate
+                    }
                 , repeatSaves =
                     [ { cadence = "end_of_target_turn"
                       , onSuccess = "ends_on_target"

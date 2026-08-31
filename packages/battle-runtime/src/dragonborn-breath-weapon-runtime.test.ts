@@ -2,7 +2,7 @@
 
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { DieRollResult } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
@@ -21,11 +21,16 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   characterBattleFeatureInitForTest,
+  battleStateWithAllocatedEffectForTest,
   rageResource,
+  requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
   supportedBattleUnitRef,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
+  saveGatedConditionWithRepeatDurationTicks,
+  saveGatedConditionWithRepeatUnitId,
   speciesDragonbornBreathWeaponUnitId,
   spellCasterId,
   spellTargetId,
@@ -40,10 +45,12 @@ import {
   discoverBattleActs,
   discoverBattleActCandidates,
   resolveBattleSubject,
+  spellSlotInvocationRef,
   startBattle,
 } from "./unit-profile-admission.test-support.ts";
 import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 
 const breathWeaponUnit = unitLibrary.requireUnit(
   speciesDragonbornBreathWeaponUnitId,
@@ -52,6 +59,138 @@ const rageUnit = unitLibrary.requireUnit("barbarian_rage");
 const secondTargetId = combatantId("dragonborn-breath-second-target");
 
 describe("Dragonborn Breath Weapon runtime", () => {
+  test("positive unit-feature damage requests a repeat save and applies its outcome", () => {
+    const session = breathWeaponBattle({ includeDamageRepeatSave: true });
+    const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellCasterId,
+      spellSlotInvocationRef(
+        saveGatedConditionWithRepeatUnitId,
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
+    );
+    const source = session.state.combatants.get(spellCasterId);
+    if (source === undefined) {
+      throw new Error("Expected repeat-save source combatant.");
+    }
+    const state = battleStateWithAllocatedEffectForTest({
+      state: {
+        ...session.state,
+        combatants: new Map(session.state.combatants).set(spellCasterId, {
+          ...source,
+          concentration: {
+            sourceProcedureRef,
+            effectKind: "spellEffect",
+          },
+        }),
+      },
+      ownerId: spellTargetId,
+      effect: {
+        kind: "saveGatedConditionWithRepeat",
+        sourceProcedureRef,
+        sourceCombatantId: spellCasterId,
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: saveGatedConditionWithRepeatDurationTicks,
+        },
+      },
+    });
+    const saveHole = requireHole(
+      breathWeaponAct(state).initialHoles,
+      "savingThrowOutcome",
+    );
+    const saveFill = breathWeaponSavingThrowFill(
+      saveHole,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [spellTargetId],
+    );
+    const needsDamage = resolveBattleSubject({
+      state,
+      subject: breathWeaponSubject(state),
+      fills: [saveFill],
+    });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected unit-feature damage roll hole.");
+    }
+    const damageHole = requireHole(needsDamage.holes, "rolledDice");
+    const damageFill = rolledDiceFill(damageHole, [5, 5]);
+    const needsRepeatSave = resolveBattleSubject({
+      state,
+      subject: breathWeaponSubject(state),
+      fills: [saveFill, damageFill],
+    });
+    if (needsRepeatSave.tag !== "needsHoles") {
+      throw new Error("Expected unit-feature damage repeat-save hole.");
+    }
+    const repeatSaveHole = requireHole(
+      needsRepeatSave.holes,
+      "savingThrowOutcome",
+    );
+    expect(repeatSaveHole).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: spellTargetId,
+        trigger: "damage",
+      },
+    });
+
+    const failedRepeatSave = resolveBattleSubject({
+      state,
+      subject: breathWeaponSubject(state),
+      fills: [
+        saveFill,
+        damageFill,
+        {
+          kind: "savingThrowOutcome",
+          holeId: repeatSaveHole.holeId,
+          value: {
+            outcomes: [{ targetId: spellTargetId, succeeded: false }],
+          },
+        },
+      ],
+    });
+    if (failedRepeatSave.tag !== "resolved") {
+      throw new Error("Expected failed damage repeat save to resolve.");
+    }
+    expect(
+      failedRepeatSave.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
+    ).toBe(true);
+
+    const successfulRepeatSave = resolveBattleSubject({
+      state,
+      subject: breathWeaponSubject(state),
+      fills: [
+        saveFill,
+        damageFill,
+        {
+          kind: "savingThrowOutcome",
+          holeId: repeatSaveHole.holeId,
+          value: {
+            outcomes: [{ targetId: spellTargetId, succeeded: true }],
+          },
+        },
+      ],
+    });
+    if (successfulRepeatSave.tag !== "resolved") {
+      throw new Error("Expected successful damage repeat save to resolve.");
+    }
+    expect(
+      successfulRepeatSave.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
+    ).toBe(false);
+  });
+
   test("resolves an empty area without damage and rejects a stale Attack action after save validation", () => {
     const session = breathWeaponBattle();
     const state = session.state;
@@ -435,17 +574,24 @@ function breathWeaponBattle(
     readonly extraAttack?: boolean;
     readonly fighterLevel?: number;
     readonly includeRage?: boolean;
+    readonly includeDamageRepeatSave?: boolean;
     readonly usesRemaining?: number;
   } = {},
 ): BattleRuntimeSession {
   const fighterLevel = classLevel(input.fighterLevel ?? 5);
-  const classLevels: CharacterBattleClassLevelInits =
+  const martialClassLevels: CharacterBattleClassLevelInits =
     input.includeRage === true
       ? [
           { className: "fighter" as const, level: fighterLevel },
           { className: "barbarian" as const, level: classLevel(1) },
         ]
       : [{ className: "fighter" as const, level: fighterLevel }];
+  const classLevels: CharacterBattleClassLevelInits = [
+    ...martialClassLevels,
+    ...(input.includeDamageRepeatSave === true
+      ? [{ className: "wizard" as const, level: classLevel(1) }]
+      : []),
+  ];
   const result = startBattle({
     battleId: battleId("dragonborn-breath-weapon-runtime"),
     combatants: [
@@ -478,6 +624,16 @@ function breathWeaponBattle(
           },
           ...(input.includeRage === true ? [rageResource()] : []),
         ],
+        ...(input.includeDamageRepeatSave === true
+          ? {
+              spellcasting: wizardSpellcasting({
+                preparedSpells: [
+                  spellRecord(saveGatedConditionWithRepeatUnitId),
+                ],
+                spellSlots: [{ spellLevel: 1, count: 1 }],
+              }),
+            }
+          : {}),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -495,10 +651,10 @@ function breathWeaponBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function breathWeaponAct(state: BattleState) {
@@ -610,12 +766,12 @@ function breathWeaponUnitRef() {
     throw new Error("Expected Breath Weapon support.");
   }
   expect(unitRef).toEqual(
-    Either.right({ unit: breathWeaponUnit, supportProfiles: [support] }),
+    Result.succeed({ unit: breathWeaponUnit, supportProfiles: [support] }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function resolvedState(result: BattleResolutionResult): BattleState {

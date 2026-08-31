@@ -34,7 +34,7 @@ import {
   battleAttackExecutionScopeRefForProcedureRef,
   battleAttackProcedureExecutionRef,
 } from "./identity.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 type HalflingNimblenessLastResult =
   | "init"
@@ -318,8 +318,8 @@ function halflingNimblenessBattle(input: {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId(
@@ -335,10 +335,8 @@ function halflingNimblenessBattle(input: {
         displayName: "Nimble Mover",
         initiative: 20,
         size: "small",
-        unitFeatures: input.selected
-          ? [characterBattleFeatureInitForTest(unit)]
-          : [],
-        characterUnitRefs: input.selected ? [unitRef.right] : [],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
+        characterUnitRefs: input.selected ? [unitRef.success] : [],
       }),
       characterSeed({
         combatantId: blockerId,

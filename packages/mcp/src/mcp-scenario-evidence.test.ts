@@ -84,29 +84,29 @@ function readJson<T>(path: string): T {
 describe("MCP scenario evidence manifest", () => {
   test("uses the production query-kind owner for exact evidence obligations", () => {
     const decode = (value: unknown) =>
-      Schema.decodeUnknownEither(CharacterSessionQueryKindsSchema)(value);
+      Schema.decodeUnknownResult(CharacterSessionQueryKindsSchema)(value);
     expect(decode([...CHARACTER_SESSION_QUERY_KIND_VALUES])).toEqual(
-      expect.objectContaining({ _tag: "Right" }),
+      expect.objectContaining({ _tag: "Success" }),
     );
     expect(
       decode([
         ...CHARACTER_SESSION_QUERY_KIND_VALUES.slice(0, -1),
         "unknownQueryKind",
       ]),
-    ).toEqual(expect.objectContaining({ _tag: "Left" }));
+    ).toEqual(expect.objectContaining({ _tag: "Failure" }));
     expect(
       decode([
         ...CHARACTER_SESSION_QUERY_KIND_VALUES.slice(0, -1),
         CHARACTER_SESSION_QUERY_KIND_VALUES[0],
       ]),
-    ).toEqual(expect.objectContaining({ _tag: "Left" }));
+    ).toEqual(expect.objectContaining({ _tag: "Failure" }));
     expect(
       decode([
         CHARACTER_SESSION_QUERY_KIND_VALUES[1],
         CHARACTER_SESSION_QUERY_KIND_VALUES[0],
         ...CHARACTER_SESSION_QUERY_KIND_VALUES.slice(2),
       ]),
-    ).toEqual(expect.objectContaining({ _tag: "Left" }));
+    ).toEqual(expect.objectContaining({ _tag: "Failure" }));
   });
 
   test("rejects query-kind drift through the public scenario validator", () => {

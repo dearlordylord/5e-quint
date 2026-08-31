@@ -283,7 +283,7 @@ describe("GitHub #227 attack and damage coverage", () => {
           responderId: deflectMonkId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -351,6 +351,7 @@ describe("GitHub #227 attack and damage coverage", () => {
     if (target === undefined) throw new Error("Expected the Goblin target.");
 
     const defeated = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: initial,
       target,
       damageAmount: Number(target.hp),
@@ -362,6 +363,7 @@ describe("GitHub #227 attack and damage coverage", () => {
     }
 
     const damagedAgain = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: defeated,
       target: zeroHpTarget,
       damageAmount: 1,

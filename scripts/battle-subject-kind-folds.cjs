@@ -28,8 +28,16 @@ function propertyAssignment(objectLiteral, propertyName) {
 }
 
 function schemaLiteralStrings(expression) {
-  if (!isSchemaCall(expression, "Literal")) return [];
-  return expression.arguments
+  if (
+    !isSchemaCall(expression, "Literal") &&
+    !isSchemaCall(expression, "Literals")
+  ) {
+    return [];
+  }
+  const literalArguments = expression.arguments.flatMap((argument) =>
+    ts.isArrayLiteralExpression(argument) ? argument.elements : [argument],
+  );
+  return literalArguments
     .filter((argument) => ts.isStringLiteral(argument))
     .map((argument) => argument.text);
 }
@@ -53,7 +61,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTurnBoundary";
     case "move":
     case "standFromProne":
-    case "jumpMovementReplacement":
+    case "fixedCostMovementReplacement":
     case "creatureFalls":
       return "runtimeMovement";
     case "releaseReadiedSpell":
@@ -69,23 +77,22 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTableDecision";
     case "releaseGrapple":
       return "runtimeLinkRelease";
-    case "greaseGroundHazardSave":
-    case "webRestraintSave":
-    case "sleetStormAreaHazardSave":
-    case "insectPlagueAreaHazardSave":
-    case "cloudkillAreaHazardSave":
-    case "gustOfWindLineSave":
+    case "persistentAreaSaveConditionSave":
+    case "persistentAreaSaveConditionEscapeSave":
+    case "persistentAreaSaveCompositeSave":
+    case "persistentAreaSaveDamageSave":
+    case "directionalPersistentAreaSave":
     case "movableZoneSave":
-    case "moonbeamCylinderExit":
+    case "persistentAreaSaveDamageExit":
       return "runtimeSavingThrow";
-    case "webRestrainedNoLongerInArea":
-    case "webAreaRemoved":
-    case "disperseFogCloud":
-    case "disperseCloudkill":
-    case "wardingBondSeparation":
+    case "endPersistentAreaSaveConditionEscapeForDeparture":
+    case "endPersistentAreaSaveConditionEscapeForAreaRemoval":
+    case "endPersistentAreaTraitForEnvironment":
+    case "endPersistentAreaSaveDamageForEnvironment":
+    case "linkedDefenseResistanceDamageShareSeparation":
     case "endConcentration":
       return "runtimeEffectCleanup";
-    case "gustOfWindLineDirectionChange":
+    case "directionalPersistentAreaDirectionChange":
     case "movableZoneReposition":
     case "movableZoneRam":
       return "runtimeEffectControl";
@@ -98,14 +105,14 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeProtectionPrevention";
     case "replaceSelfTransformationMode":
       return "runtimeTransformationMode";
-    case "commandGrovel":
-    case "commandDrop":
-    case "commandApproach":
-    case "commandFlee":
+    case "executeCompelledGrovel":
+    case "executeCompelledDrop":
+    case "executeCompelledApproach":
+    case "executeCompelledFlee":
       return "runtimeCompelledAction";
-    case "levitateAltitudeControl":
+    case "controlledVerticalSuspensionAltitudeControl":
       return "runtimeAltitudeControl";
-    case "dragonsBreathExhale":
+    case "grantedAreaSaveDamageAction":
       return "runtimeAreaEffect";
     default:
       return unknownSubjectKind("runtimeCommand", discriminatorValue);
@@ -136,8 +143,8 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         case "escapeGrapple":
         case "escapeSpellRestraint":
           return "actionContest";
-        case "shakeAwakeFromSleep":
-        case "shakeAwakeFromHypnoticPattern":
+        case "shakeAwakeFromStagedCondition":
+        case "shakeAwakeFromAreaControl":
           return "actionConditionIntervention";
         default:
           return unknownSubjectKind(tag, discriminatorValue);
@@ -188,7 +195,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
       }
     case "runtimeCommand":
       return runtimeCommandSubjectKind(discriminatorValue);
-    case "findFamiliarTouchSpell":
+    case "spawnedCompanionTouchSpellProxy":
       switch (discriminatorValue) {
         case "action":
         case "bonusAction":
@@ -196,7 +203,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         default:
           return unknownSubjectKind(tag, discriminatorValue);
       }
-    case "pactOfTheChainFamiliarAttack":
+    case "companionAttack":
       return "companionAttack";
     case "monkFocusFlurryOfBlowsStrike":
       return "featureAttack";
@@ -210,7 +217,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
       return "featureActivation";
     case "unitFeatureHeldWeaponActivation":
       return "featureWeaponActivation";
-    case "findFamiliarSharedSenses":
+    case "spawnedCompanionSharedSenses":
       return "companionSenses";
     default:
       return tag;
@@ -229,7 +236,7 @@ function battleSubjectKindDiscriminator(tag) {
       return "option";
     case "runtimeCommand":
       return "command";
-    case "findFamiliarTouchSpell":
+    case "spawnedCompanionTouchSpellProxy":
       return "spellAction";
     default:
       return undefined;
@@ -262,8 +269,26 @@ function extractBattleSubjectKindCases(rootPath) {
     true,
   );
   const cases = [];
+  const schemaBindings = new Map();
+  function collectSchemaBindings(node) {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer !== undefined
+    ) {
+      schemaBindings.set(node.name.text, node.initializer);
+    }
+    ts.forEachChild(node, collectSchemaBindings);
+  }
+  collectSchemaBindings(sourceFile);
+
   function collectStruct(callExpression) {
-    if (!isSchemaCall(callExpression, "Struct")) return;
+    const isStruct = isSchemaCall(callExpression, "Struct");
+    const isInterruptSelection =
+      ts.isIdentifier(callExpression.expression) &&
+      callExpression.expression.text ===
+        "battleInterruptAttackExecutionSelectionWithFields";
+    if (!isStruct && !isInterruptSelection) return;
     const [shape] = callExpression.arguments;
     if (!ts.isObjectLiteralExpression(shape)) return;
     const tags = schemaLiteralPropertyStrings(shape, "tag");
@@ -294,16 +319,50 @@ function extractBattleSubjectKindCases(rootPath) {
       });
     }
   }
+  function visitSchema(node, resolvingBindings) {
+    if (ts.isIdentifier(node)) {
+      const binding = schemaBindings.get(node.text);
+      if (binding === undefined || resolvingBindings.has(node.text)) return;
+      resolvingBindings.add(node.text);
+      visitSchema(binding, resolvingBindings);
+      resolvingBindings.delete(node.text);
+      return;
+    }
+    if (ts.isArrayLiteralExpression(node)) {
+      for (const element of node.elements) {
+        visitSchema(element, resolvingBindings);
+      }
+      return;
+    }
+    if (!ts.isCallExpression(node)) return;
+    if (
+      isSchemaCall(node, "Struct") ||
+      (ts.isIdentifier(node.expression) &&
+        node.expression.text ===
+          "battleInterruptAttackExecutionSelectionWithFields")
+    ) {
+      collectStruct(node);
+      return;
+    }
+    if (isSchemaCall(node, "Union")) {
+      for (const argument of node.arguments) {
+        visitSchema(argument, resolvingBindings);
+      }
+      return;
+    }
+    if (isSchemaCall(node, "extend")) {
+      const [base] = node.arguments;
+      if (base !== undefined) visitSchema(base, resolvingBindings);
+    }
+  }
   function visit(node) {
     if (
       ts.isVariableDeclaration(node) &&
       node.name.getText(sourceFile) === "BattleSubjectSchema"
     ) {
-      function visitSchema(schemaNode) {
-        if (ts.isCallExpression(schemaNode)) collectStruct(schemaNode);
-        ts.forEachChild(schemaNode, visitSchema);
+      if (node.initializer !== undefined) {
+        visitSchema(node.initializer, new Set());
       }
-      if (node.initializer !== undefined) visitSchema(node.initializer);
       return;
     }
     ts.forEachChild(node, visit);

@@ -2,18 +2,17 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
-  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSnapshotSchema,
-  battleCheckpointFrontierEnvelope,
 } from "./index.ts";
+import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
 import {
-  characterSpellInvocationRefForProcedureRefForTest,
   battleFrontierInterruptDecisionForState,
+  characterSpellInvocationRefForProcedureRefForTest,
   testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
@@ -35,7 +34,6 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -118,13 +116,18 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     const choice = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
     )?.choices.find((candidate) => {
-      if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+      if (
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castAttackHitBonusActionSpell"
+      ) {
+        return false;
+      }
       const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({
           ...session,
           state: awaitingReaction.state,
         }),
-        candidate.reactorId,
+        candidate.subject.casterId,
         candidate.subject.procedureRef,
       );
       return (
@@ -135,7 +138,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     });
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
@@ -143,8 +147,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -155,7 +159,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
           ...session,
           state: awaitingReaction.state,
         }),
-        choice.reactorId,
+        choice.subject.casterId,
         choice.subject.procedureRef,
       ),
     ).toEqual(
@@ -224,16 +228,19 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     });
     expect(
       requireCombatant(afterWeaponDamage.state, spellTargetId).activeEffects,
-    ).toContainEqual({
-      kind: "shiningSmiteIllumination",
-      sourceProcedureRef: choice.subject.procedureRef,
-      sourceCombatantId: spellCasterId,
-      expiresAt: {
-        kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(10),
+    ).toEqual([
+      {
+        effectRef: expect.any(String),
+        kind: "afterHitDamageAndIllumination",
+        sourceProcedureRef: choice.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: elapsedTimeTicks(10),
+        },
       },
-    });
+    ]);
     expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
@@ -241,9 +248,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: {
-          kind: "brightAndDim",
-          brightRadiusFeet: SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET,
-          dimAdditionalFeet: movementFeet(0),
+          kind: "bright",
+          radiusFeet: movementFeet(5),
         },
         opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: {
@@ -391,7 +397,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       requireCombatant(concentrationBroken.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "shiningSmiteIllumination" }),
+        expect.objectContaining({ kind: "afterHitDamageAndIllumination" }),
       ]),
     );
     expect(snapshotBattle(concentrationBroken.state).lightEmitters).toEqual([]);
@@ -444,9 +450,14 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     const unarmedChoice = battleFrontierInterruptDecisionForState(
       unarmedHit.state,
     )?.choices.find(
-      (candidate) => candidate.kind === "castAttackHitBonusActionSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castAttackHitBonusActionSpell",
     );
-    if (unarmedChoice?.kind !== "castAttackHitBonusActionSpell") {
+    if (
+      unarmedChoice?.kind !== "nestedProcedure" ||
+      unarmedChoice.subject.command !== "castAttackHitBonusActionSpell"
+    ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
     expect(() =>
@@ -465,7 +476,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
           ...unarmedSession,
           state: unarmedHit.state,
         }),
-        unarmedChoice.reactorId,
+        unarmedChoice.subject.casterId,
         unarmedChoice.subject.procedureRef,
       ),
     ).toEqual(
@@ -511,8 +522,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         attackRollFill(rangedRoll, { total: 15, naturalD20: 10 }),
       ],
     });
-    expect(rangedHit).toMatchObject({
-      tag: "needsHoles",
-    });
+    expect(rangedHit).toMatchObject({ tag: "needsHoles" });
+    if (rangedHit.tag !== "needsHoles") {
+      throw new Error("Expected Shining Smite ranged attack frontier.");
+    }
+    expect(battleFrontierInterruptDecisionForState(rangedHit.state)).toBeNull();
   });
 });

@@ -7,11 +7,11 @@ import {
   type ActionEconomyState,
   type RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -150,7 +150,7 @@ export function statBlockMultiattackContinuationActionResourcesAreValid(
 export function actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
   actionResources: readonly RuntimeActionResource[],
   actorId: CombatantId,
-  activeEffectRefs: readonly BattleActiveEffectExecutionRef[],
+  activeEffectRefs: readonly BattleEffectExecutionRef[],
 ): boolean {
   const spellEffectRefs = actionResources.flatMap((resource) =>
     resource.source === "spellEffect" ? [resource.sourceEffectRef] : [],
@@ -268,13 +268,13 @@ export function canSpendEscapeGrappleActionResource(
   resources: ActionEconomyState,
   actorId: CombatantId,
 ): boolean {
-  return Either.isRight(spendEscapeGrappleActionResource(resources, actorId));
+  return Result.isSuccess(spendEscapeGrappleActionResource(resources, actorId));
 }
 
 export function spendEscapeGrappleActionResource<T extends ActionEconomyState>(
   resources: T,
   actorId: CombatantId,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   return spendMatchingActionResource(
     resources,
     "attack",

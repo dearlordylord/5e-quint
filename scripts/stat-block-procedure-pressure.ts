@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { format } from "prettier";
 
-import { srdStatBlockCollection } from "../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   resolveAuthoredUnitReference,
   srdUnitCollection,

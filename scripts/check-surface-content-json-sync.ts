@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   formatSurfaceDecodeError,
@@ -30,6 +30,10 @@ import {
   type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
+import {
+  describeSurfacePublicationDeltaIssue,
+  verifySurfacePublicationDelta,
+} from "../packages/surface/src/surface/publication-delta-verifier.ts";
 import { buildSrdSurfacePortableCases } from "./generate-surface-portable-cases.ts";
 import {
   readSrdStatBlockParity,
@@ -104,6 +108,10 @@ export type PublicationIssue =
   | {
       readonly kind: "publication-generation-failed";
       readonly issue: SurfacePublicationBuildIssue;
+    }
+  | {
+      readonly kind: "publication-delta-verification-failed";
+      readonly message: string;
     }
   | {
       readonly kind: "peer-family-mismatch";
@@ -693,20 +701,20 @@ function decodeRecord(value: unknown): string | undefined {
     value.kind === "statBlock";
   const diagnostic = isStatBlock
     ? (() => {
-        const decoded = Schema.decodeUnknownEither(StatBlockRecordSchema, {
+        const decoded = Schema.decodeUnknownResult(StatBlockRecordSchema, {
           onExcessProperty: "error",
         })(value);
-        return Either.isRight(decoded)
+        return Result.isSuccess(decoded)
           ? undefined
-          : formatSurfaceDecodeError(decoded.left);
+          : formatSurfaceDecodeError(decoded.failure);
       })()
     : (() => {
-        const decoded = Schema.decodeUnknownEither(UnitRecordSchema, {
+        const decoded = Schema.decodeUnknownResult(UnitRecordSchema, {
           onExcessProperty: "error",
         })(value);
-        return Either.isRight(decoded)
+        return Result.isSuccess(decoded)
           ? undefined
-          : formatSurfaceDecodeError(decoded.left);
+          : formatSurfaceDecodeError(decoded.failure);
       })();
 
   if (diagnostic === undefined) return undefined;
@@ -1465,21 +1473,30 @@ async function main(): Promise<void> {
 
   const { srdSurface } =
     await import("../packages/surface/src/surface/surface-catalog.ts");
-  const { issues, sourceCount, peerCount, statBlockParity } =
-    runSurfacePublicationCheck(
-      {
+  const publicationCheck = runSurfacePublicationCheck(
+    {
+      repoRoot,
+      contentDir,
+      publicationDir: join(repoRoot, "packages", "surface", "publication"),
+      publicationSurface: srdSurface,
+      portableCasesPath: join(
         repoRoot,
-        contentDir,
-        publicationDir: join(repoRoot, "packages", "surface", "publication"),
-        publicationSurface: srdSurface,
-        portableCasesPath: join(
-          repoRoot,
-          "packages/surface/portable-cases/srd-surface-cases.json",
-        ),
-        compile: compileDhallToJson,
-      },
-      srdSurface.statBlocks,
+        "packages/surface/portable-cases/srd-surface-cases.json",
+      ),
+      compile: compileDhallToJson,
+    },
+    srdSurface.statBlocks,
+  );
+  const issues: PublicationIssue[] = [...publicationCheck.issues];
+  const publicationDelta = verifySurfacePublicationDelta({ repoRoot });
+  if (publicationDelta.tag === "invalid") {
+    issues.push(
+      ...publicationDelta.issues.map((issue) => ({
+        kind: "publication-delta-verification-failed" as const,
+        message: describeSurfacePublicationDeltaIssue(issue),
+      })),
     );
+  }
 
   if (issues.length > 0) {
     console.error(
@@ -1550,6 +1567,10 @@ async function main(): Promise<void> {
               `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(buildIssue)}`,
           ),
           Match.when(
+            { kind: "publication-delta-verification-failed" },
+            ({ message }) => `- ${message}`,
+          ),
+          Match.when(
             { kind: "peer-family-mismatch" },
             ({ peer, source, actualRecordKind, expectedRecordKind }) =>
               `- peer-family-mismatch: ${peer} from ${source} advertises ${actualRecordKind}; expected ${expectedRecordKind}`,
@@ -1568,10 +1589,10 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `Surface content publication passed: ${sourceCount} canonical Dhall sources and ${peerCount} generated JSON peers decoded and synchronized.`,
+    `Surface content publication passed: ${publicationCheck.sourceCount} canonical Dhall sources and ${publicationCheck.peerCount} generated JSON peers decoded and synchronized.`,
   );
   console.log(
-    `SRD stat-block parity report: ${statBlockParity.discovery.occurrences.length} source occurrences, ${statBlockParity.discovery.identities.length} source identities, ${statBlockParity.issues.length} report issues; parity acceptance remains a separate operation.`,
+    `SRD stat-block parity report: ${publicationCheck.statBlockParity.discovery.occurrences.length} source occurrences, ${publicationCheck.statBlockParity.discovery.identities.length} source identities, ${publicationCheck.statBlockParity.issues.length} report issues; parity acceptance remains a separate operation.`,
   );
 }
 

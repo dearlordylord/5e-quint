@@ -16,6 +16,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import type {
   CharacterSheet,
   CharacterSheetClassFeaturePreparedSpellAccess,
@@ -47,23 +51,25 @@ export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(unitId);
+    const feature = Option.isSome(unit)
+      ? projectCharacterSheetClassFeature(unit.value)
+      : Option.none();
     if (
-      Option.isNone(unit) ||
-      unit.value.kind !== "class_feature" ||
-      unit.value.mechanics.family !== "passive"
+      Option.isNone(feature) ||
+      feature.value.mechanics.family !== "passive"
     ) {
       continue;
     }
     const classLevel = classLevelForClassFeatureUnit({
       build: input.build,
       unitLibrary: input.unitLibrary,
-      featureUnit: unit.value,
+      featureFacts: feature.value,
     });
-    const spellIds = unit.value.mechanics.grants.flatMap((grant) =>
+    const spellIds = feature.value.mechanics.grants.flatMap((grant) =>
       preparedSpellIdsForClassFeatureGrant(grant, classLevel),
     );
     if (spellIds.length > 0) {
-      accesses.push({ sourceUnitId: unit.value.id, spellIds });
+      accesses.push({ sourceUnitId: unitId, spellIds });
     }
   }
   return accesses;
@@ -77,10 +83,13 @@ export function characterSheetSpellAccessesForBuild(input: {
     characterSheetClassFeaturePreparedSpellAccessesForBuild(input).flatMap(
       (access) => {
         const source = input.unitLibrary.getUnit(access.sourceUnitId);
-        if (Option.isNone(source) || source.value.kind !== "class_feature") {
+        const feature = Option.isSome(source)
+          ? projectCharacterSheetClassFeature(source.value)
+          : Option.none();
+        if (Option.isNone(feature)) {
           return [];
         }
-        const sourceClassName = source.value.className;
+        const sourceClassName = feature.value.className;
         const spellcastingSource = input.build.spellcasting?.sources.find(
           ({ sourceUnitId }) => {
             const unit = input.unitLibrary.getUnit(sourceUnitId);
@@ -146,7 +155,7 @@ export function characterSheetClassFeatureSelectedReferenceProjection(input: {
 function classLevelForClassFeatureUnit(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-  readonly featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
+  readonly featureFacts: CharacterSheetClassFeatureFacts;
 }): number {
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: V8 maps the exhausted-scan edge to this loop, but an admitted class feature's owning class must occur in the same build progression. */
   for (const progressionClassUnitId of progressionClassUnitIds(
@@ -156,7 +165,7 @@ function classLevelForClassFeatureUnit(input: {
     if (
       Option.isSome(classUnit) &&
       classUnit.value.kind === "class" &&
-      classUnit.value.className === input.featureUnit.className
+      classUnit.value.className === input.featureFacts.className
     ) {
       return classLevelForUnit(input.build.progression, progressionClassUnitId);
     }

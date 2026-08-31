@@ -11,7 +11,7 @@ import { describe, expect, test } from "vitest";
 
 import { admitStatBlockSpellInvocationDeltas } from "./stat-block-spell-invocation-deltas.ts";
 
-const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
+const decode = <A, I>(schema: Schema.Codec<A, I>, input: unknown): A =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
 
 const allDeltas = decode(StatBlockSpellInvocationDeltasSchema, [

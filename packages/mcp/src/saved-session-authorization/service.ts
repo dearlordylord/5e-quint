@@ -4,7 +4,7 @@ import { cimd } from "@better-auth/cimd";
 import { mcp } from "@better-auth/mcp";
 import { betterAuth } from "better-auth";
 import { anonymous, jwt } from "better-auth/plugins";
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Semaphore } from "effect";
 
 import { SAVED_INACTIVITY_RETENTION_MS } from "../play-session-access.ts";
 import { PLAY_SESSION_OAUTH_SCOPE } from "../tool-definition-contract.ts";
@@ -55,14 +55,15 @@ export type SavedSessionAuthorizationService = {
   ) => Effect.Effect<Response, SavedSessionAuthorizationIssue>;
 };
 
-export class SavedSessionAuthorization extends Context.Tag(
-  "@dnd/mcp/SavedSessionAuthorization",
-)<SavedSessionAuthorization, SavedSessionAuthorizationService>() {}
+export class SavedSessionAuthorization extends Context.Service<
+  SavedSessionAuthorization,
+  SavedSessionAuthorizationService
+>()("@dnd/mcp/SavedSessionAuthorization") {}
 
 export function savedSessionAuthorizationLayer(
   configuration: SavedSessionAuthorizationConfiguration,
 ): Layer.Layer<SavedSessionAuthorization, SavedSessionAuthorizationIssue> {
-  return Layer.scoped(
+  return Layer.effect(
     SavedSessionAuthorization,
     Effect.gen(function* () {
       const database = yield* Effect.acquireRelease(
@@ -83,7 +84,7 @@ export function savedSessionAuthorizationLayer(
         },
         catch: (cause) => authorizationIssue("initializationFailed", cause),
       });
-      const requestMutex = yield* Effect.makeSemaphore(1);
+      const requestMutex = yield* Semaphore.make(1);
       const handle = Effect.fn("SavedSessionAuthorization.handle")(
         (request: Request) =>
           requestMutex.withPermits(1)(

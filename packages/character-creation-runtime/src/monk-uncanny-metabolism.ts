@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { DAMAGE_DIE_SIZES, type DamageDieSize } from "@dnd/shared/types";
 import type {
   ClassFeatureRecord,
@@ -98,7 +98,7 @@ export type CharacterBuildMonkUncannyMetabolismFactsIssue = {
 export function characterBuildMonkUncannyMetabolismFacts(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildMonkUncannyMetabolismFacts | undefined,
   CharacterBuildMonkUncannyMetabolismFactsIssue
 > {
@@ -107,7 +107,7 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
       authoredUnitId(MONK_UNCANNY_METABOLISM_UNIT_ID),
     )
   ) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
 
   const featureUnit = input.unitLibrary.getUnit(
@@ -125,17 +125,17 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
   }
 
   const focusFacts = characterBuildMonksFocusFacts(input);
-  if (Either.isLeft(focusFacts)) {
-    return monkUncannyMetabolismFactsIssue(focusFacts.left.message);
+  if (Result.isFailure(focusFacts)) {
+    return monkUncannyMetabolismFactsIssue(focusFacts.failure.message);
   }
-  if (focusFacts.right === undefined) {
+  if (focusFacts.success === undefined) {
     return monkUncannyMetabolismFactsIssue(
       "Uncanny Metabolism requires the shared Monk's Focus resource projection.",
     );
   }
   if (
     featureUnit.value.mechanics.recovery.resourceUnitId !==
-    focusFacts.right.unitId
+    focusFacts.success.unitId
   ) {
     return monkUncannyMetabolismFactsIssue(
       "Uncanny Metabolism recovery must reference the shared Monk's Focus resource.",
@@ -165,17 +165,18 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
     feature: featureUnit.value,
   });
   /* v8 ignore start -- @preserve -- Admission retains Uncanny Metabolism only with its owning Monk class progression. */
-  if (Either.isLeft(monkLevel)) {
-    return monkUncannyMetabolismFactsIssue(monkLevel.left.message);
+  if (Result.isFailure(monkLevel)) {
+    return monkUncannyMetabolismFactsIssue(monkLevel.failure.message);
   }
   /* v8 ignore stop -- @preserve */
   const martialArtsDie = monkMartialArtsDieForLevel({
     dieGrant: martialArtsDieGrant,
-    monkLevel: monkLevel.right,
+    monkLevel: monkLevel.success,
   });
-  if (Either.isLeft(martialArtsDie)) return Either.left(martialArtsDie.left);
+  if (Result.isFailure(martialArtsDie))
+    return Result.fail(martialArtsDie.failure);
 
-  return Either.right({
+  return Result.succeed({
     unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
     trigger: featureUnit.value.mechanics.trigger.kind,
     optional: true,
@@ -183,14 +184,14 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
       resetCadence: featureUnit.value.mechanics.resetCadence,
     },
     focusRecovery: {
-      resourceUnitId: focusFacts.right.unitId,
+      resourceUnitId: focusFacts.success.unitId,
       recoversAllExpended: true,
     },
     healing: {
       target: featureUnit.value.mechanics.healing.target,
       martialArtsDieSourceUnitId: martialArtsUnitId,
-      martialArtsDie: martialArtsDie.right,
-      monkLevelBonus: monkLevel.right,
+      martialArtsDie: martialArtsDie.success,
+      monkLevelBonus: monkLevel.success,
     },
   });
 }
@@ -229,14 +230,14 @@ function findMonkMartialArtsDieGrant(
 function monkMartialArtsDieForLevel(input: {
   readonly dieGrant: MonkMartialArtsDieGrant;
   readonly monkLevel: number;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
   CharacterBuildMonkUncannyMetabolismFactsIssue
 > {
   const baseDie = parseSingleDamageDie(input.dieGrant.die.base);
-  if (Either.isLeft(baseDie)) return Either.left(baseDie.left);
+  if (Result.isFailure(baseDie)) return Result.fail(baseDie.failure);
 
-  let die = baseDie.right;
+  let die = baseDie.success;
   const applicableTiers = [...input.dieGrant.die.tiers]
     .filter((tier) => tier.atLevel <= input.monkLevel)
     .sort((left, right) => left.atLevel - right.atLevel);
@@ -245,11 +246,11 @@ function monkMartialArtsDieForLevel(input: {
       die,
       override: tier.override,
     });
-    if (Either.isLeft(tierDie)) return Either.left(tierDie.left);
-    die = tierDie.right;
+    if (Result.isFailure(tierDie)) return Result.fail(tierDie.failure);
+    die = tierDie.success;
   }
 
-  return Either.right(die);
+  return Result.succeed(die);
 }
 
 function isMonkMartialArtsDieGrant(
@@ -265,7 +266,7 @@ function isMonkMartialArtsDieGrant(
 
 function parseSingleDamageDie(
   value: DiceExpr,
-): Either.Either<
+): Result.Result<
   CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
   CharacterBuildMonkUncannyMetabolismFactsIssue
 > {
@@ -279,13 +280,13 @@ function parseSingleDamageDie(
       "Uncanny Metabolism requires a supported Martial Arts damage die size.",
     );
   }
-  return Either.right({ dice: 1, dieSize: value.dieSize });
+  return Result.succeed({ dice: 1, dieSize: value.dieSize });
 }
 
 function applySingleDamageDieOverride(input: {
   readonly die: CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"];
   readonly override: DiceExprDelta;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
   CharacterBuildMonkUncannyMetabolismFactsIssue
 > {
@@ -304,7 +305,7 @@ function applySingleDamageDieOverride(input: {
       "Uncanny Metabolism requires a supported Martial Arts damage die size.",
     );
   }
-  return Either.right({ dice: 1, dieSize: input.override.dieSize });
+  return Result.succeed({ dice: 1, dieSize: input.override.dieSize });
 }
 
 function isDamageDieSize(value: number): value is DamageDieSize {
@@ -313,6 +314,6 @@ function isDamageDieSize(value: number): value is DamageDieSize {
 
 function monkUncannyMetabolismFactsIssue(
   message: string,
-): Either.Either<never, CharacterBuildMonkUncannyMetabolismFactsIssue> {
-  return Either.left({ tag: "monkUncannyMetabolismFactsIssue", message });
+): Result.Result<never, CharacterBuildMonkUncannyMetabolismFactsIssue> {
+  return Result.fail({ tag: "monkUncannyMetabolismFactsIssue", message });
 }

@@ -104,7 +104,7 @@ module battleRuntimeSpellLifecycleBridge {
       | _ => effect
     })
   pure def battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn: bool =
-    oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn
+    oneRoundTriggeredDefenseExpiresAtStartOfNextTurn
   pure def battleRuntimeTimedSpellEffectDurationAfterRoundTick(durationTicks: int): int =
     timedSpellEffectDurationAfterRoundTick(durationTicks)
   pure def battleRuntimeTimedSpellEffectRemainsActive(durationTicks: int): bool =

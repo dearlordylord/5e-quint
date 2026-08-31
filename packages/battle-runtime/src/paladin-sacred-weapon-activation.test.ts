@@ -126,6 +126,29 @@ describe("Sacred Weapon activation", () => {
     });
   });
 
+  test("replaying a Sacred Weapon activation after its action is spent returns staleSubject", () => {
+    const state = sacredWeaponBattle({});
+    const act = requireSacredWeaponAct(state);
+    const first = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (first.tag !== "resolved") {
+      throw new Error(
+        "Expected the first Sacred Weapon activation to resolve.",
+      );
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: first.state,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("recast spends another Channel Divinity use and replaces the prior weapon binding", () => {
     const state = sacredWeaponBattle({});
     const first = resolveSacredWeapon(state, requireSacredWeaponAct(state));

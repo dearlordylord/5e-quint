@@ -12,7 +12,7 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
-  fogCloudAreaFill,
+  persistentAreaTraitAreaFill,
   spellTargetAllocationFill,
   startBattleSessionRight,
   statBlockCreatureInit,
@@ -25,9 +25,9 @@ import {
 import {
   abilityChoiceFill,
   damageTypeChoiceFill,
-  flamingSphereAreaFill,
+  persistentAreaSaveDamageAreaFill,
   greaseSavingThrowOutcomeFill,
-  gustOfWindLineSavingThrowOutcomeFill,
+  directionalPersistentAreaSavingThrowOutcomeFill,
   knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
   savingThrowOutcomeFill,
@@ -225,10 +225,10 @@ function catalogFrontierFills(input: {
       if ("outcomeTargeting" in hole && hole.outcomeTargeting === "area") {
         const outcomes = [{ targetId: firstTargetId, succeeded: false }];
         const fill =
-          input.procedure === "greaseGroundHazard"
+          input.procedure === "persistentAreaSaveCondition"
             ? greaseSavingThrowOutcomeFill(hole, outcomes)
-            : input.procedure === "gustOfWindLine"
-              ? gustOfWindLineSavingThrowOutcomeFill(hole, outcomes)
+            : input.procedure === "directionalPersistentArea"
+              ? directionalPersistentAreaSavingThrowOutcomeFill(hole, outcomes)
               : undefined;
         if (fill === undefined) return undefined;
         fills.push(fill);
@@ -264,13 +264,16 @@ function catalogFrontierFills(input: {
     }
     if (hole.kind === "spellAreaChoice") {
       const fill =
-        input.procedure === "flamingSphere"
-          ? flamingSphereAreaFill(hole)
-          : input.procedure === "fogCloudObscurement"
-            ? fogCloudAreaFill(hole, battleAreaId("catalog-fog-cloud-area"))
-            : input.procedure === "sleetStormAreaHazard"
+        input.procedure === "persistentAreaSaveDamage"
+          ? persistentAreaSaveDamageAreaFill(hole)
+          : input.procedure === "persistentAreaTrait"
+            ? persistentAreaTraitAreaFill(
+                hole,
+                battleAreaId("catalog-fog-cloud-area"),
+              )
+            : input.procedure === "persistentAreaSaveComposite"
               ? sleetStormAreaFill(hole)
-              : input.procedure === "webRestraintHazard"
+              : input.procedure === "persistentAreaSaveConditionEscape"
                 ? webAreaFill(hole)
                 : undefined;
       if (fill === undefined) return undefined;
@@ -486,50 +489,49 @@ describe("spell cast hole frontier catalog", () => {
         "attackBurstSaveDamage: [targetChoice] -> [targetChoice]",
         "chainedSpellAttackDamage: [damageTypeChoice] -> [damageTypeChoice]",
         "chosenDamageResistance: [targetChoice, damageTypeChoice] -> [targetChoice]",
+        "compositeTargetBuffWithAftermath: [targetChoice] -> [targetChoice]",
+        "controlledVerticalSuspension: [targetChoice] -> [targetChoice]",
         "creatureSizeDecrease: [targetChoice] -> [targetChoice]",
         "creatureSizeIncrease: [targetChoice] -> [targetChoice]",
         "creatureTypeProtection: [targetChoice] -> [targetChoice]",
-        "dancingLightsCombinedCast: [dancingLightsPlacement] -> [dancingLightsPlacement]",
-        "dancingLightsSeparateCast: [dancingLightsPlacement] -> [dancingLightsPlacement]",
         "directCondition: [spellTargetList] -> [spellTargetList]",
-        "dragonsBreathInitial: [spellTargetList, damageTypeChoice] -> [spellTargetList]",
-        "flamingSphere: [spellAreaChoice] -> [spellAreaChoice]",
-        "fogCloudObscurement: [spellAreaChoice] -> [spellAreaChoice]",
-        "greaseGroundHazard: [savingThrowOutcome] -> [savingThrowOutcome]",
-        "gustOfWindLine: [savingThrowOutcome] -> [savingThrowOutcome]",
-        "hastePositive: [targetChoice] -> [targetChoice]",
-        "hideousLaughter: [spellTargetList] -> [spellTargetList]",
-        "hypnoticPattern: [savingThrowOutcome] -> [savingThrowOutcome]",
-        "jumpMovementReplacement: [spellTargetList] -> [spellTargetList]",
-        "levitatedCreature: [targetChoice] -> [targetChoice]",
-        "magicWeaponEnhancement: [magicWeaponTargetItem] -> [magicWeaponTargetItem]",
+        "directionalPersistentArea: [savingThrowOutcome] -> [savingThrowOutcome]",
+        "fixedCostMovementReplacement: [spellTargetList] -> [spellTargetList]",
+        "grantedAreaSaveDamageAction: [spellTargetList, damageTypeChoice] -> [spellTargetList]",
         "magicalDarknessPointOrigin: [spellAreaChoice] -> [spellAreaChoice]",
+        "movableLightManifestation: [movableLightPlacement] -> [movableLightPlacement]",
         "objectLight: [objectTargetChoice] -> [objectTargetChoice]",
         "ongoingSpellEnd: [ongoingSpellTargetChoice] -> [ongoingSpellTargetChoice]",
+        "persistentAreaSaveComposite: [spellAreaChoice] -> [spellAreaChoice]",
+        "persistentAreaSaveCondition: [savingThrowOutcome] -> [savingThrowOutcome]",
+        "persistentAreaSaveConditionEscape: [spellAreaChoice] -> [spellAreaChoice]",
+        "persistentAreaSaveDamage: [spellAreaChoice] -> [spellAreaChoice]",
+        "persistentAreaTrait: [spellAreaChoice] -> [spellAreaChoice]",
         "persistentArmorEffect: [targetChoice] -> [targetChoice]",
         "repeatedDamageAllocation: [spellTargetAllocation] -> [spellTargetAllocation]",
         "rollModifier: [spellTargetList, targetAbilityChoices] -> [spellTargetList]",
         "rollModifier: [targetChoice, abilityChoice] -> [targetChoice]",
+        "saveGatedAreaControl: [savingThrowOutcome] -> [savingThrowOutcome]",
         "saveGatedCondition: [savingThrowOutcome] -> [savingThrowOutcome]",
         "saveGatedCondition: [spellTargetList, conditionChoice] -> [spellTargetList]",
         "saveGatedCondition: [spellTargetList] -> [spellTargetList]",
+        "saveGatedConditionWithRepeat: [spellTargetList] -> [spellTargetList]",
         "saveGatedDamage: [savingThrowOutcome] -> [savingThrowOutcome]",
         "saveGatedDamage: [targetChoice] -> [targetChoice]",
+        "saveGatedTurnConstraintBundle: [savingThrowOutcome] -> [savingThrowOutcome]",
         "scalarBuff: [rolledDice] -> [rolledDice]",
         "scalarBuff: [spellTargetList] -> [spellTargetList]",
         "scalarBuff: [targetChoice] -> [targetChoice]",
         "selfTeleport: [teleportDestination] -> [teleportDestination]",
         "selfTransformationMode: [selfTransformationModeChoice] -> [selfTransformationModeChoice]",
-        "sleepTargetAdmission: [savingThrowOutcome] -> [savingThrowOutcome]",
-        "sleetStormAreaHazard: [spellAreaChoice] -> [spellAreaChoice]",
-        "slowActivePenalties: [savingThrowOutcome] -> [savingThrowOutcome]",
         "spellAttackDamage: [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice]",
         "spellAttackDamage: [targetChoice] -> [targetChoice]",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice]",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice]",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice]",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice]",
-        "webRestraintHazard: [spellAreaChoice] -> [spellAreaChoice]",
+        "stagedSaveCondition: [savingThrowOutcome] -> [savingThrowOutcome]",
+        "weaponAttackDamageEnhancement: [weaponAttackDamageEnhancementTargetItem] -> [weaponAttackDamageEnhancementTargetItem]",
       ]
     `);
 
@@ -570,50 +572,49 @@ describe("spell cast hole frontier catalog", () => {
         "attackBurstSaveDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "chainedSpellAttackDamage: [damageTypeChoice] => [damageTypeChoice] -> [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "chosenDamageResistance: [targetChoice, damageTypeChoice] => [targetChoice] -> [damageTypeChoice] -> resolved",
+        "compositeTargetBuffWithAftermath: [targetChoice] => [targetChoice] -> resolved",
+        "controlledVerticalSuspension: [targetChoice] => [targetChoice] -> [controlledVerticalSuspensionInitialRise] -> unsupported",
         "creatureSizeDecrease: [targetChoice] => [targetChoice] -> resolved",
         "creatureSizeIncrease: [targetChoice] => [targetChoice] -> resolved",
         "creatureTypeProtection: [targetChoice] => [targetChoice] -> resolved",
-        "dancingLightsCombinedCast: [dancingLightsPlacement] => [dancingLightsPlacement] -> unsupported",
-        "dancingLightsSeparateCast: [dancingLightsPlacement] => [dancingLightsPlacement] -> unsupported",
         "directCondition: [spellTargetList] => [spellTargetList] -> resolved",
-        "dragonsBreathInitial: [spellTargetList, damageTypeChoice] => [spellTargetList] -> [damageTypeChoice] -> resolved",
-        "flamingSphere: [spellAreaChoice] => [spellAreaChoice] -> resolved",
-        "fogCloudObscurement: [spellAreaChoice] => [spellAreaChoice] -> resolved",
-        "greaseGroundHazard: [savingThrowOutcome] => [savingThrowOutcome] -> resolved",
-        "gustOfWindLine: [savingThrowOutcome] => [savingThrowOutcome] -> resolved",
-        "hastePositive: [targetChoice] => [targetChoice] -> resolved",
-        "hideousLaughter: [spellTargetList] => [spellTargetList] -> [savingThrowOutcome] -> resolved",
-        "hypnoticPattern: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
-        "jumpMovementReplacement: [spellTargetList] => [spellTargetList] -> resolved",
-        "levitatedCreature: [targetChoice] => [targetChoice] -> [levitateInitialRise] -> unsupported",
-        "magicWeaponEnhancement: [magicWeaponTargetItem] => [magicWeaponTargetItem] -> unsupported",
+        "directionalPersistentArea: [savingThrowOutcome] => [savingThrowOutcome] -> resolved",
+        "fixedCostMovementReplacement: [spellTargetList] => [spellTargetList] -> resolved",
+        "grantedAreaSaveDamageAction: [spellTargetList, damageTypeChoice] => [spellTargetList] -> [damageTypeChoice] -> resolved",
         "magicalDarknessPointOrigin: [spellAreaChoice] => [spellAreaChoice] -> unsupported",
+        "movableLightManifestation: [movableLightPlacement] => [movableLightPlacement] -> unsupported",
         "objectLight: [objectTargetChoice] => [objectTargetChoice] -> resolved",
         "ongoingSpellEnd: [ongoingSpellTargetChoice] => [ongoingSpellTargetChoice] -> unsupported",
+        "persistentAreaSaveComposite: [spellAreaChoice] => [spellAreaChoice] -> resolved",
+        "persistentAreaSaveCondition: [savingThrowOutcome] => [savingThrowOutcome] -> resolved",
+        "persistentAreaSaveConditionEscape: [spellAreaChoice] => [spellAreaChoice] -> resolved",
+        "persistentAreaSaveDamage: [spellAreaChoice] => [spellAreaChoice] -> resolved",
+        "persistentAreaTrait: [spellAreaChoice] => [spellAreaChoice] -> resolved",
         "persistentArmorEffect: [targetChoice] => [targetChoice] -> resolved",
         "repeatedDamageAllocation: [spellTargetAllocation] => [spellTargetAllocation] -> [rolledDice] -> unsupported",
         "rollModifier: [spellTargetList, targetAbilityChoices] => [spellTargetList] -> [targetAbilityChoices] -> resolved",
         "rollModifier: [targetChoice, abilityChoice] => [targetChoice] -> [abilityChoice] -> resolved",
+        "saveGatedAreaControl: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
         "saveGatedCondition: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
         "saveGatedCondition: [spellTargetList, conditionChoice] => [spellTargetList] -> [conditionChoice] -> [savingThrowOutcome] -> resolved",
         "saveGatedCondition: [spellTargetList] => [spellTargetList] -> [savingThrowOutcome] -> resolved",
+        "saveGatedConditionWithRepeat: [spellTargetList] => [spellTargetList] -> [savingThrowOutcome] -> resolved",
         "saveGatedDamage: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
         "saveGatedDamage: [targetChoice] => [targetChoice] -> [savingThrowOutcome] -> [rolledDice] -> unsupported",
+        "saveGatedTurnConstraintBundle: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
         "scalarBuff: [rolledDice] => [rolledDice] -> unsupported",
         "scalarBuff: [spellTargetList] => [spellTargetList] -> resolved",
         "scalarBuff: [targetChoice] => [targetChoice] -> resolved",
         "selfTeleport: [teleportDestination] => [teleportDestination] -> resolved",
         "selfTransformationMode: [selfTransformationModeChoice] => [selfTransformationModeChoice] -> resolved",
-        "sleepTargetAdmission: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
-        "sleetStormAreaHazard: [spellAreaChoice] => [spellAreaChoice] -> resolved",
-        "slowActivePenalties: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
-        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
-        "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
-        "webRestraintHazard: [spellAreaChoice] => [spellAreaChoice] -> resolved",
+        "stagedSaveCondition: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
+        "weaponAttackDamageEnhancement: [weaponAttackDamageEnhancementTargetItem] => [weaponAttackDamageEnhancementTargetItem] -> unsupported",
       ]
     `);
   }, 30_000);

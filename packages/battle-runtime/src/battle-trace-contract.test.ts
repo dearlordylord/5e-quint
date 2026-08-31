@@ -1,12 +1,12 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
@@ -150,10 +150,10 @@ function startBattleRight(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function requireAttackAct(session: BattleRuntimeSession): AvailableBattleAct {
@@ -247,16 +247,20 @@ function statBlockCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
   const statBlock = statBlockRecord();
-  const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
+  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(projected.runtime.statBlock.hp.value),
+      source: (() => {
+        const source = battleStatBlockCombatantSource(projected.runtime);
+        if (Result.isFailure(source)) {
+          throw new Error(battleStateInitIssueMessage(source.failure));
+        }
+        return source.success;
+      })(),
+      currentHp: Hp(statBlock.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [],
       conditions: [],

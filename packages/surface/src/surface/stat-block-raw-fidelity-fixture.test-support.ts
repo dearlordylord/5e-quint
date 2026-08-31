@@ -7,7 +7,7 @@ import { discoverSrdStatBlocks } from "../../../../scripts/srd521-stat-block-par
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
 import type { SrdStatBlockRecord } from "./types.ts";
 import { projectRawStatBlocks } from "./stat-block-raw-projection.test-support.ts";
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 
 type RawStatBlockSourceFixture = {

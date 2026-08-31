@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import cloakOfProtectionInput from "../../content/cloak_of_protection.json";
@@ -33,9 +33,9 @@ import {
   decodeSpeciesRecordSync,
   decodeSpeciesTraitRecordSync,
   decodeSpellRecordSync,
-  decodeSrdSurfaceEither,
+  decodeSrdSurfaceResult,
   decodeSubclassRecordSync,
-  decodeUnitRecordEither,
+  decodeUnitRecordResult,
   decodeWeaponRecordSync,
   decodeWeaponTemplateRecordSync,
   formatSurfaceDecodeError,
@@ -309,10 +309,10 @@ describe("SRD Surface publication schema", () => {
   });
 
   test("formats public decoder errors for boundary diagnostics", () => {
-    const result = decodeUnitRecordEither({ kind: "synthetic-test" });
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(formatSurfaceDecodeError(result.left)).toContain("UnitRecord");
+    const result = decodeUnitRecordResult({ kind: "synthetic-test" });
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(formatSurfaceDecodeError(result.failure)).toContain("UnitRecord");
     }
   });
 
@@ -337,7 +337,7 @@ describe("SRD Surface publication schema", () => {
 
   test("rejects non-SRD member provenance at the aggregate boundary", () => {
     const firstUnit = srdSurface.units[0];
-    const result = decodeSrdSurfaceEither({
+    const result = decodeSrdSurfaceResult({
       ...srdSurface,
       units: [
         {
@@ -347,7 +347,7 @@ describe("SRD Surface publication schema", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   });
 
   test("preserves the canonical provenance role while narrowing to SRD", () => {
@@ -379,17 +379,17 @@ describe("SRD Surface publication schema", () => {
 
   test("rejects unknown properties instead of stripping them", () => {
     const firstUnit = srdSurface.units[0];
-    const aggregateResult = decodeSrdSurfaceEither({
+    const aggregateResult = decodeSrdSurfaceResult({
       ...srdSurface,
       units: [{ ...firstUnit, unknownProperty: true }],
     });
-    const recordResult = decodeUnitRecordEither({
+    const recordResult = decodeUnitRecordResult({
       ...firstUnit,
       unknownProperty: true,
     });
 
-    expect(Either.isLeft(aggregateResult)).toBe(true);
-    expect(Either.isLeft(recordResult)).toBe(true);
+    expect(Result.isFailure(aggregateResult)).toBe(true);
+    expect(Result.isFailure(recordResult)).toBe(true);
   });
 
   test("keeps top-level presentation prose out of canonical Unit records", () => {
@@ -397,8 +397,8 @@ describe("SRD Surface publication schema", () => {
 
     expect("description" in firstUnit).toBe(false);
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           ...firstUnit,
           description: "Handwritten presentation prose.",
         }),
@@ -409,21 +409,21 @@ describe("SRD Surface publication schema", () => {
   test("rejects empty or whitespace-only Unit ids", () => {
     const firstUnit = srdSurface.units[0];
     expect(
-      Either.isLeft(decodeUnitRecordEither({ ...firstUnit, id: "" })),
+      Result.isFailure(decodeUnitRecordResult({ ...firstUnit, id: "" })),
     ).toBe(true);
     expect(
-      Either.isLeft(decodeUnitRecordEither({ ...firstUnit, id: "   " })),
+      Result.isFailure(decodeUnitRecordResult({ ...firstUnit, id: "   " })),
     ).toBe(true);
   });
 
   test("rejects empty catalog collections", () => {
-    const result = decodeSrdSurfaceEither({
+    const result = decodeSrdSurfaceResult({
       ...srdSurface,
       units: [],
       statBlocks: [],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   });
 
   test("is Draft 2020-12 and closes generated object schemas", () => {
@@ -464,10 +464,10 @@ describe("SRD Surface publication schema", () => {
       "stat blocks property",
     );
     expect(requireRecord(units.items, "units items").$ref).toBe(
-      "#/$defs/PublishedSrdUnitPublication",
+      "#/$defs/PublishedSrdUnitPublicationEncoded",
     );
     expect(requireRecord(statBlocks.items, "stat blocks items").$ref).toBe(
-      "#/$defs/PublishedSrdStatBlockPublication",
+      "#/$defs/PublishedSrdStatBlockPublicationEncoded",
     );
     expect(
       JSON.stringify(SrdSurfaceJsonSchema.$defs).includes('"srd-5.2.1"'),

@@ -17,7 +17,7 @@ import {
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -63,18 +63,21 @@ export function applyCompleteShortRestOperation(
   },
 ) {
   const started = startShortRest({ sheet: input.session });
-  if (Either.isLeft(started)) {
-    return characterSessionOperationFailure(input.characterId, started.left);
+  if (Result.isFailure(started)) {
+    return characterSessionOperationFailure(input.characterId, started.failure);
   }
   const completion = finishShortRest({
-    rest: started.right,
+    rest: started.success,
     restedTicks: elapsedTimeTicks(input.operation.restedTicks),
   });
-  if (Either.isLeft(completion)) {
-    return characterSessionOperationFailure(input.characterId, completion.left);
+  if (Result.isFailure(completion)) {
+    return characterSessionOperationFailure(
+      input.characterId,
+      completion.failure,
+    );
   }
   const completed = completeShortRest({
-    completion: completion.right,
+    completion: completion.success,
     unitLibrary: root.unitLibrary,
     ...restRecoveryFromTool(input.operation),
     ...(input.operation.fiendishResilienceDamageType === undefined
@@ -84,12 +87,15 @@ export function applyCompleteShortRestOperation(
             input.operation.fiendishResilienceDamageType,
         }),
   });
-  if (Either.isLeft(completed)) {
-    return characterSessionOperationFailure(input.characterId, completed.left);
+  if (Result.isFailure(completed)) {
+    return characterSessionOperationFailure(
+      input.characterId,
+      completed.failure,
+    );
   }
-  root.sessionStore.characters.set(completed.right);
+  root.sessionStore.characters.set(completed.success);
   return characterSessionOperationSuccess(root, {
-    character: completed.right,
+    character: completed.success,
     result: {
       tag: "shortRestCompleted",
       restedTicks: input.operation.restedTicks,
@@ -109,11 +115,11 @@ export function applyInterruptShortRestOperation(
   },
 ) {
   const started = startShortRest({ sheet: input.session });
-  if (Either.isLeft(started)) {
-    return characterSessionOperationFailure(input.characterId, started.left);
+  if (Result.isFailure(started)) {
+    return characterSessionOperationFailure(input.characterId, started.failure);
   }
   const interrupted = interruptShortRest({
-    rest: started.right,
+    rest: started.success,
     interruption: input.operation.interruption,
   });
   return characterSessionOperationSuccess(root, {
@@ -140,12 +146,12 @@ export function applyCompleteLongRestOperation(
     sheet: input.session,
     timing: longRestTimingFromTool(input.operation.timing),
   });
-  if (Either.isLeft(started)) {
-    return characterSessionOperationFailure(input.characterId, started.left);
+  if (Result.isFailure(started)) {
+    return characterSessionOperationFailure(input.characterId, started.failure);
   }
   return completeStartedLongRestOperation(root, {
     characterId: input.characterId,
-    rest: started.right,
+    rest: started.success,
     completion: input.operation,
   });
 }
@@ -165,10 +171,10 @@ export function applyInterruptLongRestOperation(
     sheet: input.session,
     timing: longRestTimingFromTool(input.operation.timing),
   });
-  if (Either.isLeft(started)) {
-    return characterSessionOperationFailure(input.characterId, started.left);
+  if (Result.isFailure(started)) {
+    return characterSessionOperationFailure(input.characterId, started.failure);
   }
-  let rest = started.right;
+  let rest = started.success;
   let previousCumulativeRestedTicks = 0;
   // RAW: .references/srd-5.2.1/Rules-Glossary.md#Long-Rest (lines 694-696)
   // grants Short Rest benefits after at least 1 hour before an interruption
@@ -186,31 +192,31 @@ export function applyInterruptLongRestOperation(
       previousCumulativeRestedTicks,
       cumulativeRestedTicks: segment.cumulativeRestedTicks,
     });
-    if (Either.isLeft(segmentBoundary)) {
+    if (Result.isFailure(segmentBoundary)) {
       return characterSessionOperationFailure(
         input.characterId,
-        segmentBoundary.left.issue,
-        segmentBoundary.left.context,
+        segmentBoundary.failure.issue,
+        segmentBoundary.failure.context,
       );
     }
     const interrupted = interruptLongRest({
       rest,
       unitLibrary: root.unitLibrary,
       timing: {
-        cumulativeRestedTicks: segmentBoundary.right.cumulativeRestedTicks,
+        cumulativeRestedTicks: segmentBoundary.success.cumulativeRestedTicks,
         elapsedSincePreviousInterruptionTicks:
-          segmentBoundary.right.elapsedSincePreviousBoundaryTicks,
+          segmentBoundary.success.elapsedSincePreviousBoundaryTicks,
       },
       interruption: longRestInterruptionFromTool(segment.interruption),
       ...restRecoveryFromTool(segment),
     });
-    if (Either.isLeft(interrupted)) {
+    if (Result.isFailure(interrupted)) {
       return characterSessionOperationFailure(
         input.characterId,
-        interrupted.left,
+        interrupted.failure,
       );
     }
-    rest = interrupted.right.rest;
+    rest = interrupted.success.rest;
     previousCumulativeRestedTicks = segment.cumulativeRestedTicks;
   }
   const completionBoundary = cumulativeRestBoundary({
@@ -218,11 +224,11 @@ export function applyInterruptLongRestOperation(
     previousCumulativeRestedTicks,
     cumulativeRestedTicks: input.operation.completion.cumulativeRestedTicks,
   });
-  if (Either.isLeft(completionBoundary)) {
+  if (Result.isFailure(completionBoundary)) {
     return characterSessionOperationFailure(
       input.characterId,
-      completionBoundary.left.issue,
-      completionBoundary.left.context,
+      completionBoundary.failure.issue,
+      completionBoundary.failure.context,
     );
   }
   return completeStartedLongRestOperation(root, {
@@ -246,11 +252,14 @@ function completeStartedLongRestOperation(
     rest: input.rest,
     restedTicks: longRestCompletionRestedTicks(input.completion),
   });
-  if (Either.isLeft(completion)) {
-    return characterSessionOperationFailure(input.characterId, completion.left);
+  if (Result.isFailure(completion)) {
+    return characterSessionOperationFailure(
+      input.characterId,
+      completion.failure,
+    );
   }
   const completed = completeLongRest({
-    completion: completion.right,
+    completion: completion.success,
     unitLibrary: root.unitLibrary,
     ...(input.completion.weaponMasteryReselections === undefined
       ? {}
@@ -282,12 +291,15 @@ function completeStartedLongRestOperation(
         }),
     statBlockCatalog: root.statBlockCatalog,
   });
-  if (Either.isLeft(completed)) {
-    return characterSessionOperationFailure(input.characterId, completed.left);
+  if (Result.isFailure(completed)) {
+    return characterSessionOperationFailure(
+      input.characterId,
+      completed.failure,
+    );
   }
-  root.sessionStore.characters.set(completed.right);
+  root.sessionStore.characters.set(completed.success);
   return characterSessionOperationSuccess(root, {
-    character: completed.right,
+    character: completed.success,
     result: {
       tag: "longRestCompleted",
       restedTicks: longRestCompletionResultTicks(input.completion),

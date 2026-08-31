@@ -2,7 +2,7 @@ import { movementFeet } from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.retaliation-reaction-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-01-BARBARIAN-RETALIATION barbarian_retaliation
 import { describe, expect, test } from "vitest";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { classLevel } from "@dnd/shared/types";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
@@ -11,7 +11,6 @@ import {
   battleCheckpointFrontierEnvelope,
 } from "./index.ts";
 import {
-  Either,
   attackRollFill,
   battleId,
   battleUnitSupportProfilesForUnit,
@@ -54,16 +53,24 @@ describe("battle runtime: Barbarian Retaliation", () => {
     }
     const retaliationChoice = battleFrontierInterruptDecisionForState(
       awaitingRetaliation.state,
-    )?.choices.find((choice) => choice.kind === "retaliationAttack");
-    if (retaliationChoice === undefined) {
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "retaliationAttack",
+    );
+    if (
+      retaliationChoice === undefined ||
+      retaliationChoice.kind !== "nestedProcedure" ||
+      retaliationChoice.subject.command !== "retaliationAttack"
+    ) {
       throw new Error("Expected a Retaliation codec fixture.");
     }
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
       battleCheckpointFrontierEnvelope(awaitingRetaliation.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -78,13 +85,42 @@ describe("battle runtime: Barbarian Retaliation", () => {
         Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
       ),
     ).not.toThrow();
+    const malformedRetaliationChoice = {
+      ...retaliationChoice,
+      subject: {
+        ...retaliationChoice.subject,
+        reactorId: goblinId,
+      },
+    };
     expect(() =>
       Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
-        ...retaliationChoice,
-        reactorId: goblinId,
+        ...malformedRetaliationChoice,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        ...encoded,
+        frontier:
+          encoded.frontier.kind === "interruptDecision"
+            ? {
+                ...encoded.frontier,
+                choices: encoded.frontier.choices.map((choice) =>
+                  choice.kind === "nestedProcedure" &&
+                  choice.subject.command === "retaliationAttack"
+                    ? {
+                        ...choice,
+                        subject: {
+                          ...choice.subject,
+                          reactorId: goblinId,
+                        },
+                      }
+                    : choice,
+                ),
+              }
+            : encoded.frontier,
       }),
     ).toThrow(
-      "Interrupt choices must own the matching reference-bearing runtime subject.",
+      "Battle checkpoint frontier references must be bound to the checkpoint and its subjects.",
     );
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
@@ -99,7 +135,6 @@ describe("battle runtime: Barbarian Retaliation", () => {
           responderId: fighterId,
           choice: {
             kind: "retaliationAttack",
-            reactorId: fighterId,
             selection: longswordSelection,
             fills: [
               {
@@ -193,10 +228,10 @@ function barbarianRetaliationBattle(input?: {
 function retaliationSupportProfiles() {
   const unit = unitLibrary.requireUnit("barbarian_retaliation");
   const supportProfiles = battleUnitSupportProfilesForUnit({ unit });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
-  return supportProfiles.right;
+  return supportProfiles.success;
 }
 
 function resolveGoblinScimitarDamage(input: {

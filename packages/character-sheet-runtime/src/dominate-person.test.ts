@@ -16,7 +16,7 @@ import {
 import { Hp, spellSlotLevel } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import backgroundSoldierInput from "../../surface/content/background_soldier.json";
 import classWizardInput from "../../surface/content/class_wizard.json";
 import dominatePersonInput from "../../surface/content/dominate_person.json";
@@ -102,7 +102,7 @@ describe("Character Sheet runtime / Dominate Person", () => {
       savingThrowOutcome: { tag: "failed" },
       fightingCasterOrAllies: true,
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castDominatePerson({
         sheet: dominatePersonWizardSheet({
           preparedSpells: ["dominate_person"],
@@ -155,7 +155,7 @@ describe("Character Sheet runtime / Dominate Person", () => {
   });
 
   test("Dominate Person returns no effect on a successful Wisdom save", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDominatePerson({
         sheet: dominatePersonWizardSheet({
           preparedSpells: ["dominate_person"],
@@ -185,9 +185,9 @@ describe("Character Sheet runtime / Dominate Person", () => {
       target: dominatePersonTarget({ savingThrowOutcome: { tag: "failed" } }),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Dominate Person requires prepared class Spell Access.",
       );
     }
@@ -196,7 +196,7 @@ describe("Character Sheet runtime / Dominate Person", () => {
 
 const dominatePersonSelectedIdentityActions = {
   doCastDominatePerson: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDominatePerson({
         sheet: dominatePersonWizardSheet({
           preparedSpells: ["dominate_person"],
@@ -260,7 +260,7 @@ function dominatePersonTarget(input: {
   readonly fightingCasterOrAllies?: boolean;
 }): CharacterSheetDominatePersonTarget {
   return {
-    targetId: requireRight(
+    targetId: requireSuccess(
       characterSheetDominatePersonTargetId("dominate-person-target:humanoid"),
     ),
     visibleByCaster: true,
@@ -336,7 +336,7 @@ const dominatePersonCatalogById = new Map(
 );
 const dominatePersonUnitLibrary: UnitCatalog = {
   getUnit: (id) =>
-    Option.fromNullable(dominatePersonCatalogById.get(authoredUnitId(id))),
+    Option.fromNullishOr(dominatePersonCatalogById.get(authoredUnitId(id))),
   listUnits: () => dominatePersonCatalogUnits,
   requireUnit: (id) => {
     const unit = dominatePersonCatalogById.get(authoredUnitId(id));
@@ -362,7 +362,7 @@ function armorClassBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful" as const, morality: "good" as const },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -383,9 +383,11 @@ function armorClassBuild(input: {
   };
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isLeft(either)) {
-    throw new Error(`Expected Right, got Left: ${JSON.stringify(either.left)}`);
+function requireSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `Expected Result success, got failure: ${JSON.stringify(result.failure)}`,
+    );
   }
-  return either.right;
+  return result.success;
 }

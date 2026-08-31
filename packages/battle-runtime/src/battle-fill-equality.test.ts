@@ -417,6 +417,15 @@ describe("battle fill equality", () => {
       value: {
         succeeded: false,
         naturalD20: DieRollResult(1),
+        ...(decision.kind === "rerollRolledDie"
+          ? {
+              rolledD20s: {
+                first: DieRollResult(1),
+                second: DieRollResult(1),
+                selected: "first",
+              },
+            }
+          : {}),
         d20TestNaturalOneReroll: decision,
       },
     });
@@ -425,15 +434,34 @@ describe("battle fill equality", () => {
       effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
       replacement: { succeeded: true, naturalD20: DieRollResult(14) },
     } as const;
-    const outcomeRolledDie = {
-      kind: "rerollRolledDie",
-      effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-      replacement: {
-        die: "second",
-        naturalD20: DieRollResult(15),
-        result: { succeeded: true, naturalD20: DieRollResult(15) },
-      },
-    } as const;
+    type ConcentrationRerollOverrides = {
+      readonly die?: "first" | "second";
+      readonly replacementNaturalD20?: number;
+      readonly resultSucceeded?: boolean;
+    };
+    const concentrationReroll = ({
+      die = "first",
+      replacementNaturalD20 = 15,
+      resultSucceeded = true,
+    }: ConcentrationRerollOverrides = {}) =>
+      concentration({
+        kind: "rerollRolledDie",
+        effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+        replacement: {
+          die,
+          naturalD20: DieRollResult(replacementNaturalD20),
+          result: {
+            succeeded: resultSucceeded,
+            naturalD20: DieRollResult(replacementNaturalD20),
+          },
+        },
+      });
+    expect(
+      battleContinuationFillEquals(
+        concentrationReroll(),
+        concentrationReroll(),
+      ),
+    ).toBe(true);
     expect(
       battleContinuationFillEquals(
         concentration(naturalDecline),
@@ -443,12 +471,12 @@ describe("battle fill equality", () => {
     expect(
       battleContinuationFillEquals(
         concentration(outcomeReroll),
-        concentration(outcomeRolledDie),
+        concentrationReroll(),
       ),
     ).toBe(false);
     expect(
       battleContinuationFillEquals(
-        concentration(outcomeRolledDie),
+        concentrationReroll(),
         concentration(outcomeReroll),
       ),
     ).toBe(false);
@@ -464,6 +492,37 @@ describe("battle fill equality", () => {
         }),
       ),
     ).toBe(false);
+
+    const concentrationRerollDifferences = [
+      {
+        name: "selected die",
+        left: { die: "first" },
+        right: { die: "second" },
+      },
+      {
+        name: "replacement natural d20",
+        left: { replacementNaturalD20: 15 },
+        right: { replacementNaturalD20: 14 },
+      },
+      {
+        name: "result succeeded",
+        left: { resultSucceeded: true },
+        right: { resultSucceeded: false },
+      },
+    ] satisfies readonly {
+      readonly name: string;
+      readonly left: ConcentrationRerollOverrides;
+      readonly right: ConcentrationRerollOverrides;
+    }[];
+    for (const difference of concentrationRerollDifferences) {
+      expect(
+        battleContinuationFillEquals(
+          concentrationReroll(difference.left),
+          concentrationReroll(difference.right),
+        ),
+        difference.name,
+      ).toBe(false);
+    }
 
     const deathSavingThrow = (
       decision: NonNullable<DeathSavingThrowFill["d20TestNaturalOneReroll"]>,

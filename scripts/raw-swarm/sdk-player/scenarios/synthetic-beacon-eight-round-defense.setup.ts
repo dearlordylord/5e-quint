@@ -61,16 +61,16 @@ export const setupScenario: ScenarioSetup = ({
       initiative: sdk.initiativeScore(choice.initiative),
       ammunitionStocks: [],
     });
-    if (sdk.isLeft(projected)) {
+    if (sdk.isFailure(projected)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.characterBattleRuntimeIssueMessage(projected.left),
+        obstruction: sdk.characterBattleRuntimeIssueMessage(projected.failure),
         observation: { characterId: choice.characterId },
       };
     }
-    combatants.push(projected.right);
+    combatants.push(projected.success);
     placements.push({
-      tokenId: projected.right.combatantId,
+      tokenId: projected.success.combatantId,
       coordinate: choice.coordinate,
     });
   }
@@ -132,18 +132,16 @@ export const setupScenario: ScenarioSetup = ({
           : [],
       conditions: [],
     });
-    if (sdk.isLeft(projected)) {
+    if (sdk.isFailure(projected)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-          projected.left,
-        ),
+        obstruction: sdk.battleStateInitIssueMessage(projected.failure),
         observation: { combatantId: choice.combatantId },
       };
     }
-    combatants.push(projected.right);
+    combatants.push(projected.success);
     placements.push({
-      tokenId: projected.right.combatantId,
+      tokenId: projected.success.combatantId,
       coordinate: choice.coordinate,
     });
   }
@@ -152,10 +150,10 @@ export const setupScenario: ScenarioSetup = ({
     battleId: sdk.battleId("synthetic-beacon-eight-round-defense"),
     combatants,
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: { operation: "startBattle" },
     };
   }
@@ -232,7 +230,7 @@ export const setupScenario: ScenarioSetup = ({
     .slice(characterChoices.length)
     .map(({ combatantId }) => combatantId);
   const scenarioSession = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: {
       kind: "geometryDerived",
       arena: { cells, boundaries },
@@ -289,15 +287,15 @@ export const setupScenario: ScenarioSetup = ({
       },
     ],
   });
-  return sdk.isLeft(scenarioSession)
+  return sdk.isFailure(scenarioSession)
     ? {
         kind: "obstructed",
-        obstruction: sdk.scenarioSessionIssueMessage(scenarioSession.left),
+        obstruction: sdk.scenarioSessionIssueMessage(scenarioSession.failure),
         observation: { operation: "createScenarioSession" },
       }
     : {
         kind: "ready",
-        session: scenarioSession.right,
+        session: scenarioSession.success,
         observation: {
           setup: "ready",
           combatantCount: combatants.length,

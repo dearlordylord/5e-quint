@@ -13,8 +13,7 @@ import {
 import { activeDruidWildShape } from "./battle-reducer/druid-wild-shape.ts";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import type { CombatantId } from "./identity.ts";
-import * as Either from "effect/Either";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/types";
@@ -42,10 +41,21 @@ export type StatBlockPresentationAdmission = {
 
 type ExecutableStatBlockProcedure = Exclude<
   StatBlockProcedure,
-  { readonly kind: "unarmedStrike" }
+  { readonly kind: "effectOccurrenceSource" | "unarmedStrike" }
 >;
 
-export type StatBlockProcedurePresentationResult = Either.Either<
+type PresentedStatBlockProcedureBinding = Exclude<
+  StatBlockExecutionState["procedureBindings"][number],
+  { readonly procedure: { readonly kind: "effectOccurrenceSource" } }
+>;
+
+function isPresentedStatBlockProcedureBinding(
+  binding: StatBlockExecutionState["procedureBindings"][number],
+): binding is PresentedStatBlockProcedureBinding {
+  return binding.procedure.kind !== "effectOccurrenceSource";
+}
+
+export type StatBlockProcedurePresentationResult = Result.Result<
   readonly StatBlockProcedurePresentation[],
   ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>
 >;
@@ -123,7 +133,10 @@ function statBlockProjectionIssues(
 ): readonly StatBlockProjectionIssue[] {
   const admitted = procedureCoordinateIndex(
     execution.procedureBindings.flatMap((binding) =>
-      binding.procedure.kind === "unarmedStrike" ? [] : [binding.procedure],
+      binding.procedure.kind === "unarmedStrike" ||
+      binding.procedure.kind === "effectOccurrenceSource"
+        ? []
+        : [binding.procedure],
     ),
   );
   type TraitIssue = Extract<
@@ -228,7 +241,8 @@ export function statBlockProcedurePresentations(
 ): StatBlockProcedurePresentationResult {
   if (admission.presentation === undefined) {
     const issues = admission.execution.procedureBindings.flatMap((binding) =>
-      binding.procedure.kind === "unarmedStrike"
+      binding.procedure.kind === "unarmedStrike" ||
+      binding.procedure.kind === "effectOccurrenceSource"
         ? []
         : [
             {
@@ -242,8 +256,8 @@ export function statBlockProcedurePresentations(
     );
     const [firstIssue, ...remainingIssues] = issues;
     return firstIssue === undefined
-      ? Either.right([])
-      : Either.left([firstIssue, ...remainingIssues]);
+      ? Result.succeed([])
+      : Result.fail([firstIssue, ...remainingIssues]);
   }
   const labels = procedureCoordinateIndex(
     admission.presentation.orderedProcedures,
@@ -251,31 +265,32 @@ export function statBlockProcedurePresentations(
   const issues: StatBlockProcedurePresentationJoinIssue[] = [];
   const presentations: StatBlockProcedurePresentation[] = [];
   for (const binding of admission.execution.procedureBindings) {
+    if (!isPresentedStatBlockProcedureBinding(binding)) continue;
     const joined = statBlockProcedurePresentationForBinding(binding, labels);
-    if (Either.isLeft(joined)) {
-      issues.push(joined.left);
+    if (Result.isFailure(joined)) {
+      issues.push(joined.failure);
     } else {
-      presentations.push(joined.right);
+      presentations.push(joined.success);
     }
   }
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
-    ? Either.right(presentations)
-    : Either.left([firstIssue, ...remainingIssues]);
+    ? Result.succeed(presentations)
+    : Result.fail([firstIssue, ...remainingIssues]);
 }
 
 function statBlockProcedurePresentationForBinding(
-  binding: StatBlockExecutionState["procedureBindings"][number],
+  binding: PresentedStatBlockProcedureBinding,
   labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]
   >,
-): Either.Either<
+): Result.Result<
   StatBlockProcedurePresentation,
   StatBlockProcedurePresentationJoinIssue
 > {
   return Match.value(binding.procedure).pipe(
     Match.when({ kind: "unarmedStrike" }, () =>
-      Either.right({
+      Result.succeed({
         procedureRef: binding.procedureRef,
         kind: "attack" as const,
         name: UNARMED_STRIKE_NAME,
@@ -319,13 +334,13 @@ function joinedExecutableStatBlockProcedurePresentation(
   labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]
   >,
-): Either.Either<
+): Result.Result<
   StatBlockProcedurePresentation,
   StatBlockProcedurePresentationJoinIssue
 > {
   const entry = procedureAtCoordinate(labels, procedure);
   if (entry === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "statBlockProcedurePresentationJoinIssue",
       reason: "missingPresentation",
       section: procedure.section,
@@ -344,7 +359,7 @@ function joinedExecutableStatBlockProcedurePresentation(
     Match.exhaustive,
   );
   if (entry.kind !== expectedKind) {
-    return Either.left({
+    return Result.fail({
       tag: "statBlockProcedurePresentationJoinIssue",
       reason: "presentationKindMismatch",
       section: procedure.section,
@@ -355,24 +370,28 @@ function joinedExecutableStatBlockProcedurePresentation(
   }
   return Match.value(procedure).pipe(
     Match.when({ kind: "attack" }, () =>
-      Either.right({ procedureRef, kind: "attack" as const, name: entry.name }),
+      Result.succeed({
+        procedureRef,
+        kind: "attack" as const,
+        name: entry.name,
+      }),
     ),
     Match.when({ kind: "multiattack" }, () =>
-      Either.right({
+      Result.succeed({
         procedureRef,
         kind: "multiattack" as const,
         label: entry.name,
       }),
     ),
     Match.when({ kind: "bonusActionOption" }, () =>
-      Either.right({
+      Result.succeed({
         procedureRef,
         kind: "bonusActionOption" as const,
         label: entry.name,
       }),
     ),
     Match.when({ kind: "spellcasting" }, () =>
-      Either.right({
+      Result.succeed({
         procedureRef,
         kind: "spellcasting" as const,
         label: entry.name,
@@ -387,10 +406,10 @@ export function attackActionOptionPresentationName(
   context: BattleRuntimeContext,
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
-): Either.Either<string, AttackPresentationJoinIssue> {
+): Result.Result<string, AttackPresentationJoinIssue> {
   return Match.value(attack).pipe(
     Match.discriminatorsExhaustive("kind")({
-      unarmedStrike: (value) => Either.right(attackActionOptionName(value)),
+      unarmedStrike: (value) => Result.succeed(attackActionOptionName(value)),
       weapon: (value) =>
         characterWeaponAttackPresentationName(state, context, actorId, value),
       statBlockAttack: (value) =>
@@ -404,10 +423,10 @@ function characterWeaponAttackPresentationName(
   context: BattleRuntimeContext,
   actorId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
-): Either.Either<string, AttackPresentationJoinIssue> {
+): Result.Result<string, AttackPresentationJoinIssue> {
   const characterContext = context.characters.get(actorId);
   if (characterContext === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "attackPresentationJoinIssue",
       reason: "characterContextMissing",
     });
@@ -416,8 +435,8 @@ function characterWeaponAttackPresentationName(
     characterContext,
     attack.weapon.weaponUnitId,
   );
-  if (Either.isLeft(source)) {
-    return Either.left({
+  if (Result.isFailure(source)) {
+    return Result.fail({
       tag: "attackPresentationJoinIssue",
       reason: "weaponPresentationMissing",
     });
@@ -430,10 +449,10 @@ function characterWeaponAttackPresentationName(
   const suffixes = characterWeaponPresentationSuffixes(
     attack,
     baseAttack,
-    source.right,
+    source.success,
   );
-  return Either.right(
-    formatWeaponPresentationName(source.right.name, suffixes),
+  return Result.succeed(
+    formatWeaponPresentationName(source.success.name, suffixes),
   );
 }
 
@@ -495,33 +514,33 @@ function statBlockAttackPresentationName(
     SupportedAttackActionOption,
     { readonly kind: "statBlockAttack" }
   >,
-): Either.Either<string, AttackPresentationJoinIssue> {
+): Result.Result<string, AttackPresentationJoinIssue> {
   const presentations = statBlockProcedurePresentationsForActor(
     state,
     context,
     actorId,
   );
   if (presentations === null) {
-    return Either.left({
+    return Result.fail({
       tag: "attackPresentationJoinIssue",
       reason: "statBlockAdmissionMissing",
     });
   }
-  if (Either.isLeft(presentations)) {
-    return Either.left({
+  if (Result.isFailure(presentations)) {
+    return Result.fail({
       tag: "attackPresentationJoinIssue",
       reason: "statBlockProcedurePresentationJoin",
-      issues: presentations.left,
+      issues: presentations.failure,
     });
   }
-  const presentation = presentations.right.find(
+  const presentation = presentations.success.find(
     (candidate) =>
       candidate.kind === "attack" &&
       candidate.procedureRef === attack.procedureRef,
   );
   return presentation?.kind === "attack"
-    ? Either.right(presentation.name)
-    : Either.left({
+    ? Result.succeed(presentation.name)
+    : Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockPresentationMissing",
       });

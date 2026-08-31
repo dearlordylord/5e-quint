@@ -25,13 +25,18 @@ import {
   type ResourceCount,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import {
-  topLevelSpellCastingTime,
-  type SpellRecord,
-  type UnitRecord,
-} from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import type { UnitRecord } from "@dnd/surface/surface/types";
+import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellFacts,
+} from "./character-spell-projection.ts";
+import { characterSheetTopLevelSpellCastingTime } from "./spell-profile-shape.ts";
 import {
   characterSheetCurrentHp,
   recoverCharacterSheetHitPoints,
@@ -168,21 +173,21 @@ type CharacterSheetSpellRestBenefitEffects = {
 
 export function applyLayOnHands(
   input: CharacterSheetLayOnHandsInput,
-): Either.Either<CharacterSheetLayOnHandsResult, CharacterSheetIssue> {
+): Result.Result<CharacterSheetLayOnHandsResult, CharacterSheetIssue> {
   const spend = layOnHandsSpend(input);
   /* v8 ignore next -- @preserve -- Lay On Hands spend rejection is malformed healing-pool request input. */
-  if (Either.isLeft(spend)) return Either.left(spend.left);
+  if (Result.isFailure(spend)) return Result.fail(spend.failure);
 
   const sourceAfterSpend = spendCharacterSheetResource({
     sheet: input.source,
     unitLibrary: input.unitLibrary,
-    amount: spend.right,
+    amount: spend.success,
   });
-  if (Either.isLeft(sourceAfterSpend))
-    return Either.left(sourceAfterSpend.left);
+  if (Result.isFailure(sourceAfterSpend))
+    return Result.fail(sourceAfterSpend.failure);
 
   const sourceIsTarget = input.source.characterId === input.target.characterId;
-  const targetBase = sourceIsTarget ? sourceAfterSpend.right : input.target;
+  const targetBase = sourceIsTarget ? sourceAfterSpend.success : input.target;
   const targetAfterHealing = applyLayOnHandsTargetEffects({
     sheet: targetBase,
     unitLibrary: input.unitLibrary,
@@ -190,33 +195,33 @@ export function applyLayOnHands(
     removePoisoned: input.removePoisoned,
   });
   /* v8 ignore start -- @preserve -- Malformed Lay On Hands input: the target request failed its HP or Poisoned-state precondition. */
-  if (Either.isLeft(targetAfterHealing)) {
-    return Either.left(targetAfterHealing.left);
+  if (Result.isFailure(targetAfterHealing)) {
+    return Result.fail(targetAfterHealing.failure);
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right(
+  return Result.succeed(
     sourceIsTarget
       ? {
-          source: targetAfterHealing.right,
-          target: targetAfterHealing.right,
+          source: targetAfterHealing.success,
+          target: targetAfterHealing.success,
         }
       : {
-          source: sourceAfterSpend.right,
-          target: targetAfterHealing.right,
+          source: sourceAfterSpend.success,
+          target: targetAfterHealing.success,
         },
   );
 }
 
 export function applyLayOnHandsWithRoute(
   input: CharacterSheetLayOnHandsInput,
-): Either.Either<CharacterSheetLayOnHandsRouteResult, CharacterSheetIssue> {
+): Result.Result<CharacterSheetLayOnHandsRouteResult, CharacterSheetIssue> {
   const result = applyLayOnHands(input);
   /* v8 ignore start -- @preserve -- Malformed Lay On Hands route input returns the same typed rejection as the core application. */
-  return Either.isLeft(result)
-    ? Either.left(result.left)
-    : Either.right({
-        ...result.right,
+  return Result.isFailure(result)
+    ? Result.fail(result.failure)
+    : Result.succeed({
+        ...result.success,
         qRoute: layOnHandsRoute(),
       });
   /* v8 ignore stop -- @preserve */
@@ -228,21 +233,21 @@ function layOnHandsRoute(): CharacterSheetLayOnHandsRoute {
 
 export function applyCharacterSheetSpellRestBenefit(
   input: CharacterSheetSpellRestBenefitInput,
-): Either.Either<CharacterSheetSpellRestBenefitResult, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellRestBenefitResult, CharacterSheetIssue> {
   const profile = characterSheetSpellRestBenefitProfile({
     spellId: input.spellId,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Rest-benefit profile rejection is unsupported authored spell data. */
-  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (Result.isFailure(profile)) return Result.fail(profile.failure);
   /* v8 ignore start -- @preserve -- Malformed spell-rest input: the requested cast level is below the admitted spell's base level. */
-  if (input.castLevel < profile.right.baseSpellLevel) {
+  if (input.castLevel < profile.success.baseSpellLevel) {
     return characterSheetIssue(
       "Spell rest benefit application requires a Spell Slot at or above the spell's base level.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const recipientIssue = spellRestBenefitRecipientIssue(input, profile.right);
+  const recipientIssue = spellRestBenefitRecipientIssue(input, profile.success);
   /* v8 ignore next -- @preserve -- A non-null recipient issue is malformed spell-rest recipient input. */
   if (recipientIssue !== null) return characterSheetIssue(recipientIssue);
   const caster = spendCharacterSheetSpellSlot({
@@ -251,13 +256,13 @@ export function applyCharacterSheetSpellRestBenefit(
     spellSlotSource: input.spellSlotSource,
   });
   /* v8 ignore next -- @preserve -- Slot-spend rejection is malformed spell-rest casting input. */
-  if (Either.isLeft(caster)) return Either.left(caster.left);
+  if (Result.isFailure(caster)) return Result.fail(caster.failure);
 
-  let casterSheet = caster.right;
+  let casterSheet = caster.success;
   const recipients: CharacterSheet[] = [];
   for (const recipient of input.recipients) {
     const affected = applySpellRestBenefitToRecipient({
-      profile: profile.right,
+      profile: profile.success,
       recipient:
         recipient.sheet.characterId === casterSheet.characterId
           ? { ...recipient, sheet: casterSheet }
@@ -266,26 +271,29 @@ export function applyCharacterSheetSpellRestBenefit(
       castLevel: input.castLevel,
     });
     /* v8 ignore next -- @preserve -- Recipient application rejection is malformed per-recipient rest-benefit input. */
-    if (Either.isLeft(affected)) return Either.left(affected.left);
-    if (affected.right.characterId === casterSheet.characterId) {
-      casterSheet = affected.right;
+    if (Result.isFailure(affected)) return Result.fail(affected.failure);
+    if (affected.success.characterId === casterSheet.characterId) {
+      casterSheet = affected.success;
     }
-    recipients.push(affected.right);
+    recipients.push(affected.success);
   }
-  return Either.right({ caster: casterSheet, recipients });
+  return Result.succeed({ caster: casterSheet, recipients });
 }
 
 export function characterSheetSpellRestBenefitProfile(input: {
   readonly spellId: UnitRecord["id"];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetSpellRestBenefitProfile, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellRestBenefitProfile, CharacterSheetIssue> {
   const unit = input.unitLibrary.getUnit(input.spellId);
-  if (Option.isNone(unit) || unit.value.kind !== "spell") {
+  const spell = Option.isSome(unit)
+    ? projectCharacterSheetSpellSource(unit.value)
+    : Option.none();
+  if (Option.isNone(spell)) {
     return characterSheetIssue(
       "Spell rest benefit application requires an installed Spell Definition.",
     );
   }
-  const mechanics = unit.value.mechanics;
+  const mechanics = spell.value.mechanics;
   /* v8 ignore start -- @preserve -- Unsupported authored spell shape: rest-benefit projection requires the admitted leveled casting shell, one direct recipient phase, and effect trio. */
   if (mechanics.family !== "activation" || mechanics.level < 1) {
     return characterSheetIssue(
@@ -323,10 +331,10 @@ export function characterSheetSpellRestBenefitProfile(input: {
     effects,
     mechanics.level,
   );
-  if (Either.isLeft(restBenefitEffects)) {
-    return Either.left(restBenefitEffects.left);
+  if (Result.isFailure(restBenefitEffects)) {
+    return Result.fail(restBenefitEffects.failure);
   }
-  const { healing } = restBenefitEffects.right;
+  const { healing } = restBenefitEffects.success;
   const healingDicePerSlotAboveBase = healing.amount.perLevel.dice;
   if (healingDicePerSlotAboveBase === undefined) {
     return characterSheetIssue(
@@ -334,8 +342,8 @@ export function characterSheetSpellRestBenefitProfile(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
-    spellId: unit.value.id,
+  return Result.succeed({
+    spellId: spell.value.unitId,
     baseSpellLevel: spellSlotLevel(mechanics.level),
     maxRecipients: selection.count,
     healingBaseDice: healing.amount.base.dice,
@@ -373,7 +381,7 @@ export function spellRestBenefitHealingAmount(input: {
   readonly profile: CharacterSheetSpellRestBenefitProfile;
   readonly castLevel: SpellSlotLevel;
   readonly healingRolls: readonly DieRollResult[];
-}): Either.Either<HpType, CharacterSheetIssue> {
+}): Result.Result<HpType, CharacterSheetIssue> {
   const dice =
     input.profile.healingBaseDice +
     (input.castLevel - input.profile.baseSpellLevel) *
@@ -396,26 +404,27 @@ export function spellRestBenefitHealingAmount(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(
+  return Result.succeed(
     Hp(input.healingRolls.reduce((total, roll) => total + roll, 0)),
   );
 }
 
 export function completeShortRestBenefits(
   input: CharacterSheetShortRestBenefitsInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const prepared = completeShortRestBenefitsBeforeArcaneRecovery(input);
-  if (Either.isLeft(prepared)) return Either.left(prepared.left);
-  if (input.arcaneRecovery === undefined) return Either.right(prepared.right);
+  if (Result.isFailure(prepared)) return Result.fail(prepared.failure);
+  if (input.arcaneRecovery === undefined)
+    return Result.succeed(prepared.success);
   const arcaneRecovery = applyArcaneRecovery({
-    sheet: prepared.right,
+    sheet: prepared.success,
     pactSlotsAtRestStart: characterSheetPactSlots(input.sheet),
     unitLibrary: input.unitLibrary,
     refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
   });
   return arcaneRecovery.tag === "accepted"
-    ? Either.right(arcaneRecovery.sheet)
-    : Either.left(arcaneRecovery.issue);
+    ? Result.succeed(arcaneRecovery.sheet)
+    : Result.fail(arcaneRecovery.issue);
 }
 
 export function completeShortRestArcaneRecoveryBenefitsWithOwner(
@@ -427,16 +436,16 @@ export function completeShortRestArcaneRecoveryBenefitsWithOwner(
 ): CharacterSheetShortRestArcaneRecoveryBenefitsResult {
   const prepared = completeShortRestBenefitsBeforeArcaneRecovery(input);
   /* v8 ignore start -- @preserve -- Malformed Arcane Recovery route input: an earlier Short Rest benefit failed before ownership could be assigned. */
-  if (Either.isLeft(prepared)) {
+  if (Result.isFailure(prepared)) {
     return {
       tag: "rejected",
-      issue: prepared.left,
+      issue: prepared.failure,
       owner: undefined,
     };
   }
   /* v8 ignore stop -- @preserve */
   return applyArcaneRecovery({
-    sheet: prepared.right,
+    sheet: prepared.success,
     pactSlotsAtRestStart: characterSheetPactSlots(input.sheet),
     unitLibrary: input.unitLibrary,
     refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
@@ -445,7 +454,7 @@ export function completeShortRestArcaneRecoveryBenefitsWithOwner(
 
 function completeShortRestBenefitsBeforeArcaneRecovery(
   input: CharacterSheetShortRestBenefitsInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed Short Rest input: a normal rest starts while the character has zero HP. */
   if (
     input.hpGate === "requiresShortRestStartHp" &&
@@ -462,39 +471,39 @@ function completeShortRestBenefitsBeforeArcaneRecovery(
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: an admitted Short-Rest resource cannot be projected from its installed Unit. */
-  if (Either.isLeft(useCountRecovered)) {
-    return Either.left(useCountRecovered.left);
+  if (Result.isFailure(useCountRecovered)) {
+    return Result.fail(useCountRecovered.failure);
   }
   /* v8 ignore stop -- @preserve */
   const hitDiceSpent = spendHitDice({
-    sheet: useCountRecovered.right,
+    sheet: useCountRecovered.success,
     unitLibrary: input.unitLibrary,
     spendHitDice: input.spendHitDice,
   });
-  if (Either.isLeft(hitDiceSpent)) return Either.left(hitDiceSpent.left);
+  if (Result.isFailure(hitDiceSpent)) return Result.fail(hitDiceSpent.failure);
   const sorceryPointsRecovered =
     input.sorcerousRestoration === undefined
-      ? Either.right(hitDiceSpent.right)
+      ? Result.succeed(hitDiceSpent.success)
       : recoverSorceryPointsWithSorcerousRestoration({
-          sheet: hitDiceSpent.right,
+          sheet: hitDiceSpent.success,
           unitLibrary: input.unitLibrary,
           recoverSorceryPoints: input.sorcerousRestoration.recoverSorceryPoints,
         });
-  if (Either.isLeft(sorceryPointsRecovered)) {
-    return Either.left(sorceryPointsRecovered.left);
+  if (Result.isFailure(sorceryPointsRecovered)) {
+    return Result.fail(sorceryPointsRecovered.failure);
   }
-  return Either.right(sorceryPointsRecovered.right);
+  return Result.succeed(sorceryPointsRecovered.success);
 }
 
 export function characterSheetHitDice(
   sheet: CharacterSheet,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterSheetHitDieState[], CharacterSheetIssue> {
+): Result.Result<readonly CharacterSheetHitDieState[], CharacterSheetIssue> {
   const capacity = characterBuildHitDice(sheet.build, unitLibrary);
   /* v8 ignore next -- @preserve -- Hit Die capacity rejection is malformed build/catalog correlation. */
-  if (Either.isLeft(capacity)) return Either.left(capacity.left);
-  return Either.right(
-    capacity.right.map((pool) => ({
+  if (Result.isFailure(capacity)) return Result.fail(capacity.failure);
+  return Result.succeed(
+    capacity.success.map((pool) => ({
       ...pool,
       spent:
         sheet.spentHitDice.find(
@@ -507,21 +516,21 @@ export function characterSheetHitDice(
 export function characterBuildHitDice(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterBuildHitDiePool[], CharacterSheetIssue> {
+): Result.Result<readonly CharacterBuildHitDiePool[], CharacterSheetIssue> {
   const hitPoints = characterBuildHitPoints(build, unitLibrary);
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: Hit Point construction cannot project the build's class Hit Dice. */
-  return Either.isLeft(hitPoints)
+  return Result.isFailure(hitPoints)
     ? characterSheetIssue(
-        hitPoints.left.map(characterCreationIssueMessage).join("; "),
+        hitPoints.failure.map(characterCreationIssueMessage).join("; "),
       )
-    : Either.right(hitPoints.right.hitDice);
+    : Result.succeed(hitPoints.success.hitDice);
   /* v8 ignore stop -- @preserve */
 }
 
 export function restSpellSlotRecoveryProfileForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   CharacterSheetRestSpellSlotRecoveryProfile,
   CharacterSheetIssue
 > {
@@ -529,11 +538,15 @@ export function restSpellSlotRecoveryProfileForBuild(
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore next -- @preserve -- A build-owned recovery feature id must resolve in the same Unit catalog. */
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    if (!isRestSpellSlotRecoveryFeature(unit.right)) {
+    if (Result.isFailure(unit)) return Result.fail(unit.failure);
+    const projection = projectCharacterSheetClassFeature(unit.success);
+    if (
+      Option.isNone(projection) ||
+      !isRestSpellSlotRecoveryFeature(projection.value)
+    ) {
       continue;
     }
-    features.push(unit.right);
+    features.push({ unitId: unit.success.id, ...projection.value });
   }
   if (features.length === 0) {
     return characterSheetIssue(
@@ -562,16 +575,13 @@ export function restSpellSlotRecoveryProfileForBuild(
   });
 }
 
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
 type RestSpellSlotRecoveryMechanics = Extract<
-  CharacterSheetClassFeatureRecord["mechanics"],
+  CharacterSheetClassFeatureFacts["mechanics"],
   { readonly family: "rest_spell_slot_recovery" }
 >;
 type CharacterSheetRestSpellSlotRecoveryFeature =
-  CharacterSheetClassFeatureRecord & {
+  CharacterSheetClassFeatureFacts & {
+    readonly unitId: UnitRecord["id"];
     readonly mechanics: RestSpellSlotRecoveryMechanics;
   };
 type CharacterSheetRestSpellSlotRecoveryProfile = {
@@ -584,7 +594,7 @@ function applySpellRestBenefitToRecipient(input: {
   readonly recipient: CharacterSheetSpellRestBenefitRecipient;
   readonly unitLibrary: UnitCatalog;
   readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const shortRested = completeShortRestBenefits({
     sheet: input.recipient.sheet,
     unitLibrary: input.unitLibrary,
@@ -594,28 +604,28 @@ function applySpellRestBenefitToRecipient(input: {
     sorcerousRestoration: input.recipient.sorcerousRestoration,
   });
   /* v8 ignore next -- @preserve -- Short Rest benefit rejection is malformed admitted recipient input. */
-  if (Either.isLeft(shortRested)) return Either.left(shortRested.left);
+  if (Result.isFailure(shortRested)) return Result.fail(shortRested.failure);
   const healing = spellRestBenefitHealingAmount({
     profile: input.profile,
     castLevel: input.castLevel,
     healingRolls: input.recipient.healingRolls,
   });
   /* v8 ignore next -- @preserve -- Healing-roll rejection is malformed admitted recipient roll input. */
-  if (Either.isLeft(healing)) return Either.left(healing.left);
+  if (Result.isFailure(healing)) return Result.fail(healing.failure);
   const healed = recoverCharacterSheetHitPoints({
-    sheet: shortRested.right,
+    sheet: shortRested.success,
     unitLibrary: input.unitLibrary,
-    healing: healing.right,
+    healing: healing.success,
     overflow: { tag: "capAtMaximum" },
     deadCharacterMessage:
       "Spell rest benefit healing cannot restore HP to a dead character.",
   });
   /* v8 ignore next -- @preserve -- HP recovery rejection is malformed admitted recipient HP state. */
-  if (Either.isLeft(healed)) return Either.left(healed.left);
-  return Either.right({
-    ...healed.right,
+  if (Result.isFailure(healed)) return Result.fail(healed.failure);
+  return Result.succeed({
+    ...healed.success,
     restFeatureUses: [
-      ...healed.right.restFeatureUses,
+      ...healed.success.restFeatureUses,
       {
         tag: SPELL_RECIPIENT_REST_LOCKOUT_TAG,
         spellId: input.profile.spellId,
@@ -631,7 +641,7 @@ function spendCharacterSheetSpellSlot(input: {
   readonly spellSlotSource:
     | CharacterSheetFontOfMagicSpellSlotSource
     | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed spell-rest input: the caster has no ordinary or created Spell Slot state. */
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -645,11 +655,12 @@ function spendCharacterSheetSpellSlot(input: {
     spellSlotSource: input.spellSlotSource,
   });
   /* v8 ignore next -- @preserve -- Slot-source rejection is malformed retained slot/source input. */
-  if (Either.isLeft(spellSlotSpend)) return Either.left(spellSlotSpend.left);
-  return Either.right({
+  if (Result.isFailure(spellSlotSpend))
+    return Result.fail(spellSlotSpend.failure);
+  return Result.succeed({
     ...input.sheet,
-    spellSlotExpenditures: spellSlotSpend.right.ordinarySpellSlotExpenditures,
-    createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
+    spellSlotExpenditures: spellSlotSpend.success.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotSpend.success.createdSpellSlots,
   });
 }
 
@@ -659,7 +670,7 @@ function spendCharacterSheetSpellSlotSource(input: {
   readonly spellSlotSource:
     | CharacterSheetFontOfMagicSpellSlotSource
     | undefined;
-}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   const ordinarySlot = ordinarySpellSlotStates(input.sheet).find(
     (slot) => slot.spellLevel === input.spellLevel,
   );
@@ -678,9 +689,9 @@ function spendCharacterSheetSpellSlotSource(input: {
     createdAvailable,
   });
   /* v8 ignore next -- @preserve -- Slot-source selection rejection is malformed or ambiguous slot-spend input. */
-  if (Either.isLeft(source)) return Either.left(source.left);
-  return source.right === "ordinary"
-    ? Either.right({
+  if (Result.isFailure(source)) return Result.fail(source.failure);
+  return source.success === "ordinary"
+    ? Result.succeed({
         ordinarySpellSlotExpenditures: replaceOrdinarySpellSlotExpenditure({
           expenditures: input.sheet.spellSlotExpenditures,
           spellLevel: input.spellLevel,
@@ -689,7 +700,7 @@ function spendCharacterSheetSpellSlotSource(input: {
         }),
         createdSpellSlots: input.sheet.createdSpellSlots,
       })
-    : Either.right({
+    : Result.succeed({
         ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures,
         createdSpellSlots: input.sheet.createdSpellSlots.map((slot) =>
           slot.spellLevel === input.spellLevel
@@ -707,7 +718,7 @@ function characterSheetSpellSlotSpendSource(input: {
   readonly ordinaryAvailable: boolean;
   readonly createdSlot: CharacterSheetCreatedSpellSlotState | undefined;
   readonly createdAvailable: boolean;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetFontOfMagicSpellSlotSource,
   CharacterSheetIssue
 > {
@@ -719,7 +730,7 @@ function characterSheetSpellSlotSpendSource(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    return Either.right("ordinary");
+    return Result.succeed("ordinary");
   }
   if (input.spellSlotSource === "created") {
     /* v8 ignore start -- @preserve -- Malformed slot-spend input: created was selected but no unexpended created slot exists at this level. */
@@ -729,7 +740,7 @@ function characterSheetSpellSlotSpendSource(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    return Either.right("created");
+    return Result.succeed("created");
   }
   /* v8 ignore start -- @preserve -- Ambiguous slot-spend input: both ordinary and created sources are available but no source was selected. */
   if (input.ordinaryAvailable && input.createdAvailable) {
@@ -738,9 +749,9 @@ function characterSheetSpellSlotSpendSource(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (input.ordinaryAvailable) return Either.right("ordinary");
+  if (input.ordinaryAvailable) return Result.succeed("ordinary");
   /* v8 ignore start -- @preserve -- Malformed slot-spend input: V8 maps the no-available-source edge to this conditional; after both availability checks fail, the remaining paths only report fully expended or absent slot state. */
-  if (input.createdAvailable) return Either.right("created");
+  if (input.createdAvailable) return Result.succeed("created");
   if (input.ordinarySlot !== undefined && input.createdSlot === undefined) {
     return characterSheetIssue(
       "Spell Slot spend requires an unexpended ordinary Spell Slot.",
@@ -767,8 +778,8 @@ function spendHitDice(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spendHitDice: readonly CharacterSheetHitDieSpend[] | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (input.spendHitDice === undefined) return Either.right(input.sheet);
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
+  if (input.spendHitDice === undefined) return Result.succeed(input.sheet);
   /* v8 ignore start -- @preserve -- Malformed Short Rest input: an explicit Hit Dice spend list cannot be empty. */
   if (input.spendHitDice.length === 0) {
     return characterSheetIssue("Short Rest Hit Dice spending cannot be empty.");
@@ -776,9 +787,9 @@ function spendHitDice(input: {
   /* v8 ignore stop -- @preserve */
   const hitDice = characterSheetHitDice(input.sheet, input.unitLibrary);
   /* v8 ignore next -- @preserve -- Hit Die projection rejection is malformed Short Rest build/pool correlation. */
-  if (Either.isLeft(hitDice)) return Either.left(hitDice.left);
+  if (Result.isFailure(hitDice)) return Result.fail(hitDice.failure);
   const hitDiceByClass = new Map(
-    hitDice.right.map((pool) => [pool.classUnitId, pool]),
+    hitDice.success.map((pool) => [pool.classUnitId, pool]),
   );
   const spentThisRest = new Map<UnitRecord["id"], ResourceCount>();
   let healingTotal = 0;
@@ -842,9 +853,9 @@ function spendHitDice(input: {
       "Short Rest Hit Dice cannot restore HP to a dead character.",
   });
   /* v8 ignore next -- @preserve -- Hit Die HP recovery rejection is malformed retained HP state. */
-  if (Either.isLeft(healed)) return Either.left(healed.left);
-  return Either.right({
-    ...healed.right,
+  if (Result.isFailure(healed)) return Result.fail(healed.failure);
+  return Result.succeed({
+    ...healed.success,
     spentHitDice: nextSpentHitDice,
   });
 }
@@ -869,10 +880,10 @@ function applyArcaneRecovery(input: {
     input.sheet.build,
     input.unitLibrary,
   );
-  if (Either.isLeft(profile)) {
+  if (Result.isFailure(profile)) {
     return {
       tag: "rejected",
-      issue: profile.left,
+      issue: profile.failure,
       owner: "featureResource",
     };
   }
@@ -893,13 +904,13 @@ function applyArcaneRecovery(input: {
   const sheet = input.sheet;
   const refund = arcaneRecoverySpellSlotRefund({
     sheet,
-    profile: profile.right,
+    profile: profile.success,
     refundSpellSlots: input.refundSpellSlots,
   });
-  if (Either.isLeft(refund)) {
+  if (Result.isFailure(refund)) {
     return {
       tag: "rejected",
-      issue: refund.left,
+      issue: refund.failure,
       owner: arcaneRecoveryPactSlotRejectionBoundary({
         sheet,
         pactSlotsAtRestStart: input.pactSlotsAtRestStart,
@@ -914,7 +925,7 @@ function applyArcaneRecovery(input: {
     owner: "spellSlot",
     sheet: {
       ...sheet,
-      spellSlotExpenditures: refund.right,
+      spellSlotExpenditures: refund.success,
       restFeatureUses: [
         ...sheet.restFeatureUses,
         {
@@ -934,7 +945,7 @@ function arcaneRecoverySpellSlotRefund(input: {
   readonly sheet: CharacterSheetWithSpellSlots;
   readonly profile: CharacterSheetRestSpellSlotRecoveryProfile;
   readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
-}): Either.Either<
+}): Result.Result<
   readonly CharacterSpellSlotExpenditure[],
   CharacterSheetIssue
 > {
@@ -1002,7 +1013,7 @@ function arcaneRecoverySpellSlotRefund(input: {
     }
     /* v8 ignore stop -- @preserve */
   }
-  return Either.right(updated);
+  return Result.succeed(updated);
 }
 
 function arcaneRecoveryPactSlotRejectionBoundary(input: {
@@ -1035,7 +1046,7 @@ function restSpellSlotRecoveryProfileForFeature(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetRestSpellSlotRecoveryProfile,
   CharacterSheetIssue
 > {
@@ -1045,12 +1056,12 @@ function restSpellSlotRecoveryProfileForFeature(input: {
   )) {
     const unit = getRequiredUnit(input.unitLibrary, progressionClassUnitId);
     /* v8 ignore next -- @preserve -- A progression class id must resolve in the same Unit catalog. */
-    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (Result.isFailure(unit)) return Result.fail(unit.failure);
     if (
-      unit.right.kind === "class" &&
-      unit.right.className === input.feature.className
+      unit.success.kind === "class" &&
+      unit.success.className === input.feature.className
     ) {
-      return Either.right({
+      return Result.succeed({
         feature: input.feature,
         classUnitId: progressionClassUnitId,
       });
@@ -1063,19 +1074,20 @@ function restSpellSlotRecoveryProfileForFeature(input: {
 }
 
 function isRestSpellSlotRecoveryFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetRestSpellSlotRecoveryFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is Omit<CharacterSheetRestSpellSlotRecoveryFeature, "unitId"> {
   return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "rest_spell_slot_recovery" &&
-    unit.mechanics.recoveryTrigger === "short_rest" &&
-    unit.mechanics.resetCadence.kind === "long_rest" &&
-    unit.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
+    facts.mechanics.family === "rest_spell_slot_recovery" &&
+    facts.mechanics.recoveryTrigger === "short_rest" &&
+    facts.mechanics.resetCadence.kind === "long_rest" &&
+    facts.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
   );
 }
 
-function isSpellRestBenefitCastingShell(mechanics: SpellRecord["mechanics"]) {
-  const castingTime = topLevelSpellCastingTime(mechanics);
+function isSpellRestBenefitCastingShell(
+  mechanics: CharacterSheetSpellFacts["mechanics"],
+) {
+  const castingTime = characterSheetTopLevelSpellCastingTime(mechanics);
   return (
     castingTime?.kind === "minutes" &&
     castingTime.amount === 10 &&
@@ -1105,7 +1117,7 @@ function hasRemainWithinSpellRangeForEntireCastingRequirement(
 function characterSheetSpellRestBenefitEffects(
   effects: readonly unknown[],
   baseSpellLevel: number,
-): Either.Either<CharacterSheetSpellRestBenefitEffects, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellRestBenefitEffects, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Unsupported authored spell shape: the direct phase lacks the exact healing, Short Rest benefit, and Long-Rest lockout effect trio. */
   if (effects.length !== 3) {
     return characterSheetIssue(
@@ -1148,7 +1160,7 @@ function characterSheetSpellRestBenefitEffects(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     healing,
   });
 }
@@ -1213,7 +1225,7 @@ function hasSpellRecipientRestLockout(
 
 function layOnHandsSpend(
   input: Pick<CharacterSheetLayOnHandsInput, "restoreHp" | "removePoisoned">,
-): Either.Either<ResourceCount, CharacterSheetIssue> {
+): Result.Result<ResourceCount, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed Lay On Hands input: HP restoration is negative/nonintegral or neither healing nor Poisoned removal was requested. */
   if (!Number.isInteger(input.restoreHp) || input.restoreHp < 0) {
     return characterSheetIssue(
@@ -1226,7 +1238,7 @@ function layOnHandsSpend(
   );
   return spend === 0
     ? characterSheetIssue("Lay On Hands must restore HP or remove Poisoned.")
-    : Either.right(spend);
+    : Result.succeed(spend);
   /* v8 ignore stop -- @preserve */
 }
 
@@ -1234,11 +1246,11 @@ function spendCharacterSheetResource(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly amount: ResourceCount;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   /* v8 ignore next -- @preserve -- Lay On Hands resource rejection is malformed build/resource correlation. */
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
+  if (Result.isFailure(resources)) return Result.fail(resources.failure);
+  const resource = resources.success.find(
     (candidate) => candidate.tag === "layOnHandsHealingPool",
   );
   /* v8 ignore start -- @preserve -- Malformed Lay On Hands input: the source build lacks the admitted Lay On Hands healing-pool feature. */
@@ -1262,7 +1274,7 @@ function spendCharacterSheetResource(input: {
     tag: "layOnHandsHealingPool",
     expended: resourceCount(resource.expended + input.amount),
   });
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
     resourceExpenditures: nextExpenditures,
   });
@@ -1273,7 +1285,7 @@ function applyLayOnHandsTargetEffects(input: {
   readonly unitLibrary: UnitCatalog;
   readonly restoreHp: HpType;
   readonly removePoisoned: boolean;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   if (input.removePoisoned) {
     /* v8 ignore start -- @preserve -- Malformed Lay On Hands input: Poisoned removal was requested for a target without Poisoned. */
     if (!input.sheet.conditions.some((condition) => condition === "poisoned")) {
@@ -1288,7 +1300,7 @@ function applyLayOnHandsTargetEffects(input: {
     : input.sheet.conditions;
 
   if (input.restoreHp === 0) {
-    return Either.right({ ...input.sheet, conditions });
+    return Result.succeed({ ...input.sheet, conditions });
   }
   const healed = recoverCharacterSheetHitPoints({
     sheet: input.sheet,
@@ -1302,9 +1314,9 @@ function applyLayOnHandsTargetEffects(input: {
     deadCharacterMessage: "Lay On Hands cannot restore HP to a dead target.",
   });
   /* v8 ignore start -- @preserve -- Malformed Lay On Hands input: requested healing violates the target's HP lifecycle or missing-HP bound. */
-  if (Either.isLeft(healed)) return Either.left(healed.left);
+  if (Result.isFailure(healed)) return Result.fail(healed.failure);
   /* v8 ignore stop -- @preserve */
-  return Either.right({ ...healed.right, conditions });
+  return Result.succeed({ ...healed.success, conditions });
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

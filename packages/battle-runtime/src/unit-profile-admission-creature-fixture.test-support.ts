@@ -16,7 +16,7 @@ import type {
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import weaponClubInput from "../../surface/content/weapon_club.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
@@ -41,13 +41,13 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
-import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
 } from "./battle-ammunition.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -309,7 +309,7 @@ export function statBlockCreature(input: {
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
 }): BattleCreatureInit {
-  const projected = Either.getOrThrow(
+  const projected = Result.getOrThrow(
     projectAuthoredStatBlock(input.statBlock),
   );
   const attacks = projected.runtime.procedures.flatMap((procedure) =>
@@ -320,7 +320,7 @@ export function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
+      source: Result.getOrThrow(
         battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
@@ -396,7 +396,6 @@ export function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: weapon.usage === "ranged" ? "dex" : "str",
     abilityModifier: abilityModifier(0),
@@ -787,14 +786,14 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["provokedOpportunityAttacks"];
-    readonly jumpMovementReplacement?: Extract<
+    readonly fixedCostMovementReplacement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["jumpMovementReplacement"];
-    readonly levitatedMovement?: Extract<
+    >["value"]["fixedCostMovementReplacement"];
+    readonly controlledVerticalSuspensionMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["levitatedMovement"];
+    >["value"]["controlledVerticalSuspensionMovement"];
     readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -803,10 +802,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["acrobaticMovement"];
-    readonly gustOfWindLineMovement?: Extract<
+    readonly directionalPersistentAreaMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["gustOfWindLineMovement"];
+    >["value"]["directionalPersistentAreaMovement"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -816,21 +815,27 @@ export function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      ...(value.jumpMovementReplacement === undefined
+      ...(value.fixedCostMovementReplacement === undefined
         ? {}
-        : { jumpMovementReplacement: value.jumpMovementReplacement }),
-      ...(value.levitatedMovement === undefined
+        : { fixedCostMovementReplacement: value.fixedCostMovementReplacement }),
+      ...(value.controlledVerticalSuspensionMovement === undefined
         ? {}
-        : { levitatedMovement: value.levitatedMovement }),
+        : {
+            controlledVerticalSuspensionMovement:
+              value.controlledVerticalSuspensionMovement,
+          }),
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),
       ...(value.acrobaticMovement === undefined
         ? {}
         : { acrobaticMovement: value.acrobaticMovement }),
-      ...(value.gustOfWindLineMovement === undefined
+      ...(value.directionalPersistentAreaMovement === undefined
         ? {}
-        : { gustOfWindLineMovement: value.gustOfWindLineMovement }),
+        : {
+            directionalPersistentAreaMovement:
+              value.directionalPersistentAreaMovement,
+          }),
     },
   };
 }

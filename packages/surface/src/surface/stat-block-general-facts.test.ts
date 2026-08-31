@@ -1,9 +1,9 @@
-import { JSONSchema, Schema } from "effect";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
 
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 
 import {
   CreatureImmunityListSchema,
@@ -21,7 +21,10 @@ import {
 } from "./schema.ts";
 import { statBlockHasPotentialFlySpeed } from "./stat-block-speed-readers.ts";
 
-const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
+const decode = <S extends Schema.ConstraintDecoder<unknown>>(
+  schema: S,
+  input: unknown,
+): S["Type"] =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
 
 const syntheticStandaloneStatBlock = {
@@ -573,7 +576,9 @@ describe("standalone Stat Block general facts", () => {
       ).toThrow();
     }
 
-    expect(JSONSchema.make(StatBlockGmSpeedChoiceSchema)).toMatchObject({
+    expect(
+      Schema.toJsonSchemaDocument(StatBlockGmSpeedChoiceSchema).schema,
+    ).toMatchObject({
       properties: {
         alternatives: { minItems: 2, uniqueItems: true },
       },

@@ -25,7 +25,7 @@ import {
   readiedSpellTargetSelectionKind,
   type ReadiedSpellTargetSelectionKind,
 } from "./battle-reducer/spells-resolve-readied-target.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   booleanField,
@@ -1033,10 +1033,14 @@ function createRuleCoreSpellDriver() {
           attackHit.state,
         )?.choices.find(
           (candidate) =>
-            candidate.kind === "releaseReadiedSpell" &&
-            candidate.readiedSpellCasterId === casterId,
+            candidate.kind === "nestedProcedure" &&
+            candidate.subject.command === "releaseReadiedSpell" &&
+            candidate.subject.readiedSpellCasterId === casterId,
         );
-        if (releaseChoice?.kind !== "releaseReadiedSpell") {
+        if (
+          releaseChoice?.kind !== "nestedProcedure" ||
+          releaseChoice.subject.command !== "releaseReadiedSpell"
+        ) {
           throw new Error("Expected Readied Spell release choice.");
         }
         recordResult(
@@ -1049,7 +1053,6 @@ function createRuleCoreSpellDriver() {
                 responderId: casterId,
                 choice: {
                   kind: "releaseReadiedSpell",
-                  readiedSpellCasterId: casterId,
                   procedureRef: releaseChoice.subject.procedureRef,
                   fills: [
                     allocation,
@@ -1794,10 +1797,10 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function spellcaster(input: {

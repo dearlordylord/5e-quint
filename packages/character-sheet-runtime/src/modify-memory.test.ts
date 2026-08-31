@@ -10,14 +10,14 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castModifyMemory,
   characterSheetId,
   characterSheetModifyMemoryTargetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -101,7 +101,7 @@ describe("Character Sheet runtime / Modify Memory", () => {
       savingThrowOutcome: { tag: "failed" },
     });
     const memoryEdit = modifyMemoryEdit();
-    const result = requireRight(
+    const result = requireSuccess(
       castModifyMemory({
         sheet: modifyMemoryWizardSheet({
           preparedSpells: ["modify_memory"],
@@ -157,7 +157,7 @@ describe("Character Sheet runtime / Modify Memory", () => {
   });
 
   it("returns no effect when the Wisdom Saving Throw succeeds", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castModifyMemory({
         sheet: modifyMemoryWizardSheet({
           preparedSpells: ["modify_memory"],
@@ -181,7 +181,7 @@ describe("Character Sheet runtime / Modify Memory", () => {
   });
 
   it("keeps the spell conditions but does not alter memory when the target cannot understand", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castModifyMemory({
         sheet: modifyMemoryWizardSheet({
           preparedSpells: ["modify_memory"],
@@ -206,7 +206,7 @@ describe("Character Sheet runtime / Modify Memory", () => {
   });
 
   it("does not alter memory when the description is incomplete before spell end", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castModifyMemory({
         sheet: modifyMemoryWizardSheet({
           preparedSpells: ["modify_memory"],
@@ -237,9 +237,9 @@ describe("Character Sheet runtime / Modify Memory", () => {
       memoryEdit: modifyMemoryEdit(),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Modify Memory requires prepared class Spell Access.",
       );
     }
@@ -300,13 +300,13 @@ describe("Character Sheet runtime / Modify Memory", () => {
         target: modifyMemoryTarget({ savingThrowOutcome: { tag: "failed" } }),
         memoryEdit: modifyMemoryEdit(),
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
   });
 });
 
 const modifyMemorySelectedIdentityActions = {
   doCastModifyMemory: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castModifyMemory({
         sheet: modifyMemoryWizardSheet({
           preparedSpells: ["modify_memory"],
@@ -374,7 +374,7 @@ function modifyMemoryTarget(
   },
 ): CharacterSheetModifyMemoryTarget {
   return {
-    targetId: requireRight(
+    targetId: requireSuccess(
       characterSheetModifyMemoryTargetId("modify-memory-target:known"),
     ),
     visibleByCaster: true,
@@ -407,7 +407,7 @@ function modifyMemoryWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:modify-memory-wizard-9"),
       build: {

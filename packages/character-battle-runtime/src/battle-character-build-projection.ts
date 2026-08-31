@@ -20,10 +20,12 @@ import {
   type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
+  type BattleStateInitIssue,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   admitCharacterWeaponExecutionWeapon,
+  admitResolvedCharacterWeaponExecutionWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime";
@@ -85,15 +87,20 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
   classSpellListForSpellcastingClassRecord,
   spellcastingClassRecordForClassName,
-} from "@dnd/surface/surface/unit-catalog";
+  resolveWeaponMasteryReference,
+} from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Match, Option } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { Result, Match, Option } from "effect";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   classSpellChoiceIsRuntimeDetached,
   omitRuntimeDetachedClassSpellChoices,
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
+
+export type CharacterBattleRuntimeIssueMessage = (
+  issue: BattleCreatureInitIssue | BattleStateInitIssue,
+) => string;
 
 type CharacterBattleBuildProjectionPhase =
   | "derivedState"
@@ -301,8 +308,8 @@ export function battleCreatureInitIssue(
     kind: "characterBuildProjection",
     phase: "derivedState",
   },
-): Either.Either<never, BattleCreatureInitLeafIssue> {
-  return Either.left({
+): Result.Result<never, BattleCreatureInitLeafIssue> {
+  return Result.fail({
     tag: "battleCreatureInitIssue",
     message,
     ...characterBattleInitIssueFactFields(reason),
@@ -339,7 +346,7 @@ export function battleCreatureInitIssueFromCharacterBuildProjection(
 export function battleCreatureInitIssuesFromCharacterBuildProjection(
   issues: ReadonlyNonEmptyArray<CharacterBuildProjectionIssue>,
   phase: CharacterBattleBuildProjectionPhase,
-): Either.Either<never, BattleCreatureInitIssue> {
+): Result.Result<never, BattleCreatureInitIssue> {
   const [first, ...rest] = issues;
   return battleCreatureInitIssueFromLeaves([
     battleCreatureInitIssueFromCharacterBuildProjection(first, phase),
@@ -353,11 +360,11 @@ export function battleCreatureInitIssues(
   first: BattleCreatureInitIssueLeaf,
   second: BattleCreatureInitIssueLeaf,
   ...rest: ReadonlyArray<BattleCreatureInitIssueLeaf>
-): Either.Either<
+): Result.Result<
   never,
   Extract<BattleCreatureInitIssue, { tag: "battleCreatureInitIssues" }>
 > {
-  return Either.left({
+  return Result.fail({
     tag: "battleCreatureInitIssues",
     message: [first, second, ...rest]
       .map(battleCreatureInitIssueMessage)
@@ -368,23 +375,23 @@ export function battleCreatureInitIssues(
 
 export function battleCreatureInitIssueFromLeaves(
   issues: ReadonlyNonEmptyArray<BattleCreatureInitIssueLeaf>,
-): Either.Either<never, BattleCreatureInitIssue> {
+): Result.Result<never, BattleCreatureInitIssue> {
   const [first, second, ...rest] = issues;
   return second === undefined
-    ? Either.left(first)
+    ? Result.fail(first)
     : battleCreatureInitIssues(first, second, ...rest);
 }
 
 export function battleCreatureInitIssuesFromMessages(
   messages: readonly string[],
   reasonForIndex: (index: number) => CharacterBattleInitIssueReason,
-): Either.Either<never, BattleCreatureInitIssue> {
+): Result.Result<never, BattleCreatureInitIssue> {
   const leaves = messages.map((message, index) => ({
     tag: "battleCreatureInitIssue" as const,
     message,
     ...characterBattleInitIssueFactFields(reasonForIndex(index)),
   }));
-  if (!isNonEmptyReadonlyArray(leaves)) {
+  if (!isReadonlyArrayNonEmpty(leaves)) {
     return battleCreatureInitIssue(
       "Character battle initialization produced no projection issue facts.",
       reasonForIndex(0),
@@ -414,21 +421,24 @@ export function characterArmorClassState(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
-}): Either.Either<ArmorClassState, BattleCreatureInitIssue> {
+}): Result.Result<ArmorClassState, BattleCreatureInitIssue> {
   const state = characterSheetArmorClassState(input);
-  if (Either.isLeft(state)) return battleCreatureInitIssue(state.left.message);
-  const bonuses = [...state.right.bonuses];
+  if (Result.isFailure(state))
+    return battleCreatureInitIssue(state.failure.message);
+  const bonuses = [...state.success.bonuses];
   for (const featureUnitId of characterBuildFeatureUnitIds(
     input.build,
     input.unitLibrary,
   )) {
     const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
-    if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
+    if (Result.isFailure(unit)) {
+      return battleCreatureInitIssue(
+        battleCreatureInitIssueMessage(unit.failure),
+      );
     }
-    bonuses.push(...armorDefenseBonus(unit.right));
+    bonuses.push(...armorDefenseBonus(unit.success));
   }
-  return Either.right({ ...state.right, bonuses });
+  return Result.succeed({ ...state.success, bonuses });
 }
 
 export function characterUnarmoredArmorClassBases(input: {
@@ -436,7 +446,7 @@ export function characterUnarmoredArmorClassBases(input: {
   readonly unitLibrary: UnitCatalog;
   readonly shieldedBaseChoice?: CharacterSheetArmorClassBaseChoice;
   readonly unshieldedBaseChoice?: CharacterSheetArmorClassBaseChoice;
-}): Either.Either<
+}): Result.Result<
   {
     readonly shielded: Extract<
       ArmorClassBaseSource,
@@ -457,8 +467,8 @@ export function characterUnarmoredArmorClassBases(input: {
       : { baseChoice: input.shieldedBaseChoice }),
     wieldingShield: true,
   });
-  if (Either.isLeft(shielded)) {
-    return battleCreatureInitIssue(shielded.left.message);
+  if (Result.isFailure(shielded)) {
+    return battleCreatureInitIssue(shielded.failure.message);
   }
   const unshielded = characterSheetUnarmoredArmorClassBase({
     build: input.build,
@@ -468,9 +478,12 @@ export function characterUnarmoredArmorClassBases(input: {
       : { baseChoice: input.unshieldedBaseChoice }),
     wieldingShield: false,
   });
-  return Either.isLeft(unshielded)
-    ? battleCreatureInitIssue(unshielded.left.message)
-    : Either.right({ shielded: shielded.right, unshielded: unshielded.right });
+  return Result.isFailure(unshielded)
+    ? battleCreatureInitIssue(unshielded.failure.message)
+    : Result.succeed({
+        shielded: shielded.success,
+        unshielded: unshielded.success,
+      });
 }
 
 function armorDefenseBonus(
@@ -494,13 +507,13 @@ export function characterAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
-): Either.Either<
+): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
 > {
   const loadoutWeapon = build.equipment.loadout.weapon;
   if (loadoutWeapon === undefined) {
-    return Either.right(null);
+    return Result.succeed(null);
   }
   const selectedWeapon = characterEquipmentItemSourceFromId(
     loadoutWeapon.itemId,
@@ -522,13 +535,13 @@ export function characterOffHandAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
-): Either.Either<
+): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | undefined,
   BattleCreatureInitIssue
 > {
   const loadoutWeapon = build.equipment.loadout.offHandWeapon;
   if (loadoutWeapon === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   const selectedWeapon = characterEquipmentItemSourceFromId(
     loadoutWeapon.itemId,
@@ -543,14 +556,16 @@ export function characterOffHandAttackActionOption(
     classLevels,
     pactBladeBondedWeaponItemId,
   );
-  if (Either.isLeft(option)) {
-    return battleCreatureInitIssue(battleCreatureInitIssueMessage(option.left));
+  if (Result.isFailure(option)) {
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(option.failure),
+    );
   }
-  return option.right === null
+  return option.success === null
     ? battleCreatureInitIssue(
         "Off-hand weapon loadout must reference a Weapon Unit.",
       )
-    : Either.right(option.right);
+    : Result.succeed(option.success);
 }
 
 export function characterBattleLoadoutFromBuild(
@@ -630,7 +645,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
         CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
       >["itemId"]
     | undefined;
-}): Either.Either<
+}): Result.Result<
   | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
   | NonNullable<
       CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
@@ -639,7 +654,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
   BattleCreatureInitIssue
 > {
   if (input.itemId === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   if (!hasPactOfTheBlade(input.build)) {
     return battleCreatureInitIssue(
@@ -668,20 +683,23 @@ export function characterPactBladeBondedWeaponItemId(input: {
   }
   const weaponUnitId = characterEquipmentItemSourceFromId(input.itemId).unitId;
   const unit = getRequiredUnit(input.unitLibrary, weaponUnitId);
-  if (Either.isLeft(unit)) {
-    return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
+  if (Result.isFailure(unit)) {
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(unit.failure),
+    );
   }
   if (
-    unit.right.kind !== "weapon" ||
-    unit.right.usage !== "melee" ||
-    (unit.right.category !== "simple" && unit.right.category !== "martial") ||
-    unit.right.damage.kind !== "dice"
+    unit.success.kind !== "weapon" ||
+    unit.success.usage !== "melee" ||
+    (unit.success.category !== "simple" &&
+      unit.success.category !== "martial") ||
+    unit.success.damage.kind !== "dice"
   ) {
     return battleCreatureInitIssue(
       "Pact of the Blade bond must reference a Simple or Martial Melee weapon with dice damage.",
     );
   }
-  return Either.right(input.itemId);
+  return Result.succeed(input.itemId);
 }
 
 function characterWeaponAttackActionOption(
@@ -691,22 +709,35 @@ function characterWeaponAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[],
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
-): Either.Either<
+): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
 > {
   const unit = getRequiredUnit(unitLibrary, unitId);
-  if (Either.isLeft(unit)) {
-    return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
+  if (Result.isFailure(unit)) {
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(unit.failure),
+    );
   }
-  if (unit.right.kind !== "weapon" || unit.right.damage.kind !== "dice") {
-    return Either.right(null);
+  if (unit.success.kind !== "weapon" || unit.success.damage.kind !== "dice") {
+    return Result.succeed(null);
+  }
+
+  const masteryReference = resolveWeaponMasteryReference(
+    unit.success,
+    unitLibrary,
+  );
+  const executionWeapon = Result.isFailure(masteryReference)
+    ? Result.succeed(admitCharacterWeaponExecutionWeapon(unit.success))
+    : admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success);
+  if (Result.isFailure(executionWeapon)) {
+    return battleCreatureInitIssue(executionWeapon.failure.message);
   }
 
   const baseAttack = {
     ...characterBattleCreatureInitWeaponAttack({
       kind: "weapon",
-      weapon: admitCharacterWeaponExecutionWeapon(unit.right),
+      weapon: executionWeapon.success,
       ability: "str",
       abilityModifier: battleAbilityModifier(
         scoreModifier(build.abilityScores.str),
@@ -719,16 +750,16 @@ function characterWeaponAttackActionOption(
     unitLibrary,
     classLevels,
   });
-  if (Either.isLeft(martialArts)) {
+  if (Result.isFailure(martialArts)) {
     return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(martialArts.left),
+      battleCreatureInitIssueMessage(martialArts.failure),
     );
   }
   const projectedAttack =
-    martialArts.right === null || !isMonkWeapon(unit.right)
+    martialArts.success === null || !isMonkWeapon(unit.success)
       ? baseAttack
-      : martialArtsWeaponAttack(baseAttack, build, martialArts.right);
-  return Either.right(
+      : martialArtsWeaponAttack(baseAttack, build, martialArts.success);
+  return Result.succeed(
     pactBladeWeaponAttack(
       projectedAttack,
       build,
@@ -742,7 +773,7 @@ export function characterBaseUnarmedStrikeActionOption(
   build: CharacterBuild,
   unitLibrary?: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
-): Either.Either<CharacterUnarmedStrikeActionOption, BattleCreatureInitIssue> {
+): Result.Result<CharacterUnarmedStrikeActionOption, BattleCreatureInitIssue> {
   const strengthModifier = battleAbilityModifier(
     scoreModifier(build.abilityScores.str),
   );
@@ -762,21 +793,21 @@ export function characterBaseUnarmedStrikeActionOption(
     ),
     damageAbilityModifier: strengthModifier,
   } as const satisfies CharacterUnarmedStrikeActionOption;
-  if (unitLibrary === undefined) return Either.right(baseAttack);
+  if (unitLibrary === undefined) return Result.succeed(baseAttack);
   const martialArts = martialArtsAttackProjectionForBuild({
     build,
     unitLibrary,
     classLevels,
   });
-  if (Either.isLeft(martialArts)) {
+  if (Result.isFailure(martialArts)) {
     return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(martialArts.left),
+      battleCreatureInitIssueMessage(martialArts.failure),
     );
   }
-  return Either.right(
-    martialArts.right === null
+  return Result.succeed(
+    martialArts.success === null
       ? baseAttack
-      : martialArtsUnarmedStrike(baseAttack, build, martialArts.right),
+      : martialArtsUnarmedStrike(baseAttack, build, martialArts.success),
   );
 }
 
@@ -924,9 +955,9 @@ function martialArtsAttackProjectionForBuild(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
-}): Either.Either<MartialArtsAttackProjection | null, BattleCreatureInitIssue> {
+}): Result.Result<MartialArtsAttackProjection | null, BattleCreatureInitIssue> {
   if (!martialArtsLoadoutConditionHolds(input)) {
-    return Either.right(null);
+    return Result.succeed(null);
   }
   const classLevels = input.classLevels.map((entry) => ({
     className: entry.className,
@@ -937,18 +968,20 @@ function martialArtsAttackProjectionForBuild(input: {
     input.unitLibrary,
   )) {
     const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
-    if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
+    if (Result.isFailure(unit)) {
+      return battleCreatureInitIssue(
+        battleCreatureInitIssueMessage(unit.failure),
+      );
     }
     const profile = martialArtsAttackProjectionProfileForUnit(
-      unit.right,
+      unit.success,
       classLevels,
     );
     if (profile !== null) {
-      return Either.right(profile);
+      return Result.succeed(profile);
     }
   }
-  return Either.right(null);
+  return Result.succeed(null);
 }
 
 function martialArtsLoadoutConditionHolds(input: {
@@ -1068,7 +1101,7 @@ function weaponWithMartialArtsDamage(
 function spellcastingAllowedByArmorTraining(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<boolean, BattleCreatureInitIssue> {
+): Result.Result<boolean, BattleCreatureInitIssue> {
   const armor =
     build.equipment.loadout.armor == null
       ? undefined
@@ -1077,29 +1110,31 @@ function spellcastingAllowedByArmorTraining(
           characterEquipmentItemSourceFromId(build.equipment.loadout.armor)
             .unitId,
         );
-  if (armor !== undefined && Either.isLeft(armor)) {
-    return battleCreatureInitIssue(battleCreatureInitIssueMessage(armor.left));
+  if (armor !== undefined && Result.isFailure(armor)) {
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(armor.failure),
+    );
   }
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
-  if (Either.isLeft(armorTraining)) {
+  if (Result.isFailure(armorTraining)) {
     return battleCreatureInitIssuesFromMessages(
-      armorTraining.left.map(characterCreationIssueMessage),
+      armorTraining.failure.map(characterCreationIssueMessage),
       () => ({
         kind: "characterBuildProjection",
         phase: "proficiencies",
       }),
     );
   }
-  return Either.right(
-    armor?.right.kind !== "armor" ||
-      armorTraining.right.includes(armor.right.category),
+  return Result.succeed(
+    armor?.success.kind !== "armor" ||
+      armorTraining.success.includes(armor.success.category),
   );
 }
 
 function parseCharacterBattleMagicInitiateSpellAccesses(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildMagicInitiateSpellAccess[],
   BattleCreatureInitIssue
 > {
@@ -1108,12 +1143,12 @@ function parseCharacterBattleMagicInitiateSpellAccesses(input: {
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isRight(parsed)) return Either.right(parsed.right);
+  if (Result.isSuccess(parsed)) return Result.succeed(parsed.success);
   const spellAccessIssues = characterBattleSpellAccessProjectionIssues(
-    parsed.left,
+    parsed.failure,
     input.build,
   );
-  return isNonEmptyReadonlyArray(spellAccessIssues)
+  return isReadonlyArrayNonEmpty(spellAccessIssues)
     ? battleCreatureInitIssueFromLeaves(spellAccessIssues)
     : battleCreatureInitIssue(
         "Character Battle Spell Access projection contains invalid selections.",
@@ -1125,14 +1160,14 @@ function projectCharacterBattleMagicInitiateSpellAccessesForCasting(input: {
   readonly build: CharacterBuild;
   readonly accesses: readonly CharacterBuildMagicInitiateSpellAccess[];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBattleSpellAccessInit[],
   BattleCreatureInitIssue
 > {
   const projected = projectCharacterBattleMagicInitiateSpellAccesses(input);
-  if (Either.isRight(projected)) return Either.right(projected.right);
-  return isNonEmptyReadonlyArray(projected.left)
-    ? battleCreatureInitIssueFromLeaves(projected.left)
+  if (Result.isSuccess(projected)) return Result.succeed(projected.success);
+  return isReadonlyArrayNonEmpty(projected.failure)
+    ? battleCreatureInitIssueFromLeaves(projected.failure)
     : battleCreatureInitIssue(
         "Character Battle Spell Access projection contains invalid selections.",
         { kind: "characterBuildProjection", phase: "spellcasting" },
@@ -1145,7 +1180,7 @@ export function characterSpellcasting(input: {
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
-}): Either.Either<
+}): Result.Result<
   NonNullable<
     Extract<
       BattleCreatureInit["creatureInit"],
@@ -1157,53 +1192,53 @@ export function characterSpellcasting(input: {
   const { build, unitLibrary } = input;
   const parsedMagicInitiateSpellAccesses =
     parseCharacterBattleMagicInitiateSpellAccesses({ build, unitLibrary });
-  if (Either.isLeft(parsedMagicInitiateSpellAccesses)) {
-    return Either.left(parsedMagicInitiateSpellAccesses.left);
+  if (Result.isFailure(parsedMagicInitiateSpellAccesses)) {
+    return Result.fail(parsedMagicInitiateSpellAccesses.failure);
   }
   const spellcasting = build.spellcasting;
   const canCastSpells = characterBattleSpellcastingCanCast(input);
-  if (Either.isLeft(canCastSpells)) {
+  if (Result.isFailure(canCastSpells)) {
     return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(canCastSpells.left),
+      battleCreatureInitIssueMessage(canCastSpells.failure),
     );
   }
   const sources =
     spellcasting === undefined
-      ? Either.right(null)
+      ? Result.succeed(null)
       : spellcastingSourcesWithOneAbilityAndClass({
           unitLibrary,
           sources: spellcasting.sources,
         });
-  if (Either.isLeft(sources)) {
+  if (Result.isFailure(sources)) {
     return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(sources.left),
+      battleCreatureInitIssueMessage(sources.failure),
     );
   }
   const spellRecords = characterBattleSpellRecordsForSources({
-    sources: sources.right,
+    sources: sources.success,
     unitLibrary,
   });
-  if (Either.isLeft(spellRecords)) {
-    return Either.left(spellRecords.left);
+  if (Result.isFailure(spellRecords)) {
+    return Result.fail(spellRecords.failure);
   }
   const projectedMagicInitiateSpellAccesses =
     projectCharacterBattleMagicInitiateSpellAccessesForCasting({
       build,
-      accesses: parsedMagicInitiateSpellAccesses.right,
+      accesses: parsedMagicInitiateSpellAccesses.success,
       unitLibrary,
     });
-  if (Either.isLeft(projectedMagicInitiateSpellAccesses)) {
-    return Either.left(projectedMagicInitiateSpellAccesses.left);
+  if (Result.isFailure(projectedMagicInitiateSpellAccesses)) {
+    return Result.fail(projectedMagicInitiateSpellAccesses.failure);
   }
-  const projectedSpellAccesses = projectedMagicInitiateSpellAccesses.right;
+  const projectedSpellAccesses = projectedMagicInitiateSpellAccesses.success;
   const additionalSpellAccesses = characterBattleAdditionalSpellAccesses({
     build,
     spellcastingSources: spellcasting?.sources ?? [],
     unitLibrary,
     bookOfShadowsPresence: input.bookOfShadowsPresence,
   });
-  if (Either.isLeft(additionalSpellAccesses)) {
-    return Either.left(additionalSpellAccesses.left);
+  if (Result.isFailure(additionalSpellAccesses)) {
+    return Result.fail(additionalSpellAccesses.failure);
   }
 
   const spellSlots =
@@ -1214,33 +1249,34 @@ export function characterSpellcasting(input: {
       expended: resourceCount(0),
     }));
 
-  return Either.right({
+  return Result.succeed({
     spellcastingSource:
-      sources.right === null
+      sources.success === null
         ? { tag: "spellAccessOnly" }
         : {
             tag: "classSpellcasting",
-            className: sources.right.sourceClassName,
+            className: sources.success.sourceClassName,
             abilityModifier: battleAbilityModifier(
               scoreModifier(
-                build.abilityScores[sources.right.spellcastingAbility],
+                build.abilityScores[sources.success.spellcastingAbility],
               ),
             ),
           },
     proficiencyBonus: proficiencyBonusForCharacterLevel(
       characterBuildLevel(build),
     ),
-    canCastSpells: canCastSpells.right,
-    cantrips: spellRecords.right.cantrips,
-    preparedSpells: spellRecords.right.preparedSpells,
-    featurePreparedSpells: additionalSpellAccesses.right.featurePreparedSpells,
+    canCastSpells: canCastSpells.success,
+    cantrips: spellRecords.success.cantrips,
+    preparedSpells: spellRecords.success.preparedSpells,
+    featurePreparedSpells:
+      additionalSpellAccesses.success.featurePreparedSpells,
     spellAccesses: projectedSpellAccesses,
     spellbookRitualSpellAccesses:
-      additionalSpellAccesses.right.spellbookRitualSpellAccesses,
+      additionalSpellAccesses.success.spellbookRitualSpellAccesses,
     bookOfShadowsSpellAccesses:
-      additionalSpellAccesses.right.bookOfShadowsSpellAccesses,
+      additionalSpellAccesses.success.bookOfShadowsSpellAccesses,
     invocationSpellAccesses:
-      additionalSpellAccesses.right.invocationSpellAccesses,
+      additionalSpellAccesses.success.invocationSpellAccesses,
     spellSlots: spellSlots.map((slot) => ({
       spellLevel: slot.spellLevel,
       count: slot.count,
@@ -1255,7 +1291,7 @@ export function characterSpellcasting(input: {
 function characterBattleSpellcastingCanCast(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<boolean, BattleCreatureInitIssue> {
+}): Result.Result<boolean, BattleCreatureInitIssue> {
   const sheetSpellAccesses = characterSheetSpellAccessesForBuild({
     build: input.build,
     unitLibrary: input.unitLibrary,
@@ -1280,7 +1316,7 @@ type CharacterBattleSpellcastingSources = {
 function characterBattleSpellRecordsForSources(input: {
   readonly sources: CharacterBattleSpellcastingSources | null;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   {
     readonly cantrips: readonly SpellRecord[];
     readonly preparedSpells: readonly SpellRecord[];
@@ -1289,7 +1325,7 @@ function characterBattleSpellRecordsForSources(input: {
 > {
   const cantrips =
     input.sources === null
-      ? Either.right([] as readonly SpellRecord[])
+      ? Result.succeed([] as readonly SpellRecord[])
       : battleProjectedSpellRecordsForIds({
           unitLibrary: input.unitLibrary,
           sourceClassName: input.sources.sourceClassName,
@@ -1298,7 +1334,7 @@ function characterBattleSpellRecordsForSources(input: {
         });
   const preparedSpells =
     input.sources === null
-      ? Either.right([] as readonly SpellRecord[])
+      ? Result.succeed([] as readonly SpellRecord[])
       : battleProjectedSpellRecordsForIds({
           unitLibrary: input.unitLibrary,
           sourceClassName: input.sources.sourceClassName,
@@ -1308,12 +1344,12 @@ function characterBattleSpellRecordsForSources(input: {
           selectionKind: "leveledSpell",
         });
   const issues = [cantrips, preparedSpells].flatMap((projection) =>
-    Either.isLeft(projection)
-      ? [battleCreatureInitIssueMessage(projection.left)]
+    Result.isFailure(projection)
+      ? [battleCreatureInitIssueMessage(projection.failure)]
       : [],
   );
-  return Either.isLeft(cantrips) || Either.isLeft(preparedSpells)
-    ? isNonEmptyReadonlyArray(issues)
+  return Result.isFailure(cantrips) || Result.isFailure(preparedSpells)
+    ? isReadonlyArrayNonEmpty(issues)
       ? battleCreatureInitIssuesFromMessages(issues, () => ({
           kind: "characterBuildProjection",
           phase: "spellcasting",
@@ -1322,9 +1358,9 @@ function characterBattleSpellRecordsForSources(input: {
           "Character battle spell records projection failed.",
           { kind: "characterBuildProjection", phase: "spellcasting" },
         )
-    : Either.right({
-        cantrips: cantrips.right,
-        preparedSpells: preparedSpells.right,
+    : Result.succeed({
+        cantrips: cantrips.success,
+        preparedSpells: preparedSpells.success,
       });
 }
 
@@ -1337,7 +1373,7 @@ function characterBattleAdditionalSpellAccesses(input: {
   readonly bookOfShadowsPresence?:
     | CharacterBattleBookOfShadowsPresence
     | undefined;
-}): Either.Either<
+}): Result.Result<
   {
     readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
     readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[];
@@ -1350,40 +1386,40 @@ function characterBattleAdditionalSpellAccesses(input: {
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(featurePreparedSpells)) {
-    return Either.left(featurePreparedSpells.left);
+  if (Result.isFailure(featurePreparedSpells)) {
+    return Result.fail(featurePreparedSpells.failure);
   }
   const invocationSpellAccesses = invocationSpellAccess({
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(invocationSpellAccesses)) {
-    return Either.left(invocationSpellAccesses.left);
+  if (Result.isFailure(invocationSpellAccesses)) {
+    return Result.fail(invocationSpellAccesses.failure);
   }
   const spellbookRitualSpellAccesses = spellbookRitualSpellAccess({
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(spellbookRitualSpellAccesses)) {
-    return Either.left(spellbookRitualSpellAccesses.left);
+  if (Result.isFailure(spellbookRitualSpellAccesses)) {
+    return Result.fail(spellbookRitualSpellAccesses.failure);
   }
   const bookOfShadowsSpellAccesses = bookOfShadowsSpellAccess({
     build: input.build,
     spellcastingSources: input.spellcastingSources,
     unitLibrary: input.unitLibrary,
-    featurePreparedSpells: featurePreparedSpells.right,
+    featurePreparedSpells: featurePreparedSpells.success,
     ...(input.bookOfShadowsPresence === undefined
       ? {}
       : { bookOfShadowsPresence: input.bookOfShadowsPresence }),
   });
-  if (Either.isLeft(bookOfShadowsSpellAccesses)) {
-    return Either.left(bookOfShadowsSpellAccesses.left);
+  if (Result.isFailure(bookOfShadowsSpellAccesses)) {
+    return Result.fail(bookOfShadowsSpellAccesses.failure);
   }
-  return Either.right({
-    featurePreparedSpells: featurePreparedSpells.right,
-    invocationSpellAccesses: invocationSpellAccesses.right,
-    spellbookRitualSpellAccesses: spellbookRitualSpellAccesses.right,
-    bookOfShadowsSpellAccesses: bookOfShadowsSpellAccesses.right,
+  return Result.succeed({
+    featurePreparedSpells: featurePreparedSpells.success,
+    invocationSpellAccesses: invocationSpellAccesses.success,
+    spellbookRitualSpellAccesses: spellbookRitualSpellAccesses.success,
+    bookOfShadowsSpellAccesses: bookOfShadowsSpellAccesses.success,
   });
 }
 
@@ -1419,7 +1455,7 @@ function projectCharacterBattleMagicInitiateSpellAccesses(input: {
   readonly build: CharacterBuild;
   readonly accesses: readonly CharacterBuild["magicInitiateSpellAccesses"][number][];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBattleSpellAccessInit[],
   readonly CharacterBattleSpellAccessProjectionIssue[]
 > {
@@ -1432,10 +1468,10 @@ function projectCharacterBattleMagicInitiateSpellAccesses(input: {
       accessIndex,
       unitLibrary: input.unitLibrary,
     });
-    if (Either.isLeft(projection)) issues.push(...projection.left);
-    else projected.push(projection.right);
+    if (Result.isFailure(projection)) issues.push(...projection.failure);
+    else projected.push(projection.success);
   }
-  return issues.length > 0 ? Either.left(issues) : Either.right(projected);
+  return issues.length > 0 ? Result.fail(issues) : Result.succeed(projected);
 }
 
 function projectCharacterBattleMagicInitiateSpellAccess(input: {
@@ -1443,13 +1479,13 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
   readonly access: CharacterBuild["magicInitiateSpellAccesses"][number];
   readonly accessIndex: number;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBattleSpellAccessInit,
   readonly CharacterBattleSpellAccessProjectionIssue[]
 > {
   const sourceUnit = input.unitLibrary.getUnit(input.access.featUnitId);
   if (Option.isNone(sourceUnit)) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "characterBattleSpellAccessProjectionIssue",
         accessIndex: input.accessIndex,
@@ -1463,7 +1499,7 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
     sourceUnit.value.kind !== "feat" ||
     sourceUnit.value.mechanics.family !== "magic_initiate"
   ) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "characterBattleSpellAccessProjectionIssue",
         accessIndex: input.accessIndex,
@@ -1478,7 +1514,7 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
     unitLibrary: input.unitLibrary,
   });
   if (spellListClassRecord === undefined) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "characterBattleSpellAccessProjectionIssue",
         accessIndex: input.accessIndex,
@@ -1493,8 +1529,8 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
     input.access.cantrips[1],
     input.access.levelOneSpell,
   ] as const);
-  if (Either.isLeft(spells)) {
-    const issues = battleCreatureInitIssueLeaves(spells.left).map(
+  if (Result.isFailure(spells)) {
+    const issues = battleCreatureInitIssueLeaves(spells.failure).map(
       (issue, issueIndex) => ({
         tag: "characterBattleSpellAccessProjectionIssue" as const,
         accessIndex: input.accessIndex,
@@ -1504,8 +1540,8 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
         message: battleCreatureInitIssueMessage(issue),
       }),
     );
-    return Either.left(
-      isNonEmptyReadonlyArray(issues)
+    return Result.fail(
+      isReadonlyArrayNonEmpty(issues)
         ? issues
         : [
             {
@@ -1523,7 +1559,7 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
     className: spellListClassRecord.className,
     ...classSpellListForSpellcastingClassRecord(spellListClassRecord),
   };
-  return Either.right({
+  return Result.succeed({
     source: {
       tag: "feat",
       sourceUnit: sourceUnit.value,
@@ -1536,15 +1572,15 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
         ),
       ),
     ),
-    cantrips: [spells.right[0], spells.right[1]],
-    levelOneSpell: spells.right[2],
+    cantrips: [spells.success[0], spells.success[1]],
+    levelOneSpell: spells.success[2],
   });
 }
 
 function spellbookRitualSpellAccess(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBattleSpellbookRitualSpellAccessInit[],
   BattleCreatureInitIssue
 > {
@@ -1555,13 +1591,13 @@ function spellbookRitualSpellAccess(input: {
       unitLibrary: input.unitLibrary,
       classUnitId: source.sourceUnitId,
     });
-    return Either.isLeft(sourceClassName)
+    return Result.isFailure(sourceClassName)
       ? source
       : {
           ...source,
           spellbook: omitRuntimeDetachedClassSpellChoices({
             unitLibrary: input.unitLibrary,
-            sourceClassName: sourceClassName.right,
+            sourceClassName: sourceClassName.success,
             spellIds: source.spellbook,
             choiceKind: "leveledSpell",
           }),
@@ -1585,10 +1621,10 @@ function spellbookRitualSpellAccess(input: {
     ...input,
     build: ritualProjectionBuild,
   });
-  return Either.isLeft(accesses)
-    ? battleCreatureInitIssue(accesses.left.message)
-    : Either.right(
-        accesses.right.map((access) => ({
+  return Result.isFailure(accesses)
+    ? battleCreatureInitIssue(accesses.failure.message)
+    : Result.succeed(
+        accesses.success.map((access) => ({
           tag: "spellbookRitual",
           spell: access.spell,
           featureUnitId: access.featureUnitId,
@@ -1604,7 +1640,7 @@ function bookOfShadowsSpellAccess(input: {
   readonly unitLibrary: UnitCatalog;
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBattleBookOfShadowsSpellAccessInit[],
   BattleCreatureInitIssue
 > {
@@ -1613,7 +1649,7 @@ function bookOfShadowsSpellAccess(input: {
     return access === undefined ? [] : [{ source, access }];
   });
   if (accesses.length === 0) {
-    return Either.right([]);
+    return Result.succeed([]);
   }
   if (input.bookOfShadowsPresence === undefined) {
     return battleCreatureInitIssue(
@@ -1640,7 +1676,10 @@ function bookOfShadowsSpellAccess(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: source.sourceUnitId,
   });
-  if (Either.isLeft(sourceClassName) || sourceClassName.right !== "warlock") {
+  if (
+    Result.isFailure(sourceClassName) ||
+    sourceClassName.success !== "warlock"
+  ) {
     return battleCreatureInitIssue(
       "Book of Shadows Spell Access must be attached to the Warlock spellcasting source.",
     );
@@ -1685,23 +1724,23 @@ function bookOfShadowsSpellAccess(input: {
     );
   }
   const cantrips = spellRecordsForIds(input.unitLibrary, access.cantrips);
-  if (Either.isLeft(cantrips)) {
-    return battleCreatureInitIssue(cantrips.left.message);
+  if (Result.isFailure(cantrips)) {
+    return battleCreatureInitIssue(cantrips.failure.message);
   }
   const ritualSpells = spellRecordsForIds(
     input.unitLibrary,
     access.ritualSpells,
   );
-  if (Either.isLeft(ritualSpells)) {
-    return battleCreatureInitIssue(ritualSpells.left.message);
+  if (Result.isFailure(ritualSpells)) {
+    return battleCreatureInitIssue(ritualSpells.failure.message);
   }
-  if (cantrips.right.some((spell) => spell.mechanics.level !== 0)) {
+  if (cantrips.success.some((spell) => spell.mechanics.level !== 0)) {
     return battleCreatureInitIssue(
       "Book of Shadows cantrip selections must be cantrip Spell Definitions.",
     );
   }
   if (
-    ritualSpells.right.some(
+    ritualSpells.success.some(
       (spell) =>
         spell.mechanics.level !== 1 || !spellHasTopLevelRitualTag(spell),
     )
@@ -1710,12 +1749,12 @@ function bookOfShadowsSpellAccess(input: {
       "Book of Shadows Ritual selections must be level-1 ritual-tagged Spell Definitions.",
     );
   }
-  return Either.right([
+  return Result.succeed([
     {
       tag: access.tag,
       bookPresence: input.bookOfShadowsPresence,
-      cantrips: cantrips.right,
-      ritualSpells: ritualSpells.right,
+      cantrips: cantrips.success,
+      ritualSpells: ritualSpells.success,
       spellcastingFocus: access.spellcastingFocus,
     },
   ]);
@@ -1724,7 +1763,7 @@ function bookOfShadowsSpellAccess(input: {
 function invocationSpellAccess(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBattleInvocationSpellAccessInit[],
   BattleCreatureInitIssue
 > {
@@ -1737,10 +1776,10 @@ function invocationSpellAccess(input: {
       spellId: authoredUnitId(ARMOR_OF_SHADOWS_SPELL_ID),
       tag: "armorOfShadowsMageArmor",
     });
-    if (Either.isLeft(access)) {
-      return Either.left(access.left);
+    if (Result.isFailure(access)) {
+      return Result.fail(access.failure);
     }
-    accesses.push(access.right);
+    accesses.push(access.success);
   }
   if (
     hasSelectedEldritchInvocation(input.build, PACT_OF_THE_CHAIN_INVOCATION_ID)
@@ -1748,38 +1787,38 @@ function invocationSpellAccess(input: {
     const access = invocationSpellAccessForSpell({
       unitLibrary: input.unitLibrary,
       spellId: authoredUnitId(PACT_OF_THE_CHAIN_SPELL_ID),
-      tag: "pactOfTheChainFindFamiliar",
+      tag: "pactOfTheChainSpawnedCompanion",
     });
-    if (Either.isLeft(access)) {
-      return Either.left(access.left);
+    if (Result.isFailure(access)) {
+      return Result.fail(access.failure);
     }
-    accesses.push(access.right);
+    accesses.push(access.success);
   }
-  return Either.right(accesses);
+  return Result.succeed(accesses);
 }
 
 function invocationSpellAccessForSpell(input: {
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
   readonly tag: CharacterBattleInvocationSpellAccessInit["tag"];
-}): Either.Either<
+}): Result.Result<
   CharacterBattleInvocationSpellAccessInit,
   BattleCreatureInitIssue
 > {
   const spell = getRequiredUnit(input.unitLibrary, input.spellId);
-  if (Either.isLeft(spell)) {
-    return battleCreatureInitIssue(spell.left.message);
+  if (Result.isFailure(spell)) {
+    return battleCreatureInitIssue(spell.failure.message);
   }
-  if (spell.right.kind !== "spell") {
+  if (spell.success.kind !== "spell") {
     return battleCreatureInitIssue(`Expected spell Unit: ${input.spellId}`);
   }
-  return Either.right({ tag: input.tag, spell: spell.right });
+  return Result.succeed({ tag: input.tag, spell: spell.success });
 }
 
 function featurePreparedSpellAccess(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBattleFeaturePreparedSpellInit[],
   BattleCreatureInitIssue
 > {
@@ -1807,25 +1846,25 @@ function featurePreparedSpellAccess(input: {
         input.unitLibrary,
         authoredUnitId(grant.spellId),
       );
-      if (Either.isLeft(spell)) {
-        return battleCreatureInitIssue(spell.left.message);
+      if (Result.isFailure(spell)) {
+        return battleCreatureInitIssue(spell.failure.message);
       }
-      if (spell.right.kind !== "spell") {
+      if (spell.success.kind !== "spell") {
         return battleCreatureInitIssue(`Expected spell Unit: ${grant.spellId}`);
       }
       featurePreparedSpells.push({
         sourceUnitId: unit.value.id,
-        spell: spell.right,
+        spell: spell.success,
       });
     }
   }
-  return Either.right(featurePreparedSpells);
+  return Result.succeed(featurePreparedSpells);
 }
 
 function spellcastingSourcesWithOneAbilityAndClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly sources: NonEmptyReadonlyArray<CharacterBuildSpellcastingSource>;
-}): Either.Either<
+}): Result.Result<
   {
     readonly spellcastingAbility: CharacterBuildSpellcastingSource["spellcastingAbility"];
     readonly sourceClassName: ClassName;
@@ -1838,7 +1877,7 @@ function spellcastingSourcesWithOneAbilityAndClass(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: firstSource.sourceUnitId,
   });
-  if (Either.isLeft(firstClassName)) {
+  if (Result.isFailure(firstClassName)) {
     return battleCreatureInitIssue(
       "Battle spellcasting projection requires a class spellcasting source.",
     );
@@ -1850,7 +1889,8 @@ function spellcastingSourcesWithOneAbilityAndClass(input: {
         classUnitId: source.sourceUnitId,
       });
       return (
-        Either.isRight(className) && className.right === firstClassName.right
+        Result.isSuccess(className) &&
+        className.success === firstClassName.success
       );
     })
   ) {
@@ -1861,9 +1901,9 @@ function spellcastingSourcesWithOneAbilityAndClass(input: {
   return input.sources.every(
     (source) => source.spellcastingAbility === firstSource.spellcastingAbility,
   )
-    ? Either.right({
+    ? Result.succeed({
         spellcastingAbility: firstSource.spellcastingAbility,
-        sourceClassName: firstClassName.right,
+        sourceClassName: firstClassName.success,
         sources: input.sources,
       })
     : battleCreatureInitIssue(
@@ -1878,7 +1918,7 @@ function characterBuildLevel(build: CharacterBuild) {
 function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   unitLibrary: UnitCatalog,
   unitIds: UnitIds,
-): Either.Either<
+): Result.Result<
   { readonly [Index in keyof UnitIds]: SpellRecord },
   BattleCreatureInitIssue
 > {
@@ -1886,17 +1926,17 @@ function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   const issues: string[] = [];
   for (const unitId of unitIds) {
     const unit = getRequiredUnit(unitLibrary, unitId);
-    if (Either.isLeft(unit)) {
-      issues.push(unit.left.message);
+    if (Result.isFailure(unit)) {
+      issues.push(unit.failure.message);
       continue;
     }
-    if (unit.right.kind !== "spell") {
+    if (unit.success.kind !== "spell") {
       issues.push(`Expected spell Unit: ${unitId}`);
       continue;
     }
-    spells.push(unit.right);
+    spells.push(unit.success);
   }
-  if (isNonEmptyReadonlyArray(issues)) {
+  if (isReadonlyArrayNonEmpty(issues)) {
     return battleCreatureInitIssuesFromMessages(issues, () => ({
       kind: "characterBuildProjection",
       phase: "spellcasting",
@@ -1904,7 +1944,7 @@ function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   }
   // Every input id contributes exactly one record unless the function returns
   // a typed lookup/kind issue, so this projection preserves tuple length.
-  return Either.right(
+  return Result.succeed(
     spells as { readonly [Index in keyof UnitIds]: SpellRecord },
   );
 }
@@ -1914,7 +1954,7 @@ function battleProjectedSpellRecordsForIds(input: {
   readonly sourceClassName: ClassName;
   readonly spellIds: readonly UnitRecord["id"][];
   readonly selectionKind: ClassSpellChoiceKind;
-}): Either.Either<readonly SpellRecord[], BattleCreatureInitIssue> {
+}): Result.Result<readonly SpellRecord[], BattleCreatureInitIssue> {
   const spells: SpellRecord[] = [];
   const issues: string[] = [];
   for (const spellId of input.spellIds) {
@@ -1940,8 +1980,8 @@ function battleProjectedSpellRecordsForIds(input: {
     spells.push(unit.value);
   }
   return issues.length === 0
-    ? Either.right(spells)
-    : isNonEmptyReadonlyArray(issues)
+    ? Result.succeed(spells)
+    : isReadonlyArrayNonEmpty(issues)
       ? battleCreatureInitIssuesFromMessages(issues, () => ({
           kind: "characterBuildProjection",
           phase: "spellcasting",
@@ -1955,10 +1995,10 @@ function battleProjectedSpellRecordsForIds(input: {
 export function getRequiredUnit(
   unitLibrary: UnitCatalog,
   unitId: UnitRecord["id"],
-): Either.Either<UnitRecord, BattleCreatureInitIssue> {
+): Result.Result<UnitRecord, BattleCreatureInitIssue> {
   const unit = unitLibrary.getUnit(unitId);
   return Option.isSome(unit)
-    ? Either.right(unit.value)
+    ? Result.succeed(unit.value)
     : battleCreatureInitIssue(`Unknown Unit id: ${unitId}`);
 }
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";

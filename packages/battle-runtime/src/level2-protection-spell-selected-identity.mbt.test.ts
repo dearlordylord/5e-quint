@@ -30,7 +30,7 @@ import {
   passWithoutTraceUnitId,
   spellCasterId,
   spellTargetId,
-  wardingBondUnitId,
+  linkedDefenseResistanceDamageShareUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
@@ -60,7 +60,7 @@ const level2ProtectionSpellUnitIds = [
   magicWeaponUnitId,
   mirrorImageUnitId,
   passWithoutTraceUnitId,
-  wardingBondUnitId,
+  linkedDefenseResistanceDamageShareUnitId,
 ] as const;
 type Level2ProtectionSpellUnitId =
   (typeof level2ProtectionSpellUnitIds)[number];
@@ -68,15 +68,15 @@ type Level2ProtectionSpellSelectedIdentityResult =
   | "init"
   | "aidHitPointBuff"
   | "barkskinArmorClassFloor"
-  | "blurAttackRollDefense"
+  | "perceptionGatedAttackRollDefense"
   | "continualFlameObjectLight"
   | "enhanceAbilityRollModifier"
   | "enhanceAbilityHigherSlotPerTarget"
   | "enlargeReduceSizeIncrease"
-  | "magicWeaponEnhancement"
-  | "mirrorImageHitInterception"
+  | "weaponAttackDamageEnhancement"
+  | "duplicateHitInterception"
   | "passWithoutTraceStealthModifier"
-  | "wardingBondLinkedEffect";
+  | "linkedDefenseResistanceDamageShareLinkedEffect";
 type Level2ProtectionSpellSelectedIdentityProjection = {
   readonly lastResult: Level2ProtectionSpellSelectedIdentityResult;
 };
@@ -95,15 +95,15 @@ const LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   AidHitPointBuff: "aidHitPointBuff",
   BarkskinArmorClassFloor: "barkskinArmorClassFloor",
-  BlurAttackRollDefense: "blurAttackRollDefense",
+  BlurAttackRollDefense: "perceptionGatedAttackRollDefense",
   ContinualFlameObjectLight: "continualFlameObjectLight",
   EnhanceAbilityRollModifier: "enhanceAbilityRollModifier",
   EnhanceAbilityHigherSlotPerTarget: "enhanceAbilityHigherSlotPerTarget",
   EnlargeReduceSizeIncrease: "enlargeReduceSizeIncrease",
-  MagicWeaponEnhancement: "magicWeaponEnhancement",
-  MirrorImageHitInterception: "mirrorImageHitInterception",
+  MagicWeaponEnhancement: "weaponAttackDamageEnhancement",
+  MirrorImageHitInterception: "duplicateHitInterception",
   PassWithoutTraceStealthModifier: "passWithoutTraceStealthModifier",
-  WardingBondLinkedEffect: "wardingBondLinkedEffect",
+  WardingBondLinkedEffect: "linkedDefenseResistanceDamageShareLinkedEffect",
 } as const satisfies Readonly<
   Record<string, Level2ProtectionSpellSelectedIdentityResult>
 >;
@@ -154,8 +154,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverBlurAttackRollDefense", {
           spellId: blurUnitId,
           actionTag: "actionSpell",
-          procedure: "blurAttackRollDefense",
-          result: "blurAttackRollDefense",
+          procedure: "perceptionGatedAttackRollDefense",
+          result: "perceptionGatedAttackRollDefense",
         }),
       ],
     },
@@ -202,8 +202,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverMagicWeaponEnhancement", {
           spellId: magicWeaponUnitId,
           actionTag: "bonusActionSpell",
-          procedure: "magicWeaponEnhancement",
-          result: "magicWeaponEnhancement",
+          procedure: "weaponAttackDamageEnhancement",
+          result: "weaponAttackDamageEnhancement",
         }),
       ],
     },
@@ -213,8 +213,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverMirrorImageHitInterception", {
           spellId: mirrorImageUnitId,
           actionTag: "actionSpell",
-          procedure: "mirrorImageHitInterception",
-          result: "mirrorImageHitInterception",
+          procedure: "duplicateHitInterception",
+          result: "duplicateHitInterception",
         }),
       ],
     },
@@ -230,13 +230,13 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: wardingBondUnitId,
+      unitId: linkedDefenseResistanceDamageShareUnitId,
       procedures: [
         selectedSpellProcedure("doDiscoverWardingBondLinkedEffect", {
-          spellId: wardingBondUnitId,
+          spellId: linkedDefenseResistanceDamageShareUnitId,
           actionTag: "actionSpell",
-          procedure: "wardingBond",
-          result: "wardingBondLinkedEffect",
+          procedure: "linkedDefenseResistanceDamageShare",
+          result: "linkedDefenseResistanceDamageShareLinkedEffect",
         }),
       ],
     },

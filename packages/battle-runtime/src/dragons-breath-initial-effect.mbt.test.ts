@@ -24,7 +24,7 @@ import type { DamageType } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
-import dragonsBreathInput from "../../surface/content/dragons_breath.json";
+import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -60,6 +60,7 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { boundGrantedAreaSaveDamageActionEffect } from "./battle-reducer/spell-modifier-binding.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
@@ -110,7 +111,7 @@ type DragonsBreathInitialRuntimeState = {
 
 type DragonsBreathEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "dragonsBreath" }
+  { readonly kind: "grantedAreaSaveDamageAction" }
 >;
 
 const DRAGONS_BREATH_DURATION_TICKS = 10;
@@ -138,7 +139,7 @@ function createDragonsBreathInitialEffectDriver() {
       }) => {
         state = castDragonsBreath(
           state,
-          dragonsBreathDamageType(input.damageType),
+          grantedAreaSaveDamageActionDamageType(input.damageType),
           input.slotLevel,
         );
       },
@@ -149,12 +150,12 @@ function createDragonsBreathInitialEffectDriver() {
         state = breakDragonsBreathConcentration(state);
       },
       step: () => {},
-      getState: () => dragonsBreathInitialEffectProjection(state),
+      getState: () => grantedAreaSaveDamageActionEffectProjection(state),
     };
   });
 }
 
-const dragonsBreathInitialEffectStateCheck = stateCheck(
+const grantedAreaSaveDamageActionEffectStateCheck = stateCheck(
   normalizeDragonsBreathQuintState,
   compareDragonsBreathStates,
 );
@@ -163,7 +164,7 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
   it("attaches the chosen breath state to a willing target", () => {
     const cast = castDragonsBreath(initialRuntimeState(), "fire", 3);
 
-    expect(dragonsBreathInitialEffectProjection(cast)).toMatchObject({
+    expect(grantedAreaSaveDamageActionEffectProjection(cast)).toMatchObject({
       bonusActionAvailable: false,
       spellInvocationAvailable: false,
       targetEffectActive: true,
@@ -180,7 +181,9 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
     const cast = castDragonsBreath(initialRuntimeState(), "acid", 2);
     const targetTurn = endCasterTurn(cast);
 
-    expect(dragonsBreathInitialEffectProjection(targetTurn)).toMatchObject({
+    expect(
+      grantedAreaSaveDamageActionEffectProjection(targetTurn),
+    ).toMatchObject({
       turnRole: "target",
       targetEffectActive: true,
       effectDamageType: "acid",
@@ -196,7 +199,7 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
     const targetTurn = endCasterTurn(cast);
     const broken = breakDragonsBreathConcentration(targetTurn);
 
-    expect(dragonsBreathInitialEffectProjection(broken)).toMatchObject({
+    expect(grantedAreaSaveDamageActionEffectProjection(broken)).toMatchObject({
       targetEffectActive: false,
       effectDamageType: "none",
       effectOriginalSlotLevel: 0,
@@ -209,7 +212,7 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
   });
 
   it("projects spell availability from existing runtime resources", () => {
-    const projection = dragonsBreathInitialEffectProjection(
+    const projection = grantedAreaSaveDamageActionEffectProjection(
       castDragonsBreath(initialRuntimeState(), "lightning", 2),
     );
 
@@ -242,7 +245,7 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(5),
-        stateCheck: dragonsBreathInitialEffectStateCheck,
+        stateCheck: grantedAreaSaveDamageActionEffectStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -252,7 +255,7 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
 function initialRuntimeState(): DragonsBreathInitialRuntimeState {
   return {
     battle: spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [
         { spellLevel: 2, count: 1 },
         { spellLevel: 3, count: 1 },
@@ -263,8 +266,8 @@ function initialRuntimeState(): DragonsBreathInitialRuntimeState {
   };
 }
 
-function dragonsBreathSpell(): SpellRecord {
-  const unit = decodeUnitRecordSync(dragonsBreathInput);
+function grantedAreaSaveDamageActionSpell(): SpellRecord {
+  const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);
   if (unit.kind !== "spell") {
     throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
   }
@@ -339,11 +342,13 @@ function breakDragonsBreathConcentration(
   };
 }
 
-function dragonsBreathInitialEffectProjection(
+function grantedAreaSaveDamageActionEffectProjection(
   state: DragonsBreathInitialRuntimeState,
 ): DragonsBreathInitialEffectState {
   const caster = requireCombatant(state.battle.state, spellCasterId);
-  const effect = dragonsBreathTargetEffect(state.battle.state);
+  const effect = boundGrantedAreaSaveDamageActionEffectProjection(
+    state.battle.state,
+  );
   const spellSaveDc = spellSaveDcForCaster(state.battle.state, spellCasterId);
   const targetEffectActive = effect !== undefined;
   const casterConcentrating =
@@ -364,15 +369,17 @@ function dragonsBreathInitialEffectProjection(
     effectDamageType:
       effect === undefined
         ? "none"
-        : dragonsBreathDamageType(effect.damageType),
-    effectOriginalSlotLevel: effect?.originalSlotLevel ?? 0,
-    effectSpellSaveDc: effect === undefined ? 0 : Number(effect.spellSaveDc),
+        : grantedAreaSaveDamageActionDamageType(effect.damageType),
+    effectOriginalSlotLevel: effect?.castLevel ?? 0,
+    effectSpellSaveDc: effect === undefined ? 0 : Number(spellSaveDc),
     effectDurationTicks:
       effect?.expiresAt.kind === "concentration"
         ? Number(effect.expiresAt.durationTicks)
         : 0,
     casterConcentrating,
-    grantedMagicActionAvailable: dragonsBreathExhaleActAvailable(state.battle),
+    grantedMagicActionAvailable: grantedAreaSaveDamageActionActAvailable(
+      state.battle,
+    ),
     lastResult: state.lastResult,
   } satisfies DragonsBreathInitialEffectState;
   expect(projection.casterConcentrating).toBe(projection.targetEffectActive);
@@ -387,17 +394,24 @@ function dragonsBreathInitialEffectProjection(
   return projection;
 }
 
-function dragonsBreathTargetEffect(
+function grantedAreaSaveDamageActionTargetEffect(
   state: BattleState,
 ): DragonsBreathEffect | undefined {
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
-      effect.kind === "dragonsBreath" &&
+      effect.kind === "grantedAreaSaveDamageAction" &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
 
-function dragonsBreathExhaleActAvailable(
+function boundGrantedAreaSaveDamageActionEffectProjection(state: BattleState) {
+  const effect = grantedAreaSaveDamageActionTargetEffect(state);
+  return effect === undefined
+    ? undefined
+    : boundGrantedAreaSaveDamageActionEffect(state, effect);
+}
+
+function grantedAreaSaveDamageActionActAvailable(
   session: BattleRuntimeSession,
 ): boolean {
   if (!canSpendAction(session.state.currentTurnResources, "magic"))
@@ -405,7 +419,7 @@ function dragonsBreathExhaleActAvailable(
   return discoverBattleActs(session).some(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
-      act.subject.command === "dragonsBreathExhale",
+      act.subject.command === "grantedAreaSaveDamageAction",
   );
 }
 
@@ -438,12 +452,14 @@ function normalizeDragonsBreathQuintState(
   raw: unknown,
 ): DragonsBreathInitialEffectState {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = dragonsBreathLastResult(state["qScenarioOutcome"]);
+  const scenarioResult = grantedAreaSaveDamageActionLastResult(
+    state["qScenarioOutcome"],
+  );
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
     noInvalidReason: "",
-    decodeHole: dragonsBreathInitialEffectUnexpectedHole,
+    decodeHole: grantedAreaSaveDamageActionEffectUnexpectedHole,
   });
   if (protocol.holes.length !== 0) {
     throw new Error(
@@ -456,11 +472,13 @@ function normalizeDragonsBreathQuintState(
     protocol,
   });
   return {
-    turnRole: dragonsBreathTurnRole(state["qTurnRole"]),
+    turnRole: grantedAreaSaveDamageActionTurnRole(state["qTurnRole"]),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     spellInvocationAvailable: booleanField(state, "qSpellInvocationAvailable"),
     targetEffectActive: booleanField(state, "qTargetEffectActive"),
-    effectDamageType: dragonsBreathDamageTypeOrNone(state["qEffectDamageType"]),
+    effectDamageType: grantedAreaSaveDamageActionDamageTypeOrNone(
+      state["qEffectDamageType"],
+    ),
     effectOriginalSlotLevel: numberFromQuintInt(
       state["qEffectOriginalSlotLevel"],
       "qEffectOriginalSlotLevel",
@@ -482,7 +500,7 @@ function normalizeDragonsBreathQuintState(
   };
 }
 
-function dragonsBreathInitialEffectUnexpectedHole(raw: unknown): never {
+function grantedAreaSaveDamageActionEffectUnexpectedHole(raw: unknown): never {
   throw new Error(
     `Dragon's Breath initial-effect witness does not expect holes; received ${String(raw)}.`,
   );
@@ -503,12 +521,16 @@ function compareDragonsBreathStates(
   return true;
 }
 
-function dragonsBreathTurnRole(raw: unknown): DragonsBreathTurnRole {
+function grantedAreaSaveDamageActionTurnRole(
+  raw: unknown,
+): DragonsBreathTurnRole {
   if (raw === "caster" || raw === "target") return raw;
   throw new Error(`Unknown Dragon's Breath turn role: ${String(raw)}.`);
 }
 
-function dragonsBreathDamageType(raw: unknown): DragonsBreathLegalDamageType {
+function grantedAreaSaveDamageActionDamageType(
+  raw: unknown,
+): DragonsBreathLegalDamageType {
   switch (raw) {
     case "acid":
     case "cold":
@@ -520,12 +542,16 @@ function dragonsBreathDamageType(raw: unknown): DragonsBreathLegalDamageType {
   throw new Error(`Unknown Dragon's Breath damage type: ${String(raw)}.`);
 }
 
-function dragonsBreathDamageTypeOrNone(raw: unknown): DragonsBreathDamageType {
+function grantedAreaSaveDamageActionDamageTypeOrNone(
+  raw: unknown,
+): DragonsBreathDamageType {
   if (raw === "none") return raw;
-  return dragonsBreathDamageType(raw);
+  return grantedAreaSaveDamageActionDamageType(raw);
 }
 
-function dragonsBreathLastResult(raw: unknown): DragonsBreathLastResult {
+function grantedAreaSaveDamageActionLastResult(
+  raw: unknown,
+): DragonsBreathLastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
   const value = DRAGONS_BREATH_INITIAL_EFFECT_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {

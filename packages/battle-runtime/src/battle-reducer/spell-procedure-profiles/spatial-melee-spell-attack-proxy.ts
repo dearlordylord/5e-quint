@@ -1,0 +1,642 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  ongoingSpellRepeatCastIsAvailable,
+  ongoingSpellRepeatIsOnLaterTurn,
+} from "../ongoing-spell-repeat-cast.ts";
+import { spellCastCandidate } from "../spell-cast-candidate.ts";
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
+//
+// The Spiritual Weapon profile family: a prepared Bonus Action spell creates a
+// spell-owned spectral force attack proxy, and later Bonus Actions move the
+// force and repeat the melee Spell Attack.
+//
+// RAW anchors:
+//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Spiritual Weapon":
+//     Bonus Action; 60 feet; Concentration up to 1 minute; spectral force
+//     appears in a chosen space; immediate melee Spell Attack against one
+//     creature within 5 feet of the force; Force damage 1d8 plus spellcasting
+//     ability modifier; later-turn Bonus Action moves up to 20 feet and repeats
+//     the attack; higher-level slots add 1d8 per slot level above 2.
+//   - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Attack, Attack Roll, Damage
+//     Roll, Damage Type, Spell Slot, Spell Invocation, and Spell Effect.
+//
+// What lives here: shape admission, active-effect repeat admission, discovery,
+// cast summaries, invocation references, and the profile-owned resolve entry.
+//
+// What stays in shared infrastructure: the attack/damage resolver body remains
+// in spells-resolve.ts because ordinary spell attacks, held-light hurls,
+// spell-created held-object attacks, object-contact repeats, and Spiritual
+// Weapon attacks share one target, attack-roll, damage, reaction, reduction,
+// and concentration-save lifecycle.
+
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  attackBonus,
+  movementFeet,
+  type AbilityModifier,
+  type ProficiencyBonus as ProficiencyBonusType,
+} from "@dnd/shared/types";
+import type {
+  Attachment,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  EffectAtom,
+} from "@dnd/surface/surface/types";
+import { Match, Result } from "effect";
+import {
+  type BattleActDiscoveryCandidate,
+  type BattleActiveEffect,
+  type BattleExecutableSpellInvocation,
+  type BattleResolutionResult,
+  type BattleState,
+  type SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
+import {
+  BattleEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../magic-suppression-ongoing-effect.ts";
+import {
+  spatialMeleeSpellAttackProxyPositionHole,
+  spellTargetHole,
+} from "../spells-targeting.ts";
+import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
+import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
+import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
+import type {
+  SpellAdmissionContext,
+  SpellProcedureDeclaration,
+  SpellProcedureProfileResolveInput,
+} from "./profile.ts";
+import { Schema } from "effect";
+import {
+  AttackBonus,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  LeveledSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
+import {
+  preparedSpellSlotInvocations,
+  spellAdmissionBattleTurn,
+  spellAdmissionOngoingSpellEffectSuppressed,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
+
+type SpatialMeleeSpellAttackProxyAttackProxyInvocation = Extract<
+  SupportedSpellInvocation,
+  {
+    readonly procedure: "spatialMeleeSpellAttackProxy";
+    readonly operation: "createAndAttack";
+  }
+>;
+type SpatialMeleeSpellAttackProxyRepeatAttackInvocation = Extract<
+  SupportedSpellInvocation,
+  {
+    readonly procedure: "spatialMeleeSpellAttackProxy";
+    readonly operation: "repositionAndAttack";
+  }
+>;
+type SpatialMeleeSpellAttackProxyInvocation =
+  | SpatialMeleeSpellAttackProxyAttackProxyInvocation
+  | SpatialMeleeSpellAttackProxyRepeatAttackInvocation;
+type SpatialMeleeSpellAttackProxyResolveInput =
+  SpellProcedureProfileResolveInput<SpatialMeleeSpellAttackProxyInvocation>;
+type LinearPerLevelDiceAmount = Extract<
+  DiceAmount,
+  { readonly kind: "linear_per_level" }
+>;
+type SupportedSpatialMeleeSpellAttackProxyDamageAmount =
+  LinearPerLevelDiceAmount & {
+    readonly axis: "slot";
+    readonly base: DiceExpr & {
+      readonly dice: 1;
+      readonly dieSize: 8;
+      readonly flat?: undefined;
+      readonly spellcastingMod: true;
+      readonly abilityModifier?: undefined;
+    };
+    readonly perLevel: DiceExprDelta & {
+      readonly dice: 1;
+      readonly dieSize: 8;
+      readonly flat?: undefined;
+    };
+    readonly startingAtLevel: 2;
+  };
+type SupportedSpatialMeleeSpellAttackProxyDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "damage" }
+> & {
+  readonly damageType: "force";
+  readonly amount: SupportedSpatialMeleeSpellAttackProxyDamageAmount;
+};
+
+function admitSpatialMeleeSpellAttackProxyAttackProxy(
+  spell: BattleSpellAdmissionSource,
+  ctx: SpellAdmissionContext,
+): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] {
+  const proxy = spatialMeleeSpellAttackProxySpell(spell);
+  if (proxy === null) {
+    return [];
+  }
+  const spellcasting = ctx.actor.origin.spellcasting;
+  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
+    const damageExpr = supportedDamageAmountExpr({
+      amount: proxy.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel,
+    });
+    return damageExpr === null
+      ? null
+      : {
+          ...base,
+          procedure: "spatialMeleeSpellAttackProxy",
+          operation: "createAndAttack",
+          actionCost: "bonusAction",
+          targeting: { kind: "singleCombatant" },
+          durationTicks: proxy.durationTicks,
+          rangeFeet: movementFeet(proxy.rangeFeet),
+          forceReachFeet: movementFeet(proxy.forceReachFeet),
+          repeatMoveMaxFeet: movementFeet(proxy.repeatMoveMaxFeet),
+          damage: {
+            kind: "fixedSpellAttackDamage",
+            expr: {
+              ...damageExpr,
+              flat: Number(ctx.castingSource.abilityModifier),
+            },
+            damageType: "force",
+          },
+          attackKind: "melee_spell_attack",
+          attackBonus: spatialMeleeSpellAttackProxyAttackBonus({
+            spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
+            proficiencyBonus: spellcasting.proficiencyBonus,
+          }),
+        };
+  });
+}
+
+function spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(
+  effect: BattleActiveEffect,
+  ctx: SpellAdmissionContext,
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "spatialMeleeSpellAttackProxy" }
+> {
+  return (
+    effect.kind === "spatialMeleeSpellAttackProxy" &&
+    effect.sourceCombatantId === ctx.actor.combatantId &&
+    !spellAdmissionOngoingSpellEffectSuppressed(
+      ctx,
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
+    ) &&
+    spatialMeleeSpellAttackProxyRepeatIsLaterTurn(effect, ctx)
+  );
+}
+
+function spatialMeleeSpellAttackProxyRepeatBindingFor(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
+  >,
+  ctx: SpellAdmissionContext,
+) {
+  const procedure = ctx.actor.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure ===
+        "spatialMeleeSpellAttackProxy" &&
+      binding.procedure.execution.operation === "repositionAndAttack" &&
+      binding.procedure.execution.activeEffectRef === effect.effectRef &&
+      binding.procedure.execution.activeEffectSourceProcedureRef ===
+        effect.sourceProcedureRef,
+  )?.procedure;
+  return procedure?.kind === "spellInvocation" ? procedure.execution : null;
+}
+
+function spatialMeleeSpellAttackProxyRepeatExecutionFacts(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
+  >,
+  ctx: SpellAdmissionContext,
+) {
+  const source = characterRetainedSpellProcedureExecution(
+    ctx.actor.origin.execution,
+    effect.sourceProcedureRef,
+  );
+  if (source?.procedure !== "spatialMeleeSpellAttackProxy") return null;
+  if (source.operation !== "createAndAttack") return null;
+  const repeat = spatialMeleeSpellAttackProxyRepeatBindingFor(effect, ctx);
+  if (repeat === null) return null;
+  if (repeat.procedure !== "spatialMeleeSpellAttackProxy") return null;
+  if (repeat.operation !== "repositionAndAttack") return null;
+  return { source, repeat };
+}
+
+function admitSpatialMeleeSpellAttackProxyRepeatAttack(
+  spell: BattleSpellAdmissionSource,
+  ctx: SpellAdmissionContext,
+): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] {
+  if (spatialMeleeSpellAttackProxySpell(spell) === null) {
+    return [];
+  }
+  return ctx.actor.activeEffects.flatMap(
+    (effect): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] => {
+      if (!spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(effect, ctx)) {
+        return [];
+      }
+      const execution = spatialMeleeSpellAttackProxyRepeatExecutionFacts(
+        effect,
+        ctx,
+      );
+      if (execution === null) return [];
+      return [
+        {
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: effect.sourceCombatantId,
+          },
+          resource: { tag: "none" },
+          procedure: "spatialMeleeSpellAttackProxy",
+          operation: "repositionAndAttack",
+          spell,
+          actionCost: "bonusAction",
+          activeEffect: effect,
+          targeting: { kind: "singleCombatant" },
+          repeatTargeting: execution.repeat.repeatTargeting,
+          damage: execution.source.damage,
+          attackKind: execution.source.attackKind,
+          attackBonus: execution.source.attackBonus,
+          forceReachFeet: execution.source.forceReachFeet,
+          repeatMoveMaxFeet: execution.source.repeatMoveMaxFeet,
+        },
+      ];
+    },
+  );
+}
+
+function spatialMeleeSpellAttackProxyAttackBonus(input: {
+  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly proficiencyBonus: ProficiencyBonusType;
+}) {
+  return attackBonus(
+    Number(input.spellcastingAbilityModifier) + Number(input.proficiencyBonus),
+  );
+}
+
+function spatialMeleeSpellAttackProxyRepeatIsLaterTurn(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
+  >,
+  ctx: SpellAdmissionContext,
+): boolean {
+  const battleTurn = spellAdmissionBattleTurn(ctx);
+  return (
+    battleTurn !== undefined &&
+    ongoingSpellRepeatIsOnLaterTurn(battleTurn, effect)
+  );
+}
+
+function spatialMeleeSpellAttackProxySpell(spell: BattleSpellAdmissionSource) {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const forceAttachment = spell.mechanics.attachment;
+  const initialAttack = spell.mechanics.initialPhase;
+  const [repeatOperation, ...extraOperations] = spell.mechanics.operations;
+  const repeatEffects =
+    repeatOperation?.effect.kind === "composite_ongoing"
+      ? repeatOperation.effect.effects
+      : [];
+  const [reposition, repeatAttack, ...extraRepeatEffects] = repeatEffects;
+  const initialHit =
+    initialAttack?.kind === "attack_roll" ? initialAttack.onHit[0] : undefined;
+  const initialMiss =
+    initialAttack?.kind === "attack_roll" ? initialAttack.onMiss[0] : undefined;
+  const repeatHit =
+    repeatAttack?.kind === "attack_roll" ? repeatAttack.onHit[0] : undefined;
+  const repeatMiss =
+    repeatAttack?.kind === "attack_roll" ? repeatAttack.onMiss[0] : undefined;
+
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    extraOperations.length !== 0 ||
+    durationTicks === null ||
+    Result.isFailure(durationTicks) ||
+    forceAttachment.kind !== "hole" ||
+    forceAttachment.value.kind !== "location" ||
+    initialAttack?.kind !== "attack_roll" ||
+    initialAttack.attackKind !== "melee_spell_attack" ||
+    initialAttack.attachment.kind !== "hole" ||
+    !spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
+      initialAttack.attachment,
+      forceAttachment.holeId,
+    ) ||
+    initialAttack.onHit.length !== 1 ||
+    initialAttack.onMiss.length !== 1 ||
+    !isSupportedSpatialMeleeSpellAttackProxyDamageEffect(initialHit) ||
+    !isSupportedSpatialMeleeSpellAttackProxyMissEffect(initialMiss) ||
+    repeatOperation?.trigger.kind !== "on_caster_spends_action" ||
+    repeatOperation.trigger.cost.kind !== "bonus_action" ||
+    repeatOperation.trigger.laterTurnsOnly !== true ||
+    repeatOperation.predicate !== undefined ||
+    repeatOperation.targetLimit !== undefined ||
+    repeatOperation.usageLimit !== undefined ||
+    repeatOperation.effect.kind !== "composite_ongoing" ||
+    extraRepeatEffects.length !== 0 ||
+    reposition?.kind !== "reposition_attachment" ||
+    reposition.maxMoveFeet !== 20 ||
+    repeatAttack?.kind !== "attack_roll" ||
+    repeatAttack.attackKind !== "melee_spell_attack" ||
+    !spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
+      repeatAttack.attachment,
+      forceAttachment.holeId,
+    ) ||
+    repeatAttack.onHit.length !== 1 ||
+    repeatAttack.onMiss.length !== 1 ||
+    !isSupportedSpatialMeleeSpellAttackProxyDamageEffect(repeatHit) ||
+    !isSupportedSpatialMeleeSpellAttackProxyMissEffect(repeatMiss) ||
+    !sameSpatialMeleeSpellAttackProxyDamageEffect(initialHit, repeatHit)
+  ) {
+    return null;
+  }
+  return {
+    durationTicks: durationTicks.success,
+    rangeFeet: 60,
+    forceReachFeet: 5,
+    repeatMoveMaxFeet: reposition.maxMoveFeet,
+    damageAmount: initialHit.amount,
+  };
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyDamageEffect(
+  effect: EffectAtom | undefined,
+): effect is SupportedSpatialMeleeSpellAttackProxyDamageEffect {
+  if (effect?.kind !== "damage") {
+    return false;
+  }
+  return (
+    effect.damageType === "force" &&
+    isSupportedSpatialMeleeSpellAttackProxyDamageAmount(effect.amount)
+  );
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyMissEffect(
+  effect: EffectAtom | undefined,
+): effect is Extract<EffectAtom, { readonly kind: "none" }> {
+  return effect?.kind === "none";
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyDamageAmount(
+  amount: DiceAmount,
+): amount is SupportedSpatialMeleeSpellAttackProxyDamageAmount {
+  if (
+    amount.kind !== "linear_per_level" ||
+    amount.axis !== "slot" ||
+    amount.startingAtLevel !== 2
+  ) {
+    return false;
+  }
+  return (
+    isSupportedSpatialMeleeSpellAttackProxyBaseDamage(amount.base) &&
+    isSupportedSpatialMeleeSpellAttackProxyPerLevelDamage(amount.perLevel)
+  );
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyBaseDamage(
+  amount: DiceExpr,
+): boolean {
+  return (
+    amount.dice === 1 &&
+    amount.dieSize === 8 &&
+    amount.flat === undefined &&
+    amount.spellcastingMod === true &&
+    amount.abilityModifier === undefined
+  );
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyPerLevelDamage(
+  amount: DiceExprDelta,
+): boolean {
+  return amount.dice === 1 && amount.dieSize === 8 && amount.flat === undefined;
+}
+
+function sameSpatialMeleeSpellAttackProxyBaseDamage(
+  left: SupportedSpatialMeleeSpellAttackProxyDamageAmount["base"],
+  right: SupportedSpatialMeleeSpellAttackProxyDamageAmount["base"],
+): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    left.flat === right.flat &&
+    left.spellcastingMod === right.spellcastingMod &&
+    left.abilityModifier === right.abilityModifier
+  );
+}
+
+function sameSpatialMeleeSpellAttackProxyPerLevelDamage(
+  left: SupportedSpatialMeleeSpellAttackProxyDamageAmount["perLevel"],
+  right: SupportedSpatialMeleeSpellAttackProxyDamageAmount["perLevel"],
+): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    left.flat === right.flat
+  );
+}
+
+function sameSpatialMeleeSpellAttackProxyDamageEffect(
+  left: SupportedSpatialMeleeSpellAttackProxyDamageEffect,
+  right: SupportedSpatialMeleeSpellAttackProxyDamageEffect,
+): boolean {
+  return (
+    left.damageType === right.damageType &&
+    left.amount.axis === right.amount.axis &&
+    left.amount.startingAtLevel === right.amount.startingAtLevel &&
+    sameSpatialMeleeSpellAttackProxyBaseDamage(
+      left.amount.base,
+      right.amount.base,
+    ) &&
+    sameSpatialMeleeSpellAttackProxyPerLevelDamage(
+      left.amount.perLevel,
+      right.amount.perLevel,
+    )
+  );
+}
+
+function spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
+  attachment: Attachment | undefined,
+  forceHoleId: string,
+): boolean {
+  if (
+    attachment?.kind !== "hole" ||
+    attachment.value.kind !== "target" ||
+    attachment.value.selection.mode !== "one" ||
+    attachment.value.selection.targetKinds === undefined ||
+    attachment.value.selection.targetKinds.length !== 1 ||
+    attachment.value.selection.targetKinds[0] !== "creature"
+  ) {
+    return false;
+  }
+  const relativePosition =
+    "relativePosition" in attachment.value.selection
+      ? attachment.value.selection.relativePosition
+      : undefined;
+  return (
+    relativePosition?.kind === "within_feet_of_attachment" &&
+    relativePosition.attachmentHoleId === forceHoleId &&
+    relativePosition.feet === 5
+  );
+}
+
+function discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<SpatialMeleeSpellAttackProxyAttackProxyInvocation>,
+): readonly BattleActDiscoveryCandidate[] {
+  return spatialMeleeSpellAttackProxyAttackCandidate(
+    state,
+    actorId,
+    invocation,
+  );
+}
+
+function discoverSpatialMeleeSpellAttackProxyRepeatAttackCastAct(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<SpatialMeleeSpellAttackProxyInvocation>,
+): readonly BattleActDiscoveryCandidate[] {
+  if (invocation.operation !== "repositionAndAttack") {
+    return [];
+  }
+  if (!ongoingSpellRepeatCastIsAvailable(state, invocation.activeEffect)) {
+    return [];
+  }
+  return spatialMeleeSpellAttackProxyAttackCandidate(
+    state,
+    actorId,
+    invocation,
+  );
+}
+
+function spatialMeleeSpellAttackProxyAttackCandidate(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<
+    | SpatialMeleeSpellAttackProxyAttackProxyInvocation
+    | SpatialMeleeSpellAttackProxyRepeatAttackInvocation
+  >,
+): readonly BattleActDiscoveryCandidate[] {
+  const targetHole = spellTargetHole(state, actorId, invocation);
+  return targetHole.choices.length === 0
+    ? []
+    : [
+        spellCastCandidate(
+          "bonusActionSpell",
+          actorId,
+          invocation.sourceProcedureRef,
+          [spatialMeleeSpellAttackProxyPositionHole(invocation), targetHole],
+        ),
+      ];
+}
+
+function resolveSpatialMeleeSpellAttackProxy(
+  input: SpatialMeleeSpellAttackProxyResolveInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
+): BattleResolutionResult {
+  return resolveBonusActionSpellAttackProxyAct(input.input, executionRegistry);
+}
+
+const SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spatialMeleeSpellAttackProxy"),
+      operation: Schema.Literal("createAndAttack"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      durationTicks: ElapsedTimeTicksSchema,
+      rangeFeet: MovementFeet,
+      forceReachFeet: MovementFeet,
+      repeatMoveMaxFeet: MovementFeet,
+      damage: Schema.Struct({
+        kind: Schema.Literal("fixedSpellAttackDamage"),
+        expr: DiceExprSchema,
+        damageType: Schema.Literal("force"),
+      }),
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+    }),
+  );
+
+const SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      procedure: Schema.Literal("spatialMeleeSpellAttackProxy"),
+      operation: Schema.Literal("repositionAndAttack"),
+      spellRuleFacts: Schema.optionalKey(Schema.Never),
+      activeEffectRef: BattleEffectExecutionRef,
+      activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
+      repeatTargeting: Schema.Union([
+        Schema.Struct({ kind: Schema.Literal("unrestricted") }),
+        Schema.Struct({
+          kind: Schema.Literal("fixedCombatant"),
+          combatantId: CombatantId,
+        }),
+      ]),
+    }),
+  );
+export const spatialMeleeSpellAttackProxyProfile = {
+  procedure: "spatialMeleeSpellAttackProxy",
+  executionSchema: Schema.Union([
+    SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
+    SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema,
+  ]),
+  admit: (spell, context) => [
+    ...admitSpatialMeleeSpellAttackProxyAttackProxy(spell, context),
+    ...admitSpatialMeleeSpellAttackProxyRepeatAttack(spell, context),
+  ],
+  discoverCastAct: (state, actorId, invocation) =>
+    Match.value(invocation).pipe(
+      Match.when({ operation: "createAndAttack" }, (createInvocation) =>
+        discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct(
+          state,
+          actorId,
+          createInvocation,
+        ),
+      ),
+      Match.when({ operation: "repositionAndAttack" }, (repeatInvocation) =>
+        discoverSpatialMeleeSpellAttackProxyRepeatAttackCastAct(
+          state,
+          actorId,
+          repeatInvocation,
+        ),
+      ),
+      Match.exhaustive,
+    ),
+  resolve: resolveSpatialMeleeSpellAttackProxy,
+} satisfies SpellProcedureDeclaration<
+  "spatialMeleeSpellAttackProxy",
+  SpatialMeleeSpellAttackProxyInvocation
+>;

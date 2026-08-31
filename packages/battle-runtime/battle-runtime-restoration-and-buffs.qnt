@@ -12,6 +12,7 @@ module battleRuntimeRestorationAndBuffs {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
+  import battleRuntimeFallingCreatureMitigationReaction.* from "./battle-runtime-falling-creature-mitigation-reaction"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
 
   type ScalarBuffSpellResolutionResult = {
@@ -174,11 +175,11 @@ module battleRuntimeRestorationAndBuffs {
     }
   }
 
-  pure def flySpeedGrantEndFallCleanupFrame(target: Actor): InterruptFrame =
+  pure def grantedFlightEndFallCleanupFrame(target: Actor): InterruptFrame =
     PendingFlySpeedGrantEndFallCleanup({ target: target })
 
   pure def stateWithFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): BattleState =
-    { ...state, interruptStack: state.interruptStack.append(flySpeedGrantEndFallCleanupFrame(target)) }
+    { ...state, interruptStack: state.interruptStack.append(grantedFlightEndFallCleanupFrame(target)) }
 
   pure def interruptStackWithoutFrame(stack: List[InterruptFrame], frameToRemove: InterruptFrame): List[InterruptFrame] =
     stack.foldl(List(), (remaining, frame) =>
@@ -191,12 +192,12 @@ module battleRuntimeRestorationAndBuffs {
   pure def stateWithoutFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): BattleState =
     {
       ...state,
-      interruptStack: interruptStackWithoutFrame(state.interruptStack, flySpeedGrantEndFallCleanupFrame(target)),
+      interruptStack: interruptStackWithoutFrame(state.interruptStack, grantedFlightEndFallCleanupFrame(target)),
     }
 
   pure def stateHasFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): bool =
     state.interruptStack.foldl(false, (found, frame) =>
-      found or frame == flySpeedGrantEndFallCleanupFrame(target)
+      found or frame == grantedFlightEndFallCleanupFrame(target)
     )
 
   pure def breakFlySpeedGrantForEndFall(state: BattleState, source: Actor, target: Actor): BattleState =
@@ -234,7 +235,14 @@ module battleRuntimeRestorationAndBuffs {
             FlyEndFalls({
               state: resolveFeatherFallSpell(
                 cleaned,
-                data.featherFallReactor,
+                target,
+                {
+                  kind: VisibleCreatureFalls({
+                    distanceFeet: fallingCreatureMitigationTriggerRangeFeet,
+                  }),
+                  reactor: data.featherFallReactor,
+                  fallingCreature: target,
+                },
                 data.featherFallTargets,
                 Set(target),
                 data.featherFallTargets.size(),

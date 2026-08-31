@@ -3,7 +3,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-MYCELIUM-STEP mycelium_step
 // UNIT-IDENTITY-REPLAY: L1D2-MYCELIUM-STEP mycelium_step doDiscoverMyceliumStepDash doDashAsBonusAction
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -161,10 +161,10 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleRuntimeSession {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function characterCombatant(input: {
@@ -274,12 +274,12 @@ function requireMyceliumStepAlternateActionCostProfile(
   unit: ClassicNonSrdMechanicsUnit,
 ): Extract<BattleUnitSupportProfile, { readonly kind: "alternateActionCost" }> {
   const profiles = battleUnitSupportProfilesForUnit({ unit });
-  if (Either.isLeft(profiles)) {
-    throw new Error(profiles.left.message);
+  if (Result.isFailure(profiles)) {
+    throw new Error(profiles.failure.message);
   }
-  const profile = profiles.right[0];
+  const profile = profiles.success[0];
   if (
-    profiles.right.length !== 1 ||
+    profiles.success.length !== 1 ||
     !isAlternateActionCostSupportProfile(profile) ||
     profile.from.kind !== "standardAction" ||
     profile.from.actions.length !== 1 ||

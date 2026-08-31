@@ -68,8 +68,7 @@
             "kind": "damage"
           },
           {
-            "expiresAt": "end_of_caster_next_turn",
-            "kind": "emit_dim_light",
+            "kind": "emit_dim_illumination_until_end_of_caster_next_turn",
             "radiusFeet": 10
           },
           {

@@ -96,10 +96,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolf)) {
+  if (sdk.isFailure(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
+      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -115,10 +115,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: arrowStock(),
     conditions: [],
   });
-  if (sdk.isLeft(skeleton)) {
+  if (sdk.isFailure(skeleton)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(skeleton.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -134,12 +134,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: arrowStock(),
     conditions: [],
   });
-  if (sdk.isLeft(goblinWarrior)) {
+  if (sdk.isFailure(goblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        goblinWarrior.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -150,12 +148,12 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [wolf.right, skeleton.right, goblinWarrior.right],
+    combatants: [wolf.success, skeleton.success, goblinWarrior.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-battle-start",
@@ -173,7 +171,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     }),
   );
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -209,10 +207,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     // supported tactical objects or markers; neither is resolved in setup.
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "scenario-session-composition",
@@ -222,7 +220,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId: SCENARIO_ID,
       setup: "ready",

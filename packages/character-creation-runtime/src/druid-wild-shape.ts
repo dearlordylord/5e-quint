@@ -1,4 +1,4 @@
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 import {
   resourceCount,
   type ReadonlyNonEmptyArray,
@@ -30,10 +30,19 @@ import {
   thresholdTierValueAtClassLevel,
 } from "./class-level-scaling.ts";
 import type { CharacterBuild } from "./types.ts";
+import { projectCharacterCreationClassFeatureFacts } from "./character-feature-projection.ts";
 
 export const DRUID_WILD_SHAPE_UNIT_ID = authoredUnitId("druid_wild_shape");
 
 const byKind = Match.discriminator("kind");
+
+type DruidWildShapeFeatureFacts = ReturnType<
+  typeof projectCharacterCreationClassFeatureFacts<DruidWildShapeFeatureRecord>
+>;
+type DruidWildShapeFeatureSource = {
+  readonly unitId: UnitRecord["id"];
+  readonly facts: DruidWildShapeFeatureFacts;
+};
 
 export type CharacterBuildDruidWildShapeFacts = {
   readonly unitId: UnitRecord["id"];
@@ -97,25 +106,25 @@ type DruidWildShapeKnownFormEligibilityIssueCode =
 export function characterBuildDruidWildShapeFacts(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildDruidWildShapeFacts | undefined,
   CharacterBuildDruidWildShapeFactsIssue
 > {
   const featureUnit = characterDruidWildShapeFeatureUnit(input);
-  if (Either.isLeft(featureUnit)) return Either.left(featureUnit.left);
-  if (featureUnit.right === undefined) {
-    return Either.right(undefined);
+  if (Result.isFailure(featureUnit)) return Result.fail(featureUnit.failure);
+  if (featureUnit.success === undefined) {
+    return Result.succeed(undefined);
   }
-  const feature = featureUnit.right;
+  const feature = featureUnit.success;
 
   const druidLevel = classLevelForWildShapeFeature({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    feature,
+    feature: feature.facts,
   });
-  if (Either.isLeft(druidLevel)) return Either.left(druidLevel.left);
+  if (Result.isFailure(druidLevel)) return Result.fail(druidLevel.failure);
 
-  const knownFormRoster = wildShapeKnownFormRoster(feature);
+  const knownFormRoster = wildShapeKnownFormRoster(feature.facts);
   /* v8 ignore start -- @preserve -- Admission retains Wild Shape only after proving its Beast-form roster exists. */
   if (knownFormRoster === undefined) {
     return druidWildShapeFactsIssue(
@@ -123,11 +132,11 @@ export function characterBuildDruidWildShapeFacts(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const useCountCap = feature.mechanics.resource.cap;
+  const useCountCap = feature.facts.mechanics.resource.cap;
   const maxChallengeRating = knownFormRoster.maxChallengeRating;
   const knownFormCount = classLevelChoiceCountAtLevel(
     knownFormRoster.knownForms,
-    druidLevel.right,
+    druidLevel.success,
   );
   /* v8 ignore start -- @preserve -- Admission proves both retained projections use class-level threshold tiers. */
   if (
@@ -140,31 +149,31 @@ export function characterBuildDruidWildShapeFacts(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
-    unitId: feature.id,
+  return Result.succeed({
+    unitId: feature.unitId,
     useCount: {
       maximum: resourceCount(
-        thresholdTierValueAtClassLevel(useCountCap, druidLevel.right),
+        thresholdTierValueAtClassLevel(useCountCap, druidLevel.success),
       ),
       shortRestRefill: resourceCount(
-        feature.mechanics.resetCadence.shortRestRefill,
+        feature.facts.mechanics.resetCadence.shortRestRefill,
       ),
       longRestRefillsAll: true,
     },
     duration: {
       unit: "hour",
-      amount: druidWildShapeDurationHoursForClassLevel(druidLevel.right),
+      amount: druidWildShapeDurationHoursForClassLevel(druidLevel.success),
     },
     knownFormRoster: {
       creatureType: knownFormRoster.creatureType,
       count: knownFormCount,
       maxChallengeRating: thresholdTierValueAtClassLevel(
         maxChallengeRating,
-        druidLevel.right,
+        druidLevel.success,
       ),
       flySpeed: wildShapeFlySpeedAtClassLevel(
         knownFormRoster.flySpeed,
-        druidLevel.right,
+        druidLevel.success,
       ),
       longRestReplacementCount:
         knownFormRoster.knownFormChange.replacementCount,
@@ -175,18 +184,21 @@ export function characterBuildDruidWildShapeFacts(input: {
 function characterDruidWildShapeFeatureUnit(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
-  DruidWildShapeFeatureRecord | undefined,
+}): Result.Result<
+  DruidWildShapeFeatureSource | undefined,
   CharacterBuildDruidWildShapeFactsIssue
 > {
-  const matches: DruidWildShapeFeatureRecord[] = [];
+  const matches: DruidWildShapeFeatureSource[] = [];
   for (const unitId of characterBuildFeatureUnitIds(
     input.build,
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(unitId);
     if (Option.isSome(unit) && isDruidWildShapeFeatureRecord(unit.value)) {
-      matches.push(unit.value);
+      matches.push({
+        unitId: unit.value.id,
+        facts: projectCharacterCreationClassFeatureFacts(unit.value),
+      });
     }
   }
   if (matches.length > 1) {
@@ -194,7 +206,7 @@ function characterDruidWildShapeFeatureUnit(input: {
       "Wild Shape projection supports exactly one Druid Wild Shape feature.",
     );
   }
-  return Either.right(matches[0]);
+  return Result.succeed(matches[0]);
 }
 
 export function replaceDruidWildShapeKnownForm(input: {
@@ -202,7 +214,7 @@ export function replaceDruidWildShapeKnownForm(input: {
   readonly currentKnownFormStatBlockIds: readonly StatBlockId[];
   readonly replacement: CharacterBuildDruidWildShapeKnownFormReplacement;
   readonly statBlockCatalog: StatBlockCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly StatBlockId[],
   CharacterBuildDruidWildShapeFactsIssue
 > {
@@ -211,8 +223,8 @@ export function replaceDruidWildShapeKnownForm(input: {
     knownFormStatBlockIds: input.currentKnownFormStatBlockIds,
     statBlockCatalog: input.statBlockCatalog,
   });
-  if (Either.isLeft(currentKnownForms))
-    return Either.left(currentKnownForms.left);
+  if (Result.isFailure(currentKnownForms))
+    return Result.fail(currentKnownForms.failure);
   if (
     input.replacement.replaceStatBlockId ===
     input.replacement.selectedStatBlockId
@@ -255,12 +267,12 @@ export function validateDruidWildShapeKnownForms(input: {
   readonly facts: CharacterBuildDruidWildShapeFacts;
   readonly knownFormStatBlockIds: readonly StatBlockId[];
   readonly statBlockCatalog: StatBlockCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly StatBlockId[],
   CharacterBuildDruidWildShapeFactsIssue
 > {
   const issues = validateDruidWildShapeKnownFormIssues(input);
-  if (issues === undefined) return Either.right(input.knownFormStatBlockIds);
+  if (issues === undefined) return Result.succeed(input.knownFormStatBlockIds);
   return druidWildShapeFactsIssue(
     messageForDruidWildShapeKnownFormIssue(issues[0]),
   );
@@ -330,7 +342,7 @@ export function messageForDruidWildShapeKnownFormIssue(
 export function validateDruidWildShapeKnownFormRecords(input: {
   readonly facts: CharacterBuildDruidWildShapeFacts;
   readonly knownForms: readonly StatBlockRecord[];
-}): Either.Either<
+}): Result.Result<
   readonly StatBlockRecord[],
   CharacterBuildDruidWildShapeFactsIssue
 > {
@@ -347,16 +359,16 @@ export function validateDruidWildShapeKnownFormRecords(input: {
       facts: input.facts,
       statBlock,
     });
-    if (Either.isLeft(eligibility)) return Either.left(eligibility.left);
+    if (Result.isFailure(eligibility)) return Result.fail(eligibility.failure);
   }
-  return Either.right(input.knownForms);
+  return Result.succeed(input.knownForms);
 }
 
 function classLevelForWildShapeFeature(input: {
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
-  readonly feature: DruidWildShapeFeatureRecord;
-}): Either.Either<number, CharacterBuildDruidWildShapeFactsIssue> {
+  readonly feature: DruidWildShapeFeatureFacts;
+}): Result.Result<number, CharacterBuildDruidWildShapeFactsIssue> {
   for (const classUnitId of progressionClassUnitIds(input.build.progression)) {
     const classUnit = input.unitLibrary.getUnit(classUnitId);
     if (
@@ -364,7 +376,7 @@ function classLevelForWildShapeFeature(input: {
       classUnit.value.kind === "class" &&
       classUnit.value.className === input.feature.className
     ) {
-      return Either.right(
+      return Result.succeed(
         classLevelForUnit(input.build.progression, classUnitId),
       );
     }
@@ -375,7 +387,7 @@ function classLevelForWildShapeFeature(input: {
 }
 
 function wildShapeKnownFormRoster(
-  feature: DruidWildShapeFeatureRecord,
+  feature: DruidWildShapeFeatureFacts,
 ): DruidWildShapeKnownFormsRoster | undefined {
   return druidWildShapeKnownFormRosterFromPhase(feature.mechanics.phases[0]);
 }
@@ -402,10 +414,10 @@ function wildShapeFlySpeed(
 function druidWildShapeStatBlockEligibility(input: {
   readonly facts: CharacterBuildDruidWildShapeFacts;
   readonly statBlock: StatBlockRecord;
-}): Either.Either<true, CharacterBuildDruidWildShapeFactsIssue> {
+}): Result.Result<true, CharacterBuildDruidWildShapeFactsIssue> {
   const issueCode = druidWildShapeStatBlockIssueCodes(input)[0];
   return issueCode === undefined
-    ? Either.right(true)
+    ? Result.succeed(true)
     : druidWildShapeFactsIssue(
         messageForDruidWildShapeKnownFormIssue({
           code: issueCode,
@@ -448,6 +460,6 @@ function hasDuplicateStatBlockIds(
 
 function druidWildShapeFactsIssue(
   message: string,
-): Either.Either<never, CharacterBuildDruidWildShapeFactsIssue> {
-  return Either.left({ tag: "druidWildShapeFactsIssue", message });
+): Result.Result<never, CharacterBuildDruidWildShapeFactsIssue> {
+  return Result.fail({ tag: "druidWildShapeFactsIssue", message });
 }

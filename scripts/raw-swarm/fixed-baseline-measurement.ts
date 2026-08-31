@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import ts from "typescript";
 
 import { BattleFillSchema } from "../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
@@ -437,16 +437,16 @@ function validateRequiredHoleFills(
 ): void {
   const decodedFills: BattleFill[] = [];
   for (const fill of fills) {
-    const decoded = Schema.decodeUnknownEither(BattleFillSchema, {
+    const decoded = Schema.decodeUnknownResult(BattleFillSchema, {
       onExcessProperty:
         holeEvidenceSource.kind === "recordedCurrentRuntime"
           ? "error"
           : "ignore",
     })(fill);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       fail(`Continuation ${continuation} supplied a malformed hole fill.`);
     }
-    decodedFills.push(decoded.right);
+    decodedFills.push(decoded.success);
   }
   const projectedKeys = holes.map(holeKey);
   const suppliedKeys = decodedFills.map(fillKeys);

@@ -1,13 +1,10 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import {
-  antimagicFieldAuraEffectForTest,
-  antimagicFieldAuraMembershipForTest,
-} from "./antimagic-field.test-support.ts";
+import { magicSuppressionEmanationMembershipForTest } from "./antimagic-field.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 // RAW trace:
@@ -47,7 +44,9 @@ import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-l
 import type {
   BattleOngoingSpellTarget,
   BattleOngoingSpellTargetWithinRangeFact,
+  BattleStoredLightEmitterTemplate,
 } from "./battle-state-execution.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   antimagicFieldUnitId,
@@ -65,7 +64,6 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   battleAreaId,
   battleObjectId,
-  type BattleActiveEffect,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -73,10 +71,8 @@ import {
   type BattleRuntimeSession,
   type BattleState,
   type BattleProcedureExecutionRef,
-  type BattleTrackedOngoingSpellLightEmitter,
   type CharacterBattleCreatureState,
 } from "./index.ts";
-
 type LastResult =
   | "init"
   | "needsHigherLevelCheck"
@@ -145,13 +141,11 @@ const dispelledObjectId = battleObjectId("focused-dispel-magic-object");
 const lowLevelEffectId = battleSpellEffectOccurrenceId(
   "focused-dispel-magic-low-level-light",
 );
-const highLevelEffectId = battleSpellEffectOccurrenceId(
-  "focused-dispel-magic-high-level-contact",
-);
 const antimagicFieldAreaId = battleAreaId("focused-dispel-antimagic-aura");
 const BASE_DISPEL_SLOT_LEVEL = 3;
 const UPCAST_DISPEL_SLOT_LEVEL = 4;
 const HIGHER_LEVEL_SOURCE_SPELL_LEVEL = 4;
+const LOW_LEVEL_SOURCE_SPELL_LEVEL = 2;
 const HIGHER_LEVEL_CHECK_DC = 10 + HIGHER_LEVEL_SOURCE_SPELL_LEVEL;
 const FAILED_HIGHER_LEVEL_CHECK_TOTAL = HIGHER_LEVEL_CHECK_DC - 1;
 const SUCCESSFUL_HIGHER_LEVEL_CHECK_TOTAL = HIGHER_LEVEL_CHECK_DC;
@@ -328,41 +322,52 @@ function initialRuntimeState(): DispelMagicInitialRuntimeState {
       { spellLevel: UPCAST_DISPEL_SLOT_LEVEL, count: 1 },
     ],
   });
-  const caster = requireCombatant(base.state, spellCasterId);
-  const target = requireCombatant(base.state, spellTargetId);
+  const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: base.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellCasterId,
+        effect: highLevelObjectContactEffect(),
+      },
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: magicSuppressionEmanationEffect(),
+      },
+      {
+        kind: "storedLightEmitter",
+        ownerId: spellTargetId,
+        emitter: lowLevelObjectLightEmitter(),
+      },
+    ],
+  }).state;
+  const allocatedCaster = requireCombatant(allocatedState, spellCasterId);
+  const allocatedTarget = requireCombatant(allocatedState, spellTargetId);
   return {
     battle: battleRuntimeSessionForTest({
       ...base,
       state: {
-        ...base.state,
-        combatants: new Map(base.state.combatants)
+        ...allocatedState,
+        combatants: new Map(allocatedState.combatants)
           .set(spellCasterId, {
-            ...caster,
+            ...allocatedCaster,
             concentration: {
               sourceProcedureRef: battleProcedureExecutionRefForTest(
                 String(heatMetalUnitId),
               ),
               effectKind: "spellEffect",
             },
-            activeEffects: [
-              ...caster.activeEffects,
-              highLevelObjectContactEffect(),
-            ],
           })
           .set(spellTargetId, {
-            ...target,
+            ...allocatedTarget,
             concentration: {
               sourceProcedureRef: battleProcedureExecutionRefForTest(
                 String(antimagicFieldUnitId),
               ),
               effectKind: "spellEffect",
             },
-            activeEffects: [
-              ...target.activeEffects,
-              antimagicFieldAuraEffect(),
-            ],
           }),
-        lightEmitters: [lowLevelObjectLightEmitter()],
       },
     }),
     lastResult: "init",
@@ -409,9 +414,13 @@ function requestHigherLevelCheck(
       casterId: spellCasterId,
       sourceProcedureRef: act.subject.procedureRef,
       target: { kind: "object", objectId: dispelledObjectId },
-      effect: {
-        kind: "spellActiveEffect",
-        activeEffectKind: "spellObjectContactDamage",
+      checkedOccurrence: {
+        ownerId: spellCasterId,
+        target: { kind: "object", objectId: dispelledObjectId },
+        effect: {
+          kind: "spellActiveEffect",
+          activeEffectKind: "spellObjectContactDamage",
+        },
       },
       contestedSpellLevel: HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
     },
@@ -497,10 +506,18 @@ function targetAntimagicAura(
     spellId: dispelMagicUnitId,
     slotLevel: BASE_DISPEL_SLOT_LEVEL,
   });
+  const aura = requireCombatant(
+    state.battle.state,
+    spellTargetId,
+  ).activeEffects.find((effect) => effect.kind === "magicSuppressionEmanation");
+  if (aura?.kind !== "magicSuppressionEmanation") {
+    throw new Error("Expected an allocated Antimagic Field aura.");
+  }
   const target = {
     kind: "magicalEffect" as const,
     effect: {
-      kind: "antimagicFieldAura" as const,
+      kind: "magicSuppressionEmanation" as const,
+      effectRef: aura.effectRef,
       areaId: antimagicFieldAreaId,
       sourceCombatantId: spellTargetId,
     },
@@ -548,18 +565,17 @@ function dispelProjection(
     lowLevelEffectActive: state.battle.state.lightEmitters.some(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&
-        "sourceEffectId" in emitter &&
-        emitter.sourceEffectId === lowLevelEffectId,
+        emitter.attachment.kind === "object" &&
+        emitter.attachment.objectId === dispelledObjectId &&
+        Number(emitter.sourceSpellLevel) === LOW_LEVEL_SOURCE_SPELL_LEVEL,
     ),
-    highLevelEffectActive:
-      highLevelEffect?.effectRef ===
-      battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
+    highLevelEffectActive: highLevelEffect !== undefined,
     antimagicAuraActive: requireCombatant(
       state.battle.state,
       spellTargetId,
     ).activeEffects.some(
       (effect) =>
-        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+        effect.kind === "magicSuppressionEmanation" &&
         effect.areaId === antimagicFieldAreaId,
     ),
     higherLevelCheckHoleCount:
@@ -588,21 +604,36 @@ function requirePendingHigherLevelCheckState(
   return state;
 }
 
-function antimagicFieldAuraEffect(): Extract<
-  BattleActiveEffect,
-  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+function magicSuppressionEmanationEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "magicSuppressionEmanation" }
 > {
-  return antimagicFieldAuraEffectForTest({
-    areaId: antimagicFieldAreaId,
-    aura: antimagicFieldAuraMembershipForTest({
-      sourceCombatantId: spellTargetId,
-      originIncluded: true,
-      nonOriginCombatantIds: [],
-    }),
+  const aura = magicSuppressionEmanationMembershipForTest({
+    sourceCombatantId: spellTargetId,
+    originIncluded: true,
+    nonOriginCombatantIds: [],
   });
+  return {
+    kind: "magicSuppressionEmanation",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      String(antimagicFieldUnitId),
+    ),
+    sourceCombatantId: spellTargetId,
+    areaId: antimagicFieldAreaId,
+    auraMembership: aura.membership,
+    suppressedOngoingSpellEffects: [],
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellTargetId,
+      durationTicks: elapsedTimeTicks(600),
+    },
+  };
 }
 
-function lowLevelObjectLightEmitter(): BattleTrackedOngoingSpellLightEmitter {
+function lowLevelObjectLightEmitter(): Extract<
+  BattleStoredLightEmitterTemplate,
+  { readonly kind: "spellLightEmitter" }
+> {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -623,12 +654,11 @@ function lowLevelObjectLightEmitter(): BattleTrackedOngoingSpellLightEmitter {
 }
 
 function highLevelObjectContactEffect(): Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spellObjectContactDamage" }
 > {
   return {
     kind: "spellObjectContactDamage",
-    effectRef: battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),

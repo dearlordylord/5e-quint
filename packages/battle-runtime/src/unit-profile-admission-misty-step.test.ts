@@ -7,8 +7,10 @@ import {
 } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { spellTeleportDestinationHole } from "./battle-reducer/spells-holes-fills.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./battle-reducer/staged-condition-repeat-save.ts";
 import {
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatUnitId,
   mistyStepUnitId,
   spellCasterId,
   spellTargetId,
@@ -24,6 +26,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -33,7 +36,7 @@ import {
   battleTablePositionId,
   combatantId,
   discoverBattleActs,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   movementFeet,
   resolveBattleSubject,
   savingThrowOutcomeFill,
@@ -245,25 +248,34 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       act.initialHoles,
       "teleportDestination",
     );
-    const staleRepeatSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      {
-        kind: "hideousLaughter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hideousLaughterUnitId),
-        ),
-        sourceCombatantId: spellCasterId,
-        conditionHadNonSpellProneSource: false,
-        conditionHadNonSpellIncapacitatedSource: false,
-        repeatSaveRollMode: null,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-        expiresAt: {
-          kind: "concentration",
-          combatantId: spellCasterId,
+    const staleRepeatSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        {
+          kind: "saveGatedConditionWithRepeat",
+          effectRef: battleEffectExecutionRefForTest(
+            "stale-misty-step-hideous-laughter",
+          ),
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(saveGatedConditionWithRepeatUnitId),
+          ),
+          sourceCombatantId: spellCasterId,
+          conditionHadNonSpellProneSource: false,
+          conditionHadNonSpellIncapacitatedSource: false,
+          repeatSaveRollMode: null,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: spellCasterId,
+          },
         },
-      },
-      "damage",
-    );
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("stale-misty-step-hideous-laughter-damage-save"),
+          ),
+        },
+      );
 
     expect(
       resolveBattleSubject({

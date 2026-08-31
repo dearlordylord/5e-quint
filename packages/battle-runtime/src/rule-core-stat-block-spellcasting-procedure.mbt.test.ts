@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.spellcasting.procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import { isDeepStrictEqual } from "node:util";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, it } from "vitest";
 
 import {
@@ -101,12 +101,12 @@ function projectSpellcastingProcedure(
   section: SpellcastingSection,
 ): SpellcastingProcedureProjection {
   const projected = projectAuthoredStatBlock(spellcastingRecord(section));
-  if (Either.isLeft(projected)) {
+  if (Result.isFailure(projected)) {
     throw new Error(
-      `Expected synthetic Stat Block spellcasting projection: ${projected.left.reason}.`,
+      `Expected synthetic Stat Block spellcasting projection: ${projected.failure.reason}.`,
     );
   }
-  const procedure = projected.right.runtime.procedures.find(
+  const procedure = projected.success.runtime.procedures.find(
     (candidate) => candidate.kind === "spellcasting",
   );
   if (procedure === undefined) {

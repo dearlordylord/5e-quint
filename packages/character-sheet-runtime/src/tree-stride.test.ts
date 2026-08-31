@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castTreeStride,
@@ -16,7 +16,7 @@ import {
   characterSheetTreeStrideTreeKind,
   druidWildShapeFixtureKnownFormStatBlockIds,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   resolveTreeStrideTransit,
   spellSlotLevel,
   storedAvailableSheetInput,
@@ -108,7 +108,7 @@ describe("Character Sheet runtime / Tree Stride", () => {
   });
 
   test("Tree Stride spends a level-5 prepared spell slot and returns a tree travel contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTreeStride({
         sheet: treeStrideDruidSheet({
           preparedSpells: ["tree_stride"],
@@ -143,7 +143,7 @@ describe("Character Sheet runtime / Tree Stride", () => {
   });
 
   test("Tree Stride resolves destination travel, entry-tree fallback, and once-per-turn rejection", () => {
-    const cast = requireRight(
+    const cast = requireSuccess(
       castTreeStride({
         sheet: treeStrideDruidSheet({
           preparedSpells: ["tree_stride"],
@@ -152,7 +152,7 @@ describe("Character Sheet runtime / Tree Stride", () => {
         unitLibrary,
       }),
     );
-    const destination = requireRight(
+    const destination = requireSuccess(
       resolveTreeStrideTransit({
         invocation: cast.invocation,
         entryTree,
@@ -168,7 +168,7 @@ describe("Character Sheet runtime / Tree Stride", () => {
       endsOutsideTree: true,
     });
 
-    const fallback = requireRight(
+    const fallback = requireSuccess(
       resolveTreeStrideTransit({
         invocation: cast.invocation,
         entryTree,
@@ -187,9 +187,9 @@ describe("Character Sheet runtime / Tree Stride", () => {
       movementAvailableFeet: 10,
       usedThisTurn: true,
     });
-    expect(Either.isLeft(repeated)).toBe(true);
-    if (Either.isLeft(repeated)) {
-      expect(repeated.left.message).toBe(
+    expect(Result.isFailure(repeated)).toBe(true);
+    if (Result.isFailure(repeated)) {
+      expect(repeated.failure.message).toBe(
         "Tree Stride can be used only once per turn.",
       );
     }
@@ -202,8 +202,8 @@ describe("Character Sheet runtime / Tree Stride", () => {
         usedThisTurn: false,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Tree Stride requires 5 feet of movement to enter a tree.",
       },
     });
@@ -214,7 +214,7 @@ describe("Character Sheet runtime / Tree Stride", () => {
         entryTree,
         destinationTree: {
           ...destinationTree,
-          treeKind: requireRight(
+          treeKind: requireSuccess(
             characterSheetTreeStrideTreeKind("synthetic-different-kind"),
           ),
         },
@@ -222,8 +222,8 @@ describe("Character Sheet runtime / Tree Stride", () => {
         usedThisTurn: false,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Tree Stride destination must be a tree of the same kind.",
       },
     });
@@ -235,9 +235,9 @@ describe("Character Sheet runtime / Tree Stride", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Tree Stride requires prepared class Spell Access.",
       );
     }
@@ -246,7 +246,7 @@ describe("Character Sheet runtime / Tree Stride", () => {
 
 const treeStrideSelectedIdentityActions = {
   doCastTreeStride: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTreeStride({
         sheet: treeStrideDruidSheet({
           preparedSpells: ["tree_stride"],
@@ -265,7 +265,7 @@ const treeStrideSelectedIdentityActions = {
     });
   },
   doResolveTreeStrideTransit: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTreeStride({
         sheet: treeStrideDruidSheet({
           preparedSpells: ["tree_stride"],
@@ -274,7 +274,7 @@ const treeStrideSelectedIdentityActions = {
         unitLibrary,
       }),
     );
-    const transit = requireRight(
+    const transit = requireSuccess(
       resolveTreeStrideTransit({
         invocation: result.invocation,
         entryTree,
@@ -325,15 +325,17 @@ function expectedTreeStrideProjection(input: {
   return treeStrideProjection(input);
 }
 
-const oakKind = requireRight(characterSheetTreeStrideTreeKind("oak"));
+const oakKind = requireSuccess(characterSheetTreeStrideTreeKind("oak"));
 const entryTree = {
-  treeId: requireRight(characterSheetTreeStrideTreeId("tree:entry-oak")),
+  treeId: requireSuccess(characterSheetTreeStrideTreeId("tree:entry-oak")),
   treeKind: oakKind,
   living: true,
   atLeastCasterSize: true,
 } as const satisfies CharacterSheetTreeStrideTree;
 const destinationTree = {
-  treeId: requireRight(characterSheetTreeStrideTreeId("tree:destination-oak")),
+  treeId: requireSuccess(
+    characterSheetTreeStrideTreeId("tree:destination-oak"),
+  ),
   treeKind: oakKind,
   living: true,
   atLeastCasterSize: true,
@@ -344,7 +346,7 @@ function treeStrideDruidSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     parseCharacterSheet(
       {
         ...storedAvailableSheetInput({

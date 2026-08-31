@@ -113,7 +113,7 @@ module battleRuntimeConditionSavingThrowSelectedIdentityMbt {
     recordProjection(false, false, false, false, false, false, false, false, false, true, 30, 0, 1, 0, 0, conditionSavingThrowResolvedProtocol),
   }
 
-  action doResolveHideousLaughterRepeatSavingThrowSuccess = all {
+  action doResolveStagedConditionRepeatSavingThrowSuccess = all {
     conditionSavingThrowCanResolve,
     recordProjection(false, false, false, false, false, false, false, false, false, true, 30, 1, 0, 0, 0, conditionSavingThrowResolvedProtocol),
   }
@@ -137,7 +137,7 @@ module battleRuntimeConditionSavingThrowSelectedIdentityMbt {
     doResolveHoldMonsterRepeatSavingThrowSuccess,
     doResolveHoldPersonFailedSavingThrow,
     doResolveHoldPersonRepeatSavingThrowSuccess,
-    doResolveHideousLaughterRepeatSavingThrowSuccess,
+    doResolveStagedConditionRepeatSavingThrowSuccess,
     doResolveHypnoticPatternFailedSavingThrow,
     doResolveSleepRepeatSavingThrowFailure,
   }

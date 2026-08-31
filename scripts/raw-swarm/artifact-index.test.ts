@@ -102,24 +102,16 @@ function sdkTranscript(directory: string): string {
     resolve(run, "evidence/player-invocation-0002.events.jsonl"),
     '{"type":"second"}\n',
   );
-  const initialSession = {
+  const battleState = (round: number) => ({
     battle: {
       state: {
         battleId: "battle:artifact-index",
-        initiative: { stillToAct: [{ creature: "fighter" }] },
+        initiative: { round, stillToAct: [{ creature: "fighter" }] },
       },
-      round: 1,
     },
-  };
-  const outputSession = {
-    battle: {
-      state: {
-        battleId: "battle:artifact-index",
-        initiative: { stillToAct: [{ creature: "fighter" }] },
-      },
-      round: 2,
-    },
-  };
+  });
+  const initialSession = battleState(1);
+  const outputSession = battleState(2);
   const result = {
     tag: "resolved",
     session: outputSession,

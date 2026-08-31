@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
 import { movementFeet, resourceCount } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -61,9 +61,9 @@ describe("ammunition lifecycle", () => {
         ]),
       ],
     });
-    expect(Either.isLeft(duplicate)).toBe(true);
-    if (Either.isRight(duplicate)) return;
-    expect(battleStateInitIssueMessage(duplicate.left)).toBe(
+    expect(Result.isFailure(duplicate)).toBe(true);
+    if (Result.isSuccess(duplicate)) return;
+    expect(battleStateInitIssueMessage(duplicate.failure)).toBe(
       "Duplicate ammunition stock for ammunition kind: arrow",
     );
 
@@ -71,9 +71,9 @@ describe("ammunition lifecycle", () => {
       battleId: battleId("battle-ammunition-missing-stock"),
       combatants: [withStocks([])],
     });
-    expect(Either.isLeft(missing)).toBe(true);
-    if (Either.isRight(missing)) return;
-    expect(battleStateInitIssueMessage(missing.left)).toBe(
+    expect(Result.isFailure(missing)).toBe(true);
+    if (Result.isSuccess(missing)) return;
+    expect(battleStateInitIssueMessage(missing.failure)).toBe(
       "Stat Block battle initialization requires an explicit arrow ammunition stock.",
     );
   });

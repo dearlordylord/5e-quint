@@ -1,6 +1,6 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { ClassLevel } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
@@ -61,11 +61,11 @@ describe("extracted Stat Block parity branches", () => {
       ),
     );
 
-    expect(Either.isRight(skeleton)).toBe(true);
-    expect(Either.isRight(sphinx)).toBe(true);
-    if (Either.isLeft(skeleton) || Either.isLeft(sphinx)) return;
+    expect(Result.isSuccess(skeleton)).toBe(true);
+    expect(Result.isSuccess(sphinx)).toBe(true);
+    if (Result.isFailure(skeleton) || Result.isFailure(sphinx)) return;
 
-    expect(skeleton.right.runtime.statBlock).toMatchObject({
+    expect(skeleton.success.runtime.statBlock).toMatchObject({
       savingThrowModifiers: expect.any(Array),
       vulnerabilities: { kind: "fixed", damageTypes: ["bludgeoning"] },
       immunities: {
@@ -73,12 +73,12 @@ describe("extracted Stat Block parity branches", () => {
         damageTypes: ["poison"],
       },
     });
-    expect(sphinx.right.runtime).toMatchObject({
+    expect(sphinx.success.runtime).toMatchObject({
       resources: [
         { ordinal: 1, ownership: "shared", limit: { kind: "daily", uses: 2 } },
       ],
     });
-    expect(sphinx.right.presentation.orderedProcedures).toContainEqual({
+    expect(sphinx.success.presentation.orderedProcedures).toContainEqual({
       section: "reactions",
       procedureOrdinal: 1,
       name: "Burst of Ingenuity",
@@ -110,9 +110,9 @@ describe("extracted Stat Block parity branches", () => {
     };
 
     const result = projectAuthoredStatBlockWithCreatureType(record, "fey");
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right.runtime.statBlock).toMatchObject({
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success.runtime.statBlock).toMatchObject({
       creatureType: "fey",
       speeds: [
         { kind: "walk", feet: { kind: "literal", value: 30 } },

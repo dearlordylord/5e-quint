@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { Either, ParseResult, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -16,6 +16,7 @@ import {
   SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
   SURFACE_UNIT_DEPENDENCY_RELATIONS,
 } from "./schema-base.ts";
+import { formatSurfaceDecodeError } from "./schema.ts";
 import {
   PortableSurfaceOracle,
   type PortableCaseIssue,
@@ -23,59 +24,60 @@ import {
   type PortableOracleResult,
 } from "../../../../scripts/surface-portable-case-oracle.ts";
 
-const dependencyRelationSchema = Schema.Literal(
-  ...[
-    ...SURFACE_UNIT_DEPENDENCY_RELATIONS,
-    ...SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
-  ],
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
 );
+const dependencyRelationSchema = Schema.Literals([
+  ...SURFACE_UNIT_DEPENDENCY_RELATIONS,
+  ...SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
+]);
 const plainIssueSchema = Schema.Struct({
-  code: Schema.Literal("json", "shape", "schema"),
-  path: Schema.NonEmptyTrimmedString,
+  code: Schema.Literals(["json", "shape", "schema"]),
+  path: NonEmptyTrimmedStringSchema,
 });
 const duplicateJsonMemberIssueSchema = Schema.Struct({
   code: Schema.Literal("duplicate-json-member"),
-  path: Schema.NonEmptyTrimmedString,
-  memberName: Schema.NonEmptyTrimmedString,
+  path: NonEmptyTrimmedStringSchema,
+  memberName: NonEmptyTrimmedStringSchema,
 });
 const duplicateIdentityIssueSchema = Schema.Struct({
   code: Schema.Literal("duplicate-authored-identity"),
-  path: Schema.NonEmptyTrimmedString,
-  targetKind: Schema.Literal("unit", "statBlock"),
-  targetId: Schema.NonEmptyTrimmedString,
-  priorPath: Schema.NonEmptyTrimmedString,
+  path: NonEmptyTrimmedStringSchema,
+  targetKind: Schema.Literals(["unit", "statBlock"]),
+  targetId: NonEmptyTrimmedStringSchema,
+  priorPath: NonEmptyTrimmedStringSchema,
 });
 const danglingDependencyIssueSchema = Schema.Struct({
   code: Schema.Literal("dangling-authored-dependency"),
-  path: Schema.NonEmptyTrimmedString,
-  targetKind: Schema.Literal("unit", "statBlock"),
-  targetId: Schema.NonEmptyTrimmedString,
+  path: NonEmptyTrimmedStringSchema,
+  targetKind: Schema.Literals(["unit", "statBlock"]),
+  targetId: NonEmptyTrimmedStringSchema,
   relation: dependencyRelationSchema,
 });
 const unsupportedSchemaNodeIssueSchema = Schema.Struct({
   code: Schema.Literal("unsupported-schema-node"),
-  path: Schema.NonEmptyTrimmedString,
-  astTag: Schema.NonEmptyTrimmedString,
+  path: NonEmptyTrimmedStringSchema,
+  astTag: NonEmptyTrimmedStringSchema,
 });
-const issueSchema = Schema.Union(
+const issueSchema = Schema.Union([
   plainIssueSchema,
   duplicateJsonMemberIssueSchema,
   duplicateIdentityIssueSchema,
   danglingDependencyIssueSchema,
   unsupportedSchemaNodeIssueSchema,
-);
-const outcomeSchema = Schema.Union(
+]);
+const outcomeSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("accepted") }),
   Schema.Struct({
     tag: Schema.Literal("rejected"),
     issues: Schema.NonEmptyArray(issueSchema),
   }),
-);
+]);
 const dependencyRoleSchema = Schema.Struct({
-  sourceKind: Schema.Literal("unit", "statBlock"),
-  path: Schema.NonEmptyTrimmedString,
-  fieldName: Schema.NonEmptyTrimmedString,
-  targetKind: Schema.Literal("unit", "statBlock"),
+  sourceKind: Schema.Literals(["unit", "statBlock"]),
+  path: NonEmptyTrimmedStringSchema,
+  fieldName: NonEmptyTrimmedStringSchema,
+  targetKind: Schema.Literals(["unit", "statBlock"]),
   relation: dependencyRelationSchema,
 });
 const expectedSchema = Schema.Struct({
@@ -83,28 +85,19 @@ const expectedSchema = Schema.Struct({
   independent: outcomeSchema,
 });
 const caseWithInputSchema = Schema.Struct({
-  name: Schema.NonEmptyTrimmedString,
+  name: NonEmptyTrimmedStringSchema,
   input: Schema.Unknown,
   expected: expectedSchema,
-}).pipe(
-  Schema.filter(
-    (value) => value.input !== undefined && !Object.hasOwn(value, "inputText"),
-  ),
-);
+});
 const caseWithTextSchema = Schema.Struct({
-  name: Schema.NonEmptyTrimmedString,
-  inputText: Schema.NonEmptyTrimmedString,
+  name: NonEmptyTrimmedStringSchema,
+  inputText: NonEmptyTrimmedStringSchema,
   expected: expectedSchema,
-}).pipe(
-  Schema.filter(
-    (value) =>
-      typeof value.inputText === "string" && !Object.hasOwn(value, "input"),
-  ),
-);
-const portableCaseSchema = Schema.Union(
+});
+const portableCaseSchema = Schema.Union([
   caseWithInputSchema,
   caseWithTextSchema,
-);
+]);
 const portableCaseDocumentSchema = Schema.Struct({
   version: Schema.Literal(1),
   dependencyContract: Schema.NonEmptyArray(dependencyRoleSchema),
@@ -149,20 +142,20 @@ function readPortableJson(path: string): unknown {
   return parsed;
 }
 
-function decodeDocument<T>(
-  schema: Schema.Schema<T>,
+function decodeDocument<S extends Schema.ConstraintDecoder<unknown>>(
+  schema: S,
   value: unknown,
   path: string,
-): T {
-  const decoded = Schema.decodeUnknownEither(schema, {
+): S["Type"] {
+  const decoded = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error(
-      `JSON input failed its schema at ${path}: ${ParseResult.TreeFormatter.formatErrorSync(decoded.left)}`,
+      `JSON input failed its schema at ${path}: ${formatSurfaceDecodeError(decoded.failure)}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 const caseDocument = decodeDocument(
@@ -170,7 +163,7 @@ const caseDocument = decodeDocument(
   readPortableJson(caseDocumentPath),
   caseDocumentPath,
 );
-const dependencyContractDocument = decodeDocument<DependencyContractDocument>(
+const dependencyContractDocument: DependencyContractDocument = decodeDocument(
   dependencyContractDocumentSchema,
   readPortableJson(dependencyContractPath),
   dependencyContractPath,
@@ -355,22 +348,22 @@ describe("portable SRD Surface boundary", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(portableCaseSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(portableCaseSchema, {
           onExcessProperty: "error",
         })(withoutInput),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(portableCaseSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(portableCaseSchema, {
           onExcessProperty: "error",
         })(withBothInputs),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(portableCaseSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(portableCaseSchema, {
           onExcessProperty: "error",
         })(withEmptyIssues),
       ),

@@ -13,6 +13,7 @@ import type {
   OrcSpeciesRecord,
   PrimaryAbilityExpression,
   SpeciesRecord,
+  SubclassRecord,
   StartingEquipmentChoice,
   UnitRecord,
   WizardClassRecord,
@@ -65,12 +66,19 @@ export type WizardClassCreationFacts =
     readonly spellcasting: WizardSpellcastingCreation;
   };
 
+export type NonWizardSpellcastingClassCreationFacts =
+  CommonClassCreationFacts<NonWizardClassRecord> & {
+    readonly spellcasting: ClassSpellcastingCreation;
+  };
+
+export type NonSpellcastingClassCreationFacts =
+  CommonClassCreationFacts<NonWizardClassRecord> & {
+    readonly spellcasting?: never;
+  };
+
 export type NonWizardClassCreationFacts =
-  CommonClassCreationFacts<NonWizardClassRecord> &
-    (
-      | { readonly spellcasting: ClassSpellcastingCreation }
-      | { readonly spellcasting?: never }
-    );
+  | NonWizardSpellcastingClassCreationFacts
+  | NonSpellcastingClassCreationFacts;
 
 export type ClassCreationFacts =
   | WizardClassCreationFacts
@@ -83,6 +91,12 @@ export type BackgroundCreationFacts = {
   readonly skillProficiencies: readonly Skill[];
   readonly toolProficiency: BackgroundToolProficiency;
   readonly startingEquipment: readonly StartingEquipmentChoice[];
+};
+
+export type SubclassCreationFacts = {
+  readonly recordId: SubclassRecord["id"];
+  readonly className: SubclassRecord["className"];
+  readonly featureGrants: SubclassRecord["featureGrants"];
 };
 
 export const MAGIC_INITIATE_SELECTED_CANTRIPS = {
@@ -110,7 +124,7 @@ export type MagicInitiateSpellAccessSourceFacts = {
   readonly spellcastingAbilityOptions: typeof MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS;
 };
 
-export type SpeciesCreationFacts = {
+type CommonSpeciesCreationFacts = {
   readonly recordId: SpeciesRecord["id"];
   readonly species: SpeciesRecord["species"];
   readonly creatureType: SpeciesRecord["creatureType"];
@@ -118,6 +132,26 @@ export type SpeciesCreationFacts = {
   readonly speed: SpeciesRecord["speed"];
   readonly traits: SpeciesRecord["traits"];
 };
+
+export type DragonbornSpeciesCreationFacts = CommonSpeciesCreationFacts & {
+  readonly recordId: Extract<
+    SpeciesRecord,
+    { readonly species: "dragonborn" }
+  >["id"];
+  readonly species: "dragonborn";
+  readonly draconicAncestry: Extract<
+    SpeciesRecord,
+    { readonly species: "dragonborn" }
+  >["draconicAncestry"];
+};
+
+export type NonDragonbornSpeciesCreationFacts = CommonSpeciesCreationFacts & {
+  readonly species: Exclude<SpeciesRecord["species"], "dragonborn">;
+};
+
+export type SpeciesCreationFacts =
+  | DragonbornSpeciesCreationFacts
+  | NonDragonbornSpeciesCreationFacts;
 
 export type OrcSpeciesCreationFacts = SpeciesCreationFacts & {
   readonly recordId: OrcSpeciesRecord["id"];
@@ -139,7 +173,7 @@ export function readClassCreationFacts(
 }
 
 export function classCreationFacts(unit: ClassRecord): ClassCreationFacts {
-  if (unit.className === "wizard") {
+  if (isWizardSpellcastingClassRecord(unit)) {
     return {
       ...readCommonClassCreationFacts(unit),
       spellcasting: unit.spellcasting,
@@ -154,6 +188,15 @@ export function classCreationFacts(unit: ClassRecord): ClassCreationFacts {
   }
 
   return readCommonClassCreationFacts(unit);
+}
+
+function isWizardSpellcastingClassRecord(
+  unit: ClassRecord,
+): unit is WizardClassRecord {
+  return (
+    "spellcasting" in unit &&
+    unit.spellcasting?.kind === "wizard_spellcasting_creation"
+  );
 }
 
 function readCommonClassCreationFacts<TClassRecord extends ClassRecord>(
@@ -188,14 +231,43 @@ export function readBackgroundCreationFacts(
 
   return {
     tag: "readable",
-    value: {
-      recordId: unit.id,
-      abilityScoreIncrease: unit.abilityScoreIncrease,
-      originFeatId: unit.originFeatId,
-      skillProficiencies: unit.skillProficiencies,
-      toolProficiency: unit.toolProficiency,
-      startingEquipment: unit.startingEquipment,
-    },
+    value: backgroundCreationFacts(unit),
+  };
+}
+
+export function backgroundCreationFacts(
+  unit: BackgroundRecord,
+): BackgroundCreationFacts {
+  return {
+    recordId: unit.id,
+    abilityScoreIncrease: unit.abilityScoreIncrease,
+    originFeatId: unit.originFeatId,
+    skillProficiencies: unit.skillProficiencies,
+    toolProficiency: unit.toolProficiency,
+    startingEquipment: unit.startingEquipment,
+  };
+}
+
+export function readSubclassCreationFacts(
+  unit: UnitRecord,
+): UnitReaderResult<SubclassCreationFacts> {
+  if (unit.kind !== "subclass") {
+    return unsupportedKind(unit, "subclass");
+  }
+
+  return {
+    tag: "readable",
+    value: subclassCreationFacts(unit),
+  };
+}
+
+export function subclassCreationFacts(
+  unit: SubclassRecord,
+): SubclassCreationFacts {
+  return {
+    recordId: unit.id,
+    className: unit.className,
+    featureGrants: unit.featureGrants,
   };
 }
 
@@ -236,7 +308,32 @@ export function readSpeciesCreationFacts(
 
   return {
     tag: "readable",
-    value: readSpeciesRecord(unit),
+    value: speciesCreationFacts(unit),
+  };
+}
+
+export function speciesCreationFacts(
+  unit: SpeciesRecord,
+): SpeciesCreationFacts {
+  if ("draconicAncestry" in unit) {
+    return {
+      recordId: unit.id,
+      species: unit.species,
+      creatureType: unit.creatureType,
+      size: unit.size,
+      speed: unit.speed,
+      traits: unit.traits,
+      draconicAncestry: unit.draconicAncestry,
+    };
+  }
+
+  return {
+    recordId: unit.id,
+    species: unit.species,
+    creatureType: unit.creatureType,
+    size: unit.size,
+    speed: unit.speed,
+    traits: unit.traits,
   };
 }
 
@@ -250,17 +347,6 @@ export function readOrcSpeciesCreationFacts(
   return {
     tag: "readable",
     value: readOrcSpeciesRecord(unit),
-  };
-}
-
-function readSpeciesRecord(unit: SpeciesRecord): SpeciesCreationFacts {
-  return {
-    recordId: unit.id,
-    species: unit.species,
-    creatureType: unit.creatureType,
-    size: unit.size,
-    speed: unit.speed,
-    traits: unit.traits,
   };
 }
 
@@ -279,6 +365,7 @@ function unsupportedKind(
   unit: UnitRecord,
   expectedKind:
     | ClassRecord["kind"]
+    | SubclassRecord["kind"]
     | BackgroundRecord["kind"]
     | SpeciesRecord["kind"],
 ): UnitReaderResult<never> {

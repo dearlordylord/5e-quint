@@ -9,7 +9,7 @@
   },
   "id": "weapon_sling",
   "kind": "weapon",
-  "mastery": "slow",
+  "masteryUnitId": "mastery_slow",
   "name": "Sling",
   "properties": [
     {

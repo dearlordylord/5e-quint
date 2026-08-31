@@ -119,7 +119,7 @@ Task 7 should extend the same finalized character through battle:
    label or subject payload. Do not branch runtime behavior on the spell id in
    production code.
 4. If exercising Fireball, fill the returned `savingThrowOutcome` hole with a
-   caller-supplied `fireballArea` including the affected target ids and explicit
+   caller-supplied `pointOriginSphereSaveDamageArea` including the affected target ids and explicit
    `objectIgnitionFacts` (empty if the table says no unattended flammable
    objects are in the Sphere). Then fill the returned `rolledDice` hole.
 5. Assert the result spends one level-3 Spell Slot. Expected post-Fireball

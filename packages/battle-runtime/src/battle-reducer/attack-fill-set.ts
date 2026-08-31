@@ -63,8 +63,8 @@ import {
   STUNNING_STRIKE_DECISION_HOLE_ID,
   STUNNING_STRIKE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
-import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
-import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
+import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./staged-condition-repeat-save.ts";
+import { isDuplicateHitInterceptionDuplicateRollFill } from "./duplicate-hit-interception.ts";
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 
@@ -112,7 +112,7 @@ export function selectedAttackFillSet(
     huntersPreyHordeBreakerDamageDisposition,
     huntersPreyHordeBreakerDamageDispositionFilled,
     damageRoll,
-    mirrorImageDuplicateRoll,
+    duplicateHitInterceptionRoll,
     spellDamageReductionRoll,
     sourceDamageRollPenaltyRolls,
     attackDamageReductionRedirectTarget,
@@ -132,7 +132,7 @@ export function selectedAttackFillSet(
     cunningStrikeMovement,
     cunningStrikeToolPossession,
     cunningStrikeEndTurnCover,
-    hideousLaughterDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaves,
     weaponMasteryCleaveDecision,
     weaponMasteryCleaveTarget,
     weaponMasteryCleaveAttackRoll,
@@ -211,11 +211,11 @@ export function selectedAttackFillSet(
     attackRoll,
     frenzyDamageTypeChoice,
     concentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaves,
     damageDisposition,
     damageDispositionFilled,
     damageRoll,
-    mirrorImageDuplicateRoll,
+    duplicateHitInterceptionRoll,
     spellDamageReductionRoll,
     sourceDamageRollPenaltyRolls,
     attackDamageReductionRedirectTarget,
@@ -272,7 +272,7 @@ type SelectedAttackCreatureFillContext = Omit<
   | "tag"
   | "damageRelationshipDecisions"
   | "concentrationSavingThrows"
-  | "hideousLaughterDamageRepeatSaves"
+  | "saveGatedConditionWithRepeatDamageRepeatSaves"
   | "sourceDamageRollPenaltyRolls"
   | "weaponMasteryCleaveTarget"
   | "huntersPreyHordeBreakerTarget"
@@ -287,7 +287,7 @@ type SelectedAttackFillContext = SelectedAttackCreatureFillContext & {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
-  hideousLaughterDamageRepeatSaves: Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -327,7 +327,7 @@ function createSelectedAttackFillContext(): SelectedAttackFillContext {
     huntersPreyHordeBreakerDamageDisposition: { kind: "ordinaryDamage" },
     huntersPreyHordeBreakerDamageDispositionFilled: false,
     damageRoll: undefined,
-    mirrorImageDuplicateRoll: undefined,
+    duplicateHitInterceptionRoll: undefined,
     spellDamageReductionRoll: undefined,
     sourceDamageRollPenaltyRolls: [],
     attackDamageReductionRedirectTarget: undefined,
@@ -347,7 +347,7 @@ function createSelectedAttackFillContext(): SelectedAttackFillContext {
     cunningStrikeMovement: undefined,
     cunningStrikeToolPossession: undefined,
     cunningStrikeEndTurnCover: undefined,
-    hideousLaughterDamageRepeatSaves: [],
+    saveGatedConditionWithRepeatDamageRepeatSaves: [],
     weaponMasteryCleaveDecision: undefined,
     weaponMasteryCleaveTarget: undefined,
     weaponMasteryCleaveAttackRoll: undefined,
@@ -425,7 +425,7 @@ function processSelectedAttackFill(input: {
 
 const SELECTED_ATTACK_SUPPORTED_FILL_KINDS = [
   "damageRelationshipDecisions",
-  "sanctuaryInterdictionOutcome",
+  "targetingSaveInterdictionOutcome",
   "unitFeatureDecision",
   "movement",
   "targetChoice",
@@ -473,7 +473,7 @@ function processSelectedAttackSupportedFill(input: {
   const { fill, context } = input;
   return Match.value(fill).pipe(
     Match.when({ kind: "damageRelationshipDecisions" }, () => null),
-    Match.when({ kind: "sanctuaryInterdictionOutcome" }, () => null),
+    Match.when({ kind: "targetingSaveInterdictionOutcome" }, () => null),
     Match.when({ kind: "unitFeatureDecision" }, (value) =>
       processUnitFeatureDecisionFill(value, context),
     ),
@@ -1071,17 +1071,17 @@ function processSavingThrowOutcomeFill(
       },
     );
   }
-  if (isHideousLaughterDamageRepeatSaveFill(fill)) {
+  if (isSaveGatedConditionWithRepeatDamageRepeatSaveFill(fill)) {
     if (
-      context.hideousLaughterDamageRepeatSaves.some(
+      context.saveGatedConditionWithRepeatDamageRepeatSaves.some(
         (candidate) => candidate.holeId === fill.holeId,
       )
     ) {
       return selectedAttackFillError(
-        "Hideous Laughter damage repeat save was filled twice.",
+        "Staged-condition damage repeat save was filled twice.",
       );
     }
-    context.hideousLaughterDamageRepeatSaves.push(fill);
+    context.saveGatedConditionWithRepeatDamageRepeatSaves.push(fill);
     return null;
   }
   return selectedAttackFillError(
@@ -1093,13 +1093,13 @@ function processRolledDiceFill(
   fill: BattleRolledDiceFill,
   context: SelectedAttackFillContext,
 ): SelectedAttackFillProcessingResult {
-  if (isMirrorImageDuplicateRollFill(fill)) {
+  if (isDuplicateHitInterceptionDuplicateRollFill(fill)) {
     return rememberSelectedAttackFill(
-      context.mirrorImageDuplicateRoll,
+      context.duplicateHitInterceptionRoll,
       fill,
-      "Mirror Image duplicate roll was filled twice.",
+      "Duplicate-interception roll was filled twice.",
       (value) => {
-        context.mirrorImageDuplicateRoll = value;
+        context.duplicateHitInterceptionRoll = value;
       },
     );
   }

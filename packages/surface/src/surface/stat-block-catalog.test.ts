@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
@@ -9,7 +9,7 @@ import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
 import {
-  decodeStatBlockRecordEither,
+  decodeStatBlockRecordResult,
   decodeStatBlockRecordSync,
 } from "./schema.ts";
 import {
@@ -18,7 +18,7 @@ import {
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
 } from "./stat-block-catalog.ts";
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { assertStatBlockForTest } from "./stat-block-catalog.test-support.ts";
 import type {
   Srd521StatBlock,
@@ -90,18 +90,18 @@ describe("Stat Block catalog boundary", () => {
 
   test("rejects empty Stat Block ids and names", () => {
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "" }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, id: "" }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "   " }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, id: "   " }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, name: "   " }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, name: "   " }),
       ),
     ).toBe(true);
   });
@@ -114,16 +114,16 @@ describe("Stat Block catalog boundary", () => {
       }).challengeRating,
     ).toBe(0.125);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...goblinWarriorInput,
           challengeRating: 0.13,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...goblinWarriorInput,
           challengeRating: 31,
         }),
@@ -305,7 +305,7 @@ describe("Stat Block catalog boundary", () => {
         ),
       },
     };
-    expect(Either.isLeft(decodeStatBlockRecordEither(malformed))).toBe(true);
+    expect(Result.isFailure(decodeStatBlockRecordResult(malformed))).toBe(true);
   });
 
   test("exports Skeleton's SRD Stat Block vulnerabilities and immunities", () => {

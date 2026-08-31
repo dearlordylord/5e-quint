@@ -7,7 +7,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, relative, resolve } from "node:path";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import {
   FinalScenarioReviewSchema,
@@ -116,60 +116,62 @@ export const FINDING_KINDS = [
 ] as const;
 export type FindingKind = (typeof FINDING_KINDS)[number];
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThan(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0)),
 );
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
 );
 
 const AuthoritySchema = Schema.Struct({
-  role: Schema.NonEmptyTrimmedString,
+  role: Schema.Trimmed.check(Schema.isNonEmpty()),
   ...ArtifactAuthoritySchema.fields,
 });
 export type FindingAuthority = Schema.Schema.Type<typeof AuthoritySchema>;
 
 const ArtifactPointerSchema = Schema.Struct({
   kind: Schema.Literal("artifact"),
-  authorityRole: Schema.NonEmptyTrimmedString,
-  line: Schema.optional(PositiveIntegerSchema),
+  authorityRole: Schema.Trimmed.check(Schema.isNonEmpty()),
+  line: Schema.optionalKey(PositiveIntegerSchema),
 });
 const SdkSequencePointerSchema = Schema.Struct({
   kind: Schema.Literal("sdkSequence"),
-  authorityRole: Schema.NonEmptyTrimmedString,
+  authorityRole: Schema.Trimmed.check(Schema.isNonEmpty()),
   sequence: PositiveIntegerSchema,
 });
 const ReviewVerdictPointerSchema = Schema.Struct({
   kind: Schema.Literal("reviewVerdict"),
-  authorityRole: Schema.NonEmptyTrimmedString,
+  authorityRole: Schema.Trimmed.check(Schema.isNonEmpty()),
   verdictIndex: PositiveIntegerSchema,
 });
 const IssuePointerSchema = Schema.Struct({
   kind: Schema.Literal("issue"),
-  authorityRole: Schema.NonEmptyTrimmedString,
+  authorityRole: Schema.Trimmed.check(Schema.isNonEmpty()),
   fingerprint: HashSchema,
 });
-export const FindingPointerSchema = Schema.Union(
+export const FindingPointerSchema = Schema.Union([
   ArtifactPointerSchema,
   SdkSequencePointerSchema,
   ReviewVerdictPointerSchema,
   IssuePointerSchema,
-);
+]);
 export type FindingPointer = Schema.Schema.Type<typeof FindingPointerSchema>;
 
 const FindingSchema = Schema.Struct({
   findingId: HashSchema,
-  stage: Schema.Literal(...FINDING_STAGES),
-  category: Schema.Literal(...FINDING_CATEGORIES),
-  kind: Schema.Literal(...FINDING_KINDS),
-  summary: Schema.NonEmptyTrimmedString,
-  detail: Schema.optional(Schema.NonEmptyTrimmedString),
+  stage: Schema.Literals(FINDING_STAGES),
+  category: Schema.Literals(FINDING_CATEGORIES),
+  kind: Schema.Literals(FINDING_KINDS),
+  summary: Schema.Trimmed.check(Schema.isNonEmpty()),
+  detail: Schema.optionalKey(Schema.Trimmed.check(Schema.isNonEmpty())),
   pointer: FindingPointerSchema,
-  fingerprint: Schema.optional(HashSchema),
-  githubIssueNumber: Schema.optional(PositiveIntegerSchema),
+  fingerprint: Schema.optionalKey(HashSchema),
+  githubIssueNumber: Schema.optionalKey(PositiveIntegerSchema),
 });
 export type Finding = Schema.Schema.Type<typeof FindingSchema>;
 
@@ -178,16 +180,16 @@ const FindingsSubjectCommonFields = {
   startedAt: StartedAtSchema,
 } as const;
 
-const FindingsSdkCallsSchema = Schema.Union(
+const FindingsSdkCallsSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("transcriptFree") }),
   Schema.Struct({
     tag: Schema.Literal("retainedTranscript"),
     transcriptSha256: HashSchema,
     callCount: NonNegativeIntegerSchema,
   }),
-);
+]);
 
-const FindingsSubjectSchema = Schema.Union(
+const FindingsSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("execution"),
     executionId: ExecutionIdSchema,
@@ -204,7 +206,7 @@ const FindingsSubjectSchema = Schema.Union(
     ...FindingsSubjectCommonFields,
     sdkCalls: Schema.Struct({ tag: Schema.Literal("transcriptFree") }),
   }),
-);
+]);
 export type FindingsSubject = Schema.Schema.Type<typeof FindingsSubjectSchema>;
 
 export function findingsTranscriptSha256(
@@ -226,7 +228,9 @@ export const FindingsProjectionSchema = Schema.Struct({
   schemaVersion: Schema.Literal(RAW_SWARM_FINDINGS_SCHEMA_VERSION),
   subjectIdentity: HashSchema,
   subject: FindingsSubjectSchema,
-  authorities: Schema.Array(AuthoritySchema).pipe(Schema.minItems(1)),
+  authorities: Schema.Array(AuthoritySchema).pipe(
+    Schema.check(Schema.isMinLength(1)),
+  ),
   findings: Schema.Array(FindingSchema),
 });
 export type FindingsProjection = Schema.Schema.Type<
@@ -299,30 +303,30 @@ export type FindingAuthoritySnapshot =
 export function canonicalFindingAuthoritySnapshotForBytes(
   authority: FindingAuthority,
   bytes: Uint8Array,
-): Either.Either<CanonicalFindingAuthoritySnapshot, string> {
-  const canonical: Either.Either<string, string> = (() => {
+): Result.Result<CanonicalFindingAuthoritySnapshot, string> {
+  const canonical: Result.Result<string, string> = (() => {
     try {
-      return Either.right(sourcePath(authority.path));
+      return Result.succeed(sourcePath(authority.path));
     } catch (error: unknown) {
-      return Either.left(
+      return Result.fail(
         error instanceof Error
           ? error.message
           : `Finding authority path is invalid: ${authority.path}.`,
       );
     }
   })();
-  if (Either.isLeft(canonical)) return Either.left(canonical.left);
-  if (canonical.right !== authority.path) {
-    return Either.left(
+  if (Result.isFailure(canonical)) return Result.fail(canonical.failure);
+  if (canonical.success !== authority.path) {
+    return Result.fail(
       `Finding authority path is not repository-relative: ${authority.path}.`,
     );
   }
-  const observed = artifactAuthorityForBytes(canonical.right, bytes);
+  const observed = artifactAuthorityForBytes(canonical.success, bytes);
   if (
     observed.byteLength !== authority.byteLength ||
     observed.sha256 !== authority.sha256
   ) {
-    return Either.left(
+    return Result.fail(
       `Finding authority bytes do not match ${authority.path}.`,
     );
   }
@@ -341,7 +345,7 @@ export function canonicalFindingAuthoritySnapshotForBytes(
     },
     bytes: Uint8Array.from(bytes),
   });
-  return Either.right(snapshot);
+  return Result.succeed(snapshot);
 }
 
 /**
@@ -352,12 +356,12 @@ export function canonicalFindingAuthoritySnapshotForBytes(
 export function portableFindingAuthoritySnapshotForBytes(
   authority: FindingAuthority,
   bytes: Uint8Array,
-): Either.Either<PortableFindingAuthoritySnapshot, string> {
+): Result.Result<PortableFindingAuthoritySnapshot, string> {
   if (
     bytes.byteLength !== authority.byteLength ||
     createHash("sha256").update(bytes).digest("hex") !== authority.sha256
   ) {
-    return Either.left(
+    return Result.fail(
       `Finding authority bytes do not match ${authority.path}.`,
     );
   }
@@ -376,7 +380,7 @@ export function portableFindingAuthoritySnapshotForBytes(
     },
     bytes: Uint8Array.from(bytes),
   });
-  return Either.right(snapshot);
+  return Result.succeed(snapshot);
 }
 
 const parsedSourceBrand: unique symbol = Symbol("parsedFindingSource");
@@ -496,10 +500,10 @@ export function authorityFor(source: Source): FindingAuthority {
     };
   }
   const authorityPath = canonicalRepositoryReadPath(repoRoot, canonical);
-  if (Either.isLeft(authorityPath)) {
+  if (Result.isFailure(authorityPath)) {
     fail(`Finding authority is unreadable: ${source.path}`);
   }
-  const bytes = readFileSync(authorityPath.right);
+  const bytes = readFileSync(authorityPath.success);
   return {
     role: source.role,
     ...artifactAuthorityForBytes(canonical, bytes),
@@ -520,28 +524,33 @@ export function unresolvedSource(input: {
 export function readSourceWithAuthority(input: {
   readonly role: string;
   readonly path: string;
-}): Either.Either<ParsedSource, string> {
-  const source: Either.Either<UnresolvedSource, string> = (() => {
+}): Result.Result<ParsedSource, string> {
+  const source: Result.Result<UnresolvedSource, string> = (() => {
     try {
-      return Either.right(unresolvedSource(input));
+      return Result.succeed(unresolvedSource(input));
     } catch (error: unknown) {
-      return Either.left(
+      return Result.fail(
         error instanceof Error ? error.message : "Finding source is invalid.",
       );
     }
   })();
-  if (Either.isLeft(source)) return Either.left(source.left);
-  const absolutePath = canonicalRepositoryReadPath(repoRoot, source.right.path);
-  if (Either.isLeft(absolutePath)) return Either.left(absolutePath.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
+  const absolutePath = canonicalRepositoryReadPath(
+    repoRoot,
+    source.success.path,
+  );
+  if (Result.isFailure(absolutePath)) return Result.fail(absolutePath.failure);
   const bytes = (() => {
     try {
-      return Either.right(readFileSync(absolutePath.right));
+      return Result.succeed(readFileSync(absolutePath.success));
     } catch {
-      return Either.left(`Finding source ${source.right.path} is unreadable.`);
+      return Result.fail(
+        `Finding source ${source.success.path} is unreadable.`,
+      );
     }
   })();
-  if (Either.isLeft(bytes)) return Either.left(bytes.left);
-  return Either.right(sourceWithAuthority(source.right, bytes.right));
+  if (Result.isFailure(bytes)) return Result.fail(bytes.failure);
+  return Result.succeed(sourceWithAuthority(source.success, bytes.success));
 }
 
 function sourceWithAuthority(
@@ -573,10 +582,10 @@ export function sourcePath(path: string): string {
     return value;
   };
   const read = canonicalRepositoryReadPath(repoRoot, path);
-  if (Either.isRight(read)) return relativePath(read.right);
+  if (Result.isSuccess(read)) return relativePath(read.success);
   const output = canonicalRepositoryOutputPath(repoRoot, path);
-  if (Either.isRight(output)) return relativePath(output.right);
-  fail(`Finding source is not repository-owned: ${path}: ${read.left}`);
+  if (Result.isSuccess(output)) return relativePath(output.success);
+  fail(`Finding source is not repository-owned: ${path}: ${read.failure}`);
 }
 
 type JsonLineRecord = {
@@ -654,9 +663,9 @@ function findingAuthoritySnapshotForPath(
 function findingAuthoritySnapshotBytes(
   snapshot: FindingAuthoritySnapshot,
   authority: FindingAuthority,
-): Either.Either<Uint8Array, string> {
+): Result.Result<Uint8Array, string> {
   if (!verifiedFindingAuthoritySnapshots.has(snapshot)) {
-    return Either.left(
+    return Result.fail(
       `Finding authority snapshot is not verified: ${authority.path}.`,
     );
   }
@@ -666,26 +675,26 @@ function findingAuthoritySnapshotBytes(
     captured.authority.byteLength !== authority.byteLength ||
     captured.authority.sha256 !== authority.sha256
   ) {
-    return Either.left(
+    return Result.fail(
       `Finding authority snapshot does not match ${authority.path}.`,
     );
   }
-  return Either.right(captured.bytes);
+  return Result.succeed(captured.bytes);
 }
 
 function findingAuthoritySnapshotBytesForPath(
   path: string,
   snapshots: readonly FindingAuthoritySnapshot[],
-): Either.Either<Uint8Array, string> | undefined {
+): Result.Result<Uint8Array, string> | undefined {
   const snapshot = findingAuthoritySnapshotForPath(path, snapshots);
   if (snapshot === undefined) return undefined;
   if (!verifiedFindingAuthoritySnapshots.has(snapshot)) {
-    return Either.left(`Finding authority snapshot is not verified: ${path}.`);
+    return Result.fail(`Finding authority snapshot is not verified: ${path}.`);
   }
   const captured = verifiedFindingAuthoritySnapshotValues.get(snapshot);
   return captured === undefined
-    ? Either.left(`Finding authority snapshot is unavailable: ${path}.`)
-    : Either.right(captured.bytes);
+    ? Result.fail(`Finding authority snapshot is unavailable: ${path}.`)
+    : Result.succeed(captured.bytes);
 }
 
 function readFindingAuthorityRecord(
@@ -708,61 +717,63 @@ type RetainedScenarioReviewInputRead = Readonly<{
   readonly bytes: Buffer;
 }>;
 
-function readSourceBytes(path: string): Either.Either<Buffer, string> {
+function readSourceBytes(path: string): Result.Result<Buffer, string> {
   try {
-    return Either.right(readFileSync(resolve(repoRoot, path)));
+    return Result.succeed(readFileSync(resolve(repoRoot, path)));
   } catch {
-    return Either.left(`Finding source ${path} is unreadable.`);
+    return Result.fail(`Finding source ${path} is unreadable.`);
   }
 }
 
 function readRetainedScenarioReviewInputOnce(
   path: string,
-): Either.Either<RetainedScenarioReviewInputRead, string> {
+): Result.Result<RetainedScenarioReviewInputRead, string> {
   const canonical = sourcePath(path);
   const bytes = readSourceBytes(canonical);
-  if (Either.isLeft(bytes)) {
-    return Either.left(`Review replay input ${canonical} is unreadable.`);
+  if (Result.isFailure(bytes)) {
+    return Result.fail(`Review replay input ${canonical} is unreadable.`);
   }
-  const value: Either.Either<unknown, string> = (() => {
+  const value: Result.Result<unknown, string> = (() => {
     try {
-      return Either.right(JSON.parse(bytes.right.toString("utf8")) as unknown);
+      return Result.succeed(
+        JSON.parse(bytes.success.toString("utf8")) as unknown,
+      );
     } catch {
-      return Either.left(`Review replay input ${canonical} is invalid JSON.`);
+      return Result.fail(`Review replay input ${canonical} is invalid JSON.`);
     }
   })();
-  if (Either.isLeft(value)) return Either.left(value.left);
-  const decoded = Schema.decodeUnknownEither(
+  if (Result.isFailure(value)) return Result.fail(value.failure);
+  const decoded = Schema.decodeUnknownResult(
     RetainedScenarioReviewInputSchema,
     { onExcessProperty: "error" },
-  )(value.right);
-  if (Either.isLeft(decoded)) {
-    return Either.left(
-      `Review replay input ${canonical} is invalid: ${decoded.left.message}`,
+  )(value.success);
+  if (Result.isFailure(decoded)) {
+    return Result.fail(
+      `Review replay input ${canonical} is invalid: ${decoded.failure.message}`,
     );
   }
-  return Either.right({
-    input: decoded.right,
-    bytes: bytes.right,
+  return Result.succeed({
+    input: decoded.success,
+    bytes: bytes.success,
   });
 }
 
 function parseRun(
   transcriptPath: string,
   snapshots: readonly FindingAuthoritySnapshot[] = [],
-): Either.Either<ParsedRun, string> {
+): Result.Result<ParsedRun, string> {
   const snapshotBytes = findingAuthoritySnapshotBytesForPath(
     transcriptPath,
     snapshots,
   );
   const records = (() => {
     try {
-      if (snapshotBytes !== undefined && Either.isLeft(snapshotBytes)) {
-        return Either.left(snapshotBytes.left);
+      if (snapshotBytes !== undefined && Result.isFailure(snapshotBytes)) {
+        return Result.fail(snapshotBytes.failure);
       }
       if (snapshotBytes !== undefined) {
-        return Either.right(
-          Buffer.from(snapshotBytes.right)
+        return Result.succeed(
+          Buffer.from(snapshotBytes.success)
             .toString("utf8")
             .split("\n")
             .filter((line) => line.trim().length > 0)
@@ -770,31 +781,31 @@ function parseRun(
         );
       }
       const canonicalTranscriptPath = sourcePath(transcriptPath);
-      return Either.right(readJsonLines(canonicalTranscriptPath));
+      return Result.succeed(readJsonLines(canonicalTranscriptPath));
     } catch (error) {
-      return Either.left(
+      return Result.fail(
         `SDK transcript is malformed and cannot be projected: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
     }
   })();
-  if (Either.isLeft(records)) {
-    return Either.left(records.left);
+  if (Result.isFailure(records)) {
+    return Result.fail(records.failure);
   }
-  if (snapshotBytes !== undefined && Either.isLeft(snapshotBytes)) {
-    return Either.left(snapshotBytes.left);
+  if (snapshotBytes !== undefined && Result.isFailure(snapshotBytes)) {
+    return Result.fail(snapshotBytes.failure);
   }
   const transcriptSha256 =
     snapshotBytes !== undefined
-      ? createHash("sha256").update(snapshotBytes.right).digest("hex")
+      ? createHash("sha256").update(snapshotBytes.success).digest("hex")
       : createHash("sha256")
           .update(readFileSync(resolve(repoRoot, sourcePath(transcriptPath))))
           .digest("hex");
-  const sdk = parseSdkTranscript(records.right);
+  const sdk = parseSdkTranscript(records.success);
   if (sdk.tag === "valid") {
     const header = sdk.value.header;
-    return Either.right({
+    return Result.succeed({
       scenarioId: header.scenarioId,
       gitSha: header.gitSha,
       startedAt: header.startedAt,
@@ -812,7 +823,7 @@ function parseRun(
         : {}),
     });
   }
-  return Either.left(
+  return Result.fail(
     `SDK transcript is malformed and cannot be projected: ${sdk.message}`,
   );
 }
@@ -951,12 +962,12 @@ export function findingsFromReview(
   expectedIdentity?: ReviewIdentityExpectation,
 ): readonly Finding[] {
   const value = readSourceRecord(path);
-  const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+  const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isRight(decoded)) {
-    assertReviewOutputIdentity(path, decoded.right, expectedIdentity);
-    return decoded.right.verdicts.flatMap((verdict, index) => {
+  if (Result.isSuccess(decoded)) {
+    assertReviewOutputIdentity(path, decoded.success, expectedIdentity);
+    return decoded.success.verdicts.flatMap((verdict, index) => {
       const category = categoryForVerdict(verdict.class);
       const fingerprint =
         verdict.class === "bug" || verdict.class === "adapter-defect"
@@ -1176,25 +1187,25 @@ export function findingsFromScenarioReviewSource(
   expectedIdentity?: ScenarioReviewIdentityExpectation,
 ): readonly Finding[] {
   const value = readSourceRecord(path);
-  const final = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+  const final = Schema.decodeUnknownResult(FinalScenarioReviewSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isRight(final)) {
+  if (Result.isSuccess(final)) {
     return findingsFromFinalScenarioReview(
-      final.right,
+      final.success,
       authorityRole,
       path,
       expectedIdentity,
     );
   }
-  const composite = Schema.decodeUnknownEither(ScenarioCompositeReviewSchema, {
+  const composite = Schema.decodeUnknownResult(ScenarioCompositeReviewSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isRight(composite)) {
+  if (Result.isSuccess(composite)) {
     if (expectedIdentity !== undefined) {
       fail(`Historical scenario review has no execution identity: ${path}`);
     }
-    return findingsFromScenarioReview(composite.right, authorityRole);
+    return findingsFromScenarioReview(composite.success, authorityRole);
   }
   fail(`Scenario-review authority has an unsupported schema: ${path}`);
 }
@@ -1209,12 +1220,12 @@ function findingsFromPlayerEventSource(source: Source): readonly Finding[] {
     if (line.trim().length === 0) continue;
     const value = (() => {
       try {
-        return Either.right(JSON.parse(line) as unknown);
+        return Result.succeed(JSON.parse(line) as unknown);
       } catch {
-        return Either.left("malformed");
+        return Result.fail("malformed");
       }
     })();
-    if (Either.isLeft(value)) {
+    if (Result.isFailure(value)) {
       findings.push(
         makeFinding({
           stage: "player",
@@ -1226,10 +1237,13 @@ function findingsFromPlayerEventSource(source: Source): readonly Finding[] {
       );
       continue;
     }
-    if (!isJsonRecord(value.right) || value.right.type !== "item.completed") {
+    if (
+      !isJsonRecord(value.success) ||
+      value.success.type !== "item.completed"
+    ) {
       continue;
     }
-    const item = value.right.item;
+    const item = value.success.item;
     if (!isJsonRecord(item) || item.type !== "command_execution") continue;
     const command = typeof item.command === "string" ? item.command : "";
     if (!command.includes("player-client")) continue;
@@ -1328,56 +1342,58 @@ export function findingsFromGenerationLedger(
   const findings: Finding[] = [];
   for (const { value, line } of readJsonLineRecords(source.path)) {
     const decoded = parseModelInvocationLedgerEntry(value);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       fail(
-        `Generation invocation ledger ${source.path} line ${String(line)} is malformed: ${decoded.left.message}`,
+        `Generation invocation ledger ${source.path} line ${String(line)} is malformed: ${decoded.failure.message}`,
       );
     }
     const campaignMismatch =
       expected.owner.tag === "campaign" &&
-      (decoded.right.schemaVersion === 4 ||
-        decoded.right.schemaVersion === 5) &&
-      ((decoded.right.phase === "scenarioGeneration" &&
-        (decoded.right.subject.tag !== "scenarioCampaign" ||
-          decoded.right.subject.campaignId !==
+      (decoded.success.schemaVersion === 4 ||
+        decoded.success.schemaVersion === 5) &&
+      ((decoded.success.phase === "scenarioGeneration" &&
+        (decoded.success.subject.tag !== "scenarioCampaign" ||
+          decoded.success.subject.campaignId !==
             expected.owner.campaign.campaignId ||
-          decoded.right.subject.evidenceSetId !==
+          decoded.success.subject.evidenceSetId !==
             expected.owner.campaign.evidenceSetId ||
-          decoded.right.subject.plannedScenarioId !==
+          decoded.success.subject.plannedScenarioId !==
             expected.owner.campaign.plannedScenarioId)) ||
-        (decoded.right.phase === "scenarioCompositeReview" &&
-          (decoded.right.subject.tag !== "scenarioCandidate" ||
-            decoded.right.subject.campaignId !==
+        (decoded.success.phase === "scenarioCompositeReview" &&
+          (decoded.success.subject.tag !== "scenarioCandidate" ||
+            decoded.success.subject.campaignId !==
               expected.owner.campaign.campaignId ||
-            decoded.right.subject.evidenceSetId !==
+            decoded.success.subject.evidenceSetId !==
               expected.owner.campaign.evidenceSetId ||
-            decoded.right.subject.plannedScenarioId !==
+            decoded.success.subject.plannedScenarioId !==
               expected.owner.campaign.plannedScenarioId)));
     const benchmarkMismatch =
       expected.owner.tag === "benchmark" &&
-      (decoded.right.schemaVersion !== 4 && decoded.right.schemaVersion !== 5
+      (decoded.success.schemaVersion !== 4 &&
+      decoded.success.schemaVersion !== 5
         ? true
-        : decoded.right.subject.tag !== "benchmark" ||
-          decoded.right.subject.benchmarkId !==
+        : decoded.success.subject.tag !== "benchmark" ||
+          decoded.success.subject.benchmarkId !==
             expected.owner.benchmark.benchmarkId ||
-          decoded.right.subject.profile !== expected.owner.benchmark.profile ||
-          decoded.right.subject.scenarioId !==
+          decoded.success.subject.profile !==
+            expected.owner.benchmark.profile ||
+          decoded.success.subject.scenarioId !==
             expected.owner.benchmark.scenarioId);
     const foreignBenchmarkMismatch =
       expected.owner.tag !== "benchmark" &&
-      (decoded.right.schemaVersion === 4 ||
-        decoded.right.schemaVersion === 5) &&
-      decoded.right.subject.tag === "benchmark";
+      (decoded.success.schemaVersion === 4 ||
+        decoded.success.schemaVersion === 5) &&
+      decoded.success.subject.tag === "benchmark";
     const candidateWithoutCampaign =
       expected.owner.tag !== "campaign" &&
-      (decoded.right.schemaVersion === 4 ||
-        decoded.right.schemaVersion === 5) &&
-      decoded.right.subject.tag === "scenarioCandidate";
+      (decoded.success.schemaVersion === 4 ||
+        decoded.success.schemaVersion === 5) &&
+      decoded.success.subject.tag === "scenarioCandidate";
     if (
-      String(modelInvocationScenarioReference(decoded.right)) !==
+      String(modelInvocationScenarioReference(decoded.success)) !==
         expected.scenarioId ||
       (expected.gitSha !== undefined &&
-        String(decoded.right.gitSha) !== expected.gitSha) ||
+        String(decoded.success.gitSha) !== expected.gitSha) ||
       campaignMismatch ||
       benchmarkMismatch ||
       foreignBenchmarkMismatch ||
@@ -1387,13 +1403,13 @@ export function findingsFromGenerationLedger(
         `Generation invocation ledger ${source.path} line ${String(line)} belongs to a different findings identity.`,
       );
     }
-    const exit = decoded.right.exit;
+    const exit = decoded.success.exit;
     const processFailed =
       exit.tag === "exited" || exit.tag === "shellStatus"
         ? exit.status !== 0
         : true;
     const resultFailed =
-      "result" in decoded.right && decoded.right.result.tag === "failed";
+      "result" in decoded.success && decoded.success.result.tag === "failed";
     const failed = processFailed || resultFailed;
     if (!failed) continue;
     findings.push(
@@ -1420,15 +1436,15 @@ function expectedReplayCampaignIdentity(
     const manifestPath = replayCampaignManifestPath(ledgerPath);
     if (!existsSync(manifestPath)) continue;
     const canonicalManifestPath = sourcePath(relative(repoRoot, manifestPath));
-    const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    const decoded = Schema.decodeUnknownResult(ScenarioCampaignManifestSchema, {
       onExcessProperty: "error",
     })(readSourceRecord(canonicalManifestPath));
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       fail(
-        `Generation Campaign manifest is invalid: ${canonicalManifestPath}: ${decoded.left.message}`,
+        `Generation Campaign manifest is invalid: ${canonicalManifestPath}: ${decoded.failure.message}`,
       );
     }
-    const campaign = decoded.right;
+    const campaign = decoded.success;
     if (
       expected !== undefined &&
       canonicalJson(expected) !== canonicalJson(campaign)
@@ -1477,24 +1493,24 @@ function readReplayLedgerEntries(
     const canonical = sourcePath(path);
     const records = (() => {
       try {
-        return Either.right(readJsonLineRecords(canonical));
+        return Result.succeed(readJsonLineRecords(canonical));
       } catch {
-        return Either.left(
+        return Result.fail(
           `Original generation ledger is unreadable: ${canonical}`,
         );
       }
     })();
-    if (Either.isLeft(records)) {
+    if (Result.isFailure(records)) {
       fail(`Original generation ledger is unreadable: ${canonical}`);
     }
-    return records.right.map(({ value, line }) => {
+    return records.success.map(({ value, line }) => {
       const decoded = parseModelInvocationLedgerEntry(value);
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         fail(
-          `Original generation ledger ${canonical} line ${String(line)} is malformed: ${decoded.left.message}`,
+          `Original generation ledger ${canonical} line ${String(line)} is malformed: ${decoded.failure.message}`,
         );
       }
-      return decoded.right;
+      return decoded.success;
     });
   });
 }
@@ -1594,8 +1610,8 @@ function originalCompositeReviewInputs(
   const invocationIds = new Set<string>();
   for (const { path: canonical, stage: expectedStage } of canonicalEntries) {
     const retained = readRetainedScenarioReviewInputOnce(canonical);
-    if (Either.isLeft(retained)) fail(retained.left);
-    const review = retained.right.input;
+    if (Result.isFailure(retained)) fail(retained.failure);
+    const review = retained.success.input;
     if (invocationIds.has(review.invocationId)) {
       fail(
         `Review replay inputs contain duplicate original invocation id ${review.invocationId}.`,
@@ -1625,9 +1641,9 @@ function originalCompositeReviewInputs(
         owner: expectedOwner,
       }),
     );
-    if (Either.isLeft(binding)) {
+    if (Result.isFailure(binding)) {
       fail(
-        `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId}: ${binding.left}`,
+        `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId}: ${binding.failure}`,
       );
     }
     const eventPath = canonical.endsWith(".json")
@@ -1663,7 +1679,7 @@ function originalCompositeReviewInputs(
       );
     }
     validateRetainedScenarioReviewInvocation({
-      binding: binding.right,
+      binding: binding.success,
       eventSha256: eventAuthority.sha256,
       events: parsedEvents.events,
     });
@@ -1695,7 +1711,10 @@ function originalCompositeReviewInputs(
       if (source.tag !== "unresolved") {
         fail(`Finding replay source is already authority-bound: ${canonical}`);
       }
-      sources[sourceIndex] = sourceWithAuthority(source, retained.right.bytes);
+      sources[sourceIndex] = sourceWithAuthority(
+        source,
+        retained.success.bytes,
+      );
     }
   }
 }
@@ -1705,12 +1724,12 @@ function validateReplayResultSource(input: {
   readonly replaySupervisor: Source | undefined;
   readonly parsed: ParsedRun;
 }): void {
-  const decoded = Schema.decodeUnknownEither(SdkReplayResultEvidenceSchema, {
+  const decoded = Schema.decodeUnknownResult(SdkReplayResultEvidenceSchema, {
     onExcessProperty: "error",
   })(readSourceRecord(input.source.path));
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Replay-result authority ${input.source.path} is invalid: ${decoded.left.message}`,
+      `Replay-result authority ${input.source.path} is invalid: ${decoded.failure.message}`,
     );
   }
   if (input.replaySupervisor === undefined) {
@@ -1718,7 +1737,7 @@ function validateReplayResultSource(input: {
       "Replay-result authority requires the retained replay-supervisor authority.",
     );
   }
-  const replayResult = decoded.right;
+  const replayResult = decoded.success;
   const replaySupervisorAuthority = authorityFor(input.replaySupervisor);
   if (
     replayResult.scenarioId !== input.parsed.scenarioId ||
@@ -1751,22 +1770,22 @@ export function findingsFromStagePlanSource(
   source: Source,
   expectedIdentity?: StagePlanIdentityExpectation,
 ): readonly Finding[] {
-  const decoded = Schema.decodeUnknownEither(ScenarioStagePlanFindingsSchema, {
+  const decoded = Schema.decodeUnknownResult(ScenarioStagePlanFindingsSchema, {
     onExcessProperty: "error",
   })(readSourceRecord(source.path));
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return [
       makeFinding({
         stage: "generation",
         category: "model-controller-mistake",
         kind: "generation-invocation-failure",
         summary: "Retained stage-plan findings could not be decoded.",
-        detail: decoded.left.message,
+        detail: decoded.failure.message,
         pointer: pointerForSource(source.role),
       }),
     ];
   }
-  return decoded.right.map((finding: ScenarioStagePlanFinding) => {
+  return decoded.success.map((finding: ScenarioStagePlanFinding) => {
     if (
       expectedIdentity !== undefined &&
       !stagePlanIdentitiesMatch(finding.identity, expectedIdentity)
@@ -1821,13 +1840,13 @@ function subjectAuthorityBindingError(
     return `Findings subject requires its ${expectedRole} authority.`;
   }
   if (projection.subject.tag === "scenarioCampaign") {
-    const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    const decoded = Schema.decodeUnknownResult(ScenarioCampaignManifestSchema, {
       onExcessProperty: "error",
     })(readFindingAuthorityRecord(authority.path, snapshots));
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       return `Campaign authority does not decode as a campaign manifest: ${authority.path}`;
     }
-    const campaign = decoded.right;
+    const campaign = decoded.success;
     return campaign.campaignId === projection.subject.campaignId &&
       campaign.plannedScenarioId === projection.subject.plannedScenarioId &&
       campaign.evidenceSetId === projection.subject.evidenceSetId &&
@@ -1836,13 +1855,13 @@ function subjectAuthorityBindingError(
       ? undefined
       : "Findings campaign subject does not match its decoded campaign manifest.";
   }
-  const decoded = Schema.decodeUnknownEither(ExecutionStartRecordSchema, {
+  const decoded = Schema.decodeUnknownResult(ExecutionStartRecordSchema, {
     onExcessProperty: "error",
   })(readFindingAuthorityRecord(authority.path, snapshots));
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return `Execution authority does not decode as an execution-start manifest: ${authority.path}`;
   }
-  const execution = decoded.right;
+  const execution = decoded.success;
   return execution.executionId === projection.subject.executionId &&
     execution.evidenceSetId === projection.subject.evidenceSetId &&
     execution.scenarioId === projection.subject.scenarioId &&
@@ -1879,7 +1898,7 @@ function validateDecodedProjection(
       };
     }
     paths.add(authority.path);
-    const bytes: Either.Either<Uint8Array, string> = ((): Either.Either<
+    const bytes: Result.Result<Uint8Array, string> = ((): Result.Result<
       Uint8Array,
       string
     > => {
@@ -1891,7 +1910,7 @@ function validateDecodedProjection(
         snapshots.some((candidate) => candidate.scope === "bundle") &&
         snapshot === undefined
       ) {
-        return Either.left(
+        return Result.fail(
           `Finding authority snapshot is missing from the portable bundle: ${authority.path}.`,
         );
       }
@@ -1899,25 +1918,25 @@ function validateDecodedProjection(
         return findingAuthoritySnapshotBytes(snapshot, authority);
       }
 
-      const canonicalPath: Either.Either<string, string> = ((): Either.Either<
+      const canonicalPath: Result.Result<string, string> = ((): Result.Result<
         string,
         string
       > => {
         try {
-          return Either.right(sourcePath(authority.path));
+          return Result.succeed(sourcePath(authority.path));
         } catch (error) {
-          return Either.left(
+          return Result.fail(
             error instanceof Error
               ? error.message
               : `Finding authority path is invalid: ${authority.path}.`,
           );
         }
       })();
-      if (Either.isLeft(canonicalPath)) {
-        return Either.left(canonicalPath.left);
+      if (Result.isFailure(canonicalPath)) {
+        return Result.fail(canonicalPath.failure);
       }
-      if (canonicalPath.right !== authority.path) {
-        return Either.left(
+      if (canonicalPath.success !== authority.path) {
+        return Result.fail(
           `Finding authority path is not repository-relative: ${authority.path}.`,
         );
       }
@@ -1925,13 +1944,13 @@ function validateDecodedProjection(
         repoRoot,
         authority.path,
       );
-      if (Either.isLeft(canonicalAuthority)) {
-        return Either.left(
+      if (Result.isFailure(canonicalAuthority)) {
+        return Result.fail(
           `Finding authority is not a canonical repository path: ${authority.path}.`,
         );
       }
-      if (relative(repoRoot, canonicalAuthority.right) !== authority.path) {
-        return Either.left(
+      if (relative(repoRoot, canonicalAuthority.success) !== authority.path) {
+        return Result.fail(
           `Finding authority is not a canonical repository path: ${authority.path}.`,
         );
       }
@@ -1939,19 +1958,19 @@ function validateDecodedProjection(
         return findingAuthoritySnapshotBytes(snapshot, authority);
       }
       try {
-        return Either.right(readFileSync(canonicalAuthority.right));
+        return Result.succeed(readFileSync(canonicalAuthority.success));
       } catch {
-        return Either.left(
+        return Result.fail(
           `Finding authority is unreadable: ${authority.path}.`,
         );
       }
     })();
-    if (Either.isLeft(bytes)) {
-      return { tag: "invalid", message: bytes.left };
+    if (Result.isFailure(bytes)) {
+      return { tag: "invalid", message: bytes.failure };
     }
     if (
-      bytes.right.byteLength !== authority.byteLength ||
-      createHash("sha256").update(bytes.right).digest("hex") !==
+      bytes.success.byteLength !== authority.byteLength ||
+      createHash("sha256").update(bytes.success).digest("hex") !==
         authority.sha256
     ) {
       return {
@@ -2001,13 +2020,13 @@ function validateDecodedProjection(
       };
     }
     const parsedTranscript = parseRun(transcript.path, snapshots);
-    if (Either.isLeft(parsedTranscript)) {
+    if (Result.isFailure(parsedTranscript)) {
       return {
         tag: "invalid",
-        message: `Finding transcript cannot be parsed: ${parsedTranscript.left}`,
+        message: `Finding transcript cannot be parsed: ${parsedTranscript.failure}`,
       };
     }
-    const parsed = parsedTranscript.right;
+    const parsed = parsedTranscript.success;
     if (
       parsed.scenarioId !== projection.subject.scenarioId ||
       parsed.gitSha !== projection.subject.gitSha ||
@@ -2096,13 +2115,13 @@ function validateDecodedProjection(
         pointerPath,
         snapshots,
       );
-      if (pointerBytes !== undefined && Either.isLeft(pointerBytes)) {
-        return { tag: "invalid", message: pointerBytes.left };
+      if (pointerBytes !== undefined && Result.isFailure(pointerBytes)) {
+        return { tag: "invalid", message: pointerBytes.failure };
       }
       const contents =
         pointerBytes === undefined
           ? readFileSync(resolve(repoRoot, pointerPath), "utf8")
-          : Buffer.from(pointerBytes.right).toString("utf8");
+          : Buffer.from(pointerBytes.success).toString("utf8");
       const lineCount =
         contents.length === 0
           ? 0
@@ -2115,12 +2134,12 @@ function validateDecodedProjection(
       }
     }
     if (finding.pointer.kind === "reviewVerdict") {
-      const reviewed = Schema.decodeUnknownEither(ReviewOutputSchema, {
+      const reviewed = Schema.decodeUnknownResult(ReviewOutputSchema, {
         onExcessProperty: "error",
       })(readFindingAuthorityRecord(pointerPath, snapshots));
       if (
-        Either.isLeft(reviewed) ||
-        finding.pointer.verdictIndex > reviewed.right.verdicts.length
+        Result.isFailure(reviewed) ||
+        finding.pointer.verdictIndex > reviewed.success.verdicts.length
       ) {
         return {
           tag: "invalid",
@@ -2153,11 +2172,11 @@ export function validateFindingsProjection(
   value: unknown,
   snapshots: readonly FindingAuthoritySnapshot[] = [],
 ): FindingsProjectionResult {
-  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+  const decoded = Schema.decodeUnknownResult(FindingsProjectionSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
-    return { tag: "invalid", message: decoded.left.message };
+  if (Result.isFailure(decoded)) {
+    return { tag: "invalid", message: decoded.failure.message };
   }
   if (!Array.isArray(snapshots)) {
     return {
@@ -2165,7 +2184,7 @@ export function validateFindingsProjection(
       message: "Finding authority snapshots must be a verified snapshot list.",
     };
   }
-  return validateDecodedProjection(decoded.right, snapshots);
+  return validateDecodedProjection(decoded.success, snapshots);
 }
 
 export function projectExecutionFindings(
@@ -2176,26 +2195,26 @@ export function projectExecutionFindings(
     input.evidenceSetDirectory ?? defaultEvidenceSetDirectory(transcriptPath),
   );
   const parsedResult = parseRun(transcriptPath);
-  if (Either.isLeft(parsedResult)) fail(parsedResult.left);
-  const parsed = parsedResult.right;
+  if (Result.isFailure(parsedResult)) fail(parsedResult.failure);
+  const parsed = parsedResult.success;
   const executionStartPath = sourcePath(
     `${evidenceSetDirectory}/evidence/execution-start.json`,
   );
-  const executionStart = Schema.decodeUnknownEither(
+  const executionStart = Schema.decodeUnknownResult(
     ExecutionStartRecordSchema,
     {
       onExcessProperty: "error",
     },
   )(readSourceRecord(executionStartPath));
-  if (Either.isLeft(executionStart)) {
+  if (Result.isFailure(executionStart)) {
     fail(
-      `Execution start authority is invalid: ${executionStartPath}: ${executionStart.left.message}`,
+      `Execution start authority is invalid: ${executionStartPath}: ${executionStart.failure.message}`,
     );
   }
   if (
-    executionStart.right.scenarioId !== parsed.scenarioId ||
-    executionStart.right.gitSha !== parsed.gitSha ||
-    executionStart.right.startedAt !== parsed.startedAt
+    executionStart.success.scenarioId !== parsed.scenarioId ||
+    executionStart.success.gitSha !== parsed.gitSha ||
+    executionStart.success.startedAt !== parsed.startedAt
   ) {
     fail("Execution start authority does not match the transcript identity.");
   }
@@ -2315,7 +2334,7 @@ export function projectExecutionFindings(
     );
   }
   const expectedReviewIdentity: ReviewIdentityExpectation = {
-    scenarioId: executionStart.right.scenarioId,
+    scenarioId: executionStart.success.scenarioId,
     gitSha: parsed.gitSha,
     transcriptSha256: parsed.transcriptSha256,
     ...(parsed.scenarioSha256 === undefined
@@ -2329,7 +2348,7 @@ export function projectExecutionFindings(
       : { candidateScenarioSha256: scenarioAuthoritySha256 }),
   };
   const expectedScenarioReviewIdentity: ScenarioReviewIdentityExpectation = {
-    scenarioId: executionStart.right.scenarioId,
+    scenarioId: executionStart.success.scenarioId,
     ...(parsed.scenarioSha256 === undefined
       ? {}
       : { scenarioSha256: parsed.scenarioSha256 }),
@@ -2455,12 +2474,12 @@ export function projectExecutionFindings(
     const stagePlan = validateScenarioStagePlan(
       readSourceRecord(stagePlanPath),
     );
-    if (Either.isLeft(stagePlan)) fail(stagePlan.left);
+    if (Result.isFailure(stagePlan)) fail(stagePlan.failure);
     if (
-      stagePlan.right.identity.tag !== "admitted" ||
-      stagePlan.right.identity.scenarioId !== parsed.scenarioId ||
-      stagePlan.right.identity.scenarioSha256 !== parsed.scenarioSha256 ||
-      stagePlan.right.identity.scenarioReviewSha256 !==
+      stagePlan.success.identity.tag !== "admitted" ||
+      stagePlan.success.identity.scenarioId !== parsed.scenarioId ||
+      stagePlan.success.identity.scenarioSha256 !== parsed.scenarioSha256 ||
+      stagePlan.success.identity.scenarioReviewSha256 !==
         parsed.scenarioReviewSha256
     ) {
       fail(
@@ -2475,18 +2494,18 @@ export function projectExecutionFindings(
         `Stage-plan findings authority is required by the execution transcript: ${stagePlanFindingsPath}`,
       );
     }
-    const decodedFindings = Schema.decodeUnknownEither(
+    const decodedFindings = Schema.decodeUnknownResult(
       ScenarioStagePlanFindingsSchema,
       { onExcessProperty: "error" },
     )(readSourceRecord(stagePlanFindingsPath));
-    if (Either.isLeft(decodedFindings)) {
+    if (Result.isFailure(decodedFindings)) {
       fail(
-        `Invalid stage-plan findings authority: ${decodedFindings.left.message}`,
+        `Invalid stage-plan findings authority: ${decodedFindings.failure.message}`,
       );
     }
     if (
-      canonicalJson(decodedFindings.right) !==
-      canonicalJson(scenarioStagePlanFindings(stagePlan.right))
+      canonicalJson(decodedFindings.success) !==
+      canonicalJson(scenarioStagePlanFindings(stagePlan.success))
     ) {
       fail(
         `Stage-plan findings authority does not match the retained plan: ${stagePlanFindingsPath}`,
@@ -2622,9 +2641,9 @@ export function projectExecutionFindings(
     .sort((left, right) => left.role.localeCompare(right.role));
   const subject = {
     tag: "execution" as const,
-    executionId: executionStart.right.executionId,
-    evidenceSetId: executionStart.right.evidenceSetId,
-    scenarioId: executionStart.right.scenarioId,
+    executionId: executionStart.success.executionId,
+    evidenceSetId: executionStart.success.evidenceSetId,
+    scenarioId: executionStart.success.scenarioId,
     gitSha: parsed.gitSha,
     startedAt: parsed.startedAt,
     sdkCalls: {

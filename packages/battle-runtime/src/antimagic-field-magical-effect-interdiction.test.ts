@@ -1,28 +1,29 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  battleStateWithAllocatedEffectForTest,
   characterBattleFeatureInitForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+  MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
   MAGIC_ITEM_MAGICAL_EFFECT_SOURCE,
   OTHER_MAGICAL_EFFECT_SOURCE,
   SPELL_MAGICAL_EFFECT_SOURCE,
-  magicalEffectTargetsInterdictedByAntimagicField,
-} from "./battle-reducer/antimagic-field-magical-effect-interdiction.ts";
+  magicalEffectTargetsInterdictedByMagicSuppressionEmanation,
+} from "./battle-reducer/magic-suppression-magical-effect-interdiction.ts";
 import {
   burningHandsUnitId,
   clericChannelDivinityUnitId,
@@ -83,7 +84,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         targetHp: 1,
         targetMaxHp: 20,
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -98,14 +99,14 @@ describe("Antimagic Field magical-effect interdiction", () => {
 
     expect(targetHole.choices).not.toContain(spellTargetId);
     expect(
-      magicalEffectTargetsInterdictedByAntimagicField({
+      magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
         state: session.state,
         source: SPELL_MAGICAL_EFFECT_SOURCE,
         targetIds: [spellTargetId],
       }),
     ).toBe(true);
     expect(
-      magicalEffectTargetsInterdictedByAntimagicField({
+      magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
         state: session.state,
         source: MAGIC_ITEM_MAGICAL_EFFECT_SOURCE,
         targetIds: [spellTargetId],
@@ -138,7 +139,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         preparedSpells: [spellRecord(burningHandsUnitId)],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -164,7 +165,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 
@@ -177,7 +178,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         targetHp: 20,
         targetMaxHp: 20,
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -219,7 +220,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 
@@ -277,7 +278,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         ...initialSession,
         state: casterTurn.state,
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -304,14 +305,14 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 
   test("rejects other magical-effect targets inside the aura without spell identity", () => {
     const session = activeAntimagicAuraSession(
       preserveLifeBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -325,7 +326,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
 
     expect(distribution.choices).not.toContain(spellTargetId);
     expect(
-      magicalEffectTargetsInterdictedByAntimagicField({
+      magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
         state: session.state,
         source: OTHER_MAGICAL_EFFECT_SOURCE,
         targetIds: [spellTargetId],
@@ -344,7 +345,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 });
@@ -353,24 +354,24 @@ function activeAntimagicAuraSession(
   session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
 ): BattleRuntimeSession {
-  const combatants = new Map(session.state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = session.state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const state = battleStateWithAllocatedEffectForTest({
+    state: session.state,
+    ownerId: aura.sourceCombatantId,
+    effect: magicSuppressionEmanationEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+    }),
   });
+  expect(
+    Number(state.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, combatants },
+    state,
   });
 }
 
@@ -409,10 +410,10 @@ function preserveLifeBattle(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function preserveLifeAct(session: BattleRuntimeSession) {
@@ -462,13 +463,13 @@ function preserveLifeUnitRefWithSupport() {
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionHealingPoolSupportForUnit(preserveLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Preserve Life Magic Action support.");
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(support);
-  return unitRef.right;
+  expect(unitRef.success.supportProfiles).toContainEqual(support);
+  return unitRef.success;
 }

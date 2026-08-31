@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 
 import { discoverSrdStatBlocks } from "../../../../scripts/srd521-stat-block-parity.ts";
 
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
 
 const PACK_TACTICS_EFFECT = {

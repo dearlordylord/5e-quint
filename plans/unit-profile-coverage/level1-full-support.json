@@ -5698,7 +5698,7 @@
             "profileId": "spell.invocation-fog-cloud-obscurement",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+              "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
             ]
           }
         ],
@@ -5949,7 +5949,7 @@
             "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
             ]
           }
         ],
@@ -6888,8 +6888,7 @@
               "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
               "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-            ],
-            "semanticOwnerPolicy": "profile-local-semantic-core"
+            ]
           }
         ],
         "unitId": "shield"
@@ -7015,7 +7014,7 @@
             "profileId": "spell.invocation-sleep-target-admission",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
             ]
           },
           {
@@ -7031,7 +7030,7 @@
             "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
             ]
           }
         ],

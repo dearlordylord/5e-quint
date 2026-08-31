@@ -7,7 +7,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 import { removeBattleRuntimeCombatants } from "./index.ts";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime context", () => {
@@ -35,12 +35,12 @@ describe("battle runtime context", () => {
       session,
       combatantIds: [removedCharacterId, removedStatBlockId],
     });
-    expect(Either.isRight(removed)).toBe(true);
-    if (Either.isLeft(removed)) return;
+    expect(Result.isSuccess(removed)).toBe(true);
+    if (Result.isFailure(removed)) return;
 
     const successor = battleRuntimeSessionWithState(
       session,
-      removed.right.state,
+      removed.success.state,
     );
 
     expect(successor.context.characters.get(retainedCharacterId)).toBe(

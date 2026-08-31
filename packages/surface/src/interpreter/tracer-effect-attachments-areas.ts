@@ -26,8 +26,10 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "remote_perception"
       | "set_speed"
       | "set_speed_ratio"
-      | "emit_light"
-      | "emit_dim_light"
+      | "emit_bright_and_dim_illumination"
+      | "emit_bright_illumination"
+      | "emit_dim_illumination"
+      | "emit_dim_illumination_until_end_of_caster_next_turn"
       | "block_reanimation"
       | "ignite_objects"
       | "create_object"
@@ -220,27 +222,43 @@ export function traceAttachmentAndAreaEffectAtom(
       });
       return id;
     }
-    case "emit_light": {
+    case "emit_bright_and_dim_illumination": {
       const id = ids("eff");
-      const dimTag =
-        e.dimAdditionalFeet !== undefined && e.dimAdditionalFeet > 0
-          ? `\ndim: +${e.dimAdditionalFeet} ft`
-          : "";
       nodes.push({
         id,
         category: "effect",
-        atomKind: "emit_light",
-        label: `emit_light\nbright: ${e.brightRadiusFeet} ft${dimTag}`,
+        atomKind: "emit_bright_and_dim_illumination",
+        label: `emit_bright_and_dim_illumination\nbright: ${e.brightRadiusFeet} ft\ndim: +${e.dimAdditionalFeet} ft`,
       });
       return id;
     }
-    case "emit_dim_light": {
+    case "emit_bright_illumination": {
       const id = ids("eff");
       nodes.push({
         id,
         category: "effect",
-        atomKind: "emit_dim_light",
-        label: `emit_dim_light\nradius: ${e.radiusFeet} ft`,
+        atomKind: "emit_bright_illumination",
+        label: `emit_bright_illumination\nradius: ${e.radiusFeet} ft`,
+      });
+      return id;
+    }
+    case "emit_dim_illumination": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "emit_dim_illumination",
+        label: `emit_dim_illumination\nradius: ${e.radiusFeet} ft`,
+      });
+      return id;
+    }
+    case "emit_dim_illumination_until_end_of_caster_next_turn": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "emit_dim_illumination_until_end_of_caster_next_turn",
+        label: `emit_dim_illumination_until_end_of_caster_next_turn\nradius: ${e.radiusFeet} ft`,
       });
       return id;
     }

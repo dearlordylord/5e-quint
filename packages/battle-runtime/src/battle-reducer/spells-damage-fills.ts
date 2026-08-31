@@ -55,7 +55,10 @@ import {
   damageAmountByTypeMapEntries,
   type SpellDamageReductionConsumption,
 } from "./damage-helpers.ts";
-import { applyBattleHitPointDamage } from "./damage-apply.ts";
+import {
+  applyBattleHitPointDamage,
+  type SaveGatedConditionDamageRepeatSaveContext,
+} from "./damage-apply.ts";
 import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
@@ -88,7 +91,7 @@ import {
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSkillChoiceHole,
   type BattleSpellTargetAbilityChoicesHole,
-  type BattleThaumaturgyActiveOneMinuteEffectCountHole,
+  type BattleTemporaryAbilityCheckRollModeActiveEffectCountHole,
   type BattleSpellTargetAllocation,
   type BattleSpellTargetListHole,
   type BattleState,
@@ -115,13 +118,13 @@ import {
 } from "../character-execution-queries.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import {
-  SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
-  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
-  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
-  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+  SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
+  MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,
@@ -210,7 +213,7 @@ export function selectedSpellAttackDamageProcedure(
   | { readonly tag: "invalid"; readonly message: string } {
   if (
     invocation.procedure !== "spellAttackDamage" ||
-    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"
+    invocation.damage.kind !== "spellAttackDamageTypeChoice"
   ) {
     return { tag: "ok", invocation };
   }
@@ -235,7 +238,7 @@ export function selectedSpellAttackDamageProcedure(
     invocation: {
       ...invocation,
       damage: {
-        kind: "selectedSorcerousBurstDamage",
+        kind: "selectedSpellAttackDamage",
         expr: invocation.damage.expr,
         damageType: selectedDamageType,
         maxDieAdditionalDiceLimit: invocation.damage.maxDieAdditionalDiceLimit,
@@ -255,7 +258,7 @@ type SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit = Extract<
   { readonly procedure: "spellAttackDamage" }
 > & {
   readonly damage: {
-    readonly kind: "selectedSorcerousBurstDamage";
+    readonly kind: "selectedSpellAttackDamage";
     readonly maxDieAdditionalDiceLimit: number;
   };
 };
@@ -281,8 +284,7 @@ export function spellAttackRollHole(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack"
+          | "spatialMeleeSpellAttackProxy"
           | "spellAttackDamage";
       }
     >
@@ -364,8 +366,7 @@ function spellAttackRollHoleBase(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack"
+          | "spatialMeleeSpellAttackProxy"
           | "spellAttackDamage";
       }
     >
@@ -392,7 +393,7 @@ export function spellDamageTypeChoiceHole(
           | "chainedSpellAttackDamage"
           | "chosenDamageResistance"
           | "damageReduction"
-          | "dragonsBreathInitial"
+          | "grantedAreaSaveDamageAction"
           | "selfTransformationMode"
           | "spellAttackDamage"
           | "spellHostedWeaponAttack";
@@ -408,7 +409,7 @@ export function spellDamageTypeChoiceHole(
     invocation.procedure === "selfTransformationMode"
       ? invocation.naturalWeaponFacts.damage.damageTypeChoices
       : invocation.procedure === "spellAttackDamage"
-        ? invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+        ? invocation.damage.kind === "spellAttackDamageTypeChoice"
           ? invocation.damage.damageTypeChoices
           : []
         : invocation.damageTypeChoices;
@@ -709,8 +710,7 @@ export function spellDamageTypes(
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
+        | "spatialMeleeSpellAttackProxy"
         | "spellAttackDamage";
     }
   >,
@@ -1037,21 +1037,22 @@ export function spellAbilityChoiceHole(
   };
 }
 
-export function thaumaturgyActiveOneMinuteEffectCountHole(
+export function temporaryAbilityCheckRollModeActiveEffectCountHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       RuntimeSpellProcedure,
-      { readonly procedure: "thaumaturgyBoomingVoice" }
+      { readonly procedure: "temporaryAbilityCheckRollMode" }
     >
   >,
-): BattleThaumaturgyActiveOneMinuteEffectCountHole {
+): BattleTemporaryAbilityCheckRollModeActiveEffectCountHole {
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
-    holeId: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
-    holeInstanceKey: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
+    holeId: MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+    holeInstanceKey: MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
     label: `Spell total active 1-minute effects`,
     sourceProcedureRef: invocation.sourceProcedureRef,
-    maximumActiveOneMinuteEffects: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+    maximumActiveOneMinuteEffects:
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
     requiresTableSpellEffectCount: true,
   };
 }
@@ -1076,19 +1077,19 @@ export function spellSavingThrowOutcomeHole(
           | "rollModifier"
           | "creatureSizeIncrease"
           | "creatureSizeDecrease"
-          | "levitatedCreature"
+          | "controlledVerticalSuspension"
           | "saveGatedDamage"
           | "saveGatedCondition"
           | "saveGatedConditionImmunity"
           | "saveGatedAttackRollAdvantage"
-          | "counterspell"
-          | "sleepTargetAdmission"
-          | "hideousLaughter"
-          | "hypnoticPattern"
-          | "slowActivePenalties"
-          | "command"
-          | "greaseGroundHazard"
-          | "gustOfWindLine";
+          | "spellCastInterruptionReaction"
+          | "stagedSaveCondition"
+          | "saveGatedConditionWithRepeat"
+          | "saveGatedAreaControl"
+          | "saveGatedTurnConstraintBundle"
+          | "compelledNextTurnBehavior"
+          | "persistentAreaSaveCondition"
+          | "directionalPersistentArea";
       }
     >
   >,
@@ -1264,18 +1265,18 @@ export function spellSavingThrowAbility(
         | "saveGatedDamage"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
-        | "levitatedCreature"
+        | "controlledVerticalSuspension"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "counterspell"
-        | "sleepTargetAdmission"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine"
-        | "slowActivePenalties";
+        | "spellCastInterruptionReaction"
+        | "stagedSaveCondition"
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
+        | "compelledNextTurnBehavior"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea"
+        | "saveGatedTurnConstraintBundle";
     }
   >,
 ): Ability {
@@ -1299,22 +1300,22 @@ export function spellSavingThrowTargeting(
         | "saveGatedDamage"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
-        | "levitatedCreature"
+        | "controlledVerticalSuspension"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "counterspell"
-        | "sleepTargetAdmission"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine"
-        | "slowActivePenalties";
+        | "spellCastInterruptionReaction"
+        | "stagedSaveCondition"
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
+        | "compelledNextTurnBehavior"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea"
+        | "saveGatedTurnConstraintBundle";
     }
   >,
 ): SpellTargeting {
-  return invocation.procedure === "counterspell"
+  return invocation.procedure === "spellCastInterruptionReaction"
     ? { kind: "singleCombatant" }
     : invocation.procedure === "attackBurstSaveDamage"
       ? invocation.burst.targeting
@@ -1338,6 +1339,10 @@ export function spellAreaTargetingLabel(
       () => "point-origin Cube",
     ),
     Match.when({ kind: "pointOriginCube" }, () => "point-origin Cube"),
+    Match.when(
+      { kind: "pointOriginGroundSquare" },
+      () => "point-origin ground square",
+    ),
     Match.when({ kind: "selfOriginCube" }, () => "self-origin Cube"),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
     Match.when({ kind: "selfOriginLine" }, () => "self-origin Line"),
@@ -1559,12 +1564,17 @@ export function savingThrowFlatBonusProjections(
   ability: Ability,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
   return [...state.combatants].flatMap(([, target]) => [
-    ...wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
-    ...slowActivePenaltiesSavingThrowFlatBonusProjection(target, ability),
+    ...linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+      target,
+    ),
+    ...saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
+      target,
+      ability,
+    ),
   ]);
 }
 
-function slowActivePenaltiesSavingThrowFlatBonusProjection(
+function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
   target: BattleCreatureState,
   ability: Ability,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
@@ -1576,8 +1586,8 @@ function slowActivePenaltiesSavingThrowFlatBonusProjection(
       candidate,
     ): candidate is Extract<
       BattleCreatureState["activeEffects"][number],
-      { readonly kind: "slowActivePenalties" }
-    > => candidate.kind === "slowActivePenalties",
+      { readonly kind: "saveGatedTurnConstraintBundle" }
+    > => candidate.kind === "saveGatedTurnConstraintBundle",
   );
   return effect === undefined
     ? []
@@ -1586,7 +1596,7 @@ function slowActivePenaltiesSavingThrowFlatBonusProjection(
           targetId: target.combatantId,
           sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
-          bonus: SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
+          bonus: SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
         },
       ];
 }
@@ -1744,7 +1754,7 @@ export function validateSpellDamageFill(
   }
   if (
     invocation.procedure === "spellAttackDamage" &&
-    invocation.damage.kind === "selectedSorcerousBurstDamage"
+    invocation.damage.kind === "selectedSpellAttackDamage"
   ) {
     return null;
   }
@@ -1816,7 +1826,7 @@ function hasMaxDieAdditionalDiceLimit(
 ): invocation is SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit {
   return (
     invocation.procedure === "spellAttackDamage" &&
-    invocation.damage.kind === "selectedSorcerousBurstDamage"
+    invocation.damage.kind === "selectedSpellAttackDamage"
   );
 }
 
@@ -1943,7 +1953,7 @@ export function validateSpellBurstDamageFill(
   >,
 ): string | null {
   if (fill.holeId !== spellBurstDamageHoleId(invocation)) {
-    return "Ice Knife burst damage must use the burst damage hole.";
+    return "attack-burst damage burst damage must use the burst damage hole.";
   }
   return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.burst.damage.expr.dice,
@@ -1998,16 +2008,13 @@ type ResolvedSpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
-  readonly wardingBondDamageShareConcentrationSavingThrows?:
+  readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows?:
     | readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[]
     | undefined;
-  readonly hideousLaughterDamageRepeatSaves?:
-    | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
-    | undefined;
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
+  readonly saveGatedConditionDamageRepeatSave: SaveGatedConditionDamageRepeatSaveContext;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
@@ -2045,9 +2052,8 @@ export function applyResolvedSpellDamage(
 ): BattleState {
   const {
     concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey,
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows,
+    saveGatedConditionDamageRepeatSave,
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
     spatialFacts,
@@ -2074,17 +2080,10 @@ export function applyResolvedSpellDamage(
     ...optionalProperty("relationshipDecisions", relationshipDecisions),
     concentrationSavingThrow,
     ...optionalProperty(
-      "wardingBondDamageShareConcentrationSavingThrows",
-      wardingBondDamageShareConcentrationSavingThrows,
+      "linkedDefenseResistanceDamageShareConcentrationSavingThrows",
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows,
     ),
-    ...optionalProperty(
-      "hideousLaughterDamageRepeatSaves",
-      hideousLaughterDamageRepeatSaves,
-    ),
-    ...optionalProperty(
-      "hideousLaughterDamageRepeatSaveEventKey",
-      hideousLaughterDamageRepeatSaveEventKey,
-    ),
+    saveGatedConditionDamageRepeatSave,
   });
 }
 

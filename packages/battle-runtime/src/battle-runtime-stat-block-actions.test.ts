@@ -10,11 +10,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import fc from "fast-check";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.attack-procedure stat-block.multiattack stat-block.resource-lifecycle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   decodeCreatureImmunityDeclarationSync,
@@ -28,7 +31,11 @@ import type {
   BattleSubject,
   NonSpellExecutableProcedureKind,
 } from "./battle-runtime.test-support.ts";
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
+import type { BattleCreatureState } from "./battle-state-execution.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 import {
   abilityCheckFill,
   attackDamageHoleAfterHit,
@@ -266,7 +273,12 @@ function procedureRefForOrdinal(
   }
   const origin = actor.origin;
   const binding = origin.execution.procedureBindings.find((candidate) => {
-    if (candidate.procedure.kind === "unarmedStrike") return false;
+    if (
+      candidate.procedure.kind === "unarmedStrike" ||
+      candidate.procedure.kind === "effectOccurrenceSource"
+    ) {
+      return false;
+    }
     return (
       candidate.procedure.section === section &&
       candidate.procedure.procedureOrdinal ===
@@ -318,10 +330,7 @@ function repeatedProcedureRefs(
   return [procedureRef, ...repeatedProcedureRefs(procedureRef, count - 1)];
 }
 
-function slowActivePenaltiesEffectForTest(): Extract<
-  BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
-> {
+function slowActivePenaltiesEffectForTest(): BattleActiveEffectOccurrenceTemplate {
   return {
     kind: "slowActivePenalties",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -337,6 +346,19 @@ function slowActivePenaltiesEffectForTest(): Extract<
       combatantId: fighterId,
       durationTicks: elapsedTimeTicks(10),
     },
+  };
+}
+
+function battleCreatureWithSlowActivePenaltiesForTest<
+  Actor extends BattleCreatureState,
+>(actor: Actor): Actor {
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: actor,
+    effect: slowActivePenaltiesEffectForTest(),
+  });
+  return {
+    ...allocation.owner,
+    activeEffects: [...allocation.owner.activeEffects, allocation.effect],
   };
 }
 
@@ -562,29 +584,20 @@ function withProneConditionImmunity(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    throw new Error("Expected Prone-immunity test target.");
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "conditionImmunity",
-          condition: "prone",
-          conditionHadNonSpellSource: false,
-          expiresAt: { kind: "untilDispelled" },
-          sourceCombatantId: targetId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId("synthetic_prone_immunity")),
-          ),
-        },
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "conditionImmunity",
+      condition: "prone",
+      conditionHadNonSpellSource: false,
+      expiresAt: { kind: "untilDispelled" },
+      sourceCombatantId: targetId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spellId("synthetic_prone_immunity")),
+      ),
+    },
+  });
 }
 
 function monsterMultiDamageStatBlock(): StatBlockRecord {
@@ -1081,28 +1094,18 @@ describe("battle runtime: Stat Block actions", () => {
       targetId: fighterId,
       target: characterSeed({ initiative: 10 }),
       attackRollMode: "advantage",
-      stateTransform: (state) => {
-        const target = state.combatants.get(fighterId);
-        if (target === undefined) {
-          throw new Error("Expected Bite target.");
-        }
-        return {
-          ...state,
-          combatants: new Map(state.combatants).set(fighterId, {
-            ...target,
-            activeEffects: [
-              ...target.activeEffects,
-              {
-                kind: "nextAttackRollAgainstSelf",
-                sourceProcedureRef: oneShotProcedureRef,
-                sourceCombatantId: goblinId,
-                mode: "advantage",
-                expiresAt: { kind: "startOfTurn", combatantId: goblinId },
-              },
-            ],
-          }),
-        };
-      },
+      stateTransform: (state) =>
+        battleStateWithAllocatedEffectForTest({
+          state,
+          ownerId: fighterId,
+          effect: {
+            kind: "nextAttackRollAgainstSelf",
+            sourceProcedureRef: oneShotProcedureRef,
+            sourceCombatantId: goblinId,
+            mode: "advantage",
+            expiresAt: { kind: "startOfTurn", combatantId: goblinId },
+          },
+        }),
     });
     const target = resolved.combatants.get(fighterId);
     if (target === undefined) {
@@ -1184,9 +1187,9 @@ describe("battle runtime: Stat Block actions", () => {
     expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
 
     const projected = projectAuthoredStatBlock(statBlock);
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [
@@ -1205,9 +1208,9 @@ describe("battle runtime: Stat Block actions", () => {
     expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
 
     const projected = projectAuthoredStatBlock(statBlock);
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [
@@ -1225,9 +1228,9 @@ describe("battle runtime: Stat Block actions", () => {
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
 
     const projected = projectAuthoredStatBlock(statBlock);
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [
@@ -1650,16 +1653,12 @@ describe("battle runtime: Stat Block actions", () => {
     if (multiattackActor === undefined) {
       throw new Error("Expected the Multiattack actor.");
     }
-    const multiattackStateAfterSlowApplied: BattleState = {
-      ...multiattackState,
-      combatants: new Map(multiattackState.combatants).set(goblinId, {
-        ...multiattackActor,
-        activeEffects: [
-          ...multiattackActor.activeEffects,
-          slowActivePenaltiesEffectForTest(),
-        ],
-      }),
-    };
+    const multiattackStateAfterSlowApplied =
+      battleStateWithAllocatedEffectForTest({
+        state: multiattackState,
+        ownerId: goblinId,
+        effect: slowActivePenaltiesEffectForTest(),
+      });
     const shortbow = discoverStatBlockActs(
       multiattackStateAfterSlowApplied,
     ).find(
@@ -2192,16 +2191,11 @@ describe("battle runtime: Stat Block actions", () => {
     if (goblin?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block goblin.");
     }
-    const slowedGoblinTurn: BattleState = {
-      ...goblinTurn,
-      combatants: new Map(goblinTurn.combatants).set(goblinId, {
-        ...goblin,
-        activeEffects: [
-          ...goblin.activeEffects,
-          slowActivePenaltiesEffectForTest(),
-        ],
-      }),
-    };
+    const slowedGoblinTurn = battleStateWithAllocatedEffectForTest({
+      state: goblinTurn,
+      ownerId: goblinId,
+      effect: slowActivePenaltiesEffectForTest(),
+    });
     const subject = discoveredMultiattackSubject(slowedGoblinTurn);
     const afterMultiattack = requireResolved(
       resolveBattleSubject({
@@ -2330,13 +2324,7 @@ describe("battle runtime: Stat Block actions", () => {
               },
             };
           const actorForPlan = slowed
-            ? {
-                ...actor,
-                activeEffects: [
-                  ...actor.activeEffects,
-                  slowActivePenaltiesEffectForTest(),
-                ],
-              }
+            ? battleCreatureWithSlowActivePenaltiesForTest(actor)
             : actor;
           const dispatchResourceDemand =
             statBlockMultiattackDispatchResourceDemandForActor(
@@ -2431,7 +2419,7 @@ describe("battle runtime: Stat Block actions", () => {
     );
 
     expect(projected).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStatBlockProjectionFailure",
         reason: "unsupportedProcedureBinding",
         issues: [
@@ -2798,9 +2786,9 @@ describe("battle runtime: Stat Block actions", () => {
     const projected = projectAuthoredStatBlock(
       monsterResourceStatBlockWithUnsupportedAttackSections(),
     );
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [

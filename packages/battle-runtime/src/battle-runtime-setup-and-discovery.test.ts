@@ -33,7 +33,6 @@ import {
   BattleSnapshotSchema,
   discoverBattleActCandidates,
   discoverBattleActs,
-  Either,
   initiativeScore,
   movementFeet,
   resolveBattleSubject,
@@ -42,11 +41,13 @@ import {
   snapshotBattle,
   startBattle,
 } from "./battle-runtime.test-support.ts";
+import { Result } from "effect";
 import { battleCreaturePresentationDisplayName } from "./stat-block-presentation.ts";
 import {
   battlePresentedSnapshot,
   BattlePresentedSnapshotSchema,
   battleRuntimeSessionFollows,
+  battleRuntimeSessionDescendsFrom,
   isBattleRuntimeSession,
 } from "./index.ts";
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
@@ -97,6 +98,14 @@ describe("battle runtime: setup and discovery", () => {
     expect(battleRuntimeSessionFollows(session, successor)).toBe(false);
     expect(battleRuntimeSessionFollows(laterSuccessor, session)).toBe(false);
     expect(battleRuntimeSessionFollows(unrelated, session)).toBe(false);
+
+    expect(battleRuntimeSessionDescendsFrom(session, session)).toBe(true);
+    expect(battleRuntimeSessionDescendsFrom(successor, session)).toBe(true);
+    expect(battleRuntimeSessionDescendsFrom(laterSuccessor, session)).toBe(
+      true,
+    );
+    expect(battleRuntimeSessionDescendsFrom(session, successor)).toBe(false);
+    expect(battleRuntimeSessionDescendsFrom(unrelated, session)).toBe(false);
   });
 
   test("battle ids must be non-empty trimmed strings", () => {
@@ -170,16 +179,16 @@ describe("battle runtime: setup and discovery", () => {
       "displayName",
     );
     const presented = battlePresentedSnapshot(session);
-    expect(Either.isRight(presented)).toBe(true);
-    if (Either.isLeft(presented)) return;
-    expect(presented.right.combatants[0]?.displayName).toBe("Goblin Warrior");
-    expect(presented.right.combatants[1]?.displayName).toBe("Fighter");
-    expect(Schema.is(BattlePresentedSnapshotSchema)(presented.right)).toBe(
+    expect(Result.isSuccess(presented)).toBe(true);
+    if (Result.isFailure(presented)) return;
+    expect(presented.success.combatants[0]?.displayName).toBe("Goblin Warrior");
+    expect(presented.success.combatants[1]?.displayName).toBe("Fighter");
+    expect(Schema.is(BattlePresentedSnapshotSchema)(presented.success)).toBe(
       true,
     );
     const missingPresentedName = {
-      ...presented.right,
-      combatants: presented.right.combatants.map((combatant) => {
+      ...presented.success,
+      combatants: presented.success.combatants.map((combatant) => {
         const { displayName: _displayName, ...combatantWithoutDisplayName } =
           combatant;
         return combatantWithoutDisplayName;
@@ -190,10 +199,10 @@ describe("battle runtime: setup and discovery", () => {
     );
     expect(
       Schema.is(BattlePresentedSnapshotSchema)({
-        ...presented.right,
+        ...presented.success,
         combatants: [
-          presented.right.combatants[0],
-          ...presented.right.combatants,
+          presented.success.combatants[0],
+          ...presented.success.combatants,
         ],
       }),
     ).toBe(false);
@@ -204,7 +213,7 @@ describe("battle runtime: setup and discovery", () => {
       }),
     );
     expect(missingContext).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleSnapshotPresentationIssue",
           reason: "missingStatBlockPresentation",
@@ -225,7 +234,7 @@ describe("battle runtime: setup and discovery", () => {
       }),
     );
     expect(invalidDisplayName).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleSnapshotPresentationIssue",
           reason: "invalidDisplayName",
@@ -536,12 +545,12 @@ describe("battle runtime: setup and discovery", () => {
           ),
         }),
       );
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isRight(result)) return;
-      expect(result.left).toHaveLength(2);
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isSuccess(result)) return;
+      expect(result.failure).toHaveLength(2);
       expect(
         new Set(
-          result.left.map((issue) => `${issue.combatantId}:${issue.reason}`),
+          result.failure.map((issue) => `${issue.combatantId}:${issue.reason}`),
         ),
       ).toEqual(
         new Set([
@@ -725,8 +734,8 @@ describe("battle runtime: setup and discovery", () => {
         ],
       });
       expect(
-        Either.isLeft(result)
-          ? battleStateInitIssueMessage(result.left)
+        Result.isFailure(result)
+          ? battleStateInitIssueMessage(result.failure)
           : "admitted",
       ).toBe("fighter class level must be an integer from 1 to 20.");
     }
@@ -747,8 +756,8 @@ describe("battle runtime: setup and discovery", () => {
       ],
     });
     expect(
-      Either.isLeft(result)
-        ? battleStateInitIssueMessage(result.left)
+      Result.isFailure(result)
+        ? battleStateInitIssueMessage(result.failure)
         : "admitted",
     ).toBe("Character class levels duplicate fighter.");
   });
@@ -768,8 +777,8 @@ describe("battle runtime: setup and discovery", () => {
       ],
     });
     expect(
-      Either.isLeft(result)
-        ? battleStateInitIssueMessage(result.left)
+      Result.isFailure(result)
+        ? battleStateInitIssueMessage(result.failure)
         : "admitted",
     ).toBe("Total character level must not exceed 20.");
   });
@@ -790,8 +799,8 @@ describe("battle runtime: setup and discovery", () => {
       ],
     });
     expect(
-      Either.isLeft(result)
-        ? battleStateInitIssueMessage(result.left)
+      Result.isFailure(result)
+        ? battleStateInitIssueMessage(result.failure)
         : "admitted",
     ).toBe(
       "fighter class level must be an integer from 1 to 20.; Character class levels duplicate fighter.; wizard class level must be an integer from 1 to 20.",
@@ -821,15 +830,15 @@ describe("battle runtime: setup and discovery", () => {
         const validAggregate =
           uniqueClassCount === classLevels.length && totalLevel <= 20;
 
-        expect(Either.isRight(result)).toBe(validAggregate);
-        if (Either.isRight(result)) {
+        expect(Result.isSuccess(result)).toBe(validAggregate);
+        if (Result.isSuccess(result)) {
           expect(
-            result.right.map(({ className, level }) => ({
+            result.success.map(({ className, level }) => ({
               className,
               level: Number(level),
             })),
           ).toEqual(classLevels);
-          expect(Number(characterBattleLevel(result.right))).toBe(totalLevel);
+          expect(Number(characterBattleLevel(result.success))).toBe(totalLevel);
         }
       }),
       { numRuns: 100 },
@@ -867,9 +876,9 @@ describe("battle runtime: setup and discovery", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toEqual({
       tag: "battleStateInitIssue",
       kind: "characterAdmissionInvalid",
       combatantId: fighterId,
@@ -971,16 +980,16 @@ describe("battle runtime: setup and discovery", () => {
       state,
       combatantIds: [skeletonId],
     });
-    expect(Either.mapLeft(absent, battleStateInitIssueMessage)).toEqual(
-      Either.left("Cannot remove a combatant that is not in this battle."),
+    expect(Result.mapError(absent, battleStateInitIssueMessage)).toEqual(
+      Result.fail("Cannot remove a combatant that is not in this battle."),
     );
 
     const all = removeBattleCombatants({
       state,
       combatantIds: [fighterId, goblinId],
     });
-    expect(Either.mapLeft(all, battleStateInitIssueMessage)).toEqual(
-      Either.left("Cannot remove every combatant from a battle."),
+    expect(Result.mapError(all, battleStateInitIssueMessage)).toEqual(
+      Result.fail("Cannot remove every combatant from a battle."),
     );
   });
 

@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-proficiency-choice
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import {
   abilityScore,
@@ -53,8 +53,8 @@ export type ChoiceOptionCodecIssue = {
 function choiceOptionCodecIssue(
   optionId: string,
   cause: CreationChoiceOptionDecodeCause,
-): Either.Either<never, ChoiceOptionCodecIssue> {
-  return Either.left({
+): Result.Result<never, ChoiceOptionCodecIssue> {
+  return Result.fail({
     tag: "choiceOptionCodecIssue",
     optionId,
     cause,
@@ -93,7 +93,7 @@ export function requireAbilityScoreIncreaseTwoScoresOptionId(input: {
 
 export function decodeAbilityScoreIncreaseOptionId(
   optionId: CreationChoiceOptionId | string,
-): Either.Either<
+): Result.Result<
   readonly AbilityScoreIncreaseDeltaWithCap[],
   ChoiceOptionCodecIssue
 > {
@@ -113,15 +113,15 @@ export function decodeAbilityScoreIncreaseOptionId(
       optionIdText,
       "increase",
     );
-    if (Either.isLeft(increase)) return Either.left(increase.left);
+    if (Result.isFailure(increase)) return Result.fail(increase.failure);
     const maximum = decodeAbilityScoreMaximum(oneScore[3], optionIdText);
-    if (Either.isLeft(maximum)) return Either.left(maximum.left);
+    if (Result.isFailure(maximum)) return Result.fail(maximum.failure);
 
-    return Either.right([
+    return Result.succeed([
       {
         ability,
-        increase: increase.right,
-        maxScore: maximum.right,
+        increase: increase.success,
+        maxScore: maximum.success,
       },
     ]);
   }
@@ -150,30 +150,30 @@ export function decodeAbilityScoreIncreaseOptionId(
       optionIdText,
       "increase",
     );
-    if (Either.isLeft(primaryIncrease)) {
-      return Either.left(primaryIncrease.left);
+    if (Result.isFailure(primaryIncrease)) {
+      return Result.fail(primaryIncrease.failure);
     }
     const secondaryIncrease = decodePositiveAbilityScoreIncreaseValue(
       twoScores[4],
       optionIdText,
       "increase",
     );
-    if (Either.isLeft(secondaryIncrease)) {
-      return Either.left(secondaryIncrease.left);
+    if (Result.isFailure(secondaryIncrease)) {
+      return Result.fail(secondaryIncrease.failure);
     }
     const maximum = decodeAbilityScoreMaximum(twoScores[5], optionIdText);
-    if (Either.isLeft(maximum)) return Either.left(maximum.left);
+    if (Result.isFailure(maximum)) return Result.fail(maximum.failure);
 
-    return Either.right([
+    return Result.succeed([
       {
         ability: primary,
-        increase: primaryIncrease.right,
-        maxScore: maximum.right,
+        increase: primaryIncrease.success,
+        maxScore: maximum.success,
       },
       {
         ability: secondary,
-        increase: secondaryIncrease.right,
-        maxScore: maximum.right,
+        increase: secondaryIncrease.success,
+        maxScore: maximum.success,
       },
     ]);
   }
@@ -187,7 +187,7 @@ function decodePositiveAbilityScoreIncreaseValue(
   token: string | undefined,
   optionId: string,
   field: "increase" | "maximum",
-): Either.Either<PositiveIntegerType, ChoiceOptionCodecIssue> {
+): Result.Result<PositiveIntegerType, ChoiceOptionCodecIssue> {
   const value = Number(token);
   if (!Number.isSafeInteger(value)) {
     return invalidPositiveAbilityScoreIncreaseValueIssue(
@@ -197,7 +197,7 @@ function decodePositiveAbilityScoreIncreaseValue(
     );
   }
   return value > 0
-    ? Either.right(PositiveInteger(value))
+    ? Result.succeed(PositiveInteger(value))
     : invalidPositiveAbilityScoreIncreaseValueIssue(
         optionId,
         field,
@@ -208,15 +208,15 @@ function decodePositiveAbilityScoreIncreaseValue(
 function decodeAbilityScoreMaximum(
   token: string | undefined,
   optionId: string,
-): Either.Either<AbilityScoreType, ChoiceOptionCodecIssue> {
+): Result.Result<AbilityScoreType, ChoiceOptionCodecIssue> {
   const positive = decodePositiveAbilityScoreIncreaseValue(
     token,
     optionId,
     "maximum",
   );
-  if (Either.isLeft(positive)) return Either.left(positive.left);
-  return positive.right <= 30
-    ? Either.right(abilityScore(positive.right))
+  if (Result.isFailure(positive)) return Result.fail(positive.failure);
+  return positive.success <= 30
+    ? Result.succeed(abilityScore(positive.success))
     : invalidAbilityScoreIncreaseValueIssue(optionId, {
         tag: "invalidAbilityScoreIncreaseValue",
         field: "maximum",
@@ -228,7 +228,7 @@ function invalidPositiveAbilityScoreIncreaseValueIssue(
   optionId: string,
   field: "increase" | "maximum",
   reason: "nonPositive" | "unsafeInteger",
-): Either.Either<never, ChoiceOptionCodecIssue> {
+): Result.Result<never, ChoiceOptionCodecIssue> {
   return invalidAbilityScoreIncreaseValueIssue(
     optionId,
     field === "increase"
@@ -243,7 +243,7 @@ function invalidAbilityScoreIncreaseValueIssue(
     CreationChoiceOptionDecodeCause,
     { readonly tag: "invalidAbilityScoreIncreaseValue" }
   >,
-): Either.Either<never, ChoiceOptionCodecIssue> {
+): Result.Result<never, ChoiceOptionCodecIssue> {
   return choiceOptionCodecIssue(optionId, cause);
 }
 
@@ -319,17 +319,17 @@ export function proficiencyGrantSubjectOptionId(
 
 export function decodeProficiencyGrantSubjectOptionId(
   optionId: CreationChoiceOptionId | string,
-): Either.Either<ParsedProficiencyGrantSubject, ChoiceOptionCodecIssue> {
+): Result.Result<ParsedProficiencyGrantSubject, ChoiceOptionCodecIssue> {
   const optionIdText = String(optionId);
   const skill = SKILLS.find((candidate) => candidate === optionIdText);
   if (skill != null) {
-    return Either.right({ kind: "skill", skill });
+    return Result.succeed({ kind: "skill", skill });
   }
 
   if (optionIdText.startsWith("weapon_category:")) {
     const category = optionIdText.slice("weapon_category:".length);
     return isOneOf(WEAPON_PROFICIENCY_CATEGORIES, category)
-      ? Either.right({
+      ? Result.succeed({
           kind: "weapon_category",
           category,
         })
@@ -341,7 +341,7 @@ export function decodeProficiencyGrantSubjectOptionId(
   if (optionIdText.startsWith("armor_category:")) {
     const category = optionIdText.slice("armor_category:".length);
     return isOneOf(ARMOR_TRAINING_CATEGORIES, category)
-      ? Either.right({
+      ? Result.succeed({
           kind: "armor_category",
           category,
         })
@@ -353,15 +353,15 @@ export function decodeProficiencyGrantSubjectOptionId(
   if (optionIdText.startsWith("tool:")) {
     const toolId = optionIdText.slice("tool:".length);
     const parsedToolId = parseToolProficiencyId(toolId);
-    if (Either.isLeft(parsedToolId)) {
+    if (Result.isFailure(parsedToolId)) {
       return choiceOptionCodecIssue(optionIdText, {
         tag: "unsupportedToolProficiencyId",
       });
     }
 
-    return Either.right({
+    return Result.succeed({
       kind: "tool",
-      toolId: parsedToolId.right,
+      toolId: parsedToolId.success,
     });
   }
 
@@ -375,8 +375,8 @@ export function toolProficiencyIdsFromProficiencyChoiceOptionIds(
 ): readonly ToolProficiencyId[] {
   return optionIds.flatMap((optionId) => {
     const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
-    return Either.isRight(decoded) && decoded.right.kind === "tool"
-      ? [decoded.right.toolId]
+    return Result.isSuccess(decoded) && decoded.success.kind === "tool"
+      ? [decoded.success.toolId]
       : [];
   });
 }
@@ -386,7 +386,7 @@ export function toolProficiencyIdsFromDirectToolOptionIds(
 ): readonly ToolProficiencyId[] {
   return optionIds.flatMap((optionId) => {
     const parsed = parseToolProficiencyId(String(optionId));
-    return Either.isRight(parsed) ? [parsed.right] : [];
+    return Result.isSuccess(parsed) ? [parsed.success] : [];
   });
 }
 
@@ -399,15 +399,15 @@ export function toolProficiencyIdsFromSubjects(
     }
 
     const parsed = parseToolProficiencyId(subject.toolId);
-    return Either.isRight(parsed) ? [parsed.right] : [];
+    return Result.isSuccess(parsed) ? [parsed.success] : [];
   });
 }
 
 export function parseToolProficiencyId(
   value: string,
-): Either.Either<ToolProficiencyId, ChoiceOptionCodecIssue> {
+): Result.Result<ToolProficiencyId, ChoiceOptionCodecIssue> {
   return isCharacterBuildToolProficiencyId(value)
-    ? Either.right(toolProficiencyId(value))
+    ? Result.succeed(toolProficiencyId(value))
     : choiceOptionCodecIssue(value, {
         tag: "unsupportedCharacterBuildToolProficiencyId",
       });

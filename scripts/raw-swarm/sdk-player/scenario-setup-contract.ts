@@ -10,15 +10,13 @@ import type {
   startBattle,
   AuthoredStatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
-import type {
-  characterBattleRuntimeIssueMessage,
-  characterSheetBattleInit,
-} from "@dnd/character-battle-runtime";
+import type { CharacterSheetBattleInit } from "../../../packages/character-battle-runtime/src/battle-creature-init.ts";
+import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/character-battle-runtime/src/battle-character-build-projection.ts";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import type { Either } from "effect";
+import type { Result } from "effect";
 import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Hp, movementFeet } from "@dnd/shared/types";
 
@@ -83,8 +81,8 @@ export type ScenarioSetupSdk = {
   readonly battleObjectId: typeof battleObjectId;
   readonly authoredStatBlockBattleInitIssueMessage: typeof authoredStatBlockBattleInitIssueMessage;
   readonly battleStateInitIssueMessage: typeof battleStateInitIssueMessage;
-  readonly characterBattleRuntimeIssueMessage: typeof characterBattleRuntimeIssueMessage;
-  readonly characterSheetBattleInit: typeof characterSheetBattleInit;
+  readonly characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage;
+  readonly characterSheetBattleInit: CharacterSheetBattleInit;
   readonly combatantId: typeof combatantId;
   readonly initiativeScore: typeof initiativeScore;
   readonly startBattle: typeof startBattle;
@@ -97,7 +95,7 @@ export type ScenarioSetupSdk = {
   readonly scenarioSessionIssueMessage: typeof scenarioSessionIssueMessage;
   readonly tableAuthoredSpatialDecision: typeof tableAuthoredSpatialDecision;
   readonly scenarioSessionWithTableD20TestCircumstance: typeof scenarioSessionWithTableD20TestCircumstance;
-  readonly isLeft: typeof Either.isLeft;
+  readonly isLeft: typeof Result.isFailure;
 };
 
 export type ScenarioSetupContext = {

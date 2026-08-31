@@ -2,14 +2,14 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
-  BattleFeatherFallLandingResult,
+  BattleFallingCreatureMitigationTriggerFact,
+  BattleFallingCreatureMitigationLandingResult,
   BattleFallDamageLandingResult,
   BattleInterruptFrame,
   BattleRawFallDamage,
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleTargetSpatialFact,
   EndedFlySpeedGrant,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
@@ -18,15 +18,15 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-h
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import {
   battleReducerRouteForCreatureFallsInterruptWindow,
-  battleReducerRouteForFeatherFallLanding,
+  battleReducerRouteForFallingCreatureMitigationLanding,
 } from "./interrupt-route-projection.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { featherFallLandingCleanupForCombatant } from "./spells-holes-fills.ts";
+import { fallingCreatureMitigationLandingCleanupForCombatant } from "./spells-holes-fills.ts";
 
 export function openCreatureFallsInterruptWindow(input: {
   readonly state: BattleState;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
 }): BattleResolutionResult {
   const reactionWindow = maybeOpenInterruptWindow(
     input.state,
@@ -66,7 +66,7 @@ export type FlySpeedGrantEndFallWitness =
     }
   | {
       readonly kind: "cannotStopFall";
-      readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
     };
 
 export type FlySpeedGrantEndFallWitnessResult =
@@ -116,10 +116,10 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       state: input.state,
       snapshot: snapshotBattle(input.state),
       reason: "missingCombatant",
-      message: "Fly Speed end-fall witness target is not in this battle.",
+      message: "Granted-flight end-fall witness target is not in this battle.",
     };
   }
-  const cleanup = flySpeedGrantEndFallCleanupFrame(input.state, input.targetId);
+  const cleanup = grantedFlightEndFallCleanupFrame(input.state, input.targetId);
   if (cleanup === null) {
     return {
       tag: "invalid",
@@ -127,7 +127,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       snapshot: snapshotBattle(input.state),
       reason: "cleanupFrameMissing",
       message:
-        "Fly Speed end-fall witness requires a pending cleanup frame emitted by Fly effect cleanup.",
+        "Granted-flight end-fall witness requires its pending cleanup frame.",
     };
   }
   const cleanupFrame = cleanup.frame;
@@ -139,7 +139,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       snapshot: snapshotBattle(input.state),
       reason: "effectStillActive",
       message:
-        "Fly Speed end-fall witness can only resolve after the emitted Fly effect cleanup removed the ended grant.",
+        "Granted-flight end-fall witness can only resolve after cleanup removed the ended grant.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -181,20 +181,20 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
   };
 }
 
-function flySpeedGrantEndFallCleanupFrame(
+function grantedFlightEndFallCleanupFrame(
   state: BattleState,
   targetId: CombatantId,
 ): {
   readonly frameIndex: number;
   readonly frame: Extract<
     BattleInterruptFrame,
-    { readonly kind: "flySpeedGrantEndFallCleanup" }
+    { readonly kind: "grantedFlightEndFallCleanup" }
   >;
 } | null {
   for (let index = state.interruptStack.length - 1; index >= 0; index -= 1) {
     const frame = state.interruptStack[index];
     if (
-      frame?.kind === "flySpeedGrantEndFallCleanup" &&
+      frame?.kind === "grantedFlightEndFallCleanup" &&
       frame.targetId === targetId
     ) {
       return { frameIndex: index, frame };
@@ -203,10 +203,10 @@ function flySpeedGrantEndFallCleanupFrame(
   return null;
 }
 
-export function resolveFeatherFallLanding(input: {
+export function resolveFallingCreatureMitigationLanding(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
-}): BattleFeatherFallLandingResult {
+}): BattleFallingCreatureMitigationLandingResult {
   const target = input.state.combatants.get(input.targetId);
   if (target === undefined) {
     return {
@@ -214,17 +214,21 @@ export function resolveFeatherFallLanding(input: {
       state: input.state,
       snapshot: snapshotBattle(input.state),
       reason: "missingCombatant",
-      message: "Feather Fall landing target is not in this battle.",
+      message:
+        "Falling-creature mitigation landing target is not in this battle.",
     };
   }
-  return resolveFeatherFallLandingForTarget(input.state, target);
+  return resolveFallingCreatureMitigationLandingForTarget(input.state, target);
 }
 
-function resolveFeatherFallLandingForTarget(
+function resolveFallingCreatureMitigationLandingForTarget(
   state: BattleState,
   target: BattleCreatureState,
-): Exclude<BattleFeatherFallLandingResult, { readonly tag: "invalid" }> {
-  const cleanup = featherFallLandingCleanupForCombatant(target);
+): Exclude<
+  BattleFallingCreatureMitigationLandingResult,
+  { readonly tag: "invalid" }
+> {
+  const cleanup = fallingCreatureMitigationLandingCleanupForCombatant(target);
   if (cleanup.tag === "unmitigated") {
     return {
       tag: "unmitigated",
@@ -249,8 +253,9 @@ function resolveFeatherFallLandingForTarget(
     targetId: target.combatantId,
     fallDamagePrevented: true,
     fallingPronePrevented: true,
-  } as const satisfies BattleFeatherFallLandingResult;
-  const routeEvents = battleReducerRouteForFeatherFallLanding(result);
+  } as const satisfies BattleFallingCreatureMitigationLandingResult;
+  const routeEvents =
+    battleReducerRouteForFallingCreatureMitigationLanding(result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
@@ -269,27 +274,30 @@ export function resolveFallDamageLanding(input: {
       message: "Fall damage landing target is not in this battle.",
     };
   }
-  const featherFall = resolveFeatherFallLandingForTarget(input.state, target);
+  const mitigationLanding = resolveFallingCreatureMitigationLandingForTarget(
+    input.state,
+    target,
+  );
   const mitigationFrameIndex = fallDamageLandingMitigationFrameIndex(
-    featherFall.state,
+    mitigationLanding.state,
     input.targetId,
   );
   const mitigationFrame =
     mitigationFrameIndex === null
       ? null
-      : featherFall.state.interruptStack[mitigationFrameIndex];
-  const slowFallReductionAmount =
+      : mitigationLanding.state.interruptStack[mitigationFrameIndex];
+  const fallDamageReductionAmount =
     mitigationFrame?.kind === "fallDamageLandingMitigation"
       ? Number(mitigationFrame.reductionAmount)
       : 0;
-  const effectiveFallDamageNumber = featherFall.fallDamagePrevented
+  const effectiveFallDamageNumber = mitigationLanding.fallDamagePrevented
     ? 0
-    : Math.max(0, Number(input.fallDamage.amount) - slowFallReductionAmount);
+    : Math.max(0, Number(input.fallDamage.amount) - fallDamageReductionAmount);
   const withoutMitigationFrame =
     mitigationFrameIndex === null
-      ? featherFall.state
+      ? mitigationLanding.state
       : battleStateWithoutInterruptStackFrame(
-          featherFall.state,
+          mitigationLanding.state,
           mitigationFrameIndex,
         );
   const landedTarget = withoutMitigationFrame.combatants.get(input.targetId);
@@ -313,8 +321,8 @@ export function resolveFallDamageLanding(input: {
     effectiveFallDamage,
     fallDamagePrevented: effectiveFallDamage === 0,
     fallingPronePrevented: effectiveFallDamage === 0,
-    slowFallReductionAmount: toDamageAmount(slowFallReductionAmount),
-    featherFallMitigated: featherFall.tag === "mitigated",
+    fallDamageReductionAmount: toDamageAmount(fallDamageReductionAmount),
+    fallingCreatureMitigated: mitigationLanding.tag === "mitigated",
   };
 }
 

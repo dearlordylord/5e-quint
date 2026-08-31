@@ -3,7 +3,7 @@ import {
   battleStateInitIssueMessage,
   type BattleStatBlockProjectionFailure,
 } from "@dnd/battle-runtime";
-import { Either, Match, Option } from "effect";
+import { Match, Option, Result } from "effect";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -18,7 +18,7 @@ export function projectStatBlockBattleCombatant(input: {
     input.combatant.statBlockId,
   );
   if (Option.isNone(statBlock)) {
-    return Either.left(
+    return Result.fail(
       errorContent("Unknown Stat Block combatant.", {
         code: "UNKNOWN_STAT_BLOCK_COMBATANT",
         statBlockId: input.combatant.statBlockId,
@@ -38,9 +38,9 @@ export function projectStatBlockBattleCombatant(input: {
       ? {}
       : { tempHp: input.combatant.tempHp }),
   });
-  if (Either.isLeft(creatureInit)) {
-    return Either.left(
-      Match.value(creatureInit.left).pipe(
+  if (Result.isFailure(creatureInit)) {
+    return Result.fail(
+      Match.value(creatureInit.failure).pipe(
         Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
           statBlockProjectionFailureContent(
             input.combatant.statBlockId,
@@ -64,11 +64,11 @@ export function projectStatBlockBattleCombatant(input: {
       ),
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "encounterCombatant" as const,
     creatureInit: {
-      ...creatureInit.right,
-      creatureInit: creatureInit.right.creatureInit,
+      ...creatureInit.success,
+      creatureInit: creatureInit.success.creatureInit,
     },
   });
 }

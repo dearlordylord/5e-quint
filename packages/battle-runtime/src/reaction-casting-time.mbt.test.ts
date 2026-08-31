@@ -70,6 +70,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -100,13 +101,14 @@ type ReactionCastingTimeContinuationKind =
   | "afterDamageResolved";
 type ReactionCastingTimeLastResult =
   | "init"
-  | "counterspellEndedSpellCast"
-  | "counterspellAllowedSpellCastResume"
+  | "spellCastInterruptionReactionEndedSpellCast"
+  | "spellCastInterruptionReactionAllowedSpellCastResume"
   | "hellishRebukeAfterDamage";
 const REACTION_CASTING_TIME_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
   Init: "init",
-  CounterspellEndedSpellCast: "counterspellEndedSpellCast",
-  CounterspellAllowedSpellCastResume: "counterspellAllowedSpellCastResume",
+  CounterspellEndedSpellCast: "spellCastInterruptionReactionEndedSpellCast",
+  CounterspellAllowedSpellCastResume:
+    "spellCastInterruptionReactionAllowedSpellCastResume",
   HellishRebukeAfterDamage: "hellishRebukeAfterDamage",
 } as const satisfies Readonly<Record<string, ReactionCastingTimeLastResult>>;
 
@@ -146,12 +148,12 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 const magicMissileUnitId = "magic_missile";
-const counterspellUnitId = "counterspell";
+const spellCastInterruptionReactionUnitId = "spellCastInterruptionReaction";
 const hellishRebukeUnitId = "hellish_rebuke";
 const triggerCreatureId = combatantId("reaction-casting-time-trigger-creature");
 const reactorId = combatantId("reaction-casting-time-reactor");
 const initialHp = 30;
-const counterspellSlotLevel = 3;
+const spellCastInterruptionReactionSlotLevel = 3;
 const hellishRebukeSlotLevel = 2;
 const magicMissileFirstSlotLevel = 1;
 const magicMissileFourthSlotLevel = 4;
@@ -161,7 +163,7 @@ const hellishRebukeDamageRoll = [[1, 1, 1]] as const;
 
 const replaySequences = [
   {
-    name: "counterspell-ends-spell-cast",
+    name: "spellCastInterruptionReaction-ends-spell-cast",
     actions: ["doCounterspellEndsSpellCast"],
     expected: expectedReactionCastingTimeProjection({
       triggerKind: "spellCast",
@@ -169,11 +171,11 @@ const replaySequences = [
       reactorReactionAvailable: false,
       reactorThirdLevelSlotsExpended: 1,
       reactionWindowCleared: true,
-      lastResult: "counterspellEndedSpellCast",
+      lastResult: "spellCastInterruptionReactionEndedSpellCast",
     }),
   },
   {
-    name: "counterspell-allows-spell-cast-resume",
+    name: "spellCastInterruptionReaction-allows-spell-cast-resume",
     actions: ["doCounterspellAllowsSpellCastResume"],
     expected: expectedReactionCastingTimeProjection({
       triggerKind: "spellCast",
@@ -183,7 +185,7 @@ const replaySequences = [
       triggerCreatureFourthLevelSlotsExpended: 1,
       reactorThirdLevelSlotsExpended: 1,
       reactionWindowCleared: true,
-      lastResult: "counterspellAllowedSpellCastResume",
+      lastResult: "spellCastInterruptionReactionAllowedSpellCastResume",
     }),
   },
   {
@@ -267,10 +269,10 @@ function createReactionCastingTimeDriver() {
         state = initialRuntimeState();
       },
       doCounterspellEndsSpellCast: () => {
-        state = counterspellEndsSpellCast();
+        state = spellCastInterruptionReactionEndsSpellCast();
       },
       doCounterspellAllowsSpellCastResume: () => {
-        state = counterspellAllowsSpellCastResume();
+        state = spellCastInterruptionReactionAllowsSpellCastResume();
       },
       doHellishRebukeAfterDamage: () => {
         state = hellishRebukeAfterDamage();
@@ -286,8 +288,12 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
     battle: reactionCastingTimeBattle({
       triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
       triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
-      reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
-      reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+      reactorPreparedSpells: [
+        srdSpellRecord(spellCastInterruptionReactionUnitId),
+      ],
+      reactorSpellSlots: [
+        { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+      ],
     }).state,
     triggerKind: "none",
     continuationKind: "none",
@@ -295,12 +301,16 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
   };
 }
 
-function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
+function spellCastInterruptionReactionEndsSpellCast(): ReactionCastingTimeRuntimeState {
   const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
-    reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
-    reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+    reactorPreparedSpells: [
+      srdSpellRecord(spellCastInterruptionReactionUnitId),
+    ],
+    reactorSpellSlots: [
+      { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+    ],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
     session,
@@ -327,18 +337,22 @@ function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
     battle: resolved.state,
     triggerKind: "spellCast",
     continuationKind: "spellCastEnded",
-    lastResult: "counterspellEndedSpellCast",
+    lastResult: "spellCastInterruptionReactionEndedSpellCast",
   };
 }
 
-function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
+function spellCastInterruptionReactionAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
   const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [
       { spellLevel: magicMissileFourthSlotLevel, count: 1 },
     ],
-    reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
-    reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+    reactorPreparedSpells: [
+      srdSpellRecord(spellCastInterruptionReactionUnitId),
+    ],
+    reactorSpellSlots: [
+      { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+    ],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
     session,
@@ -376,7 +390,7 @@ function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
     battle: resolved.state,
     triggerKind: "spellCast",
     continuationKind: "spellCastResumed",
-    lastResult: "counterspellAllowedSpellCastResume",
+    lastResult: "spellCastInterruptionReactionAllowedSpellCastResume",
   };
 }
 
@@ -676,7 +690,7 @@ function startMagicMissileWithCounterspell(input: {
       {
         kind: "targetSpatialFacts",
         holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
-        spatialFacts: [counterspellTriggerFact(input.session)],
+        spatialFacts: [spellCastInterruptionReactionTriggerFact(input.session)],
       },
     ],
   });
@@ -837,49 +851,53 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(
+function spellCastInterruptionReactionTriggerFact(
   session: BattleRuntimeSession,
 ): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId,
     casterId: triggerCreatureId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       session,
       reactorId,
       spellSlotInvocationRef(
-        counterspellUnitId,
-        counterspellSlotLevel,
-        "counterspell",
+        spellCastInterruptionReactionUnitId,
+        spellCastInterruptionReactionSlotLevel,
+        "spellCastInterruptionReaction",
       ),
     ),
     rangeFeet: movementFeet(60),
   };
 }
 
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function requireCounterspellChoice(
   result: NeedsHolesResult,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     result,
-    spellId: counterspellUnitId,
-    procedure: "counterspell",
-    slotLevel: counterspellSlotLevel,
+    spellId: spellCastInterruptionReactionUnitId,
+    procedure: "spellCastInterruptionReaction",
+    slotLevel: spellCastInterruptionReactionSlotLevel,
   });
 }
 
 function requireHellishRebukeChoice(
   result: NeedsHolesResult,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     result,
     spellId: hellishRebukeUnitId,
@@ -893,41 +911,34 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly spellId: string;
   readonly procedure: string;
   readonly slotLevel: number;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     input.result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== reactorId
-      ) {
-        return false;
-      }
-      const reactor = input.result.state.combatants.get(candidate.reactorId);
-      if (reactor?.origin.kind !== "character") return false;
-      const binding = characterProcedureBinding(
-        reactor.origin.execution,
-        candidate.subject.procedureRef,
-      );
-      if (binding?.procedure.kind !== "spellInvocation") return false;
-      const execution = binding.procedure.execution;
-      return (
-        execution.procedure === input.procedure &&
-        "resource" in execution &&
-        execution.resource.tag === "spellSlot" &&
-        Number(execution.resource.slotLevel) === input.slotLevel
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId
+    ) {
+      return false;
+    }
+    const reactor = input.result.state.combatants.get(
+      candidate.subject.reactorId,
+    );
+    if (reactor?.origin.kind !== "character") return false;
+    const binding = characterProcedureBinding(
+      reactor.origin.execution,
+      candidate.subject.procedureRef,
+    );
+    if (binding?.procedure.kind !== "spellInvocation") return false;
+    const execution = binding.procedure.execution;
+    return (
+      execution.procedure === input.procedure &&
+      "resource" in execution &&
+      execution.resource.tag === "spellSlot" &&
+      Number(execution.resource.slotLevel) === input.slotLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction choice.`);
   }
@@ -947,10 +958,7 @@ function requirePendingReactionTrigger(
 
 function triggeredReactionSpellDecision(
   reactor: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {

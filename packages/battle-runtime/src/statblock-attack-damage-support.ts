@@ -8,7 +8,7 @@ import type {
   CreatureAttackRollMechanics,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Brand, Either, Match } from "effect";
+import { Brand, Match, Result } from "effect";
 import type {
   SelectedStatBlockAttackDamage,
   SelectedStatBlockAttackDamageComponent,
@@ -56,6 +56,16 @@ type UnreferencedStatBlockAttackDamageComponent =
       "componentRef"
     >;
 
+type SupportedStatBlockAdvantageBonusDamage =
+  | { readonly kind: "absent" }
+  | {
+      readonly kind: "present";
+      readonly component: UnreferencedStatBlockAttackDamageComponent & {
+        readonly componentRef: typeof statBlockAdvantageBonusDamageComponentRef;
+      };
+    }
+  | { readonly kind: "unsupported" };
+
 const selectedStatBlockAttackDamage =
   Brand.nominal<SelectedStatBlockAttackDamage>();
 
@@ -63,8 +73,8 @@ export function parseSelectedStatBlockAttackDamage(
   damage: SelectedStatBlockAttackDamageComponents,
 ) {
   return selectedStatBlockAttackDamageHasCanonicalComponentRefs(damage)
-    ? Either.right(selectedStatBlockAttackDamage(damage))
-    : Either.left({ kind: "nonCanonicalStatBlockAttackDamageRoles" } as const);
+    ? Result.succeed(selectedStatBlockAttackDamage(damage))
+    : Result.fail({ kind: "nonCanonicalStatBlockAttackDamageRoles" } as const);
 }
 
 export function supportedStatBlockAttackDamage(
@@ -76,6 +86,28 @@ export function supportedStatBlockAttackDamage(
 export function supportedStatBlockAttackDamage(
   attack: CreatureAttackHitEffects,
 ): StatBlockAttackDamage | null {
+  const effects = supportedStatBlockAttackDamageEffects(attack);
+  if (effects === null) return null;
+  const baseComponents = referencedStatBlockBaseDamageComponents(effects);
+  if (baseComponents === null) return null;
+  const advantageBonus = supportedStatBlockAdvantageBonusDamage(
+    effects,
+    baseComponents[0].damageType,
+  );
+  return Match.value(advantageBonus).pipe(
+    Match.when({ kind: "absent" }, () => ({ baseComponents })),
+    Match.when({ kind: "present" }, ({ component }) => ({
+      baseComponents,
+      advantageBonus: component,
+    })),
+    Match.when({ kind: "unsupported" }, () => null),
+    Match.exhaustive,
+  );
+}
+
+function supportedStatBlockAttackDamageEffects(
+  attack: CreatureAttackHitEffects,
+): readonly SupportedStatBlockAttackDamageEffect[] | null {
   const effects: SupportedStatBlockAttackDamageEffect[] = [];
   for (const effect of attack.onHit) {
     const parsed = supportedStatBlockAttackDamageEffect(effect);
@@ -87,6 +119,12 @@ export function supportedStatBlockAttackDamage(
     }
     effects.push(parsed);
   }
+  return effects;
+}
+
+function referencedStatBlockBaseDamageComponents(
+  effects: readonly SupportedStatBlockAttackDamageEffect[],
+): ReadonlyNonEmptyArray<StatBlockAttackDamageComponent> | null {
   const unreferencedBaseComponents = nonEmpty(
     effects.flatMap((effect) =>
       effect.kind === "base" ? [effect.component] : [],
@@ -95,57 +133,54 @@ export function supportedStatBlockAttackDamage(
   if (unreferencedBaseComponents === null) {
     return null;
   }
-  const referencedBaseComponents = Either.all(
-    unreferencedBaseComponents.map((component, index) =>
-      Either.map(
-        parseStatBlockBaseDamageComponentOrdinal(index + 1),
-        (ordinal) =>
-          withStatBlockDamageComponentRef(
-            component,
-            statBlockBaseDamageComponentRef(ordinal),
-          ),
-      ),
-    ),
+  const referencedBaseComponents = unreferencedBaseComponents.flatMap(
+    (component, index) => {
+      const ordinal = parseStatBlockBaseDamageComponentOrdinal(index + 1);
+      return Result.isSuccess(ordinal)
+        ? [
+            withStatBlockDamageComponentRef(
+              component,
+              statBlockBaseDamageComponentRef(ordinal.success),
+            ),
+          ]
+        : [];
+    },
   );
-  if (Either.isLeft(referencedBaseComponents)) {
+  if (referencedBaseComponents.length !== unreferencedBaseComponents.length) {
     return null;
   }
-  const baseComponents = nonEmpty(referencedBaseComponents.right);
+  const baseComponents = nonEmpty(referencedBaseComponents);
   if (baseComponents === null) {
     return null;
   }
+  return baseComponents;
+}
 
+function supportedStatBlockAdvantageBonusDamage(
+  effects: readonly SupportedStatBlockAttackDamageEffect[],
+  baseDamageType: StatBlockAttackDamageComponent["damageType"],
+): SupportedStatBlockAdvantageBonusDamage {
   const advantageBonuses = effects.flatMap((effect) =>
     effect.kind === "advantageBonus" ? [effect.component] : [],
   );
   if (advantageBonuses.length > 1) {
-    return null;
+    return { kind: "unsupported" };
   }
   const unreferencedAdvantageBonus = advantageBonuses[0];
-  const advantageBonus =
-    unreferencedAdvantageBonus === undefined
-      ? undefined
-      : withStatBlockDamageComponentRef(
-          unreferencedAdvantageBonus,
-          statBlockAdvantageBonusDamageComponentRef,
-        );
-  if (
-    advantageBonus !== undefined &&
-    advantageBonus.damageType !== baseComponents[0].damageType
-  ) {
-    return null;
-  }
+  if (unreferencedAdvantageBonus === undefined) return { kind: "absent" };
+  const advantageBonus = withStatBlockDamageComponentRef(
+    unreferencedAdvantageBonus,
+    statBlockAdvantageBonusDamageComponentRef,
+  );
+  if (advantageBonus.damageType !== baseDamageType)
+    return { kind: "unsupported" };
   const advantageBonusIndex = effects.findIndex(
     (effect) => effect.kind === "advantageBonus",
   );
   if (advantageBonusIndex > 0 && advantageBonusIndex < effects.length - 1) {
-    return null;
+    return { kind: "unsupported" };
   }
-
-  return {
-    baseComponents,
-    ...optionalProperty("advantageBonus", advantageBonus),
-  };
+  return { kind: "present", component: advantageBonus };
 }
 
 function supportedStatBlockAttackDamageEffect(
@@ -305,7 +340,7 @@ export function selectedStatBlockAttackDamageOptions(
   return deduplicatedSelectedStatBlockAttackDamageOptions(
     options.flatMap((option) => {
       const parsed = parseSelectedStatBlockAttackDamage(option);
-      return Either.isRight(parsed) ? [parsed.right] : [];
+      return Result.isSuccess(parsed) ? [parsed.success] : [];
     }),
   );
 }
@@ -387,10 +422,14 @@ export function selectedStatBlockAttackDamageHasCanonicalComponentRefs(
   ]);
 }
 
-function withStatBlockDamageComponentRef(
+function withStatBlockDamageComponentRef<
+  ComponentRef extends StatBlockAttackDamageComponentRef,
+>(
   component: UnreferencedStatBlockAttackDamageComponent,
-  componentRef: StatBlockAttackDamageComponentRef,
-): StatBlockAttackDamageComponent {
+  componentRef: ComponentRef,
+): UnreferencedStatBlockAttackDamageComponent & {
+  readonly componentRef: ComponentRef;
+} {
   return { ...component, componentRef };
 }
 

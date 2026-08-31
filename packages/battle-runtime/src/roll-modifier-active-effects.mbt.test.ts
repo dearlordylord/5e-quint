@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -63,7 +63,7 @@ import {
   breakBattleConcentration,
   combatantId,
   discoverBattleActs,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleFill,
@@ -142,7 +142,7 @@ type LastResult =
   | "enhancePerTarget"
   | "enthrallPerception"
   | "needsThaumaturgyCount"
-  | "thaumaturgyBoomingVoice"
+  | "temporaryAbilityCheckRollMode"
   | "thaumaturgyCancelled"
   | "concentrationBroken";
 const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
@@ -159,7 +159,7 @@ const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
   EnhancePerTarget: "enhancePerTarget",
   EnthrallPerception: "enthrallPerception",
   NeedsThaumaturgyCount: "needsThaumaturgyCount",
-  ThaumaturgyBoomingVoice: "thaumaturgyBoomingVoice",
+  ThaumaturgyBoomingVoice: "temporaryAbilityCheckRollMode",
   ThaumaturgyCancelled: "thaumaturgyCancelled",
   ConcentrationBroken: "concentrationBroken",
 } as const satisfies Readonly<Record<string, LastResult>>;
@@ -459,7 +459,7 @@ describe("roll-modifier active effects MBT parity", () => {
       thaumaturgyEffectActive: true,
       thaumaturgyIntimidationRollMode: "advantage",
       casterConcentrating: false,
-      lastResult: "thaumaturgyBoomingVoice",
+      lastResult: "temporaryAbilityCheckRollMode",
     });
     expect(
       rollModifierActiveEffectsProjection(
@@ -881,7 +881,7 @@ function routeCastThaumaturgyBoomingVoice(
     holes: [],
     lastResult: cancelWithDisadvantage
       ? "thaumaturgyCancelled"
-      : "thaumaturgyBoomingVoice",
+      : "temporaryAbilityCheckRollMode",
     surface: cancelWithDisadvantage
       ? "thaumaturgyCancelled"
       : "thaumaturgyActiveEffect",
@@ -1297,7 +1297,7 @@ function castThaumaturgyBoomingVoice(
     holes: [],
     lastResult: cancelWithDisadvantage
       ? "thaumaturgyCancelled"
-      : "thaumaturgyBoomingVoice",
+      : "temporaryAbilityCheckRollMode",
   };
 }
 
@@ -1376,7 +1376,7 @@ function rollModifierActiveEffectsProjection(
     thaumaturgyIntimidationRollMode: thaumaturgyIntimidationMode(
       state.battle.state,
     ),
-    thaumaturgyEffectActive: thaumaturgyBoomingVoiceEffectActive(
+    thaumaturgyEffectActive: temporaryAbilityCheckRollModeEffectActive(
       state.battle.state,
     ),
     holes: battleHolesToRollModifierHoles(state.holes),
@@ -1471,7 +1471,7 @@ function abilityCheckModeFor(
 
 function thaumaturgyIntimidationMode(state: BattleState): RollMode {
   return (
-    thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+    temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
       state,
       spellCasterId,
       difficultyClass(13),
@@ -1479,9 +1479,11 @@ function thaumaturgyIntimidationMode(state: BattleState): RollMode {
   );
 }
 
-function thaumaturgyBoomingVoiceEffectActive(state: BattleState): boolean {
+function temporaryAbilityCheckRollModeEffectActive(
+  state: BattleState,
+): boolean {
   return requireCombatant(state, spellCasterId).activeEffects.some(
-    (effect) => effect.kind === "thaumaturgyBoomingVoice",
+    (effect) => effect.kind === "temporaryAbilityCheckRollMode",
   );
 }
 
@@ -1494,7 +1496,7 @@ function battleHolesToRollModifierHoles(
       if (hole.kind === "skillChoice") return "SkillChoice";
       if (hole.kind === "abilityChoice") return "AbilityChoice";
       if (hole.kind === "targetAbilityChoices") return "TargetAbilityChoices";
-      if (hole.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+      if (hole.kind === "temporaryAbilityCheckRollModeActiveEffectCount") {
         return "ThaumaturgyActiveOneMinuteEffectCount";
       }
       throw new Error(`Unexpected roll modifier hole ${hole.kind}.`);
@@ -1531,8 +1533,11 @@ function requireResolved(
 }
 
 function findThaumaturgyCountHole(holes: readonly BattleHole[]) {
-  const hole = requireHole(holes, "thaumaturgyActiveOneMinuteEffectCount");
-  if (hole.kind !== "thaumaturgyActiveOneMinuteEffectCount") {
+  const hole = requireHole(
+    holes,
+    "temporaryAbilityCheckRollModeActiveEffectCount",
+  );
+  if (hole.kind !== "temporaryAbilityCheckRollModeActiveEffectCount") {
     throw new Error("Expected Thaumaturgy active-effect count hole.");
   }
   return hole;
@@ -1543,7 +1548,7 @@ function thaumaturgyCountFill(
   activeOneMinuteEffectCount: number,
 ): BattleFill {
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     holeId: hole.holeId,
     value: { activeOneMinuteEffectCount },
   };
@@ -1555,7 +1560,7 @@ function withCharismaDisadvantageAgainstCaster(
   const source = requireCombatant(state, spellTargetId);
   const hexEffect = {
     kind: "spellMarkedDamageRider",
-    effectRef: battleActiveEffectExecutionRefForTest("roll-modifier-hex"),
+    effectRef: battleEffectExecutionRefForTest("roll-modifier-hex"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: spellTargetId,
     targetCombatantId: spellCasterId,

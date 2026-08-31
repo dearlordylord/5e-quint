@@ -1,13 +1,13 @@
-FROM node:22-bookworm-slim AS builder
+FROM node:22.19.0-bookworm-slim AS builder
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
 WORKDIR /srv/dnd
 
 COPY --chown=node:node . .
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --strict-peer-dependencies
 RUN pnpm --filter @dnd/mcp deploy --prod --legacy /srv/deploy
 
-FROM node:22-bookworm-slim
+FROM node:22.19.0-bookworm-slim
 
 ARG DND_MCP_RELEASE
 RUN test -n "$DND_MCP_RELEASE"

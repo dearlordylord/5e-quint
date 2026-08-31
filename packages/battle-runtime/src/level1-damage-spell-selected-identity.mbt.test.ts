@@ -9,7 +9,7 @@
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   armorClass,
   defaultArmorClassState,
@@ -28,8 +28,8 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import {
-  CHROMATIC_ORB_DAMAGE_TYPES,
-  CHROMATIC_ORB_LEAP_RANGE_FEET,
+  CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES,
+  CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -1168,10 +1168,10 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function level1DamageSpellCreature(input: {
@@ -1264,9 +1264,9 @@ function assertSelectedSpellProcedureProfile(
       targeting: { kind: "singleCombatant" },
       attackKind: "ranged_spell_attack",
       damage: { expr: { dice: 3, dieSize: 8 } },
-      damageTypeChoices: [...CHROMATIC_ORB_DAMAGE_TYPES],
+      damageTypeChoices: [...CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES],
       rangeFeet: 90,
-      leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+      leapRangeFeet: CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
     },
     ice_knife: {
       procedure: "attackBurstSaveDamage",
@@ -1323,7 +1323,7 @@ function assertSelectedSpellProcedureProfile(
       targeting: { kind: "singleCreatureOrObject" },
       attackKind: "ranged_spell_attack",
       damage: {
-        kind: "sorcerousBurstDamageTypeChoice",
+        kind: "spellAttackDamageTypeChoice",
         expr: { dice: 1, dieSize: 8 },
         maxDieAdditionalDiceLimit: 3,
         damageTypeChoices: [...sorcerousBurstDamageTypes],
@@ -1425,7 +1425,7 @@ function spellLeapTargetFill(
         previousTargetId,
         targetId,
         sourceProcedureRef,
-        rangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+        rangeFeet: CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
       },
     ],
   };
@@ -1578,7 +1578,7 @@ function assertChromaticOrbDamageTypeChoiceProfile(
   hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
 ): void {
   if (
-    !sameStringSet(hole.choices, CHROMATIC_ORB_DAMAGE_TYPES) ||
+    !sameStringSet(hole.choices, CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES) ||
     "spell" in hole
   ) {
     throw new Error("Chromatic Orb damage type choice profile drifted.");

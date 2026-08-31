@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS,
@@ -40,7 +40,7 @@ const oauth = createPublicMcpOAuth({
   issuer: issuer.toString().replace(/\/$/u, ""),
   jwksUrl: new URL("/api/auth/jwks", origin).toString(),
 });
-if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
+if (Result.isFailure(oauth)) throw new Error(oauth.failure.message);
 
 try {
   const metadata = await decodeJson(
@@ -231,15 +231,15 @@ try {
   ) {
     throw new Error("Refresh retry did not replay the rotated token response");
   }
-  const principal = await oauth.right.verifyAccessToken(
+  const principal = await oauth.success.verifyAccessToken(
     refreshedTokens.access_token,
   );
-  if (Either.isLeft(principal)) throw new Error(principal.left.message);
+  if (Result.isFailure(principal)) throw new Error(principal.failure.message);
   const chatGptPrincipal =
-    await oauth.right.verifyAccessToken(chatGptAccessToken);
-  if (Either.isLeft(chatGptPrincipal))
-    throw new Error(chatGptPrincipal.left.message);
-  if (chatGptPrincipal.right !== principal.right)
+    await oauth.success.verifyAccessToken(chatGptAccessToken);
+  if (Result.isFailure(chatGptPrincipal))
+    throw new Error(chatGptPrincipal.failure.message);
+  if (chatGptPrincipal.success !== principal.success)
     throw new Error("ChatGPT and refresh flows derived different principals");
   const restoredBrowserSession = await decodeJson(
     SessionResponseSchema,
@@ -284,13 +284,13 @@ try {
     state: "isolated-saved-session-state",
     tokenEndpoint: metadata.token_endpoint,
   });
-  const isolatedPrincipal = await oauth.right.verifyAccessToken(
+  const isolatedPrincipal = await oauth.success.verifyAccessToken(
     isolatedTokens.access_token,
   );
-  if (Either.isLeft(isolatedPrincipal)) {
-    throw new Error(isolatedPrincipal.left.message);
+  if (Result.isFailure(isolatedPrincipal)) {
+    throw new Error(isolatedPrincipal.failure.message);
   }
-  if (isolatedPrincipal.right === principal.right) {
+  if (isolatedPrincipal.success === principal.success) {
     throw new Error("Independent browser sessions derived the same principal");
   }
   const deletionResponse = await fetch(
@@ -352,7 +352,7 @@ try {
           refreshTokenLifetimeSeconds:
             SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
           existingMcpVerifierAccepted: true,
-          principalDerived: principal.right.length > 0,
+          principalDerived: principal.success.length > 0,
           browserSessionRestored: restoredBrowserSession.user.id.length > 0,
           independentBrowserSessionsIsolated: true,
           anonymousUserDeletionDisabled: true,

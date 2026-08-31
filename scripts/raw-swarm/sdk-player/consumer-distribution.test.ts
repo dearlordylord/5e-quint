@@ -30,6 +30,8 @@ import {
   PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
   publicDeclarationDiagnosticBaselineMismatches,
   type PublicDeclarationSerializationDiagnosticBaselineEntry,
 } from "./consumer-distribution.ts";
@@ -101,17 +103,54 @@ function observedPinnedDeclarationDiagnostics(
 
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(520);
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(13 * 512 * 1024);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(536);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
+    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(
+      PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
+        PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes,
+    );
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
-    writeFileSync(join(directory, "allowed.d.ts"), "export {};\n");
+    writeFileSync(
+      join(directory, "allowed.d.ts"),
+      "x".repeat(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES),
+    );
     expect(assertPublicDeclarationBundle(directory)).toEqual({
       files: 1,
-      bytes: "export {};\n".length,
+      bytes: PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
     });
+    appendFileSync(join(directory, "allowed.d.ts"), "x");
+    expect(() => assertPublicDeclarationBundle(directory)).toThrow(
+      new RegExp(
+        `Public declaration bundle has ${String(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES + 1)} bytes; maximum is ${String(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES)}`,
+      ),
+    );
+    writeFileSync(join(directory, "allowed.d.ts"), "export {};\n");
     writeFileSync(join(directory, "README.md"), "not a declaration\n");
     expect(() => assertPublicDeclarationBundle(directory)).toThrow(
       /non-declaration file/,
+    );
+
+    const fileCapDirectory = mkdtempSync(
+      join(tmpdir(), "dnd-declaration-file-gate-"),
+    );
+    for (let index = 0; index < PUBLIC_DECLARATION_BUNDLE_MAX_FILES; index++) {
+      writeFileSync(join(fileCapDirectory, `${String(index)}.d.ts`), "");
+    }
+    expect(assertPublicDeclarationBundle(fileCapDirectory)).toEqual({
+      files: PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
+      bytes: 0,
+    });
+    writeFileSync(
+      join(
+        fileCapDirectory,
+        `${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES)}.d.ts`,
+      ),
+      "",
+    );
+    expect(() => assertPublicDeclarationBundle(fileCapDirectory)).toThrow(
+      new RegExp(
+        `Public declaration bundle has ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES + 1)} files; maximum is ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES)}`,
+      ),
     );
   });
 
@@ -254,6 +293,30 @@ describe("SDK player consumer distribution", () => {
       const declarationMeasure = assertPublicDeclarationBundle(
         join(destination, "declarations"),
       );
+      expect(declarationMeasure).toEqual(
+        PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
+      );
+      const declarationRoot = join(destination, "declarations");
+      for (const retainedOwner of [
+        "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.d.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.d.ts",
+      ]) {
+        expect(existsSync(join(declarationRoot, retainedOwner))).toBe(true);
+      }
+      for (const removedBroadDependency of [
+        "packages/character-battle-runtime/src/index.d.ts",
+        "packages/character-battle-runtime/src/companion-handoff.d.ts",
+        "packages/character-battle-runtime/src/battle-handoff-issue.d.ts",
+        "packages/character-battle-runtime/src/character-battle-route.d.ts",
+        "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.d.ts",
+        "scripts/raw-swarm/transcript.d.ts",
+        "scripts/raw-swarm/raw-swarm-identities.d.ts",
+      ]) {
+        expect(existsSync(join(declarationRoot, removedBroadDependency))).toBe(
+          false,
+        );
+      }
       expect(
         assertPublicDeclarationBundle(join(trustedDestination, "declarations")),
       ).toEqual(declarationMeasure);

@@ -12,7 +12,7 @@ type WardingBondCleanupFills = {
   readonly recastOnConnectedCreature: boolean;
 };
 
-export function wardingBondDamageSharingInitialState(input: {
+export function linkedDefenseResistanceDamageShareDamageSharingInitialState(input: {
   readonly sourceHitPoints: number;
   readonly wardHitPoints: number;
   readonly bondPresent: boolean;
@@ -26,7 +26,9 @@ export function wardingBondDamageSharingInitialState(input: {
   };
 }
 
-function wardingBondDamageAfterResistance(incomingDamage: number): number {
+function linkedDefenseResistanceDamageShareDamageAfterResistance(
+  incomingDamage: number,
+): number {
   return Math.floor(nonnegativeInteger(incomingDamage) / 2);
 }
 
@@ -35,7 +37,9 @@ export function resolveWardingBondSharedDamage(
   fill: { readonly incomingDamage: number },
 ): WardingBondDamageSharingState {
   const targetDamage = state.bondPresent
-    ? wardingBondDamageAfterResistance(fill.incomingDamage)
+    ? linkedDefenseResistanceDamageShareDamageAfterResistance(
+        fill.incomingDamage,
+      )
     : nonnegativeInteger(fill.incomingDamage);
   const sourceSharesDamage =
     state.bondPresent && state.sourceHitPoints > 0 && targetDamage > 0;
@@ -47,7 +51,7 @@ export function resolveWardingBondSharedDamage(
     wardHitPoints: applyDamageToHitPoints(state.wardHitPoints, targetDamage),
     sourceTookSharedDamage: sourceSharesDamage,
   };
-  return wardingBondStateAfterCleanup(damaged, {
+  return linkedDefenseResistanceDamageShareStateAfterCleanup(damaged, {
     separatedBeyondSixtyFeet: false,
     recastOnConnectedCreature: false,
   });
@@ -57,13 +61,13 @@ export function resolveWardingBondCleanup(
   state: WardingBondDamageSharingState,
   fills: WardingBondCleanupFills,
 ): WardingBondDamageSharingState {
-  return wardingBondStateAfterCleanup(
+  return linkedDefenseResistanceDamageShareStateAfterCleanup(
     { ...state, sourceTookSharedDamage: false },
     fills,
   );
 }
 
-function wardingBondStateAfterCleanup(
+function linkedDefenseResistanceDamageShareStateAfterCleanup(
   state: WardingBondDamageSharingState,
   fills: WardingBondCleanupFills,
 ): WardingBondDamageSharingState {

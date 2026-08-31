@@ -1,6 +1,5 @@
 import { classLevel } from "@dnd/shared/types";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -104,15 +103,15 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       unit.id,
       "attackDamageReduction",
     );
-    expect(choice.choice).toMatchObject({
+    expect(choice.modifier).toMatchObject({
       zeroDamageRedirect: { originalDamageType: "slashing" },
     });
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -123,8 +122,8 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       );
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
           frontier: {
             ...encoded.frontier,
@@ -146,7 +145,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -218,7 +217,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -278,7 +277,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -352,7 +351,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },

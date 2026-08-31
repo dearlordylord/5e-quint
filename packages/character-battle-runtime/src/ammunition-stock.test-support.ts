@@ -6,7 +6,7 @@ import {
 } from "@dnd/battle-runtime";
 import type { AmmunitionKind } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 export type { AuthoredStatBlockBattleInitInput } from "@dnd/battle-runtime";
 
@@ -16,7 +16,7 @@ export function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return Either.getOrThrow(
+  return Result.getOrThrow(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),

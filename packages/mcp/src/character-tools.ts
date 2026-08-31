@@ -9,7 +9,7 @@ import {
   createFreshCharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
@@ -187,6 +187,7 @@ export function handleCharacterToolCall(
           hitPointMaximumReduction: Hp(0),
           conditions: [],
           unitLibrary: root.unitLibrary,
+          statBlockCatalog: root.statBlockCatalog,
           ...(matched.args.druidWildShapeKnownFormStatBlockIds === undefined
             ? {}
             : {
@@ -194,13 +195,13 @@ export function handleCharacterToolCall(
                   matched.args.druidWildShapeKnownFormStatBlockIds,
               }),
         });
-        if (Either.isLeft(session)) {
+        if (Result.isFailure(session)) {
           return errorContent("Character finalization session failed.", {
             code: "CHARACTER_SESSION_INVALID",
-            message: characterSheetConstructionIssuesSummary(session.left),
+            message: characterSheetConstructionIssuesSummary(session.failure),
           });
         }
-        root.sessionStore.characters.set(session.right);
+        root.sessionStore.characters.set(session.success);
         root.sessionStore.drafts.delete(draftId);
         publishAdminProjectionBestEffort(root);
       }
@@ -218,14 +219,14 @@ export function handleCharacterToolCall(
     ),
     Match.when({ name: characterToolNames.listCharacters }, () => {
       const rows = characterListRows(root);
-      if (Either.isLeft(rows)) {
+      if (Result.isFailure(rows)) {
         return errorContent("Character list projection failed.", {
           code: "CHARACTER_LIST_INVALID",
-          message: rows.left,
+          message: rows.failure,
         });
       }
       return schemaJsonContent(ListCharactersOutputSchema, {
-        characters: rows.right,
+        characters: rows.success,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
@@ -233,8 +234,8 @@ export function handleCharacterToolCall(
       { name: characterToolNames.inspectCharacterSession },
       (matched) => {
         const detail = characterSessionDetail(root, matched.args.characterId);
-        if (Either.isLeft(detail)) {
-          return Match.value(detail.left).pipe(
+        if (Result.isFailure(detail)) {
+          return Match.value(detail.failure).pipe(
             Match.when({ tag: "unknownCharacterSession" }, () =>
               errorContent(
                 `Unknown character session: ${matched.args.characterId}`,
@@ -255,7 +256,7 @@ export function handleCharacterToolCall(
           );
         }
         return schemaJsonContent(CharacterSessionDetailOutputSchema, {
-          detail: characterSessionDetailOutput(detail.right),
+          detail: characterSessionDetailOutput(detail.success),
           session: mcpSessionSummary(root.sessionStore.snapshot()),
         });
       },
@@ -267,12 +268,12 @@ export function handleCharacterToolCall(
           characterId: matched.args.characterId,
           query: matched.args.query,
         });
-        if (Either.isLeft(query)) {
-          return characterSessionQueryIssueContent(query.left);
+        if (Result.isFailure(query)) {
+          return characterSessionQueryIssueContent(query.failure);
         }
         return schemaJsonContent(CharacterSessionQueryOutputSchema, {
           characterId: matched.args.characterId,
-          query: characterSessionQueryProjectionForOutput(query.right),
+          query: characterSessionQueryProjectionForOutput(query.success),
           session: mcpSessionSummary(root.sessionStore.snapshot()),
         });
       },

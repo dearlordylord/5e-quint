@@ -16,7 +16,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -125,8 +125,8 @@ function completeShortRest(
   },
 ) {
   const { sheet, ...benefits } = input;
-  const rest = requireRight(startShortRest({ sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  const completion = requireSuccess(
     finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
   );
   return completeShortRestCore({ ...benefits, completion });
@@ -138,10 +138,10 @@ function completeLongRest(
   },
 ) {
   const { sheet, ...benefits } = input;
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
   );
   return completeLongRestCore({ ...benefits, completion });
@@ -264,7 +264,7 @@ function recoverSecondLevelSpellSlotProjection(): Extract<
     pactSlotsExpended: 1,
     arcaneRecoveryUsedSinceLongRest: false,
   });
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeShortRest({
       sheet,
       unitLibrary,
@@ -301,7 +301,7 @@ function resetArcaneRecoveryOnLongRestProjection(): Extract<
     pactSlotsExpended: 1,
     arcaneRecoveryUsedSinceLongRest: true,
   });
-  const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+  const rested = requireSuccess(completeLongRest({ sheet, unitLibrary }));
   return {
     outcome: "long_rest_reset",
     featureUnitId: wizardArcaneRecoveryFeatureUnitId(rested),
@@ -337,12 +337,12 @@ function rejectPactSlotArcaneRecoveryProjection(): Extract<
       ],
     },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Arcane Recovery to reject Pact Slot recovery.");
   }
-  if (result.left.message !== ARCANE_RECOVERY_PACT_SLOT_REJECTION) {
+  if (result.failure.message !== ARCANE_RECOVERY_PACT_SLOT_REJECTION) {
     throw new Error(
-      `Expected Pact Slot rejection, got ${result.left.message}.`,
+      `Expected Pact Slot rejection, got ${result.failure.message}.`,
     );
   }
   return {
@@ -367,7 +367,7 @@ function arcaneRecoverySheet(input: {
   readonly pactSlotsExpended: number;
   readonly arcaneRecoveryUsedSinceLongRest: boolean;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId("character:arcane-recovery-selected"),
       build: wizard4BuildWithPactSlots(),
@@ -409,7 +409,7 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -627,18 +627,18 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }
 
 function normalizeArcaneRecoverySelectedIdentityQuintState(

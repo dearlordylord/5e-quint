@@ -4,7 +4,7 @@ import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
 import assert from "node:assert/strict";
-import { Either } from "effect";
+import { Result } from "effect";
 import { decodeDiceSeed, type DiceSeed } from "./dice-sampling-service.ts";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import { characterId, combatantId } from "@dnd/battle-runtime";
@@ -880,9 +880,9 @@ describe("MCP protocol server", () => {
         guestAccessGrant: retainedGrant,
       });
       const decoded = decodePlaySessionId(playSessionId);
-      if (decoded._tag === "Left") throw new Error(decoded.left);
+      if (decoded._tag === "Failure") throw new Error(decoded.failure);
       await host.playSessions.run(
-        decoded.right,
+        decoded.success,
         guestCaller(playSessionId),
         (root) => {
           const monk = availableCharacterSession({
@@ -905,8 +905,8 @@ describe("MCP protocol server", () => {
             ],
             unitLibrary: root.unitLibrary,
           });
-          if (Either.isLeft(monk)) throw new Error(monk.left.message);
-          root.sessionStore.characters.set(monk.right);
+          if (Result.isFailure(monk)) throw new Error(monk.failure.message);
+          root.sessionStore.characters.set(monk.success);
         },
       );
       const operationTool = (await client.listTools()).tools.find(
@@ -1857,8 +1857,10 @@ describe("MCP protocol server", () => {
           const presentation = presented.presentation;
           return (
             isJsonObject(choice) &&
-            choice.kind === "castTriggeredReactionSpell" &&
-            choice.reactorId === "row-shield-wizard" &&
+            choice.kind === "nestedProcedure" &&
+            isJsonObject(choice.subject) &&
+            choice.subject.command === "castTriggeredReactionSpell" &&
+            choice.subject.reactorId === "row-shield-wizard" &&
             isJsonObject(presentation) &&
             presentation.kind === "spell" &&
             isJsonObject(presentation.invocation) &&
@@ -1971,9 +1973,9 @@ describe("MCP protocol server", () => {
       );
       const playSessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
-      if (Either.isLeft(decoded)) throw new Error(decoded.left);
+      if (Result.isFailure(decoded)) throw new Error(decoded.failure);
       const installed = await playSessions.run(
-        decoded.right,
+        decoded.success,
         guestCaller(playSessionId),
         (root) => {
           for (const id of [firstCharacterId, secondCharacterId]) {
@@ -1992,13 +1994,14 @@ describe("MCP protocol server", () => {
               companion: { tag: "none" },
               unitLibrary: root.unitLibrary,
             });
-            if (Either.isLeft(session)) throw new Error(session.left.message);
-            root.sessionStore.characters.set(session.right);
+            if (Result.isFailure(session))
+              throw new Error(session.failure.message);
+            root.sessionStore.characters.set(session.success);
           }
         },
       );
-      if (Either.isLeft(installed))
-        throw new Error(installed.left.restoration.guidance);
+      if (Result.isFailure(installed))
+        throw new Error(installed.failure.restoration.guidance);
       const started = await callStructuredTool(client, {
         name: "start_battle",
         arguments: {
@@ -2179,9 +2182,9 @@ describe("MCP protocol server", () => {
       await client.connect(clientTransport);
       const playSessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
-      if (Either.isLeft(decoded)) throw new Error(decoded.left);
+      if (Result.isFailure(decoded)) throw new Error(decoded.failure);
       const installed = await host.playSessions.run(
-        decoded.right,
+        decoded.success,
         guestCaller(playSessionId),
         (root) => {
           for (const character of [firstCharacterId, secondCharacterId]) {
@@ -2200,13 +2203,14 @@ describe("MCP protocol server", () => {
               companion: { tag: "none" },
               unitLibrary: root.unitLibrary,
             });
-            if (Either.isLeft(session)) throw new Error(session.left.message);
-            root.sessionStore.characters.set(session.right);
+            if (Result.isFailure(session))
+              throw new Error(session.failure.message);
+            root.sessionStore.characters.set(session.success);
           }
         },
       );
-      if (Either.isLeft(installed))
-        throw new Error(installed.left.restoration.guidance);
+      if (Result.isFailure(installed))
+        throw new Error(installed.failure.restoration.guidance);
 
       await callStructuredTool(client, {
         name: "start_battle",
@@ -2378,7 +2382,7 @@ describe("MCP protocol server", () => {
       });
 
       const adjustedBattle = await host.playSessions.run(
-        decoded.right,
+        decoded.success,
         guestCaller(playSessionId),
         (root) => {
           const battle = root.sessionStore.battleSession;
@@ -2409,7 +2413,7 @@ describe("MCP protocol server", () => {
           );
         },
       );
-      if (Either.isLeft(adjustedBattle)) {
+      if (Result.isFailure(adjustedBattle)) {
         throw new Error("Expected canonical Battle HP adjustment to commit.");
       }
       const removed = await callStructuredTool(client, {
@@ -2522,17 +2526,17 @@ describe("MCP protocol server", () => {
       });
       const captureDeepProjection = () =>
         host.playSessions.run(
-          decoded.right,
+          decoded.success,
           guestCaller(playSessionId),
           (root) => {
             const projection = adminProjection(root);
-            if (Either.isLeft(projection)) {
+            if (Result.isFailure(projection)) {
               throw new Error(
-                `Expected a complete Play Session projection: ${projection.left}`,
+                `Expected a complete Play Session projection: ${projection.failure}`,
               );
             }
             return structuredClone({
-              projection: projection.right,
+              projection: projection.success,
               sessionSnapshot: root.sessionStore.snapshot(),
               drafts: Array.from(root.sessionStore.drafts.entries()),
               characterSessions: Array.from(
@@ -2540,20 +2544,21 @@ describe("MCP protocol server", () => {
               ),
               battleState: root.sessionStore.battleState,
               battleSession: root.sessionStore.battleSession,
-              pendingBattleFills: root.sessionStore.pendingBattleFills,
+              pendingBattleFills:
+                root.sessionStore.getPendingBattleTransaction(),
             });
           },
         );
       const deepBeforeFailure = await captureDeepProjection();
-      if (Either.isLeft(deepBeforeFailure)) {
-        throw new Error(deepBeforeFailure.left.restoration.guidance);
+      if (Result.isFailure(deepBeforeFailure)) {
+        throw new Error(deepBeforeFailure.failure.restoration.guidance);
       }
       await host.playSessions.run(
-        decoded.right,
+        decoded.success,
         guestCaller(playSessionId),
         (root) => {
           root.sessionStore.characters.setAll = () =>
-            Either.left({
+            Result.fail({
               tag: "unknownCharacterSession",
               characterId: characterId("character:injected"),
             });
@@ -2585,11 +2590,11 @@ describe("MCP protocol server", () => {
         },
       });
       const deepAfterFailure = await captureDeepProjection();
-      if (Either.isLeft(deepAfterFailure)) {
-        throw new Error(deepAfterFailure.left.restoration.guidance);
+      if (Result.isFailure(deepAfterFailure)) {
+        throw new Error(deepAfterFailure.failure.restoration.guidance);
       }
-      expect(deepAfterFailure.right.value).toEqual(
-        deepBeforeFailure.right.value,
+      expect(deepAfterFailure.success.value).toEqual(
+        deepBeforeFailure.success.value,
       );
       const battleAfterFailure = await callStructuredTool(client, {
         name: "read_battle_state",
@@ -3019,17 +3024,17 @@ describe("MCP protocol server", () => {
         },
       });
       const decoded = decodePlaySessionId(playSessionId);
-      if (decoded._tag === "Left") throw new Error(decoded.left);
+      if (decoded._tag === "Failure") throw new Error(decoded.failure);
       const sourceBefore = await callStructuredTool(client, {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: "character:rest-source" },
       });
       await host.playSessions.run(
-        decoded.right,
+        decoded.success,
         guestCaller(playSessionId),
         (root) => {
           root.sessionStore.characters.setAll = () =>
-            Either.left({
+            Result.fail({
               tag: "unknownCharacterSession",
               characterId: characterId("character:injected"),
             });
@@ -3212,9 +3217,9 @@ async function installHealingSessions(
   },
 ) {
   const decoded = decodePlaySessionId(playSessionId);
-  if (decoded._tag === "Left") throw new Error(decoded.left);
+  if (decoded._tag === "Failure") throw new Error(decoded.failure);
   const result = await host.playSessions.run(
-    decoded.right,
+    decoded.success,
     guestCaller(playSessionId),
     (root) => {
       for (const fixture of [fixtures.source, fixtures.target]) {
@@ -3228,12 +3233,13 @@ async function installHealingSessions(
           companion: { tag: "none" },
           unitLibrary: root.unitLibrary,
         });
-        if (Either.isLeft(session)) throw new Error(session.left.message);
-        root.sessionStore.characters.set(session.right);
+        if (Result.isFailure(session)) throw new Error(session.failure.message);
+        root.sessionStore.characters.set(session.success);
       }
     },
   );
-  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+  if (Result.isFailure(result))
+    throw new Error("Expected a live Play Session.");
 }
 
 async function installFontOfMagicSession(
@@ -3241,9 +3247,9 @@ async function installFontOfMagicSession(
   playSessionId: string,
 ) {
   const decoded = decodePlaySessionId(playSessionId);
-  if (decoded._tag === "Left") throw new Error(decoded.left);
+  if (decoded._tag === "Failure") throw new Error(decoded.failure);
   const result = await host.playSessions.run(
-    decoded.right,
+    decoded.success,
     guestCaller(playSessionId),
     (root) => {
       const sorcerer = availableCharacterSession({
@@ -3279,11 +3285,12 @@ async function installFontOfMagicSession(
         companion: { tag: "none" },
         unitLibrary: root.unitLibrary,
       });
-      if (Either.isLeft(sorcerer)) throw new Error(sorcerer.left.message);
-      root.sessionStore.characters.set(sorcerer.right);
+      if (Result.isFailure(sorcerer)) throw new Error(sorcerer.failure.message);
+      root.sessionStore.characters.set(sorcerer.success);
     },
   );
-  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+  if (Result.isFailure(result))
+    throw new Error("Expected a live Play Session.");
 }
 
 async function installCharacterRowCoverageSessions(
@@ -3291,9 +3298,9 @@ async function installCharacterRowCoverageSessions(
   playSessionId: string,
 ) {
   const decoded = decodePlaySessionId(playSessionId);
-  if (decoded._tag === "Left") throw new Error(decoded.left);
+  if (decoded._tag === "Failure") throw new Error(decoded.failure);
   const result = await host.playSessions.run(
-    decoded.right,
+    decoded.success,
     guestCaller(playSessionId),
     (root) => {
       const wizardBase = wizardBuild({ wizardAdvancements: 0 });
@@ -3419,17 +3426,19 @@ async function installCharacterRowCoverageSessions(
             : {
                 druidWildShapeKnownFormStatBlockIds:
                   input.druidWildShapeKnownFormStatBlockIds,
+                statBlockCatalog: root.statBlockCatalog,
               }),
           ...(input.zeroHpLifecycle === undefined
             ? {}
             : { zeroHpLifecycle: input.zeroHpLifecycle }),
         });
-        if (Either.isLeft(session)) throw new Error(session.left.message);
-        root.sessionStore.characters.set(session.right);
+        if (Result.isFailure(session)) throw new Error(session.failure.message);
+        root.sessionStore.characters.set(session.success);
       }
     },
   );
-  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+  if (Result.isFailure(result))
+    throw new Error("Expected a live Play Session.");
 }
 
 async function installDerivedQueryCoverageSessions(
@@ -3437,7 +3446,7 @@ async function installDerivedQueryCoverageSessions(
   playSessionId: string,
 ) {
   const decoded = decodePlaySessionId(playSessionId);
-  if (decoded._tag === "Left") throw new Error(decoded.left);
+  if (decoded._tag === "Failure") throw new Error(decoded.failure);
   const derivedRogueBuild = {
     ...armorClassBuild({
       startingClass: "class_rogue",
@@ -3462,7 +3471,7 @@ async function installDerivedQueryCoverageSessions(
     ],
   };
   const result = await host.playSessions.run(
-    decoded.right,
+    decoded.success,
     guestCaller(playSessionId),
     (root) => {
       const sessions = [
@@ -3512,12 +3521,13 @@ async function installDerivedQueryCoverageSessions(
           companion: { tag: "none" },
           unitLibrary: root.unitLibrary,
         });
-        if (Either.isLeft(session)) throw new Error(session.left.message);
-        root.sessionStore.characters.set(session.right);
+        if (Result.isFailure(session)) throw new Error(session.failure.message);
+        root.sessionStore.characters.set(session.success);
       }
     },
   );
-  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+  if (Result.isFailure(result))
+    throw new Error("Expected a live Play Session.");
 }
 
 async function installInitiativeSession(
@@ -3529,9 +3539,9 @@ async function installInitiativeSession(
   },
 ) {
   const decoded = decodePlaySessionId(playSessionId);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
   const result = await host.playSessions.run(
-    decoded.right,
+    decoded.success,
     guestCaller(playSessionId),
     (root) => {
       const session = availableCharacterSession({
@@ -3544,11 +3554,12 @@ async function installInitiativeSession(
         companion: { tag: "none" },
         unitLibrary: root.unitLibrary,
       });
-      if (Either.isLeft(session)) throw new Error(session.left.message);
-      root.sessionStore.characters.set(session.right);
+      if (Result.isFailure(session)) throw new Error(session.failure.message);
+      root.sessionStore.characters.set(session.success);
     },
   );
-  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+  if (Result.isFailure(result))
+    throw new Error("Expected a live Play Session.");
 }
 
 async function createPlaySession(client: Client): Promise<string> {
@@ -3590,10 +3601,10 @@ async function createPlaySession(client: Client): Promise<string> {
 function guestCaller(playSessionId: string) {
   const grant = guestAccessGrantByPlaySessionId.get(playSessionId);
   const decoded = decodeGuestAccessGrant(grant);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error("Expected the retained Guest Play Session access grant.");
   }
-  return { tag: "guest" as const, guestAccessGrant: decoded.right };
+  return { tag: "guest" as const, guestAccessGrant: decoded.success };
 }
 
 async function callStructuredTool(
@@ -3663,8 +3674,8 @@ function ajvJsonSchema(schema: unknown): JsonSchemaType {
 
 function requireDiceSeed(input: readonly [string, string, string, string]) {
   const decoded = decodeDiceSeed(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }
 
 function operationResult(

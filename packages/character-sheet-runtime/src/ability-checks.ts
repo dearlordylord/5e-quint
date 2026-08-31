@@ -19,8 +19,9 @@ import {
   type ProficiencyBonus,
 } from "@dnd/shared/types";
 import type { PassiveMechanics, UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match, Option } from "effect";
 
+import { projectCharacterSheetClassFeature } from "./character-feature-projection.ts";
 import {
   JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
   characterSheetIssue,
@@ -52,7 +53,7 @@ export function characterSheetProficiencyBonusForCharacterLevel(
 
 export function characterSheetAbilityCheckProficiencyBonus(
   input: CharacterSheetAbilityCheckProficiencyBonusInput,
-): Either.Either<
+): Result.Result<
   CharacterSheetAbilityCheckProficiencyBonus,
   CharacterSheetIssue
 > {
@@ -61,9 +62,9 @@ export function characterSheetAbilityCheckProficiencyBonus(
     input.unitLibrary,
   );
   /* v8 ignore start -- @preserve -- A proficiency projection failure means the parsed build and Unit catalog no longer correlate. */
-  if (Either.isLeft(proficiencies)) {
+  if (Result.isFailure(proficiencies)) {
     return characterSheetIssue(
-      proficiencies.left.map(characterCreationIssueMessage).join("; "),
+      proficiencies.failure.map(characterCreationIssueMessage).join("; "),
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -71,15 +72,15 @@ export function characterSheetAbilityCheckProficiencyBonus(
   const proficiencyBonus = characterSheetProficiencyBonusForCharacterLevel(
     characterLevel(computeTotalLevel(input.build.progression)),
   );
-  if (proficiencies.right.expertise.includes(input.skill)) {
-    return Either.right({
+  if (proficiencies.success.expertise.includes(input.skill)) {
+    return Result.succeed({
       tag: "expertise",
       skill: input.skill,
       bonus: proficiencyBonus * 2,
     });
   }
-  if (proficiencies.right.skills.includes(input.skill)) {
-    return Either.right({
+  if (proficiencies.success.skills.includes(input.skill)) {
+    return Result.succeed({
       tag: "skillProficiency",
       skill: input.skill,
       bonus: proficiencyBonus,
@@ -90,28 +91,28 @@ export function characterSheetAbilityCheckProficiencyBonus(
     input.unitLibrary,
   );
   /* v8 ignore start -- @preserve -- Jack of All Trades lookup failure means a build-owned feature id no longer resolves in its Unit catalog. */
-  if (Either.isLeft(jackOfAllTradesUnitId)) {
-    return Either.left(jackOfAllTradesUnitId.left);
+  if (Result.isFailure(jackOfAllTradesUnitId)) {
+    return Result.fail(jackOfAllTradesUnitId.failure);
   }
   /* v8 ignore stop -- @preserve */
   return Match.value(input.otherProficiencyBonus).pipe(
     Match.when({ tag: "otherProficiencyBonusApplies" }, () =>
-      Either.right({
+      Result.succeed({
         tag: "none" as const,
         bonus: 0 as const,
       }),
     ),
     Match.when({ tag: "noOtherProficiencyBonus" }, () =>
-      jackOfAllTradesUnitId.right !== undefined
-        ? Either.right({
+      jackOfAllTradesUnitId.success !== undefined
+        ? Result.succeed({
             tag: "jackOfAllTrades" as const,
-            sourceUnitId: jackOfAllTradesUnitId.right,
+            sourceUnitId: jackOfAllTradesUnitId.success,
             skill: input.skill,
             bonus: Math.floor(
               proficiencyBonus / JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
             ),
           })
-        : Either.right({
+        : Result.succeed({
             tag: "none" as const,
             bonus: 0 as const,
           }),
@@ -122,11 +123,11 @@ export function characterSheetAbilityCheckProficiencyBonus(
 
 export function characterSheetAbilityCheckProficiencyBonusProjection(
   input: CharacterSheetAbilityCheckProficiencyBonusInput,
-): Either.Either<
+): Result.Result<
   CharacterSheetAbilityCheckProficiencyBonusProjection,
   CharacterSheetIssue
 > {
-  return Either.map(
+  return Result.map(
     characterSheetAbilityCheckProficiencyBonus(input),
     (proficiencyBonus) => ({
       proficiencyBonus,
@@ -139,7 +140,7 @@ export function characterSheetAbilityCheckProficiencyBonusProjection(
 
 export function characterSheetAbilityCheckAbility(
   input: CharacterSheetAbilityCheckAbilityInput,
-): Either.Either<CharacterSheetAbilityCheckAbility, CharacterSheetIssue> {
+): Result.Result<CharacterSheetAbilityCheckAbility, CharacterSheetIssue> {
   const optionalSubstitutions: CharacterSheetAbilityCheckAbilitySubstitution[] =
     [];
   const activeFeatureUnitIds = new Set(input.activeFeatureUnitIds);
@@ -149,8 +150,8 @@ export function characterSheetAbilityCheckAbility(
     input.unitLibrary,
   )) {
     /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    for (const grant of feature.right.mechanics.grants) {
+    if (Result.isFailure(feature)) return Result.fail(feature.failure);
+    for (const grant of feature.success.mechanics.grants) {
       if (
         grant.kind !== "offer_ability_substitution_for_ability_checks" ||
         !grant.skillFilter.skills.includes(input.skill)
@@ -167,7 +168,7 @@ export function characterSheetAbilityCheckAbility(
       }
       optionalSubstitutions.push({
         ability: grant.use,
-        sourceUnitId: feature.right.unitId,
+        sourceUnitId: feature.success.unitId,
         ...(grant.requiredActiveFeature === undefined
           ? {}
           : {
@@ -179,7 +180,7 @@ export function characterSheetAbilityCheckAbility(
     }
   }
 
-  return Either.right({
+  return Result.succeed({
     defaultAbility: input.defaultAbility,
     optionalSubstitutions,
   });
@@ -187,7 +188,7 @@ export function characterSheetAbilityCheckAbility(
 
 export function characterSheetJumpDistanceAbility(
   input: CharacterSheetJumpDistanceAbilityInput,
-): Either.Either<CharacterSheetJumpDistanceAbility, CharacterSheetIssue> {
+): Result.Result<CharacterSheetJumpDistanceAbility, CharacterSheetIssue> {
   const optionalSubstitutions: CharacterSheetJumpDistanceAbilitySubstitution[] =
     [];
 
@@ -196,8 +197,8 @@ export function characterSheetJumpDistanceAbility(
     input.unitLibrary,
   )) {
     /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    for (const grant of feature.right.mechanics.grants) {
+    if (Result.isFailure(feature)) return Result.fail(feature.failure);
+    for (const grant of feature.success.mechanics.grants) {
       if (
         grant.kind === "offer_ability_substitution_for_jump_distance" &&
         grant.replaces === input.defaultAbility
@@ -205,13 +206,13 @@ export function characterSheetJumpDistanceAbility(
         optionalSubstitutions.push({
           ability: grant.use,
           replaces: grant.replaces,
-          sourceUnitId: feature.right.unitId,
+          sourceUnitId: feature.success.unitId,
         });
       }
     }
   }
 
-  return Either.right({
+  return Result.succeed({
     defaultAbility: input.defaultAbility,
     optionalSubstitutions,
   });
@@ -220,7 +221,7 @@ export function characterSheetJumpDistanceAbility(
 export function characterSheetLinkedSpeedGrants(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   readonly CharacterSheetLinkedSpeedGrant[],
   CharacterSheetIssue
 > {
@@ -230,24 +231,24 @@ export function characterSheetLinkedSpeedGrants(
     unitLibrary,
   )) {
     /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    for (const grant of feature.right.mechanics.grants) {
+    if (Result.isFailure(feature)) return Result.fail(feature.failure);
+    for (const grant of feature.success.mechanics.grants) {
       if (grant.kind !== "grant_speed") continue;
       grants.push({
-        sourceUnitId: feature.right.unitId,
+        sourceUnitId: feature.success.unitId,
         speedKind: grant.speedKind,
         feet: grant.feet,
       });
     }
   }
-  return Either.right(grants);
+  return Result.succeed(grants);
 }
 
 function* characterSheetClassFeatureComponents(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Generator<
-  Either.Either<
+  Result.Result<
     {
       readonly unitId: UnitRecord["id"];
       readonly mechanics: PassiveMechanics;
@@ -258,21 +259,25 @@ function* characterSheetClassFeatureComponents(
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore start -- @preserve -- Build-owned feature ids must resolve in the same Unit catalog used to derive the feature roster. */
-    if (Either.isLeft(unit)) {
-      yield Either.left(unit.left);
+    if (Result.isFailure(unit)) {
+      yield Result.fail(unit.failure);
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    if (unit.right.kind !== "class_feature") continue;
-    if (unit.right.mechanics.family === "composite") {
-      for (const part of unit.right.mechanics.parts) {
+    const feature = projectCharacterSheetClassFeature(unit.success);
+    if (Option.isNone(feature)) continue;
+    if (feature.value.mechanics.family === "composite") {
+      for (const part of feature.value.mechanics.parts) {
         if (part.family !== "passive") continue;
-        yield Either.right({ unitId, mechanics: part });
+        yield Result.succeed({ unitId, mechanics: part });
       }
       continue;
     }
-    if (unit.right.mechanics.family === "passive") {
-      yield Either.right({ unitId, mechanics: unit.right.mechanics });
+    if (feature.value.mechanics.family === "passive") {
+      yield Result.succeed({
+        unitId,
+        mechanics: feature.value.mechanics,
+      });
     }
   }
 }
@@ -280,20 +285,21 @@ function* characterSheetClassFeatureComponents(
 function characterBuildJackOfAllTradesFeatureUnitId(
   build: Pick<CharacterBuild, "progression" | "features">,
   unitLibrary: UnitCatalog,
-): Either.Either<UnitRecord["id"] | undefined, CharacterSheetIssue> {
+): Result.Result<UnitRecord["id"] | undefined, CharacterSheetIssue> {
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Jack of All Trades lookup receives feature ids already admitted from this catalog. */
-    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (Result.isFailure(unit)) return Result.fail(unit.failure);
+    const feature = projectCharacterSheetClassFeature(unit.success);
     if (
-      unit.right.kind === "class_feature" &&
-      unit.right.mechanics.family === "passive" &&
-      unit.right.mechanics.grants.some(
+      Option.isSome(feature) &&
+      feature.value.mechanics.family === "passive" &&
+      feature.value.mechanics.grants.some(
         (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
       )
     ) {
-      return Either.right(unitId);
+      return Result.succeed(unitId);
     }
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }

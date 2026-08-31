@@ -4,6 +4,7 @@ import {
   opportunityAttackLeavesReach,
   opportunityAttackThreatIdentityEqual,
   opportunityAttackThreatEqual,
+  interruptChoiceResponderId,
   type BattleInterruptProcedureSelection,
 } from "./index.ts";
 import { classLevel, movementFeet } from "@dnd/shared/types";
@@ -311,17 +312,25 @@ function startRetaliationAfterSkeletonOpportunityAttack(
     throw new Error("Expected pending Opportunity Attack interrupt.");
   }
   const rawOpportunityChoice = pendingInterrupt.choices.find(
-    (choice) => choice.kind === "opportunityAttack",
+    (choice) =>
+      choice.kind === "nestedProcedure" &&
+      choice.subject.command === "opportunityAttack",
   );
   if (rawOpportunityChoice === undefined) {
     throw new Error("Expected Skeleton Opportunity Attack choice.");
   }
-  const opportunityChoice = reactionChoiceWithSubject([rawOpportunityChoice]);
+  if (
+    rawOpportunityChoice.kind !== "nestedProcedure" ||
+    rawOpportunityChoice.subject.command !== "opportunityAttack"
+  ) {
+    throw new Error("Expected a nested Opportunity Attack choice.");
+  }
+  const opportunityChoice = rawOpportunityChoice;
   const startedOpportunity = resolveBattleInterrupt({
     state: awaitingOpportunity.state,
     fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
       kind: "resolve",
-      responderId: opportunityChoice.reactorId,
+      responderId: interruptChoiceResponderId(opportunityChoice),
       choice: opportunityAttackProcedureSelectionForTest(opportunityChoice),
     }),
   });
@@ -371,7 +380,9 @@ function startRetaliationAfterSkeletonOpportunityAttack(
   }
   const rawRetaliationChoice = retaliationInterrupt.choices.find(
     (choice) =>
-      choice.kind === "retaliationAttack" && choice.reactorId === fighterId,
+      choice.kind === "nestedProcedure" &&
+      choice.subject.command === "retaliationAttack" &&
+      choice.subject.reactorId === fighterId,
   );
   if (rawRetaliationChoice === undefined) {
     throw new Error("Expected fighter Retaliation choice.");
@@ -395,7 +406,6 @@ function startRetaliationAfterSkeletonOpportunityAttack(
   };
   const selection: BattleInterruptProcedureSelection = {
     kind: "retaliationAttack",
-    reactorId: fighterId,
     selection: attackExecutionSelectionForSubjectForTest(retaliationAttack),
     fills: [retaliationTargetDistanceFact],
   };
@@ -462,7 +472,9 @@ function startFighterOpportunityAttackAfterMovement(
   }
   const rawOpportunityChoice = pendingInterrupt.choices.find(
     (choice) =>
-      choice.kind === "opportunityAttack" && choice.reactorId === fighterId,
+      choice.kind === "nestedProcedure" &&
+      choice.subject.command === "opportunityAttack" &&
+      choice.subject.reactorId === fighterId,
   );
   if (rawOpportunityChoice === undefined) {
     throw new Error("Expected fighter Opportunity Attack choice.");
@@ -792,7 +804,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
   });
 
   test("a Hideous Laughter target repeats its save after an Opportunity Attack", () => {
-    const hideousLaughter = spellRecord("hideous_laughter");
+    const saveGatedConditionWithRepeat = spellRecord("hideous_laughter");
     const baseTarget = statBlockWithCreatureType("humanoid");
     const incapacitatedImmuneTarget = {
       ...baseTarget,
@@ -813,7 +825,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
           initiative: 30,
           attack: null,
           spellcasting: wizardSpellcasting({
-            preparedSpells: [hideousLaughter],
+            preparedSpells: [saveGatedConditionWithRepeat],
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
         }),
@@ -892,7 +904,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
       holes: [
         {
           kind: "savingThrowOutcome",
-          hideousLaughterRepeatSave: {
+          saveGatedConditionRepeatSave: {
             targetId: goblinId,
             trigger: "damage",
           },

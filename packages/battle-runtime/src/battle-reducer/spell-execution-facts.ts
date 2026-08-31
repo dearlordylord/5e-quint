@@ -4,29 +4,18 @@ import type {
   SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import type {
+  BattleSpellProcedureKey,
+  BattleStoredSpellProcedureExecution,
   RuntimeSpellProcedureExecution,
   SpellProcedureExecution,
   SpellProcedureExecutionByProcedure,
 } from "../character-execution.ts";
+import type { SpellExecutionFacts } from "./spell-execution-facts-codec.ts";
+export { SpellExecutionFactsSchema } from "./spell-execution-facts-codec.ts";
+export type { SpellExecutionFacts } from "./spell-execution-facts-codec.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
-import { Match, Schema } from "effect";
-
-export const SpellExecutionFactsSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("actionSpell"),
-    familiarTouchDelivery: Schema.Boolean,
-    readiedSpellCompatible: Schema.Boolean,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("bonusActionSpell"),
-    familiarTouchDelivery: Schema.Boolean,
-  }),
-  Schema.Struct({ kind: Schema.Literal("bonusActionDashSpell") }),
-  Schema.Struct({ kind: Schema.Literal("triggeredReactionSpell") }),
-  Schema.Struct({ kind: Schema.Literal("attackHitBonusActionSpell") }),
-);
-export type SpellExecutionFacts = typeof SpellExecutionFactsSchema.Type;
+import { Match } from "effect";
 
 type ActionSpellProcedureResolutionExecutionFacts =
   | {
@@ -77,14 +66,14 @@ type SpellProcedureExecutionFacts =
   | NonMagicActionSpellProcedureExecutionFacts;
 
 export type SpellProcedureExecutionsWithActionCost<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = Extract<
   SpellProcedureExecutionByProcedure[P],
   { readonly actionCost: unknown }
 >;
 
 export type SpellProcedureExecutionsWithoutActionCost<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = Exclude<
   SpellProcedureExecutionByProcedure[P],
   { readonly actionCost: unknown }
@@ -96,12 +85,11 @@ type ActionCostOf<Execution> = Execution extends {
   ? ActionCost
   : never;
 
-export type SpellProcedureActionCost<
-  P extends SupportedSpellInvocation["procedure"],
-> = ActionCostOf<SpellProcedureExecutionsWithActionCost<P>>;
+export type SpellProcedureActionCost<P extends BattleSpellProcedureKey> =
+  ActionCostOf<SpellProcedureExecutionsWithActionCost<P>>;
 
 type SpellProcedureExecutionFactsForProcedure<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = [SpellProcedureExecutionsWithActionCost<P>] extends [never]
   ? SpellProcedureExecutionFacts
   : [
@@ -150,19 +138,19 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   afterHitDamageAndIllumination: { executionClass: "attackHitBonusAction" },
   afterHitSaveGatedCondition: { executionClass: "attackHitBonusAction" },
   afterHitTimedDamageAndSave: { executionClass: "attackHitBonusAction" },
-  antimagicFieldOngoingSpellSuppression: { executionClass: "actionCast" },
+  magicSuppressionEmanation: { executionClass: "actionCast" },
   attackBurstSaveDamage: {
     executionClass: "actionCast",
     resolution: ACTION_COST_OVERRIDE_RESOLUTION,
   },
-  blurAttackRollDefense: { executionClass: "actionCast" },
+  perceptionGatedAttackRollDefense: { executionClass: "actionCast" },
   chainedSpellAttackDamage: {
     executionClass: "actionCast",
     resolution: ACTION_COST_OVERRIDE_RESOLUTION,
   },
   chosenDamageResistance: { executionClass: "actionCast" },
-  cloudkillAreaHazard: { executionClass: "actionCast" },
-  command: {
+  persistentAreaSaveDamage: { executionClass: "actionCast" },
+  compelledNextTurnBehavior: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
@@ -170,7 +158,9 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
     executionClass: "actionCast",
   },
   conditionRemovalProtection: { executionClass: "actionCast" },
-  counterspell: { executionClass: "triggeredReactionOrActionCast" },
+  spellCastInterruptionReaction: {
+    executionClass: "triggeredReactionOrActionCast",
+  },
   creatureSizeDecrease: {
     executionClass: "actionCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
@@ -181,9 +171,7 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   },
   creatureTypeProtection: { executionClass: "actionCast" },
   damageReduction: { executionClass: "actionCast" },
-  dancingLightsCombinedCast: { executionClass: "actionCast" },
-  dancingLightsReposition: { executionClass: "bonusActionCast" },
-  dancingLightsSeparateCast: { executionClass: "actionCast" },
+  movableLightManifestation: { executionClass: "actionCostCast" },
   directCondition: {
     executionClass: "actionCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
@@ -193,44 +181,41 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
     executionClass: "actionCostCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
   },
-  dragonsBreathInitial: { executionClass: "bonusActionCast" },
-  expeditiousRetreatDash: { executionClass: "bonusActionDash" },
-  featherFallMitigation: {
+  grantedAreaSaveDamageAction: { executionClass: "bonusActionCast" },
+  grantedAlternateActionCost: { executionClass: "bonusActionDash" },
+  fallingCreatureMitigationReaction: {
     executionClass: "triggeredReactionOrActionCast",
   },
-  flamingSphere: { executionClass: "actionCast" },
-  fogCloudObscurement: { executionClass: "actionCast" },
-  greaseGroundHazard: {
+  persistentAreaTrait: { executionClass: "actionCast" },
+  persistentAreaSaveCondition: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  gustOfWindLine: {
+  directionalPersistentArea: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  hastePositive: { executionClass: "actionCast" },
+  compositeTargetBuffWithAftermath: { executionClass: "actionCast" },
   heldLight: { executionClass: "bonusActionCast" },
   heldLightHurl: {
     executionClass: "actionCast",
     resolution: SHARED_SPELL_ATTACK_ACTION_COST_OVERRIDE_RESOLUTION,
   },
-  hideousLaughter: {
+  saveGatedConditionWithRepeat: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  hypnoticPattern: {
+  saveGatedAreaControl: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  insectPlagueAreaHazard: { executionClass: "actionCast" },
-  jumpMovementReplacement: { executionClass: "bonusActionCast" },
-  levitatedCreature: { executionClass: "actionCast" },
-  magicWeaponEnhancement: { executionClass: "bonusActionCast" },
+  fixedCostMovementReplacement: { executionClass: "bonusActionCast" },
+  controlledVerticalSuspension: { executionClass: "actionCast" },
+  weaponAttackDamageEnhancement: { executionClass: "bonusActionCast" },
   magicalDarknessPointOrigin: { executionClass: "actionCast" },
   makeStable: { executionClass: "actionCast" },
   markedDamageRider: { executionClass: "bonusActionCast" },
-  mirrorImageHitInterception: { executionClass: "actionCast" },
-  moonbeam: { executionClass: "actionCast" },
+  duplicateHitInterception: { executionClass: "actionCast" },
   objectContactDamage: { executionClass: "actionCast" },
   objectContactDamageRepeat: { executionClass: "bonusActionCast" },
   objectLight: {
@@ -244,7 +229,7 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
     executionClass: "actionCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
   },
-  sanctuaryTargetingInterdiction: { executionClass: "bonusActionCast" },
+  targetingSaveInterdiction: { executionClass: "bonusActionCast" },
   saveGatedAttackRollAdvantage: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
@@ -268,10 +253,10 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   seeInvisibleObserverSight: { executionClass: "actionCast" },
   selfTeleport: { executionClass: "bonusActionCast" },
   selfTransformationMode: { executionClass: "actionCast" },
-  shieldReaction: { executionClass: "triggeredReactionOrActionCast" },
-  sleepTargetAdmission: { executionClass: "actionCast" },
-  sleetStormAreaHazard: { executionClass: "actionCast" },
-  slowActivePenalties: {
+  triggeredArmorDefense: { executionClass: "triggeredReactionOrActionCast" },
+  saveGatedTurnConstraintBundle: { executionClass: "actionCast" },
+  persistentAreaSaveComposite: { executionClass: "actionCast" },
+  stagedSaveCondition: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
@@ -290,75 +275,70 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   },
   spellCreatedHeldObjectReEvoke: { executionClass: "bonusActionCast" },
   spellHostedWeaponAttack: { executionClass: "actionCast" },
-  spikeGrowthMovementHazard: { executionClass: "actionCast" },
-  spiritualWeaponAttackProxy: {
+  areaMovementDistanceDamage: { executionClass: "actionCast" },
+  spatialMeleeSpellAttackProxy: {
     executionClass: "bonusActionCast",
     resolution: DIRECT_SPELL_ATTACK_DAMAGE_RESOLUTION,
   },
-  spiritualWeaponRepeatAttack: {
-    executionClass: "bonusActionCast",
-    resolution: DIRECT_SPELL_ATTACK_DAMAGE_RESOLUTION,
-  },
-  thaumaturgyBoomingVoice: { executionClass: "actionCast" },
-  wardingBond: { executionClass: "actionCast" },
+  temporaryAbilityCheckRollMode: { executionClass: "actionCast" },
+  linkedDefenseResistanceDamageShare: { executionClass: "actionCast" },
   weaponAttackOverride: { executionClass: "bonusActionCast" },
   weaponDamageRider: { executionClass: "bonusActionCast" },
-  webRestraintHazard: { executionClass: "actionCast" },
+  persistentAreaSaveConditionEscape: { executionClass: "actionCast" },
 } as const satisfies {
-  readonly [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsForProcedure<P>;
+  readonly [P in BattleSpellProcedureKey]: SpellProcedureExecutionFactsForProcedure<P>;
 };
 
 export type SpellExecutionClass =
-  (typeof SPELL_EXECUTION_FACTS_BY_PROCEDURE)[SupportedSpellInvocation["procedure"]]["executionClass"];
+  (typeof SPELL_EXECUTION_FACTS_BY_PROCEDURE)[BattleSpellProcedureKey]["executionClass"];
 
-export type SpellExecutionClassForProcedure<
-  P extends SupportedSpellInvocation["procedure"],
-> = (typeof SPELL_EXECUTION_FACTS_BY_PROCEDURE)[P]["executionClass"];
+export type SpellExecutionClassForProcedure<P extends BattleSpellProcedureKey> =
+  (typeof SPELL_EXECUTION_FACTS_BY_PROCEDURE)[P]["executionClass"];
 
 type SpellProcedureExecutionFactsByProcedure =
   typeof SPELL_EXECUTION_FACTS_BY_PROCEDURE;
 
 export type SpellProcedureAcceptingMetamagicApplications = {
-  [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsByProcedure[P] extends {
+  [P in BattleSpellProcedureKey]: SpellProcedureExecutionFactsByProcedure[P] extends {
     readonly resolution: {
       readonly acceptsMetamagicApplications: true;
     };
   }
     ? P
     : never;
-}[SupportedSpellInvocation["procedure"]];
+}[BattleSpellProcedureKey];
 
 export type SpellProcedureAcceptingActionCostOverride = {
-  [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsByProcedure[P] extends {
+  [P in BattleSpellProcedureKey]: SpellProcedureExecutionFactsByProcedure[P] extends {
     readonly resolution: {
       readonly acceptsActionCostOverride: true;
     };
   }
     ? P
     : never;
-}[SupportedSpellInvocation["procedure"]];
+}[BattleSpellProcedureKey];
 
 export type SpellProcedureWithQuickenedActionCostRewrite = {
-  [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsByProcedure[P] extends {
+  [P in BattleSpellProcedureKey]: SpellProcedureExecutionFactsByProcedure[P] extends {
     readonly resolution: {
       readonly quickenedActionCostRewrite: true;
     };
   }
     ? P
     : never;
-}[SupportedSpellInvocation["procedure"]];
+}[BattleSpellProcedureKey];
 
 type SpellProcedureWithSharedSpellAttackDamageBody<
   Routing extends "profileDelegated" | "direct",
 > = {
-  [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsByProcedure[P] extends {
+  [P in BattleSpellProcedureKey]: SpellProcedureExecutionFactsByProcedure[P] extends {
     readonly resolution: {
       readonly sharedSpellAttackDamageBody: Routing;
     };
   }
     ? P
     : never;
-}[SupportedSpellInvocation["procedure"]];
+}[BattleSpellProcedureKey];
 
 export type SpellProcedureWithProfileDelegatedSpellAttackDamageBody =
   SpellProcedureWithSharedSpellAttackDamageBody<"profileDelegated">;
@@ -366,7 +346,7 @@ export type SpellProcedureWithDirectSpellAttackDamageBody =
   SpellProcedureWithSharedSpellAttackDamageBody<"direct">;
 
 export function spellProcedureAcceptsMetamagicApplications(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): procedure is SpellProcedureAcceptingMetamagicApplications {
   const facts: SpellProcedureExecutionFacts =
     SPELL_EXECUTION_FACTS_BY_PROCEDURE[procedure];
@@ -377,7 +357,7 @@ export function spellProcedureAcceptsMetamagicApplications(
 }
 
 export function spellProcedureAcceptsActionCostOverride(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): procedure is SpellProcedureAcceptingActionCostOverride {
   const facts: SpellProcedureExecutionFacts =
     SPELL_EXECUTION_FACTS_BY_PROCEDURE[procedure];
@@ -388,7 +368,7 @@ export function spellProcedureAcceptsActionCostOverride(
 }
 
 export function spellProcedureHasQuickenedActionCostRewrite(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): procedure is SpellProcedureWithQuickenedActionCostRewrite {
   const facts: SpellProcedureExecutionFacts =
     SPELL_EXECUTION_FACTS_BY_PROCEDURE[procedure];
@@ -399,7 +379,7 @@ export function spellProcedureHasQuickenedActionCostRewrite(
 }
 
 export function spellProcedureSharedSpellAttackDamageBodyRouting(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): "profileDelegated" | "direct" | undefined {
   const facts: SpellProcedureExecutionFacts =
     SPELL_EXECUTION_FACTS_BY_PROCEDURE[procedure];
@@ -410,7 +390,7 @@ export function spellProcedureSharedSpellAttackDamageBodyRouting(
 }
 
 export function spellProcedureUsesProfileDelegatedSpellAttackDamageBody(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): procedure is SpellProcedureWithProfileDelegatedSpellAttackDamageBody {
   return (
     spellProcedureSharedSpellAttackDamageBodyRouting(procedure) ===
@@ -419,7 +399,7 @@ export function spellProcedureUsesProfileDelegatedSpellAttackDamageBody(
 }
 
 export function spellProcedureUsesDirectSpellAttackDamageBody(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): procedure is SpellProcedureWithDirectSpellAttackDamageBody {
   return (
     spellProcedureSharedSpellAttackDamageBodyRouting(procedure) === "direct"
@@ -427,7 +407,7 @@ export function spellProcedureUsesDirectSpellAttackDamageBody(
 }
 
 export function spellExecutionClassForProcedure(
-  procedure: SupportedSpellInvocation["procedure"],
+  procedure: BattleSpellProcedureKey,
 ): SpellExecutionClass {
   return SPELL_EXECUTION_FACTS_BY_PROCEDURE[procedure].executionClass;
 }
@@ -463,17 +443,20 @@ export function spellInvocationHasReadiedSpellExecutionShape<
   if (invocation.procedure !== "spellAttackDamage") {
     return true;
   }
-  return invocation.damage.kind !== "sorcerousBurstDamageTypeChoice";
+  return invocation.damage.kind !== "spellAttackDamageTypeChoice";
 }
 
-function executionClassForInvocation(
-  invocation: Pick<SupportedSpellInvocation, "procedure">,
-): SpellExecutionClass {
+function executionClassForInvocation(invocation: {
+  readonly procedure: BattleSpellProcedureKey;
+}): SpellExecutionClass {
   return spellExecutionClassForProcedure(invocation.procedure);
 }
 
 export function spellSubjectTagForInvocation(
-  invocation: SpellProcedureExecution | BattleExecutableSpellInvocation,
+  invocation:
+    | BattleStoredSpellProcedureExecution
+    | RuntimeSpellProcedureExecution
+    | BattleExecutableSpellInvocation,
 ): "actionSpell" | "bonusActionSpell" {
   if ("actionCost" in invocation) {
     return Match.value(invocation.actionCost).pipe(
@@ -494,7 +477,10 @@ export function spellSubjectTagForInvocation(
 }
 
 export function spellExecutionFacts(
-  invocation: SpellProcedureExecution | BattleExecutableSpellInvocation,
+  invocation:
+    | BattleStoredSpellProcedureExecution
+    | RuntimeSpellProcedureExecution
+    | BattleExecutableSpellInvocation,
 ): SpellExecutionFacts {
   const executionClass = executionClassForInvocation(invocation);
   if (

@@ -11,16 +11,15 @@ export const STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS = [
 export type StatBlockDamageComponentNotation =
   (typeof STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS)[number];
 
-export const StatBlockBaseDamageComponentOrdinal = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+export const StatBlockBaseDamageComponentOrdinal = Schema.Int.pipe(
+  Schema.check(Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("StatBlockBaseDamageComponentOrdinal"),
 );
 export type StatBlockBaseDamageComponentOrdinal =
   typeof StatBlockBaseDamageComponentOrdinal.Type;
 const makeStatBlockBaseDamageComponentOrdinal =
   Brand.nominal<StatBlockBaseDamageComponentOrdinal>();
-const decodeStatBlockBaseDamageComponentOrdinal = Schema.decodeUnknownEither(
+const decodeStatBlockBaseDamageComponentOrdinal = Schema.decodeUnknownResult(
   StatBlockBaseDamageComponentOrdinal,
 );
 
@@ -34,7 +33,7 @@ export function statBlockBaseDamageComponentOrdinal(
   return makeStatBlockBaseDamageComponentOrdinal(value);
 }
 
-export const StatBlockAttackDamageComponentRef = Schema.Union(
+export const StatBlockAttackDamageComponentRef = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("baseDamageComponent"),
     ordinal: StatBlockBaseDamageComponentOrdinal,
@@ -42,7 +41,7 @@ export const StatBlockAttackDamageComponentRef = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("advantageBonusDamageComponent"),
   }),
-);
+]);
 export type StatBlockAttackDamageComponentRef =
   typeof StatBlockAttackDamageComponentRef.Type;
 
@@ -58,7 +57,7 @@ export const statBlockAdvantageBonusDamageComponentRef = {
 
 export const StatBlockAttackDamageComponentSelection = Schema.Struct({
   componentRef: StatBlockAttackDamageComponentRef,
-  notation: Schema.Literal(...STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS),
+  notation: Schema.Literals(STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS),
 });
 export type StatBlockAttackDamageComponentSelection =
   typeof StatBlockAttackDamageComponentSelection.Type;
@@ -66,16 +65,21 @@ export type StatBlockAttackDamageComponentSelection =
 export const StatBlockAttackDamageSelection = Schema.NonEmptyArray(
   StatBlockAttackDamageComponentSelection,
 ).pipe(
-  Schema.filter(statBlockAttackDamageSelectionHasCanonicalComponentRoles, {
-    message: () =>
-      "Stat Block Attack damage selection must list base component refs 1 through N in order, followed only by the optional Advantage bonus component ref.",
-  }),
+  Schema.check(
+    Schema.makeFilter(
+      statBlockAttackDamageSelectionHasCanonicalComponentRoles,
+      {
+        message:
+          "Stat Block Attack damage selection must list base component refs 1 through N in order, followed only by the optional Advantage bonus component ref.",
+      },
+    ),
+  ),
   Schema.brand("StatBlockAttackDamageSelection"),
 );
 export type StatBlockAttackDamageSelection =
   typeof StatBlockAttackDamageSelection.Type;
 
-const decodeStatBlockAttackDamageSelection = Schema.decodeUnknownEither(
+const decodeStatBlockAttackDamageSelection = Schema.decodeUnknownResult(
   StatBlockAttackDamageSelection,
 );
 

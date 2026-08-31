@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import {
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceRefsSchema,
@@ -33,8 +33,8 @@ const EmptyArgsSchema = Schema.Struct({});
 const StringArraySchema = Schema.Array(Schema.String);
 const WorkflowGuideOutputSchema = Schema.Struct({
   lifecycle: StringArraySchema,
-  resultPaths: Schema.Record({ key: Schema.String, value: Schema.String }),
-  acceptedInputs: Schema.Record({ key: Schema.String, value: Schema.String }),
+  resultPaths: Schema.Record(Schema.String, Schema.String),
+  acceptedInputs: Schema.Record(Schema.String, Schema.String),
   naturalLanguagePolicy: Schema.String,
   recovery: StringArraySchema,
   limits: StringArraySchema,
@@ -44,10 +44,7 @@ const UnitSummarySchema = Schema.Struct({
   name: Schema.String,
 });
 const ListCatalogUnitsOutputSchema = Schema.Struct({
-  unitsByKind: Schema.Record({
-    key: Schema.String,
-    value: Schema.Array(UnitSummarySchema),
-  }),
+  unitsByKind: Schema.Record(Schema.String, Schema.Array(UnitSummarySchema)),
   naturalLanguagePolicy: Schema.String,
   next: Schema.String,
 });
@@ -55,27 +52,27 @@ const StatBlockAttackSummarySchema = Schema.Struct({
   attackName: Schema.String,
   attackType: Schema.String,
   attackBonus: Schema.Number,
-  reachFeet: Schema.optionalWith(Schema.Number, { exact: true }),
-  normalRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
-  longRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
+  reachFeet: Schema.optionalKey(Schema.Number),
+  normalRangeFeet: Schema.optionalKey(Schema.Number),
+  longRangeFeet: Schema.optionalKey(Schema.Number),
   onHit: StringArraySchema,
 });
-const StatBlockProcedureSectionOutputSchema = Schema.Literal(
+const StatBlockProcedureSectionOutputSchema = Schema.Literals([
   "action",
   "bonus_action",
   "reaction",
   "legendary_action",
-);
-const StatBlockProcedureKindOutputSchema = Schema.Literal(
+]);
+const StatBlockProcedureKindOutputSchema = Schema.Literals([
   "attack_roll",
   "multiattack",
   "save",
   "support",
   "action_option",
   "spellcasting",
-);
+]);
 const StatBlockSpellcastingGroupSummarySchema = Schema.Struct({
-  kind: Schema.Literal("at_will", "limited"),
+  kind: Schema.Literals(["at_will", "limited"]),
   resourceRefs: StatBlockProcedureResourceRefsSchema,
   spells: Schema.NonEmptyArray(StatBlockSpellReferenceSchema),
 });
@@ -86,9 +83,8 @@ const StatBlockExecutableProcedureSummarySchema = Schema.Struct({
   procedureKind: StatBlockProcedureKindOutputSchema,
   name: Schema.String,
   resourceRefs: StatBlockProcedureResourceRefsSchema,
-  spellcastingGroups: Schema.optionalWith(
+  spellcastingGroups: Schema.optionalKey(
     Schema.Array(StatBlockSpellcastingGroupSummarySchema),
-    { exact: true },
   ),
 });
 const StatBlockTextOnlyProcedureSummarySchema = Schema.Struct({
@@ -100,10 +96,10 @@ const StatBlockTextOnlyProcedureSummarySchema = Schema.Struct({
   reason: StatBlockTextOnlyReasonSchema,
   resourceRefs: StatBlockProcedureResourceRefsSchema,
 });
-const StatBlockProcedureSummarySchema = Schema.Union(
+const StatBlockProcedureSummarySchema = Schema.Union([
   StatBlockExecutableProcedureSummarySchema,
   StatBlockTextOnlyProcedureSummarySchema,
-);
+]);
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
   name: Schema.String,
@@ -205,10 +201,10 @@ export function isContentToolName(name: string): name is ContentToolName {
 export function decodeContentToolCall(input: {
   readonly name: ContentToolName;
   readonly args: unknown;
-}): Either.Either<ContentToolCall, ReturnType<typeof errorContent>> {
+}): Result.Result<ContentToolCall, ReturnType<typeof errorContent>> {
   return Match.value(input.name).pipe(
     Match.when(contentToolNames.describeMcpWorkflow, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -221,7 +217,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.listStatBlocks, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -234,7 +230,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.listCatalogUnits, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -247,7 +243,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.inspectCatalogUnit, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           InspectCatalogUnitInputSchema,
           input.args,

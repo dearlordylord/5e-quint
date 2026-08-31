@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import { attackBonus, classLevel } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   characterBattleFeatureInitForTest,
   startBattleRight,
@@ -80,7 +80,7 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import {
   fighterRemarkableAthleteUnitId,
-  wardingBondUnitId,
+  linkedDefenseResistanceDamageShareUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { weaponMasteryCleaveExtraAttack } from "./battle-reducer/attack-roll.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
@@ -92,7 +92,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleFrontierInterruptDecisionForState,
 } from "./battle-runtime.test-support.ts";
@@ -136,10 +136,10 @@ function selectedDarkOnesBlessingUnit() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(admitted)) {
-    throw new Error(admitted.left.message);
+  if (Result.isFailure(admitted)) {
+    throw new Error(admitted.failure.message);
   }
-  return { unit, unitRef: admitted.right };
+  return { unit, unitRef: admitted.success };
 }
 
 function darkOnesBlessingRangeFact(
@@ -173,10 +173,10 @@ function withWardingBondTargetAndConcentratingCaster(
         activeEffects: [
           ...target.activeEffects,
           {
-            kind: "wardingBond" as const,
-            effectRef: battleActiveEffectExecutionRefForTest("mastery-ward"),
+            kind: "linkedDefenseResistanceDamageShare" as const,
+            effectRef: battleEffectExecutionRefForTest("mastery-ward"),
             sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(wardingBondUnitId),
+              String(linkedDefenseResistanceDamageShareUnitId),
             ),
             sourceCombatantId: casterId,
             expiresAt: {
@@ -190,7 +190,7 @@ function withWardingBondTargetAndConcentratingCaster(
         ...caster,
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(wardingBondUnitId),
+            String(linkedDefenseResistanceDamageShareUnitId),
           ),
           effectKind: "spellEffect" as const,
         },
@@ -379,13 +379,15 @@ describe("battle runtime: Weapon Mastery", () => {
       }),
     );
 
-    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: expect.any(String),
-      sourceCombatantId: fighterId,
-      mode: "disadvantage",
-      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
-    });
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: expect.any(String),
+        sourceCombatantId: fighterId,
+        mode: "disadvantage",
+        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+      }),
+    );
 
     const goblinTurn = requireResolved(
       endTurn({ state: hit.state, actorId: fighterId }),
@@ -660,13 +662,15 @@ describe("battle runtime: Weapon Mastery", () => {
       "weaponMasterySap",
     );
 
-    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
-      kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: slowProcedureRef,
-      sourceCombatantId: fighterId,
-      deltaFeet: movementDeltaFeet(-10),
-      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
-    });
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "unitFeatureSpeedDelta",
+        sourceProcedureRef: slowProcedureRef,
+        sourceCombatantId: fighterId,
+        deltaFeet: movementDeltaFeet(-10),
+        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+      }),
+    );
     expect(
       hit.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
@@ -953,8 +957,8 @@ describe("battle runtime: Weapon Mastery", () => {
       unitRef: { unitId: halflingLuck.id },
       unit: halflingLuck,
     });
-    if (Either.isLeft(halflingLuckRef)) {
-      throw new Error(halflingLuckRef.left.message);
+    if (Result.isFailure(halflingLuckRef)) {
+      throw new Error(halflingLuckRef.failure.message);
     }
     const state = startBattleRight({
       battleId: battleId("battle-weapon-mastery-cleave"),
@@ -963,7 +967,7 @@ describe("battle runtime: Weapon Mastery", () => {
           initiative: 20,
           characterUnitRefs: [
             ...masteryCleaveUnitRefs(),
-            halflingLuckRef.right,
+            halflingLuckRef.success,
           ],
           unitFeatures: [characterBattleFeatureInitForTest(halflingLuck)],
           weaponMasteries: greataxeWeaponMasterySelections(),

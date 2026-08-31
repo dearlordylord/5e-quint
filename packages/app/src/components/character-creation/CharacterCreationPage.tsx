@@ -1,6 +1,6 @@
 import { type CharacterDraft, createCharacterDraft, type CreationBatchFillIssue } from "@dnd/character-creation-runtime"
 import type { CharacterSheet } from "@dnd/character-sheet-runtime"
-import { Either, Match } from "effect"
+import { Match, Result } from "effect"
 import { useCallback, useEffect, useState } from "react"
 
 import { CHARACTER_CREATION_PRESETS } from "#/components/character-creation/characterCreationPresets.ts"
@@ -148,12 +148,12 @@ export function CharacterCreationPage() {
               disabled={assessment.finalization.tag !== "ready"}
               onClick={() => {
                 const sheet = createCharacterSheetFromDraft(draft)
-                if (Either.isLeft(sheet)) {
-                  setLastSheetIssue(sheet.left.message)
+                if (Result.isFailure(sheet)) {
+                  setLastSheetIssue(sheet.failure.message)
                   return
                 }
-                setSheets((storedSheets) => appendStoredCharacterSheet(storedSheets, sheet.right))
-                setSelectedSheetId(sheet.right.characterId)
+                setSheets((storedSheets) => appendStoredCharacterSheet(storedSheets, sheet.success))
+                setSelectedSheetId(sheet.success.characterId)
                 setLastSheetIssue(null)
               }}
               type="button"
@@ -171,11 +171,11 @@ export function CharacterCreationPage() {
                 {sheets.map((sheet) => {
                   const summary = characterSheetSummary(sheet)
                   const selected = selectedSheetId === sheet.characterId
-                  if (Either.isLeft(summary)) {
+                  if (Result.isFailure(summary)) {
                     return (
                       <li key={sheet.characterId}>
                         <div className="rounded-md border border-rose-900/80 bg-black/20 px-3 py-2 text-sm text-rose-100">
-                          {summary.left.message}
+                          {summary.failure.message}
                         </div>
                       </li>
                     )
@@ -191,11 +191,11 @@ export function CharacterCreationPage() {
                         onClick={() => setSelectedSheetId(sheet.characterId)}
                         type="button"
                       >
-                        <span className="block truncate">{summary.right.characterId}</span>
+                        <span className="block truncate">{summary.success.characterId}</span>
                         <span className="mt-1 block text-xs text-gray-400">
-                          HP {summary.right.currentHp}/{summary.right.maximumHp}
-                          {summary.right.tempHp === 0 ? "" : ` + ${summary.right.tempHp} temp`} ·{" "}
-                          {summary.right.hitPointState}
+                          HP {summary.success.currentHp}/{summary.success.maximumHp}
+                          {summary.success.tempHp === 0 ? "" : ` + ${summary.success.tempHp} temp`} ·{" "}
+                          {summary.success.hitPointState}
                         </span>
                       </button>
                     </li>
@@ -270,13 +270,13 @@ export function CharacterCreationPage() {
                 .filter((sheet) => sheet.characterId === selectedSheetId)
                 .map((sheet) => {
                   const summary = characterSheetSummary(sheet)
-                  if (Either.isLeft(summary)) {
+                  if (Result.isFailure(summary)) {
                     return (
                       <div
                         key={sheet.characterId}
                         className="mt-4 rounded-md border border-rose-900 bg-black/20 p-3 text-sm text-rose-100"
                       >
-                        {summary.left.message}
+                        {summary.failure.message}
                       </div>
                     )
                   }
@@ -284,20 +284,20 @@ export function CharacterCreationPage() {
                     <dl key={sheet.characterId} className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Character Sheet</dt>
-                        <dd className="mt-1 break-all text-gray-100">{summary.right.characterId}</dd>
+                        <dd className="mt-1 break-all text-gray-100">{summary.success.characterId}</dd>
                       </div>
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Hit Points</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.right.currentHp}/{summary.right.maximumHp} · {summary.right.hitPointState}
+                          {summary.success.currentHp}/{summary.success.maximumHp} · {summary.success.hitPointState}
                         </dd>
                       </div>
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Spell Slot State</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.right.spellSlots.length === 0
+                          {summary.success.spellSlots.length === 0
                             ? "No spell slot expenditures"
-                            : summary.right.spellSlots
+                            : summary.success.spellSlots
                                 .map((slot) => `Level ${slot.spellLevel}: ${slot.expended}/${slot.count}`)
                                 .join(", ")}
                         </dd>
@@ -305,15 +305,15 @@ export function CharacterCreationPage() {
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Pact Slot State</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.right.pactSlots === undefined
+                          {summary.success.pactSlots === undefined
                             ? "No Pact Slots"
-                            : `Level ${summary.right.pactSlots.slotLevel}: ${summary.right.pactSlots.expended}/${summary.right.pactSlots.count}`}
+                            : `Level ${summary.success.pactSlots.slotLevel}: ${summary.success.pactSlots.expended}/${summary.success.pactSlots.count}`}
                         </dd>
                       </div>
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Hit Dice</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.right.hitDice
+                          {summary.success.hitDice
                             .map((pool) => `${pool.classUnitId}: ${pool.spent}/${pool.total} d${pool.dieSize}`)
                             .join(", ")}
                         </dd>
@@ -321,9 +321,9 @@ export function CharacterCreationPage() {
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Resources</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.right.resources.length === 0
+                          {summary.success.resources.length === 0
                             ? "No tracked resources"
-                            : summary.right.resources
+                            : summary.success.resources
                                 .map(
                                   (resource) =>
                                     `${characterSheetResourceSourceUnitId(resource)}: ${resource.expended}/${resource.count}`

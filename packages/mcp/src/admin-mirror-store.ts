@@ -1,4 +1,4 @@
-import { Effect, Either, PubSub, Schema, Stream } from "effect";
+import { Effect, Result, PubSub, Schema, Stream } from "effect";
 
 import {
   AdminMirrorProjectionEnvelopeSchema,
@@ -197,9 +197,9 @@ function nextPresentationTimeline(
 
 export function decodeAdminMirrorProjectionEnvelope(
   value: unknown,
-): Either.Either<AdminMirrorProjectionEnvelope, string> {
-  const decoded = Schema.decodeUnknownEither(
+): Result.Result<AdminMirrorProjectionEnvelope, string> {
+  const decoded = Schema.decodeUnknownResult(
     AdminMirrorProjectionEnvelopeSchema,
   )(value);
-  return Either.mapLeft(decoded, (error) => error.message);
+  return Result.mapError(decoded, (error) => error.message);
 }

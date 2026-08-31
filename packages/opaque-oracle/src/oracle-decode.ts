@@ -1,0 +1,708 @@
+import { Result, Match, Schema, SchemaIssue } from "effect";
+import * as AST from "effect/SchemaAST";
+
+import { compareCodePoints } from "./oracle-canonical.ts";
+
+export const ORACLE_DECODE_ISSUE_CODES = [
+  "invalidJson",
+  "duplicateMember",
+  "wrongType",
+  "missingMember",
+  "unknownMember",
+  "unknownVariant",
+  "outOfRange",
+  "emptyValue",
+  "emptyCollection",
+  "duplicateCollectionMember",
+  "nonCanonicalDomainValue",
+] as const;
+
+export type OracleDecodeIssueCode = (typeof ORACLE_DECODE_ISSUE_CODES)[number];
+
+export type OracleDecodeIssue = {
+  readonly path: string;
+  readonly code: OracleDecodeIssueCode;
+};
+
+export type OracleDecodeIssues = readonly [
+  OracleDecodeIssue,
+  ...OracleDecodeIssue[],
+];
+
+type DecodeOptions = {
+  readonly classifyRefinement?: (
+    actual: unknown,
+    path: string,
+  ) => OracleDecodeIssueCode | undefined;
+};
+
+type PendingParseIssue = {
+  readonly issue: SchemaIssue.Issue;
+  readonly path: string;
+  readonly depth: number;
+};
+
+type RefinementCode = Exclude<
+  OracleDecodeIssueCode,
+  | "invalidJson"
+  | "wrongType"
+  | "unknownMember"
+  | "missingMember"
+  | "unknownVariant"
+  | "duplicateMember"
+>;
+
+export function decodeWithSchema<
+  S extends Schema.ConstraintDecoder<unknown, never>,
+>(
+  schema: S,
+  input: unknown,
+  options: DecodeOptions = {},
+): Result.Result<S["Type"], OracleDecodeIssues> {
+  let decoded: Result.Result<S["Type"], Schema.SchemaError>;
+  try {
+    decoded = Schema.decodeUnknownResult(schema, {
+      errors: "all",
+      onExcessProperty: "error",
+      reportInput: true,
+    })(input);
+  } catch {
+    return Result.fail([{ path: "", code: "wrongType" }]);
+  }
+  if (Result.isSuccess(decoded)) return Result.succeed(decoded.success);
+
+  const issues: OracleDecodeIssue[] = [];
+  try {
+    collectParseIssues(decoded.failure.issue, "", issues, options);
+  } catch {
+    return Result.fail([{ path: "", code: "wrongType" }]);
+  }
+  return Result.fail(toOracleDecodeIssues(sortIssues(uniqueIssues(issues))));
+}
+
+function collectParseIssues(
+  issue: SchemaIssue.Issue,
+  path: string,
+  output: OracleDecodeIssue[],
+  options: DecodeOptions,
+): void {
+  const pending: PendingParseIssue[] = [{ issue, path, depth: 0 }];
+  let visited = 0;
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined) continue;
+    visited += 1;
+    if (visited > MAX_RAW_JSON_ITEMS || current.depth > MAX_RAW_JSON_DEPTH) {
+      output.push({ path: current.path, code: "wrongType" });
+      continue;
+    }
+    collectParseIssue(current, pending, output, options);
+  }
+}
+
+function collectParseIssue(
+  current: PendingParseIssue,
+  pending: PendingParseIssue[],
+  output: OracleDecodeIssue[],
+  options: DecodeOptions,
+): void {
+  return Match.value(current.issue).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      Pointer: (issue) =>
+        collectPointerParseIssue({ ...current, issue }, pending),
+      Composite: (issue) =>
+        collectCompositeParseIssue({ ...current, issue }, pending),
+      UnexpectedKey: () => {
+        output.push({ path: current.path, code: "unknownMember" });
+      },
+      MissingKey: () => {
+        output.push({ path: current.path, code: "missingMember" });
+      },
+      Filter: (issue) =>
+        collectRefinementParseIssue(
+          { ...current, issue },
+          pending,
+          output,
+          options,
+        ),
+      Encoding: (issue) => {
+        pending.push({
+          issue: issue.issue,
+          path: current.path,
+          depth: current.depth + 1,
+        });
+      },
+      InvalidType: (issue) => {
+        const unknownVariantPath = unknownVariantIssuePath(issue, current.path);
+        output.push({
+          path: unknownVariantPath ?? current.path,
+          code:
+            unknownVariantPath === undefined ? "wrongType" : "unknownVariant",
+        });
+      },
+      InvalidValue: () => {
+        output.push({ path: current.path, code: "nonCanonicalDomainValue" });
+      },
+      AnyOf: (issue) => {
+        if (issue.issues.length === 0) {
+          const unknownVariantPath = unknownVariantIssuePath(
+            issue,
+            current.path,
+          );
+          output.push({
+            path: unknownVariantPath ?? current.path,
+            code:
+              unknownVariantPath === undefined ? "wrongType" : "unknownVariant",
+          });
+        } else {
+          for (let index = issue.issues.length - 1; index >= 0; index -= 1) {
+            const child = issue.issues[index];
+            if (child !== undefined) {
+              pending.push({
+                issue: child,
+                path: current.path,
+                depth: current.depth + 1,
+              });
+            }
+          }
+        }
+      },
+      OneOf: () => {
+        output.push({ path: current.path, code: "wrongType" });
+      },
+      Forbidden: () => undefined,
+    }),
+  );
+}
+
+function collectPointerParseIssue(
+  current: PendingParseIssue & { readonly issue: SchemaIssue.Pointer },
+  pending: PendingParseIssue[],
+): void {
+  const pointerPath = current.issue.path;
+  pending.push({
+    issue: current.issue.issue,
+    path: pointerPath.reduce<string>(
+      (currentPath, segment) => appendPath(currentPath, segment),
+      current.path,
+    ),
+    depth: current.depth + 1,
+  });
+}
+
+function collectCompositeParseIssue(
+  current: PendingParseIssue & { readonly issue: SchemaIssue.Composite },
+  pending: PendingParseIssue[],
+): void {
+  const children = current.issue.issues;
+  for (let index = children.length - 1; index >= 0; index -= 1) {
+    const child = children[index];
+    if (child !== undefined) {
+      pending.push({
+        issue: child,
+        path: current.path,
+        depth: current.depth + 1,
+      });
+    }
+  }
+}
+
+function collectRefinementParseIssue(
+  current: PendingParseIssue & { readonly issue: SchemaIssue.Filter },
+  pending: PendingParseIssue[],
+  output: OracleDecodeIssue[],
+  options: DecodeOptions,
+): void {
+  if (
+    current.issue.issue._tag === "Composite" ||
+    current.issue.issue._tag === "Pointer"
+  ) {
+    pending.push({
+      issue: current.issue.issue,
+      path: current.path,
+      depth: current.depth + 1,
+    });
+    return;
+  }
+  const classified = options.classifyRefinement?.(
+    current.issue.input,
+    current.path,
+  );
+  output.push({
+    path: current.path,
+    code:
+      classified ?? refinementCode(current.issue.input, current.issue.filter),
+  });
+}
+
+function unknownVariantIssuePath(
+  issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
+  path: string,
+): string | undefined {
+  if (typeof issue.input === "string" && literalStrings(issue.ast).length > 0) {
+    return path;
+  }
+  const discriminator = unknownObjectVariantDiscriminator(issue);
+  return discriminator === undefined
+    ? undefined
+    : appendPath(path, discriminator);
+}
+
+function unknownObjectVariantDiscriminator(
+  issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
+): string | undefined {
+  const variant = unknownObjectVariant(issue);
+  if (variant === undefined) return undefined;
+  const { input, members } = variant;
+  const firstMember = members[0];
+  if (firstMember?._tag !== "Objects") return undefined;
+  for (const property of firstMember.propertySignatures) {
+    const discriminator = unknownVariantDiscriminatorProperty(
+      input,
+      members,
+      property.name,
+    );
+    if (discriminator !== undefined) return discriminator;
+  }
+  return undefined;
+}
+
+type UnknownObjectVariant = {
+  readonly input: object;
+  readonly members: readonly AST.AST[];
+};
+
+function unknownObjectVariant(
+  issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
+): UnknownObjectVariant | undefined {
+  if (issue.ast._tag !== "Union") return undefined;
+  if (
+    typeof issue.input !== "object" ||
+    issue.input === null ||
+    Array.isArray(issue.input)
+  ) {
+    return undefined;
+  }
+  return { input: issue.input, members: issue.ast.types };
+}
+
+function unknownVariantDiscriminatorProperty(
+  input: object,
+  members: readonly AST.AST[],
+  propertyName: PropertyKey,
+): string | undefined {
+  if (typeof propertyName !== "string") return undefined;
+  const actual = Reflect.get(input, propertyName);
+  if (typeof actual !== "string") return undefined;
+  const expected = commonLiteralPropertyValues(members, propertyName);
+  return expected !== undefined && !expected.includes(actual)
+    ? propertyName
+    : undefined;
+}
+
+function commonLiteralPropertyValues(
+  members: readonly AST.AST[],
+  propertyName: string,
+): readonly string[] | undefined {
+  const valuesByMember = members.map((member) => {
+    if (member._tag !== "Objects") return undefined;
+    const property = member.propertySignatures.find(
+      ({ name }) => name === propertyName,
+    );
+    if (property === undefined) return undefined;
+    const values = literalStrings(property.type);
+    return values.length === 0 ? undefined : values;
+  });
+  return valuesByMember.some((values) => values === undefined)
+    ? undefined
+    : valuesByMember.flatMap((values) => values ?? []);
+}
+
+function refinementCode(
+  actual: unknown,
+  filter: AST.Check<unknown>,
+): Exclude<
+  OracleDecodeIssueCode,
+  | "invalidJson"
+  | "wrongType"
+  | "unknownMember"
+  | "missingMember"
+  | "unknownVariant"
+  | "duplicateMember"
+> {
+  if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
+  if (hasUniqueItemsAnnotation(filter)) return "duplicateCollectionMember";
+  return (
+    refinementStringCode(actual) ??
+    refinementNumberCode(actual) ??
+    "nonCanonicalDomainValue"
+  );
+}
+
+function refinementStringCode(actual: unknown): RefinementCode | undefined {
+  if (typeof actual !== "string") return undefined;
+  if (actual.length === 0) return "emptyValue";
+  return actual.trim() !== actual ? "nonCanonicalDomainValue" : undefined;
+}
+
+function refinementNumberCode(actual: unknown): RefinementCode | undefined {
+  if (typeof actual !== "number") return undefined;
+  return !Number.isFinite(actual) || !Number.isInteger(actual) || actual < 0
+    ? "outOfRange"
+    : undefined;
+}
+
+function hasUniqueItemsAnnotation(filter: AST.Check<unknown>): boolean {
+  return filter.annotations?.oracleUniqueItems === true;
+}
+
+function literalStrings(ast: AST.AST): readonly string[] {
+  switch (ast._tag) {
+    case "Literal":
+      return typeof ast.literal === "string" ? [ast.literal] : [];
+    case "Union":
+      return ast.types.flatMap(literalStrings);
+    default:
+      return [];
+  }
+}
+
+function uniqueIssues(
+  issues: readonly OracleDecodeIssue[],
+): readonly OracleDecodeIssue[] {
+  const seen = new Set<string>();
+  return issues.filter((issue) => {
+    const key = `${issue.path}|${issue.code}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function sortIssues(
+  issues: readonly OracleDecodeIssue[],
+): readonly OracleDecodeIssue[] {
+  return [...issues].sort((first, second) =>
+    first.path === second.path
+      ? ORACLE_DECODE_ISSUE_CODES.indexOf(first.code) -
+        ORACLE_DECODE_ISSUE_CODES.indexOf(second.code)
+      : compareCodePoints(first.path, second.path),
+  );
+}
+
+function toOracleDecodeIssues(
+  issues: readonly OracleDecodeIssue[],
+): OracleDecodeIssues {
+  const [first, ...rest] = issues;
+  return first === undefined
+    ? [{ path: "", code: "wrongType" }]
+    : [first, ...rest];
+}
+
+function appendPath(path: string, segment: PropertyKey): string {
+  return typeof segment === "number"
+    ? `${path}/${segment}`
+    : `${path}/${String(segment).replaceAll("~", "~0").replaceAll("/", "~1")}`;
+}
+
+const MAX_RAW_JSON_DEPTH = 1_024;
+const MAX_RAW_JSON_ITEMS = 100_000;
+
+type ParsedJson = { readonly end: number };
+type ParsedJsonString = { readonly value: string; readonly end: number };
+
+type JsonScanFrame =
+  | {
+      readonly kind: "object";
+      readonly path: string;
+      readonly keys: Set<string>;
+      state: "keyOrEnd" | "keyRequired" | "value" | "commaOrEnd";
+      pendingPath: string | undefined;
+    }
+  | {
+      readonly kind: "array";
+      readonly path: string;
+      length: number;
+      state: "valueOrEnd" | "valueRequired" | "commaOrEnd";
+    };
+
+type JsonScanState = {
+  cursor: number;
+  nextValue: { readonly path: string } | undefined;
+  rootComplete: boolean;
+  scannedItems: number;
+  readonly frames: JsonScanFrame[];
+};
+
+type JsonFramePreparation = "closed" | "ready" | "invalid";
+
+export function parseJsonWithDuplicateDetection(
+  text: string,
+): Result.Result<unknown, OracleDecodeIssues> {
+  const duplicates: string[] = [];
+  const parsed = scanJsonValue(text, skipWhitespace(text, 0), "", duplicates);
+  if (
+    parsed === undefined ||
+    text.slice(skipWhitespace(text, parsed.end)).length > 0
+  ) {
+    return Result.fail([{ path: "", code: "invalidJson" }]);
+  }
+  if (duplicates.length > 0) {
+    return Result.fail(
+      toOracleDecodeIssues(
+        sortIssues(
+          duplicates.map((path) => ({
+            path,
+            code: "duplicateMember" as const,
+          })),
+        ),
+      ),
+    );
+  }
+  try {
+    return Result.succeed(JSON.parse(text));
+  } catch {
+    return Result.fail([{ path: "", code: "invalidJson" }]);
+  }
+}
+
+function scanJsonValue(
+  text: string,
+  start: number,
+  path: string,
+  duplicates: string[],
+): ParsedJson | undefined {
+  const state: JsonScanState = {
+    cursor: skipWhitespace(text, start),
+    nextValue: { path },
+    rootComplete: false,
+    scannedItems: 0,
+    frames: [],
+  };
+
+  while (!state.rootComplete) {
+    if (state.nextValue !== undefined) {
+      state.scannedItems += 1;
+      if (state.scannedItems > MAX_RAW_JSON_ITEMS) return undefined;
+      const valuePath = state.nextValue.path;
+      state.nextValue = undefined;
+      if (!scanNextJsonValue(text, state, valuePath)) return undefined;
+      continue;
+    }
+    const frame = state.frames[state.frames.length - 1];
+    if (frame === undefined) return undefined;
+    const scanned =
+      frame.kind === "object"
+        ? scanJsonObjectFrame(text, state, frame, duplicates)
+        : scanJsonArrayFrame(text, state, frame);
+    if (!scanned) return undefined;
+  }
+  return { end: skipWhitespace(text, state.cursor) };
+}
+
+function completeJsonValue(state: JsonScanState): void {
+  const parent = state.frames[state.frames.length - 1];
+  if (parent === undefined) {
+    state.rootComplete = true;
+    return;
+  }
+  if (parent.kind === "object") {
+    parent.state = "commaOrEnd";
+    parent.pendingPath = undefined;
+    return;
+  }
+  parent.length += 1;
+  parent.state = "commaOrEnd";
+}
+
+function scanNextJsonValue(
+  text: string,
+  state: JsonScanState,
+  valuePath: string,
+): boolean {
+  const opened = openJsonContainer(text, state, valuePath);
+  if (opened !== undefined) return opened;
+  if (text[state.cursor] === '"') {
+    const string = scanJsonString(text, state.cursor);
+    if (string === undefined) return false;
+    state.cursor = skipWhitespace(text, string.end);
+    completeJsonValue(state);
+    return true;
+  }
+  const end = scanJsonPrimitiveEnd(text, state.cursor);
+  if (end === undefined) return false;
+  state.cursor = skipWhitespace(text, end);
+  completeJsonValue(state);
+  return true;
+}
+
+function openJsonContainer(
+  text: string,
+  state: JsonScanState,
+  valuePath: string,
+): boolean | undefined {
+  const char = text[state.cursor];
+  if (char === "{") {
+    if (state.frames.length + 1 > MAX_RAW_JSON_DEPTH) return false;
+    state.frames.push({
+      kind: "object",
+      path: valuePath,
+      keys: new Set<string>(),
+      state: "keyOrEnd",
+      pendingPath: undefined,
+    });
+    state.cursor = skipWhitespace(text, state.cursor + 1);
+    return true;
+  }
+  if (char !== "[") return undefined;
+  if (state.frames.length + 1 > MAX_RAW_JSON_DEPTH) return false;
+  state.frames.push({
+    kind: "array",
+    path: valuePath,
+    length: 0,
+    state: "valueOrEnd",
+  });
+  state.cursor = skipWhitespace(text, state.cursor + 1);
+  return true;
+}
+
+function scanJsonPrimitiveEnd(
+  text: string,
+  cursor: number,
+): number | undefined {
+  if (text.startsWith("true", cursor)) return cursor + 4;
+  if (text.startsWith("false", cursor)) return cursor + 5;
+  if (text.startsWith("null", cursor)) return cursor + 4;
+  const number = text
+    .slice(cursor)
+    .match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/u);
+  return number === null ? undefined : cursor + number[0].length;
+}
+
+function scanJsonObjectFrame(
+  text: string,
+  state: JsonScanState,
+  frame: Extract<JsonScanFrame, { readonly kind: "object" }>,
+  duplicates: string[],
+): boolean {
+  const preparation = prepareJsonObjectFrame(text, state, frame);
+  if (preparation === "closed") return true;
+  if (preparation === "invalid") return false;
+  return scanJsonObjectMember(text, state, frame, duplicates);
+}
+
+function prepareJsonObjectFrame(
+  text: string,
+  state: JsonScanState,
+  frame: Extract<JsonScanFrame, { readonly kind: "object" }>,
+): JsonFramePreparation {
+  if (frame.state === "commaOrEnd") {
+    if (text[state.cursor] === "}") {
+      state.frames.pop();
+      state.cursor = skipWhitespace(text, state.cursor + 1);
+      completeJsonValue(state);
+      return "closed";
+    }
+    if (text[state.cursor] !== ",") return "invalid";
+    frame.state = "keyRequired";
+    state.cursor = skipWhitespace(text, state.cursor + 1);
+  }
+  if (frame.state === "keyOrEnd" && text[state.cursor] === "}") {
+    state.frames.pop();
+    state.cursor = skipWhitespace(text, state.cursor + 1);
+    completeJsonValue(state);
+    return "closed";
+  }
+  return frame.state === "keyOrEnd" || frame.state === "keyRequired"
+    ? "ready"
+    : "invalid";
+}
+
+function scanJsonObjectMember(
+  text: string,
+  state: JsonScanState,
+  frame: Extract<JsonScanFrame, { readonly kind: "object" }>,
+  duplicates: string[],
+): boolean {
+  const key = scanJsonString(text, state.cursor);
+  if (key === undefined) return false;
+  state.cursor = skipWhitespace(text, key.end);
+  if (text[state.cursor] !== ":") return false;
+  state.cursor = skipWhitespace(text, state.cursor + 1);
+  const memberPath = appendPath(frame.path, key.value);
+  if (frame.keys.has(key.value)) duplicates.push(memberPath);
+  frame.keys.add(key.value);
+  frame.pendingPath = memberPath;
+  frame.state = "value";
+  state.nextValue = { path: memberPath };
+  return true;
+}
+
+function scanJsonArrayFrame(
+  text: string,
+  state: JsonScanState,
+  frame: Extract<JsonScanFrame, { readonly kind: "array" }>,
+): boolean {
+  const preparation = prepareJsonArrayFrame(text, state, frame);
+  if (preparation === "closed") return true;
+  if (preparation === "invalid") return false;
+  const memberPath = appendPath(frame.path, frame.length);
+  frame.state = "commaOrEnd";
+  state.nextValue = { path: memberPath };
+  return true;
+}
+
+function prepareJsonArrayFrame(
+  text: string,
+  state: JsonScanState,
+  frame: Extract<JsonScanFrame, { readonly kind: "array" }>,
+): JsonFramePreparation {
+  if (frame.state === "commaOrEnd") {
+    if (text[state.cursor] === "]") {
+      state.frames.pop();
+      state.cursor = skipWhitespace(text, state.cursor + 1);
+      completeJsonValue(state);
+      return "closed";
+    }
+    if (text[state.cursor] !== ",") return "invalid";
+    frame.state = "valueRequired";
+    state.cursor = skipWhitespace(text, state.cursor + 1);
+  }
+  if (frame.state === "valueOrEnd" && text[state.cursor] === "]") {
+    state.frames.pop();
+    state.cursor = skipWhitespace(text, state.cursor + 1);
+    completeJsonValue(state);
+    return "closed";
+  }
+  return frame.state === "valueOrEnd" || frame.state === "valueRequired"
+    ? "ready"
+    : "invalid";
+}
+
+function scanJsonString(
+  text: string,
+  start: number,
+): ParsedJsonString | undefined {
+  let cursor = start + 1;
+  while (cursor < text.length) {
+    if (text[cursor] === "\\") cursor += 2;
+    else if (text[cursor] === '"') {
+      const raw = text.slice(start, cursor + 1);
+      try {
+        const value = JSON.parse(raw);
+        return typeof value === "string"
+          ? { value, end: cursor + 1 }
+          : undefined;
+      } catch {
+        return undefined;
+      }
+    } else cursor += 1;
+  }
+  return undefined;
+}
+
+function skipWhitespace(text: string, start: number): number {
+  let cursor = start;
+  while (/\s/u.test(text[cursor] ?? "")) cursor += 1;
+  return cursor;
+}

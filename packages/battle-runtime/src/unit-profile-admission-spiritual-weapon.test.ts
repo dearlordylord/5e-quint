@@ -1,13 +1,16 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  wizardSpellcasting,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME spiritual_weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 import { describe, expect, test } from "vitest";
 import {
-  requireCharacterSpellProcedureRefForTest,
   battleFrontierInterruptDecisionForState,
+  requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
@@ -22,6 +25,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type {
+  BattleInterruptSubject,
   BattleInterruptProcedureChoice,
   BattleProcedureExecutionRef,
   BattleResolutionResult,
@@ -30,15 +34,14 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   bonusSpellAct,
   savingThrowOutcomeFill,
-  spiritualWeaponForcePositionFill,
-  spiritualWeaponTargetFill,
+  spatialMeleeSpellAttackProxyPositionFill,
+  spatialMeleeSpellAttackProxyTargetFill,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -57,7 +60,7 @@ import {
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import {
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   mirrorImageUnitId,
   shieldUnitId,
   spellCasterId,
@@ -65,6 +68,7 @@ import {
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
 describe("L12G deterministic Spiritual Weapon admission", () => {
   test("spiritual weapon casts as a Bonus Action attack proxy with slot scaling", () => {
@@ -108,13 +112,16 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         spellSlotInvocationRef(
           spiritualWeaponUnitId,
           2,
-          "spiritualWeaponAttackProxy",
+          "spatialMeleeSpellAttackProxy",
         ),
       ),
       mode: { tag: "cast" },
     });
     expect(
-      requireHole(secondLevelAct.initialHoles, "spiritualWeaponForcePosition"),
+      requireHole(
+        secondLevelAct.initialHoles,
+        "spatialMeleeSpellAttackProxyPosition",
+      ),
     ).toEqual(
       expect.objectContaining({
         mode: "cast",
@@ -123,7 +130,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
     expect(spellHoleInvocation(session, fourthLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
-        procedure: "spiritualWeaponAttackProxy",
+        procedure: "spatialMeleeSpellAttackProxy",
         damage: {
           kind: "fixedSpellAttackDamage",
           expr: { dice: 3, dieSize: 8, flat: 3 },
@@ -154,17 +161,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
     const firstForce = requireHole(
       firstAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const firstTarget = requireHole(firstAct.initialHoles, "targetChoice");
     const firstPositionId = battleTablePositionId(
       "spiritual-weapon-first-discovery",
     );
-    const firstForceFill = spiritualWeaponForcePositionFill({
+    const firstForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: firstForce,
       positionId: firstPositionId,
     });
-    const firstTargetFill = spiritualWeaponTargetFill(
+    const firstTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       firstTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -218,7 +225,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     const secondForce = requireHole(
       secondAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const secondTarget = requireHole(secondAct.initialHoles, "targetChoice");
     const secondPositionId = battleTablePositionId(
@@ -228,11 +235,11 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       state: committed.state,
       subject: secondAct.subject,
       fills: [
-        spiritualWeaponForcePositionFill({
+        spatialMeleeSpellAttackProxyPositionFill({
           hole: secondForce,
           positionId: secondPositionId,
         }),
-        spiritualWeaponTargetFill(
+        spatialMeleeSpellAttackProxyTargetFill(
           secondTarget,
           spiritualWeaponUnitId,
           spellCasterId,
@@ -256,30 +263,40 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "cleric", level: 3 }],
       targetClassLevels: [{ className: "wizard", level: 3 }],
-      targetPreparedSpells: [spellRecord(mirrorImageUnitId)],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [spellRecord(mirrorImageUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
       targetHp: 30,
       targetMaxHp: 30,
     });
     const target = requireCombatant(session.state, spellTargetId);
+    const mirrorImage = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "duplicateHitInterception",
+        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          spellTargetId,
+          spellSlotInvocationRef(
+            mirrorImageUnitId,
+            2,
+            "duplicateHitInterception",
+          ),
+        ),
+        sourceCombatantId: spellTargetId,
+        remainingDuplicates: 3,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const mirrorImageState: BattleState = {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "mirrorImageDuplicates",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic-mirror-image-for-spiritual-weapon",
-            ),
-            sourceCombatantId: spellTargetId,
-            remainingDuplicates: 3,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
+        ...mirrorImage.owner,
+        activeEffects: [...target.activeEffects, mirrorImage.effect],
       }),
     };
     const act = bonusSpellAct({
@@ -290,14 +307,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const targetChoice = requireHole(act.initialHoles, "targetChoice");
     const positionId = battleTablePositionId("spiritual-weapon-mirror-force");
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId,
     });
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       targetChoice,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -322,8 +342,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ],
     });
     const mirrorHole = requireResultHole(mirrorHoleResult, "rolledDice");
-    if (!("mirrorImageDuplicateRoll" in mirrorHole)) {
-      throw new Error("Expected Mirror Image duplicate roll hole.");
+    if (!("duplicateHitInterceptionRoll" in mirrorHole)) {
+      throw new Error("Expected duplicate-hit interception roll hole.");
     }
     const resolved = resolveBattleSubject({
       state: mirrorImageState,
@@ -343,13 +363,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "mirrorImageDuplicates",
+        kind: "duplicateHitInterception",
         remainingDuplicates: 2,
       }),
     );
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
-    ).toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    ).toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
@@ -381,7 +403,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         spellSlotInvocationRef(
           spiritualWeaponUnitId,
           2,
-          "spiritualWeaponAttackProxy",
+          "spatialMeleeSpellAttackProxy",
         ),
       ),
       mode: { tag: "cast" },
@@ -402,7 +424,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
   });
 
   test("rejects authored repeat attacks with mismatched damage", () => {
-    const spell = spiritualWeaponWithMismatchedRepeatDamage();
+    const spell = spatialMeleeSpellAttackProxyWithMismatchedRepeatDamage();
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -414,15 +436,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
           battleActSpellPresentation(candidate)?.invocation.spellId ===
             spiritualWeaponUnitId &&
           battleActSpellPresentation(candidate)?.invocation.procedure ===
-            "spiritualWeaponAttackProxy",
+            "spatialMeleeSpellAttackProxy",
       ),
     ).toBe(false);
   });
 
   test("rejects authored Spiritual Weapon shapes with extra later executable mechanics", () => {
     const spells = [
-      spiritualWeaponWithExtraLaterOperation(),
-      spiritualWeaponWithExtraCompositeEffect(),
+      spatialMeleeSpellAttackProxyWithExtraLaterOperation(),
+      spatialMeleeSpellAttackProxyWithExtraCompositeEffect(),
     ];
 
     for (const spell of spells) {
@@ -438,7 +460,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
             battleActSpellPresentation(candidate)?.invocation.spellId ===
               spiritualWeaponUnitId &&
             battleActSpellPresentation(candidate)?.invocation.procedure ===
-              "spiritualWeaponAttackProxy",
+              "spatialMeleeSpellAttackProxy",
         ),
       ).toBe(false);
     }
@@ -459,16 +481,19 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
       spellTargetId,
       forcePositionId,
     );
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
@@ -519,12 +544,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         forcePositionId,
-        forceReachFeet: movementFeet(5),
-        repeatMoveMaxFeet: movementFeet(20),
         startedOn: {
           actorId: spellCasterId,
           round: state.initiative.round,
@@ -540,7 +563,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const cleaned = breakBattleConcentration(resolved.state, spellCasterId);
     expect(
       requireCombatant(cleaned, spellCasterId).activeEffects,
-    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
 
     const expiring = withSpiritualWeaponDurationTicks(
       resolved.state,
@@ -552,11 +577,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     };
     expect(
       requireCombatant(expired, spellCasterId).activeEffects,
-    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
     expect(requireCombatant(expired, spellCasterId).concentration).toBeNull();
   });
 
-  test("counterspell reaction frame uses the Spiritual Weapon Bonus Action resource", () => {
+  test("spellCastInterruptionReaction reaction frame uses the Spiritual Weapon Bonus Action resource", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
     const session = spellBattle({
@@ -571,7 +598,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [spellRecord(counterspellUnitId)],
+        preparedSpells: [spellRecord(spellCastInterruptionReactionUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -585,16 +612,19 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
       spellTargetId,
       forcePositionId,
     );
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
@@ -606,13 +636,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
           forceFill,
           targetFill,
           spellCastReactionFactsFill([
-            counterspellTriggerFact({
+            spellCastInterruptionReactionTriggerFact({
               reactorId: spellTargetId,
               casterId: spellCasterId,
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
                 session,
                 spellTargetId,
-                spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+                spellSlotInvocationRef(
+                  spellCastInterruptionReactionUnitId,
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
               ),
             }),
           ]),
@@ -631,8 +665,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       session,
       result: awaitingCounterspell,
       reactorId: spellTargetId,
-      spellId: counterspellUnitId,
-      procedure: "counterspell",
+      spellId: spellCastInterruptionReactionUnitId,
+      procedure: "spellCastInterruptionReaction",
       slotLevel: 3,
     });
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
@@ -657,9 +691,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     if (countered.tag !== "resolved") {
       throw new Error("Expected Counterspell to resolve Spiritual Weapon.");
     }
+    expect(battleFrontierInterruptDecisionForState(countered.state)).toBeNull();
     expect(
       requireCombatant(countered.state, spellCasterId).activeEffects,
-    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
   });
 
   test("self-target immediate damage sees the newly created concentration proxy", () => {
@@ -675,16 +712,19 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
       spellCasterId,
       forcePositionId,
     );
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
@@ -735,7 +775,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(needsConcentration.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId,
       }),
     );
@@ -771,7 +811,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId,
       }),
     );
@@ -808,13 +848,16 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -849,17 +892,30 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(awaitingShield.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId,
       }),
     );
+    expect(awaitingShield.state.interruptStack.at(-1)).toMatchObject({
+      kind: "interruptCheckpoint",
+      frame: {
+        continuation: {
+          spatialMeleeSpellAttackProxyCommitCheckpoint: {
+            kind: "spatialMeleeSpellAttackProxyCommitApplied",
+            actorId: spellCasterId,
+            sourceProcedureRef: act.subject.procedureRef,
+            operation: "createAndAttack",
+          },
+        },
+      },
+    });
 
     const choice = requireTriggeredReactionSpellChoice({
       session,
       result: awaitingShield,
       reactorId: spellTargetId,
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
       slotLevel: 1,
     });
     const resolved = resolveBattleInterrupt({
@@ -870,6 +926,11 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ),
     });
 
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected Shielded Spiritual Weapon cast to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -879,6 +940,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(20),
     );
@@ -886,17 +948,139 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId,
       }),
     );
+  });
+
+  test("an attack-hit interrupt replay does not restore a concentration-ended Spiritual Weapon proxy or re-spend its cast", () => {
+    const spell = spellRecord(spiritualWeaponUnitId);
+    const forcePositionId = battleTablePositionId(
+      "spiritual-weapon-force-concentration-replay",
+    );
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 20,
+      targetMaxHp: 20,
+      targetSpellcasting: {
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [spellRecord(shieldUnitId)],
+        featurePreparedSpells: [],
+        spellAccesses: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    });
+    const act = bonusSpellAct({
+      session,
+      spellId: spiritualWeaponUnitId,
+      slotLevel: 2,
+    });
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
+      hole: requireHole(
+        act.initialHoles,
+        "spatialMeleeSpellAttackProxyPosition",
+      ),
+      positionId: forcePositionId,
+    });
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      spiritualWeaponUnitId,
+      spellCasterId,
+      spellTargetId,
+      forcePositionId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [forceFill, targetFill],
+      }),
+      "attackRoll",
+    );
+    const awaitingShield = requireNeedsHoles(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          forceFill,
+          targetFill,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ],
+      }),
+    );
+    const concentrationEnded = breakBattleConcentration(
+      awaitingShield.state,
+      spellCasterId,
+    );
+    expect(
+      requireCombatant(concentrationEnded, spellCasterId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
+
+    const awaitingDamage = resolveBattleInterrupt({
+      state: concentrationEnded,
+      fill: interruptDecisionFill(
+        requireHole(awaitingShield.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellTargetId },
+      ),
+    });
+    expect(awaitingDamage).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected replayed Spiritual Weapon damage roll.");
+    }
+    const damage = requireHole(awaitingDamage.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: awaitingDamage.state,
+      subject: awaitingDamage.subject,
+      fills: [damageRollFillWithGroups(damage, [[5]])],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionQuotaAvailable: false,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected replayed Spiritual Weapon hit to resolve.");
+    }
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
+      Hp(12),
+    );
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toStrictEqual([{ kind: "committed", combatantId: spellCasterId }]);
   });
 
   test("sanctuary loss on cast still spends and records the Spiritual Weapon proxy", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
     const session = spellBattle({
-      preparedSpells: [spell],
+      preparedSpells: [spell, spellRecord(sanctuaryUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const state = withSanctuaryWard(session.state, spellTargetId);
@@ -905,16 +1089,19 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
       spellTargetId,
       forcePositionId,
     );
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
@@ -932,7 +1119,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         forceFill,
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -952,7 +1139,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(lost.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId,
       }),
     );
@@ -971,16 +1158,19 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
       spellTargetId,
       forcePositionId,
     );
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
@@ -993,14 +1183,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Spiritual Weapon force position must use the selected spell act position hole.",
+        "spatial melee spell-attack proxy force position must use the selected spell act position hole.",
     });
 
     const overRange = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spiritualWeaponForcePositionFill({
+        spatialMeleeSpellAttackProxyPositionFill({
           hole: force,
           positionId: forcePositionId,
           distanceFromCasterFeet: 61,
@@ -1012,7 +1202,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Spiritual Weapon force placement must be within the spell range.",
+        "spatial melee spell-attack proxy force placement must be within the spell range.",
     });
   });
 
@@ -1030,13 +1220,16 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: selectedForceId,
     });
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1069,13 +1262,16 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 2,
     });
-    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const force = requireHole(
+      act.initialHoles,
+      "spatialMeleeSpellAttackProxyPosition",
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
-    const forceFill = spiritualWeaponForcePositionFill({
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: force,
       positionId: forcePositionId,
     });
-    const targetFill = spiritualWeaponTargetFill(
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
       target,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1119,10 +1315,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
+          battleActSpellPresentation(candidate)?.invocation.tag ===
+            "spellEffect" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
             spiritualWeaponUnitId &&
           battleActSpellPresentation(candidate)?.invocation.procedure ===
-            "spiritualWeaponRepeatAttack",
+            "spatialMeleeSpellAttackProxy",
       ),
     ).toBe(false);
   });
@@ -1138,20 +1336,26 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       targetMaxHp: 30,
     });
     const casterBeforeCast = requireCombatant(session.state, spellCasterId);
-    const unrelatedEffect = {
-      kind: "speedDelta",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-spiritual-weapon-composition",
-      ),
-      sourceCombatantId: spellCasterId,
-      deltaFeet: movementDeltaFeet(10),
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const satisfies BattleActiveEffect;
+    const unrelatedEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: casterBeforeCast,
+      effect: {
+        kind: "speedDelta",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-spiritual-weapon-composition",
+        ),
+        sourceCombatantId: spellCasterId,
+        deltaFeet: movementDeltaFeet(10),
+        expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+      },
+    });
     const state: BattleState = {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...casterBeforeCast,
-        activeEffects: [...casterBeforeCast.activeEffects, unrelatedEffect],
+        ...unrelatedEffect.owner,
+        activeEffects: [
+          ...casterBeforeCast.activeEffects,
+          unrelatedEffect.effect,
+        ],
       }),
     };
     const castAct = bonusSpellAct({
@@ -1161,14 +1365,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
     const castForce = requireHole(
       castAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const castTarget = requireHole(castAct.initialHoles, "targetChoice");
-    const castForceFill = spiritualWeaponForcePositionFill({
+    const castForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: castForce,
       positionId: initialForceId,
     });
-    const castTargetFill = spiritualWeaponTargetFill(
+    const castTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       castTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1215,10 +1419,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponRepeatAttack",
+          "spatialMeleeSpellAttackProxy",
     );
     expect(repeatAct).toBeDefined();
     if (repeatAct === undefined) {
@@ -1226,15 +1432,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     }
     const repeatForce = requireHole(
       repeatAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const repeatTarget = requireHole(repeatAct.initialHoles, "targetChoice");
-    const repeatForceFill = spiritualWeaponForcePositionFill({
+    const repeatForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: repeatForce,
       positionId: movedForceId,
       moveDistanceFeet: 20,
     });
-    const repeatTargetFill = spiritualWeaponTargetFill(
+    const repeatTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       repeatTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1245,7 +1451,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       state: repeatReadyState,
       subject: repeatAct.subject,
       fills: [
-        spiritualWeaponForcePositionFill({
+        spatialMeleeSpellAttackProxyPositionFill({
           hole: repeatForce,
           positionId: movedForceId,
           moveDistanceFeet: 21,
@@ -1256,7 +1462,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(overlongMove).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Spiritual Weapon force movement exceeds the spell's maximum.",
+      message:
+        "spatial melee spell-attack proxy force movement exceeds the spell's maximum.",
     });
 
     const repeatAttackRoll = requireResultHole(
@@ -1304,7 +1511,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Spiritual Weapon repeat attack is only available on later turns.",
+        "spatial melee spell-attack proxy repeat attack is only available on later turns.",
     });
     // The discovered repeat also fails closed if another operation spends the
     // current Bonus Action before this subject resolves.
@@ -1332,7 +1539,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).activeEffects.find(
       (effect) =>
         "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef === unrelatedEffect.sourceProcedureRef,
+        effect.sourceProcedureRef === unrelatedEffect.effect.sourceProcedureRef,
     );
     if (unrelatedEffectBeforeRepeat === undefined) {
       throw new Error(
@@ -1357,7 +1564,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "spiritualWeapon",
+          kind: "spatialMeleeSpellAttackProxy",
           forcePositionId: movedForceId,
         }),
         unrelatedEffectBeforeRepeat,
@@ -1383,14 +1590,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
     const castForce = requireHole(
       castAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const castTarget = requireHole(castAct.initialHoles, "targetChoice");
-    const castForceFill = spiritualWeaponForcePositionFill({
+    const castForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: castForce,
       positionId: initialForceId,
     });
-    const castTargetFill = spiritualWeaponTargetFill(
+    const castTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       castTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1448,10 +1655,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponRepeatAttack",
+          "spatialMeleeSpellAttackProxy",
     );
     expect(repeatAct).toBeDefined();
     if (repeatAct === undefined) {
@@ -1459,15 +1668,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     }
     const repeatForce = requireHole(
       repeatAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const repeatTarget = requireHole(repeatAct.initialHoles, "targetChoice");
-    const repeatForceFill = spiritualWeaponForcePositionFill({
+    const repeatForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: repeatForce,
       positionId: movedForceId,
       moveDistanceFeet: 20,
     });
-    const repeatTargetFill = spiritualWeaponTargetFill(
+    const repeatTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       repeatTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1508,7 +1717,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(repeated.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId: movedForceId,
       }),
     );
@@ -1548,14 +1757,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
     const castForce = requireHole(
       castAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const castTarget = requireHole(castAct.initialHoles, "targetChoice");
-    const castForceFill = spiritualWeaponForcePositionFill({
+    const castForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: castForce,
       positionId: initialForceId,
     });
-    const castTargetFill = spiritualWeaponTargetFill(
+    const castTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       castTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1602,10 +1811,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponRepeatAttack",
+          "spatialMeleeSpellAttackProxy",
     );
     expect(repeatAct).toBeDefined();
     if (repeatAct === undefined) {
@@ -1613,15 +1824,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     }
     const repeatForce = requireHole(
       repeatAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const repeatTarget = requireHole(repeatAct.initialHoles, "targetChoice");
-    const repeatForceFill = spiritualWeaponForcePositionFill({
+    const repeatForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: repeatForce,
       positionId: movedForceId,
       moveDistanceFeet: 20,
     });
-    const repeatTargetFill = spiritualWeaponTargetFill(
+    const repeatTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       repeatTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1659,7 +1870,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       result: awaitingShield,
       reactorId: spellTargetId,
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
       slotLevel: 1,
     });
     const resolved = resolveBattleInterrupt({
@@ -1669,7 +1880,11 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
-
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected Shielded Spiritual Weapon repeat to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -1679,6 +1894,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(30),
     );
@@ -1686,7 +1902,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId: movedForceId,
       }),
     );
@@ -1709,7 +1925,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
     const session = spellBattle({
-      preparedSpells: [spell],
+      preparedSpells: [spell, spellRecord(sanctuaryUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const state = session.state;
@@ -1720,14 +1936,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
     const castForce = requireHole(
       castAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const castTarget = requireHole(castAct.initialHoles, "targetChoice");
-    const castForceFill = spiritualWeaponForcePositionFill({
+    const castForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: castForce,
       positionId: initialForceId,
     });
-    const castTargetFill = spiritualWeaponTargetFill(
+    const castTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       castTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1775,10 +1991,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponRepeatAttack",
+          "spatialMeleeSpellAttackProxy",
     );
     expect(repeatAct).toBeDefined();
     if (repeatAct === undefined) {
@@ -1786,15 +2004,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     }
     const repeatForce = requireHole(
       repeatAct.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const repeatTarget = requireHole(repeatAct.initialHoles, "targetChoice");
-    const repeatForceFill = spiritualWeaponForcePositionFill({
+    const repeatForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: repeatForce,
       positionId: movedForceId,
       moveDistanceFeet: 20,
     });
-    const repeatTargetFill = spiritualWeaponTargetFill(
+    const repeatTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       repeatTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -1815,7 +2033,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         repeatForceFill,
         repeatTargetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1835,7 +2053,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       requireCombatant(lost.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spiritualWeapon",
+        kind: "spatialMeleeSpellAttackProxy",
         forcePositionId: movedForceId,
       }),
     );
@@ -1852,8 +2070,18 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
+
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 function requireNeedsHoles(result: BattleResolutionResult): NeedsHolesResult {
   expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
@@ -1862,13 +2090,13 @@ function requireNeedsHoles(result: BattleResolutionResult): NeedsHolesResult {
   return result;
 }
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionReactionTriggerFact(input: {
   readonly reactorId: typeof spellTargetId;
   readonly casterId: typeof spellCasterId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: input.sourceProcedureRef,
@@ -1893,40 +2121,31 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly spellId: string;
   readonly procedure: string;
   readonly slotLevel: number;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     input.result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId
-      )
-        return false;
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          ...input.session,
-          state: input.result.state,
-        }),
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        Number(invocation.slotLevel) === input.slotLevel
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== input.reactorId
+    )
+      return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        ...input.session,
+        state: input.result.state,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      Number(invocation.slotLevel) === input.slotLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
   }
@@ -1935,10 +2154,7 @@ function requireTriggeredReactionSpellChoice(input: {
 
 function triggeredReactionSpellDecision(
   reactorId: typeof spellTargetId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {
@@ -1953,13 +2169,20 @@ function triggeredReactionSpellDecision(
 }
 
 function sanctuaryOutcomeFill(
-  hole: Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }>,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >,
   value: Extract<
     BattleFill,
-    { readonly kind: "sanctuaryInterdictionOutcome" }
+    { readonly kind: "targetingSaveInterdictionOutcome" }
   >["value"],
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  return { kind: "sanctuaryInterdictionOutcome", holeId: hole.holeId, value };
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  return {
+    kind: "targetingSaveInterdictionOutcome",
+    holeId: hole.holeId,
+    value,
+  };
 }
 
 function withSanctuaryWard(
@@ -1967,27 +2190,40 @@ function withSanctuaryWard(
   wardedId: typeof spellTargetId,
 ): BattleState {
   const warded = requireCombatant(state, wardedId);
-  const ward: Extract<BattleActiveEffect, { readonly kind: "sanctuaryWard" }> =
-    {
-      kind: "sanctuaryWard",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("sanctuary"),
-      ),
-      sourceCombatantId: spellTargetId,
-      save: { ability: "wis", dc: { kind: "fixed", dc: 13 } },
+  const caster = requireCombatant(state, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Sanctuary source character.");
+  }
+  const sourceProcedureRef = caster.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure === "targetingSaveInterdiction",
+  )?.procedureRef;
+  if (sourceProcedureRef === undefined) {
+    throw new Error("Expected bound Sanctuary procedure.");
+  }
+  const ward = allocateBattleEffectOccurrenceForCreature({
+    owner: warded,
+    effect: {
+      kind: "targetingSaveInterdiction",
+      sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "duration",
         durationTicks: elapsedTimeTicks(10),
       },
-    };
+    },
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(wardedId, {
-      ...warded,
-      activeEffects: [...warded.activeEffects, ward],
+      ...ward.owner,
+      activeEffects: [...warded.activeEffects, ward.effect],
     }),
   };
 }
+
+const sanctuaryUnitId = "sanctuary";
 
 function withSpiritualWeaponDurationTicks(
   state: BattleState,
@@ -1999,7 +2235,7 @@ function withSpiritualWeaponDurationTicks(
     combatants: new Map(state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spiritualWeapon"
+        effect.kind === "spatialMeleeSpellAttackProxy"
           ? {
               ...effect,
               expiresAt: {
@@ -2013,7 +2249,7 @@ function withSpiritualWeaponDurationTicks(
   };
 }
 
-function spiritualWeaponWithMismatchedRepeatDamage(): SpellRecord {
+function spatialMeleeSpellAttackProxyWithMismatchedRepeatDamage(): SpellRecord {
   const spell = spellRecord(spiritualWeaponUnitId);
   if (spell.mechanics.family !== "ongoing_effect") {
     throw new Error("Expected Spiritual Weapon ongoing mechanics.");
@@ -2066,7 +2302,7 @@ function spiritualWeaponWithMismatchedRepeatDamage(): SpellRecord {
   });
 }
 
-function spiritualWeaponWithExtraLaterOperation(): SpellRecord {
+function spatialMeleeSpellAttackProxyWithExtraLaterOperation(): SpellRecord {
   const spell = spellRecord(spiritualWeaponUnitId);
   if (spell.mechanics.family !== "ongoing_effect") {
     throw new Error("Expected Spiritual Weapon ongoing mechanics.");
@@ -2081,7 +2317,7 @@ function spiritualWeaponWithExtraLaterOperation(): SpellRecord {
   });
 }
 
-function spiritualWeaponWithExtraCompositeEffect(): SpellRecord {
+function spatialMeleeSpellAttackProxyWithExtraCompositeEffect(): SpellRecord {
   const spell = spellRecord(spiritualWeaponUnitId);
   if (spell.mechanics.family !== "ongoing_effect") {
     throw new Error("Expected Spiritual Weapon ongoing mechanics.");

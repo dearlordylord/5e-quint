@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 
 module battleRuntimeMirrorImage {
+  import battleRuntimeDuplicateHitInterception.* from "./battle-runtime-duplicate-hit-interception"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMirrorImageConstants.* from "./battle-runtime-mirror-image-constants"
 
@@ -27,7 +28,7 @@ module battleRuntimeMirrorImage {
       .fold(0, (highest, count) => if (highest > count) highest else count)
 
   pure def mirrorImageDuplicateRollInterposes(remainingDuplicates: int, highestRoll: int): bool =
-    remainingDuplicates > 0 and highestRoll >= mirrorImageDuplicateSuccessAtLeast
+    duplicateRollInterposes(remainingDuplicates, highestRoll, mirrorImageDuplicateSuccessAtLeast)
 
   pure def activeEffectsContainMirrorImageBypassBlindedCondition(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
@@ -48,8 +49,10 @@ module battleRuntimeMirrorImage {
     targetEffects: Set[ActiveEffect],
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
   ): bool =
-    activeEffectsContainMirrorImageDuplicates(targetEffects)
-      and not(mirrorImageAttackerUnaffected(attackerEffects, attackerPerceivesTargetWithBlindsightOrTruesight))
+    duplicateRollRequired(
+      activeEffectsMirrorImageRemainingDuplicates(targetEffects),
+      mirrorImageAttackerUnaffected(attackerEffects, attackerPerceivesTargetWithBlindsightOrTruesight),
+    )
 
   pure def mirrorImageRedirectsAttackRollHit(
     attackerEffects: Set[ActiveEffect],
@@ -57,14 +60,11 @@ module battleRuntimeMirrorImage {
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
     highestDuplicateRoll: int,
   ): bool =
-    mirrorImageRequiresDuplicateRollForAttackRollHit(
-      attackerEffects,
-      targetEffects,
-      attackerPerceivesTargetWithBlindsightOrTruesight,
-    ) and
-    mirrorImageDuplicateRollInterposes(
+    duplicateRedirectsHit(
       activeEffectsMirrorImageRemainingDuplicates(targetEffects),
+      mirrorImageAttackerUnaffected(attackerEffects, attackerPerceivesTargetWithBlindsightOrTruesight),
       highestDuplicateRoll,
+      mirrorImageDuplicateSuccessAtLeast,
     )
 
   pure def mirrorImageAttackRollHitReplayHoles(
@@ -101,16 +101,10 @@ module battleRuntimeMirrorImage {
     effects
       .map(effect => match effect {
         | MirrorImageDuplicates(data) =>
-          if (data.remainingDuplicates < 2)
-            MirrorImageDuplicates({
-              durationTicks: data.durationTicks,
-              remainingDuplicates: 0,
-            })
-          else
-            MirrorImageDuplicates({
-              durationTicks: data.durationTicks,
-              remainingDuplicates: data.remainingDuplicates - 1,
-            })
+          MirrorImageDuplicates({
+            durationTicks: data.durationTicks,
+            remainingDuplicates: remainingDuplicatesAfterIntercept(data.remainingDuplicates),
+          })
         | _ => effect
       })
       .filter(effect => match effect {

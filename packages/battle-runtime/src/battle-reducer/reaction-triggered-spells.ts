@@ -1,11 +1,13 @@
 // Triggered reaction spell discovery and trigger matching extracted from dispatcher.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 
 import { CombatantId } from "../identity.ts";
+import type { MovementFeet } from "@dnd/shared/types";
+import { Match } from "effect";
 import type { SpellProcedureExecution } from "../character-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
@@ -17,28 +19,29 @@ import {
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
-import { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
+import { triggeredArmorDefenseSpellMatchesTrigger } from "./triggered-armor-defense-reaction.ts";
 import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
   spellTargetListHole,
 } from "./spells-holes-fills.ts";
 import {
-  counterspellCapableReactors,
-  spellCastCanTriggerCounterspell,
-} from "./counterspell-reaction-discovery.ts";
+  spellCastInterruptionReactionCapableReactors,
+  spellCastCanTriggerSpellCastInterruption,
+} from "./spell-cast-interruption-reaction-discovery.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import type {
   BattleInterruptCheckpointInput,
   BattleInterruptProcedureChoice,
   BattleExecutableSpellInvocation,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 
-export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
+export { triggeredArmorDefenseSpellMatchesTrigger } from "./triggered-armor-defense-reaction.ts";
 
 export function triggeredReactionSpellChoices(
   state: BattleState,
@@ -52,19 +55,15 @@ export function triggeredReactionSpellChoices(
   ) {
     return [];
   }
-  let counterspellReactors:
-    | ReturnType<typeof counterspellCapableReactors>
-    | undefined;
-  const getCounterspellReactors = (): ReturnType<
-    typeof counterspellCapableReactors
-  > => (counterspellReactors ??= counterspellCapableReactors(state));
+  const spellCastInterruptionReactionReactors =
+    spellCastInterruptionReactionCapableReactors(state);
   const reactorIds =
     frame.trigger === "attackHit"
       ? [frame.targetId]
       : frame.trigger === "afterDamage"
         ? [frame.damagedId]
         : frame.trigger === "creatureFalls"
-          ? featherFallTriggerReactors(frame)
+          ? fallingCreatureMitigationTriggerReactors(frame)
           : spellCastTriggerReactors(frame);
   return reactorIds.flatMap(
     (reactorId): readonly BattleInterruptProcedureChoice[] => {
@@ -72,7 +71,7 @@ export function triggeredReactionSpellChoices(
       if (
         !isCharacterBattleCreatureState(reactor) ||
         !combatantCanTakeReactions(reactor) ||
-        combatantInsideActiveAntimagicFieldAura(state, reactorId)
+        combatantInsideActiveMagicSuppressionEmanation(state, reactorId)
       ) {
         return [];
       }
@@ -95,13 +94,19 @@ export function triggeredReactionSpellChoices(
           ) {
             return [];
           }
-          const spellCastReactionFactsHoles = spellCastCanTriggerCounterspell({
-            casterId: reactorId,
-            invocation: executableInvocation,
-            reactors: getCounterspellReactors(),
-          })
-            ? [spellCastReactionFactsHole({ casterId: reactorId, invocation })]
-            : [];
+          const spellCastReactionFactsHoles =
+            spellCastCanTriggerSpellCastInterruption({
+              casterId: reactorId,
+              invocation: executableInvocation,
+              reactors: spellCastInterruptionReactionReactors,
+            })
+              ? [
+                  spellCastReactionFactsHole({
+                    casterId: reactorId,
+                    invocation,
+                  }),
+                ]
+              : [];
           const initialHoles =
             executableInvocation.procedure === "saveGatedDamage"
               ? [
@@ -113,7 +118,8 @@ export function triggeredReactionSpellChoices(
                   ),
                   spellDamageHole(executableInvocation),
                 ]
-              : executableInvocation.procedure === "counterspell" &&
+              : executableInvocation.procedure ===
+                    "spellCastInterruptionReaction" &&
                   frame.trigger === "spellCast"
                 ? [
                     ...spellCastReactionFactsHoles,
@@ -123,7 +129,8 @@ export function triggeredReactionSpellChoices(
                       executableInvocation,
                     ),
                   ]
-                : executableInvocation.procedure === "featherFallMitigation"
+                : executableInvocation.procedure ===
+                    "fallingCreatureMitigationReaction"
                   ? [
                       ...spellCastReactionFactsHoles,
                       spellTargetListHole(
@@ -135,8 +142,7 @@ export function triggeredReactionSpellChoices(
                   : spellCastReactionFactsHoles;
           return [
             {
-              kind: "castTriggeredReactionSpell" as const,
-              reactorId,
+              kind: "nestedProcedure" as const,
               initialHoles,
               subject: {
                 tag: "runtimeCommand" as const,
@@ -160,10 +166,10 @@ export function triggeredReactionSpellTurnResourceAvailable(
     SpellProcedureExecution,
     {
       readonly procedure:
-        | "shieldReaction"
+        | "triggeredArmorDefense"
         | "saveGatedDamage"
-        | "featherFallMitigation"
-        | "counterspell";
+        | "fallingCreatureMitigationReaction"
+        | "spellCastInterruptionReaction";
     }
   >,
 ): boolean {
@@ -182,35 +188,41 @@ export function triggeredReactionSpellMatchesTrigger(
       SpellProcedureExecution,
       {
         readonly procedure:
-          | "shieldReaction"
+          | "triggeredArmorDefense"
           | "saveGatedDamage"
-          | "featherFallMitigation"
-          | "counterspell";
+          | "fallingCreatureMitigationReaction"
+          | "spellCastInterruptionReaction";
       }
     >
   >,
   frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
 ): boolean {
-  if (invocation.procedure === "shieldReaction") {
-    return shieldReactionSpellMatchesTrigger(invocation, frame);
+  if (invocation.procedure === "triggeredArmorDefense") {
+    return triggeredArmorDefenseSpellMatchesTrigger(invocation, frame);
   }
   if (invocation.procedure === "saveGatedDamage") {
-    return hellishRebukeReactionSpellMatchesTrigger(invocation, frame);
+    return afterDamageRetaliationReactionSpellMatchesTrigger(invocation, frame);
   }
-  if (invocation.procedure === "counterspell") {
-    return counterspellReactionSpellMatchesTrigger(
+  if (invocation.procedure === "spellCastInterruptionReaction") {
+    return spellCastInterruptionReactionReactionSpellMatchesTrigger(
       invocation,
       frame,
       reactorId,
     );
   }
-  return featherFallReactionSpellMatchesTrigger(invocation, frame);
+  return fallingCreatureMitigationReactionSpellMatchesTrigger(
+    invocation,
+    frame,
+  );
 }
 
-export function counterspellReactionSpellMatchesTrigger(
+export function spellCastInterruptionReactionReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
-    Extract<SpellProcedureExecution, { readonly procedure: "counterspell" }>
+    Extract<
+      SpellProcedureExecution,
+      { readonly procedure: "spellCastInterruptionReaction" }
+    >
   >,
   frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
@@ -228,7 +240,7 @@ export function counterspellReactionSpellMatchesTrigger(
     ) &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>
-        fact.kind === "counterspellTriggerCasterVisibleWithinRange" &&
+        fact.kind === "spellCastInterruptionTriggerCasterVisibleWithinRange" &&
         fact.reactorId === reactorId &&
         fact.casterId === frame.casterId &&
         fact.sourceProcedureRef === invocation.sourceProcedureRef &&
@@ -237,7 +249,7 @@ export function counterspellReactionSpellMatchesTrigger(
   );
 }
 
-export function hellishRebukeReactionSpellMatchesTrigger(
+export function afterDamageRetaliationReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<SpellProcedureExecution, { readonly procedure: "saveGatedDamage" }>
   >,
@@ -278,11 +290,11 @@ export function reactionSpellTargetFactsForAfterDamage(input: {
   );
 }
 
-export function featherFallReactionSpellMatchesTrigger(
+export function fallingCreatureMitigationReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       SpellProcedureExecution,
-      { readonly procedure: "featherFallMitigation" }
+      { readonly procedure: "fallingCreatureMitigationReaction" }
     >
   >,
   frame: BattleInterruptCheckpointInput,
@@ -291,16 +303,18 @@ export function featherFallReactionSpellMatchesTrigger(
     frame.trigger === "creatureFalls" &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>
-        fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&
         fact.reactorId === invocation.activeEffect.sourceCombatantId &&
-        fact.fallingCreatureId === frame.fallingCreatureId &&
         fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.rangeFeet === invocation.rangeFeet,
+        fallingCreatureMitigationTriggerFactMatchesFrame(
+          fact,
+          frame.fallingCreatureId,
+          { kind: "invocation", rangeFeet: invocation.rangeFeet },
+        ),
     )
   );
 }
 
-function featherFallTriggerReactors(
+function fallingCreatureMitigationTriggerReactors(
   frame: Extract<
     BattleInterruptCheckpointInput,
     { readonly trigger: "creatureFalls" }
@@ -309,13 +323,44 @@ function featherFallTriggerReactors(
   return [
     ...new Set(
       frame.reactionSpellTargetFacts.flatMap((fact): readonly CombatantId[] =>
-        fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&
-        fact.fallingCreatureId === frame.fallingCreatureId
+        fallingCreatureMitigationTriggerFactMatchesFrame(
+          fact,
+          frame.fallingCreatureId,
+          { kind: "reactorDiscovery" },
+        )
           ? [fact.reactorId]
           : [],
       ),
     ),
   ];
+}
+
+function fallingCreatureMitigationTriggerFactMatchesFrame(
+  fact: BattleFallingCreatureMitigationTriggerFact,
+  fallingCreatureId: CombatantId,
+  requirement:
+    | { readonly kind: "reactorDiscovery" }
+    | { readonly kind: "invocation"; readonly rangeFeet: MovementFeet },
+): boolean {
+  return Match.value(fact.witness).pipe(
+    Match.when(
+      { kind: "reactorFalls" },
+      () => fact.reactorId === fallingCreatureId,
+    ),
+    Match.when({ kind: "visibleCreatureFalls" }, (witness) =>
+      witness.fallingCreatureId !== fallingCreatureId
+        ? false
+        : Match.value(requirement).pipe(
+            Match.when({ kind: "reactorDiscovery" }, () => true),
+            Match.when(
+              { kind: "invocation" },
+              ({ rangeFeet }) => witness.distanceFeet <= rangeFeet,
+            ),
+            Match.exhaustive,
+          ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function spellCastTriggerReactors(
@@ -329,7 +374,8 @@ function spellCastTriggerReactors(
       ...frame.targetIds,
       ...frame.reactionSpellTargetFacts.flatMap(
         (fact): readonly CombatantId[] =>
-          fact.kind === "counterspellTriggerCasterVisibleWithinRange" &&
+          fact.kind ===
+            "spellCastInterruptionTriggerCasterVisibleWithinRange" &&
           fact.casterId === frame.casterId
             ? [fact.reactorId]
             : [],

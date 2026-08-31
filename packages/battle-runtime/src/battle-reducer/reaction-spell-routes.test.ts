@@ -21,7 +21,7 @@ describe("Reaction spell route subjects", () => {
     const featherFallInvocation = spellSlotInvocationRef(
       "feather_fall",
       1,
-      "featherFallMitigation",
+      "fallingCreatureMitigationReaction",
     );
     const session = spellBattle({
       preparedSpells: [spellRecord("feather_fall")],
@@ -32,15 +32,18 @@ describe("Reaction spell route subjects", () => {
       fallingCreatureId: spellTargetId,
       reactionSpellTargetFacts: [
         {
-          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          kind: "fallingCreatureMitigationTrigger",
           reactorId: spellCasterId,
-          fallingCreatureId: spellTargetId,
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
             session,
             spellCasterId,
             featherFallInvocation,
           ),
-          rangeFeet: movementFeet(60),
+          witness: {
+            kind: "visibleCreatureFalls",
+            fallingCreatureId: spellTargetId,
+            distanceFeet: movementFeet(60),
+          },
         },
       ],
     });
@@ -53,16 +56,20 @@ describe("Reaction spell route subjects", () => {
     }
     const choice = frame.choices.find(
       (candidate) =>
-        candidate.kind === "castTriggeredReactionSpell" &&
-        candidate.reactorId === spellCasterId,
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell" &&
+        candidate.subject.reactorId === spellCasterId,
     );
-    if (choice?.kind !== "castTriggeredReactionSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected a Feather Fall Reaction spell choice.");
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
         awaitingReaction.session,
-        choice.reactorId,
+        choice.subject.reactorId,
         choice.subject.procedureRef,
       ),
     ).toEqual(featherFallInvocation);

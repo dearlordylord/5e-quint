@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 
 import {
   attackRollFill,
@@ -138,20 +137,25 @@ describe("battle runtime: attack reaction coverage", () => {
         candidate,
       ): candidate is Extract<
         BattleInterruptProcedureChoice,
-        { readonly kind: "castTriggeredReactionSpell" }
+        { readonly kind: "nestedProcedure" }
       > =>
-        candidate.kind === "castTriggeredReactionSpell" &&
-        candidate.reactorId === casterId,
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell" &&
+        candidate.subject.reactorId === casterId,
     );
-    if (choice === undefined) {
+    if (
+      choice === undefined ||
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected Hellish Rebuke reaction choice.");
     }
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),

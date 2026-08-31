@@ -58,7 +58,7 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "substitute_ability_for_rolls"
       | "offer_ability_substitution_for_ability_checks"
       | "offer_ability_substitution_for_jump_distance"
-      | "grant_magic_weapon_enhancement"
+      | "grant_weapon_attack_enhancement"
       | "grant_condition_immunity"
       | "suppress_condition_benefit"
       | "grant_damage_immunity"
@@ -530,14 +530,14 @@ export function traceObjectAndBarrierEffectAtom(
       });
       return id;
     }
-    case "grant_magic_weapon_enhancement": {
+    case "grant_weapon_attack_enhancement": {
       const id = ids("eff");
       nodes.push({
         id,
         category: "effect",
-        atomKind: "grant_magic_weapon_enhancement",
+        atomKind: "grant_weapon_attack_enhancement",
         label:
-          `grant_magic_weapon_enhancement\nmagic weapon status` +
+          `grant_weapon_attack_enhancement\nmagic weapon status` +
           `\n${describeDelta(e.bonus)} to attack rolls and damage rolls with attached weapon`,
       });
       return id;

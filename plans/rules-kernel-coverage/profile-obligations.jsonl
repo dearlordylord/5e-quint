@@ -50,7 +50,7 @@
 {"profileId":"spell.invocation-damage-reduction","obligationIds":["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"]}
 {"profileId":"spell.invocation-chosen-damage-resistance","obligationIds":["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"]}
 {"profileId":"spell.hit-point-restoration","obligationIds":["BATTLE.SPELL.HIT_POINT_RESTORATION"]}
-{"profileId":"spell.reaction-shield","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
+{"profileId":"spell.reaction-shield","obligationIds":["BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.readied-action-time-spell","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.REACTION.OFFER_DECLINE_RESUME","BATTLE.SPELL.READIED_RESPONSE_PROCEDURE","BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"]}
 {"profileId":"spell.invocation-sleep-target-admission","obligationIds":["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"]}
 {"profileId":"spell.invocation-grease-ground-hazard","obligationIds":["BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"]}
@@ -103,7 +103,7 @@
 {"profileId":"spell.invocation-mirror-image-hit-interception","obligationIds":["BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"]}
 {"profileId":"spell.invocation-warding-bond-linked-effect","obligationIds":["BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"]}
 {"profileId":"spell.invocation-sanctuary-targeting-interdiction","obligationIds":["BATTLE.SANCTUARY.TARGETING_INTERDICTION"]}
-{"profileId":"spell.find-familiar-lifecycle","obligationIds":["BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"]}
+{"profileId":"spell.companion-lifecycle","obligationIds":["BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"]}
 {"profileId":"spell.invocation-command-halt-grovel","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
 {"profileId":"spell.invocation-command-drop-held-object","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
 {"profileId":"spell.invocation-command-approach-route","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
@@ -171,12 +171,12 @@
 {"profileId":"unit-feature.metamagic-cast-duration-and-concentration","obligationIds":["BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION"]}
 {"profileId":"unit-feature.metamagic-cast-component-suppression","obligationIds":["BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}
-{"profileId":"spell.invocation-antimagic-field-ongoing-spell-suppression","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
-{"profileId":"spell.invocation-antimagic-field-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}
-{"profileId":"spell.invocation-antimagic-field-magical-effect-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"]}
+{"profileId":"spell.invocation-magic-suppression-emanation","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
+{"profileId":"spell.invocation-magic-suppression-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}
+{"profileId":"spell.invocation-magic-suppression-magical-effect-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"]}
 {"profileId":"spell.invocation-spike-growth-movement-hazard","obligationIds":["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"]}
 {"profileId":"spell.invocation-see-invisible-observer-sight","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"]}
-{"profileId":"spell.invocation-spiritual-weapon-attack-proxy","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"]}
+{"profileId":"spell.invocation-spiritual-weapon-attack-proxy","obligationIds":["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"]}
 {"profileId":"unit-feature.metamagic-missed-spell-attack-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"]}
 {"profileId":"unit-feature.metamagic-damage-dice-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"]}
 {"profileId":"spell.invocation-acid-arrow-attack-timing","obligationIds":["BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING","BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"]}

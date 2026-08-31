@@ -23,7 +23,7 @@ let magicWeaponBonus : Delta =
       }
 
 let magicWeaponEnhancement =
-      { kind = "grant_magic_weapon_enhancement", bonus = magicWeaponBonus }
+      { kind = "grant_weapon_attack_enhancement", bonus = magicWeaponBonus }
 
 let magicWeapon =
       { kind = "spell"

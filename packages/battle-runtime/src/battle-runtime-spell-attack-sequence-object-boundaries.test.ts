@@ -1,11 +1,11 @@
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import { Hp, classLevel, movementFeet } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleFill, BattleHole } from "./battle-state-execution.ts";
 import {
-  Either,
   battleUnitRefWithSupportProfiles,
   spellCasterId,
   spellTargetId,
@@ -48,13 +48,13 @@ describe("spell attack sequence object-target boundaries", () => {
       unitRef: { unitId: unit.id },
       unit,
     });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) {
-      throw new Error(unitRef.left.message);
+    expect(Result.isSuccess(unitRef)).toBe(true);
+    if (Result.isFailure(unitRef)) {
+      throw new Error(unitRef.failure.message);
     }
     const session = spellBattle({
       cantrips: [spellRecord(eldritchBlastUnitId)],
-      casterUnitRefs: [unitRef.right],
+      casterUnitRefs: [unitRef.success],
       casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
     const act = spellAct({
@@ -106,14 +106,14 @@ describe("spell attack sequence object-target boundaries", () => {
       unitRef: { unitId: unit.id },
       unit,
     });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) {
-      throw new Error(unitRef.left.message);
+    expect(Result.isSuccess(unitRef)).toBe(true);
+    if (Result.isFailure(unitRef)) {
+      throw new Error(unitRef.failure.message);
     }
     const session = spellBattle({
       cantrips: [spellRecord(eldritchBlastUnitId)],
       casterClassLevels: [{ className: "fighter", level: classLevel(3) }],
-      casterUnitRefs: [unitRef.right],
+      casterUnitRefs: [unitRef.success],
       casterUnitFeatures: [
         characterBattleFeatureInitForTest(unit, [
           { className: "fighter", level: classLevel(3) },

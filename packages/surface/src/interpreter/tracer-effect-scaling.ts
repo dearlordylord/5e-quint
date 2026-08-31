@@ -5,6 +5,7 @@ import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceActionRestriction } from "./tracer-action-restrictions.ts";
 
 import { traceDiceAmountScaling } from "./tracer-scaling.ts";
+import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
 
 // Emit scaling nodes for effect atoms that carry a DiceAmount.
 export function traceEffectAtomScaling(
@@ -15,6 +16,7 @@ export function traceEffectAtomScaling(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
+  if (isIlluminationEffectAtom(e)) return;
   switch (e.kind) {
     case "object_contact_damage":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
@@ -84,7 +86,7 @@ export function traceEffectAtomScaling(
     case "target_effect_escape_action":
     case "restrict_action_usage":
     case "choose_action_or_bonus_action_each_turn":
-    case "command_target_next_turn":
+    case "compelled_target_next_turn":
     case "forced_reaction_movement":
     case "jump_movement_replacement":
     case "feather_fall_mitigation":
@@ -163,7 +165,7 @@ export function traceEffectAtomScaling(
     case "substitute_ability_for_rolls":
     case "offer_ability_substitution_for_ability_checks":
     case "offer_ability_substitution_for_jump_distance":
-    case "grant_magic_weapon_enhancement":
+    case "grant_weapon_attack_enhancement":
     case "grant_condition_immunity":
     case "suppress_condition_benefit":
     case "prevent_drop_to_0_hp":
@@ -203,8 +205,6 @@ export function traceEffectAtomScaling(
     case "transform_target":
     case "natural_weapons":
     case "water_breathing":
-    case "emit_light":
-    case "emit_dim_light":
     case "spell_created_held_object":
     case "block_reanimation":
     case "ignite_objects":

@@ -1,4 +1,4 @@
-import { srdStatBlockCatalog } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCatalog } from "./stat-block-catalog.ts";
 import { srdUnitCollection } from "./unit-catalog.ts";
 import { decodeSrdSurfaceSync } from "./schema.ts";
 import type { SrdSurface } from "./types.ts";
@@ -9,3 +9,16 @@ export const srdSurface: SrdSurface = decodeSrdSurfaceSync({
   units: srdUnitCollection.units,
   statBlocks: srdStatBlockCatalog.listStatBlocks(),
 });
+
+export {
+  closeSrdSurface,
+  collectSurfaceAuthoredRelations,
+  type SurfaceAuthoredRelation,
+  type SurfaceRelationClosureIssue,
+  type SurfaceRelationClosureIssues,
+  type SurfaceRelationSelection,
+  type SurfaceRelationTraversalIssue,
+  type SurfaceRelationTraversalIssues,
+  type SurfaceStatBlockId,
+  type SurfaceUnitId,
+} from "./surface-relations.ts";

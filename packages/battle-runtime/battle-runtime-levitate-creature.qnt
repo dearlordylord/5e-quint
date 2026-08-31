@@ -5,6 +5,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 
 module battleRuntimeLevitateCreature {
+  import battleRuntimeControlledVerticalSuspension.* from "./battle-runtime-controlled-vertical-suspension"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -12,19 +13,19 @@ module battleRuntimeLevitateCreature {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
 
-  pure val levitateInitialRiseMaxFeet = 20
-  pure val levitateAltitudeChangeMaxFeet = 20
-  pure val levitateRangeFeet = 60
-  pure val levitateDurationTicks = 100
+  pure val levitateInitialRiseMaxFeet = controlledVerticalSuspensionInitialRiseMaxFeet
+  pure val levitateAltitudeChangeMaxFeet = controlledVerticalSuspensionAltitudeChangeMaxFeet
+  pure val levitateRangeFeet = controlledVerticalSuspensionControlRangeFeet
+  pure val levitateDurationTicks = controlledVerticalSuspensionDurationTicks
 
   pure def levitateInitialRiseIsLegal(distanceFeet: int): bool =
-    distanceFeet >= 0 and distanceFeet <= levitateInitialRiseMaxFeet
+    controlledVerticalSuspensionInitialRiseIsLegal(distanceFeet, levitateInitialRiseMaxFeet)
 
   pure def levitateAltitudeChangeIsLegal(distanceFeet: int): bool =
-    distanceFeet > 0 and distanceFeet <= levitateAltitudeChangeMaxFeet
+    controlledVerticalSuspensionChangeIsLegal(distanceFeet, levitateAltitudeChangeMaxFeet)
 
   pure def levitatedClimbingMovementCost(speedKind: MovementSpeedKind, distanceFeet: int): int =
-    if (speedKind == ClimbSpeedKind) distanceFeet else distanceFeet * 2
+    controlledVerticalSuspensionClimbingMovementCost(speedKind == ClimbSpeedKind, distanceFeet)
 
   pure def levitatedCreatureEffect(source: Actor, initialRiseFeet: int): ActiveEffect =
     LevitatedCreature({
@@ -90,12 +91,7 @@ module battleRuntimeLevitateCreature {
       .fold(-1, (highest, altitude) => if (highest > altitude) highest else altitude)
 
   pure def shiftedLevitatedCreatureAltitude(altitudeFeet: int, directionUp: bool, distanceFeet: int): int =
-    if (directionUp)
-      altitudeFeet + distanceFeet
-    else if (distanceFeet > altitudeFeet)
-      0
-    else
-      altitudeFeet - distanceFeet
+    controlledVerticalSuspensionShiftedAltitude(altitudeFeet, directionUp, distanceFeet)
 
   pure def activeEffectsWithLevitatedCreatureAltitudeChanged(
     effects: Set[ActiveEffect],

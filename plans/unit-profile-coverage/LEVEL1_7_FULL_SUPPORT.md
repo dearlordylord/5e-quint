@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 341/341 (100%) |
 | SRD authored product readiness | 118/118 (100%) |
 | Rules-kernel profile join | 119/119 (100%) |
-| Rules-kernel covered profile join | 106/119 (89.1%) |
-| Supported Unit rules-kernel chain | 140/166 (84.3%) |
+| Rules-kernel covered profile join | 107/119 (89.9%) |
+| Supported Unit rules-kernel chain | 141/166 (84.9%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -145,7 +145,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `druid_primal_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
 | `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.fighter-fighting-style-advancement-replacement` (mapped-open: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` (covered)) | _plan-update-required_ |
 | `fighter_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
-| `haste` | mapped-open | `spell.invocation-haste-positive` (mapped-open: `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` (covered), `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` (covered)) | _plan-update-required_ |
 | `misty_step` | mapped-open | `spell.invocation-self-teleport` (mapped-open: `BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING` (covered), `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `monk_uncanny_metabolism` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |

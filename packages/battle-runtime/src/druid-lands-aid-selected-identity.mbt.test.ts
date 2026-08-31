@@ -8,7 +8,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
 // UNIT-IDENTITY-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import {
   type BattleFill,
@@ -372,10 +372,10 @@ function landsAidBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function landsAidAct(state: BattleState) {
@@ -555,13 +555,13 @@ function requireLandsAidUnitRef(druidLevel = 3) {
     unit: landsAidUnit,
     classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support =
     battleMagicActionAreaSaveDamageHealingSupportForUnit(landsAidUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Land's Aid damage/healing support.");
   }
-  return unitRef.right;
+  return unitRef.success;
 }

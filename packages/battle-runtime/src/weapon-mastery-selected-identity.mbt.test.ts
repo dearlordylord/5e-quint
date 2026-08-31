@@ -24,7 +24,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
 } from "./battle-runtime.test-support.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitResolvedCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 
 import {
@@ -35,7 +35,7 @@ import {
   reducerRoutedWeaponMasteryPropertyStateCheck,
   run,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 
@@ -48,6 +48,7 @@ import {
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
+  resolveWeaponMasteryReference,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 
@@ -869,12 +870,17 @@ function weaponAttack(
   if (weapon.kind !== "weapon") {
     throw new Error(`Expected ${weaponUnitId} weapon Unit.`);
   }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(weapon, unitLibrary),
+  );
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      weapon,
-      battleObjectId(`main:${weapon.id}`),
-      weaponMasteries,
+    ...Result.getOrThrow(
+      admitResolvedCharacterWeaponAttackExecutionWeapon(
+        resolution,
+        battleObjectId(`main:${weapon.id}`),
+        weaponMasteries,
+      ),
     ),
     ability: "str",
     abilityModifier: abilityModifier(3),
@@ -1102,8 +1108,8 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }

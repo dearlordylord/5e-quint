@@ -2,21 +2,25 @@ import { Schema } from "effect";
 
 // EXPLANATION: the surface models absence as an omitted property, not as
 // `property: undefined`. Keep optional object fields exact across the schema.
-export const exactOptional = <A, I, R>(schema: Schema.Schema<A, I, R>) =>
-  Schema.optionalWith(schema, { exact: true });
+export const exactOptional = <S extends Schema.Constraint>(schema: S) =>
+  Schema.optionalKey(schema);
 
 export const strictStruct = <Fields extends Schema.Struct.Fields>(
   fields: Fields,
 ) =>
-  Schema.Struct(fields).annotations({
-    parseOptions: { onExcessProperty: "error" },
-  });
+  Schema.Struct(fields).pipe(
+    Schema.annotate({
+      parseOptions: { onExcessProperty: "error" },
+    }),
+  );
 
-export const ForbiddenValueSchema = Schema.Never.annotations({
-  identifier: "ForbiddenValue",
-});
+export const ForbiddenValueSchema = Schema.Never.pipe(
+  Schema.annotate({
+    identifier: "ForbiddenValue",
+  }),
+);
 
 // EXPLANATION: shared shorthand for closed non-empty arrays in the handwritten
 // surface codec. Keeps the spell/non-spell files from owning private wrappers.
-export const nonEmpty = <A, I, R>(schema: Schema.Schema<A, I, R>) =>
+export const nonEmpty = <S extends Schema.Constraint>(schema: S) =>
   Schema.NonEmptyArray(schema);

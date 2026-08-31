@@ -1,4 +1,4 @@
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { decodeDiceRollRequestId } from "./dice-tool-input.ts";
 
@@ -70,7 +70,7 @@ describe("Play Session operation scheduling", () => {
     );
 
     const independentResult = await independentCall;
-    expect(Either.isRight(independentResult)).toBe(true);
+    expect(Result.isSuccess(independentResult)).toBe(true);
     expect(events).toEqual(["first:start", "second:complete"]);
 
     releaseFirst?.();
@@ -78,8 +78,8 @@ describe("Play Session operation scheduling", () => {
       firstCall,
       queuedCall,
     ]);
-    expect(Either.isRight(firstResult)).toBe(true);
-    expect(Either.isRight(queuedResult)).toBe(true);
+    expect(Result.isSuccess(firstResult)).toBe(true);
+    expect(Result.isSuccess(queuedResult)).toBe(true);
     expect(events).toEqual([
       "first:start",
       "second:complete",
@@ -145,7 +145,7 @@ describe("Play Session operation scheduling", () => {
     const decoded = decodePlaySessionId(
       "play-session:00000000-0000-4000-8000-000000000000",
     );
-    if (Either.isLeft(decoded)) throw new Error(decoded.left);
+    if (Result.isFailure(decoded)) throw new Error(decoded.failure);
     const applicationServices = createMcpApplicationServices();
     const registry = createPlaySessionRegistry({
       createRoot: (playSessionId) =>
@@ -153,15 +153,15 @@ describe("Play Session operation scheduling", () => {
           applicationServices,
           adminMirrorSessionId(playSessionId),
         ),
-      playSessionIdFactory: () => decoded.right,
+      playSessionIdFactory: () => decoded.success,
     });
 
-    expect(Either.isRight(registry.create({ tag: "anonymous" }))).toBe(true);
+    expect(Result.isSuccess(registry.create({ tag: "anonymous" }))).toBe(true);
     const collision = registry.create({ tag: "anonymous" });
 
-    expect(Either.isLeft(collision)).toBe(true);
-    if (Either.isRight(collision)) return;
-    expect(collision.left).toMatchObject({
+    expect(Result.isFailure(collision)).toBe(true);
+    if (Result.isSuccess(collision)) return;
+    expect(collision.failure).toMatchObject({
       tag: "playSessionCreationFailed",
       reason: "playSessionIdCollision",
     });
@@ -190,11 +190,11 @@ describe("Play Session operation scheduling", () => {
     });
     await operationStarted;
     const owner = decodePrincipalId("principal:queued-save");
-    if (Either.isLeft(owner)) throw new Error(owner.left);
+    if (Result.isFailure(owner)) throw new Error(owner.failure);
     const saved = registry.save(
       guest.playSessionId,
       guest.caller.guestAccessGrant,
-      owner.right,
+      owner.success,
     );
     const stale = registry.run(
       guest.playSessionId,
@@ -203,10 +203,10 @@ describe("Play Session operation scheduling", () => {
     );
     release?.();
     await first;
-    expect(await saved).toMatchObject({ _tag: "Right" });
+    expect(await saved).toMatchObject({ _tag: "Success" });
     expect(await stale).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
   });
 
@@ -236,13 +236,13 @@ describe("Play Session operation scheduling", () => {
         retain: () => false,
         succeeded: () => false,
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     nowMs = GUEST_INACTIVITY_RETENTION_MS;
     expect(
       await registry.run(guest.playSessionId, guest.caller, () => "expired"),
     ).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
   });
 });
@@ -251,8 +251,8 @@ function createdPlaySession(
   registry: PlaySessionRegistry,
 ): PlaySessionCreation {
   const created = registry.create({ tag: "anonymous" });
-  if (Either.isLeft(created)) throw new Error(created.left.message);
-  return created.right;
+  if (Result.isFailure(created)) throw new Error(created.failure.message);
+  return created.success;
 }
 
 function createdGuestPlaySession(registry: PlaySessionRegistry) {
@@ -271,12 +271,12 @@ function createdGuestPlaySession(registry: PlaySessionRegistry) {
 
 function testEpochMilliseconds(input: number) {
   const decoded = decodeEpochMilliseconds(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }
 
 function requireDiceRollRequestId(input: string) {
   const decoded = decodeDiceRollRequestId(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }

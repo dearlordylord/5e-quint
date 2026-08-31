@@ -64,6 +64,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -220,6 +224,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -237,6 +249,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -490,6 +506,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
               "role": "semantic-core"
             },
@@ -537,6 +557,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
               "role": "semantic-core"
             },
@@ -575,6 +599,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -732,6 +760,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -749,6 +785,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -955,6 +995,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -1111,6 +1155,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -1128,6 +1180,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -1371,6 +1427,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -1388,6 +1452,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -1580,6 +1648,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -1593,6 +1677,22 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+              "role": "proof-only"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
@@ -1685,6 +1785,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
               "role": "semantic-core"
             },
@@ -1766,6 +1870,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -1974,6 +2082,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -1991,6 +2107,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -2336,6 +2456,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -2349,6 +2485,22 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+              "role": "proof-only"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
@@ -2594,6 +2746,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
             },
@@ -2639,6 +2795,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -2656,6 +2820,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -2728,6 +2896,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
               "role": "semantic-core"
             }
@@ -2762,6 +2934,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -2988,6 +3164,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
               "role": "semantic-core"
             },
@@ -3035,6 +3215,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
               "role": "semantic-core"
             },
@@ -3073,6 +3257,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -3230,6 +3418,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -3247,6 +3443,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -3491,6 +3691,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -3742,6 +3946,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
@@ -3755,6 +3975,22 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+              "role": "proof-only"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
@@ -3893,6 +4129,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -4067,6 +4307,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -4224,6 +4468,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -4241,6 +4493,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -4498,6 +4754,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
               "role": "semantic-core"
             }
@@ -4596,6 +4856,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
             },
@@ -4659,6 +4923,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -4815,6 +5083,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -4832,6 +5108,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -5038,6 +5318,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -5194,6 +5478,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -5211,6 +5503,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -5417,6 +5713,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -5573,6 +5873,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -5590,6 +5898,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -5795,6 +6107,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -6052,6 +6368,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -6208,6 +6528,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -6225,6 +6553,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -6431,6 +6763,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -6587,6 +6923,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -6604,6 +6948,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -6857,6 +7205,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -7013,6 +7365,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -7030,6 +7390,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -7236,6 +7600,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
               "role": "semantic-core"
             },
@@ -7366,6 +7734,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
             },
@@ -7491,6 +7863,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -7648,6 +8024,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -7665,6 +8049,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -7871,6 +8259,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
             },
@@ -7913,6 +8305,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -8123,6 +8519,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -8296,6 +8696,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -8534,6 +8938,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -8690,6 +9098,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -8707,6 +9123,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -8944,6 +9364,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -9100,6 +9524,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -9117,6 +9549,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -9370,6 +9806,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
               "role": "semantic-core"
             },
@@ -9417,6 +9857,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
               "role": "semantic-core"
             },
@@ -9455,6 +9899,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -9612,6 +10060,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -9629,6 +10085,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -9835,6 +10295,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -9991,6 +10455,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -10008,6 +10480,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -10251,6 +10727,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -10268,6 +10752,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -10460,6 +10948,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -10473,6 +10977,22 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+              "role": "proof-only"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
@@ -10565,6 +11085,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
               "role": "semantic-core"
             },
@@ -10646,6 +11170,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -10854,6 +11382,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -10871,6 +11407,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -11216,6 +11756,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -11229,6 +11785,22 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+              "role": "proof-only"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
@@ -11474,6 +12046,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
             },
@@ -11519,6 +12095,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -11536,6 +12120,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -11608,6 +12196,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
               "role": "semantic-core"
             }
@@ -11642,6 +12234,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -11868,6 +12464,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
               "role": "semantic-core"
             },
@@ -11915,6 +12515,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
               "role": "semantic-core"
             },
@@ -11953,6 +12557,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -12110,6 +12718,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -12127,6 +12743,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -12371,6 +12991,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -12622,6 +13246,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
@@ -12635,6 +13275,22 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+              "role": "proof-only"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
@@ -12773,6 +13429,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -12947,6 +13607,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -13104,6 +13768,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -13121,6 +13793,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -13378,6 +14054,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
               "role": "semantic-core"
             }
@@ -13476,6 +14156,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
             },
@@ -13538,6 +14222,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -13695,6 +14383,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -13712,6 +14408,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -13918,6 +14618,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -14074,6 +14778,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -14091,6 +14803,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -14364,6 +15080,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -14520,6 +15240,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -14537,6 +15265,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -14742,6 +15474,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -14999,6 +15735,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -15155,6 +15895,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -15172,6 +15920,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -15378,6 +16130,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -15534,6 +16290,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -15551,6 +16315,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -15804,6 +16572,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -15960,6 +16732,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -15977,6 +16757,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -16183,6 +16967,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
               "role": "semantic-core"
             },
@@ -16313,6 +17101,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
             },
@@ -16438,6 +17230,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -16595,6 +17391,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -16612,6 +17416,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"
@@ -16818,6 +17626,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
             },
@@ -16860,6 +17672,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -17070,6 +17886,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -17243,6 +18063,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
@@ -17481,6 +18305,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
               "role": "semantic-core"
             },
@@ -17637,6 +18465,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -17654,6 +18490,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
               "role": "semantic-core"

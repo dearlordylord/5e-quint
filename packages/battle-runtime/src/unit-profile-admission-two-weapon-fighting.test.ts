@@ -8,7 +8,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting doReplayTwoWeaponFightingApplyDamageModifier
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting doReplayTwoWeaponFightingDeclineDamageModifier
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.light-extra-attack-damage-ability-modifier
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { attackBonus } from "@dnd/shared/types";
 import {
@@ -60,7 +60,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(twoWeaponFightingUnitId),
         supportProfiles: [twoWeaponFightingSupportProfile()],
       }),
@@ -574,15 +574,15 @@ function twoWeaponFightingBattleUnitRef(): BattleUnitRef {
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(twoWeaponFightingUnitId),
       supportProfiles: [twoWeaponFightingSupportProfile()],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function twoWeaponFightingSupportProfile() {

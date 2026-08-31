@@ -30,8 +30,9 @@ import {
 // UNIT-IDENTITY-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
-import { Either } from "effect";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -54,7 +55,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   SpellRecord,
@@ -120,13 +121,14 @@ import {
   quintStateRecord,
   quintVariantTag,
   reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
+  type ReducerRouteEvent,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
   | "doDivineFavorWeaponDamageRider"
@@ -207,6 +209,30 @@ type ActionCastSpellId = MembersOf<
   | typeof longstriderUnitId
   | typeof trueStrikeUnitId
 >;
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type AttackHitBonusActionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castAttackHitBonusActionSpell";
+    }
+  >;
+};
+
+function isAttackHitBonusActionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is AttackHitBonusActionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castAttackHitBonusActionSpell"
+  );
+}
+
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
 type LongstriderSourceSpellId = typeof longstriderUnitId | "none";
@@ -979,7 +1005,9 @@ const reducerRoutedMarkedDamageImmunityPublicRouteStateCheck = stateCheck(
     }
     const state = quintStateRecord(raw);
     return {
-      route: decodeReducerRoute(quintField(state, "qRoute")),
+      route: currentPublicConnectorRouteProjection(
+        decodeReducerRoute(quintField(state, "qRoute")),
+      ),
     };
   },
   (spec: PublicReducerRouteProjection, impl: PublicReducerRouteProjection) => {
@@ -997,6 +1025,26 @@ function isPublicReducerRouteProjection(
     "route" in raw &&
     Array.isArray(raw.route)
   );
+}
+
+function currentPublicConnectorRouteProjection(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  let omittedInitialMarkedRiderDiscovery = false;
+  return route.filter((event) => {
+    if (
+      omittedInitialMarkedRiderDiscovery ||
+      event.kind !== "discoverBattleActs" ||
+      event.subject !== "markedDamageRiderEffect" ||
+      event.owner !== "battleSpellSlotAndActionEconomy" ||
+      event.holes.length !== 1 ||
+      event.holes[0] !== "targetChoice"
+    ) {
+      return true;
+    }
+    omittedInitialMarkedRiderDiscovery = true;
+    return false;
+  });
 }
 
 type MarkedDamageImmunityRouteAction =
@@ -2068,6 +2116,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         throw new Error("Expected Hunter's Mark target.");
       }
       state = applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         target: markedTarget,
         damageAmount: 1,
@@ -2159,6 +2208,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         throw new Error("Expected Hex cursed target.");
       }
       state = applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         target: cursedTarget,
         damageAmount: 1,
@@ -2360,14 +2410,14 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const act = publicActionSpellAct(session, trueStrikeUnitId);
       const damageType = requireHole(act.initialHoles, "damageTypeChoice");
-      const target = requireHole(act.initialHoles, "targetChoice");
       const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
-      const targetFill = attackTargetFill(target);
       const awaitingTargetChoice = resolveBattleSubject({
         state,
         subject: act.subject,
         fills: [damageTypeFill],
       });
+      const target = requireResultHole(awaitingTargetChoice, "targetChoice");
+      const targetFill = attackTargetFill(target);
       const awaitingAttackRoll = resolveBattleSubject({
         state,
         subject: act.subject,
@@ -2628,10 +2678,10 @@ function level1BuffMarkSmiteSession(
         : []),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function level1BuffMarkSmiteCreature(input: {
@@ -2724,13 +2774,13 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     statBlockLibrary,
     statBlockId("stat_block_goblin_warrior"),
   );
-  const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
+  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
+      source: Result.getOrThrow(
         battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(projected.runtime.statBlock.hp.value),
@@ -2911,7 +2961,6 @@ function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(0),
@@ -3281,27 +3330,17 @@ function isMarkedDamageTransferAct(
 function attackHitBonusActionSpellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   spellId: AttackHitBonusActionSpellId,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castAttackHitBonusActionSpell" }
-> {
+): AttackHitBonusActionSpellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castAttackHitBonusActionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castAttackHitBonusActionSpell" ||
-        candidate.reactorId !== casterId
-      )
-        return false;
-      return true;
-    },
-  );
+  )?.choices.find((candidate): candidate is AttackHitBonusActionSpellChoice => {
+    if (
+      !isAttackHitBonusActionSpellChoice(candidate) ||
+      candidate.subject.casterId !== casterId
+    )
+      return false;
+    return true;
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${spellId} after-hit Bonus Action Spell choice.`);
   }

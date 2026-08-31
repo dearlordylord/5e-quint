@@ -27,7 +27,7 @@ import {
   spellAct,
   spellTargetFill,
   spellTargetListFill,
-  thunderwaveArea,
+  selfOriginCubePushArea,
   thunderwaveSavingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -367,7 +367,7 @@ describe("public Saving Throw outcome validation", () => {
           outcomes: [outcome(spellTargetId)],
         },
         expected:
-          "Sleep point-origin Sphere origin anchor must be a combatant in this battle.",
+          "hit-point-budget condition point-origin Sphere origin anchor must be a combatant in this battle.",
       },
       {
         value: {
@@ -378,11 +378,12 @@ describe("public Saving Throw outcome validation", () => {
           outcomes: [outcome(spellTargetId)],
         },
         expected:
-          "Sleep point-origin Sphere targets must not duplicate targets.",
+          "hit-point-budget condition point-origin Sphere targets must not duplicate targets.",
       },
       {
         value: { area: { ...area, affectedTargetIds: [] }, outcomes: [] },
-        expected: "Sleep must target at least one selected creature.",
+        expected:
+          "hit-point-budget condition must target at least one selected creature.",
       },
       {
         value: {
@@ -390,24 +391,25 @@ describe("public Saving Throw outcome validation", () => {
           outcomes: [outcome(foreignTargetId)],
         },
         expected:
-          "Sleep point-origin Sphere target must be a combatant in this battle.",
+          "hit-point-budget condition point-origin Sphere target must be a combatant in this battle.",
       },
       {
         value: { area, outcomes: [outcome(spellCasterId)] },
         expected:
-          "Sleep Saving Throw outcomes must match selected Sphere targets.",
+          "hit-point-budget condition Saving Throw outcomes must match selected Sphere targets.",
       },
       {
         value: {
           area,
           outcomes: [outcome(spellTargetId), outcome(spellTargetId)],
         },
-        expected: "Sleep Saving Throw outcomes must not duplicate targets.",
+        expected:
+          "hit-point-budget condition Saving Throw outcomes must not duplicate targets.",
       },
       {
         value: { area, outcomes: [] },
         expected:
-          "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.",
+          "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.",
       },
       { value: { area, outcomes: [outcome(spellTargetId)] }, expected: null },
     ];
@@ -436,7 +438,7 @@ describe("public Saving Throw outcome validation", () => {
     });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const area = {
-      kind: "greaseGroundArea",
+      kind: "persistentAreaSaveConditionArea",
       areaId: battleAreaId("save-validation:grease-area"),
       originAnchorId: spellCasterId,
       affectedTargetIds: [spellTargetId],
@@ -451,7 +453,7 @@ describe("public Saving Throw outcome validation", () => {
           outcomes: [outcome(spellTargetId)],
         },
         expected:
-          "Grease ground-area origin anchor must be a combatant in this battle.",
+          "ground-area prone hazard ground-area origin anchor must be a combatant in this battle.",
       },
       {
         value: {
@@ -462,7 +464,7 @@ describe("public Saving Throw outcome validation", () => {
           outcomes: [outcome(spellTargetId)],
         },
         expected:
-          "Grease ground-area affected targets must not duplicate targets.",
+          "ground-area prone hazard ground-area affected targets must not duplicate targets.",
       },
       {
         value: {
@@ -470,24 +472,25 @@ describe("public Saving Throw outcome validation", () => {
           outcomes: [outcome(foreignTargetId)],
         },
         expected:
-          "Grease ground-area affected target must be a combatant in this battle.",
+          "ground-area prone hazard ground-area affected target must be a combatant in this battle.",
       },
       {
         value: { area, outcomes: [outcome(secondTargetId)] },
         expected:
-          "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.",
+          "ground-area prone hazard Saving Throw outcomes must match the table-supplied ground-area affected targets.",
       },
       {
         value: {
           area,
           outcomes: [outcome(spellTargetId), outcome(spellTargetId)],
         },
-        expected: "Grease Saving Throw outcomes must not duplicate targets.",
+        expected:
+          "ground-area prone hazard Saving Throw outcomes must not duplicate targets.",
       },
       {
         value: { area, outcomes: [] },
         expected:
-          "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.",
+          "ground-area prone hazard Saving Throw outcomes must cover every table-supplied ground-area affected target.",
       },
       { value: { area, outcomes: [outcome(spellTargetId)] }, expected: null },
     ];
@@ -526,10 +529,10 @@ describe("public Saving Throw outcome validation", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Thunderwave requires caller-supplied push, object, and audible-boom area facts.",
+        "forced-movement cube burst requires caller-supplied push, object, and audible-boom area facts.",
     });
 
-    const area = thunderwaveArea([spellTargetId], [spellTargetId]);
+    const area = selfOriginCubePushArea([spellTargetId], [spellTargetId]);
     const fill = thunderwaveSavingThrowOutcomeFill(save, outcomeInput);
     expect(
       resolveBattleSubject({
@@ -560,7 +563,7 @@ describe("public Saving Throw outcome validation", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Thunderwave push disposition must use the spell's 10-foot distance.",
+        "forced-movement cube burst push disposition must use the spell's 10-foot distance.",
     });
   });
 });

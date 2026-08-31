@@ -207,8 +207,8 @@ export function traceWeaponUnit(weapon: WeaponRecord): Trace {
   nodes.push({
     id: masteryId,
     category: "source",
-    atomKind: "weapon_mastery",
-    label: `weapon_mastery\n${weapon.mastery}`,
+    atomKind: "weapon_mastery_reference",
+    label: `weapon_mastery_reference\n${weapon.masteryUnitId}`,
   });
   edges.push({ from: rootId, to: masteryId, relation: "defines" });
 

@@ -29,7 +29,7 @@ import {
   type BattleRuntimeTableD20TestResolutionResult,
   type BattleHole,
 } from "../../../packages/battle-runtime/src/index.ts";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import type {
   JsonValue,
@@ -125,10 +125,12 @@ const submissionsPath = resolve("submissions");
 const charactersPath = resolve("evidence/characters.ts");
 const setupPath = resolve("evidence/setup.ts");
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
 );
 const PrefixSchema = Schema.Struct({
   frozenByteLength: NonNegativeIntegerSchema,
@@ -209,11 +211,11 @@ function exclusiveJson(path: string, value: unknown): void {
 }
 
 function readPrefix(): FrozenPrefix {
-  const decoded = Schema.decodeUnknownEither(PrefixSchema, {
+  const decoded = Schema.decodeUnknownResult(PrefixSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(prefixPath, "utf8")));
-  if (Either.isLeft(decoded)) fail("Frozen-prefix evidence is invalid.");
-  return decoded.right;
+  if (Result.isFailure(decoded)) fail("Frozen-prefix evidence is invalid.");
+  return decoded.success;
 }
 
 function verifyFrozenPrefix(): FrozenPrefix {
@@ -435,30 +437,30 @@ function retainScenarioBattlefield(
         resolved.objectDamages,
         resolved.movements,
       );
-      return Either.isLeft(updated)
+      return Result.isFailure(updated)
         ? {
             tag: "scenarioSessionConflict" as const,
             session,
-            issue: updated.left,
+            issue: updated.failure,
           }
-        : { ...resolved, session: updated.right };
+        : { ...resolved, session: updated.success };
     }),
     byResolutionTag("needsHoles", (needsHoles) => {
       const updated = scenarioSessionWithBattleResult(
         session,
         needsHoles.session,
       );
-      return Either.isLeft(updated)
+      return Result.isFailure(updated)
         ? {
             tag: "scenarioSessionConflict" as const,
             session,
-            issue: updated.left,
+            issue: updated.failure,
           }
         : (() => {
             if (needsHoles.envelope.frontier.kind !== "holes") {
               return {
                 ...needsHoles,
-                session: updated.right,
+                session: updated.success,
               };
             }
             const projectedHoles = projectGeometryTargetHoles({
@@ -470,7 +472,7 @@ function retainScenarioBattlefield(
             if (firstHole === undefined) {
               return {
                 ...needsHoles,
-                session: updated.right,
+                session: updated.success,
               };
             }
             const holes: ReadonlyNonEmptyArray<BattleHole> = [
@@ -486,7 +488,7 @@ function retainScenarioBattlefield(
                   holes,
                 },
               },
-              session: updated.right,
+              session: updated.success,
             };
           })();
     }),
@@ -495,13 +497,13 @@ function retainScenarioBattlefield(
         cancelInvalidMovement && session.movementResolution.kind !== "idle"
           ? scenarioSessionAfterRejectedMovement(session, invalid.session)
           : scenarioSessionWithBattleResult(session, invalid.session);
-      return Either.isLeft(updated)
+      return Result.isFailure(updated)
         ? {
             tag: "scenarioSessionConflict" as const,
             session,
-            issue: updated.left,
+            issue: updated.failure,
           }
-        : { ...invalid, session: updated.right };
+        : { ...invalid, session: updated.success };
     }),
     Match.exhaustive,
   );
@@ -546,12 +548,12 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
         subject,
         fills: battleFills,
       });
-      if (Either.isLeft(tableSpatialProjectedFills)) {
+      if (Result.isFailure(tableSpatialProjectedFills)) {
         const result: ScenarioBattleResolutionResult = {
           tag: "invalid",
           session,
           reason: "invalidFill",
-          message: tableSpatialProjectedFills.left.message,
+          message: tableSpatialProjectedFills.failure.message,
           envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
@@ -564,14 +566,14 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       const projectedFills = scenarioObjectAttackFills({
         session,
         subject,
-        fills: tableSpatialProjectedFills.right,
+        fills: tableSpatialProjectedFills.success,
       });
-      if (Either.isLeft(projectedFills)) {
+      if (Result.isFailure(projectedFills)) {
         const result: ScenarioBattleResolutionResult = {
           tag: "invalid",
           session,
           reason: "invalidFill",
-          message: projectedFills.left.message,
+          message: projectedFills.failure.message,
           envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
@@ -584,14 +586,14 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       const attackProjectedFills = scenarioAttackTargetFills({
         session,
         subject,
-        fills: projectedFills.right,
+        fills: projectedFills.success,
       });
-      if (Either.isLeft(attackProjectedFills)) {
+      if (Result.isFailure(attackProjectedFills)) {
         const result: ScenarioBattleResolutionResult = {
           tag: "invalid",
           session,
           reason: "invalidFill",
-          message: attackProjectedFills.left.message,
+          message: attackProjectedFills.failure.message,
           envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
@@ -604,14 +606,14 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       const creatureSpellProjectedFills = scenarioCreatureSpellTargetFills({
         session,
         subject,
-        fills: attackProjectedFills.right,
+        fills: attackProjectedFills.success,
       });
-      if (Either.isLeft(creatureSpellProjectedFills)) {
+      if (Result.isFailure(creatureSpellProjectedFills)) {
         const result: ScenarioBattleResolutionResult = {
           tag: "invalid",
           session,
           reason: "invalidFill",
-          message: creatureSpellProjectedFills.left.message,
+          message: creatureSpellProjectedFills.failure.message,
           envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
@@ -625,7 +627,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
         resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
           session: session.battle,
           subject,
-          fills: creatureSpellProjectedFills.right,
+          fills: creatureSpellProjectedFills.success,
           d20TestResolutionId: scenarioD20TestResolutionId(session),
           tableD20TestCircumstanceDecisions:
             session.tableD20TestCircumstances.activeDecisions,
@@ -633,7 +635,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       const preparation = scenarioD20TestCircumstancePreparation({
         session,
         subject,
-        fills: creatureSpellProjectedFills.right,
+        fills: creatureSpellProjectedFills.success,
         requests:
           preliminaryBattleResult.tag === "needsHoles"
             ? preliminaryBattleResult.d20TestCircumstanceRequests
@@ -646,7 +648,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           : resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
               session: session.battle,
               subject,
-              fills: creatureSpellProjectedFills.right,
+              fills: creatureSpellProjectedFills.success,
               d20TestResolutionId: scenarioD20TestResolutionId(session),
               tableD20TestCircumstanceDecisions: preparation.decisions,
             });
@@ -679,11 +681,11 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
         input.kind === "route"
           ? planScenarioMovement({ session, ...input })
           : continueScenarioMovement({ session, fills: input.fills });
-      if (Either.isLeft(planned)) {
+      if (Result.isFailure(planned)) {
         const result: ScenarioBattleResolutionResult = {
           tag: "scenarioMovementRejected",
           session,
-          message: planned.left.message,
+          message: planned.failure.message,
         };
         return {
           operation: "resolveScenarioMovement" as const,
@@ -693,12 +695,12 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
         };
       }
       const battleResult = resolveBattleRuntimeSubject({
-        session: planned.right.session.battle,
-        subject: planned.right.subject,
-        fills: planned.right.fills,
+        session: planned.success.session.battle,
+        subject: planned.success.subject,
+        fills: planned.success.fills,
       });
       const result = retainScenarioBattlefield(
-        planned.right.session,
+        planned.success.session,
         battleResult,
         input.kind === "route",
       );
@@ -1501,20 +1503,20 @@ async function main(args: readonly string[]): Promise<void> {
       );
     }
     const startedAt =
-      Schema.decodeUnknownEither(StartedAtSchema)(startedAtInput);
-    if (Either.isLeft(startedAt)) {
-      fail(`Invalid started-at authority: ${startedAt.left.message}`);
+      Schema.decodeUnknownResult(StartedAtSchema)(startedAtInput);
+    if (Result.isFailure(startedAt)) {
+      fail(`Invalid started-at authority: ${startedAt.failure.message}`);
     }
     const decodedScenarioId =
-      Schema.decodeUnknownEither(ScenarioIdSchema)(scenarioId);
-    if (Either.isLeft(decodedScenarioId)) {
-      fail(`Invalid scenario id: ${decodedScenarioId.left.message}`);
+      Schema.decodeUnknownResult(ScenarioIdSchema)(scenarioId);
+    if (Result.isFailure(decodedScenarioId)) {
+      fail(`Invalid scenario id: ${decodedScenarioId.failure.message}`);
     }
     await initialize(
-      decodedScenarioId.right,
+      decodedScenarioId.success,
       gitSha,
       consumerIsolation,
-      startedAt.right,
+      startedAt.success,
       replaySupervisorSha256,
       scenarioSha256,
       scenarioReviewSha256,

@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 module battleRuntimeSleetStormAreaHazard {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -12,6 +13,7 @@ module battleRuntimeSleetStormAreaHazard {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure val sleetStormDurationTicks = 10
+  pure val sleetStormLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val sleetStormAreaId = 8
   pure val sleetStormRadiusFeet = 20
   pure val sleetStormHeightFeet = 40
@@ -108,10 +110,10 @@ module battleRuntimeSleetStormAreaHazard {
     target: Combatant,
     savingThrowSucceeded: bool,
   ): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else
+    if (persistentAreaConditionApplies(savingThrowSucceeded))
       { ...breakConcentration(target), prone: true }
+    else
+      target
 
   pure def resolveSleetStormAreaHazardSave(
     state: BattleState,
@@ -124,7 +126,13 @@ module battleRuntimeSleetStormAreaHazard {
     if (not(areaEffectTriggerCanResolve(
       sleetStormAreaHazardActive(state, areaId),
       true,
-      sleetStormFirstEntryAndStartTurnProfile(saved, saved),
+      firstPerTimingPerTurnAreaTriggerProfile(
+        Set(CreatureEntersArea, CreatureStartsTurnInArea),
+        if (saved)
+          Set(CreatureEntersArea, CreatureStartsTurnInArea)
+        else
+          Set(),
+      ),
       sleetStormAreaHazardSaveTriggerTiming(triggerFact),
     )))
       state

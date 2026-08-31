@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   decodeToolArgs,
@@ -8,8 +8,8 @@ import {
 import { errorContent } from "./tool-content.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.positive(),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0)),
 );
 export const MAX_DIE_SIZE = 100;
 /** MCP work budgets; these are transport-safety limits, not D&D rules. */
@@ -18,44 +18,52 @@ export const MAX_TOTAL_DICE = 10_000;
 /** Maximum number of groups accepted before aggregate dice work is evaluated. */
 export const MAX_DICE_GROUPS_PER_CALL = MAX_TOTAL_DICE;
 const DiceCountSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(MAX_DICE_PER_GROUP),
-).annotations({
-  description:
-    "Number of dice in this group; it must be a positive integer no greater than 1000 (an MCP work budget).",
-});
+  Schema.check(Schema.isLessThanOrEqualTo(MAX_DICE_PER_GROUP)),
+).pipe(
+  Schema.annotate({
+    description:
+      "Number of dice in this group; it must be a positive integer no greater than 1000 (an MCP work budget).",
+  }),
+);
 const DieSizeSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(MAX_DIE_SIZE),
-).annotations({
-  description:
-    "Number of faces on each die; it must be a positive integer no greater than 100.",
-});
+  Schema.check(Schema.isLessThanOrEqualTo(MAX_DIE_SIZE)),
+).pipe(
+  Schema.annotate({
+    description:
+      "Number of faces on each die; it must be a positive integer no greater than 100.",
+  }),
+);
 
 export const DiceRollGroupSchema = Schema.Struct({
   dice: DiceCountSchema,
   dieSize: DieSizeSchema,
-}).annotations({
-  description:
-    "One structured dice group. Groups are rolled in the order supplied.",
-});
+}).pipe(
+  Schema.annotate({
+    description:
+      "One structured dice group. Groups are rolled in the order supplied.",
+  }),
+);
 
-export const DiceRollRequestIdSchema = Schema.UUID.pipe(
-  Schema.brand("DiceRollRequestId"),
-).annotations({
-  description:
-    "Caller-generated idempotency key. Reusing it with identical groups returns the original faces; reusing it with different groups is rejected.",
-});
-export const decodeDiceRollRequestId = Schema.decodeUnknownEither(
+export const DiceRollRequestIdSchema = Schema.String.check(Schema.isUUID())
+  .pipe(Schema.brand("DiceRollRequestId"))
+  .annotate({
+    description:
+      "Caller-generated idempotency key. Reusing it with identical groups returns the original faces; reusing it with different groups is rejected.",
+  });
+export const decodeDiceRollRequestId = Schema.decodeUnknownResult(
   DiceRollRequestIdSchema,
 );
 
 export const RollDiceArgsSchema = Schema.Struct({
   requestId: DiceRollRequestIdSchema,
   groups: Schema.NonEmptyArray(DiceRollGroupSchema).pipe(
-    Schema.maxItems(MAX_DICE_GROUPS_PER_CALL),
+    Schema.check(Schema.isMaxLength(MAX_DICE_GROUPS_PER_CALL)),
   ),
-}).annotations({
-  description: `An ordered, non-empty list of independent structured dice groups (at most ${MAX_DICE_GROUPS_PER_CALL} groups per call).`,
-});
+}).pipe(
+  Schema.annotate({
+    description: `An ordered, non-empty list of independent structured dice groups (at most ${MAX_DICE_GROUPS_PER_CALL} groups per call).`,
+  }),
+);
 
 export const rollDiceInputSchema = mcpObjectJsonSchema(RollDiceArgsSchema);
 
@@ -80,10 +88,10 @@ export function decodeDiceToolCall(input: {
 }): ToolInputResult<DiceToolCall> {
   return Match.value(input.name).pipe(
     Match.when(diceToolNames.rollDice, () =>
-      Either.flatMap(
+      Result.flatMap(
         decodeToolArgs(RollDiceArgsSchema, input.args, diceToolNames.rollDice),
         (args) =>
-          Either.map(validateDiceRollBudget(args), (validatedArgs) => ({
+          Result.map(validateDiceRollBudget(args), (validatedArgs) => ({
             name: diceToolNames.rollDice,
             args: validatedArgs,
           })),
@@ -101,7 +109,7 @@ function validateDiceRollBudget(
     // Subtract before adding so even an unusual future numeric representation
     // cannot overflow the accumulator before the budget rejection.
     if (group.dice > MAX_TOTAL_DICE - totalDice) {
-      return Either.left(
+      return Result.fail(
         errorContent("roll_dice exceeds the MCP total dice work budget.", {
           code: "DICE_ROLL_BUDGET_EXCEEDED",
           maxTotalDice: MAX_TOTAL_DICE,
@@ -111,7 +119,7 @@ function validateDiceRollBudget(
     }
     totalDice += group.dice;
   }
-  return Either.right(request);
+  return Result.succeed(request);
 }
 
 export function isDiceToolName(name: string): name is DiceToolName {

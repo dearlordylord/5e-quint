@@ -1,9 +1,10 @@
 import fc from "fast-check";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
+  decodeToolArgs,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
   mcpModelOutputJsonSchema,
@@ -22,6 +23,20 @@ const schemaProperties = fc.uniqueArray(
 );
 
 describe("MCP output JSON Schema identity", () => {
+  test("decodes the same encoded representation advertised for transformed inputs", () => {
+    const codec = Schema.Struct({ count: Schema.NumberFromString });
+
+    expect(mcpObjectJsonSchema(codec)).toMatchObject({
+      properties: { count: { type: "string" } },
+    });
+    expect(decodeToolArgs(codec, { count: "12" }, "transform_test")).toEqual(
+      Result.succeed({ count: 12 }),
+    );
+    expect(
+      Result.isFailure(decodeToolArgs(codec, { count: 12 }, "transform_test")),
+    ).toBe(true);
+  });
+
   test("reuses one generated schema per Effect Schema codec", () => {
     const codec = Schema.Struct({ value: Schema.String });
 
@@ -44,10 +59,28 @@ describe("MCP output JSON Schema identity", () => {
     expect(different.$id).not.toBe(first.$id);
   });
 
+  test("preserves data properties named $id while assigning the MCP identity", () => {
+    const codec = Schema.Struct({
+      $id: Schema.String,
+      value: Schema.String,
+    }).pipe(Schema.annotate({ jsonSchema: { $id: "urn:source-schema" } }));
+
+    const advertised = mcpOutputJsonSchema(codec);
+
+    expect(advertised.$id).toMatch(
+      /^urn:dnd:mcp:output-schema:sha256:[a-f0-9]{64}$/,
+    );
+    expect(advertised.$id).not.toBe("urn:source-schema");
+    expect(advertised).toMatchObject({
+      properties: { $id: { type: "string" }, value: { type: "string" } },
+      required: ["$id", "value"],
+    });
+  });
+
   test("extracts an object branch and rejects schemas with no object input", () => {
     expect(
       mcpObjectJsonSchema(
-        Schema.Union(Schema.String, Schema.Struct({ value: Schema.String })),
+        Schema.Union([Schema.String, Schema.Struct({ value: Schema.String })]),
       ),
     ).toMatchObject({
       type: "object",
@@ -60,13 +93,13 @@ describe("MCP output JSON Schema identity", () => {
 
   test("advertises copied result objects without expanding their canonical schema", () => {
     const Copied = Schema.Struct({
-      kind: Schema.Literal("first", "second"),
+      kind: Schema.Literals(["first", "second"]),
       nested: Schema.Struct({ value: Schema.String }),
-    }).annotations({ identifier: "Copied" });
-    const RetainedLeaf = Schema.String.annotations({
+    }).annotate({ identifier: "Copied" });
+    const RetainedLeaf = Schema.String.annotate({
       identifier: "RetainedLeaf",
     });
-    const Retained = Schema.Struct({ leaf: RetainedLeaf }).annotations({
+    const Retained = Schema.Struct({ leaf: RetainedLeaf }).annotate({
       identifier: "Retained",
     });
     const CanonicalArgs = Schema.Struct({
@@ -154,7 +187,7 @@ describe("MCP output JSON Schema identity", () => {
 
 describe("MCP model output JSON Schema", () => {
   test("retains the root result contract without expanding nested definitions", () => {
-    const Nested = Schema.Struct({ hidden: Schema.String }).annotations({
+    const Nested = Schema.Struct({ hidden: Schema.String }).annotate({
       identifier: "NestedResult",
     });
     const codec = Schema.Struct({
@@ -179,11 +212,11 @@ describe("MCP model output JSON Schema", () => {
   });
 
   test("retains distinct root and nested object branches within the bound", () => {
-    const codec = Schema.Union(
+    const codec = Schema.Union([
       Schema.Struct({ value: Schema.Struct({ first: Schema.String }) }),
-      Schema.Struct({ value: Schema.Struct({ second: Schema.Number }) }),
+      Schema.Struct({ value: Schema.Struct({ second: Schema.Finite }) }),
       Schema.Struct({ error: Schema.String }),
-    );
+    ]);
 
     expect(mcpModelOutputJsonSchema(codec)).toMatchObject({
       anyOf: [

@@ -1,8 +1,15 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import {
+  attackExecutionSelectionForOption,
+  boundAttackExecutionSelectionMatchesOption,
+} from "./battle-action-options.ts";
+import { Result, Schema } from "effect";
 import {
   NonNegativeInteger,
   movementFeet,
@@ -54,22 +61,23 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   BattleCharacterExecutionScopeRef,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
-  battleActiveEffectExecutionOrdinal,
+  battleEffectExecutionOrdinal,
   battleCharacterExecutionScopeRef,
   battleCharacterExecutionScopeRefOrdinalIsBefore,
-  battleActiveEffectExecutionRef,
-  battleActiveEffectExecutionRefOrdinalIsBefore,
+  battleEffectExecutionRefOrdinalIsBefore,
   battleAttackExecutionScopeRef,
   battleAttackExecutionScopeRefOrdinalIsBefore,
   battleExecutionScopeCursor,
+  battleEffectExecutionRef,
   battleProcedureExecutionRef,
   battleProcedureExecutionCursor,
   battleProcedureExecutionRefOrdinalIsBefore,
   battleResourcePoolExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
   battleStatBlockExecutionScopeRefOrdinalIsBefore,
@@ -97,12 +105,9 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
-import {
-  attackExecutionSelectionForOption,
-  boundAttackExecutionSelectionMatchesOption,
-} from "./battle-action-options.ts";
-import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import { escapeSpellRestraintAbilityCheckHoleKey } from "./battle-reducer/selected-effect-hole-key.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 
 const isolatedExecutionBattleId = battleId(
@@ -165,9 +170,9 @@ test("restore retains an empty Stat Block resource graph", () => {
     statBlockExecutionSnapshot(admission.execution),
   );
 
-  expect(Either.isRight(restored)).toBe(true);
-  if (Either.isLeft(restored)) return;
-  expect(restored.right.statBlock.resources).toEqual([]);
+  expect(Result.isSuccess(restored)).toBe(true);
+  if (Result.isFailure(restored)) return;
+  expect(restored.success.statBlock.resources).toEqual([]);
 });
 
 function executionReferenceView(
@@ -208,9 +213,9 @@ describe("Stat Block execution references", () => {
       characterScope,
       NonNegativeInteger(0),
     );
-    const activeEffectRef = battleActiveEffectExecutionRef(
+    const activeEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: characterScope,
         ordinal: 0,
       }),
@@ -239,10 +244,10 @@ describe("Stat Block execution references", () => {
       ),
     ).toBe(true);
     expect(
-      battleActiveEffectExecutionRefOrdinalIsBefore(
+      battleEffectExecutionRefOrdinalIsBefore(
         activeEffectRef,
         characterScope,
-        battleActiveEffectExecutionOrdinal(1),
+        battleEffectExecutionOrdinal(1),
       ),
     ).toBe(true);
     expect(
@@ -268,10 +273,10 @@ describe("Stat Block execution references", () => {
       ),
     ).toBe(false);
     expect(
-      battleActiveEffectExecutionRefOrdinalIsBefore(
+      battleEffectExecutionRefOrdinalIsBefore(
         activeEffectRef,
         statBlockScope,
-        battleActiveEffectExecutionOrdinal(1),
+        battleEffectExecutionOrdinal(1),
       ),
     ).toBe(false);
   });
@@ -340,9 +345,9 @@ describe("Stat Block execution references", () => {
   });
 
   test("rejects noncanonical replay occurrence references", () => {
-    const activeEffectRef = battleActiveEffectExecutionRef(
+    const activeEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: battleCharacterExecutionScopeRef(
           battleId("battle-reference-codec"),
           combatantId("character-a"),
@@ -351,16 +356,14 @@ describe("Stat Block execution references", () => {
         ordinal: 0,
       }),
     );
-    expect(BattleActiveEffectExecutionRef.make(activeEffectRef)).toBe(
+    expect(BattleEffectExecutionRef.make(activeEffectRef)).toBe(
       activeEffectRef,
     );
+    expect(() => BattleEffectExecutionRef.make("active-effect-0")).toThrow();
     expect(() =>
-      BattleActiveEffectExecutionRef.make("active-effect-0"),
-    ).toThrow();
-    expect(() =>
-      BattleActiveEffectExecutionRef.make(
+      BattleEffectExecutionRef.make(
         JSON.stringify({
-          kind: "activeEffectOccurrence",
+          kind: "effectOccurrence",
           battleId: "battle-reference-codec",
           ownerId: "character-a",
           ordinal: 0,
@@ -368,10 +371,10 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      BattleActiveEffectExecutionRef.make(
+      BattleEffectExecutionRef.make(
         JSON.stringify({
           battleId: "battle-reference-codec",
-          kind: "activeEffectOccurrence",
+          kind: "effectOccurrence",
           ownerId: "character-a",
           ordinal: 0,
           authoredId: "synthetic-effect",
@@ -559,8 +562,8 @@ describe("Stat Block execution references", () => {
       false,
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleStatBlockExecutionScopeRef)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleStatBlockExecutionScopeRef)(
           forgedScopeRef,
         ),
       ),
@@ -581,8 +584,8 @@ describe("Stat Block execution references", () => {
       battleStatBlockExecutionScopeRefIsWellFormed(reorderedScopeRef),
     ).toBe(false);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSubjectSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSubjectSchema)({
           tag: "action",
           actorId: ownerId,
           action: "attack",
@@ -738,9 +741,9 @@ describe("Stat Block execution references", () => {
     }
     const [supportedBonusAction, unsupportedBonusAction] = bonusActions;
     const projected = projectAuthoredStatBlock(statBlock);
-    expect(Either.isLeft(projected)).toBe(true);
-    if (Either.isRight(projected)) return;
-    expect(projected.left).toEqual({
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
       tag: "battleStatBlockProjectionFailure",
       reason: "unsupportedProcedureBinding",
       issues: [
@@ -802,14 +805,14 @@ describe("Stat Block execution references", () => {
       restoredSource,
       statBlockExecutionSnapshot(spentExecution),
     );
-    expect(Either.isRight(restored)).toBe(true);
-    if (Either.isLeft(restored)) {
+    expect(Result.isSuccess(restored)).toBe(true);
+    if (Result.isFailure(restored)) {
       throw new Error("Expected the spent rest-recharge state to restore.");
     }
-    expect(restored.right.execution.resourcePools).toEqual(
+    expect(restored.success.execution.resourcePools).toEqual(
       spentExecution.resourcePools,
     );
-    expect(restored.right.statBlock.resources).toEqual(
+    expect(restored.success.statBlock.resources).toEqual(
       restoredSource.resources,
     );
   });
@@ -835,12 +838,12 @@ describe("Stat Block execution references", () => {
       state: battle,
       combatantIds: [actorId],
     });
-    if (Either.isLeft(removed)) {
+    if (Result.isFailure(removed)) {
       throw new Error("Expected the Stat Block combatant to be removed.");
     }
     const serializedAfterRemoval = Schema.decodeUnknownSync(
       BattleSnapshotSchema,
-    )(Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(removed.right)));
+    )(Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(removed.success)));
     expect(serializedAfterRemoval).not.toHaveProperty("executionScopeCursors");
     expect(serializedAfterRemoval).not.toHaveProperty(
       "retiredExecutionScopeAllocations",
@@ -852,34 +855,36 @@ describe("Stat Block execution references", () => {
       }),
     ).toThrow();
     const restoredAfterRemoval: BattleState = {
-      ...removed.right,
-      executionScopeCursors: new Map(removed.right.executionScopeCursors),
+      ...removed.success,
+      executionScopeCursors: new Map(removed.success.executionScopeCursors),
     };
     const characterWithoutFormsId = combatantId(
       "execution-ref-character-without-forms",
     );
     const addedCharacter = addBattleCombatant({
-      state: removed.right,
+      state: removed.success,
       combatant: characterSeed({
         combatantId: characterWithoutFormsId,
         initiative: 5,
       }),
     });
-    if (Either.isLeft(addedCharacter)) {
+    if (Result.isFailure(addedCharacter)) {
       throw new Error("Expected a character without forms to be added.");
     }
     expect(
-      addedCharacter.right.executionScopeCursors.has(characterWithoutFormsId),
+      addedCharacter.success.executionScopeCursors.has(characterWithoutFormsId),
     ).toBe(true);
     const removedCharacter = removeBattleCombatants({
-      state: addedCharacter.right,
+      state: addedCharacter.success,
       combatantIds: [characterWithoutFormsId],
     });
-    if (Either.isLeft(removedCharacter)) {
+    if (Result.isFailure(removedCharacter)) {
       throw new Error("Expected the character to be removed.");
     }
     const retiredCharacterAllocation =
-      removedCharacter.right.executionScopeCursors.get(characterWithoutFormsId);
+      removedCharacter.success.executionScopeCursors.get(
+        characterWithoutFormsId,
+      );
     if (
       retiredCharacterAllocation?.kind !== "retired" ||
       retiredCharacterAllocation.ownership.kind !== "character"
@@ -898,11 +903,11 @@ describe("Stat Block execution references", () => {
       state: restoredAfterRemoval,
       combatant: actorInit,
     });
-    if (Either.isLeft(readmitted)) {
+    if (Result.isFailure(readmitted)) {
       throw new Error("Expected the Stat Block combatant to be re-admitted.");
     }
     const readmittedExecution = executionReferenceView(
-      readmitted.right,
+      readmitted.success,
       actorId,
     );
 
@@ -929,28 +934,28 @@ describe("Stat Block execution references", () => {
         }),
       ],
     });
-    if (Either.isLeft(initial)) {
+    if (Result.isFailure(initial)) {
       throw new Error("Expected the initial runtime session.");
     }
     const addedCharacterId = combatantId("roster-context-character");
     const added = addBattleRuntimeCombatant({
-      session: initial.right,
+      session: initial.success,
       combatant: characterSeed({
         combatantId: addedCharacterId,
         initiative: 10,
         spellcasting: wizardSpellcasting(),
       }),
     });
-    if (Either.isLeft(added)) {
+    if (Result.isFailure(added)) {
       throw new Error("Expected the character runtime admission.");
     }
-    expect(added.right.context.characters.has(addedCharacterId)).toBe(true);
+    expect(added.success.context.characters.has(addedCharacterId)).toBe(true);
     expect(
-      added.right.context.characters.get(addedCharacterId)
+      added.success.context.characters.get(addedCharacterId)
         ?.spellPresentationSources.length,
     ).toBeGreaterThan(0);
     const advanced = endBattleRuntimeTurn({
-      session: added.right,
+      session: added.success,
       actorId: initialMonsterId,
     });
     if (advanced.tag !== "resolved") {
@@ -969,11 +974,13 @@ describe("Stat Block execution references", () => {
       session: advanced.session,
       combatantIds: [addedCharacterId],
     });
-    if (Either.isLeft(removed)) {
+    if (Result.isFailure(removed)) {
       throw new Error("Expected the character runtime removal.");
     }
-    expect(removed.right.context.characters.has(addedCharacterId)).toBe(false);
-    expect(removed.right.state.combatants.has(addedCharacterId)).toBe(false);
+    expect(removed.success.context.characters.has(addedCharacterId)).toBe(
+      false,
+    );
+    expect(removed.success.state.combatants.has(addedCharacterId)).toBe(false);
   });
 
   test("does not reuse a character execution scope after re-admission", () => {
@@ -986,17 +993,17 @@ describe("Stat Block execution references", () => {
       state: battle,
       combatantIds: [wizardId],
     });
-    if (Either.isLeft(removed)) {
+    if (Result.isFailure(removed)) {
       throw new Error("Expected the character to be removed.");
     }
     const readmitted = addBattleCombatant({
-      state: removed.right,
+      state: removed.success,
       combatant: characterSeed({ combatantId: wizardId, initiative: 20 }),
     });
-    if (Either.isLeft(readmitted)) {
+    if (Result.isFailure(readmitted)) {
       throw new Error("Expected the character to be re-admitted.");
     }
-    const next = readmitted.right.combatants.get(wizardId);
+    const next = readmitted.success.combatants.get(wizardId);
     if (next?.origin.kind !== "character") {
       throw new Error("Expected a re-admitted character execution.");
     }
@@ -1584,13 +1591,13 @@ describe("Stat Block execution references", () => {
       projectedStatBlockRuntimeSource(statBlock),
       reorderedSnapshot,
     );
-    expect(Either.isRight(restoredFromReorderedOwnership)).toBe(true);
+    expect(Result.isSuccess(restoredFromReorderedOwnership)).toBe(true);
     const [firstOwnedPoolRef] = binding.resourcePoolRefs;
     if (firstOwnedPoolRef === undefined) {
       throw new Error("Expected an owned resource pool.");
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         restoreStatBlockExecutionAdmission(
           isolatedExecutionBattleId,
           actorId,
@@ -1670,7 +1677,7 @@ describe("Stat Block execution references", () => {
       },
     ])[0];
     if (
-      choice?.kind !== "opportunityAttack" ||
+      choice?.kind !== "nestedProcedure" ||
       choice.subject.command !== "opportunityAttack"
     ) {
       throw new Error("Expected Stat Block Opportunity Attack choice.");
@@ -1965,9 +1972,9 @@ describe("Stat Block execution references", () => {
       decodedOrigin.execution.scopeRef,
       NonNegativeInteger(999),
     );
-    const unboundEffectRef = battleActiveEffectExecutionRef(
+    const unboundEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
         ordinal: 999,
       }),
@@ -1988,18 +1995,18 @@ describe("Stat Block execution references", () => {
     if (encodedActor?.origin.kind !== "statBlock") {
       throw new Error("Expected the serialized Stat Block combatant.");
     }
-    const fighterEffectRef = battleActiveEffectExecutionRef(
+    const fighterEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: encodedFighter.origin.execution.scopeRef,
-        ordinal: spentBattle.combatants.get(fighterId)?.nextActiveEffectOrdinal,
+        ordinal: spentBattle.combatants.get(fighterId)?.nextEffectOrdinal,
       }),
     );
-    const actorEffectRef = battleActiveEffectExecutionRef(
+    const actorEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
-        ordinal: spentBattle.combatants.get(actorId)?.nextActiveEffectOrdinal,
+        ordinal: spentBattle.combatants.get(actorId)?.nextEffectOrdinal,
       }),
     );
     const escapeSubject = {
@@ -2009,9 +2016,22 @@ describe("Stat Block execution references", () => {
       targetId: fighterId,
       effectRef: fighterEffectRef,
     };
+    const escapeSpellRestraintHole = (effectRef: BattleEffectExecutionRef) => {
+      const key = escapeSpellRestraintAbilityCheckHoleKey(effectRef);
+      return {
+        holeId: holeId(key),
+        holeInstanceKey: holeInstanceKey(key),
+        kind: "abilityCheck" as const,
+        label: "Escape spell restraint Strength (Athletics) check (DC 1)",
+        ability: "str" as const,
+        skill: "athletics" as const,
+        dc: 1,
+      };
+    };
     const snapshotWithEffectOwner = (
       ownerId: CombatantId,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
+      initialHoles: readonly unknown[] = [escapeSpellRestraintHole(effectRef)],
     ) => ({
       ...encodedEnvelope,
       checkpoint: {
@@ -2020,7 +2040,16 @@ describe("Stat Block execution references", () => {
           combatant.combatantId === ownerId
             ? {
                 ...combatant,
-                activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
+                activeEffectOccurrences: [
+                  ...combatant.activeEffectOccurrences,
+                  {
+                    kind: "activeEffect" as const,
+                    effectRef,
+                    activeEffectKind: "saveGatedConditionWithRepeat" as const,
+                    location: { kind: "nonSpatial" as const },
+                  },
+                ],
+                nextEffectOrdinal: Number(combatant.nextEffectOrdinal) + 1,
               }
             : combatant,
         ),
@@ -2028,7 +2057,7 @@ describe("Stat Block execution references", () => {
       frontier: {
         ...encodedEnvelope.frontier,
         acts: [
-          { ...firstAct, subject: escapeSubject, initialHoles: [] },
+          { ...firstAct, subject: escapeSubject, initialHoles },
           ...encodedActs.slice(1),
         ],
       },
@@ -2038,6 +2067,24 @@ describe("Stat Block execution references", () => {
         snapshotWithEffectOwner(fighterId, fighterEffectRef),
       ),
     ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        snapshotWithEffectOwner(fighterId, fighterEffectRef, []),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        snapshotWithEffectOwner(fighterId, fighterEffectRef, [
+          {
+            ...escapeSpellRestraintHole(fighterEffectRef),
+            holeId: holeId("battle:codec:unrelated-ability-check"),
+            holeInstanceKey: holeInstanceKey(
+              "battle:codec:unrelated-ability-check",
+            ),
+          },
+        ]),
+      ),
+    ).toThrow();
     const duplicateActiveEffectSnapshot = snapshotWithEffectOwner(
       fighterId,
       fighterEffectRef,
@@ -2052,9 +2099,15 @@ describe("Stat Block execution references", () => {
               combatant.combatantId === fighterId
                 ? {
                     ...combatant,
-                    activeEffectRefs: [
-                      ...combatant.activeEffectRefs,
-                      fighterEffectRef,
+                    activeEffectOccurrences: [
+                      ...combatant.activeEffectOccurrences,
+                      {
+                        kind: "activeEffect" as const,
+                        effectRef: fighterEffectRef,
+                        activeEffectKind:
+                          "saveGatedConditionWithRepeat" as const,
+                        location: { kind: "nonSpatial" as const },
+                      },
                     ],
                   }
                 : combatant,
@@ -2071,7 +2124,7 @@ describe("Stat Block execution references", () => {
             {
               ...firstAct,
               subject: { ...escapeSubject, effectRef: actorEffectRef },
-              initialHoles: [],
+              initialHoles: [escapeSpellRestraintHole(actorEffectRef)],
             },
             ...encodedActs.slice(1),
           ],
@@ -2305,13 +2358,13 @@ describe("Stat Block execution references", () => {
       projectedStatBlockRuntimeSource(statBlock),
       decodedOrigin.execution,
     );
-    expect(Either.isRight(restored)).toBe(true);
-    if (Either.isLeft(restored)) {
+    expect(Result.isSuccess(restored)).toBe(true);
+    if (Result.isFailure(restored)) {
       throw new Error("Expected valid execution snapshot restoration.");
     }
-    expect(restored.right.execution).toEqual(spentAdmission.execution);
+    expect(restored.success.execution).toEqual(spentAdmission.execution);
     expect(
-      restored.right.execution.procedureBindings.find(
+      restored.success.execution.procedureBindings.find(
         (binding) => binding.procedureRef === limitedBinding.procedureRef,
       )?.procedure,
     ).toEqual(limitedBinding.procedure);
@@ -2324,11 +2377,11 @@ describe("Stat Block execution references", () => {
         resourcePools: [...decodedOrigin.execution.resourcePools].reverse(),
       },
     );
-    expect(Either.isRight(restoredFromReorderedPools)).toBe(true);
-    if (Either.isRight(restoredFromReorderedPools)) {
-      expect(restoredFromReorderedPools.right.execution.resourcePools).toEqual(
-        spentAdmission.execution.resourcePools,
-      );
+    expect(Result.isSuccess(restoredFromReorderedPools)).toBe(true);
+    if (Result.isSuccess(restoredFromReorderedPools)) {
+      expect(
+        restoredFromReorderedPools.success.execution.resourcePools,
+      ).toEqual(spentAdmission.execution.resourcePools);
     }
     const invalidGraph = {
       ...decodedOrigin.execution,
@@ -2451,7 +2504,7 @@ describe("Stat Block execution references", () => {
       throw new Error("Expected a procedure-binding fixture.");
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         restoreStatBlockExecutionAdmission(
           battle.battleId,
           actorId,
@@ -2467,7 +2520,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         restoreStatBlockExecutionAdmission(
           battle.battleId,
           actorId,
@@ -2496,7 +2549,7 @@ describe("Stat Block execution references", () => {
       }),
     ).toThrow();
     expect(
-      Either.isLeft(
+      Result.isFailure(
         restoreStatBlockExecutionAdmission(
           battle.battleId,
           combatantId("different-execution-owner"),
@@ -2566,11 +2619,100 @@ describe("Stat Block execution references", () => {
     );
 
     expect(restored).toMatchObject(
-      Either.left({
+      Result.fail({
         tag: "invalidStatBlockExecutionSnapshot",
         reason: "procedureBindingsMismatch",
       }),
     );
+  });
+
+  test("restores one expired source binding and rejects duplicate effect identity across a restoration cohort", () => {
+    const actorId = combatantId("execution-ref-source-binding-cohort");
+    const statBlocks = [
+      monsterResourceStatBlock(),
+      monsterResourceStatBlock(),
+    ] as const;
+    const admissions = isolatedStatBlockAdmissions(actorId, statBlocks);
+    const snapshots = admissions.map((admission) =>
+      statBlockExecutionSnapshot(admission.execution),
+    );
+    const firstSnapshot = snapshots[0];
+    const secondSnapshot = snapshots[1];
+    if (firstSnapshot === undefined || secondSnapshot === undefined) {
+      throw new Error("Expected two Stat Block execution snapshots.");
+    }
+    const sharedEffectRef = battleEffectExecutionRef(
+      JSON.stringify({
+        kind: "effectOccurrence",
+        ownerScopeRef: firstSnapshot.scopeRef,
+        ordinal: 0,
+      }),
+    );
+    const withHistoricalSourceBinding = (
+      snapshot: typeof firstSnapshot,
+    ): typeof firstSnapshot => ({
+      ...snapshot,
+      procedureBindings: [
+        ...snapshot.procedureBindings,
+        {
+          procedureRef: battleStatBlockProcedureExecutionRef(
+            snapshot.scopeRef,
+            NonNegativeInteger(snapshot.procedureBindings.length),
+          ),
+          procedure: {
+            kind: "effectOccurrenceSource",
+            effectRef: sharedEffectRef,
+            effectKind: "spellConditionRepeatSave",
+          },
+          resourcePoolRefs: [],
+        },
+      ],
+    });
+    const firstHistoricalSnapshot = withHistoricalSourceBinding(firstSnapshot);
+    const secondHistoricalSnapshot =
+      withHistoricalSourceBinding(secondSnapshot);
+
+    const restoredExpired = restoreStatBlockExecutionAdmission(
+      isolatedExecutionBattleId,
+      actorId,
+      admissions[0].statBlock,
+      firstHistoricalSnapshot,
+    );
+    expect(Result.isSuccess(restoredExpired)).toBe(true);
+    if (Result.isFailure(restoredExpired)) {
+      throw new Error(
+        "Expected one expired historical source binding to restore.",
+      );
+    }
+    expect(
+      restoredExpired.success.execution.procedureBindings.at(-1)?.procedure,
+    ).toMatchObject({
+      kind: "effectOccurrenceSource",
+      effectRef: sharedEffectRef,
+    });
+
+    const duplicated = restoreStatBlockExecutionAdmissions(
+      isolatedExecutionBattleId,
+      actorId,
+      [
+        {
+          statBlock: admissions[0].statBlock,
+          snapshot: firstHistoricalSnapshot,
+        },
+        {
+          statBlock: admissions[1].statBlock,
+          snapshot: secondHistoricalSnapshot,
+        },
+      ],
+    );
+    expect(Result.isFailure(duplicated)).toBe(true);
+    if (Result.isSuccess(duplicated)) {
+      throw new Error("Expected duplicate restored effect identity to fail.");
+    }
+    expect(duplicated.failure).toMatchObject([
+      { restorationIndex: 0, reason: "procedureBindingsMismatch" },
+      { restorationIndex: 1, reason: "procedureBindingsMismatch" },
+    ]);
   });
 
   test("reports every structurally mismatched resource pool without partial restoration", () => {
@@ -2667,11 +2809,11 @@ describe("Stat Block execution references", () => {
       ],
     );
 
-    expect(Either.isLeft(restored)).toBe(true);
-    if (Either.isRight(restored)) {
+    expect(Result.isFailure(restored)).toBe(true);
+    if (Result.isSuccess(restored)) {
       throw new Error("Expected every resource mismatch to be reported.");
     }
-    expect(restored.left).toMatchObject([
+    expect(restored.failure).toMatchObject([
       { restorationIndex: 0, reason: "resourcePoolsMismatch" },
       { restorationIndex: 1, reason: "resourcePoolsMismatch" },
       { restorationIndex: 2, reason: "resourcePoolsMismatch" },
@@ -2726,11 +2868,11 @@ describe("Stat Block execution references", () => {
       ],
     );
 
-    expect(Either.isRight(restored)).toBe(true);
-    if (Either.isLeft(restored)) {
+    expect(Result.isSuccess(restored)).toBe(true);
+    if (Result.isFailure(restored)) {
       throw new Error("Expected the ordered form cohort to restore.");
     }
-    expect(restored.right.map((admission) => admission.execution)).toEqual(
+    expect(restored.success.map((admission) => admission.execution)).toEqual(
       admitted.map((admission, index) =>
         index === 1
           ? spendStatBlockProcedureResources(
@@ -2741,7 +2883,7 @@ describe("Stat Block execution references", () => {
       ),
     );
     expect(
-      Either.isRight(
+      Result.isSuccess(
         restoreStatBlockExecutionAdmission(
           isolatedExecutionBattleId,
           actorId,
@@ -2779,11 +2921,11 @@ describe("Stat Block execution references", () => {
       restorations,
     );
 
-    expect(Either.isLeft(restored)).toBe(true);
-    if (Either.isRight(restored)) {
+    expect(Result.isFailure(restored)).toBe(true);
+    if (Result.isSuccess(restored)) {
       throw new Error("Expected every invalid restoration to be reported.");
     }
-    expect(restored.left).toMatchObject([
+    expect(restored.failure).toMatchObject([
       { restorationIndex: 0, reason: "procedureBindingsMismatch" },
       { restorationIndex: 1, reason: "procedureBindingsMismatch" },
     ]);
@@ -2912,8 +3054,8 @@ describe("Stat Block execution references", () => {
       Schema.decodeUnknownSync(BattleSnapshotSchema)(encodedBattle),
     ).toEqual(snapshotBattle(spentBattle));
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
             battleCheckpointFrontierEnvelope(spentBattle),
           ),
@@ -2957,11 +3099,11 @@ describe("Stat Block execution references", () => {
         };
       }),
     );
-    expect(Either.isRight(restored)).toBe(true);
-    if (Either.isLeft(restored)) {
+    expect(Result.isSuccess(restored)).toBe(true);
+    if (Result.isFailure(restored)) {
       throw new Error("Expected the serialized Wild Shape cohort to restore.");
     }
-    expect(restored.right.map((admission) => admission.execution)).toEqual(
+    expect(restored.success.map((admission) => admission.execution)).toEqual(
       spentForms.map((admission) => admission.execution),
     );
   });

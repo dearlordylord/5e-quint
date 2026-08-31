@@ -1,5 +1,5 @@
 import { NonNegativeInteger, resourceCount } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -63,7 +63,7 @@ describe("character battle resource execution", () => {
         points: resourceCount(1),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterBattlePointPoolSpendIssue",
         message: "Only point-pool character battle resources can spend points.",
       }),
@@ -74,7 +74,7 @@ describe("character battle resource execution", () => {
         points: resourceCount(0),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterBattlePointPoolSpendIssue",
         message: "Point-pool spending requires a positive point cost.",
       }),
@@ -85,7 +85,7 @@ describe("character battle resource execution", () => {
         points: resourceCount(5),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterBattlePointPoolSpendIssue",
         message: "Point-pool resource has insufficient remaining points.",
       }),
@@ -96,7 +96,7 @@ describe("character battle resource execution", () => {
         points: resourceCount(2),
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         ...pointPoolResource,
         pointsRemaining: resourceCount(2),
       }),

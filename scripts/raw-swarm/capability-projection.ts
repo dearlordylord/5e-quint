@@ -1,4 +1,4 @@
-import { Either, ParseResult, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import type { ScenarioCharacterSdk } from "./sdk-player/scenario-character-contract.ts";
 import type { ScenarioSetupSdk } from "./sdk-player/scenario-setup-contract.ts";
@@ -64,45 +64,56 @@ function operationOwnedByRole(
   );
 }
 
-const CapabilityRoleSchema = Schema.Literal(...CAPABILITY_ROLES);
+const CapabilityRoleSchema = Schema.Literals(CAPABILITY_ROLES);
 const CapabilityDescriptorSchema = Schema.Struct({
-  id: Schema.NonEmptyTrimmedString,
-  roles: Schema.Array(CapabilityRoleSchema).pipe(Schema.minItems(1)),
-  operation: Schema.optional(Schema.Literal(...PUBLIC_CAPABILITY_OPERATIONS)),
-  summary: Schema.NonEmptyTrimmedString,
-  boundary: Schema.NonEmptyTrimmedString,
+  id: Schema.Trimmed.check(Schema.isNonEmpty()),
+  roles: Schema.Array(CapabilityRoleSchema).pipe(
+    Schema.check(Schema.isMinLength(1)),
+  ),
+  operation: Schema.optionalKey(Schema.Literals(PUBLIC_CAPABILITY_OPERATIONS)),
+  summary: Schema.Trimmed.check(Schema.isNonEmpty()),
+  boundary: Schema.Trimmed.check(Schema.isNonEmpty()),
 }).pipe(
-  Schema.filter(
-    ({ roles, operation }) =>
-      operation === undefined ||
-      roles.every((role) => operationOwnedByRole(role, operation)),
-    {
-      message: () =>
-        "A capability operation must be owned by every projected role.",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      ({ roles, operation }) =>
+        operation === undefined ||
+        roles.every((role) => operationOwnedByRole(role, operation)),
+      {
+        message:
+          "A capability operation must be owned by every projected role.",
+      },
+    ),
   ),
 );
 const CapabilityBoundarySchema = Schema.Struct({
-  id: Schema.NonEmptyTrimmedString,
-  roles: Schema.Array(CapabilityRoleSchema).pipe(Schema.minItems(1)),
-  statement: Schema.NonEmptyTrimmedString,
+  id: Schema.Trimmed.check(Schema.isNonEmpty()),
+  roles: Schema.Array(CapabilityRoleSchema).pipe(
+    Schema.check(Schema.isMinLength(1)),
+  ),
+  statement: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 export const CapabilityProjectionSchema = Schema.Struct({
   schemaVersion: Schema.Literal(CAPABILITY_PROJECTION_SCHEMA_VERSION),
   capabilities: Schema.Array(CapabilityDescriptorSchema).pipe(
-    Schema.minItems(1),
+    Schema.check(Schema.isMinLength(1)),
   ),
-  boundaries: Schema.Array(CapabilityBoundarySchema).pipe(Schema.minItems(1)),
+  boundaries: Schema.Array(CapabilityBoundarySchema).pipe(
+    Schema.check(Schema.isMinLength(1)),
+  ),
 }).pipe(
-  Schema.filter(
-    ({ capabilities, boundaries }) =>
-      new Set(capabilities.map(({ id }) => id)).size === capabilities.length &&
-      new Set(boundaries.map(({ id }) => id)).size === boundaries.length,
-    {
-      message: () =>
-        "Capability projection capability and boundary ids must be unique.",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      ({ capabilities, boundaries }) =>
+        new Set(capabilities.map(({ id }) => id)).size ===
+          capabilities.length &&
+        new Set(boundaries.map(({ id }) => id)).size === boundaries.length,
+      {
+        message:
+          "Capability projection capability and boundary ids must be unique.",
+      },
+    ),
   ),
 );
 export type CapabilityProjection = Schema.Schema.Type<
@@ -427,8 +438,8 @@ export function capabilityContextForRole(role: CapabilityRole): string {
 
 export function parseCapabilityRole(
   value: unknown,
-): Either.Either<CapabilityRole, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(CapabilityRoleSchema, {
+): Result.Result<CapabilityRole, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(CapabilityRoleSchema, {
     onExcessProperty: "error",
   })(value);
 }

@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type {
   CharacterBuild,
@@ -50,7 +50,7 @@ export type CharacterBuildSelectedReferenceRouteIssue = {
 export function characterBuildSelectedReferencesWithRoute<RouteEvent>(input: {
   readonly build: CharacterBuild;
   readonly route: readonly RouteEvent[];
-}): Either.Either<
+}): Result.Result<
   CharacterBuildSelectedReferenceRoute<RouteEvent>,
   CharacterBuildSelectedReferenceRouteIssue
 > {
@@ -58,12 +58,12 @@ export function characterBuildSelectedReferencesWithRoute<RouteEvent>(input: {
     input.build,
   );
   if (selectedReferenceCount < MIN_SELECTED_REFERENCE_COUNT) {
-    return Either.left({
+    return Result.fail({
       tag: "noSelectedReferences",
       message: "CharacterBuild has no retained selected references to route.",
     });
   }
-  return Either.right({
+  return Result.succeed({
     build: input.build,
     route: [...input.route, routeRetainCreationSelectedReferences()],
   });

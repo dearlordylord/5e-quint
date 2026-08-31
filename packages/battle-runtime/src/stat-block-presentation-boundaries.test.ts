@@ -1,8 +1,8 @@
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { statBlockId } from "@dnd/shared/game-facts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus,
@@ -65,7 +65,7 @@ function presentationSession() {
 describe("battle presentation joins", () => {
   test("projects authored Stat Block communication into presentation context", () => {
     const source = statBlockRecord();
-    const projected = Either.getOrThrow(projectAuthoredStatBlock(source));
+    const projected = Result.getOrThrow(projectAuthoredStatBlock(source));
 
     expect(projected.presentation).toMatchObject({
       displayName: source.name,
@@ -117,7 +117,7 @@ describe("battle presentation joins", () => {
         actions: [...(source.statBlock.actions ?? []), textOnlyAction],
       },
     };
-    const projected = Either.getOrThrow(projectAuthoredStatBlock(record));
+    const projected = Result.getOrThrow(projectAuthoredStatBlock(record));
 
     expect(projected.presentation.traits).toEqual([
       textOnlyTrait,
@@ -303,10 +303,10 @@ describe("battle presentation joins", () => {
     const result = statBlockProcedurePresentations({
       execution: actor.origin.execution,
     });
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
       expect(
-        result.left.every((issue) => issue.reason === "missingPresentation"),
+        result.failure.every((issue) => issue.reason === "missingPresentation"),
       ).toBe(true);
     }
   });
@@ -331,7 +331,7 @@ describe("battle presentation joins", () => {
           procedureBindings: unarmedOnly,
         },
       }),
-    ).toEqual(Either.right([]));
+    ).toEqual(Result.succeed([]));
     expect(
       statBlockProcedurePresentations({
         execution: {
@@ -339,7 +339,7 @@ describe("battle presentation joins", () => {
           procedureBindings: [],
         },
       }),
-    ).toEqual(Either.right([]));
+    ).toEqual(Result.succeed([]));
   });
 
   test("reports a typed missing presentation for an option from another Stat Block actor", () => {
@@ -374,7 +374,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockPresentationMissing",
       }),
@@ -450,7 +450,7 @@ describe("battle presentation joins", () => {
           fighterId,
           alternateAttack,
         ),
-      ).toEqual(Either.right(`Longsword (${alternateAbility.label})`));
+      ).toEqual(Result.succeed(`Longsword (${alternateAbility.label})`));
     }
   });
 
@@ -542,7 +542,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockAdmissionMissing",
       }),
@@ -581,6 +581,7 @@ describe("battle presentation joins", () => {
       actor.origin.execution.procedureBindings.find(
         (binding) =>
           binding.procedure.kind !== "unarmedStrike" &&
+          binding.procedure.kind !== "effectOccurrenceSource" &&
           binding.procedure.section === firstProcedure.section &&
           binding.procedure.procedureOrdinal ===
             firstProcedure.procedureOrdinal,
@@ -603,7 +604,7 @@ describe("battle presentation joins", () => {
         contextWithMissingProcedure,
         goblinId,
       ),
-    ).toEqual(Either.left(missingJoinIssues));
+    ).toEqual(Result.fail(missingJoinIssues));
     expect(
       attackActionOptionPresentationName(
         session.state,
@@ -612,7 +613,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockProcedurePresentationJoin",
         issues: missingJoinIssues,
@@ -676,7 +677,7 @@ describe("battle presentation joins", () => {
         contextWithMismatchedProcedure,
         goblinId,
       ),
-    ).toEqual(Either.left(mismatchedJoinIssues));
+    ).toEqual(Result.fail(mismatchedJoinIssues));
     expect(
       attackActionOptionPresentationName(
         session.state,
@@ -685,7 +686,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockProcedurePresentationJoin",
         issues: mismatchedJoinIssues,
@@ -801,7 +802,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "weaponPresentationMissing",
       }),
@@ -821,7 +822,7 @@ describe("battle presentation joins", () => {
         attack.weapon.weaponUnitId,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterWeaponPresentationSourceIssue",
         reason: "ambiguous",
         weaponUnitId: attack.weapon.weaponUnitId,

@@ -9,7 +9,7 @@
   },
   "id": "weapon_javelin",
   "kind": "weapon",
-  "mastery": "slow",
+  "masteryUnitId": "mastery_slow",
   "name": "Javelin",
   "properties": [
     {

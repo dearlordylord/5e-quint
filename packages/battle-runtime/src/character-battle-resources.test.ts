@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 
 import type { CharacterBattleClassLevels } from "./character-class-level.ts";
@@ -55,7 +55,7 @@ import {
   bardicInspirationUnit,
   characterSeed,
   decodeUnitRecordSync,
-  findFamiliarInput,
+  spawnedCompanionInput,
   spellRecord,
   startBattle,
   statBlockCreatureInit,
@@ -69,10 +69,10 @@ function classLevelsFor(
   level: number,
 ): CharacterBattleClassLevels {
   const result = parseCharacterBattleClassLevels([{ className, level }]);
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.messages.join("; "));
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.messages.join("; "));
   }
-  return result.right;
+  return result.success;
 }
 
 function resourcePoolRefFor(resourceId: string) {
@@ -90,9 +90,9 @@ function expectBattleStartIssue(
   result: ReturnType<typeof startBattle>,
   message: string,
 ) {
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(battleStateInitIssueMessage(result.left)).toBe(message);
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(battleStateInitIssueMessage(result.failure)).toBe(message);
   }
 }
 
@@ -100,9 +100,9 @@ function expectBattleStartIssueContaining(
   result: ReturnType<typeof startBattle>,
   message: string,
 ) {
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(battleStateInitIssueMessage(result.left)).toContain(message);
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(battleStateInitIssueMessage(result.failure)).toContain(message);
   }
 }
 
@@ -481,9 +481,9 @@ describe("character battle resource projections", () => {
       },
       "missing-expenditures",
     );
-    expect(Either.isLeft(missingExpenditures)).toBe(true);
-    if (Either.isLeft(missingExpenditures)) {
-      expect(battleStateInitIssueMessage(missingExpenditures.left)).toBe(
+    expect(Result.isFailure(missingExpenditures)).toBe(true);
+    if (Result.isFailure(missingExpenditures)) {
+      expect(battleStateInitIssueMessage(missingExpenditures.failure)).toBe(
         "Spell Slot expenditure state must match slot capacity.",
       );
     }
@@ -503,9 +503,9 @@ describe("character battle resource projections", () => {
       },
       "duplicate-expenditures",
     );
-    expect(Either.isLeft(duplicateExpenditures)).toBe(true);
-    if (Either.isLeft(duplicateExpenditures)) {
-      expect(battleStateInitIssueMessage(duplicateExpenditures.left)).toBe(
+    expect(Result.isFailure(duplicateExpenditures)).toBe(true);
+    if (Result.isFailure(duplicateExpenditures)) {
+      expect(battleStateInitIssueMessage(duplicateExpenditures.failure)).toBe(
         "Spell Slot expenditure state must match slot capacity.",
       );
     }
@@ -523,9 +523,9 @@ describe("character battle resource projections", () => {
       },
       "untraced-feature-spell",
     );
-    expect(Either.isLeft(untracedFeatureSpell)).toBe(true);
-    if (Either.isLeft(untracedFeatureSpell)) {
-      expect(battleStateInitIssueMessage(untracedFeatureSpell.left)).toBe(
+    expect(Result.isFailure(untracedFeatureSpell)).toBe(true);
+    if (Result.isFailure(untracedFeatureSpell)) {
+      expect(battleStateInitIssueMessage(untracedFeatureSpell.failure)).toBe(
         "Feature-prepared spells must trace to a character Unit grant.",
       );
     }
@@ -536,7 +536,7 @@ describe("character battle resource projections", () => {
           ...wizardSpellcasting({
             invocationSpellAccesses: [
               {
-                tag: "pactOfTheChainFindFamiliar",
+                tag: "pactOfTheChainSpawnedCompanion",
                 spell: spellRecord("fire_bolt"),
               },
             ],
@@ -627,7 +627,7 @@ describe("character battle resource projections", () => {
       throw new Error("Expected Magic Initiate spell access fixture.");
     }
     const valid = startDirectAccess(validAccess);
-    expect(Either.isRight(valid)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
 
     expectBattleStartIssue(
       startDirectAccess(
@@ -737,9 +737,9 @@ describe("character battle resource projections", () => {
         spellList: clericSpellListSource(),
       }),
     );
-    expect(Either.isLeft(wrongList)).toBe(true);
-    if (Either.isLeft(wrongList)) {
-      expect(battleStateInitIssueMessage(wrongList.left)).toContain(
+    expect(Result.isFailure(wrongList)).toBe(true);
+    if (Result.isFailure(wrongList)) {
+      expect(battleStateInitIssueMessage(wrongList.failure)).toContain(
         "Magic Initiate Spell Access list source must match its parsed source mechanics.",
       );
     }
@@ -749,9 +749,9 @@ describe("character battle resource projections", () => {
         resourceSpellId: spellRecord("magic_missile").id,
       }),
     );
-    expect(Either.isLeft(mismatchedResource)).toBe(true);
-    if (Either.isLeft(mismatchedResource)) {
-      expect(battleStateInitIssueMessage(mismatchedResource.left)).toContain(
+    expect(Result.isFailure(mismatchedResource)).toBe(true);
+    if (Result.isFailure(mismatchedResource)) {
+      expect(battleStateInitIssueMessage(mismatchedResource.failure)).toContain(
         "Magic Initiate Spell Access must have exactly one one-use free-cast resource for its level-1 spell.",
       );
     }
@@ -795,7 +795,7 @@ describe("character battle resource projections", () => {
     expect(
       parseCharacterBattleInvocationSpellAccesses([
         {
-          tag: "pactOfTheChainFindFamiliar",
+          tag: "pactOfTheChainSpawnedCompanion",
           spell: spellRecord("fire_bolt"),
         },
       ]),
@@ -804,10 +804,10 @@ describe("character battle resource projections", () => {
       message: "Pact of the Chain Spell Access must grant Find Familiar.",
     });
 
-    const malformedFindFamiliar = decodeUnitRecordSync({
-      ...findFamiliarInput,
+    const malformedSpawnedCompanion = decodeUnitRecordSync({
+      ...spawnedCompanionInput,
       mechanics: {
-        ...findFamiliarInput.mechanics,
+        ...spawnedCompanionInput.mechanics,
         mode: {
           label: "creature type",
           options: [
@@ -820,14 +820,14 @@ describe("character battle resource projections", () => {
         },
       },
     });
-    if (malformedFindFamiliar.kind !== "spell") {
+    if (malformedSpawnedCompanion.kind !== "spell") {
       throw new Error("Expected malformed Find Familiar spell fixture.");
     }
     expect(
       parseCharacterBattleInvocationSpellAccesses([
         {
-          tag: "pactOfTheChainFindFamiliar",
-          spell: malformedFindFamiliar,
+          tag: "pactOfTheChainSpawnedCompanion",
+          spell: malformedSpawnedCompanion,
         },
       ]),
     ).toEqual({

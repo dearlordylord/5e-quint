@@ -9,7 +9,7 @@
   },
   "id": "weapon_handaxe",
   "kind": "weapon",
-  "mastery": "vex",
+  "masteryUnitId": "mastery_vex",
   "name": "Handaxe",
   "properties": [
     {

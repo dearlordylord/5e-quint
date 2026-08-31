@@ -114,7 +114,10 @@ export const ChainedSpellAttackDamageInvocationSchema =
       damageTypeChoices: Schema.Array(DamageTypeSchema),
       rangeFeet: MovementFeet,
       leapRangeFeet: MovementFeet,
-      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackKind: Schema.Literals([
+        "melee_spell_attack",
+        "ranged_spell_attack",
+      ]),
       attackBonus: AttackBonus,
     }),
   );

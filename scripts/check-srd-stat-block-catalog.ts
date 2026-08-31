@@ -612,6 +612,7 @@ function publicationCheckOwnershipIssues(
       Match.when({ kind: "portable-case-generation-failed" }, () => []),
       Match.when({ kind: "publication-schema-bound-exceeded" }, () => []),
       Match.when({ kind: "publication-generation-failed" }, () => []),
+      Match.when({ kind: "publication-delta-verification-failed" }, () => []),
       Match.when({ kind: "peer-family-mismatch" }, () => []),
       Match.exhaustive,
     ),

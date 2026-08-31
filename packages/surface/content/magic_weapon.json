@@ -56,7 +56,7 @@
               }
             ]
           },
-          "kind": "grant_magic_weapon_enhancement"
+          "kind": "grant_weapon_attack_enhancement"
         },
         "trigger": {
           "kind": "passive"

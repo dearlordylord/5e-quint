@@ -8,8 +8,8 @@ import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts"
 import {
   fireBoltUnitId,
   heroismUnitId,
-  hideousLaughterDurationTicks,
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatDurationTicks,
+  saveGatedConditionWithRepeatUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -42,7 +42,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   hasCondition,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
@@ -55,11 +55,30 @@ import type {
 } from "./unit-profile-admission.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
+import { boundSaveGatedConditionWithRepeatEffect } from "./battle-reducer/spell-modifier-binding.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./battle-reducer/staged-condition-repeat-save.ts";
 
-function heightenedHideousLaughterFixture() {
-  const spell = spellRecord(hideousLaughterUnitId);
+function requireBoundStagedConditionEffect(
+  state: BattleState,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "saveGatedConditionWithRepeat" }
+  >,
+) {
+  const bound = boundSaveGatedConditionWithRepeatEffect(state, effect);
+  if (bound === undefined) {
+    throw new Error("Expected bound Hideous Laughter procedure facts.");
+  }
+  return bound;
+}
+
+function heightenedStagedConditionFixture() {
+  const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
   const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -86,7 +105,7 @@ function heightenedHideousLaughterFixture() {
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "hideousLaughter" &&
+        "saveGatedConditionWithRepeat" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -100,16 +119,16 @@ function heightenedHideousLaughterFixture() {
   const targetFill = spellTargetListFill(
     targetHole,
     spellCasterId,
-    hideousLaughterUnitId,
+    saveGatedConditionWithRepeatUnitId,
     [spellTargetId],
   );
   const heightenedFill = targetChoiceFill(heightenedHole, spellTargetId);
   return { session, act, targetFill, heightenedFill };
 }
 
-function castHeightenedHideousLaughter() {
+function castHeightenedStagedCondition() {
   const { session, act, targetFill, heightenedFill } =
-    heightenedHideousLaughterFixture();
+    heightenedStagedConditionFixture();
   const needsSave = resolveBattleSubject({
     state: session.state,
     subject: act.subject,
@@ -150,14 +169,14 @@ function targetChoiceFill(
 
 describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   test("Hideous Laughter applies Prone and Incapacitated until a repeat save succeeds", () => {
-    const spell = spellRecord(hideousLaughterUnitId);
+    const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
       session: state,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 2,
     });
 
@@ -170,7 +189,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(hideousLaughterUnitId, 2, "hideousLaughter"),
+        spellSlotInvocationRef(
+          saveGatedConditionWithRepeatUnitId,
+          2,
+          "saveGatedConditionWithRepeat",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -184,7 +207,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const needsSave = resolveBattleSubject({
@@ -211,13 +234,13 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(hasCondition(laughed.conditions, "incapacitated")).toBe(true);
     expect(laughed.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "hideousLaughter",
+        kind: "saveGatedConditionWithRepeat",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
-          durationTicks: hideousLaughterDurationTicks,
+          durationTicks: saveGatedConditionWithRepeatDurationTicks,
         },
       }),
     ]);
@@ -247,7 +270,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const repeatSave = requireResultHole(needsRepeatSave, "savingThrowOutcome");
     expect(repeatSave).toEqual(
       expect.objectContaining({
-        hideousLaughterRepeatSave: expect.objectContaining({
+        saveGatedConditionRepeatSave: expect.objectContaining({
           targetId: spellTargetId,
           trigger: "endTurn",
         }),
@@ -278,31 +301,55 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       requireCombatant(cleared.state, spellCasterId).concentration,
     ).toBeNull();
 
-    const hideousLaughterEffect = laughed.activeEffects.find(
-      (effect) => effect.kind === "hideousLaughter",
+    const saveGatedConditionWithRepeatEffect = laughed.activeEffects.find(
+      (effect) => effect.kind === "saveGatedConditionWithRepeat",
     );
-    if (hideousLaughterEffect === undefined) {
+    if (saveGatedConditionWithRepeatEffect === undefined) {
       throw new Error("Expected Hideous Laughter active effect.");
     }
-    const damageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      hideousLaughterEffect,
-      "damage",
-    );
+    const damageSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(
+          cast.state,
+          saveGatedConditionWithRepeatEffect,
+        ),
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("hideous-laughter-damage-save"),
+          ),
+        },
+      );
     expect(damageSaveHole.targetRollModes).toEqual([
       { targetId: spellTargetId, rollMode: "advantage" },
     ]);
+    const laterDamageSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(
+          cast.state,
+          saveGatedConditionWithRepeatEffect,
+        ),
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("later-hideous-laughter-damage-save"),
+          ),
+        },
+      );
+    expect(laterDamageSaveHole.holeId).not.toBe(damageSaveHole.holeId);
     const zeroDamage = applyBattleHitPointDamage({
       state: cast.state,
       target: laughed,
       damageAmount: 0,
       deathFailuresAtZeroHp: 1,
       damageSourceId: spellCasterId,
-      hideousLaughterDamageRepeatSaves: [],
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
     });
     const zeroDamageTarget = requireCombatant(zeroDamage, spellTargetId);
     expect(zeroDamageTarget.activeEffects).toContainEqual(
-      hideousLaughterEffect,
+      saveGatedConditionWithRepeatEffect,
     );
     expect(hasCondition(zeroDamageTarget.conditions, "prone")).toBe(true);
     expect(hasCondition(zeroDamageTarget.conditions, "incapacitated")).toBe(
@@ -314,11 +361,17 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       damageAmount: 1,
       deathFailuresAtZeroHp: 1,
       damageSourceId: spellCasterId,
-      hideousLaughterDamageRepeatSaves: [
-        savingThrowOutcomeFill(damageSaveHole, [
-          { targetId: spellTargetId, succeeded: true },
-        ]),
-      ],
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: [
+          savingThrowOutcomeFill(damageSaveHole, [
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+        ],
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          holeId("hideous-laughter-damage-save"),
+        ),
+      },
     });
     const damagedTarget = requireCombatant(damaged, spellTargetId);
     expect(hasCondition(damagedTarget.conditions, "prone")).toBe(false);
@@ -327,7 +380,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(requireCombatant(damaged, spellCasterId).concentration).toBeNull();
 
     const expiringEffect = {
-      ...hideousLaughterEffect,
+      ...saveGatedConditionWithRepeatEffect,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: spellCasterId,
@@ -340,7 +393,8 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         .set(spellCasterId, {
           ...requireCombatant(cast.state, spellCasterId),
           concentration: {
-            sourceProcedureRef: hideousLaughterEffect.sourceProcedureRef,
+            sourceProcedureRef:
+              saveGatedConditionWithRepeatEffect.sourceProcedureRef,
             effectKind: "spellEffect",
           },
         })
@@ -356,11 +410,15 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     if (expiringTargetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const expiringRepeatSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      expiringEffect,
-      "endTurn",
-    );
+    const expiringRepeatSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(
+          expiringTargetTurn.state,
+          expiringEffect,
+        ),
+        { trigger: "endTurn" },
+      );
     const expired = endTurn({
       state: expiringTargetTurn.state,
       actorId: spellTargetId,
@@ -380,7 +438,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(hasCondition(expiredTarget.conditions, "incapacitated")).toBe(false);
     expect(
       expiredTarget.activeEffects.some(
-        (effect) => effect.kind === "hideousLaughter",
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
     ).toBe(false);
 
@@ -392,7 +450,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     });
     const hideousAct = spellAct({
       session: spellDamageState,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
     });
     const hideousTarget = requireHole(
       hideousAct.initialHoles,
@@ -401,7 +459,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const hideousTargetFill = spellTargetListFill(
       hideousTarget,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const hideousInitialSave = requireResultHole(
@@ -509,7 +567,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     );
     expect(spellDamageRepeatSave).toEqual(
       expect.objectContaining({
-        hideousLaughterRepeatSave: expect.objectContaining({
+        saveGatedConditionRepeatSave: expect.objectContaining({
           targetId: spellTargetId,
           trigger: "damage",
         }),
@@ -548,21 +606,21 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   });
 
   test("a failed Hideous Laughter save opens the target's readied-spell Reaction", () => {
-    const spell = spellRecord(hideousLaughterUnitId);
+    const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
     const session = spellBattleWithTargetReadiedRay({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
       session,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const needsSave = resolveBattleSubject({
@@ -587,20 +645,20 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(hasCondition(target.conditions, "prone")).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
     expect(target.activeEffects).toContainEqual(
-      expect.objectContaining({ kind: "hideousLaughter" }),
+      expect.objectContaining({ kind: "saveGatedConditionWithRepeat" }),
     );
   });
 
   test("Heightened Hideous Laughter carries Disadvantage from failed initial save to end-turn repeat save", () => {
-    const resolved = castHeightenedHideousLaughter();
+    const resolved = castHeightenedStagedCondition();
     const laughed = requireCombatant(resolved.state, spellTargetId);
     const effect = laughed.activeEffects.find(
       (
         candidate,
       ): candidate is Extract<
         BattleActiveEffect,
-        { readonly kind: "hideousLaughter" }
-      > => candidate.kind === "hideousLaughter",
+        { readonly kind: "saveGatedConditionWithRepeat" }
+      > => candidate.kind === "saveGatedConditionWithRepeat",
     );
     if (effect === undefined) {
       throw new Error("Expected Heightened Hideous Laughter active effect.");
@@ -626,7 +684,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const repeatSave = requireResultHole(needsRepeatSave, "savingThrowOutcome");
     expect(repeatSave).toEqual(
       expect.objectContaining({
-        hideousLaughterRepeatSave: expect.objectContaining({
+        saveGatedConditionRepeatSave: expect.objectContaining({
           targetId: spellTargetId,
           trigger: "endTurn",
         }),
@@ -638,7 +696,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   });
 
   test("Heightened Hideous Laughter requests its target before the saving throw", () => {
-    const { session, act, targetFill } = heightenedHideousLaughterFixture();
+    const { session, act, targetFill } = heightenedStagedConditionFixture();
     const needsHeightenedTarget = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
@@ -663,44 +721,50 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   });
 
   test("Heightened Hideous Laughter damage repeat save cancels damage Advantage to normal", () => {
-    const resolved = castHeightenedHideousLaughter();
+    const resolved = castHeightenedStagedCondition();
     const laughed = requireCombatant(resolved.state, spellTargetId);
     const effect = laughed.activeEffects.find(
       (
         candidate,
       ): candidate is Extract<
         BattleActiveEffect,
-        { readonly kind: "hideousLaughter" }
-      > => candidate.kind === "hideousLaughter",
+        { readonly kind: "saveGatedConditionWithRepeat" }
+      > => candidate.kind === "saveGatedConditionWithRepeat",
     );
     if (effect === undefined) {
       throw new Error("Expected Heightened Hideous Laughter active effect.");
     }
 
-    const damageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      effect,
-      "damage",
-    );
+    const damageSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(resolved.state, effect),
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("heightened-hideous-laughter-damage-save"),
+          ),
+        },
+      );
     expect(damageSaveHole.targetRollModes).toEqual([
       { targetId: spellTargetId, rollMode: "normal" },
     ]);
   });
   test("Hideous Laughter does not leave Concentration after all initial saves succeed", () => {
-    const spell = spellRecord(hideousLaughterUnitId);
+    const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
       session: state,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const initialSave = requireResultHole(
@@ -730,47 +794,48 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(hasCondition(target.conditions, "prone")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
     expect(
-      target.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+      target.activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
     ).toBe(false);
   });
   test("Hideous Laughter applies each condition independently of condition immunity", () => {
     const castWithConditionImmunity = (
       immuneCondition: "prone" | "incapacitated",
     ) => {
-      const spell = spellRecord(hideousLaughterUnitId);
+      const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
       const baseState = spellBattle({ preparedSpells: [spell] });
-      const baseTarget = requireCombatant(baseState.state, spellTargetId);
-      const state: BattleRuntimeSession = battleRuntimeSessionForTest({
-        ...baseState,
-        state: {
-          ...baseState.state,
-          combatants: new Map(baseState.state.combatants).set(spellTargetId, {
-            ...baseTarget,
-            activeEffects: [
-              ...baseTarget.activeEffects,
-              {
-                kind: "conditionImmunity",
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(heroismUnitId),
-                ),
-                sourceCombatantId: spellCasterId,
-                condition: immuneCondition,
-                conditionHadNonSpellSource: false,
-                expiresAt: {
-                  kind: "duration",
-                  durationTicks: elapsedTimeTicks(600),
-                },
-              },
-            ],
-          }),
+      requireCombatant(baseState.state, spellTargetId);
+      const allocatedState = battleStateWithAllocatedEffectForTest({
+        state: baseState.state,
+        ownerId: spellTargetId,
+        effect: {
+          kind: "conditionImmunity",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(heroismUnitId),
+          ),
+          sourceCombatantId: spellCasterId,
+          condition: immuneCondition,
+          conditionHadNonSpellSource: false,
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(600),
+          },
         },
       });
-      const act = spellAct({ session: state, spellId: hideousLaughterUnitId });
+      const state: BattleRuntimeSession = battleRuntimeSessionForTest({
+        ...baseState,
+        state: allocatedState,
+      });
+      const act = spellAct({
+        session: state,
+        spellId: saveGatedConditionWithRepeatUnitId,
+      });
       const targetHole = requireHole(act.initialHoles, "spellTargetList");
       const targetFill = spellTargetListFill(
         targetHole,
         spellCasterId,
-        hideousLaughterUnitId,
+        saveGatedConditionWithRepeatUnitId,
         [spellTargetId],
       );
       const initialSave = requireResultHole(
@@ -804,7 +869,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     );
     expect(
       proneImmuneTarget.activeEffects.some(
-        (effect) => effect.kind === "hideousLaughter",
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
     ).toBe(true);
 
@@ -818,49 +883,49 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     ).toBe(false);
     expect(
       incapacitatedImmuneTarget.activeEffects.some(
-        (effect) => effect.kind === "hideousLaughter",
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
     ).toBe(true);
   });
   test("Hideous Laughter repeat saves clear only the saved effect", () => {
-    const spell = spellRecord(hideousLaughterUnitId);
+    const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
     const baseState = spellBattle({
       preparedSpells: [spell],
       targetHp: 20,
       targetMaxHp: 20,
     });
     const target = requireCombatant(baseState.state, spellTargetId);
-    const firstEffect = {
-      kind: "hideousLaughter",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(hideousLaughterUnitId),
+    const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseState,
+      spellCasterId,
+      spellSlotInvocationRef(
+        saveGatedConditionWithRepeatUnitId,
+        1,
+        "saveGatedConditionWithRepeat",
       ),
+    );
+    const firstEffectTemplate = {
+      kind: "saveGatedConditionWithRepeat",
+      sourceProcedureRef,
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
       repeatSaveRollMode: null,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",
         combatantId: spellCasterId,
-        durationTicks: hideousLaughterDurationTicks,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "hideousLaughter" }
-    >;
-    const secondEffect = {
-      ...firstEffect,
-      sourceCombatantId: spellTargetId,
+    } as const;
+    const secondEffectTemplate = {
+      ...firstEffectTemplate,
+      sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "concentration",
-        combatantId: spellTargetId,
-        durationTicks: hideousLaughterDurationTicks,
+        combatantId: spellCasterId,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "hideousLaughter" }
-    >;
+    } as const;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -868,57 +933,107 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         "incapacitated",
       ),
     );
-    const state: BattleState = {
+    const preparedState: BattleState = {
       ...baseState.state,
       combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...affectedTarget,
-        activeEffects: [firstEffect, secondEffect],
       }),
     };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: preparedState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: firstEffectTemplate,
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: secondEffectTemplate,
+        },
+      ],
+    });
+    const [firstOccurrence, secondOccurrence] = allocated.occurrences;
+    if (
+      firstOccurrence?.kind !== "activeEffect" ||
+      firstOccurrence.effect.kind !== "saveGatedConditionWithRepeat" ||
+      secondOccurrence?.kind !== "activeEffect" ||
+      secondOccurrence.effect.kind !== "saveGatedConditionWithRepeat"
+    ) {
+      throw new Error("Expected two allocated Hideous Laughter occurrences.");
+    }
+    const firstEffect = firstOccurrence.effect;
+    const secondEffect = secondOccurrence.effect;
+    const state = allocated.state;
 
-    const damageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      firstEffect,
-      "damage",
-    );
+    const damageSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(state, firstEffect),
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("first-allocated-hideous-laughter-damage-save"),
+          ),
+        },
+      );
     const afterDamage = applyBattleHitPointDamage({
       state,
       target: requireCombatant(state, spellTargetId),
       damageAmount: 1,
       deathFailuresAtZeroHp: 1,
-      hideousLaughterDamageRepeatSaves: [
-        savingThrowOutcomeFill(damageSaveHole, [
-          { targetId: spellTargetId, succeeded: true },
-        ]),
-      ],
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: [
+          savingThrowOutcomeFill(damageSaveHole, [
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+        ],
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          holeId("first-allocated-hideous-laughter-damage-save"),
+        ),
+      },
     });
     const damageTarget = requireCombatant(afterDamage, spellTargetId);
     expect(
       damageTarget.activeEffects.filter(
-        (effect) => effect.kind === "hideousLaughter",
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
-    ).toEqual([expect.objectContaining({ sourceCombatantId: spellTargetId })]);
+    ).toEqual([expect.objectContaining({ sourceCombatantId: spellCasterId })]);
     expect(hasCondition(damageTarget.conditions, "prone")).toBe(true);
     expect(hasCondition(damageTarget.conditions, "incapacitated")).toBe(true);
 
-    const secondDamageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      secondEffect,
-      "damage",
-    );
+    const secondDamageSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(state, secondEffect),
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("first-allocated-hideous-laughter-damage-save"),
+          ),
+        },
+      );
     const afterAllDamageSaves = applyBattleHitPointDamage({
       state,
       target: requireCombatant(state, spellTargetId),
       damageAmount: 1,
       deathFailuresAtZeroHp: 1,
-      hideousLaughterDamageRepeatSaves: [
-        savingThrowOutcomeFill(damageSaveHole, [
-          { targetId: spellTargetId, succeeded: true },
-        ]),
-        savingThrowOutcomeFill(secondDamageSaveHole, [
-          { targetId: spellTargetId, succeeded: true },
-        ]),
-      ],
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: [
+          savingThrowOutcomeFill(damageSaveHole, [
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+          savingThrowOutcomeFill(secondDamageSaveHole, [
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+        ],
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          holeId("first-allocated-hideous-laughter-damage-save"),
+        ),
+      },
     });
     const allDamageSavesTarget = requireCombatant(
       afterAllDamageSaves,
@@ -926,7 +1041,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     );
     expect(
       allDamageSavesTarget.activeEffects.some(
-        (effect) => effect.kind === "hideousLaughter",
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
     ).toBe(false);
     expect(hasCondition(allDamageSavesTarget.conditions, "prone")).toBe(false);
@@ -938,16 +1053,18 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const firstEndTurnHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      firstEffect,
-      "endTurn",
-    );
-    const secondEndTurnHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      secondEffect,
-      "endTurn",
-    );
+    const firstEndTurnHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(state, firstEffect),
+        { trigger: "endTurn" },
+      );
+    const secondEndTurnHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        requireBoundStagedConditionEffect(state, secondEffect),
+        { trigger: "endTurn" },
+      );
     const afterEndTurn = endTurn({
       state: targetTurn.state,
       actorId: spellTargetId,
@@ -966,14 +1083,14 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const endTurnTarget = requireCombatant(afterEndTurn.state, spellTargetId);
     expect(
       endTurnTarget.activeEffects.filter(
-        (effect) => effect.kind === "hideousLaughter",
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
-    ).toEqual([expect.objectContaining({ sourceCombatantId: spellTargetId })]);
+    ).toEqual([expect.objectContaining({ sourceCombatantId: spellCasterId })]);
     expect(hasCondition(endTurnTarget.conditions, "prone")).toBe(true);
     expect(hasCondition(endTurnTarget.conditions, "incapacitated")).toBe(true);
   });
   test("Hideous Laughter does not break Concentration when Incapacitated immunity prevents Incapacitated", () => {
-    const spell = spellRecord(hideousLaughterUnitId);
+    const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
     const baseState = spellBattle({ preparedSpells: [spell] });
     const target = requireCombatant(baseState.state, spellTargetId);
     const targetConcentration = {
@@ -982,50 +1099,64 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       ),
       effectKind: "spellEffect" as const,
     };
+    const concentratingState: BattleState = {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
+        ...target,
+        concentration: targetConcentration,
+      }),
+    };
+    const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: concentratingState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "conditionImmunity",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(heroismUnitId),
+            ),
+            sourceCombatantId: spellTargetId,
+            condition: "incapacitated",
+            conditionHadNonSpellSource: false,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "turnStartTemporaryHitPoints",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(heroismUnitId),
+            ),
+            sourceCombatantId: spellTargetId,
+            amount: 3,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellTargetId,
+            },
+          },
+        },
+      ],
+    }).state;
     const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
-      state: {
-        ...baseState.state,
-        combatants: new Map(baseState.state.combatants).set(spellTargetId, {
-          ...target,
-          concentration: targetConcentration,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "conditionImmunity",
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(heroismUnitId),
-              ),
-              sourceCombatantId: spellTargetId,
-              condition: "incapacitated",
-              conditionHadNonSpellSource: false,
-              expiresAt: {
-                kind: "duration",
-                durationTicks: elapsedTimeTicks(600),
-              },
-            },
-            {
-              kind: "turnStartTemporaryHitPoints",
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(heroismUnitId),
-              ),
-              sourceCombatantId: spellTargetId,
-              amount: 3,
-              expiresAt: {
-                kind: "concentration",
-                combatantId: spellTargetId,
-              },
-            },
-          ],
-        }),
-      },
+      state: allocatedState,
     });
-    const act = spellAct({ session: state, spellId: hideousLaughterUnitId });
+    const act = spellAct({
+      session: state,
+      spellId: saveGatedConditionWithRepeatUnitId,
+    });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const initialSave = requireResultHole(

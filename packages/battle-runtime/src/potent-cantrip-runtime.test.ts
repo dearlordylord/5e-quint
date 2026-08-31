@@ -15,7 +15,7 @@ import {
 import {
   characterBattleFeatureInitForTest,
   attackRollFill,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleId,
@@ -252,7 +252,7 @@ describe("Potent Cantrip runtime", () => {
     }
     const charmEffect = {
       kind: "spellCondition",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "potent-cantrip-relationship-effect",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(

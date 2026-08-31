@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
@@ -15,7 +15,7 @@ import {
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
-import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
+import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
 describe("Find Familiar projection failures", () => {
   test("preserves every accumulated unsupported procedure location", () => {
@@ -25,7 +25,7 @@ describe("Find Familiar projection failures", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Find Familiar form projection failed in actions procedure 1, actions procedure 3: the procedure binding is not supported by battle execution.",
+        "Companion form projection failed in actions procedure 1, actions procedure 3: the procedure binding is not supported by battle execution.",
     });
   });
 
@@ -36,7 +36,7 @@ describe("Find Familiar projection failures", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Find Familiar form projection failed: battle initialization requires a concrete Size.",
+        "Companion form projection failed: battle initialization requires a concrete Size.",
     });
   });
 });
@@ -51,12 +51,12 @@ function castInvalidFamiliar(statBlock: StatBlockRecord) {
       }),
     ],
   });
-  if (Either.isLeft(started)) {
+  if (Result.isFailure(started)) {
     throw new Error("Expected the Familiar projection test battle.");
   }
 
-  return castResolvedFindFamiliar({
-    state: started.right.state,
+  return castResolvedSpawnedCompanion({
+    state: started.success.state,
     casterId: combatantId("find-familiar-projection-caster"),
     familiarId: combatantId("find-familiar-projection-companion"),
     ammunitionStocks: [],

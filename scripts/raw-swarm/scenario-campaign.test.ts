@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test, vi } from "vitest";
 
 import {
@@ -526,10 +526,10 @@ describe("scenario generation campaign", () => {
       resolve(campaignDirectory, name),
     );
     for (const path of paths) {
-      const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
+      const decoded = Schema.decodeUnknownResult(ScenarioCampaignConfigSchema, {
         onExcessProperty: "error",
       })(JSON.parse(readFileSync(path, "utf8")));
-      expect(Either.isRight(decoded), path).toBe(true);
+      expect(Result.isSuccess(decoded), path).toBe(true);
     }
   });
   test("rejects an incoherent candidate before invoking whole-scenario review", async () => {
@@ -562,12 +562,12 @@ describe("scenario generation campaign", () => {
       { select: () => 0 },
     );
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right.tag).toBe("candidateRejected");
-      if (result.right.tag === "candidateRejected") {
-        expect(result.right.candidateStagePlan.outcome.tag).toBe("rejected");
-        expect(result.right.candidateStagePlan.identity).toMatchObject({
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success.tag).toBe("candidateRejected");
+      if (result.success.tag === "candidateRejected") {
+        expect(result.success.candidateStagePlan.outcome.tag).toBe("rejected");
+        expect(result.success.candidateStagePlan.identity).toMatchObject({
           tag: "candidate",
           campaignId: "synthetic-battle-campaign",
           candidateId: expect.stringMatching(
@@ -578,7 +578,7 @@ describe("scenario generation campaign", () => {
             .digest("hex"),
         });
         expect(
-          result.right.candidateStagePlan.stages.find(
+          result.success.candidateStagePlan.stages.find(
             ({ stage }) => stage === "scenarioCompositeReview",
           )?.modelInvocation,
         ).toBe("none");
@@ -629,9 +629,9 @@ describe("scenario generation campaign", () => {
       select: () => 1,
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right).toMatchObject({
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success).toMatchObject({
         scenario: "iteration 2 candidate B",
         iterations: 2,
         stopReason: "ready",
@@ -686,14 +686,14 @@ describe("scenario generation campaign", () => {
       { select: (count) => count - 1 },
     );
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right).toMatchObject({
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success).toMatchObject({
         iterations: 3,
         stopReason: "ready",
         rawReview: { classification: "unsupported" },
       });
-      expect(finalScenarioDisposition(result.right)).toBe("admitted");
+      expect(finalScenarioDisposition(result.success)).toBe("admitted");
     }
     expect(generationInputs[2]).toMatchObject({
       priorRevision: {
@@ -759,7 +759,7 @@ describe("scenario generation campaign", () => {
       },
       { select: () => 0 },
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(reviewCount).toBe(2);
     expect(generationInputs[1]).toMatchObject({
       priorRevision: {
@@ -837,10 +837,12 @@ describe("scenario generation campaign", () => {
       { select: () => 0 },
     );
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(finalScenarioDisposition(result.right)).toBe("rejected");
-      expect(result.right.scenarioQuality.classification).toBe("needsRevision");
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(finalScenarioDisposition(result.success)).toBe("rejected");
+      expect(result.success.scenarioQuality.classification).toBe(
+        "needsRevision",
+      );
     }
     expect(reviewInputs).toEqual([
       {
@@ -885,21 +887,21 @@ describe("scenario generation campaign", () => {
     };
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         await runScenarioCampaign({ ...config, minimumIterations: 5 }, agents, {
           select: () => 0,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         await runScenarioCampaign({ ...config, reviewMilestone: 0 }, agents, {
           select: () => 0,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         await runScenarioCampaign(
           {
             ...config,
@@ -913,10 +915,10 @@ describe("scenario generation campaign", () => {
     const result = await runScenarioCampaign(config, agents, {
       select: () => 0,
     });
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(finalScenarioDisposition(result.right)).toBe("rejected");
-      expect(result.right.rawReview.classification).toBe("contradictory");
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(finalScenarioDisposition(result.success)).toBe("rejected");
+      expect(result.success.rawReview.classification).toBe("contradictory");
     }
     expect(reviewScenario).toHaveBeenCalled();
 
@@ -925,10 +927,10 @@ describe("scenario generation campaign", () => {
       agents,
       { select: () => 0 },
     );
-    expect(Either.isRight(contradictoryWithUnsupportedAdmission)).toBe(true);
-    if (Either.isRight(contradictoryWithUnsupportedAdmission)) {
+    expect(Result.isSuccess(contradictoryWithUnsupportedAdmission)).toBe(true);
+    if (Result.isSuccess(contradictoryWithUnsupportedAdmission)) {
       expect(
-        finalScenarioDisposition(contradictoryWithUnsupportedAdmission.right),
+        finalScenarioDisposition(contradictoryWithUnsupportedAdmission.success),
       ).toBe("rejected");
     }
 
@@ -960,18 +962,18 @@ describe("scenario generation campaign", () => {
       },
       { select: () => 0 },
     );
-    expect(Either.isRight(unavailableScenario)).toBe(true);
-    if (Either.isRight(unavailableScenario)) {
-      expect(finalScenarioDisposition(unavailableScenario.right)).toBe(
+    expect(Result.isSuccess(unavailableScenario)).toBe(true);
+    if (Result.isSuccess(unavailableScenario)) {
+      expect(finalScenarioDisposition(unavailableScenario.success)).toBe(
         "rejected",
       );
-      expect(unavailableScenario.right.contentReview.classification).toBe(
+      expect(unavailableScenario.success.contentReview.classification).toBe(
         "invalidUnavailableSelection",
       );
     }
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         await runScenarioCampaign(
           config,
           {
@@ -1002,7 +1004,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         await runScenarioCampaign(
           { ...config, contentAvailabilityIntent: "probeUnavailableContent" },
           agents,
@@ -1041,9 +1043,11 @@ describe("scenario generation campaign", () => {
       },
       { select: () => 0 },
     );
-    expect(Either.isRight(deliberateProbe)).toBe(true);
-    if (Either.isRight(deliberateProbe)) {
-      expect(finalScenarioDisposition(deliberateProbe.right)).toBe("admitted");
+    expect(Result.isSuccess(deliberateProbe)).toBe(true);
+    if (Result.isSuccess(deliberateProbe)) {
+      expect(finalScenarioDisposition(deliberateProbe.success)).toBe(
+        "admitted",
+      );
     }
 
     const duplicateBatch = await runScenarioCampaign(
@@ -1056,7 +1060,7 @@ describe("scenario generation campaign", () => {
       },
       { select: () => 0 },
     );
-    expect(Either.isLeft(duplicateBatch)).toBe(true);
+    expect(Result.isFailure(duplicateBatch)).toBe(true);
   });
 
   test("carries an invalid unavailable-selection critique in probe campaigns", async () => {
@@ -1218,7 +1222,7 @@ describe("scenario generation campaign", () => {
       sdkCapabilityIntent: "supportedOnly" | "probeUnsupportedCapability",
       value: unknown,
     ) =>
-      Schema.decodeUnknownEither(
+      Schema.decodeUnknownResult(
         scenarioCompositeReviewSchemaForIntents({
           contentAvailabilityIntent,
           sdkCapabilityIntent,
@@ -1227,7 +1231,7 @@ describe("scenario generation campaign", () => {
       )(value);
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode("availableOnly", "supportedOnly", {
           ...review({
             contentAvailability: supportedContent,
@@ -1237,7 +1241,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode("availableOnly", "supportedOnly", {
           ...review({
             contentAvailability: unavailableProbeContent,
@@ -1247,7 +1251,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode("availableOnly", "supportedOnly", {
           ...review({
             contentAvailability: supportedContent,
@@ -1262,7 +1266,7 @@ describe("scenario generation campaign", () => {
     ).toBe(true);
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode("probeUnavailableContent", "probeUnsupportedCapability", {
           ...review({
             contentAvailability: unavailableProbeContent,
@@ -1272,7 +1276,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode("probeUnavailableContent", "probeUnsupportedCapability", {
           ...review({
             contentAvailability: {
@@ -1290,7 +1294,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode("probeUnavailableContent", "probeUnsupportedCapability", {
           ...review({
             contentAvailability: supportedContent,
@@ -1300,7 +1304,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode("probeUnavailableContent", "probeUnsupportedCapability", {
           ...review({
             contentAvailability: unavailableProbeContent,
@@ -1323,7 +1327,7 @@ describe("scenario generation campaign", () => {
           sdkCapabilityIntent,
         });
         expect(
-          Either.isRight(
+          Result.isSuccess(
             classifyScenarioReviewOutputSchema({
               schemaVersion: 3,
               outputJsonSchema: codexOutputJsonSchema(schema),
@@ -1342,12 +1346,12 @@ describe("scenario generation campaign", () => {
       schemaVersion: 3,
       outputJsonSchema: strictOutputJsonSchema,
     });
-    expect(Either.isRight(strictCurrent)).toBe(true);
-    if (Either.isRight(strictCurrent)) {
-      expect(strictCurrent.right.tag).toBe("intentSpecificCurrent");
+    expect(Result.isSuccess(strictCurrent)).toBe(true);
+    if (Result.isSuccess(strictCurrent)) {
+      expect(strictCurrent.success.tag).toBe("intentSpecificCurrent");
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         classifyScenarioReviewOutputSchema({
           schemaVersion: 2,
           outputJsonSchema: strictOutputJsonSchema,
@@ -1400,9 +1404,9 @@ describe("scenario generation campaign", () => {
       maliciousAgents,
       { select: () => 0 },
     );
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toBe(
         "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
       );
     }
@@ -1414,8 +1418,8 @@ describe("scenario generation campaign", () => {
       required: ["result"],
     });
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(ScenarioRawReviewSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(ScenarioRawReviewSchema, {
           onExcessProperty: "error",
         })({
           classification: "supported",
@@ -1450,7 +1454,7 @@ describe("scenario generation campaign", () => {
     const noAdmittedScenarios = { tag: "noAdmittedScenarios" } as const;
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         verifyFinalScenarioReview(review, {
           scenarioId,
           gitSha,
@@ -1473,7 +1477,7 @@ describe("scenario generation campaign", () => {
       },
     };
     expect(
-      Either.isRight(
+      Result.isSuccess(
         verifyFinalScenarioReview(currentReview, {
           scenarioId,
           gitSha,
@@ -1483,7 +1487,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(
           {
             ...currentReview,
@@ -1518,7 +1522,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(currentReview, {
           scenarioId,
           gitSha,
@@ -1542,7 +1546,7 @@ describe("scenario generation campaign", () => {
       }),
     ).toBe("rejected");
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(
           { ...currentReview, scenarioQuality: undefined },
           { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
@@ -1550,7 +1554,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(
           {
             ...review,
@@ -1564,7 +1568,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(
           {
             ...review,
@@ -1575,7 +1579,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(
           {
             ...review,
@@ -1586,7 +1590,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(review, {
           scenarioId,
           gitSha: Schema.decodeUnknownSync(GitShaSchema)("b".repeat(40)),
@@ -1596,7 +1600,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         verifyFinalScenarioReview(
           {
             ...review,
@@ -1611,7 +1615,7 @@ describe("scenario generation campaign", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         verifyFinalScenarioReview(
           { ...review, disposition: "admitted" },
           { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
@@ -1690,9 +1694,9 @@ describe("scenario generation campaign", () => {
         ],
       },
     });
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(finalScenarioDisposition(result.right)).toBe("rejected");
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(finalScenarioDisposition(result.success)).toBe("rejected");
     }
   });
 
@@ -1792,7 +1796,7 @@ describe("scenario generation campaign", () => {
         expectedScenarioIds: ["admitted-synthetic-scenario"],
       },
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(generationInputs[1]?.priorRevision?.critiques).toEqual(
       expect.arrayContaining([
         expect.stringContaining("outside the geometry experiment envelope"),
@@ -1835,9 +1839,9 @@ describe("scenario generation campaign", () => {
     const probe = await runScenarioCampaign(probeConfig, baseAgents, {
       select: () => 0,
     });
-    expect(Either.isRight(probe)).toBe(true);
-    if (Either.isRight(probe)) {
-      expect(finalScenarioDisposition(probe.right)).toBe("admitted");
+    expect(Result.isSuccess(probe)).toBe(true);
+    if (Result.isSuccess(probe)) {
+      expect(finalScenarioDisposition(probe.success)).toBe("admitted");
     }
 
     const nowSupported = await runScenarioCampaign(
@@ -1867,9 +1871,9 @@ describe("scenario generation campaign", () => {
       },
       { select: () => 0 },
     );
-    expect(Either.isRight(nowSupported)).toBe(true);
-    if (Either.isRight(nowSupported)) {
-      expect(finalScenarioDisposition(nowSupported.right)).toBe("rejected");
+    expect(Result.isSuccess(nowSupported)).toBe(true);
+    if (Result.isSuccess(nowSupported)) {
+      expect(finalScenarioDisposition(nowSupported.success)).toBe("rejected");
     }
   });
 
@@ -1978,17 +1982,17 @@ describe("scenario generation campaign", () => {
         expectedScenarioIds: [projection.scenarioId],
       },
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(comparisons).toHaveLength(6);
     expect(reviewComparison).toMatchObject({
       conclusion: "meaningfullyDistinct",
     });
-    if (Either.isRight(result) && !("tag" in result.right)) {
-      expect(result.right.catalogueComparison).toMatchObject({
+    if (Result.isSuccess(result) && !("tag" in result.success)) {
+      expect(result.success.catalogueComparison).toMatchObject({
         tag: "retained",
         comparison: { conclusion: "meaningfullyDistinct" },
       });
-      expect(finalScenarioDisposition(result.right)).toBe("admitted");
+      expect(finalScenarioDisposition(result.success)).toBe("admitted");
     }
   });
 
@@ -2030,7 +2034,7 @@ describe("scenario generation campaign", () => {
       { select: () => 0 },
       { tag: "required", batches: [], expectedScenarioIds: [] },
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(retained).toMatchObject({
       tag: "retained",
       comparison: {
@@ -2133,10 +2137,10 @@ describe("scenario generation campaign", () => {
         expectedScenarioIds: [projection.scenarioId],
       },
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(reviewComparison).toMatchObject({ conclusion: "redundant" });
-    if (Either.isRight(result) && !("tag" in result.right)) {
-      expect(finalScenarioDisposition(result.right)).toBe("rejected");
+    if (Result.isSuccess(result) && !("tag" in result.success)) {
+      expect(finalScenarioDisposition(result.success)).toBe("rejected");
     }
   });
 });

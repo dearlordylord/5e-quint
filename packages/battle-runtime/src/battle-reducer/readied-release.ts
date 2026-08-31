@@ -328,7 +328,7 @@ export function resolveReleaseReadiedMovementCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Release Readied Movement only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
+      "Release Readied Movement only accepts Movement, ground-piercing movement effect damage, Concentration, and damage disposition fills.",
     );
   }
   /* v8 ignore stop -- @preserve */

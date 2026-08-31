@@ -3,7 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-flaming-sphere-hazard-ram
 
 module battleRuntimeFlamingSphereFacts {
-  import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
 
   pure val flamingSphereDurationTicks: int = 10
   pure val flamingSphereDiameterFeet: int = 5
@@ -12,11 +12,12 @@ module battleRuntimeFlamingSphereFacts {
   pure val flamingSphereBaseDamageDice: int = 2
 
   pure def flamingSphereDamageDice(slotLevel: int): int =
-    flamingSphereBaseDamageDice + (slotLevel - flamingSphereMinimumSlotLevel)
+    persistentAreaScaledDamageDice(
+      slotLevel,
+      flamingSphereMinimumSlotLevel,
+      flamingSphereBaseDamageDice,
+    )
 
-  pure def flamingSphereDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int = {
-    val branch = spellSaveGateBranch(savingThrowSucceeded)
-    val damageResult = spellSaveGateDamageResult(branch, SpellSaveGateHalfDamageOnSuccess)
-    spellSaveGateDamageAmount(rolledDamage, damageResult)
-  }
+  pure def flamingSphereDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
+    persistentAreaDamageAfterSave(rolledDamage, savingThrowSucceeded)
 }

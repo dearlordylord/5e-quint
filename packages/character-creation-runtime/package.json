@@ -5,7 +5,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./workflow-horizon": "./src/workflow-horizon.ts"
   },
   "imports": {
     "#/*": "./src/*"
@@ -23,14 +24,14 @@
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "effect": "^3.21.0"
+    "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
     "@firfi/quint-connect": "catalog:",
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11",
     "zod": "^4.3.6"
   }

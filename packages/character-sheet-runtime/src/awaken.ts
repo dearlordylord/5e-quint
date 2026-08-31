@@ -4,8 +4,8 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   AWAKEN_MATERIAL_COMPONENTS,
@@ -32,7 +32,7 @@ export function castAwaken(input: {
   readonly unitLibrary: UnitCatalog;
   readonly casting: CharacterSheetAwakenCasting;
   readonly target: CharacterSheetAwakenTarget;
-}): Either.Either<CharacterSheetAwakenResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetAwakenResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -67,10 +67,10 @@ function awakenTargetIssue(target: CharacterSheetAwakenTarget): string | null {
 }
 
 function awakenInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetAwakenCasting;
   readonly target: CharacterSheetAwakenTarget;
-}): Either.Either<CharacterSheetAwakenInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetAwakenInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Awaken support profile required by this projector. */
   if (
@@ -82,11 +82,11 @@ function awakenInvocationFromSpell(input: {
     spell.mechanics.duration.kind !== "instantaneous" ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !==
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !==
       AWAKEN_MATERIAL_COMPONENTS.agateCostGpMinimum ||
-    !("materialConsumed" in spell.mechanics.components) ||
-    spell.mechanics.components.materialConsumed !== true
+    spell.mechanics.components.material.consumed !== true
   ) {
     return characterSheetIssue(
       "Awaken requires the supported level-5 touch transformation profile.",
@@ -131,14 +131,14 @@ function awakenInvocationFromSpell(input: {
     amount: AWAKEN_CHARM_DURATION_DAYS,
   });
   /* v8 ignore start -- @preserve -- The fixed thirty-day charm duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(charmDuration)) {
+  if (Result.isFailure(charmDuration)) {
     return characterSheetIssue("Awaken requires a supported charm duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "awaken",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -170,7 +170,7 @@ function awakenInvocationFromSpell(input: {
     },
     charm: {
       condition: "charmed",
-      duration: charmDuration.right,
+      duration: charmDuration.success,
       endsIfCasterOrAlliesDamageTarget: true,
       attitudeAfterConditionEndsOwner: "gm-table",
     },

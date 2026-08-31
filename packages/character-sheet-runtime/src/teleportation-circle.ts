@@ -4,8 +4,8 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   TELEPORTATION_CIRCLE_MATERIAL_COMPONENTS,
@@ -28,7 +28,7 @@ export function castTeleportationCircle(input: {
   readonly unitLibrary: UnitCatalog;
   readonly destination: CharacterSheetTeleportationCircleDestination;
   readonly casting: CharacterSheetTeleportationCircleCasting;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetTeleportationCircleResult,
   CharacterSheetIssue
 > {
@@ -49,10 +49,10 @@ export function castTeleportationCircle(input: {
 }
 
 function teleportationCircleInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly destination: CharacterSheetTeleportationCircleDestination;
   readonly casting: CharacterSheetTeleportationCircleCasting;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetTeleportationCircleInvocation,
   CharacterSheetIssue
 > {
@@ -68,9 +68,10 @@ function teleportationCircleInvocationFromSpell(input: {
     spell.mechanics.duration.kind !== "timed" ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== false ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !== 50 ||
-    spell.mechanics.components.materialConsumed !== true
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !== 50 ||
+    spell.mechanics.components.material.consumed !== true
   ) {
     return characterSheetIssue(
       "Teleportation Circle requires the supported level-5 travel-circle profile.",
@@ -79,7 +80,7 @@ function teleportationCircleInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The authored one-round duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue(
       "Teleportation Circle requires a supported duration.",
     );
@@ -117,9 +118,9 @@ function teleportationCircleInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "teleportationCircle",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -130,7 +131,7 @@ function teleportationCircleInvocationFromSpell(input: {
     castingTime: { kind: "minutes", amount: 1 },
     rangeFeet: 10,
     drawnCircleRadiusFeet: 5,
-    duration: duration.right,
+    duration: duration.success,
     materialComponents: input.casting.materialComponents,
     destination: input.destination,
     portal: {

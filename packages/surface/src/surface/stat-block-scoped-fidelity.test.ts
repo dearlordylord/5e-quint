@@ -15,7 +15,7 @@ import {
   type SrdStatBlockParityIssue,
 } from "../../../../scripts/srd521-stat-block-parity.ts";
 
-import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import {
   normalizeStatBlockIdentity,
   type NormalizedStatBlockIdentity,

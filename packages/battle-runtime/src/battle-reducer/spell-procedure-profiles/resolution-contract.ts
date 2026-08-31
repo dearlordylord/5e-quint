@@ -24,7 +24,7 @@ import type {
 import type {
   BattleSpellProcedureExecution,
   SpellProcedureExecutionByProcedure,
-  SpellProcedureKey,
+  BattleSpellProcedureKey,
 } from "../../character-execution.ts";
 import type {
   BattleProcedureExecutionRef,
@@ -78,7 +78,9 @@ type TriggeredReactionSpellResolutionInput = BattleResolutionInputForSubject<
   readonly frame: BattleInterruptCheckpoint;
 };
 
-type SpellProcedureActionCostResolutionInput<P extends SpellProcedureKey> = [
+type SpellProcedureActionCostResolutionInput<
+  P extends BattleSpellProcedureKey,
+> = [
   Exclude<SpellProcedureActionCost<P>, "magicAction" | "bonusAction">,
 ] extends [never]
   ?
@@ -90,30 +92,33 @@ type SpellProcedureActionCostResolutionInput<P extends SpellProcedureKey> = [
           : BonusActionSpellBattleResolutionInput)
   : never;
 
-type SpellProcedureExecutionClassResolutionInput<P extends SpellProcedureKey> =
+type SpellProcedureExecutionClassResolutionInput<
+  P extends BattleSpellProcedureKey,
+> =
   SpellExecutionClassForProcedure<P> extends "bonusActionCast"
     ? BonusActionSpellBattleResolutionInput
     : SpellExecutionClassForProcedure<P> extends "actionCast" | "actionCostCast"
       ? ActionSpellBattleResolutionInput
       : never;
 
-export type HypnoticPatternStoredGlyphRelease = {
+export type SaveGatedAreaControlStoredGlyphRelease = {
   readonly kind: "storedGlyphSpellRelease";
   readonly selfOriginAreaAnchorId: CombatantId;
 };
 
-type OrdinarySpellProcedureResolutionOptions<P extends SpellProcedureKey> =
-  (P extends SpellProcedureAcceptingActionCostOverride
-    ? { readonly actionCostOverride?: "magicAction" | "bonusAction" }
-    : { readonly actionCostOverride?: never }) &
-    (P extends SpellProcedureAcceptingMetamagicApplications
-      ? {
-          readonly metamagicApplications: readonly SpellMetamagicApplicationFact[];
-        }
-      : { readonly metamagicApplications?: never });
+type OrdinarySpellProcedureResolutionOptions<
+  P extends BattleSpellProcedureKey,
+> = (P extends SpellProcedureAcceptingActionCostOverride
+  ? { readonly actionCostOverride?: "magicAction" | "bonusAction" }
+  : { readonly actionCostOverride?: never }) &
+  (P extends SpellProcedureAcceptingMetamagicApplications
+    ? {
+        readonly metamagicApplications: readonly SpellMetamagicApplicationFact[];
+      }
+    : { readonly metamagicApplications?: never });
 
-type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
-  P extends "hypnoticPattern"
+type SpellProcedureResolutionOptions<P extends BattleSpellProcedureKey> =
+  P extends "saveGatedAreaControl"
     ?
         | {
             readonly metamagicApplications: readonly CharacterBattleMetamagicOptionFact[];
@@ -121,7 +126,7 @@ type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
           }
         | {
             readonly metamagicApplications?: never;
-            readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease;
+            readonly storedGlyphRelease: SaveGatedAreaControlStoredGlyphRelease;
           }
     : P extends GlyphStoredSingleCreatureActiveEffectProcedure
       ?
@@ -137,10 +142,13 @@ type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
             }
       : OrdinarySpellProcedureResolutionOptions<P>;
 
-export type SpellProcedureResolutionInput<P extends SpellProcedureKey> =
+export type SpellProcedureResolutionInput<P extends BattleSpellProcedureKey> =
   P extends "persistentArmorEffect"
     ? ActionSpellBattleResolutionInput & { readonly castingState: BattleState }
-    : P extends "counterspell" | "shieldReaction" | "featherFallMitigation"
+    : P extends
+          | "spellCastInterruptionReaction"
+          | "triggeredArmorDefense"
+          | "fallingCreatureMitigationReaction"
       ? TriggeredReactionSpellResolutionInput
       : P extends
             | "afterHitDamage"
@@ -149,7 +157,7 @@ export type SpellProcedureResolutionInput<P extends SpellProcedureKey> =
         ? AttackHitDamageResolutionInput
         : P extends "afterHitSaveGatedCondition"
           ? AttackHitSaveGatedConditionResolutionInput
-          : P extends "expeditiousRetreatDash"
+          : P extends "grantedAlternateActionCost"
             ? BonusActionDashSpellBattleResolutionInput
             : P extends SpellProcedureWithQuickenedActionCostRewrite
               ?
@@ -165,7 +173,7 @@ export type SpellProcedureResolutionInput<P extends SpellProcedureKey> =
                         ? never
                         : SpellProcedureExecutionClassResolutionInput<P>);
 
-export type SpellProcedureResolutionFillSet<P extends SpellProcedureKey> =
+export type SpellProcedureResolutionFillSet<P extends BattleSpellProcedureKey> =
   P extends "afterHitSaveGatedCondition"
     ? readonly BattleFill[]
     : P extends "weaponAttackOverride"
@@ -174,15 +182,16 @@ export type SpellProcedureResolutionFillSet<P extends SpellProcedureKey> =
         ? ChainedSpellFillSet
         : OkSpellFillSet;
 
-type OrdinarySpellProcedureExecutionResolution<P extends SpellProcedureKey> =
-  SpellProcedureResolutionOptions<P> & {
-    readonly input: SpellProcedureResolutionInput<P>;
-    readonly actorId: CombatantId;
-    readonly invocation: BattleSpellProcedureExecution<
-      SpellProcedureExecutionByProcedure[P]
-    >;
-    readonly fillSet: SpellProcedureResolutionFillSet<P>;
-  };
+type OrdinarySpellProcedureExecutionResolution<
+  P extends BattleSpellProcedureKey,
+> = SpellProcedureResolutionOptions<P> & {
+  readonly input: SpellProcedureResolutionInput<P>;
+  readonly actorId: CombatantId;
+  readonly invocation: BattleSpellProcedureExecution<
+    SpellProcedureExecutionByProcedure[P]
+  >;
+  readonly fillSet: SpellProcedureResolutionFillSet<P>;
+};
 
 type StoredGlyphExecution<Invocation extends GlyphStoredSpellInvocation> =
   BattleSpellProcedureExecution<Invocation>;
@@ -197,7 +206,7 @@ type StoredGlyphOrdinaryReleaseInvocation = Exclude<
       | GlyphStoredSingleCreatureActiveEffectProcedure
       | "saveGatedDamage"
       | "saveGatedCondition"
-      | "greaseGroundHazard";
+      | "persistentAreaSaveCondition";
   }
 >;
 
@@ -279,11 +288,11 @@ export type StoredGlyphSpellReleasePlan =
       readonly anchorId: CombatantId;
     }
   | {
-      readonly kind: "greaseGroundHazard";
+      readonly kind: "persistentAreaSaveCondition";
       readonly invocation: StoredGlyphExecution<
         Extract<
           GlyphStoredSpellInvocation,
-          { readonly procedure: "greaseGroundHazard" }
+          { readonly procedure: "persistentAreaSaveCondition" }
         >
       >;
     }
@@ -355,7 +364,7 @@ export type TriggeredReactionSaveGatedDamageResolution = {
   readonly fillSet: OkSpellFillSet;
 };
 
-type SpellProcedureDeclarationResolutionFor<P extends SpellProcedureKey> =
+type SpellProcedureDeclarationResolutionFor<P extends BattleSpellProcedureKey> =
   P extends "saveGatedDamage"
     ?
         | OrdinarySpellProcedureExecutionResolution<P>
@@ -363,10 +372,10 @@ type SpellProcedureDeclarationResolutionFor<P extends SpellProcedureKey> =
     : OrdinarySpellProcedureExecutionResolution<P>;
 
 export type SpellProcedureDeclarationResolution<
-  P extends SpellProcedureKey = SpellProcedureKey,
+  P extends BattleSpellProcedureKey = BattleSpellProcedureKey,
 > = { [Procedure in P]: SpellProcedureDeclarationResolutionFor<Procedure> }[P];
 
 export type SpellProcedureExecutionResolution<
-  P extends SpellProcedureKey = SpellProcedureKey,
+  P extends BattleSpellProcedureKey = BattleSpellProcedureKey,
 > = SpellProcedureDeclarationResolution<P>;
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

@@ -7,6 +7,9 @@
   "exports": {
     "./elapsed-time": "./src/elapsed-time.ts",
     "./game-facts": "./src/game-facts.ts",
+    "./json-schema": "./src/json-schema.ts",
+    "./semantic-refinement": "./src/semantic-refinement.ts",
+    "./structural-value": "./src/structural-value.ts",
     "./types": "./src/types.ts",
     "./wild-shape": "./src/wild-shape.ts"
   },
@@ -18,12 +21,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "^3.21.0"
+    "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11"
   }
 }

@@ -98,12 +98,10 @@ export const setupScenario: ScenarioSetup = (context) => {
   const combatants = [];
   for (const input of creatureInputs) {
     const initialized = sdk.battleCreatureInitFromStatBlock(input);
-    if (sdk.isLeft(initialized)) {
+    if (sdk.isFailure(initialized)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-          initialized.left,
-        ),
+        obstruction: sdk.battleStateInitIssueMessage(initialized.failure),
         observation: {
           tag: "stat-block-combatant-initialization-obstructed",
           scenarioId,
@@ -111,17 +109,17 @@ export const setupScenario: ScenarioSetup = (context) => {
         },
       };
     }
-    combatants.push(initialized.right);
+    combatants.push(initialized.success);
   }
 
   const started = sdk.startBattle({
     battleId: sdk.battleId(scenarioId),
     combatants,
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: {
         tag: "battle-start-obstructed",
         scenarioId,
@@ -136,7 +134,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ];
 
   const created = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -178,10 +176,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     objects: [],
   });
 
-  if (sdk.isLeft(created)) {
+  if (sdk.isFailure(created)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(created.left),
+      obstruction: sdk.scenarioSessionIssueMessage(created.failure),
       observation: {
         tag: "scenario-session-construction-obstructed",
         scenarioId,
@@ -191,7 +189,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: created.right,
+    session: created.success,
     observation: {
       tag: "scenario-session-ready",
       scenarioId,

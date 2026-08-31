@@ -15,7 +15,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { TargetSelection } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -44,6 +44,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -146,7 +147,7 @@ function directConditionProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         selection,
@@ -158,7 +159,7 @@ function directConditionProjection(
           expiresAt: {
             kind: "concentration",
             combatantId: actorId,
-            durationTicks: durationTicks.right,
+            durationTicks: durationTicks.success,
           },
         },
       };
@@ -251,6 +252,7 @@ const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
       maxTargets: Schema.Number,
     }),
     activeEffect: Schema.Struct({
+      ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("targetActionEndedSpellCondition"),
       sourceCombatantId: CombatantId,
       condition: Schema.Literal("invisible"),

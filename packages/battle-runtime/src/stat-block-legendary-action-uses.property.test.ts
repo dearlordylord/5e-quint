@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
@@ -67,9 +67,9 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
         const projection = projectAuthoredStatBlock(
           withLegendaryActionUses(authored, { kind: "fixed", uses }),
         );
-        expect(Either.isRight(projection)).toBe(true);
-        if (Either.isLeft(projection)) return;
-        expect(projection.right.runtime.legendaryActionUses).toBe(uses);
+        expect(Result.isSuccess(projection)).toBe(true);
+        if (Result.isFailure(projection)) return;
+        expect(projection.success.runtime.legendaryActionUses).toBe(uses);
       }),
       PROPERTY_OPTIONS,
     );
@@ -89,7 +89,7 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
             }),
           );
           expect(projection).toEqual(
-            Either.left({
+            Result.fail({
               tag: "battleStatBlockProjectionFailure",
               reason: "unsupportedLairConditionalLegendaryActionUses",
             }),
@@ -106,11 +106,11 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
   test("reject malformed counts without throwing or crossing admission boundaries", () => {
     const authored = monsterResourceStatBlock();
     const projected = projectAuthoredStatBlock(authored);
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
+    expect(Result.isSuccess(projected)).toBe(true);
+    if (Result.isFailure(projected)) return;
 
-    const source = projected.right.runtime;
-    const admittedSource = Either.getOrThrow(
+    const source = projected.success.runtime;
+    const admittedSource = Result.getOrThrow(
       battleStatBlockCombatantSource(source),
     );
     const execution = statBlockExecutionAdmissionCohort(

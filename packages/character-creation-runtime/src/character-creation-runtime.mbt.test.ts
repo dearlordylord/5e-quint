@@ -8,7 +8,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { describe, expect, it } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import { z } from "zod";
 
 import {
@@ -49,10 +49,10 @@ const unitLibrary = unitCatalogResult.catalog;
 
 function loadoutEquipmentUnitIdRight(value: string) {
   const result = loadoutEquipmentUnitId(authoredUnitId(value));
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(`Invalid MBT loadout equipment Unit id: ${value}`);
   }
-  return result.right;
+  return result.success;
 }
 
 type DraftProjection = {
@@ -447,7 +447,7 @@ function standardArrayFill(
     wis: 10,
     cha: 12,
   });
-  if (Either.isLeft(scores)) {
+  if (Result.isFailure(scores)) {
     throw new Error("Standard Array MBT fixture must parse.");
   }
 
@@ -455,7 +455,7 @@ function standardArrayFill(
     kind: "abilityScores",
     holeId: discoveredHoleId(holes, hole),
     method: "standardArray",
-    value: scores.right,
+    value: scores.success,
   };
 }
 

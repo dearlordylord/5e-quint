@@ -8,7 +8,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { Skill } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -1518,14 +1518,14 @@ function standardArrayFill(
     wis: 10,
     cha: 12,
   });
-  if (Either.isLeft(scores)) {
+  if (Result.isFailure(scores)) {
     throw new Error("Standard Array route MBT fixture must parse.");
   }
   return {
     kind: "abilityScores",
     holeId: hole.holeId,
     method: "standardArray",
-    value: scores.right,
+    value: scores.success,
   };
 }
 
@@ -1540,14 +1540,14 @@ function wrongKindAbilityScoreFill(
     wis: 10,
     cha: 12,
   });
-  if (Either.isLeft(scores)) {
+  if (Result.isFailure(scores)) {
     throw new Error("Wrong-kind ability score route MBT fixture must parse.");
   }
   return {
     kind: "abilityScores",
     holeId: hole.holeId,
     method: "standardArray",
-    value: scores.right,
+    value: scores.success,
   };
 }
 
@@ -1557,7 +1557,7 @@ function choiceFillForKnownProtocolLoadoutArmor(
   const equipmentUnitId = loadoutEquipmentUnitId(
     authoredUnitId(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID),
   );
-  if (Either.isLeft(equipmentUnitId)) {
+  if (Result.isFailure(equipmentUnitId)) {
     throw new Error("Known route MBT loadout armor Unit id must parse.");
   }
   return {
@@ -1565,7 +1565,7 @@ function choiceFillForKnownProtocolLoadoutArmor(
     holeId: creationHoleId(
       loadoutSourceHoleIdText({
         tag: "loadout",
-        equipmentUnitId: equipmentUnitId.right,
+        equipmentUnitId: equipmentUnitId.success,
         slot: "armor",
       }),
     ),
@@ -1776,9 +1776,9 @@ function requiredBuildResource(
   throw new Error(`Expected CharacterBuild resource ${unitId}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const left = result.failure;
   if (
     left !== null &&
     typeof left === "object" &&

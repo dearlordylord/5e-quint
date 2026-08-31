@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
@@ -37,15 +37,15 @@ import {
 } from "./spell-execution-facts.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
-  combatantInsideActiveAntimagicFieldAura,
-  spellInvocationActInterdictedByAntimagicField,
-} from "./antimagic-field-action-interdiction.ts";
+  combatantInsideActiveMagicSuppressionEmanation,
+  spellInvocationActInterdictedByMagicSuppressionEmanation,
+} from "./magic-suppression-action-interdiction.ts";
 import {
-  counterspellCapableReactors,
-  spellCastCanTriggerCounterspell,
-  type CounterspellCapableReactor,
-} from "./counterspell-reaction-discovery.ts";
-import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
+  spellCastInterruptionReactionCapableReactors,
+  spellCastCanTriggerSpellCastInterruption,
+  type SpellCastInterruptionCapableReactor,
+} from "./spell-cast-interruption-reaction-discovery.ts";
+import { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
@@ -94,19 +94,19 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       objectLight: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      thaumaturgyBoomingVoice: (value) =>
+      temporaryAbilityCheckRollMode: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      blurAttackRollDefense: (value) =>
+      perceptionGatedAttackRollDefense: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       seeInvisibleObserverSight: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      mirrorImageHitInterception: (value) =>
+      duplicateHitInterception: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       persistentArmorEffect: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      magicWeaponEnhancement: (value) =>
+      weaponAttackDamageEnhancement: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      wardingBond: (value) =>
+      linkedDefenseResistanceDamageShare: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       creatureTypeProtection: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
@@ -114,7 +114,7 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       chosenDamageResistance: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      hastePositive: (value) =>
+      compositeTargetBuffWithAftermath: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       directCondition: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
@@ -126,27 +126,27 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       creatureSizeDecrease: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      levitatedCreature: (value) =>
+      controlledVerticalSuspension: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       scalarBuff: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       directHitPointRestoration: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      expeditiousRetreatDash: (value) =>
+      grantedAlternateActionCost: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      jumpMovementReplacement: (value) =>
+      fixedCostMovementReplacement: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       /* v8 ignore start -- @preserve -- Triggered Feather Fall invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
-      featherFallMitigation: (value) =>
+      fallingCreatureMitigationReaction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       /* v8 ignore stop -- @preserve */
       selfTeleport: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       selfTransformationMode: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      dragonsBreathInitial: (value) =>
+      grantedAreaSaveDamageAction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      sanctuaryTargetingInterdiction: (value) =>
+      targetingSaveInterdiction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       markedDamageRider: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
@@ -174,46 +174,40 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       abilityD20TestRollModeSaveGate: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      sleepTargetAdmission: (value) =>
+      stagedSaveCondition: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      hideousLaughter: (value) =>
+      saveGatedConditionWithRepeat: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      hypnoticPattern: (value) =>
+      saveGatedAreaControl: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      slowActivePenalties: (value) =>
+      saveGatedTurnConstraintBundle: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      greaseGroundHazard: (value) =>
+      persistentAreaSaveCondition: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      gustOfWindLine: (value) =>
+      directionalPersistentArea: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      flamingSphere: (value) =>
+      persistentAreaSaveDamage: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      moonbeam: (value) =>
+      persistentAreaTrait: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      fogCloudObscurement: (value) =>
+      areaMovementDistanceDamage: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      spikeGrowthMovementHazard: (value) =>
+      persistentAreaSaveConditionEscape: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      webRestraintHazard: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      sleetStormAreaHazard: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      insectPlagueAreaHazard: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      cloudkillAreaHazard: (value) =>
+      persistentAreaSaveComposite: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       magicalDarknessPointOrigin: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      antimagicFieldOngoingSpellSuppression: (value) =>
+      magicSuppressionEmanation: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      command: (value) =>
+      compelledNextTurnBehavior: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      /* v8 ignore start -- @preserve -- Triggered Counterspell invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
-      counterspell: (value) =>
+      /* v8 ignore start -- @preserve -- Triggered spell-interruption invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
+      spellCastInterruptionReaction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Shield is removed explicitly before ordinary cast-act dispatch and is discovered only from an attack trigger. */
-      shieldReaction: (value) =>
+      triggeredArmorDefense: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       /* v8 ignore stop -- @preserve */
       spellAttackDamage: (value) =>
@@ -226,9 +220,7 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellCreatedHeldObjectReEvoke: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      spiritualWeaponAttackProxy: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      spiritualWeaponRepeatAttack: (value) =>
+      spatialMeleeSpellAttackProxy: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       objectContactDamage: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
@@ -242,11 +234,7 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       repeatedDamageAllocation: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      dancingLightsSeparateCast: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      dancingLightsCombinedCast: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      dancingLightsReposition: (value) =>
+      movableLightManifestation: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
     }),
   );
@@ -261,23 +249,26 @@ export function discoverSupportedSpellInvocations(
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  const spellcastingPreventedByAntimagicField =
-    combatantInsideActiveAntimagicFieldAura(state, actorId);
+  const spellcastingPreventedByMagicSuppression =
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId);
   const invocations = supportedSpellActs(state, actor);
   const executionInvocations = invocations;
-  const counterspellReactors = counterspellCapableReactors(state);
+  const interruptionReactors =
+    spellCastInterruptionReactionCapableReactors(state);
   const acts = invocations.flatMap(
     (invocation): readonly BattleActDiscoveryCandidate[] => {
       const executionInvocation = invocation;
-      if (executionInvocation.procedure === "shieldReaction") {
+      if (executionInvocation.procedure === "triggeredArmorDefense") {
         return [];
       }
       if (isTriggeredReactionSpellInvocation(executionInvocation)) {
         return [];
       }
       if (
-        spellcastingPreventedByAntimagicField &&
-        spellInvocationActInterdictedByAntimagicField(executionInvocation)
+        spellcastingPreventedByMagicSuppression &&
+        spellInvocationActInterdictedByMagicSuppressionEmanation(
+          executionInvocation,
+        )
       ) {
         return [];
       }
@@ -345,7 +336,7 @@ export function discoverSupportedSpellInvocations(
         actor,
         actorId,
         executionInvocations,
-        counterspellReactors,
+        interruptionReactors,
         act,
       ),
     );
@@ -498,7 +489,7 @@ function spellCastReactionFactsAct(
   actor: BattleCreatureState,
   actorId: CombatantId,
   invocations: readonly BattleExecutableSpellInvocation[],
-  counterspellReactors: readonly CounterspellCapableReactor[],
+  interruptionReactors: readonly SpellCastInterruptionCapableReactor[],
   act: BattleActDiscoveryCandidate,
 ): BattleActDiscoveryCandidate {
   const subject = act.subject;
@@ -523,7 +514,7 @@ function spellCastReactionFactsAct(
           subject,
           actorId,
           invocation,
-          counterspellReactors,
+          interruptionReactors,
           act.initialHoles,
         ),
       };
@@ -540,7 +531,7 @@ function spellCastInitialHoles(
   >,
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
-  counterspellReactors: readonly CounterspellCapableReactor[],
+  interruptionReactors: readonly SpellCastInterruptionCapableReactor[],
   holes: readonly BattleHole[],
 ): readonly BattleHole[] {
   const metamagicApplications =
@@ -553,23 +544,23 @@ function spellCastInitialHoles(
           subject,
         })
       : [];
-  const slowHole = slowSomaticSpellFailureOutcomeHole({
+  const turnConstraintHole = turnConstraintSomaticSpellFailureOutcomeHole({
     state,
     actorId,
     invocation,
     metamagicApplications,
   });
-  const counterspellHole = spellCastCanTriggerCounterspell({
+  const interruptionHole = spellCastCanTriggerSpellCastInterruption({
     casterId: actorId,
     invocation,
-    reactors: counterspellReactors,
+    reactors: interruptionReactors,
   })
     ? spellCastReactionFactsHole({ casterId: actorId, invocation })
     : null;
   return [
     ...holes,
-    ...(slowHole === null ? [] : [slowHole]),
-    ...(counterspellHole === null ? [] : [counterspellHole]),
+    ...(turnConstraintHole === null ? [] : [turnConstraintHole]),
+    ...(interruptionHole === null ? [] : [interruptionHole]),
   ];
 }
 
@@ -650,20 +641,36 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
-    (invocation.procedure !== "spiritualWeaponRepeatAttack" ||
-      actor.activeEffects.some(
-        (effect) =>
-          effect.kind === "spiritualWeapon" &&
-          effect.effectRef === invocation.activeEffect.effectRef &&
-          effect.sourceCombatantId === actor.combatantId,
-      )) &&
-    (invocation.procedure !== "dancingLightsReposition" ||
-      actor.activeEffects.some(
-        (effect) =>
-          effect.kind === "dancingLights" &&
-          effect.effectRef === invocation.activeEffectRef &&
-          effect.sourceCombatantId === actor.combatantId,
-      ))
+    spatialMeleeSpellAttackProxyPrerequisiteIsMet(actor, invocation) &&
+    movableLightManifestationPrerequisiteIsMet(actor, invocation)
+  );
+}
+
+function spatialMeleeSpellAttackProxyPrerequisiteIsMet(
+  actor: BattleCreatureState,
+  invocation: BattleExecutableSpellInvocation,
+): boolean {
+  if (invocation.procedure !== "spatialMeleeSpellAttackProxy") return true;
+  if (invocation.operation !== "repositionAndAttack") return true;
+  return actor.activeEffects.some(
+    (effect) =>
+      effect.kind === "spatialMeleeSpellAttackProxy" &&
+      effect.effectRef === invocation.activeEffect.effectRef &&
+      effect.sourceCombatantId === actor.combatantId,
+  );
+}
+
+function movableLightManifestationPrerequisiteIsMet(
+  actor: BattleCreatureState,
+  invocation: BattleExecutableSpellInvocation,
+): boolean {
+  if (invocation.procedure !== "movableLightManifestation") return true;
+  if (invocation.operation !== "reposition") return true;
+  return actor.activeEffects.some(
+    (effect) =>
+      effect.kind === "movableLightManifestation" &&
+      effect.effectRef === invocation.activeEffectRef &&
+      effect.sourceCombatantId === actor.combatantId,
   );
 }
 

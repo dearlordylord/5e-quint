@@ -1,0 +1,458 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
+import { DcSourceSchema } from "@dnd/surface/surface/schema";
+//
+// The SpellCastInterruption Spell Procedure Profile: a prepared Reaction spell that
+// interrupts a visible spell cast within range, asks for the
+// triggering caster's Constitution Saving Throw, and ends the triggering spell
+// on a failed save.
+//
+// RAW anchors:
+//   - SRD 5.2.1 Spells "SpellCastInterruption": Reaction when seeing a creature within
+//     60 feet casting a spell with V/S/M components; range 60 feet; S
+//     component; instantaneous; target makes a Constitution save; on failure
+//     the spell dissipates with no effect and its action, Bonus Action, or
+//     Reaction is wasted while a used slot is not expended.
+//   - SRD 5.2.1 Playing the Game "Reactions": a Reaction is an instant
+//     response to a trigger and an interrupting Reaction returns control after
+//     the Reaction.
+//   - UBIQUITOUS_LANGUAGE.md: Reaction, Casting Time, Cast Level.
+
+import {
+  spendAction,
+  spendActivationResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
+import { movementFeet } from "@dnd/shared/types";
+import { Result, Match } from "effect";
+import {
+  type BattleActDiscoveryCandidate,
+  type BattleInterruptCheckpoint,
+  type BattleInterruptCheckpointFrame,
+  type BattleResolutionResult,
+  type BattleState,
+  type BattleTurnResources,
+  type SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
+import {
+  snapshotBattle,
+  interruptedProcedureSubject,
+} from "../interrupt-execution.ts";
+import { copyInterruptCheckpointIdentity } from "../interrupt-checkpoint-identity.ts";
+import { needsHolesResult } from "../needs-holes-result.ts";
+import { spellCastInterruptionReactionReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
+import { invalidResult } from "../result-helpers.ts";
+import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
+import {
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowOutcomeHoleId,
+} from "../spells-damage-fills.ts";
+import { expendSpellSlot } from "../spell-effects.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
+import {
+  markSpellSlotExpendedThisTurn,
+  releasePendingSpellSlotUseThisTurn,
+} from "../spell-turn-resources.ts";
+import {
+  commitSpellAccessFreeCastResourceUse,
+  spendSpellAccessFreeCastResource,
+  spendSpellCastMetamagicResources,
+  type SpellCastResourceSpendResult,
+} from "../spells-resolve-resources.ts";
+import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
+import { Schema } from "effect";
+import {
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  LeveledSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
+import {
+  preparedSpellSlotInvocations,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+  type SpellAdmissionContext,
+  type SpellProcedureDeclaration,
+  type SpellProcedureProfileResolveInput,
+} from "./profile.ts";
+
+type SpellCastInterruptionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellCastInterruptionReaction" }
+>;
+type SpellCastInterruptionResolveInput =
+  SpellProcedureProfileResolveInput<SpellCastInterruptionInvocation>;
+
+function admitSpellCastInterruption(
+  spell: BattleSpellAdmissionSource,
+  ctx: SpellAdmissionContext,
+): readonly SpellCastInterruptionInvocation[] {
+  const projection = spellCastInterruptionReactionSpellProjection(spell);
+  if (projection === null) {
+    return [];
+  }
+  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
+    ...base,
+    procedure: "spellCastInterruptionReaction",
+    ...projection,
+  }));
+}
+
+function spellCastInterruptionReactionSpellProjection(
+  spell: BattleSpellAdmissionSource,
+): Pick<
+  SpellCastInterruptionInvocation,
+  "ability" | "dc" | "targeting" | "rangeFeet" | "triggerComponents"
+> | null {
+  if (
+    spell.mechanics.family !== "triggered_reaction" ||
+    spell.mechanics.level !== 3 ||
+    spell.mechanics.castingTime.kind !== "reaction" ||
+    spell.mechanics.castingTime.trigger.kind !== "creature_casts_spell" ||
+    !sameStringSet(spell.mechanics.castingTime.trigger.components ?? [], [
+      "V",
+      "S",
+      "M",
+    ]) ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    !spell.mechanics.components.s ||
+    spell.mechanics.components.v ||
+    spell.mechanics.components.m ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    !spell.mechanics.interruptsTrigger ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    hasSaveGateRepeatSaves(phase) ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    phase.onFail.kind !== "negate_triggering_spell" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.autoSuccessIfCasterSlotGte !== undefined
+  ) {
+    return null;
+  }
+  return {
+    triggerComponents: ["V", "S", "M"],
+    ability: phase.ability,
+    dc: phase.dc,
+    targeting: { kind: "singleCombatant" },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
+/* v8 ignore start -- @preserve -- Reaction-only profile: SpellCastInterruption candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
+function discoverSpellCastInterruptionCastAct(): readonly BattleActDiscoveryCandidate[] {
+  return [];
+}
+/* v8 ignore stop -- @preserve */
+
+function resolveSpellCastInterruption(
+  input: SpellCastInterruptionResolveInput,
+): BattleResolutionResult {
+  if (
+    input.input.frame.trigger !== "spellCast" ||
+    !spellCastInterruptionReactionReactionSpellMatchesTrigger(
+      input.invocation,
+      input.input.frame,
+      input.input.subject.reactorId,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "SpellCastInterruption requires a matching spell-cast Reaction trigger.",
+    );
+  }
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      spellSavingThrowOutcomeHoleId(input.invocation),
+    ])
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "SpellCastInterruption targets the caster from the spell-cast trigger and uses only that caster's Constitution Saving Throw when needed.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.input.subject.reactorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const validation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    input.invocation,
+    input.input.state,
+    input.input.subject.reactorId,
+    input.input.frame.casterId,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (validation !== null) {
+    return invalidResult(input.input.state, "invalidFill", validation);
+  }
+  /* v8 ignore stop -- @preserve */
+  const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (outcome === undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "SpellCastInterruption requires the triggering caster's Saving Throw outcome.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const triggeringCasterSaveSucceeded = outcome.succeeded;
+
+  const castingState = stateAfterSpellCastDeclared({
+    state: input.input.state,
+    casterId: input.input.subject.reactorId,
+    invocation: input.invocation,
+  });
+  const resourced: SpellCastResourceSpendResult = Match.value(
+    input.invocation.resource,
+  ).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) =>
+      spendSpellAccessFreeCastResource(
+        castingState,
+        input.input.subject.reactorId,
+        resourcePoolRef,
+        input.invocation,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) => {
+      const slotted = expendSpellSlot(
+        castingState,
+        input.input.subject.reactorId,
+        slotLevel,
+      );
+      const nextTurnResources = markSpellSlotExpendedThisTurn(
+        slotted.currentTurnResources,
+        input.input.subject.reactorId,
+      );
+      if (Result.isFailure(nextTurnResources)) {
+        return invalidResult(
+          input.input.state,
+          "staleSubject",
+          "This turn has already expended a Spell Slot.",
+        );
+      }
+      return {
+        tag: "resolved" as const,
+        state: {
+          ...slotted,
+          currentTurnResources: nextTurnResources.success,
+        },
+      };
+    }),
+    Match.exhaustive,
+  );
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const spellCastInterruptionReactionState = resourced.state;
+  if (triggeringCasterSaveSucceeded) {
+    return {
+      tag: "resolved",
+      state: spellCastInterruptionReactionState,
+      snapshot: snapshotBattle(spellCastInterruptionReactionState),
+    };
+  }
+
+  const counteredState = stateAfterCounteredSpellCast(
+    spellCastInterruptionReactionState,
+    input.input.frame,
+  );
+  if (counteredState.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      counteredState.message,
+    );
+  }
+  return {
+    tag: "resolved",
+    state: counteredState.state,
+    snapshot: snapshotBattle(counteredState.state),
+  };
+}
+
+function stateAfterCounteredSpellCast(
+  state: BattleState,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const interruptFrame = state.interruptStack[state.interruptStack.length - 1];
+  const spellCastCheckpoint =
+    interruptFrame?.kind === "interruptCheckpoint"
+      ? interruptFrame.frame
+      : null;
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (spellCastCheckpoint?.trigger !== "spellCast") {
+    return {
+      tag: "invalid",
+      message:
+        "SpellCastInterruption can only end the current spell-cast interrupt checkpoint.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const committedState = commitCounteredSpellPayment(state, frame);
+  if (Result.isFailure(committedState)) {
+    return { tag: "invalid", message: committedState.failure };
+  }
+  const releasedResources =
+    frame.paymentCommitment.kind !== "pendingCasterSpellSlot"
+      ? state.currentTurnResources
+      : releasePendingSpellSlotUseThisTurn(
+          state.currentTurnResources,
+          frame.casterId,
+        );
+  const wastedResources = turnResourcesAfterWastedSpellCastingResource(
+    releasedResources,
+    frame,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (Result.isFailure(wastedResources)) {
+    return {
+      tag: "invalid",
+      message: wastedResources.failure,
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const metamagicSpend = spendCounteredSpellMetamagic(
+    committedState.success,
+    wastedResources.success,
+    frame,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (Result.isFailure(metamagicSpend)) {
+    return { tag: "invalid", message: metamagicSpend.failure };
+  }
+  /* v8 ignore stop -- @preserve */
+  const spellCastInterruptionFrame = {
+    ...spellCastCheckpoint,
+    offeredResponders: spellCastCheckpoint.eligibleResponders,
+    continuation: {
+      kind: "resolved" as const,
+      subject: interruptedProcedureSubject(spellCastCheckpoint.continuation),
+    },
+  } satisfies BattleInterruptCheckpoint;
+  copyInterruptCheckpointIdentity(
+    spellCastCheckpoint,
+    spellCastInterruptionFrame,
+  );
+  return {
+    tag: "ok",
+    state: {
+      ...metamagicSpend.success,
+      interruptStack: [
+        ...state.interruptStack.slice(0, -1),
+        spellCastInterruptionReactionReactionInterruptFrame(
+          spellCastInterruptionFrame,
+        ),
+      ],
+    },
+  };
+}
+
+function spendCounteredSpellMetamagic(
+  state: BattleState,
+  currentTurnResources: BattleState["currentTurnResources"],
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+): Result.Result<BattleState, string> {
+  return spendSpellCastMetamagicResources({
+    state: { ...state, currentTurnResources },
+    actorId: frame.casterId,
+    applications:
+      frame.metamagicCommitment.kind === "none"
+        ? []
+        : frame.metamagicCommitment.applications,
+  });
+}
+
+function commitCounteredSpellPayment(
+  state: BattleState,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+): Result.Result<BattleState, string> {
+  if (frame.paymentCommitment.kind !== "spellAccessFreeCast") {
+    return Result.succeed(state);
+  }
+  return commitSpellAccessFreeCastResourceUse({
+    state,
+    actorId: frame.casterId,
+    resourcePoolRef: frame.paymentCommitment.resourcePoolRef,
+  });
+}
+
+function turnResourcesAfterWastedSpellCastingResource(
+  resources: BattleTurnResources,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+): Result.Result<BattleTurnResources, string> {
+  if (frame.castingResource.kind === "magicAction") {
+    const spent = spendAction(resources, "magic");
+    return Result.isFailure(spent)
+      ? Result.fail(
+          "Magic action is no longer available for the countered spell.",
+        )
+      : Result.succeed(spent.success);
+  }
+  if (frame.castingResource.kind === "bonusAction") {
+    const spent = spendActivationResource(resources, { kind: "bonusAction" });
+    return Result.isFailure(spent)
+      ? Result.fail(
+          "Bonus Action is no longer available for the countered spell.",
+        )
+      : Result.succeed(spent.success);
+  }
+  return Result.succeed(resources);
+}
+
+function spellCastInterruptionReactionReactionInterruptFrame(
+  frame: BattleInterruptCheckpoint,
+): BattleInterruptCheckpointFrame {
+  return { kind: "interruptCheckpoint", frame };
+}
+
+const SpellCastInterruptionInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: LeveledSpellInvocationResourceSchema,
+    procedure: Schema.Literal("spellCastInterruptionReaction"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    triggerComponents: Schema.Array(Schema.Literals(["V", "S", "M"])),
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+    rangeFeet: MovementFeet,
+  }),
+);
+export const spellCastInterruptionReactionProfile = {
+  procedure: "spellCastInterruptionReaction",
+  executionSchema: SpellCastInterruptionInvocationSchema,
+  admit: admitSpellCastInterruption,
+  discoverCastAct: discoverSpellCastInterruptionCastAct,
+  resolve: resolveSpellCastInterruption,
+} satisfies SpellProcedureDeclaration<
+  "spellCastInterruptionReaction",
+  SpellCastInterruptionInvocation
+>;

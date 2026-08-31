@@ -62,6 +62,15 @@ Current executable state:
   from class-feature always-prepared grants and creation-retained Magic
   Initiate selections. Magic Initiate cantrips remain learned access; its level
   1 spell is always prepared and retains the feat-selected spellcasting ability.
+- `projectCharacterSheetSpell` is the package-local static Spell Definition
+  admission boundary. It removes root-record identity and Material-component
+  prose while retaining one correlated typed material presence, cost, and
+  consumption contract. Nested authored expression remains admission input only
+  until specialized structural readers narrow it; execution results do not
+  expose that expression. `projectPartialCharacterSheetSpell` adds exact consumed/unowned
+  Unit mechanics paths for the 31 structurally partial spell roots currently
+  owned by Character Sheet. The projection contains no build selection, actor,
+  expenditure, rest, current-state, or generated Slice-membership facts.
 - `spellAccessFreeCast` is the generic limited free-cast resource. Its identity
   is the Spell Access pair of source Unit and Spell Unit, capacity is derived
   from the projected access or installed class-feature grant, and the sheet
@@ -114,6 +123,18 @@ Current executable state:
   Defense are read from Surface class-feature mechanics; a multiclass build
   with multiple available class-feature base formulas must provide one
   `baseChoice`.
+- `projectCharacterSheetEquipmentDefinition` is the sheet-owned static
+  admission boundary for ordinary armor and Shields. It retains correlated
+  Armor Class, training, Strength, Stealth, donning, doffing, weight, and cost
+  facts without authored identity; Armor Class calculation consumes this same
+  projection rather than reading the Surface record again.
+- `projectCharacterSheetFeature` is the sheet-owned static boundary for
+  class-feature, feat, and species-trait mechanics. Production sheet owners
+  consume its source-free facts instead of re-recognizing Surface records.
+  `projectPartialCharacterSheetFeature` adds exact consumed/unowned mechanics
+  paths for the six structurally partial roots and accumulates independent
+  represented-branch failures; build selections, current sheet state, rests,
+  expenditures, and actors remain outside this static projection.
 - `parseCharacterSheet` is the boundary parser for serialized sheets before app
   or MCP code consumes them.
 

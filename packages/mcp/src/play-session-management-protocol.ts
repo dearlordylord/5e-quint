@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { decodeGuestAccessGrant } from "./play-session-access.ts";
 import {
@@ -31,19 +31,20 @@ export async function handleSavePlaySession(
   }
   const playSessionId = decodePlaySessionId(args.playSessionId);
   const guestAccessGrant = decodeGuestAccessGrant(args.guestAccessGrant);
-  if (Either.isLeft(playSessionId) || Either.isLeft(guestAccessGrant)) {
+  if (Result.isFailure(playSessionId) || Result.isFailure(guestAccessGrant)) {
     return invalidArguments(playSessionToolNames.save);
   }
   const saved = await registry.save(
-    playSessionId.right,
-    guestAccessGrant.right,
+    playSessionId.success,
+    guestAccessGrant.success,
     identity.principalId,
   );
-  if (Either.isLeft(saved)) return playSessionAccessFailureContent(saved.left);
+  if (Result.isFailure(saved))
+    return playSessionAccessFailureContent(saved.failure);
   return simpleProtocolResult({
     tag: "playSessionSaved",
-    playSessionId: playSessionId.right,
-    tenure: saved.right,
+    playSessionId: playSessionId.success,
+    tenure: saved.success,
   });
 }
 
@@ -57,11 +58,11 @@ export function handleListSavedPlaySessions(
     return invalidArguments(playSessionToolNames.listSaved);
   }
   const listed = registry.listSaved(identity.principalId);
-  if (Either.isLeft(listed))
-    return playSessionAccessFailureContent(listed.left);
+  if (Result.isFailure(listed))
+    return playSessionAccessFailureContent(listed.failure);
   return simpleProtocolResult({
     tag: "savedPlaySessionsListed",
-    sessions: listed.right,
+    sessions: listed.success,
   });
 }
 
@@ -75,18 +76,18 @@ export async function handleDeleteSavedPlaySession(
     return invalidArguments(playSessionToolNames.deleteSaved);
   }
   const playSessionId = decodePlaySessionId(args.playSessionId);
-  if (Either.isLeft(playSessionId)) {
+  if (Result.isFailure(playSessionId)) {
     return invalidArguments(playSessionToolNames.deleteSaved);
   }
   const deleted = await registry.deleteSaved(
-    playSessionId.right,
+    playSessionId.success,
     identity.principalId,
   );
-  if (Either.isLeft(deleted))
-    return playSessionAccessFailureContent(deleted.left);
+  if (Result.isFailure(deleted))
+    return playSessionAccessFailureContent(deleted.failure);
   return simpleProtocolResult({
-    tag: deleted.right.tag,
-    playSessionId: playSessionId.right,
+    tag: deleted.success.tag,
+    playSessionId: playSessionId.success,
   });
 }
 

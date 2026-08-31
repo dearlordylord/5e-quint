@@ -20,8 +20,9 @@ import {
   type D6RollResult,
 } from "@dnd/shared/types";
 import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { characterBattleLevel } from "../character-class-level.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import {
   activeEffectsWithShapeShiftOwnerReplaced,
@@ -318,25 +319,29 @@ export function assumeDruidWildShapeForm(input: {
   const durationTicks = elapsedTimeTicksFromHours(
     druidWildShapeDurationHoursForClassLevel(Number(input.profile.classLevel)),
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     throw new Error("Druid Wild Shape duration must use whole-hour ticks.");
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: input.actor,
+    effect: {
+      kind: "druidWildShapeForm",
+      sourceProcedureRef: input.procedureRef,
+      sourceCombatantId: input.actor.combatantId,
+      formScopeRef: input.formAdmission.execution.scopeRef,
+      formLimbs: input.formLimbs,
+      equipmentDisposition: input.equipmentDisposition,
+      expiresAt: { kind: "duration", durationTicks: durationTicks.success },
+    },
+  });
   const nextActor: CharacterBattleCreatureState = {
-    ...input.actor,
+    ...allocation.owner,
     tempHp: Hp(
       Math.max(Number(input.actor.tempHp), Number(input.profile.classLevel)),
     ),
     activeEffects: activeEffectsWithShapeShiftOwnerReplaced(
-      input.actor.activeEffects,
-      {
-        kind: "druidWildShapeForm",
-        sourceProcedureRef: input.procedureRef,
-        sourceCombatantId: input.actor.combatantId,
-        formScopeRef: input.formAdmission.execution.scopeRef,
-        formLimbs: input.formLimbs,
-        equipmentDisposition: input.equipmentDisposition,
-        expiresAt: { kind: "duration", durationTicks: durationTicks.right },
-      },
+      allocation.owner.activeEffects,
+      allocation.effect,
     ),
   };
   return {

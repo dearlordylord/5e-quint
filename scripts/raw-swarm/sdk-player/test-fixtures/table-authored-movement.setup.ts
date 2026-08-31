@@ -48,12 +48,12 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
   const started = sdk.startBattle({
     battleId: sdk.battleId("table-authored-movement-transcript"),
-    combatants: [goblin.right, skeleton.right],
+    combatants: [goblin.success, skeleton.success],
   });
   if (sdk.isLeft(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: { phase: "start-battle" },
     };
   }
@@ -64,7 +64,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     route,
   });
   const session = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: {
       kind: "tableAuthored",
       spatialDecisions: [
@@ -72,7 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
           decisionId: "table-authored-movement-route",
           question: {
             kind: "movementRoute",
-            moverId: goblin.right.combatantId,
+            moverId: goblin.success.combatantId,
             route,
             speedKind: "walk",
           },
@@ -101,12 +101,12 @@ export const setupScenario: ScenarioSetup = (context) => {
   return sdk.isLeft(session)
     ? {
         kind: "obstructed",
-        obstruction: sdk.scenarioSessionIssueMessage(session.left),
+        obstruction: sdk.scenarioSessionIssueMessage(session.failure),
         observation: { phase: "scenario-session" },
       }
     : {
         kind: "ready",
-        session: session.right,
+        session: session.success,
         observation: {
           spatialSource: "table-authored",
           movementDecisionId: "table-authored-movement-route",

@@ -1,5 +1,5 @@
 import { DieRollResult } from "@dnd/shared/types";
-import { Effect, Either, Match } from "effect";
+import { Effect, Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { diceToolNames, type DiceToolCall } from "./dice-tool-input.ts";
@@ -25,11 +25,11 @@ export function handleDiceToolCall(
   return Match.value(call).pipe(
     Match.when({ name: diceToolNames.rollDice }, ({ args }) => {
       const sampled = Effect.runSync(
-        Effect.either(root.diceSampling.sample(args.requestId, args.groups)),
+        Effect.result(root.diceSampling.sample(args.requestId, args.groups)),
       );
-      return Either.isLeft(sampled)
-        ? errorContent(sampled.left.message, {
-            code: Match.value(sampled.left.reason).pipe(
+      return Result.isFailure(sampled)
+        ? errorContent(sampled.failure.message, {
+            code: Match.value(sampled.failure.reason).pipe(
               Match.when(
                 "requestIdConflict",
                 () => "DICE_REQUEST_ID_CONFLICT" as const,
@@ -45,7 +45,7 @@ export function handleDiceToolCall(
               Match.exhaustive,
             ),
           })
-        : schemaJsonContent(RollDiceOutputSchema, rollDice(sampled.right));
+        : schemaJsonContent(RollDiceOutputSchema, rollDice(sampled.success));
     }),
     Match.exhaustive,
   );

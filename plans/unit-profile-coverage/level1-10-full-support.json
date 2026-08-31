@@ -1582,7 +1582,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "The promoted owner consumes explicit area identity, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination, descent through terrain, or wind dispersal from map geometry.",
+      "reason": "The promoted owner consumes explicit area identity, ordered affected-creature facts for its fixed 10-foot movement frontier, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination or direction, descent through terrain, or wind dispersal from map geometry.",
       "selectedIdentity": {
         "owner": "battle-runtime deterministic Cloudkill area-hazard admission owner",
         "reason": "Cloudkill support is a spell-slot battle procedure with caller/table-supplied area identity and active hazard state. Focused runtime tests bind the authored SRD Unit identity to the executable typed hazard profile; no separate selected Unit identity replay was run for this finite table-area witness slice.",
@@ -10917,8 +10917,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 125,
-      "numerator": 112,
-      "percent": "89.6%"
+      "numerator": 113,
+      "percent": "90.4%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 125,
@@ -10927,8 +10927,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 180,
-      "numerator": 150,
-      "percent": "83.3%"
+      "numerator": 151,
+      "percent": "83.9%"
     },
     "strictFinalSupport": {
       "denominator": 411,
@@ -18461,8 +18461,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 180,
-        "numerator": 150,
-        "percent": "83.3%"
+        "numerator": 151,
+        "percent": "83.9%"
       }
     },
     "units": [
@@ -20423,7 +20423,7 @@
             "profileId": "spell.invocation-fog-cloud-obscurement",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+              "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
             ]
           }
         ],
@@ -20541,10 +20541,10 @@
         "unitId": "guiding_bolt"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
@@ -20562,8 +20562,9 @@
             "profileId": "spell.invocation-haste-positive",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
               "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
-              "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+              "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt"
             ],
             "semanticOwnerPolicy": "profile-local-semantic-core"
           }
@@ -20726,7 +20727,7 @@
             "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
             ]
           }
         ],
@@ -20818,7 +20819,7 @@
             "profileId": "spell.invocation-hypnotic-pattern-control",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt"
             ]
           }
         ],
@@ -22819,8 +22820,7 @@
               "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
               "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-            ],
-            "semanticOwnerPolicy": "profile-local-semantic-core"
+            ]
           }
         ],
         "unitId": "shield"
@@ -22968,7 +22968,7 @@
             "profileId": "spell.invocation-sleep-target-admission",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
             ]
           },
           {
@@ -22984,7 +22984,7 @@
             "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
             ]
           }
         ],
@@ -23012,6 +23012,7 @@
             "profileId": "spell.invocation-slow-active-penalties",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
             ]
@@ -23186,8 +23187,7 @@
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-            ],
-            "semanticOwnerPolicy": "profile-local-semantic-core"
+            ]
           }
         ],
         "unitId": "spiritual_weapon"

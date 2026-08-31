@@ -31,12 +31,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(ridingHorse)) {
+  if (sdk.isFailure(ridingHorse)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        ridingHorse.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(ridingHorse.failure),
       observation: { stage: "riding-horse-battle-initialization" },
     };
   }
@@ -48,28 +46,28 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolf)) {
+  if (sdk.isFailure(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
+      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
       observation: { stage: "wolf-battle-initialization" },
     };
   }
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId("horse-wolf-pursuit"),
-    combatants: [ridingHorse.right, wolf.right],
+    combatants: [ridingHorse.success, wolf.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: { stage: "battle-start" },
     };
   }
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -102,16 +100,16 @@ export const setupScenario: ScenarioSetup = (context) => {
     ],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: { stage: "scenario-session-creation" },
     };
   }
 
   const tableCircumstance = sdk.scenarioSessionWithTableD20TestCircumstance({
-    session: session.right,
+    session: session.success,
     binding: {
       selection: {
         kind: "nextD20TestForActor",
@@ -122,17 +120,17 @@ export const setupScenario: ScenarioSetup = (context) => {
       source: "disadvantage",
     },
   });
-  if (sdk.isLeft(tableCircumstance)) {
+  if (sdk.isFailure(tableCircumstance)) {
     return {
       kind: "obstructed",
-      obstruction: tableCircumstance.left.message,
+      obstruction: tableCircumstance.failure.message,
       observation: { stage: "table-d20-test-circumstance-binding" },
     };
   }
 
   return {
     kind: "ready",
-    session: tableCircumstance.right,
+    session: tableCircumstance.success,
     observation: {
       issue: 279,
       capability: "table-authored-per-test-circumstance-disadvantage",

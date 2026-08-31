@@ -3,7 +3,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
+const { createHash } = require("node:crypto");
 const ts = require("typescript");
+const {
+  battleRuntimeExecutionImportClosure,
+  battleRuntimePublicExportOwnerFiles,
+} = require("./check-battle-runtime-import-ownership.cjs");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const PACKAGES_ROOT = path.join(REPO_ROOT, "packages");
@@ -35,10 +40,6 @@ const ALLOWLIST_PATH_RULES = [
     pattern: /^packages\/mcp\/src\/(?:composition-root|content-tools)\.ts$/,
   },
   {
-    reason: "fixture-boundary",
-    pattern: /^packages\/app\/src\/components\/trace-visualizer\//,
-  },
-  {
     reason: "character-creation-support-profile-boundary",
     pattern:
       /^packages\/character-creation-runtime\/src\/(?:phase1-manifest|support-gates)\.ts$/,
@@ -46,11 +47,6 @@ const ALLOWLIST_PATH_RULES = [
   {
     reason: "character-sheet-retained-companion-support-admission-boundary",
     pattern: /^packages\/character-sheet-runtime\/src\/companions\.ts$/,
-  },
-  {
-    reason: "battle-runtime-unit-profile-admission-test-support-boundary",
-    pattern:
-      /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
 ];
 
@@ -87,7 +83,7 @@ const POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN =
   /BattleSpellDamageDieExecutionRef|groupOrdinal|dieOrdinal|selectedDieOrdinal/;
 const EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN = /subject\.attackName/;
 const REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN =
-  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:(?!\s*Schema\.optionalWith\(Schema\.Never)/;
+  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:(?!\s*(?:Schema\.optionalWith\(Schema\.Never|Schema\.optionalKey\(Schema\.Never\)))/;
 const REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN =
   /type BattleSpellTargetListHole[\s\S]{0,500}\bprocedure:/;
 const POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN =
@@ -95,6 +91,1146 @@ const POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN =
 const GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN = /\b(?:Omit|Pick)</;
 const SHALLOW_UNIT_EXECUTION_PROJECTION_PATTERN =
   /([A-Za-z_$][\w$]*) extends SupportedUnitFeatureProfile\s*\?\s*Omit<\1,\s*"unit">/;
+
+const EXECUTION_IDENTITY_ROLE_FIELDS = new Set([
+  "action",
+  "checkpoint",
+  "checkpointKind",
+  "command",
+  "effectKind",
+  "fillKind",
+  "holeKind",
+  "kind",
+  "procedure",
+  "protocolKind",
+  "tag",
+]);
+const EXECUTION_IDENTITY_ARRAY_NAME_PATTERN =
+  /(?:ACTION|CHECKPOINT|COMMAND|EFFECT|FILL|HOLE|KIND|PROCEDURE|PROTOCOL|REGISTRY|SUBJECT|TAG)(?:S|_KINDS|_KEYS|_REGISTRY)?$/i;
+const EXECUTION_DECLARATION_NAME_PATTERN =
+  /(?:Checkpoint|Command|Effect|Execution|Fill|Hole|Invocation|Procedure|Profile|Protocol|Registry|Route|Schema|Subject|Template)/;
+const EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN =
+  /_(?:HOLE_ID|HOLE_INSTANCE|HOLE_INSTANCE_PREFIX)$/;
+const EXECUTION_DIAGNOSTIC_CALL_PATTERN =
+  /(?:^|\.)(?:fail|failure|invalid|invalidResult|invalidWitness|issue|error|validation|validate)$/i;
+const EXECUTION_DIAGNOSTIC_FIELDS = new Set([
+  "detail",
+  "label",
+  "message",
+  "reason",
+  "summary",
+]);
+const EXECUTION_IDENTITY_BOUNDARIES = [
+  {
+    reason: "surface-authored-content-boundary",
+    pattern: /^packages\/surface\/(?:content|src\/surface)\//,
+  },
+  {
+    reason: "battle-procedure-admission-boundary",
+    pattern:
+      /^packages\/battle-runtime\/src\/(?:procedure-admission\/|character-execution-admission\.ts$|battle-composition-admission\.ts$|character-battle-resources\.ts$|unit-feature-support\.ts$)/,
+  },
+  {
+    reason: "battle-presentation-boundary",
+    pattern:
+      /^packages\/battle-runtime\/src\/(?:battle-act-composition\.ts$|stat-block-presentation\.ts$|battle-snapshot-presentation\.ts$)/,
+  },
+  {
+    reason: "registered-proof-instantiation-boundary",
+    pattern: /\.(?:mbt\.)?qnt$/,
+  },
+];
+
+// These are mechanics words which happen to be complete authored spell names.
+// Each semantic exemption is an exact AST role + identifier collision. The
+// finite site-count certificate below additionally binds those collisions to
+// their reviewed source paths, normalized owning statements, and cardinalities.
+// A new occurrence therefore fails even when it copies an otherwise legitimate
+// identifier.
+function exactCollision(spellId, identifier, roles, reason) {
+  return roles.map((role) => ({ spellId, role, identifier, reason }));
+}
+
+const DISCRIMINANT_ROLES = [
+  "discriminant-literal",
+  "protocol-array-member",
+  "registry-key",
+  "schema-discriminant-literal",
+];
+
+const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
+  ...exactCollision(
+    "command",
+    "runtimeCommand",
+    DISCRIMINANT_ROLES,
+    "command is the runtime protocol category",
+  ),
+  ...exactCollision(
+    "command",
+    "command",
+    ["registry-key"],
+    "command is the discriminant field name",
+  ),
+  ...exactCollision(
+    "darkness",
+    "magicalDarknessPointOrigin",
+    DISCRIMINANT_ROLES,
+    "darkness is a visibility trait projected from generic area facts",
+  ),
+  ...exactCollision(
+    "fly",
+    "fly",
+    ["protocol-array-member"],
+    "fly is a movement mode",
+  ),
+  ...exactCollision(
+    "knock",
+    "knockOut",
+    ["discriminant-literal"],
+    "knock out is the zero-hit-point combat choice",
+  ),
+  ...["heldLight", "heldLightHurl", "objectLight"].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      DISCRIMINANT_ROLES,
+      "light is an illumination or weapon-property mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "light",
+    "lightEmission",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "light is an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "lightEmitter",
+    ["discriminant-literal"],
+    "light is an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "spellLightEmitter",
+    ["discriminant-literal"],
+    "light is an illumination mechanic",
+  ),
+  ...exactCollision(
+    "resistance",
+    "chosenDamageResistance",
+    DISCRIMINANT_ROLES,
+    "resistance is a damage relationship",
+  ),
+  ...exactCollision(
+    "resistance",
+    "damageResistance",
+    [
+      "discriminant-literal",
+      "protocol-array-member",
+      "schema-discriminant-literal",
+    ],
+    "resistance is a damage relationship",
+  ),
+  ...exactCollision(
+    "shield",
+    "shield",
+    ["discriminant-literal", "protocol-array-member"],
+    "shield is an equipment category",
+  ),
+  ...exactCollision(
+    "sleep",
+    "doesNotSleep",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "sleep is a creature-state predicate",
+  ),
+  ...exactCollision(
+    "command",
+    "command",
+    ["protocol-array-member"],
+    "command is the generic runtime protocol category",
+  ),
+  ...exactCollision(
+    "darkvision",
+    "darkvision",
+    ["discriminant-literal"],
+    "darkvision is a creature sense",
+  ),
+  ...exactCollision(
+    "sleep",
+    "does_not_sleep",
+    ["discriminant-literal"],
+    "sleep is a creature-state predicate",
+  ),
+  ...[
+    "AttackHitBonusActionSpellCommandInput",
+    "AttackHitBonusActionSpellCommandSubject",
+    "BattleRuntimeCommand",
+    "CompelledBehaviorFollowUpCommand",
+    "PersistentSpatialSpellProcedureCommand",
+    "ReactionAttackCommandContext",
+    "RuntimeCommandSubject",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "command",
+      identifier,
+      ["declaration-identifier"],
+      "command names the generic runtime request protocol",
+    ),
+  ),
+  ...[
+    "MagicalDarknessPointOriginProfileShape",
+    "MagicalDarknessPointOriginSpellInvocation",
+    "MagicalDarknessPointOriginSpellProcedureExecution",
+    "magicalDarknessPointOriginProfile",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["declaration-identifier"],
+      "darkness is the projected visibility mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "darkness",
+    "magicalDarknessArea",
+    ["discriminant-literal"],
+    "darkness is the projected visibility mechanic",
+  ),
+  ...exactCollision(
+    "darkness",
+    "spellMagicalDarknessZone",
+    ["discriminant-literal"],
+    "darkness is the projected visibility mechanic",
+  ),
+  ...exactCollision(
+    "darkness",
+    "magical-darkness-point-origin",
+    ["execution-filename"],
+    "darkness is the projected visibility mechanic",
+  ),
+  ...[
+    "AllocatedStoredLightEmitterForTemplate",
+    "BattleLightEmitterOpaqueCoverInteraction",
+    "BattleMovableLightPlacementHole",
+    "BattleStoredLightEmitterTemplate",
+    "CombinedMovableLightManifestationSpellProcedureExecution",
+    "ExecutableMovableLightCastInvocation",
+    "ExecutableMovableLightManifestationInvocation",
+    "ExecutableMovableLightRepositionInvocation",
+    "HeldLightHurlInvocation",
+    "HeldLightHurlSpellInvocation",
+    "HeldLightHurlSpellProcedureExecution",
+    "HeldLightInvocation",
+    "HeldLightSpellInvocation",
+    "HeldLightSpellProcedureExecution",
+    "LightExtraAttackDamageAbilityModifierProcedureExecutionSchema",
+    "MovableLightActiveEffect",
+    "MovableLightCastInvocation",
+    "MovableLightCombinedCastInvocation",
+    "MovableLightEffect",
+    "MovableLightEffectShape",
+    "MovableLightManifestationSpellInvocation",
+    "MovableLightRepositionInvocation",
+    "MovableLightSeparateCastInvocation",
+    "MovableLightSpellProfile",
+    "ObjectLightClassCantripSpellProcedureExecution",
+    "ObjectLightInvocation",
+    "ObjectLightPreparedSpellProcedureExecution",
+    "ObjectLightSpellInvocation",
+    "ObjectLightSpellInvocationBase",
+    "RepositionMovableLightManifestationSpellProcedureExecution",
+    "SeparateMovableLightManifestationSpellProcedureExecution",
+    "heldLightHurlProfile",
+    "heldLightProfile",
+    "movableLightManifestationProfile",
+    "objectLightProfile",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["declaration-identifier"],
+      "light names an illumination or weapon-property mechanic",
+    ),
+  ),
+  ...["movableLightManifestation"].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      [
+        "discriminant-literal",
+        "protocol-array-member",
+        "registry-key",
+        "schema-discriminant-literal",
+      ],
+      "light names an illumination mechanic",
+    ),
+  ),
+  ...[
+    "BattleLightEmitterAttachmentSchema",
+    "BattleLightEmitterEndOfTurnExpirationSchema",
+    "BattleLightEmitterSchema",
+    "BattleMovableLightCastPlacementSchema",
+    "BattleMovableLightPlacementValueSchema",
+    "BattleMovableLightRepositionPlacementSchema",
+    "BattleObjectInvisibleRevealLightEmitterFacts",
+    "BattleProjectedObjectInvisibleRevealLightEmitterSchema",
+    "BattleProjectedSpellLightEmitterFields",
+    "BattleProjectedSpellLightEmitterSchema",
+    "BattleSpellLightEmitterFacts",
+    "BattleSpellLightEmitterMechanicalFields",
+    "BattleSpellLightEmitterVariantFacts",
+    "BattleStoredLightEmitterSchema",
+    "BattleStoredObjectInvisibleRevealLightEmitterSchema",
+    "BattleStoredSpellLightEmitterFields",
+    "BattleStoredSpellLightEmitterSchema",
+    "BattleTrackedOngoingSpellLightEmitterFacts",
+    "ExecutableMovableLightCastResolveInput",
+    "ExecutableMovableLightRepositionResolveInput",
+    "HeldLightHurlInvocationSchema",
+    "HeldLightHurlResolveInput",
+    "HeldLightInvocationSchema",
+    "LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE",
+    "LIGHT_OBJECT_MAX_SIZE",
+    "LightCantripObjectLightDirectPhase",
+    "LightCantripObjectTargetFact",
+    "MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET",
+    "MOVABLE_LIGHT_DURATION_MINUTES",
+    "MOVABLE_LIGHT_RANGE_FEET",
+    "MOVABLE_LIGHT_REPOSITION_MAX_FEET",
+    "MOVABLE_LIGHT_SPACING_FEET",
+    "MovableLightCastResolveInput",
+    "MovableLightCombinedCastInvocationSchema",
+    "MovableLightExpirationSchema",
+    "MovableLightRepositionInvocationSchema",
+    "MovableLightRepositionResolveInput",
+    "MovableLightSeparateCastInvocationSchema",
+    "OBJECT_LIGHT_TARGET_FACT_KINDS",
+    "ObjectLightInvocationSchema",
+    "ObjectLightSpellCantripSource",
+    "ObjectLightSpellSlotSource",
+    "ObjectLightSpellSource",
+    "ObjectLightTargetSize",
+    "RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET",
+    "RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET",
+    "SerializedLightEmitterSource",
+    "SpellCreatedHeldObjectLightOperation",
+    "SpellLightEmitterTargetAttachment",
+    "TouchedObjectLightDirectPhase",
+    "activeLightIds",
+    "admitCantripObjectLight",
+    "admitHeldLight",
+    "admitMovableLightCombinedCast",
+    "admitMovableLightSeparateCast",
+    "admitObjectLight",
+    "admitPreparedObjectLight",
+    "battleMovableLightId",
+    "boundCombatantIlluminationLightEmitter",
+    "boundObjectIlluminationLightEmitter",
+    "currentMovableLightIds",
+    "dimLightOperation",
+    "discoverHeldLightCastAct",
+    "discoverHeldLightHurlCastAct",
+    "discoverMovableLightCastAct",
+    "discoverMovableLightRepositionAct",
+    "discoverObjectLightCastAct",
+    "dispelledLightEffectRefs",
+    "dispelledSpellCreatedLightMaxSpellLevel",
+    "heldLight",
+    "heldLightHurl",
+    "isExecutableMovableLightCastResolveInput",
+    "isExecutableMovableLightRepositionResolveInput",
+    "isLightObjectSpell",
+    "isObjectLightDirectPhase",
+    "isSpellLightEmissionPostDamageRider",
+    "isTouchedObjectLightDirectPhase",
+    "light",
+    "lightAttachment",
+    "lightEffect",
+    "lightEffects",
+    "lightEmitterAttachmentMatchesTarget",
+    "lightEmitterFromPostDamageRider",
+    "lightEmitterMatchesTarget",
+    "lightEmitterOpaqueCoverBlocksEmission",
+    "lightEmitterRefs",
+    "lightEmitters",
+    "lightEmittersAfterDurationTick",
+    "lightEmittersAfterEndEffects",
+    "lightFact",
+    "lightId",
+    "lightOperation",
+    "lightOperations",
+    "lightPhase",
+    "lightPropertyAbilityChoice",
+    "lightPropertyAlternateAbilityChoices",
+    "lightPropertyAttackDamageAbilityModifierChoice",
+    "lightPropertyAttackDamageAbilityModifierChoiceForAbilityChoice",
+    "lightPropertyDamageAbilityModifier",
+    "lightPropertyDamageAbilityModifierForAbilityChoice",
+    "lightPropertyDamageAbilityModifierForAttack",
+    "lightPropertyOffHand",
+    "lightRiders",
+    "lightWeaponAttackMade",
+    "movableLight",
+    "movableLightCantripBase",
+    "movableLightCastPlacementPlan",
+    "movableLightManifestation",
+    "movableLightPlacement",
+    "movableLightRepositionPlacementPlan",
+    "movableLightSeparatePlacementError",
+    "movableLightSpell",
+    "objectInvisibleRevealLightEmitterWasAdded",
+    "objectLight",
+    "objectLightEmitterDeniesInvisibleBenefit",
+    "objectLightTargetFactKinds",
+    "outlineLightEmitters",
+    "paladinSacredWeaponLightEmitters",
+    "placedLightIds",
+    "priorLightAttack",
+    "projectBoundIlluminationLightEmitter",
+    "projectStoredLightEmitter",
+    "resolveHeldLight",
+    "resolveHeldLightHurl",
+    "resolveMovableLightCast",
+    "resolveMovableLightReposition",
+    "resolveObjectLight",
+    "serializedLightEmitterOwnsSource",
+    "serializedLightEmitterSource",
+    "sourceHeldLightProcedureRef",
+    "spellCreatedLightOverlaps",
+    "spellLightEmitterMatchesOngoingTarget",
+    "storedLightEmitters",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["declaration-identifier"],
+      "light names the illumination or weapon-property mechanic",
+    ),
+  ),
+  ...[
+    "MagicalDarknessPointOriginInvocationSchema",
+    "MagicalDarknessPointOriginResolveInput",
+    "admitMagicalDarknessPointOrigin",
+    "magicalDarknessAreaChoiceInvalidReason",
+    "magicalDarknessPointOrigin",
+    "magicalDarknessPointOriginSpell",
+    "resolveMagicalDarknessPointOrigin",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["declaration-identifier"],
+      "darkness names the magical obscurement mechanic",
+    ),
+  ),
+  ...[
+    "movableLight",
+    "movableLightPlacement",
+    "objectInvisibleRevealLightEmitter",
+    "spellCreatedLightOverlapsArea",
+    "spellDistantObjectLightTarget",
+    "spellLightEmitter",
+    "spellObjectLightTarget",
+    "unitFeatureLightEmitter",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["schema-discriminant-literal"],
+      "light names the illumination mechanic",
+    ),
+  ),
+  ...[
+    "objectInvisibleRevealLightEmitter",
+    "spellLightEmitter",
+    "unitFeatureLightEmitter",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["registry-key"],
+      "light names the illumination mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "light",
+    "movableLightPlacement",
+    ["protocol-array-member"],
+    "light names the illumination mechanic",
+  ),
+  ...["magicalDarknessArea", "spellMagicalDarknessZone"].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["schema-discriminant-literal"],
+      "darkness names the magical obscurement mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "darkness",
+    "spellMagicalDarknessZone",
+    ["registry-key"],
+    "darkness names the magical obscurement mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "movableLightPlacement",
+    ["discriminant-literal", "registry-key"],
+    "light names an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "movableLight",
+    ["discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "nonmagicalLightInArea",
+    ["discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...["objectInvisibleRevealLightEmitter", "unitFeatureLightEmitter"].flatMap(
+    (identifier) =>
+      exactCollision(
+        "light",
+        identifier,
+        ["discriminant-literal"],
+        "light names an illumination mechanic",
+      ),
+  ),
+  ...exactCollision(
+    "light",
+    "spellCreatedLightOverlapsArea",
+    ["discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...["spellDistantObjectLightTarget", "spellObjectLightTarget"].flatMap(
+    (identifier) =>
+      exactCollision(
+        "light",
+        identifier,
+        ["discriminant-literal", "protocol-array-member"],
+        "light names an illumination mechanic",
+      ),
+  ),
+  ...exactCollision(
+    "light",
+    "storedLightEmitter",
+    ["discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "lightCantripObject",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "light names the object-illumination execution shape",
+  ),
+  ...exactCollision(
+    "light",
+    "lightExtraAttackDamageAbilityModifier",
+    ["schema-discriminant-literal"],
+    "light names the weapon-property mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "weaponWithLightProperty",
+    ["schema-discriminant-literal"],
+    "light names the weapon-property mechanic",
+  ),
+  ...["held-light", "held-light-hurl", "object-light"].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["execution-filename"],
+      "light names an illumination mechanic",
+    ),
+  ),
+  ...[
+    "Light Property Bonus Action Attack",
+    "movable-light manifestation placement does not match this spell act.",
+    "movable-light manifestation placement must use the selected spell act placement hole.",
+    "movable-light manifestation placement was filled twice.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["execution-diagnostic"],
+      "light names an illumination or weapon-property mechanic",
+    ),
+  ),
+  ...[
+    "ChosenDamageResistanceInvocationSchema",
+    "ChosenDamageResistanceSpellInvocation",
+    "ChosenDamageResistanceSpellProcedureExecution",
+    "LinkedDefenseResistanceDamageShareEffect",
+    "LinkedDefenseResistanceDamageShareSpellInvocation",
+    "LinkedDefenseResistanceDamageShareSpellProcedureExecution",
+    "LinkedDefenseResistanceDamageShareTemplate",
+    "LinkedDefenseResistanceDamageShareTemplateSchema",
+    "PassiveDamageResistanceProcedureExecutionSchema",
+    "chosenDamageResistanceProfile",
+    "linkedDefenseResistanceDamageShareProfile",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names a damage relationship mechanic",
+    ),
+  ),
+  ...[
+    "linkedDefenseResistanceDamageShare",
+    "linkedDefenseResistanceDamageShareSeparation",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      DISCRIMINANT_ROLES,
+      "resistance names a damage relationship mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "resistance",
+    "passiveDamageResistance",
+    ["schema-discriminant-literal"],
+    "resistance names a damage relationship mechanic",
+  ),
+  ...exactCollision(
+    "resistance",
+    "chosen-damage-resistance",
+    ["execution-filename"],
+    "resistance names a damage relationship mechanic",
+  ),
+  ...exactCollision(
+    "resistance",
+    "Resistance damage reduction (1d4)",
+    ["execution-diagnostic"],
+    "resistance names a damage relationship mechanic",
+  ),
+  ...exactCollision(
+    "fly",
+    "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
+    ["execution-diagnostic"],
+    "Fly Speed is a creature movement mode and Wild Shape admission fact",
+  ),
+  ...exactCollision(
+    "shield",
+    "Character battle loadout cannot wield shield and off-hand weapon.",
+    ["execution-diagnostic"],
+    "shield is an equipment category",
+  ),
+  ...[
+    "runtimeCommandSubjectKind",
+    "resolveControlledVerticalSuspensionAltitudeControlCommand",
+    "resolveReplaceSelfTransformationModeCommand",
+    "resolveCastAttackHitBonusActionSpellCommand",
+    "resolveReleaseGrappleCommand",
+    "resolveExecuteCompelledGrovelCommand",
+    "resolveExecuteCompelledDropCommand",
+    "resolveCompelledApproachCommand",
+    "resolveCompelledFleeCommand",
+    "resolveEndConcentrationCommand",
+    "resolveGrantedAreaSaveDamageActionCommand",
+    "runtimeCommandSubjectSpendsMagicAction",
+    "resolveMoveCommand",
+    "resolveFixedCostMovementReplacementCommand",
+    "resolveStandFromProneCommand",
+    "resolveOpportunityAttackCommand",
+    "resolveReactionAttackCommand",
+    "resolvePersistentSpatialSpellProcedureCommand",
+    "resolvePersistentAreaSaveConditionSaveCommand",
+    "resolvePersistentAreaSaveConditionEntrySaveCommand",
+    "resolvePersistentAreaSaveConditionEscapeSaveCommand",
+    "resolvePersistentAreaSaveCompositeSaveCommand",
+    "resolvePersistentAreaSaveDamageCommand",
+    "resolvePersistentAreaSaveConditionEscapeRestrainedNoLongerInAreaCommand",
+    "resolvePersistentAreaSaveConditionEscapeAreaRemovedCommand",
+    "resolveDirectionalPersistentAreaSaveCommand",
+    "resolveDirectionalPersistentAreaDirectionChangeCommand",
+    "resolveRamMovablePersistentAreaSaveCommand",
+    "resolveRamMovablePersistentAreaRepositionCommand",
+    "resolveRamMovablePersistentAreaRamCommand",
+    "resolveMovablePersistentAreaSaveCommand",
+    "resolveMovablePersistentAreaCylinderExitCommand",
+    "resolveMovablePersistentAreaRepositionCommand",
+    "resolvePersistentAreaSaveConditionEndTurnSaveCommand",
+    "resolveProtectionRelevantEffectSaveCommand",
+    "resolveCreatureTypeProtectionConditionAttemptCommand",
+    "resolveCreatureTypeProtectionPossessionAttemptCommand",
+    "resolveReleaseReadiedActionCommand",
+    "resolveReleaseReadiedSpellCommand",
+    "resolveReleaseReadiedMovementCommand",
+    "resolveReportReadyTriggerCommand",
+    "resolveDispersePersistentAreaTraitCommand",
+    "resolveDisperseTranslatingPersistentAreaCommand",
+    "resolveLinkedDefenseResistanceDamageShareSeparationCommand",
+    "resolveReleaseSpellCreatedHeldObjectCommand",
+    "resolveCastTriggeredReactionSpellCommand",
+    "resolveDirectTriggeredReactionSpellCommand",
+    "resolveEndTurnCommand",
+    "resolveDelegatedEndTurnCommand",
+    "resolveStagedDelegatedEndTurnCommand",
+    "resolveDelegatedEndTurnCommandWithReplayState",
+    "resolveEndTurnCommandForParent",
+    "battleRuntimeCommandProcedureRefs",
+    "battleRuntimeCommandBoundExecutionReferences",
+    "runtimeCommandEffectOccurrenceKey",
+    "runtimeCommandAreaMembershipTrigger",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "command",
+      identifier,
+      ["declaration-identifier"],
+      "command names the generic runtime request protocol",
+    ),
+  ),
+  ...[
+    "characterLightExtraAttackDamageAbilityModifierSupportProcedureRefs",
+    "isObjectLightDiscoverySubject",
+    "applyHeldLightEffect",
+    "activeMovableLightEffect",
+    "applyObjectLightEffect",
+    "objectLightSpellEffectOccurrenceId",
+    "applySpellLightEmitterEffects",
+    "applyMovableLightSpellEffect",
+    "repositionMovableLightSpellEffect",
+    "movableLightFromEffect",
+    "endHeldLightSpellEffect",
+    "trackedOngoingSpellLightEmittersByEffectRef",
+    "movableLightFillSetHasUnrelatedFills",
+    "spellMovableLightPlacementHole",
+    "spellMovableLightPlacementHoleId",
+    "characterExecutionWithMovableLightReposition",
+    "characterExecutionWithHeldLightHurl",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["declaration-identifier"],
+      "light names the illumination mechanic",
+    ),
+  ),
+  ...[
+    "linkedDefenseResistanceDamageShareConcentrationSavingThrowHoles",
+    "linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSaveHoles",
+    "characterExecutionGrantsPassiveDamageResistance",
+    "isLinkedDefenseResistanceDamageShareEffect",
+    "applyLinkedDefenseResistanceDamageShareSpellEffect",
+    "linkedDefenseResistanceDamageShareSeparationFactsHole",
+    "battleStateWithoutLinkedDefenseResistanceDamageShareEffects",
+    "linkedDefenseResistanceDamageShareEffectIsConnectedToAny",
+    "resolveLinkedDefenseResistanceDamageShareSeparationCommand",
+    "applyChosenDamageResistanceEffect",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names the damage relationship mechanic",
+    ),
+  ),
+  ...[
+    "Chosen damage Resistance spells use one target fill and one damage type choice.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["execution-diagnostic"],
+      "resistance names the damage relationship mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "darkness",
+    "applyMagicalDarknessPointOriginCastEffect",
+    ["declaration-identifier"],
+    "darkness names a visibility trait projected from generic area facts",
+  ),
+  ...[
+    "Darkness uses one table-supplied magical Darkness area fill.",
+    "Darkness area id must be a non-empty magical Darkness area.",
+    "Darkness spell-light overlap must reference a tracked ongoing spell light.",
+    "Darkness can only dispel overlapping spell-created light at or below its supported spell level limit.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["execution-diagnostic"],
+      "darkness names a visibility trait projected from generic area facts",
+    ),
+  ),
+  ...exactCollision(
+    "knock",
+    "Knock Out can only be chosen for melee attack damage.",
+    ["execution-diagnostic"],
+    "knock out names the zero-hit-point combat choice",
+  ),
+  ...[
+    "Fly Speed end-fall witness must be resolved before other battle subjects.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "fly",
+      identifier,
+      ["execution-diagnostic"],
+      "fly names the movement mode",
+    ),
+  ),
+  ...[
+    "BattleMovableLight",
+    "BattleMovableLightList",
+    "isLightMeleeWeapon",
+    "isTrackedOngoingSpellLightEmitter",
+    "heldLightHurlMechanicalFacts",
+    "movableLightResolutionSubjectMatchesOperation",
+    "battleLightEmitters",
+    "battleLightEmitterProjection",
+    "battleIlluminationFromLightEmitters",
+    "battleMagicalDarknessNonmagicalLightIllumination",
+    "expireBattleLightEmitters",
+    "tickDurationBattleLightEmitters",
+    "MovableLightCastPlan",
+    "MovableLightRepositionPlan",
+    "isDimLightEmissionRiderShape",
+    "stateAfterResolvedHeldLightHurl",
+    "resolveMovableLightCastSpellAct",
+    "resolveMovableLightRepositionSpellAct",
+    "ObjectLightTargetFact",
+    "spellObjectLightTargetFact",
+    "BattleLightEmitterAttachment",
+    "BattleTrackedOngoingSpellLightEmitterMechanicalFacts",
+    "BattleProjectedSpellLightEmitter",
+    "BattleTrackedOngoingSpellLightEmitter",
+    "BattleSpellLightEmitter",
+    "BattleUnitFeatureLightEmitter",
+    "BattleObjectInvisibleRevealLightEmitter",
+    "BattleStoredLightEmitter",
+    "BattleLightEmitterMechanicalFacts",
+    "BattleLightEmitter",
+    "BattleMovableLightForm",
+    "BattleLightEmitterProjectionFact",
+    "BattleLightEmitterProjection",
+    "BattleMagicalDarknessNonmagicalLightProjectionFact",
+    "BattleSpellCreatedLightAreaOverlap",
+    "SpellLightEmissionPostDamageRider",
+    "BattleMovableLightCastPlacement",
+    "BattleMovableLightRepositionPlacement",
+    "BattleMovableLightCastPlacementList",
+    "BattleMovableLightRepositionPlacementList",
+    "BattleMovableLightPlacementValue",
+    "allocateBattleStoredLightEmitterForCreature",
+    "BattleMovableLightId",
+    "BattleLightEmission",
+    "HeldLightHurlMechanicalFacts",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["declaration-identifier"],
+      "light names the illumination or weapon-property mechanic",
+    ),
+  ),
+  ...[
+    "magicalDarknessPointOriginRadiusFeet",
+    "battleMagicalDarknessSightObscurement",
+    "battleMagicalDarknessNonmagicalLightIllumination",
+    "resolveMagicalDarknessPointOriginSpellAct",
+    "BattleMagicalDarknessZone",
+    "BattleMagicalDarknessSightProjectionFact",
+    "BattleMagicalDarknessNonmagicalLightProjectionFact",
+    "BattleMagicalDarknessAreaChoice",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["declaration-identifier"],
+      "darkness names the visibility mechanic",
+    ),
+  ),
+  ...[
+    "combatantHasLinkedDefenseResistanceDamageShareResistance",
+    "linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget",
+    "linkedDefenseResistanceDamageShareCastFactsAreSatisfied",
+    "battleStateWithoutLinkedDefenseResistanceDamageShareConnectedToCombatants",
+    "battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints",
+    "linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied",
+    "battleStateAfterLinkedDefenseResistanceDamageShareSeparation",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names the damage relationship mechanic",
+    ),
+  ),
+  ...[
+    "battleCreatureStateWithKnockOutPreservedConditions",
+    "nonKnockOutLifecycleFields",
+    "battleCreatureStateWithoutKnockOut",
+    "damageAllowsKnockOut",
+    "attackCanCarryKnockOutChoice",
+    "KnockOutEligibleBattleCreatureState",
+    "BattleCreatureKnockOutLifecycle",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "knock",
+      identifier,
+      ["declaration-identifier"],
+      "knock out names the zero-hit-point combat choice",
+    ),
+  ),
+  ...[
+    "FlySpeedGrantEndFallCleanupFramesResult",
+    "battleStateWithFlySpeedGrantEndFallCleanupFrames",
+    "isEndedFlySpeedGrant",
+    "EndedFlySpeedGrant",
+    "BattleFlySpeedGrantEndFallCleanupFrame",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "fly",
+      identifier,
+      ["declaration-identifier"],
+      "fly names the movement mode",
+    ),
+  ),
+  ...["BattleJumpLandingFact", "BattleJumpDistanceMultiplier"].flatMap(
+    (identifier) =>
+      exactCollision(
+        "jump",
+        identifier,
+        ["declaration-identifier"],
+        "jump names the movement operation",
+      ),
+  ),
+  ...["HealAmount", "healAmount"].flatMap((identifier) =>
+    exactCollision(
+      "heal",
+      identifier,
+      ["declaration-identifier"],
+      "heal names hit-point restoration",
+    ),
+  ),
+  ...exactCollision(
+    "shield",
+    "combatantWieldingShield",
+    ["declaration-identifier"],
+    "shield names the equipment category",
+  ),
+  ...exactCollision(
+    "slow",
+    "applyWeaponMasterySlowAfterDamage",
+    ["declaration-identifier"],
+    "slow names the weapon-mastery property",
+  ),
+  ...exactCollision(
+    "shield",
+    "unarmored_no_shield",
+    ["discriminant-literal"],
+    "shield names the equipment category",
+  ),
+  ...exactCollision(
+    "light",
+    "light_dex",
+    ["discriminant-literal"],
+    "light names the armor category",
+  ),
+  ...exactCollision(
+    "light",
+    "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
+    ["execution-diagnostic"],
+    "Light Property is the canonical weapon-property mechanic",
+  ),
+  ...exactCollision(
+    "shield",
+    "Acrobatic Movement requires the mover to be unarmored and not wielding a Shield.",
+    ["execution-diagnostic"],
+    "Shield is the canonical equipment category",
+  ),
+  ...[
+    "Chosen damage Resistance spell target must be a willing combatant within the selected spell's supported range.",
+    "Chosen damage Resistance spell damage type must be one of the selected spell's choices.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["execution-diagnostic"],
+      "Resistance is the canonical damage relationship",
+    ),
+  ),
+  ...["shield", "magic_missile"].flatMap((spellId) =>
+    exactCollision(
+      spellId,
+      "SHIELD_MAGIC_MISSILE_SPELL_ID",
+      ["declaration-identifier"],
+      "the authored rule names this exact cross-record interaction",
+    ),
+  ),
+  ...exactCollision(
+    "magic_missile",
+    "magic_missile",
+    ["execution-diagnostic"],
+    "the authored rule names this exact cross-record interaction",
+  ),
+  ...[
+    "COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND",
+    "EncodedRuntimeCommandBattleSubject",
+    "SerializedRuntimeCommandReferencePolicy",
+    "byCommand",
+    "command",
+    "commandLabel",
+    "commandRoute",
+    "commandSpell",
+    "CommandInvocationSchema",
+    "serializedRuntimeCommandOwnsBoundProcedure",
+    "serializedRuntimeCommandReferencePolicy",
+    "serializedRuntimeCommandTargetIsLive",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "command",
+      identifier,
+      ["declaration-identifier"],
+      "command names the generic runtime request protocol",
+    ),
+  ),
+  ...[
+    "RAGE_RESISTANCE_DAMAGE_TYPES",
+    "CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES",
+    "ChosenDamageResistanceResolveInput",
+    "LinkedDefenseResistanceDamageShareInvocationSchema",
+    "afterLinkedDefenseResistanceDamageShareDamageShare",
+    "afterResistance",
+    "admitChosenDamageResistance",
+    "admitLinkedDefenseResistanceDamageShare",
+    "applyLinkedDefenseResistanceDamageShareDamageShare",
+    "chosenDamageResistance",
+    "chosenDamageResistanceSpellProjection",
+    "damageResistance",
+    "discoverChosenDamageResistanceCastAct",
+    "discoverLinkedDefenseResistanceDamageShareCastAct",
+    "linkedDefenseResistanceDamageShare",
+    "linkedDefenseResistanceDamageShareCaster",
+    "linkedDefenseResistanceDamageShareCasters",
+    "linkedDefenseResistanceDamageShareConcentrationSavingThrows",
+    "linkedDefenseResistanceDamageShareArmorClassOperationIsSupported",
+    "linkedDefenseResistanceDamageShareDamageShareOperationIsSupported",
+    "linkedDefenseResistanceDamageShareEarlyEndsAreSupported",
+    "linkedDefenseResistanceDamageShareMaterialComponentIsSupported",
+    "linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate",
+    "linkedDefenseResistanceDamageShareOperationsAreSupported",
+    "linkedDefenseResistanceDamageShareResistanceOperationIsSupported",
+    "linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported",
+    "linkedDefenseResistanceDamageShareSeparationAct",
+    "linkedDefenseResistanceDamageShareSeparationActs",
+    "linkedDefenseResistanceDamageShareSpellProjection",
+    "resolveChosenDamageResistance",
+    "resolveLinkedDefenseResistanceDamageShare",
+    "suppressLinkedDefenseResistanceDamageShareDamageShare",
+    "targetHasRuntimeDamageResistance",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names the generic damage relationship mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "sleep",
+    "doesNotSleep",
+    ["declaration-identifier"],
+    "sleep names a generic creature-state predicate",
+  ),
+  ...[
+    "WildShapeShieldLoadoutObjectRefSchema",
+    "characterBattleLoadoutShieldOffhandIssues",
+    "shield",
+    "shieldAvailable",
+    "shieldGrounded",
+    "shieldWorn",
+    "usesShield",
+    "wieldingShield",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "shield",
+      identifier,
+      ["declaration-identifier"],
+      "shield names the generic equipment category",
+    ),
+  ),
+  ...exactCollision(
+    "shield",
+    "shield",
+    ["registry-key", "schema-discriminant-literal"],
+    "shield names the generic equipment category",
+  ),
+  ...[
+    "FlyEndCanStopFallReason",
+    "FlySpeedGrantEndFallWitness",
+    "FlySpeedGrantEndFallWitnessResult",
+    "expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames",
+    "expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames",
+    "flySpeed",
+    "resolveFlySpeedGrantEndFallCleanup",
+    "resolveFlySpeedGrantEndFallCleanupStateOnly",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "fly",
+      identifier,
+      ["declaration-identifier"],
+      "fly names the generic movement mode",
+    ),
+  ),
+  ...[
+    "applyStepOfTheWindJumpDistanceMultiplier",
+    "jumpDistanceMultiplier",
+    "jumpMovementValidation",
+    "maxJumpDistanceFeet",
+    "withJumpDistanceMultiplier",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "jump",
+      identifier,
+      ["declaration-identifier"],
+      "jump names the generic movement operation",
+    ),
+  ),
+  ...[
+    "KnockOutEligibleZeroHpLifecycle",
+    "applyKnockOut",
+    "hpDamageProjectionAllowsKnockOut",
+    "initialKnockOutLifecycleFields",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "knock",
+      identifier,
+      ["declaration-identifier"],
+      "knock out names the generic zero-hit-point combat choice",
+    ),
+  ),
+  ...exactCollision(
+    "knock",
+    "knockOut",
+    ["schema-discriminant-literal"],
+    "knock out names the generic zero-hit-point combat choice",
+  ),
+  ...exactCollision(
+    "slow",
+    "WEAPON_MASTERY_SLOW_SUPPORT_PROFILE",
+    ["declaration-identifier"],
+    "slow names the distinct weapon-mastery support profile",
+  ),
+  ...exactCollision(
+    "creation",
+    "creationBoundary",
+    ["declaration-identifier"],
+    "creation names the generic completed-inscription lifecycle boundary",
+  ),
+];
+
+const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
+  sha256: "924a0f7738de41287522f032dcc0d72c04b1ac0f5d319ccee1e1b52ad109747d",
+  siteCount: 1207,
+  violationCount: 1318,
+};
 
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -154,6 +1290,18 @@ function classifyPath(relativePath, rules) {
   }
 
   return null;
+}
+
+function assertEveryPathRuleMatches(relativePaths, rules, label) {
+  const unmatched = rules.filter(
+    (rule) =>
+      !relativePaths.some((relativePath) => rule.pattern.test(relativePath)),
+  );
+  assert.deepEqual(
+    unmatched.map((rule) => rule.reason),
+    [],
+    `${label} contains rule(s) which match no repository file`,
+  );
 }
 
 function hasAuthoredIdentitySelector(text) {
@@ -346,7 +1494,7 @@ function assertBattleReplayExecutionBoundary() {
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
       patterns: [
         /as unknown as Schema\.Schema<BattleHole>/,
-        /(?:spell|unit):(?!\s*Schema\.optionalWith\(Schema\.Never)/,
+        /(?:spell|unit):(?!\s*(?:Schema\.optionalWith\(Schema\.Never|Schema\.optionalKey\(Schema\.Never\)))/,
         /unitFeature:/,
       ],
       sliceStart: "const BattleHoleBaseSchema",
@@ -463,10 +1611,15 @@ function assertBattleReplayExecutionBoundary() {
       ],
     },
     {
-      relativePath: "packages/mcp/src/session-store.ts",
+      relativePath: "packages/battle-runtime/src/battle-runtime-transaction.ts",
       patterns: [
-        /export type BattleFillSession[\s\S]{0,300}readonly label:/,
-        /export type BattleFillSession[\s\S]{0,300}readonly summary:/,
+        /export type BattlePendingTransactionView[\s\S]{0,300}readonly label:/,
+        /export type BattlePendingTransactionView[\s\S]{0,300}readonly summary:/,
+      ],
+    },
+    {
+      relativePath: "packages/mcp/src/session-store-types.ts",
+      patterns: [
         /export type McpSessionSnapshot[\s\S]{0,500}readonly label:/,
         /export type McpSessionSnapshot[\s\S]{0,500}readonly summary:/,
       ],
@@ -481,7 +1634,7 @@ function assertBattleReplayExecutionBoundary() {
     {
       relativePath: "packages/battle-runtime/src/identity.ts",
       patterns: [
-        /BattleActiveEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
+        /BattleEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
         /BattleSpellDamageDieExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
         POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN,
       ],
@@ -867,7 +2020,7 @@ function unwrapExpression(node) {
 }
 
 function schemaNeverRejectsExpression(node) {
-  return /^Schema\.optionalWith\(Schema\.Never,\s*\{\s*exact:\s*true\s*\}\)$/.test(
+  return /^(?:Schema\.optionalWith\(Schema\.Never,\s*\{\s*exact:\s*true\s*\}\)|Schema\.optionalKey\(Schema\.Never\))$/.test(
     node.getText(),
   );
 }
@@ -1333,7 +2486,7 @@ function assertBattleReplayAstSelfTests() {
       procedure: Procedure,
     })
     const rerollCodec = Schema.Struct({
-      spellDamageReroll: Schema.optionalWith(Schema.Struct({
+      spellDamageReroll: Schema.optionalKey(Schema.Struct({
         dice: Schema.Array(Schema.Struct({ dieRef: Ref })),
       })),
     })
@@ -1349,12 +2502,12 @@ function assertBattleReplayAstSelfTests() {
     const codec = Schema.Struct({
       kind: Schema.Literal("spellTargetList"),
       sourceProcedureRef: Ref,
-      procedure: Schema.optionalWith(Schema.Never, { exact: true }),
+      procedure: Schema.optionalKey(Schema.Never),
     })
     const rerollCodec = Schema.Struct({
-      spellDamageReroll: Schema.optionalWith(Schema.Struct({
+      spellDamageReroll: Schema.optionalKey(Schema.Struct({
         dice: Schema.Array(Schema.Struct({
-          dieRef: Schema.optionalWith(Schema.Never, { exact: true }),
+          dieRef: Schema.optionalKey(Schema.Never),
         })),
       })),
     })
@@ -1372,12 +2525,12 @@ function assertBattleReplayAstSelfTests() {
     const rerollPayloadCodec = Schema.Struct({
       dice: Schema.Array(rerollDieCodec),
     })
-    const spellDamageReroll = Schema.optionalWith(rerollPayloadCodec)
+    const spellDamageReroll = Schema.optionalKey(rerollPayloadCodec)
     const fillCodec = Schema.Struct({ spellDamageReroll })
   `;
   const strictExtractedSchemaFixture = `
     const removedTargetFields = {
-      procedure: Schema.optionalWith(Schema.Never, { exact: true }),
+      procedure: Schema.optionalKey(Schema.Never),
     }
     const targetListFields = {
       kind: Schema.Literal("spellTargetList"),
@@ -1385,13 +2538,22 @@ function assertBattleReplayAstSelfTests() {
     }
     const targetListCodec = Schema.Struct(targetListFields)
     const removedDieFields = {
-      dieRef: Schema.optionalWith(Schema.Never, { exact: true }),
+      dieRef: Schema.optionalKey(Schema.Never),
     }
     const rerollDieCodec = Schema.Struct({ ...removedDieFields })
-    const spellDamageReroll = Schema.optionalWith(
+    const spellDamageReroll = Schema.optionalKey(
       Schema.Struct({ dice: Schema.Array(rerollDieCodec) }),
     )
     const fillCodec = Schema.Struct({ spellDamageReroll })
+  `;
+  const nativeStrictSchemaFixture = `
+    const targetListCodec = Schema.Struct({
+      kind: Schema.Literal("spellTargetList"),
+      procedure: Schema.optionalKey(Schema.Never),
+    })
+    const rerollDieCodec = Schema.Struct({
+      dieRef: Schema.optionalKey(Schema.Never),
+    })
   `;
   const violations = battleReplayAstViolations(
     fixture,
@@ -1446,6 +2608,14 @@ function assertBattleReplayAstSelfTests() {
     ),
     [],
     "Battle replay AST gate must follow extracted strict-rejection schemas.",
+  );
+  assert.deepEqual(
+    battleReplayAstViolations(
+      nativeStrictSchemaFixture,
+      "packages/battle-runtime/src/battle-reducer/native-strict-codecs.ts",
+    ),
+    [],
+    "Battle replay AST gate must recognize native v4 optionalKey Never rejection schemas.",
   );
   assert.ok(
     violations.filter((violation) =>
@@ -1649,6 +2819,1081 @@ function collectAuthoredIdentityLiterals() {
     identityLiterals,
     malformedContentFiles,
   };
+}
+
+function lexicalWords(text) {
+  return text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+function collectSurfaceSpellLexicon(records) {
+  const spellRecords =
+    records ??
+    listSurfaceContentFiles(SURFACE_CONTENT_ROOT).map((filePath) => {
+      const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      return { ...parsed, sourceFile: path.relative(REPO_ROOT, filePath) };
+    });
+  const malformed = [];
+  const lexicon = [];
+  const seenIds = new Set();
+
+  for (const record of spellRecords) {
+    if (record?.kind !== "spell") continue;
+    if (
+      typeof record.id !== "string" ||
+      record.id.length === 0 ||
+      typeof record.name !== "string" ||
+      record.name.length === 0
+    ) {
+      malformed.push(record?.sourceFile ?? "<synthetic-record>");
+      continue;
+    }
+    if (seenIds.has(record.id)) {
+      malformed.push(
+        `${record.sourceFile ?? "<synthetic-record>"}:duplicate:${record.id}`,
+      );
+      continue;
+    }
+    seenIds.add(record.id);
+    const idWords = lexicalWords(record.id);
+    const nameWords = lexicalWords(record.name);
+    const phraseKeys = new Set([idWords.join(" "), nameWords.join(" ")]);
+    lexicon.push({
+      id: record.id,
+      name: record.name,
+      phraseWords: [...phraseKeys].map((phrase) => phrase.split(" ")),
+    });
+  }
+
+  return {
+    malformed,
+    lexicon: lexicon.sort((left, right) => left.id.localeCompare(right.id)),
+  };
+}
+
+function collectSurfaceSpellHoleIds() {
+  const holeIds = new Set();
+  const visit = (value) => {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    if (value == null || typeof value !== "object") return;
+    for (const [key, nestedValue] of Object.entries(value)) {
+      if (key === "holeId" && typeof nestedValue === "string") {
+        holeIds.add(nestedValue);
+      }
+      visit(nestedValue);
+    }
+  };
+
+  for (const filePath of listSurfaceContentFiles(SURFACE_CONTENT_ROOT)) {
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (parsed?.kind === "spell") visit(parsed);
+  }
+  return holeIds;
+}
+
+function wordsContainPhrase(words, phrase) {
+  if (phrase.length === 0 || phrase.length > words.length) return false;
+  for (let start = 0; start <= words.length - phrase.length; start += 1) {
+    if (phrase.every((word, offset) => words[start + offset] === word)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const SPELL_LEXICON_MATCHER_CACHE = new WeakMap();
+
+function spellLexiconMatcher(spellLexicon) {
+  const cached = SPELL_LEXICON_MATCHER_CACHE.get(spellLexicon);
+  if (cached !== undefined) return cached;
+  const phrasesByFirstWord = new Map();
+  for (const spell of spellLexicon) {
+    for (const phrase of spell.phraseWords) {
+      const first = phrase[0];
+      const bucket = phrasesByFirstWord.get(first) ?? [];
+      bucket.push({ phrase, spell });
+      phrasesByFirstWord.set(first, bucket);
+    }
+  }
+  const matcher = { phrasesByFirstWord, results: new Map() };
+  SPELL_LEXICON_MATCHER_CACHE.set(spellLexicon, matcher);
+  return matcher;
+}
+
+function spellLexiconMatches(text, spellLexicon) {
+  const matcher = spellLexiconMatcher(spellLexicon);
+  const cached = matcher.results.get(text);
+  if (cached !== undefined) return cached;
+  const words = lexicalWords(text);
+  const matched = new Map();
+  for (const word of new Set(words)) {
+    for (const candidate of matcher.phrasesByFirstWord.get(word) ?? []) {
+      if (wordsContainPhrase(words, candidate.phrase)) {
+        matched.set(candidate.spell.id, candidate.spell);
+      }
+    }
+  }
+  const matches = [...matched.values()];
+  matcher.results.set(text, matches);
+  return matches;
+}
+
+function textContainsExactAuthoredTitle(text, spell) {
+  return new RegExp(
+    `(?:^|[^A-Za-z0-9])${escapeForRegExp(spell.name)}(?:$|[^A-Za-z0-9])`,
+  ).test(text);
+}
+
+function executionIdentityBoundaryReason(relativePath) {
+  if (
+    /(?:\.test\.[cm]?tsx?$|\.mbt\.test\.[cm]?tsx?$|\.test-support\.[cm]?tsx?$|\/test-support\/|\/fixtures?\/)/.test(
+      relativePath,
+    )
+  ) {
+    return "test-or-fixture-boundary";
+  }
+  return classifyPath(relativePath, EXECUTION_IDENTITY_BOUNDARIES);
+}
+
+function isExecutionIdentitySource(relativePath, executionImportClosure) {
+  return (
+    executionImportClosure.has(relativePath) &&
+    executionIdentityBoundaryReason(relativePath) === null
+  );
+}
+
+function executionDiagnosticViolationsForFile(
+  relativePath,
+  content,
+  spellLexicon,
+) {
+  if (
+    !relativePath.startsWith("packages/battle-runtime/src/") ||
+    executionIdentityBoundaryReason(relativePath) !== null
+  ) {
+    return [];
+  }
+  return executionIdentityViolationsForFile(
+    relativePath,
+    content,
+    spellLexicon,
+    new Set([relativePath]),
+  ).filter((violation) => violation.role === "execution-diagnostic");
+}
+
+function declarationName(node) {
+  const hasExportModifier = (candidate) =>
+    candidate.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    ) === true;
+  const variableStatement = ts.isVariableDeclaration(node)
+    ? node.parent?.parent
+    : undefined;
+  const variableIsExported =
+    variableStatement !== undefined &&
+    ts.isVariableStatement(variableStatement) &&
+    hasExportModifier(variableStatement);
+  const isExportedDeclaration =
+    !ts.isVariableDeclaration(node) && hasExportModifier(node);
+  const isExecutionContractDeclaration =
+    ts.isClassDeclaration(node) ||
+    ts.isEnumDeclaration(node) ||
+    ts.isInterfaceDeclaration(node) ||
+    ts.isTypeAliasDeclaration(node) ||
+    ts.isFunctionDeclaration(node) ||
+    (ts.isVariableDeclaration(node) && variableIsExported);
+  if (
+    isExecutionContractDeclaration &&
+    node.name !== undefined &&
+    ts.isIdentifier(node.name) &&
+    (isExportedDeclaration ||
+      EXECUTION_DECLARATION_NAME_PATTERN.test(node.name.text) ||
+      EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(node.name.text) ||
+      EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN.test(node.name.text))
+  ) {
+    return node.name.text;
+  }
+  return undefined;
+}
+
+function exportedVariableAuthoredValue(node, spellLexicon) {
+  if (!ts.isVariableDeclaration(node) || node.initializer === undefined) {
+    return false;
+  }
+  const variableStatement = node.parent?.parent;
+  if (
+    variableStatement === undefined ||
+    !ts.isVariableStatement(variableStatement) ||
+    variableStatement.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    ) !== true
+  ) {
+    return false;
+  }
+  let hasAuthoredValue = false;
+  const visit = (candidate) => {
+    if (hasAuthoredValue) return;
+    const text = runtimeTextExpression(candidate);
+    if (
+      text !== undefined &&
+      !isNestedRuntimeTextExpression(candidate) &&
+      spellLexiconMatches(text, spellLexicon).some(
+        (spell) =>
+          spell.phraseWords.some((phrase) => phrase.length > 1) ||
+          textContainsExactAuthoredTitle(text, spell),
+      )
+    ) {
+      hasAuthoredValue = true;
+      return;
+    }
+    ts.forEachChild(candidate, visit);
+  };
+  visit(node.initializer);
+  return hasAuthoredValue;
+}
+
+function coupledExecutionIdentifier(node) {
+  if (
+    (ts.isVariableDeclaration(node) ||
+      ts.isParameter(node) ||
+      ts.isPropertyDeclaration(node) ||
+      ts.isPropertySignature(node) ||
+      ts.isTypeAliasDeclaration(node) ||
+      ts.isFunctionDeclaration(node) ||
+      ts.isInterfaceDeclaration(node) ||
+      ts.isClassDeclaration(node)) &&
+    node.name !== undefined &&
+    ts.isIdentifier(node.name)
+  ) {
+    return node.name;
+  }
+  if (ts.isImportSpecifier(node)) return node.name;
+  if (ts.isImportClause(node) && node.name !== undefined) return node.name;
+  return undefined;
+}
+
+function runtimeTextExpression(node) {
+  if (ts.isTaggedTemplateExpression(node)) {
+    return runtimeTextExpression(node.template);
+  }
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return node.text;
+  }
+  if (ts.isTemplateExpression(node)) {
+    return [
+      node.head.text,
+      ...node.templateSpans.map((span) => span.literal.text),
+    ].join(" ");
+  }
+  if (
+    ts.isBinaryExpression(node) &&
+    node.operatorToken.kind === ts.SyntaxKind.PlusToken
+  ) {
+    const left = runtimeTextExpression(node.left);
+    const right = runtimeTextExpression(node.right);
+    if (left === undefined && right === undefined) return undefined;
+    return `${left ?? ""} ${right ?? ""}`;
+  }
+  return undefined;
+}
+
+function isNestedRuntimeTextExpression(node) {
+  const parent = node.parent;
+  return (
+    ts.isTaggedTemplateExpression(parent) ||
+    ts.isTemplateExpression(parent) ||
+    (ts.isTemplateSpan(parent) && parent.literal === node) ||
+    (ts.isBinaryExpression(parent) &&
+      parent.operatorToken.kind === ts.SyntaxKind.PlusToken)
+  );
+}
+
+function runtimeTextExpressionHasExecutionRole(node) {
+  let current = node;
+  while (
+    ts.isParenthesizedExpression(current.parent) ||
+    ts.isAsExpression(current.parent) ||
+    ts.isSatisfiesExpression(current.parent) ||
+    ts.isArrayLiteralExpression(current.parent)
+  ) {
+    current = current.parent;
+  }
+  const parent = current.parent;
+  return (
+    (ts.isVariableDeclaration(parent) && parent.initializer === current) ||
+    (ts.isPropertyAssignment(parent) && parent.initializer === current) ||
+    (ts.isReturnStatement(parent) && parent.expression === current) ||
+    (ts.isArrowFunction(parent) && parent.body === current) ||
+    ((ts.isCallExpression(parent) || ts.isNewExpression(parent)) &&
+      parent.arguments?.some((argument) => argument === current) === true)
+  );
+}
+
+function nearestNamedFunction(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isSourceFile(current)) {
+    if (
+      (ts.isFunctionDeclaration(current) ||
+        ts.isFunctionExpression(current) ||
+        ts.isMethodDeclaration(current)) &&
+      current.name !== undefined
+    ) {
+      return propertyNameText(current.name);
+    }
+    if (
+      ts.isVariableDeclaration(current) &&
+      ts.isIdentifier(current.name) &&
+      (ts.isArrowFunction(current.initializer) ||
+        ts.isFunctionExpression(current.initializer))
+    ) {
+      return current.name.text;
+    }
+    current = current.parent;
+  }
+  return undefined;
+}
+
+function isPositionalDiagnosticString(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isStatement(current)) {
+    if (ts.isCallExpression(current)) {
+      return EXECUTION_DIAGNOSTIC_CALL_PATTERN.test(
+        current.expression.getText(),
+      );
+    }
+    if (
+      ts.isNewExpression(current) &&
+      ts.isIdentifier(current.expression) &&
+      current.expression.text === "Error"
+    ) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+function isReturnedValidationString(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isSourceFile(current)) {
+    if (ts.isReturnStatement(current)) {
+      const functionName = nearestNamedFunction(current);
+      return (
+        functionName !== undefined &&
+        /(?:fail|invalid|issue|error|validat)/i.test(functionName)
+      );
+    }
+    if (ts.isFunctionLike(current)) return false;
+    current = current.parent;
+  }
+  return false;
+}
+
+function propertyDeclaresExecutionRegistryKey(node) {
+  if (
+    ts.isPropertySignature(node) ||
+    ts.isMethodSignature(node) ||
+    ts.isMethodDeclaration(node)
+  ) {
+    let owner = node.parent;
+    while (owner !== undefined && !ts.isSourceFile(owner)) {
+      if (
+        (ts.isInterfaceDeclaration(owner) ||
+          ts.isTypeAliasDeclaration(owner)) &&
+        owner.name !== undefined
+      ) {
+        return /(?:Map|Registry|Procedures|Protocol|Variants)/.test(
+          owner.name.text,
+        );
+      }
+      owner = owner.parent;
+    }
+    return false;
+  }
+  if (!ts.isPropertyAssignment(node)) return false;
+  let owner = node.parent;
+  for (let depth = 0; owner !== undefined && depth < 5; depth += 1) {
+    if (ts.isCallExpression(owner)) {
+      return /(?:discriminator|match|registry)/i.test(
+        owner.expression.getText(),
+      );
+    }
+    if (ts.isVariableDeclaration(owner) && ts.isIdentifier(owner.name)) {
+      return EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(owner.name.text);
+    }
+    owner = owner.parent;
+  }
+  return false;
+}
+
+function nearestPropertyRole(node) {
+  let current = node.parent;
+  for (let depth = 0; current !== undefined && depth < 7; depth += 1) {
+    if (
+      ts.isPropertyAssignment(current) ||
+      ts.isPropertySignature(current) ||
+      ts.isMethodDeclaration(current) ||
+      ts.isMethodSignature(current)
+    ) {
+      return propertyNameText(current.name);
+    }
+    if (ts.isStatement(current) || ts.isSourceFile(current)) break;
+    current = current.parent;
+  }
+  return undefined;
+}
+
+function nearestVariableName(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isStatement(current)) {
+    if (ts.isVariableDeclaration(current) && ts.isIdentifier(current.name)) {
+      return current.name.text;
+    }
+    current = current.parent;
+  }
+  return undefined;
+}
+
+function isSchemaLiteralNode(node) {
+  let current = node.parent;
+  for (let depth = 0; current !== undefined && depth < 5; depth += 1) {
+    if (
+      ts.isCallExpression(current) &&
+      /(?:^|\.)Schema\.(?:Literal|Literals)$/.test(current.expression.getText())
+    ) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+const collisionSitePrinter = ts.createPrinter({ removeComments: true });
+const collisionSiteFingerprintCache = new WeakMap();
+
+function collisionSiteFingerprint(source, node) {
+  let current = node;
+  let site = node;
+  while (!ts.isSourceFile(current)) {
+    if (ts.isStatement(current)) site = current;
+    current = current.parent;
+  }
+  const cached = collisionSiteFingerprintCache.get(site);
+  if (cached !== undefined) return cached;
+  const normalizedSource = collisionSitePrinter
+    .printNode(ts.EmitHint.Unspecified, site, source)
+    .replace(/\s+/g, " ")
+    .trim();
+  const fingerprint = `${ts.SyntaxKind[site.kind]}:${createHash("sha256")
+    .update(normalizedSource)
+    .digest("hex")}`;
+  collisionSiteFingerprintCache.set(site, fingerprint);
+  return fingerprint;
+}
+
+function executionIdentityViolation(
+  source,
+  relativePath,
+  node,
+  role,
+  identifier,
+  spell,
+) {
+  const location = source.getLineAndCharacterOfPosition(node.getStart(source));
+  return {
+    relativePath,
+    line: location.line + 1,
+    column: location.character + 1,
+    spellId: spell.id,
+    spellName: spell.name,
+    role,
+    identifier,
+    siteFingerprint: collisionSiteFingerprint(source, node),
+  };
+}
+
+function executionIdentityViolationsForFile(
+  relativePath,
+  content,
+  spellLexicon,
+  executionImportClosure = new Set([relativePath]),
+) {
+  if (!isExecutionIdentitySource(relativePath, executionImportClosure)) {
+    return [];
+  }
+  const source = ts.createSourceFile(
+    relativePath,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    relativePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const violations = [];
+  const addMatches = (node, role, identifier) => {
+    for (const spell of spellLexiconMatches(identifier, spellLexicon)) {
+      violations.push(
+        executionIdentityViolation(
+          source,
+          relativePath,
+          node,
+          role,
+          identifier,
+          spell,
+        ),
+      );
+    }
+  };
+  const addAuthoredTitleTextMatches = (node, identifier) => {
+    for (const spell of spellLexiconMatches(identifier, spellLexicon)) {
+      if (
+        !spell.phraseWords.some((phrase) => phrase.length > 1) &&
+        !textContainsExactAuthoredTitle(identifier, spell)
+      ) {
+        continue;
+      }
+      violations.push(
+        executionIdentityViolation(
+          source,
+          relativePath,
+          node,
+          "execution-diagnostic",
+          identifier,
+          spell,
+        ),
+      );
+    }
+  };
+  const visit = (node) => {
+    const declared = declarationName(node);
+    if (declared !== undefined) {
+      addMatches(node.name, "declaration-identifier", declared);
+    }
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      exportedVariableAuthoredValue(node, spellLexicon)
+    ) {
+      addMatches(node.name, "declaration-identifier", node.name.text);
+    }
+    const coupledIdentifier = coupledExecutionIdentifier(node);
+    if (coupledIdentifier !== undefined) {
+      addMatches(
+        coupledIdentifier,
+        "declaration-identifier",
+        coupledIdentifier.text,
+      );
+    }
+
+    if (
+      (ts.isPropertyAssignment(node) ||
+        ts.isPropertySignature(node) ||
+        ts.isMethodDeclaration(node) ||
+        ts.isMethodSignature(node)) &&
+      node.name !== undefined
+    ) {
+      const key = propertyNameText(node.name);
+      if (key !== undefined && propertyDeclaresExecutionRegistryKey(node)) {
+        addMatches(node.name, "registry-key", key);
+      }
+    }
+
+    const runtimeText = runtimeTextExpression(node);
+    if (runtimeText !== undefined && !isNestedRuntimeTextExpression(node)) {
+      const propertyRole = nearestPropertyRole(node);
+      if (
+        propertyRole !== undefined &&
+        EXECUTION_IDENTITY_ROLE_FIELDS.has(propertyRole)
+      ) {
+        addMatches(
+          node,
+          isSchemaLiteralNode(node)
+            ? "schema-discriminant-literal"
+            : "discriminant-literal",
+          runtimeText,
+        );
+      } else if (
+        propertyRole !== undefined &&
+        EXECUTION_DIAGNOSTIC_FIELDS.has(propertyRole)
+      ) {
+        addMatches(node, "execution-diagnostic", runtimeText);
+      } else {
+        const containerName = nearestVariableName(node);
+        if (
+          containerName !== undefined &&
+          (EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(containerName) ||
+            EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN.test(containerName))
+        ) {
+          addMatches(node, "protocol-array-member", runtimeText);
+        } else if (
+          isPositionalDiagnosticString(node) ||
+          isReturnedValidationString(node) ||
+          runtimeTextExpressionHasExecutionRole(node)
+        ) {
+          addAuthoredTitleTextMatches(node, runtimeText);
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+
+  const basename = path.basename(relativePath).replace(/\.[^.]+$/, "");
+  for (const spell of spellLexiconMatches(basename, spellLexicon)) {
+    violations.push({
+      relativePath,
+      line: 1,
+      column: 1,
+      spellId: spell.id,
+      spellName: spell.name,
+      role: "execution-filename",
+      identifier: basename,
+      siteFingerprint: `execution-filename:${basename}`,
+    });
+  }
+  return violations;
+}
+
+function collisionSiteCountEvidence(violations) {
+  const counts = new Map();
+  for (const violation of violations) {
+    const site = JSON.stringify({
+      relativePath: violation.relativePath,
+      spellId: violation.spellId,
+      role: violation.role,
+      identifier: violation.identifier,
+      siteFingerprint: violation.siteFingerprint,
+    });
+    counts.set(site, (counts.get(site) ?? 0) + 1);
+  }
+  const sites = [...counts.entries()]
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([site, count]) => ({ site: JSON.parse(site), count }));
+  const canonicalSites = JSON.stringify(sites);
+  return {
+    sha256: createHash("sha256").update(canonicalSites).digest("hex"),
+    siteCount: sites.length,
+    violationCount: violations.length,
+  };
+}
+
+function sameCollisionSiteEvidence(left, right) {
+  return (
+    left.sha256 === right.sha256 &&
+    left.siteCount === right.siteCount &&
+    left.violationCount === right.violationCount
+  );
+}
+
+function applyExecutionIdentityCollisionExemptions(
+  violations,
+  exemptions,
+  expectedSiteEvidence,
+) {
+  const usage = new Map(exemptions.map((exemption) => [exemption, 0]));
+  const matched = [];
+  const remaining = violations.filter((violation) => {
+    const matches = exemptions.filter(
+      (exemption) =>
+        exemption.spellId === violation.spellId &&
+        exemption.role === violation.role &&
+        exemption.identifier === violation.identifier,
+    );
+    assert.ok(
+      matches.length <= 1,
+      `duplicate authored-identity collision exemption for ${violation.spellId}/${violation.role}/${violation.identifier}`,
+    );
+    if (matches.length === 0) return true;
+    usage.set(matches[0], (usage.get(matches[0]) ?? 0) + 1);
+    matched.push(violation);
+    return false;
+  });
+  const stale = exemptions.filter((exemption) => usage.get(exemption) === 0);
+  const siteEvidence = collisionSiteCountEvidence(matched);
+  return {
+    remaining,
+    stale,
+    usage,
+    siteEvidence,
+    siteEvidenceMatches: sameCollisionSiteEvidence(
+      siteEvidence,
+      expectedSiteEvidence,
+    ),
+  };
+}
+
+function dedupeExecutionIdentityViolations(violations) {
+  const unique = new Map();
+  for (const violation of violations) {
+    const key = `${violation.relativePath}:${violation.line}:${violation.column}:${violation.spellId}:${violation.role}:${violation.identifier}`;
+    if (!unique.has(key)) unique.set(key, violation);
+  }
+  return [...unique.values()].sort(
+    (left, right) =>
+      left.relativePath.localeCompare(right.relativePath) ||
+      left.line - right.line ||
+      left.column - right.column ||
+      left.role.localeCompare(right.role) ||
+      left.spellId.localeCompare(right.spellId),
+  );
+}
+
+function runExecutionIdentityCohortSelfTest() {
+  const { lexicon, malformed } = collectSurfaceSpellLexicon([
+    { kind: "spell", id: "cloudkill", name: "Cloudkill" },
+    { kind: "spell", id: "magic_missile", name: "Magic Missile" },
+    { kind: "spell", id: "mirror_image", name: "Mirror Image" },
+    { kind: "spell", id: "find_familiar", name: "Find Familiar" },
+    { kind: "spell", id: "feather_fall", name: "Feather Fall" },
+    { kind: "spell", id: "sanctuary", name: "Sanctuary" },
+    { kind: "spell", id: "light", name: "Light" },
+    { kind: "spell", id: "command", name: "Command" },
+    { kind: "spell", id: "shield", name: "Shield" },
+    { kind: "unit", id: "cloudkill_unit", name: "Cloudkill Unit" },
+  ]);
+  assert.deepEqual(malformed, []);
+  const fixturePath =
+    "packages/battle-runtime/src/battle-reducer/synthetic-procedure.ts";
+  const fixture = `
+    export type CloudkillAreaHazardEffect = { readonly kind: "cloudkillAreaHazard" }
+    export function resolveCloudkillProcedure() { return true }
+    export function resolveCloudkillMechanic() { return true }
+    export const CLOUDKILL_SAVE_HOLE_ID = holeId("battle:cloudkill:save")
+    export const RUNTIME_COMMAND_KINDS = ["magicMissileDamage", "nearMissile"] as const
+    export const Registry = { magicMissile: Schema.Struct({
+      command: Schema.Literal("magicMissileDamage"),
+    }) }
+    const invalid = { message: "Cloudkill movement could not continue." }
+    function validateReplay() { return "Cloudkill replay is invalid." }
+    invalidResult(state, "invalidFill", "Cloudkill positional diagnostic.")
+    throw new Error("Cloudkill constructor diagnostic.")
+    export const MIRROR_IMAGE_HOLE_PREFIX = "battle:mirror-image:duplicate:"
+    export function occurrenceMessage() { return "Find Familiar lifecycle failed." }
+    const lifecycleConfig = { emptyRosterMessage: "Find Familiar admission requires combatants." }
+    export function resolve(input) {
+      const sanctuaryCheck = input
+      return invalidTransition("invalidFill", \`Spell \${input.part} Mirror Image duplicate roll is invalid.\`)
+    }
+  `;
+  const fixtureViolations = executionIdentityViolationsForFile(
+    fixturePath,
+    fixture,
+    lexicon,
+  );
+  const roles = new Set(fixtureViolations.map((violation) => violation.role));
+  for (const expected of [
+    "declaration-identifier",
+    "discriminant-literal",
+    "schema-discriminant-literal",
+    "protocol-array-member",
+    "registry-key",
+    "execution-diagnostic",
+  ]) {
+    assert.ok(roles.has(expected), `cohort self-test missed ${expected}`);
+  }
+  for (const identifier of [
+    "resolveCloudkillProcedure",
+    "resolveCloudkillMechanic",
+    "CLOUDKILL_SAVE_HOLE_ID",
+    "battle:cloudkill:save",
+    "Cloudkill replay is invalid.",
+    "Cloudkill positional diagnostic.",
+    "Cloudkill constructor diagnostic.",
+    "MIRROR_IMAGE_HOLE_PREFIX",
+    "battle:mirror-image:duplicate:",
+    "Find Familiar lifecycle failed.",
+    "Find Familiar admission requires combatants.",
+    "sanctuaryCheck",
+    "Spell   Mirror Image duplicate roll is invalid.",
+  ]) {
+    assert.ok(
+      fixtureViolations.some(
+        (violation) => violation.identifier === identifier,
+      ),
+      `cohort self-test missed ${identifier}`,
+    );
+  }
+  assert.ok(
+    executionDiagnosticViolationsForFile(
+      "packages/battle-runtime/src/companion-lifecycle.ts",
+      `const lifecycle = { emptyRosterMessage: "Find Familiar admission requires combatants." }`,
+      lexicon,
+    ).some(
+      (violation) =>
+        violation.role === "execution-diagnostic" &&
+        violation.identifier === "Find Familiar admission requires combatants.",
+    ),
+    "cohort scanner did not inspect arbitrary diagnostic fields in battle runtime production outside the declared execution closure",
+  );
+  assert.throws(
+    () =>
+      assertEveryPathRuleMatches(
+        [fixturePath],
+        [{ reason: "missing-boundary", pattern: /^packages\/missing\.ts$/ }],
+        "synthetic allowlist",
+      ),
+    /missing-boundary/,
+    "cohort self-test accepted an allowlist rule matching no repository file",
+  );
+  assert.equal(
+    executionIdentityViolationsForFile(
+      fixturePath,
+      `const message = "nearMissile"`,
+      lexicon,
+    ).length,
+    0,
+    "cohort scanner treated a synthetic near miss as authored identity",
+  );
+  assert.equal(
+    executionIdentityViolationsForFile(
+      "packages/battle-runtime/src/procedure-admission/cloudkill.ts",
+      fixture,
+      lexicon,
+    ).length,
+    0,
+    "cohort scanner rejected the explicit admission boundary",
+  );
+  const executionFacingSharedPath =
+    "packages/shared-algebras/src/synthetic-cloudkill-mechanics.ts";
+  const executionClosure = new Set([fixturePath, executionFacingSharedPath]);
+  assert.ok(
+    executionIdentityViolationsForFile(
+      executionFacingSharedPath,
+      `export const cloudkillMechanic = { kind: "cloudkillAreaHazard" }`,
+      lexicon,
+      executionClosure,
+    ).length > 0,
+    "cohort scanner did not inspect an execution-reachable shared-package module",
+  );
+  assert.equal(
+    executionIdentityViolationsForFile(
+      "packages/shared-algebras/src/unreachable-cloudkill-mechanics.ts",
+      `export const cloudkillMechanic = { kind: "cloudkillAreaHazard" }`,
+      lexicon,
+      executionClosure,
+    ).length,
+    0,
+    "cohort scanner inspected a module outside the execution import closure",
+  );
+  for (const [sourceText, identifier] of [
+    ["function featherFallLanding() { return true }", "featherFallLanding"],
+    [
+      'import { resolveLanding as featherFallLanding } from "./landing.ts";',
+      "featherFallLanding",
+    ],
+  ]) {
+    assert.ok(
+      executionIdentityViolationsForFile(fixturePath, sourceText, lexicon).some(
+        (violation) =>
+          violation.role === "declaration-identifier" &&
+          violation.identifier === identifier,
+      ),
+      `cohort scanner missed authored declaration/import identifier ${identifier} without a same-file authored string`,
+    );
+  }
+  assert.ok(
+    battleRuntimePublicExportOwnerFiles().includes(
+      "packages/battle-runtime/src/battle-reducer/environmental-fall-procedures.ts",
+    ),
+    "cohort scanner public-owner discovery missed a re-export outside the former execution roots",
+  );
+  const collisionSource =
+    "export type HeldLightSpellProcedureExecution = { readonly value: true }";
+  const collision = executionIdentityViolationsForFile(
+    fixturePath,
+    collisionSource,
+    lexicon,
+  );
+  const collisionExemption = {
+    spellId: "light",
+    role: "declaration-identifier",
+    identifier: "HeldLightSpellProcedureExecution",
+    reason: "synthetic exact collision",
+  };
+  const collisionEvidence = collisionSiteCountEvidence(collision);
+  const applied = applyExecutionIdentityCollisionExemptions(
+    collision,
+    [collisionExemption],
+    collisionEvidence,
+  );
+  assert.deepEqual(applied.remaining, []);
+  assert.deepEqual(applied.stale, []);
+  assert.equal(applied.siteEvidenceMatches, true);
+
+  const unrelatedCollision = executionIdentityViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/unrelated-procedure.ts",
+    collisionSource,
+    lexicon,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      unrelatedCollision,
+      [collisionExemption],
+      collisionEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted an exempt identifier copied into an unrelated production file",
+  );
+
+  const runtimeCommandCollisionSource =
+    "export function executeRuntime(command: unknown) { return command }";
+  const runtimeCommandCollision = executionIdentityViolationsForFile(
+    fixturePath,
+    runtimeCommandCollisionSource,
+    lexicon,
+  ).filter(
+    (violation) =>
+      violation.spellId === "command" &&
+      violation.role === "declaration-identifier" &&
+      violation.identifier === "command",
+  );
+  const runtimeCommandExemption = {
+    spellId: "command",
+    role: "declaration-identifier",
+    identifier: "command",
+    reason: "synthetic generic runtime command collision",
+  };
+  const runtimeCommandEvidence = collisionSiteCountEvidence(
+    runtimeCommandCollision,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      runtimeCommandCollision,
+      [runtimeCommandExemption],
+      runtimeCommandEvidence,
+    ).siteEvidenceMatches,
+    true,
+    "cohort scanner rejected a reviewed generic runtime command collision",
+  );
+  const launderedRuntimeCommandCollision = executionIdentityViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/unrelated-command.ts",
+    runtimeCommandCollisionSource,
+    lexicon,
+  ).filter(
+    (violation) =>
+      violation.spellId === "command" &&
+      violation.role === "declaration-identifier" &&
+      violation.identifier === "command",
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      launderedRuntimeCommandCollision,
+      [runtimeCommandExemption],
+      runtimeCommandEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted a generic command exemption copied into an unrelated production file",
+  );
+
+  const surplusCollision = executionIdentityViolationsForFile(
+    fixturePath,
+    `${collisionSource}\nexport interface HeldLightSpellProcedureExecution { readonly value: true }`,
+    lexicon,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      surplusCollision,
+      [collisionExemption],
+      collisionEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted surplus exempt occurrences at an allowed site",
+  );
+
+  const triggeredArmorDefensePath =
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/triggered-armor-defense.ts";
+  const triggeredArmorDefenseSource =
+    'const SHIELD_MAGIC_MISSILE_SPELL_ID = unitId("magic_missile");';
+  const triggeredArmorDefenseCollisions = dedupeExecutionIdentityViolations(
+    executionIdentityViolationsForFile(
+      triggeredArmorDefensePath,
+      triggeredArmorDefenseSource,
+      lexicon,
+    ),
+  );
+  const triggeredArmorDefenseExemptions = [
+    ...["shield", "magic_missile"].map((spellId) => ({
+      spellId,
+      role: "declaration-identifier",
+      identifier: "SHIELD_MAGIC_MISSILE_SPELL_ID",
+      reason: "synthetic authored cross-record interaction",
+    })),
+    {
+      spellId: "magic_missile",
+      role: "execution-diagnostic",
+      identifier: "magic_missile",
+      reason: "synthetic authored cross-record interaction",
+    },
+  ];
+  const triggeredArmorDefenseEvidence = collisionSiteCountEvidence(
+    triggeredArmorDefenseCollisions,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      triggeredArmorDefenseCollisions,
+      triggeredArmorDefenseExemptions,
+      triggeredArmorDefenseEvidence,
+    ).siteEvidenceMatches,
+    true,
+    "cohort scanner rejected the exact triggered-defense admission owner",
+  );
+  const relocatedTriggeredArmorDefenseCollisions =
+    dedupeExecutionIdentityViolations(
+      executionIdentityViolationsForFile(
+        triggeredArmorDefensePath,
+        `function unrelatedProcedure() {
+          const SHIELD_MAGIC_MISSILE_SPELL_ID = unitId("magic_missile");
+          return SHIELD_MAGIC_MISSILE_SPELL_ID;
+        }`,
+        lexicon,
+      ),
+    );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      relocatedTriggeredArmorDefenseCollisions,
+      triggeredArmorDefenseExemptions,
+      triggeredArmorDefenseEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted a same-file substitution outside the reviewed triggered-defense declaration",
+  );
+
+  const staleCollision = applyExecutionIdentityCollisionExemptions(
+    [],
+    [collisionExemption],
+    collisionEvidence,
+  );
+  assert.equal(
+    staleCollision.stale.length,
+    1,
+    "cohort scanner accepted a stale collision exemption",
+  );
+  assert.equal(
+    staleCollision.siteEvidenceMatches,
+    false,
+    "cohort scanner accepted absent reviewed collision-site evidence",
+  );
+  const augmented = collectSurfaceSpellLexicon([
+    { kind: "spell", id: "cloudkill", name: "Cloudkill" },
+    { kind: "spell", id: "synthetic_procedure", name: "Synthetic Procedure" },
+  ]).lexicon;
+  assert.ok(
+    executionIdentityViolationsForFile(
+      fixturePath,
+      `export const syntheticProcedure = { procedure: "syntheticProcedure" }`,
+      augmented,
+    ).length > 0,
+    "cohort scanner did not incorporate a newly added Surface spell",
+  );
 }
 
 function collectDispatchContainerUsages(content) {
@@ -2639,6 +4884,7 @@ function runSelfTest() {
     "addle",
     "push",
     "topple",
+    "flaming_sphere_area",
   ]) {
     addAuthoredIdentityLiteral(selfTestLiterals, literal);
   }
@@ -2694,6 +4940,27 @@ function runSelfTest() {
   assert(
     productionKinds.has("effect-match-identity-branch"),
     `Self-test failed: effect/Match spell.name branch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+
+  const authoredHoleIdBranch = [
+    "export function authoredHoleSelection(attachment) {",
+    '  return attachment.holeId === "flaming_sphere_area";',
+    "}",
+  ].join("\n");
+  const authoredHoleIdViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/synthetic-area.ts",
+    authoredHoleIdBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    authoredHoleIdViolations.some(
+      (violation) =>
+        violation.literal === "flaming_sphere_area" &&
+        violation.context.kind === "id-comparison",
+    ),
+    `Self-test failed: authored hole-ID dispatch was not caught. Got ${JSON.stringify(authoredHoleIdViolations)}`,
   );
 
   const someOnlyBranch = [
@@ -2960,13 +5227,6 @@ function runSelfTest() {
 
   assert.equal(
     classifyPath(
-      "packages/battle-runtime/src/unit-profile-admission-spell-fill-support.ts",
-      ALLOWLIST_PATH_RULES,
-    ),
-    "battle-runtime-unit-profile-admission-test-support-boundary",
-  );
-  assert.equal(
-    classifyPath(
       "packages/battle-runtime/src/unit-feature-support.ts",
       ALLOWLIST_PATH_RULES,
     ),
@@ -2989,6 +5249,11 @@ function main() {
   assertBattleReplayAstBoundary();
   assertNoReducerOwnedActPresentation();
   runSelfTest();
+  runExecutionIdentityCohortSelfTest();
+  if (process.argv.includes("--self-test")) {
+    console.log("authored-identity dispatch boundary self-test passed");
+    return;
+  }
 
   if (!fs.existsSync(PACKAGES_ROOT)) {
     console.error("authored-id boundary check: packages directory not found");
@@ -3017,6 +5282,26 @@ function main() {
   const authoredAlternation = buildAuthoredAlternation(
     authoredIdentityLiterals,
   );
+  const battleAuthoredAlternation = buildAuthoredAlternation(
+    new Set([...authoredIdentityLiterals, ...collectSurfaceSpellHoleIds()]),
+  );
+  const { lexicon: surfaceSpellLexicon, malformed: malformedSpellRecords } =
+    collectSurfaceSpellLexicon();
+  if (malformedSpellRecords.length > 0) {
+    console.error(
+      "authored-id boundary check: malformed or duplicate Surface spell record(s):",
+    );
+    for (const malformed of malformedSpellRecords) {
+      console.error(`  - ${malformed}`);
+    }
+    process.exit(1);
+  }
+  if (surfaceSpellLexicon.length === 0) {
+    console.error(
+      "authored-id boundary check: no decoded Surface spell records discovered",
+    );
+    process.exit(1);
+  }
 
   const sourceFiles = listFiles(PACKAGES_ROOT)
     .map((filePath) =>
@@ -3024,7 +5309,27 @@ function main() {
     )
     .sort();
 
+  assertEveryPathRuleMatches(
+    sourceFiles,
+    ALLOWLIST_PATH_RULES,
+    "whole-file allowlist",
+  );
+
   const sourceFilesSet = new Set(sourceFiles);
+  const executionImportClosure = new Set([
+    ...battleRuntimeExecutionImportClosure(),
+    ...battleRuntimePublicExportOwnerFiles(),
+  ]);
+  const missingExecutionSources = [...executionImportClosure].filter(
+    (relativePath) =>
+      executionIdentityBoundaryReason(relativePath) === null &&
+      !sourceFilesSet.has(relativePath),
+  );
+  assert.deepEqual(
+    missingExecutionSources,
+    [],
+    "execution import closure contains production source outside the authored-identity scanner input",
+  );
   const authoredExportsByFile = buildAuthoredExportIndex(
     sourceFiles,
     sourceFilesSet,
@@ -3038,6 +5343,7 @@ function main() {
   };
 
   const violations = [];
+  const executionIdentityViolations = [];
 
   for (const relativePath of sourceFiles) {
     const excludedReason = classifyPath(relativePath, EXCLUDED_PATH_RULES);
@@ -3060,11 +5366,26 @@ function main() {
 
     stats.checked += 1;
     const content = fs.readFileSync(path.join(REPO_ROOT, relativePath), "utf8");
+    executionIdentityViolations.push(
+      ...executionIdentityViolationsForFile(
+        relativePath,
+        content,
+        surfaceSpellLexicon,
+        executionImportClosure,
+      ),
+      ...executionDiagnosticViolationsForFile(
+        relativePath,
+        content,
+        surfaceSpellLexicon,
+      ),
+    );
     violations.push(
       ...findViolationsForFile(
         relativePath,
         content,
-        authoredAlternation,
+        relativePath.startsWith("packages/battle-runtime/")
+          ? battleAuthoredAlternation
+          : authoredAlternation,
         sourceFilesSet,
         authoredExportsByFile,
       ),
@@ -3072,18 +5393,86 @@ function main() {
   }
 
   const uniqueViolations = dedupeViolations(violations);
+  const uniqueExecutionIdentityViolations = dedupeExecutionIdentityViolations(
+    executionIdentityViolations,
+  );
+  const executionIdentityExemptionResult =
+    applyExecutionIdentityCollisionExemptions(
+      uniqueExecutionIdentityViolations,
+      EXECUTION_IDENTITY_COLLISION_EXEMPTIONS,
+      EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE,
+    );
 
-  if (uniqueViolations.length > 0) {
-    console.error("authored-identity dispatch boundary violation(s) found:");
-    for (const violation of uniqueViolations) {
+  if (
+    uniqueViolations.length > 0 ||
+    executionIdentityExemptionResult.remaining.length > 0 ||
+    executionIdentityExemptionResult.stale.length > 0 ||
+    !executionIdentityExemptionResult.siteEvidenceMatches
+  ) {
+    if (uniqueViolations.length > 0) {
+      console.error("authored-identity dispatch boundary violation(s) found:");
+      for (const violation of uniqueViolations) {
+        console.error(
+          `  - ${violation.relativePath}:${violation.line} dispatches on authored identity "${violation.literal}" (${violation.context.kind}: ${violation.context.detail})`,
+        );
+      }
+      console.error("");
       console.error(
-        `  - ${violation.relativePath}:${violation.line} dispatches on authored identity "${violation.literal}" (${violation.context.kind}: ${violation.context.detail})`,
+        "If this usage is a valid boundary (catalog/composition/fixture/legacy/support-profile admission), add an explicit allowlist rule in scripts/check-authored-id-dispatch-boundary.cjs.",
       );
     }
-    console.error("");
-    console.error(
-      "If this usage is a valid boundary (catalog/composition/fixture/legacy/support-profile admission), add an explicit allowlist rule in scripts/check-authored-id-dispatch-boundary.cjs.",
-    );
+    if (executionIdentityExemptionResult.remaining.length > 0) {
+      const byRole = new Map();
+      const bySpell = new Map();
+      for (const violation of executionIdentityExemptionResult.remaining) {
+        byRole.set(violation.role, (byRole.get(violation.role) ?? 0) + 1);
+        bySpell.set(
+          violation.spellId,
+          (bySpell.get(violation.spellId) ?? 0) + 1,
+        );
+      }
+      console.error(
+        "authored spell identity remains in production execution roles:",
+      );
+      for (const violation of executionIdentityExemptionResult.remaining) {
+        console.error(
+          `  - ${violation.relativePath}:${violation.line}:${violation.column} [${violation.role}] ${violation.identifier} <- ${violation.spellId} (${violation.spellName})`,
+        );
+      }
+      console.error(
+        `execution identity violation count: ${executionIdentityExemptionResult.remaining.length}`,
+      );
+      console.error(
+        `by role: ${formatCountMapEntries(byRole)
+          .map(({ reason, count }) => `${reason}=${count}`)
+          .join(", ")}`,
+      );
+      console.error(
+        `by authored spell: ${formatCountMapEntries(bySpell)
+          .map(({ reason, count }) => `${reason}=${count}`)
+          .join(", ")}`,
+      );
+    }
+    if (executionIdentityExemptionResult.stale.length > 0) {
+      console.error("stale authored-identity collision exemption(s):");
+      for (const exemption of executionIdentityExemptionResult.stale) {
+        console.error(
+          `  - ${exemption.spellId}/${exemption.role}/${exemption.identifier}: ${exemption.reason}`,
+        );
+      }
+    }
+    if (!executionIdentityExemptionResult.siteEvidenceMatches) {
+      console.error("authored-identity collision site evidence changed:");
+      console.error(
+        `  - expected ${JSON.stringify(EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE)}`,
+      );
+      console.error(
+        `  - observed ${JSON.stringify(executionIdentityExemptionResult.siteEvidence)}`,
+      );
+      console.error(
+        "Every exempt occurrence is bound to its reviewed relative path, normalized owning statement, and count; review the added, removed, or copied collision before updating this certificate.",
+      );
+    }
     process.exit(1);
   }
 
@@ -3099,6 +5488,13 @@ function main() {
   console.log("authored-identity dispatch boundary check passed");
   console.log(
     `authored identity literals discovered: ${authoredIdentityLiterals.size}`,
+  );
+  console.log(`decoded Surface spell records: ${surfaceSpellLexicon.length}`);
+  console.log(
+    `exact execution collision exemptions exercised: ${EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.length}`,
+  );
+  console.log(
+    `reviewed execution collision sites exercised: ${executionIdentityExemptionResult.siteEvidence.siteCount} sites / ${executionIdentityExemptionResult.siteEvidence.violationCount} occurrences`,
   );
   console.log(`checked source files: ${stats.checked}`);
   console.log(`excluded files: ${excludedTotal}`);

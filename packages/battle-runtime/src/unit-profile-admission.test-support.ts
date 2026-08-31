@@ -26,7 +26,7 @@ import {
   type ProficiencyBonus,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   ActivationPhase,
@@ -42,7 +42,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
@@ -56,7 +56,7 @@ import type {
 } from "./battle-state-execution.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./battle-reducer/staged-condition-repeat-save.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import {
   applyFailedSaveSpellConditionEffects,
@@ -68,13 +68,13 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
-import { supportedPreparedHideousLaughterProfile } from "./battle-reducer/spell-procedure-profiles/hideous-laughter.ts";
+import { supportedPreparedSaveGatedConditionWithRepeatProfile } from "./battle-reducer/spell-procedure-profiles/staged-save-condition.ts";
 import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { supportedPreparedSleepTargetAdmissionProfile } from "./battle-reducer/spell-procedure-profiles/sleep-target-admission.ts";
-import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
+import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
+import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import {
@@ -109,8 +109,8 @@ import {
   battleSightObscurement,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   breakBattleConcentration,
   cantripSpellInvocationRef,
   characterId,
@@ -134,7 +134,7 @@ import {
   resolveBattlePossessionAttempt,
   resolveBattleInterrupt,
   resolveFallDamageLanding,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
   requiredInitiativeRollModeForCombatant,
   sameBattleSubject,
@@ -151,6 +151,7 @@ import {
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
+  type BattleFallingCreatureMitigationTriggerFact,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleHole,
   type BattleObjectDamageDisposition,
@@ -293,8 +294,8 @@ export {
   battleStunningStrikeSupportForUnit,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   bonusActionDashTemporaryHitPointsProfileForUnit,
@@ -318,7 +319,7 @@ export {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  Either,
+  Result,
   elapsedTimeTicks,
   eldritchBlastInput,
   endTurn,
@@ -328,7 +329,7 @@ export {
   hasCondition,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   hideActionObscurementPermissionProfileForUnit,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   holeId,
   Hp,
   HUNTERS_PREY_SUPPORT_PROFILE,
@@ -366,7 +367,7 @@ export {
   resolveBattlePossessionAttempt,
   resolveBattleSubject,
   resolveFallDamageLanding,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
   resourceCount,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
@@ -387,11 +388,11 @@ export {
   startBattle,
   startBattleWithInitialInitiativeSetup,
   STUNNING_STRIKE_SUPPORT_PROFILE,
-  supportedPreparedHellishRebukeReactionSpellProfile,
-  supportedPreparedHideousLaughterProfile,
+  supportedPreparedAfterDamageReactionSaveSpellProfile,
+  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedSleepTargetAdmissionProfile,
+  supportedPreparedStagedSaveConditionProfile,
   trueStrikeInput,
   validateSavingThrowOutcomes,
   validateSpellDamageFill,
@@ -407,6 +408,7 @@ export type {
   BattleCreatureInit,
   BattleCreatureState,
   BattleFill,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHole,
   BattleObjectDamageDisposition,

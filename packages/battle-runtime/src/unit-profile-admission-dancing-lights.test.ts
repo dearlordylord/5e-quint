@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
@@ -13,11 +16,13 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   interruptDecisionFill,
+  requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
+  knownWillingSpellTargetFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -33,20 +38,17 @@ import {
   elapsedTimeTicks,
   endTurn,
   holeId,
-  movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import type { ActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
 import type {
   BattleFill,
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
-import { battleFrontierInterruptDecisionForState } from "./battle-runtime.test-support.ts";
 
 describe("SRDINV32A deterministic Dancing Lights admission", () => {
   test("dancing_lights is admitted as Magic Action source-owned movable Dim Light", () => {
@@ -64,11 +66,11 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toEqual([
       cantripSpellInvocationRef(
         dancingLightsUnitId,
-        "dancingLightsSeparateCast",
+        "movableLightManifestation",
       ),
       cantripSpellInvocationRef(
         dancingLightsUnitId,
-        "dancingLightsCombinedCast",
+        "movableLightManifestation",
       ),
     ]);
     const castAct = castActs[0];
@@ -90,8 +92,8 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: castAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
-          holeId: requireHole(castAct.initialHoles, "dancingLightsPlacement")
+          kind: "movableLightPlacement",
+          holeId: requireHole(castAct.initialHoles, "movableLightPlacement")
             .holeId,
           value: {
             mode: "cast",
@@ -126,7 +128,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "dancingLights",
+        kind: "movableLightManifestation",
         sourceProcedureRef: castAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         form: "separateLights",
@@ -140,7 +142,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
           sourceProcedureRef: castAct.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           attachment: expect.objectContaining({
-            kind: "dancingLight",
+            kind: "movableLight",
             form: "separateLights",
           }),
           emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -155,7 +157,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     const dancingEmitter = resolved.snapshot.lightEmitters[0];
     if (
       dancingEmitter?.kind !== "spellLightEmitter" ||
-      dancingEmitter.attachment.kind !== "dancingLight"
+      dancingEmitter.attachment.kind !== "movableLight"
     ) {
       throw new Error("Expected projected Dancing Light emitter.");
     }
@@ -250,9 +252,8 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       spellId: dancingLightsUnitId,
     });
     const placement = {
-      kind: "dancingLightsPlacement",
-      holeId: requireHole(castAct.initialHoles, "dancingLightsPlacement")
-        .holeId,
+      kind: "movableLightPlacement",
+      holeId: requireHole(castAct.initialHoles, "movableLightPlacement").holeId,
       value: {
         mode: "cast",
         form: "separateLights",
@@ -285,13 +286,30 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Dancing Lights spell-cast reaction window.");
     }
+    const reactionFrontier = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    expect(reactionFrontier).toMatchObject({
+      trigger: "spellCast",
+      choices: [
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: spellTargetId,
+          }),
+        }),
+      ],
+    });
+    if (reactionFrontier === null) {
+      throw new Error("Expected Dancing Lights reaction frontier.");
+    }
     const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: interruptDecisionFill(
-        battleFrontierInterruptDecisionForState(awaitingReaction.state)!
-          .decisionHole,
-        { kind: "decline", responderId: spellTargetId },
-      ),
+      fill: interruptDecisionFill(reactionFrontier.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
     });
     if (afterDecline.tag !== "resolved") {
       throw new Error("Expected declined reaction to replay Dancing Lights.");
@@ -306,10 +324,52 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
   });
   test("dancing_lights supports combined Medium-form choice, Bonus Action movement, Concentration cleanup, and duration cleanup", () => {
     const spell = spellRecord(dancingLightsUnitId);
-    const session = spellBattle({
+    const baseSession = spellBattle({
       cantrips: [spell],
       preparedSpells: [spellRecord(longstriderUnitId)],
       spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const longstriderAct = spellAct({
+      session: baseSession,
+      spellId: longstriderUnitId,
+      slotLevel: 1,
+    });
+    const longstriderTarget = requireHole(
+      longstriderAct.initialHoles,
+      "targetChoice",
+    );
+    const longstriderCast = resolveBattleSubject({
+      state: baseSession.state,
+      subject: longstriderAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          longstriderTarget,
+          longstriderUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    if (longstriderCast.tag !== "resolved") {
+      throw new Error("Expected admitted Longstrider cast to resolve.");
+    }
+    const targetTurnAfterLongstrider = endTurn({
+      state: longstriderCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurnAfterLongstrider.tag !== "resolved") {
+      throw new Error("Expected Longstrider caster turn to end.");
+    }
+    const casterTurnAfterLongstrider = endTurn({
+      state: targetTurnAfterLongstrider.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurnAfterLongstrider.tag !== "resolved") {
+      throw new Error("Expected Longstrider target turn to end.");
+    }
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: casterTurnAfterLongstrider.state,
     });
     const combinedAct = discoverBattleActs(session).find(
       (candidate): candidate is ActionSpellAct =>
@@ -317,7 +377,12 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           dancingLightsUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "dancingLightsCombinedCast",
+          "movableLightManifestation" &&
+        candidate.initialHoles.some(
+          (hole) =>
+            hole.kind === "movableLightPlacement" &&
+            hole.form === "combinedMediumForm",
+        ),
     );
     expect(combinedAct).toBeDefined();
     if (combinedAct === undefined) {
@@ -325,7 +390,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     }
     const combinedPlacementHole = requireHole(
       combinedAct.initialHoles,
-      "dancingLightsPlacement",
+      "movableLightPlacement",
     );
     expect(
       resolveBattleSubject({
@@ -333,7 +398,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         subject: combinedAct.subject,
         fills: [
           {
-            kind: "dancingLightsPlacement",
+            kind: "movableLightPlacement",
             holeId: combinedPlacementHole.holeId,
             value: {
               mode: "cast",
@@ -351,14 +416,14 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights placement must be within the spell range.",
+      message: "Movable-light placement must be within spell range.",
     });
     const resolved = resolveBattleSubject({
       state: session.state,
       subject: combinedAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           holeId: combinedPlacementHole.holeId,
           value: {
             mode: "cast",
@@ -377,7 +442,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([
       expect.objectContaining({
         attachment: expect.objectContaining({
-          kind: "dancingLight",
+          kind: "movableLight",
           form: "combinedMediumForm",
         }),
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
@@ -385,7 +450,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ]);
     expect(
       resolved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
-        resolved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+        resolved.snapshot.lightEmitters[0].attachment.kind === "movableLight"
         ? String(resolved.snapshot.lightEmitters[0].attachment.lightId)
         : "",
     ).toContain(String(combinedAct.subject.procedureRef));
@@ -395,23 +460,51 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
 
     const beforeMovePosition =
       resolved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
-      resolved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+      resolved.snapshot.lightEmitters[0].attachment.kind === "movableLight"
         ? resolved.snapshot.lightEmitters[0].attachment.positionId
         : null;
-    const recastReadyState: BattleState = {
-      ...resolved.state,
-      currentTurnResources: session.state.currentTurnResources,
-    };
+    const targetTurnBeforeRecast = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurnBeforeRecast.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights caster turn to end.");
+    }
+    const casterTurnBeforeRecast = endTurn({
+      state: targetTurnBeforeRecast.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurnBeforeRecast.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights target turn to end.");
+    }
+    const recastSession = battleRuntimeSessionForTest({
+      ...session,
+      state: casterTurnBeforeRecast.state,
+    });
+    const recastAct = discoverBattleActs(recastSession).find(
+      (candidate): candidate is ActionSpellAct =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          dancingLightsUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "movableLightManifestation" &&
+        candidate.initialHoles.some(
+          (hole) =>
+            hole.kind === "movableLightPlacement" &&
+            hole.form === "combinedMediumForm",
+        ),
+    );
+    if (recastAct === undefined) {
+      throw new Error("Expected a fresh Dancing Lights combined-form act.");
+    }
     const recast = resolveBattleSubject({
-      state: recastReadyState,
-      subject: combinedAct.subject,
+      state: recastSession.state,
+      subject: recastAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
-          holeId: requireHole(
-            combinedAct.initialHoles,
-            "dancingLightsPlacement",
-          ).holeId,
+          kind: "movableLightPlacement",
+          holeId: requireHole(recastAct.initialHoles, "movableLightPlacement")
+            .holeId,
           value: {
             mode: "cast",
             form: "combinedMediumForm",
@@ -448,7 +541,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       spellId: dancingLightsUnitId,
     });
     expect(battleActSpellPresentation(moveAct)?.invocation).toEqual(
-      cantripSpellInvocationRef(dancingLightsUnitId, "dancingLightsReposition"),
+      cantripSpellInvocationRef(
+        dancingLightsUnitId,
+        "movableLightManifestation",
+      ),
     );
     expect(
       resolveBattleSubject({
@@ -467,7 +563,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "needsHoles",
       holes: [
         expect.objectContaining({
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           mode: "reposition",
           form: "combinedMediumForm",
           activeLightIds: [
@@ -476,38 +572,24 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         }),
       ],
     });
-    const resolvedCaster = resolved.state.combatants.get(spellCasterId);
-    if (resolvedCaster === undefined) {
-      throw new Error("Expected Dancing Lights caster before repositioning.");
+    const unrelatedEffect = requireCombatant(
+      resolved.state,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) =>
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === longstriderAct.subject.procedureRef,
+    );
+    if (unrelatedEffect === undefined) {
+      throw new Error("Expected allocated Longstrider occurrence.");
     }
-    const unrelatedEffect = {
-      kind: "speedDelta",
-      sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-        session,
-        spellCasterId,
-        spellSlotInvocationRef(longstriderUnitId, 1, "scalarBuff"),
-      ),
-      sourceCombatantId: spellCasterId,
-      deltaFeet: movementDeltaFeet(10),
-      expiresAt: {
-        kind: "duration",
-        durationTicks: elapsedTimeTicks(600),
-      },
-    } as const;
-    const repositionState: BattleState = {
-      ...resolved.state,
-      combatants: new Map(resolved.state.combatants).set(spellCasterId, {
-        ...resolvedCaster,
-        activeEffects: [...resolvedCaster.activeEffects, unrelatedEffect],
-      }),
-    };
     const moved = resolveBattleSubject({
-      state: repositionState,
+      state: resolved.state,
       subject: moveAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
-          holeId: requireHole(moveAct.initialHoles, "dancingLightsPlacement")
+          kind: "movableLightPlacement",
+          holeId: requireHole(moveAct.initialHoles, "movableLightPlacement")
             .holeId,
           value: {
             mode: "reposition",
@@ -517,7 +599,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
                 resolved.snapshot.lightEmitters[0]?.kind ===
                   "spellLightEmitter" &&
                 resolved.snapshot.lightEmitters[0].attachment.kind ===
-                  "dancingLight"
+                  "movableLight"
                   ? resolved.snapshot.lightEmitters[0].attachment.lightId
                   : (() => {
                       throw new Error("Expected Dancing Lights emitter.");
@@ -537,7 +619,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     }
     const afterMovePosition =
       moved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
-      moved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+      moved.snapshot.lightEmitters[0].attachment.kind === "movableLight"
         ? moved.snapshot.lightEmitters[0].attachment.positionId
         : null;
     expect(afterMovePosition).not.toBe(beforeMovePosition);
@@ -561,7 +643,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       combatants: new Map(resolved.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
-          effect.kind === "dancingLights"
+          effect.kind === "movableLightManifestation"
             ? {
                 ...effect,
                 expiresAt: {
@@ -608,10 +690,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
     const placementHole = requireHole(
       separateAct.initialHoles,
-      "dancingLightsPlacement",
+      "movableLightPlacement",
     );
     const castPlacement = {
-      kind: "dancingLightsPlacement",
+      kind: "movableLightPlacement",
       holeId: placementHole.holeId,
       value: {
         mode: "cast",
@@ -657,7 +739,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     }
     const lightIds = cast.snapshot.lightEmitters.flatMap((emitter) =>
       emitter.kind === "spellLightEmitter" &&
-      emitter.attachment.kind === "dancingLight"
+      emitter.attachment.kind === "movableLight"
         ? [emitter.attachment.lightId]
         : [],
     );
@@ -670,10 +752,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       }),
       spellId: dancingLightsUnitId,
     });
-    const moveHole = requireHole(
-      moveAct.initialHoles,
-      "dancingLightsPlacement",
-    );
+    const moveHole = requireHole(moveAct.initialHoles, "movableLightPlacement");
     expect(
       resolveBattleSubject({
         state: breakBattleConcentration(cast.state, spellCasterId),
@@ -685,7 +764,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       reason: "staleSubject",
     });
     const validMovePlacement = {
-      kind: "dancingLightsPlacement",
+      kind: "movableLightPlacement",
       holeId: moveHole.holeId,
       value: {
         mode: "reposition",
@@ -721,7 +800,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
 
     const duplicateMovePlacement = {
-      kind: "dancingLightsPlacement",
+      kind: "movableLightPlacement",
       holeId: moveHole.holeId,
       value: {
         mode: "reposition",
@@ -764,10 +843,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
     const placementHole = requireHole(
       separateAct.initialHoles,
-      "dancingLightsPlacement",
+      "movableLightPlacement",
     );
     const oneLightPlacement = {
-      kind: "dancingLightsPlacement",
+      kind: "movableLightPlacement",
       holeId: placementHole.holeId,
       value: {
         mode: "cast",
@@ -803,7 +882,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       ).toMatchObject({
         tag: "invalid",
         reason: "invalidFill",
-        message: "Dancing Lights separate form requires one to four lights.",
+        message: "Movable-light separate form requires one to four lights.",
       });
     }
     expect(
@@ -828,7 +907,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights placement must be within the spell range.",
+      message: "Movable-light placement must be within spell range.",
     });
     const cast = resolveBattleSubject({
       state: session.state,
@@ -869,13 +948,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       }),
       spellId: dancingLightsUnitId,
     });
-    const moveHole = requireHole(
-      moveAct.initialHoles,
-      "dancingLightsPlacement",
-    );
+    const moveHole = requireHole(moveAct.initialHoles, "movableLightPlacement");
     const lightId =
       cast.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
-      cast.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+      cast.snapshot.lightEmitters[0].attachment.kind === "movableLight"
         ? cast.snapshot.lightEmitters[0].attachment.lightId
         : (() => {
             throw new Error("Expected Dancing Lights emitter.");
@@ -885,7 +961,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: moveAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           holeId: moveHole.holeId,
           value: {
             mode: "reposition",
@@ -909,7 +985,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: moveAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           holeId: moveHole.holeId,
           value: {
             mode: "reposition",
@@ -938,7 +1014,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: separateAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           holeId: placementHole.holeId,
           value: {
             mode: "cast",
@@ -970,12 +1046,12 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
     const fourMoveHole = requireHole(
       fourMoveAct.initialHoles,
-      "dancingLightsPlacement",
+      "movableLightPlacement",
     );
     const fourLightIds = fourLightCast.snapshot.lightEmitters.flatMap(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&
-        emitter.attachment.kind === "dancingLight"
+        emitter.attachment.kind === "movableLight"
           ? [emitter.attachment.lightId]
           : [],
     );
@@ -985,7 +1061,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: fourMoveAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           holeId: fourMoveHole.holeId,
           value: {
             mode: "reposition",
@@ -1006,7 +1082,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(badReposition).toMatchObject({
       tag: "invalid",
       message:
-        "Dancing Lights separate lights must stay within 20 feet of another light.",
+        "Separate movable lights must remain within their spacing limit.",
     });
   });
 
@@ -1019,7 +1095,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
     const placementHole = requireHole(
       separateAct.initialHoles,
-      "dancingLightsPlacement",
+      "movableLightPlacement",
     );
     expect(
       resolveBattleSubject({
@@ -1027,7 +1103,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         subject: separateAct.subject,
         fills: [
           {
-            kind: "dancingLightsPlacement",
+            kind: "movableLightPlacement",
             holeId: placementHole.holeId,
             value: {
               mode: "reposition",
@@ -1040,7 +1116,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights placement does not match the selected form.",
+      message: "Movable-light placement does not match the selected form.",
     });
 
     const cast = resolveBattleSubject({
@@ -1048,7 +1124,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       subject: separateAct.subject,
       fills: [
         {
-          kind: "dancingLightsPlacement",
+          kind: "movableLightPlacement",
           holeId: placementHole.holeId,
           value: {
             mode: "cast",
@@ -1091,22 +1167,22 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (moveFrontier.tag !== "needsHoles") {
       throw new Error("Expected Dancing Lights reposition placement.");
     }
-    const moveHole = requireHole(moveFrontier.holes, "dancingLightsPlacement");
+    const moveHole = requireHole(moveFrontier.holes, "movableLightPlacement");
     const lightEmitter = cast.snapshot.lightEmitters.find(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&
-        emitter.attachment.kind === "dancingLight",
+        emitter.attachment.kind === "movableLight",
     );
     if (
       lightEmitter === undefined ||
       lightEmitter.kind !== "spellLightEmitter" ||
-      lightEmitter.attachment.kind !== "dancingLight"
+      lightEmitter.attachment.kind !== "movableLight"
     ) {
       throw new Error("Expected a Dancing Lights light identity.");
     }
     const lightId = lightEmitter.attachment.lightId;
     const validMovePlacement = {
-      kind: "dancingLightsPlacement",
+      kind: "movableLightPlacement",
       holeId: moveHole.holeId,
       value: {
         mode: "reposition",
@@ -1128,7 +1204,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         subject: moveAct.subject,
         fills: [
           {
-            kind: "dancingLightsPlacement",
+            kind: "movableLightPlacement",
             holeId: moveHole.holeId,
             value: {
               mode: "cast",
@@ -1149,7 +1225,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights movement requires reposition placement.",
+      message: "Movable-light movement requires reposition placement.",
     });
     const inactiveLightsState = breakBattleConcentration(
       cast.state,
@@ -1165,7 +1241,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Dancing Lights movement requires active lights from this spell.",
+        "Movable-light reposition requires an active manifestation from this spell.",
     });
     expect(
       resolveBattleSubject({
@@ -1177,7 +1253,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Dancing Lights movement requires active lights from this spell.",
+        "Movable-light reposition requires an active manifestation from this spell.",
     });
   });
 });

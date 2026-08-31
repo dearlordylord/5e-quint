@@ -103,6 +103,31 @@ function projectionBuild(
   };
 }
 
+function fighterSorcererMulticlassProjectionBuild(): ReturnType<
+  typeof projectionBuild
+> {
+  const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
+  const sorcererClassUnitId = classUnitId(authoredUnitId("class_sorcerer"));
+  const startingBuild = projectionBuild(fighterClassUnitId);
+  return {
+    ...startingBuild,
+    abilityScores: {
+      ...startingBuild.abilityScores,
+      str: abilityScore(13),
+      cha: abilityScore(13),
+    },
+    progression: {
+      ...startingBuild.progression,
+      advancements: [
+        {
+          classUnitId: sorcererClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+  };
+}
+
 function catalogWithHitPointMaximumFeature(
   featureUnitId: UnitRecord["id"],
   delta: HitPointMaximumDelta,
@@ -130,7 +155,8 @@ function catalogWithHitPointMaximumFeature(
   const feature = {
     ...source,
     id: featureUnitId,
-    name: "Synthetic Hit Point Bonus",
+    acquiredAtLevel: 1,
+    name: "Synthetic Level-One Hit Point Bonus",
     provenance: {
       kind: "synthetic-test",
       section: "synthetic hit point projection boundary",
@@ -158,6 +184,46 @@ function catalogWithHitPointMaximumFeature(
     requireUnit: (unitId) =>
       unitId === featureUnitId ? feature : unitLibrary.requireUnit(unitId),
   };
+}
+
+function buildWithSelectedHitPointFeature(
+  build: ReturnType<typeof projectionBuild>,
+  featureUnitId: UnitRecord["id"],
+): ReturnType<typeof projectionBuild> {
+  return {
+    ...build,
+    features: [
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
+        unitId: featureUnitId,
+      },
+    ],
+  };
+}
+
+function expectUnsupportedHitPointDelta(input: {
+  readonly build: ReturnType<typeof projectionBuild>;
+  readonly suffix: string;
+  readonly delta: HitPointMaximumDelta;
+}): void {
+  const featureUnitId = authoredUnitId(`synthetic_hit_point_${input.suffix}`);
+  expect(
+    characterBuildHitPoints(
+      buildWithSelectedHitPointFeature(input.build, featureUnitId),
+      catalogWithHitPointMaximumFeature(featureUnitId, input.delta),
+    ),
+  ).toMatchObject({
+    _tag: "Failure",
+    failure: [
+      {
+        cause: {
+          tag: "unsupportedHitPointMaximumGrant",
+          sourceUnitId: featureUnitId,
+        },
+      },
+    ],
+  });
 }
 
 describe("character finalization boundaries", () => {
@@ -212,8 +278,8 @@ describe("character finalization boundaries", () => {
         "con",
       ]),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         str: 11,
         dex: 11,
         con: 11,
@@ -231,15 +297,15 @@ describe("character finalization boundaries", () => {
     expect(
       characterBuildHitPoints(unknownClassBuild, unitLibrary),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "class" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "class" } }],
     });
     expect(
       characterBuildProficiencies(unknownClassBuild, unitLibrary),
-    ).toHaveProperty("_tag", "Left");
+    ).toHaveProperty("_tag", "Failure");
     expect(
       characterBuildArmorTraining(unknownClassBuild, unitLibrary),
-    ).toHaveProperty("_tag", "Left");
+    ).toHaveProperty("_tag", "Failure");
 
     expect(
       characterBuildProficiencies(
@@ -247,8 +313,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unreadableUnit",
@@ -271,8 +337,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "background" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "background" } }],
     });
     expect(
       characterBuildProficiencies(
@@ -283,8 +349,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unreadableUnit", role: "background" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unreadableUnit", role: "background" } }],
     });
   });
 
@@ -306,8 +372,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         skills: expect.arrayContaining(["arcana", "athletics"]),
         expertise: ["athletics"],
         weapon: expect.arrayContaining(["simple"]),
@@ -320,8 +386,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining(["heavy"]),
+      _tag: "Success",
+      success: expect.arrayContaining(["heavy"]),
     });
   });
 
@@ -346,8 +412,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "missingHitPointMaximumGrantSourceUnit",
@@ -373,8 +439,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unknownUnit",
@@ -400,8 +466,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unreadableUnit",
@@ -438,7 +504,7 @@ describe("character finalization boundaries", () => {
     expect(resourceUnitIds).not.toContain(missingFeatureUnitId);
   });
 
-  test("rejects non-deterministic retained Hit Point bonuses", () => {
+  test("rejects retained Hit Point bonuses whose value depends on a roll or runtime state", () => {
     const fighterBuild = projectionBuild(
       classUnitId(authoredUnitId("class_fighter")),
     );
@@ -461,37 +527,78 @@ describe("character finalization boundaries", () => {
           startingAtLevel: 3,
         },
       },
+      {
+        suffix: "threshold_tiers_exploding_max_die",
+        delta: {
+          kind: "threshold_tiers_exploding_max_die",
+          axis: "character",
+          baseDice: 1,
+          dieSize: 6,
+          tiers: [{ atLevel: 2, dice: 1 }],
+          maxAdditionalDice: "spellcasting_ability_modifier",
+        },
+      },
+      {
+        suffix: "resource_spent",
+        delta: { kind: "resource_spent" },
+      },
+      {
+        suffix: "resource_spent_linear",
+        delta: {
+          kind: "resource_spent_linear",
+          base: { dice: 0, dieSize: 1, flat: 1 },
+          perResource: { flat: 1 },
+        },
+      },
+      {
+        suffix: "linked",
+        delta: {
+          kind: "linked",
+          link: { kind: "damage_taken", scale: "half" },
+        },
+      },
     ] as const satisfies readonly {
       readonly suffix: string;
       readonly delta: HitPointMaximumDelta;
     }[];
 
     for (const { suffix, delta } of cases) {
-      const featureUnitId = authoredUnitId(`synthetic_hit_point_${suffix}`);
-      expect(
-        characterBuildHitPoints(
-          {
-            ...fighterBuild,
-            features: [
-              {
-                kind: "selectedClassChoice",
-                selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
-                unitId: featureUnitId,
-              },
-            ],
-          },
-          catalogWithHitPointMaximumFeature(featureUnitId, delta),
-        ),
-      ).toMatchObject({
-        _tag: "Left",
-        left: [
-          {
-            cause: {
-              tag: "unsupportedHitPointMaximumGrant",
-              sourceUnitId: featureUnitId,
-            },
-          },
-        ],
+      expectUnsupportedHitPointDelta({
+        build: fighterBuild,
+        suffix,
+        delta,
+      });
+    }
+  });
+
+  test("rejects deterministic retained Hit Point delta kinds outside the support profile", () => {
+    const fighterBuild = projectionBuild(
+      classUnitId(authoredUnitId("class_fighter")),
+    );
+    const cases = [
+      {
+        suffix: "flat_threshold_tiers",
+        delta: {
+          kind: "threshold_tiers",
+          axis: "character",
+          base: { dice: 0, dieSize: 1, flat: 1 },
+          tiers: [{ atLevel: 2, override: { flat: 2 } }],
+        },
+      },
+      {
+        suffix: "proficiency_bonus",
+        delta: { kind: "proficiency_bonus" },
+      },
+    ] as const satisfies readonly {
+      readonly suffix: string;
+      readonly delta: HitPointMaximumDelta;
+    }[];
+
+    for (const { suffix, delta } of cases) {
+      expectUnsupportedHitPointDelta({
+        build: fighterBuild,
+        suffix,
+        delta,
       });
     }
   });
@@ -500,20 +607,11 @@ describe("character finalization boundaries", () => {
     const featureUnitId = authoredUnitId(
       "synthetic_character_axis_hit_point_bonus",
     );
-    const build = projectionBuild(classUnitId(authoredUnitId("class_fighter")));
+    const build = fighterSorcererMulticlassProjectionBuild();
 
     expect(
       characterBuildHitPoints(
-        {
-          ...build,
-          features: [
-            {
-              kind: "selectedClassChoice",
-              selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
-              unitId: featureUnitId,
-            },
-          ],
-        },
+        buildWithSelectedHitPointFeature(build, featureUnitId),
         catalogWithHitPointMaximumFeature(featureUnitId, {
           kind: "linear_per_level",
           axis: "character",
@@ -523,8 +621,31 @@ describe("character finalization boundaries", () => {
         }),
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: { maximum: 11 },
+      _tag: "Success",
+      success: { maximum: 16 },
+    });
+  });
+
+  test("scales retained class-axis Hit Point grants by the source class level", () => {
+    const featureUnitId = authoredUnitId(
+      "synthetic_class_axis_hit_point_bonus",
+    );
+    const build = fighterSorcererMulticlassProjectionBuild();
+
+    expect(
+      characterBuildHitPoints(
+        buildWithSelectedHitPointFeature(build, featureUnitId),
+        catalogWithHitPointMaximumFeature(featureUnitId, {
+          kind: "linear_per_level",
+          axis: "class",
+          base: { dice: 0, dieSize: 1, flat: 1 },
+          perLevel: { flat: 1 },
+          startingAtLevel: 1,
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Success",
+      success: { maximum: 15 },
     });
   });
 
@@ -859,16 +980,16 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         { cause: { tag: "unknownUnit", role: "class" } },
         { cause: { tag: "unknownUnit", role: "background" } },
       ],
     });
 
     expect(finalizedBuildEquipment(bothUnknown, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "class" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "class" } }],
     });
 
     const fighter = selectionsWithStartingClass(
@@ -883,13 +1004,13 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "background" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "background" } }],
     });
 
     expect(finalizedBuildEquipment(fighter, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: { startingEquipmentCurrencyRemainderCp: 0 },
+      _tag: "Success",
+      success: { startingEquipmentCurrencyRemainderCp: 0 },
     });
   });
 });

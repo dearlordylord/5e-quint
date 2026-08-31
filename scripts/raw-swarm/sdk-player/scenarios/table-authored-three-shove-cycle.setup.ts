@@ -45,10 +45,10 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const shoveDistance = sdk.scenarioDistanceFeet(5);
-  if (sdk.isLeft(shoveDistance)) {
+  if (sdk.isFailure(shoveDistance)) {
     return {
       kind: "obstructed",
-      obstruction: shoveDistance.left.message,
+      obstruction: shoveDistance.failure.message,
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "invalid-shove-distance",
@@ -66,7 +66,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
       answer: {
         direction: "north",
-        distanceFeet: shoveDistance.right,
+        distanceFeet: shoveDistance.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
@@ -81,7 +81,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
       answer: {
         direction: "east",
-        distanceFeet: shoveDistance.right,
+        distanceFeet: shoveDistance.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
@@ -96,7 +96,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
       answer: {
         direction: "south-west",
-        distanceFeet: shoveDistance.right,
+        distanceFeet: shoveDistance.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
@@ -107,10 +107,10 @@ export const setupScenario: ScenarioSetup = (context) => {
   const spatialDecisions = [];
   for (const input of shoveDecisionInputs) {
     const decision = sdk.tableAuthoredSpatialDecision(input);
-    if (sdk.isLeft(decision)) {
+    if (sdk.isFailure(decision)) {
       return {
         kind: "obstructed",
-        obstruction: decision.left.message,
+        obstruction: decision.failure.message,
         observation: {
           scenarioId: "table-authored-three-shove-cycle",
           obstruction: "invalid-table-authored-spatial-decision",
@@ -118,7 +118,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         },
       };
     }
-    spatialDecisions.push(decision.right);
+    spatialDecisions.push(decision.success);
   }
 
   const combatantInits = [
@@ -144,13 +144,11 @@ export const setupScenario: ScenarioSetup = (context) => {
       conditions: [],
     }),
   ];
-  const invalidCombatant = combatantInits.find(sdk.isLeft);
+  const invalidCombatant = combatantInits.find(sdk.isFailure);
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
-        invalidCombatant.left,
-      ),
+      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "stat-block-battle-initialization-failed",
@@ -158,17 +156,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
   const combatants = combatantInits
-    .filter((combatant) => !sdk.isLeft(combatant))
-    .map((combatant) => combatant.right);
+    .filter((combatant) => !sdk.isFailure(combatant))
+    .map((combatant) => combatant.success);
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId("table-authored-three-shove-cycle"),
     combatants,
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "battle-start-failed",
@@ -177,7 +175,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "tableAuthored",
       spatialDecisions,
@@ -193,10 +191,10 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "scenario-session-composition-failed",
@@ -206,7 +204,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: { scenarioId: "table-authored-three-shove-cycle" },
   };
 };
