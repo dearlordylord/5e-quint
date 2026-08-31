@@ -22,7 +22,6 @@ import {
 } from "./stat-block-identity.ts";
 import { projectRawStatBlock } from "./stat-block-raw-projection.ts";
 import {
-  evaluateSrdStatBlockScopedFidelity,
   projectSrdStatBlockScopedFidelity,
   reconcileSrdStatBlockScopedFidelity,
   type SrdStatBlockAuthoredFidelityProjection,
@@ -32,7 +31,8 @@ import {
   type SrdStatBlockScopedFidelityResult,
   type StatBlockScopedProjectionFailure,
   type StatBlockScopedMechanics,
-} from "./stat-block-scoped-fidelity.ts";
+} from "./stat-block-scoped-fidelity.test-support.ts";
+import { evaluateSrdStatBlockScopedFidelity } from "./stat-block-scoped-fidelity.ts";
 
 const repositoryRoot = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -67,6 +67,20 @@ function assessableProjections() {
 }
 
 const cachedCorpusProjections = assessableProjections();
+const normalizedEvidenceIdentities = new Map<
+  string,
+  NormalizedStatBlockIdentity
+>();
+
+function normalizedEvidenceIdentity(evidence: {
+  readonly name: string;
+}): NormalizedStatBlockIdentity {
+  const existing = normalizedEvidenceIdentities.get(evidence.name);
+  if (existing !== undefined) return existing;
+  const identity = normalizeStatBlockIdentity(evidence.name);
+  normalizedEvidenceIdentities.set(evidence.name, identity);
+  return identity;
+}
 
 function delimiterCollisionAssessment(
   idPrefix: string,
@@ -86,14 +100,10 @@ function delimiterCollisionAssessment(
   const duplicatedEvidence = {
     statBlockId: statBlockId(`${idPrefix}|${sharedSegment}`),
     name: identitySuffix,
-    normalizedIdentity: normalizeStatBlockIdentity(identitySuffix),
   };
   const missingEvidence = {
     statBlockId: statBlockId(idPrefix),
     name: `${sharedSegment}|${identitySuffix}`,
-    normalizedIdentity: normalizeStatBlockIdentity(
-      `${sharedSegment}|${identitySuffix}`,
-    ),
   };
   const installedRecords = [duplicatedEvidence, missingEvidence].map(
     ({ statBlockId: id, name }) => ({
@@ -202,12 +212,12 @@ function issueFailureEvidenceKey(
     Match.when(
       { kind: "raw-projection-failed" },
       ({ source, failure }) =>
-        `${issueEvidenceKey(issue)}|${failure.tag}|${source.normalizedIdentity}`,
+        `${issueEvidenceKey(issue)}|${failure.tag}|${normalizedEvidenceIdentity(source)}`,
     ),
     Match.when(
       { kind: "authored-projection-failed" },
       ({ authoredRecord, failure }) =>
-        `${issueEvidenceKey(issue)}|${failure.tag}|${authoredRecord.normalizedIdentity}`,
+        `${issueEvidenceKey(issue)}|${failure.tag}|${normalizedEvidenceIdentity(authoredRecord)}`,
     ),
     Match.when({ kind: "mechanics-mismatch" }, () => issueEvidenceKey(issue)),
     Match.exhaustive,
@@ -464,8 +474,8 @@ function mutationTargets(
   const rawOccurrenceCounts = new Map<NormalizedStatBlockIdentity, number>();
   for (const { evidence } of projections.raw) {
     rawOccurrenceCounts.set(
-      evidence.normalizedIdentity,
-      (rawOccurrenceCounts.get(evidence.normalizedIdentity) ?? 0) + 1,
+      normalizedEvidenceIdentity(evidence),
+      (rawOccurrenceCounts.get(normalizedEvidenceIdentity(evidence)) ?? 0) + 1,
     );
   }
   const used = new Set<NormalizedStatBlockIdentity>();
@@ -474,15 +484,17 @@ function mutationTargets(
       const mechanics = projectedMechanics(candidate);
       return (
         mechanics !== undefined &&
-        rawOccurrenceCounts.get(candidate.evidence.normalizedIdentity) === 1 &&
-        !used.has(candidate.evidence.normalizedIdentity) &&
+        rawOccurrenceCounts.get(
+          normalizedEvidenceIdentity(candidate.evidence),
+        ) === 1 &&
+        !used.has(normalizedEvidenceIdentity(candidate.evidence)) &&
         descriptor.accepts(mechanics)
       );
     });
     if (projection === undefined) {
       throw new Error("Unable to select an independent fidelity mutation");
     }
-    used.add(projection.evidence.normalizedIdentity);
+    used.add(normalizedEvidenceIdentity(projection.evidence));
     return { descriptor, projection };
   });
 }
@@ -501,7 +513,8 @@ function mutateProjectionFixture(
   ): SrdStatBlockRawFidelityProjection => {
     const rawProjection = fixture.raw.find(
       ({ evidence }) =>
-        evidence.normalizedIdentity === projection.evidence.normalizedIdentity,
+        normalizedEvidenceIdentity(evidence) ===
+        normalizedEvidenceIdentity(projection.evidence),
     );
     if (rawProjection === undefined) {
       throw new Error("Mutation target has no RAW occurrence");
@@ -522,12 +535,15 @@ function mutateProjectionFixture(
     const raw = rawFor(projection);
     Match.value(descriptor).pipe(
       Match.when({ kind: "raw-projection-failure" }, ({ mutate }) => {
-        rawReplacements.set(raw.evidence.normalizedIdentity, mutate(raw));
+        rawReplacements.set(
+          normalizedEvidenceIdentity(raw.evidence),
+          mutate(raw),
+        );
         expectedIssueKeys.push(`raw-projection-failed|${sourceKey(raw)}`);
       }),
       Match.when({ kind: "authored-projection-failure" }, ({ mutate }) => {
         authoredReplacements.set(
-          projection.evidence.normalizedIdentity,
+          normalizedEvidenceIdentity(projection.evidence),
           mutate(projection),
         );
         expectedIssueKeys.push(
@@ -536,7 +552,7 @@ function mutateProjectionFixture(
       }),
       Match.when({ kind: "mechanics-mismatch" }, ({ mutate }) => {
         authoredReplacements.set(
-          projection.evidence.normalizedIdentity,
+          normalizedEvidenceIdentity(projection.evidence),
           changeMechanics(projection, mutate),
         );
         expectedIssueKeys.push(
@@ -548,12 +564,14 @@ function mutateProjectionFixture(
   }
   const raw = fixture.raw.map(
     (projection) =>
-      rawReplacements.get(projection.evidence.normalizedIdentity) ?? projection,
+      rawReplacements.get(normalizedEvidenceIdentity(projection.evidence)) ??
+      projection,
   );
   const authored = fixture.authored.map(
     (projection) =>
-      authoredReplacements.get(projection.evidence.normalizedIdentity) ??
-      projection,
+      authoredReplacements.get(
+        normalizedEvidenceIdentity(projection.evidence),
+      ) ?? projection,
   );
   const [firstRaw, ...remainingRaw] = raw;
   const [firstAuthored, ...remainingAuthored] = authored;
@@ -623,8 +641,8 @@ function parityAndFidelityScenarioTargets(
   const rawOccurrenceCounts = new Map<NormalizedStatBlockIdentity, number>();
   for (const { evidence } of fixture.raw) {
     rawOccurrenceCounts.set(
-      evidence.normalizedIdentity,
-      (rawOccurrenceCounts.get(evidence.normalizedIdentity) ?? 0) + 1,
+      normalizedEvidenceIdentity(evidence),
+      (rawOccurrenceCounts.get(normalizedEvidenceIdentity(evidence)) ?? 0) + 1,
     );
   }
   const candidates = fixture.authored.flatMap((authored) => {
@@ -635,13 +653,15 @@ function parityAndFidelityScenarioTargets(
     );
     if (
       !authoredProjected ||
-      rawOccurrenceCounts.get(authored.evidence.normalizedIdentity) !== 1
+      rawOccurrenceCounts.get(normalizedEvidenceIdentity(authored.evidence)) !==
+        1
     ) {
       return [];
     }
     const raw = fixture.raw.find(
       ({ evidence }) =>
-        evidence.normalizedIdentity === authored.evidence.normalizedIdentity,
+        normalizedEvidenceIdentity(evidence) ===
+        normalizedEvidenceIdentity(authored.evidence),
     );
     return raw === undefined
       ? []
@@ -702,7 +722,7 @@ function scenarioMutationFixture(
   };
   const addMismatch = (target: ScenarioTarget): void => {
     authoredReplacements.set(
-      target.authored.evidence.normalizedIdentity,
+      normalizedEvidenceIdentity(target.authored.evidence),
       passivePerceptionMismatch(target.authored),
     );
   };
@@ -739,7 +759,9 @@ function scenarioMutationFixture(
         expectedParityIssues.push({
           kind: "duplicate-identity",
           name: target.authored.evidence.name,
-          normalizedIdentity: target.authored.evidence.normalizedIdentity,
+          normalizedIdentity: normalizedEvidenceIdentity(
+            target.authored.evidence,
+          ),
           statBlockIds: [
             target.authored.evidence.statBlockId,
             secondRecord.evidence.statBlockId,
@@ -794,7 +816,7 @@ function scenarioMutationFixture(
         );
       }),
       Match.when("raw-projection-failure", () => {
-        rawReplacements.set(target.raw.evidence.normalizedIdentity, {
+        rawReplacements.set(normalizedEvidenceIdentity(target.raw.evidence), {
           ...target.raw,
           outcome: {
             tag: "failed",
@@ -806,13 +828,16 @@ function scenarioMutationFixture(
         );
       }),
       Match.when("authored-projection-failure", () => {
-        authoredReplacements.set(target.authored.evidence.normalizedIdentity, {
-          ...target.authored,
-          outcome: {
-            tag: "failed",
-            failure: SYNTHETIC_PROJECTION_FAILURE,
+        authoredReplacements.set(
+          normalizedEvidenceIdentity(target.authored.evidence),
+          {
+            ...target.authored,
+            outcome: {
+              tag: "failed",
+              failure: SYNTHETIC_PROJECTION_FAILURE,
+            },
           },
-        });
+        );
         expectedFidelityIssueKeys.push(
           `authored-projection-failed|${target.authored.evidence.statBlockId}`,
         );
@@ -832,13 +857,15 @@ function scenarioMutationFixture(
       parity: { ...fixture.parity, issues: expectedParityIssues },
       raw: fixture.raw.map(
         (projection) =>
-          rawReplacements.get(projection.evidence.normalizedIdentity) ??
-          projection,
+          rawReplacements.get(
+            normalizedEvidenceIdentity(projection.evidence),
+          ) ?? projection,
       ),
       authored: fixture.authored.map(
         (projection) =>
-          authoredReplacements.get(projection.evidence.normalizedIdentity) ??
-          projection,
+          authoredReplacements.get(
+            normalizedEvidenceIdentity(projection.evidence),
+          ) ?? projection,
       ),
     },
     expectedFidelityIssueKeys: expectedFidelityIssueKeys.sort(),
@@ -859,6 +886,35 @@ function fidelityIssueKeys(
 }
 
 describe("whole-lane SRD Stat Block scoped fidelity", () => {
+  test("keeps normalized identity derived from canonical evidence at the join", () => {
+    const [raw] = cachedCorpusProjections.raw;
+    const [authored] = cachedCorpusProjections.authored;
+    if (raw === undefined || authored === undefined) {
+      throw new Error("The corpus has no scoped-fidelity evidence");
+    }
+    const mechanics = projectedMechanics(authored);
+    if (mechanics === undefined) {
+      throw new Error("The corpus has no projected scoped mechanics");
+    }
+
+    const shapeProof: readonly [
+      "normalizedIdentity" extends keyof typeof raw.evidence ? false : true,
+      "normalizedIdentity" extends keyof typeof authored.evidence
+        ? false
+        : true,
+      "id" extends keyof typeof mechanics ? false : true,
+      "name" extends keyof typeof mechanics ? false : true,
+      "sourceSection" extends keyof typeof mechanics ? false : true,
+    ] = [true, true, true, true, true];
+
+    expect(shapeProof).toEqual([true, true, true, true, true]);
+    expect(raw.evidence).not.toHaveProperty("normalizedIdentity");
+    expect(authored.evidence).not.toHaveProperty("normalizedIdentity");
+    expect(mechanics).not.toHaveProperty("id");
+    expect(mechanics).not.toHaveProperty("name");
+    expect(mechanics).not.toHaveProperty("sourceSection");
+  });
+
   test("keeps delimiter-bearing authored identities collision free", () => {
     expectDelimiterCollisionEvidence(
       delimiterCollisionAssessment("x", "y", "z"),
@@ -1039,7 +1095,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const variantName = installedRecord.name.toUpperCase();
     expect(variantName).not.toBe(installedRecord.name);
     expect(normalizeStatBlockIdentity(variantName)).toBe(
-      target.evidence.normalizedIdentity,
+      normalizedEvidenceIdentity(target.evidence),
     );
     const denominatorVariant = { ...installedRecord, name: variantName };
     const projectionVariant = {
@@ -1221,10 +1277,10 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     >();
     for (const occurrence of result.occurrences) {
       const prior = occurrencesByIdentity.get(
-        occurrence.source.normalizedIdentity,
+        normalizedEvidenceIdentity(occurrence.source),
       );
       occurrencesByIdentity.set(
-        occurrence.source.normalizedIdentity,
+        normalizedEvidenceIdentity(occurrence.source),
         prior === undefined ? [occurrence] : [...prior, occurrence],
       );
     }
@@ -1344,7 +1400,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
           )
           .map(
             (projection) =>
-              `raw-projection-failed|${sourceKey(projection)}|source-not-supplied|${projection.evidence.normalizedIdentity}`,
+              `raw-projection-failed|${sourceKey(projection)}|source-not-supplied|${normalizedEvidenceIdentity(projection.evidence)}`,
           ),
       ),
     );
@@ -1375,10 +1431,10 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
 
     expect(issues.map(issueFailureEvidenceKey).sort()).toEqual(
       [
-        `raw-projection-failed|${sourceKey(missingRaw)}|projection-outcome-not-supplied|${missingRaw.evidence.normalizedIdentity}`,
-        `raw-projection-failed|${sourceKey(duplicateRaw)}|projection-binding-not-unique|${duplicateRaw.evidence.normalizedIdentity}`,
-        `authored-projection-failed|${missingAuthored.evidence.statBlockId}|projection-outcome-not-supplied|${missingAuthored.evidence.normalizedIdentity}`,
-        `authored-projection-failed|${duplicateAuthored.evidence.statBlockId}|projection-binding-not-unique|${duplicateAuthored.evidence.normalizedIdentity}`,
+        `raw-projection-failed|${sourceKey(missingRaw)}|projection-outcome-not-supplied|${normalizedEvidenceIdentity(missingRaw.evidence)}`,
+        `raw-projection-failed|${sourceKey(duplicateRaw)}|projection-binding-not-unique|${normalizedEvidenceIdentity(duplicateRaw.evidence)}`,
+        `authored-projection-failed|${missingAuthored.evidence.statBlockId}|projection-outcome-not-supplied|${normalizedEvidenceIdentity(missingAuthored.evidence)}`,
+        `authored-projection-failed|${duplicateAuthored.evidence.statBlockId}|projection-binding-not-unique|${normalizedEvidenceIdentity(duplicateAuthored.evidence)}`,
       ].sort(),
     );
   });
@@ -1457,20 +1513,21 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const occurrenceCounts = new Map<NormalizedStatBlockIdentity, number>();
     for (const { evidence } of fixture.raw) {
       occurrenceCounts.set(
-        evidence.normalizedIdentity,
-        (occurrenceCounts.get(evidence.normalizedIdentity) ?? 0) + 1,
+        normalizedEvidenceIdentity(evidence),
+        (occurrenceCounts.get(normalizedEvidenceIdentity(evidence)) ?? 0) + 1,
       );
     }
     const repeatedAuthored = fixture.authored.find(
-      ({ evidence }) => occurrenceCounts.get(evidence.normalizedIdentity) === 2,
+      ({ evidence }) =>
+        occurrenceCounts.get(normalizedEvidenceIdentity(evidence)) === 2,
     );
     if (repeatedAuthored === undefined) {
       throw new Error("Repeated-anchor test requires a repeated identity");
     }
     const repeatedRaw = fixture.raw.filter(
       ({ evidence }) =>
-        evidence.normalizedIdentity ===
-        repeatedAuthored.evidence.normalizedIdentity,
+        normalizedEvidenceIdentity(evidence) ===
+        normalizedEvidenceIdentity(repeatedAuthored.evidence),
     );
     const [firstRepeatedRaw] = repeatedRaw;
     if (firstRepeatedRaw === undefined) {
