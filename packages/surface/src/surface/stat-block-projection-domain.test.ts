@@ -266,9 +266,46 @@ describe("domain-valid scoped Stat Block projections", () => {
         procedures: [
           {
             ...procedure,
+            attackType: "ranged",
+            rangeFeet: { normal: 30, long: 120 },
+            reachFeet: 5,
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [{ ...procedure, onHit: [] }],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            ...procedure,
+            attackType: "ranged",
+            rangeFeet: { normal: 120, long: 30 },
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            ...procedure,
             attackAbilityEvidence: {
               kind: "unresolved",
               candidates: ["str", "str"],
+            },
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            ...procedure,
+            attackAbilityEvidence: {
+              kind: "unresolved",
+              candidates: ["str"],
             },
           },
         ],
@@ -282,6 +319,38 @@ describe("domain-valid scoped Stat Block projections", () => {
               {
                 ...damage,
                 amount: { kind: "fixed", static: 4, expr: { dice: 1 } },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            ...procedure,
+            onHit: [
+              {
+                ...damage,
+                amount: { kind: "fixed", static: 4, expr: { dieSize: 6 } },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            ...procedure,
+            onHit: [
+              {
+                ...damage,
+                amount: {
+                  kind: "fixed",
+                  static: 4,
+                  spellcastingMod: true,
+                },
               },
             ],
           },
@@ -304,7 +373,73 @@ describe("domain-valid scoped Stat Block projections", () => {
         ...candidate,
         generalFacts: {
           ...generalFacts,
+          speeds: [
+            {
+              kind: "walk",
+              feet: { kind: "literal", value: 30 },
+              hover: true,
+            },
+          ],
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          speeds: [
+            {
+              kind: "gm_choice",
+              alternatives: [
+                { kind: "walk", feet: { kind: "literal", value: 30 } },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          speeds: [
+            {
+              kind: "gm_choice",
+              alternatives: [
+                { kind: "walk", feet: { kind: "literal", value: 30 } },
+                { kind: "walk", feet: { kind: "literal", value: 30 } },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
           sizeAndSwarm: { size: "medium", swarm: null },
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          sizeAndSwarm: {
+            size: "tiny",
+            swarm: { constituentSize: "tiny" },
+          },
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          resistances: { kind: "fixed", damageTypes: [] },
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          resistances: { kind: "choose_one_from", options: [] },
         },
       },
       {
@@ -313,6 +448,45 @@ describe("domain-valid scoped Stat Block projections", () => {
           ...generalFacts,
           immunities: { kind: "some", value: {} },
         },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          immunities: {
+            kind: "some",
+            value: {
+              conditions: ["charmed"],
+              qualifiedConditions: [
+                { condition: "charmed", qualifier: "synthetic source" },
+              ],
+            },
+          },
+        },
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            section: "Actions",
+            name: "Synthetic Multiattack",
+            kind: "multiattack",
+            dispatches: [],
+            resourceLimits: [],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            section: "Actions",
+            name: "Synthetic Options",
+            kind: "action_option",
+            options: [],
+            resourceLimits: [],
+          },
+        ],
       },
       {
         ...candidate,
@@ -330,6 +504,54 @@ describe("domain-valid scoped Stat Block projections", () => {
                 resourceLimits: [
                   { kind: "daily", uses: 1, ownership: "shared" },
                 ],
+              },
+            ],
+            resourceLimits: [],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            section: "Actions",
+            name: "Synthetic Spellcasting",
+            kind: "spellcasting",
+            ability: "int",
+            components: { kind: "spell_definition" },
+            groups: [],
+            resourceLimits: [],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            section: "Actions",
+            name: "Synthetic Spellcasting",
+            kind: "spellcasting",
+            ability: "int",
+            components: { kind: "spell_definition" },
+            groups: [{ kind: "at_will", spells: [], resourceLimits: [] }],
+            resourceLimits: [],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            section: "Actions",
+            name: "Synthetic Spellcasting",
+            kind: "spellcasting",
+            ability: "int",
+            components: { kind: "spell_definition" },
+            groups: [
+              {
+                kind: "limited",
+                spells: [{ spellId: "synthetic_spell" }],
+                resourceLimits: [],
               },
             ],
             resourceLimits: [],

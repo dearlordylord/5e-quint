@@ -75,12 +75,12 @@ describe("Animals Stat Block procedure fidelity", () => {
     expect(
       projectAuthoredStatBlocks([swarm], "")[0]?.generalFacts.speeds,
     ).toEqual([
-      { kind: "walk", feet: 20, hover: false },
+      { kind: "walk", feet: { kind: "literal", value: 20 } },
       {
         kind: "gm_choice",
         alternatives: [
-          { kind: "climb", feet: 20, hover: false },
-          { kind: "fly", feet: 20, hover: false },
+          { kind: "climb", feet: { kind: "literal", value: 20 } },
+          { kind: "fly", feet: { kind: "literal", value: 20 } },
         ],
       },
     ]);
