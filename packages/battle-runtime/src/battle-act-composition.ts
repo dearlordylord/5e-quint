@@ -12,8 +12,15 @@ import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
-import { spellActiveEffectForExecutionRef } from "./effect-execution-ref.ts";
+import type {
+  BattleEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "./identity.ts";
+import {
+  spellActiveEffectForExecutionRef,
+  type ReplayAddressableSpellActiveEffect,
+} from "./effect-execution-ref.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "./battle-action-options.ts";
 import {
   attackActionOptionsForActor,
@@ -56,6 +63,17 @@ const byTag = Match.discriminator("tag");
 type IntrinsicBattleSubject = Exclude<
   BattleSubject,
   CharacterProcedureBattleSubject
+>;
+
+type RuntimeSpellCastingCommandSubject = Extract<
+  IntrinsicBattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command:
+      | "releaseReadiedSpell"
+      | "castTriggeredReactionSpell"
+      | "castAttackHitBonusActionSpell";
+  }
 >;
 
 export function battleActSpellPresentation(
@@ -211,32 +229,7 @@ function intrinsicActPresentation(
       subject.command === "castTriggeredReactionSpell" ||
       subject.command === "castAttackHitBonusActionSpell")
   ) {
-    const spellOwnerId =
-      subject.command === "releaseReadiedSpell"
-        ? subject.readiedSpellCasterId
-        : subject.command === "castTriggeredReactionSpell"
-          ? subject.reactorId
-          : subject.casterId;
-    const source = spellPresentationSourceForProcedure(
-      state,
-      context,
-      spellOwnerId,
-      subject.procedureRef,
-    );
-    if (source === undefined) return undefined;
-    if (source.invocation.procedure === "spawnedCompanionLifecycle") {
-      return undefined;
-    }
-    const release = subject.command === "releaseReadiedSpell";
-    return {
-      label: `${release ? "Release " : "Cast "}${source.invocation.spell.name}`,
-      summary: `${release ? "Release" : "Cast"} ${source.invocation.spell.name} with ${release ? "a Reaction" : "the available interrupt"}.`,
-      presentation: {
-        kind: "spell",
-        procedureRef: subject.procedureRef,
-        invocation: supportedSpellInvocationRef(source.invocation),
-      },
-    };
+    return runtimeSpellCastingCommandPresentation(state, context, subject);
   }
   const presentation = intrinsicSubjectPresentation(state, context, subject);
   if (presentation === undefined) return undefined;
@@ -257,6 +250,39 @@ function intrinsicActPresentation(
   return {
     ...intrinsicActPresentationText(state, context, subject),
     presentation,
+  };
+}
+
+function runtimeSpellCastingCommandPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: RuntimeSpellCastingCommandSubject,
+): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
+  const spellOwnerId =
+    subject.command === "releaseReadiedSpell"
+      ? subject.readiedSpellCasterId
+      : subject.command === "castTriggeredReactionSpell"
+        ? subject.reactorId
+        : subject.casterId;
+  const source = spellPresentationSourceForProcedure(
+    state,
+    context,
+    spellOwnerId,
+    subject.procedureRef,
+  );
+  if (source === undefined) return undefined;
+  if (source.invocation.procedure === "spawnedCompanionLifecycle") {
+    return undefined;
+  }
+  const release = subject.command === "releaseReadiedSpell";
+  return {
+    label: `${release ? "Release " : "Cast "}${source.invocation.spell.name}`,
+    summary: `${release ? "Release" : "Cast"} ${source.invocation.spell.name} with ${release ? "a Reaction" : "the available interrupt"}.`,
+    presentation: {
+      kind: "spell",
+      procedureRef: subject.procedureRef,
+      invocation: supportedSpellInvocationRef(source.invocation),
+    },
   };
 }
 
@@ -328,32 +354,12 @@ function intrinsicActPresentationText(
   subject: IntrinsicBattleSubject,
 ): { readonly label: string; readonly summary: string } {
   if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
-    const effect = [...state.combatants.values()].flatMap((combatant) => {
-      const candidate = spellActiveEffectForExecutionRef(
-        combatant.activeEffects,
-        subject.effectRef,
-      );
-      return candidate === undefined ? [] : [candidate];
-    })[0];
-    if (effect !== undefined && "sourceProcedureRef" in effect) {
-      const source = spellPresentationSourceForProcedure(
-        state,
-        context,
-        effect.sourceCombatantId,
-        effect.sourceProcedureRef,
-      );
-      if (source !== undefined) {
-        const invocation = source.invocation;
-        const help = subject.actorId !== subject.targetId;
-        const label = `${help ? "Help escape" : "Escape"} ${invocation.spell.name}`;
-        return {
-          label,
-          summary: help
-            ? `Use an action while within reach of the target to attempt to end ${invocation.spell.name}.`
-            : `Use an action to attempt to end ${invocation.spell.name}.`,
-        };
-      }
-    }
+    const presentation = escapeSpellRestraintPresentationText(
+      state,
+      context,
+      subject,
+    );
+    if (presentation !== undefined) return presentation;
   }
   if (subject.tag === "runtimeCommand") {
     const spellCommandPresentation = runtimeSpellCommandPresentationText(
@@ -369,46 +375,117 @@ function intrinsicActPresentationText(
     subject.tag === "runtimeCommand" &&
     subject.command === "fixedCostMovementReplacement"
   ) {
-    const actor = state.combatants.get(subject.actorId);
-    const effect = spellActiveEffectForExecutionRef(
-      actor?.activeEffects ?? [],
-      subject.effectRef,
+    const presentation = fixedCostMovementReplacementPresentationText(
+      state,
+      subject,
     );
-    if (effect?.kind === "fixedCostMovementReplacement") {
-      const boundEffect = boundFixedCostMovementReplacementEffect(
-        state,
-        effect,
-      );
-      if (boundEffect !== undefined) {
-        return {
-          label: "Jump",
-          summary: `Spend ${boundEffect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, boundEffect)} feet using table-supplied landing facts.`,
-        };
-      }
-    }
+    if (presentation !== undefined) return presentation;
   }
   if (
     (subject.tag === "action" && subject.action === "multiattack") ||
     (subject.tag === "bonusAction" &&
       subject.action === "statBlockActionOption")
   ) {
-    const actor = state.combatants.get(subject.actorId);
-    if (actor?.origin.kind === "statBlock") {
-      const presentation = statBlockProcedurePresentationsForActor(
-        state,
-        context,
-        subject.actorId,
-      )?.find((candidate) => candidate.procedureRef === subject.procedureRef);
-      if (presentation !== undefined && presentation.kind !== "attack") {
-        return {
-          label: presentation.label,
-          summary: `Use ${presentation.label}.`,
-        };
-      }
-    }
+    const presentation = statBlockProcedurePresentationText(
+      state,
+      context,
+      subject,
+    );
+    if (presentation !== undefined) return presentation;
   }
   const label = intrinsicActPresentationLabel(subject);
   return { label, summary: `Use ${label}.` };
+}
+
+type EscapeSpellRestraintSubject = Extract<
+  IntrinsicBattleSubject,
+  { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
+>;
+
+function escapeSpellRestraintPresentationText(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: EscapeSpellRestraintSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const effect = spellActiveEffectInBattle(state, subject.effectRef);
+  if (effect === undefined || !("sourceProcedureRef" in effect)) {
+    return undefined;
+  }
+  const source = spellPresentationSourceForProcedure(
+    state,
+    context,
+    effect.sourceCombatantId,
+    effect.sourceProcedureRef,
+  );
+  if (source === undefined) return undefined;
+  const help = subject.actorId !== subject.targetId;
+  const label = `${help ? "Help escape" : "Escape"} ${source.invocation.spell.name}`;
+  return {
+    label,
+    summary: help
+      ? `Use an action while within reach of the target to attempt to end ${source.invocation.spell.name}.`
+      : `Use an action to attempt to end ${source.invocation.spell.name}.`,
+  };
+}
+
+type FixedCostMovementReplacementSubject = Extract<
+  IntrinsicBattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "fixedCostMovementReplacement";
+  }
+>;
+
+function fixedCostMovementReplacementPresentationText(
+  state: BattleState,
+  subject: FixedCostMovementReplacementSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const actor = state.combatants.get(subject.actorId);
+  const effect = spellActiveEffectForExecutionRef(
+    actor?.activeEffects ?? [],
+    subject.effectRef,
+  );
+  if (effect?.kind !== "fixedCostMovementReplacement") return undefined;
+  const boundEffect = boundFixedCostMovementReplacementEffect(state, effect);
+  if (boundEffect === undefined) return undefined;
+  return {
+    label: "Jump",
+    summary: `Spend ${boundEffect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, boundEffect)} feet using table-supplied landing facts.`,
+  };
+}
+
+type StatBlockProcedurePresentationSubject =
+  | Extract<
+      IntrinsicBattleSubject,
+      { readonly tag: "action"; readonly action: "multiattack" }
+    >
+  | Extract<
+      IntrinsicBattleSubject,
+      {
+        readonly tag: "bonusAction";
+        readonly action: "statBlockActionOption";
+      }
+    >;
+
+function statBlockProcedurePresentationText(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: StatBlockProcedurePresentationSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "statBlock") return undefined;
+  const presentation = statBlockProcedurePresentationsForActor(
+    state,
+    context,
+    subject.actorId,
+  )?.find((candidate) => candidate.procedureRef === subject.procedureRef);
+  if (presentation === undefined || presentation.kind === "attack") {
+    return undefined;
+  }
+  return {
+    label: presentation.label,
+    summary: `Use ${presentation.label}.`,
+  };
 }
 
 type RuntimeCommandSubject = Extract<
@@ -523,31 +600,46 @@ function activeSpellEffectForRuntimeCommand(
   state: BattleState,
   subject: RuntimeCommandSubject,
 ): BattleActiveEffect | undefined {
-  const effectRef =
-    "effectRef" in subject
-      ? subject.effectRef
-      : "areaMembershipTrigger" in subject
-        ? subject.areaMembershipTrigger.effectRef
-        : undefined;
+  const effectRef = runtimeCommandEffectRef(subject);
   if (effectRef !== undefined) {
-    for (const combatant of state.combatants.values()) {
-      const effect = spellActiveEffectForExecutionRef(
-        combatant.activeEffects,
-        effectRef,
-      );
-      if (effect !== undefined) return effect;
-    }
+    const effect = spellActiveEffectInBattle(state, effectRef);
+    if (effect !== undefined) return effect;
   }
-  const areaId =
-    "areaId" in subject
-      ? subject.areaId
-      : "areaMembershipTrigger" in subject
-        ? subject.areaMembershipTrigger.areaId
-        : undefined;
+  const areaId = runtimeCommandAreaId(subject);
   if (areaId === undefined) return undefined;
   for (const combatant of state.combatants.values()) {
     const effect = combatant.activeEffects.find(
       (candidate) => "areaId" in candidate && candidate.areaId === areaId,
+    );
+    if (effect !== undefined) return effect;
+  }
+  return undefined;
+}
+
+function runtimeCommandEffectRef(subject: RuntimeCommandSubject) {
+  return "effectRef" in subject
+    ? subject.effectRef
+    : "areaMembershipTrigger" in subject
+      ? subject.areaMembershipTrigger.effectRef
+      : undefined;
+}
+
+function runtimeCommandAreaId(subject: RuntimeCommandSubject) {
+  return "areaId" in subject
+    ? subject.areaId
+    : "areaMembershipTrigger" in subject
+      ? subject.areaMembershipTrigger.areaId
+      : undefined;
+}
+
+function spellActiveEffectInBattle(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+): ReplayAddressableSpellActiveEffect | undefined {
+  for (const combatant of state.combatants.values()) {
+    const effect = spellActiveEffectForExecutionRef(
+      combatant.activeEffects,
+      effectRef,
     );
     if (effect !== undefined) return effect;
   }
@@ -670,29 +762,7 @@ function characterProcedurePresentationJoin(
     subject.tag === "bonusActionDashSpell" ||
     subject.tag === "spawnedCompanionTouchSpellProxy"
   ) {
-    const invocation = spellPresentationInvocationForProcedure(
-      state,
-      context,
-      actor.combatantId,
-      procedureRef,
-    );
-    if (invocation === undefined) return undefined;
-    if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
-    const presentationText = spellProcedurePresentationText(
-      state,
-      context,
-      invocation,
-      subject,
-    );
-    if (presentationText === undefined) return undefined;
-    return {
-      ...presentationText,
-      presentation: {
-        kind: "spell",
-        procedureRef,
-        invocation: supportedSpellInvocationRef(invocation),
-      },
-    };
+    return characterSpellProcedurePresentation(state, context, actor, subject);
   }
   if (subject.tag === "druidWildShape" && subject.action === "assumeForm") {
     const form = actor.origin.druidWildShapeAvailableForms?.find(
@@ -810,20 +880,53 @@ function characterProcedurePresentationJoin(
   return { label: name, summary: `Use ${name}.`, presentation };
 }
 
+type SpellCharacterProcedureSubject = Extract<
+  CharacterProcedureBattleSubject,
+  {
+    readonly tag:
+      | "actionSpell"
+      | "bonusActionSpell"
+      | "bonusActionDashSpell"
+      | "spawnedCompanionTouchSpellProxy";
+  }
+>;
+
+function characterSpellProcedurePresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  actor: CharacterBattleCreatureState,
+  subject: SpellCharacterProcedureSubject,
+): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
+  const invocation = spellPresentationInvocationForProcedure(
+    state,
+    context,
+    actor.combatantId,
+    subject.procedureRef,
+  );
+  if (invocation === undefined) return undefined;
+  if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
+  const presentationText = spellProcedurePresentationText(
+    state,
+    context,
+    invocation,
+    subject,
+  );
+  if (presentationText === undefined) return undefined;
+  return {
+    ...presentationText,
+    presentation: {
+      kind: "spell",
+      procedureRef: subject.procedureRef,
+      invocation: supportedSpellInvocationRef(invocation),
+    },
+  };
+}
+
 function spellProcedurePresentationText(
   state: BattleState,
   context: BattleRuntimeContext,
   invocation: AuthoredSelectedSpellInvocation,
-  subject: Extract<
-    CharacterProcedureBattleSubject,
-    {
-      readonly tag:
-        | "actionSpell"
-        | "bonusActionSpell"
-        | "bonusActionDashSpell"
-        | "spawnedCompanionTouchSpellProxy";
-    }
-  >,
+  subject: SpellCharacterProcedureSubject,
 ): { readonly label: string; readonly summary: string } | undefined {
   if (subject.tag === "spawnedCompanionTouchSpellProxy") {
     const label = `Familiar Delivery: ${invocation.spell.name}`;
@@ -839,14 +942,8 @@ function spellProcedurePresentationText(
       summary: `${label} for ${readiedSpellTriggerPresentationName(subject.mode.trigger)}.`,
     };
   }
-  if (
-    (invocation.procedure === "spatialMeleeSpellAttackProxy" &&
-      invocation.operation === "repositionAndAttack") ||
-    invocation.procedure === "spellCreatedHeldObjectAttack"
-  ) {
-    const label = `${invocation.spell.name} attack`;
-    return { label, summary: `Make the ${label}.` };
-  }
+  const attackPresentation = spellProcedureAttackPresentationText(invocation);
+  if (attackPresentation !== undefined) return attackPresentation;
   if (invocation.procedure === "spellHostedWeaponAttack") {
     const weaponName = attackActionOptionPresentationName(
       state,
@@ -890,6 +987,22 @@ function spellProcedurePresentationText(
     label: invocation.spell.name,
     summary: `Use ${invocation.spell.name}.`,
   };
+}
+
+function spellProcedureAttackPresentationText(
+  invocation: AuthoredSelectedSpellInvocation,
+): { readonly label: string; readonly summary: string } | undefined {
+  if (
+    !(
+      (invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+        invocation.operation === "repositionAndAttack") ||
+      invocation.procedure === "spellCreatedHeldObjectAttack"
+    )
+  ) {
+    return undefined;
+  }
+  const label = `${invocation.spell.name} attack`;
+  return { label, summary: `Make the ${label}.` };
 }
 
 function metamagicSelectionPresentationName(
@@ -1086,15 +1199,46 @@ function isDynamicSpellPresentationExecution(
 ): execution is DynamicSpellPresentationExecution {
   return (
     execution.procedure === "heldLightHurl" ||
-    (execution.procedure === "movableLightManifestation" &&
-      execution.operation === "reposition") ||
+    isRepositionMovableLightManifestationExecution(execution) ||
     execution.procedure === "spellCreatedHeldObjectAttack" ||
     execution.procedure === "spellCreatedHeldObjectReEvoke" ||
-    (execution.procedure === "spatialMeleeSpellAttackProxy" &&
-      execution.operation === "repositionAndAttack") ||
+    isRepeatSpatialMeleeSpellAttackProxyExecution(execution) ||
     execution.procedure === "objectContactDamageRepeat" ||
-    (execution.procedure === "markedDamageRider" &&
-      execution.action === "transfer")
+    isMarkedDamageRiderTransferExecution(execution)
+  );
+}
+
+function isRepositionMovableLightManifestationExecution(
+  execution: BattleSpellProcedureExecution,
+): execution is RepositionMovableLightManifestationSpellProcedureExecution & {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+} {
+  return (
+    execution.procedure === "movableLightManifestation" &&
+    execution.operation === "reposition"
+  );
+}
+
+function isRepeatSpatialMeleeSpellAttackProxyExecution(
+  execution: BattleSpellProcedureExecution,
+): execution is RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution & {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+} {
+  return (
+    execution.procedure === "spatialMeleeSpellAttackProxy" &&
+    execution.operation === "repositionAndAttack"
+  );
+}
+
+function isMarkedDamageRiderTransferExecution(
+  execution: BattleSpellProcedureExecution,
+): execution is Extract<
+  BattleSpellProcedureExecution,
+  { readonly procedure: "markedDamageRider"; readonly action: "transfer" }
+> {
+  return (
+    execution.procedure === "markedDamageRider" &&
+    execution.action === "transfer"
   );
 }
 
