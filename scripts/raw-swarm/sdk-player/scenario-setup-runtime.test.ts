@@ -552,7 +552,7 @@ export const setupScenario = (context) =>
       const expectedPrefix = {
         scenarioId:
           "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
-        blockedOperation: "battleCreatureInitFromStatBlock",
+        blockedOperation: "startBattle",
         requiredStatBlockIds: [
           "stat_block_goblin_warrior",
           "stat_block_wolf",
@@ -2474,8 +2474,9 @@ export const setupScenario = (context) =>
               kind: "interruptDecision",
               choices: expect.arrayContaining([
                 expect.objectContaining({
-                  kind: "opportunityAttack",
+                  kind: "nestedProcedure",
                   subject: expect.objectContaining({
+                    command: "opportunityAttack",
                     statBlockDamageSelection: expect.arrayContaining([
                       expect.objectContaining({ notation: "static" }),
                     ]),
@@ -2525,16 +2526,14 @@ export const setupScenario = (context) =>
       expectedThreats.length,
     );
     expect(
-      resolution.envelope.frontier.choices.map(
-        ({ reactorId: choiceReactorId, kind }) => ({
-          reactorId: choiceReactorId,
-          kind,
-        }),
-      ),
+      resolution.envelope.frontier.choices.map(({ subject, kind }) => ({
+        reactorId: subject.reactorId,
+        kind,
+      })),
     ).toEqual(
       expectedThreats.map(({ reactorId: expectedReactorId }) => ({
         reactorId: expectedReactorId,
-        kind: "opportunityAttack",
+        kind: "nestedProcedure",
       })),
     );
   }, 120_000);

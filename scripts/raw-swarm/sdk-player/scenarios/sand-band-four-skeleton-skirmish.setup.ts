@@ -77,31 +77,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     combatants.push(projected.success);
   }
 
-  const skeletonInits = skeletonIds.map((combatantId) =>
-    sdk.battleCreatureInitFromStatBlock({
-      combatantId,
-      statBlock: skeleton,
-      initiative: sdk.initiativeScore(14 + 3),
-      currentHp: sdk.hp(13),
-      tempHp: sdk.hp(0),
-      ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-    }),
-  );
+  const skeletonInits = skeletonIds.map((combatantId) => ({
+    combatantId,
+    statBlock: skeleton,
+    initiative: sdk.initiativeScore(14 + 3),
+    currentHp: sdk.hp(13),
+    tempHp: sdk.hp(0),
+    ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+    conditions: [],
+  }));
   for (const projected of skeletonInits) {
-    if (sdk.isFailure(projected)) {
-      return {
-        kind: "obstructed",
-        obstruction:
-          "The canonical Skeleton Stat Block could not be initialized: " +
-          sdk.battleStateInitIssueMessage(projected.failure),
-        observation: {
-          scenarioId: "sand-band-four-skeleton-skirmish",
-          skeletonBattleInitializationSucceeded: false,
-        },
-      };
-    }
-    combatants.push(projected.success);
+    combatants.push(projected);
   }
 
   const battle = sdk.startBattle({

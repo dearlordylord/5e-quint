@@ -6,7 +6,7 @@ import {
   type SpawnedCompanionCreatureTypeOverride,
   StatBlockId,
 } from "@dnd/shared/game-facts";
-import type { StatBlockCatalog } from "./stat-block-catalog.ts";
+import type { StatBlockCatalog } from "./stat-block-catalog-contract.ts";
 import type { SpellRecord, StatBlockRecord } from "./types.ts";
 
 export {

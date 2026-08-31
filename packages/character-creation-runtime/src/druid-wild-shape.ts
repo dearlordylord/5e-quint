@@ -7,7 +7,7 @@ import {
 import type {
   StatBlockCatalog,
   StatBlockId,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/stat-block-catalog-contract";
 import {
   druidWildShapeDurationHoursForClassLevel,
   druidWildShapeKnownFormRosterFromPhase,

@@ -50,7 +50,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   resolveBattleSubject,
   attackRollFill,
@@ -256,7 +256,7 @@ function dragonbornDamageResistanceBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -317,7 +317,7 @@ function dwarvenResilienceBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -351,7 +351,7 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   // This fixture exercises the lower-level repeat-save interaction, not spell
   // admission. Give that synthetic boundary its own source-owned procedure and
@@ -460,7 +460,7 @@ function halflingBraveBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -543,7 +543,7 @@ function escapeGrappleRollMode(input: {
     ],
   });
   if (Result.isFailure(state)) {
-    throw new Error(battleStateInitIssueMessage(state.failure));
+    throw new Error(battleInitializationIssueMessage(state.failure));
   }
   const grappleSubject = {
     tag: "action",
@@ -1011,7 +1011,7 @@ function goliathPowerfulBuildBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1056,7 +1056,7 @@ function halflingNimblenessSubstrateBattle(input: {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

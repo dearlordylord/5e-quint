@@ -37,7 +37,7 @@ import {
 import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import { Result, Match, Option } from "effect";
 
 import {

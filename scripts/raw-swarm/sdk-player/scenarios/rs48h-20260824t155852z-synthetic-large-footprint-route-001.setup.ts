@@ -48,14 +48,13 @@ export const setupScenario: ScenarioSetup = (context) => {
     statBlock: (typeof statBlocks)[number],
     initiative: number,
     ammunitionStocks: ReturnType<typeof arrowStock> | readonly [] = [],
-  ) =>
-    sdk.battleCreatureInitFromStatBlock({
-      combatantId: sdk.combatantId(combatantId),
-      statBlock,
-      initiative: sdk.initiativeScore(initiative),
-      ammunitionStocks,
-      conditions: [],
-    });
+  ) => ({
+    combatantId: sdk.combatantId(combatantId),
+    statBlock,
+    initiative: sdk.initiativeScore(initiative),
+    ammunitionStocks,
+    conditions: [],
+  });
 
   const ridingHorse = createStatBlockCombatant(
     "riding-horse",
@@ -96,25 +95,11 @@ export const setupScenario: ScenarioSetup = (context) => {
     northwestSkeleton,
     southeastSkeleton,
   ];
-  const initializedCombatants = [];
-  for (const combatant of combatants) {
-    if (sdk.isFailure(combatant)) {
-      return {
-        kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(combatant.failure),
-        observation: {
-          capability: "canonical-stat-block-battle-initialization",
-        },
-      };
-    }
-    initializedCombatants.push(combatant.success);
-  }
-
   const battle = sdk.startBattle({
     battleId: sdk.battleId(
       "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
     ),
-    combatants: initializedCombatants,
+    combatants,
   });
   if (sdk.isFailure(battle)) {
     return {

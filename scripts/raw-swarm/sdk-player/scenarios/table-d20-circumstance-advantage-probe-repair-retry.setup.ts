@@ -24,39 +24,23 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
 
-  const ridingHorse = sdk.battleCreatureInitFromStatBlock({
+  const ridingHorse = {
     combatantId: ridingHorseId,
     statBlock: ridingHorseStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(ridingHorse)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(ridingHorse.failure),
-      observation: { stage: "riding-horse-battle-initialization" },
-    };
-  }
-
-  const wolf = sdk.battleCreatureInitFromStatBlock({
+  };
+  const wolf = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolf)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
-      observation: { stage: "wolf-battle-initialization" },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId("horse-wolf-pursuit"),
-    combatants: [ridingHorse.success, wolf.success],
+    combatants: [ridingHorse, wolf],
   });
   if (sdk.isFailure(battle)) {
     return {

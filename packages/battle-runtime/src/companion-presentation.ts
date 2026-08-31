@@ -12,7 +12,7 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type {
   SpawnedCompanionCreatureTypeOverride,
   SpawnedCompanionResolvedForm,

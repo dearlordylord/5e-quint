@@ -25,68 +25,30 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   }
 
   const arrowStock = () => sdk.battleAmmunitionStock("arrow", 20);
-  const meleeGoblinWarrior = sdk.battleCreatureInitFromStatBlock({
+  const meleeGoblinWarrior = {
     combatantId: meleeGoblinWarriorId,
     statBlock: goblinWarrior,
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [arrowStock()],
     conditions: [],
-  });
-  if (sdk.isFailure(meleeGoblinWarrior)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The public battle initializer rejected the melee Goblin Warrior: ${sdk.battleStateInitIssueMessage(meleeGoblinWarrior.failure)}`,
-      observation: {
-        scenarioId: "prone-target-roll-mode-distance-probe",
-        stage: "melee-goblin-warrior-initialization",
-      },
-    };
-  }
-
-  const rangedGoblinWarrior = sdk.battleCreatureInitFromStatBlock({
+  };
+  const rangedGoblinWarrior = {
     combatantId: rangedGoblinWarriorId,
     statBlock: goblinWarrior,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [arrowStock()],
     conditions: [],
-  });
-  if (sdk.isFailure(rangedGoblinWarrior)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The public battle initializer rejected the ranged Goblin Warrior: ${sdk.battleStateInitIssueMessage(rangedGoblinWarrior.failure)}`,
-      observation: {
-        scenarioId: "prone-target-roll-mode-distance-probe",
-        stage: "ranged-goblin-warrior-initialization",
-      },
-    };
-  }
-
-  const wolfCreature = sdk.battleCreatureInitFromStatBlock({
+  };
+  const wolfCreature = {
     combatantId: wolfId,
     statBlock: wolf,
     initiative: sdk.initiativeScore(7),
     ammunitionStocks: [],
     conditions: ["prone"],
-  });
-  if (sdk.isFailure(wolfCreature)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The public battle initializer rejected the Wolf's initial Prone condition: ${sdk.battleStateInitIssueMessage(wolfCreature.failure)}`,
-      observation: {
-        scenarioId: "prone-target-roll-mode-distance-probe",
-        stage: "wolf-initialization",
-        requiredCondition: "prone",
-      },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId("prone-target-roll-mode-distance-probe"),
-    combatants: [
-      meleeGoblinWarrior.success,
-      rangedGoblinWarrior.success,
-      wolfCreature.success,
-    ],
+    combatants: [meleeGoblinWarrior, rangedGoblinWarrior, wolfCreature],
   });
   if (sdk.isFailure(battle)) {
     return {

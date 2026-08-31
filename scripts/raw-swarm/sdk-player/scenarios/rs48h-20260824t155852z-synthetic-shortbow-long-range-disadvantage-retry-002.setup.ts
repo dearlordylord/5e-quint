@@ -40,49 +40,27 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
 
-  const skeletonInit = sdk.battleCreatureInitFromStatBlock({
+  const skeletonInit = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: skeletonInitiative,
     currentHp: sdk.hp(13),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
+  };
 
-  if (sdk.isFailure(skeletonInit)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The canonical Skeleton could not be initialized: ${sdk.battleStateInitIssueMessage(skeletonInit.failure)}`,
-      observation: {
-        stage: "stat-block-creature-init",
-        combatant: "stat_block_skeleton",
-      },
-    };
-  }
-
-  const wolfInit = sdk.battleCreatureInitFromStatBlock({
+  const wolfInit = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: wolfInitiative,
     currentHp: sdk.hp(11),
     ammunitionStocks: [],
     conditions: [],
-  });
-
-  if (sdk.isFailure(wolfInit)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The canonical Wolf could not be initialized: ${sdk.battleStateInitIssueMessage(wolfInit.failure)}`,
-      observation: {
-        stage: "stat-block-creature-init",
-        combatant: "stat_block_wolf",
-      },
-    };
-  }
+  };
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [skeletonInit.success, wolfInit.success],
+    combatants: [skeletonInit, wolfInit],
   });
 
   if (sdk.isFailure(battle)) {

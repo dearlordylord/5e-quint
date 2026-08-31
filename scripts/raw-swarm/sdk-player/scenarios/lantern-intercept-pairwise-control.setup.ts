@@ -97,19 +97,8 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const combatants = [];
   for (const input of creatureInputs) {
-    const initialized = sdk.battleCreatureInitFromStatBlock(input);
-    if (sdk.isFailure(initialized)) {
-      return {
-        kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(initialized.failure),
-        observation: {
-          tag: "stat-block-combatant-initialization-obstructed",
-          scenarioId,
-          combatantId: input.combatantId,
-        },
-      };
-    }
-    combatants.push(initialized.success);
+    const initialized = input;
+    combatants.push(initialized);
   }
 
   const started = sdk.startBattle({

@@ -27,46 +27,32 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
 
-  const nearerGoblin = sdk.battleCreatureInitFromStatBlock({
+  const nearerGoblin = {
     combatantId: nearerGoblinId,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  const skeleton = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeleton = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  const fartherGoblin = sdk.battleCreatureInitFromStatBlock({
+  };
+  const fartherGoblin = {
     combatantId: fartherGoblinId,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(9),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
+  };
 
   const creatureInits = [nearerGoblin, skeleton, fartherGoblin] as const;
-  const invalidCreature = creatureInits.find(sdk.isFailure);
-  if (invalidCreature !== undefined) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCreature.failure),
-      observation: {
-        scenarioId: "two-goblins-pursue-skeleton",
-        status: "invalid-canonical-combatant",
-      },
-    };
-  }
-
   const battle = sdk.startBattle({
     battleId: sdk.battleId("two-goblins-pursue-skeleton"),
-    combatants: creatureInits
-      .filter((result) => !sdk.isFailure(result))
-      .map((result) => result.success),
+    combatants: creatureInits,
   });
   if (sdk.isFailure(battle)) {
     return {

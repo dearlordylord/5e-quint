@@ -28,68 +28,33 @@ export const setupScenario: ScenarioSetup = (context) => {
   const skeletonTwoId = sdk.combatantId("skeleton-two");
   const goblinWarriorId = sdk.combatantId("goblin-warrior");
 
-  const skeletonOne = sdk.battleCreatureInitFromStatBlock({
+  const skeletonOne = {
     combatantId: skeletonOneId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(16),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  const skeletonTwo = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeletonTwo = {
     combatantId: skeletonTwoId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(12),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  const goblinWarrior = sdk.battleCreatureInitFromStatBlock({
+  };
+  const goblinWarrior = {
     combatantId: goblinWarriorId,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-
-  if (sdk.isFailure(skeletonOne)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonOne.failure),
-      observation: {
-        capability: "stat-block-creature-init",
-        combatant: "Skeleton One",
-      },
-    };
-  }
-  if (sdk.isFailure(skeletonTwo)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonTwo.failure),
-      observation: {
-        capability: "stat-block-creature-init",
-        combatant: "Skeleton Two",
-      },
-    };
-  }
-  if (sdk.isFailure(goblinWarrior)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.failure),
-      observation: {
-        capability: "stat-block-creature-init",
-        combatant: "Goblin Warrior",
-      },
-    };
-  }
+  };
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(
       "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
     ),
-    combatants: [
-      skeletonOne.success,
-      skeletonTwo.success,
-      goblinWarrior.success,
-    ],
+    combatants: [skeletonOne, skeletonTwo, goblinWarrior],
   });
 
   if (sdk.isFailure(battle)) {

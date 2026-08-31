@@ -60,6 +60,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
+  type BattleCreatureState,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
@@ -99,9 +100,15 @@ import {
 } from "./battle-runtime.test-support.ts";
 import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { battleStateWithReconciledCurrentActorTurnConstraint } from "./battle-reducer/save-gated-turn-constraint-runtime.ts";
+import { tickBattleStateDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
+import { statBlockMultiattackBindings } from "./stat-block-execution-state.ts";
 
 type SaveGatedTurnConstraintBundleEffect = Extract<
   BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "saveGatedTurnConstraintBundle" }
+>;
+type AllocatedSaveGatedTurnConstraintBundleEffect = Extract<
+  BattleCreatureState["activeEffects"][number],
   { readonly kind: "saveGatedTurnConstraintBundle" }
 >;
 
@@ -418,7 +425,10 @@ describe("Slow active-penalties MBT parity", () => {
       initialRuntimeState(),
     );
     const multiattackTurn = endCasterTurnForMultiattackTarget(multiattackCast);
-    const multiattacked = makeSlowedStatBlockMultiattack(multiattackTurn);
+    const multiattackActivated =
+      activateSlowedStatBlockMultiattack(multiattackTurn);
+    const multiattackDispatched =
+      resolveChosenSlowedStatBlockMultiattackDispatch(multiattackActivated);
     expect(
       saveGatedTurnConstraintBundleProjection(multiattackTurn),
     ).toMatchObject({
@@ -430,7 +440,17 @@ describe("Slow active-penalties MBT parity", () => {
       lastResult: "multiattackTargetTurn",
     });
     expect(
-      saveGatedTurnConstraintBundleProjection(multiattacked),
+      saveGatedTurnConstraintBundleProjection(multiattackActivated),
+    ).toMatchObject({
+      currentTurnRole: "multiattackTarget",
+      turnActionOrBonusChoice: "action",
+      targetTurnCanSpendAction: false,
+      targetTurnCanSpendBonusAction: false,
+      statBlockMultiattackResourceCount: 1,
+      lastResult: "multiattackActivated",
+    });
+    expect(
+      saveGatedTurnConstraintBundleProjection(multiattackDispatched),
     ).toMatchObject({
       currentTurnRole: "multiattackTarget",
       turnActionOrBonusChoice: "action",
@@ -1300,9 +1320,9 @@ function stateWithSlowDurationTicks(
 }
 
 function saveGatedTurnConstraintBundleEffectWithDurationTicks(
-  effect: SaveGatedTurnConstraintBundleEffect,
+  effect: AllocatedSaveGatedTurnConstraintBundleEffect,
   durationTicks: ReturnType<typeof elapsedTimeTicks>,
-): SaveGatedTurnConstraintBundleEffect {
+): AllocatedSaveGatedTurnConstraintBundleEffect {
   if (
     effect.sourceCombatantId !== spellCasterId ||
     effect.expiresAt.kind !== "concentration"

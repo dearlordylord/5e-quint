@@ -23,41 +23,25 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   const wolfId = sdk.combatantId("wolf");
   const skeletonId = sdk.combatantId("skeleton");
 
-  const wolfInit = sdk.battleCreatureInitFromStatBlock({
+  const wolfInit = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(19),
     currentHp: sdk.hp(11),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolfInit)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The public battle initializer rejected the required Wolf: ${sdk.battleStateInitIssueMessage(wolfInit.failure)}`,
-      observation: { stage: "wolf-initialization" },
-    };
-  }
-
-  const skeletonInit = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeletonInit = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(9),
     currentHp: sdk.hp(13),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 0)],
     conditions: [],
-  });
-  if (sdk.isFailure(skeletonInit)) {
-    return {
-      kind: "obstructed",
-      obstruction: `The public battle initializer rejected the required Skeleton with zero arrows: ${sdk.battleStateInitIssueMessage(skeletonInit.failure)}`,
-      observation: { stage: "skeleton-initialization" },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId("open-grid-wolf-skeleton-pursuit"),
-    combatants: [wolfInit.success, skeletonInit.success],
+    combatants: [wolfInit, skeletonInit],
   });
   if (sdk.isFailure(battle)) {
     return {

@@ -11,11 +11,13 @@ supplied through its context to construct the closest faithful initial
 `ScenarioSession`. Start the canonical battle, then call
 `createScenarioSession` once with its ambient Illumination, stat-block damage
 notation, vertical environment facts, and scenario-fixed objects.
-Stat-block initialization requires one explicit `conditions` collection. Use
+Each authored Stat Block battle input requires one explicit `conditions`
+collection and is passed directly to the atomic `startBattle` boundary. Use
 `[]` when the scenario fixes no supported initial condition, or the typed public
-value when it does; the initializer rejects conditions the Stat Block is immune
-to. Do not simulate an initial condition with a later act or a duplicate state
-field.
+value when it does; `startBattle` projects and admits the complete collection,
+and reports typed initialization issues without exposing a separate per-creature
+projection result. Do not simulate an initial condition with a later act or a
+duplicate state field.
 
 Tactical-space is optional, but its source is one coherent choice: either supply both the
 five-foot arena and initial placements for a `geometryDerived`

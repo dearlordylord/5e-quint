@@ -1,6 +1,4 @@
 import type {
-  authoredStatBlockBattleInitIssueMessage,
-  battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleId,
   battleObjectId,
@@ -14,7 +12,7 @@ import type { CharacterSheetBattleInit } from "../../../packages/character-battl
 import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/character-battle-runtime/src/battle-character-build-projection.ts";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { Result } from "effect";
 import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -70,16 +68,10 @@ export type {
 export type ScenarioAuthoredStatBlockBattleInitInput =
   AuthoredStatBlockBattleInitInput;
 
-export type ScenarioBattleCreatureInitFromStatBlock = (
-  input: ScenarioAuthoredStatBlockBattleInitInput,
-) => ReturnType<typeof battleCreatureInitFromStatBlock>;
-
 export type ScenarioSetupSdk = {
   readonly battleAmmunitionStock: typeof battleAmmunitionStock;
-  readonly battleCreatureInitFromStatBlock: ScenarioBattleCreatureInitFromStatBlock;
   readonly battleId: typeof battleId;
   readonly battleObjectId: typeof battleObjectId;
-  readonly authoredStatBlockBattleInitIssueMessage: typeof authoredStatBlockBattleInitIssueMessage;
   readonly battleStateInitIssueMessage: typeof battleStateInitIssueMessage;
   readonly characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage;
   readonly characterSheetBattleInit: CharacterSheetBattleInit;

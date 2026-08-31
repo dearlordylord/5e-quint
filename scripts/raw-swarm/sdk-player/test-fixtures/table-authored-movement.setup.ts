@@ -24,31 +24,23 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
     };
   }
-  const goblin = sdk.battleCreatureInitFromStatBlock({
+  const goblin = {
     combatantId: sdk.combatantId("goblin-warrior"),
     initiative: sdk.initiativeScore(15),
     statBlock: goblinStatBlock,
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  const skeleton = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeleton = {
     combatantId: sdk.combatantId("skeleton"),
     initiative: sdk.initiativeScore(10),
     statBlock: skeletonStatBlock,
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(goblin) || sdk.isFailure(skeleton)) {
-    return {
-      kind: "obstructed",
-      obstruction:
-        "The retained movement fixture could not initialize its Stat Blocks.",
-      observation: { phase: "creature-init" },
-    };
-  }
+  };
   const started = sdk.startBattle({
     battleId: sdk.battleId("table-authored-movement-transcript"),
-    combatants: [goblin.success, skeleton.success],
+    combatants: [goblin, skeleton],
   });
   if (sdk.isFailure(started)) {
     return {
@@ -72,7 +64,7 @@ export const setupScenario: ScenarioSetup = (context) => {
           decisionId: "table-authored-movement-route",
           question: {
             kind: "movementRoute",
-            moverId: goblin.success.combatantId,
+            moverId: goblin.combatantId,
             route,
             speedKind: "walk",
           },

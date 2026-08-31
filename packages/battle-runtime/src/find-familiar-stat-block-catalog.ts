@@ -1,4 +1,4 @@
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 
 /**

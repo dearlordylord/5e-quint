@@ -39,47 +39,23 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const bitingWolfId = sdk.combatantId(BITING_WOLF_ID);
   const targetWolfId = sdk.combatantId(TARGET_WOLF_ID);
-  const bitingWolf = sdk.battleCreatureInitFromStatBlock({
+  const bitingWolf = {
     combatantId: bitingWolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.bitingWolf),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(bitingWolf)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(bitingWolf.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: BITING_WOLF_ID,
-      },
-    };
-  }
-
-  const targetWolf = sdk.battleCreatureInitFromStatBlock({
+  };
+  const targetWolf = {
     combatantId: targetWolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.targetWolf),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(targetWolf)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(targetWolf.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: TARGET_WOLF_ID,
-      },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [bitingWolf.success, targetWolf.success],
+    combatants: [bitingWolf, targetWolf],
   });
   if (sdk.isFailure(battle)) {
     return {

@@ -36,7 +36,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         "The supplied canonical SRD stat-block catalog is missing one or more scenario-fixed combatant records.",
       observation: {
         scenarioId,
-        blockedOperation: "battleCreatureInitFromStatBlock",
+        blockedOperation: "startBattle",
         requiredStatBlockIds: REQUIRED_STAT_BLOCK_IDS,
         missingStatBlockIds,
       },
@@ -47,54 +47,30 @@ export const setupScenario: ScenarioSetup = (context) => {
   const skeletonId = sdk.combatantId("skeleton");
   const wolfId = sdk.combatantId("wolf");
 
-  const goblin = sdk.battleCreatureInitFromStatBlock({
+  const goblin = {
     combatantId: goblinId,
     statBlock: goblinStatBlock,
     initiative: sdk.initiativeScore(17),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(goblin)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblin.failure),
-      observation: { stage: "goblin-warrior-initialization" },
-    };
-  }
-
-  const skeleton = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeleton = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(12),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(skeleton)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
-      observation: { stage: "skeleton-initialization" },
-    };
-  }
-
-  const wolf = sdk.battleCreatureInitFromStatBlock({
+  };
+  const wolf = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(8),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolf)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
-      observation: { stage: "wolf-initialization" },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId(scenarioId),
-    combatants: [goblin.success, skeleton.success, wolf.success],
+    combatants: [goblin, skeleton, wolf],
   });
   if (sdk.isFailure(battle)) {
     return {

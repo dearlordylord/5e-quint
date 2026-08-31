@@ -70,66 +70,30 @@ export const setupScenario: ScenarioSetup = (context) => {
   const goblinId = sdk.combatantId("goblin-warrior");
 
   const arrowStock = () => [sdk.battleAmmunitionStock("arrow", 20)];
-  const skeleton = sdk.battleCreatureInitFromStatBlock({
+  const skeleton = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.skeleton),
     ammunitionStocks: arrowStock(),
     conditions: [],
-  });
-  if (sdk.isFailure(skeleton)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: "skeleton",
-      },
-    };
-  }
-
-  const wolf = sdk.battleCreatureInitFromStatBlock({
+  };
+  const wolf = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.wolf),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolf)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: "wolf",
-      },
-    };
-  }
-
-  const goblin = sdk.battleCreatureInitFromStatBlock({
+  };
+  const goblin = {
     combatantId: goblinId,
     statBlock: goblinStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.goblinWarrior),
     ammunitionStocks: arrowStock(),
     conditions: [],
-  });
-  if (sdk.isFailure(goblin)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblin.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: "goblin-warrior",
-      },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [skeleton.success, wolf.success, goblin.success],
+    combatants: [skeleton, wolf, goblin],
   });
   if (sdk.isFailure(battle)) {
     return {
