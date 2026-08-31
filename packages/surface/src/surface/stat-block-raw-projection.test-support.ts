@@ -1,5 +1,7 @@
 import { Match } from "effect";
 
+import { statBlockId } from "@dnd/shared/game-facts";
+
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
 import {
   projectAuthoredStatBlock,
@@ -11,18 +13,20 @@ import type { SrdStatBlockRecord } from "./types.ts";
 
 type IdentifiedStatBlockScopedFidelityProjection =
   StatBlockScopedFidelityProjection & {
-    readonly id: string;
+    readonly id: SrdStatBlockRecord["id"];
     readonly name: string;
     readonly sourceSection: string;
   };
 
-const statBlockIdFromRawName = (name: string): string =>
-  `stat_block_${name
-    .normalize("NFKC")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "")}`;
+const statBlockIdFromRawName = (name: string): SrdStatBlockRecord["id"] =>
+  statBlockId(
+    `stat_block_${name
+      .normalize("NFKC")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "")}`,
+  );
 
 function requireProjected(
   result: StatBlockScopedProjectionResult,

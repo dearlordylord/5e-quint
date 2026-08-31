@@ -1,11 +1,13 @@
-const STAT_BLOCK_PUBLICATION_RECORD_KIND = "statBlock" as const;
-const OTHER_PUBLICATION_RECORD_KIND = "other" as const;
-const UNKNOWN_PUBLICATION_RECORD_KIND = "unknown" as const;
 const SURFACE_PUBLICATION_RECORD_KINDS = [
+  "statBlock",
+  "other",
+  "unknown",
+] as const;
+const [
   STAT_BLOCK_PUBLICATION_RECORD_KIND,
   OTHER_PUBLICATION_RECORD_KIND,
   UNKNOWN_PUBLICATION_RECORD_KIND,
-] as const;
+] = SURFACE_PUBLICATION_RECORD_KINDS;
 
 export type SurfacePublicationRecordKind =
   (typeof SURFACE_PUBLICATION_RECORD_KINDS)[number];
