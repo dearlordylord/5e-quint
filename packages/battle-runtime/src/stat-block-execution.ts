@@ -47,6 +47,7 @@ import {
   type StatBlockResourcePoolState,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
+import { statBlockProficiencyBonusForChallengeRating } from "@dnd/surface/surface/stat-block-proficiency-bonus";
 export * from "./stat-block-execution-state.ts";
 
 type BattleStatBlockClosedExecutionSource =
@@ -386,7 +387,8 @@ function admittedUnarmedStrike(
     attackBonus: {
       kind: "literal",
       value:
-        strengthModifier + statBlockProficiencyBonus(statBlock.challengeRating),
+        strengthModifier +
+        statBlockProficiencyBonusForChallengeRating(statBlock.challengeRating),
     },
     reachFeet: 5,
     onHit: [
@@ -405,19 +407,6 @@ function admittedUnarmedStrike(
     kind: "unarmedStrike",
     attack,
   };
-}
-
-function statBlockProficiencyBonus(
-  challengeRating: BattleStatBlockExecutionSource["challengeRating"],
-): number {
-  if (challengeRating <= 4) return 2;
-  if (challengeRating <= 8) return 3;
-  if (challengeRating <= 12) return 4;
-  if (challengeRating <= 16) return 5;
-  if (challengeRating <= 20) return 6;
-  if (challengeRating <= 24) return 7;
-  if (challengeRating <= 28) return 8;
-  return 9;
 }
 
 function admittedMultiattackDispatches(

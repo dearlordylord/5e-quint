@@ -1,9 +1,14 @@
 import { Match } from "effect";
 
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
+import {
+  isChallengeRating,
+  statBlockProficiencyBonusForChallengeRating,
+} from "./stat-block-proficiency-bonus.ts";
 
 import {
   CONDITIONS,
+  type ChallengeRating,
   type SrdStatBlockRecord,
   type StatBlockProcedureEntry,
   type StatBlockTextOnlyReason,
@@ -272,7 +277,7 @@ type StructuralProcedure = Exclude<
 >;
 
 type ScopedGeneralFacts = {
-  readonly challengeRating: number;
+  readonly challengeRating: ChallengeRating;
   readonly size:
     | string
     | {
@@ -425,18 +430,15 @@ const isAttackAbilityName = (
 ): ability is AttackAbilityName =>
   ATTACK_ABILITY_NAMES.some((attackAbility) => attackAbility === ability);
 
-const proficiencyBonus = (challengeRating: number): number =>
-  2 + Math.floor(Math.max(0, challengeRating - 1) / 4);
-
 const rawAttackAbilityCandidates = (
   abilityScores: Readonly<Record<AbilityName, number>>,
-  challengeRating: number,
+  challengeRating: ChallengeRating,
   attackBonus: number,
 ): readonly AttackAbilityName[] =>
   ATTACK_ABILITY_NAMES.filter(
     (ability) =>
       Math.floor((abilityScores[ability] - 10) / 2) +
-        proficiencyBonus(challengeRating) ===
+        statBlockProficiencyBonusForChallengeRating(challengeRating) ===
       attackBonus,
   );
 
@@ -1253,15 +1255,19 @@ const parseRawGeneralFacts = (
     /\*\*Initiative\*\* ([+−-]?\d+) \((\d+)\)/,
     `${name} Initiative`,
   );
-  const challengeRating = requireMatch(
+  const challengeRatingMatch = requireMatch(
     requireLine(lines, "**CR**", name),
     /\*\*CR\*\* (\d+)(?:\/(\d+))?/,
     `${name} CR`,
   );
+  const challengeRating =
+    Number(challengeRatingMatch[1]) / Number(challengeRatingMatch[2] ?? 1);
+  if (!isChallengeRating(challengeRating)) {
+    throw new Error(`Unsupported ${name} Challenge Rating ${challengeRating}`);
+  }
 
   return {
-    challengeRating:
-      Number(challengeRating[1]) / Number(challengeRating[2] ?? 1),
+    challengeRating,
     ...parseMetadata(lines, name),
     ac: {
       kind: "literal",

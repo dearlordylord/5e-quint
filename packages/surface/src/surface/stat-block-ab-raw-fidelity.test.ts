@@ -4,6 +4,7 @@ import { statBlockId } from "@dnd/shared/game-facts";
 
 import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
 import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
+import { statBlockProficiencyBonusForChallengeRating } from "./stat-block-proficiency-bonus.ts";
 
 const { records: A_B_RECORDS } = loadRawStatBlockSourceFixture(
   ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
@@ -17,10 +18,6 @@ function requireRecord(id: string) {
     throw new Error(`Missing A–B record ${id}`);
   }
   return record;
-}
-
-function proficiencyBonus(challengeRating: number): number {
-  return 2 + Math.floor(Math.max(0, challengeRating - 1) / 4);
 }
 
 describe("A–B independent RAW fidelity", () => {
@@ -83,7 +80,8 @@ describe("A–B independent RAW fidelity", () => {
               2,
           );
           const expected =
-            abilityModifier + proficiencyBonus(record.challengeRating);
+            abilityModifier +
+            statBlockProficiencyBonusForChallengeRating(record.challengeRating);
           if (entry.procedure.attackBonus.value !== expected) {
             mismatches.push(
               `${record.name}/${entry.procedure.name}: ${entry.procedure.attackAbility} implies ${expected}, authored ${entry.procedure.attackBonus.value}`,
