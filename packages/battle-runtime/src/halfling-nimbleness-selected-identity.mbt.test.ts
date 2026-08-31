@@ -30,7 +30,10 @@ import {
   requireHole,
   startBattleRight,
 } from "./battle-runtime.test-support.ts";
-import { BattleAttackProcedureExecutionRef } from "./identity.ts";
+import {
+  battleAttackExecutionScopeRefForProcedureRef,
+  battleAttackProcedureExecutionRef,
+} from "./identity.ts";
 import { Result } from "effect";
 
 type HalflingNimblenessLastResult =

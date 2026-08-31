@@ -1,6 +1,9 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  resolveBattleSubject,
+  runtimeStatBlockCatalog,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
@@ -407,7 +410,7 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: requireResolved(dismissed),
     casterId,
-    catalog: statBlockCatalog,
+    catalog: runtimeStatBlockCatalog,
     initiative: initiativeScore(18),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
@@ -892,16 +895,6 @@ function requireSpawnedCompanionEligibility(
     throw new Error("Expected Find Familiar form eligibility.");
   }
   return eligibility;
-}
-
-function withFreshMagicAction(state: BattleState): BattleState {
-  return {
-    ...state,
-    currentTurnResources: {
-      ...state.currentTurnResources,
-      actionResources: [{ kind: "action", source: "turn" }],
-    },
-  };
 }
 
 function touchSpellTargetFill(

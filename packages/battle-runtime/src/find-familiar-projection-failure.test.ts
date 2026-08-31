@@ -15,7 +15,7 @@ import {
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
-import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
+import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
 describe("Find Familiar projection failures", () => {
   test("preserves every accumulated unsupported procedure location", () => {
@@ -55,7 +55,7 @@ function castInvalidFamiliar(statBlock: StatBlockRecord) {
     throw new Error("Expected the Familiar projection test battle.");
   }
 
-  return castResolvedFindFamiliar({
+  return castResolvedSpawnedCompanion({
     state: started.success.state,
     casterId: combatantId("find-familiar-projection-caster"),
     familiarId: combatantId("find-familiar-projection-companion"),

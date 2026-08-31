@@ -32,6 +32,7 @@ import {
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -2779,8 +2780,10 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Result.getOrThrow(battleStatBlockCombatantSource(statBlock)),
-      currentHp: maxHp,
+      source: Result.getOrThrow(
+        battleStatBlockCombatantSource(projected.runtime),
+      ),
+      currentHp: Hp(statBlock.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
       conditions: [],

@@ -16,6 +16,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import {
   dragonsBreathUnitId,
   resistanceUnitId,

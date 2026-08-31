@@ -1050,6 +1050,13 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 
 export const unitLibrary = unitCatalogResult.catalog;
 export const statBlockCatalog = statBlockCatalogResult.catalog;
+export const runtimeStatBlockCatalog = {
+  getStatBlock: (id: Parameters<typeof statBlockCatalog.getStatBlock>[0]) =>
+    Option.map(
+      statBlockCatalog.getStatBlock(id),
+      projectedStatBlockRuntimeSource,
+    ),
+};
 const testSpellRecords = new Map(
   [
     magicMissileInput,
@@ -2408,17 +2415,11 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   const admission = admitSpawnedCompanionReappearance({
     state: input.state,
     casterId: input.subject.actorId,
-    catalog,
+    catalog: {
+      getStatBlock: (id) =>
+        Option.map(catalog.getStatBlock(id), projectedStatBlockRuntimeSource),
+    },
   });
-  if (Result.isSuccess(admission)) {
-    statBlockPresentationsByExecutionScopeForTest.set(
-      String(
-        admission.success.mechanics.combatantAdmission.origin.execution
-          .scopeRef,
-      ),
-      admission.success.presentation,
-    );
-  }
   return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
     : resolveAdmittedCompanionReappearanceSubject({
@@ -3814,7 +3815,11 @@ export function characterSeed(input: {
     druidWildShapeAvailableForms !== undefined &&
     Result.isFailure(druidWildShapeAvailableForms)
   ) {
-    throw new Error(druidWildShapeAvailableForms.failure.message);
+    throw new Error(
+      wildShapeKnownFormsIssueMessage(
+        druidWildShapeAvailableForms.failure.issues,
+      ),
+    );
   }
   const parsedDruidWildShapeAvailableForms =
     druidWildShapeAvailableForms === undefined

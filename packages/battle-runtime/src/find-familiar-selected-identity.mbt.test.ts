@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   resolveBattleSubject,
+  runtimeStatBlockCatalog,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
@@ -197,7 +198,7 @@ function observeDismissAndReappearSpawnedCompanionRoute(): readonly BattleReduce
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: withFreshMagicAction(requireResolved(dismissed)),
     casterId,
-    catalog: statBlockCatalog,
+    catalog: runtimeStatBlockCatalog,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
@@ -337,7 +338,7 @@ function dismissAndReappearSpawnedCompanionProjection(): SpawnedCompanionSelecte
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: withFreshMagicAction(dismissed.state),
     casterId,
-    catalog: statBlockCatalog,
+    catalog: runtimeStatBlockCatalog,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });

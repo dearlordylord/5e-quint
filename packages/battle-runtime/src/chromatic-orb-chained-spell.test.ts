@@ -1,4 +1,8 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
@@ -1805,7 +1809,10 @@ function poisonImmuneSkeletonCreature(input: {
       kind: "statBlock",
       source: Result.getOrThrow(
         battleStatBlockCombatantSource(
-          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
         ),
       ),
       currentHp: Hp(13),

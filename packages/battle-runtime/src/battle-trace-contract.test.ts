@@ -256,7 +256,7 @@ function statBlockCreatureInit(input: {
     creatureInit: {
       kind: "statBlock",
       source: (() => {
-        const source = battleStatBlockCombatantSource(statBlock);
+        const source = battleStatBlockCombatantSource(projected.runtime);
         if (Result.isFailure(source)) {
           throw new Error(battleStateInitIssueMessage(source.failure));
         }

@@ -1758,7 +1758,7 @@ function statBlockCreature(input: {
     creatureInit: {
       kind: "statBlock",
       source: Result.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(projected.runtime.statBlock.hp.value),
       tempHp: Hp(0),

@@ -34,7 +34,6 @@ import {
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
 import { Result } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -44,7 +43,6 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import {
-  authoredStatBlockBattleInitIssueMessage,
   battleId,
   battleCreatureInitFromStatBlock,
   combatantId,
@@ -329,20 +327,15 @@ function statBlockCreature(input: {
   readonly initiative: number;
   readonly statBlock: StatBlockRecord;
 }): StatBlockBattleCombatantInit {
-  const initialized = battleCreatureInitFromStatBlock({
-    combatantId: input.combatantId,
-    initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
-      ),
-      currentHp: Hp(12),
-      tempHp: Hp(0),
+  return Result.getOrThrow(
+    battleCreatureInitFromStatBlock({
+      combatantId: input.combatantId,
+      initiative: initiativeScore(input.initiative),
+      statBlock: input.statBlock,
       ammunitionStocks: [],
       conditions: [],
-    },
-  });
+    }),
+  );
 }
 
 function multiattackSubject(
