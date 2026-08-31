@@ -173,15 +173,7 @@ function startableBattleCombatants(input: {
     combatant: firstCombatant,
     index: 0,
   });
-  if (
-    Result.isSuccess(firstEntry) &&
-    firstEntry.success.tag === "availableCharacter"
-  ) {
-    projectedCharacterSessions.push({
-      ...firstEntry.success.session,
-      index: 0,
-    });
-  }
+  appendAvailableCharacterSession(projectedCharacterSessions, firstEntry, 0);
   const restEntries: BattleRosterEntry[] = [];
   const restProjectionIssues: CharacterDisplayRosterIssue[] = [];
   for (const [offset, combatant] of restCombatants.entries()) {
@@ -195,12 +187,7 @@ function startableBattleCombatants(input: {
       restProjectionIssues.push(entry.failure);
       continue;
     }
-    if (entry.success.tag === "availableCharacter") {
-      projectedCharacterSessions.push({
-        ...entry.success.session,
-        index,
-      });
-    }
+    appendAvailableCharacterSession(projectedCharacterSessions, entry, index);
     restEntries.push(entry.success.rosterEntry);
   }
   if (Result.isFailure(firstEntry)) {
@@ -239,6 +226,17 @@ function startableBattleCombatants(input: {
       companionAdmissions: input.companionAdmissions,
     }),
   });
+}
+
+function appendAvailableCharacterSession(
+  sessions: StartableCharacterSessionCombatant[],
+  entry: ReturnType<typeof rosterEntryForToolCombatant>,
+  index: number,
+): void {
+  if (Result.isFailure(entry) || entry.success.tag !== "availableCharacter") {
+    return;
+  }
+  sessions.push({ ...entry.success.session, index });
 }
 
 function battleRosterAdmissions(

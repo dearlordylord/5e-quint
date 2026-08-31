@@ -769,17 +769,10 @@ function dependencyWalkContextWithAst<Tag extends SchemaAST.AST["_tag"]>(
 
 function handleDependencyNode(context: DependencyWalkContext): void {
   const ast = context.current.ast;
-  if (ast._tag === "Literal" || ast._tag === "String") {
+  if (isStringDependencyAst(ast)) {
     return handleStringDependency(dependencyWalkContextWithAst(context, ast));
   }
-  if (
-    ast._tag === "Boolean" ||
-    ast._tag === "Number" ||
-    ast._tag === "Never" ||
-    ast._tag === "Unknown"
-  ) {
-    return handleNoop();
-  }
+  if (isNoopDependencyAst(ast)) return handleNoop();
   if (ast._tag === "Suspend") {
     return handleSuspendNode(dependencyWalkContextWithAst(context, ast));
   }
@@ -793,6 +786,24 @@ function handleDependencyNode(context: DependencyWalkContext): void {
     return handleTypeLiteralNode(dependencyWalkContextWithAst(context, ast));
   }
   return handleUnsupportedNode(context);
+}
+
+type StringDependencyAst = Extract<
+  SchemaAST.AST,
+  { readonly _tag: "Literal" | "String" }
+>;
+
+function isStringDependencyAst(ast: SchemaAST.AST): ast is StringDependencyAst {
+  return ast._tag === "Literal" || ast._tag === "String";
+}
+
+function isNoopDependencyAst(ast: SchemaAST.AST): boolean {
+  return (
+    ast._tag === "Boolean" ||
+    ast._tag === "Number" ||
+    ast._tag === "Never" ||
+    ast._tag === "Unknown"
+  );
 }
 
 function collectAuthoredDependencies(

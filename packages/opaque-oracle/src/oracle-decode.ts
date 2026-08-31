@@ -222,45 +222,71 @@ function unknownVariantDiscriminant(
   ast: AST.AST,
   input: unknown,
 ): PropertyKey | undefined {
-  const structural = AST.toType(ast);
-  if (
-    structural._tag !== "Union" ||
-    typeof input !== "object" ||
-    input === null ||
-    Array.isArray(input)
-  ) {
-    return undefined;
-  }
-  const record = input as Record<PropertyKey, unknown>;
-  const candidates = new Map<PropertyKey, Set<string>>();
-  for (const member of structural.types) {
-    const object = AST.toType(member);
-    if (object._tag !== "Objects") return undefined;
-    const memberCandidates = new Map<PropertyKey, readonly string[]>();
-    for (const property of object.propertySignatures) {
-      const values = literalStrings(property.type);
-      if (values.length > 0) memberCandidates.set(property.name, values);
-    }
-    if (candidates.size === 0) {
-      for (const [name, values] of memberCandidates) {
-        candidates.set(name, new Set(values));
-      }
-      continue;
-    }
-    for (const [name, values] of candidates) {
-      const memberValues = memberCandidates.get(name);
-      if (memberValues === undefined) {
-        candidates.delete(name);
-      } else {
-        for (const value of memberValues) values.add(value);
-      }
-    }
-  }
+  const record = variantInputRecord(input);
+  if (record === undefined) return undefined;
+  const candidates = unionLiteralDiscriminantCandidates(ast);
+  if (candidates === undefined) return undefined;
   for (const [name, values] of candidates) {
     const actual = record[name];
     if (typeof actual === "string" && !values.has(actual)) return name;
   }
   return undefined;
+}
+
+function variantInputRecord(
+  input: unknown,
+): Record<PropertyKey, unknown> | undefined {
+  return typeof input === "object" && input !== null && !Array.isArray(input)
+    ? (input as Record<PropertyKey, unknown>)
+    : undefined;
+}
+
+function unionLiteralDiscriminantCandidates(
+  ast: AST.AST,
+): Map<PropertyKey, Set<string>> | undefined {
+  const structural = AST.toType(ast);
+  if (structural._tag !== "Union") return undefined;
+  const candidates = new Map<PropertyKey, Set<string>>();
+  for (const member of structural.types) {
+    const object = AST.toType(member);
+    if (object._tag !== "Objects") return undefined;
+    mergeLiteralDiscriminantCandidates(
+      candidates,
+      literalDiscriminantCandidates(object),
+    );
+  }
+  return candidates;
+}
+
+function literalDiscriminantCandidates(
+  object: Extract<AST.AST, { readonly _tag: "Objects" }>,
+): Map<PropertyKey, readonly string[]> {
+  const candidates = new Map<PropertyKey, readonly string[]>();
+  for (const property of object.propertySignatures) {
+    const values = literalStrings(property.type);
+    if (values.length > 0) candidates.set(property.name, values);
+  }
+  return candidates;
+}
+
+function mergeLiteralDiscriminantCandidates(
+  candidates: Map<PropertyKey, Set<string>>,
+  memberCandidates: ReadonlyMap<PropertyKey, readonly string[]>,
+): void {
+  if (candidates.size === 0) {
+    for (const [name, values] of memberCandidates) {
+      candidates.set(name, new Set(values));
+    }
+    return;
+  }
+  for (const [name, values] of candidates) {
+    const memberValues = memberCandidates.get(name);
+    if (memberValues === undefined) {
+      candidates.delete(name);
+      continue;
+    }
+    for (const value of memberValues) values.add(value);
+  }
 }
 
 function collectPointerParseIssue(

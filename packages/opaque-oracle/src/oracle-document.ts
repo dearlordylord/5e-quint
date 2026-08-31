@@ -26,26 +26,9 @@ function projectDocumentCheck(
   check: AST.Check<unknown>,
   path: string,
 ): AST.Check<unknown> | undefined {
-  const annotations = check.annotations as
-    | Record<PropertyKey, unknown>
-    | undefined;
-  const semanticReason = annotations?.[SemanticRefinementAnnotationId];
-  if (semanticReason !== undefined) {
-    if (isSemanticRefinementReason(semanticReason)) return undefined;
-    throw new Error(
-      `Document schema has an invalid semantic refinement reason at ${path}.`,
-    );
-  }
+  if (documentCheckIsSemantic(check, path)) return undefined;
   if (check._tag === "FilterGroup") {
-    const checks = check.checks.flatMap((nested, index) => {
-      const projected = projectDocumentCheck(nested, `${path}<${index}>`);
-      return projected === undefined ? [] : [projected];
-    });
-    if (checks.length === 0) return undefined;
-    return new AST.FilterGroup(
-      checks as [AST.Check<unknown>, ...AST.Check<unknown>[]],
-      check.annotations,
-    );
+    return projectDocumentFilterGroup(check, path);
   }
   if (check.annotations?.toJsonSchema !== undefined) return check;
   throw new Error(
@@ -57,6 +40,37 @@ function projectDocumentCheck(
         ", ",
       )}); mark its semantic admission reason or use a structural check with JSON Schema representation.`,
   );
+}
+
+function documentCheckIsSemantic(
+  check: AST.Check<unknown>,
+  path: string,
+): boolean {
+  const annotations = check.annotations as
+    | Record<PropertyKey, unknown>
+    | undefined;
+  const semanticReason = annotations?.[SemanticRefinementAnnotationId];
+  if (semanticReason === undefined) return false;
+  if (isSemanticRefinementReason(semanticReason)) return true;
+  throw new Error(
+    `Document schema has an invalid semantic refinement reason at ${path}.`,
+  );
+}
+
+function projectDocumentFilterGroup(
+  check: AST.FilterGroup<unknown>,
+  path: string,
+): AST.Check<unknown> | undefined {
+  const checks = check.checks.flatMap((nested, index) => {
+    const projected = projectDocumentCheck(nested, `${path}<${index}>`);
+    return projected === undefined ? [] : [projected];
+  });
+  return checks.length === 0
+    ? undefined
+    : new AST.FilterGroup(
+        checks as [AST.Check<unknown>, ...AST.Check<unknown>[]],
+        check.annotations,
+      );
 }
 
 /** Project the encoded JSON document shape while removing marked semantic checks. */

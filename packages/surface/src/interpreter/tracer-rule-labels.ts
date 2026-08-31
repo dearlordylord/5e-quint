@@ -486,7 +486,28 @@ export function describeAreaExclusions(
   );
 }
 
+type SquareAreaShape = Extract<
+  AreaShapeSpec,
+  { readonly kind: "cube" | "ground_square" }
+>;
+
+function isSquareAreaShape(shape: AreaShapeSpec): shape is SquareAreaShape {
+  return shape.kind === "cube" || shape.kind === "ground_square";
+}
+
+function describeSquareAreaShape(shape: SquareAreaShape): string {
+  return Match.value(shape).pipe(
+    Match.when({ kind: "cube" }, (cube) => `cube ${cube.sideFeet} ft side`),
+    Match.when(
+      { kind: "ground_square" },
+      (square) => `ground square ${square.sideFeet} ft side`,
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function describeAreaShape(s: AreaShapeSpec): string {
+  if (isSquareAreaShape(s)) return describeSquareAreaShape(s);
   switch (s.kind) {
     case "sphere":
       return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
@@ -496,10 +517,6 @@ export function describeAreaShape(s: AreaShapeSpec): string {
       return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
     case "cone":
       return `cone ${s.lengthFeet} ft`;
-    case "cube":
-      return `cube ${s.sideFeet} ft side`;
-    case "ground_square":
-      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
@@ -526,6 +543,7 @@ export function describeAreaShape(s: AreaShapeSpec): string {
 }
 
 export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
+  if (isSquareAreaShape(s)) return describeSquareAreaShape(s);
   switch (s.kind) {
     case "sphere":
       return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
@@ -535,10 +553,6 @@ export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
     case "cone":
       return `cone ${s.lengthFeet} ft`;
-    case "cube":
-      return `cube ${s.sideFeet} ft side`;
-    case "ground_square":
-      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
