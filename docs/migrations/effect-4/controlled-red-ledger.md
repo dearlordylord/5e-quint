@@ -1233,13 +1233,10 @@ domain, architecture, and connascence boundaries. Standards and Spec/RAW
 re-review converged without remaining findings. The complete current
 disposition is in the [final parity report](./final-parity-report.md).
 
-The selected #381 QNT sweep ran at `c4d42c94f` under the repository MBT/proof
-lock and completed all 133 selected owners with 133 passes, zero failures, and
-terminal `SWEEP_PASS` after 3,141 seconds. The 26,237-byte log has SHA-256
-`f594ab24f437fcfbf6d3d7c982726edec3ba50b89dddcbf85629bf2594b5cc6a`.
-No `.qnt` file, QNT owner-role registry, or #381 manifest changed between that
-revision and `ad053d7de`, so the sweep remains the formal-owner receipt for the
-reconciled source line.
+The selected #381 QNT sweep passed and remains applicable to the reconciled
+source line. Its exact fixed point, owner disposition, elapsed time, log
+measurement, digest, and unchanged-range evidence are owned by the
+[final parity report](./final-parity-report.md#qnt-and-runtime-parity).
 
 The migration exception is closed in source and no waiver remains. Final issue
 closure is nevertheless pending these exact public commands at the final
