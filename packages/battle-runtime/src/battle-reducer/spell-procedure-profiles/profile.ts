@@ -45,13 +45,15 @@ import {
 import { characterBattleLevel } from "../../character-class-level.ts";
 import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
 import type {
+  SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsAdmissionDeclaration,
 } from "./spell-mechanics-admission.ts";
 export * from "./execution-profile.ts";
 export * from "./spell-mechanics-admission.ts";
 
-// Context handed to admit() at discovery time. Profiles use only what they
-// need, with character actor facts kept canonical on `actor`.
+// Context handed to a supported static admission's bound closure at discovery
+// time. Profiles use only what they need, with character actor facts kept
+// canonical on `actor`.
 export type SpellAdmissionActor = BattleCreatureState & {
   readonly origin: Extract<
     BattleCreatureState["origin"],
@@ -162,16 +164,6 @@ export function preparedSpellSlotInvocationsFrom<
   });
 }
 
-// Registry admission is existential over each profile's concrete invocation.
-// This common view preserves the shared input contract while projecting each
-// concrete result to the supported-invocation union covariantly.
-export type AnySpellProcedureAdmission = {
-  readonly admit: (
-    spell: BattleSpellAdmissionSource,
-    ctx: SpellAdmissionContext,
-  ) => readonly SupportedSpellInvocation[];
-};
-
 export function spellAdmissionBattleTurn(
   ctx: SpellAdmissionContext,
 ): SpellAdmissionBattleTurn | undefined {
@@ -226,29 +218,27 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
 export type SpellProcedureAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
+  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
 > = {
-  // Discovery: enumerate every currently-admissible invocation of this
-  // procedure for the given actor + spell. Returns [] if the spell does not
-  // fit this procedure's shape.
-  readonly admit: (
-    spell: BattleSpellAdmissionSource,
-    ctx: SpellAdmissionContext,
-  ) => readonly I[];
   /**
    * Static authored-mechanics admission.  This is required at the declaration
    * boundary so every authored profile must migrate before the canonical
-   * static view can claim complete/partial roots. Contextual `admit` stays
-   * responsible for caster/resource/state-dependent invocation creation.
+   * static view can claim complete/partial roots. Contextual admission is
+   * bound by the supported result and therefore consumes correlated facts and
+   * a mechanics-free execution source.
    */
   readonly admitMechanics: SpellProcedureMechanicsAdmissionDeclaration<
-    P
+    P,
+    Facts,
+    I
   >["admitMechanics"];
 };
 
 export type SpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
-> = SpellProcedureAdmissionDeclaration<P, I> &
+  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+> = SpellProcedureAdmissionDeclaration<P, I, Facts> &
   SpellProcedureExecutionDeclaration<P>;
 
 export type SynthesizedSpellProcedureDeclaration<
