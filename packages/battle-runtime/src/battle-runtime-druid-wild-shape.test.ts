@@ -1,4 +1,5 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { readFileSync } from "node:fs";
 import {
   statBlockId,
   unitId as parseSharedUnitId,
@@ -158,6 +159,23 @@ const ratId = statBlockId("stat_block_rat");
 const ridingHorseId = statBlockId("stat_block_riding_horse");
 const lizardId = statBlockId("stat_block_lizard");
 const catId = statBlockId("stat_block_cat");
+
+test("keeps resource feature projection parse-once across Wild Shape and execution", () => {
+  const source = readFileSync(
+    new URL("./battle-reducer/creature-state.ts", import.meta.url),
+    "utf8",
+  );
+
+  expect([
+    ...source.matchAll(/parseSupportedUnitFeatureProfile\s*\(/g),
+  ]).toHaveLength(1);
+  expect(source).toMatch(
+    /const resourceUnitFeatureProfiles =\s*projectCharacterResourceUnitFeatureProfiles\([\s\S]*?characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*resourceUnitFeatureProfiles,\s*\)/,
+  );
+  expect(source).toMatch(
+    /unitFeatureProfiles:\s*\[\s*\.\.\.resourceUnitFeatureProfiles\.flatMap\(/,
+  );
+});
 
 type DruidWildShapeInputPhase =
   (typeof druidWildShapeInput.mechanics.phases)[number];
