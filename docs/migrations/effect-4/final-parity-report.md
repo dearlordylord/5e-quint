@@ -110,8 +110,8 @@ exercised by the clean-consumer smoke.
 ### Master-reconciliation declaration certificate
 
 The fixed Surface and Battle Runtime consumer graph now contains exactly 529
-declaration files and 4,094,561 bytes. The 10 MiB byte cap is unchanged and
-leaves 6,391,199 bytes of margin; the file cap is the exact reviewed count, not
+declaration files and 4,094,773 bytes. The 10 MiB byte cap is unchanged and
+leaves 6,390,987 bytes of margin; the file cap is the exact reviewed count, not
 a permissive growth allowance. Relative to the prior 523-file reconciliation
 certificate, the current graph adds these ten declarations:
 

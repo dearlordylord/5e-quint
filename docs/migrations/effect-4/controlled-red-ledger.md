@@ -1138,8 +1138,8 @@ then prove complete newline-framed JSON, byte-for-byte output ownership, exit
 code 130, empty standard error, and cleanup; no timing sleep is used.
 
 After master reconciliation, the public declaration graph has a reviewed
-deterministic measure of 529 files and 4,094,561 bytes. The file limit is
-exactly 529. The byte limit remains 10 MiB, with a 6,391,199-byte margin. Tests
+deterministic measure of 529 files and 4,094,773 bytes. The file limit is
+exactly 529. The byte limit remains 10 MiB, with a 6,390,987-byte margin. Tests
 prove acceptance exactly at both caps and fail-closed rejection at each cap
 plus one, and the real public distribution must equal the reviewed measure.
 The reviewed ten additions and four removals from the prior 523-file graph are
