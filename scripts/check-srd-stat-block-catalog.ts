@@ -3,6 +3,10 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import { Match } from "effect";
+import {
+  NonNegativeInteger,
+  type NonNegativeInteger as NonNegativeIntegerType,
+} from "../packages/shared/src/types.ts";
 
 import {
   evaluateSrdStatBlockCatalogReachability,
@@ -13,7 +17,6 @@ import {
   buildSrdStatBlockCatalogFromRecords,
   decodeStatBlockRecords,
   evaluateSrdStatBlockProvenance,
-  type SrdStatBlockProvenanceIssue,
   type SrdStatBlockProvenanceResult,
   type StatBlockRecordsDecodeResult,
   type StatBlockCatalogBuildIssue,
@@ -64,7 +67,7 @@ export const SRD_STAT_BLOCK_CATALOG_DIAGNOSTIC_BLOCKERS = [
   "catalog-reachability",
 ] as const;
 
-export type SrdStatBlockCatalogDiagnosticBlocker =
+type SrdStatBlockCatalogDiagnosticBlocker =
   (typeof SRD_STAT_BLOCK_CATALOG_DIAGNOSTIC_BLOCKERS)[number];
 
 type ParityIssueOwner =
@@ -108,10 +111,10 @@ function ownedParityIssues(
   return owned;
 }
 
-export type SrdStatBlockInstalledMembershipResult =
+type SrdStatBlockInstalledMembershipResult =
   | {
       readonly tag: "installed";
-      readonly installedCount: number;
+      readonly installedCount: NonNegativeIntegerType;
       readonly catalog: Extract<
         ReturnType<typeof buildSrdStatBlockCatalogFromRecords>,
         { readonly tag: "ok" }
@@ -125,7 +128,7 @@ export type SrdStatBlockInstalledMembershipResult =
       ];
     };
 
-export type SrdStatBlockScopedFidelityAssessment =
+type SrdStatBlockScopedFidelityAssessment =
   | {
       readonly tag: "assessed";
       readonly result: SrdStatBlockScopedFidelityResult;
@@ -137,10 +140,40 @@ export type SrdStatBlockScopedFidelityAssessment =
 
 export type SrdStatBlockCatalogAssessment =
   | {
-      readonly tag: "rejected";
-      readonly strictDecode: StatBlockRecordsDecodeResult;
+      readonly tag: "strict-decode-rejected";
+      readonly strictDecode: Extract<
+        StatBlockRecordsDecodeResult,
+        { readonly tag: "rejected" }
+      >;
       readonly provenance: SrdStatBlockProvenanceResult;
       readonly installedMembership: SrdStatBlockInstalledMembershipResult;
+    }
+  | {
+      readonly tag: "provenance-rejected";
+      readonly strictDecode: Extract<
+        StatBlockRecordsDecodeResult,
+        { readonly tag: "decoded" }
+      >;
+      readonly provenance: Extract<
+        SrdStatBlockProvenanceResult,
+        { readonly tag: "mixed" }
+      >;
+      readonly installedMembership: SrdStatBlockInstalledMembershipResult;
+    }
+  | {
+      readonly tag: "installed-membership-rejected";
+      readonly strictDecode: Extract<
+        StatBlockRecordsDecodeResult,
+        { readonly tag: "decoded" }
+      >;
+      readonly provenance: Extract<
+        SrdStatBlockProvenanceResult,
+        { readonly tag: "homogeneous" }
+      >;
+      readonly installedMembership: Extract<
+        SrdStatBlockInstalledMembershipResult,
+        { readonly tag: "rejected" }
+      >;
     }
   | {
       readonly tag: "installed";
@@ -170,12 +203,12 @@ export type SrdStatBlockCatalogDiagnosticObservation = {
   readonly catalogAssessment: SrdStatBlockCatalogAssessment;
 };
 
-export type SrdStatBlockCatalogDiagnostic =
+type SrdStatBlockCatalogDiagnostic =
   SrdStatBlockCatalogDiagnosticObservation & {
     readonly sourceDenominator: {
       readonly sourceCoverage: SrdStatBlockParityReport["sourceCoverage"];
-      readonly occurrenceCount: number;
-      readonly identityCount: number;
+      readonly occurrenceCount: NonNegativeIntegerType;
+      readonly identityCount: NonNegativeIntegerType;
       readonly issues: readonly SrdStatBlockParityIssue[];
     };
     readonly generatedPeerAgreement: {
@@ -193,7 +226,10 @@ export type SrdStatBlockCatalogDiagnostic =
     readonly provenance: {
       readonly issues: readonly (
         | SrdStatBlockParityIssue
-        | SrdStatBlockProvenanceIssue
+        | Extract<
+            SrdStatBlockProvenanceResult,
+            { readonly tag: "mixed" }
+          >["issues"][number]
       )[];
     };
     readonly exclusions: typeof SRD_STAT_BLOCK_CATALOG_DIAGNOSTIC_EXCLUSIONS;
@@ -243,12 +279,30 @@ export function evaluateSrdStatBlockCatalogDiagnostic(
   observation: SrdStatBlockCatalogDiagnosticObservation,
 ): SrdStatBlockCatalogDiagnosticResult {
   const parityIssues = ownedParityIssues(observation.parity.issues);
-  const catalogEvidenceAvailable =
-    observation.catalogAssessment.tag === "installed";
+  const catalogEvidenceAvailable = Match.value(
+    observation.catalogAssessment,
+  ).pipe(
+    Match.when({ tag: "installed" }, () => true),
+    Match.when({ tag: "strict-decode-rejected" }, () => false),
+    Match.when({ tag: "provenance-rejected" }, () => false),
+    Match.when({ tag: "installed-membership-rejected" }, () => false),
+    Match.exhaustive,
+  );
+  const localProvenanceIssues = Match.value(
+    observation.catalogAssessment.provenance,
+  ).pipe(
+    Match.when({ tag: "mixed" }, ({ issues }) => issues),
+    Match.when({ tag: "homogeneous" }, () => []),
+    Match.exhaustive,
+  );
   const sourceDenominator = {
     sourceCoverage: observation.parity.sourceCoverage,
-    occurrenceCount: observation.parity.discovery.occurrences.length,
-    identityCount: observation.parity.discovery.identities.length,
+    occurrenceCount: NonNegativeInteger(
+      observation.parity.discovery.occurrences.length,
+    ),
+    identityCount: NonNegativeInteger(
+      observation.parity.discovery.identities.length,
+    ),
     issues: parityIssues["source-denominator"],
   };
   const diagnostic: SrdStatBlockCatalogDiagnostic = {
@@ -265,9 +319,7 @@ export function evaluateSrdStatBlockCatalogDiagnostic(
     },
     provenance: {
       issues: [
-        ...(observation.catalogAssessment.provenance.tag === "mixed"
-          ? observation.catalogAssessment.provenance.issues
-          : []),
+        ...localProvenanceIssues,
         ...(catalogEvidenceAvailable ? parityIssues.provenance : []),
       ],
     },
@@ -275,11 +327,22 @@ export function evaluateSrdStatBlockCatalogDiagnostic(
   };
   const blockers: SrdStatBlockCatalogDiagnosticBlocker[] = [];
 
-  if (observation.aggregateSynchronization.tag === "unsynchronized") {
+  const aggregateSynchronizationBlocks = Match.value(
+    observation.aggregateSynchronization,
+  ).pipe(
+    Match.when({ tag: "unsynchronized" }, () => true),
+    Match.when({ tag: "synchronized" }, () => false),
+    Match.exhaustive,
+  );
+  if (aggregateSynchronizationBlocks) {
     blockers.push("aggregate-synchronization");
   }
   if (
-    sourceDenominator.sourceCoverage.tag === "incomplete" ||
+    Match.value(sourceDenominator.sourceCoverage).pipe(
+      Match.when({ tag: "incomplete" }, () => true),
+      Match.when({ tag: "complete" }, () => false),
+      Match.exhaustive,
+    ) ||
     sourceDenominator.occurrenceCount !==
       SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY ||
     sourceDenominator.identityCount !==
@@ -295,14 +358,34 @@ export function evaluateSrdStatBlockCatalogDiagnostic(
     observation.catalogAssessment,
   ).pipe(
     Match.when(
-      { tag: "rejected" },
-      ({ strictDecode, installedMembership }) => ({
-        strictDecode: strictDecode.tag === "rejected",
-        installedMembership: installedMembership.tag === "rejected",
+      { tag: "strict-decode-rejected" },
+      ({ installedMembership }) => ({
+        strictDecode: true,
+        installedMembership: Match.value(installedMembership).pipe(
+          Match.when({ tag: "rejected" }, () => true),
+          Match.when({ tag: "installed" }, () => false),
+          Match.exhaustive,
+        ),
         scopedFidelity: false,
         catalogReachability: false,
       }),
     ),
+    Match.when({ tag: "provenance-rejected" }, ({ installedMembership }) => ({
+      strictDecode: false,
+      installedMembership: Match.value(installedMembership).pipe(
+        Match.when({ tag: "rejected" }, () => true),
+        Match.when({ tag: "installed" }, () => false),
+        Match.exhaustive,
+      ),
+      scopedFidelity: false,
+      catalogReachability: false,
+    })),
+    Match.when({ tag: "installed-membership-rejected" }, () => ({
+      strictDecode: false,
+      installedMembership: true,
+      scopedFidelity: false,
+      catalogReachability: false,
+    })),
     Match.when(
       { tag: "installed" },
       ({ installedMembership, scopedFidelity, catalogReachability }) => ({
@@ -400,28 +483,64 @@ export function runSrdStatBlockCatalogDiagnostic(input: {
   const strictDecode = decodeStatBlockRecords(
     input.aggregateInputs ?? srdStatBlockAggregateInputs,
   );
-  const decodedRecords =
-    strictDecode.tag === "decoded"
-      ? strictDecode.records
-      : strictDecode.decodedRecords;
+  const decodedRecords = strictDecode.decodedRecords;
   const provenance = evaluateSrdStatBlockProvenance(decodedRecords);
-  const srdRecords =
-    provenance.tag === "homogeneous"
-      ? provenance.records
-      : provenance.srdRecords;
+  const srdRecords = Match.value(provenance).pipe(
+    Match.when({ tag: "homogeneous" }, ({ records }) => records),
+    Match.when({ tag: "mixed" }, ({ srdRecords }) => srdRecords),
+    Match.exhaustive,
+  );
   const catalogBuild = buildSrdStatBlockCatalogFromRecords(srdRecords);
   const installedMembership: SrdStatBlockInstalledMembershipResult =
-    catalogBuild.tag === "ok"
-      ? {
-          tag: "installed",
-          installedCount: catalogBuild.collection.statBlocks.length,
-          catalog: catalogBuild.catalog,
-        }
-      : { tag: "rejected", issues: catalogBuild.issues };
-  const isFullyInstalled =
-    strictDecode.tag === "decoded" &&
-    provenance.tag === "homogeneous" &&
-    installedMembership.tag === "installed";
+    Match.value(catalogBuild).pipe(
+      Match.when({ tag: "ok" }, ({ collection, catalog }) => ({
+        tag: "installed" as const,
+        installedCount: NonNegativeInteger(collection.statBlocks.length),
+        catalog,
+      })),
+      Match.when({ tag: "invalid" }, ({ issues }) => ({
+        tag: "rejected" as const,
+        issues,
+      })),
+      Match.exhaustive,
+    );
+  const catalogPhase = Match.value(strictDecode).pipe(
+    Match.when({ tag: "rejected" }, (rejected) => ({
+      tag: "strict-decode-rejected" as const,
+      strictDecode: rejected,
+      provenance,
+      installedMembership,
+    })),
+    Match.when({ tag: "decoded" }, (decoded) =>
+      Match.value(provenance).pipe(
+        Match.when({ tag: "mixed" }, (mixed) => ({
+          tag: "provenance-rejected" as const,
+          strictDecode: decoded,
+          provenance: mixed,
+          installedMembership,
+        })),
+        Match.when({ tag: "homogeneous" }, (homogeneous) =>
+          Match.value(installedMembership).pipe(
+            Match.when({ tag: "rejected" }, (rejected) => ({
+              tag: "installed-membership-rejected" as const,
+              strictDecode: decoded,
+              provenance: homogeneous,
+              installedMembership: rejected,
+            })),
+            Match.when({ tag: "installed" }, (installed) => ({
+              tag: "ready" as const,
+              strictDecode: decoded,
+              provenance: homogeneous,
+              installedMembership: installed,
+            })),
+            Match.exhaustive,
+          ),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
   const publication = runPublicationCheck({
     repoRoot: input.repositoryRoot,
     contentDir: join(input.repositoryRoot, "packages", "surface", "content"),
@@ -437,11 +556,26 @@ export function runSrdStatBlockCatalogDiagnostic(input: {
   const parity = deriveSrdStatBlockParity({
     sourceFiles: sourceMaterials.sourceFiles,
     sourceReadIssues: sourceMaterials.sourceReadIssues,
-    installedStatBlocks: isFullyInstalled ? provenance.records : [],
+    installedStatBlocks: Match.value(catalogPhase).pipe(
+      Match.when({ tag: "ready" }, ({ provenance }) => provenance.records),
+      Match.when({ tag: "strict-decode-rejected" }, () => []),
+      Match.when({ tag: "provenance-rejected" }, () => []),
+      Match.when({ tag: "installed-membership-rejected" }, () => []),
+      Match.exhaustive,
+    ),
     peerObservations,
   });
-  const scopedFidelity = isFullyInstalled
-    ? Match.value(sourceMaterials.equipmentSource).pipe(
+  const catalogAssessment: SrdStatBlockCatalogAssessment = Match.value(
+    catalogPhase,
+  ).pipe(
+    Match.when({ tag: "strict-decode-rejected" }, (rejected) => rejected),
+    Match.when({ tag: "provenance-rejected" }, (rejected) => rejected),
+    Match.when(
+      { tag: "installed-membership-rejected" },
+      (rejected) => rejected,
+    ),
+    Match.when({ tag: "ready" }, (ready) => {
+      const scopedFidelity = Match.value(sourceMaterials.equipmentSource).pipe(
         Match.when({ tag: "unavailable" }, ({ message }) => ({
           tag: "equipment-source-unavailable" as const,
           message,
@@ -451,39 +585,26 @@ export function runSrdStatBlockCatalogDiagnostic(input: {
           result: evaluateSrdStatBlockScopedFidelity({
             parity,
             sourceByPath: sourceMaterials.sourceByPath,
-            authoredRecords: provenance.records,
+            authoredRecords: ready.provenance.records,
             equipmentSource: contents,
           }),
         })),
         Match.exhaustive,
-      )
-    : undefined;
-  const catalogReachability = isFullyInstalled
-    ? evaluateSrdStatBlockCatalogReachability({
-        installedStatBlocks: provenance.records,
-        catalog: installedMembership.catalog,
+      );
+      const catalogReachability = evaluateSrdStatBlockCatalogReachability({
+        installedStatBlocks: ready.provenance.records,
+        catalog: ready.installedMembership.catalog,
         present: presentStatBlockSummary,
-      })
-    : undefined;
-
-  const catalogAssessment: SrdStatBlockCatalogAssessment =
-    isFullyInstalled &&
-    scopedFidelity !== undefined &&
-    catalogReachability !== undefined
-      ? {
-          tag: "installed",
-          strictDecode,
-          provenance,
-          installedMembership,
-          scopedFidelity,
-          catalogReachability,
-        }
-      : {
-          tag: "rejected",
-          strictDecode,
-          provenance,
-          installedMembership,
-        };
+      });
+      return {
+        ...ready,
+        tag: "installed" as const,
+        scopedFidelity,
+        catalogReachability,
+      };
+    }),
+    Match.exhaustive,
+  );
 
   return evaluateSrdStatBlockCatalogDiagnostic({
     aggregateSynchronization: checkSrdStatBlockAggregateSync(
@@ -533,7 +654,9 @@ function main(): void {
       { tag: "installed" },
       ({ installedMembership }) => installedMembership.installedCount,
     ),
-    Match.when({ tag: "rejected" }, () => 0),
+    Match.when({ tag: "strict-decode-rejected" }, () => 0),
+    Match.when({ tag: "provenance-rejected" }, () => 0),
+    Match.when({ tag: "installed-membership-rejected" }, () => 0),
     Match.exhaustive,
   )} strictly decoded and installed Stat Blocks`;
 

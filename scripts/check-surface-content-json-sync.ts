@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import {
   formatSurfaceDecodeError,
@@ -42,7 +42,11 @@ import type { SrdStatBlockParityInstalledRecord } from "../packages/surface/src/
 export type PublicationIssue =
   | {
       readonly kind: "publication-check-failed";
-      readonly stage: "discovery" | "temporary-directory" | "cleanup";
+      readonly stage:
+        | "discovery"
+        | "temporary-directory"
+        | "evaluation"
+        | "cleanup";
       readonly message: string;
     }
   | {
@@ -1025,18 +1029,30 @@ function checkPortableCasesArtifact(
   }
 }
 
-function runPublicationCheckUnsafe(
+function invokeDhallCompiler(
+  compile: PublicationCheckOptions["compile"],
+  sourcePath: string,
+  generatedPath: string,
+): string | undefined {
+  try {
+    return compile(sourcePath, generatedPath);
+  } catch (error) {
+    return String(error);
+  }
+}
+
+function runPublicationCheckWithWorkspace(
   options: PublicationCheckOptions,
+  sources: readonly string[],
+  peers: readonly string[],
+  temporaryDirectory: string,
 ): PublicationCheckResult {
   const { repoRoot, contentDir, compile } = options;
-  const sources = canonicalDhallFiles(contentDir);
-  const peers = contentFiles(contentDir, ".json");
   const sourcePeers = new Set(
     sources.map((source) => source.replace(/\.dhall$/, ".json")),
   );
   const issues: PublicationIssue[] = [];
   const peerObservations: SurfacePublicationPeerObservation[] = [];
-  const temporaryDirectory = mkdtempSync(join(tmpdir(), "surface-json-sync-"));
 
   try {
     for (const source of sources) {
@@ -1058,12 +1074,11 @@ function runPublicationCheckUnsafe(
         });
       }
 
-      let compileError: string | undefined;
-      try {
-        compileError = compile(sourcePath, generatedPath);
-      } catch (error) {
-        compileError = String(error);
-      }
+      const compileError = invokeDhallCompiler(
+        compile,
+        sourcePath,
+        generatedPath,
+      );
       let generatedInspection: JsonInspection | undefined;
       if (compileError !== undefined) {
         peerIsHealthy = false;
@@ -1302,25 +1317,108 @@ function runPublicationCheckUnsafe(
   };
 }
 
+type PublicationWorkspaceDiscovery =
+  | {
+      readonly tag: "available";
+      readonly sources: readonly string[];
+      readonly peers: readonly string[];
+    }
+  | { readonly tag: "unavailable"; readonly message: string };
+
+function discoverPublicationWorkspace(
+  contentDir: string,
+): PublicationWorkspaceDiscovery {
+  try {
+    return {
+      tag: "available",
+      sources: canonicalDhallFiles(contentDir),
+      peers: contentFiles(contentDir, ".json"),
+    };
+  } catch (error) {
+    return { tag: "unavailable", message: String(error) };
+  }
+}
+
+type TemporaryDirectoryCreation =
+  | { readonly tag: "available"; readonly path: string }
+  | { readonly tag: "unavailable"; readonly message: string };
+
+function createPublicationTemporaryDirectory(): TemporaryDirectoryCreation {
+  try {
+    return {
+      tag: "available",
+      path: mkdtempSync(join(tmpdir(), "surface-json-sync-")),
+    };
+  } catch (error) {
+    return { tag: "unavailable", message: String(error) };
+  }
+}
+
+function failedPublicationCheck(
+  stage: Extract<
+    PublicationIssue,
+    { readonly kind: "publication-check-failed" }
+  >["stage"],
+  message: string,
+  sourceCount: number,
+  peerCount: number,
+): PublicationCheckResult {
+  return {
+    issues: [{ kind: "publication-check-failed", stage, message }],
+    sourceCount,
+    peerCount,
+    peerObservations: [],
+  };
+}
+
+function evaluatePublicationWorkspace(
+  options: PublicationCheckOptions,
+  sources: readonly string[],
+  peers: readonly string[],
+  temporaryDirectory: string,
+): PublicationCheckResult {
+  try {
+    return runPublicationCheckWithWorkspace(
+      options,
+      sources,
+      peers,
+      temporaryDirectory,
+    );
+  } catch (error) {
+    return failedPublicationCheck(
+      "evaluation",
+      String(error),
+      sources.length,
+      peers.length,
+    );
+  }
+}
+
 export function runPublicationCheck(
   options: PublicationCheckOptions,
 ): PublicationCheckResult {
-  try {
-    return runPublicationCheckUnsafe(options);
-  } catch (error) {
-    return {
-      issues: [
-        {
-          kind: "publication-check-failed",
-          stage: "discovery",
-          message: String(error),
-        },
-      ],
-      sourceCount: 0,
-      peerCount: 0,
-      peerObservations: [],
-    };
-  }
+  return Match.value(discoverPublicationWorkspace(options.contentDir)).pipe(
+    Match.when({ tag: "unavailable" }, ({ message }) =>
+      failedPublicationCheck("discovery", message, 0, 0),
+    ),
+    Match.when({ tag: "available" }, ({ sources, peers }) =>
+      Match.value(createPublicationTemporaryDirectory()).pipe(
+        Match.when({ tag: "unavailable" }, ({ message }) =>
+          failedPublicationCheck(
+            "temporary-directory",
+            message,
+            sources.length,
+            peers.length,
+          ),
+        ),
+        Match.when({ tag: "available" }, ({ path }) =>
+          evaluatePublicationWorkspace(options, sources, peers, path),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export type SurfacePublicationCheckResult = PublicationCheckResult & {
@@ -1388,53 +1486,82 @@ async function main(): Promise<void> {
       "Surface content publication failed: every canonical Dhall source must have a deterministic, strictly decodable JSON peer.",
     );
     for (const issue of issues) {
-      if (issue.kind === "publication-check-failed") {
-        console.error(
-          `- publication-check-failed (${issue.stage}): ${issue.message}`,
-        );
-      } else if (issue.kind === "missing-json") {
-        console.error(`- missing-json: ${issue.source} -> ${issue.peer}`);
-      } else if (issue.kind === "orphaned-json") {
-        console.error(`- orphaned-json: ${issue.peer}`);
-      } else if (issue.kind === "out-of-sync-json") {
-        console.error(`- out-of-sync-json: ${issue.peer} from ${issue.source}`);
-      } else if (issue.kind === "compile-failed") {
-        console.error(`- compile-failed: ${issue.source}\n${issue.message}`);
-      } else if (issue.kind === "decode-failed") {
-        console.error(`- decode-failed: ${issue.file}\n${issue.message}`);
-      } else if (issue.kind === "missing-publication-artifact") {
-        console.error(`- missing-publication-artifact: ${issue.file}`);
-      } else if (issue.kind === "out-of-sync-publication-artifact") {
-        console.error(`- out-of-sync-publication-artifact: ${issue.file}`);
-      } else if (issue.kind === "unreadable-publication-artifact") {
-        console.error(
-          `- unreadable-publication-artifact: ${issue.file}\n${issue.message}`,
-        );
-      } else if (issue.kind === "missing-portable-case-artifact") {
-        console.error(`- missing-portable-case-artifact: ${issue.file}`);
-      } else if (issue.kind === "out-of-sync-portable-case-artifact") {
-        console.error(`- out-of-sync-portable-case-artifact: ${issue.file}`);
-      } else if (issue.kind === "unreadable-portable-case-artifact") {
-        console.error(
-          `- unreadable-portable-case-artifact: ${issue.file}\n${issue.message}`,
-        );
-      } else if (issue.kind === "portable-case-generation-failed") {
-        console.error(
-          `- portable-case-generation-failed: ${issue.file}\n${issue.message}`,
-        );
-      } else if (issue.kind === "publication-generation-failed") {
-        console.error(
-          `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(issue.issue)}`,
-        );
-      } else if (issue.kind === "peer-family-mismatch") {
-        console.error(
-          `- peer-family-mismatch: ${issue.peer} from ${issue.source} advertises ${issue.actualRecordKind}; expected ${issue.expectedRecordKind}`,
-        );
-      } else {
-        console.error(
-          `- publication-schema-bound-exceeded: ${issue.measure} ${issue.actual} >= ${issue.limit}`,
-        );
-      }
+      console.error(
+        Match.value(issue).pipe(
+          Match.when(
+            { kind: "publication-check-failed" },
+            ({ stage, message }) =>
+              `- publication-check-failed (${stage}): ${message}`,
+          ),
+          Match.when(
+            { kind: "missing-json" },
+            ({ source, peer }) => `- missing-json: ${source} -> ${peer}`,
+          ),
+          Match.when(
+            { kind: "orphaned-json" },
+            ({ peer }) => `- orphaned-json: ${peer}`,
+          ),
+          Match.when(
+            { kind: "out-of-sync-json" },
+            ({ source, peer }) => `- out-of-sync-json: ${peer} from ${source}`,
+          ),
+          Match.when(
+            { kind: "compile-failed" },
+            ({ source, message }) => `- compile-failed: ${source}\n${message}`,
+          ),
+          Match.when(
+            { kind: "decode-failed" },
+            ({ file, message }) => `- decode-failed: ${file}\n${message}`,
+          ),
+          Match.when(
+            { kind: "missing-publication-artifact" },
+            ({ file }) => `- missing-publication-artifact: ${file}`,
+          ),
+          Match.when(
+            { kind: "out-of-sync-publication-artifact" },
+            ({ file }) => `- out-of-sync-publication-artifact: ${file}`,
+          ),
+          Match.when(
+            { kind: "unreadable-publication-artifact" },
+            ({ file, message }) =>
+              `- unreadable-publication-artifact: ${file}\n${message}`,
+          ),
+          Match.when(
+            { kind: "missing-portable-case-artifact" },
+            ({ file }) => `- missing-portable-case-artifact: ${file}`,
+          ),
+          Match.when(
+            { kind: "out-of-sync-portable-case-artifact" },
+            ({ file }) => `- out-of-sync-portable-case-artifact: ${file}`,
+          ),
+          Match.when(
+            { kind: "unreadable-portable-case-artifact" },
+            ({ file, message }) =>
+              `- unreadable-portable-case-artifact: ${file}\n${message}`,
+          ),
+          Match.when(
+            { kind: "portable-case-generation-failed" },
+            ({ file, message }) =>
+              `- portable-case-generation-failed: ${file}\n${message}`,
+          ),
+          Match.when(
+            { kind: "publication-generation-failed" },
+            ({ issue: buildIssue }) =>
+              `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(buildIssue)}`,
+          ),
+          Match.when(
+            { kind: "peer-family-mismatch" },
+            ({ peer, source, actualRecordKind, expectedRecordKind }) =>
+              `- peer-family-mismatch: ${peer} from ${source} advertises ${actualRecordKind}; expected ${expectedRecordKind}`,
+          ),
+          Match.when(
+            { kind: "publication-schema-bound-exceeded" },
+            ({ measure, actual, limit }) =>
+              `- publication-schema-bound-exceeded: ${measure} ${actual} >= ${limit}`,
+          ),
+          Match.exhaustive,
+        ),
+      );
     }
     process.exitCode = 1;
     return;

@@ -4,6 +4,7 @@ import { Match } from "effect";
 import fc from "fast-check";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { NonNegativeInteger } from "../packages/shared/src/types.ts";
 import { projectSrdStatBlockPeerObservation } from "../packages/surface/src/surface/surface-publication-peer-observation.ts";
 import { decodeStatBlockRecords } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
@@ -69,7 +70,13 @@ function installedAssessment(
 ) {
   return Match.value(observation.catalogAssessment).pipe(
     Match.when({ tag: "installed" }, (installed) => installed),
-    Match.when({ tag: "rejected" }, () => {
+    Match.when({ tag: "strict-decode-rejected" }, () => {
+      throw new Error("Canonical catalog assessment was rejected");
+    }),
+    Match.when({ tag: "provenance-rejected" }, () => {
+      throw new Error("Canonical catalog assessment was rejected");
+    }),
+    Match.when({ tag: "installed-membership-rejected" }, () => {
       throw new Error("Canonical catalog assessment was rejected");
     }),
     Match.exhaustive,
@@ -133,7 +140,7 @@ function applyMutation(
       return {
         ...observation,
         catalogAssessment: {
-          tag: "rejected" as const,
+          tag: "strict-decode-rejected" as const,
           strictDecode,
           provenance: observation.catalogAssessment.provenance,
           installedMembership:
@@ -176,8 +183,9 @@ function applyMutation(
               ...installed,
               installedMembership: {
                 ...installed.installedMembership,
-                installedCount:
+                installedCount: NonNegativeInteger(
                   installed.installedMembership.installedCount - 1,
+                ),
               },
             },
           },
@@ -208,7 +216,7 @@ function applyMutation(
                 issues: [
                   {
                     kind: "missing-list-entry" as const,
-                    statBlockId: installed.strictDecode.records[0]!.id,
+                    statBlockId: installed.provenance.records[0]!.id,
                   },
                 ] as const,
               },
@@ -308,7 +316,7 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
 
   it("accumulates strict decode, provenance, and duplicate identity issues", () => {
     const installed = installedAssessment(canonical);
-    const first = installed.strictDecode.records[0]!;
+    const first = installed.provenance.records[0]!;
     const nonSrd = {
       ...first,
       provenance: { kind: "synthetic-test" as const, section: "synthetic" },
@@ -327,6 +335,10 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
       "provenance",
       "installed-membership",
     ]);
+    expect(result.diagnostic.provenance.issues[0]).toMatchObject({
+      code: "nonSrdStatBlockProvenance",
+      inputOrdinal: 2,
+    });
   });
 
   it("does not invent catalog parity failures when strict decode is unavailable", () => {

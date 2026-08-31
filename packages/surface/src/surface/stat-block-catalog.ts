@@ -2,7 +2,7 @@ import {
   PositiveInteger,
   type PositiveInteger as PositiveIntegerType,
 } from "@dnd/shared/types";
-import { Brand, Either, Option } from "effect";
+import { Brand, Either, Match, Option } from "effect";
 
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 
@@ -72,14 +72,17 @@ export type StatBlockCatalogBuildIssue =
       readonly statBlockId: StatBlockId;
     };
 
-export type StatBlockCatalogBuildResult =
+type StatBlockCatalogBuildResult =
   | { readonly tag: "ok"; readonly catalog: SrdStatBlockCatalog }
   | {
       readonly tag: "invalid";
-      readonly issues: readonly StatBlockCatalogBuildIssue[];
+      readonly issues: readonly [
+        StatBlockCatalogBuildIssue,
+        ...StatBlockCatalogBuildIssue[],
+      ];
     };
 
-export type StatBlockRecordDecodeIssue = {
+type StatBlockRecordDecodeIssue = {
   readonly code: "statBlockDecodeFailed";
   readonly inputOrdinal: PositiveIntegerType;
   readonly message: string;
@@ -88,7 +91,7 @@ export type StatBlockRecordDecodeIssue = {
 export type StatBlockRecordsDecodeResult =
   | {
       readonly tag: "decoded";
-      readonly records: readonly StatBlockRecord[];
+      readonly decodedRecords: readonly DecodedStatBlockRecord[];
     }
   | {
       readonly tag: "rejected";
@@ -96,10 +99,15 @@ export type StatBlockRecordsDecodeResult =
         StatBlockRecordDecodeIssue,
         ...StatBlockRecordDecodeIssue[],
       ];
-      readonly decodedRecords: readonly StatBlockRecord[];
+      readonly decodedRecords: readonly DecodedStatBlockRecord[];
     };
 
-export type SrdStatBlockProvenanceIssue = {
+type DecodedStatBlockRecord = {
+  readonly inputOrdinal: PositiveIntegerType;
+  readonly record: StatBlockRecord;
+};
+
+type SrdStatBlockProvenanceIssue = {
   readonly code: "nonSrdStatBlockProvenance";
   readonly inputOrdinal: PositiveIntegerType;
   readonly statBlockId: StatBlockId;
@@ -120,7 +128,7 @@ export type SrdStatBlockProvenanceResult =
       readonly srdRecords: readonly Srd521StatBlock[];
     };
 
-export type SrdStatBlockCatalogFromRecordsResult =
+type SrdStatBlockCatalogFromRecordsResult =
   | {
       readonly tag: "ok";
       readonly collection: SrdStatBlockCollection;
@@ -183,7 +191,7 @@ export function decodeStatBlockRecords(
   inputs: readonly [unknown, ...unknown[]],
 ): StatBlockRecordsDecodeResult {
   const issues: StatBlockRecordDecodeIssue[] = [];
-  const decodedRecords: StatBlockRecord[] = [];
+  const decodedRecords: DecodedStatBlockRecord[] = [];
 
   for (const [inputIndex, input] of inputs.entries()) {
     const decoded = decodeStatBlockRecordEither(input);
@@ -194,13 +202,16 @@ export function decodeStatBlockRecords(
         message: formatSurfaceDecodeError(decoded.left),
       });
     } else {
-      decodedRecords.push(decoded.right);
+      decodedRecords.push({
+        inputOrdinal: PositiveInteger(inputIndex + 1),
+        record: decoded.right,
+      });
     }
   }
 
   const firstIssue = issues[0];
   return firstIssue === undefined
-    ? { tag: "decoded", records: decodedRecords }
+    ? { tag: "decoded", decodedRecords }
     : {
         tag: "rejected",
         issues: [firstIssue, ...issues.slice(1)],
@@ -209,15 +220,15 @@ export function decodeStatBlockRecords(
 }
 
 export function evaluateSrdStatBlockProvenance(
-  records: readonly StatBlockRecord[],
+  decodedRecords: readonly DecodedStatBlockRecord[],
 ): SrdStatBlockProvenanceResult {
   const issues: SrdStatBlockProvenanceIssue[] = [];
   const srdRecords: Srd521StatBlock[] = [];
-  for (const [recordIndex, record] of records.entries()) {
+  for (const { inputOrdinal, record } of decodedRecords) {
     if (!isSrd521StatBlock(record)) {
       issues.push({
         code: "nonSrdStatBlockProvenance",
-        inputOrdinal: PositiveInteger(recordIndex + 1),
+        inputOrdinal,
         statBlockId: record.id,
         actual: record.provenance,
       });
@@ -244,17 +255,18 @@ export function buildSrdStatBlockCatalogFromRecords(
     provenance: { kind: "srd-5.2.1" },
     statBlocks: records,
   } as const satisfies SrdStatBlockCollection;
-  const result = buildStatBlockCatalog({ collections: [collection] });
-  if (result.tag === "ok") {
-    return { tag: "ok", collection, catalog: result.catalog };
-  }
-  const firstIssue = result.issues[0];
-  /* v8 ignore start -- @preserve -- an invalid catalog build always carries its discovered issue */
-  if (firstIssue === undefined) {
-    throw new Error("Invalid SRD Stat Block catalog has no build issue");
-  }
-  /* v8 ignore stop -- @preserve */
-  return { tag: "invalid", issues: [firstIssue, ...result.issues.slice(1)] };
+  return Match.value(buildStatBlockCatalog({ collections: [collection] })).pipe(
+    Match.when({ tag: "ok" }, ({ catalog }) => ({
+      tag: "ok" as const,
+      collection,
+      catalog,
+    })),
+    Match.when({ tag: "invalid" }, ({ issues }) => ({
+      tag: "invalid" as const,
+      issues,
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function buildStatBlockCatalog(input: {
@@ -262,8 +274,9 @@ export function buildStatBlockCatalog(input: {
 }): StatBlockCatalogBuildResult {
   const { issues, records } = collectStatBlockCatalogIssues(input.collections);
 
-  if (issues.length > 0) {
-    return { tag: "invalid", issues };
+  const firstIssue = issues[0];
+  if (firstIssue !== undefined) {
+    return { tag: "invalid", issues: [firstIssue, ...issues.slice(1)] };
   }
 
   return {

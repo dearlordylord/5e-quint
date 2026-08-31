@@ -11,8 +11,8 @@ export * from "./stat-block-catalog.ts";
 
 const decodedRecords = decodeStatBlockRecords(srdStatBlockAggregateInputs);
 
-const srdRecords = Match.value(decodedRecords).pipe(
-  Match.when({ tag: "decoded" }, ({ records }) => records),
+const decodedStatBlockRecords = Match.value(decodedRecords).pipe(
+  Match.when({ tag: "decoded" }, ({ decodedRecords }) => decodedRecords),
   Match.when({ tag: "rejected" }, ({ issues }) => {
     throw new Error(
       `Generated SRD Stat Block aggregate is invalid: ${JSON.stringify(issues)}`,
@@ -21,7 +21,7 @@ const srdRecords = Match.value(decodedRecords).pipe(
   Match.exhaustive,
 );
 
-const provenance = evaluateSrdStatBlockProvenance(srdRecords);
+const provenance = evaluateSrdStatBlockProvenance(decodedStatBlockRecords);
 const homogeneousSrdRecords = Match.value(provenance).pipe(
   Match.when({ tag: "homogeneous" }, ({ records }) => records),
   Match.when({ tag: "mixed" }, ({ issues }) => {
