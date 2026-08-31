@@ -59,7 +59,7 @@ missing tag for both sides. Its overall identity
 SHA-256 is
 `2b90424e06d2a6f63225c4bdfe9cc3a5aa160b609f6f0cde715a4fe258549e7a`,
 and the certificate artifact SHA-256 is
-`483aab64f2bb2b94815ad4486b69ac2b66c160244f8aaed6613091c8d3f5eeee`.
+`4839c6c4d911328c092827b3feb73aeb6b461cbee4e8b80362a2dae97ce81a5d`.
 
 | Classification                | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
