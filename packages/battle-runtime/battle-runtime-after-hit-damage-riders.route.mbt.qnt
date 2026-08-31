@@ -253,7 +253,7 @@ module battleRuntimeAfterHitSpellsRouteMbt {
       List(
         startRoute,
         discoverAfterHit(
-          Set(RolledDiceHoleKind, SavingThrowOutcomeHoleKind),
+          Set(RolledDiceHoleKind),
           BattleActiveEffectOwner,
         ),
         resolveAfterHit(
