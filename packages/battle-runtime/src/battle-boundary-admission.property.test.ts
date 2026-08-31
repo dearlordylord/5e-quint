@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
-import { Result, Schema, SchemaIssue } from "effect";
+import { Match, Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
 import { classLevel, resourceCount } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
@@ -206,11 +206,15 @@ import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
 
-type ResourceOwningStatBlockProcedureBinding = Exclude<
+type ResourceOwningStatBlockProcedureBinding = Extract<
   StatBlockProcedureBinding,
   {
     readonly procedure: {
-      readonly kind: "spellcasting" | "effectOccurrenceSource";
+      readonly kind:
+        | "attack"
+        | "unarmedStrike"
+        | "multiattack"
+        | "bonusActionOption";
     };
   }
 >;
@@ -218,9 +222,15 @@ type ResourceOwningStatBlockProcedureBinding = Exclude<
 function isResourceOwningStatBlockProcedureBinding(
   binding: StatBlockProcedureBinding,
 ): binding is ResourceOwningStatBlockProcedureBinding {
-  return (
-    binding.procedure.kind !== "spellcasting" &&
-    binding.procedure.kind !== "effectOccurrenceSource"
+  return Match.value(binding.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      attack: () => true,
+      unarmedStrike: () => true,
+      multiattack: () => true,
+      bonusActionOption: () => true,
+      spellcasting: () => false,
+      effectOccurrenceSource: () => false,
+    }),
   );
 }
 
