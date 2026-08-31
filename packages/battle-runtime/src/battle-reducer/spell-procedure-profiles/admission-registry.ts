@@ -8,7 +8,6 @@ import type { SpellAdmissionContext } from "./profile.ts";
 import {
   admitBattleSpellMechanicsFrom,
   type AdmittedSpellProcedureMechanicsView,
-  type BattleSpellMechanicsAdmission,
   type SpellMechanicsAdmissionSource,
 } from "./spell-mechanics-admission.ts";
 import { registeredSpellProcedureDeclarations } from "./registry.ts";
@@ -48,7 +47,7 @@ export function registeredSpellProcedureMechanicsAdmissions() {
  */
 export function admitRegisteredSpellProcedureMechanics(
   source: SpellMechanicsAdmissionSource,
-): BattleSpellMechanicsAdmission {
+) {
   return admitBattleSpellMechanicsFrom(
     source,
     registeredSpellProcedureMechanicsAdmissions(),
