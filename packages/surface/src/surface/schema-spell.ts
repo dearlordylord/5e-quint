@@ -4556,7 +4556,7 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           onlyIfTargetIsShapeShifted: Schema.Literal(true),
         }),
         Schema.Struct({ kind: Schema.Literal("none") }),
-      ]) as unknown as Schema.Codec<EffectAtom, unknown, never, never>,
+      ]),
   ).pipe(Schema.annotate({ identifier: "EffectAtom" }));
 
 export const AreaScopedEffectAtomSchema = AreaPushUnsecuredObjectsSchema;
