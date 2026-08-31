@@ -5,7 +5,6 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   characterId,
@@ -65,23 +64,8 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForTest } from "./sdk-integration.test-support.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return requireSuccess(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
 
 const settlementScenarios = [
   "init",
@@ -844,7 +828,7 @@ function startCharacterBattle(input: {
       battleId: battleId(input.battleIdText),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        authoredStatBlockBattleInit({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: assertStatBlockForTest(
             statBlockCatalog,

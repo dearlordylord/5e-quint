@@ -11,8 +11,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
-  type BattleStateInitIssue,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
+  type BattleInitializationIssue,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -124,30 +123,15 @@ import {
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectSuccess(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
 
 type RouteCharacterBattleRuntimeEntry = {
   readonly session: BattleRuntimeSession;
   readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
 };
 
-type RouteCharacterBattleRuntimeEntryIssue = BattleStateInitIssue & {
+type RouteCharacterBattleRuntimeEntryIssue = BattleInitializationIssue & {
   readonly routeEvents: readonly [];
 };
 
@@ -1042,7 +1026,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       battleId: battleId("battle:route-metamagic-feature-resource-bridge"),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        authoredStatBlockBattleInit({
           combatantId: targetCombatantId,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,

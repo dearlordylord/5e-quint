@@ -5,7 +5,6 @@ import * as path from "node:path";
 
 import {
   battleId,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   characterId,
   combatantId,
   initiativeScore,
@@ -54,23 +53,8 @@ import {
   characterSheetBattleInit,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectSuccess(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
 
 const battleInitProjectionScenarios = [
   "init",
@@ -451,7 +435,7 @@ function projectCharacterBattle(input: {
       battleId: battleId(input.battleIdText),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        authoredStatBlockBattleInit({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
