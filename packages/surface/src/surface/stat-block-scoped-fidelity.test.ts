@@ -1449,6 +1449,118 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     );
   });
 
+  test("reports a malformed telepathy clause once without a dependent communication-schema cascade", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Aboleth",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.startsWith("**Languages**")
+          ? "**Languages** Deep Speech; telepathy malformed"
+          : line,
+      )
+      .join("\n");
+
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result).toMatchObject({
+      tag: "failed",
+      failure: {
+        tag: "projection-issues",
+        issues: [
+          {
+            kind: "malformed-evidence",
+            anchor: {
+              kind: "raw",
+              sourcePath: occurrence.anchor.sourcePath,
+              heading: occurrence.anchor.heading,
+              lineStart: occurrence.anchor.lineStart,
+              lineEnd: occurrence.anchor.lineEnd,
+              field: "communication.telepathy",
+            },
+            evidence: "telepathy malformed",
+          },
+        ],
+      },
+    });
+    if (result.tag === "failed" && result.failure.tag === "projection-issues") {
+      expect(result.failure.issues).toHaveLength(1);
+    }
+  });
+
+  test("accumulates every malformed skill item in source order without dependent skill-name issues", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Ape",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const malformedItems = ["Athletics broken", "Perception malformed"];
+
+    fc.assert(
+      fc.property(
+        fc.shuffledSubarray(malformedItems, {
+          minLength: malformedItems.length,
+          maxLength: malformedItems.length,
+        }),
+        (items) => {
+          const mutatedSource = canonicalSource
+            .split(/\r?\n/)
+            .map((line, index) =>
+              index + 1 >= occurrence.anchor.lineStart &&
+              index + 1 <= occurrence.anchor.lineEnd &&
+              line.startsWith("**Skills**")
+                ? `**Skills** ${items.join(", ")}`
+                : line,
+            )
+            .join("\n");
+          const result = projectRawStatBlock(
+            {
+              sourcePath: occurrence.anchor.sourcePath,
+              contents: mutatedSource,
+            },
+            occurrence,
+            equipmentSource,
+          );
+          expect(result.tag).toBe("failed");
+          if (
+            result.tag !== "failed" ||
+            result.failure.tag !== "projection-issues"
+          ) {
+            return;
+          }
+          expect(
+            result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+              kind,
+              field: anchor.field,
+              evidence: "evidence" in issue ? issue.evidence : undefined,
+            })),
+          ).toEqual(
+            items.map((evidence, index) => ({
+              kind: "malformed-evidence",
+              field: `skillModifiers.${index}`,
+              evidence,
+            })),
+          );
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
   test("matches 334 unique source anchors to 330 records and preserves four repeated identities", () => {
     const result = consistentResult(
       evaluateSrdStatBlockScopedFidelity(corpusInput),

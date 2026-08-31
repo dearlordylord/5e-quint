@@ -61,7 +61,6 @@ import {
   type CreatureSkillModifier,
   type DamageType,
   type SrdStatBlockRecord,
-  type StandaloneCreatureSense,
   type StandaloneStatBlockSpeedEntry,
   type StatBlockCommunication,
   type StatBlockProcedureEntry,
@@ -212,11 +211,6 @@ const recordIssue = <Value>(
   return dependencyFallback;
 };
 
-const hasIssueAtField = (
-  context: ProjectionIssueContext,
-  field: string,
-): boolean => context.issues.some(({ anchor }) => anchor.field === field);
-
 const missingEvidence = <Value>(
   context: ProjectionIssueContext,
   field: string,
@@ -304,15 +298,13 @@ const decodeProjectionValue = <Value, Encoded>(
   const decoded = Schema.decodeUnknownEither(schema)(candidate);
   return Either.isRight(decoded)
     ? decoded.right
-    : hasIssueAtField(context, field)
-      ? dependencyFallback
-      : malformedEvidence(
-          context,
-          field,
-          String(decoded.left),
-          "canonical Surface domain value",
-          dependencyFallback,
-        );
+    : malformedEvidence(
+        context,
+        field,
+        String(decoded.left),
+        "canonical Surface domain value",
+        dependencyFallback,
+      );
 };
 
 const PositiveIntegerSchema = Schema.Number.pipe(
@@ -720,7 +712,6 @@ const requireMatch = (
 ): RegExpMatchArray | readonly [] => {
   const match = value.match(pattern);
   if (match === null) {
-    if (hasIssueAtField(context, field)) return [];
     return malformedEvidence(context, field, value, pattern.source, []);
   }
   return match;
@@ -737,6 +728,19 @@ const requireLine = (
     return missingEvidence(context, field, `line beginning ${prefix}`, "");
   }
   return line;
+};
+
+const requireLineMatch = (
+  context: ProjectionIssueContext,
+  lines: readonly string[],
+  prefix: string,
+  pattern: RegExp,
+  field: string,
+): RegExpMatchArray | readonly [] => {
+  const line = assess(context, () =>
+    requireLine(context, lines, prefix, field),
+  );
+  return line === undefined ? [] : requireMatch(context, line, pattern, field);
 };
 
 const sortedStrings = <Value extends string>(
@@ -975,107 +979,125 @@ const parseSpeeds = (
     .replace("**Speed**", "")
     .trim()
     .split(", ")
-    .map((part): StandaloneStatBlockSpeedEntry => {
-      const gmChoice = part.match(
-        /^((?:Burrow|Climb|Fly|Swim|Walk)(?: or (?:Burrow|Climb|Fly|Swim|Walk))+)(?: )(\d+) ft\. \(GM's choice\)$/,
-      );
-      if (gmChoice !== null) {
-        const feet = Number(gmChoice[2]);
-        const alternatives = (gmChoice[1] ?? "").split(" or ").map((kind) => ({
-          kind: parsedLiteral(
+    .flatMap((part, index) => {
+      const field = `speeds.${index}`;
+      const projected = assess(
+        issueContext,
+        (): StandaloneStatBlockSpeedEntry => {
+          const gmChoice = part.match(
+            /^((?:Burrow|Climb|Fly|Swim|Walk)(?: or (?:Burrow|Climb|Fly|Swim|Walk))+)(?: )(\d+) ft\. \(GM's choice\)$/,
+          );
+          if (gmChoice !== null) {
+            const feet = Number(gmChoice[2]);
+            const alternativeIssueCount = issueContext.issues.length;
+            const alternatives = (gmChoice[1] ?? "")
+              .split(" or ")
+              .map((kind, alternativeIndex) => ({
+                kind: parsedLiteral(
+                  issueContext,
+                  SPEED_TYPES,
+                  kind.toLowerCase(),
+                  `${field}.gmChoice.${alternativeIndex}`,
+                ),
+                feet: { kind: "literal" as const, value: feet },
+              }));
+            if (issueContext.issues.length > alternativeIssueCount) {
+              return { kind: "walk", feet: { kind: "literal", value: 1 } };
+            }
+            const [first, second, ...rest] = alternatives;
+            if (first === undefined || second === undefined) {
+              return missingEvidence(
+                issueContext,
+                `${field}.gmChoice`,
+                `${contextLabel} GM Speed choice requires two alternatives`,
+                {
+                  kind: "walk" as const,
+                  feet: { kind: "literal" as const, value: feet },
+                },
+              );
+            }
+            return decodeProjectionValue(
+              issueContext,
+              StandaloneStatBlockSpeedEntrySchema,
+              {
+                kind: "gm_choice",
+                alternatives: [first, second, ...rest],
+              },
+              `${field}.gmChoice`,
+              { kind: "walk", feet: { kind: "literal", value: 1 } },
+            );
+          }
+          const speed = assess(issueContext, () =>
+            requireMatch(
+              issueContext,
+              part,
+              /^(?:(Burrow|Climb|Fly|Swim) )?(\d+) ft\.(?: \((hover|[A-Za-z]+(?: or [A-Za-z]+)* form only)\))?$/,
+              field,
+            ),
+          );
+          if (speed === undefined) {
+            return { kind: "walk", feet: { kind: "literal", value: 1 } };
+          }
+          const qualifier = speed[3];
+          const kind = parsedLiteral(
             issueContext,
             SPEED_TYPES,
-            kind.toLowerCase(),
-            "speeds.gmChoice",
-          ),
-          feet: { kind: "literal" as const, value: feet },
-        }));
-        const [first, second, ...rest] = alternatives;
-        if (first === undefined || second === undefined) {
-          return missingEvidence(
-            issueContext,
-            "speeds.gmChoice",
-            `${contextLabel} GM Speed choice requires two alternatives`,
-            {
-              kind: "walk" as const,
-              feet: { kind: "literal" as const, value: feet },
-            },
+            (speed[1] ?? "walk").toLowerCase(),
+            `${field}.kind`,
           );
-        }
-        return decodeProjectionValue(
-          issueContext,
-          StandaloneStatBlockSpeedEntrySchema,
-          {
-            kind: "gm_choice",
-            alternatives: [first, second, ...rest],
-          },
-          "speeds.gmChoice",
-          { kind: "walk", feet: { kind: "literal", value: 1 } },
-        );
-      }
-      const speed = requireMatch(
-        issueContext,
-        part,
-        /^(?:(Burrow|Climb|Fly|Swim) )?(\d+) ft\.(?: \((hover|[A-Za-z]+(?: or [A-Za-z]+)* form only)\))?$/,
-        "speeds",
-      );
-      const qualifier = speed[3];
-      const kind = parsedLiteral(
-        issueContext,
-        SPEED_TYPES,
-        (speed[1] ?? "walk").toLowerCase(),
-        "speeds.kind",
-      );
-      const availability =
-        qualifier === undefined || qualifier === "hover"
-          ? {}
-          : {
-              availability: {
-                kind: "forms_only" as const,
-                forms: sortedNonEmptyStrings(
-                  issueContext,
-                  qualifier
-                    .replace(/ form only$/, "")
-                    .split(" or ")
-                    .map((form) => form.toLowerCase()),
-                  "speeds.forms",
-                  "base",
-                ),
+          const availability =
+            qualifier === undefined || qualifier === "hover"
+              ? {}
+              : {
+                  availability: {
+                    kind: "forms_only" as const,
+                    forms: sortedNonEmptyStrings(
+                      issueContext,
+                      qualifier
+                        .replace(/ form only$/, "")
+                        .split(" or ")
+                        .map((form) => form.toLowerCase()),
+                      `${field}.forms`,
+                      "base",
+                    ),
+                  },
+                };
+          const decodeNonFly = () =>
+            decodeProjectionValue(
+              issueContext,
+              StandaloneStatBlockSpeedEntrySchema,
+              {
+                kind,
+                feet: { kind: "literal", value: Number(speed[2]) },
+                ...availability,
               },
-            };
-      const decodeNonFly = () =>
-        decodeProjectionValue(
-          issueContext,
-          StandaloneStatBlockSpeedEntrySchema,
-          {
-            kind,
-            feet: { kind: "literal", value: Number(speed[2]) },
-            ...availability,
-          },
-          "speeds",
-          { kind: "walk", feet: { kind: "literal", value: 1 } },
-        );
-      return Match.value(kind).pipe(
-        Match.when("fly", () =>
-          decodeProjectionValue(
-            issueContext,
-            StandaloneStatBlockSpeedEntrySchema,
-            {
-              kind,
-              feet: { kind: "literal", value: Number(speed[2]) },
-              ...(qualifier === "hover" ? { hover: true as const } : {}),
-              ...availability,
-            },
-            "speeds",
-            { kind: "fly", feet: { kind: "literal", value: 1 } },
-          ),
-        ),
-        Match.when("walk", decodeNonFly),
-        Match.when("burrow", decodeNonFly),
-        Match.when("climb", decodeNonFly),
-        Match.when("swim", decodeNonFly),
-        Match.exhaustive,
+              field,
+              { kind: "walk", feet: { kind: "literal", value: 1 } },
+            );
+          return Match.value(kind).pipe(
+            Match.when("fly", () =>
+              decodeProjectionValue(
+                issueContext,
+                StandaloneStatBlockSpeedEntrySchema,
+                {
+                  kind,
+                  feet: { kind: "literal", value: Number(speed[2]) },
+                  ...(qualifier === "hover" ? { hover: true as const } : {}),
+                  ...availability,
+                },
+                field,
+                { kind: "fly", feet: { kind: "literal", value: 1 } },
+              ),
+            ),
+            Match.when("walk", decodeNonFly),
+            Match.when("burrow", decodeNonFly),
+            Match.when("climb", decodeNonFly),
+            Match.when("swim", decodeNonFly),
+            Match.exhaustive,
+          );
+        },
       );
+      return projected === undefined ? [] : [projected];
     });
   const [first, ...rest] = speeds;
   if (first === undefined) {
@@ -1461,22 +1483,27 @@ const parseSavingThrowModifiers = (
       .replace("**Saves**", "")
       .trim()
       .split(", ")
-      .map((part) => {
-        const modifier = requireMatch(
-          issueContext,
-          part,
-          /^(STR|DEX|CON|INT|WIS|CHA) ([+−-]?\d+)(?: \([^)]*\))?$/,
-          "savingThrowModifiers",
+      .flatMap((part, index) => {
+        const field = `savingThrowModifiers.${index}`;
+        const modifier = assess(issueContext, () =>
+          requireMatch(
+            issueContext,
+            part,
+            /^(STR|DEX|CON|INT|WIS|CHA) ([+−-]?\d+)(?: \([^)]*\))?$/,
+            field,
+          ),
         );
-        return {
+        if (modifier === undefined) return [];
+        const projected = assess(issueContext, () => ({
           ability: parsedLiteral(
             issueContext,
             ABILITY_NAMES,
             (modifier[1] ?? "").toLowerCase(),
-            "savingThrowModifiers.ability",
+            `${field}.ability`,
           ),
           modifier: signedNumber(modifier[2] ?? ""),
-        };
+        }));
+        return projected === undefined ? [] : [projected];
       }),
     ({ ability }) => ability,
   );
@@ -1496,22 +1523,22 @@ const parseNamedModifiers = (
       .replace(`**${label}**`, "")
       .trim()
       .split(", ")
-      .map((part) => {
-        const modifier = requireMatch(
-          issueContext,
-          part,
-          /^(.+?) ([+−-]?\d+)$/,
-          "skillModifiers",
+      .flatMap((part, index) => {
+        const field = `skillModifiers.${index}`;
+        const modifier = assess(issueContext, () =>
+          requireMatch(issueContext, part, /^(.+?) ([+−-]?\d+)$/, field),
         );
-        return {
+        if (modifier === undefined) return [];
+        const projected = assess(issueContext, () => ({
           skill: parsedLiteral(
             issueContext,
             SKILLS,
             normalizedIdentifier(modifier[1] ?? ""),
-            "skillModifiers.skill",
+            `${field}.skill`,
           ),
           modifier: signedNumber(modifier[2] ?? ""),
-        };
+        }));
+        return projected === undefined ? [] : [projected];
       }),
     ({ skill }) => skill,
   );
@@ -1534,12 +1561,12 @@ const parseVulnerabilities = (
           issueContext,
           value
             .split(", ")
-            .map((item) =>
+            .map((item, index) =>
               parsedLiteral(
                 issueContext,
                 DAMAGE_TYPES,
                 item.toLowerCase(),
-                "vulnerabilities.damageType",
+                `vulnerabilities.damageTypes.${index}`,
               ),
             ),
           "vulnerabilities.damageTypes",
@@ -1585,12 +1612,12 @@ const parseResistances = (
           "resistances.options",
         )[1]
           ?.split(", ")
-          .map((damageType) =>
+          .map((damageType, index) =>
             parsedLiteral(
               issueContext,
               DAMAGE_TYPES,
               damageType.replace(/^or /, "").toLowerCase(),
-              "resistances.damageType",
+              `resistances.options.${index}`,
             ),
           ) ?? []);
   return chosen === null
@@ -1600,12 +1627,12 @@ const parseResistances = (
           issueContext,
           value
             .split(", ")
-            .map((damageType) =>
+            .map((damageType, index) =>
               parsedLiteral(
                 issueContext,
                 DAMAGE_TYPES,
                 damageType.toLowerCase(),
-                "resistances.damageType",
+                `resistances.damageTypes.${index}`,
               ),
             ),
           "resistances.damageTypes",
@@ -1643,12 +1670,12 @@ const parseImmunities = (
       : sortedStrings(
           value
             .split(", ")
-            .map((item) =>
+            .map((item, index) =>
               parsedLiteral(
                 issueContext,
                 DAMAGE_TYPES,
                 item.toLowerCase(),
-                "immunities.damageType",
+                `immunities.damageTypes.${index}`,
               ),
             ),
         );
@@ -1658,7 +1685,10 @@ const parseImmunities = (
       readonly condition: Condition;
       readonly qualifier: string;
     }[] = [];
-    for (const item of value === "" ? [] : value.split(", ")) {
+    for (const [index, item] of (value === ""
+      ? []
+      : value.split(", ")
+    ).entries()) {
       const qualified = item.match(/^([A-Za-z]+) \((.+)\)$/);
       if (qualified === null) {
         conditions.push(
@@ -1666,7 +1696,7 @@ const parseImmunities = (
             issueContext,
             CONDITIONS,
             item.toLowerCase(),
-            "immunities.condition",
+            `immunities.conditions.${index}`,
           ),
         );
       } else {
@@ -1675,7 +1705,7 @@ const parseImmunities = (
             issueContext,
             CONDITIONS,
             (qualified[1] ?? "").toLowerCase(),
-            "immunities.condition",
+            `immunities.qualifiedConditions.${index}.condition`,
           ),
           qualifier: qualified[2] ?? "",
         });
@@ -1735,54 +1765,66 @@ const parseSenses = (
     return { senses: [], passivePerception: 1 };
   }
   const line = senseLine.replace("**Senses**", "").trim();
-  const passive = requireMatch(
-    issueContext,
-    line,
-    /Passive Perception (\d+)/,
-    "passivePerception",
+  const passive = assess(issueContext, () =>
+    requireMatch(
+      issueContext,
+      line,
+      /Passive Perception (\d+)/,
+      "passivePerception",
+    ),
   );
   const sensesText = line.replace(/;? ?Passive Perception \d+/, "");
   const senses =
     sensesText === ""
       ? []
-      : sensesText.split(", ").map((part): StandaloneCreatureSense => {
-          const sense = requireMatch(
-            issueContext,
-            part,
-            /^(Blindsight|Darkvision|Tremorsense|Truesight) (\d+) ft\.(?: \((.+)\))?$/,
-            "senses",
+      : sensesText.split(", ").flatMap((part, index) => {
+          const field = `senses.${index}`;
+          const sense = assess(issueContext, () =>
+            requireMatch(
+              issueContext,
+              part,
+              /^(Blindsight|Darkvision|Tremorsense|Truesight) (\d+) ft\.(?: \((.+)\))?$/,
+              field,
+            ),
           );
-          const kind = parsedLiteral(
-            issueContext,
-            ["darkvision", "blindsight", "tremorsense", "truesight"] as const,
-            (sense[1] ?? "").toLowerCase(),
-            "senses.kind",
+          if (sense === undefined) return [];
+          const kind = assess(issueContext, () =>
+            parsedLiteral(
+              issueContext,
+              ["darkvision", "blindsight", "tremorsense", "truesight"] as const,
+              (sense[1] ?? "").toLowerCase(),
+              `${field}.kind`,
+            ),
           );
+          if (kind === undefined) return [];
           const qualifier = sense[3];
           if (qualifier !== undefined) {
             if (
               kind !== "darkvision" ||
               qualifier !== "unimpeded by magical Darkness"
             ) {
-              return unsupportedEvidence(
+              unsupportedEvidence(
                 issueContext,
-                "senses.qualifier",
+                `${field}.qualifier`,
                 `${kind}: ${qualifier}`,
                 "darkvision: unimpeded by magical Darkness",
-                { kind, rangeFeet: Number(sense[2]) },
+                undefined,
               );
+              return [];
             }
-            return {
-              kind,
-              rangeFeet: Number(sense[2]),
-              qualifier: "unimpeded_by_magical_darkness",
-            };
+            return [
+              {
+                kind,
+                rangeFeet: Number(sense[2]),
+                qualifier: "unimpeded_by_magical_darkness" as const,
+              },
+            ];
           }
-          return { kind, rangeFeet: Number(sense[2]) };
+          return [{ kind, rangeFeet: Number(sense[2]) }];
         });
   return {
     senses: sortedAbsentOrNonEmpty(senses, ({ kind }) => kind),
-    passivePerception: Number(passive[1]),
+    passivePerception: Number(passive?.[1]),
   };
 };
 
@@ -1969,9 +2011,13 @@ const parseCommunication = (
   issueContext: ProjectionIssueContext,
   lines: readonly string[],
   contextLabel: string,
-): StatBlockCommunication =>
-  Schema.decodeUnknownEither(StatBlockCommunicationSchema)(
+): StatBlockCommunication => {
+  const candidate = assess(issueContext, () =>
     parseCommunicationCandidate(issueContext, lines, contextLabel),
+  );
+  if (candidate === undefined) return { kind: "none" };
+  return Schema.decodeUnknownEither(StatBlockCommunicationSchema)(
+    candidate,
   ).pipe(
     Either.match({
       onLeft: (error) =>
@@ -1985,6 +2031,7 @@ const parseCommunication = (
       onRight: (communication) => communication,
     }),
   );
+};
 
 const parseRawGeneralFacts = (
   issueContext: ProjectionIssueContext,
@@ -1994,31 +2041,39 @@ const parseRawGeneralFacts = (
   const metadata = assess(issueContext, () =>
     parseMetadata(issueContext, lines, name),
   );
-  const ac = requireMatch(
+  const ac = requireLineMatch(
     issueContext,
-    requireLine(issueContext, lines, "**AC**", "ac"),
+    lines,
+    "**AC**",
     /\*\*AC\*\* (\d+)(?: \(([^)]+)\))?/,
     "ac",
   );
-  const hp = requireMatch(
+  const hp = requireLineMatch(
     issueContext,
-    requireLine(issueContext, lines, "**HP**", "hp"),
+    lines,
+    "**HP**",
     /\*\*HP\*\* (\d+)/,
     "hp",
   );
   const initiativeLine = lines.find((line) => line.includes("**Initiative**"));
-  const initiativeEvidence =
-    initiativeLine ??
-    missingEvidence(issueContext, "initiative", `${name} Initiative`, "");
-  const initiative = requireMatch(
+  const initiative =
+    initiativeLine === undefined
+      ? missingEvidence(
+          issueContext,
+          "initiative",
+          `${name} Initiative`,
+          [] as const,
+        )
+      : requireMatch(
+          issueContext,
+          initiativeLine,
+          /\*\*Initiative\*\* ([+−-]?\d+) \((\d+)\)/,
+          "initiative",
+        );
+  const challengeRatingMatch = requireLineMatch(
     issueContext,
-    initiativeEvidence,
-    /\*\*Initiative\*\* ([+−-]?\d+) \((\d+)\)/,
-    "initiative",
-  );
-  const challengeRatingMatch = requireMatch(
-    issueContext,
-    requireLine(issueContext, lines, "**CR**", "challengeRating"),
+    lines,
+    "**CR**",
     /\*\*CR\*\* (\d+)(?:\/(\d+))?/,
     "challengeRating",
   );
@@ -2385,8 +2440,12 @@ const parseSimpleAttack = (
     ),
     (damage) => damage[0],
   );
-  const damages = damageTexts.map((damage) =>
-    parseDamage(issueContext, damage, `procedures.${entry.name}.onHit`),
+  const damages = damageTexts.map((damage, index) =>
+    parseDamage(
+      issueContext,
+      damage,
+      `procedures.${entry.name}.onHit.${index}`,
+    ),
   );
   if (damages.some((damage) => damage === undefined)) return undefined;
   const parsedDamages = damages.filter(
@@ -3258,6 +3317,7 @@ type AttackConditionalDamage = Extract<
 const projectDamageFields = (
   issueContext: ProjectionIssueContext,
   damage: AttackDamage | AttackConditionalDamage,
+  field: string,
 ): Omit<DamageProjection, "kind"> => {
   const fixedAmount = Match.value(damage.amount).pipe(
     Match.when({ kind: "fixed" }, (amount) => amount),
@@ -3268,7 +3328,7 @@ const projectDamageFields = (
   if (staticDamage === undefined) {
     return missingEvidence(
       issueContext,
-      "procedures.damage.static",
+      `${field}.static`,
       `authored ${damage.damageType} static damage`,
       { damageType: damage.damageType, amount: { kind: "static", static: 1 } },
     );
@@ -3301,22 +3361,24 @@ const projectDamageFields = (
 const projectDamage = (
   issueContext: ProjectionIssueContext,
   damage: AttackDamage,
+  field: string,
 ): DamageProjection => ({
   kind: "damage",
-  ...projectDamageFields(issueContext, damage),
+  ...projectDamageFields(issueContext, damage, field),
 });
 
 const projectAttackEffect = (
   issueContext: ProjectionIssueContext,
   effect: AttackEffect,
+  field: string,
 ): AttackEffectProjection | undefined => {
   return Match.value(effect).pipe(
     Match.when({ kind: "damage" }, (damage) =>
-      projectDamage(issueContext, damage),
+      projectDamage(issueContext, damage, field),
     ),
     Match.when({ kind: "conditional_bonus_damage" }, (conditional) => ({
       kind: "conditional_bonus_damage" as const,
-      ...projectDamageFields(issueContext, conditional),
+      ...projectDamageFields(issueContext, conditional, field),
       when: Match.value(conditional.when).pipe(
         Match.when(
           { kind: "attack_roll_had_advantage" },
@@ -3325,7 +3387,7 @@ const projectAttackEffect = (
         Match.when({ kind: "target_creature_type" }, () => {
           return unsupportedEvidence(
             issueContext,
-            "procedures.attackEffect.when",
+            `${field}.when`,
             "target_creature_type",
             "attack_roll_had_advantage",
             "attack_roll_had_advantage" as const,
@@ -3360,7 +3422,7 @@ const projectAttackEffect = (
     Match.when({ kind: "apply_condition" }, () => {
       return unsupportedEvidence(
         issueContext,
-        "procedures.attackEffect",
+        field,
         "apply_condition without expiration",
         "apply_condition with supported expiration",
         undefined,
@@ -3525,9 +3587,13 @@ const projectExecutableProcedure = (
       })();
       if (attackAbility === undefined) return undefined;
       const effectIssueCount = issueContext.issues.length;
-      const projectedEffects = attack.onHit.flatMap((effect) => {
+      const projectedEffects = attack.onHit.flatMap((effect, index) => {
         const projected = assess(issueContext, () =>
-          projectAttackEffect(issueContext, effect),
+          projectAttackEffect(
+            issueContext,
+            effect,
+            `procedures.${attack.name}.onHit.${index}`,
+          ),
         );
         return projected === undefined ? [] : [projected];
       });
@@ -3584,7 +3650,7 @@ const projectExecutableProcedure = (
         );
       const onFail = Match.value(save.onFail).pipe(
         Match.when({ kind: "damage" }, (damage) =>
-          projectDamage(issueContext, damage),
+          projectDamage(issueContext, damage, `procedures.${save.name}.onFail`),
         ),
         Match.when(
           { kind: "conditional_bonus_damage" },
