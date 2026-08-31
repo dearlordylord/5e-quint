@@ -24,7 +24,7 @@ type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
 export type CounterspellTriggerFact = Extract<
   Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >
 
 type CounterspellReactionChoice = Extract<BattleInterruptProcedureChoice, { readonly kind: "nestedProcedure" }> & {
@@ -103,7 +103,7 @@ function hasCounterspellSpellPresentation(
   if (presentation?.kind !== "spell") return false
   return (
     presentation.invocation.tag === "spellSlot" &&
-    presentation.invocation.procedure === "counterspell" &&
+    presentation.invocation.procedure === "spellCastInterruptionReaction" &&
     presentation.invocation.spellId === input.spellId &&
     Number(presentation.invocation.slotLevel) === input.slotLevel
   )
@@ -142,7 +142,7 @@ export function counterspellTriggerFact(input: {
   readonly rangeFeet: number
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: input.sourceProcedureRef,
@@ -158,7 +158,7 @@ export function requireCounterspellProcedureRef(
 ): CounterspellTriggerFact["sourceProcedureRef"] {
   const source = context.characters.get(reactorId)?.spellPresentationSources.find(
     (candidate) =>
-      candidate.invocation.procedure === "counterspell" &&
+      candidate.invocation.procedure === "spellCastInterruptionReaction" &&
       candidate.invocation.spell.id === spellId &&
       Match.value(candidate.invocation.resource).pipe(
         Match.when({ tag: "spellSlot" }, ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel),
@@ -216,7 +216,7 @@ export function fireballSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: input.originAnchorId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: [
@@ -250,7 +250,7 @@ export function shatterSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "shatterArea",
+        kind: "pointOriginSphereObjectDamageArea",
         originAnchorId: input.originAnchorId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         nonmagicalUnattendedObjectDamageFacts: input.nonmagicalUnattendedObjectDamageFacts

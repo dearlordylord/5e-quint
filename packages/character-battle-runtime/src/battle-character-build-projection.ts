@@ -1621,15 +1621,32 @@ function spellbookRitualSpellAccess(input: {
     ...input,
     build: ritualProjectionBuild,
   });
-  return Result.isFailure(accesses)
-    ? battleCreatureInitIssue(accesses.failure.message)
-    : Result.succeed(
-        accesses.success.map((access) => ({
-          tag: "spellbookRitual",
-          spell: access.spell,
-          featureUnitId: access.featureUnitId,
-        })),
-      );
+  if (Result.isFailure(accesses)) {
+    return battleCreatureInitIssue(accesses.failure.message);
+  }
+  const spells = spellRecordsForIds(
+    input.unitLibrary,
+    accesses.success.map((access) => access.spell.unitId),
+  );
+  if (Result.isFailure(spells)) return Result.fail(spells.failure);
+  return Result.succeed(
+    accesses.success.map((access) => ({
+      tag: "spellbookRitual",
+      spell: spellRecordForValidatedId(spells.success, access.spell.unitId),
+      featureUnitId: access.featureUnitId,
+    })),
+  );
+}
+
+function spellRecordForValidatedId(
+  spells: readonly SpellRecord[],
+  unitId: UnitRecord["id"],
+): SpellRecord {
+  const spell = spells.find((candidate) => candidate.id === unitId);
+  if (spell === undefined) {
+    throw new Error(`Validated spell record missing for ${unitId}.`);
+  }
+  return spell;
 }
 
 function bookOfShadowsSpellAccess(input: {

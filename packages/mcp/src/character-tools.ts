@@ -347,7 +347,7 @@ function characterSessionRitualAccessForOutput(
   return {
     tag: access.tag,
     spell: {
-      id: access.spell.id,
+      id: access.spell.unitId,
       mechanics: { level: access.spell.mechanics.level },
     },
     spellcastingSourceUnitId: access.spellcastingSourceUnitId,

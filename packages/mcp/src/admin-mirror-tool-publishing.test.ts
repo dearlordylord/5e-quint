@@ -1,6 +1,5 @@
 import { Hp } from "@dnd/shared/types";
 import { Effect } from "effect";
-import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import { enabledAdminMirrorPublication } from "./admin-mirror.ts";

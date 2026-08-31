@@ -481,7 +481,6 @@ function emptyEvaluationServices(): OracleEvaluationServices {
     statBlockCatalog: {
       getStatBlock: () => Option.none(),
       listStatBlocks: () => [],
-      requireStatBlock: impossibleLookup,
     },
   };
 }

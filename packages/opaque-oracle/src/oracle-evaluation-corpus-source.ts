@@ -15,10 +15,12 @@ import {
   type BattleSubject,
   type CombatantId,
   type InitiativeScore,
+  type StatBlockAttackDamageSelection,
 } from "@dnd/battle-runtime";
 import { statBlockId, type StatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { Result, Option, Schema } from "effect";
+import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
 
 import {
   abilityScoreAssignment,
@@ -33,6 +35,7 @@ import {
   type CreationChoiceOptionId,
   type CreationFill,
   type CreationHole,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
 } from "@dnd/character-creation-runtime";
 
 import {
@@ -116,6 +119,11 @@ type BattleSourceFacts = {
 type StatBlockProcedureRef = Schema.Schema.Type<
   typeof BattleStatBlockProcedureExecutionRef
 >;
+
+type StatBlockAttackExecutionSelection = {
+  readonly procedureRef: StatBlockProcedureRef;
+  readonly statBlockDamageSelection: StatBlockAttackDamageSelection;
+};
 
 type BattleMovementFacts = {
   readonly session: BattleRuntimeSession;
@@ -514,10 +522,13 @@ export function startStatBlockBattle(
     : Result.succeed(started.success);
 }
 
-export function discoverStatBlockAttackProcedureRef(
+export function discoverStatBlockAttackExecutionSelection(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-): Result.Result<StatBlockProcedureRef, OracleEvaluationSourceIssue> {
+): Result.Result<
+  StatBlockAttackExecutionSelection,
+  OracleEvaluationSourceIssue
+> {
   const ended = endBattleRuntimeTurn({ session, actorId });
   if (ended.tag !== "resolved") {
     return Result.fail({
@@ -529,12 +540,12 @@ export function discoverStatBlockAttackProcedureRef(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      !("statBlockDamageNotation" in act.subject),
+      "statBlockDamageSelection" in act.subject,
   );
   if (
     attackAct?.subject.tag !== "action" ||
     attackAct.subject.action !== "attack" ||
-    "statBlockDamageNotation" in attackAct.subject
+    !("statBlockDamageSelection" in attackAct.subject)
   ) {
     return Result.fail({
       tag: "sourceConstructionFailure",
@@ -549,7 +560,10 @@ export function discoverStatBlockAttackProcedureRef(
         tag: "sourceConstructionFailure",
         message: "Source attack procedure reference was not canonical.",
       })
-    : Result.succeed(procedureRef.success);
+    : Result.succeed({
+        procedureRef: procedureRef.success,
+        statBlockDamageSelection: attackAct.subject.statBlockDamageSelection,
+      });
 }
 
 function battleSourceFacts(
@@ -586,12 +600,12 @@ function prepareBattleMovementFacts(
   const started = discoverBattleMovementStart(services);
   if (Result.isFailure(started)) return Result.fail(started.failure);
 
-  const procedureRef = discoverStatBlockAttackProcedureRef(
+  const attackSelection = discoverStatBlockAttackExecutionSelection(
     started.success.session,
     firstId,
   );
-  if (Result.isFailure(procedureRef)) {
-    return Result.fail(procedureRef.failure);
+  if (Result.isFailure(attackSelection)) {
+    return Result.fail(attackSelection.failure);
   }
 
   const movementWithoutOpportunityAttack: BattleFill = {
@@ -613,7 +627,7 @@ function prepareBattleMovementFacts(
         {
           reactorId: secondId,
           distanceFeet: movementFeet(5),
-          procedureRef: procedureRef.success,
+          ...attackSelection.success,
         },
       ],
     },
@@ -853,7 +867,9 @@ function acceptedFillForHole(
   }
 
   const { min, max } = choiceCardinalityBounds(hole.cardinality);
-  const optionIds = hole.options.map((option) => option.optionId);
+  const optionIds = battleExecutableChoiceOptions(hole, unitLibrary).map(
+    (option) => option.optionId,
+  );
   for (let size = Number(min); size <= Number(max); size += 1) {
     for (const selectedOptionIds of choiceCombinations(optionIds, size, 256)) {
       const fill: CreationFill = {
@@ -876,6 +892,36 @@ function acceptedFillForHole(
     tag: "sourceConstructionFailure",
     message: `Source has no accepted fill for ${hole.holeId}.`,
   });
+}
+
+function battleExecutableChoiceOptions(
+  hole: Extract<CreationHole, { readonly kind: "choice" }>,
+  unitLibrary: OracleEvaluationServices["unitLibrary"],
+): Extract<CreationHole, { readonly kind: "choice" }>["options"] {
+  if (
+    hole.source.tag !== "unitChoice" ||
+    hole.source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY
+  ) {
+    return hole.options;
+  }
+  const supported: (typeof hole.options)[number][] = [];
+  const unsupportedWeaponMasteries: (typeof hole.options)[number][] = [];
+  for (const option of hole.options) {
+    const unit =
+      option.unitRef === undefined
+        ? Option.none()
+        : unitLibrary.getUnit(option.unitRef.unitId);
+    if (
+      Option.isSome(unit) &&
+      unit.value.kind === "weapon" &&
+      Result.isFailure(resolveWeaponMasteryReference(unit.value, unitLibrary))
+    ) {
+      unsupportedWeaponMasteries.push(option);
+    } else {
+      supported.push(option);
+    }
+  }
+  return [...supported, ...unsupportedWeaponMasteries];
 }
 
 function choiceCombinations(

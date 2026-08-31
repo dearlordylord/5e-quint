@@ -4088,7 +4088,7 @@ describe("MCP server route", () => {
     createFinalizedFighterSheet(root, secondDraftId);
     const baseStatBlock = assertStatBlockForTest(
       root.statBlockCatalog,
-      statBlockId("stat_block_skeleton"),
+      statBlockId("stat_block_mage"),
     );
     const unsupportedStatBlock = {
       ...baseStatBlock,
@@ -4096,11 +4096,6 @@ describe("MCP server route", () => {
       name: "Synthetic MCP Runtime Owner Invalid Stat Block",
       statBlock: {
         ...baseStatBlock.statBlock,
-        displayName: "Synthetic MCP Runtime Owner Invalid Stat Block",
-        hp: {
-          kind: "caster_derived" as const,
-          source: "proficiency_bonus" as const,
-        },
       },
     } satisfies StatBlockRecord;
     const incompleteUnitLibrary = {
@@ -4163,7 +4158,7 @@ describe("MCP server route", () => {
             kind: "statBlockProjection",
             code: "STAT_BLOCK_BATTLE_INIT_INVALID",
             ownerPath: ["initialCombatants", 1],
-            statBlockId: unsupportedStatBlock.id,
+            combatantId: "invalid-stat-block",
           }),
           expect.objectContaining({
             kind: "characterSheetProjection",
@@ -5455,7 +5450,7 @@ describe("MCP server route", () => {
           readonly invocation?: { readonly spellId?: string };
         };
       }) =>
-        act.subject.tag === "spawnedCompanionTouchSpell" &&
+        act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
         act.presentation.kind === "spell" &&
         act.presentation.invocation?.spellId === "cure_wounds",
     );

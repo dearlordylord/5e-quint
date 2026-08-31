@@ -1,8 +1,11 @@
 import { armorClassBuild } from "../../character-sheet-runtime/src/test-support.test-support.ts";
 import {
   battleId,
+  battleSubjectPresentation,
   combatantId as makeCombatantId,
   characterId as makeCharacterId,
+  discoverBattleActs,
+  endBattleRuntimeTurn,
 } from "@dnd/battle-runtime";
 import { Hp } from "@dnd/shared/types";
 import { Result } from "effect";
@@ -178,18 +181,25 @@ function pendingInterruptTransaction() {
   if (movementHole?.kind !== "movement") {
     throw new Error("Expected the fixture's movement hole.");
   }
-  const goblinAttackProcedure = session.context.statBlocks
-    .get(goblinId)
-    ?.procedures.find((procedure) => procedure.kind === "attack");
-  if (goblinAttackProcedure === undefined) {
-    throw new Error("Expected the Goblin's admitted attack procedure.");
+  const ended = endBattleRuntimeTurn({ session, actorId: fighterId });
+  if (ended.tag !== "resolved") {
+    throw new Error(
+      "Expected the Fighter's turn to end in the test projection.",
+    );
   }
-  const goblinAttackSubject = {
-    tag: "action" as const,
-    actorId: goblinId,
-    action: "attack" as const,
-    procedureRef: goblinAttackProcedure.procedureRef,
-  };
+  const goblinSession = ended.session;
+  const discoveredActs = discoverBattleActs(goblinSession);
+  const goblinAttack = discoveredActs.find((act) => {
+    const presentation = battleSubjectPresentation(goblinSession, act.subject);
+    return (
+      act.subject.actorId === goblinId &&
+      presentation?.kind === "attack" &&
+      presentation.name === "Scimitar"
+    );
+  })?.subject;
+  if (goblinAttack?.tag !== "action" || goblinAttack.action !== "attack") {
+    throw new Error("Expected the Goblin's discovered Scimitar attack.");
+  }
   const pending = readToolPayload(
     handleToolCall(root, "fill_battle_hole", {
       subject: movement.subject,
@@ -199,7 +209,7 @@ function pendingInterruptTransaction() {
           {
             reactorId: goblinId,
             distanceFeet: movementFeet(5),
-            ...attackExecutionSelectionForSubjectForTest(goblinAttackSubject),
+            ...attackExecutionSelectionForSubjectForTest(goblinAttack),
           },
         ],
       }),

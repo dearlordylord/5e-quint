@@ -26,6 +26,7 @@ import {
   type BattlePendingTransaction,
   type BattleRuntimeSession,
   type BattleInitializationIssue,
+  type BattleInitializationLeafIssue,
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
@@ -797,11 +798,7 @@ function stripBattleStateInitIssue(
 }
 
 function stripBattleStateInitLeafIssue(
-  issue: Extract<
-    BattleInitializationIssue,
-    | { readonly tag: "battleStateInitIssue" }
-    | { readonly tag: "weaponLoadoutMismatch" }
-  >,
+  issue: BattleInitializationLeafIssue,
 ): OracleBattleStateInitLeafIssue {
   if (issue.tag === "weaponLoadoutMismatch") return issue;
   return { tag: "battleStateInitIssue" };

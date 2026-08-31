@@ -38,6 +38,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import {
   OracleBattleCheckpointSchema,
   OracleBattleContinuationSchema,
@@ -49,7 +50,7 @@ import {
 } from "./oracle-case-trace-schema.ts";
 import {
   completeCreationFillBatches as buildCompleteCreationFillBatches,
-  discoverStatBlockAttackProcedureRef,
+  discoverStatBlockAttackExecutionSelection,
   startStatBlockBattle,
   statBlockBattleFor,
   type OracleStatBlockBattlePlacement,
@@ -71,7 +72,9 @@ if (statBlockLibraryResult.tag !== "ok") {
   );
 }
 const statBlockCatalog = statBlockLibraryResult.catalog;
-const statBlockRecord = statBlockCatalog.getStatBlock("stat_block_skeleton");
+const statBlockRecord = statBlockCatalog.getStatBlock(
+  statBlockId("stat_block_skeleton"),
+);
 if (Option.isNone(statBlockRecord)) {
   throw new Error("SRD stat-block fixture must be available.");
 }
@@ -83,10 +86,9 @@ const projectionFailureStatBlockCatalog: StatBlockCatalog = {
           ...statBlockRecord.value,
           statBlock: {
             ...statBlockRecord.value.statBlock,
-            immunities: {
-              ...(statBlockRecord.value.statBlock.immunities ?? {}),
-              conditions: ["prone"] as const,
-            },
+            immunities: decodeCreatureImmunityDeclarationSync({
+              conditions: ["prone"],
+            }),
           },
         })
       : statBlockCatalog.getStatBlock(id),
@@ -833,7 +835,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             {
               reactorId: combatantId("oracle:skeleton-b"),
               distanceFeet: movementFeet(5),
-              procedureRef: statBlockAttackProcedureRef(),
+              ...statBlockAttackSelection(),
             },
           ],
         },
@@ -894,6 +896,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
             kind: "opportunityAttack",
             selection: {
               procedureRef: opportunityAttack.subject.procedureRef,
+              statBlockDamageSelection:
+                opportunityAttack.subject.statBlockDamageSelection,
             },
             fills: [],
           },
@@ -1293,7 +1297,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             {
               reactorId: distinctReactorId,
               distanceFeet: movementFeet(5),
-              procedureRef: statBlockAttackProcedureRef(distinctReactorId),
+              ...statBlockAttackSelection(distinctReactorId),
             },
           ],
         },
@@ -2249,7 +2253,7 @@ function caseWithMovementCost(
   };
 }
 
-function statBlockAttackProcedureRef(
+function statBlockAttackSelection(
   reactorCombatantId = combatantId("oracle:skeleton-b"),
 ) {
   const firstCombatantId = combatantId("oracle:skeleton-a");
@@ -2277,14 +2281,14 @@ function statBlockAttackProcedureRef(
       `test stat-block battle failed: ${started.failure.message}`,
     );
   }
-  const procedureRef = discoverStatBlockAttackProcedureRef(
+  const selection = discoverStatBlockAttackExecutionSelection(
     started.success,
     firstCombatantId,
   );
-  if (Result.isFailure(procedureRef)) {
+  if (Result.isFailure(selection)) {
     throw new Error(
-      `test stat-block attack failed: ${procedureRef.failure.message}`,
+      `test stat-block attack failed: ${selection.failure.message}`,
     );
   }
-  return procedureRef.success;
+  return selection.success;
 }
