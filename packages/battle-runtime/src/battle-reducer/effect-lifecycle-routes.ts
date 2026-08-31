@@ -553,20 +553,7 @@ export function repeatSaveConditionEffectRouteForResolution(
     return undefined;
   }
   if (input.fills.length === 0) {
-    if (result.tag !== "needsHoles") {
-      return undefined;
-    }
-    const holes = repeatSaveConditionEffectRouteHoles(result.holes);
-    if (holes.length === 0) {
-      return undefined;
-    }
-    return [
-      discoverBattleActsRoute(
-        "repeatSaveConditionEffect",
-        holes,
-        "battleTurnBoundary",
-      ),
-    ];
+    return repeatSaveConditionEffectDiscoveryRoutes(result);
   }
   if (
     result.tag !== "resolved" ||
@@ -611,6 +598,22 @@ export function repeatSaveConditionEffectRouteForResolution(
         ]
       : []),
   ]);
+}
+
+function repeatSaveConditionEffectDiscoveryRoutes(
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag !== "needsHoles") return undefined;
+  const holes = repeatSaveConditionEffectRouteHoles(result.holes);
+  return holes.length === 0
+    ? undefined
+    : [
+        discoverBattleActsRoute(
+          "repeatSaveConditionEffect",
+          holes,
+          "battleTurnBoundary",
+        ),
+      ];
 }
 
 function fillsIncludeSavingThrowOutcome(fills: readonly BattleFill[]): boolean {
