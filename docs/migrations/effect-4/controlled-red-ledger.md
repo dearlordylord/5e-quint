@@ -1216,24 +1216,28 @@ their exact shipped entrypoints.
 The Effect 3 behavioral oracle remains immutable at 12,997,527 bytes and
 SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-The reconciled finite Effect 4 certificate records every one of the 7,261 changed JSON
+The reconciled finite Effect 4 certificate records every one of the 8,811 changed JSON
 Pointer identities with its classification, operation, path, and both side
 digests or missing tags. Its verifier rejects changed baseline or candidate
 bytes, unreadable artifacts, duplicate, unclassified, multiply classified, or
 stale exact identities, and stale aggregate counts or hashes.
 
-At reconciliation tip `505263eb6`, the candidate is 52,137,007 bytes with SHA-256
-`bb25eae9123b6b85ce80cc49a81ec0ef4b54cad00cc223525a20b04d09953e6c`;
+At the current master-reconciliation checkpoint, the candidate is 50,667,014
+bytes with SHA-256
+`d841b7e377277b37a1774649f4e69c35323aab267d9c5616bb7db4311f97292f`;
 the identity-set SHA-256 is
-`1fa5ab3d2e37822d76958bdd2385172b71a3a4cbee2c9482c46edf41c6d06e3c`,
+`2b90424e06d2a6f63225c4bdfe9cc3a5aa160b609f6f0cde715a4fe258549e7a`,
 and the certificate artifact SHA-256 is
-`ff8304287d391f14f1634e06ffae8125007fb488913c4474da4f0f98190afbca`.
+`483aab64f2bb2b94815ad4486b69ac2b66c160244f8aaed6613091c8d3f5eeee`.
+The restored canonical Surface corpus expands the candidate authored-artifact
+authority from 1,215 to 1,866 members; all 651 additions and 122 changed
+artifact leaves remain classified at the Surface authored boundary.
 The authored-identity boundary also passes after removing the stale generic
 `runtimeCommandSubject` exemption: 4,735 literals, 795 checked source files,
 552 exercised exact exemptions, and 1,214 reviewed sites / 1,325 occurrences.
 
 The subsequent master-reconciliation authored-identity audit passes with
-7,328 literals from 283 decoded Surface spell records, 817 checked source
+7,328 literals from 283 decoded Surface spell records, 818 checked source
 files, 762 excluded fixture or artifact files, and the unchanged 9 narrowly
 allowlisted boundary files. It exercises 620 exact exemptions and authenticates
 1,294 reviewed sites / 1,405 occurrences with SHA-256
