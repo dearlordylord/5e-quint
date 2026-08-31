@@ -102,7 +102,7 @@ describe("P–S repeated source occurrences", () => {
       /malformed-evidence.*abilityScores\.matrix\.0.*twelve nonempty Stone Giant cells/,
     );
     expect(() => projectMutation(unknownAbility)).toThrow(
-      /unsupported-evidence.*abilityScores\.label.*POWER.*str, dex, con, int, wis, cha/,
+      /unsupported-evidence.*abilityScores\.matrix\.1\.label.*POWER.*str, dex, con, int, wis, cha/,
     );
   });
 });

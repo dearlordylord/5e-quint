@@ -1180,37 +1180,39 @@ const parseAbilityMatrixNumber = (
 const parseAbilityMatrixGroup = (
   issueContext: ProjectionIssueContext,
   cells: readonly [string, string, string, string],
+  factIndex: number,
 ): AbilityMatrixFact => {
   const [rawAbility, rawScore, rawModifier, rawSaveModifier] = cells;
-  const ability = rawAbility.replaceAll("*", "").toLowerCase();
-  if (!isAbility(ability)) {
-    return unsupportedEvidence(
-      issueContext,
-      "abilityScores.label",
-      rawAbility,
-      ABILITY_NAMES.join(", "),
-      { ability: "str", score: 0, modifier: 0, saveModifier: 0 },
-    );
-  }
+  const field = `abilityScores.matrix.${factIndex}`;
+  const abilityCandidate = rawAbility.replaceAll("*", "").toLowerCase();
+  const ability = isAbility(abilityCandidate)
+    ? abilityCandidate
+    : unsupportedEvidence(
+        issueContext,
+        `${field}.label`,
+        rawAbility,
+        ABILITY_NAMES.join(", "),
+        "str" as const,
+      );
   return {
     ability,
     score: parseAbilityMatrixNumber(
       issueContext,
       rawScore,
       /^\d+$/,
-      "abilityScores.score",
+      `${field}.score`,
     ),
     modifier: parseAbilityMatrixNumber(
       issueContext,
       rawModifier,
       /^[+−-]?\d+$/,
-      "abilityScores.modifier",
+      `${field}.modifier`,
     ),
     saveModifier: parseAbilityMatrixNumber(
       issueContext,
       rawSaveModifier,
       /^[+−-]?\d+$/,
-      "abilityScores.saveModifier",
+      `${field}.saveModifier`,
     ),
   };
 };
@@ -1306,24 +1308,21 @@ const parseAbilityMatrix = (
       );
     }
     return [
-      parseAbilityMatrixGroup(issueContext, [
-        ability1,
-        score1,
-        modifier1,
-        saveModifier1,
-      ]),
-      parseAbilityMatrixGroup(issueContext, [
-        ability2,
-        score2,
-        modifier2,
-        saveModifier2,
-      ]),
-      parseAbilityMatrixGroup(issueContext, [
-        ability3,
-        score3,
-        modifier3,
-        saveModifier3,
-      ]),
+      parseAbilityMatrixGroup(
+        issueContext,
+        [ability1, score1, modifier1, saveModifier1],
+        rowIndex * 3,
+      ),
+      parseAbilityMatrixGroup(
+        issueContext,
+        [ability2, score2, modifier2, saveModifier2],
+        rowIndex * 3 + 1,
+      ),
+      parseAbilityMatrixGroup(
+        issueContext,
+        [ability3, score3, modifier3, saveModifier3],
+        rowIndex * 3 + 2,
+      ),
     ];
   });
   if (issueContext.issues.length > matrixIssueCount) return undefined;
@@ -1602,52 +1601,56 @@ const parseResistances = (
   if (line === undefined) return { kind: "none" };
   const value = line.replace("**Resistances**", "").trim();
   const chosen = value.match(/^Damage type chosen for .+$/);
-  const chosenOptions =
-    chosen === null
-      ? []
-      : (requireMatch(
+  if (chosen !== null) {
+    const optionList = assess(issueContext, () =>
+      requireMatch(
+        issueContext,
+        normalizedProse(lines.join(" ")),
+        /one of the following damage types [^:]*: ([A-Za-z, ]+)\./,
+        "resistances.options",
+      ),
+    );
+    if (optionList === undefined) {
+      return { kind: "choose_one_from", options: ["acid"] };
+    }
+    const chosenOptions = (optionList[1] ?? "")
+      .split(", ")
+      .map((damageType, index) =>
+        parsedLiteral(
           issueContext,
-          normalizedProse(lines.join(" ")),
-          /one of the following damage types [^:]*: ([A-Za-z, ]+)\./,
-          "resistances.options",
-        )[1]
-          ?.split(", ")
-          .map((damageType, index) =>
-            parsedLiteral(
-              issueContext,
-              DAMAGE_TYPES,
-              damageType.replace(/^or /, "").toLowerCase(),
-              `resistances.options.${index}`,
-            ),
-          ) ?? []);
-  return chosen === null
-    ? {
-        kind: "fixed",
-        damageTypes: sortedNonEmptyStrings(
-          issueContext,
-          value
-            .split(", ")
-            .map((damageType, index) =>
-              parsedLiteral(
-                issueContext,
-                DAMAGE_TYPES,
-                damageType.toLowerCase(),
-                `resistances.damageTypes.${index}`,
-              ),
-            ),
-          "resistances.damageTypes",
-          "acid",
+          DAMAGE_TYPES,
+          damageType.replace(/^or /, "").toLowerCase(),
+          `resistances.options.${index}`,
         ),
-      }
-    : {
-        kind: "choose_one_from",
-        options: sortedNonEmptyStrings(
-          issueContext,
-          chosenOptions,
-          "resistances.options",
-          "acid",
+      );
+    return {
+      kind: "choose_one_from",
+      options: sortedNonEmptyStrings(
+        issueContext,
+        chosenOptions,
+        "resistances.options",
+        "acid",
+      ),
+    };
+  }
+  return {
+    kind: "fixed",
+    damageTypes: sortedNonEmptyStrings(
+      issueContext,
+      value
+        .split(", ")
+        .map((damageType, index) =>
+          parsedLiteral(
+            issueContext,
+            DAMAGE_TYPES,
+            damageType.toLowerCase(),
+            `resistances.damageTypes.${index}`,
+          ),
         ),
-      };
+      "resistances.damageTypes",
+      "acid",
+    ),
+  };
 };
 
 const parseImmunities = (
@@ -1765,15 +1768,27 @@ const parseSenses = (
     return { senses: [], passivePerception: 1 };
   }
   const line = senseLine.replace("**Senses**", "").trim();
-  const passive = assess(issueContext, () =>
-    requireMatch(
-      issueContext,
-      line,
-      /Passive Perception (\d+)/,
-      "passivePerception",
-    ),
-  );
-  const sensesText = line.replace(/;? ?Passive Perception \d+/, "");
+  const passiveMarker = "Passive Perception";
+  const passiveStart = line.lastIndexOf(passiveMarker);
+  const sensesText = (passiveStart === -1 ? line : line.slice(0, passiveStart))
+    .replace(/;?\s*$/, "")
+    .trim();
+  const passive =
+    passiveStart === -1
+      ? missingEvidence(
+          issueContext,
+          "passivePerception",
+          "Passive Perception clause",
+          [] as const,
+        )
+      : assess(issueContext, () =>
+          requireMatch(
+            issueContext,
+            line.slice(passiveStart),
+            /^Passive Perception (\d+)$/,
+            "passivePerception",
+          ),
+        );
   const senses =
     sensesText === ""
       ? []
@@ -2070,24 +2085,29 @@ const parseRawGeneralFacts = (
           /\*\*Initiative\*\* ([+−-]?\d+) \((\d+)\)/,
           "initiative",
         );
-  const challengeRatingMatch = requireLineMatch(
-    issueContext,
-    lines,
-    "**CR**",
-    /\*\*CR\*\* (\d+)(?:\/(\d+))?/,
-    "challengeRating",
+  const challengeRatingMatch = assess(issueContext, () =>
+    requireLineMatch(
+      issueContext,
+      lines,
+      "**CR**",
+      /\*\*CR\*\* (\d+)(?:\/(\d+))?/,
+      "challengeRating",
+    ),
   );
-  const challengeRatingCandidate =
-    Number(challengeRatingMatch[1]) / Number(challengeRatingMatch[2] ?? 1);
-  const challengeRating = isChallengeRating(challengeRatingCandidate)
-    ? challengeRatingCandidate
-    : unsupportedEvidence(
-        issueContext,
-        "challengeRating",
-        String(challengeRatingCandidate),
-        "a canonical challenge rating",
-        0 as const,
-      );
+  const challengeRating = (() => {
+    if (challengeRatingMatch === undefined) return 0 as const;
+    const candidate =
+      Number(challengeRatingMatch[1]) / Number(challengeRatingMatch[2] ?? 1);
+    return isChallengeRating(candidate)
+      ? candidate
+      : unsupportedEvidence(
+          issueContext,
+          "challengeRating",
+          String(candidate),
+          "a canonical challenge rating",
+          0 as const,
+        );
+  })();
 
   const speeds = assess(issueContext, () =>
     parseSpeeds(issueContext, lines, name),
@@ -3640,11 +3660,14 @@ const projectExecutableProcedure = (
       );
     }),
     Match.when({ kind: "save" }, (save) => {
-      const unsupportedSimpleDamageSave = () =>
+      const unsupportedSimpleDamageSave = (
+        branch: "onFail" | "onSuccess",
+        effectKind: string,
+      ) =>
         unsupportedEvidence(
           issueContext,
-          `procedures.${save.name}.saveEffect`,
-          `${record.name}/${save.name}`,
+          `procedures.${save.name}.${branch}`,
+          effectKind,
           "a simple damage save",
           undefined,
         );
@@ -3652,29 +3675,33 @@ const projectExecutableProcedure = (
         Match.when({ kind: "damage" }, (damage) =>
           projectDamage(issueContext, damage, `procedures.${save.name}.onFail`),
         ),
-        Match.when(
-          { kind: "conditional_bonus_damage" },
-          unsupportedSimpleDamageSave,
+        Match.when({ kind: "conditional_bonus_damage" }, ({ kind }) =>
+          unsupportedSimpleDamageSave("onFail", kind),
         ),
         Match.when(
           { kind: "apply_condition_if_target_size_at_most" },
-          unsupportedSimpleDamageSave,
+          ({ kind }) => unsupportedSimpleDamageSave("onFail", kind),
         ),
-        Match.when({ kind: "apply_condition" }, unsupportedSimpleDamageSave),
+        Match.when({ kind: "apply_condition" }, ({ kind }) =>
+          unsupportedSimpleDamageSave("onFail", kind),
+        ),
         Match.exhaustive,
       );
       const onSuccess = Match.value(save.onSuccess).pipe(
         Match.when({ kind: "half_damage" }, () => "half_damage" as const),
-        Match.when({ kind: "damage" }, unsupportedSimpleDamageSave),
-        Match.when(
-          { kind: "conditional_bonus_damage" },
-          unsupportedSimpleDamageSave,
+        Match.when({ kind: "damage" }, ({ kind }) =>
+          unsupportedSimpleDamageSave("onSuccess", kind),
+        ),
+        Match.when({ kind: "conditional_bonus_damage" }, ({ kind }) =>
+          unsupportedSimpleDamageSave("onSuccess", kind),
         ),
         Match.when(
           { kind: "apply_condition_if_target_size_at_most" },
-          unsupportedSimpleDamageSave,
+          ({ kind }) => unsupportedSimpleDamageSave("onSuccess", kind),
         ),
-        Match.when({ kind: "apply_condition" }, unsupportedSimpleDamageSave),
+        Match.when({ kind: "apply_condition" }, ({ kind }) =>
+          unsupportedSimpleDamageSave("onSuccess", kind),
+        ),
         Match.exhaustive,
       );
       if (onFail === undefined || onSuccess === undefined) return undefined;

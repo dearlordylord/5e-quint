@@ -20,7 +20,10 @@ import {
   normalizeStatBlockIdentity,
   type NormalizedStatBlockIdentity,
 } from "./stat-block-identity.ts";
-import { projectRawStatBlock } from "./stat-block-raw-projection.ts";
+import {
+  projectAuthoredStatBlock,
+  projectRawStatBlock,
+} from "./stat-block-raw-projection.ts";
 import {
   projectSrdStatBlockScopedFidelity,
   reconcileSrdStatBlockScopedFidelity,
@@ -1497,6 +1500,274 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     if (result.tag === "failed" && result.failure.tag === "projection-issues") {
       expect(result.failure.issues).toHaveLength(1);
     }
+  });
+
+  test.each([
+    {
+      label: "missing",
+      replacement: "",
+      kind: "missing-required-evidence",
+      evidence: undefined,
+    },
+    {
+      label: "malformed",
+      replacement: "**CR** malformed",
+      kind: "malformed-evidence",
+      evidence: "**CR** malformed",
+    },
+  ] as const)(
+    "reports a $label Challenge Rating clause once without a canonical-value cascade",
+    ({ replacement, kind, evidence }) => {
+      const occurrence = corpusParity.discovery.occurrences.find(
+        ({ name }) => name === "Ape",
+      );
+      expect(occurrence).toBeDefined();
+      if (occurrence === undefined) return;
+      const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+      expect(canonicalSource).toBeDefined();
+      if (canonicalSource === undefined) return;
+      const mutatedSource = canonicalSource
+        .split(/\r?\n/)
+        .map((line, index) =>
+          index + 1 >= occurrence.anchor.lineStart &&
+          index + 1 <= occurrence.anchor.lineEnd &&
+          line.startsWith("**CR**")
+            ? replacement
+            : line,
+        )
+        .join("\n");
+
+      const result = projectRawStatBlock(
+        { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag).toBe("failed");
+      if (
+        result.tag !== "failed" ||
+        result.failure.tag !== "projection-issues"
+      ) {
+        return;
+      }
+      expect(
+        result.failure.issues.map(({ kind: issueKind, anchor, ...issue }) => ({
+          kind: issueKind,
+          field: anchor.field,
+          evidence: "evidence" in issue ? issue.evidence : undefined,
+        })),
+      ).toEqual([{ kind, field: "challengeRating", evidence }]);
+    },
+  );
+
+  test("reports a malformed Passive Perception clause once without treating it as a sense", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Ape",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.startsWith("**Senses**")
+          ? "**Senses** Passive Perception malformed"
+          : line,
+      )
+      .join("\n");
+
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result).toMatchObject({
+      tag: "failed",
+      failure: {
+        tag: "projection-issues",
+        issues: [
+          {
+            kind: "malformed-evidence",
+            anchor: {
+              kind: "raw",
+              sourcePath: occurrence.anchor.sourcePath,
+              heading: occurrence.anchor.heading,
+              lineStart: occurrence.anchor.lineStart,
+              lineEnd: occurrence.anchor.lineEnd,
+              field: "passivePerception",
+            },
+            evidence: "Passive Perception malformed",
+          },
+        ],
+      },
+    });
+    if (result.tag === "failed" && result.failure.tag === "projection-issues") {
+      expect(result.failure.issues).toHaveLength(1);
+    }
+  });
+
+  test("accumulates independent label and score failures within one ability-matrix fact", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name, anchor }) =>
+        name === "Stone Giant" && anchor.sourcePath.endsWith("Monsters-T-Z.md"),
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd
+          ? line.replace("| DEX | 15 |", "| POWER | nope |")
+          : line,
+      )
+      .join("\n");
+
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+        kind,
+        field: anchor.field,
+        evidence: "evidence" in issue ? issue.evidence : undefined,
+      })),
+    ).toEqual([
+      {
+        kind: "unsupported-evidence",
+        field: "abilityScores.matrix.1.label",
+        evidence: "POWER",
+      },
+      {
+        kind: "malformed-evidence",
+        field: "abilityScores.matrix.1.score",
+        evidence: "nope",
+      },
+    ]);
+  });
+
+  test("reports a missing resistance option list once without an empty-options cascade", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Half-Dragon",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.includes("one of the following damage types")
+          ? line.replace(
+              /one of the following damage types[^.]*\./,
+              "unknown damage type list.",
+            )
+          : line,
+      )
+      .join("\n");
+
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(result.failure.issues).toHaveLength(1);
+    expect(result.failure.issues[0]).toMatchObject({
+      kind: "malformed-evidence",
+      anchor: { field: "resistances.options" },
+    });
+  });
+
+  test("distinguishes independent unsupported authored save branches", () => {
+    const ankheg = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Ankheg",
+    );
+    expect(ankheg).toBeDefined();
+    if (ankheg === undefined) return;
+    const actions = ankheg.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const [firstAction, ...remainingActions] = actions;
+    const mutateAction = (
+      action: (typeof actions)[number],
+    ): (typeof actions)[number] => {
+      if (action.kind !== "executable") return action;
+      const procedure = action.procedure;
+      if (procedure.kind !== "save" || procedure.name !== "Acid Spray") {
+        return action;
+      }
+      const mutatedProcedure: typeof procedure = {
+        ...procedure,
+        onFail: {
+          kind: "conditional_bonus_damage",
+          when: { kind: "attack_roll_had_advantage" },
+          damageType: "acid",
+          amount: { kind: "fixed", static: 1 },
+        },
+        onSuccess: {
+          kind: "damage",
+          damageType: "acid",
+          amount: { kind: "fixed", static: 1 },
+        },
+      };
+      return {
+        ...action,
+        procedure: mutatedProcedure,
+      };
+    };
+    const mutated = {
+      ...ankheg,
+      statBlock: {
+        ...ankheg.statBlock,
+        actions: [
+          mutateAction(firstAction),
+          ...remainingActions.map(mutateAction),
+        ] as const,
+      },
+    };
+
+    const result = projectAuthoredStatBlock(mutated, equipmentSource);
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+        kind,
+        field: anchor.field,
+        evidence: "evidence" in issue ? issue.evidence : undefined,
+      })),
+    ).toEqual([
+      {
+        kind: "unsupported-evidence",
+        field: "procedures.Acid Spray.onFail",
+        evidence: "conditional_bonus_damage",
+      },
+      {
+        kind: "unsupported-evidence",
+        field: "procedures.Acid Spray.onSuccess",
+        evidence: "damage",
+      },
+    ]);
   });
 
   test("accumulates every malformed skill item in source order without dependent skill-name issues", () => {
