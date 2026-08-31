@@ -27,43 +27,40 @@ zero-diagnostic inventory; it remains a pending final gate.
 The immutable [Effect 3 behavioral oracle](./effect3-behavioral-oracle.json)
 remains 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-The integrated Effect 4 candidate is 52,152,897 bytes with SHA-256
-`06caf573f4a04809c8f8e4ec75e7ca8166aa70b3e050ffca5e76dcabe36dc2bb`.
+The integrated Effect 4 candidate is 50,737,132 bytes with SHA-256
+`c2ed219276ab4d707368727972223af30c2fa0e6b0df28f568a9def201c1ccfa`.
 
 The v2 [finite delta certificate](./effect4-oracle-delta-certificate.json)
-reviews exactly 7,246 recursive identities. Its overall identity SHA-256 is
-`f580748a45802d4f0d04f621a5fad558abe85021294654e3b2d41e4390ccdc8d`;
-the staged certificate is 4,656,210 bytes with SHA-256
-`63eade8b0bd7bfa304d7bff83bfade023d70cc9cd1f9435d271b9bc208eed502`.
+reviews exactly 8,946 recursive identities. Its overall identity SHA-256 is
+`72c2405c4ab059ab43fc4c28525e99805f4e600d81a8beb340d4d0f8a170eecb`;
+the staged certificate is 5,552,197 bytes with SHA-256
+`faf9ceb428b511c30637b0f210a58cf207a73751f5a3757db911b1a687a0521c`.
 
 | Reviewed reason               | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
-| MCP registration contract     |      2,260 |   691 |   1,504 |      65 |
-| MCP protocol entrypoints      |      2,738 |   998 |   1,584 |     156 |
-| MCP authenticated projection  |      2,081 |   769 |   1,192 |     120 |
+| MCP registration contract     |      2,275 |   695 |   1,502 |      78 |
+| MCP protocol entrypoints      |      3,565 | 1,060 |   1,582 |     923 |
+| MCP authenticated projection  |      2,094 |   761 |   1,190 |     143 |
 | Persisted session codecs      |         22 |     6 |      12 |       4 |
-| Raw Swarm runtime artifacts   |         57 |    43 |       0 |      14 |
+| Raw Swarm runtime artifacts   |         61 |    43 |       0 |      18 |
 | Surface publication authority |          4 |     0 |       0 |       4 |
-| Surface authored authority    |         84 |     0 |       0 |      84 |
+| Surface authored authority    |        925 |   651 |       0 |     274 |
 
-All 7,246 identities have exactly one typed reason. Relative to the preceding
-certificate, 7,244 exact identities are unchanged. Exactly two identities were
-replaced at the existing `scripts/raw-swarm/OPERATIONS.md` artifact's
-`byteLength` and `sha256` sites, and both retain the existing
-`raw-swarm-effect-runtime-artifacts` reason. The per-reason identity and
-operation counts in the table therefore remain unchanged.
+All 8,946 identities have exactly one typed reason. The refresh audit retained
+6,952 exact previously reviewed sites. Its structural reason classifier had
+zero unclassified current identities and zero disagreements with the reasons
+on all 7,246 identities in the preceding certificate. The new Surface authored
+identities are the expanded SRD Stat Block corpus and related authored records;
+the MCP identities are their registration, protocol, and authenticated output
+projections.
 
-Collection authorities are stable relative to the preceding certificate. The
-baseline-to-candidate Raw Swarm authority remains the one changed collection,
-from 76 to 119 artifacts. Array-authority counts are stable; the
-`positional-value-sequence-v1` site set retains 101,977 sites and has current
-SHA-256 `0c7bca197ab4752257da59eeef34a1532e647947497009925cd7ebbbdf56e0b7`.
-The strict decoder accepts the v2 artifact. Two independent self-test
-invocations passed all 15 tests. The final pinned current verification at
-approximately 2026-08-30T22:05Z completed with exit 0, retained the candidate
-byte count and SHA-256 above, and retained the same 7,246-identity SHA-256. It
-reported
-`Effect 4 finite oracle delta verified (7246 reviewed identities).`
+The baseline-to-candidate Surface authored collection now grows from 1,215 to
+1,866 artifacts, while the Raw Swarm collection remains 76 to 119 artifacts.
+The other collection memberships remain stable. The
+`positional-value-sequence-v1` authority now covers 98,014 sites with SHA-256
+`9db9a1ae963cccfcd6641574ba2118917ba803d872f81b1c94af5c7daaf12280`;
+the four other array authorities remain unchanged. The strict decoder and
+pinned verifier are rerun as part of the current Stat Block parity milestone.
 
 ## Clean-consumer distribution
 
