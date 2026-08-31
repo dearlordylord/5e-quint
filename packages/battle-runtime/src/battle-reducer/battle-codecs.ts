@@ -6790,12 +6790,10 @@ function characterProcedureBindingSourceIsValid(
   ) {
     return true;
   }
-  return (
-    procedure.source.kind === "intrinsic" ||
-    resources.some(
-      (resource) =>
-        resource.resourcePoolRef === procedure.source.resourcePoolRef,
-    )
+  const { source } = procedure;
+  if (source.kind === "intrinsic") return true;
+  return resources.some(
+    (resource) => resource.resourcePoolRef === source.resourcePoolRef,
   );
 }
 

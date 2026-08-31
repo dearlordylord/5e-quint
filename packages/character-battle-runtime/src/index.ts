@@ -10,16 +10,10 @@ import {
   characterBattleResourceMaxUses,
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
-  battleCreatureInitFromStatBlock,
-  authoredStatBlockBattleInitIssueMessage,
-  battleInitializationIssueFactFields,
-  type AuthoredStatBlockBattleInitIssue,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
-  type BattleStatBlockInitializationIssue,
-  type BattleInitializationIssueFacts,
   type BattleRuntimeSession,
   type CombatantId,
   type CharacterBattleResourceOwnership,
@@ -130,15 +124,11 @@ function characterBattleHandoffValidationIssue(
 
 export type CharacterBattleRuntimeIssue =
   | BattleCreatureInitIssue
-  | BattleStateInitIssue
-  | AuthoredStatBlockBattleInitIssue;
+  | BattleStateInitIssue;
 
 export function characterBattleRuntimeIssueMessage(
   issue: CharacterBattleRuntimeIssue,
 ): string {
-  if (issue.tag === "statBlockProjectionFailure") {
-    return authoredStatBlockBattleInitIssueMessage(issue);
-  }
   return issue.tag === "battleCreatureInitIssues"
     ? battleCreatureInitIssueMessage(issue)
     : issue.tag === "battleCreatureInitIssue" ||
@@ -266,7 +256,7 @@ export type BattleRosterCharacterCombatant = Extract<
 
 export type BattleRosterStatBlockCombatant = Extract<
   BattleCreatureInit,
-  { readonly creatureInit: { readonly kind: "statBlock" } }
+  AuthoredStatBlockBattleInitInput
 >;
 
 export type BattleRosterCharacterSource =
@@ -312,13 +302,6 @@ export type BattleRosterEntries = readonly [
   ...BattleRosterEntry[],
 ];
 
-type BattleRosterStatBlockProjectionFact = {
-  [K in BattleInitializationIssueFacts["kind"]]: Omit<
-    Extract<BattleInitializationIssueFacts, { readonly kind: K }>,
-    "kind"
-  > & { readonly reason: K };
-}[BattleInitializationIssueFacts["kind"]];
-
 type BattleRosterCharacterProjectionIssue = {
   readonly kind: "characterSheetProjection";
   readonly index: number;
@@ -326,31 +309,6 @@ type BattleRosterCharacterProjectionIssue = {
   readonly issueTag: "battleCreatureInitIssue";
   readonly message: string;
 } & CharacterBattleInitIssueFact;
-
-type BattleRosterStatBlockProjectionIssue = {
-  readonly kind: "statBlockProjection";
-  readonly index: number;
-  readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly message: string;
-} & (
-  | ({
-      readonly issueTag: "battleStateInitIssue";
-    } & BattleRosterStatBlockProjectionFact)
-  | {
-      readonly issueTag: "statBlockResourceGraphIssue";
-      readonly issues: Extract<
-        AuthoredStatBlockBattleInitIssue,
-        { readonly tag: "statBlockResourceGraphIssue" }
-      >["issues"];
-    }
-  | {
-      readonly issueTag: "statBlockProjectionFailure";
-      readonly failure: Extract<
-        AuthoredStatBlockBattleInitIssue,
-        { readonly tag: "statBlockProjectionFailure" }
-      >["failure"];
-    }
-);
 
 export type BattleRosterAdmission =
   | {
@@ -431,8 +389,7 @@ export type BattleRosterIssue =
       readonly issueIndex: number;
       readonly cause: "invalidBuildSpellAccess";
       readonly message: string;
-    }
-  | BattleRosterStatBlockProjectionIssue;
+    };
 
 function battleRosterIssueList(
   issue: BattleRosterIssue,
@@ -880,64 +837,6 @@ function battleRosterCharacterSpellAccessProjectionIssue(input: {
   );
 }
 
-function battleRosterStatBlockProjectionIssue(input: {
-  readonly index: number;
-  readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issue: BattleStatBlockInitializationIssue;
-  readonly issueIndex: number;
-}): Extract<BattleRosterIssue, { kind: "statBlockProjection" }> {
-  const { message, ...fields } = input.issue;
-  return {
-    kind: "statBlockProjection" as const,
-    index: input.index,
-    combatantId: input.combatantId,
-    issueTag: "battleStateInitIssue" as const,
-    ...battleInitializationIssueFactFields(
-      "kind" in fields
-        ? fields
-        : {
-            kind: "runtimeAdmissionInvalid" as const,
-            combatantId: input.combatantId,
-            origin: "statBlock" as const,
-            issueIndex: input.issueIndex,
-          },
-    ),
-    message,
-  };
-}
-
-function battleRosterStatBlockProjectionIssues(input: {
-  readonly index: number;
-  readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issue: AuthoredStatBlockBattleInitIssue;
-}): ReadonlyNonEmptyArray<BattleRosterIssue> {
-  const common = {
-    kind: "statBlockProjection" as const,
-    index: input.index,
-    combatantId: input.combatantId,
-    message: authoredStatBlockBattleInitIssueMessage(input.issue),
-  };
-  return Match.value(input.issue).pipe(
-    Match.when({ tag: "battleStateInitIssue" }, (issue) =>
-      battleRosterIssueList(
-        battleRosterStatBlockProjectionIssue({
-          index: input.index,
-          combatantId: input.combatantId,
-          issue,
-          issueIndex: 0,
-        }),
-      ),
-    ),
-    Match.when({ tag: "statBlockResourceGraphIssue" }, ({ tag, issues }) =>
-      battleRosterIssueList({ ...common, issueTag: tag, issues }),
-    ),
-    Match.when({ tag: "statBlockProjectionFailure" }, ({ tag, failure }) =>
-      battleRosterIssueList({ ...common, issueTag: tag, failure }),
-    ),
-    Match.exhaustive,
-  );
-}
-
 function projectBattleRosterEntry(
   entry: BattleRosterEntry,
   index: number,
@@ -1004,24 +903,14 @@ function projectBattleRosterEntry(
             }),
           ),
         ),
-        Match.when({ kind: "available" }, (source) => {
-          const projection = battleCreatureInitFromStatBlock(source.input);
-          if (Result.isFailure(projection)) {
-            return Result.fail(
-              battleRosterStatBlockProjectionIssues({
-                index,
-                combatantId: source.input.combatantId,
-                issue: projection.failure,
-              }),
-            );
-          }
-          return Result.succeed({
+        Match.when({ kind: "available" }, (source) =>
+          Result.succeed({
             kind: "statBlock" as const,
             index,
-            combatant: projection.success,
+            combatant: source.input,
             routeEvents: [] as const,
-          });
-        }),
+          }),
+        ),
         Match.exhaustive,
       );
     }),

@@ -26,6 +26,7 @@ import {
   type BattlePendingTransaction,
   type BattleRuntimeSession,
   type BattleInitializationIssue,
+  type BattleInitializationLeafIssue,
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
@@ -304,7 +305,6 @@ function appendFreshSheetAndBattle(
           transaction: null,
         },
         attemptsInput,
-        statBlockCatalog,
       ),
     },
   };
@@ -321,7 +321,6 @@ type OracleBattleFrame = {
 function appendBattleAttempts(
   initial: OracleBattleFrame,
   attempts: readonly OracleBattleAttempt[],
-  statBlockCatalog: StatBlockCatalog,
 ): OracleBattleAttemptSegment {
   let current = initial;
   const priorFrames: OracleBattleFrame[] = [];
@@ -343,7 +342,6 @@ function appendBattleAttempts(
       session: current.session,
       transaction: current.transaction,
       operation,
-      statBlockCatalog,
     });
     const next = Match.value(result).pipe(
       Match.when({ tag: "invalid" }, ({ resolution }) => {
@@ -631,15 +629,6 @@ function battleRosterIssueToOracleIssue(
       kind: "projection" as const,
       issue: battleRosterCharacterProjectionIssue(projection, rosterEntries),
     })),
-    Match.when({ kind: "statBlockProjection" }, (projection) => ({
-      kind: "projection" as const,
-      issue: {
-        tag: "characterBattleEncounterProjectionIssue" as const,
-        origin: "statBlock" as const,
-        combatantId: projection.combatantId,
-        issue: { tag: "battleStateInitIssue" as const },
-      },
-    })),
     Match.when({ kind: "duplicateCombatantId" }, () =>
       genericBattleStateEntryIssue(),
     ),
@@ -804,25 +793,39 @@ function battleEntryRejection(
 function stripBattleStateInitIssue(
   issue: BattleInitializationIssue,
 ): OracleBattleStateInitIssue {
-  if (issue.tag === "battleStateInitIssues") {
-    return {
-      tag: "battleStateInitIssues" as const,
-      issues: issue.issues.map(stripBattleStateInitLeafIssue),
-    };
-  }
-  if (issue.tag === "weaponLoadoutMismatch") return issue;
-  return { tag: "battleStateInitIssue" as const };
+  return Match.value(issue).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      battleStateInitIssues: ({ issues }) => ({
+        tag: "battleStateInitIssues" as const,
+        issues: issues.map(stripBattleStateInitLeafIssue),
+      }),
+      battleStateInitIssue: () => ({ tag: "battleStateInitIssue" as const }),
+      statBlockProjectionFailure: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
+      statBlockResourceGraphIssue: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
+      weaponLoadoutMismatch: (matched) => matched,
+    }),
+  );
 }
 
 function stripBattleStateInitLeafIssue(
-  issue: Extract<
-    BattleInitializationIssue,
-    | { readonly tag: "battleStateInitIssue" }
-    | { readonly tag: "weaponLoadoutMismatch" }
-  >,
+  issue: BattleInitializationLeafIssue,
 ): OracleBattleStateInitLeafIssue {
-  if (issue.tag === "weaponLoadoutMismatch") return issue;
-  return { tag: "battleStateInitIssue" };
+  return Match.value(issue).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      battleStateInitIssue: () => ({ tag: "battleStateInitIssue" as const }),
+      statBlockProjectionFailure: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
+      statBlockResourceGraphIssue: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
+      weaponLoadoutMismatch: (matched) => matched,
+    }),
+  );
 }
 
 function strippedBattleCheckpoint(

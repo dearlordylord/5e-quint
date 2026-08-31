@@ -248,6 +248,7 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
+import type { BattleStatBlockProjectionFailure } from "./stat-block-authored-projection.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -4630,6 +4631,12 @@ export type BattleInitializationLeafIssue =
       readonly tag: "statBlockResourceGraphIssue";
       readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
       readonly combatantId: CombatantId;
+      readonly ownerPath: readonly (string | number)[];
+    }
+  | {
+      readonly tag: "statBlockProjectionFailure";
+      readonly combatantId: CombatantId;
+      readonly failure: BattleStatBlockProjectionFailure;
       readonly ownerPath: readonly (string | number)[];
     }
   | {

@@ -3,13 +3,13 @@ import {
   type BattleCreatureInit,
   type BattleHole,
   battleId,
+  battleInitializationIssueMessage,
   battleObjectId,
   type BattleObjectIgnitionOutcome,
   type BattleRuntimeContext,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
-  battleStateInitIssueMessage,
   characterId,
   type CombatantId,
   combatantId,
@@ -1147,7 +1147,7 @@ function requireInitialSession(spellsById: Readonly<Record<WizardBattleSpellId, 
   })
   /* v8 ignore next -- @preserve -- battle setup inputs are checked-in typed fixture records */
   if (Result.isFailure(session)) {
-    throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.failure)}`)
+    throw new Error(`Wizard battle demo fixture is invalid: ${battleInitializationIssueMessage(session.failure)}`)
   }
   return session.success
 }

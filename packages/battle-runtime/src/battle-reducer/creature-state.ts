@@ -49,7 +49,7 @@ import {
   type InitiativeScore,
 } from "../identity.ts";
 import type {
-  BattleCreatureInit,
+  BattleCreatureAdmissionInit,
   CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
   CharacterBattleCreatureInit,
@@ -142,7 +142,7 @@ import {
 } from "../stat-block-combatant-admission.ts";
 
 function isCharacterBattleCreatureInit(
-  input: BattleCreatureInit,
+  input: BattleCreatureAdmissionInit,
 ): input is CharacterBattleCombatantInit {
   return input.creatureInit.kind === "character";
 }
@@ -296,7 +296,7 @@ function wildShapePresentationsProjection(
 
 export function battleCreatureStateAdmissionFromInit(
   battleId: BattleId,
-  input: BattleCreatureInit,
+  input: BattleCreatureAdmissionInit,
   startingScopeOrdinal: BattleExecutionScopeOrdinal,
 ):
   | {
@@ -715,7 +715,7 @@ export function battleCreatureStateAdmissionFromInit(
 }
 
 function initialConditionImmunityIssueForCreatureInit(
-  creatureInit: BattleCreatureInit["creatureInit"],
+  creatureInit: BattleCreatureAdmissionInit["creatureInit"],
   combatantId: CombatantId,
 ): BattleStateInitLeafIssue | null {
   return Match.value(creatureInit).pipe(
@@ -1005,7 +1005,7 @@ export function combatantInitiativeInsertionIndex(
 }
 
 function initialZeroHpLifecycleForCreatureOrigin(
-  creatureInit: BattleCreatureInit["creatureInit"],
+  creatureInit: BattleCreatureAdmissionInit["creatureInit"],
   combatantId: CombatantId,
 ): Result.Result<ZeroHpLifecycle, BattleStateInitLeafIssue> {
   return Match.value(creatureInit).pipe(
@@ -1047,7 +1047,7 @@ function initialZeroHpLifecycleForCreatureOrigin(
 }
 
 export function positiveHpUnconsciousInitIssue(
-  input: BattleCreatureInit,
+  input: BattleCreatureAdmissionInit,
 ): Result.Result<never, BattleStateInitIssue> | null {
   const creatureInit = input.creatureInit;
   if (
@@ -1262,7 +1262,7 @@ function characterSpellcastingSourceClassIssue(
 }
 
 export function initialKnockOutLifecycleFields(
-  creatureInit: BattleCreatureInit["creatureInit"],
+  creatureInit: BattleCreatureAdmissionInit["creatureInit"],
   conditions: ConditionState,
 ): BattleCreatureKnockOutLifecycle {
   if (

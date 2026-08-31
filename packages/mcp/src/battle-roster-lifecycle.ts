@@ -21,7 +21,10 @@ import { schemaJsonContent } from "./schema-codec.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { errorContent } from "./tool-content.ts";
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
-import { battleRosterIssuePayload } from "./battle-start-failure.ts";
+import {
+  battleRosterIssuePayload,
+  battleRuntimeIssuePayload,
+} from "./battle-start-failure.ts";
 
 export const BATTLE_LIFECYCLE_RECOVERY = {
   tag: "battleAndCharacterSessionsUnchanged",
@@ -192,7 +195,7 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
         combatantId: matched.combatantId,
         ownerPath: matched.ownerPath,
-        message: matched.message,
+        issues: battleRuntimeIssuePayload(matched.issue),
       }),
     ),
     Match.when({ tag: "battleRosterCombatantRemovalFailed" }, (matched) =>

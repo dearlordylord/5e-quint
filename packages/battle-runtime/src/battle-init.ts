@@ -17,7 +17,7 @@ import type {
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import { Brand, Match, Result } from "effect";
+import { Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
@@ -609,7 +609,7 @@ export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
 export type StatBlockInitialCondition =
   (typeof STAT_BLOCK_INITIAL_CONDITIONS)[number];
 
-export type StatBlockBattleCreatureInit = {
+type StatBlockBattleCreatureInit = {
   readonly kind: "statBlock";
   readonly source: BattleStatBlockCombatantSource;
   readonly currentHp: Hp;
@@ -617,10 +617,7 @@ export type StatBlockBattleCreatureInit = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
   readonly presentation: BattleStatBlockPresentationSource;
-} & Brand.Brand<"StatBlockBattleCreatureInit">;
-
-const StatBlockBattleCreatureInit =
-  Brand.nominal<StatBlockBattleCreatureInit>();
+};
 
 type BattleCreatureInitCommon = {
   readonly combatantId: CombatantId;
@@ -635,17 +632,28 @@ export type CharacterBattleCombatantInit = BattleCreatureInitCommon & {
   readonly displayName: string;
 };
 
-export type StatBlockBattleCombatantInit = BattleCreatureInitCommon & {
+type StatBlockBattleCombatantInit = BattleCreatureInitCommon & {
   // The creature init kind is the zero-HP lifecycle authority:
   // characters use death saves; stat block creatures die at 0 HP.
   readonly creatureInit: StatBlockBattleCreatureInit;
 };
 
+/** Public combatant input. Stat Blocks remain authored until lifecycle admission. */
 export type BattleCreatureInit =
+  | (CharacterBattleCombatantInit & {
+      readonly statBlock?: never;
+    })
+  | (AuthoredStatBlockBattleInitInput & {
+      readonly creatureInit?: never;
+      readonly displayName?: never;
+    });
+
+/** Runtime-paired input available only after the lifecycle projection boundary. */
+export type BattleCreatureAdmissionInit =
   | CharacterBattleCombatantInit
   | StatBlockBattleCombatantInit;
 
-export function battleCreatureInitFromStatBlock(
+export function projectAuthoredStatBlockBattleInit(
   input: AuthoredStatBlockBattleInitInput,
 ): Result.Result<
   StatBlockBattleCombatantInit,
@@ -682,7 +690,7 @@ function battleCreatureInitFromRuntimeStatBlock(
   return Result.succeed({
     combatantId: input.combatantId,
     initiative: input.initiative,
-    creatureInit: StatBlockBattleCreatureInit({
+    creatureInit: {
       kind: "statBlock",
       source: input.statBlock,
       currentHp: input.currentHp ?? maxHp,
@@ -690,7 +698,7 @@ function battleCreatureInitFromRuntimeStatBlock(
       ammunitionStocks: input.ammunitionStocks,
       conditions: input.conditions,
       presentation: input.presentation,
-    }),
+    },
   });
 }
 

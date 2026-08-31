@@ -50,7 +50,7 @@ import {
 } from "./oracle-case-trace-schema.ts";
 import {
   completeCreationFillBatches as buildCompleteCreationFillBatches,
-  discoverStatBlockAttackProcedureRef,
+  discoverStatBlockAttackExecutionSelection,
   startStatBlockBattle,
   statBlockBattleFor,
   type OracleStatBlockBattlePlacement,
@@ -855,7 +855,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             {
               reactorId: combatantId("oracle:skeleton-b"),
               distanceFeet: movementFeet(5),
-              procedureRef: statBlockAttackProcedureRef(),
+              ...statBlockAttackExecutionSelection(),
             },
           ],
         },
@@ -1315,7 +1315,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             {
               reactorId: distinctReactorId,
               distanceFeet: movementFeet(5),
-              procedureRef: statBlockAttackProcedureRef(distinctReactorId),
+              ...statBlockAttackExecutionSelection(distinctReactorId),
             },
           ],
         },
@@ -2271,7 +2271,7 @@ function caseWithMovementCost(
   };
 }
 
-function statBlockAttackProcedureRef(
+function statBlockAttackExecutionSelection(
   reactorCombatantId = combatantId("oracle:skeleton-b"),
 ) {
   const firstCombatantId = combatantId("oracle:skeleton-a");
@@ -2299,14 +2299,14 @@ function statBlockAttackProcedureRef(
       `test stat-block battle failed: ${started.failure.message}`,
     );
   }
-  const procedureRef = discoverStatBlockAttackProcedureRef(
+  const selection = discoverStatBlockAttackExecutionSelection(
     started.success,
     firstCombatantId,
   );
-  if (Result.isFailure(procedureRef)) {
+  if (Result.isFailure(selection)) {
     throw new Error(
-      `test stat-block attack failed: ${procedureRef.failure.message}`,
+      `test stat-block attack failed: ${selection.failure.message}`,
     );
   }
-  return procedureRef.success;
+  return selection.success;
 }

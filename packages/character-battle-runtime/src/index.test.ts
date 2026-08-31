@@ -37,7 +37,6 @@ import type {
   CharacterBattleResourceOwnership,
   CharacterBattleResourceState,
   CharacterBattleSpellcastingExecutionState,
-  AuthoredStatBlockBattleInitIssue,
 } from "@dnd/battle-runtime";
 import {
   battleRuntimeContextForTest,
@@ -252,22 +251,16 @@ function startBattleFromProjectedRosterFixture(input: {
   readonly projections: readonly [
     Result.Result<
       BattleCreatureInit,
-      | BattleStateInitIssue
-      | BattleCreatureInitIssue
-      | AuthoredStatBlockBattleInitIssue
+      BattleStateInitIssue | BattleCreatureInitIssue
     >,
     ...Result.Result<
       BattleCreatureInit,
-      | BattleStateInitIssue
-      | BattleCreatureInitIssue
-      | AuthoredStatBlockBattleInitIssue
+      BattleStateInitIssue | BattleCreatureInitIssue
     >[],
   ];
 }): Result.Result<
   BattleRuntimeSession,
-  | BattleStateInitIssue
-  | BattleCreatureInitIssue
-  | AuthoredStatBlockBattleInitIssue
+  BattleStateInitIssue | BattleCreatureInitIssue
 > {
   const combatants: BattleCreatureInit[] = [];
   for (const projection of input.projections) {
@@ -1720,15 +1713,6 @@ describe("Character Sheet battle handoff", () => {
       tag: "battleStatBlockProjectionFailure" as const,
       reason: "nonLiteralSize" as const,
     };
-
-    expect(
-      characterBattleRuntimeIssueMessage({
-        tag: "statBlockProjectionFailure",
-        failure: projectionFailure,
-      }),
-    ).toBe(
-      "Stat Block authored projection failed: battle initialization requires a concrete Size.",
-    );
 
     const composition = composeBattleRoster([
       {

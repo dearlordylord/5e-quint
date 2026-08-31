@@ -1,5 +1,4 @@
 import {
-  battleCreatureInitFromStatBlock,
   BattleStatBlockProcedureExecutionRef,
   combatantId,
   discoverBattleActs,
@@ -9,6 +8,7 @@ import {
   settleBattleRuntimeTransaction,
   startBattle,
   type BattleFill,
+  type BattleAttackExecutionSelection,
   type BattleCreatureInit,
   type BattleMechanicalFrontier,
   type BattleRuntimeSession,
@@ -112,10 +112,6 @@ type BattleSourceFacts = {
   readonly movementWithOpportunityAttack: BattleFill;
   readonly interruptDecisionDecline: OracleBattleAttempt;
 };
-
-type StatBlockProcedureRef = Schema.Schema.Type<
-  typeof BattleStatBlockProcedureExecutionRef
->;
 
 type BattleMovementFacts = {
   readonly session: BattleRuntimeSession;
@@ -486,20 +482,13 @@ export function startStatBlockBattle(
         message: `Source stat-block ${placement.statBlockId} was not found.`,
       });
     }
-    const creature = battleCreatureInitFromStatBlock({
+    initialized.push({
       combatantId: placement.combatantId,
       statBlock: statBlock.value,
       initiative: placement.initiative,
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
       conditions: [],
     });
-    if (Result.isFailure(creature)) {
-      return Result.fail({
-        tag: "sourceConstructionFailure",
-        message: `Source stat-block ${placement.statBlockId} could not be initialized for ${placement.combatantId}.`,
-      });
-    }
-    initialized.push(creature.success);
   }
 
   const started = startBattle({
@@ -514,10 +503,10 @@ export function startStatBlockBattle(
     : Result.succeed(started.success);
 }
 
-export function discoverStatBlockAttackProcedureRef(
+export function discoverStatBlockAttackExecutionSelection(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-): Result.Result<StatBlockProcedureRef, OracleEvaluationSourceIssue> {
+): Result.Result<BattleAttackExecutionSelection, OracleEvaluationSourceIssue> {
   const ended = endBattleRuntimeTurn({ session, actorId });
   if (ended.tag !== "resolved") {
     return Result.fail({
@@ -529,12 +518,12 @@ export function discoverStatBlockAttackProcedureRef(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      !("statBlockDamageNotation" in act.subject),
+      act.subject.statBlockDamageSelection !== undefined,
   );
   if (
     attackAct?.subject.tag !== "action" ||
     attackAct.subject.action !== "attack" ||
-    "statBlockDamageNotation" in attackAct.subject
+    attackAct.subject.statBlockDamageSelection === undefined
   ) {
     return Result.fail({
       tag: "sourceConstructionFailure",
@@ -549,7 +538,10 @@ export function discoverStatBlockAttackProcedureRef(
         tag: "sourceConstructionFailure",
         message: "Source attack procedure reference was not canonical.",
       })
-    : Result.succeed(procedureRef.success);
+    : Result.succeed({
+        procedureRef: procedureRef.success,
+        statBlockDamageSelection: attackAct.subject.statBlockDamageSelection,
+      });
 }
 
 function battleSourceFacts(
@@ -560,7 +552,6 @@ function battleSourceFacts(
   const movement = prepareBattleMovementFacts(services, firstId, secondId);
   if (Result.isFailure(movement)) return Result.fail(movement.failure);
   const interruptDecisionDecline = buildInterruptDecisionDecline(
-    services,
     movement.success,
   );
   if (Result.isFailure(interruptDecisionDecline)) {
@@ -586,12 +577,12 @@ function prepareBattleMovementFacts(
   const started = discoverBattleMovementStart(services);
   if (Result.isFailure(started)) return Result.fail(started.failure);
 
-  const procedureRef = discoverStatBlockAttackProcedureRef(
+  const attackSelection = discoverStatBlockAttackExecutionSelection(
     started.success.session,
     firstId,
   );
-  if (Result.isFailure(procedureRef)) {
-    return Result.fail(procedureRef.failure);
+  if (Result.isFailure(attackSelection)) {
+    return Result.fail(attackSelection.failure);
   }
 
   const movementWithoutOpportunityAttack: BattleFill = {
@@ -613,7 +604,7 @@ function prepareBattleMovementFacts(
         {
           reactorId: secondId,
           distanceFeet: movementFeet(5),
-          procedureRef: procedureRef.success,
+          ...attackSelection.success,
         },
       ],
     },
@@ -641,7 +632,6 @@ function discoverBattleMovementStart(
   const movementHole = discoverBattleMovementHole(
     started.success,
     moveSubject.success,
-    services.statBlockCatalog,
   );
   if (Result.isFailure(movementHole)) return Result.fail(movementHole.failure);
 
@@ -675,7 +665,6 @@ function discoverBattleMoveSubject(
 function discoverBattleMovementHole(
   session: BattleRuntimeSession,
   moveSubject: MoveSubject,
-  statBlockCatalog: OracleEvaluationServices["statBlockCatalog"],
 ): Result.Result<OrdinaryMovementHole, OracleEvaluationSourceIssue> {
   const moveHoles = settleBattleRuntimeTransaction({
     session,
@@ -685,7 +674,6 @@ function discoverBattleMovementHole(
       subject: moveSubject,
       fills: [],
     },
-    statBlockCatalog,
   });
   if (
     moveHoles.tag !== "needsHoles" ||
@@ -708,7 +696,6 @@ function discoverBattleMovementHole(
 }
 
 function buildInterruptDecisionDecline(
-  services: OracleEvaluationServices,
   movement: BattleMovementFacts,
 ): Result.Result<OracleBattleAttempt, OracleEvaluationSourceIssue> {
   const opportunityAttack = settleBattleRuntimeTransaction({
@@ -719,7 +706,6 @@ function buildInterruptDecisionDecline(
       subject: movement.moveSubject,
       fills: [movement.movementWithOpportunityAttack],
     },
-    statBlockCatalog: services.statBlockCatalog,
   });
   if (
     opportunityAttack.tag !== "needsHoles" ||

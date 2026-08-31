@@ -1,5 +1,10 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { combatantId, initiativeScore } from "@dnd/battle-runtime";
+import {
+  combatantId,
+  initiativeScore,
+  type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
+} from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
 import {
@@ -12,24 +17,33 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { Result, Option, Schema } from "effect";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
-import { projectStatBlockBattleCombatant } from "./stat-block-battle-combatant-projection.ts";
+import { handleToolCall } from "./server.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { StatBlockCombatantToolInput } from "./start-battle-tool-input.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 
 const authoredOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureOrdinalSchema)(value);
 
-describe("MCP Stat Block battle combatant projection", () => {
+describe("MCP authored Stat Block battle admission boundary", () => {
+  test("does not type a spread character and authored Stat Block as one public input", () => {
+    type SpreadHybrid = CharacterBattleCombatantInit & {
+      readonly statBlock: StatBlockRecord;
+    };
+
+    expectTypeOf<SpreadHybrid>().not.toMatchTypeOf<BattleCreatureInit>();
+  });
+
   test("rejects an unknown Stat Block identity with its authored id", () => {
     const root = createMcpPlaySessionRoot();
     const missingStatBlockId = statBlockId(
       "stat_block_synthetic_missing_mcp_combatant",
     );
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: {
         kind: "statBlock",
@@ -43,12 +57,12 @@ describe("MCP Stat Block battle combatant projection", () => {
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Unknown Stat Block combatant.",
-      details: {
-        code: "UNKNOWN_STAT_BLOCK_COMBATANT",
-        statBlockId: missingStatBlockId,
-      },
+    expectStartAdmissionIssue(projected.failure, {
+      kind: "statBlockSourceUnavailable",
+      ownerPath: ["initialCombatants", 0],
+      combatantId: "synthetic-missing-mcp-combatant",
+      code: "UNKNOWN_STAT_BLOCK_COMBATANT",
+      statBlockId: missingStatBlockId,
     });
   });
 
@@ -78,31 +92,44 @@ describe("MCP Stat Block battle combatant projection", () => {
       ...baseRoot,
       statBlockCatalog: {
         ...baseRoot.statBlockCatalog,
-        getStatBlock: () => Option.some(invalid),
+        getStatBlock: (id: StatBlockRecord["id"]) =>
+          id === invalid.id
+            ? Option.some(invalid)
+            : baseRoot.statBlockCatalog.getStatBlock(id),
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const started = admitStatBlockThroughStartBoundary({
+      root,
+      combatant: {
+        ...statBlockCombatant(base),
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+      },
+    });
+    expect(Result.isSuccess(started)).toBe(true);
+    if (Result.isFailure(started)) return;
+    const battleBeforeRejectedAdd = root.sessionStore.battleSession;
+    const projected = admitStatBlockThroughAddBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error:
-        "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        issues: [
-          {
-            kind: "duplicateResourceOrdinal",
-            ordinal: resource.ordinal,
-          },
-        ],
-      },
+    expectDynamicAdmissionIssue(projected.failure, {
+      kind: "battleInitialization",
+      code: "BATTLE_INITIALIZATION_INVALID",
+      ownerPath: ["operation", "combatant"],
+      issueTag: "statBlockResourceGraphIssue",
+      combatantId: "synthetic-mcp-combatant",
+      issues: [
+        {
+          kind: "duplicateResourceOrdinal",
+          ordinal: resource.ordinal,
+        },
+      ],
     });
+    expect(root.sessionStore.battleSession).toBe(battleBeforeRejectedAdd);
   });
 
   test("projects a supported installed Stat Block combatant", () => {
@@ -117,18 +144,21 @@ describe("MCP Stat Block battle combatant projection", () => {
       tempHp: Hp(2),
     };
 
-    const projected = projectStatBlockBattleCombatant({ root, combatant });
+    const projected = admitStatBlockThroughStartBoundary({ root, combatant });
 
     expect(Result.isSuccess(projected)).toBe(true);
     if (Result.isFailure(projected)) return;
     expect(projected.success).toMatchObject({
-      tag: "encounterCombatant",
-      creatureInit: {
-        combatantId: combatant.combatantId,
-        creatureInit: {
-          currentHp: combatant.currentHp,
-          tempHp: combatant.tempHp,
-          source: { id: wolf.id },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            {
+              combatantId: combatant.combatantId,
+              hp: combatant.currentHp,
+              tempHp: combatant.tempHp,
+              origin: { kind: "statBlock", statBlockId: wolf.id },
+            },
+          ],
         },
       },
     });
@@ -168,20 +198,15 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        reason: "unsupportedLairConditionalLegendaryActionUses",
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "unsupportedLairConditionalLegendaryActionUses",
     });
   });
 
@@ -240,24 +265,19 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        reason: "unsupportedProcedureBinding",
-        issues: [
-          { section: "actions", procedureOrdinal: attack.procedureOrdinal },
-          { section: "actions", procedureOrdinal: authoredOrdinal(3) },
-        ],
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        { section: "actions", procedureOrdinal: attack.procedureOrdinal },
+        { section: "actions", procedureOrdinal: authoredOrdinal(3) },
+      ],
     });
   });
 
@@ -285,20 +305,15 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        reason: "nonLiteralSize",
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "nonLiteralSize",
     });
   });
 
@@ -338,20 +353,15 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        reason: "unsupportedFormRestrictedSpeed",
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "unsupportedFormRestrictedSpeed",
     });
   });
 
@@ -362,20 +372,15 @@ describe("MCP Stat Block battle combatant projection", () => {
       statBlockId("stat_block_swarm_of_insects"),
     );
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(swarm),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: swarm.id,
-        reason: "unresolvedGmSpeedChoice",
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "unresolvedGmSpeedChoice",
     });
   });
 
@@ -412,20 +417,15 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        reason: "unsupportedQualifiedConditionImmunity",
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "unsupportedQualifiedConditionImmunity",
     });
   });
 
@@ -459,26 +459,21 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
     } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
 
-    const projected = projectStatBlockBattleCombatant({
+    const projected = admitStatBlockThroughStartBoundary({
       root,
       combatant: statBlockCombatant(invalid),
     });
 
     expect(Result.isFailure(projected)).toBe(true);
     if (Result.isSuccess(projected)) return;
-    expect(jsonContentPayload(projected.failure)).toEqual({
-      error: "Stat Block projection failed.",
-      details: {
-        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-        statBlockId: invalid.id,
-        reason: "invalidResourceLimit",
-        issues: [
-          {
-            ordinal: invalidResource.ordinal,
-            reason: "invalidDailyUses",
-          },
-        ],
-      },
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "invalidResourceLimit",
+      issues: [
+        {
+          ordinal: invalidResource.ordinal,
+          reason: "invalidDailyUses",
+        },
+      ],
     });
   });
 });
@@ -494,4 +489,88 @@ function statBlockCombatant(
     ammunitionStocks: [],
     admissionSource: { kind: "encounterParticipant" },
   };
+}
+
+function admitStatBlockThroughStartBoundary(input: {
+  readonly root: ReturnType<typeof createMcpPlaySessionRoot>;
+  readonly combatant: StatBlockCombatantToolInput;
+}) {
+  const response = handleToolCall(
+    input.root,
+    "start_battle",
+    battleToolWireArgs("start_battle", {
+      battleId: "battle:synthetic-mcp-stat-block-admission",
+      initiativeMode: "direct",
+      companionAdmissions: [],
+      initialCombatants: [input.combatant],
+    }),
+  );
+  return response.isError === true
+    ? Result.fail(response)
+    : Result.succeed(jsonContentPayload(response));
+}
+
+function admitStatBlockThroughAddBoundary(input: {
+  readonly root: ReturnType<typeof createMcpPlaySessionRoot>;
+  readonly combatant: StatBlockCombatantToolInput;
+}) {
+  const response = handleToolCall(
+    input.root,
+    "battle_lifecycle",
+    battleToolWireArgs("battle_lifecycle", {
+      operation: {
+        kind: "addCombatant",
+        combatant: input.combatant,
+      },
+    }),
+  );
+  return response.isError === true
+    ? Result.fail(response)
+    : Result.succeed(jsonContentPayload(response));
+}
+
+function expectStartAdmissionIssue(
+  response: Parameters<typeof jsonContentPayload>[0],
+  issue: Record<string, unknown>,
+) {
+  expect(jsonContentPayload(response)).toMatchObject({
+    error: "Invalid battle start combatants.",
+    details: {
+      code: "INVALID_BATTLE_COMBATANTS",
+      issues: [issue],
+    },
+  });
+}
+
+function expectDynamicAdmissionIssue(
+  response: Parameters<typeof jsonContentPayload>[0],
+  issue: Record<string, unknown>,
+) {
+  expect(jsonContentPayload(response)).toMatchObject({
+    error: "Battle combatant admission failed.",
+    details: {
+      code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+      combatantId: "synthetic-mcp-combatant",
+      ownerPath: ["operation", "combatant"],
+      issues: [issue],
+    },
+  });
+}
+
+function expectStatBlockProjectionIssue(
+  response: Parameters<typeof jsonContentPayload>[0],
+  failure: Record<string, unknown>,
+  ownerPath: readonly (string | number)[] = ["initialCombatants", 0],
+) {
+  expectStartAdmissionIssue(response, {
+    kind: "battleInitialization",
+    code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+    ownerPath,
+    issueTag: "statBlockProjectionFailure",
+    combatantId: "synthetic-mcp-combatant",
+    failure: {
+      tag: "battleStatBlockProjectionFailure",
+      ...failure,
+    },
+  });
 }

@@ -1,5 +1,6 @@
 import type {
   BattleId,
+  BattleInitializationIssue,
   BattlePendingTransaction,
   BattleRuntimeSession,
   BattleSubject,
@@ -111,7 +112,7 @@ export type McpBattleRosterTransitionIssue =
       readonly tag: "battleRosterCombatantAdmissionFailed";
       readonly combatantId: CombatantId;
       readonly ownerPath: readonly ["operation", "combatant"];
-      readonly message: string;
+      readonly issue: BattleInitializationIssue;
     }
   | {
       readonly tag: "battleRosterCombatantRemovalFailed";

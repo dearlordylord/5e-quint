@@ -137,6 +137,7 @@ export {
 } from "./stat-block-execution.ts";
 
 export {
+  battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
   type AuthoredStatBlockProjection,
   type BattleStatBlockProjectionFailure,
@@ -421,7 +422,6 @@ export type {
 
 export type {
   AuthoredStatBlockBattleInitInput,
-  AuthoredStatBlockBattleInitIssue,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
   BattleDruidWildShapeKnownFormsIssue,
@@ -436,8 +436,6 @@ export type {
   CharacterBattleInvocationFeature,
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
-  StatBlockBattleCreatureInit,
-  StatBlockBattleCombatantInit,
   StatBlockBattleInitIssue,
   StatBlockInitialCondition,
 } from "./battle-init.ts";
@@ -459,7 +457,6 @@ export type {
 export { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
 
 export {
-  authoredStatBlockBattleInitIssueMessage,
   wildShapeKnownFormsIssueMessage,
   KNOCKED_OUT_UNCONSCIOUS,
   STAT_BLOCK_INITIAL_CONDITIONS,
@@ -664,6 +661,7 @@ export {
   applyInitiativeSwap,
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,
+  battleInitializationIssueMessage,
   finishInitialInitiativeSetup,
   removeBattleRuntimeCombatants,
   requiredInitiativeRollModeForCombatant,
@@ -699,7 +697,6 @@ export type {
   BattleReducerRouteOwnerGroup,
   BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route-protocol.ts";
-export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
 export { battleAmmunitionStock } from "./battle-ammunition.ts";
 export type {
   BattleAmmunitionKind,

@@ -17,9 +17,9 @@ import {
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type CharacterWeaponAttackDamageTypeChoices,
-  type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
+  type CharacterBattleCreatureInit,
   type BattleStateInitIssue,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
@@ -1168,12 +1168,7 @@ export function characterSpellcasting(input: {
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
 }): Result.Result<
-  NonNullable<
-    Extract<
-      BattleCreatureInit["creatureInit"],
-      { readonly kind: "character" }
-    >["spellcasting"]
-  >,
+  NonNullable<CharacterBattleCreatureInit["spellcasting"]>,
   BattleCreatureInitIssue
 > {
   const { build, unitLibrary } = input;
