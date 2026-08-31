@@ -75,6 +75,9 @@ type GrantedAreaSaveDamageActionDamageEntry = {
   readonly damageAmount: number;
   readonly spellDamageReductionHoles: readonly ExpectedGrantedAreaSaveDamageFill[];
 };
+type GrantedAreaSaveDamageActionOutcomes = NonNullable<
+  ReturnType<typeof savingThrowFillFor>
+>["value"]["outcomes"];
 
 export function resolveGrantedAreaSaveDamageActionCommand(
   input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>,
@@ -102,6 +105,13 @@ export function resolveGrantedAreaSaveDamageActionCommand(
       "Granted area Save damage requires an active target-attached effect.",
     );
   }
+  return resolveGrantedAreaSaveDamageActionWithEffect(input, effect);
+}
+
+function resolveGrantedAreaSaveDamageActionWithEffect(
+  input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>,
+  effect: GrantedAreaSaveDamageActionEffect,
+): BattleResolutionResult {
   const saveHole = grantedAreaSaveDamageActionSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
@@ -174,6 +184,36 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     };
   }
 
+  return resolveGrantedAreaSaveDamageActionDamage({
+    input,
+    effect,
+    saveHole,
+    outcomes,
+    savingThrowTargetIds,
+    relationshipFacts,
+  });
+}
+
+function resolveGrantedAreaSaveDamageActionDamage(stage: {
+  readonly input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>;
+  readonly effect: GrantedAreaSaveDamageActionEffect;
+  readonly saveHole: ReturnType<
+    typeof grantedAreaSaveDamageActionSavingThrowOutcomeHole
+  >;
+  readonly outcomes: GrantedAreaSaveDamageActionOutcomes;
+  readonly savingThrowTargetIds: readonly CombatantId[];
+  readonly relationshipFacts: Parameters<
+    typeof extendSavingThrowOngoingFeatures
+  >[3];
+}): BattleResolutionResult {
+  const {
+    effect,
+    outcomes,
+    saveHole,
+    savingThrowTargetIds,
+    relationshipFacts,
+  } = stage;
+  const input = stage.input;
   const damageHole = grantedAreaSaveDamageActionDamageRollHole(effect);
   const damageFill = rolledDiceFillFor(input.fills, damageHole.holeId);
   if (damageFill === undefined) {
@@ -198,6 +238,48 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   /* v8 ignore stop -- @preserve */
+
+  const preparation = prepareGrantedAreaSaveDamageEntries({
+    input,
+    effect,
+    outcomes,
+    damageHole,
+    damageFill,
+  });
+  if (preparation.tag === "resolution") return preparation.result;
+  return resolveGrantedAreaSaveDamageLifecycle({
+    input,
+    saveHole,
+    damageHole,
+    savingThrowTargetIds,
+    relationshipFacts,
+    resolvedDamageEntries: preparation.entries,
+  });
+}
+
+type ResolvedGrantedAreaSaveDamageActionDamageEntry =
+  GrantedAreaSaveDamageActionDamageEntry & {
+    readonly damageRepeatSave: Extract<
+      ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+      { readonly tag: "ok" }
+    >;
+  };
+
+type GrantedAreaSaveDamageEntryPreparation =
+  | {
+      readonly tag: "ok";
+      readonly entries: readonly ResolvedGrantedAreaSaveDamageActionDamageEntry[];
+    }
+  | { readonly tag: "resolution"; readonly result: BattleResolutionResult };
+
+function prepareGrantedAreaSaveDamageEntries(stage: {
+  readonly input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>;
+  readonly effect: GrantedAreaSaveDamageActionEffect;
+  readonly outcomes: GrantedAreaSaveDamageActionOutcomes;
+  readonly damageHole: BattleGrantedAreaSaveDamageActionDamageRollHole;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+}): GrantedAreaSaveDamageEntryPreparation {
+  const { input, effect, outcomes, damageHole, damageFill } = stage;
 
   const spellDamageReductionRolls = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
@@ -226,17 +308,23 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellReduction.tag === "invalid") {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
-      );
+      return {
+        tag: "resolution",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+        ),
+      };
     }
     /* v8 ignore stop -- @preserve */
     if (spellReduction.tag === "needsHoles") {
-      return needsHolesResult(input.state, input.subject, [
-        ...spellReduction.holes,
-      ]);
+      return {
+        tag: "resolution",
+        result: needsHolesResult(input.state, input.subject, [
+          ...spellReduction.holes,
+        ]),
+      };
     }
     damageEntriesByTarget.push({
       targetId: outcome.targetId,
@@ -259,14 +347,20 @@ export function resolveGrantedAreaSaveDamageActionCommand(
             ],
     });
   }
-  const resolvedDamageEntries: Array<
-    GrantedAreaSaveDamageActionDamageEntry & {
-      readonly damageRepeatSave: Extract<
-        ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
-        { readonly tag: "ok" }
-      >;
-    }
-  > = [];
+  return resolveGrantedAreaDamageRepeatSaveEntries(
+    input,
+    damageHole,
+    damageEntriesByTarget,
+  );
+}
+
+function resolveGrantedAreaDamageRepeatSaveEntries(
+  input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>,
+  damageHole: BattleGrantedAreaSaveDamageActionDamageRollHole,
+  damageEntriesByTarget: readonly GrantedAreaSaveDamageActionDamageEntry[],
+): GrantedAreaSaveDamageEntryPreparation {
+  const resolvedDamageEntries: ResolvedGrantedAreaSaveDamageActionDamageEntry[] =
+    [];
   for (const entry of damageEntriesByTarget) {
     const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
       state: input.state,
@@ -286,21 +380,50 @@ export function resolveGrantedAreaSaveDamageActionCommand(
       }),
     });
     if (damageRepeatSave.tag === "invalid") {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        damageRepeatSave.message,
-      );
+      return {
+        tag: "resolution",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          damageRepeatSave.message,
+        ),
+      };
     }
     if (damageRepeatSave.tag === "needsHoles") {
-      return needsHolesResult(
-        input.state,
-        input.subject,
-        damageRepeatSave.missingHoles,
-      );
+      return {
+        tag: "resolution",
+        result: needsHolesResult(
+          input.state,
+          input.subject,
+          damageRepeatSave.missingHoles,
+        ),
+      };
     }
     resolvedDamageEntries.push({ ...entry, damageRepeatSave });
   }
+  return { tag: "ok", entries: resolvedDamageEntries };
+}
+
+function resolveGrantedAreaSaveDamageLifecycle(stage: {
+  readonly input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>;
+  readonly saveHole: ReturnType<
+    typeof grantedAreaSaveDamageActionSavingThrowOutcomeHole
+  >;
+  readonly damageHole: BattleGrantedAreaSaveDamageActionDamageRollHole;
+  readonly savingThrowTargetIds: readonly CombatantId[];
+  readonly relationshipFacts: Parameters<
+    typeof extendSavingThrowOngoingFeatures
+  >[3];
+  readonly resolvedDamageEntries: readonly ResolvedGrantedAreaSaveDamageActionDamageEntry[];
+}): BattleResolutionResult {
+  const {
+    input,
+    saveHole,
+    damageHole,
+    savingThrowTargetIds,
+    relationshipFacts,
+    resolvedDamageEntries,
+  } = stage;
   const concentrationHoles = resolvedDamageEntries.flatMap((entry) => {
     return entry.damageAmount <= 0
       ? []
@@ -410,6 +533,40 @@ export function resolveGrantedAreaSaveDamageActionCommand(
   }
   /* v8 ignore stop -- @preserve */
 
+  return applyGrantedAreaSaveDamageEntries({
+    input,
+    savingThrowTargetIds,
+    relationshipFacts,
+    resolvedDamageEntries,
+    concentrationFills,
+    damageDispositions,
+  });
+}
+
+function applyGrantedAreaSaveDamageEntries(stage: {
+  readonly input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>;
+  readonly savingThrowTargetIds: readonly CombatantId[];
+  readonly relationshipFacts: Parameters<
+    typeof extendSavingThrowOngoingFeatures
+  >[3];
+  readonly resolvedDamageEntries: readonly ResolvedGrantedAreaSaveDamageActionDamageEntry[];
+  readonly concentrationFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+  readonly damageDispositions: readonly Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >[];
+}): BattleResolutionResult {
+  const {
+    input,
+    savingThrowTargetIds,
+    relationshipFacts,
+    resolvedDamageEntries,
+    concentrationFills,
+    damageDispositions,
+  } = stage;
   let damaged = battleStateAfterSpendingGrantedAreaSaveDamageActionMagicAction(
     input,
     savingThrowTargetIds,

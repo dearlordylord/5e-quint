@@ -1549,31 +1549,36 @@ function persistentAreaSaveDamageEffectForRef(
         | TranslatingPersistentAreaAreaHazardEffect;
     }
   | undefined {
-  let located:
-    | {
-        readonly effectOwnerId: CombatantId;
-        readonly effect: PersistentAreaSaveDamageOccurrence;
-      }
-    | undefined;
-  for (const [effectOwnerId, combatant] of state.combatants) {
-    for (const candidate of combatant.activeEffects) {
-      if (candidate.effectRef !== effectRef) {
-        continue;
-      }
-      if (located !== undefined) return undefined;
-      if (!isAppearanceTriggeredPersistentAreaSaveDamage(candidate)) {
-        return undefined;
-      }
-      located = { effectOwnerId, effect: candidate };
-    }
-  }
+  const located = uniqueAppearanceTriggeredPersistentAreaEffect(
+    state,
+    effectRef,
+  );
   if (located === undefined) return undefined;
   const source = state.combatants.get(located.effect.sourceCombatantId);
   if (source === undefined) return undefined;
   const bound = boundPersistentAreaSaveDamageEffect(source, located.effect);
+  return projectAppearanceTriggeredPersistentAreaEffect(
+    located.effectOwnerId,
+    expectedLifecycle,
+    bound,
+  );
+}
+
+function projectAppearanceTriggeredPersistentAreaEffect(
+  effectOwnerId: CombatantId,
+  expectedLifecycle: "stationary" | "sourceTurnTranslation",
+  bound: ReturnType<typeof boundPersistentAreaSaveDamageEffect>,
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect:
+        | StationaryPersistentAreaAreaHazardEffect
+        | TranslatingPersistentAreaAreaHazardEffect;
+    }
+  | undefined {
   if (expectedLifecycle === "stationary" && bound?.kind === "stationary") {
     return {
-      effectOwnerId: located.effectOwnerId,
+      effectOwnerId,
       effect: {
         ...bound.effect,
         save: { ability: bound.facts.ability, dc: bound.facts.dc },
@@ -1584,7 +1589,7 @@ function persistentAreaSaveDamageEffectForRef(
   return expectedLifecycle === "sourceTurnTranslation" &&
     bound?.kind === "sourceTurnTranslation"
     ? {
-        effectOwnerId: located.effectOwnerId,
+        effectOwnerId,
         effect: {
           ...bound.effect,
           save: { ability: bound.facts.ability, dc: bound.facts.dc },
@@ -1592,6 +1597,34 @@ function persistentAreaSaveDamageEffectForRef(
         },
       }
     : undefined;
+}
+
+function uniqueAppearanceTriggeredPersistentAreaEffect(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: PersistentAreaSaveDamageOccurrence;
+    }
+  | undefined {
+  let located:
+    | {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: PersistentAreaSaveDamageOccurrence;
+      }
+    | undefined;
+  for (const [effectOwnerId, combatant] of state.combatants) {
+    for (const candidate of combatant.activeEffects) {
+      if (candidate.effectRef !== effectRef) continue;
+      if (located !== undefined) return undefined;
+      if (!isAppearanceTriggeredPersistentAreaSaveDamage(candidate)) {
+        return undefined;
+      }
+      located = { effectOwnerId, effect: candidate };
+    }
+  }
+  return located;
 }
 
 function isAppearanceTriggeredPersistentAreaSaveDamage(

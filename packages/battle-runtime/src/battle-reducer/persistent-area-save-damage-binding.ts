@@ -10,6 +10,7 @@ import type {
   StationaryPersistentAreaSaveDamageSpellProcedureExecution,
 } from "../procedure-execution/spell-procedure-execution.ts";
 import { persistentAreaSaveDamageRepositionKind } from "./persistent-area-save-damage-lifecycle.ts";
+import { Match } from "effect";
 
 export { persistentAreaSaveDamageRepositionKind } from "./persistent-area-save-damage-lifecycle.ts";
 
@@ -71,42 +72,38 @@ export function boundPersistentAreaSaveDamageEffect(
     effect.sourceProcedureRef,
   );
   if (facts?.procedure !== "persistentAreaSaveDamage") return undefined;
-  if (isStationaryEffect(effect) && isStationaryFacts(facts)) {
-    return { kind: "stationary", effect, facts };
-  }
-  if (isTranslatingEffect(effect) && isTranslatingFacts(facts)) {
-    return { kind: "sourceTurnTranslation", effect, facts };
-  }
-  if (isCollisionFacts(facts) && isCollisionEffect(effect)) {
-    return { kind: "collisionReposition", effect, facts };
-  }
-  return isDirectedFacts(facts) && isDirectedEffect(effect)
-    ? { kind: "directedReposition", effect, facts }
-    : undefined;
-}
-
-function isStationaryEffect(
-  effect: PersistentAreaSaveDamageEffect,
-): effect is StationaryEffect {
-  return effect.lifecycle === "stationary";
-}
-
-function isTranslatingEffect(
-  effect: PersistentAreaSaveDamageEffect,
-): effect is TranslatingEffect {
-  return effect.lifecycle === "sourceTurnTranslation";
-}
-
-function isCollisionEffect(
-  effect: PersistentAreaSaveDamageEffect,
-): effect is CollisionEffect {
-  return effect.lifecycle === "collisionReposition";
-}
-
-function isDirectedEffect(
-  effect: PersistentAreaSaveDamageEffect,
-): effect is DirectedEffect {
-  return effect.lifecycle === "directedReposition";
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("lifecycle")({
+      stationary: (stationaryEffect) =>
+        isStationaryFacts(facts)
+          ? { kind: "stationary" as const, effect: stationaryEffect, facts }
+          : undefined,
+      sourceTurnTranslation: (translatingEffect) =>
+        isTranslatingFacts(facts)
+          ? {
+              kind: "sourceTurnTranslation" as const,
+              effect: translatingEffect,
+              facts,
+            }
+          : undefined,
+      collisionReposition: (collisionEffect) =>
+        isCollisionFacts(facts)
+          ? {
+              kind: "collisionReposition" as const,
+              effect: collisionEffect,
+              facts,
+            }
+          : undefined,
+      directedReposition: (directedEffect) =>
+        isDirectedFacts(facts)
+          ? {
+              kind: "directedReposition" as const,
+              effect: directedEffect,
+              facts,
+            }
+          : undefined,
+    }),
+  );
 }
 
 function isStationaryFacts(
