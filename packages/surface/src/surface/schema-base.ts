@@ -148,6 +148,25 @@ export type SurfaceSchemaFieldRole =
       readonly kind: SurfaceProjectionKind;
     };
 
+export type SurfaceLinkSchemaRole = Extract<
+  SurfaceSchemaFieldRole,
+  { readonly category: "reference" | "dependency" }
+>;
+
+export type SurfaceLinkSourceRoleFor<Role extends SurfaceLinkSchemaRole> =
+  Role extends { readonly targetKind: "unit" }
+    ? SurfaceLinkSourceRole
+    : "generic";
+
+export function surfaceLinkSourceRole<Role extends SurfaceLinkSchemaRole>(
+  role: Role,
+): SurfaceLinkSourceRoleFor<Role>;
+export function surfaceLinkSourceRole(
+  role: SurfaceLinkSchemaRole,
+): SurfaceLinkSourceRole {
+  return "sourceRole" in role ? (role.sourceRole ?? "generic") : "generic";
+}
+
 function isStringSchemaAst(ast: AST.AST): boolean {
   const current = AST.toType(ast);
   return (
@@ -312,15 +331,8 @@ function surfaceSchemaRoleKey(value: unknown): string | undefined {
   );
 }
 
-function surfaceLinkSchemaRoleKey(
-  value: Extract<
-    SurfaceSchemaFieldRole,
-    { readonly category: "reference" | "dependency" }
-  >,
-): string {
-  const sourceRole =
-    "sourceRole" in value ? (value.sourceRole ?? "generic") : "generic";
-  return `${value.category}:${value.targetKind}:${value.relation}:${sourceRole}`;
+function surfaceLinkSchemaRoleKey(value: SurfaceLinkSchemaRole): string {
+  return `${value.category}:${value.targetKind}:${value.relation}:${surfaceLinkSourceRole(value)}`;
 }
 
 export function surfaceSchemaRolesEqual(

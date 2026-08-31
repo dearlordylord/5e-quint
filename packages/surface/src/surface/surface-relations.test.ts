@@ -128,6 +128,9 @@ describe("canonical Surface authored relations", () => {
 
     expect(decoded.issues).toEqual([]);
     expect(decoded.relations).toHaveLength(4);
+    expect(
+      decoded.relations.every((relation) => relation.sourceRole === "generic"),
+    ).toBe(true);
     expect(decoded.relations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -185,7 +188,6 @@ describe("canonical Surface authored relations", () => {
       result.success.some(
         (relation) =>
           relation.sourceKind === "unit" &&
-          "sourceRole" in relation &&
           relation.sourceRecordId === "class_fighter" &&
           relation.targetRecordId === "subclass_fighter_champion" &&
           relation.sourceRole === "class-subclass-choice",
