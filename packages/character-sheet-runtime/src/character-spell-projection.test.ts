@@ -1,7 +1,7 @@
 import { unitId } from "@dnd/shared/game-facts";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -252,6 +252,115 @@ describe("Character Sheet spell projection", () => {
     ]);
   });
 
+  test("rejects duration combinations outside the current partial support profile", () => {
+    const wallOfStone = requireSpell("wall_of_stone");
+    if (wallOfStone.mechanics.duration.kind !== "concentration") {
+      throw new Error("Expected Wall of Stone to use Concentration.");
+    }
+    expectDurationIssues(
+      decodeUnitRecordSync({
+        ...wallOfStone,
+        mechanics: {
+          ...wallOfStone.mechanics,
+          duration: {
+            ...wallOfStone.mechanics.duration,
+            earlyEnd: [{ kind: "caster_drops_to_0_hp" }],
+          },
+        },
+      }),
+      ["recordMechanics/generalFact:5"],
+    );
+
+    const teleportationCircle = requireSpell("teleportation_circle");
+    if (teleportationCircle.mechanics.duration.kind !== "timed") {
+      throw new Error("Expected Teleportation Circle to use a timed duration.");
+    }
+    expectDurationIssues(
+      decodeUnitRecordSync({
+        ...teleportationCircle,
+        mechanics: {
+          ...teleportationCircle.mechanics,
+          duration: {
+            ...teleportationCircle.mechanics.duration,
+            earlyEnd: [{ kind: "caster_recasts_spell" }],
+          },
+        },
+      }),
+      ["recordMechanics/generalFact:5"],
+    );
+
+    const geas = requireSpell("geas");
+    if (
+      geas.mechanics.duration.kind !== "timed" ||
+      teleportationCircle.mechanics.duration.permanentAfter === undefined
+    ) {
+      throw new Error("Expected correlated timed duration fixtures.");
+    }
+    expectDurationIssues(
+      decodeUnitRecordSync({
+        ...geas,
+        mechanics: {
+          ...geas.mechanics,
+          duration: {
+            ...geas.mechanics.duration,
+            permanentAfter:
+              teleportationCircle.mechanics.duration.permanentAfter,
+          },
+        },
+      }),
+      ["recordMechanics/generalFact:5"],
+    );
+
+    const planarBinding = requireSpell("planar_binding");
+    if (planarBinding.mechanics.duration.kind !== "slot_tiered") {
+      throw new Error("Expected Planar Binding to use slot-tiered duration.");
+    }
+    const firstTier = planarBinding.mechanics.duration.tiers[0];
+    if (firstTier === undefined || firstTier.duration.kind !== "timed") {
+      throw new Error("Expected a timed Planar Binding duration tier.");
+    }
+    expectDurationIssues(
+      decodeUnitRecordSync({
+        ...planarBinding,
+        mechanics: {
+          ...planarBinding.mechanics,
+          duration: {
+            ...planarBinding.mechanics.duration,
+            tiers: [
+              {
+                ...firstTier,
+                duration: {
+                  ...firstTier.duration,
+                  earlyEnd: [{ kind: "caster_recasts_spell" }],
+                },
+              },
+              ...planarBinding.mechanics.duration.tiers.slice(1),
+            ],
+          },
+        },
+      }),
+      ["recordMechanics/generalFact:5/extension:1"],
+    );
+
+    const telekinesis = requireSpell("telekinesis");
+    if (telekinesis.mechanics.duration.kind !== "concentration") {
+      throw new Error("Expected Telekinesis to use Concentration.");
+    }
+    expectDurationIssues(
+      decodeUnitRecordSync({
+        ...telekinesis,
+        mechanics: {
+          ...telekinesis.mechanics,
+          duration: {
+            ...telekinesis.mechanics.duration,
+            earlyEnd: [{ kind: "caster_drops_to_0_hp" }],
+          },
+        },
+      }),
+      ["recordMechanics/generalFact:5"],
+    );
+  });
+
   test("preserves exact phase and family coordinates", () => {
     expectCoordinates("dominate_person", [
       "unowned|repeat saving throw|recordMechanics/procedure:1/procedure:1",
@@ -454,6 +563,147 @@ describe("Character Sheet spell projection", () => {
       ],
     });
   });
+
+  test("accumulates extra effects in a Character Sheet-owned phase", () => {
+    const prayerOfHealing = requireSpell("prayer_of_healing");
+    if (prayerOfHealing.mechanics.family !== "activation") {
+      throw new Error("Expected Prayer of Healing to be an activation spell.");
+    }
+    const phase = prayerOfHealing.mechanics.phases[0];
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected Prayer of Healing to have a direct phase.");
+    }
+    const malformed = decodeUnitRecordSync({
+      ...prayerOfHealing,
+      mechanics: {
+        ...prayerOfHealing.mechanics,
+        phases: [
+          {
+            ...phase,
+            effects: [
+              ...(phase.effects ?? []),
+              { kind: "none" },
+              { kind: "none" },
+            ],
+          },
+        ],
+      },
+    });
+    expect(projectPartialCharacterSheetSpell(malformed)).toMatchObject({
+      tag: "unreadable",
+      issues: [
+        {
+          code: "unsupportedSpellBranch",
+          mechanicsPath: {
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "occurrence", role: "procedure", ordinal: 1 },
+              { kind: "occurrence", role: "effect", ordinal: 4 },
+            ],
+          },
+        },
+        {
+          code: "unsupportedSpellBranch",
+          mechanicsPath: {
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "occurrence", role: "procedure", ordinal: 1 },
+              { kind: "occurrence", role: "effect", ordinal: 5 },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  test("reports a missing required rest-benefit effect at the phase path", () => {
+    const prayerOfHealing = requireSpell("prayer_of_healing");
+    if (prayerOfHealing.mechanics.family !== "activation") {
+      throw new Error("Expected Prayer of Healing to be an activation spell.");
+    }
+    const phase = prayerOfHealing.mechanics.phases[0];
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected Prayer of Healing to have a direct phase.");
+    }
+    const malformed = decodeUnitRecordSync({
+      ...prayerOfHealing,
+      mechanics: {
+        ...prayerOfHealing.mechanics,
+        phases: [
+          {
+            ...phase,
+            effects: (phase.effects ?? []).filter(
+              (effect) => effect.kind !== "grant_rest_benefit",
+            ),
+          },
+        ],
+      },
+    });
+    expect(projectPartialCharacterSheetSpell(malformed)).toMatchObject({
+      tag: "unreadable",
+      issues: [
+        {
+          code: "unsupportedSpellBranch",
+          mechanicsPath: {
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "occurrence", role: "procedure", ordinal: 1 },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  test("rejects an owned effect substituted into the reincarnation shape", () => {
+    const reincarnate = requireSpell("reincarnate");
+    const greaterRestoration = requireSpell("greater_restoration");
+    if (
+      reincarnate.mechanics.family !== "activation" ||
+      greaterRestoration.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected activation spell fixtures.");
+    }
+    const reincarnationPhase = reincarnate.mechanics.phases[0];
+    const restorationPhase = greaterRestoration.mechanics.phases[0];
+    const removeConditionEffect =
+      restorationPhase?.kind === "direct"
+        ? restorationPhase.effects?.[0]
+        : undefined;
+    if (
+      reincarnationPhase?.kind !== "direct" ||
+      removeConditionEffect?.kind !== "remove_condition"
+    ) {
+      throw new Error("Expected reincarnation and restoration phase fixtures.");
+    }
+    const malformed = decodeUnitRecordSync({
+      ...reincarnate,
+      mechanics: {
+        ...reincarnate.mechanics,
+        phases: [
+          {
+            ...reincarnationPhase,
+            effects: [removeConditionEffect],
+          },
+        ],
+      },
+    });
+    expect(projectPartialCharacterSheetSpell(malformed)).toMatchObject({
+      tag: "unreadable",
+      issues: [
+        {
+          code: "unsupportedSpellBranch",
+          mechanicsPath: {
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "occurrence", role: "procedure", ordinal: 1 },
+              { kind: "occurrence", role: "effect", ordinal: 1 },
+            ],
+          },
+        },
+      ],
+    });
+  });
 });
 
 function expectCoordinates(
@@ -490,6 +740,20 @@ function issueCoordinate(
   >["issues"][number],
 ): string {
   return pathCoordinate(issue.mechanicsPath.nodes);
+}
+
+function expectDurationIssues(
+  spell: UnitRecord,
+  expectedCoordinates: readonly string[],
+): void {
+  const projection = projectPartialCharacterSheetSpell(spell);
+  expect(projection).toMatchObject({
+    tag: "unreadable",
+    issues: expectedCoordinates.map(() => ({ code: "unsupportedSpellBranch" })),
+  });
+  if (projection.tag === "unreadable") {
+    expect(projection.issues.map(issueCoordinate)).toEqual(expectedCoordinates);
+  }
 }
 
 function pathCoordinate(

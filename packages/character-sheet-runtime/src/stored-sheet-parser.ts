@@ -92,7 +92,7 @@ import {
   projectCharacterSheetSpellSource,
   type CharacterSheetSpellSource,
 } from "./character-spell-projection.ts";
-import { characterSheetTopLevelSpellCastingTime } from "./spell-profile-shape.ts";
+import { characterSheetSpellHasRitualTag } from "./spell-profile-shape.ts";
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
 import { parseHp } from "./hit-points.ts";
@@ -1073,7 +1073,8 @@ function storedBookOfShadowsSelectionIssue(
   }
   if (
     ritualSpells.success.some(
-      (spell) => spell.mechanics.level !== 1 || !spellHasRitualTag(spell),
+      (spell) =>
+        spell.mechanics.level !== 1 || !characterSheetSpellHasRitualTag(spell),
     )
   ) {
     return characterSheetIssue(
@@ -1136,15 +1137,6 @@ function spellSourcesForIds(
     spells.push(projection.value);
   }
   return Result.succeed(spells);
-}
-
-function spellHasRitualTag(spell: CharacterSheetSpellSource): boolean {
-  const castingTime = characterSheetTopLevelSpellCastingTime(spell.mechanics);
-  return (
-    castingTime !== null &&
-    "ritual" in castingTime &&
-    castingTime.ritual === true
-  );
 }
 
 function parseStoredOriginLanguages(

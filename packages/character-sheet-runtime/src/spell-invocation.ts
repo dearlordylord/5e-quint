@@ -18,7 +18,7 @@ import {
   projectCharacterSheetSpellSource,
   type CharacterSheetSpellSource,
 } from "./character-spell-projection.ts";
-import { characterSheetTopLevelSpellCastingTime } from "./spell-profile-shape.ts";
+import { characterSheetSpellHasRitualTag } from "./spell-profile-shape.ts";
 import {
   RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
   characterSheetIssue,
@@ -161,7 +161,7 @@ function characterSheetBookOfShadowsRitualInvocation(
       "Book of Shadows Ritual requires the book on your person.",
     );
   }
-  const spell = requiredRitualSpell(input, spellHasRitualTag);
+  const spell = requiredRitualSpell(input, characterSheetSpellHasRitualTag);
   /* v8 ignore next -- @preserve -- Ritual spell rejection is malformed Book of Shadows spell/catalog input. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   return Result.succeed({
@@ -362,16 +362,7 @@ function optionalSpellbookRitualAccessFeatureForBuild(
 }
 
 function spellHasLeveledRitualTag(spell: CharacterSheetSpellSource): boolean {
-  return spell.mechanics.level >= 1 && spellHasRitualTag(spell);
-}
-
-function spellHasRitualTag(spell: CharacterSheetSpellSource): boolean {
-  const castingTime = characterSheetTopLevelSpellCastingTime(spell.mechanics);
-  return (
-    castingTime !== null &&
-    "ritual" in castingTime &&
-    castingTime.ritual === true
-  );
+  return spell.mechanics.level >= 1 && characterSheetSpellHasRitualTag(spell);
 }
 
 function isSpellcastingBuild(

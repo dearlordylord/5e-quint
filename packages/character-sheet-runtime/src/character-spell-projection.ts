@@ -175,6 +175,7 @@ const SHEET_SAVE_FAILURE_KINDS = new Set<SavePhase["onFail"]["kind"]>([
 ]);
 const SHEET_OWNED_DIRECT_EFFECT_KINDS = new Set<DirectEffect["kind"]>([
   "grant_rest_benefit",
+  "spell_recipient_rest_lockout",
   "remove_condition",
   "revive_dead_creature",
 ]);
@@ -284,7 +285,7 @@ function isPartialSpellMechanics(
 
 function isPartialActivation(mechanics: Activation): boolean {
   return (
-    hasEffect(mechanics, "grant_rest_benefit") ||
+    hasRestBenefitCandidate(mechanics) ||
     (mechanics.level === 5 &&
       mechanics.phases.some((phase) =>
         Match.value(phase).pipe(
@@ -303,11 +304,15 @@ function isPartialActivation(mechanics: Activation): boolean {
   );
 }
 
-function hasEffect(mechanics: Activation, kind: "grant_rest_benefit"): boolean {
+function hasRestBenefitCandidate(mechanics: Activation): boolean {
   return mechanics.phases.some(
     (phase) =>
       phase.kind === "direct" &&
-      (phase.effects ?? []).some((effect) => effect.kind === kind),
+      (phase.effects ?? []).some(
+        (effect) =>
+          effect.kind === "grant_rest_benefit" ||
+          effect.kind === "spell_recipient_rest_lockout",
+      ),
   );
 }
 
@@ -435,14 +440,7 @@ function activationBranchIssues(
       ),
     );
   }
-  if (!isSupportedSheetDuration(mechanics.duration)) {
-    issues.push(
-      branchIssue(
-        [headerFact("duration")],
-        "The Character Sheet spell profile has an unsupported duration branch.",
-      ),
-    );
-  }
+  issues.push(...activationDurationBranchIssues(mechanics.duration));
   const phase = mechanics.phases[0];
   if (phase !== undefined)
     issues.push(...activationPhaseBranchIssues(mechanics, phase));
@@ -472,6 +470,41 @@ function directPhaseBranchIssues(
   phase: DirectPhase,
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   const effects = phase.effects ?? [];
+  if (isSheetReincarnationPhase(mechanics, phase)) {
+    return effects.length === 1 && effects[0]?.kind === "none"
+      ? []
+      : [
+          branchIssue(
+            [occurrence("procedure", 1), occurrence("effect", 1)],
+            "The Character Sheet reincarnation phase requires one explicit no-op effect.",
+          ),
+        ];
+  }
+  const ownedCandidateKind = effects.find((effect) =>
+    SHEET_OWNED_DIRECT_EFFECT_KINDS.has(effect.kind),
+  )?.kind;
+  if (ownedCandidateKind !== undefined) {
+    const validation = validateOwnedEffectSet(effects, ownedCandidateKind);
+    return [
+      ...validation.unsupportedIndices.map((unsupportedEffectIndex) =>
+        branchIssue(
+          [
+            occurrence("procedure", 1),
+            occurrence("effect", unsupportedEffectIndex + 1),
+          ],
+          "The Character Sheet-owned phase has an unsupported effect branch.",
+        ),
+      ),
+      ...(validation.missingRequired
+        ? [
+            branchIssue(
+              [occurrence("procedure", 1)],
+              "The Character Sheet-owned phase is missing a required effect branch.",
+            ),
+          ]
+        : []),
+    ];
+  }
   if (
     effects.length === 1 &&
     effects[0]?.kind === "none" &&
@@ -495,6 +528,43 @@ function directPhaseBranchIssues(
       ];
 }
 
+function validateOwnedEffectSet(
+  effects: readonly DirectEffect[],
+  ownedCandidateKind: typeof SHEET_OWNED_DIRECT_EFFECT_KINDS extends Set<
+    infer Kind
+  >
+    ? Kind
+    : never,
+): {
+  readonly unsupportedIndices: readonly number[];
+  readonly missingRequired: boolean;
+} {
+  const expectedCounts =
+    ownedCandidateKind === "grant_rest_benefit" ||
+    ownedCandidateKind === "spell_recipient_rest_lockout"
+      ? new Map<DirectEffect["kind"], number>([
+          ["heal_hp", 1],
+          ["grant_rest_benefit", 1],
+          ["spell_recipient_rest_lockout", 1],
+        ])
+      : new Map<DirectEffect["kind"], number>([[ownedCandidateKind, 1]]);
+  const unsupportedIndices: number[] = [];
+  for (const [index, effect] of effects.entries()) {
+    const remaining = expectedCounts.get(effect.kind) ?? 0;
+    if (remaining === 0) {
+      unsupportedIndices.push(index);
+    } else {
+      expectedCounts.set(effect.kind, remaining - 1);
+    }
+  }
+  return {
+    unsupportedIndices,
+    missingRequired: [...expectedCounts.values()].some(
+      (remaining) => remaining > 0,
+    ),
+  };
+}
+
 function savePhaseBranchIssues(
   mechanics: Activation,
   phase: SavePhase,
@@ -511,7 +581,7 @@ function savePhaseBranchIssues(
 
 function isPotentialSheetActivation(mechanics: Activation): boolean {
   return (
-    hasEffect(mechanics, "grant_rest_benefit") ||
+    hasRestBenefitCandidate(mechanics) ||
     (mechanics.level === 5 &&
       mechanics.phases.some(
         (phase) =>
@@ -524,14 +594,85 @@ function isPotentialSheetActivation(mechanics: Activation): boolean {
   );
 }
 
-function isSupportedSheetDuration(duration: Activation["duration"]): boolean {
+function activationDurationBranchIssues(
+  duration: Activation["duration"],
+): readonly PartialCharacterSheetSpellProjectionIssue[] {
   return Match.value(duration).pipe(
-    Match.when({ kind: "instantaneous" }, () => true),
-    Match.when({ kind: "timed" }, () => true),
-    Match.when({ kind: "concentration" }, () => true),
-    Match.when({ kind: "permanent" }, () => true),
-    Match.when({ kind: "slot_tiered" }, () => true),
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, (timed) =>
+      timed.earlyEnd === undefined &&
+      (timed.permanentAfter === undefined ||
+        timed.value.upcastTiers === undefined)
+        ? []
+        : [unsupportedDurationIssue([headerFact("duration")])],
+    ),
+    Match.when({ kind: "concentration" }, (concentration) =>
+      concentration.earlyEnd === undefined ||
+      concentration.permanentIfMaintainedFull === undefined
+        ? []
+        : [unsupportedDurationIssue([headerFact("duration")])],
+    ),
+    Match.when({ kind: "permanent" }, () => []),
+    Match.when({ kind: "slot_tiered" }, slotTieredDurationBranchIssues),
     Match.exhaustive,
+  );
+}
+
+function slotTieredDurationBranchIssues(
+  duration: Extract<Activation["duration"], { readonly kind: "slot_tiered" }>,
+): readonly PartialCharacterSheetSpellProjectionIssue[] {
+  const issues: PartialCharacterSheetSpellProjectionIssue[] = [];
+  if (!isPlainTimedDurationBranch(duration.base)) {
+    issues.push(
+      unsupportedDurationIssue([headerFact("duration"), durationValue()]),
+    );
+  }
+  for (const [index, tier] of duration.tiers.entries()) {
+    if (!isPlainTimedDurationBranch(tier.duration)) {
+      issues.push(
+        unsupportedDurationIssue([
+          headerFact("duration"),
+          occurrence(
+            "extension",
+            DURATION_BRANCH_ORDINALS.firstExtension + index,
+          ),
+        ]),
+      );
+    }
+  }
+  return issues;
+}
+
+function isPlainTimedDurationBranch(
+  duration: Extract<
+    Activation["duration"],
+    { readonly kind: "slot_tiered" }
+  >["base"],
+): boolean {
+  return (
+    duration.kind === "timed" &&
+    duration.earlyEnd === undefined &&
+    duration.permanentAfter === undefined &&
+    duration.value.upcastTiers === undefined
+  );
+}
+
+function isPlainConcentrationDuration(
+  duration: CharacterSheetSpellMechanics["duration"],
+): boolean {
+  return (
+    duration.kind === "concentration" &&
+    duration.earlyEnd === undefined &&
+    duration.permanentIfMaintainedFull === undefined
+  );
+}
+
+function unsupportedDurationIssue(
+  mechanicsPath: UnitMechanicsPath["nodes"],
+): PartialCharacterSheetSpellProjectionIssue {
+  return branchIssue(
+    mechanicsPath,
+    "The Character Sheet spell profile has an unsupported duration branch.",
   );
 }
 
@@ -539,7 +680,7 @@ function ongoingBranchIssues(
   mechanics: OngoingEffect,
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   if (!isPartialOngoingEffect(mechanics)) return [];
-  return mechanics.duration.kind === "concentration"
+  return isPlainConcentrationDuration(mechanics.duration)
     ? []
     : [
         branchIssue(
@@ -553,7 +694,7 @@ function templatedSpawnBranchIssues(
   mechanics: TemplatedSpawn,
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   const issues: PartialCharacterSheetSpellProjectionIssue[] = [];
-  if (mechanics.duration.kind !== "concentration") {
+  if (!isPlainConcentrationDuration(mechanics.duration)) {
     issues.push(
       branchIssue(
         [headerFact("duration")],
@@ -577,7 +718,7 @@ function spawnedCreatureBranchIssues(
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   if (!isPotentialSpawnedCreature(mechanics)) return [];
   const issues: PartialCharacterSheetSpellProjectionIssue[] = [];
-  if (mechanics.duration.kind !== "concentration") {
+  if (!isPlainConcentrationDuration(mechanics.duration)) {
     issues.push(
       branchIssue(
         [headerFact("duration")],
@@ -697,13 +838,29 @@ function timedDurationEvidence(
       ),
     );
   }
-  if (duration.permanentAfter !== undefined) {
+  for (const [index] of (duration.earlyEnd ?? []).entries()) {
     entries.push(
       evidence(
         "consumed",
         [
           headerFact("duration"),
-          occurrence("effect", DURATION_BRANCH_ORDINALS.firstEffect),
+          occurrence("effect", DURATION_BRANCH_ORDINALS.firstEffect + index),
+        ],
+        "duration early ending",
+      ),
+    );
+  }
+  if (duration.permanentAfter !== undefined) {
+    const earlyEndCount = duration.earlyEnd?.length ?? 0;
+    entries.push(
+      evidence(
+        "consumed",
+        [
+          headerFact("duration"),
+          occurrence(
+            "effect",
+            DURATION_BRANCH_ORDINALS.firstEffect + earlyEndCount,
+          ),
         ],
         "permanent casting cadence",
       ),
@@ -738,12 +895,16 @@ function concentrationDurationEvidence(
     );
   }
   if (duration.permanentIfMaintainedFull === true) {
+    const earlyEndCount = duration.earlyEnd?.length ?? 0;
     entries.push(
       evidence(
         "consumed",
         [
           headerFact("duration"),
-          occurrence("effect", DURATION_BRANCH_ORDINALS.firstEffect),
+          occurrence(
+            "effect",
+            DURATION_BRANCH_ORDINALS.firstEffect + earlyEndCount,
+          ),
         ],
         "maintained permanent duration",
       ),
@@ -839,7 +1000,7 @@ function activationEvidence(
       ),
     ];
     if (phase.kind === "direct") {
-      const disposition = ownsDirectPhaseEffects(mechanics, phase)
+      const disposition = ownsExactDirectPhaseEffects(mechanics, phase)
         ? "consumed"
         : "unowned";
       return [
@@ -881,15 +1042,25 @@ function activationEvidence(
   });
 }
 
-function ownsDirectPhaseEffects(
+function ownsExactDirectPhaseEffects(
   mechanics: Activation,
   phase: DirectPhase,
 ): boolean {
   const effects = phase.effects ?? [];
+  const restBenefitValidation = validateOwnedEffectSet(
+    effects,
+    "grant_rest_benefit",
+  );
   return (
-    effects.some((effect) =>
-      SHEET_OWNED_DIRECT_EFFECT_KINDS.has(effect.kind),
-    ) || isSheetReincarnationPhase(mechanics, phase)
+    (effects.length === 3 &&
+      restBenefitValidation.unsupportedIndices.length === 0 &&
+      !restBenefitValidation.missingRequired) ||
+    (effects.length === 1 &&
+      (effects[0]?.kind === "remove_condition" ||
+        effects[0]?.kind === "revive_dead_creature")) ||
+    (effects.length === 1 &&
+      effects[0]?.kind === "none" &&
+      isSheetReincarnationPhase(mechanics, phase))
   );
 }
 

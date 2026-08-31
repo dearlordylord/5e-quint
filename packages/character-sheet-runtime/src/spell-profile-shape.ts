@@ -1,11 +1,25 @@
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 
-import type { CharacterSheetSpellFacts } from "./character-spell-projection.ts";
+import type {
+  CharacterSheetSpellFacts,
+  CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
 
 export function characterSheetTopLevelSpellCastingTime(
   mechanics: CharacterSheetSpellFacts["mechanics"],
 ) {
   return "castingTime" in mechanics ? mechanics.castingTime : null;
+}
+
+export function characterSheetSpellHasRitualTag(
+  spell: CharacterSheetSpellSource,
+): boolean {
+  const castingTime = characterSheetTopLevelSpellCastingTime(spell.mechanics);
+  return (
+    castingTime !== null &&
+    "ritual" in castingTime &&
+    castingTime.ritual === true
+  );
 }
 
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
