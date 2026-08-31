@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50667014,
-    "sha256": "f6e959b94b55d66523aef9a569f7dfbe42fd9da9d4a5e0dbbf9e6283156f8088"
+    "sha256": "c05360a0ab9e66c7b824ae9c5e651f549aa812f85d415670cc8f12b0ba0ac1ff"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -29603,7 +29603,7 @@
       {
         "delta": {
           "baselineSha256": "31dc4263bcfd887e249c3b2a7dc2bdb4933719cb7c9ee24ba29f45b89dae8cf7",
-          "candidateSha256": "a02fde68bb014923bbfc53ee8372ca29846f5adb1e46177048da2c2fe291bb9c",
+          "candidateSha256": "782e1cefab77f8192575603d08ecf4f91cbc1d2f00177b9076e0e818f358fb93",
           "operation": "changed",
           "segments": [
             "surface",
@@ -128247,7 +128247,7 @@
       {
         "delta": {
           "baselineSha256": "fa39529ae8918c2cb33041a4d15cd2573c1d5beffdfb6a5784e84840725950fd",
-          "candidateSha256": "6d8289a62b11540e071f9cc28bef78bd2d9c580b65d172349d5ebc1e5c38d5f4",
+          "candidateSha256": "1220d03e0e72308449e7fddb7c74d2460eb5236673c9fdec23cbc9a926e9dc26",
           "operation": "changed",
           "segments": [
             "surface",
@@ -196686,7 +196686,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "06bf78480fc4a6c22af1513188b5c4aa669f1173990fa16f3d143115b7ec7ef5",
+    "identitySha256": "0a0f9b4b840b4e3da7aaf58c71af87c92557a03de335fcccb4d85dddbf44ad46",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -196751,7 +196751,7 @@
       {
         "changedCollectionAuthorityIds": [],
         "deltaCount": 4,
-        "deltaIdentitySha256": "07d512e4506ecb8687bd01ab2ec6895c6e45755974763d6d5878270fe5c16b26",
+        "deltaIdentitySha256": "13ec066ab6fab25fbf7bfe935aab44cfb58aca6ed622d3f882374b3f69bede02",
         "id": "surface-publication-contract-convergence",
         "operations": {
           "added": 0,
