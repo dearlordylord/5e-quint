@@ -134,7 +134,7 @@ import type { CharacterBattleResourceState } from "./character-battle-resources.
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 import { unitSupportProfileKind } from "./character-execution-queries.ts";
 import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-fixtures.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { frenzyDamageTypeSelection } from "./battle-reducer/statblock-attacks.ts";
 
 const ruleCoreFeatureMbtHoles = [
@@ -1889,7 +1889,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

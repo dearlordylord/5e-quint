@@ -32,7 +32,7 @@ import {
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   fighterId,
   resolveBattleSubject,
@@ -731,7 +731,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

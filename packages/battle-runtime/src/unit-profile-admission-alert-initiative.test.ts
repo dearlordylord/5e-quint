@@ -19,6 +19,7 @@ import {
 import { initiativeProficiencyAndSwapProfileForUnit } from "./unit-feature-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import type {
   BattleState,
   CombatantId,
@@ -411,7 +412,7 @@ function alertBattleSetup(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

@@ -62,7 +62,7 @@ import {
   battleMagicActionSaveGatedConditionSupportForUnit,
   magicActionSaveGatedConditionProfileForUnit,
 } from "./unit-feature-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const paladinAbjureFoesUnitId = "paladin_abjure_foes";
 const abjureFoesUnit = unitLibrary.requireUnit(paladinAbjureFoesUnitId);
@@ -480,7 +480,7 @@ function abjureFoesBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
