@@ -109,11 +109,16 @@ exercised by the clean-consumer smoke.
 
 ### Master-reconciliation declaration certificate
 
-The fixed Surface and Battle Runtime consumer graph now contains exactly 529
-declaration files and 4,094,773 bytes. The 10 MiB byte cap is unchanged and
-leaves 6,390,987 bytes of margin; the file cap is the exact reviewed count, not
-a permissive growth allowance. Relative to the prior 523-file reconciliation
-certificate, the current graph adds these ten declarations:
+The fixed Surface and Battle Runtime consumer graph now contains exactly 530
+declaration files and 4,667,450 bytes. The 10 MiB byte cap is unchanged and
+leaves 5,818,310 bytes of margin; the file cap is the exact reviewed count, not
+a permissive growth allowance. The SHA-256 of the sorted relative-path ledger
+is `fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e`;
+the SHA-256 of the sorted ledger that binds each relative path to its file
+SHA-256 is
+`b196b26a3dd9aa80064b55d867f41344f133738325c10895cc7290f406420809`.
+Relative to the prior 523-file reconciliation certificate, the current graph
+adds these eleven declarations:
 
 - `packages/battle-runtime/src/battle-reducer/codec-building-blocks.d.ts`
 - `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/once-per-turn-limit-group-admission.d.ts`
@@ -123,6 +128,7 @@ certificate, the current graph adds these ten declarations:
 - `packages/battle-runtime/src/stat-block-attack-damage-selection.d.ts`
 - `packages/battle-runtime/src/stat-block-authored-projection.d.ts`
 - `packages/battle-runtime/src/stat-block-presentation-contract.d.ts`
+- `packages/surface/src/surface/generated/srd-unit-aggregate.d.ts`
 - `packages/surface/src/surface/stat-block-catalog-contract.d.ts`
 - `packages/surface/src/surface/stat-block-speed-readers.d.ts`
 
@@ -134,10 +140,14 @@ Block catalog type is now owned by
 [`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
 so type-only consumers do not pull the runtime catalog into the public graph.
 The 1,599,076-byte generated `srd-stat-block-aggregate.d.ts` and its
-`stat-block-identity.d.ts` dependency are consequently absent. The focused
-real relocated supervisor test proves initialization, transcript, replay, and
-declaration emission for this graph; this certificate does not claim that the
-remaining issue #386 public gates have run.
+`stat-block-identity.d.ts` dependency are consequently absent. In contrast,
+the SDK setup runtime consumes the eager canonical Unit collection, whose data
+owner now imports the generated 572,677-byte `srd-unit-aggregate.d.ts`; that
+single new declaration accounts for the complete growth from the reviewed
+529-file graph. The focused real relocated supervisor test proves
+initialization, transcript, replay, and declaration emission for this graph;
+this certificate does not claim that the remaining issue #386 public gates
+have run.
 
 ### Master-reconciliation authored-identity collision audit
 
