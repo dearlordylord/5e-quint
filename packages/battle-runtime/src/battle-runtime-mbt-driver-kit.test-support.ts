@@ -685,8 +685,7 @@ type MbtHole =
   | "SpellDamageRoll"
   | "StatBlockRechargeRoll"
   | "LevitateAltitudeChange"
-  | "LevitateInitialRise"
-  | "SlowSomaticSpellFailureOutcome";
+  | "LevitateInitialRise";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
 type SpellTargetSubject =
@@ -18655,7 +18654,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
     return ["LevitateInitialRise"];
   }
   if (hole.kind === "turnConstraintSomaticSpellFailureOutcome") {
-    return ["SlowSomaticSpellFailureOutcome"];
+    throw new Error(
+      "Generic battle runtime MBT leaves turn-constraint Somatic spell-failure holes to the focused Slow witness.",
+    );
   }
   if (hole.kind === "targetAbilityChoices") {
     throw new Error(
@@ -18835,8 +18836,7 @@ function holeName(raw: unknown): MbtHole {
     tag === "SpellDamageRoll" ||
     tag === "StatBlockRechargeRoll" ||
     tag === "LevitateAltitudeChange" ||
-    tag === "LevitateInitialRise" ||
-    tag === "SlowSomaticSpellFailureOutcome"
+    tag === "LevitateInitialRise"
   ) {
     return tag;
   }

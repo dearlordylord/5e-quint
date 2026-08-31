@@ -3367,7 +3367,7 @@
       "runtimeOwners": [
         "packages/character-sheet-runtime/src/armor-class.ts",
         "packages/shared-algebras/src/armor-class-algebra.ts",
-        "packages/surface/src/surface/unit-catalog-data.ts"
+        "packages/surface/src/surface/unit-catalog.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6103,7 +6103,7 @@
       "followUpTaskIds": [],
       "holeKind": "attackRoll",
       "id": "BattleAttackRollHole",
-      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is now split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control.",
+      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control. BATTLE.STAT_BLOCK.ATTACK_PROCEDURE owns formal semantics for the admitted Stat Block attack, damage, and typed-rider family.",
       "subject": "battle-hole-family"
     },
     {
@@ -6539,7 +6539,7 @@
       "followUpTaskIds": [],
       "holeKind": "statBlockRechargeRoll",
       "id": "BattleStatBlockRechargeRollHole",
-      "reason": "Recharge rolls affect stat block limited-use/recharge availability and are covered by the stat-block attack-control obligation; the protocol ordering obligation owns their start-turn frontier before recharge-gated action availability is restored.",
+      "reason": "Recharge rolls affect stat block limited-use/recharge availability and are covered by the precise Stat Block procedure obligation; the protocol ordering obligation owns their start-turn frontier before recharge-gated action availability is restored.",
       "subject": "battle-hole-family"
     },
     {
