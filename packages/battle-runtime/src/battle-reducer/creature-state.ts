@@ -1210,8 +1210,13 @@ function characterResourceFeatureProcedures(
   resources: readonly CharacterBattleResourceAdmissionInput[],
 ): readonly AdmittedResourceFeature[] {
   return resources.flatMap((resource) =>
-    "tag" in resource && resource.projection.tag === "resourceFeature"
-      ? [resource.projection.feature]
+    "tag" in resource
+      ? [
+          {
+            sourceUnitId: resource.init.unit.id,
+            procedure: resource.procedure,
+          },
+        ]
       : [],
   );
 }

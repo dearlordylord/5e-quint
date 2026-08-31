@@ -10,7 +10,7 @@ import {
   spellSlotLevel,
   type ProficiencyBonus,
 } from "@dnd/shared/types";
-import { Brand, Match } from "effect";
+import { Brand } from "effect";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -66,6 +66,7 @@ import {
   admitResourceFeature,
   resourceFeatureExecutionFacts,
   type AdmittedResourceFeature,
+  type UnboundResourceFeatureProcedure,
 } from "./procedure-admission/resource-feature-admission.ts";
 import {
   type CharacterBattleActivationResource,
@@ -134,23 +135,13 @@ export type CharacterBattleResourceInit =
   | CharacterBattlePointPoolResourceInit
   | CharacterBattleSpellAccessFreeCastResourceInit;
 
-export type CharacterBattleResourceProjection =
-  | {
-      readonly tag: "resource";
-      readonly resource: CharacterBattleResourceExecutionFacts;
-    }
-  | {
-      readonly tag: "resourceFeature";
-      readonly feature: AdmittedResourceFeature;
-    };
-
 type ProjectedCharacterBattleResourceInitData = {
   readonly tag: "projectedCharacterBattleResource";
   readonly init: Exclude<
     CharacterBattleResourceInit,
     CharacterBattleSpellAccessFreeCastResourceInit
   >;
-  readonly projection: CharacterBattleResourceProjection;
+  readonly procedure: UnboundResourceFeatureProcedure;
 };
 
 export type ProjectedCharacterBattleResourceInit =
@@ -188,7 +179,7 @@ export function projectCharacterBattleResourceFeature(
     input: ProjectedCharacterBattleResourceInit({
       tag: "projectedCharacterBattleResource",
       init,
-      projection: { tag: "resourceFeature", feature },
+      procedure: feature.procedure,
     }),
   };
 }
@@ -201,13 +192,7 @@ export function characterBattleResourceExecutionFacts(
   input: CharacterBattleResourceAdmissionInput,
 ): CharacterBattleResourceExecutionFacts {
   if ("tag" in input) {
-    return Match.value(input.projection).pipe(
-      Match.discriminatorsExhaustive("tag")({
-        resource: ({ resource }) => resource,
-        resourceFeature: ({ feature }) =>
-          resourceFeatureExecutionFacts(feature.procedure),
-      }),
-    );
+    return resourceFeatureExecutionFacts(input.procedure);
   }
   if (input.spellAccessFreeCast !== undefined) {
     return {
