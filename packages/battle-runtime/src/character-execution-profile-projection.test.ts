@@ -8,6 +8,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import {
+  boundUnitFeatureProcedureFactsFromProfile,
   characterExecutionFromUnits,
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
@@ -118,6 +119,21 @@ const UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
 ] as const satisfies ReadonlyArray<UnitFeatureProjectionFailure>;
 
 describe("character execution profile projection", () => {
+  test("separates source identity from projected procedure facts", () => {
+    const unit = requireUnit(unitId("fighter_tactical_mind"));
+    const profile = parseSupportedUnitFeatureProfile(
+      unit,
+      FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
+      sourceFacts,
+    );
+    if (profile === null) throw new Error("Expected Tactical Mind profile.");
+
+    const bound = boundUnitFeatureProcedureFactsFromProfile(profile);
+
+    expect(bound.sourceUnitId).toBe(unit.id);
+    expect(bound.facts).not.toHaveProperty("unit");
+  });
+
   test("projects every admitted SRD Unit feature into execution facts", () => {
     const projectedKinds = new Set<string>();
     const supportOwnedKinds = new Set<string>();
@@ -259,7 +275,9 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-feature-resource"),
       combatantId: combatantId("missing-feature-resource-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      unitFeatureProfiles: [profile],
+      unitFeatureProcedures: [
+        boundUnitFeatureProcedureFactsFromProfile(profile),
+      ],
       resourceUnits: [],
       units: [unit],
       unitRefs: [],
@@ -289,7 +307,7 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-primary-support-resource"),
       combatantId: combatantId("missing-primary-support-resource-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      unitFeatureProfiles: [],
+      unitFeatureProcedures: [],
       resourceUnits: [],
       units: [unit],
       unitRefs: [{ unit, supportProfiles: [profile] }],
@@ -319,7 +337,7 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-option-grant-procedure"),
       combatantId: combatantId("missing-option-grant-procedure-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      unitFeatureProfiles: [],
+      unitFeatureProcedures: [],
       resourceUnits: [],
       units: [unit],
       unitRefs: [{ unit, supportProfiles: [profile] }],

@@ -55,6 +55,19 @@ import type {
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts";
+import { admitWeaponMasteryProcedure } from "./procedure-admission/weapon-mastery.ts";
+export {
+  battleWeaponMasteryCleaveSupportForUnit,
+  battleWeaponMasteryPushSupportForUnit,
+  battleWeaponMasterySapSupportForUnit,
+  battleWeaponMasterySlowSupportForUnit,
+  battleWeaponMasteryToppleSupportForUnit,
+  type BattleWeaponMasteryCleaveSupport,
+  type BattleWeaponMasteryPushSupport,
+  type BattleWeaponMasterySapSupport,
+  type BattleWeaponMasterySlowSupport,
+  type BattleWeaponMasteryToppleSupport,
+} from "./procedure-admission/weapon-mastery.ts";
 export type {
   BrutalStrikeEffect,
   BrutalStrikeHamstringEffect,
@@ -1859,75 +1872,60 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(tacticalMasterReplacementSupport);
   }
 
-  const weaponMasteryPushSupport = battleWeaponMasteryPushSupportForUnit(
-    input.unit,
+  const weaponMasteryProcedure = Match.value(
+    admitWeaponMasteryProcedure(input.unit),
+  ).pipe(
+    Match.when({ tag: "notBattleOwned" }, () =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([]),
+    ),
+    Match.when({ tag: "admitted" }, (admission) =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([
+        admission.procedure.facts,
+      ]),
+    ),
+    Match.when({ tag: "rejected" }, (rejection) =>
+      battleUnitSupportProfileIssue(
+        Match.value(rejection.issues[0].procedure).pipe(
+          Match.when(
+            WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+            () =>
+              `Unsupported battle Weapon Mastery Push Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+            () =>
+              `Unsupported battle Weapon Mastery Sap Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+            () =>
+              `Unsupported battle Weapon Mastery Topple Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+            () =>
+              `Unsupported battle Weapon Mastery Cleave Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+            () =>
+              `Unsupported battle Weapon Mastery Slow Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            "unrecognizedWeaponMastery",
+            () =>
+              `Unsupported battle Weapon Mastery Unit hook: ${input.unit.id}.`,
+          ),
+          Match.exhaustive,
+        ),
+      ),
+    ),
+    Match.exhaustive,
   );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (weaponMasteryPushSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Weapon Mastery Push Unit hook: ${input.unit.id}.`,
-    );
+  if (Result.isFailure(weaponMasteryProcedure)) {
+    return Result.fail(weaponMasteryProcedure.failure);
   }
-  /* v8 ignore stop -- @preserve */
-  if (weaponMasteryPushSupport !== null) {
-    supportProfiles.push(weaponMasteryPushSupport);
-  }
-
-  const weaponMasterySapSupport = battleWeaponMasterySapSupportForUnit(
-    input.unit,
-  );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (weaponMasterySapSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Weapon Mastery Sap Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (weaponMasterySapSupport !== null) {
-    supportProfiles.push(weaponMasterySapSupport);
-  }
-
-  const weaponMasteryToppleSupport = battleWeaponMasteryToppleSupportForUnit(
-    input.unit,
-  );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (weaponMasteryToppleSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Weapon Mastery Topple Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (weaponMasteryToppleSupport !== null) {
-    supportProfiles.push(weaponMasteryToppleSupport);
-  }
-
-  const weaponMasteryCleaveSupport = battleWeaponMasteryCleaveSupportForUnit(
-    input.unit,
-  );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (weaponMasteryCleaveSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Weapon Mastery Cleave Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (weaponMasteryCleaveSupport !== null) {
-    supportProfiles.push(weaponMasteryCleaveSupport);
-  }
-
-  const weaponMasterySlowSupport = battleWeaponMasterySlowSupportForUnit(
-    input.unit,
-  );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (weaponMasterySlowSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Weapon Mastery Slow Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (weaponMasterySlowSupport !== null) {
-    supportProfiles.push(weaponMasterySlowSupport);
-  }
+  supportProfiles.push(...weaponMasteryProcedure.success);
 
   return Result.succeed({ supportProfiles, huntersPreyAdmission });
 }
@@ -3300,31 +3298,6 @@ export type BattleDruidWildShapeKnownFormSupport =
 
 export type BattleTacticalMasterReplacementSupport =
   | BattleTacticalMasterReplacementSupportProfile
-  | "unsupported"
-  | null;
-
-export type BattleWeaponMasterySapSupport =
-  | typeof WEAPON_MASTERY_SAP_SUPPORT_PROFILE
-  | "unsupported"
-  | null;
-
-export type BattleWeaponMasteryToppleSupport =
-  | typeof WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE
-  | "unsupported"
-  | null;
-
-export type BattleWeaponMasteryCleaveSupport =
-  | typeof WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE
-  | "unsupported"
-  | null;
-
-export type BattleWeaponMasteryPushSupport =
-  | typeof WEAPON_MASTERY_PUSH_SUPPORT_PROFILE
-  | "unsupported"
-  | null;
-
-export type BattleWeaponMasterySlowSupport =
-  | typeof WEAPON_MASTERY_SLOW_SUPPORT_PROFILE
   | "unsupported"
   | null;
 
@@ -7432,142 +7405,6 @@ function thresholdTierNumberAtClassLevel(
     tiers.base,
   );
 }
-
-export function battleWeaponMasterySapSupportForUnit(
-  unit: AuthoredUnitSource,
-): BattleWeaponMasterySapSupport {
-  if (unit.kind !== "mastery") {
-    return null;
-  }
-  /* v8 ignore start -- @preserve -- Malformed Sap mastery mechanics are rejected at profile admission; canonical Sap projection and unrelated mastery shapes remain covered. */
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit" &&
-    unit.mechanics.optional === false &&
-    unit.mechanics.effect.kind === "modify_roll_advantage" &&
-    unit.mechanics.effect.mode === "disadvantage" &&
-    unit.mechanics.effect.count === 1 &&
-    unit.mechanics.effect.on.length === 1 &&
-    unit.mechanics.effect.on[0] === "attack_roll" &&
-    unit.mechanics.effect.expiresOn.kind === "target_uses_or_turn_start";
-  if (supported) {
-    return WEAPON_MASTERY_SAP_SUPPORT_PROFILE;
-  }
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "modify_roll_advantage"
-    ? "unsupported"
-    : null;
-  /* v8 ignore stop -- @preserve */
-}
-
-export function battleWeaponMasteryPushSupportForUnit(
-  unit: AuthoredUnitSource,
-): BattleWeaponMasteryPushSupport {
-  if (unit.kind !== "mastery") {
-    return null;
-  }
-  /* v8 ignore start -- @preserve -- Malformed Push mastery mechanics are rejected at profile admission; canonical Push projection and unrelated mastery shapes remain covered. */
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.kind === "push_creature" &&
-    unit.mechanics.effect.maxDistanceFeet === 10 &&
-    unit.mechanics.effect.direction === "straight_away_from_self" &&
-    unit.mechanics.effect.maximumTargetSize === "large";
-  if (supported) {
-    return WEAPON_MASTERY_PUSH_SUPPORT_PROFILE;
-  }
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "push_creature"
-    ? "unsupported"
-    : null;
-  /* v8 ignore stop -- @preserve */
-}
-
-export function battleWeaponMasteryToppleSupportForUnit(
-  unit: AuthoredUnitSource,
-): BattleWeaponMasteryToppleSupport {
-  if (unit.kind !== "mastery") {
-    return null;
-  }
-  /* v8 ignore start -- @preserve -- Malformed Topple mastery mechanics are rejected at profile admission; canonical Topple projection and unrelated mastery shapes remain covered. */
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.kind === "save_gate" &&
-    unit.mechanics.effect.ability === "con" &&
-    unit.mechanics.effect.dc.kind === "weapon_attack_dc" &&
-    unit.mechanics.effect.dc.base === 8 &&
-    unit.mechanics.effect.onFail.kind === "apply_condition" &&
-    unit.mechanics.effect.onFail.condition === "prone" &&
-    unit.mechanics.effect.onSuccess.kind === "none";
-  if (supported) {
-    return WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE;
-  }
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "save_gate"
-    ? "unsupported"
-    : null;
-  /* v8 ignore stop -- @preserve */
-}
-
-export function battleWeaponMasterySlowSupportForUnit(
-  unit: AuthoredUnitSource,
-): BattleWeaponMasterySlowSupport {
-  if (unit.kind !== "mastery") {
-    return null;
-  }
-  /* v8 ignore start -- @preserve -- Malformed Slow mastery mechanics are rejected at profile admission; canonical Slow projection and unrelated mastery shapes remain covered. */
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit_with_damage" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.kind === "speed_delta" &&
-    unit.mechanics.effect.deltaFeet === -10 &&
-    unit.mechanics.effect.maximumReductionFeet === 10 &&
-    unit.mechanics.effect.expiresOn.kind === "start_of_attacker_next_turn";
-  if (supported) {
-    return WEAPON_MASTERY_SLOW_SUPPORT_PROFILE;
-  }
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "speed_delta"
-    ? "unsupported"
-    : null;
-  /* v8 ignore stop -- @preserve */
-}
-
-export function battleWeaponMasteryCleaveSupportForUnit(
-  unit: AuthoredUnitSource,
-): BattleWeaponMasteryCleaveSupport {
-  if (unit.kind !== "mastery") {
-    return null;
-  }
-  if (
-    unit.mechanics.family !== "on_hit_trigger" ||
-    unit.mechanics.effect.kind !== "grant_weapon_attack" ||
-    !("usageLimit" in unit.mechanics)
-  ) {
-    return null;
-  }
-  /* v8 ignore start -- @preserve -- Malformed Cleave mastery mechanics are rejected at profile admission; canonical Cleave projection is covered. */
-  const supported =
-    unit.mechanics.trigger.kind === "weapon_hit_melee_only" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.attackKind === "melee_weapon_attack" &&
-    unit.mechanics.effect.secondaryTarget.kind === "adjacent_to_primary" &&
-    unit.mechanics.effect.secondaryTarget.constraint ===
-      "within_5ft_and_reach" &&
-    unit.mechanics.effect.onHit.kind === "weapon_damage" &&
-    unit.mechanics.effect.onHit.abilityModifier === "negative_only" &&
-    unit.mechanics.usageLimit.kind === "once_per_turn";
-  if (supported) {
-    return WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE;
-  }
-  return "unsupported";
-}
-/* v8 ignore stop -- @preserve */
 
 function parseBardicInspirationGrantUnitFeatureProfile(
   unit: AuthoredUnitSource,

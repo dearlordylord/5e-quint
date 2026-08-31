@@ -59,6 +59,7 @@ import {
   type BattleUnitSupportProfile,
   type BattleUnitSupportProfileIssue,
   type BattleUnitSupportSource,
+  type SupportedUnitFeatureFacts,
   type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import type {
@@ -126,6 +127,20 @@ export type CharacterUnitProcedureOwnership = {
   readonly procedureRef: BattleProcedureExecutionRef;
 };
 
+export type BoundUnitFeatureProcedureFacts<
+  Facts extends SupportedUnitFeatureFacts = SupportedUnitFeatureFacts,
+> = {
+  readonly sourceUnitId: AuthoredUnitSource["id"];
+  readonly facts: Facts;
+};
+
+export function boundUnitFeatureProcedureFactsFromProfile(
+  profile: SupportedUnitFeatureProfile,
+): BoundUnitFeatureProcedureFacts {
+  const { unit, ...facts } = profile;
+  return { sourceUnitId: unit.id, facts };
+}
+
 export type UnitSupportProcedureExecutionContext = {
   readonly resourcePoolRefsByUnitId: ReadonlyMap<
     AuthoredUnitSource["id"],
@@ -170,13 +185,13 @@ type UnitFeatureProcedureCandidate = {
   readonly execution: UnitFeatureProcedureExecution;
 };
 
-function resourceSelectedAreaDamageReplacementProfiles(input: {
+function resourceSelectedAreaDamageReplacementProcedures(input: {
   readonly resourceUnits: readonly AuthoredUnitSource[];
   readonly unitRefs: readonly {
     readonly unit: BattleUnitSupportSource;
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
   }[];
-}): readonly SupportedUnitFeatureProfile[] {
+}): readonly BoundUnitFeatureProcedureFacts[] {
   const resourceUnitsById = new Map(
     input.resourceUnits.map((unit) => [unit.id, unit]),
   );
@@ -184,10 +199,10 @@ function resourceSelectedAreaDamageReplacementProfiles(input: {
     const resourceUnit = resourceUnitsById.get(unitRef.unit.id);
     if (resourceUnit === undefined) return [];
     return unitRef.supportProfiles.flatMap(
-      (profile): readonly SupportedUnitFeatureProfile[] =>
+      (profile): readonly BoundUnitFeatureProcedureFacts[] =>
         typeof profile === "object" &&
         profile.kind === "attackActionAreaSaveDamageReplacement"
-          ? [{ ...profile, unit: resourceUnit }]
+          ? [{ sourceUnitId: resourceUnit.id, facts: profile }]
           : [],
     );
   });
@@ -216,7 +231,7 @@ export function characterExecutionFromUnits(input: {
   readonly battleId: BattleId;
   readonly combatantId: CombatantId;
   readonly scopeOrdinal: BattleExecutionScopeOrdinal;
-  readonly unitFeatureProfiles: readonly SupportedUnitFeatureProfile[];
+  readonly unitFeatureProcedures: readonly BoundUnitFeatureProcedureFacts[];
   readonly resourceUnits: readonly AuthoredUnitSource[];
   readonly units: readonly AuthoredUnitSource[];
   readonly unitRefs: readonly {
@@ -243,44 +258,44 @@ export function characterExecutionFromUnits(input: {
   const unitFeatureExecutionContext: UnitFeatureProcedureExecutionContext = {
     resourcePoolRefsByUnitId,
   };
-  const resourceSelectedProfiles =
-    resourceSelectedAreaDamageReplacementProfiles(input);
-  const unitFeatureProfiles = [
-    ...input.unitFeatureProfiles,
-    ...resourceSelectedProfiles.filter(
+  const resourceSelectedProcedures =
+    resourceSelectedAreaDamageReplacementProcedures(input);
+  const unitFeatureProcedures = [
+    ...input.unitFeatureProcedures,
+    ...resourceSelectedProcedures.filter(
       (selected) =>
-        !input.unitFeatureProfiles.some(
-          (profile) =>
-            profile.unit.id === selected.unit.id &&
-            profile.kind === selected.kind,
+        !input.unitFeatureProcedures.some(
+          (procedure) =>
+            procedure.sourceUnitId === selected.sourceUnitId &&
+            procedure.facts.kind === selected.facts.kind,
         ),
     ),
   ];
-  const unitProcedures = unitFeatureProfiles.flatMap((profile) => {
+  const unitProcedures = unitFeatureProcedures.flatMap((procedure) => {
     const execution = unitFeatureProcedureExecution(
-      profile,
+      procedure.facts,
       unitFeatureExecutionContext,
     );
     if (
       execution === undefined &&
-      profile.kind !== "cunningStrike" &&
-      profile.kind !== "cunningStrikeOptionGrant"
+      procedure.facts.kind !== "cunningStrike" &&
+      procedure.facts.kind !== "cunningStrikeOptionGrant"
     ) {
       supportProfileIssues.push({
         tag: "battleUnitSupportProfileIssue",
-        message: `Unit feature profile ${profile.kind} references an unavailable mechanical execution resource.`,
+        message: `Unit feature profile ${procedure.facts.kind} references an unavailable mechanical execution resource.`,
       });
     }
     return execution === undefined
       ? []
       : [
           {
-            unitId: profile.unit.id,
+            unitId: procedure.sourceUnitId,
             execution,
             source: characterUnitProcedureSourceForAdmission(
               scopeRef,
               input.resourceUnits,
-              profile.unit.id,
+              procedure.sourceUnitId,
             ),
           },
         ];
@@ -670,7 +685,7 @@ function characterUnitProcedureSourceForAdmission(
 }
 
 export function unitFeatureProcedureExecution(
-  profile: SupportedUnitFeatureProfile,
+  profile: SupportedUnitFeatureFacts,
   context: UnitFeatureProcedureExecutionContext,
 ) {
   return Match.value(profile).pipe(

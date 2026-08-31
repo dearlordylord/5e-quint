@@ -134,6 +134,7 @@ import {
   statBlockAttackActionOptions,
 } from "./stat-block-execution-state.ts";
 import {
+  boundUnitFeatureProcedureFactsFromProfile,
   characterExecutionFromUnits,
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
@@ -2423,7 +2424,7 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-execution"),
         combatantId: combatantId("boundary-character-execution"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        unitFeatureProfiles: [],
+        unitFeatureProcedures: [],
         resourceUnits: [],
         units: [],
         unitRefs: [],
@@ -2450,7 +2451,9 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-missing-resource"),
         combatantId: combatantId("boundary-character-missing-resource"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        unitFeatureProfiles: [tacticalProfile],
+        unitFeatureProcedures: [
+          boundUnitFeatureProcedureFactsFromProfile(tacticalProfile),
+        ],
         resourceUnits: [],
         units: [tacticalMind],
         unitRefs: [],
