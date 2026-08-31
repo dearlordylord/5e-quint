@@ -48,28 +48,36 @@ paths.
 The immutable [Effect 3 behavioral oracle](./effect3-behavioral-oracle.json)
 remains byte-identical: 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-No public mutation command remains. The final Effect 4 capture is 52,137,007
+No public mutation command remains. The final Effect 4 capture is 50,667,014
 bytes with SHA-256
-`bb25eae9123b6b85ce80cc49a81ec0ef4b54cad00cc223525a20b04d09953e6c`.
+`d841b7e377277b37a1774649f4e69c35323aab267d9c5616bb7db4311f97292f`.
 
 The reviewed [finite delta certificate](./effect4-oracle-delta-certificate.json)
-classifies and lists 7,261 recursive JSON-pointer leaf identities, including
+classifies and lists 8,811 recursive JSON-pointer leaf identities, including
 the owning classification, operation, path, and SHA-256 digest or explicit
 missing tag for both sides. Its overall identity
 SHA-256 is
-`1fa5ab3d2e37822d76958bdd2385172b71a3a4cbee2c9482c46edf41c6d06e3c`,
+`2b90424e06d2a6f63225c4bdfe9cc3a5aa160b609f6f0cde715a4fe258549e7a`,
 and the certificate artifact SHA-256 is
-`ff8304287d391f14f1634e06ffae8125007fb488913c4474da4f0f98190afbca`.
+`483aab64f2bb2b94815ad4486b69ac2b66c160244f8aaed6613091c8d3f5eeee`.
 
 | Classification                | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
-| MCP registration contract     |      2,275 |   706 |   1,489 |      80 |
-| MCP protocol entrypoints      |      2,738 |   998 |   1,584 |     156 |
-| MCP authenticated projection  |      2,081 |   769 |   1,192 |     120 |
+| MCP registration contract     |      2,290 |   710 |   1,487 |      93 |
+| MCP protocol entrypoints      |      3,565 | 1,060 |   1,582 |     923 |
+| MCP authenticated projection  |      2,094 |   761 |   1,190 |     143 |
 | Surface publication authority |          4 |     0 |       0 |       4 |
-| Surface authored authority    |         84 |     0 |       0 |      84 |
+| Surface authored authority    |        773 |   651 |       0 |     122 |
 | Persisted session codecs      |         22 |     6 |      12 |       4 |
-| Raw Swarm artifact authority  |         57 |    43 |       0 |      14 |
+| Raw Swarm artifact authority  |         63 |    43 |       0 |      20 |
+
+The restored canonical Surface corpus changes the tracked authored-artifact
+authority from 1,215 to 1,866 members. Its candidate membership and order
+SHA-256 is
+`0bb46fc07b756ede424773e1c6ae203fd8581f2624c86d7e8719ffd01429174a`.
+The complete candidate traversal contains 97,808 positional-value sites with
+site-set SHA-256
+`818a795411b79fff4076f9e6e17341e018679ea2ae7917390930e23400cabcb3`.
 
 Baseline metadata and all five reducer behavior classes have zero identities.
 The verifier rejects baseline or candidate byte drift,
@@ -152,7 +160,7 @@ have run.
 ### Master-reconciliation authored-identity collision audit
 
 The current static authored-identity boundary check discovers 7,328 authored
-identity literals from 283 decoded Surface spell records across 817 checked
+identity literals from 283 decoded Surface spell records across 818 checked
 source files, with 762 excluded fixture or artifact files and 9 files admitted
 through the existing narrow boundary allowlists. It exercises 620 exact
 collision exemptions and authenticates 1,294 reviewed sites / 1,405
