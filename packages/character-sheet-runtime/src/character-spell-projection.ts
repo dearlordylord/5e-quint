@@ -3,11 +3,29 @@ import { Match, Option } from "effect";
 import { PositiveInteger } from "@dnd/shared/types";
 import type { UnitReaderResult } from "@dnd/surface/surface/character-creation-readers";
 import {
-  unitMechanicsPath,
-  type MechanicsGraphPathNode,
-  type MechanicsGraphNodeRole,
-  type UnitMechanicsPath,
-} from "@dnd/surface/surface/mechanics-graph-path";
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellSpawnedCreatureControlPath,
+  spellSpawnedCreatureDismissalPath,
+  spellSpawnedCreaturePath,
+  spellTemplatedSpawnCapacityPath,
+  spellTemplatedSpawnControlPath,
+  spellTemplatedSpawnReversionPath,
+  spellTemplatedSpawnSizeTierPath,
+  spellTemplatedSpawnStatBlockPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import type {
   SpellMechanics,
   SpellRecord,
@@ -180,23 +198,6 @@ const SHEET_OWNED_DIRECT_EFFECT_KINDS = new Set<DirectEffectSetCandidateKind>([
   "remove_condition",
   "revive_dead_creature",
 ]);
-
-const SPELL_HEADER_FACT_ORDINALS = {
-  level: 1,
-  school: 2,
-  range: 3,
-  components: 4,
-  duration: 5,
-  castingTime: 6,
-  family: 7,
-} as const;
-
-const MATERIAL_BRANCH_ORDINALS = { cost: 1, consumption: 1 } as const;
-const DURATION_BRANCH_ORDINALS = {
-  value: 1,
-  firstExtension: 1,
-  firstEffect: 1,
-} as const;
 
 export function projectCharacterSheetSpell(
   unit: UnitRecord,
@@ -436,7 +437,7 @@ function activationBranchIssues(
   if (mechanics.phases.length !== 1) {
     issues.push(
       branchIssue(
-        [occurrence("procedure", 1)],
+        spellActivationPhasePath(PositiveInteger(1)),
         "A Character Sheet spell profile requires one activation phase.",
       ),
     );
@@ -483,7 +484,7 @@ function directPhaseBranchIssues(
   if (hasUnsupportedNoEffectAttachment(mechanics, phase, effects)) {
     return [
       branchIssue(
-        [occurrence("procedure", 1), occurrence("generalFact", 1)],
+        spellActivationAttachmentPath(PositiveInteger(1)),
         "The activation phase has an unsupported attachment branch.",
       ),
     ];
@@ -493,7 +494,7 @@ function directPhaseBranchIssues(
     ? []
     : [
         branchIssue(
-          [occurrence("procedure", 1), occurrence("effect", 1)],
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
           "The activation phase has an unsupported effect branch.",
         ),
       ];
@@ -505,7 +506,7 @@ function reincarnationPhaseBranchIssues(
   if (effects.length === 1 && effects[0]?.kind === "none") return [];
   return [
     branchIssue(
-      [occurrence("procedure", 1), occurrence("effect", 1)],
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
       "The Character Sheet reincarnation phase requires one explicit no-op effect.",
     ),
   ];
@@ -518,17 +519,17 @@ function ownedDirectPhaseBranchIssues(
   const validation = validateOwnedEffectSet(effects, ownedCandidateKind);
   const issues = validation.unsupportedIndices.map((unsupportedEffectIndex) =>
     branchIssue(
-      [
-        occurrence("procedure", 1),
-        occurrence("effect", unsupportedEffectIndex + 1),
-      ],
+      spellActivationEffectPath(
+        PositiveInteger(1),
+        PositiveInteger(unsupportedEffectIndex + 1),
+      ),
       "The Character Sheet-owned phase has an unsupported effect branch.",
     ),
   );
   if (validation.missingRequired) {
     issues.push(
       branchIssue(
-        [occurrence("procedure", 1)],
+        spellActivationPhasePath(PositiveInteger(1)),
         "The Character Sheet-owned phase is missing a required effect branch.",
       ),
     );
@@ -589,7 +590,9 @@ function savePhaseBranchIssues(
   const role = phase.onFail.kind === "composite" ? "generalFact" : "effect";
   return [
     branchIssue(
-      [occurrence("procedure", 1), occurrence(role, 1)],
+      role === "generalFact"
+        ? spellActivationAttachmentPath(PositiveInteger(1))
+        : spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
       "The save phase has an unsupported represented branch.",
     ),
   ];
@@ -620,13 +623,13 @@ function activationDurationBranchIssues(
       (timed.permanentAfter === undefined ||
         timed.value.upcastTiers === undefined)
         ? []
-        : [unsupportedDurationIssue([headerFact("duration")])],
+        : [unsupportedDurationIssue(spellMechanicsHeaderPath("duration"))],
     ),
     Match.when({ kind: "concentration" }, (concentration) =>
       concentration.earlyEnd === undefined ||
       concentration.permanentIfMaintainedFull === undefined
         ? []
-        : [unsupportedDurationIssue([headerFact("duration")])],
+        : [unsupportedDurationIssue(spellMechanicsHeaderPath("duration"))],
     ),
     Match.when({ kind: "permanent" }, () => []),
     Match.when({ kind: "slot_tiered" }, slotTieredDurationBranchIssues),
@@ -639,20 +642,14 @@ function slotTieredDurationBranchIssues(
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   const issues: PartialCharacterSheetSpellProjectionIssue[] = [];
   if (!isPlainTimedDurationBranch(duration.base)) {
-    issues.push(
-      unsupportedDurationIssue([headerFact("duration"), durationValue()]),
-    );
+    issues.push(unsupportedDurationIssue(spellDurationValuePath()));
   }
   for (const [index, tier] of duration.tiers.entries()) {
     if (!isPlainTimedDurationBranch(tier.duration)) {
       issues.push(
-        unsupportedDurationIssue([
-          headerFact("duration"),
-          occurrence(
-            "extension",
-            DURATION_BRANCH_ORDINALS.firstExtension + index,
-          ),
-        ]),
+        unsupportedDurationIssue(
+          spellDurationExtensionPath(PositiveInteger(index + 1)),
+        ),
       );
     }
   }
@@ -684,7 +681,7 @@ function isPlainConcentrationDuration(
 }
 
 function unsupportedDurationIssue(
-  mechanicsPath: UnitMechanicsPath["nodes"],
+  mechanicsPath: UnitMechanicsPath,
 ): PartialCharacterSheetSpellProjectionIssue {
   return branchIssue(
     mechanicsPath,
@@ -700,7 +697,7 @@ function ongoingBranchIssues(
     ? []
     : [
         branchIssue(
-          [headerFact("duration")],
+          spellMechanicsHeaderPath("duration"),
           "An ongoing Character Sheet spell requires Concentration.",
         ),
       ];
@@ -713,7 +710,7 @@ function templatedSpawnBranchIssues(
   if (!isPlainConcentrationDuration(mechanics.duration)) {
     issues.push(
       branchIssue(
-        [headerFact("duration")],
+        spellMechanicsHeaderPath("duration"),
         "A templated Character Sheet spawn requires Concentration.",
       ),
     );
@@ -721,7 +718,7 @@ function templatedSpawnBranchIssues(
   if (!mechanics.revertOnZeroHp) {
     issues.push(
       branchIssue(
-        [occurrence("effect", 2)],
+        spellTemplatedSpawnReversionPath(),
         "A templated object spawn must revert at 0 Hit Points.",
       ),
     );
@@ -737,7 +734,7 @@ function spawnedCreatureBranchIssues(
   if (!isPlainConcentrationDuration(mechanics.duration)) {
     issues.push(
       branchIssue(
-        [headerFact("duration")],
+        spellMechanicsHeaderPath("duration"),
         "A Character Sheet spawned creature requires Concentration.",
       ),
     );
@@ -745,7 +742,7 @@ function spawnedCreatureBranchIssues(
   if (mechanics.control === undefined) {
     issues.push(
       branchIssue(
-        [occurrence("procedure", 1)],
+        spellSpawnedCreatureControlPath(),
         "A Character Sheet spawned creature requires control facts.",
       ),
     );
@@ -756,7 +753,7 @@ function spawnedCreatureBranchIssues(
   ) {
     issues.push(
       branchIssue(
-        [occurrence("effect", 2)],
+        spellSpawnedCreatureDismissalPath(),
         "A spawned creature must use the supported correlated dismissal branch.",
       ),
     );
@@ -768,15 +765,31 @@ function spellEvidence(
   mechanics: CharacterSheetSpellMechanics,
 ): PartialCharacterSheetSpellProjection["evidence"] {
   return [
-    evidence("consumed", [headerFact("level")], "spell level"),
-    evidence("consumed", [headerFact("school")], "spell school"),
-    evidence("consumed", [headerFact("range")], "spell range"),
-    evidence("consumed", [headerFact("components")], "spell components"),
+    evidence("consumed", spellMechanicsHeaderPath("level"), "spell level"),
+    evidence("consumed", spellMechanicsHeaderPath("school"), "spell school"),
+    evidence("consumed", spellMechanicsHeaderPath("range"), "spell range"),
+    evidence(
+      "consumed",
+      spellMechanicsHeaderPath("components"),
+      "spell components",
+    ),
     ...componentEvidence(mechanics.components),
-    evidence("consumed", [headerFact("duration")], "spell duration"),
+    evidence(
+      "consumed",
+      spellMechanicsHeaderPath("duration"),
+      "spell duration",
+    ),
     ...durationEvidence(mechanics.duration),
-    evidence("consumed", [headerFact("castingTime")], "casting time"),
-    evidence("consumed", [headerFact("family")], "mechanics family"),
+    evidence(
+      "consumed",
+      spellMechanicsHeaderPath("castingTime"),
+      "casting time",
+    ),
+    evidence(
+      "consumed",
+      spellMechanicsHeaderPath("family"),
+      "mechanics family",
+    ),
     ...familyEvidence(mechanics),
   ];
 }
@@ -790,10 +803,7 @@ function componentEvidence(
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("components"),
-          occurrence("resource", MATERIAL_BRANCH_ORDINALS.cost),
-        ],
+        spellMaterialComponentPath("cost"),
         "material component cost",
       ),
     );
@@ -802,10 +812,7 @@ function componentEvidence(
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("components"),
-          occurrence("effect", MATERIAL_BRANCH_ORDINALS.consumption),
-        ],
+        spellMaterialComponentPath("consumption"),
         "material component consumption",
       ),
     );
@@ -833,23 +840,13 @@ function timedDurationEvidence(
   >,
 ): readonly CharacterSheetSpellPathEvidence[] {
   const entries: CharacterSheetSpellPathEvidence[] = [
-    evidence(
-      "consumed",
-      [headerFact("duration"), durationValue()],
-      "duration limit",
-    ),
+    evidence("consumed", spellDurationValuePath(), "duration limit"),
   ];
   for (const [index] of (duration.value.upcastTiers ?? []).entries()) {
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("duration"),
-          occurrence(
-            "extension",
-            DURATION_BRANCH_ORDINALS.firstExtension + index,
-          ),
-        ],
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
         "duration upcast tier",
       ),
     );
@@ -858,10 +855,7 @@ function timedDurationEvidence(
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("duration"),
-          occurrence("effect", DURATION_BRANCH_ORDINALS.firstEffect + index),
-        ],
+        spellDurationEndingPath(PositiveInteger(index + 1)),
         "duration early ending",
       ),
     );
@@ -871,13 +865,7 @@ function timedDurationEvidence(
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("duration"),
-          occurrence(
-            "effect",
-            DURATION_BRANCH_ORDINALS.firstEffect + earlyEndCount,
-          ),
-        ],
+        spellDurationEndingPath(PositiveInteger(earlyEndCount + 1)),
         "permanent casting cadence",
       ),
     );
@@ -892,20 +880,13 @@ function concentrationDurationEvidence(
   >,
 ): readonly CharacterSheetSpellPathEvidence[] {
   const entries: CharacterSheetSpellPathEvidence[] = [
-    evidence(
-      "consumed",
-      [headerFact("duration"), durationValue()],
-      "duration limit",
-    ),
+    evidence("consumed", spellDurationValuePath(), "duration limit"),
   ];
   for (const [index] of (duration.earlyEnd ?? []).entries()) {
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("duration"),
-          occurrence("effect", DURATION_BRANCH_ORDINALS.firstEffect + index),
-        ],
+        spellDurationEndingPath(PositiveInteger(index + 1)),
         "duration early ending",
       ),
     );
@@ -915,13 +896,7 @@ function concentrationDurationEvidence(
     entries.push(
       evidence(
         "consumed",
-        [
-          headerFact("duration"),
-          occurrence(
-            "effect",
-            DURATION_BRANCH_ORDINALS.firstEffect + earlyEndCount,
-          ),
-        ],
+        spellDurationEndingPath(PositiveInteger(earlyEndCount + 1)),
         "maintained permanent duration",
       ),
     );
@@ -938,10 +913,7 @@ function permanentDurationEvidence(
   return (duration.endsOn ?? []).map((_, index) =>
     evidence(
       "consumed",
-      [
-        headerFact("duration"),
-        occurrence("effect", DURATION_BRANCH_ORDINALS.firstEffect + index),
-      ],
+      spellDurationEndingPath(PositiveInteger(index + 1)),
       "permanent duration ending",
     ),
   );
@@ -954,21 +926,11 @@ function slotTieredDurationEvidence(
   >,
 ): readonly CharacterSheetSpellPathEvidence[] {
   return [
-    evidence(
-      "consumed",
-      [headerFact("duration"), durationValue()],
-      "duration limit",
-    ),
+    evidence("consumed", spellDurationValuePath(), "duration limit"),
     ...duration.tiers.map((_, index) =>
       evidence(
         "consumed",
-        [
-          headerFact("duration"),
-          occurrence(
-            "extension",
-            DURATION_BRANCH_ORDINALS.firstExtension + index,
-          ),
-        ],
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
         "duration upcast tier",
       ),
     ),
@@ -1002,16 +964,16 @@ function activationEvidence(
   mechanics: Activation,
 ): readonly CharacterSheetSpellPathEvidence[] {
   return mechanics.phases.flatMap((phase, index) => {
-    const ordinal = index + 1;
+    const ordinal = PositiveInteger(index + 1);
     const entries: CharacterSheetSpellPathEvidence[] = [
       evidence(
         "consumed",
-        [occurrence("procedure", ordinal)],
+        spellActivationPhasePath(ordinal),
         "activation phase",
       ),
       evidence(
         "consumed",
-        [occurrence("procedure", ordinal), occurrence("generalFact", 1)],
+        spellActivationAttachmentPath(ordinal),
         "phase attachment",
       ),
     ];
@@ -1024,10 +986,10 @@ function activationEvidence(
         ...(phase.effects ?? []).map((_, effectIndex) =>
           evidence(
             disposition,
-            [
-              occurrence("procedure", ordinal),
-              occurrence("effect", effectIndex + 1),
-            ],
+            spellActivationEffectPath(
+              ordinal,
+              PositiveInteger(effectIndex + 1),
+            ),
             "phase effect execution",
           ),
         ),
@@ -1038,10 +1000,10 @@ function activationEvidence(
         entries.push(
           evidence(
             "unowned",
-            [
-              occurrence("procedure", ordinal),
-              occurrence("procedure", repeatIndex + 1),
-            ],
+            spellActivationRepeatPath(
+              ordinal,
+              PositiveInteger(repeatIndex + 1),
+            ),
             "repeat saving throw",
           ),
         );
@@ -1049,7 +1011,7 @@ function activationEvidence(
       entries.push(
         evidence(
           "unowned",
-          [occurrence("procedure", ordinal), occurrence("effect", 1)],
+          spellActivationEffectPath(ordinal, PositiveInteger(1)),
           "phase effect execution",
         ),
       );
@@ -1137,18 +1099,22 @@ function ongoingEvidence(
   mechanics: OngoingEffect,
 ): readonly CharacterSheetSpellPathEvidence[] {
   const entries: CharacterSheetSpellPathEvidence[] = [
-    evidence("consumed", [occurrence("effect", 1)], "ongoing attachment"),
+    evidence("consumed", spellOngoingAttachmentPath(), "ongoing attachment"),
   ];
   if (mechanics.initialPhase !== undefined) {
     entries.push(
-      evidence("consumed", [singleton("action")], "ongoing initial phase"),
+      evidence(
+        "consumed",
+        spellOngoingInitialPhasePath(),
+        "ongoing initial phase",
+      ),
     );
   }
   for (const [index] of mechanics.operations.entries()) {
     entries.push(
       evidence(
         "unowned",
-        [occurrence("procedure", index + 1), occurrence("effect", 1)],
+        spellOngoingOperationEffectPath(PositiveInteger(index + 1)),
         "ongoing operation execution",
       ),
     );
@@ -1160,25 +1126,29 @@ function templatedSpawnEvidence(
   mechanics: TemplatedSpawn,
 ): readonly CharacterSheetSpellPathEvidence[] {
   return [
-    evidence("consumed", [singleton("resource")], "spawn capacity"),
+    evidence("consumed", spellTemplatedSpawnCapacityPath(), "spawn capacity"),
     evidence(
       "consumed",
-      [occurrence("effect", 1)],
+      spellTemplatedSpawnStatBlockPath(),
       "spawn stat block execution",
     ),
     ...mechanics.sizeTiers.map((_, index) =>
       evidence(
         "consumed",
-        [occurrence("extension", index + 1)],
+        spellTemplatedSpawnSizeTierPath(PositiveInteger(index + 1)),
         "spawn size tier",
       ),
     ),
     evidence(
       "unowned",
-      [occurrence("procedure", 1)],
+      spellTemplatedSpawnControlPath(),
       "spawn control execution",
     ),
-    evidence("unowned", [occurrence("effect", 2)], "zero-hit-point reversion"),
+    evidence(
+      "unowned",
+      spellTemplatedSpawnReversionPath(),
+      "zero-hit-point reversion",
+    ),
   ];
 }
 
@@ -1188,7 +1158,7 @@ function spawnedCreatureEvidence(
   const entries: CharacterSheetSpellPathEvidence[] = [
     evidence(
       "consumed",
-      [occurrence("effect", 1)],
+      spellSpawnedCreaturePath(),
       "spawned creature execution",
     ),
   ];
@@ -1196,65 +1166,36 @@ function spawnedCreatureEvidence(
     entries.push(
       evidence(
         "unowned",
-        [occurrence("procedure", 1)],
+        spellSpawnedCreatureControlPath(),
         "spawn control execution",
       ),
     );
   }
   entries.push(
-    evidence("unowned", [occurrence("effect", 2)], "spawn dismissal"),
+    evidence("unowned", spellSpawnedCreatureDismissalPath(), "spawn dismissal"),
   );
   return entries;
 }
 
-type PathNode = MechanicsGraphPathNode;
-type PathTail = readonly [PathNode, ...PathNode[]];
-
 function evidence(
   disposition: CharacterSheetSpellPathDisposition,
-  tail: PathTail,
+  mechanicsPath: UnitMechanicsPath,
   branch: CharacterSheetSpellEvidenceBranch,
 ): CharacterSheetSpellPathEvidence {
   return {
     disposition,
     branch,
-    mechanicsPath: unitMechanicsPath([
-      { kind: "singleton", role: "recordMechanics" },
-      ...tail,
-    ]),
+    mechanicsPath,
   };
-}
-
-function occurrence(role: MechanicsGraphNodeRole, ordinal: number) {
-  return {
-    kind: "occurrence" as const,
-    role,
-    ordinal: PositiveInteger(ordinal),
-  };
-}
-
-function singleton(role: MechanicsGraphNodeRole) {
-  return { kind: "singleton" as const, role };
-}
-
-function headerFact(field: keyof typeof SPELL_HEADER_FACT_ORDINALS) {
-  return occurrence("generalFact", SPELL_HEADER_FACT_ORDINALS[field]);
-}
-
-function durationValue() {
-  return occurrence("generalFact", DURATION_BRANCH_ORDINALS.value);
 }
 
 function branchIssue(
-  tail: PathTail,
+  mechanicsPath: UnitMechanicsPath,
   message: string,
 ): PartialCharacterSheetSpellProjectionIssue {
   return {
     code: "unsupportedSpellBranch",
-    mechanicsPath: unitMechanicsPath([
-      { kind: "singleton", role: "recordMechanics" },
-      ...tail,
-    ]),
+    mechanicsPath,
     message,
   };
 }
@@ -1268,9 +1209,7 @@ function spellRootIssue(
     issues: [
       {
         code,
-        mechanicsPath: unitMechanicsPath([
-          { kind: "singleton", role: "recordMechanics" },
-        ]),
+        mechanicsPath: spellMechanicsRootPath(),
         message,
       },
     ],
