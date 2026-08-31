@@ -11,11 +11,13 @@ supplied through its context to construct the closest faithful initial
 `ScenarioSession`. Start the canonical battle, then call
 `createScenarioSession` once with its ambient Illumination, stat-block damage
 notation, vertical environment facts, and scenario-fixed objects.
-Stat-block initialization requires one explicit `conditions` collection. Use
+Each authored Stat Block battle input requires one explicit `conditions`
+collection and is passed directly to the atomic `startBattle` boundary. Use
 `[]` when the scenario fixes no supported initial condition, or the typed public
-value when it does; the initializer rejects conditions the Stat Block is immune
-to. Do not simulate an initial condition with a later act or a duplicate state
-field.
+value when it does; `startBattle` projects and admits the complete collection,
+and reports typed initialization issues without exposing a separate per-creature
+projection result. Do not simulate an initial condition with a later act or a
+duplicate state field.
 
 Tactical-space is optional, but its source is one coherent choice: either supply both the
 five-foot arena and initial placements for a `geometryDerived`
@@ -34,7 +36,7 @@ those facts to battle state. Do not invent substitute creatures, silently drop
 required combatants, or encode later tactics in setup code.
 For a Table-authored relation or target answer, use
 `context.sdk.scenarioDistanceFeet(number)` to obtain the branded distance and
-handle its typed `Either` result; do not cast a raw number into a spatial fact.
+handle its typed `Result` value; do not cast a raw number into a spatial fact.
 Vertical environment facts are retained setup evidence only. The current public
 SDK has no table-authored per-test circumstance witness that turns relative
 height into Advantage or Disadvantage; a supported-only scenario must not

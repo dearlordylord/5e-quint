@@ -331,7 +331,6 @@ const activeEffectOccurrenceSpatialProjectionHandlers = {
   stagedSaveConditionPendingRepeat: nonSpatialActiveEffectOccurrence,
   stagedSaveConditionApplied: nonSpatialActiveEffectOccurrence,
   saveGatedTurnConstraintBundle: nonSpatialActiveEffectOccurrence,
-  slowActivePenalties: nonSpatialActiveEffectOccurrence,
   sourceDamageRollPenalty: nonSpatialActiveEffectOccurrence,
   specialSpeedGrant: nonSpatialActiveEffectOccurrence,
   speedDelta: nonSpatialActiveEffectOccurrence,

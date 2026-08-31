@@ -132,10 +132,7 @@ import {
   boundPersistentAreaSaveConditionEscapeEffect,
   type BoundPersistentAreaSaveCompositeEffect,
 } from "./persistent-spell-area-binding.ts";
-import {
-  boundPersistentAreaSaveDamageEffect,
-  type BoundPersistentAreaSaveDamageEffect,
-} from "./persistent-area-save-damage-binding.ts";
+import { boundPersistentAreaSaveDamageEffectForArea } from "./persistent-area-save-damage-binding.ts";
 
 export type PersistentAreaSaveCompositeEffect = Extract<
   BattleActiveEffect,
@@ -1024,7 +1021,7 @@ function persistentAreaSaveDamageLifecycleFor(
   state: BattleState,
   subject: PersistentAreaSaveDamageSubject,
 ): "stationary" | "sourceTurnTranslation" | undefined {
-  const binding = persistentAreaSaveDamageBindingForArea(
+  const binding = boundPersistentAreaSaveDamageEffectForArea(
     state,
     subject.areaMembershipTrigger.effectRef,
     subject.areaMembershipTrigger.areaId,
@@ -1033,29 +1030,6 @@ function persistentAreaSaveDamageLifecycleFor(
     binding?.kind === "sourceTurnTranslation"
     ? binding.kind
     : undefined;
-}
-
-function persistentAreaSaveDamageBindingForArea(
-  state: BattleState,
-  effectRef: BattleEffectExecutionRef,
-  areaId: BattleAreaId,
-): BoundPersistentAreaSaveDamageEffect | undefined {
-  const effect = activeEffectForArea(
-    state,
-    effectRef,
-    areaId,
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleActiveEffect,
-      { readonly kind: "persistentAreaSaveDamage" }
-    > => candidate.kind === "persistentAreaSaveDamage",
-  );
-  if (effect === undefined) return undefined;
-  const owner = state.combatants.get(effect.sourceCombatantId);
-  return owner === undefined
-    ? undefined
-    : boundPersistentAreaSaveDamageEffect(owner, effect);
 }
 
 function resolvePersistentAreaSaveDamageCommand(
@@ -1485,7 +1459,7 @@ function ramMovablePersistentAreaEffectFor(
     }
   >,
 ): RamMovablePersistentAreaEffect | undefined {
-  const binding = persistentAreaSaveDamageBindingForArea(
+  const binding = boundPersistentAreaSaveDamageEffectForArea(
     state,
     subject.effectRef,
     subject.areaId,
@@ -2563,7 +2537,7 @@ function movablePersistentAreaEffectFor(
     }
   >,
 ): MovablePersistentAreaEffect | undefined {
-  const binding = persistentAreaSaveDamageBindingForArea(
+  const binding = boundPersistentAreaSaveDamageEffectForArea(
     state,
     subject.effectRef,
     subject.areaId,

@@ -11,8 +11,8 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
-  type BattleStateInitIssue,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
+  type BattleInitializationIssue,
+  battleInitializationIssueMessage,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -120,32 +120,21 @@ import {
   type CharacterBattleRouteSubject,
   type CharacterBattleSettlementRouteAction,
   type CharacterSessionSheetDerivedBattleActsRouteAction,
+  type BattleRosterIssue,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectSuccess(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
 
 type RouteCharacterBattleRuntimeEntry = {
   readonly session: BattleRuntimeSession;
   readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
 };
 
-type RouteCharacterBattleRuntimeEntryIssue = BattleStateInitIssue & {
+type RouteCharacterBattleRuntimeEntryIssue = (
+  | BattleRosterIssue
+  | BattleInitializationIssue
+) & {
   readonly routeEvents: readonly [];
 };
 
@@ -159,8 +148,7 @@ function startBattleFromTestRoster(input: {
   const roster = composeBattleRoster(input.entries);
   if (roster.tag === "rejected") {
     return Result.fail({
-      tag: "battleStateInitIssue" as const,
-      message: `Roster admission failed: ${roster.issues[0].kind}`,
+      ...roster.issues[0],
       routeEvents: [],
     });
   }
@@ -1040,7 +1028,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       battleId: battleId("battle:route-metamagic-feature-resource-bridge"),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        authoredStatBlockBattleInit({
           combatantId: targetCombatantId,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,
@@ -1551,7 +1539,11 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
     ],
   });
   if (Result.isFailure(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.failure));
+    throw new Error(
+      "tag" in entry.failure
+        ? battleInitializationIssueMessage(entry.failure)
+        : `Roster admission failed: ${entry.failure.kind}`,
+    );
   }
   return selectedReferenceRouteEvents(entry.success.initProjectionRouteEvents);
 }

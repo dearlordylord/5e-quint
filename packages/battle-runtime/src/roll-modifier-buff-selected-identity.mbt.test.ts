@@ -40,6 +40,7 @@ import {
   startBattle,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -65,7 +66,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const rollModifierBuffSpellIds = [
   "bless",
@@ -495,7 +496,7 @@ function rollModifierBuffBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -505,7 +506,7 @@ function rollModifierBuffCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

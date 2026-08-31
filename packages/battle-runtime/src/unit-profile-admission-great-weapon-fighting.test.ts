@@ -37,8 +37,8 @@ import {
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
+import type { CharacterBattleCreatureInit } from "./battle-init.ts";
 import type {
-  BattleCreatureInit,
   BattleFill,
   BattleRuntimeSession,
   UnitRecord,
@@ -332,7 +332,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
 });
 
 type CharacterSelectedLoadout = Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["selectedLoadout"];
 

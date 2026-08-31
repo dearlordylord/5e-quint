@@ -33,7 +33,7 @@ module battleRuntimeCommandOrderingMbt {
   pure def orderingErrorLabel(error: CommandFillOrderingError): str =
     match error {
       | CommandTargetListRequired => "commandTargetListRequired"
-      | CommandOptionChoiceRequired => "commandOptionChoiceRequired"
+      | CommandOptionChoiceRequired => "compelledBehaviorOptionChoiceRequired"
       | CommandSavingThrowRequired => "commandSavingThrowRequired"
       | CommandHeldObjectFactsRequired => "commandHeldObjectFactsRequired"
       | CommandMovementRequired => "commandMovementRequired"
@@ -151,7 +151,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandTargetListAndOptionChoiceStage,
     val result = commandFillOrderResult(
       qStage,
-      CommandOptionChoiceFillKind,
+      CompelledBehaviorOptionChoiceFillKind,
       CommandGrovelOption,
       true,
       false,
@@ -229,7 +229,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandOptionChoiceStage,
     val result = commandFillOrderResult(
       qStage,
-      CommandOptionChoiceFillKind,
+      CompelledBehaviorOptionChoiceFillKind,
       CommandGrovelOption,
       true,
       false,

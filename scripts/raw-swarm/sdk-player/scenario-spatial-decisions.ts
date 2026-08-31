@@ -5,16 +5,17 @@ import type {
   BattleMovementSpeedKind,
   BattleObjectId,
   BattleOpportunityAttackThreat,
+  BattleProcedureExecutionRef,
   BattleTablePositionId,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
-  BattleAttackProcedureExecutionRef,
-  BattleProcedureExecutionRef,
-  BattleStatBlockProcedureExecutionRef,
   battleObjectId,
   battleTablePositionId,
   combatantId,
+  isBattleAttackProcedureExecutionRef,
+  isBattleProcedureExecutionRef,
+  isBattleStatBlockProcedureExecutionRef,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { StatBlockAttackDamageSelection } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import {
@@ -33,6 +34,7 @@ import {
   type DistanceFeet,
   type SpatialSnapshot,
 } from "../../../packages/tactical-space/src/index.ts";
+import type { Result as ResultTypes } from "effect";
 import { Result, Match, Schema } from "effect";
 
 export type ScenarioTokenId = CombatantId | BattleObjectId;
@@ -543,7 +545,7 @@ export function scenarioTableSpatialFingerprint(
 
 export function scenarioDistanceFeet(
   value: number,
-): Result.Result<DistanceFeet, ScenarioSpatialDistanceFeetIssue> {
+): ResultTypes.Result<DistanceFeet, ScenarioSpatialDistanceFeetIssue> {
   if (!isFiniteNonNegativeInteger(value)) {
     return Result.fail({
       tag: "invalid-spatial-distance-feet",
@@ -800,7 +802,7 @@ function unknownDecisionId(value: unknown): string {
 function malformedDecision(
   input: unknown,
   message: string,
-): Result.Result<never, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<never, ScenarioSpatialDecisionIssue> {
   return Result.fail(
     spatialDecisionIssue(
       "invalid-spatial-decision",
@@ -821,7 +823,10 @@ function isNonEmptyTrimmedString(value: unknown): value is string {
 function parseProcedureRef(
   value: unknown,
   input: unknown,
-): Result.Result<BattleProcedureExecutionRef, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<
+  BattleProcedureExecutionRef,
+  ScenarioSpatialDecisionIssue
+> {
   if (!isString(value) || value.trim().length === 0) {
     return malformedDecision(
       input,
@@ -829,15 +834,12 @@ function parseProcedureRef(
     );
   }
   const trimmed = value.trim();
-  const decoded = Schema.decodeUnknownResult(BattleProcedureExecutionRef)(
-    trimmed,
-  );
-  return Result.isFailure(decoded)
+  return !isBattleProcedureExecutionRef(trimmed)
     ? malformedDecision(
         input,
         "A sourceProcedureRef must be a canonical Battle procedure execution reference.",
       )
-    : Result.succeed(decoded.success);
+    : Result.succeed(trimmed);
 }
 
 function isCoordinateInput(value: unknown): value is CoordinateInput {
@@ -879,7 +881,7 @@ function isScenarioAttackDamageType(
 function parseSpatialQuestion(
   value: unknown,
   input: unknown,
-): Result.Result<
+): ResultTypes.Result<
   ScenarioSpatialDecisionQuestion,
   ScenarioSpatialDecisionIssue
 > {
@@ -1104,7 +1106,10 @@ function parseSpatialQuestion(
 function parseRelationAnswer(
   value: unknown,
   input: unknown,
-): Result.Result<ScenarioSpatialRelationAnswer, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<
+  ScenarioSpatialRelationAnswer,
+  ScenarioSpatialDecisionIssue
+> {
   if (
     !isRecord(value) ||
     !hasOnlyKeys(value, [
@@ -1190,22 +1195,20 @@ function parseOpportunityAttackThreatInput(
   const reactorId = combatantId(value.reactorId);
   const distanceFeet = movementFeet(value.distanceFeet);
   if (hasAttackAbility && hasAttackDamageType) {
-    const procedureRef = Schema.decodeUnknownResult(
-      BattleAttackProcedureExecutionRef,
-    )(value.procedureRef);
-    if (Result.isFailure(procedureRef)) return undefined;
+    if (!isBattleAttackProcedureExecutionRef(value.procedureRef)) {
+      return undefined;
+    }
     return {
       reactorId,
       distanceFeet,
-      procedureRef: procedureRef.success,
+      procedureRef: value.procedureRef,
       attackAbility,
       attackDamageType,
     };
   }
-  const procedureRef = Schema.decodeUnknownResult(
-    BattleStatBlockProcedureExecutionRef,
-  )(value.procedureRef);
-  if (Result.isFailure(procedureRef)) return undefined;
+  if (!isBattleStatBlockProcedureExecutionRef(value.procedureRef)) {
+    return undefined;
+  }
   const statBlockDamageSelection = Schema.decodeUnknownResult(
     StatBlockAttackDamageSelection,
   )(selection.statBlockDamageSelection);
@@ -1213,7 +1216,7 @@ function parseOpportunityAttackThreatInput(
   return {
     reactorId,
     distanceFeet,
-    procedureRef: procedureRef.success,
+    procedureRef: value.procedureRef,
     statBlockDamageSelection: statBlockDamageSelection.success,
   };
 }
@@ -1222,7 +1225,7 @@ function parseCreatureSpaceTraversal(
   value: unknown,
   input: unknown,
   seen: WeakSet<object>,
-): Result.Result<
+): ResultTypes.Result<
   ScenarioMovementRouteAnswerInput["creatureSpaceTraversal"],
   ScenarioSpatialDecisionIssue
 > {
@@ -1326,7 +1329,7 @@ function parseMovementAnswer(
   value: unknown,
   input: unknown,
   seen: WeakSet<object>,
-): Result.Result<
+): ResultTypes.Result<
   ScenarioMovementRouteAnswerInput,
   ScenarioSpatialDecisionIssue
 > {
@@ -1442,7 +1445,10 @@ function parseSpatialDecisionInput(
   input: unknown,
   nested = false,
   seen = new WeakSet<object>(),
-): Result.Result<ScenarioSpatialDecisionInput, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<
+  ScenarioSpatialDecisionInput,
+  ScenarioSpatialDecisionIssue
+> {
   if (!isRecord(input) || !isString(input.decisionId)) {
     return malformedDecision(
       input,
@@ -1723,7 +1729,7 @@ function freezeParsedSpatialValue<T>(value: T): T {
 
 function normalizeSpatialDecision(
   rawInput: unknown,
-): Result.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
   const parsed = parseSpatialDecisionInput(rawInput);
   if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
   const input = parsed.success;
@@ -1794,6 +1800,6 @@ function normalizeNonMovementSpatialDecision(
 
 export function tableAuthoredSpatialDecision(
   input: unknown,
-): Result.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
   return normalizeSpatialDecision(input);
 }

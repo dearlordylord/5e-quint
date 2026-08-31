@@ -312,7 +312,9 @@ describe("Surface authored string role traversal", () => {
         ...record,
         value: { ...record.value, unexpectedString: "not part of the schema" },
       }),
-    ).toThrow();
+    ).toThrow(
+      /Surface record failed schema decoding at .*: Expected no excess property[\s\S]*\["unexpectedString"\]/,
+    );
     expect(() =>
       traversal.decodeSurfaceRecord({
         ...record,
@@ -381,14 +383,12 @@ describe("Surface authored string role traversal", () => {
           relation: "unit-reference",
           targetKind: "unit",
         }),
-      }).pipe(
-        Schema.annotate({
-          [SURFACE_SCHEMA_ROLE_ANNOTATION]: {
-            category: "prose",
-            evidence: "summary",
-          },
-        }),
-      ),
+      }).annotate({
+        [SURFACE_SCHEMA_ROLE_ANNOTATION]: {
+          category: "prose",
+          evidence: "summary",
+        },
+      }),
       { target: "synthetic_unit" },
     );
     const unsupported = inspectSurfaceSchemaValue(
@@ -484,7 +484,7 @@ describe("Surface authored string role traversal", () => {
 
   it("traverses refinement, transformation, and suspension output shapes", () => {
     const refined = surfaceSchemaRole(
-      Schema.String.pipe(Schema.check(Schema.isMinLength(1))),
+      Schema.String.check(Schema.isMinLength(1)),
       {
         category: "prose",
         evidence: "summary",
@@ -984,21 +984,9 @@ describe("Surface authored string role traversal", () => {
         role: role.category,
       })),
     ).toEqual([
-      {
-        path: "value[0]",
-        value: "reference-one",
-        role: "reference",
-      },
-      {
-        path: "value[1]",
-        value: "reference-two",
-        role: "reference",
-      },
-      {
-        path: "value[2]",
-        value: "reference-three",
-        role: "reference",
-      },
+      { path: "value[0]", value: "reference-one", role: "reference" },
+      { path: "value[1]", value: "reference-two", role: "reference" },
+      { path: "value[2]", value: "reference-three", role: "reference" },
       {
         path: "value[3]",
         value: "trailing-identity",

@@ -11,10 +11,12 @@ import { describe, expect, test } from "vitest";
 
 import { admitStatBlockSpellInvocationDeltas } from "./stat-block-spell-invocation-deltas.ts";
 
-const decode = <A, I>(schema: Schema.Codec<A, I>, input: unknown): A =>
-  Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
-
-const allDeltas = decode(StatBlockSpellInvocationDeltasSchema, [
+const allDeltas = Schema.decodeUnknownSync(
+  StatBlockSpellInvocationDeltasSchema,
+  {
+    onExcessProperty: "error",
+  },
+)([
   {
     kind: "transformation_form_creature_type_limit",
     creatureTypes: ["beast", "humanoid"],
@@ -71,7 +73,9 @@ function syntheticAuthoredRecord(input: {
   readonly section: string;
   readonly authoredExpression: string;
 }): StatBlockRecord {
-  return decode(StatBlockRecordSchema, {
+  return Schema.decodeUnknownSync(StatBlockRecordSchema, {
+    onExcessProperty: "error",
+  })({
     id: input.id,
     kind: "statBlock",
     name: input.name,

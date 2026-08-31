@@ -65,8 +65,8 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
-import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
+import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -312,7 +312,14 @@ function resolveSaveGatedTurnConstraintBundle(
   input: SaveGatedTurnConstraintBundleResolveInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!saveGatedTurnConstraintFillSetIsSupported(input)) {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -352,11 +359,21 @@ function resolveSaveGatedTurnConstraintBundle(
   const failedTargets = failedSavingThrowTargetIds(
     savingThrowOutcomes.outcomes,
   );
-  const saveFailedReactionWindow = maybeOpenTurnConstraintSaveFailedInterrupt(
-    input,
-    failedTargets,
-  );
-  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
+        continuation: spellReplayContinuation(input.input),
+      },
+      input.input.handledInterruptTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
   const resourced = spendSpellCastResources({
     state: input.input.state,
     actorId: input.actorId,
@@ -393,39 +410,6 @@ function resolveSaveGatedTurnConstraintBundle(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
-}
-
-/* v8 ignore start -- @preserve -- Malformed resolution input: admitted turn-constraint discovery supplies only area Saving Throw fills. */
-function saveGatedTurnConstraintFillSetIsSupported(
-  input: SaveGatedTurnConstraintBundleResolveInput,
-): boolean {
-  return (
-    input.fillSet.targetId === undefined &&
-    input.fillSet.targetList === undefined &&
-    input.fillSet.attackRoll === undefined &&
-    input.fillSet.damageRoll === undefined &&
-    input.fillSet.concentrationSavingThrows.length === 0 &&
-    input.fillSet.damageDispositions.length === 0
-  );
-}
-/* v8 ignore stop -- @preserve */
-
-function maybeOpenTurnConstraintSaveFailedInterrupt(
-  input: SaveGatedTurnConstraintBundleResolveInput,
-  failedTargets: readonly CombatantId[],
-): BattleResolutionResult | null {
-  const firstFailedTargetId = failedTargets[0];
-  if (firstFailedTargetId === undefined) return null;
-  return maybeOpenInterruptWindow(
-    input.input.state,
-    {
-      trigger: "saveFailed",
-      targetId: firstFailedTargetId,
-      sourceProcedureRef: input.invocation.sourceProcedureRef,
-      continuation: spellReplayContinuation(input.input),
-    },
-    input.input.handledInterruptTrigger,
-  );
 }
 
 function applyTurnHinderingActivePenaltyEffects(
@@ -510,35 +494,14 @@ function validateTurnConstraintAreaWitness(
     (outcome) => outcome.targetId,
   );
   const affectedTargetIds = new Set(area.affectedTargetIds);
-  if (!sameCombatantIdSet(affectedTargetIds, outcomeTargetIds)) {
+  if (
+    affectedTargetIds.size !== outcomeTargetIds.length ||
+    outcomeTargetIds.some((targetId) => !affectedTargetIds.has(targetId))
+  ) {
     return "The turn-constraint Cube targets must match its Saving Throw outcomes.";
   }
-  return validateTurnConstraintAffectedCreatureWitnesses(
-    area.affectedCreatureWitnesses,
-    outcomeTargetIds,
-  );
-}
-
-function sameCombatantIdSet(
-  actual: ReadonlySet<CombatantId>,
-  expected: readonly CombatantId[],
-): boolean {
-  return (
-    actual.size === expected.length &&
-    expected.every((targetId) => actual.has(targetId))
-  );
-}
-
-function validateTurnConstraintAffectedCreatureWitnesses(
-  witnesses: readonly {
-    readonly targetId: CombatantId;
-    readonly inCube: boolean;
-    readonly chosenByCaster: boolean;
-  }[],
-  outcomeTargetIds: readonly CombatantId[],
-): string | null {
   const witnessTargetIds = new Set<CombatantId>();
-  for (const witness of witnesses) {
+  for (const witness of area.affectedCreatureWitnesses) {
     if (witnessTargetIds.has(witness.targetId)) {
       return "Turn-constraint Cube witnesses must not duplicate a target.";
     }
@@ -547,7 +510,10 @@ function validateTurnConstraintAffectedCreatureWitnesses(
       return "Affected-creature witnesses must prove Cube membership and source choice.";
     }
   }
-  if (!sameCombatantIdSet(witnessTargetIds, outcomeTargetIds)) {
+  if (
+    witnessTargetIds.size !== outcomeTargetIds.length ||
+    outcomeTargetIds.some((targetId) => !witnessTargetIds.has(targetId))
+  ) {
     return "The turn-constraint procedure requires a Cube and source-choice witness for every affected target.";
   }
   return null;

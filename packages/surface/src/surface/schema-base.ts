@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import {
   ABILITIES,
@@ -148,6 +148,25 @@ export type SurfaceSchemaFieldRole =
       readonly kind: SurfaceProjectionKind;
     };
 
+export type SurfaceLinkSchemaRole = Extract<
+  SurfaceSchemaFieldRole,
+  { readonly category: "reference" | "dependency" }
+>;
+
+export type SurfaceLinkSourceRoleFor<Role extends SurfaceLinkSchemaRole> =
+  Role extends { readonly targetKind: "unit" }
+    ? SurfaceLinkSourceRole
+    : "generic";
+
+export function surfaceLinkSourceRole<Role extends SurfaceLinkSchemaRole>(
+  role: Role,
+): SurfaceLinkSourceRoleFor<Role>;
+export function surfaceLinkSourceRole(
+  role: SurfaceLinkSchemaRole,
+): SurfaceLinkSourceRole {
+  return "sourceRole" in role ? (role.sourceRole ?? "generic") : "generic";
+}
+
 function isStringSchemaAst(ast: AST.AST): boolean {
   const current = AST.toType(ast);
   return (
@@ -166,93 +185,154 @@ const exactRoleKeys = (
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
+type SurfaceSchemaRoleCategory = SurfaceSchemaFieldRole["category"];
+
+const SURFACE_SCHEMA_ROLE_CATEGORIES = {
+  dependency: true,
+  identity: true,
+  projection: true,
+  prose: true,
+  protocol: true,
+  provenance: true,
+  reference: true,
+  vocabulary: true,
+} as const satisfies Record<SurfaceSchemaRoleCategory, true>;
+
+function isSurfaceSchemaRoleCategory(
+  value: string,
+): value is SurfaceSchemaRoleCategory {
+  return Object.hasOwn(SURFACE_SCHEMA_ROLE_CATEGORIES, value);
+}
+
+function isAllowedString(value: unknown, allowed: readonly string[]): boolean {
+  return (
+    typeof value === "string" &&
+    allowed.some((candidate) => candidate === value)
+  );
+}
+
+function isEnumeratedSurfaceSchemaRole(
+  role: Record<string, unknown>,
+  field: "evidence" | "kind",
+  allowed: readonly string[],
+): boolean {
+  return (
+    exactRoleKeys(role, ["category", field]) &&
+    isAllowedString(role[field], allowed)
+  );
+}
+
+function hasValidSurfaceLinkSourceRole(role: Record<string, unknown>): boolean {
+  if (!Object.hasOwn(role, "sourceRole")) return true;
+  return (
+    role.targetKind === "unit" &&
+    typeof role.sourceRole === "string" &&
+    role.sourceRole !== "generic" &&
+    SURFACE_LINK_SOURCE_ROLES.some(
+      (sourceRole) => sourceRole === role.sourceRole,
+    )
+  );
+}
+
+function hasValidSurfaceLinkRelation(
+  role: Record<string, unknown>,
+  unitRelations: readonly string[],
+  statBlockRelations: readonly string[],
+): boolean {
+  return (
+    (role.targetKind === "unit" &&
+      unitRelations.some((relation) => relation === role.relation)) ||
+    (role.targetKind === "statBlock" &&
+      statBlockRelations.some((relation) => relation === role.relation))
+  );
+}
+
+function isSurfaceLinkSchemaRole(
+  role: Record<string, unknown>,
+  unitRelations: readonly string[],
+  statBlockRelations: readonly string[],
+): boolean {
+  const linkKeys = ["category", "relation", "targetKind"] as const;
+  const linkKeysWithSourceRole = [...linkKeys, "sourceRole"] as const;
+  return (
+    (exactRoleKeys(role, linkKeys) ||
+      exactRoleKeys(role, linkKeysWithSourceRole)) &&
+    typeof role.relation === "string" &&
+    typeof role.targetKind === "string" &&
+    hasValidSurfaceLinkSourceRole(role) &&
+    hasValidSurfaceLinkRelation(role, unitRelations, statBlockRelations)
+  );
+}
+
 export function isSurfaceSchemaRole(
   value: unknown,
 ): value is SurfaceSchemaFieldRole {
   if (!isRecord(value) || typeof value.category !== "string") return false;
-  const role = value;
-  if (role.category === "provenance") {
-    return exactRoleKeys(role, ["category"]);
-  }
-  if (role.category === "prose") {
-    return (
-      exactRoleKeys(role, ["category", "evidence"]) &&
-      typeof role.evidence === "string" &&
-      SURFACE_PROSE_EVIDENCE_POLICIES.some(
-        (evidence) => evidence === role.evidence,
-      )
-    );
-  }
-  if (role.category === "identity") {
-    return (
-      exactRoleKeys(role, ["category", "kind"]) &&
-      typeof role.kind === "string" &&
-      SURFACE_IDENTITY_KINDS.some((kind) => kind === role.kind)
-    );
-  }
-  if (role.category === "protocol") {
-    return (
-      exactRoleKeys(role, ["category", "kind"]) &&
-      typeof role.kind === "string" &&
-      SURFACE_PROTOCOL_KINDS.some((kind) => kind === role.kind)
-    );
-  }
-  if (role.category === "vocabulary") {
-    return exactRoleKeys(role, ["category", "kind"]) && role.kind === "literal";
-  }
-  if (role.category === "projection") {
-    return (
-      exactRoleKeys(role, ["category", "kind"]) &&
-      SURFACE_PROJECTION_KINDS.some((kind) => kind === role.kind)
-    );
-  }
-  if (role.category === "reference" || role.category === "dependency") {
-    const unitRelations =
-      role.category === "reference"
-        ? SURFACE_UNIT_REFERENCE_RELATIONS
-        : SURFACE_UNIT_DEPENDENCY_RELATIONS;
-    const statBlockRelations =
-      role.category === "reference"
-        ? SURFACE_STAT_BLOCK_REFERENCE_RELATIONS
-        : SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS;
-    const linkKeys = ["category", "relation", "targetKind"] as const;
-    const linkKeysWithSourceRole = [...linkKeys, "sourceRole"] as const;
-    const hasSourceRole = Object.hasOwn(role, "sourceRole");
-    return (
-      (exactRoleKeys(role, linkKeys) ||
-        exactRoleKeys(role, linkKeysWithSourceRole)) &&
-      typeof role.relation === "string" &&
-      typeof role.targetKind === "string" &&
-      (!hasSourceRole ||
-        (role.targetKind === "unit" &&
-          typeof role.sourceRole === "string" &&
-          role.sourceRole !== "generic" &&
-          SURFACE_LINK_SOURCE_ROLES.some(
-            (sourceRole) => sourceRole === role.sourceRole,
-          ))) &&
-      ((role.targetKind === "unit" &&
-        unitRelations.some((relation) => relation === role.relation)) ||
-        (role.targetKind === "statBlock" &&
-          statBlockRelations.some((relation) => relation === role.relation)))
-    );
-  }
-  return false;
+  if (!isSurfaceSchemaRoleCategory(value.category)) return false;
+  return Match.value(value.category).pipe(
+    Match.when("provenance", () => exactRoleKeys(value, ["category"])),
+    Match.when("prose", () =>
+      isEnumeratedSurfaceSchemaRole(
+        value,
+        "evidence",
+        SURFACE_PROSE_EVIDENCE_POLICIES,
+      ),
+    ),
+    Match.when("identity", () =>
+      isEnumeratedSurfaceSchemaRole(value, "kind", SURFACE_IDENTITY_KINDS),
+    ),
+    Match.when("protocol", () =>
+      isEnumeratedSurfaceSchemaRole(value, "kind", SURFACE_PROTOCOL_KINDS),
+    ),
+    Match.when(
+      "vocabulary",
+      () =>
+        exactRoleKeys(value, ["category", "kind"]) && value.kind === "literal",
+    ),
+    Match.when("projection", () =>
+      isEnumeratedSurfaceSchemaRole(value, "kind", SURFACE_PROJECTION_KINDS),
+    ),
+    Match.when("reference", () =>
+      isSurfaceLinkSchemaRole(
+        value,
+        SURFACE_UNIT_REFERENCE_RELATIONS,
+        SURFACE_STAT_BLOCK_REFERENCE_RELATIONS,
+      ),
+    ),
+    Match.when("dependency", () =>
+      isSurfaceLinkSchemaRole(
+        value,
+        SURFACE_UNIT_DEPENDENCY_RELATIONS,
+        SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function surfaceSchemaRoleKey(value: unknown): string | undefined {
   if (!isSurfaceSchemaRole(value)) return undefined;
-  if (value.category === "identity" || value.category === "protocol") {
-    return `${value.category}:${value.kind}`;
-  }
-  if (value.category === "reference" || value.category === "dependency") {
-    const sourceRole =
-      "sourceRole" in value ? (value.sourceRole ?? "generic") : "generic";
-    return `${value.category}:${value.targetKind}:${value.relation}:${sourceRole}`;
-  }
-  if (value.category === "projection") return `projection:${value.kind}`;
-  if (value.category === "prose") return `prose:${value.evidence}`;
-  if (value.category === "vocabulary") return "vocabulary:literal";
-  return value.category;
+  return Match.value(value).pipe(
+    Match.when(
+      { category: "identity" },
+      (role) => `${role.category}:${role.kind}`,
+    ),
+    Match.when(
+      { category: "protocol" },
+      (role) => `${role.category}:${role.kind}`,
+    ),
+    Match.when({ category: "reference" }, surfaceLinkSchemaRoleKey),
+    Match.when({ category: "dependency" }, surfaceLinkSchemaRoleKey),
+    Match.when({ category: "projection" }, (role) => `projection:${role.kind}`),
+    Match.when({ category: "prose" }, (role) => `prose:${role.evidence}`),
+    Match.when({ category: "vocabulary" }, () => "vocabulary:literal"),
+    Match.when({ category: "provenance" }, (role) => role.category),
+    Match.exhaustive,
+  );
+}
+
+function surfaceLinkSchemaRoleKey(value: SurfaceLinkSchemaRole): string {
+  return `${value.category}:${value.targetKind}:${value.relation}:${surfaceLinkSourceRole(value)}`;
 }
 
 export function surfaceSchemaRolesEqual(

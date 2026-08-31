@@ -113,13 +113,18 @@ export function battleMechanicalFrontier(input: {
       choices: projectMechanicalChoices(result.choices),
     });
   }
-  if (result.holes.length === 0) {
+  const ordinaryHoles = result.holes.filter(isOrdinaryBattleHole);
+  const [firstOrdinaryHole, ...remainingOrdinaryHoles] = ordinaryHoles;
+  if (firstOrdinaryHole === undefined) {
     return Result.fail({ tag: "emptyHoleFrontier" });
   }
   return Result.succeed({
     kind: "ordinaryHoles",
     subject: result.subject,
-    holes: projectMechanicalOrdinaryHoles(result.holes),
+    holes: projectMechanicalOrdinaryHoles([
+      firstOrdinaryHole,
+      ...remainingOrdinaryHoles,
+    ]),
     acceptedFills: input.acceptedFills,
   });
 }
@@ -131,13 +136,11 @@ function isOrdinaryBattleHole(
 }
 
 function projectMechanicalOrdinaryHoles(
-  holes: readonly BattleHole[],
+  holes: ReadonlyNonEmptyArray<
+    Exclude<BattleHole, { readonly kind: "interruptDecision" }>
+  >,
 ): ReadonlyNonEmptyArray<BattleMechanicalOrdinaryHole> {
-  const ordinaryHoles = holes.filter(isOrdinaryBattleHole);
-  const [first, ...rest] = ordinaryHoles;
-  if (first === undefined) {
-    throw new Error("ordinary battle holes were proven nonempty");
-  }
+  const [first, ...rest] = holes;
   return [
     projectMechanicalHole(first),
     ...rest.map((hole) => projectMechanicalHole(hole)),
@@ -176,27 +179,27 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       attackDamageDisposition: (value) =>
         projectHoleWithoutPresentationLabel(value),
       attackRoll: (value) => projectMechanicalAttackRollHole(value),
-      compelledBehaviorOptionChoice: (value) =>
-        projectHoleWithoutPresentationLabel(value),
       companionReappearanceInitiative: (value) =>
         projectHoleWithoutPresentationLabel(value),
       companionReappearancePlacement: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      compelledBehaviorOptionChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       concentrationSavingThrow: (value) => projectMechanicalD20Hole(value),
       conditionChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      controlledVerticalSuspensionAltitudeChange: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      controlledVerticalSuspensionInitialRise: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       cunningStrikeEndTurnCoverFacts: (value) =>
         projectHoleWithoutPresentationLabel(value),
       damageRelationshipDecisions: (value) =>
         projectHoleWithoutPresentationLabel(value),
       damageTypeChoice: (value) => projectHoleWithoutPresentationLabel(value),
-      movableLightPlacement: (value) =>
-        projectHoleWithoutPresentationLabel(value),
       deathSavingThrow: (value) => projectMechanicalD20Hole(value),
-      spawnedCompanionConnection: (value) =>
-        projectHoleWithoutPresentationLabel(value),
-      grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       directionalPersistentAreaDirectionChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
       helpAttackAllyDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),
@@ -205,18 +208,13 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       hitPointHealingDistribution: (value) =>
         projectHoleWithoutPresentationLabel(value),
       interruptDecision: (value) => projectHoleWithoutPresentationLabel(value),
-      controlledVerticalSuspensionAltitudeChange: (value) =>
-        projectHoleWithoutPresentationLabel(value),
-      controlledVerticalSuspensionInitialRise: (value) =>
-        projectHoleWithoutPresentationLabel(value),
-      weaponAttackDamageEnhancementTargetItem: (value) =>
+      movement: (value) => projectHoleWithoutPresentationLabel(value),
+      movableLightPlacement: (value) =>
         projectHoleWithoutPresentationLabel(value),
       movableZoneRamMovement: (value) =>
         projectHoleWithoutPresentationLabel(value),
       movableZoneRepositionMovement: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      readyDeclaration: (value) => projectHoleWithoutPresentationLabel(value),
-      movement: (value) => projectHoleWithoutPresentationLabel(value),
       objectContactTargets: (value) =>
         projectHoleWithoutPresentationLabel(value),
       objectDropResolution: (value) =>
@@ -224,44 +222,47 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       objectTargetChoice: (value) => projectHoleWithoutPresentationLabel(value),
       ongoingSpellTargetChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      rolledDice: (value) => projectMechanicalRolledDiceHole(value),
-      targetingSaveInterdictionOutcome: (value) =>
+      persistentAreaSourceTurnTranslation: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      readyDeclaration: (value) => projectHoleWithoutPresentationLabel(value),
+      rolledDice: (value) => projectMechanicalRolledDiceHole(value),
       savingThrowOutcome: (value) => projectMechanicalSavingThrowHole(value),
       selfTransformationModeChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      turnConstraintSomaticSpellFailureOutcome: (value) =>
-        projectHoleWithoutPresentationLabel(value),
-      slowSomaticSpellFailureOutcome: (value) =>
-        projectHoleWithoutPresentationLabel(value),
       shoveOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       skillChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      spatialMeleeSpellAttackProxyPosition: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      spawnedCompanionConnection: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       spellAreaChoice: (value) => projectHoleWithoutPresentationLabel(value),
       spellTargetAllocation: (value) =>
         projectHoleWithoutPresentationLabel(value),
       spellTargetList: (value) => projectHoleWithoutPresentationLabel(value),
       spellcastingAbilityCheck: (value) => projectMechanicalD20Hole(value),
-      spatialMeleeSpellAttackProxyPosition: (value) =>
+      startTurnOccurrenceOrder: (value) =>
         projectHoleWithoutPresentationLabel(value),
       statBlockRechargeRoll: (value) =>
-        projectHoleWithoutPresentationLabel(value),
-      startTurnOccurrenceOrder: (value) =>
         projectHoleWithoutPresentationLabel(value),
       targetAbilityChoices: (value) =>
         projectHoleWithoutPresentationLabel(value),
       targetChoice: (value) => projectHoleWithoutPresentationLabel(value),
       targetSpatialFacts: (value) => projectHoleWithoutPresentationLabel(value),
-      temporaryHitPointChoice: (value) =>
+      targetingSaveInterdictionOutcome: (value) =>
         projectHoleWithoutPresentationLabel(value),
       teleportDestination: (value) =>
         projectHoleWithoutPresentationLabel(value),
       temporaryAbilityCheckRollModeActiveEffectCount: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      temporaryHitPointChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       toolPossessionFacts: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      persistentAreaSourceTurnTranslation: (value) =>
+      turnConstraintSomaticSpellFailureOutcome: (value) =>
         projectHoleWithoutPresentationLabel(value),
       unitFeatureDecision: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      weaponAttackDamageEnhancementTargetItem: (value) =>
         projectHoleWithoutPresentationLabel(value),
       wildShapeEquipmentDisposition: (value) =>
         projectHoleWithoutPresentationLabel(value),
@@ -331,16 +332,25 @@ function projectMechanicalD20Hole(
 function projectMechanicalAttackRollHole(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): Extract<BattleMechanicalOrdinaryHole, { readonly kind: "attackRoll" }> {
-  const { label, d20TestNaturalOneRerolls, ...withoutLabel } = hole;
+  if ("attack" in hole) {
+    const { label, d20TestNaturalOneRerolls, attack, ...mechanical } = hole;
+    void label;
+    return {
+      ...mechanical,
+      attack: projectMechanicalAttackActionOption(attack),
+      ...(d20TestNaturalOneRerolls === undefined
+        ? {}
+        : {
+            d20TestNaturalOneRerolls: d20TestNaturalOneRerolls.map(
+              projectNestedPresentationLabel,
+            ),
+          }),
+    };
+  }
+  const { label, d20TestNaturalOneRerolls, spellAttackRerolls, ...mechanical } =
+    hole;
   void label;
-  const mechanical =
-    "attack" in withoutLabel
-      ? {
-          ...withoutLabel,
-          attack: projectMechanicalAttackActionOption(withoutLabel.attack),
-        }
-      : withoutLabel;
-  const mechanicalWithD20 = {
+  return {
     ...mechanical,
     ...(d20TestNaturalOneRerolls === undefined
       ? {}
@@ -349,16 +359,14 @@ function projectMechanicalAttackRollHole(
             projectNestedPresentationLabel,
           ),
         }),
+    ...(spellAttackRerolls === undefined
+      ? {}
+      : {
+          spellAttackRerolls: spellAttackRerolls.map(
+            projectNestedPresentationLabel,
+          ),
+        }),
   };
-  if ("spellAttackRerolls" in hole && hole.spellAttackRerolls !== undefined) {
-    return {
-      ...mechanicalWithD20,
-      spellAttackRerolls: hole.spellAttackRerolls.map(
-        projectNestedPresentationLabel,
-      ),
-    };
-  }
-  return mechanicalWithD20;
 }
 
 function projectMechanicalRolledDiceHole(

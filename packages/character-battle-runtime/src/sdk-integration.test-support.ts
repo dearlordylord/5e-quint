@@ -5,7 +5,6 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   battleActSpellSlotPresentation,
-  battleCreatureInitFromStatBlock,
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,
   battleId,
@@ -18,6 +17,7 @@ import {
   spellSlotInvocationRef,
   startBattle,
   type AvailableBattleAct,
+  type AuthoredStatBlockBattleInitInput,
   type BattleAttackExecutionSelection,
   type BattleCreatureState,
   type BattleFill,
@@ -176,9 +176,7 @@ type SheetFixture = {
 export function battleFromSheets(input: {
   readonly battleIdText: string;
   readonly characters: readonly SheetFixture[];
-  readonly monsters: readonly Parameters<
-    typeof battleCreatureInitFromStatBlock
-  >[0][];
+  readonly monsters: readonly AuthoredStatBlockBattleInitInput[];
 }): BattleState {
   return battleSessionFromSheets(input).state;
 }
@@ -186,9 +184,7 @@ export function battleFromSheets(input: {
 export function battleSessionFromSheets(input: {
   readonly battleIdText: string;
   readonly characters: readonly SheetFixture[];
-  readonly monsters: readonly Parameters<
-    typeof battleCreatureInitFromStatBlock
-  >[0][];
+  readonly monsters: readonly AuthoredStatBlockBattleInitInput[];
 }): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
     requireSuccess(
@@ -206,12 +202,7 @@ export function battleSessionFromSheets(input: {
   return requireSuccess(
     startBattle({
       battleId: battleId(input.battleIdText),
-      combatants: [
-        ...characterInits,
-        ...input.monsters.map((monster) =>
-          requireSuccess(battleCreatureInitFromStatBlock(monster)),
-        ),
-      ],
+      combatants: [...characterInits, ...input.monsters],
     }),
   );
 }
@@ -1137,7 +1128,7 @@ export function monsterBattleInput(
   initiative: number,
   statBlock: StatBlockRecord,
   input: { readonly tempHp?: number } = {},
-): Parameters<typeof battleCreatureInitFromStatBlock>[0] {
+): AuthoredStatBlockBattleInitInput {
   return {
     combatantId: id,
     statBlock,

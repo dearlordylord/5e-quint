@@ -11,8 +11,8 @@ export const STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS = [
 export type StatBlockDamageComponentNotation =
   (typeof STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS)[number];
 
-export const StatBlockBaseDamageComponentOrdinal = Schema.Int.pipe(
-  Schema.check(Schema.isGreaterThanOrEqualTo(1)),
+export const StatBlockBaseDamageComponentOrdinal = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("StatBlockBaseDamageComponentOrdinal"),
 );
 export type StatBlockBaseDamageComponentOrdinal =

@@ -141,15 +141,18 @@ module battleRuntimeSpatialMovementSpellTests {
       assert(nextTurnJumped.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 9, usedThisTurn: true }))),
     }
   }
-  run test_jump_movement_replacement_rejects_invalid_distance_cost_and_landing = {
+  run test_jump_movement_replacement_projects_landing_outcomes_and_rejects_invalid_cost_or_distance = {
     val cast = resolveJumpMovementReplacementSpell(initialState, Set(Fighter), Set(Fighter), 1)
     val tooCheap = jumpMovementReplacementFighter(cast, 5, 30, JumpLegalLandingAcrobaticsPassed)
     val tooFar = jumpMovementReplacementFighter(cast, 10, 35, JumpLegalLandingAcrobaticsPassed)
+    val passedLanding = jumpMovementReplacementFighter(cast, 10, 30, JumpLegalLandingAcrobaticsPassed)
     val illegalLanding = jumpMovementReplacementFighter(cast, 10, 30, JumpIllegalLanding)
     val failedLanding = jumpMovementReplacementFighter(cast, 10, 30, JumpLegalLandingAcrobaticsFailed)
     all {
       assert(tooCheap == cast),
       assert(tooFar == cast),
+      assert(passedLanding.fighter.movementSpent == 10),
+      assert(not(passedLanding.fighter.prone)),
       assert(illegalLanding == cast),
       assert(failedLanding.fighter.prone),
     }

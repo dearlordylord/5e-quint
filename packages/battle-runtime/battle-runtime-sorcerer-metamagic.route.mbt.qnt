@@ -59,7 +59,7 @@ module battleRuntimeSorcererMetamagicRouteMbt {
   pure val targetListHoles: Set[BattleHoleFamilyKind] =
     Set(SpellTargetListHoleKind)
   pure val commandOptionAndTargetListHoles: Set[BattleHoleFamilyKind] =
-    Set(CommandOptionChoiceHoleKind, SpellTargetListHoleKind)
+    Set(CompelledBehaviorOptionChoiceHoleKind, SpellTargetListHoleKind)
 
   pure def discoverRoute(
     subject: ReducerRouteSubjectFamily,
@@ -585,7 +585,7 @@ module battleRuntimeSorcererMetamagicRouteMbt {
         .append(
           resolveRoute(
             CommandEffectRouteSubject,
-            CommandOptionChoiceFillKind,
+            CompelledBehaviorOptionChoiceFillKind,
             savingThrowHoles,
             BattleHoleFrontierOwner,
           )

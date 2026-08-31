@@ -19,6 +19,7 @@ import type {
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
   BattleReactionModifierChoice,
+  BattleCreatureState,
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -229,10 +230,7 @@ export function resolveInterruptLifecycleDecision(input: {
   }
   /* v8 ignore stop -- @preserve */
   const choiceTurnResource = interruptChoiceTurnResource(admittedChoice.choice);
-  if (
-    choiceTurnResource === "reaction" &&
-    !combatantCanTakeReactions(responder)
-  ) {
+  if (interruptChoiceReactionIsUnavailable(choiceTurnResource, responder)) {
     return withoutInterruptRoute(
       invalidResult(
         input.state,
@@ -328,6 +326,13 @@ export function resolveInterruptLifecycleDecision(input: {
   return withInterruptRoute(
     completeResolvedActiveInterruptIfPending(interruptResult, input.execution),
   );
+}
+
+function interruptChoiceReactionIsUnavailable(
+  resource: ReturnType<typeof interruptChoiceTurnResource>,
+  responder: BattleCreatureState,
+): boolean {
+  return resource === "reaction" && !combatantCanTakeReactions(responder);
 }
 
 function spatialMeleeSpellAttackProxyCommitCheckpoint(
@@ -690,14 +695,16 @@ function closeInterruptCheckpoint(input: {
   const continuedState = stateForContinuingInterruptCheckpoint(
     recordHandledInterruptOccurrenceForActiveInterrupt(
       closedState,
-      handledInterruptOccurrenceFor(input.frame),
+      handledInterruptOccurrenceForCheckpoint(input.frame),
     ),
     input.frame,
   );
   const resumed = input.execution.resumeContinuation({
     state: continuedState,
     continuation: input.frame.continuation,
-    handledInterruptOccurrence: handledInterruptOccurrenceFor(input.frame),
+    handledInterruptOccurrence: handledInterruptOccurrenceForCheckpoint(
+      input.frame,
+    ),
   });
   return completeResolvedActiveInterruptIfPending(
     resumed,
@@ -1151,7 +1158,7 @@ function sameInterruptProcedureChoice(
   );
 }
 
-function handledInterruptOccurrenceFor(
+export function handledInterruptOccurrenceForCheckpoint(
   frame: BattleInterruptCheckpoint,
 ): BattleHandledInterruptOccurrence {
   return Match.value(frame).pipe(

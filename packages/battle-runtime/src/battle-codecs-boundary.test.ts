@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
-import { HASTE_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
+import { ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
 import { D6_ROLL_RESULTS, NonNegativeInteger } from "@dnd/shared/types";
 import {
   statBlockId as parseSharedStatBlockId,
@@ -19,6 +19,7 @@ import {
   characterSeed,
   combatantId,
   criticalRange19UnitRefs,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -71,7 +72,6 @@ import {
 } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 import { battleActiveEffectOccurrenceSpatialProjection } from "./battle-reducer/creature-state-execution.ts";
-import { discoverBattleActCandidates } from "./index.ts";
 
 type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
@@ -1355,10 +1355,10 @@ const rolledDiceCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "spikeGrowthMovement",
-    rolled("spikeGrowthMovement", {
+    "areaMovementDistanceDamage",
+    rolled("areaMovementDistanceDamage", {
       critical: false,
-      spikeGrowthMovement: {
+      areaMovementDistanceDamage: {
         ...source,
         effectRef: fixture.spikeGrowthEffectRef,
         areaId: battleAreaId("area:codec-spike-growth"),
@@ -3178,7 +3178,8 @@ describe("battle codec act ownership boundaries", () => {
             sourceEffectRef: battleEffectExecutionRefForTest(
               "forged-multiattack-continuation",
             ),
-            restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
+            restriction:
+              ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
           },
         ],
       },

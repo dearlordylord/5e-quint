@@ -29,7 +29,7 @@ import type {
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Match, Option, Result } from "effect";
+import { Result, Match, Option } from "effect";
 import type { SrdStatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { createBattleRosterTransitionPlanner } from "./battle-roster-session-store.ts";

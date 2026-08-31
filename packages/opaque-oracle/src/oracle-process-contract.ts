@@ -18,10 +18,13 @@ export type OracleLoopbackHost = typeof OracleLoopbackHostSchema.Type;
 
 /** A requested TCP bind port, including zero for operating-system assignment. */
 export const OracleBindPortSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isBetween({ minimum: 0, maximum: 65_535 })),
-  Schema.brand("OracleBindPort"),
-).annotate({ identifier: "OracleBindPort" });
+  Schema.check(
+    Schema.isInt(),
+    Schema.isBetween({ minimum: 0, maximum: 65_535 }),
+  ),
+)
+  .pipe(Schema.brand("OracleBindPort"))
+  .annotate({ identifier: "OracleBindPort" });
 
 export type OracleBindPort = typeof OracleBindPortSchema.Type;
 
@@ -30,10 +33,13 @@ export const decodeOracleBindPort =
 
 /** A TCP port returned after the operating system has completed a bind. */
 export const OracleListeningPortSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isBetween({ minimum: 1, maximum: 65_535 })),
-  Schema.brand("OracleListeningPort"),
-).annotate({ identifier: "OracleListeningPort" });
+  Schema.check(
+    Schema.isInt(),
+    Schema.isBetween({ minimum: 1, maximum: 65_535 }),
+  ),
+)
+  .pipe(Schema.brand("OracleListeningPort"))
+  .annotate({ identifier: "OracleListeningPort" });
 
 export type OracleListeningPort = typeof OracleListeningPortSchema.Type;
 
@@ -55,8 +61,9 @@ export type OracleHttpReadiness = typeof OracleHttpReadinessSchema.Type;
 /** The identity of the executable and immutable services used for evaluation. */
 export const DistributionIdSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^sha256:[0-9a-f]{64}$/u)),
-  Schema.brand("DistributionId"),
-).annotate({ identifier: "DistributionId" });
+)
+  .pipe(Schema.brand("DistributionId"))
+  .annotate({ identifier: "DistributionId" });
 
 export type DistributionId = typeof DistributionIdSchema.Type;
 

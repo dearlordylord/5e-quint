@@ -36,6 +36,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -44,7 +45,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { completeReactionSpellSlotCast } from "./battle-reducer/reaction-spell-resolution.ts";
 import {
   resolveBattleSubject,
@@ -772,7 +773,7 @@ function spellBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -855,7 +856,7 @@ function battleWithShieldReactionSpell(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -907,7 +908,7 @@ function battleWithAttackers(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -965,7 +966,7 @@ function battleWithSpellAttack(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -1023,7 +1024,7 @@ function battleWithMagicMissile(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -1033,15 +1034,15 @@ function characterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["resources"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["characterUnitRefs"];
 }): BattleCreatureInit {

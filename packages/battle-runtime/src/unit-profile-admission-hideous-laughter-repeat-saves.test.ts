@@ -33,7 +33,7 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { removeSaveGatedConditionWithRepeatEffectFromTarget } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import {
   savingThrowOutcomeFill,
@@ -881,7 +881,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     });
     expect(Result.isSuccess(baseStateResult)).toBe(true);
     if (Result.isFailure(baseStateResult)) {
-      throw new Error(battleStateInitIssueMessage(baseStateResult.failure));
+      throw new Error(
+        battleInitializationIssueMessage(baseStateResult.failure),
+      );
     }
     const baseState = baseStateResult.success;
     const subject = weaponAttackSubject(baseState, "Longsword");

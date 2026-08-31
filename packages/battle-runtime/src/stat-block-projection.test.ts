@@ -18,7 +18,7 @@ import type {
 
 import {
   battleAmmunitionStock,
-  battleCreatureInitFromStatBlock,
+  battleInitializationIssueMessage,
   battleExecutionScopeOrdinal,
   battleId,
   combatantId,
@@ -51,19 +51,13 @@ const authoredResourceOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureResourceOrdinalSchema)(value);
 
 function initializedStatBlock(source: StatBlockRecord) {
-  const initialized = battleCreatureInitFromStatBlock({
+  return {
     combatantId: combatantId("stat-block-projection-actor"),
     statBlock: source,
     initiative: initiativeScore(10),
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (Result.isFailure(initialized)) {
-    throw new Error(
-      `Expected Stat Block initialization: ${initialized.failure}`,
-    );
-  }
-  return initialized.success;
+  };
 }
 
 function startedStatBlock(source: StatBlockRecord) {
@@ -72,7 +66,9 @@ function startedStatBlock(source: StatBlockRecord) {
     combatants: [initializedStatBlock(source)],
   });
   if (Result.isFailure(started)) {
-    throw new Error(`Expected Stat Block battle start: ${started.failure}`);
+    throw new Error(
+      `Expected Stat Block battle start: ${battleInitializationIssueMessage(started.failure)}`,
+    );
   }
   return started.success;
 }
@@ -102,47 +98,63 @@ function mechanicalProjection(session: ReturnType<typeof startedStatBlock>) {
 describe("generic Stat Block projection", () => {
   test("admits authored mechanics and presentation as one operation", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("authored-stat-block"),
-      statBlock: source,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [],
-      conditions: [],
+    const actorId = combatantId("authored-stat-block");
+    const started = startBattle({
+      battleId: battleId("authored-stat-block"),
+      combatants: [
+        {
+          combatantId: combatantId("authored-stat-block"),
+          statBlock: source,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        },
+      ],
     });
 
-    expect(Result.isSuccess(initialized)).toBe(true);
-    if (Result.isFailure(initialized)) return;
-    expect(initialized.success.creatureInit.kind).toBe("statBlock");
-    if (initialized.success.creatureInit.kind !== "statBlock") return;
-    expect(initialized.success.creatureInit.source.procedures).not.toHaveLength(
-      0,
-    );
-    if (initialized.success.creatureInit.kind !== "statBlock") return;
-    expect(initialized.success.creatureInit.presentation.displayName).toBe(
+    expect(
+      Result.isSuccess(started),
+      Result.isFailure(started)
+        ? battleInitializationIssueMessage(started.failure)
+        : undefined,
+    ).toBe(true);
+    if (Result.isFailure(started)) return;
+    const actor = started.success.state.combatants.get(actorId);
+    expect(actor?.origin.kind).toBe("statBlock");
+    if (actor?.origin.kind !== "statBlock") return;
+    expect(actor.origin.execution.procedureBindings).not.toHaveLength(0);
+    expect(started.success.context.statBlocks.get(actorId)?.displayName).toBe(
       source.name,
     );
   });
 
   test("keeps authored projection failure distinct from battle init failure", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("nonliteral-authored-stat-block"),
-      statBlock: {
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          size: { kind: "alternatives", options: ["small", "medium"] },
+    const started = startBattle({
+      battleId: battleId("nonliteral-authored-stat-block"),
+      combatants: [
+        {
+          combatantId: combatantId("nonliteral-authored-stat-block"),
+          statBlock: {
+            ...source,
+            statBlock: {
+              ...source.statBlock,
+              size: { kind: "alternatives", options: ["small", "medium"] },
+            },
+          },
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: [],
         },
-      },
-      initiative: initiativeScore(10),
-      ammunitionStocks: [],
-      conditions: [],
+      ],
     });
 
-    expect(initialized).toMatchObject({
+    expect(started).toMatchObject({
       _tag: "Failure",
       failure: {
         tag: "statBlockProjectionFailure",
+        combatantId: "nonliteral-authored-stat-block",
+        ownerPath: ["initialCombatants", 0],
         failure: { reason: "nonLiteralSize" },
       },
     });
@@ -150,17 +162,22 @@ describe("generic Stat Block projection", () => {
 
   test("retains mandatory authored presentation at initialization", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("stat-block-with-presentation"),
-      statBlock: source,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
+    const actorId = combatantId("stat-block-with-presentation");
+    const started = startBattle({
+      battleId: battleId("stat-block-with-presentation"),
+      combatants: [
+        {
+          combatantId: actorId,
+          statBlock: source,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        },
+      ],
     });
-    expect(Result.isSuccess(initialized)).toBe(true);
-    if (Result.isFailure(initialized)) return;
-    if (initialized.success.creatureInit.kind !== "statBlock") return;
-    expect(initialized.success.creatureInit.presentation.displayName).toBe(
+    expect(Result.isSuccess(started)).toBe(true);
+    if (Result.isFailure(started)) return;
+    expect(started.success.context.statBlocks.get(actorId)?.displayName).toBe(
       source.name,
     );
   });

@@ -24,36 +24,28 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
     };
   }
-  const goblin = sdk.battleCreatureInitFromStatBlock({
+  const goblin = {
     combatantId: sdk.combatantId("goblin-warrior"),
     initiative: sdk.initiativeScore(15),
     statBlock: goblinStatBlock,
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  const skeleton = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeleton = {
     combatantId: sdk.combatantId("skeleton"),
     initiative: sdk.initiativeScore(10),
     statBlock: skeletonStatBlock,
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isLeft(goblin) || sdk.isLeft(skeleton)) {
-    return {
-      kind: "obstructed",
-      obstruction:
-        "The retained movement fixture could not initialize its Stat Blocks.",
-      observation: { phase: "creature-init" },
-    };
-  }
+  };
   const started = sdk.startBattle({
     battleId: sdk.battleId("table-authored-movement-transcript"),
-    combatants: [goblin.success, skeleton.success],
+    combatants: [goblin, skeleton],
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.failure),
+      obstruction: sdk.battleInitializationIssueMessage(started.failure),
       observation: { phase: "start-battle" },
     };
   }
@@ -72,7 +64,7 @@ export const setupScenario: ScenarioSetup = (context) => {
           decisionId: "table-authored-movement-route",
           question: {
             kind: "movementRoute",
-            moverId: goblin.success.combatantId,
+            moverId: goblin.combatantId,
             route,
             speedKind: "walk",
           },
@@ -98,7 +90,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
         obstruction: sdk.scenarioSessionIssueMessage(session.failure),

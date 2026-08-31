@@ -1,10 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
-import { classLevel, PositiveInteger, resourceCount } from "@dnd/shared/types";
+import { resourceCount } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { decodeStatBlockRecordResult } from "@dnd/surface/surface/schema";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -24,7 +25,6 @@ import {
   statBlockBonusActionOptionActs,
   statBlockMultiattackActs,
 } from "./battle-reducer/battle-discovery.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import {
   spellBaseArmorClassEffectRouteForDiscoveredAct,
   spellBaseArmorClassEffectRouteForResolution,
@@ -36,17 +36,7 @@ import {
   frenzyDamageTypeDecision,
   weaponTargetConstraint,
 } from "./battle-reducer/statblock-attacks.ts";
-import type { SupportedCreatureAttackRollMechanics } from "./battle-action-options.ts";
-import {
-  statBlockAdvantageBonusDamageComponentRef,
-  statBlockAttackDamageSelection,
-  statBlockBaseDamageComponentOrdinal,
-  statBlockBaseDamageComponentRef,
-  type StatBlockAttackDamageComponentRef,
-  type StatBlockAttackDamageComponentSelection,
-  type StatBlockAttackDamageSelection,
-  type StatBlockDamageComponentNotation,
-} from "./stat-block-attack-damage-selection.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
 import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import {
@@ -129,15 +119,17 @@ import {
 } from "./stat-block-execution.ts";
 import {
   statBlockBonusActionOptionBindings,
-  isNonSpellStatBlockProcedureBinding,
   statBlockMultiattackBindings,
   statBlockAttackActionOptions,
+  type StatBlockProcedureBinding,
 } from "./stat-block-execution-state.ts";
 import {
+  boundUnitFeatureProcedureFactsFromProfile,
   characterExecutionFromUnits,
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
 } from "./character-execution-admission.ts";
+import { parseCharacterBattleClassLevels } from "./character-class-level.ts";
 import {
   parseSupportedUnitFeatureProfile,
   battleUnitSupportProfilesForUnit,
@@ -180,7 +172,6 @@ import {
   startBattleSessionRight,
   monsterResourceStatBlock,
   monsterMultiattackStatBlock,
-  monsterResourceStatBlockWithUnsupportedAttackSections,
   monsterResourceStatBlockWithTwoRechargeActions,
   uncannyDodgeUnit,
   goblinAttacksReactionModifierCharacter,
@@ -189,7 +180,6 @@ import {
   savingThrowOutcomeFill,
   statBlockCreatureInit,
   statBlockRecord,
-  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
   wizardId,
   wizardSpellcasting,
@@ -218,115 +208,32 @@ import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
 
-type PactFamiliarAttackSubject = Extract<
-  BattleSubject,
-  { readonly tag: "companionAttack" }
+type ResourceOwningStatBlockProcedureBinding = Extract<
+  StatBlockProcedureBinding,
+  {
+    readonly procedure: {
+      readonly kind:
+        | "attack"
+        | "unarmedStrike"
+        | "multiattack"
+        | "bonusActionOption";
+    };
+  }
 >;
 
-type StatBlockDamageEffect =
-  SupportedCreatureAttackRollMechanics["onHit"][number];
-type StatBlockBaseDamageEffect = Extract<
-  StatBlockDamageEffect,
-  { readonly kind: "damage" }
->;
-type StatBlockAdvantageBonusDamageEffect = Extract<
-  StatBlockDamageEffect,
-  { readonly kind: "conditional_bonus_damage" }
->;
-
-function isStatBlockBaseDamageEffect(
-  effect: StatBlockDamageEffect,
-): effect is StatBlockBaseDamageEffect {
-  return effect.kind === "damage";
-}
-
-function isStatBlockAdvantageBonusDamageEffect(
-  effect: StatBlockDamageEffect,
-): effect is StatBlockAdvantageBonusDamageEffect {
-  return (
-    effect.kind === "conditional_bonus_damage" &&
-    effect.when.kind === "attack_roll_had_advantage"
+function isResourceOwningStatBlockProcedureBinding(
+  binding: StatBlockProcedureBinding,
+): binding is ResourceOwningStatBlockProcedureBinding {
+  return Match.value(binding.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      attack: () => true,
+      unarmedStrike: () => true,
+      multiattack: () => true,
+      bonusActionOption: () => true,
+      spellcasting: () => false,
+      effectOccurrenceSource: () => false,
+    }),
   );
-}
-
-function expectedStatBlockDamageComponentNotations(
-  effect: StatBlockBaseDamageEffect | StatBlockAdvantageBonusDamageEffect,
-): readonly StatBlockDamageComponentNotation[] {
-  const notations: StatBlockDamageComponentNotation[] = [];
-  if ("expr" in effect.amount && effect.amount.expr.dice > 0) {
-    notations.push("rolled");
-  }
-  if (typeof effect.amount.static === "number") {
-    notations.push("static");
-  }
-  if (notations.length === 0) {
-    throw new Error(
-      "Expected every admitted Stat Block damage component to expose a notation.",
-    );
-  }
-  return notations;
-}
-
-function expectedStatBlockDamageSelections(
-  attack: SupportedCreatureAttackRollMechanics,
-): readonly StatBlockAttackDamageSelection[] {
-  const onHitEffects: readonly StatBlockDamageEffect[] = [...attack.onHit];
-  const baseComponents = onHitEffects
-    .filter(isStatBlockBaseDamageEffect)
-    .map((effect, index) => ({
-      componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(PositiveInteger(index + 1)),
-      ),
-      notations: expectedStatBlockDamageComponentNotations(effect),
-    }));
-  const advantageBonus = onHitEffects.find(
-    isStatBlockAdvantageBonusDamageEffect,
-  );
-  const components: readonly {
-    readonly componentRef: StatBlockAttackDamageComponentRef;
-    readonly notations: readonly StatBlockDamageComponentNotation[];
-  }[] = [
-    ...baseComponents,
-    ...(advantageBonus === undefined
-      ? []
-      : [
-          {
-            componentRef: statBlockAdvantageBonusDamageComponentRef,
-            notations:
-              expectedStatBlockDamageComponentNotations(advantageBonus),
-          },
-        ]),
-  ];
-  const [firstComponent, ...remainingComponents] = components;
-  if (firstComponent === undefined) {
-    throw new Error("Expected an admitted Stat Block attack damage component.");
-  }
-
-  let selections: readonly StatBlockAttackDamageComponentSelection[][] = [[]];
-  for (const component of [firstComponent, ...remainingComponents]) {
-    selections = selections.flatMap((selection) =>
-      component.notations.map((notation) => [
-        ...selection,
-        { componentRef: component.componentRef, notation },
-      ]),
-    );
-  }
-  return selections.map((selection) => {
-    const [firstSelection, ...remainingSelections] = selection;
-    if (firstSelection === undefined) {
-      throw new Error("Expected a non-empty Stat Block damage selection.");
-    }
-    const parsed = statBlockAttackDamageSelection([
-      firstSelection,
-      ...remainingSelections,
-    ]);
-    if (Result.isFailure(parsed)) {
-      throw new Error(
-        "Expected canonical Stat Block damage component roles in test fixture.",
-      );
-    }
-    return parsed.success;
-  });
 }
 
 function moveHole(state: BattleState, actorId: CombatantId): BattleHole {
@@ -1025,7 +932,7 @@ describe("battle boundary admission owners", () => {
         },
       }),
       codecRolled("spikeGrowth", {
-        spikeGrowthMovement: {
+        areaMovementDistanceDamage: {
           ...codecSource,
           effectRef: occurrenceRef("areaMovementDistanceDamage"),
           areaId: battleAreaId("boundary-spike"),
@@ -2202,29 +2109,33 @@ describe("battle boundary admission owners", () => {
     const source = projectedStatBlockRuntimeSource(authoredSource);
     const valid = battleStatBlockCombatantSource(source);
     expect(Result.isSuccess(valid)).toBe(true);
-    const unsupportedSectionProjection = projectAuthoredStatBlock(
-      monsterResourceStatBlockWithUnsupportedAttackSections(),
-    );
-    expect(Result.isFailure(unsupportedSectionProjection)).toBe(true);
-    if (Result.isSuccess(unsupportedSectionProjection)) return;
-    expect(unsupportedSectionProjection.failure).toEqual({
-      tag: "battleStatBlockProjectionFailure",
-      reason: "unsupportedProcedureBinding",
-      issues: [
-        {
-          section: "bonusActions",
-          procedureOrdinal: 1,
-        },
-      ],
-    });
     expect(
       battleStatBlockCombatantSource({
         ...source,
         statBlock: { ...source.statBlock, hp: { kind: "literal", value: 0 } },
       }),
     ).toMatchObject({ _tag: "Failure" });
-    expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
-      authoredSource,
+    const malformedArmorClass = decodeStatBlockRecordResult({
+      ...authoredSource,
+      statBlock: {
+        ...authoredSource.statBlock,
+        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
+      },
+    });
+    expect(Result.isFailure(malformedArmorClass)).toBe(true);
+    if (Result.isSuccess(malformedArmorClass)) {
+      throw new Error("Expected malformed Armor Class source to be rejected.");
+    }
+    expect(malformedArmorClass.failure._tag).toBe("SchemaError");
+    const armorClassIssues = SchemaIssue.makeFormatterStandardSchemaV1()(
+      malformedArmorClass.failure.issue,
+    ).issues;
+    expect(armorClassIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ["statBlock", "ac", "value", "source"],
+        }),
+      ]),
     );
     expect(
       admitBattleStatBlockCombatant({
@@ -2371,6 +2282,14 @@ describe("battle boundary admission owners", () => {
         },
       ),
     ).toMatchObject({ _tag: "Failure" });
+    const resourceOwningBinding = snapshot.procedureBindings.find(
+      (binding) =>
+        isResourceOwningStatBlockProcedureBinding(binding) &&
+        binding.resourcePoolRefs.length > 0,
+    );
+    if (resourceOwningBinding === undefined) {
+      throw new Error("Expected a resource-owning Stat Block binding.");
+    }
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-execution"),
@@ -2397,43 +2316,46 @@ describe("battle boundary admission owners", () => {
         executionSource,
         {
           ...snapshot,
-          procedureBindings: snapshot.procedureBindings.map(
-            (binding, index) => {
-              if (
-                index !== 0 ||
-                !isNonSpellStatBlockProcedureBinding(binding)
-              ) {
-                return binding;
-              }
-              return {
-                ...binding,
-                resourcePoolRefs: [
-                  ...binding.resourcePoolRefs,
-                  ...binding.resourcePoolRefs,
-                ],
-              };
-            },
-          ),
+          procedureBindings: snapshot.procedureBindings.map((binding) => {
+            if (
+              binding.procedureRef !== resourceOwningBinding.procedureRef ||
+              !isResourceOwningStatBlockProcedureBinding(binding)
+            ) {
+              return binding;
+            }
+            return {
+              ...binding,
+              resourcePoolRefs: [
+                ...binding.resourcePoolRefs,
+                ...binding.resourcePoolRefs,
+              ],
+            };
+          }),
         },
       ),
     ).toMatchObject({ _tag: "Failure" });
 
+    const fighterLevelsResult = parseCharacterBattleClassLevels([
+      { className: "fighter", level: 2 },
+    ]);
+    if (Result.isFailure(fighterLevelsResult)) {
+      throw new Error("Expected valid Fighter class levels.");
+    }
+    const fighterLevels = fighterLevelsResult.success;
     expect(
       characterExecutionFromUnits({
         battleId: battleId("boundary-character-execution"),
         combatantId: combatantId("boundary-character-execution"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        unitFeatureProfiles: [],
+        resourceFeatureProcedures: [],
+        unitFeatureProcedures: [],
         resourceUnits: [],
         units: [],
         unitRefs: [],
-        classLevels: [],
+        classLevels: fighterLevels,
       }),
     ).toMatchObject({ _tag: "Success" });
     const tacticalMind = unitLibrary.requireUnit("fighter_tactical_mind");
-    const fighterLevels = [
-      { className: "fighter" as const, level: classLevel(2) },
-    ];
     const tacticalProfile = parseSupportedUnitFeatureProfile(
       tacticalMind,
       fighterLevels,
@@ -2450,7 +2372,10 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-missing-resource"),
         combatantId: combatantId("boundary-character-missing-resource"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        unitFeatureProfiles: [tacticalProfile],
+        resourceFeatureProcedures: [],
+        unitFeatureProcedures: [
+          boundUnitFeatureProcedureFactsFromProfile(tacticalProfile),
+        ],
         resourceUnits: [],
         units: [tacticalMind],
         unitRefs: [],
@@ -3285,77 +3210,37 @@ describe("battle boundary admission owners", () => {
     expect(actionAttackBindings).toHaveLength(2);
     expect(unarmedStrikeBindings).toHaveLength(1);
     expect(legendaryAttackProcedureRefs.size).toBeGreaterThan(0);
-    expect(
-      actionAttackBindings.every(
-        (binding) =>
-          binding.procedure.kind === "attack" &&
-          expectedStatBlockDamageSelections(binding.procedure.attack).length ===
-            4,
-      ),
-    ).toBe(true);
-    expect(
-      unarmedStrikeBindings.every(
-        (binding) =>
-          binding.procedure.kind === "unarmedStrike" &&
-          expectedStatBlockDamageSelections(binding.procedure.attack).length ===
-            1,
-      ),
-    ).toBe(true);
-    const expectedPactSubjects = [
-      ...actionAttackBindings,
-      ...unarmedStrikeBindings,
-    ].flatMap((binding): readonly PactFamiliarAttackSubject[] => {
-      if (
-        binding.procedure.kind !== "attack" &&
-        binding.procedure.kind !== "unarmedStrike"
-      ) {
-        return [];
-      }
-      return expectedStatBlockDamageSelections(binding.procedure.attack).map(
-        (statBlockDamageSelection) => ({
-          tag: "companionAttack" as const,
-          actorId: wizardId,
-          familiarId,
-          procedureRef: binding.procedureRef,
-          statBlockDamageSelection,
-        }),
+    const pactAttackOptions = statBlockAttackActionOptions(
+      familiar.origin.execution,
+    ).filter((option) => {
+      const binding = familiar.origin.execution.procedureBindings.find(
+        (candidate) => candidate.procedureRef === option.procedureRef,
+      );
+      return (
+        binding?.procedure.kind === "unarmedStrike" ||
+        (binding?.procedure.kind === "attack" &&
+          binding.procedure.section === "actions")
       );
     });
-    const pactSubjects = pactCandidates.map((act) => {
-      const subject = act.subject;
-      if (subject.tag !== "companionAttack") {
-        throw new Error("Expected a Pact familiar attack candidate.");
-      }
-      return subject;
-    });
+    const expectedPactSubjects: readonly BattleSubject[] =
+      pactAttackOptions.map((option) => ({
+        tag: "companionAttack",
+        actorId: wizardId,
+        familiarId,
+        ...attackExecutionSelectionForOption(option),
+      }));
+    expect(pactCandidates).toHaveLength(expectedPactSubjects.length);
     expect(
-      pactSubjects.every(
-        (subject) => !legendaryAttackProcedureRefs.has(subject.procedureRef),
-      ),
-    ).toBe(true);
-    const distinctPactProcedureRefs = new Set(
-      pactSubjects.map((subject) => subject.procedureRef),
-    );
-    expect(pactSubjects.length).toBeGreaterThan(distinctPactProcedureRefs.size);
-    expect(
-      pactSubjects.every((candidate, index) =>
-        pactSubjects
-          .slice(index + 1)
-          .every((other) => !sameBattleSubject(candidate, other)),
-      ),
-    ).toBe(true);
-    expect(pactSubjects.length).toBe(expectedPactSubjects.length);
-    expect(
-      pactSubjects.every((actualSubject) =>
+      pactCandidates.every((act) =>
         expectedPactSubjects.some((expectedSubject) =>
-          sameBattleSubject(actualSubject, expectedSubject),
+          sameBattleSubject(act.subject, expectedSubject),
         ),
       ),
     ).toBe(true);
     expect(
       expectedPactSubjects.every((expectedSubject) =>
-        pactSubjects.some((actualSubject) =>
-          sameBattleSubject(expectedSubject, actualSubject),
+        pactCandidates.some((act) =>
+          sameBattleSubject(expectedSubject, act.subject),
         ),
       ),
     ).toBe(true);

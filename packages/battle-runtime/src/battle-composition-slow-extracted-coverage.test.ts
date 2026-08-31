@@ -1,4 +1,3 @@
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { NonNegativeInteger, resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
@@ -11,6 +10,7 @@ import {
   battleId,
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSeed,
   fighterId,
   goblinId,
@@ -22,12 +22,12 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type {
-  BattleActiveEffect,
   BattleCreatureState,
   BattleFill,
   BattleState,
   StatBlockBattleCreatureState,
 } from "./battle-state-execution.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { battleStatBlockProcedureExecutionRef } from "./identity.ts";
 import {
@@ -38,9 +38,11 @@ import {
 } from "./battle-reducer/action-resource-kinds.ts";
 import { isStatBlockBattleCreatureState } from "./battle-reducer/battle-discovery.ts";
 import { subtleSpellComponentProjectionFact } from "./battle-reducer/metamagic-support.ts";
-import { slowActivePenaltiesEffects } from "./battle-reducer/slow-active-penalties-effects.ts";
-import { slowSomaticSpellFailureOutcomeHole } from "./battle-reducer/slow-active-penalties-facts.ts";
-import { resolveSlowSomaticSpellFailure } from "./battle-reducer/slow-active-penalties-runtime.ts";
+import {
+  saveGatedTurnConstraintBundleEffects,
+  turnConstraintSomaticSpellFailureOutcomeHole,
+} from "./battle-reducer/save-gated-turn-constraint-facts.ts";
+import { resolveSaveGatedTurnConstraintSomaticSpellFailure } from "./battle-reducer/save-gated-turn-constraint-runtime.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import {
   attackActionOptionIsOrdinaryAttackAction,
@@ -102,7 +104,8 @@ describe("extracted battle composition and Slow coverage", () => {
           attack: null,
           spellcasting: wizardSpellcasting({
             cantrips: [spellRecord("ray_of_frost")],
-            preparedSpells: [],
+            preparedSpells: [spellRecord("slow")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
           }),
         }),
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
@@ -126,18 +129,30 @@ describe("extracted battle composition and Slow coverage", () => {
     if (invocation === undefined) {
       throw new Error("Expected an executable spell invocation.");
     }
-    const slowEffect = slowEffectForTest();
-    const slowedActor = {
-      ...actor,
-      activeEffects: [...actor.activeEffects, slowEffect],
-    } satisfies BattleCreatureState;
-    const slowedState = stateWithActor(session.state, slowedActor);
+    const slowedState = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: fighterId,
+      effect: saveGatedTurnConstraintBundleEffectForTest(session.state),
+    });
+    const slowedActor = requireCreature(slowedState, fighterId);
+    const slowEffect = slowedActor.activeEffects.find(
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
+    );
+    if (slowEffect === undefined) {
+      throw new Error("Expected the allocated turn-constraint effect.");
+    }
 
-    expect(slowActivePenaltiesEffects(undefined)).toEqual([]);
-    expect(slowActivePenaltiesEffects(actor)).toEqual([]);
-    expect(slowActivePenaltiesEffects(slowedActor)).toEqual([slowEffect]);
     expect(
-      slowSomaticSpellFailureOutcomeHole({
+      saveGatedTurnConstraintBundleEffects(session.state, undefined),
+    ).toEqual([]);
+    expect(saveGatedTurnConstraintBundleEffects(session.state, actor)).toEqual(
+      [],
+    );
+    expect(
+      saveGatedTurnConstraintBundleEffects(slowedState, slowedActor),
+    ).toEqual([expect.objectContaining(slowEffect)]);
+    expect(
+      turnConstraintSomaticSpellFailureOutcomeHole({
         state: slowedState,
         actorId: fighterId,
         invocation,
@@ -156,7 +171,8 @@ describe("extracted battle composition and Slow coverage", () => {
           attack: null,
           spellcasting: wizardSpellcasting({
             cantrips: [spellRecord("ray_of_frost")],
-            preparedSpells: [],
+            preparedSpells: [spellRecord("slow")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
           }),
         }),
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
@@ -181,11 +197,12 @@ describe("extracted battle composition and Slow coverage", () => {
     if (invocation === undefined) {
       throw new Error("Expected an executable spell invocation.");
     }
-    const slowedState = stateWithActor(session.state, {
-      ...requireCreature(session.state, fighterId),
-      activeEffects: [slowEffectForTest()],
+    const slowedState = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: fighterId,
+      effect: saveGatedTurnConstraintBundleEffectForTest(session.state),
     });
-    const hole = slowSomaticSpellFailureOutcomeHole({
+    const hole = turnConstraintSomaticSpellFailureOutcomeHole({
       state: slowedState,
       actorId: fighterId,
       invocation,
@@ -193,13 +210,13 @@ describe("extracted battle composition and Slow coverage", () => {
     if (hole === null)
       throw new Error("Expected the slowed Somatic spell hole.");
     const fill = {
-      kind: "slowSomaticSpellFailureOutcome",
+      kind: "turnConstraintSomaticSpellFailureOutcome",
       holeId: hole.holeId,
       value: { spellFailed: false },
     } as const satisfies BattleFill;
 
     expect(
-      resolveSlowSomaticSpellFailure({
+      resolveSaveGatedTurnConstraintSomaticSpellFailure({
         state: session.state,
         castingState: session.state,
         subject: spell.subject,
@@ -407,17 +424,26 @@ describe("Stat Block extracted composition coverage", () => {
     }
 
     expect(
-      statBlockMultiattackDispatchResourceDemandForActor(actor, binding),
+      statBlockMultiattackDispatchResourceDemandForActor(state, actor, binding),
     ).toEqual({
       kind: "allListedDispatches",
       procedureRefs: binding.procedure.dispatchProcedureRefs,
     });
-    const slowedActor = {
-      ...actor,
-      activeEffects: [...actor.activeEffects, slowEffectForTest()],
-    } satisfies StatBlockBattleCreatureState;
+    const slowedState = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: goblinId,
+      effect: saveGatedTurnConstraintBundleEffectForTest(state),
+    });
+    const slowedActor = slowedState.combatants.get(goblinId);
+    if (!isStatBlockBattleCreatureState(slowedActor)) {
+      throw new Error("Expected the slowed Stat Block actor.");
+    }
     expect(
-      statBlockMultiattackDispatchResourceDemandForActor(slowedActor, binding),
+      statBlockMultiattackDispatchResourceDemandForActor(
+        slowedState,
+        slowedActor,
+        binding,
+      ),
     ).toEqual({
       kind: "oneListedDispatch",
       procedureRefs: binding.procedure.dispatchProcedureRefs,
@@ -488,7 +514,15 @@ function statBlockMultiattackBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("stat-block-extracted-composition"),
     combatants: [
-      characterSeed({ combatantId: fighterId, initiative: 20 }),
+      characterSeed({
+        combatantId: fighterId,
+        initiative: 20,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("slow")],
+          spellSlots: [{ spellLevel: 3, count: 1 }],
+        }),
+      }),
       statBlockCreatureInit({
         combatantId: goblinId,
         initiative: 10,
@@ -534,32 +568,27 @@ function subtleSpellApplicationForTest(
   };
 }
 
-function stateWithActor(
+function saveGatedTurnConstraintBundleEffectForTest(
   state: BattleState,
-  actor: BattleCreatureState,
-): BattleState {
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(actor.combatantId, actor),
-  };
-}
-
-function slowEffectForTest(): Extract<
-  BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
+): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "saveGatedTurnConstraintBundle" }
 > {
+  const source = requireCreature(state, fighterId);
+  const invocation = supportedSpellActs(state, source).find(
+    (candidate) => candidate.procedure === "saveGatedTurnConstraintBundle",
+  );
+  if (invocation?.procedure !== "saveGatedTurnConstraintBundle") {
+    throw new Error("Expected a save-gated turn-constraint invocation.");
+  }
   return {
-    kind: "slowActivePenalties",
-    effectRef: battleEffectExecutionRefForTest("extracted-slow-coverage"),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "extracted-slow-coverage",
-    ),
+    kind: "saveGatedTurnConstraintBundle",
+    sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: fighterId,
-    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
     expiresAt: {
       kind: "concentration",
       combatantId: fighterId,
-      durationTicks: elapsedTimeTicks(10),
+      durationTicks: invocation.durationTicks,
     },
   };
 }

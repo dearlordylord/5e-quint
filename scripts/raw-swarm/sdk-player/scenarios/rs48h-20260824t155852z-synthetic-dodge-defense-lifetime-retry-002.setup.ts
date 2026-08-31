@@ -40,52 +40,30 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
 
-  const skeletonResult = sdk.battleCreatureInitFromStatBlock({
+  const skeletonResult = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(17),
     currentHp: sdk.hp(13),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(skeletonResult)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonResult.failure),
-      observation: {
-        operation: "battleCreatureInitFromStatBlock",
-        combatant: "Skeleton",
-      },
-    };
-  }
-
-  const goblinResult = sdk.battleCreatureInitFromStatBlock({
+  };
+  const goblinResult = {
     combatantId: goblinId,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(12),
     currentHp: sdk.hp(10),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(goblinResult)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinResult.failure),
-      observation: {
-        operation: "battleCreatureInitFromStatBlock",
-        combatant: "Goblin Warrior",
-      },
-    };
-  }
-
+  };
   const battleResult = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [skeletonResult.success, goblinResult.success],
+    combatants: [skeletonResult, goblinResult],
   });
   if (sdk.isFailure(battleResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battleResult.failure),
+      obstruction: sdk.battleInitializationIssueMessage(battleResult.failure),
       observation: { operation: "startBattle" },
     };
   }

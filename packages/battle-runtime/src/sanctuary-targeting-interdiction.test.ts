@@ -35,6 +35,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -45,7 +46,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement } from "./battle-reducer/targeting-save-interdiction.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   damageRollFillWithGroups,
@@ -1766,7 +1767,6 @@ function battleWithSanctuary(
         ? {
             ...skeletonCreatureInit({ initiative: 10 }),
             combatantId: attackerId,
-            displayName: "Ammunition Attacker",
           }
         : characterCreature(attackerId, "Attacker", 10),
       characterCreature(replacementId, "Replacement", 9),
@@ -1774,7 +1774,7 @@ function battleWithSanctuary(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -2163,7 +2163,7 @@ function characterCreature(
   displayName: string,
   initiative: number,
   spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"],
   classLevel = 1,

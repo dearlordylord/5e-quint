@@ -274,24 +274,22 @@ describe("GH-227 battle codec properties", () => {
     const encoded = encodedStatBlockSnapshots();
     const ordinalBindings = encoded.procedureBindings.filter(
       (binding) =>
-        binding.procedure.kind !== "unarmedStrike" &&
-        binding.procedure.kind !== "effectOccurrenceSource",
+        binding.procedure.kind !== "effectOccurrenceSource" &&
+        binding.procedure.kind !== "unarmedStrike",
     );
     const first = ordinalBindings[0];
     const second = ordinalBindings[1];
-    if (first === undefined || second === undefined) {
+    if (
+      first === undefined ||
+      second === undefined ||
+      first.procedure.kind === "effectOccurrenceSource" ||
+      second.procedure.kind === "effectOccurrenceSource" ||
+      first.procedure.kind === "unarmedStrike" ||
+      second.procedure.kind === "unarmedStrike"
+    ) {
       throw new Error("Expected two ordinal-bearing procedure bindings.");
     }
     const firstProcedure = first.procedure;
-    const secondProcedure = second.procedure;
-    if (
-      firstProcedure.kind === "unarmedStrike" ||
-      firstProcedure.kind === "effectOccurrenceSource" ||
-      secondProcedure.kind === "unarmedStrike" ||
-      secondProcedure.kind === "effectOccurrenceSource"
-    ) {
-      throw new Error("Expected ordinal-bearing procedure bindings.");
-    }
     const firstProcedureOrdinal = firstProcedure.procedureOrdinal;
     const malformed = {
       ...encoded,

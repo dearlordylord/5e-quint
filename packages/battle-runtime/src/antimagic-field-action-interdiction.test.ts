@@ -23,7 +23,10 @@ import {
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
+import {
+  battleInitializationIssueMessage,
+  removeBattleCombatants,
+} from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack } from "./character-execution-admission.ts";
 import {
@@ -38,8 +41,10 @@ import {
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
   flameBladeUnitId,
+  flamingSphereUnitId,
   healingWordUnitId,
   levitateUnitId,
+  moonbeamUnitId,
   rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
@@ -50,9 +55,15 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   bonusSpellAct,
+  flamingSphereAreaFill,
+  flamingSphereRepositionAct,
+  flamingSphereRepositionMovementFill,
   knownWillingSpellTargetFill,
   maybeBonusSpellAct,
   maybeSpellAct,
+  moonbeamAreaFill,
+  moonbeamRepositionAct,
+  moonbeamRepositionMovementFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
@@ -252,6 +263,118 @@ describe("Antimagic Field action interdiction", () => {
         fills: [],
       }),
     ).not.toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic Action is blocked inside a magic-suppression area.",
+    });
+  });
+
+  test("does not classify a collision-reposition Bonus Action as a Magic Action", () => {
+    const initial = spellBattle({
+      preparedSpells: [spellRecord(flamingSphereUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const castAct = spellAct({
+      session: initial,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
+    const area = requireHole(castAct.initialHoles, "spellAreaChoice");
+    const cast = resolveBattleSubject({
+      state: initial.state,
+      subject: castAct.subject,
+      fills: [flamingSphereAreaFill(area)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Flaming Sphere cast to resolve.");
+    }
+    const base = battleRuntimeSessionForTest({ ...initial, state: cast.state });
+    const reposition = flamingSphereRepositionAct(base);
+    const movement = requireHole(
+      reposition.initialHoles,
+      "movableZoneRepositionMovement",
+    );
+    const insideAura = activeAntimagicAuraSession(
+      base,
+      magicSuppressionEmanationMembershipForTest({
+        sourceCombatantId: spellTargetId,
+        originIncluded: false,
+        nonOriginCombatantIds: [spellCasterId],
+      }),
+    );
+
+    expect(
+      discoverBattleActs(insideAura).some(
+        (candidate) =>
+          candidate.subject.tag === "runtimeCommand" &&
+          candidate.subject.command === "movableZoneReposition" &&
+          candidate.subject.effectRef === reposition.subject.effectRef,
+      ),
+    ).toBe(true);
+    expect(
+      resolveBattleSubject({
+        state: insideAura.state,
+        subject: reposition.subject,
+        fills: [flamingSphereRepositionMovementFill(movement)],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
+  test("continues to interdict a directed-reposition Magic Action", () => {
+    const initial = spellBattle({
+      preparedSpells: [spellRecord(moonbeamUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const castAct = spellAct({
+      session: initial,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const area = requireHole(castAct.initialHoles, "spellAreaChoice");
+    const cast = resolveBattleSubject({
+      state: initial.state,
+      subject: castAct.subject,
+      fills: [moonbeamAreaFill(area)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected target End Turn to resolve.");
+    }
+    const base = battleRuntimeSessionForTest({
+      ...initial,
+      state: casterTurn.state,
+    });
+    const reposition = moonbeamRepositionAct(base);
+    const movement = requireHole(
+      reposition.initialHoles,
+      "movableZoneRepositionMovement",
+    );
+    const insideAura = activeAntimagicAuraSession(
+      base,
+      magicSuppressionEmanationMembershipForTest({
+        sourceCombatantId: spellTargetId,
+        originIncluded: false,
+        nonOriginCombatantIds: [spellCasterId],
+      }),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: insideAura.state,
+        subject: reposition.subject,
+        fills: [moonbeamRepositionMovementFill(movement, 30)],
+      }),
+    ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
       message: "Magic Action is blocked inside a magic-suppression area.",
@@ -633,7 +756,7 @@ function preserveLifeBattle(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

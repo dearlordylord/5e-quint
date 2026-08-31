@@ -5,12 +5,9 @@ import {
   Layer,
   Option,
   Path,
-  Stdio,
   Terminal,
 } from "effect";
-import { PlatformError, SystemError } from "effect/PlatformError";
-import { NodeServices } from "@effect/platform-node";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import { systemError } from "effect/PlatformError";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -551,29 +548,25 @@ function validationFileSystem(
       );
       if (member === undefined) {
         return Effect.fail(
-          new PlatformError(
-            new SystemError({
-              _tag: "Unknown",
-              module: "FileSystem",
-              method: "readFile",
-              description: "unknown fixture path",
-              pathOrDescriptor: path,
-            }),
-          ),
+          systemError({
+            _tag: "Unknown",
+            module: "FileSystem",
+            method: "readFile",
+            description: "unknown fixture path",
+            pathOrDescriptor: path,
+          }),
         );
       }
       const override = schemaOverrides[member];
       if (override === "missing") {
         return Effect.fail(
-          new PlatformError(
-            new SystemError({
-              _tag: "NotFound",
-              module: "FileSystem",
-              method: "readFile",
-              description: "missing fixture schema",
-              pathOrDescriptor: path,
-            }),
-          ),
+          systemError({
+            _tag: "NotFound",
+            module: "FileSystem",
+            method: "readFile",
+            description: "missing fixture schema",
+            pathOrDescriptor: path,
+          }),
         );
       }
       return Effect.succeed(
@@ -609,15 +602,13 @@ function failingCorpusReadFileSystem(): FileSystem.FileSystem {
   return FileSystem.makeNoop({
     readFileString: (path) =>
       Effect.fail(
-        new PlatformError(
-          new SystemError({
-            _tag: "NotFound",
-            module: "FileSystem",
-            method: "readFileString",
-            description: "missing fixture corpus",
-            pathOrDescriptor: path,
-          }),
-        ),
+        systemError({
+          _tag: "NotFound",
+          module: "FileSystem",
+          method: "readFileString",
+          description: "missing fixture corpus",
+          pathOrDescriptor: path,
+        }),
       ),
   });
 }
@@ -655,15 +646,13 @@ function recordingFileSystem(
       events.push(`write:${path}:${options?.flag}`);
       if (failWrite) {
         return Effect.fail(
-          new PlatformError(
-            new SystemError({
-              _tag: "Unknown",
-              module: "FileSystem",
-              method: "writeFile",
-              description: "fixture write failure",
-              pathOrDescriptor: path,
-            }),
-          ),
+          systemError({
+            _tag: "Unknown",
+            module: "FileSystem",
+            method: "writeFile",
+            description: "fixture write failure",
+            pathOrDescriptor: path,
+          }),
         );
       }
       files.set(path, Buffer.from(data));
@@ -701,11 +690,7 @@ function runWithPlatform<A, E>(
   effect: Effect.Effect<
     A,
     E,
-    | FileSystem.FileSystem
-    | Path.Path
-    | Terminal.Terminal
-    | Stdio.Stdio
-    | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | Terminal.Terminal
   >,
   fileSystem: FileSystem.FileSystem,
   terminal: Terminal.Terminal,
@@ -713,12 +698,10 @@ function runWithPlatform<A, E>(
   return Effect.runPromise(
     effect.pipe(
       Effect.provide(
-        Layer.merge(
-          NodeServices.layer,
-          Layer.merge(
-            Layer.succeed(FileSystem.FileSystem, fileSystem),
-            Layer.succeed(Terminal.Terminal, terminal),
-          ),
+        Layer.mergeAll(
+          Layer.succeed(FileSystem.FileSystem, fileSystem),
+          Path.layer,
+          Layer.succeed(Terminal.Terminal, terminal),
         ),
       ),
       Effect.result,

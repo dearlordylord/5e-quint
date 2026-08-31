@@ -3,8 +3,6 @@ import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-import { Match, Result, Schema } from "effect";
-
 import {
   formatSurfaceDecodeError,
   StatBlockRecordSchema,
@@ -42,6 +40,11 @@ import {
 import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
 import type { SrdSurface } from "../packages/surface/src/surface/types.ts";
 import type { SrdStatBlockParityInstalledRecord } from "../packages/surface/src/surface/stat-block-parity-observation.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
+
+const { Match, Result, Schema } = effectRuntimeForPackageOwners([
+  "surface",
+]).effect;
 
 export type PublicationIssue =
   | {
@@ -119,6 +122,10 @@ export type PublicationIssue =
       readonly peer: string;
       readonly expectedRecordKind: SurfacePublicationKnownRecordKind;
       readonly actualRecordKind: SurfacePublicationKnownRecordKind;
+    }
+  | {
+      readonly kind: "publication-delta-verification-failed";
+      readonly message: string;
     };
 
 type JsonDocument = unknown;

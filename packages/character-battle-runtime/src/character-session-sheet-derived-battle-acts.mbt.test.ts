@@ -4,7 +4,6 @@ import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleActSpellPresentation,
   battleId,
   combatantId,
@@ -59,24 +58,8 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectSuccess(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
-
 type SheetDerivedOutcome =
   | "init"
   | "missing-wielded-weapon-rejected"
@@ -660,7 +643,7 @@ function startSheetDerivedSession(
 }
 
 function battleCreatureInitFromRidingHorse() {
-  return battleCreatureInitFromStatBlock({
+  return authoredStatBlockBattleInit({
     combatantId: targetCombatantId,
     statBlock: assertStatBlockForTest(
       statBlockCatalog,

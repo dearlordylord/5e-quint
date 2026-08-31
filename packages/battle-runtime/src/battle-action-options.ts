@@ -466,10 +466,12 @@ export type SelectedStatBlockAttackHitEffects = {
   readonly conditionRider?: StatBlockAttackHitTargetSizeConditionRider;
 };
 
-export type SelectedStatBlockAttackRollMechanics =
-  SupportedStatBlockAttackRollMechanics & {
-    readonly onHit: SelectedStatBlockAttackHitEffects;
-  };
+export type SelectedStatBlockAttackRollMechanics = OmitEach<
+  SupportedStatBlockAttackRollMechanics,
+  "onHit"
+> & {
+  readonly onHit: SelectedStatBlockAttackHitEffects;
+};
 
 export function statBlockAttackDamageSelectionForDamage(
   damage: SelectedStatBlockAttackDamage,

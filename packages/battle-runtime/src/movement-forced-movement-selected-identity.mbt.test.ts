@@ -41,6 +41,7 @@ import {
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleProcedureExecutionRef,
@@ -75,7 +76,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type MovementCompelledMovementSpellId =
   | "dissonant_whispers"
@@ -100,8 +101,8 @@ type MovementCompelledMovementSelectedIdentityProjection = {
   readonly dissonantMovementFillRequired: boolean;
   readonly targetMovementSpentFeet: number;
   readonly commandMovementFillRequired: boolean;
-  readonly compelledNextTurnBehaviorEffectObserved: boolean;
-  readonly compelledNextTurnBehaviorEffectCount: number;
+  readonly commandPendingEffectObserved: boolean;
+  readonly commandPendingEffectCount: number;
   readonly climbSpeedFeet: number;
   readonly swimSpeedFeet: number;
   readonly lastResult:
@@ -192,8 +193,8 @@ defineSelectedIdentityReplayAndQntReplay({
     dissonantMovementFillRequired: "bool",
     targetMovementSpentFeet: "int",
     commandMovementFillRequired: "bool",
-    compelledNextTurnBehaviorEffectObserved: "bool",
-    compelledNextTurnBehaviorEffectCount: "int",
+    commandPendingEffectObserved: "bool",
+    commandPendingEffectCount: "int",
     climbSpeedFeet: "int",
     swimSpeedFeet: "int",
     lastResult: "variant",
@@ -1232,7 +1233,7 @@ function resolvedProjection(
     >;
     readonly dissonantMovementFillRequired?: boolean;
     readonly commandMovementFillRequired?: boolean;
-    readonly compelledNextTurnBehaviorEffectObserved?: boolean;
+    readonly commandPendingEffectObserved?: boolean;
   },
 ): MovementCompelledMovementSelectedIdentityProjection {
   if (result.tag !== "resolved") {
@@ -1246,8 +1247,7 @@ function resolvedProjection(
     lastResult: flags.lastResult,
     dissonantMovementFillRequired: flags.dissonantMovementFillRequired ?? false,
     commandMovementFillRequired: flags.commandMovementFillRequired ?? false,
-    compelledNextTurnBehaviorEffectObserved:
-      flags.compelledNextTurnBehaviorEffectObserved ?? false,
+    commandPendingEffectObserved: flags.commandPendingEffectObserved ?? false,
   });
 }
 
@@ -1304,7 +1304,7 @@ function executeCompelledFleeTargetTurn(): MovementCompelledMovementSelectedIden
     {
       lastResult: "executeCompelledFlee",
       commandMovementFillRequired,
-      compelledNextTurnBehaviorEffectObserved,
+      commandPendingEffectObserved: compelledNextTurnBehaviorEffectObserved,
     },
   );
 }
@@ -1358,8 +1358,8 @@ function expectedProjection(
     dissonantMovementFillRequired: false,
     targetMovementSpentFeet: 0,
     commandMovementFillRequired: false,
-    compelledNextTurnBehaviorEffectObserved: false,
-    compelledNextTurnBehaviorEffectCount: 0,
+    commandPendingEffectObserved: false,
+    commandPendingEffectCount: 0,
     climbSpeedFeet: 0,
     swimSpeedFeet: 0,
     lastResult: "init",
@@ -1629,12 +1629,12 @@ function movementCompelledMovementBattle(input: {
   readonly caster?: {
     readonly displayName?: string;
     readonly spellcasting?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCreatureInit,
       { readonly kind: "character" }
     >["spellcasting"];
     readonly characterUnitRefs?: readonly BattleUnitRef[];
     readonly classLevels?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCreatureInit,
       { readonly kind: "character" }
     >["classLevels"];
   };
@@ -1676,7 +1676,7 @@ function movementCompelledMovementBattle(input: {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1686,12 +1686,12 @@ function movementCompelledMovementCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
   readonly characterUnitRefs?: readonly BattleUnitRef[];
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["classLevels"];
   readonly currentHp?: number;
@@ -2043,7 +2043,7 @@ function projectMovementCompelledMovementSelectedIdentityState(
     readonly lastResult: MovementCompelledMovementSelectedIdentityProjection["lastResult"];
     readonly dissonantMovementFillRequired: boolean;
     readonly commandMovementFillRequired: boolean;
-    readonly compelledNextTurnBehaviorEffectObserved: boolean;
+    readonly commandPendingEffectObserved: boolean;
   },
 ): MovementCompelledMovementSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -2079,10 +2079,8 @@ function projectMovementCompelledMovementSelectedIdentityState(
     dissonantMovementFillRequired: flags.dissonantMovementFillRequired,
     targetMovementSpentFeet: Number(targetState.movementSpentFeet),
     commandMovementFillRequired: flags.commandMovementFillRequired,
-    compelledNextTurnBehaviorEffectObserved:
-      flags.compelledNextTurnBehaviorEffectObserved,
-    compelledNextTurnBehaviorEffectCount:
-      compelledNextTurnBehaviorEffectCount(state),
+    commandPendingEffectObserved: flags.commandPendingEffectObserved,
+    commandPendingEffectCount: compelledNextTurnBehaviorEffectCount(state),
     climbSpeedFeet: speedKindFeet(caster, "climb"),
     swimSpeedFeet: speedKindFeet(caster, "swim"),
     lastResult: flags.lastResult,

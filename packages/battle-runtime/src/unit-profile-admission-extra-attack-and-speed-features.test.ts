@@ -77,7 +77,7 @@ import type {
   UnitRecord,
 } from "./unit-profile-admission.test-support.ts";
 import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;
 type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
@@ -1415,7 +1415,7 @@ function acrobaticMovementBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1486,7 +1486,7 @@ function secondStoryWorkBattle(): BattleState {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

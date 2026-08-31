@@ -177,8 +177,12 @@ export const D6_ROLL_RESULTS = [1, 2, 3, 4, 5, 6] as const;
 export type D6RollResult = DieRollResult & Brand.Brand<"D6RollResult">;
 export const D6RollResult = Brand.all(
   DieRollResult,
-  Brand.make<D6RollResult>((value: number) =>
-    D6_ROLL_RESULTS.some((rollResult) => rollResult === value),
+  Brand.check<D6RollResult>(
+    Schema.makeFilter((value: number) =>
+      D6_ROLL_RESULTS.some((rollResult) => rollResult === value)
+        ? undefined
+        : `Expected ${value} to be a d6 roll result`,
+    ),
   ),
 );
 

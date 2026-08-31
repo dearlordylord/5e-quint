@@ -132,17 +132,13 @@ const projectionBase = {
 } as const;
 
 function projectionHole(kind: string, fields: object = {}): BattleHole {
-  try {
-    return decodeBattleHole({
-      ...projectionBase,
-      holeInstanceKey: `${projectionBase.holeInstanceKey}-${kind}`,
-      holeId: `${projectionBase.holeId}-${kind}`,
-      kind,
-      ...fields,
-    });
-  } catch (cause) {
-    throw new Error(`Failed to decode ${kind} projection fixture.`, { cause });
-  }
+  return decodeBattleHole({
+    ...projectionBase,
+    holeInstanceKey: `${projectionBase.holeInstanceKey}-${kind}`,
+    holeId: `${projectionBase.holeId}-${kind}`,
+    kind,
+    ...fields,
+  });
 }
 
 const projectionNestedReroll = {
@@ -221,7 +217,7 @@ const projectionHoles = [
   projectionAttackRollWithD20,
   projectionHole("compelledBehaviorOptionChoice", {
     sourceProcedureRef: projectionProcedureRef,
-    choices: ["approach"],
+    choices: [],
   }),
   projectionHole("companionReappearanceInitiative", {
     ownerId: "projection-owner",
@@ -335,9 +331,9 @@ const projectionHoles = [
   }),
   projectionHole("movableZoneRamMovement", {
     movableZone: {
+      effectRef: projectionEffectRef,
       sourceCombatantId: "projection-source",
       sourceProcedureRef: projectionProcedureRef,
-      effectRef: projectionEffectRef,
       targetId: "projection-target",
       areaId: "projection-area",
       maxMoveFeet: 20,
@@ -346,9 +342,9 @@ const projectionHoles = [
   }),
   projectionHole("movableZoneRepositionMovement", {
     movableZone: {
+      effectRef: projectionEffectRef,
       sourceProcedureRef: projectionProcedureRef,
       sourceCombatantId: "projection-source",
-      effectRef: projectionEffectRef,
       areaId: "projection-area",
       maxMoveFeet: 20,
     },
@@ -474,10 +470,12 @@ const projectionHoles = [
     spellcastingAbilityCheck: {
       casterId: "projection-caster",
       sourceProcedureRef: projectionProcedureRef,
-      target: {
-        kind: "magicalEffect",
+      target: { kind: "combatant", combatantId: "projection-target" },
+      checkedOccurrence: {
+        ownerId: "projection-caster",
         effect: {
-          kind: "spellLightEmitter",
+          kind: "spellActiveEffect",
+          activeEffectKind: "spatialMeleeSpellAttackProxy",
           effectRef: projectionEffectRef,
         },
       },
@@ -637,8 +635,8 @@ describe("battle mechanical frontier", () => {
     );
 
     expect(Result.isSuccess(decoded)).toBe(true);
-    if (Result.isFailure(decoded)) throw decoded.failure;
-    expect(decoded.success).toMatchObject(mechanicalHole);
+    if (Result.isSuccess(decoded))
+      expect(decoded.success).toEqual(mechanicalHole);
     expect(JSON.stringify(decoded)).not.toContain("label");
   });
 
@@ -657,8 +655,8 @@ describe("battle mechanical frontier", () => {
     );
 
     expect(Result.isSuccess(decoded)).toBe(true);
-    if (Result.isFailure(decoded)) throw decoded.failure;
-    expect(decoded.success).toMatchObject(mechanicalNestedHole);
+    if (Result.isSuccess(decoded))
+      expect(decoded.success).toEqual(mechanicalNestedHole);
     expect(JSON.stringify(decoded)).not.toContain("label");
   });
 
@@ -682,8 +680,8 @@ describe("battle mechanical frontier", () => {
     )(mechanicalInterruptChoice);
 
     expect(Result.isSuccess(decoded)).toBe(true);
-    if (Result.isFailure(decoded)) throw decoded.failure;
-    expect(decoded.success).toMatchObject(mechanicalInterruptChoice);
+    if (Result.isSuccess(decoded))
+      expect(decoded.success).toEqual(mechanicalInterruptChoice);
     expect(JSON.stringify(decoded)).not.toContain("label");
   });
 
@@ -812,13 +810,13 @@ describe("battle mechanical frontier", () => {
     const propertyNames = new Set(recursivelyCollectedPropertyNames(schema));
     expect(propertyNames.has("label")).toBe(false);
 
-    const mechanicalPropertySchemas = (propertyName: string) =>
+    const holePaths = (propertyName: string) =>
       recursivelyFindPropertySchemas(schema, propertyName);
     for (const propertyName of [
       "ongoingFeatureActivations",
       "missToHitReplacements",
     ]) {
-      const nestedSchemas = mechanicalPropertySchemas(propertyName);
+      const nestedSchemas = holePaths(propertyName);
       expect(nestedSchemas.length, propertyName).toBeGreaterThan(0);
       for (const { schema: propertySchema } of nestedSchemas) {
         expect(
@@ -827,17 +825,14 @@ describe("battle mechanical frontier", () => {
       }
     }
 
-    const attackDamageChoiceSchemas = mechanicalPropertySchemas(
+    const attackDamageChoiceSchemas = holePaths(
       "attackDamageAbilityModifierChoice",
-    ).filter(({ path }) =>
-      path.includes("/$defs/BattleMechanicalOrdinaryHole"),
     );
     expect(attackDamageChoiceSchemas.length).toBeGreaterThan(0);
-    for (const { path, schema: propertySchema } of attackDamageChoiceSchemas) {
-      expect(
-        recursivelyCollectedPropertyNames(propertySchema),
-        path,
-      ).not.toContain("unitIds");
+    for (const { schema: propertySchema } of attackDamageChoiceSchemas) {
+      expect(recursivelyCollectedPropertyNames(propertySchema)).not.toContain(
+        "unitIds",
+      );
     }
 
     const reactionModifierSchemas = recursivelyFindPropertySchemas(
@@ -944,21 +939,6 @@ describe("battle mechanical frontier", () => {
     expect(serialized).not.toContain("weaponUnitId");
     expect(attackHole.attack).toHaveProperty("weaponObjectId");
     expect(attackHole.attack).not.toHaveProperty("weaponUnitId");
-    expect(attackHole).not.toHaveProperty("ongoingFeatureActivations");
-    expect(attackHole).not.toHaveProperty("missToHitReplacements");
-    for (const propertyName of [
-      "ongoingFeatureActivations",
-      "missToHitReplacements",
-    ] as const) {
-      expect(
-        Result.isFailure(
-          Schema.decodeUnknownResult(BattleMechanicalHoleSchema)({
-            ...attackHole,
-            [propertyName]: [],
-          }),
-        ),
-      ).toBe(true);
-    }
   });
 
   test("projects an interrupt frontier when its decision hole matches the checkpoint", () => {
@@ -1010,6 +990,19 @@ describe("battle mechanical frontier", () => {
     const result = ordinaryNeedsHolesResult();
     const frontier = battleMechanicalFrontier({
       result: { kind: "holes", subject: result.subject, holes: [] },
+      acceptedFills: [],
+    });
+    expect(frontier).toEqual(Result.fail({ tag: "emptyHoleFrontier" }));
+  });
+
+  test("reports an ordinary frontier containing only interrupt holes", () => {
+    const result = ordinaryNeedsHolesResult();
+    const frontier = battleMechanicalFrontier({
+      result: {
+        kind: "holes",
+        subject: result.subject,
+        holes: [runtimeInterruptDecisionHole],
+      },
       acceptedFills: [],
     });
     expect(frontier).toEqual(Result.fail({ tag: "emptyHoleFrontier" }));

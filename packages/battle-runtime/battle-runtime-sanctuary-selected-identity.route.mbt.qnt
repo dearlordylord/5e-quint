@@ -94,11 +94,11 @@ module battleRuntimeSanctuarySelectedIdentityRouteMbt {
       List(
         startRoute,
         discoverWard(
-          Set(SanctuaryInterdictionOutcomeHoleKind),
+          Set(TargetingSaveInterdictionOutcomeHoleKind),
           BattleActiveEffectOwner,
         ),
         resolveWard(
-          SanctuaryInterdictionOutcomeFillKind,
+          TargetingSaveInterdictionOutcomeFillKind,
           noHoles,
           BattleSavingThrowOutcomeOwner,
         ),
@@ -114,11 +114,11 @@ module battleRuntimeSanctuarySelectedIdentityRouteMbt {
       List(
         startRoute,
         discoverWard(
-          Set(SanctuaryInterdictionOutcomeHoleKind),
+          Set(TargetingSaveInterdictionOutcomeHoleKind),
           BattleActiveEffectOwner,
         ),
         resolveWard(
-          SanctuaryInterdictionOutcomeFillKind,
+          TargetingSaveInterdictionOutcomeFillKind,
           noHoles,
           BattleSavingThrowOutcomeOwner,
         ),
@@ -134,11 +134,11 @@ module battleRuntimeSanctuarySelectedIdentityRouteMbt {
       List(
         startRoute,
         discoverWard(
-          Set(SanctuaryInterdictionOutcomeHoleKind, TargetChoiceHoleKind),
+          Set(TargetingSaveInterdictionOutcomeHoleKind, TargetChoiceHoleKind),
           BattleActiveEffectOwner,
         ),
         resolveWard(
-          SanctuaryInterdictionOutcomeFillKind,
+          TargetingSaveInterdictionOutcomeFillKind,
           Set(TargetChoiceHoleKind),
           BattleSavingThrowOutcomeOwner,
         ),
@@ -154,11 +154,11 @@ module battleRuntimeSanctuarySelectedIdentityRouteMbt {
       List(
         startRoute,
         discoverWard(
-          Set(SanctuaryInterdictionOutcomeHoleKind, TargetChoiceHoleKind),
+          Set(TargetingSaveInterdictionOutcomeHoleKind, TargetChoiceHoleKind),
           BattleActiveEffectOwner,
         ),
         resolveWard(
-          SanctuaryInterdictionOutcomeFillKind,
+          TargetingSaveInterdictionOutcomeFillKind,
           Set(TargetChoiceHoleKind),
           BattleSavingThrowOutcomeOwner,
         ),

@@ -24,6 +24,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
@@ -33,7 +34,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleUnitSupportProfilesForUnit,
   type BattleUnitSupportProfile,
@@ -162,7 +163,7 @@ function startBattleRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -172,7 +173,7 @@ function characterCombatant(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly characterUnitRefs: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["characterUnitRefs"];
 }): BattleCreatureInit {

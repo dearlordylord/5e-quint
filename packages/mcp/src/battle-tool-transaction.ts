@@ -12,7 +12,7 @@ import {
   type BattleRuntimeTransactionResult,
   type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Match, Option, Result } from "effect";
+import { Result, Match, Option } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -67,7 +67,7 @@ export function handleFillBattleHoleToolCall(
     session,
     transaction: previous,
     operation: admission.operation,
-    statBlockCatalog: root.statBlockCatalog,
+    statBlockCatalog: root.battleStatBlockExecutionCatalog,
   });
   return storedBattleTransactionContent(root, session, result);
 }
@@ -77,9 +77,8 @@ function admitBattleFillToolInput(
   input: FillBattleHoleToolInput,
 ) {
   const visibleSession = activeBattleForTool(root);
-  if (Result.isFailure(visibleSession)) {
+  if (Result.isFailure(visibleSession))
     return Result.fail(visibleSession.failure);
-  }
 
   const previous = root.sessionStore.getPendingBattleTransaction();
   const pendingIssue = battleFillPendingTransactionIssue(previous, input);

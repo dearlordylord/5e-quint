@@ -92,9 +92,9 @@ type EncodedTextOnlyReason = Schema.Codec.Encoded<
   typeof StatBlockTextOnlyReasonSchema
 >;
 
-const decode = <S extends Schema.ConstraintDecoder<unknown>>(
+const decode = <S extends Schema.Codec<unknown, unknown, never, never>>(
   schema: S,
-  input: S["Encoded"],
+  input: Schema.Codec.Encoded<S>,
 ): S["Type"] => Schema.decodeUnknownSync(schema)(input);
 
 const noResourceRefs: Extract<EncodedResourceRefs, { readonly kind: "none" }> =

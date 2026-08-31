@@ -8,7 +8,7 @@ import type {
   CreatureAttackRollMechanics,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Brand, Match, Result } from "effect";
+import { Brand, Result, Match } from "effect";
 import type {
   SelectedStatBlockAttackDamage,
   SelectedStatBlockAttackDamageComponent,
@@ -74,7 +74,9 @@ export function parseSelectedStatBlockAttackDamage(
 ) {
   return selectedStatBlockAttackDamageHasCanonicalComponentRefs(damage)
     ? Result.succeed(selectedStatBlockAttackDamage(damage))
-    : Result.fail({ kind: "nonCanonicalStatBlockAttackDamageRoles" } as const);
+    : Result.fail({
+        kind: "nonCanonicalStatBlockAttackDamageRoles",
+      } as const);
 }
 
 export function supportedStatBlockAttackDamage(
@@ -133,23 +135,22 @@ function referencedStatBlockBaseDamageComponents(
   if (unreferencedBaseComponents === null) {
     return null;
   }
-  const referencedBaseComponents = unreferencedBaseComponents.flatMap(
-    (component, index) => {
-      const ordinal = parseStatBlockBaseDamageComponentOrdinal(index + 1);
-      return Result.isSuccess(ordinal)
-        ? [
-            withStatBlockDamageComponentRef(
-              component,
-              statBlockBaseDamageComponentRef(ordinal.success),
-            ),
-          ]
-        : [];
-    },
+  const referencedBaseComponents = Result.all(
+    unreferencedBaseComponents.map((component, index) =>
+      Result.map(
+        parseStatBlockBaseDamageComponentOrdinal(index + 1),
+        (ordinal) =>
+          withStatBlockDamageComponentRef(
+            component,
+            statBlockBaseDamageComponentRef(ordinal),
+          ),
+      ),
+    ),
   );
-  if (referencedBaseComponents.length !== unreferencedBaseComponents.length) {
+  if (Result.isFailure(referencedBaseComponents)) {
     return null;
   }
-  const baseComponents = nonEmpty(referencedBaseComponents);
+  const baseComponents = nonEmpty(referencedBaseComponents.success);
   if (baseComponents === null) {
     return null;
   }

@@ -1,7 +1,8 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { describe, expect, test } from "vitest";
+import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { battleActSpellPresentation } from "../battle-act-composition.ts";
 import {
   battleEffectExecutionRefForTest,
@@ -31,6 +32,7 @@ import {
 import type { BattleState } from "../battle-state-execution.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import {
   battleSubjectActionEligibilityIssue,
   battleSubjectBeginsBonusAction,
@@ -43,7 +45,6 @@ import {
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
   battleStatBlockExecutionScopeRef,
-  BattleStatBlockProcedureExecutionRef,
   battleStatBlockProcedureExecutionRef,
   combatantId,
 } from "../identity.ts";
@@ -297,7 +298,7 @@ describe("battle subject action eligibility", () => {
         familiarId,
         procedureRef: statBlockProcedureRef,
         statBlockDamageSelection:
-          singleBaseStatBlockAttackDamageSelectionForTest("rolled"),
+          singleBaseStatBlockAttackDamageSelectionForTest("static"),
       },
       {
         tag: "actionSpell",
@@ -417,7 +418,7 @@ describe("battle subject action eligibility", () => {
     ).toBe(false);
   });
 
-  test("rejects a present familiar's attack action while preserving other eligibility families", () => {
+  test("rejects a present spawned companion's attack action while preserving other eligibility families", () => {
     const { state, familiarId } = familiarEligibilityBattle();
     const familiar = state.combatants.get(familiarId);
     if (familiar?.origin.kind !== "statBlock") {
@@ -432,15 +433,17 @@ describe("battle subject action eligibility", () => {
     if (bitePresentation === undefined) {
       throw new Error("Expected the Bat's admitted Bite procedure.");
     }
+    const biteAttackOption = statBlockAttackActionOptions(
+      familiar.origin.execution,
+    ).find((option) => option.procedureRef === bitePresentation.procedureRef);
+    if (biteAttackOption === undefined) {
+      throw new Error("Expected the Bat's admitted Bite attack option.");
+    }
     const biteAttack = {
       tag: "action" as const,
       actorId: familiarId,
       action: "attack" as const,
-      procedureRef: BattleStatBlockProcedureExecutionRef.make(
-        bitePresentation.procedureRef,
-      ),
-      statBlockDamageSelection:
-        singleBaseStatBlockAttackDamageSelectionForTest("rolled"),
+      ...attackExecutionSelectionForOption(biteAttackOption),
     } satisfies Extract<
       BattleSubject,
       { readonly tag: "action"; readonly action: "attack" }

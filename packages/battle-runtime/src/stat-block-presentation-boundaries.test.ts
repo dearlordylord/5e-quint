@@ -1,8 +1,8 @@
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus,

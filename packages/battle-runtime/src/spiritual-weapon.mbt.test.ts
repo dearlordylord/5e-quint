@@ -27,7 +27,7 @@ import {
 } from "@dnd/shared/types";
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   attackRollFill,
   damageRollFillWithGroups,
@@ -46,6 +46,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -429,13 +430,13 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {

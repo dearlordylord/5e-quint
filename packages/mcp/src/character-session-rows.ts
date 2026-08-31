@@ -1,4 +1,5 @@
 import type { CharacterId } from "@dnd/battle-runtime";
+import type { CharacterBuildDisplayNameIssues } from "@dnd/character-creation-runtime";
 import {
   characterSheetCompanion,
   characterSheetHitDice,
@@ -9,6 +10,7 @@ import {
   type CharacterSheetPactSlotState,
   type CharacterSheetResourceState,
   type CharacterSheetSpellSlotState,
+  type CharacterSheetIssue,
 } from "@dnd/character-sheet-runtime";
 import type { Hp } from "@dnd/shared/types";
 import { Result, Match } from "effect";
@@ -28,9 +30,15 @@ import {
 
 export function characterListRows(
   root: McpPlaySessionRoot,
-): Result.Result<readonly CharacterSessionRow[], string> {
+): Result.Result<
+  readonly CharacterSessionRow[],
+  CharacterListProjectionIssues
+> {
   const rows: CharacterSessionRow[] = [];
-  for (const [characterId, session] of root.sessionStore.characters.entries()) {
+  const issues: CharacterListProjectionIssue[] = [];
+  for (const [index, [characterId, session]] of [
+    ...root.sessionStore.characters.entries(),
+  ].entries()) {
     if (session.tag === "inBattle") {
       rows.push({
         characterId,
@@ -44,21 +52,54 @@ export function characterListRows(
     }
     const detail = availableCharacterSessionDetail(root, session);
     if (Result.isFailure(detail)) {
-      return Result.fail(characterSessionDetailIssueMessage(detail.failure));
+      issues.push({
+        ownerPath: ["characters", index],
+        characterId,
+        issue: detail.failure,
+      });
+      continue;
     }
     rows.push(availableCharacterListRow(detail.success));
   }
-  return Result.succeed(rows);
+  return issues.length > 0
+    ? Result.fail([issues[0], ...issues.slice(1)])
+    : Result.succeed(rows);
 }
 
+export type CharacterListProjectionIssue = {
+  readonly ownerPath: readonly ["characters", number];
+  readonly characterId: CharacterId;
+  readonly issue: CharacterSessionProjectionIssue;
+};
+
+export type CharacterListProjectionIssues = readonly [
+  CharacterListProjectionIssue,
+  ...CharacterListProjectionIssue[],
+];
+
+export type CharacterSessionProjectionIssue =
+  | {
+      readonly tag: "hitPointMaximumUnavailable";
+      readonly issue: CharacterSheetIssue;
+    }
+  | {
+      readonly tag: "hitDiceUnavailable";
+      readonly issue: CharacterSheetIssue;
+    }
+  | {
+      readonly tag: "resourcesUnavailable";
+      readonly issue: CharacterSheetIssue;
+    }
+  | {
+      readonly tag: "characterDisplayUnavailable";
+      readonly issues: CharacterBuildDisplayNameIssues;
+    };
+
 export type CharacterSessionDetailIssue =
+  | CharacterSessionProjectionIssue
   | {
       readonly tag: "unknownCharacterSession";
       readonly characterId: CharacterId;
-    }
-  | {
-      readonly tag: "characterSessionDetailInvalid";
-      readonly message: string;
     };
 
 type CharacterSessionSheetProjection = {
@@ -115,13 +156,20 @@ export function characterSessionDetail(
     });
   }
   if (session.tag === "inBattle") {
+    const displayName = characterBuildDisplayName(
+      root.unitLibrary,
+      session.sheet.build,
+    );
+    if (Result.isFailure(displayName)) {
+      return Result.fail({
+        tag: "characterDisplayUnavailable",
+        issues: displayName.failure,
+      });
+    }
     return Result.succeed({
       tag: session.tag,
       characterId: session.sheet.characterId,
-      displayName: characterBuildDisplayName(
-        root.unitLibrary,
-        session.sheet.build,
-      ),
+      displayName: displayName.success,
       battleId: session.battleId,
       build: session.sheet.build,
     });
@@ -134,10 +182,7 @@ export function characterSessionDetailForAvailableSheet(
   sheet: AvailableCharacterSession,
 ): Result.Result<
   Extract<CharacterSessionDetail, { readonly tag: "available" }>,
-  Extract<
-    CharacterSessionDetailIssue,
-    { readonly tag: "characterSessionDetailInvalid" }
-  >
+  CharacterSessionProjectionIssue
 > {
   return availableCharacterSessionDetail(root, sheet);
 }
@@ -161,10 +206,7 @@ function availableCharacterSessionDetail(
   sheet: AvailableCharacterSession,
 ): Result.Result<
   Extract<CharacterSessionDetail, { readonly tag: "available" }>,
-  Extract<
-    CharacterSessionDetailIssue,
-    { readonly tag: "characterSessionDetailInvalid" }
-  >
+  CharacterSessionProjectionIssue
 > {
   const hitPointMaximum = characterSheetHitPointMaximum({
     sheet,
@@ -172,31 +214,38 @@ function availableCharacterSessionDetail(
   });
   if (Result.isFailure(hitPointMaximum)) {
     return Result.fail({
-      tag: "characterSessionDetailInvalid",
-      message: hitPointMaximum.failure.message,
+      tag: "hitPointMaximumUnavailable",
+      issue: hitPointMaximum.failure,
     });
   }
   const hitDice = characterSheetHitDice(sheet, root.unitLibrary);
   /* v8 ignore next -- @preserve -- The immediately preceding HP maximum projection proved the same build/catalog Hit Die facts. */
   if (Result.isFailure(hitDice)) {
     return Result.fail({
-      tag: "characterSessionDetailInvalid",
-      message: hitDice.failure.message,
+      tag: "hitDiceUnavailable",
+      issue: hitDice.failure,
     });
   }
   const resources = characterSheetResources(sheet, root.unitLibrary);
   if (Result.isFailure(resources)) {
     return Result.fail({
-      tag: "characterSessionDetailInvalid",
-      message: resources.failure.message,
+      tag: "resourcesUnavailable",
+      issue: resources.failure,
     });
   }
   const spellSlots = characterBattleSpellSlots(sheet);
   const pactSlots = characterSheetPactSlots(sheet);
+  const displayName = characterBuildDisplayName(root.unitLibrary, sheet.build);
+  if (Result.isFailure(displayName)) {
+    return Result.fail({
+      tag: "characterDisplayUnavailable",
+      issues: displayName.failure,
+    });
+  }
   return Result.succeed({
     tag: sheet.tag,
     characterId: sheet.characterId,
-    displayName: characterBuildDisplayName(root.unitLibrary, sheet.build),
+    displayName: displayName.success,
     sheet,
     sheetProjection: {
       currentHp: characterSessionCurrentHp(sheet),
@@ -250,22 +299,6 @@ function availableCharacterListRow(
     resources: detail.sheetProjection.resources,
     companion: characterSheetCompanion(detail.sheet),
   };
-}
-
-function characterSessionDetailIssueMessage(
-  issue: CharacterSessionDetailIssue,
-): string {
-  return Match.value(issue).pipe(
-    Match.when(
-      { tag: "unknownCharacterSession" },
-      ({ characterId }) => `Unknown character session: ${characterId}`,
-    ),
-    Match.when(
-      { tag: "characterSessionDetailInvalid" },
-      ({ message }) => message,
-    ),
-    Match.exhaustive,
-  );
 }
 
 function characterSheetResourceDisplayRow(

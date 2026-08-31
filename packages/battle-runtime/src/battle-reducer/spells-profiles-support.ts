@@ -81,6 +81,19 @@ type AbilityCheckRollModeSpellProjection = {
 type RollModifierSpellProjection =
   | D20RollModifierSpellProjection
   | AbilityCheckRollModeSpellProjection;
+type TemporaryAbilityCheckRollModeMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "modal_ongoing_effect" }
+> & {
+  readonly range: Extract<
+    BattleSpellAdmissionSource["mechanics"]["range"],
+    { readonly kind: "point" }
+  > & { readonly feet: number };
+  readonly duration: Extract<
+    BattleSpellAdmissionSource["mechanics"]["duration"],
+    { readonly kind: "timed" }
+  >;
+};
 export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
@@ -165,11 +178,6 @@ export function temporaryAbilityCheckRollModeProjection(
     },
   };
 }
-
-type TemporaryAbilityCheckRollModeMechanics = Extract<
-  BattleSpellAdmissionSource["mechanics"],
-  { readonly family: "modal_ongoing_effect" }
->;
 
 function temporaryAbilityCheckRollModeHeaderMatches(facts: {
   readonly level: TemporaryAbilityCheckRollModeMechanics["level"];

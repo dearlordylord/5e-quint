@@ -73,6 +73,8 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "releaseReadiedAction":
     case "releaseReadiedAttack":
       return "runtimeReaction";
+    case "retaliationAttack":
+      return "runtimeCommandRetaliationAttack";
     case "reportReadyTrigger":
       return "runtimeTableDecision";
     case "releaseGrapple":
@@ -320,6 +322,12 @@ function extractBattleSubjectKindCases(rootPath) {
     }
   }
   function visitSchema(node, resolvingBindings) {
+    if (ts.isArrayLiteralExpression(node)) {
+      for (const element of node.elements) {
+        visitSchema(element, resolvingBindings);
+      }
+      return;
+    }
     if (ts.isIdentifier(node)) {
       const binding = schemaBindings.get(node.text);
       if (binding === undefined || resolvingBindings.has(node.text)) return;

@@ -131,12 +131,24 @@ function assertSplitCatalogDiscovery(root) {
     root,
     dataCatalogPath,
     [
-      'import fixtureInput from "../../content/fixture_unit.json";',
       "export const srdUnitCollection = defineSrdUnitCollection({",
-      "  units: [fixtureInput].map((unit) => unit),",
+      "  units: srdUnitAggregateInputs.map((unit) => unit),",
       "});",
       "",
     ].join("\n"),
+  );
+  writeFixtureJson(
+    root,
+    "packages/surface/src/surface/srd-unit-publication-membership.json",
+    {
+      schema: "dnd.srd-unit-publication-membership.v1",
+      unitIds: ["fixture_unit"],
+    },
+  );
+  writeFixtureSource(
+    root,
+    "packages/surface/content/fixture_unit.dhall",
+    "{=}",
   );
   writeFixtureJson(root, "packages/surface/content/fixture_unit.json", {
     id: "fixture_unit",

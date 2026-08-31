@@ -145,7 +145,7 @@ describe("Raw Swarm capability projection", () => {
 
   test("makes resolved monster HP distinct from the absent Table choice workflow", () => {
     const mechanicalBoundary =
-      "battleCreatureInitFromStatBlock accepts a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow";
+      "startBattle accepts authored Stat Block inputs with a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow";
     const revisionPolicy =
       "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready";
     for (const role of ["generation", "review"] as const) {

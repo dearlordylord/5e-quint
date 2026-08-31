@@ -15,7 +15,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-core";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import { Result } from "effect";
 
 import {

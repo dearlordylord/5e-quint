@@ -3156,7 +3156,13 @@ describe("Cloudkill source-turn movement", () => {
     ).toMatchObject({
       trigger: "saveFailed",
       choices: [
-        expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: spellTargetId,
+          }),
+        }),
       ],
     });
   });

@@ -5,11 +5,12 @@ Issue: [#371](https://github.com/dearlordylord/5e-quint/issues/371)
 Cutover starting point: `fba977c5ed3abf554631ce43c006b5a0ad4c5557`
 Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
-Status: final issue #386 certification pending. The last recorded owner sweep
-contains zero raw and zero deduplicated diagnostics, but the current public
-gates and issue receipt remain required before closure. Historical
-controlled-red snapshots below remain evidence of the migration sequence;
-none is a current waiver or exception.
+Status: current merge-tree certification pending. The parent checkpoints below
+recorded separate zero-diagnostic inventories for 14-owner and 13-owner
+snapshots. Those historical observations remain evidence for their named
+revisions only; neither substitutes for the post-merge public typecheck, test,
+quality milestone, refreshed certificates, or issue receipt. No historical
+controlled-red snapshot is a current waiver or exception.
 
 ## Scope and ownership
 
@@ -1138,12 +1139,22 @@ each of `SIGINT` and `SIGTERM` while that response is in flight. Both cases
 then prove complete newline-framed JSON, byte-for-byte output ownership, exit
 code 130, empty standard error, and cleanup; no timing sleep is used.
 
-The public declaration graph has a reviewed deterministic measure of 512 files
-and 9,998,283 bytes. The file limit is exactly 512. The byte limit is 10 MiB,
-the smallest round binary-megabyte bound above the graph, with a 487,477-byte
-margin. Tests prove acceptance exactly at both caps and fail-closed rejection
-at each cap plus one, and the real public distribution must equal the reviewed
-measure. Raw Swarm lane hygiene again enforces that `quality:body` does not
+After master reconciliation, the public declaration graph has a reviewed
+deterministic measure of 530 files and 4,667,450 bytes. The file limit is
+exactly 530. The byte limit remains 10 MiB, with a 5,818,310-byte margin. Tests
+prove acceptance exactly at both caps and fail-closed rejection at each cap
+plus one, and the real public distribution must equal the reviewed measure.
+The comparison baseline is commit `38e79b814`: 523 files and 3,962,445 bytes,
+with independently reproduced sorted POSIX relative-path ledger SHA-256
+`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
+The reviewed ten additions and three removals from that pinned graph are listed
+with their owning reachability in
+[`final-parity-report.md`](./final-parity-report.md#master-reconciliation-declaration-certificate);
+the canonical type-only owner is
+[`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
+and the generated SRD Stat Block aggregate is excluded from the declaration
+bundle. This focused #385 evidence does not claim completion of the remaining
+#386 public gates. Raw Swarm lane hygiene again enforces that `quality:body` does not
 invoke the deterministic `:body` command; the public deterministic owner
 continues to acquire its documented lock itself.
 
@@ -1191,6 +1202,50 @@ not run for this issue snapshot.
 
 ## Issue #386 current certification and controlled-red closure
 
+Issue #386 removes the migration exception rather than extending it. The final
+inventory covers all 14 package owners and records zero raw and zero
+deduplicated diagnostics. Its SHA-256 is
+`47bcb642a9e7907630022930c73c9d75e9b4926b68e5c4a3814417417f608f72`.
+The retired inventory generator and mutation package scripts are absent;
+`pnpm typecheck` is the current executable owner and any future diagnostic is
+an ordinary blocking failure.
+
+The repository and installed dependency graph select Effect
+`4.0.0-rc.112`, `@effect/platform-node@4.0.0-rc.112`,
+`@effect/platform-node-shared@4.0.0-rc.112`, and
+`@effect/vitest@4.0.0-rc.112`, with no Effect 3 or unsupported Effect package.
+The clean-consumer deployment independently verifies the production MCP
+package graph, while the application and script lifecycle evidence exercises
+their exact shipped entrypoints.
+
+The immutable baseline and the complete finite Effect 4 disposition are owned
+by the [final parity report](./final-parity-report.md#immutable-oracle-and-finite-delta).
+That report records the candidate artifact, exact identity set, classification
+totals, collection authorities, and certificate digest in one place. The
+verifier rejects changed baseline or candidate bytes, unreadable artifacts,
+duplicate, unclassified, multiply classified, or stale exact identities, and
+stale aggregate counts or hashes.
+The authored-identity boundary also passes after removing the stale generic
+`runtimeCommandSubject` exemption: 4,735 literals, 795 checked source files,
+552 exercised exact exemptions, and 1,214 reviewed sites / 1,325 occurrences.
+
+The subsequent master-reconciliation authored-identity audit passes with
+7,328 literals from 283 decoded Surface spell records, 818 checked source
+files, 762 excluded fixture or artifact files, and the unchanged 9 narrowly
+allowlisted boundary files. It exercises 620 exact exemptions and authenticates
+1,294 reviewed sites / 1,405 occurrences with SHA-256
+`1a6b83fc6597ebcb817af5b723557f9e8e3cc219562c584de14f3e45bc4ecc02`.
+The audit adds 68 exact exemption keys covering 79 reviewed collision sites:
+55 teleportation keys, 4 Fly Speed keys, 6 illumination keys, 2 damage
+Resistance keys, and 1 healing-link key. Seven Haste-named reusable execution
+declarations were structurally renamed instead of exempted. Normalized evidence
+resolves the prior one-site disagreement: one `storedLightEmitters` occurrence in
+`battleSnapshotInvariantsHold` was replaced by two occurrences in extracted
+serialized-reference and environmental-source validation owners, while the
+`heldLightHurl` semantic relocation into a presentation-procedure set remained
+inside the narrow presentation boundary and was not collision-certificate
+evidence. This focused static checkpoint does not claim a new final fixed point
+or completion of the remaining public gates.
 The current integrated source fixed point is `e936c8c1a`, including the
 refreshed generated certification artifacts and reviewed Raw Swarm declaration
 measure. The final controlled-red inventory still covers all 13 package owners

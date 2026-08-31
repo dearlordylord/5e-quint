@@ -61,7 +61,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import { Option, Result } from "effect";
 import {
   battleCreatureInitIssue,
@@ -597,16 +597,11 @@ function characterBattleClassLevels(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Result.Result<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["classLevels"],
+  CharacterBattleCreatureInit["classLevels"],
   BattleCreatureInitIssue
 > {
-  type CharacterBattleClassLevelInits = Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["classLevels"];
+  type CharacterBattleClassLevelInits =
+    CharacterBattleCreatureInit["classLevels"];
   const classLevels: CharacterBattleClassLevelInits[number][] = [];
 
   for (const entry of progressionClassLevels(build.progression)) {

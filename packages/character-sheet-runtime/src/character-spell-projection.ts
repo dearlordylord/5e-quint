@@ -173,7 +173,8 @@ const SHEET_SAVE_FAILURE_KINDS = new Set<SavePhase["onFail"]["kind"]>([
   "create_sensor",
   "create_illusion",
 ]);
-const SHEET_OWNED_DIRECT_EFFECT_KINDS = new Set<DirectEffect["kind"]>([
+type DirectEffectSetCandidateKind = DirectEffect["kind"];
+const SHEET_OWNED_DIRECT_EFFECT_KINDS = new Set<DirectEffectSetCandidateKind>([
   "grant_rest_benefit",
   "spell_recipient_rest_lockout",
   "remove_condition",
@@ -471,45 +472,15 @@ function directPhaseBranchIssues(
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   const effects = phase.effects ?? [];
   if (isSheetReincarnationPhase(mechanics, phase)) {
-    return effects.length === 1 && effects[0]?.kind === "none"
-      ? []
-      : [
-          branchIssue(
-            [occurrence("procedure", 1), occurrence("effect", 1)],
-            "The Character Sheet reincarnation phase requires one explicit no-op effect.",
-          ),
-        ];
+    return reincarnationPhaseBranchIssues(effects);
   }
   const ownedCandidateKind = effects.find((effect) =>
     SHEET_OWNED_DIRECT_EFFECT_KINDS.has(effect.kind),
   )?.kind;
   if (ownedCandidateKind !== undefined) {
-    const validation = validateOwnedEffectSet(effects, ownedCandidateKind);
-    return [
-      ...validation.unsupportedIndices.map((unsupportedEffectIndex) =>
-        branchIssue(
-          [
-            occurrence("procedure", 1),
-            occurrence("effect", unsupportedEffectIndex + 1),
-          ],
-          "The Character Sheet-owned phase has an unsupported effect branch.",
-        ),
-      ),
-      ...(validation.missingRequired
-        ? [
-            branchIssue(
-              [occurrence("procedure", 1)],
-              "The Character Sheet-owned phase is missing a required effect branch.",
-            ),
-          ]
-        : []),
-    ];
+    return ownedDirectPhaseBranchIssues(effects, ownedCandidateKind);
   }
-  if (
-    effects.length === 1 &&
-    effects[0]?.kind === "none" &&
-    !isSheetNoEffectActivation(mechanics, phase.attachment.kind)
-  ) {
+  if (hasUnsupportedNoEffectAttachment(mechanics, phase, effects)) {
     return [
       branchIssue(
         [occurrence("procedure", 1), occurrence("generalFact", 1)],
@@ -528,13 +499,58 @@ function directPhaseBranchIssues(
       ];
 }
 
+function reincarnationPhaseBranchIssues(
+  effects: readonly DirectEffect[],
+): readonly PartialCharacterSheetSpellProjectionIssue[] {
+  if (effects.length === 1 && effects[0]?.kind === "none") return [];
+  return [
+    branchIssue(
+      [occurrence("procedure", 1), occurrence("effect", 1)],
+      "The Character Sheet reincarnation phase requires one explicit no-op effect.",
+    ),
+  ];
+}
+
+function ownedDirectPhaseBranchIssues(
+  effects: readonly DirectEffect[],
+  ownedCandidateKind: DirectEffectSetCandidateKind,
+): readonly PartialCharacterSheetSpellProjectionIssue[] {
+  const validation = validateOwnedEffectSet(effects, ownedCandidateKind);
+  const issues = validation.unsupportedIndices.map((unsupportedEffectIndex) =>
+    branchIssue(
+      [
+        occurrence("procedure", 1),
+        occurrence("effect", unsupportedEffectIndex + 1),
+      ],
+      "The Character Sheet-owned phase has an unsupported effect branch.",
+    ),
+  );
+  if (validation.missingRequired) {
+    issues.push(
+      branchIssue(
+        [occurrence("procedure", 1)],
+        "The Character Sheet-owned phase is missing a required effect branch.",
+      ),
+    );
+  }
+  return issues;
+}
+
+function hasUnsupportedNoEffectAttachment(
+  mechanics: Activation,
+  phase: DirectPhase,
+  effects: readonly DirectEffect[],
+): boolean {
+  return (
+    effects.length === 1 &&
+    effects[0]?.kind === "none" &&
+    !isSheetNoEffectActivation(mechanics, phase.attachment.kind)
+  );
+}
+
 function validateOwnedEffectSet(
   effects: readonly DirectEffect[],
-  ownedCandidateKind: typeof SHEET_OWNED_DIRECT_EFFECT_KINDS extends Set<
-    infer Kind
-  >
-    ? Kind
-    : never,
+  ownedCandidateKind: DirectEffectSetCandidateKind,
 ): {
   readonly unsupportedIndices: readonly number[];
   readonly missingRequired: boolean;
@@ -1047,20 +1063,40 @@ function ownsExactDirectPhaseEffects(
   phase: DirectPhase,
 ): boolean {
   const effects = phase.effects ?? [];
-  const restBenefitValidation = validateOwnedEffectSet(
-    effects,
-    "grant_rest_benefit",
-  );
   return (
-    (effects.length === 3 &&
-      restBenefitValidation.unsupportedIndices.length === 0 &&
-      !restBenefitValidation.missingRequired) ||
-    (effects.length === 1 &&
-      (effects[0]?.kind === "remove_condition" ||
-        effects[0]?.kind === "revive_dead_creature")) ||
-    (effects.length === 1 &&
-      effects[0]?.kind === "none" &&
-      isSheetReincarnationPhase(mechanics, phase))
+    ownsExactRestBenefitEffects(effects) ||
+    ownsSingleDirectEffect(effects) ||
+    ownsReincarnationNoEffect(mechanics, phase, effects)
+  );
+}
+
+function ownsExactRestBenefitEffects(
+  effects: readonly DirectEffect[],
+): boolean {
+  if (effects.length !== 3) return false;
+  const validation = validateOwnedEffectSet(effects, "grant_rest_benefit");
+  return (
+    validation.unsupportedIndices.length === 0 && !validation.missingRequired
+  );
+}
+
+function ownsSingleDirectEffect(effects: readonly DirectEffect[]): boolean {
+  if (effects.length !== 1) return false;
+  return (
+    effects[0]?.kind === "remove_condition" ||
+    effects[0]?.kind === "revive_dead_creature"
+  );
+}
+
+function ownsReincarnationNoEffect(
+  mechanics: Activation,
+  phase: DirectPhase,
+  effects: readonly DirectEffect[],
+): boolean {
+  return (
+    effects.length === 1 &&
+    effects[0]?.kind === "none" &&
+    isSheetReincarnationPhase(mechanics, phase)
   );
 }
 

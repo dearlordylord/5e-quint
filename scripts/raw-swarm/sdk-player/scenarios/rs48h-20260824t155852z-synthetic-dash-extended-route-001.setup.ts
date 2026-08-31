@@ -25,7 +25,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         "The supplied canonical SRD stat-block catalog is missing one or more scenario-fixed combatant records.",
       observation: {
         scenarioId,
-        blockedOperation: "battleCreatureInitFromStatBlock",
+        blockedOperation: "startBattle",
         requiredStatBlockIds: REQUIRED_STAT_BLOCK_IDS,
         missingStatBlockIds,
       },
@@ -35,52 +35,28 @@ export const setupScenario: ScenarioSetup = (context) => {
   const skeletonId = sdk.combatantId("skeleton");
   const wolfId = sdk.combatantId("wolf");
 
-  const skeletonInit = sdk.battleCreatureInitFromStatBlock({
+  const skeletonInit = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(16),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(skeletonInit)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonInit.failure),
-      observation: {
-        scenarioId,
-        blockedOperation: "battleCreatureInitFromStatBlock",
-        combatant: "Skeleton",
-      },
-    };
-  }
-
-  const wolfInit = sdk.battleCreatureInitFromStatBlock({
+  };
+  const wolfInit = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(11),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolfInit)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolfInit.failure),
-      observation: {
-        scenarioId,
-        blockedOperation: "battleCreatureInitFromStatBlock",
-        combatant: "Wolf",
-      },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId(scenarioId),
-    combatants: [skeletonInit.success, wolfInit.success],
+    combatants: [skeletonInit, wolfInit],
   });
   if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
+      obstruction: sdk.battleInitializationIssueMessage(battle.failure),
       observation: { scenarioId, blockedOperation: "startBattle" },
     };
   }

@@ -19,6 +19,14 @@ function completeScores(scores: Partial<Record<Ability, number>>): AbilityScoreI
     : { str, dex, con, int, wis, cha }
 }
 
+function abilityScoreSubmitHandler(
+  abilityScoreFill: ReturnType<typeof abilityScoresFill> | null,
+  onFill: (fill: CreationFill) => void
+): (() => void) | undefined {
+  if (abilityScoreFill === null) return undefined
+  return Result.isFailure(abilityScoreFill) ? undefined : () => onFill(abilityScoreFill.success)
+}
+
 export function AbilityScoresStep({
   holes,
   onFill
@@ -40,6 +48,7 @@ export function AbilityScoresStep({
     abilityScoreHole == null || complete == null
       ? null
       : abilityScoresFill({ holeId: abilityScoreHole.holeId, method, scores: complete })
+  const submitAbilityScores = abilityScoreSubmitHandler(abilityScoreFill, onFill)
 
   return (
     <div className="mt-5 space-y-5">
@@ -102,10 +111,8 @@ export function AbilityScoresStep({
           </div>
           <button
             className="rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={abilityScoreFill == null || Result.isFailure(abilityScoreFill)}
-            onClick={() => {
-              if (abilityScoreFill != null && Result.isSuccess(abilityScoreFill)) onFill(abilityScoreFill.success)
-            }}
+            disabled={submitAbilityScores === undefined}
+            onClick={submitAbilityScores}
             type="button"
           >
             Submit Ability Scores

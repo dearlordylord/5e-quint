@@ -18,6 +18,7 @@ import {
 } from "@dnd/character-battle-runtime";
 import {
   battleId,
+  battleInitializationIssueLeaves,
   discoverBattleActs,
   startBattle,
   initiativeScore,
@@ -37,7 +38,7 @@ import {
 import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import { Result, Match, Option } from "effect";
 
 import {
@@ -64,7 +65,6 @@ import {
   type OracleBattleCharacterSheetRosterEntry,
   type OracleAmmunitionStocks,
   type OracleBattleStateInitLeafIssue,
-  type OracleBattleStateInitIssue,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleSheetOutcome,
@@ -244,7 +244,10 @@ function appendFreshSheetAndBattle(
     unitLibrary,
     statBlockCatalog,
   });
-  const [firstRosterEntry, ...remainingRosterEntries] = rosterEntries;
+  if (Result.isFailure(rosterEntries)) {
+    return { tag: "constructed", sheet, battle: rosterEntries.failure };
+  }
+  const [firstRosterEntry, ...remainingRosterEntries] = rosterEntries.success;
   if (firstRosterEntry === undefined) {
     return {
       tag: "constructed",
@@ -264,7 +267,10 @@ function appendFreshSheetAndBattle(
     return {
       tag: "constructed",
       sheet,
-      battle: battleRosterCompositionRejection(composition, rosterEntries),
+      battle: battleRosterCompositionRejection(
+        composition,
+        rosterEntries.success,
+      ),
     };
   }
 
@@ -299,7 +305,6 @@ function appendFreshSheetAndBattle(
           transaction: null,
         },
         attemptsInput,
-        statBlockCatalog,
       ),
     },
   };
@@ -316,7 +321,6 @@ type OracleBattleFrame = {
 function appendBattleAttempts(
   initial: OracleBattleFrame,
   attempts: readonly OracleBattleAttempt[],
-  statBlockCatalog: StatBlockCatalog,
 ): OracleBattleAttemptSegment {
   let current = initial;
   const priorFrames: OracleBattleFrame[] = [];
@@ -338,7 +342,6 @@ function appendBattleAttempts(
       session: current.session,
       transaction: current.transaction,
       operation,
-      statBlockCatalog,
     });
     const next = Match.value(result).pipe(
       Match.when({ tag: "invalid" }, ({ resolution }) => {
@@ -471,12 +474,27 @@ function resolveBattleRoster(input: {
   readonly sheet: Parameters<typeof freshCharacterSheetProjection>[0];
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
-}): readonly BattleRosterEntry[] {
+}): Result.Result<readonly BattleRosterEntry[], OracleBattleEntryRejection> {
   const entries: BattleRosterEntry[] = [];
 
   for (const entry of flattenOracleBattleRoster(input.roster)) {
     const ammunitionStocks = projectAmmunitionStocks(entry.ammunitionStocks);
     if (entry.origin === "characterSheet") {
+      const displayName = characterBuildDisplayName(
+        input.unitLibrary,
+        input.sheet.build,
+      );
+      if (Result.isFailure(displayName)) {
+        return Result.fail({
+          tag: "rejected",
+          issues: [
+            {
+              tag: "characterDisplayUnavailable",
+              issues: displayName.failure,
+            },
+          ],
+        });
+      }
       entries.push({
         kind: "characterSheet",
         source: {
@@ -484,10 +502,7 @@ function resolveBattleRoster(input: {
           input: {
             sheet: input.sheet,
             combatantId: entry.combatantId,
-            displayName: characterBuildDisplayName(
-              input.unitLibrary,
-              input.sheet.build,
-            ),
+            displayName: displayName.success,
             initiative: initiativeScore(entry.initiative),
             ammunitionStocks,
             unitLibrary: input.unitLibrary,
@@ -529,7 +544,7 @@ function resolveBattleRoster(input: {
     });
   }
 
-  return entries;
+  return Result.succeed(entries);
 }
 
 function projectAmmunitionStocks(stocks: OracleAmmunitionStocks): readonly {
@@ -555,7 +570,7 @@ function projectAmmunitionStocks(stocks: OracleAmmunitionStocks): readonly {
 
 type OracleBattleEntryIssue = OracleBattleEntryRejection["issues"][number];
 
-type OracleBattleRosterIssueProjection =
+type ClassifiedBattleEntryIssue =
   | {
       readonly kind: "entry";
       readonly issue: OracleBattleEntryIssue;
@@ -569,42 +584,62 @@ function battleRosterCompositionRejection(
   composition: Extract<BattleRosterComposition, { readonly tag: "rejected" }>,
   rosterEntries: readonly BattleRosterEntry[],
 ): OracleBattleEntryRejection {
-  const entryIssues: OracleBattleEntryIssue[] = [];
-  const projectionIssues: OracleBattleProjectionIssue[] = [];
-  let firstProjectionEntryIndex: number | undefined;
-
-  for (const issue of composition.issues) {
-    const mapped = battleRosterIssueToOracleIssue(issue, rosterEntries);
-    if (mapped.kind === "projection") {
-      firstProjectionEntryIndex ??= entryIssues.length;
-      projectionIssues.push(mapped.issue);
-    } else {
-      entryIssues.push(mapped.issue);
-    }
-  }
-
-  if (firstProjectionEntryIndex !== undefined) {
-    const [firstProjectionIssue, ...remainingProjectionIssues] =
-      projectionIssues;
-    if (firstProjectionIssue === undefined) {
-      return defect("Battle roster projection issue accumulation was empty");
-    }
-    entryIssues.splice(firstProjectionEntryIndex, 0, {
-      tag: "characterBattleEncounterProjectionIssues",
-      issues: [firstProjectionIssue, ...remainingProjectionIssues],
-    });
-  }
-  const [firstIssue, ...remainingIssues] = entryIssues;
+  const [firstCompositionIssue, ...remainingCompositionIssues] =
+    composition.issues;
+  const classified = [
+    battleRosterIssueToOracleIssue(firstCompositionIssue, rosterEntries),
+    ...remainingCompositionIssues.map((issue) =>
+      battleRosterIssueToOracleIssue(issue, rosterEntries),
+    ),
+  ];
+  const orderedIssues = groupBattleEntryIssueProjections(classified);
+  const [firstIssue, ...remainingIssues] = orderedIssues;
   if (firstIssue === undefined) {
     return defect("Battle roster rejection issue accumulation was empty");
   }
   return { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
 }
 
+function groupBattleEntryIssueProjections(
+  classified: readonly ClassifiedBattleEntryIssue[],
+): readonly OracleBattleEntryIssue[] {
+  const [first, ...rest] = classified;
+  if (first === undefined) return [];
+  if (first.kind === "entry") {
+    return [first.issue, ...groupBattleEntryIssueProjections(rest)];
+  }
+  const run = contiguousBattleProjectionRun(first.issue, rest);
+  return [
+    { tag: "battleEncounterProjectionIssues", issues: run.issues },
+    ...groupBattleEntryIssueProjections(run.remainder),
+  ];
+}
+
+function contiguousBattleProjectionRun(
+  first: OracleBattleProjectionIssue,
+  remaining: readonly ClassifiedBattleEntryIssue[],
+): {
+  readonly issues: readonly [
+    OracleBattleProjectionIssue,
+    ...OracleBattleProjectionIssue[],
+  ];
+  readonly remainder: readonly ClassifiedBattleEntryIssue[];
+} {
+  const [next, ...rest] = remaining;
+  if (next?.kind !== "projection") {
+    return { issues: [first], remainder: remaining };
+  }
+  const following = contiguousBattleProjectionRun(next.issue, rest);
+  return {
+    issues: [first, ...following.issues],
+    remainder: following.remainder,
+  };
+}
+
 function battleRosterIssueToOracleIssue(
   issue: BattleRosterIssue,
   rosterEntries: readonly BattleRosterEntry[],
-): OracleBattleRosterIssueProjection {
+): ClassifiedBattleEntryIssue {
   return Match.value(issue).pipe(
     Match.when({ kind: "statBlockSourceUnavailable" }, ({ statBlockId }) => ({
       kind: "entry" as const,
@@ -613,15 +648,6 @@ function battleRosterIssueToOracleIssue(
     Match.when({ kind: "characterSheetProjection" }, (projection) => ({
       kind: "projection" as const,
       issue: battleRosterCharacterProjectionIssue(projection, rosterEntries),
-    })),
-    Match.when({ kind: "statBlockProjection" }, (projection) => ({
-      kind: "projection" as const,
-      issue: {
-        tag: "characterBattleEncounterProjectionIssue" as const,
-        origin: "statBlock" as const,
-        combatantId: projection.combatantId,
-        issue: { tag: "battleStateInitIssue" as const },
-      },
     })),
     Match.when({ kind: "duplicateCombatantId" }, () =>
       genericBattleStateEntryIssue(),
@@ -636,7 +662,7 @@ function battleRosterIssueToOracleIssue(
   );
 }
 
-function genericBattleStateEntryIssue(): OracleBattleRosterIssueProjection {
+function genericBattleStateEntryIssue(): ClassifiedBattleEntryIssue {
   return {
     kind: "entry",
     issue: {
@@ -662,7 +688,7 @@ function battleRosterCharacterProjectionIssue(
   const combatantId = battleRosterEntryCombatantId(rosterEntry);
   return Match.value(projection).pipe(
     Match.when({ issueTag: "battleCreatureInitIssue" }, () => ({
-      tag: "characterBattleEncounterProjectionIssue" as const,
+      tag: "battleEncounterProjectionIssue" as const,
       origin: "characterSheet" as const,
       combatantId,
       issue: { tag: "battleCreatureInitIssue" as const },
@@ -670,7 +696,7 @@ function battleRosterCharacterProjectionIssue(
     Match.when(
       { issueTag: "characterBattleSpellAccessProjectionIssue" },
       (spellAccessIssue) => ({
-        tag: "characterBattleEncounterProjectionIssue" as const,
+        tag: "battleEncounterProjectionIssue" as const,
         origin: "characterSheet" as const,
         combatantId,
         issue: {
@@ -773,35 +799,86 @@ function battleRosterEntryCombatantId(
 function battleEntryRejection(
   issue: BattleInitializationIssue,
 ): OracleBattleEntryRejection {
+  const leaves = battleInitializationIssueLeaves(issue);
+  const [firstLeaf, ...remainingLeaves] = leaves;
+  const classified = [
+    classifyBattleInitializationIssue(firstLeaf),
+    ...remainingLeaves.map(classifyBattleInitializationIssue),
+  ];
+  const orderedIssues = groupBattleEntryIssueProjections(classified);
+  const [firstIssue, ...remainingIssues] = orderedIssues;
+  if (firstIssue === undefined) {
+    return defect("Battle initialization issue projection was empty");
+  }
+  return { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
+}
+
+function classifyBattleInitializationIssue(
+  issue: BattleInitializationLeafIssue,
+): ClassifiedBattleEntryIssue {
+  return Match.value(issue).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      battleStateInitIssue: (leaf) => genericInitializationRejection(leaf),
+      weaponLoadoutMismatch: (leaf) => genericInitializationRejection(leaf),
+      statBlockProjectionFailure: (leaf) =>
+        statBlockInitializationProjection(leaf),
+      statBlockResourceGraphIssue: (leaf) =>
+        statBlockInitializationProjection(leaf),
+    }),
+  );
+}
+
+function genericInitializationRejection(
+  issue: Extract<
+    BattleInitializationLeafIssue,
+    { readonly tag: "battleStateInitIssue" | "weaponLoadoutMismatch" }
+  >,
+): ClassifiedBattleEntryIssue {
   return {
-    tag: "rejected",
-    issues: [
-      {
-        tag: "battleStateInitRejected",
-        issue: stripBattleStateInitIssue(issue),
-      },
-    ],
+    kind: "entry",
+    issue: {
+      tag: "battleStateInitRejected",
+      issue: stripBattleStateInitLeafIssue(issue),
+    },
   };
 }
 
-function stripBattleStateInitIssue(
-  issue: BattleInitializationIssue,
-): OracleBattleStateInitIssue {
-  if (issue.tag === "battleStateInitIssues") {
-    return {
-      tag: "battleStateInitIssues" as const,
-      issues: issue.issues.map(stripBattleStateInitLeafIssue),
-    };
-  }
-  if (issue.tag === "weaponLoadoutMismatch") return issue;
-  return { tag: "battleStateInitIssue" as const };
+function statBlockInitializationProjection(
+  issue: Extract<
+    BattleInitializationLeafIssue,
+    {
+      readonly tag:
+        | "statBlockProjectionFailure"
+        | "statBlockResourceGraphIssue";
+    }
+  >,
+): ClassifiedBattleEntryIssue {
+  return {
+    kind: "projection",
+    issue: {
+      tag: "battleEncounterProjectionIssue",
+      origin: "statBlock",
+      combatantId: issue.combatantId,
+      issue: stripBattleStateInitLeafIssue(issue),
+    },
+  };
 }
 
 function stripBattleStateInitLeafIssue(
   issue: BattleInitializationLeafIssue,
 ): OracleBattleStateInitLeafIssue {
-  if (issue.tag === "weaponLoadoutMismatch") return issue;
-  return { tag: "battleStateInitIssue" };
+  return Match.value(issue).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      battleStateInitIssue: () => ({ tag: "battleStateInitIssue" as const }),
+      statBlockProjectionFailure: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
+      statBlockResourceGraphIssue: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
+      weaponLoadoutMismatch: (matched) => matched,
+    }),
+  );
 }
 
 function strippedBattleCheckpoint(

@@ -744,30 +744,57 @@ function selectedFeatPrerequisitesSupported(
   scoresAfterBackground: AbilityScoreAssignment,
   selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
 ): boolean {
-  return unitChoiceSelections(selections).every((selection) => {
-    if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) {
-      return true;
-    }
-    return selection.options.every((option) => {
-      const featUnitId = option.unitRef?.unitId;
-      if (featUnitId === undefined) return true;
-      const featUnit = selectedFeatUnits.get(featUnitId);
-      if (featUnit === undefined) return true;
-      const projection = projectCharacterCreationFeature(featUnit);
-      if (
-        projection.tag !== "readable" ||
-        projection.value.kind !== "feat" ||
-        projection.value.facts.mechanics.family !== "grappler"
-      ) {
-        return true;
-      }
-      return (
-        computeTotalLevel(selections.progression) >= 4 &&
-        (Number(scoresAfterBackground.str) >= 13 ||
-          Number(scoresAfterBackground.dex) >= 13)
-      );
-    });
-  });
+  return unitChoiceSelections(selections).every((selection) =>
+    selectedFeatChoicePrerequisitesSupported(
+      selection,
+      selections.progression,
+      scoresAfterBackground,
+      selectedFeatUnits,
+    ),
+  );
+}
+
+function selectedFeatChoicePrerequisitesSupported(
+  selection: UnitChoiceSelection,
+  progression: CharacterProgression,
+  scores: AbilityScoreAssignment,
+  selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
+): boolean {
+  if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) return true;
+  return selection.options.every((option) =>
+    selectedFeatOptionPrerequisitesSupported(
+      option,
+      progression,
+      scores,
+      selectedFeatUnits,
+    ),
+  );
+}
+
+function selectedFeatOptionPrerequisitesSupported(
+  option: UnitChoiceSelection["options"][number],
+  progression: CharacterProgression,
+  scores: AbilityScoreAssignment,
+  selectedFeatUnits: ReadonlyMap<UnitRecord["id"], UnitRecord>,
+): boolean {
+  const featUnitId = option.unitRef?.unitId;
+  if (featUnitId === undefined) return true;
+  const featUnit = selectedFeatUnits.get(featUnitId);
+  if (featUnit === undefined) return true;
+  if (!isGrapplerFeatUnit(featUnit)) return true;
+  return (
+    computeTotalLevel(progression) >= 4 &&
+    (Number(scores.str) >= 13 || Number(scores.dex) >= 13)
+  );
+}
+
+function isGrapplerFeatUnit(unit: UnitRecord): boolean {
+  const projection = projectCharacterCreationFeature(unit);
+  return (
+    projection.tag === "readable" &&
+    projection.value.kind === "feat" &&
+    projection.value.facts.mechanics.family === "grappler"
+  );
 }
 
 function spellcastingFactsAuthoredForSelectedClassLevels(
@@ -1651,152 +1678,166 @@ function fixedProficiencySubjects(
   return [];
 }
 
-export function buildCharacterBuild(input: {
+function characterBuildOriginFacts(
+  selections: FinalizedCharacterSelections,
+  progression: CharacterProgression,
+  unitLibrary: UnitCatalog,
+): Result.Result<
+  {
+    readonly classFactsByUnitId: ClassFactsByUnitId;
+    readonly backgroundFacts: CharacterDefinitionBackgroundFacts;
+    readonly speciesUnit: Extract<UnitRecord, { readonly kind: "species" }>;
+    readonly speciesFacts: SpeciesCreationFacts;
+  },
+  FinalizationIssues
+> {
+  const classFactsByUnitId = characterBuildClassFacts(progression, unitLibrary);
+  if (Result.isFailure(classFactsByUnitId))
+    return Result.fail(classFactsByUnitId.failure);
+  const backgroundFacts = characterBuildBackgroundFacts(
+    selections.background,
+    unitLibrary,
+  );
+  if (Result.isFailure(backgroundFacts))
+    return Result.fail(backgroundFacts.failure);
+  const species = characterBuildSpeciesFacts(selections.species, unitLibrary);
+  if (Result.isFailure(species)) return Result.fail(species.failure);
+  return Result.succeed({
+    classFactsByUnitId: classFactsByUnitId.success,
+    backgroundFacts: backgroundFacts.success,
+    speciesUnit: species.success.unit,
+    speciesFacts: species.success.facts,
+  });
+}
+
+function characterBuildClassFacts(
+  progression: CharacterProgression,
+  unitLibrary: UnitCatalog,
+): Result.Result<ClassFactsByUnitId, FinalizationIssues> {
+  const facts = allClassFactsForFinalization(progression, unitLibrary);
+  if (Result.isFailure(facts)) return Result.fail(facts.failure);
+  const startingClassId = startingClassUnitId(progression);
+  return facts.success.has(startingClassId)
+    ? Result.succeed(facts.success)
+    : Result.fail([
+        characterBuildProjectionIssue({
+          tag: "missingStartingClassFacts",
+          projection: "characterBuild",
+          classUnitId: startingClassId,
+        }),
+      ]);
+}
+
+function characterBuildBackgroundFacts(
+  backgroundUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): Result.Result<CharacterDefinitionBackgroundFacts, FinalizationIssues> {
+  const unit = unitForFinalization(unitLibrary, backgroundUnitId, "background");
+  if (Result.isFailure(unit)) return Result.fail([unit.failure]);
+  const projection = projectForFinalization(
+    unit.success,
+    backgroundUnitId,
+    "background",
+  );
+  if (Result.isFailure(projection)) return Result.fail([projection.failure]);
+  return projection.success.kind === "background"
+    ? Result.succeed(projection.success.facts)
+    : Result.fail([
+        unsupportedCharacterDefinitionKind(backgroundUnitId, "background"),
+      ]);
+}
+
+function characterBuildSpeciesFacts(
+  speciesUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): Result.Result<
+  {
+    readonly unit: Extract<UnitRecord, { readonly kind: "species" }>;
+    readonly facts: SpeciesCreationFacts;
+  },
+  FinalizationIssues
+> {
+  const unit = unitForFinalization(unitLibrary, speciesUnitId, "species");
+  if (Result.isFailure(unit)) return Result.fail([unit.failure]);
+  const projection = projectForFinalization(
+    unit.success,
+    speciesUnitId,
+    "species",
+  );
+  if (Result.isFailure(projection)) return Result.fail([projection.failure]);
+  return projection.success.kind === "species" &&
+    unit.success.kind === "species"
+    ? Result.succeed({ unit: unit.success, facts: projection.success.facts })
+    : Result.fail([
+        unsupportedCharacterDefinitionKind(speciesUnitId, "species"),
+      ]);
+}
+
+function characterBuildAbilityScores(
+  selections: FinalizedCharacterSelections,
+  backgroundFacts: CharacterDefinitionBackgroundFacts,
+): Result.Result<AbilityScoreAssignment, FinalizationIssues> {
+  const backgroundScores = applyBackgroundAbilityScoreIncrease(
+    selections.abilityScoreGeneration.assignedScores,
+    selections.backgroundAbilityScoreIncrease,
+    backgroundFacts.abilityScoreIncrease.abilities,
+  );
+  if (Result.isFailure(backgroundScores))
+    return Result.fail([backgroundScores.failure]);
+  return applyClassFeatureAbilityScoreIncreases(
+    backgroundScores.success,
+    selections,
+  );
+}
+
+type CharacterBuildProjectionInput = {
   readonly supportedSelections: ExecutableSupportSelections;
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile: CharacterCreationSupportProfile;
-}): Result.Result<CharacterBuild, FinalizationIssues> {
-  const { selections } = input.supportedSelections;
-  const progression = input.supportedSelections.progression;
-  const selectedClassUnitId = startingClassUnitId(progression);
-  const classFactsByUnitId = allClassFactsForFinalization(
-    progression,
-    input.unitLibrary,
-  );
-  /* v8 ignore start -- @preserve -- The support gate already read every class in this progression from this catalog. */
-  if (Result.isFailure(classFactsByUnitId)) {
-    return Result.fail(classFactsByUnitId.failure);
-  }
-  /* v8 ignore stop -- @preserve */
-  const classFacts = classFactsByUnitId.success.get(selectedClassUnitId);
-  /* v8 ignore start -- @preserve -- The support gate already established facts for the starting class id. */
-  if (classFacts == null) {
-    return Result.fail([
-      characterBuildProjectionIssue({
-        tag: "missingStartingClassFacts",
-        projection: "characterBuild",
-        classUnitId: selectedClassUnitId,
-      }),
-    ]);
-  }
-  /* v8 ignore stop -- @preserve */
-  const backgroundUnit = unitForFinalization(
-    input.unitLibrary,
-    selections.background,
-    "background",
-  );
-  /* v8 ignore start -- @preserve -- The support gate already resolved this selected background in the same catalog. */
-  if (Result.isFailure(backgroundUnit))
-    return Result.fail([backgroundUnit.failure]);
-  /* v8 ignore stop -- @preserve */
-  const backgroundProjection = projectForFinalization(
-    backgroundUnit.success,
-    selections.background,
-    "background",
-  );
-  /* v8 ignore start -- @preserve -- The support gate already parsed this selected background's creation facts. */
-  if (Result.isFailure(backgroundProjection)) {
-    return Result.fail([backgroundProjection.failure]);
-  }
-  if (backgroundProjection.success.kind !== "background") {
-    return Result.fail([
-      unsupportedCharacterDefinitionKind(selections.background, "background"),
-    ]);
-  }
-  /* v8 ignore stop -- @preserve */
-  const speciesUnit = unitForFinalization(
-    input.unitLibrary,
-    selections.species,
-    "species",
-  );
-  /* v8 ignore start -- @preserve -- The support gate already resolved this selected species in the same catalog. */
-  if (Result.isFailure(speciesUnit)) return Result.fail([speciesUnit.failure]);
-  /* v8 ignore stop -- @preserve */
-  const speciesProjection = projectForFinalization(
-    speciesUnit.success,
-    selections.species,
-    "species",
-  );
-  /* v8 ignore start -- @preserve -- The support gate already parsed this selected species's creation facts. */
-  if (Result.isFailure(speciesProjection)) {
-    return Result.fail([speciesProjection.failure]);
-  }
-  if (speciesProjection.success.kind !== "species") {
-    return Result.fail([
-      unsupportedCharacterDefinitionKind(selections.species, "species"),
-    ]);
-  }
-  /* v8 ignore stop -- @preserve */
-  const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
-    selections,
-    speciesUnit.success,
-    speciesProjection.success.facts,
-    input.unitLibrary,
-  );
-  /* v8 ignore start -- @preserve -- The support gate already proved the species source agrees with its selected choices. */
-  if (Result.isFailure(speciesChoiceFacts)) {
-    return Result.fail(speciesChoiceFacts.failure);
-  }
-  /* v8 ignore stop -- @preserve */
-  const baseScores = selections.abilityScoreGeneration.assignedScores;
-  const finalScores = applyBackgroundAbilityScoreIncrease(
-    baseScores,
-    selections.backgroundAbilityScoreIncrease,
-    backgroundProjection.success.facts.abilityScoreIncrease.abilities,
-  );
-  /* v8 ignore start -- @preserve -- The support gate already admitted this background increase against these scores. */
-  if (Result.isFailure(finalScores)) return Result.fail([finalScores.failure]);
-  /* v8 ignore stop -- @preserve */
-  const featureScores = applyClassFeatureAbilityScoreIncreases(
-    finalScores.success,
-    selections,
-  );
-  /* v8 ignore start -- @preserve -- Supported choice holes and feat prerequisites already establish these feature increases. */
-  if (Result.isFailure(featureScores))
-    return Result.fail(featureScores.failure);
-  /* v8 ignore stop -- @preserve */
-  const finalAbilityScores = featureScores.success;
+};
+
+function characterBuildMechanics(
+  input: CharacterBuildProjectionInput,
+  selections: FinalizedCharacterSelections,
+  progression: CharacterProgression,
+  classFactsByUnitId: ClassFactsByUnitId,
+): Result.Result<
+  {
+    readonly proficiencyChoices: readonly CharacterBuildProficiencyChoiceSubject[];
+    readonly buildSpellcasting: CharacterBuildSpellcasting | undefined;
+    readonly buildFeatures: readonly CharacterBuildFeature[];
+    readonly classFeatureLanguages: readonly CharacterBuildClassFeatureLanguage[];
+    readonly buildEquipment: CharacterBuildEquipment;
+  },
+  FinalizationIssues
+> {
   const proficiencyChoices = selectedBuildProficiencyChoiceSubjects(
     selections,
     input.unitLibrary,
   );
-  /* v8 ignore start -- @preserve -- The support gate already decoded all selected proficiency option ids. */
-  if (Result.isFailure(proficiencyChoices)) {
+  if (Result.isFailure(proficiencyChoices))
     return Result.fail(proficiencyChoices.failure);
-  }
-  /* v8 ignore stop -- @preserve */
   const buildSpellcasting = finalizedBuildSpellcasting({
-    classFactsByUnitId: classFactsByUnitId.success,
+    classFactsByUnitId,
     selections,
     supportedSelections: input.supportedSelections,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- @preserve -- The support gate already checked authored spellcasting facts and selected spells. */
-  if (Result.isFailure(buildSpellcasting)) {
+  if (Result.isFailure(buildSpellcasting))
     return Result.fail(buildSpellcasting.failure);
-  }
-  /* v8 ignore stop -- @preserve */
-  const abilityCheckBonusFeatures =
+  const bonusFeatures =
     finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
       input.supportedSelections.unitChoices,
       input.unitLibrary,
     );
-  /* v8 ignore start -- @preserve -- Support admission retains only acquisition choices whose mechanics project supported ability-check bonuses. */
-  if (Result.isFailure(abilityCheckBonusFeatures)) {
-    return Result.fail(abilityCheckBonusFeatures.failure);
-  }
-  /* v8 ignore stop -- @preserve */
+  if (Result.isFailure(bonusFeatures))
+    return Result.fail(bonusFeatures.failure);
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...finalizedClassChoiceFeaturesForSupportedChoices(
       input.supportedSelections.unitChoices,
     ),
-    ...abilityCheckBonusFeatures.success,
+    ...bonusFeatures.success,
   ];
-  const magicInitiateSpellAccesses = finalizedMagicInitiateSpellAccesses(
-    selections,
-    buildFeatures,
-    input.unitLibrary,
-  );
   const classFeatureLanguages = finalizedClassFeatureLanguages({
     progression,
     originLanguages: selections.languages,
@@ -1804,21 +1845,74 @@ export function buildCharacterBuild(input: {
     unitChoices: input.supportedSelections.unitChoices,
     unitLibrary: input.unitLibrary,
   });
-  if (Result.isFailure(classFeatureLanguages)) {
+  if (Result.isFailure(classFeatureLanguages))
     return Result.fail(classFeatureLanguages.failure);
-  }
   const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
     input.supportedSelections.loadoutChoices,
     input.unitLibrary,
     input.supportProfile,
   );
-  /* v8 ignore start -- @preserve -- Support admission validates every retained loadout and owned equipment id before build projection. */
-  if (Result.isFailure(buildEquipment)) {
+  if (Result.isFailure(buildEquipment))
     return Result.fail(buildEquipment.failure);
+  return Result.succeed({
+    proficiencyChoices: proficiencyChoices.success,
+    buildSpellcasting: buildSpellcasting.success,
+    buildFeatures,
+    classFeatureLanguages: classFeatureLanguages.success,
+    buildEquipment: buildEquipment.success,
+  });
+}
+
+export function buildCharacterBuild(
+  input: CharacterBuildProjectionInput,
+): Result.Result<CharacterBuild, FinalizationIssues> {
+  const { selections } = input.supportedSelections;
+  const progression = input.supportedSelections.progression;
+  const origins = characterBuildOriginFacts(
+    selections,
+    progression,
+    input.unitLibrary,
+  );
+  if (Result.isFailure(origins)) return Result.fail(origins.failure);
+  const { classFactsByUnitId, backgroundFacts, speciesUnit, speciesFacts } =
+    origins.success;
+  const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
+    selections,
+    speciesUnit,
+    speciesFacts,
+    input.unitLibrary,
+  );
+  /* v8 ignore start -- @preserve -- The support gate already proved the species source agrees with its selected choices. */
+  if (Result.isFailure(speciesChoiceFacts)) {
+    return Result.fail(speciesChoiceFacts.failure);
   }
   /* v8 ignore stop -- @preserve */
-
+  const finalAbilityScores = characterBuildAbilityScores(
+    selections,
+    backgroundFacts,
+  );
+  if (Result.isFailure(finalAbilityScores))
+    return Result.fail(finalAbilityScores.failure);
+  const mechanics = characterBuildMechanics(
+    input,
+    selections,
+    progression,
+    classFactsByUnitId,
+  );
+  if (Result.isFailure(mechanics)) return Result.fail(mechanics.failure);
+  const {
+    proficiencyChoices,
+    buildSpellcasting,
+    buildFeatures,
+    classFeatureLanguages,
+    buildEquipment,
+  } = mechanics.success;
+  const magicInitiateSpellAccesses = finalizedMagicInitiateSpellAccesses(
+    selections,
+    buildFeatures,
+    input.unitLibrary,
+  );
   return Result.succeed({
     progression,
     background: selections.background,
@@ -1830,16 +1924,14 @@ export function buildCharacterBuild(input: {
       ? {}
       : { speciesChoiceFacts: speciesChoiceFacts.success }),
     originLanguages: selections.languages,
-    classFeatureLanguages: classFeatureLanguages.success,
+    classFeatureLanguages,
     alignment: selections.alignment,
-    abilityScores: finalAbilityScores,
-    proficiencyChoices: proficiencyChoices.success,
+    abilityScores: finalAbilityScores.success,
+    proficiencyChoices,
     features: buildFeatures,
-    ...(buildSpellcasting.success == null
-      ? {}
-      : { spellcasting: buildSpellcasting.success }),
+    ...(buildSpellcasting == null ? {} : { spellcasting: buildSpellcasting }),
     magicInitiateSpellAccesses,
-    equipment: buildEquipment.success,
+    equipment: buildEquipment,
   });
 }
 
@@ -2516,14 +2608,16 @@ function classUnitIdForSubclass(input: {
   );
 }
 
+type FinalizedClassFeatureLanguagesInput = Pick<
+  CharacterBuild,
+  "progression" | "originLanguages" | "features"
+> & {
+  readonly unitChoices: readonly UnitChoiceSelection[];
+  readonly unitLibrary: UnitCatalog;
+};
+
 function finalizedClassFeatureLanguages(
-  input: Pick<
-    CharacterBuild,
-    "progression" | "originLanguages" | "features"
-  > & {
-    readonly unitChoices: readonly UnitChoiceSelection[];
-    readonly unitLibrary: UnitCatalog;
-  },
+  input: FinalizedClassFeatureLanguagesInput,
 ): Result.Result<
   readonly CharacterBuildClassFeatureLanguage[],
   ProjectionIssues
@@ -2535,141 +2629,164 @@ function finalizedClassFeatureLanguages(
   >(input.originLanguages);
 
   for (const unitId of characterBuildFeatureUnitIds(input, input.unitLibrary)) {
-    const unit = input.unitLibrary.getUnit(unitId);
-    if (Option.isNone(unit)) {
-      continue;
-    }
-    const feature = projectCharacterCreationFeature(unit.value);
-    if (
-      feature.tag !== "readable" ||
-      feature.value.kind !== "class_feature" ||
-      feature.value.facts.mechanics.family !== "passive"
-    )
-      continue;
-
-    for (const grant of feature.value.facts.mechanics.grants) {
-      if (grant.kind === "grant_language") {
-        const language = languageFromSurfaceLanguageId(grant.languageId);
-        /* v8 ignore start -- @preserve -- Supported passive language grants carry only Surface language ids admitted by the codec. */
-        if (Result.isFailure(language)) {
-          issues.push(
-            characterBuildProjectionIssue({
-              tag: "unsupportedClassFeatureLanguage",
-              featureUnitId: unitId,
-              languageId: grant.languageId,
-            }),
-          );
-          continue;
-        }
-
-        if (knownLanguages.has(language.success)) {
-          issues.push(
-            characterBuildProjectionIssue({
-              tag: "duplicateClassFeatureLanguage",
-              featureUnitId: unitId,
-              language: language.success,
-            }),
-          );
-          continue;
-        }
-        /* v8 ignore stop -- @preserve */
-
-        knownLanguages.add(language.success);
-        classFeatureLanguages.push({
-          kind: "classFeatureLanguageGrant",
-          sourceUnitId: unitId,
-          language: language.success,
-        });
-        continue;
-      }
-
-      if (grant.kind !== "grant_language_choice") {
-        continue;
-      }
-
-      const selection = classFeatureLanguageChoiceSelection(
-        input.unitChoices,
-        unitId,
-      );
-      /* v8 ignore start -- @preserve -- The support gate admits exactly the authored number of unique language options for each retained language-choice grant. */
-      if (selection === undefined) {
-        issues.push(
-          characterBuildProjectionIssue({
-            tag: "missingClassFeatureLanguageChoice",
-            featureUnitId: unitId,
-          }),
-        );
-        continue;
-      }
-
-      if (selection.options.length !== grant.count) {
-        issues.push(
-          characterBuildProjectionIssue({
-            tag: "classFeatureLanguageChoiceCountMismatch",
-            featureUnitId: unitId,
-            mismatch:
-              selection.options.length < grant.count
-                ? {
-                    tag: "missing",
-                    receivedCount: NonNegativeInteger(selection.options.length),
-                    missingCount: PositiveInteger(
-                      grant.count - selection.options.length,
-                    ),
-                  }
-                : {
-                    tag: "extra",
-                    expectedCount: PositiveInteger(grant.count),
-                    extraCount: PositiveInteger(
-                      selection.options.length - grant.count,
-                    ),
-                  },
-          }),
-        );
-        continue;
-      }
-
-      for (const option of classFeatureLanguageChoiceOptions(
-        grant,
-        selection,
-      )) {
-        const language = option.language;
-        if (Result.isFailure(language)) {
-          issues.push(
-            characterBuildProjectionIssue({
-              tag: "unsupportedClassFeatureLanguageChoice",
-              featureUnitId: unitId,
-              optionId: option.optionId,
-            }),
-          );
-          continue;
-        }
-
-        if (knownLanguages.has(language.success)) {
-          issues.push(
-            characterBuildProjectionIssue({
-              tag: "duplicateClassFeatureLanguageChoice",
-              featureUnitId: unitId,
-              language: language.success,
-            }),
-          );
-          continue;
-        }
-        /* v8 ignore stop -- @preserve */
-
-        knownLanguages.add(language.success);
-        classFeatureLanguages.push({
-          kind: "classFeatureLanguageChoice",
-          sourceUnitId: unitId,
-          language: language.success,
-        });
-      }
-    }
+    collectFinalizedClassFeatureLanguages({
+      ...input,
+      unitId,
+      issues,
+      classFeatureLanguages,
+      knownLanguages,
+    });
   }
 
   const nonEmptyIssues = nonEmptyReadonlyArray(issues);
   return nonEmptyIssues === undefined
     ? Result.succeed(classFeatureLanguages)
     : Result.fail(nonEmptyIssues);
+}
+
+type ClassFeatureLanguageCollection = FinalizedClassFeatureLanguagesInput & {
+  readonly unitId: UnitRecord["id"];
+  readonly issues: CharacterBuildProjectionIssue[];
+  readonly classFeatureLanguages: CharacterBuildClassFeatureLanguage[];
+  readonly knownLanguages: Set<CharacterBuildClassFeatureLanguage["language"]>;
+};
+
+function collectFinalizedClassFeatureLanguages(
+  input: ClassFeatureLanguageCollection,
+): void {
+  const unit = input.unitLibrary.getUnit(input.unitId);
+  if (Option.isNone(unit)) return;
+  const feature = projectCharacterCreationFeature(unit.value);
+  if (feature.tag !== "readable" || feature.value.kind !== "class_feature")
+    return;
+  if (feature.value.facts.mechanics.family !== "passive") return;
+  for (const grant of feature.value.facts.mechanics.grants) {
+    if (grant.kind === "grant_language")
+      collectFixedClassFeatureLanguage(input, grant);
+    if (grant.kind === "grant_language_choice")
+      collectChosenClassFeatureLanguages(input, grant);
+  }
+}
+
+function collectFixedClassFeatureLanguage(
+  input: ClassFeatureLanguageCollection,
+  grant: Extract<EffectAtom, { readonly kind: "grant_language" }>,
+): void {
+  const language = languageFromSurfaceLanguageId(grant.languageId);
+  if (Result.isFailure(language)) {
+    input.issues.push(
+      characterBuildProjectionIssue({
+        tag: "unsupportedClassFeatureLanguage",
+        featureUnitId: input.unitId,
+        languageId: grant.languageId,
+      }),
+    );
+    return;
+  }
+  if (input.knownLanguages.has(language.success)) {
+    input.issues.push(
+      characterBuildProjectionIssue({
+        tag: "duplicateClassFeatureLanguage",
+        featureUnitId: input.unitId,
+        language: language.success,
+      }),
+    );
+    return;
+  }
+  input.knownLanguages.add(language.success);
+  input.classFeatureLanguages.push({
+    kind: "classFeatureLanguageGrant",
+    sourceUnitId: input.unitId,
+    language: language.success,
+  });
+}
+
+function collectChosenClassFeatureLanguages(
+  input: ClassFeatureLanguageCollection,
+  grant: Extract<EffectAtom, { readonly kind: "grant_language_choice" }>,
+): void {
+  const selection = classFeatureLanguageChoiceSelection(
+    input.unitChoices,
+    input.unitId,
+  );
+  if (selection === undefined) {
+    input.issues.push(
+      characterBuildProjectionIssue({
+        tag: "missingClassFeatureLanguageChoice",
+        featureUnitId: input.unitId,
+      }),
+    );
+    return;
+  }
+  if (selection.options.length !== grant.count) {
+    input.issues.push(
+      characterBuildProjectionIssue({
+        tag: "classFeatureLanguageChoiceCountMismatch",
+        featureUnitId: input.unitId,
+        mismatch: classFeatureLanguageChoiceCountMismatch(
+          selection.options.length,
+          grant.count,
+        ),
+      }),
+    );
+    return;
+  }
+  for (const option of classFeatureLanguageChoiceOptions(grant, selection))
+    collectClassFeatureLanguageChoice(input, option);
+}
+
+type ClassFeatureLanguageChoiceCountMismatch = Extract<
+  CharacterBuildProjectionCause,
+  { readonly tag: "classFeatureLanguageChoiceCountMismatch" }
+>["mismatch"];
+
+function classFeatureLanguageChoiceCountMismatch(
+  received: number,
+  expected: number,
+): ClassFeatureLanguageChoiceCountMismatch {
+  return received < expected
+    ? {
+        tag: "missing",
+        receivedCount: NonNegativeInteger(received),
+        missingCount: PositiveInteger(expected - received),
+      }
+    : {
+        tag: "extra",
+        expectedCount: PositiveInteger(expected),
+        extraCount: PositiveInteger(received - expected),
+      };
+}
+
+function collectClassFeatureLanguageChoice(
+  input: ClassFeatureLanguageCollection,
+  option: ParsedClassFeatureLanguageChoiceOption,
+): void {
+  if (Result.isFailure(option.language)) {
+    input.issues.push(
+      characterBuildProjectionIssue({
+        tag: "unsupportedClassFeatureLanguageChoice",
+        featureUnitId: input.unitId,
+        optionId: option.optionId,
+      }),
+    );
+    return;
+  }
+  if (input.knownLanguages.has(option.language.success)) {
+    input.issues.push(
+      characterBuildProjectionIssue({
+        tag: "duplicateClassFeatureLanguageChoice",
+        featureUnitId: input.unitId,
+        language: option.language.success,
+      }),
+    );
+    return;
+  }
+  input.knownLanguages.add(option.language.success);
+  input.classFeatureLanguages.push({
+    kind: "classFeatureLanguageChoice",
+    sourceUnitId: input.unitId,
+    language: option.language.success,
+  });
 }
 
 function classFeatureLanguageChoiceSelection(
@@ -2727,32 +2844,51 @@ export function allFinalizedChoicesSupported(
   unitLibrary: UnitCatalog,
   supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
+  const context = finalizedChoiceSupportContext(
+    selections,
+    unitLibrary,
+    supportProfile,
+  );
+  if (context === undefined) return false;
+  return (
+    finalizedChoiceSourcesAreUnique(
+      context.unitChoices,
+      context.loadoutChoices,
+    ) &&
+    context.unitChoices.every((choice) =>
+      finalizedUnitChoiceSupported(choice, context, supportProfile),
+    ) &&
+    context.loadoutChoices.every((choice) =>
+      finalizedLoadoutChoiceSupported(
+        choice,
+        context.supportedLoadoutHoles,
+        supportProfile,
+      ),
+    )
+  );
+}
+
+function finalizedChoiceSupportContext(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+  supportProfile: CharacterCreationSupportProfile,
+) {
   const selectedClassUnitId = startingClassUnitId(selections.progression);
-  const classUnit = unitLibrary.getUnit(selectedClassUnitId);
-  if (Option.isNone(classUnit)) return false;
-  const classProjection = projectCharacterDefinition(classUnit.value);
-  if (
-    classProjection.tag !== "readable" ||
-    classProjection.value.kind !== "class"
-  ) {
-    return false;
-  }
+  const classFacts = finalizedChoiceSupportClassFacts(
+    selectedClassUnitId,
+    unitLibrary,
+  );
+  if (classFacts === undefined) return undefined;
   const classFactsByUnitId = allClassFactsForFinalization(
     selections.progression,
     unitLibrary,
   );
-  if (Result.isFailure(classFactsByUnitId)) return false;
-  const backgroundUnit = unitLibrary.getUnit(selections.background);
-  if (Option.isNone(backgroundUnit)) return false;
-  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
-  if (
-    backgroundProjection.tag !== "readable" ||
-    backgroundProjection.value.kind !== "background"
-  ) {
-    return false;
-  }
-  const classFacts = classProjection.value.facts;
-  const backgroundFacts = backgroundProjection.value.facts;
+  if (Result.isFailure(classFactsByUnitId)) return undefined;
+  const backgroundFacts = finalizedChoiceSupportBackgroundFacts(
+    selections.background,
+    unitLibrary,
+  );
+  if (backgroundFacts === undefined) return undefined;
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selectedClassUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
@@ -2770,7 +2906,7 @@ export function allFinalizedChoicesSupported(
     classEquipmentHole === undefined ||
     backgroundEquipmentHole === undefined
   ) {
-    return false;
+    return undefined;
   }
   /* v8 ignore stop -- @preserve */
   const supportedHoles = supportedFinalizationChoiceHoles({
@@ -2799,65 +2935,112 @@ export function allFinalizedChoicesSupported(
   const loadoutChoices = selections.choices.flatMap((choice) =>
     choice.kind === "loadout" ? [choice] : [],
   );
-  const unitChoiceSourceKeys = unitChoices.map((choice) =>
+  return {
+    selections,
+    selectedClassUnitId,
+    classFacts,
+    backgroundFacts,
+    classEquipmentHole,
+    backgroundEquipmentHole,
+    supportedUnitHolesBySource,
+    supportedLoadoutHoles,
+    unitChoices,
+    loadoutChoices,
+  };
+}
+
+function finalizedChoiceSupportClassFacts(
+  classUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+) {
+  const unit = unitLibrary.getUnit(classUnitId);
+  if (Option.isNone(unit)) return undefined;
+  const projection = projectCharacterDefinition(unit.value);
+  return projection.tag === "readable" && projection.value.kind === "class"
+    ? projection.value.facts
+    : undefined;
+}
+
+function finalizedChoiceSupportBackgroundFacts(
+  backgroundUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+) {
+  const unit = unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(unit)) return undefined;
+  const projection = projectCharacterDefinition(unit.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? projection.value.facts
+    : undefined;
+}
+
+function finalizedChoiceSourcesAreUnique(
+  unitChoices: readonly UnitChoiceSelection[],
+  loadoutChoices: readonly LoadoutChoiceSelection[],
+): boolean {
+  const unitSources = unitChoices.map((choice) =>
     unitChoiceSourceKey(choice.source),
   );
-  const loadoutSourceKeys = loadoutChoices.map((choice) =>
+  const loadoutSources = loadoutChoices.map((choice) =>
     loadoutSourceKey(choice.source),
   );
   const loadoutSlots = loadoutChoices.map((choice) => choice.source.slot);
-
   return (
-    new Set(unitChoiceSourceKeys).size === unitChoiceSourceKeys.length &&
-    new Set(loadoutSourceKeys).size === loadoutSourceKeys.length &&
-    new Set(loadoutSlots).size === loadoutSlots.length &&
-    unitChoices.every((choice) => {
-      const supportedHole = supportedUnitHolesBySource.get(
-        unitChoiceSourceKey(choice.source),
-      );
-      if (
-        supportedHole == null ||
-        !choiceSelectionMatchesHole(choice, supportedHole, supportProfile)
-      ) {
-        return false;
-      }
+    new Set(unitSources).size === unitSources.length &&
+    new Set(loadoutSources).size === loadoutSources.length &&
+    new Set(loadoutSlots).size === loadoutSlots.length
+  );
+}
 
-      if (sameCreationHoleSource(choice.source, classEquipmentHole.source)) {
-        return supportedStartingEquipmentChoice(
-          choice,
-          selectedClassUnitId,
-          CLASS_EQUIPMENT_CHOICE_KEY,
-          classFacts.startingEquipment,
-          supportProfile,
-        );
-      }
+function finalizedUnitChoiceSupported(
+  choice: UnitChoiceSelection,
+  context: NonNullable<ReturnType<typeof finalizedChoiceSupportContext>>,
+  supportProfile: CharacterCreationSupportProfile,
+): boolean {
+  const supportedHole = context.supportedUnitHolesBySource.get(
+    unitChoiceSourceKey(choice.source),
+  );
+  if (
+    supportedHole === undefined ||
+    !choiceSelectionMatchesHole(choice, supportedHole, supportProfile)
+  )
+    return false;
+  if (
+    sameCreationHoleSource(choice.source, context.classEquipmentHole.source)
+  ) {
+    return supportedStartingEquipmentChoice(
+      choice,
+      context.selectedClassUnitId,
+      CLASS_EQUIPMENT_CHOICE_KEY,
+      context.classFacts.startingEquipment,
+      supportProfile,
+    );
+  }
+  if (
+    sameCreationHoleSource(
+      choice.source,
+      context.backgroundEquipmentHole.source,
+    )
+  ) {
+    return supportedStartingEquipmentChoice(
+      choice,
+      context.selections.background,
+      BACKGROUND_EQUIPMENT_CHOICE_KEY,
+      context.backgroundFacts.startingEquipment,
+      supportProfile,
+    );
+  }
+  return true;
+}
 
-      if (
-        sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
-      ) {
-        return supportedStartingEquipmentChoice(
-          choice,
-          selections.background,
-          BACKGROUND_EQUIPMENT_CHOICE_KEY,
-          backgroundFacts.startingEquipment,
-          supportProfile,
-        );
-      }
-
-      return (
-        !sameCreationHoleSource(choice.source, classEquipmentHole.source) &&
-        !sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
-      );
-    }) &&
-    loadoutChoices.every((choice) => {
-      const supportedHole = supportedLoadoutHoles.get(
-        loadoutSourceKey(choice.source),
-      );
-      return (
-        supportedHole != null &&
-        choiceSelectionMatchesHole(choice, supportedHole, supportProfile)
-      );
-    })
+function finalizedLoadoutChoiceSupported(
+  choice: LoadoutChoiceSelection,
+  supportedHoles: ReadonlyMap<LoadoutSourceKey, LoadoutCreationHole>,
+  supportProfile: CharacterCreationSupportProfile,
+): boolean {
+  const hole = supportedHoles.get(loadoutSourceKey(choice.source));
+  return (
+    hole !== undefined &&
+    choiceSelectionMatchesHole(choice, hole, supportProfile)
   );
 }
 
@@ -5585,30 +5768,39 @@ function characterBuildResourcesForUnit(
   unit: UnitRecord,
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CharacterBuildResource[] {
+  const supportedResource = supportedCharacterBuildResourceForUnit(
+    unit,
+    supportProfile,
+  );
+  if (supportedResource !== undefined) return [supportedResource];
+  const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
+  return zeroHitPointReplacement === null
+    ? []
+    : [{ unitId: unit.id, resource: zeroHitPointReplacement.resource }];
+}
+
+function supportedCharacterBuildResourceForUnit(
+  unit: UnitRecord,
+  supportProfile: CharacterCreationSupportProfile,
+): CharacterBuildResource | undefined {
   const projection = projectCharacterCreationFeature(unit);
   if (
-    projection.tag === "readable" &&
-    projection.value.kind === "class_feature" &&
-    supportsCharacterBuildResourceUnitId(unit.id, supportProfile) &&
-    (projection.value.facts.mechanics.family === "activation" ||
-      projection.value.facts.mechanics.family === "resource_container" ||
-      projection.value.facts.mechanics.family === "resource_pool") &&
-    projection.value.facts.mechanics.resource !== undefined
-  ) {
-    return [
-      { unitId: unit.id, resource: projection.value.facts.mechanics.resource },
-    ];
-  }
-  const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
-  if (zeroHitPointReplacement !== null) {
-    return [
-      {
-        unitId: unit.id,
-        resource: zeroHitPointReplacement.resource,
-      },
-    ];
-  }
-  return [];
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature"
+  )
+    return undefined;
+  if (!supportsCharacterBuildResourceUnitId(unit.id, supportProfile))
+    return undefined;
+  const mechanics = projection.value.facts.mechanics;
+  if (
+    mechanics.family !== "activation" &&
+    mechanics.family !== "resource_container" &&
+    mechanics.family !== "resource_pool"
+  )
+    return undefined;
+  return mechanics.resource === undefined
+    ? undefined
+    : { unitId: unit.id, resource: mechanics.resource };
 }
 
 export function unitRefs(

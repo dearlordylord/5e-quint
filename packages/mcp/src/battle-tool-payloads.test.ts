@@ -6,7 +6,7 @@ import {
   sameBattleSubject,
   settleBattleRuntimeTransaction,
 } from "@dnd/battle-runtime";
-import { Option, Result, Schema } from "effect";
+import { Result, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -40,11 +40,12 @@ function readToolPayload(response: ReturnType<typeof handleToolCall>) {
 describe("battle tool payload boundaries", () => {
   test("projects the explicit no-session state", () => {
     const root = createMcpPlaySessionRoot();
-    const payload = battleSessionPayload(root, null);
-    expect(Result.isSuccess(payload)).toBe(true);
-    if (Result.isSuccess(payload)) {
-      expect(payload.success.envelope).toBeNull();
-    }
+    expect(battleSessionPayload(root, null)).toMatchObject({
+      _tag: "Success",
+      success: {
+        envelope: null,
+      },
+    });
     expect(noStoredBattleContent()).toMatchObject({
       isError: true,
       content: [
@@ -58,15 +59,20 @@ describe("battle tool payload boundaries", () => {
   test("projects an active session without an interrupt window", () => {
     const { root, session } = startedStatBlockBattle();
 
+    expect(battleSessionPayload(root, session)).toMatchObject({
+      _tag: "Success",
+      success: {
+        envelope: {
+          checkpoint: { battleId: "battle:payload-boundaries" },
+        },
+      },
+    });
     const payload = battleSessionPayload(root, session);
     if (Result.isFailure(payload))
       throw new Error("Expected an active payload.");
     if (payload.success.envelope === null) {
       throw new Error("Expected an active battle envelope.");
     }
-    expect(payload.success.envelope.checkpoint.battleId).toBe(
-      "battle:payload-boundaries",
-    );
     expect(payload.success.envelope.checkpoint).not.toHaveProperty(
       "pendingInterrupt",
     );
@@ -125,7 +131,7 @@ describe("battle tool payload boundaries", () => {
         subject: pendingAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (pending.tag !== "needsHoles") {
       throw new Error("Expected the selected act to need holes.");
@@ -250,7 +256,7 @@ describe("battle tool payload boundaries", () => {
         subject: act.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (result.tag !== "needsHoles") {
       throw new Error("Expected the test battle act to need hole fills.");
@@ -367,7 +373,7 @@ describe("battle tool payload boundaries", () => {
         subject: pendingAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (pendingResult.tag !== "needsHoles") {
       throw new Error("Expected the test battle act to need hole fills.");
@@ -528,7 +534,7 @@ describe("battle tool payload boundaries", () => {
         subject: pendingAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     expect(pending.tag).toBe("needsHoles");
     expect(

@@ -21,9 +21,10 @@
     },
     "packages/battle-runtime/src/battle-act-composition.ts": {
       "module/binding:characterProcedurePresentationJoin": 25,
-      "module/binding:intrinsicActPresentation": 13,
-      "module/binding:intrinsicActPresentationText": 14,
-      "module/binding:spellProcedurePresentationText": 12
+      "module/binding:directSpellProcedurePresentationText": 13,
+      "module/binding:intrinsicActPresentation": 17,
+      "module/binding:intrinsicActPresentationText": 10,
+      "module/binding:intrinsicSubjectPresentation": 14
     },
     "packages/battle-runtime/src/battle-reducer/action-eligibility.ts": {
       "module/binding:actionSubjectEligibilityFacts": 9
@@ -35,8 +36,7 @@
       "module/binding:resolveReplaceSelfTransformationModeCommand": 12
     },
     "packages/battle-runtime/src/battle-reducer/after-hit-spell-routes.ts": {
-      "module/binding:afterHitSpellDiscoveryRoutesForResolution": 12,
-      "module/binding:afterHitSpellRouteForInterrupt": 23,
+      "module/binding:afterHitSpellRouteForInterrupt": 19,
       "module/binding:afterHitSpellTurnBoundaryRouteForResolution": 11
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
@@ -78,6 +78,8 @@
       "module/binding:resolveHelpAttack": 15,
       "module/binding:resolveHide": 10,
       "module/binding:resolveSearch": 11,
+      "module/binding:resolveShakeAwakeFromHitPointBudgetCondition": 9,
+      "module/binding:resolveShakeAwakeFromSaveGatedAreaControl": 9,
       "module/binding:resolveShove": 14,
       "module/binding:spendAttackAction": 11,
       "module/binding:spendAttackTurnResources": 10,
@@ -96,9 +98,6 @@
       "module/binding:battleActionRouteForResolution": 11,
       "module/binding:weaponAttackRouteForResolution": 23,
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
-    },
-    "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:characterBattleCreatureSnapshotInvariantsHold": 10
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
@@ -216,7 +215,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts": {
       "module/binding:interruptCheckpointAfterModifier": 10,
-      "module/binding:resolveInterruptLifecycleDecision": 14,
+      "module/binding:resolveInterruptLifecycleDecision": 13,
       "module/binding:resolveReactionRollOrDamageReduction": 19
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-stack-routes.ts": {
@@ -358,7 +357,6 @@
       "module/binding:saveGatedSpellRouteForResolution": 9,
       "module/binding:slotSpellRouteForResolution": 14,
       "module/binding:spellAttackProcedureBaseRouteForResolution": 10,
-      "module/binding:spellAttackProcedureRouteForDiscoveredAct": 9,
       "module/binding:spellAttackProcedureRouteOwners": 14
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts": {
@@ -536,7 +534,9 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts": {
       "module/binding:isSaveGatedTurnConstraintBundlePhase": 38,
       "module/binding:isTurnHinderingDexteritySavingThrowPenaltyEffect": 10,
-      "module/binding:saveGatedTurnConstraintBundleSpell": 14
+      "module/binding:resolveSaveGatedTurnConstraintBundle": 13,
+      "module/binding:saveGatedTurnConstraintBundleSpell": 14,
+      "module/binding:validateTurnConstraintAreaWitness": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts": {
       "module/binding:resolveScalarBuff": 9,
@@ -576,7 +576,6 @@
       "module/binding:saveGatedConditionWithRepeatSpell": 15
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts": {
-      "module/binding:persistentAreaSaveDamageSpell": 28,
       "module/binding:stationaryPersistentAreaSaveGateDamageAmount": 15
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/targeting-save-interdiction.ts": {
@@ -695,9 +694,8 @@
       "module/binding:resolveBonusActionDashSpellAct": 11,
       "module/binding:resolveBonusActionSpellAct": 27,
       "module/binding:resolveSpellActInternal": 193,
-      "module/binding:resolveSpellActInternal/call:iife:argument--1": 56,
-      "module/binding:spellAttackRerollValidationIssue": 9,
-      "module/binding:spendSpellActResolutionResources": 13
+      "module/binding:resolveSpellActInternal/call:iife:argument--1": 54,
+      "module/binding:spellAttackRerollValidationIssue": 9
     },
     "packages/battle-runtime/src/battle-reducer/spells-targeting.ts": {
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
@@ -780,6 +778,8 @@
       "module/binding:withSpawnedCompanionCombatant": 11
     },
     "packages/battle-runtime/src/companion-lifecycle.ts": {
+      "module/binding:admitCompanionToBattle": 9,
+      "module/binding:castResolvedSpawnedCompanion": 12,
       "module/binding:castWildCompanion": 14,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
@@ -894,7 +894,6 @@
     },
     "packages/character-creation-runtime/src/character-build-advancement.ts": {
       "module/binding:applyListPreparedSpellcastingLevelGain": 9,
-      "module/binding:listPreparedSpellEligibleSpellLists/call:input.build.features.flatMap:argument-0": 9,
       "module/binding:updateSorcererMetamagicOptions": 9,
       "module/binding:updateSpellcastingForClassLevelGain": 10,
       "module/binding:updateWeaponMasterySelectedFeatures": 16,
@@ -906,11 +905,8 @@
     "packages/character-creation-runtime/src/discovery.ts": {
       "module/binding:choiceOptionIdsFitHole": 9,
       "module/binding:classFeatureGrantChoiceHoles": 17,
-      "module/binding:draftHole": 18,
-      "module/binding:hasSupportedCoinEquipmentPath": 12,
       "module/binding:passiveGrantChoiceHoles": 14,
-      "module/binding:sameCreationHoleSource": 9,
-      "module/binding:selectedClassFeatureAcquisitionGrantChoiceHoles/call:input.choices.flatMap:argument-0/call:feature.value.mechanics.options .filter((option) => optionIds.has(creationChoiceOptionId(option.id))) .flatMap:argument-0/call:option.mechanics.grants.flatMap:argument-0": 12
+      "module/binding:sameCreationHoleSource": 9
     },
     "packages/character-creation-runtime/src/draft.ts": {
       "module/binding:parseDraftSelections": 32
@@ -921,29 +917,20 @@
       "module/binding:applyDraftFill": 9
     },
     "packages/character-creation-runtime/src/finalization.ts": {
-      "module/binding:allFinalizedChoicesSupported": 13,
       "module/binding:applyClassFeatureAbilityScoreIncreases": 10,
-      "module/binding:buildCharacterBuild": 18,
       "module/binding:classFeatureAcquisitionAbilityCheckBonusFeature": 11,
       "module/binding:decodedUnitProficiencySubjects": 16,
       "module/binding:executableSupportIssues": 13,
       "module/binding:finalizedBuildSpellcastingSource": 16,
       "module/binding:finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures": 9,
-      "module/binding:finalizedClassFeatureLanguages": 17,
       "module/binding:finalizedSelections": 11
     },
     "packages/character-creation-runtime/src/hole-factories.ts": {
       "module/binding:hasDraftSelection": 16
     },
-    "packages/character-creation-runtime/src/monk-focus.ts": {
-      "module/binding:isMonkFocusFeature": 9
-    },
     "packages/character-creation-runtime/src/monk-uncanny-metabolism.ts": {
       "module/binding:characterBuildMonkUncannyMetabolismFacts": 11,
       "module/binding:isMonkUncannyMetabolismFeature": 10
-    },
-    "packages/character-creation-runtime/src/sorcerer-metamagic.ts": {
-      "module/binding:characterBuildSorcererMetamagicFacts": 12
     },
     "packages/character-creation-runtime/src/types.ts": {
       "module/binding:parseLoadoutSourceKey": 10,
@@ -959,7 +946,6 @@
       "module/binding:arcaneHandInvocationFromSpell": 15
     },
     "packages/character-sheet-runtime/src/armor-class.ts": {
-      "module/binding:characterSheetArmorClassState": 18,
       "module/binding:equipmentPredicateMatches": 13
     },
     "packages/character-sheet-runtime/src/awaken.ts": {
@@ -1009,9 +995,6 @@
       "module/binding:characterSheetHitPoints": 10,
       "module/binding:passStableRecoveryTime": 11
     },
-    "packages/character-sheet-runtime/src/legend-lore.ts": {
-      "module/binding:legendLoreInvocationFromSpell": 12
-    },
     "packages/character-sheet-runtime/src/mislead.ts": {
       "module/binding:misleadInvocationFromSpell": 17
     },
@@ -1020,7 +1003,7 @@
     },
     "packages/character-sheet-runtime/src/passive-defenses.ts": {
       "module/binding:characterSheetPassiveDefenseProjection": 15,
-      "module/binding:empoweredEvocationDamageRollModifier": 13
+      "module/binding:empoweredEvocationDamageRollModifier": 12
     },
     "packages/character-sheet-runtime/src/passwall.ts": {
       "module/binding:passwallInvocationFromSpell": 11
@@ -1042,9 +1025,6 @@
       "module/binding:completeLongRest": 20,
       "module/binding:pactSlotRecoveryProfileForBuild": 13,
       "module/binding:selectedWeaponMasteryUnitIdsForLongRest": 10
-    },
-    "packages/character-sheet-runtime/src/scrying.ts": {
-      "module/binding:scryingInvocationFromSpell": 17
     },
     "packages/character-sheet-runtime/src/seeming.ts": {
       "module/binding:seemingInvocationFromSpell": 13,
@@ -1095,10 +1075,6 @@
     "packages/character-sheet-runtime/src/telepathic-bond.ts": {
       "module/binding:telepathicBondInvocationFromSpell": 12,
       "module/binding:telepathicBondInvocationFromSpell/call:spell.mechanics.phases.find:argument-0": 10
-    },
-    "packages/character-sheet-runtime/src/teleportation-circle.ts": {
-      "module/binding:teleportationCircleInvocationFromSpell": 20,
-      "module/binding:teleportationCircleInvocationFromSpell/call:spell.mechanics.phases.find:argument-0": 10
     },
     "packages/character-sheet-runtime/src/tree-stride.ts": {
       "module/binding:treeStrideInvocationFromSpell": 10
@@ -1218,10 +1194,6 @@
       "module/binding:druidWildShapeKnownFormRosterFromPhase": 14,
       "module/binding:druidWildShapeTemporaryHitPoints": 13,
       "module/binding:isDruidWildShapeFeatureRecord": 24
-    },
-    "packages/surface/src/surface/schema-base.ts": {
-      "module/binding:isSurfaceSchemaRole": 27,
-      "module/binding:surfaceSchemaRoleKey": 9
     },
     "packages/surface/src/surface/schema-nonspell.ts": {
       "module/call:Schema.makeFilter:argument-0:selector-5a4d3eae6657": 10,

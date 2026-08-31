@@ -132,14 +132,18 @@ export type AuthoredUnitReferenceResolution = {
   readonly unit: UnitRecord;
 };
 
-/** Resolve source-authored punctuation variants only at the catalog boundary. */
+/** Resolve an authored reference without retaining a parallel alias registry. */
 export function resolveAuthoredUnitReference(
   authoredReference: string,
   units: readonly UnitRecord[],
 ): AuthoredUnitReferenceResolution | undefined {
   const exact = units.find((unit) => unit.id === authoredReference);
   if (exact !== undefined) {
-    return { authoredReference, canonicalUnitId: exact.id, unit: exact };
+    return {
+      authoredReference,
+      canonicalUnitId: exact.id,
+      unit: exact,
+    };
   }
 
   const key = authoredUnitReferenceKey(authoredReference);
@@ -148,7 +152,11 @@ export function resolveAuthoredUnitReference(
   );
   const [match] = matches;
   return matches.length === 1 && match !== undefined
-    ? { authoredReference, canonicalUnitId: match.id, unit: match }
+    ? {
+        authoredReference,
+        canonicalUnitId: match.id,
+        unit: match,
+      }
     : undefined;
 }
 

@@ -90,61 +90,40 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
   const sharedWolfInitiative = sdk.initiativeScore(12);
 
-  const wolfAInit = sdk.battleCreatureInitFromStatBlock({
+  const wolfAInit = {
     combatantId: wolfAId,
     statBlock: wolf,
     initiative: sharedWolfInitiative,
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolfAInit)) {
-    return obstructed(
-      `The canonical battle projection rejected Wolf A: ${sdk.battleStateInitIssueMessage(wolfAInit.failure)}`,
-      { code: "wolf-a-battle-projection-rejected" },
-    );
-  }
-
-  const wolfBInit = sdk.battleCreatureInitFromStatBlock({
+  };
+  const wolfBInit = {
     combatantId: wolfBId,
     statBlock: wolf,
     initiative: sharedWolfInitiative,
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolfBInit)) {
-    return obstructed(
-      `The canonical battle projection rejected Wolf B: ${sdk.battleStateInitIssueMessage(wolfBInit.failure)}`,
-      { code: "wolf-b-battle-projection-rejected" },
-    );
-  }
-
-  const goblinInit = sdk.battleCreatureInitFromStatBlock({
+  };
+  const goblinInit = {
     combatantId: goblinId,
     statBlock: goblin,
     initiative: sdk.initiativeScore(15),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(goblinInit)) {
-    return obstructed(
-      `The canonical battle projection rejected Goblin Warrior A: ${sdk.battleStateInitIssueMessage(goblinInit.failure)}`,
-      { code: "goblin-battle-projection-rejected" },
-    );
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId("orc-fighter-rogue-close-interception"),
     combatants: [
       fighterInit.success,
       rogueInit.success,
-      wolfAInit.success,
-      wolfBInit.success,
-      goblinInit.success,
+      wolfAInit,
+      wolfBInit,
+      goblinInit,
     ],
   });
   if (sdk.isFailure(battle)) {
     return obstructed(
-      `The canonical battle could not start: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
+      `The canonical battle could not start: ${sdk.battleInitializationIssueMessage(battle.failure)}`,
       { code: "battle-start-rejected" },
     );
   }

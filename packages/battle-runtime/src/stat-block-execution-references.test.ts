@@ -105,10 +105,10 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
-import { escapeSpellRestraintAbilityCheckHoleKey } from "./battle-reducer/selected-effect-hole-key.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
+import { escapeSpellRestraintAbilityCheckHoleKey } from "./battle-reducer/selected-effect-hole-key.ts";
 
 const isolatedExecutionBattleId = battleId(
   "battle-stat-block-isolated-execution-admission",
@@ -1608,12 +1608,13 @@ describe("Stat Block execution references", () => {
               (candidate) => {
                 if (
                   candidate.procedureRef !== binding.procedureRef ||
-                  !isNonSpellStatBlockProcedureBinding(candidate)
+                  candidate.procedure.kind !== "attack"
                 ) {
                   return candidate;
                 }
                 return {
-                  ...candidate,
+                  procedureRef: candidate.procedureRef,
+                  procedure: candidate.procedure,
                   resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
                 };
               },
@@ -1632,7 +1633,9 @@ describe("Stat Block execution references", () => {
     expect(twice).toBe(once);
     expect(once.resourcePools).toEqual(
       admission.execution.resourcePools.map((pool) =>
-        binding.resourcePoolRefs.includes(pool.resourcePoolRef)
+        binding.resourcePoolRefs.some(
+          (resourcePoolRef) => resourcePoolRef === pool.resourcePoolRef,
+        )
           ? pool.kind === "daily" || pool.kind === "legendaryActions"
             ? { ...pool, usesRemaining: Number(pool.usesRemaining) - 1 }
             : { ...pool, available: false }
@@ -2632,6 +2635,8 @@ describe("Stat Block execution references", () => {
       monsterResourceStatBlock(),
       monsterResourceStatBlock(),
     ] as const;
+    const firstRuntimeSource = projectedStatBlockRuntimeSource(statBlocks[0]);
+    const secondRuntimeSource = projectedStatBlockRuntimeSource(statBlocks[1]);
     const admissions = isolatedStatBlockAdmissions(actorId, statBlocks);
     const snapshots = admissions.map((admission) =>
       statBlockExecutionSnapshot(admission.execution),
@@ -2675,7 +2680,7 @@ describe("Stat Block execution references", () => {
     const restoredExpired = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      admissions[0].statBlock,
+      firstRuntimeSource,
       firstHistoricalSnapshot,
     );
     expect(Result.isSuccess(restoredExpired)).toBe(true);
@@ -2695,14 +2700,8 @@ describe("Stat Block execution references", () => {
       isolatedExecutionBattleId,
       actorId,
       [
-        {
-          statBlock: admissions[0].statBlock,
-          snapshot: firstHistoricalSnapshot,
-        },
-        {
-          statBlock: admissions[1].statBlock,
-          snapshot: secondHistoricalSnapshot,
-        },
+        { statBlock: firstRuntimeSource, snapshot: firstHistoricalSnapshot },
+        { statBlock: secondRuntimeSource, snapshot: secondHistoricalSnapshot },
       ],
     );
     expect(Result.isFailure(duplicated)).toBe(true);

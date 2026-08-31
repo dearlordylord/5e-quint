@@ -1,6 +1,7 @@
 import {
   battleFrontierInterruptDecisionForState,
-  battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
 // UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
@@ -34,16 +35,19 @@ import {
   initiativeScore,
   resolveBattleInterrupt,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -63,7 +67,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type ReactionSpellProjection = {
   readonly reactorHp: number;
@@ -87,10 +91,7 @@ type StartedMagicMissile = NeedsHolesResult & {
   >;
 };
 
-type ReactionSpellUnitId =
-  | "shield"
-  | "hellish_rebuke"
-  | "spellCastInterruptionReaction";
+type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
 type SrdSpellUnitId = ReactionSpellUnitId | "magic_missile";
 
 type AttackAct = AvailableBattleAct & {
@@ -104,9 +105,11 @@ const reactorId = combatantId("reaction-spell-selected-identity-reactor");
 const triggerCreatureId = combatantId(
   "reaction-spell-selected-identity-trigger-creature",
 );
-const spellCastInterruptionReactionUnitId = "spellCastInterruptionReaction";
+const counterspellUnitId = "counterspell";
+const hellishRebukeUnitId = "hellish_rebuke";
 const magicMissileUnitId = "magic_missile";
-const spellCastInterruptionReactionSlotLevel = 3;
+const counterspellSlotLevel = 3;
+const hellishRebukeSlotLevel = 2;
 const magicMissileSlotLevel = 1;
 const higherLevelMagicMissileSlotLevel = 4;
 const magicMissileDartCount = 3;
@@ -179,7 +182,7 @@ defineSelectedIdentityReplayAndQntReplay({
     lastResult: "variant",
   },
   initialProjection: projectReactionSpellState(
-    reactionSpellBattle(srdSpellRecord("shield")),
+    reactionSpellBattle(srdSpellRecord("shield")).state,
     "init",
   ),
   units: [
@@ -202,7 +205,7 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: "spellCastInterruptionReaction",
+      unitId: counterspellUnitId,
       procedures: [
         {
           actionName: "doResolveCounterspellMagicMissileCast",
@@ -277,9 +280,9 @@ it(
 );
 
 function resolveShieldReactionSpellHit(): ReactionSpellProjection {
-  const state = reactionSpellBattle(srdSpellRecord("shield"));
+  const session = reactionSpellBattle(srdSpellRecord("shield"));
   const awaitingReaction = resolveAttackRollOnly({
-    state,
+    session,
     attackRollTotal: 14,
     includeHellishRebukeTriggerFact: false,
   });
@@ -290,9 +293,9 @@ function resolveShieldReactionSpellHit(): ReactionSpellProjection {
 }
 
 function resolveShieldReactionSpellHitRoute(): readonly BattleReducerRouteEvent[] {
-  const state = reactionSpellBattle(srdSpellRecord("shield"));
+  const session = reactionSpellBattle(srdSpellRecord("shield"));
   const awaitingReaction = resolveAttackRollOnly({
-    state,
+    session,
     attackRollTotal: 14,
     includeHellishRebukeTriggerFact: false,
   });
@@ -311,9 +314,9 @@ function resolveShieldReactionSpellHitRoute(): readonly BattleReducerRouteEvent[
 }
 
 function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
-  const state = reactionSpellBattle(srdSpellRecord("hellish_rebuke"));
+  const session = reactionSpellBattle(srdSpellRecord(hellishRebukeUnitId));
   const awaitingReaction = resolveAttackRollOnly({
-    state,
+    session,
     attackRollTotal: 15,
     includeHellishRebukeTriggerFact: true,
   });
@@ -348,9 +351,9 @@ function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
 }
 
 function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRouteEvent[] {
-  const state = reactionSpellBattle(srdSpellRecord("hellish_rebuke"));
+  const session = reactionSpellBattle(srdSpellRecord(hellishRebukeUnitId));
   const awaitingReaction = resolveAttackRollOnly({
-    state,
+    session,
     attackRollTotal: 15,
     includeHellishRebukeTriggerFact: true,
   });
@@ -391,8 +394,8 @@ function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRou
 }
 
 function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
-  const state = spellCastInterruptionReactionBattle();
-  const awaitingReaction = startMagicMissileWithCounterspell({ state });
+  const session = counterspellBattle();
+  const awaitingReaction = startMagicMissileWithCounterspell({ session });
   const choice = requireCounterspellChoice(awaitingReaction);
   return projectResolvedReaction(
     resolveBattleInterrupt({
@@ -414,11 +417,11 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
 }
 
 function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly ReducerRouteEvent[] {
-  const state = spellCastInterruptionReactionBattle({
+  const session = counterspellBattle({
     magicMissileSlotLevel: higherLevelMagicMissileSlotLevel,
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
-    state,
+    session,
     slotLevel: higherLevelMagicMissileSlotLevel,
     dartCount: higherLevelMagicMissileDartCount,
   });
@@ -454,11 +457,11 @@ function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly Reduce
 }
 
 function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly ReducerRouteEvent[] {
-  const state = spellCastInterruptionReactionBattle({
+  const session = counterspellBattle({
     magicMissileSlotLevel: higherLevelMagicMissileSlotLevel,
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
-    state,
+    session,
     slotLevel: higherLevelMagicMissileSlotLevel,
     dartCount: higherLevelMagicMissileDartCount,
   });
@@ -626,7 +629,7 @@ function srdSpellRecord(unitId: SrdSpellUnitId): SpellRecord {
   return unit;
 }
 
-function reactionSpellBattle(spell: SpellRecord): BattleState {
+function reactionSpellBattle(spell: SpellRecord): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId(`reaction-spell-selected-identity-${spell.id}`),
     combatants: [
@@ -662,22 +665,20 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
-  return result.success.state;
+  return result.success;
 }
 
-function spellCastInterruptionReactionBattle(
+function counterspellBattle(
   input: {
     readonly magicMissileSlotLevel?: number | undefined;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const triggerSpellSlotLevel =
     input.magicMissileSlotLevel ?? magicMissileSlotLevel;
   const result = startBattle({
-    battleId: battleId(
-      "reaction-spell-selected-identity-spellCastInterruptionReaction",
-    ),
+    battleId: battleId("reaction-spell-selected-identity-counterspell"),
     combatants: [
       reactionSpellCreature({
         combatantId: triggerCreatureId,
@@ -714,22 +715,20 @@ function spellCastInterruptionReactionBattle(
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
-          preparedSpells: [srdSpellRecord(spellCastInterruptionReactionUnitId)],
+          preparedSpells: [srdSpellRecord(counterspellUnitId)],
           featurePreparedSpells: [],
           spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
-          spellSlots: [
-            { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
-          ],
+          spellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
         },
       }),
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
-  return result.success.state;
+  return result.success;
 }
 
 function reactionSpellCreature(input: {
@@ -738,7 +737,7 @@ function reactionSpellCreature(input: {
   readonly initiative: number;
   readonly classLevel?: number | undefined;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
@@ -782,14 +781,14 @@ function reactionSpellCreature(input: {
 }
 
 function startMagicMissileWithCounterspell(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly slotLevel?: number | undefined;
   readonly dartCount?: number | undefined;
 }): StartedMagicMissile {
   const dartCount = input.dartCount ?? magicMissileDartCount;
-  const subject = magicMissileSubject(input.state);
+  const subject = magicMissileSubject(input.session.state);
   const targetAllocationResult = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject,
     fills: [],
   });
@@ -805,7 +804,7 @@ function startMagicMissileWithCounterspell(input: {
     dartCount,
   });
   const result = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject,
     fills: [
       targetAllocationFill,
@@ -817,8 +816,14 @@ function startMagicMissileWithCounterspell(input: {
             kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
             reactorId,
             casterId: triggerCreatureId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spellCastInterruptionReactionUnitId),
+            sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+              input.session,
+              reactorId,
+              spellSlotInvocationRef(
+                counterspellUnitId,
+                counterspellSlotLevel,
+                "spellCastInterruptionReaction",
+              ),
             ),
             rangeFeet: movementFeet(60),
           },
@@ -827,7 +832,11 @@ function startMagicMissileWithCounterspell(input: {
     ],
   });
   if (result.tag !== "needsHoles") {
-    throw new Error("Expected Counterspell Reaction window.");
+    throw new Error(
+      result.tag === "invalid"
+        ? `Expected Counterspell Reaction window, got ${result.reason}: ${result.message}.`
+        : `Expected Counterspell Reaction window, got ${result.tag}.`,
+    );
   }
   return { ...result, targetAllocationFill };
 }
@@ -884,8 +893,8 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: triggerCreatureId,
         targetId: reactorId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(magicMissileUnitId),
+        sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+          input.hole,
         ),
       },
     ],
@@ -893,11 +902,11 @@ function magicMissileTargetAllocationFill(input: {
 }
 
 function resolveAttackRollOnly(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly attackRollTotal: number;
   readonly includeHellishRebukeTriggerFact: boolean;
 }): ReturnType<typeof resolveBattleSubject> {
-  const attackAct = discoverBattleActCandidates(input.state).find(
+  const attackAct = discoverBattleActCandidates(input.session.state).find(
     (act): act is AttackAct =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
@@ -909,10 +918,11 @@ function resolveAttackRollOnly(input: {
   const target = requireHole(attackAct.initialHoles, "targetChoice");
   const targetFilled = attackTargetFill({
     hole: target,
+    session: input.session,
     includeHellishRebukeTriggerFact: input.includeHellishRebukeTriggerFact,
   });
   const awaitingAttackRoll = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: attackAct.subject,
     fills: [targetFilled],
   });
@@ -921,7 +931,7 @@ function resolveAttackRollOnly(input: {
   }
   const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
   return resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: attackAct.subject,
     fills: [
       targetFilled,
@@ -936,6 +946,7 @@ function resolveAttackRollOnly(input: {
 
 function attackTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "targetChoice" }>;
+  readonly session: BattleRuntimeSession;
   readonly includeHellishRebukeTriggerFact: boolean;
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   if (input.hole.attack === undefined) {
@@ -959,8 +970,14 @@ function attackTargetFill(input: {
               kind: "reactionSpellDamagerVisibleWithinRange" as const,
               reactorId,
               damageSourceId: triggerCreatureId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hellish_rebuke"),
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                input.session,
+                reactorId,
+                spellSlotInvocationRef(
+                  hellishRebukeUnitId,
+                  hellishRebukeSlotLevel,
+                  "saveGatedDamage",
+                ),
               ),
               rangeFeet: movementFeet(60),
             },

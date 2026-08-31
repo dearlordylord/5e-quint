@@ -209,7 +209,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     plan: BuildPlan,
   ): CharacterBuild | CompositionFailure => {
     const parsedScores = sdk.abilityScoreAssignment(plan.abilityScores);
-    if (sdk.isLeft(parsedScores)) {
+    if (sdk.isFailure(parsedScores)) {
       return {
         obstruction: `The public SDK rejected ${plan.characterId}'s required ability assignment.`,
         observation: {
@@ -313,7 +313,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       conditions: [],
       unitLibrary: unitCatalog,
     });
-    if (sdk.isLeft(sheet)) {
+    if (sdk.isFailure(sheet)) {
       return {
         obstruction: `The public SDK could not create a fresh Character Sheet for ${plan.characterId}.`,
         observation: {

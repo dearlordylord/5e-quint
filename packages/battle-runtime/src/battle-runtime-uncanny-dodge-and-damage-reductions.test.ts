@@ -267,9 +267,15 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       throw new Error("Expected attack-hit Reaction window.");
     }
 
-    const hitModifierChoices = battleFrontierInterruptDecisionForState(
+    const hitDecision = battleFrontierInterruptDecisionForState(
       hitReaction.result.state,
-    )!.choices.filter((choice) => choice.kind === "reactionModifier");
+    );
+    if (hitDecision === null) {
+      throw new Error("Expected attack-hit interrupt decision frontier.");
+    }
+    const hitModifierChoices = hitDecision.choices.filter(
+      (choice) => choice.kind === "reactionModifier",
+    );
     const firstHitModifierChoice = hitModifierChoices[0];
     if (firstHitModifierChoice === undefined) {
       throw new Error("Expected an attack-hit Reaction modifier choice.");
@@ -326,9 +332,15 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     if (awaitingDamageReaction.tag !== "needsHoles") {
       throw new Error("Expected attack-damage Reaction window.");
     }
-    const damageModifierChoices = battleFrontierInterruptDecisionForState(
+    const damageDecision = battleFrontierInterruptDecisionForState(
       awaitingDamageReaction.state,
-    )!.choices.filter((choice) => choice.kind === "reactionModifier");
+    );
+    if (damageDecision === null) {
+      throw new Error("Expected attack-damage interrupt decision frontier.");
+    }
+    const damageModifierChoices = damageDecision.choices.filter(
+      (choice) => choice.kind === "reactionModifier",
+    );
     expect(damageModifierChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

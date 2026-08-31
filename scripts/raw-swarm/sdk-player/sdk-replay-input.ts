@@ -6,8 +6,9 @@ import {
   type BattleFill,
   type BattleSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
-import { Result, Match, Schema, SchemaGetter } from "effect";
+import type { Schema as SchemaTypes } from "effect";
 
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 import type {
   EndBattleRuntimeTurnInput,
   JsonValue,
@@ -15,6 +16,10 @@ import type {
 } from "./continuation-contract.ts";
 import { sdkCallInputJsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
+
+const { Result, Match, Schema, SchemaGetter } = effectRuntimeForPackageOwners([
+  "battle-runtime",
+]).effect;
 
 type EndBattleRuntimeTurnReplayInput = Omit<
   EndBattleRuntimeTurnInput,
@@ -246,7 +251,7 @@ export function canonicalSdkCallInput(input: {
 }
 
 function decodeInput<A, I, R extends SdkCallInput>(
-  schema: Schema.Codec<A, I>,
+  schema: SchemaTypes.Codec<A, I>,
   input: unknown,
   project: (decoded: A) => R | ParseResult<R>,
 ): ParseResult<R> {

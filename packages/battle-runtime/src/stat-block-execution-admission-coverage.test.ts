@@ -1,14 +1,7 @@
 import * as Result from "effect/Result";
-import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import {
-  battleAmmunitionStock,
-  battleId,
-  combatantId,
-  initiativeScore,
-  startBattle,
-} from "./index.ts";
+import { battleId, combatantId } from "./index.ts";
 import {
   authoredProcedureOrdinal,
   monsterMultiattackStatBlock,
@@ -16,7 +9,11 @@ import {
   projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 import { admitStatBlockResourceGraph } from "./stat-block-execution-state.ts";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import {
+  admitBattleStatBlockCombatantSource,
+  battleStatBlockCombatantSource,
+} from "./stat-block-combatant-admission.ts";
+import { battleExecutionScopeOrdinal } from "./identity.ts";
 import { Schema } from "effect";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 import type {
@@ -41,40 +38,18 @@ function executionFor(source: RuntimeSource, id: string) {
       `Expected Stat Block source admission: ${JSON.stringify(admitted.failure)}`,
     );
   }
-  const initialized = {
-    combatantId: actorId,
-    initiative: initiativeScore(10),
-    creatureInit: {
-      kind: "statBlock" as const,
-      source: admitted.success,
-      currentHp: Hp(source.statBlock.hp.value),
-      tempHp: Hp(0),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-      presentation: {
-        displayName: source.id,
-        communication: { kind: "none" as const },
-        traits: [],
-        orderedProcedures: [],
-      },
-    },
-  };
-
-  const started = startBattle({
+  const combatant = admitBattleStatBlockCombatantSource({
     battleId: battleId(`stat-block-execution-${id}`),
-    combatants: [initialized],
+    combatantId: actorId,
+    source: admitted.success,
+    startingScopeOrdinal: battleExecutionScopeOrdinal(0),
   });
-  if (Result.isFailure(started)) {
+  if (Result.isFailure(combatant)) {
     throw new Error(
-      `Expected Stat Block battle start: ${JSON.stringify(started.failure)}`,
+      `Expected Stat Block direct admission: ${JSON.stringify(combatant.failure)}`,
     );
   }
-
-  const combatant = started.success.state.combatants.get(actorId);
-  if (combatant?.origin.kind !== "statBlock") {
-    throw new Error("Expected the Stat Block combatant admission.");
-  }
-  return combatant.origin.execution;
+  return combatant.success.origin.execution;
 }
 
 function multiattackProcedure(

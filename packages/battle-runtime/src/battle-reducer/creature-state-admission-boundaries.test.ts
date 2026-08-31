@@ -22,6 +22,7 @@ import {
   wizardSpellcasting,
 } from "../battle-runtime.test-support.ts";
 import { battleStateInitIssueMessage } from "./domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./api-lifecycle.ts";
 import { battleCreatureStateAdmissionFromInit } from "./creature-state.ts";
 import { battleExecutionScopeOrdinal } from "../identity.ts";
 
@@ -140,7 +141,7 @@ describe("creature-state admission boundaries", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
     );
   });
@@ -167,7 +168,7 @@ describe("creature-state admission boundaries", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
     );
   });
@@ -194,7 +195,7 @@ describe("creature-state admission boundaries", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Character battle initialization zero-HP lifecycle is invalid.",
     );
   });
@@ -216,7 +217,7 @@ describe("creature-state admission boundaries", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Metamagic battle state requires at least one known option fact.",
     );
   });
@@ -243,7 +244,7 @@ describe("creature-state admission boundaries", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Spellbook Ritual Spell Access must reference ritual-tagged leveled Spell Definitions.",
     );
   });
@@ -301,7 +302,7 @@ describe("creature-state admission boundaries", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Knocked Out Unconscious initialization requires the Unconscious condition.",
     );
   });

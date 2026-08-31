@@ -1,28 +1,24 @@
 import {
   battleAmmunitionStock,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   type AuthoredStatBlockBattleInitInput,
   type BattleAmmunitionStock,
 } from "@dnd/battle-runtime";
 import type { AmmunitionKind } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
 
 export type { AuthoredStatBlockBattleInitInput } from "@dnd/battle-runtime";
 
-export function battleCreatureInitFromStatBlock(
+export function authoredStatBlockBattleInit(
   input: Omit<
     AuthoredStatBlockBattleInitInput,
     "ammunitionStocks" | "conditions"
   >,
-) {
-  return Result.getOrThrow(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
+): AuthoredStatBlockBattleInitInput {
+  return {
+    ...input,
+    ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    conditions: [],
+  };
 }
 
 export function testAmmunitionStocksForStatBlock(

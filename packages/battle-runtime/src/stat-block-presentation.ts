@@ -24,6 +24,7 @@ import type {
   StatBlockExecutionState,
   StatBlockActionProjectionShape,
   StatBlockProcedure,
+  StatBlockProcedureBindingFor,
 } from "./stat-block-execution-state.ts";
 import type {
   StatBlockActionProjectionSection,
@@ -41,19 +42,8 @@ export type StatBlockPresentationAdmission = {
 
 type ExecutableStatBlockProcedure = Exclude<
   StatBlockProcedure,
-  { readonly kind: "effectOccurrenceSource" | "unarmedStrike" }
+  { readonly kind: "unarmedStrike" | "effectOccurrenceSource" }
 >;
-
-type PresentedStatBlockProcedureBinding = Exclude<
-  StatBlockExecutionState["procedureBindings"][number],
-  { readonly procedure: { readonly kind: "effectOccurrenceSource" } }
->;
-
-function isPresentedStatBlockProcedureBinding(
-  binding: StatBlockExecutionState["procedureBindings"][number],
-): binding is PresentedStatBlockProcedureBinding {
-  return binding.procedure.kind !== "effectOccurrenceSource";
-}
 
 export type StatBlockProcedurePresentationResult = Result.Result<
   readonly StatBlockProcedurePresentation[],
@@ -279,8 +269,18 @@ export function statBlockProcedurePresentations(
     : Result.fail([firstIssue, ...remainingIssues]);
 }
 
+function isPresentedStatBlockProcedureBinding(
+  binding: StatBlockExecutionState["procedureBindings"][number],
+): binding is StatBlockProcedureBindingFor<
+  Exclude<StatBlockProcedure, { readonly kind: "effectOccurrenceSource" }>
+> {
+  return binding.procedure.kind !== "effectOccurrenceSource";
+}
+
 function statBlockProcedurePresentationForBinding(
-  binding: PresentedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingFor<
+    Exclude<StatBlockProcedure, { readonly kind: "effectOccurrenceSource" }>
+  >,
   labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]
   >,
@@ -407,53 +407,42 @@ export function attackActionOptionPresentationName(
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
 ): Result.Result<string, AttackPresentationJoinIssue> {
-  return Match.value(attack).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      unarmedStrike: (value) => Result.succeed(attackActionOptionName(value)),
-      weapon: (value) =>
-        characterWeaponAttackPresentationName(state, context, actorId, value),
-      statBlockAttack: (value) =>
-        statBlockAttackPresentationName(state, context, actorId, value),
-    }),
-  );
-}
-
-function characterWeaponAttackPresentationName(
-  state: BattleState,
-  context: BattleRuntimeContext,
-  actorId: CombatantId,
-  attack: CharacterWeaponAttackActionOption,
-): Result.Result<string, AttackPresentationJoinIssue> {
-  const characterContext = context.characters.get(actorId);
-  if (characterContext === undefined) {
-    return Result.fail({
-      tag: "attackPresentationJoinIssue",
-      reason: "characterContextMissing",
-    });
+  if (attack.kind === "unarmedStrike") {
+    return Result.succeed(attackActionOptionName(attack));
   }
-  const source = characterWeaponPresentationSource(
-    characterContext,
-    attack.weapon.weaponUnitId,
-  );
-  if (Result.isFailure(source)) {
-    return Result.fail({
-      tag: "attackPresentationJoinIssue",
-      reason: "weaponPresentationMissing",
-    });
+  if (attack.kind === "weapon") {
+    const characterContext = context.characters.get(actorId);
+    if (characterContext === undefined) {
+      return Result.fail({
+        tag: "attackPresentationJoinIssue",
+        reason: "characterContextMissing",
+      });
+    }
+    const source = characterWeaponPresentationSource(
+      characterContext,
+      attack.weapon.weaponUnitId,
+    );
+    if (Result.isFailure(source)) {
+      return Result.fail({
+        tag: "attackPresentationJoinIssue",
+        reason: "weaponPresentationMissing",
+      });
+    }
+    const baseAttack = characterWeaponBaseAttack(
+      state,
+      actorId,
+      attack.weapon.weaponUnitId,
+    );
+    const suffixes = characterWeaponPresentationSuffixes(
+      attack,
+      baseAttack,
+      source.success,
+    );
+    return Result.succeed(
+      formatWeaponPresentationName(source.success.name, suffixes),
+    );
   }
-  const baseAttack = characterWeaponBaseAttack(
-    state,
-    actorId,
-    attack.weapon.weaponUnitId,
-  );
-  const suffixes = characterWeaponPresentationSuffixes(
-    attack,
-    baseAttack,
-    source.success,
-  );
-  return Result.succeed(
-    formatWeaponPresentationName(source.success.name, suffixes),
-  );
+  return statBlockAttackPresentationName(state, context, actorId, attack);
 }
 
 function characterWeaponBaseAttack(

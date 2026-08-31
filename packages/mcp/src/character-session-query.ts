@@ -145,7 +145,7 @@ function projectCharacterSessionQuery(input: {
 }): Result.Result<CharacterSessionQueryProjection, CharacterSessionQueryIssue> {
   return Match.value(input.query).pipe(
     Match.when({ kind: "abilityCheckAbility" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetAbilityCheckAbility({
@@ -158,7 +158,7 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "abilityCheckProficiencyBonus" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetAbilityCheckProficiencyBonusProjection({
@@ -170,7 +170,7 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "jumpDistanceAbility" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetJumpDistanceAbility({
@@ -181,14 +181,14 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "linkedSpeedGrants" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetLinkedSpeedGrants(input.sheet.build, input.unitLibrary),
       ),
     ),
     Match.when({ kind: "armorClass" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetArmorClassProjection({
@@ -220,7 +220,7 @@ function projectCharacterSessionQuery(input: {
         : Result.succeed({ kind: query.kind, projection });
     }),
     Match.when({ kind: "weaponMasterySelections" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetWeaponMasterySelectedReferenceProjection({
@@ -231,7 +231,7 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "spellbookRitualAccesses" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetSpellbookRitualAccessesForBuild({
@@ -241,7 +241,7 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "spellbookRitualAccess" }, (query) =>
-      projectEither(
+      projectCharacterSheetResult(
         input,
         query,
         characterSheetSpellbookRitualAccess({
@@ -266,7 +266,10 @@ function projectCharacterSessionQuery(input: {
   );
 }
 
-function projectEither<Query extends CharacterSessionQueryInput, Projection>(
+function projectCharacterSheetResult<
+  Query extends CharacterSessionQueryInput,
+  Projection,
+>(
   input: {
     readonly characterId: CharacterId;
   },

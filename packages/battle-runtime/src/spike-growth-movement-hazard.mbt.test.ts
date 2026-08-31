@@ -359,7 +359,7 @@ function discoverMovementDamage(
     throw new Error("Expected Spike Growth movement damage hole.");
   }
   expect(requireResultHole(result, "rolledDice")).toMatchObject({
-    spikeGrowthMovement: {
+    areaMovementDistanceDamage: {
       distanceFeet: movementFeet(damageDistanceFeet),
       damage: {
         expr: { dice: scaledDamageDice, dieSize: 4 },
@@ -481,7 +481,7 @@ function battleHolesToSpikeGrowthHoles(
 ): readonly SpikeGrowthHole[] {
   return holes
     .map((hole): SpikeGrowthHole => {
-      if (hole.kind === "rolledDice" && "spikeGrowthMovement" in hole) {
+      if (hole.kind === "rolledDice" && "areaMovementDistanceDamage" in hole) {
         return "MovementDamage";
       }
       throw new Error(`Unexpected Spike Growth hole ${hole.kind}.`);

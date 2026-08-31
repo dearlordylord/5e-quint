@@ -35,7 +35,7 @@ import {
 } from "@dnd/character-sheet-runtime"
 import type { Ability } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
-import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog"
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog-contract"
 import { buildStatBlockCatalog, srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
 import { Result } from "effect"

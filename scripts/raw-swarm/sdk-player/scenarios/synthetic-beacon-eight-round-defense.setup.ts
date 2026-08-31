@@ -122,7 +122,7 @@ export const setupScenario: ScenarioSetup = ({
         observation: { missingStatBlockId: choice.statBlockId },
       };
     }
-    const projected = sdk.battleCreatureInitFromStatBlock({
+    const projected = {
       combatantId: sdk.combatantId(choice.combatantId),
       statBlock,
       initiative: sdk.initiativeScore(choice.initiative),
@@ -131,17 +131,10 @@ export const setupScenario: ScenarioSetup = ({
           ? [sdk.battleAmmunitionStock("arrow", 20)]
           : [],
       conditions: [],
-    });
-    if (sdk.isFailure(projected)) {
-      return {
-        kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(projected.failure),
-        observation: { combatantId: choice.combatantId },
-      };
-    }
-    combatants.push(projected.success);
+    };
+    combatants.push(projected);
     placements.push({
-      tokenId: projected.success.combatantId,
+      tokenId: projected.combatantId,
       coordinate: choice.coordinate,
     });
   }
@@ -153,7 +146,7 @@ export const setupScenario: ScenarioSetup = ({
   if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.failure),
+      obstruction: sdk.battleInitializationIssueMessage(started.failure),
       observation: { operation: "startBattle" },
     };
   }

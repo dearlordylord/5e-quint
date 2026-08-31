@@ -14,6 +14,7 @@ import {
 import type { CharacterProgression } from "./character-progression-types.ts";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { Result } from "effect";
 
 /**
  * The public character-creation workflow currently composes characters only
@@ -32,6 +33,23 @@ export type CharacterCreationWorkflowRoots = {
   readonly progressions: readonly CharacterProgression[];
   readonly unitIds: readonly UnitRecord["id"][];
 };
+
+export type CharacterCreationWorkflowRootIssue =
+  | {
+      readonly tag: "missingCharacterCreationWorkflowRoot";
+      readonly unitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "characterCreationWorkflowRootKindMismatch";
+      readonly unitId: UnitRecord["id"];
+      readonly expectedKind: "class" | "background" | "species";
+      readonly actualKind: UnitRecord["kind"];
+    };
+
+export type CharacterCreationWorkflowRootIssues = readonly [
+  CharacterCreationWorkflowRootIssue,
+  ...CharacterCreationWorkflowRootIssue[],
+];
 
 /**
  * Derive the progression paths that the production creation reducer can
@@ -58,7 +76,10 @@ export function characterCreationWorkflowProgressions(
 export function deriveCharacterCreationWorkflowRoots(input: {
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile?: CharacterCreationSupportProfile;
-}): CharacterCreationWorkflowRoots {
+}): Result.Result<
+  CharacterCreationWorkflowRoots,
+  CharacterCreationWorkflowRootIssues
+> {
   const supportProfile =
     input.supportProfile ?? CHARACTER_CREATION_SUPPORT_PROFILE;
   const progressions = characterCreationWorkflowProgressions(supportProfile);
@@ -69,13 +90,29 @@ export function deriveCharacterCreationWorkflowRoots(input: {
   const supportedSpeciesIds = new Set<UnitRecord["id"]>(
     supportedSpeciesUnitIds(),
   );
-  const supportedClassNames = supportedClassNamesFor(
-    input.unitLibrary,
+  const units = input.unitLibrary.listUnits();
+  const unitsById = new Map(units.map((unit) => [unit.id, unit] as const));
+  const explicitRootIds = explicitWorkflowRootIds(supportProfile);
+  const requiredRootIds = new Set([
+    ...supportedClassIds,
+    ...supportedBackgroundIds,
+    ...supportedSpeciesIds,
+    ...explicitRootIds,
+  ]);
+  const issues = requiredWorkflowRootIssues({
+    unitsById,
+    requiredRootIds,
     supportedClassIds,
-  );
+    supportedBackgroundIds,
+    supportedSpeciesIds,
+  });
+  if (issues.length > 0) {
+    return Result.fail([issues[0], ...issues.slice(1)]);
+  }
+  const supportedClassNames = supportedClassNamesFor(units, supportedClassIds);
   const rootIds = new Set<UnitRecord["id"]>();
 
-  for (const unit of input.unitLibrary.listUnits()) {
+  for (const unit of units) {
     if (
       isCharacterCreationWorkflowRootUnit(unit, {
         supportedClassIds,
@@ -87,16 +124,15 @@ export function deriveCharacterCreationWorkflowRoots(input: {
       rootIds.add(unit.id);
   }
 
-  addExplicitWorkflowRootIds(rootIds, supportProfile);
+  for (const unitId of explicitRootIds) rootIds.add(unitId);
 
-  return {
+  return Result.succeed({
     horizon: CHARACTER_CREATION_WORKFLOW_HORIZON,
     progressions,
-    unitIds: input.unitLibrary
-      .listUnits()
+    unitIds: units
       .filter((unit) => rootIds.has(unit.id))
       .map((unit) => unit.id),
-  };
+  });
 }
 
 function supportedClassIdsFor(
@@ -111,12 +147,11 @@ function supportedClassIdsFor(
 }
 
 function supportedClassNamesFor(
-  unitLibrary: UnitCatalog,
+  units: readonly UnitRecord[],
   supportedClassIds: ReadonlySet<UnitRecord["id"]>,
 ): ReadonlySet<string> {
   return new Set(
-    unitLibrary
-      .listUnits()
+    units
       .filter(
         (unit): unit is Extract<UnitRecord, { readonly kind: "class" }> =>
           unit.kind === "class" && supportedClassIds.has(unit.id),
@@ -190,10 +225,10 @@ function isUnconditionalWorkflowRootUnit(unit: UnitRecord): boolean {
   );
 }
 
-function addExplicitWorkflowRootIds(
-  rootIds: Set<UnitRecord["id"]>,
+function explicitWorkflowRootIds(
   supportProfile: CharacterCreationSupportProfile,
-): void {
+): ReadonlySet<UnitRecord["id"]> {
+  const rootIds = new Set<UnitRecord["id"]>();
   for (const choice of supportedLoadoutChoices(supportProfile)) {
     rootIds.add(choice.unitId);
   }
@@ -203,4 +238,38 @@ function addExplicitWorkflowRootIds(
   for (const unitId of supportProfile.characterBuildResourceUnitIds) {
     rootIds.add(unitId);
   }
+  return rootIds;
+}
+
+function requiredWorkflowRootIssues(input: {
+  readonly unitsById: ReadonlyMap<UnitRecord["id"], UnitRecord>;
+  readonly requiredRootIds: ReadonlySet<UnitRecord["id"]>;
+  readonly supportedClassIds: ReadonlySet<UnitRecord["id"]>;
+  readonly supportedBackgroundIds: ReadonlySet<UnitRecord["id"]>;
+  readonly supportedSpeciesIds: ReadonlySet<UnitRecord["id"]>;
+}): readonly CharacterCreationWorkflowRootIssue[] {
+  const issues: CharacterCreationWorkflowRootIssue[] = [];
+  for (const unitId of input.requiredRootIds) {
+    if (!input.unitsById.has(unitId)) {
+      issues.push({ tag: "missingCharacterCreationWorkflowRoot", unitId });
+    }
+  }
+  for (const [expectedKind, unitIds] of [
+    ["class", input.supportedClassIds],
+    ["background", input.supportedBackgroundIds],
+    ["species", input.supportedSpeciesIds],
+  ] as const) {
+    for (const unitId of unitIds) {
+      const unit = input.unitsById.get(unitId);
+      if (unit !== undefined && unit.kind !== expectedKind) {
+        issues.push({
+          tag: "characterCreationWorkflowRootKindMismatch",
+          unitId,
+          expectedKind,
+          actualKind: unit.kind,
+        });
+      }
+    }
+  }
+  return issues;
 }

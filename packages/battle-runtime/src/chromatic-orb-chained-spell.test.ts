@@ -1,13 +1,13 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import { Result } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { statBlockId } from "@dnd/shared/game-facts";
 import {
   battleId,
   battleAmmunitionStock,
@@ -20,6 +20,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -1207,7 +1208,7 @@ function chromaticOrbSession(input: {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -1790,28 +1791,18 @@ function poisonImmuneSkeletonCreature(input: {
   readonly combatantId: CombatantId;
   readonly initiative: number;
 }): BattleCreatureInit {
-  const projected = Result.getOrThrow(
-    projectAuthoredStatBlock(
-      assertStatBlockForTest(
-        statBlockCatalog,
-        statBlockId("stat_block_skeleton"),
-      ),
-    ),
+  const statBlock = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_skeleton"),
   );
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock,
+    currentHp: Hp(13),
+    tempHp: Hp(0),
+    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   };
 }
 
@@ -1820,24 +1811,24 @@ function characterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
   readonly hp?: number;
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly unitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly zeroHitPointReplacementUnit?: UnitRecord;
@@ -1908,4 +1899,4 @@ function characterCreature(input: {
   };
 }
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";

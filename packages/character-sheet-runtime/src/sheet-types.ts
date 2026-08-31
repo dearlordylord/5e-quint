@@ -63,7 +63,7 @@ import type { StableRecovery } from "@dnd/shared-algebras/stable-recovery-algebr
 import type {
   StatBlockCatalog,
   StatBlockId,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/stat-block-catalog-contract";
 import type {
   SpawnedCompanionCreatureTypeOverride,
   SpawnedCompanionCreatureTypeOverrideChoice,

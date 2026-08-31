@@ -2,12 +2,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import {
-  authoredStatBlockBattleInitIssueMessage,
-  battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleId,
   battleObjectId,
-  battleStateInitIssueMessage,
+  battleInitializationIssueMessage,
   combatantId,
   initiativeScore,
   startBattle,
@@ -94,12 +92,10 @@ function setupContext(
         statBlocks: srdStatBlockCatalog.listStatBlocks(),
         unitCatalog,
         sdk: {
-          authoredStatBlockBattleInitIssueMessage,
           battleAmmunitionStock,
-          battleCreatureInitFromStatBlock,
           battleId,
           battleObjectId,
-          battleStateInitIssueMessage,
+          battleInitializationIssueMessage,
           characterBattleRuntimeIssueMessage,
           characterSheetBattleInit,
           combatantId,
@@ -114,7 +110,7 @@ function setupContext(
           scenarioTableSpatialFingerprint,
           scenarioSessionIssueMessage,
           tableAuthoredSpatialDecision,
-          isLeft: Result.isFailure,
+          isFailure: Result.isFailure,
         },
       },
     })),

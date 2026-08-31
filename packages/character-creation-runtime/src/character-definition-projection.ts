@@ -300,7 +300,7 @@ function inspectCharacterDefinitionLink(input: {
   }
 }
 
-function inspectCharacterDefinitionUnitLink(input: {
+type CharacterDefinitionUnitLinkInspection = {
   readonly link: SurfaceAuthoredRelation & { readonly targetKind: "unit" };
   readonly linkPath: UnitMechanicsPath;
   readonly issues: CharacterDefinitionAdmissionIssue[];
@@ -308,7 +308,11 @@ function inspectCharacterDefinitionUnitLink(input: {
   readonly owningClassName:
     | Extract<UnitRecord, { readonly kind: "class" }>["className"]
     | undefined;
-}): void {
+};
+
+function inspectCharacterDefinitionUnitLink(
+  input: CharacterDefinitionUnitLinkInspection,
+): void {
   const expectation = expectedCharacterDefinitionTarget(input.link);
   if (expectation.tag === "unowned") {
     addAdmissionIssue(
@@ -322,18 +326,11 @@ function inspectCharacterDefinitionUnitLink(input: {
 
   const target = input.unitIds.get(input.link.targetRecordId);
   if (target === undefined) {
-    if (input.link.relationKind === "dependency") {
-      addAdmissionIssue(
-        input.issues,
-        "incomplete_graph",
-        input.linkPath,
-        `The Character Definition ${input.link.relation} authored ${input.link.relationKind} does not resolve to an installed ${input.link.targetKind}.`,
-      );
-    }
+    inspectMissingCharacterDefinitionUnitLink(input);
     return;
   }
 
-  if (!expectation.targetKinds.includes(target.kind)) {
+  if (!characterDefinitionTargetMatchesExpectation(target, expectation)) {
     addAdmissionIssue(
       input.issues,
       "ambiguous_mechanics",
@@ -343,10 +340,7 @@ function inspectCharacterDefinitionUnitLink(input: {
     return;
   }
   if (
-    expectation.requiresOwningClassName &&
-    (input.owningClassName === undefined ||
-      target.kind !== "subclass" ||
-      target.className !== input.owningClassName)
+    !characterDefinitionTargetBelongsToOwningClass(input, target, expectation)
   ) {
     addAdmissionIssue(
       input.issues,
@@ -355,6 +349,44 @@ function inspectCharacterDefinitionUnitLink(input: {
       `The Character Definition subclass-choice target must belong to ${input.owningClassName ?? "the owning class"}.`,
     );
   }
+}
+
+function inspectMissingCharacterDefinitionUnitLink(
+  input: CharacterDefinitionUnitLinkInspection,
+): void {
+  if (input.link.relationKind !== "dependency") return;
+  addAdmissionIssue(
+    input.issues,
+    "incomplete_graph",
+    input.linkPath,
+    `The Character Definition ${input.link.relation} authored ${input.link.relationKind} does not resolve to an installed ${input.link.targetKind}.`,
+  );
+}
+
+function characterDefinitionTargetMatchesExpectation(
+  target: UnitRecord,
+  expectation: Exclude<
+    ReturnType<typeof expectedCharacterDefinitionTarget>,
+    { readonly tag: "unowned" }
+  >,
+): boolean {
+  return expectation.targetKinds.includes(target.kind);
+}
+
+function characterDefinitionTargetBelongsToOwningClass(
+  input: Pick<CharacterDefinitionUnitLinkInspection, "owningClassName">,
+  target: UnitRecord,
+  expectation: Exclude<
+    ReturnType<typeof expectedCharacterDefinitionTarget>,
+    { readonly tag: "unowned" }
+  >,
+): boolean {
+  if (!expectation.requiresOwningClassName) return true;
+  return (
+    input.owningClassName !== undefined &&
+    target.kind === "subclass" &&
+    target.className === input.owningClassName
+  );
 }
 
 const CHARACTER_DEFINITION_CLASS_FEATURE_KINDS = [
@@ -391,13 +423,13 @@ function expectedCharacterDefinitionTarget(
   link: SurfaceAuthoredRelation,
 ): CharacterDefinitionTargetExpectation {
   if (link.targetKind !== "unit") return { tag: "unowned" };
-  if (link.sourceRole === "class-feature-grant") {
+  if ("sourceRole" in link && link.sourceRole === "class-feature-grant") {
     return {
       tag: "supported",
       targetKinds: CHARACTER_DEFINITION_CLASS_FEATURE_KINDS,
     };
   }
-  if (link.sourceRole === "class-subclass-choice") {
+  if ("sourceRole" in link && link.sourceRole === "class-subclass-choice") {
     return {
       tag: "supported",
       targetKinds: CHARACTER_DEFINITION_SUBCLASS_KINDS,

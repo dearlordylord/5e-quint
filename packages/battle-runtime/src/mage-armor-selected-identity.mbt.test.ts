@@ -44,6 +44,7 @@ import {
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -56,7 +57,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type MageArmorSelectedIdentityLastResult =
   | "init"
@@ -480,7 +481,7 @@ function startBattleRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -491,7 +492,7 @@ function battleCreature(input: {
   readonly initiative: number;
   readonly armorClass: ArmorClassState;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

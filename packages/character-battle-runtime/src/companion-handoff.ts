@@ -37,7 +37,7 @@ import {
   type SpawnedCompanionFormEligibility,
   type SpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";

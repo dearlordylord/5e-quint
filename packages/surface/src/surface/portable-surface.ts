@@ -1,11 +1,10 @@
-import { Match, Result, Schema } from "effect";
+import { Result, Schema } from "effect";
 import * as SchemaAST from "effect/SchemaAST";
 
 import {
   PublishedSrdStatBlockRecordSchema,
   PublishedSrdSurfaceSchema,
   PublishedSrdUnitRecordSchema,
-  formatSurfaceDecodeError,
   type PublishedSrdSurface,
 } from "./schema.ts";
 import {
@@ -168,7 +167,7 @@ function schemaIssue(path: string, error: Schema.SchemaError) {
   return {
     code: "schema" as const,
     path,
-    message: formatSurfaceDecodeError(error),
+    message: String(error),
   } satisfies PortableSrdSurfaceIssue;
 }
 
@@ -534,7 +533,6 @@ function unsupportedSchemaAst(ast: SchemaAST.AST): never {
 
 const SUPPORTED_STRUCTURAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
   "Any",
-  "Arrays",
   "BigInt",
   "Boolean",
   "Declaration",
@@ -544,11 +542,11 @@ const SUPPORTED_STRUCTURAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
   "Null",
   "Number",
   "ObjectKeyword",
-  "Objects",
   "String",
-  "Suspend",
   "Symbol",
   "TemplateLiteral",
+  "Arrays",
+  "Objects",
   "Undefined",
   "Union",
   "UniqueSymbol",
@@ -558,7 +556,6 @@ const SUPPORTED_STRUCTURAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
 
 const NON_LITERAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
   "Any",
-  "Arrays",
   "BigInt",
   "Boolean",
   "Declaration",
@@ -567,10 +564,11 @@ const NON_LITERAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
   "Null",
   "Number",
   "ObjectKeyword",
-  "Objects",
   "String",
   "Symbol",
   "TemplateLiteral",
+  "Arrays",
+  "Objects",
   "Undefined",
   "UniqueSymbol",
   "Unknown",
@@ -578,7 +576,8 @@ const NON_LITERAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
 ]);
 
 function structuralAst(ast: SchemaAST.AST): SchemaAST.AST {
-  const current = ast._tag === "Suspend" ? structuralAst(ast.thunk()) : ast;
+  let current = ast;
+  if (current._tag === "Suspend") return structuralAst(current.thunk());
   return SUPPORTED_STRUCTURAL_AST_TAGS.has(current._tag)
     ? current
     : unsupportedSchemaAst(current);
@@ -601,7 +600,7 @@ function discriminatorPropertyMatches(
   property: SchemaAST.PropertySignature,
   value: Record<string, unknown>,
 ): boolean | undefined {
-  if (property.type.context?.isOptional === true) return undefined;
+  if (SchemaAST.isOptional(property.type)) return undefined;
   const literals = literalStrings(property.type);
   if (literals.length === 0) return undefined;
   return Object.hasOwn(value, property.name)
@@ -777,51 +776,47 @@ function dependencyWalkContextWithAst<Tag extends SchemaAST.AST["_tag"]>(
 }
 
 function handleDependencyNode(context: DependencyWalkContext): void {
-  Match.value(context.current.ast).pipe(
-    Match.discriminatorsExhaustive("_tag")({
-      Literal: (ast) =>
-        handleStringDependency(dependencyWalkContextWithAst(context, ast)),
-      String: (ast) =>
-        handleStringDependency(dependencyWalkContextWithAst(context, ast)),
-      Boolean: handleNoop,
-      Number: handleNoop,
-      Never: handleNoop,
-      Null: handleNoop,
-      Unknown: handleNoop,
-      Suspend: (ast) =>
-        handleSuspendNode(dependencyWalkContextWithAst(context, ast)),
-      Union: (ast) =>
-        handleUnionNode(dependencyWalkContextWithAst(context, ast)),
-      Arrays: (ast) =>
-        handleTupleNode(dependencyWalkContextWithAst(context, ast)),
-      Objects: (ast) =>
-        handleTypeLiteralNode(dependencyWalkContextWithAst(context, ast)),
-      Any: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      BigInt: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      Declaration: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      Enum: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      ObjectKeyword: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      Symbol: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      TemplateLiteral: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      Undefined: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      UniqueSymbol: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-      Void: (ast) =>
-        handleUnsupportedNode(dependencyWalkContextWithAst(context, ast)),
-    }),
+  const ast = context.current.ast;
+  if (isStringDependencyAst(ast)) {
+    return handleStringDependency(dependencyWalkContextWithAst(context, ast));
+  }
+  if (isNoopDependencyAst(ast)) return handleNoop();
+  if (ast._tag === "Suspend") {
+    return handleSuspendNode(dependencyWalkContextWithAst(context, ast));
+  }
+  if (ast._tag === "Union") {
+    return handleUnionNode(dependencyWalkContextWithAst(context, ast));
+  }
+  if (ast._tag === "Arrays") {
+    return handleTupleNode(dependencyWalkContextWithAst(context, ast));
+  }
+  if (ast._tag === "Objects") {
+    return handleTypeLiteralNode(dependencyWalkContextWithAst(context, ast));
+  }
+  return handleUnsupportedNode(context);
+}
+
+type StringDependencyAst = Extract<
+  SchemaAST.AST,
+  { readonly _tag: "Literal" | "String" }
+>;
+
+function isStringDependencyAst(ast: SchemaAST.AST): ast is StringDependencyAst {
+  return ast._tag === "Literal" || ast._tag === "String";
+}
+
+function isNoopDependencyAst(ast: SchemaAST.AST): boolean {
+  return (
+    ast._tag === "Boolean" ||
+    ast._tag === "Null" ||
+    ast._tag === "Number" ||
+    ast._tag === "Never" ||
+    ast._tag === "Unknown"
   );
 }
 
 function collectAuthoredDependencies(
-  schema: Schema.Top,
+  schema: Schema.Constraint,
   value: unknown,
   rootPath: string,
 ): AuthoredDependencyCollection {

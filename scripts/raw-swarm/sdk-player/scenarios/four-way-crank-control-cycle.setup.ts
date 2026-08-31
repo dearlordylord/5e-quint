@@ -46,59 +46,44 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const combatantInits = [
-    sdk.battleCreatureInitFromStatBlock({
+    {
       combatantId: brineId,
       statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(22),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    }),
-    sdk.battleCreatureInitFromStatBlock({
+    },
+    {
       combatantId: rivetId,
       statBlock: rivetStatBlock,
       initiative: sdk.initiativeScore(17),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    }),
-    sdk.battleCreatureInitFromStatBlock({
+    },
+    {
       combatantId: sootId,
       statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(12),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    }),
-    sdk.battleCreatureInitFromStatBlock({
+    },
+    {
       combatantId: tangleId,
       statBlock: tangleStatBlock,
       initiative: sdk.initiativeScore(7),
       ammunitionStocks: [],
       conditions: [],
-    }),
+    },
   ];
-
-  const invalidCombatant = combatantInits.find(sdk.isFailure);
-  if (invalidCombatant !== undefined) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.failure),
-      observation: {
-        scenarioId: "four-way-crank-control-cycle",
-        status: "stat-block-initialization-obstructed",
-      },
-    };
-  }
-  const combatants = combatantInits
-    .filter((combatant) => !sdk.isFailure(combatant))
-    .map((combatant) => combatant.success);
 
   const started = sdk.startBattle({
     battleId: sdk.battleId("four-way-crank-control-cycle"),
-    combatants,
+    combatants: combatantInits,
   });
   if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.failure),
+      obstruction: sdk.battleInitializationIssueMessage(started.failure),
       observation: {
         scenarioId: "four-way-crank-control-cycle",
         status: "battle-start-obstructed",

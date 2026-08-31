@@ -275,7 +275,7 @@ describe("MCP session wire projections", () => {
       session,
       subject: act.subject,
       fills: [],
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (mechanics.tag !== "needsHoles") {
       throw new Error("Expected a holes frontier.");

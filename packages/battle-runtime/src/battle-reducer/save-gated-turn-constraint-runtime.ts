@@ -4,7 +4,11 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
-import { enableActionOrBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  disableActionOrBonusActionExclusion,
+  enableActionOrBonusActionExclusion,
+} from "@dnd/shared-algebras/action-economy-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type {
   ActionSpellBattleResolutionInput,
   BattleCreatureState,
@@ -60,6 +64,21 @@ export function saveGatedTurnConstraintActionOrBonusActionTurnResources(
   return combatantHasSaveGatedTurnConstraintBundle(state, actor)
     ? enableActionOrBonusActionExclusion(resources)
     : resources;
+}
+
+export function battleStateWithReconciledCurrentActorTurnConstraint(
+  state: BattleState,
+): BattleState {
+  const actor = state.combatants.get(currentActing(state.initiative));
+  const currentTurnResources = combatantHasSaveGatedTurnConstraintBundle(
+    state,
+    actor,
+  )
+    ? enableActionOrBonusActionExclusion(state.currentTurnResources)
+    : disableActionOrBonusActionExclusion(state.currentTurnResources);
+  return currentTurnResources === state.currentTurnResources
+    ? state
+    : { ...state, currentTurnResources };
 }
 
 export function resolveSaveGatedTurnConstraintSomaticSpellFailure(input: {

@@ -24,7 +24,8 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
           wis: 10,
           cha: 12,
         });
-        if (sdk.isLeft(scores)) throw new Error("Standard Array was rejected.");
+        if (sdk.isFailure(scores))
+          throw new Error("Standard Array was rejected.");
         return {
           kind: "abilityScores" as const,
           holeId: hole.holeId,
@@ -127,7 +128,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     conditions: [],
     unitLibrary: unitCatalog,
   });
-  if (sdk.isLeft(sheet)) {
+  if (sdk.isFailure(sheet)) {
     return {
       kind: "obstructed",
       obstruction: sdk.characterSheetConstructionIssuesSummary(sheet.failure),

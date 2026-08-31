@@ -19,6 +19,15 @@ import type {
   SrdStatBlockRecord,
   StatBlockRecord,
 } from "./types.ts";
+import type {
+  StatBlockCatalog,
+  StatBlockId,
+} from "./stat-block-catalog-contract.ts";
+
+export type {
+  StatBlockCatalog,
+  StatBlockId,
+} from "./stat-block-catalog-contract.ts";
 
 /**
  * Authored monster Stat Block lookup/provenance boundary.
@@ -32,8 +41,6 @@ import type {
 
 export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
-export type StatBlockId = StatBlockRecord["id"];
-
 export type Srd521Provenance = SrdProvenance;
 
 export type Srd521StatBlock = SrdStatBlockRecord;
@@ -44,15 +51,11 @@ export type SrdStatBlockCollection = {
   readonly statBlocks: readonly Srd521StatBlock[];
 };
 
-export type StatBlockCatalog = {
-  readonly getStatBlock: (id: StatBlockId) => Option.Option<StatBlockRecord>;
-  readonly listStatBlocks: () => readonly StatBlockRecord[];
-};
-
 export type SrdStatBlockCatalog = {
   readonly getStatBlock: (id: StatBlockId) => Option.Option<Srd521StatBlock>;
   readonly listStatBlocks: () => readonly Srd521StatBlock[];
-} & Brand.Brand<"SrdStatBlockCatalog">;
+} & StatBlockCatalog &
+  Brand.Brand<"SrdStatBlockCatalog">;
 
 const toSrdStatBlockCatalog = Brand.nominal<SrdStatBlockCatalog>();
 

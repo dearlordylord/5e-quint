@@ -16,7 +16,6 @@ import {
   SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
   SURFACE_UNIT_DEPENDENCY_RELATIONS,
 } from "./schema-base.ts";
-import { formatSurfaceDecodeError } from "./schema.ts";
 import {
   PortableSurfaceOracle,
   type PortableCaseIssue,
@@ -27,6 +26,7 @@ import {
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
+
 const dependencyRelationSchema = Schema.Literals([
   ...SURFACE_UNIT_DEPENDENCY_RELATIONS,
   ...SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
@@ -88,12 +88,26 @@ const caseWithInputSchema = Schema.Struct({
   name: NonEmptyTrimmedStringSchema,
   input: Schema.Unknown,
   expected: expectedSchema,
-});
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (value) =>
+        value.input !== undefined && !Object.hasOwn(value, "inputText"),
+    ),
+  ),
+);
 const caseWithTextSchema = Schema.Struct({
   name: NonEmptyTrimmedStringSchema,
   inputText: NonEmptyTrimmedStringSchema,
   expected: expectedSchema,
-});
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (value) =>
+        typeof value.inputText === "string" && !Object.hasOwn(value, "input"),
+    ),
+  ),
+);
 const portableCaseSchema = Schema.Union([
   caseWithInputSchema,
   caseWithTextSchema,
@@ -142,17 +156,17 @@ function readPortableJson(path: string): unknown {
   return parsed;
 }
 
-function decodeDocument<S extends Schema.ConstraintDecoder<unknown>>(
-  schema: S,
+function decodeDocument<T>(
+  schema: Schema.ConstraintDecoder<T, never>,
   value: unknown,
   path: string,
-): S["Type"] {
+): T {
   const decoded = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   })(value);
   if (Result.isFailure(decoded)) {
     throw new Error(
-      `JSON input failed its schema at ${path}: ${formatSurfaceDecodeError(decoded.failure)}`,
+      `JSON input failed its schema at ${path}: ${String(decoded.failure)}`,
     );
   }
   return decoded.success;
@@ -163,7 +177,7 @@ const caseDocument = decodeDocument(
   readPortableJson(caseDocumentPath),
   caseDocumentPath,
 );
-const dependencyContractDocument: DependencyContractDocument = decodeDocument(
+const dependencyContractDocument = decodeDocument<DependencyContractDocument>(
   dependencyContractDocumentSchema,
   readPortableJson(dependencyContractPath),
   dependencyContractPath,

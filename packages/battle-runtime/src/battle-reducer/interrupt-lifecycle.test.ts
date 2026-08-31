@@ -1,7 +1,8 @@
 import { describe, expect, test, vi } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import type {
+  BattleInterruptCheckpoint,
   BattleInterruptCheckpointInput,
   BattleResolutionResult,
   BattleState,
@@ -10,6 +11,7 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { combatantId } from "../identity.ts";
 import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   fighterAttackSubject,
   fighterId,
@@ -31,6 +33,7 @@ import {
 import { opportunityAttackThreatsForMovement } from "./movement-speed.ts";
 import {
   InterruptLifecycleExecution,
+  handledInterruptOccurrenceForCheckpoint,
   resolveActiveInterruptProcedure,
   resolveInterruptLifecycleDecision,
 } from "./interrupt-lifecycle.ts";
@@ -40,11 +43,16 @@ describe("interrupt lifecycle", () => {
   test("closes an admitted responder checkpoint before resuming its continuation", () => {
     const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
     const actorId = currentActorId(state);
+    const sourceProcedureRef =
+      battleProcedureExecutionRefForTest("save-failed-source");
+    const effectRef = battleEffectExecutionRefForTest("save-failed-effect");
     const opened = maybeOpenInterruptWindow(
       state,
       {
         trigger: "saveFailed",
         targetId: actorId,
+        sourceProcedureRef,
+        effectRef,
         continuation: {
           kind: "resolved",
           subject: { tag: "action", actorId, action: "dodge" },
@@ -117,9 +125,51 @@ describe("interrupt lifecycle", () => {
         continuation: expect.objectContaining({ kind: "resolved" }),
         handledInterruptOccurrence: expect.objectContaining({
           trigger: "saveFailed",
+          targetId: actorId,
+          sourceProcedureRef,
+          effectRef,
         }),
       }),
     );
+  });
+
+  test("projects attack-hit replay correlation from its checkpoint", () => {
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "spatial-melee-spell-attack-proxy",
+    );
+    const spatialMeleeSpellAttackProxyCommitCheckpoint = {
+      kind: "spatialMeleeSpellAttackProxyCommitApplied" as const,
+      actorId: fighterId,
+      sourceProcedureRef,
+      operation: "createAndAttack" as const,
+    };
+    const frame: BattleInterruptCheckpoint = {
+      trigger: "attackHit",
+      attackerId: fighterId,
+      targetId: secondWizardId,
+      attackRoll: { total: 15, naturalD20: DieRollResult(10) },
+      attackKind: "melee",
+      attackHitTriggerKind: "meleeWeapon",
+      damageTypes: ["slashing"],
+      continuation: {
+        kind: "replay",
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "dodge",
+        },
+        fills: [],
+        spatialMeleeSpellAttackProxyCommitCheckpoint,
+      },
+      eligibleResponders: [],
+      offeredResponders: [],
+      choices: [],
+    };
+
+    expect(handledInterruptOccurrenceForCheckpoint(frame)).toEqual({
+      trigger: "attackHit",
+      spatialMeleeSpellAttackProxyCommitCheckpoint,
+    });
   });
 
   test("spends the Reaction and completes an admitted procedure through active re-entry", () => {

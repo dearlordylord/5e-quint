@@ -31,6 +31,7 @@ import {
   initiativeScore,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleProcedureExecutionRef,
@@ -38,7 +39,7 @@ import {
   type BattleState,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type BardicInspirationProjection = {
   readonly bonusActionAvailable: boolean;
@@ -143,7 +144,7 @@ function bardicInspirationBattle(): BattleRuntimeSession {
     combatants: [bardicInspirationBard(), targetCreature()],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -215,7 +216,7 @@ function targetCreature(): BattleCreatureInit {
 }
 
 function selectedIdentityUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {

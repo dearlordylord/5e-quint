@@ -39,6 +39,7 @@ import {
   type InterruptCheckpointIdentity,
 } from "./battle-reducer/interrupt-checkpoint-identity.ts";
 import { interruptedProcedureSubject } from "./battle-reducer/interrupt-execution.ts";
+import { handledInterruptOccurrenceForCheckpoint } from "./battle-reducer/interrupt-lifecycle.ts";
 import {
   isBattleReadyTriggerReportSubject,
   sameBattleSubject,
@@ -48,8 +49,8 @@ import type {
   BattleHole,
   BattleInterruptedProcedure,
   BattleFallingCreatureMitigationTriggerFact,
+  BattleStatBlockExecutionCatalog,
 } from "./battle-state-execution.ts";
-import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
@@ -146,7 +147,7 @@ type BattlePendingTransactionCompletion =
       readonly parent: BattlePendingTransactionData;
     };
 
-type BattlePendingTransactionInitialization = Result.Result<
+type BattlePendingTransactionBuildResult = Result.Result<
   {
     readonly transaction: BattlePendingTransaction;
     readonly data: BattlePendingTransactionData;
@@ -482,7 +483,7 @@ function createBattlePendingTransaction(input: {
   readonly fills: readonly BattleFill[];
   readonly holes: ReadonlyNonEmptyArray<BattleHole>;
   readonly completion: BattlePendingTransactionCompletion;
-}): BattlePendingTransactionInitialization {
+}): BattlePendingTransactionBuildResult {
   const checkpointOwnership = checkpointOwnershipFor({
     session: input.currentSession,
     holes: input.holes,
@@ -590,7 +591,7 @@ export function settleBattleRuntimeTransaction(input: {
   readonly session: BattleRuntimeSession;
   readonly transaction: BattlePendingTransaction | null;
   readonly operation: BattleRuntimeTransactionOperation;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const transactionValidation = validateTransaction(input);
   if (Result.isFailure(transactionValidation)) {
@@ -633,7 +634,7 @@ export function settleCreatureFallsRuntimeTransaction(input: {
   readonly transaction: BattlePendingTransaction | null;
   readonly fallingCreatureId: CombatantId;
   readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const subject: Extract<
     BattleSubject,
@@ -662,7 +663,7 @@ function settleBoundBattleRuntimeResolution(input: {
   readonly transaction: BattlePendingTransaction | null;
   readonly operation: BattleRuntimeTransactionOperation;
   readonly resolution: BattleRuntimeResolutionResult;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const transactionValidation = validateTransaction(input);
   if (Result.isFailure(transactionValidation)) {
@@ -683,7 +684,7 @@ function settleValidatedBattleRuntimeResolution(input: {
   readonly operation: BattleRuntimeTransactionOperation;
   readonly resolution: BattleRuntimeResolutionResult;
   readonly pendingData: BattlePendingTransactionData | null;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const operationAdmission = admitBattleRuntimeTransactionOperation(input);
   if (operationAdmission.tag === "rejected") {
@@ -721,7 +722,7 @@ function resolveOperation(input: {
   readonly transaction: BattlePendingTransaction | null;
   readonly pendingData: BattlePendingTransactionData | null;
   readonly operation: BattleRuntimeTransactionOperation;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeResolutionResult {
   return Match.value(input.operation).pipe(
     Match.when({ kind: "interruptDecision" }, ({ fill }) =>
@@ -815,7 +816,7 @@ function transactionNeedsHolesResult(
     readonly transaction: BattlePendingTransaction | null;
     readonly pendingData: BattlePendingTransactionData | null;
     readonly operation: BattleRuntimeTransactionOperation;
-    readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+    readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
   },
   resolution: NeedsHolesResolution,
 ): BattleRuntimeTransactionResult {
@@ -839,11 +840,13 @@ function transactionNeedsHolesResult(
     holes,
     subject,
   );
-  return Result.match(transaction, {
-    onFailure: (issue) => transactionDefectResult(resolution, issue),
-    onSuccess: ({ transaction, data }) =>
-      projectPendingTransactionFrontier(resolution, transaction, data.fills),
-  });
+  return Result.isFailure(transaction)
+    ? transactionDefectResult(resolution, transaction.failure)
+    : projectPendingTransactionFrontier(
+        resolution,
+        transaction.success.transaction,
+        transaction.success.data.fills,
+      );
 }
 
 function projectPendingTransactionFrontier(
@@ -855,19 +858,17 @@ function projectPendingTransactionFrontier(
     result: resolution.envelope.frontier,
     acceptedFills,
   });
-  return Result.match(projected, {
-    onFailure: (issue) =>
-      transactionDefectResult(resolution, {
+  return Result.isFailure(projected)
+    ? transactionDefectResult(resolution, {
         tag: "mechanicalFrontierProjection",
-        issue,
-      }),
-    onSuccess: (frontier) => ({
-      tag: "needsHoles" as const,
-      resolution,
-      transaction,
-      frontier,
-    }),
-  });
+        issue: projected.failure,
+      })
+    : {
+        tag: "needsHoles" as const,
+        resolution,
+        transaction,
+        frontier: projected.success,
+      };
 }
 
 function interruptedProcedureSubjectFromState(
@@ -890,7 +891,7 @@ function transactionForNeedsHoles(
   resolution: NeedsHolesResolution,
   holes: ReadonlyNonEmptyArray<BattleHole>,
   subject: BattleSubject,
-): BattlePendingTransactionInitialization {
+): BattlePendingTransactionBuildResult {
   return Match.value(input.operation).pipe(
     Match.when({ kind: "ordinarySubject" }, ({ subject, fills }) => {
       const pending = input.pendingData;
@@ -995,26 +996,14 @@ function initialCompletionCursor(input: {
   readonly transaction: BattlePendingTransaction | null;
   readonly pendingData: BattlePendingTransactionData | null;
   readonly operation: BattleRuntimeTransactionOperation;
-  readonly resolution: ResolvedResolution;
-}):
-  | {
-      readonly tag: "cursor";
-      readonly cursor: BattlePendingTransactionData | null;
-    }
-  | {
-      readonly tag: "result";
-      readonly result: BattleRuntimeTransactionResult;
-    } {
-  if (input.transaction === null) return { tag: "cursor", cursor: null };
+}): BattlePendingTransactionData | null {
+  if (input.transaction === null) return null;
   return Option.match(Option.fromNullishOr(input.pendingData), {
-    onNone: () => ({ tag: "cursor" as const, cursor: null }),
-    onSome: (transactionData) => ({
-      tag: "cursor" as const,
-      cursor:
-        input.operation.kind === "interruptDecision"
-          ? transactionData
-          : transactionData.completion.parent,
-    }),
+    onNone: () => null,
+    onSome: (transactionData) =>
+      input.operation.kind === "interruptDecision"
+        ? transactionData
+        : transactionData.completion.parent,
   });
 }
 
@@ -1034,24 +1023,9 @@ type CompletionCursorStep =
 function settleCompletionCursor(input: {
   readonly resolution: ResolvedResolution;
   readonly data: BattlePendingTransactionData;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): CompletionCursorStep {
   const data = input.data;
-  const currentFrame = currentInterruptCheckpoint(
-    input.resolution.session.state,
-  );
-  if (
-    currentFrame !== null &&
-    currentFrame.activeInterrupt === undefined &&
-    data.checkpointOwnership.tag === "interruptFrontier" &&
-    interruptCheckpointIdentity(currentFrame) ===
-      data.checkpointOwnership.checkpoint
-  ) {
-    return {
-      tag: "result",
-      result: retainedInterruptFrontierResult(input.resolution, data),
-    };
-  }
   if (
     data.completion.kind === "replaySubject" &&
     transactionOwnerClosedWithAncestor(data, input.resolution.session)
@@ -1091,7 +1065,7 @@ function settleStandaloneCompletion(input: {
   readonly resolution: ResolvedResolution;
   readonly transaction: BattlePendingTransaction;
   readonly data: BattlePendingTransactionData;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): CompletionCursorStep {
   const currentFrame = currentInterruptCheckpoint(
     input.resolution.session.state,
@@ -1138,20 +1112,19 @@ function settleStandaloneCompletion(input: {
       frontier: currentFrontier,
     },
   };
-  return Result.match(transaction, {
-    onFailure: (issue) => ({
-      tag: "result" as const,
-      result: transactionDefectResult(input.resolution, issue),
-    }),
-    onSuccess: ({ transaction: token, data }) => ({
-      tag: "result" as const,
-      result: projectPendingTransactionFrontier(
-        refreshedResolution,
-        token,
-        data.fills,
-      ),
-    }),
-  });
+  return Result.isFailure(transaction)
+    ? {
+        tag: "result" as const,
+        result: transactionDefectResult(input.resolution, transaction.failure),
+      }
+    : {
+        tag: "result" as const,
+        result: projectPendingTransactionFrontier(
+          refreshedResolution,
+          transaction.success.transaction,
+          transaction.success.data.fills,
+        ),
+      };
 }
 
 function interruptedProcedureFills(
@@ -1178,7 +1151,7 @@ function resumeCompletionCursor(input: {
   readonly resolution: ResolvedResolution;
   readonly data: BattlePendingTransactionData;
   readonly parent: BattlePendingTransactionData | null;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): CompletionCursorStep {
   const resumedOutcome = resumePendingLayer({
     resolution: input.resolution,
@@ -1227,17 +1200,14 @@ function settleResolvedTransaction(input: {
   readonly transaction: BattlePendingTransaction | null;
   readonly pendingData: BattlePendingTransactionData | null;
   readonly operation: BattleRuntimeTransactionOperation;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   let resolution = input.resolution;
-  const initial = initialCompletionCursor({
-    resolution,
+  let completionCursor = initialCompletionCursor({
     transaction: input.transaction,
     pendingData: input.pendingData,
     operation: input.operation,
   });
-  if (initial.tag === "result") return initial.result;
-  let completionCursor = initial.cursor;
 
   if (!runtimeOwnsUnresolvedContinuation(resolution.session)) {
     completionCursor = null;
@@ -1375,20 +1345,22 @@ function openNestedCheckpoint(
     holes: [currentFrontier.decisionHole],
     completion: completionForSubject(nestedSubject, input.parent),
   });
-  return Result.match(nestedTransaction, {
-    onFailure: (issue) => ({
-      tag: "ownerRetained" as const,
-      result: transactionDefectResult(input.resolution, issue),
-    }),
-    onSuccess: ({ transaction, data }) => ({
-      tag: "nestedCheckpointOpened" as const,
-      result: projectPendingTransactionFrontier(
-        nestedResolution,
-        transaction,
-        data.fills,
-      ),
-    }),
-  });
+  return Result.isFailure(nestedTransaction)
+    ? {
+        tag: "ownerRetained" as const,
+        result: transactionDefectResult(
+          input.resolution,
+          nestedTransaction.failure,
+        ),
+      }
+    : {
+        tag: "nestedCheckpointOpened" as const,
+        result: projectPendingTransactionFrontier(
+          nestedResolution,
+          nestedTransaction.success.transaction,
+          nestedTransaction.success.data.fills,
+        ),
+      };
 }
 
 function retainParentFrontier(
@@ -1397,47 +1369,49 @@ function retainParentFrontier(
   },
   parentData: BattlePendingTransactionData,
 ): RefreshParentFrontierOutcome {
-  return {
-    tag: "ownerRetained",
-    result: retainedInterruptFrontierResult(input.resolution, parentData),
-  };
-}
-
-function retainedInterruptFrontierResult(
-  resolution: ResolvedResolution,
-  transactionData: BattlePendingTransactionData,
-): BattleRuntimeTransactionResult {
-  const currentFrontier = interruptDecisionFrontier(resolution.session.state);
+  const currentFrontier = interruptDecisionFrontier(
+    input.resolution.session.state,
+  );
   if (currentFrontier === null) {
-    return transactionDefectResult(resolution, {
-      tag: "interruptFrontierMissingCheckpoint",
-    });
+    return {
+      tag: "ownerRetained",
+      result: transactionDefectResult(input.resolution, {
+        tag: "interruptFrontierMissingCheckpoint",
+      }),
+    };
   }
   const refreshedResolution: NeedsHolesResolution = {
     tag: "needsHoles",
-    session: resolution.session,
+    session: input.resolution.session,
     envelope: {
-      checkpoint: snapshotBattle(resolution.session.state),
+      checkpoint: snapshotBattle(input.resolution.session.state),
       frontier: currentFrontier,
     },
   };
   const refreshedTransaction = createBattlePendingTransaction({
-    baseSession: transactionData.baseSession,
-    currentSession: resolution.session,
-    subject: transactionData.subject,
-    fills: transactionData.fills,
+    baseSession: parentData.baseSession,
+    currentSession: input.resolution.session,
+    subject: parentData.subject,
+    fills: parentData.fills,
     holes: [currentFrontier.decisionHole],
-    completion: transactionData.completion,
+    completion: parentData.completion,
   });
-  return Result.match(refreshedTransaction, {
-    onFailure: (issue) => transactionDefectResult(resolution, issue),
-    onSuccess: ({ transaction, data }) =>
-      projectPendingTransactionFrontier(
-        refreshedResolution,
-        transaction,
-        data.fills,
-      ),
-  });
+  return Result.isFailure(refreshedTransaction)
+    ? {
+        tag: "ownerRetained" as const,
+        result: transactionDefectResult(
+          input.resolution,
+          refreshedTransaction.failure,
+        ),
+      }
+    : {
+        tag: "ownerRetained" as const,
+        result: projectPendingTransactionFrontier(
+          refreshedResolution,
+          refreshedTransaction.success.transaction,
+          refreshedTransaction.success.data.fills,
+        ),
+      };
 }
 
 type ResumePendingLayerResult =
@@ -1453,21 +1427,28 @@ type ResumePendingLayerResult =
 function resumePendingLayer(input: {
   readonly resolution: ResolvedResolution;
   readonly data: BattlePendingTransactionData;
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): ResumePendingLayerResult {
   const data = input.data;
   const currentCheckpoint = currentInterruptCheckpoint(
     input.resolution.session.state,
   );
-  const resumed = resolveBattleRuntimeSubjectForReplay({
-    session: input.resolution.session,
-    subject: data.subject,
-    fills: data.fills,
-    ...(currentCheckpoint === null
-      ? {}
-      : { handledInterruptTrigger: currentCheckpoint.trigger }),
-    ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
-  });
+  const resumed =
+    currentCheckpoint === null
+      ? resolveBattleRuntimeSubject({
+          session: input.resolution.session,
+          subject: data.subject,
+          fills: data.fills,
+          ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+        })
+      : resolveBattleRuntimeSubjectForReplay({
+          session: input.resolution.session,
+          subject: data.subject,
+          fills: data.fills,
+          handledInterruptOccurrence:
+            handledInterruptOccurrenceForCheckpoint(currentCheckpoint),
+          ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+        });
   return Match.value(resumed).pipe(
     Match.when({ tag: "invalid" }, (invalid) => ({
       tag: "result" as const,

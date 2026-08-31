@@ -120,7 +120,7 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 function d20RerollMechanics(unit: UnitRecord) {
   if (
@@ -840,7 +840,7 @@ describe("L3MSPEC species battle support", () => {
     });
     expect(Result.isSuccess(result)).toBe(true);
     if (Result.isFailure(result)) {
-      throw new Error(battleStateInitIssueMessage(result.failure));
+      throw new Error(battleInitializationIssueMessage(result.failure));
     }
     const target = result.success.state.combatants.get(targetId);
     if (target === undefined) {
@@ -1392,7 +1392,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
   });
   expect(Result.isSuccess(state)).toBe(true);
   if (Result.isFailure(state)) {
-    throw new Error(battleStateInitIssueMessage(state.failure));
+    throw new Error(battleInitializationIssueMessage(state.failure));
   }
   const grappleSubject = {
     tag: "action",
@@ -1490,7 +1490,7 @@ function dwarvenResilienceBattle() {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1525,7 +1525,7 @@ function halflingBraveBattle() {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1726,24 +1726,25 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         kind: "classFeatureAbilitySaveDc",
         base: 8,
         ability: "wis",
+        includesProficiencyBonus: true,
       },
       flurryOfBlows: {
-        displayName: "Flurry of Blows",
+        kind: "bonusActionUnarmedStrikeSequence",
         focusPointCost: 1,
         strikeCount: 2,
       },
       patientDefense: {
-        displayName: "Patient Defense",
+        kind: "bonusActionDefensiveModes",
         freeAction: "disengage",
         focusPointCost: 1,
         focusActions: ["disengage", "dodge"],
       },
       stepOfTheWind: {
-        displayName: "Step of the Wind",
+        kind: "bonusActionMobilityModes",
         freeAction: "dash",
         focusPointCost: 1,
         focusActions: ["disengage", "dash"],
-        jumpDistanceMultiplier: { multiplier: 2 },
+        jumpDistanceMultiplier: { multiplier: 2, expires: "endOfTurn" },
       },
     } as const;
 
@@ -1755,7 +1756,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     ).toEqual(
       Result.succeed({
         unit: unitLibrary.requireUnit(monkMonksFocusUnitId),
-        supportProfiles: [supportProfile],
+        supportProfiles: [],
       }),
     );
   });
@@ -1860,7 +1861,11 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
           initialOptions: unit.mechanics.optionSet.initialOptions.map(
             (option) => ({
               ...option,
-              battleExecution: { kind: "unsupported_focus_execution" },
+              battleExecution: {
+                kind: "bonus_action_unarmed_strike_sequence",
+                focusPointCost: 1,
+                strikeCount: 1,
+              },
             }),
           ),
         },

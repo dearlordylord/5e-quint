@@ -69,10 +69,11 @@ import massHealingWordInput from "../../surface/content/mass_healing_word.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleAreaId,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   battleId,
@@ -1798,7 +1799,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1861,7 +1862,7 @@ function characterCreature(input: {
   readonly currentHp?: number;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

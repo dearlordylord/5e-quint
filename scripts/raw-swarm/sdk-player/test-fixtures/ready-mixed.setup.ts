@@ -38,28 +38,21 @@ export const setupScenario: ScenarioSetup = ({
       observation: { phase: "projection" },
     };
   }
-  const monster = sdk.battleCreatureInitFromStatBlock({
+  const monster = {
     combatantId: sdk.combatantId("external-skeleton"),
     statBlock,
     initiative: sdk.initiativeScore(10),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
-  });
-  if (sdk.isFailure(monster)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(monster.failure),
-      observation: { phase: "stat-block" },
-    };
-  }
+  };
   const started = sdk.startBattle({
     battleId: sdk.battleId("external-mixed-session"),
-    combatants: [character.success, monster.success],
+    combatants: [character.success, monster],
   });
   if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.failure),
+      obstruction: sdk.battleInitializationIssueMessage(started.failure),
       observation: { phase: "start" },
     };
   }
@@ -77,7 +70,7 @@ export const setupScenario: ScenarioSetup = ({
       },
       placements: [
         { tokenId: character.success.combatantId, coordinate: { x: 0, y: 0 } },
-        { tokenId: monster.success.combatantId, coordinate: { x: 1, y: 0 } },
+        { tokenId: monster.combatantId, coordinate: { x: 1, y: 0 } },
       ],
       spatialDecisions: [],
     },
@@ -87,10 +80,10 @@ export const setupScenario: ScenarioSetup = ({
     initialRangedAttackEnemyRelationships: [
       {
         attackerId: character.success.combatantId,
-        enemyId: monster.success.combatantId,
+        enemyId: monster.combatantId,
       },
       {
-        attackerId: monster.success.combatantId,
+        attackerId: monster.combatantId,
         enemyId: character.success.combatantId,
       },
     ],
@@ -98,7 +91,7 @@ export const setupScenario: ScenarioSetup = ({
     opportunityAttackEnemyRelationships: [
       {
         reactorId: character.success.combatantId,
-        moverId: monster.success.combatantId,
+        moverId: monster.combatantId,
       },
     ],
     objects: [],

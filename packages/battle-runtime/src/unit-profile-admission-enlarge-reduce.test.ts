@@ -1871,7 +1871,6 @@ function requireCounterspellChoice(
     );
     return (
       invocation.tag === "spellSlot" &&
-      invocation.spellId === "spellCastInterruptionReaction" &&
       invocation.procedure === "spellCastInterruptionReaction" &&
       Number(invocation.slotLevel) === 3
     );

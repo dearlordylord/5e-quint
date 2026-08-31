@@ -20,7 +20,12 @@ import * as Option from "effect/Option";
 import { Match } from "effect";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { BattleCreatureInit } from "../battle-init.ts";
+import {
+  projectAuthoredStatBlockBattleInit,
+  type AuthoredStatBlockBattleInitInput,
+  type BattleCreatureAdmissionInit,
+  type BattleCreatureInit,
+} from "../battle-init.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
   battleRuntimeSessionFromAdmittedContext,
@@ -39,6 +44,7 @@ import {
   battleExecutionScopeOrdinal,
 } from "../identity.ts";
 import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
+import { battleStatBlockProjectionFailureMessage } from "../stat-block-authored-projection.ts";
 
 import {
   characterUnitProcedureBindings,
@@ -165,7 +171,7 @@ function battleInitializationIssueFromLeafIssues(
 }
 
 function battleInitializationFactsForAdmission(
-  combatant: BattleCreatureInit,
+  combatant: BattleCreatureAdmissionInit,
   issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
   issueIndex: number,
 ): BattleInitializationIssueFacts {
@@ -271,9 +277,31 @@ export function battleInitializationIssueLeaves(
       { tag: "statBlockResourceGraphIssue" },
       battleInitializationLeafList,
     ),
+    Match.when(
+      { tag: "statBlockProjectionFailure" },
+      battleInitializationLeafList,
+    ),
     Match.when({ tag: "weaponLoadoutMismatch" }, battleInitializationLeafList),
     Match.exhaustive,
   );
+}
+
+export function battleInitializationIssueMessage(
+  issue: BattleInitializationIssue,
+): string {
+  return battleInitializationIssueLeaves(issue)
+    .map((leaf) =>
+      Match.value(leaf).pipe(
+        Match.discriminatorsExhaustive("tag")({
+          battleStateInitIssue: battleStateInitIssueMessage,
+          statBlockResourceGraphIssue: battleStateInitIssueMessage,
+          statBlockProjectionFailure: ({ failure }) =>
+            battleStatBlockProjectionFailureMessage(failure),
+          weaponLoadoutMismatch: battleStateInitIssueMessage,
+        }),
+      ),
+    )
+    .join(" ");
 }
 
 function battleInitializationLeafList(
@@ -652,7 +680,7 @@ function initialBattleAdmissionAccumulator(): InitialBattleAdmissionAccumulator 
 
 function appendDuplicateCombatantIssue(
   accumulator: InitialBattleAdmissionAccumulator,
-  combatant: BattleCreatureInit,
+  combatant: Pick<BattleCreatureInit, "combatantId">,
   ownerPath: readonly (string | number)[],
 ): boolean {
   const duplicate = accumulator.seenCombatantIds.has(combatant.combatantId);
@@ -673,7 +701,7 @@ function appendDuplicateCombatantIssue(
 
 function appendPositiveHpUnconsciousIssue(
   accumulator: InitialBattleAdmissionAccumulator,
-  combatant: BattleCreatureInit,
+  combatant: BattleCreatureAdmissionInit,
   ownerPath: readonly (string | number)[],
 ): boolean {
   const issue = positiveHpUnconsciousInitIssue(combatant);
@@ -696,7 +724,7 @@ function appendPositiveHpUnconsciousIssue(
 
 function appendInvalidBattleCreatureAdmissionIssues(
   accumulator: InitialBattleAdmissionAccumulator,
-  combatant: BattleCreatureInit,
+  combatant: BattleCreatureAdmissionInit,
   admission: ReturnType<typeof battleCreatureStateAdmissionFromInit>,
   ownerPath: readonly (string | number)[],
 ): admission is ValidBattleCreatureAdmission {
@@ -715,7 +743,7 @@ function appendInvalidBattleCreatureAdmissionIssues(
 
 function recordValidInitialBattleCombatant(input: {
   readonly accumulator: InitialBattleAdmissionAccumulator;
-  readonly combatant: BattleCreatureInit;
+  readonly combatant: BattleCreatureAdmissionInit;
   readonly admission: ValidBattleCreatureAdmission;
   readonly ownerPath: readonly (string | number)[];
 }): void {
@@ -761,17 +789,13 @@ function recordValidInitialBattleCombatant(input: {
 
 function admitInitialBattleCombatant(input: {
   readonly battleId: BattleId;
-  readonly combatant: BattleCreatureInit;
+  readonly combatant: BattleCreatureAdmissionInit;
   readonly index: number;
   readonly ownerPath: readonly (string | number)[];
   readonly accumulator: InitialBattleAdmissionAccumulator;
+  readonly duplicate: boolean;
 }): void {
-  const { accumulator, combatant, ownerPath } = input;
-  const duplicate = appendDuplicateCombatantIssue(
-    accumulator,
-    combatant,
-    ownerPath,
-  );
+  const { accumulator, combatant, duplicate, ownerPath } = input;
   const hasPositiveHpUnconsciousIssue = appendPositiveHpUnconsciousIssue(
     accumulator,
     combatant,
@@ -801,19 +825,74 @@ function admitInitialBattleCombatant(input: {
   });
 }
 
+function isAuthoredStatBlockBattleInitInput(
+  input: BattleCreatureInit,
+): input is AuthoredStatBlockBattleInitInput {
+  return Match.value(input).pipe(
+    Match.when({ statBlock: Match.defined }, () => true),
+    Match.when({ creatureInit: Match.defined }, () => false),
+    Match.exhaustive,
+  );
+}
+
+function projectBattleCreatureAdmissionInit(
+  input: BattleCreatureInit,
+  ownerPath: readonly (string | number)[],
+): Result.Result<BattleCreatureAdmissionInit, BattleInitializationLeafIssue> {
+  if (!isAuthoredStatBlockBattleInitInput(input)) {
+    return Result.succeed(input);
+  }
+  const projected = projectAuthoredStatBlockBattleInit(input);
+  if (Result.isSuccess(projected)) return Result.succeed(projected.success);
+  if (projected.failure.tag === "statBlockProjectionFailure") {
+    return Result.fail({
+      ...projected.failure,
+      combatantId: input.combatantId,
+      ownerPath,
+    });
+  }
+  return Result.fail(
+    battleInitializationLeafIssueFromStateIssue(
+      projected.failure,
+      {
+        kind: "runtimeAdmissionInvalid",
+        combatantId: input.combatantId,
+        origin: "statBlock",
+        issueIndex: 0,
+      },
+      ownerPath,
+    ),
+  );
+}
+
 function admitInitialBattleCombatants(
   input: BattleStartInput,
 ): InitialBattleAdmissionAccumulator {
   const accumulator = initialBattleAdmissionAccumulator();
-  for (const [index, combatant] of input.combatants.entries()) {
+  for (const [index, combatantInput] of input.combatants.entries()) {
+    const ownerPath =
+      input.ownerPathForCombatant?.(combatantInput, index) ??
+      (["initialCombatants", index] as const);
+    const duplicate = appendDuplicateCombatantIssue(
+      accumulator,
+      combatantInput,
+      ownerPath,
+    );
+    const projected = projectBattleCreatureAdmissionInit(
+      combatantInput,
+      ownerPath,
+    );
+    if (Result.isFailure(projected)) {
+      accumulator.initializationIssues.push(projected.failure);
+      continue;
+    }
     admitInitialBattleCombatant({
       battleId: input.battleId,
-      combatant,
+      combatant: projected.success,
       index,
-      ownerPath:
-        input.ownerPathForCombatant?.(combatant, index) ??
-        (["initialCombatants", index] as const),
+      ownerPath,
       accumulator,
+      duplicate,
     });
   }
   return accumulator;
@@ -1219,6 +1298,14 @@ type AddBattleCombatantInput = {
   readonly state: BattleState;
   readonly combatant: BattleCreatureInit;
   readonly tieOrderIndex?: number;
+  readonly ownerPath?: readonly (string | number)[];
+};
+
+type AddProjectedBattleCombatantInput = Omit<
+  AddBattleCombatantInput,
+  "combatant" | "ownerPath"
+> & {
+  readonly combatant: BattleCreatureAdmissionInit;
 };
 
 function admitCharacterSpellExecution(input: {
@@ -1301,7 +1388,9 @@ function statBlockPresentationForAdmission(
     : undefined;
 }
 
-function admitBattleCombatant(input: AddBattleCombatantInput): Result.Result<
+function admitBattleCombatant(
+  input: AddProjectedBattleCombatantInput,
+): Result.Result<
   {
     readonly state: BattleState;
     readonly characterContext?: CharacterBattleRuntimeContext;
@@ -1395,51 +1484,103 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Result.Result<
   });
 }
 
+type PublicBattleCombatantAdmission = {
+  readonly state: BattleState;
+  readonly combatant: BattleCreatureAdmissionInit;
+  readonly characterContext?: CharacterBattleRuntimeContext;
+  readonly statBlockPresentation?: BattleStatBlockPresentationSource;
+};
+
+function admitPublicBattleCombatant(
+  input: AddBattleCombatantInput,
+): Result.Result<PublicBattleCombatantAdmission, BattleInitializationIssue> {
+  const ownerPath = input.ownerPath ?? (["combatant"] as const);
+  const projected = projectBattleCreatureAdmissionInit(
+    input.combatant,
+    ownerPath,
+  );
+  if (Result.isFailure(projected)) return Result.fail(projected.failure);
+  const admitted = admitBattleCombatant({
+    state: input.state,
+    combatant: projected.success,
+    ...optionalProperty("tieOrderIndex", input.tieOrderIndex),
+  });
+  if (Result.isSuccess(admitted)) {
+    return Result.succeed({
+      ...admitted.success,
+      combatant: projected.success,
+    });
+  }
+  const [firstStateIssue, ...remainingStateIssues] = battleStateInitIssueLeaves(
+    admitted.failure,
+  );
+  const initializationIssueFor = (
+    issue: BattleStateInitLeafIssue,
+    issueIndex: number,
+  ) =>
+    battleInitializationLeafIssueFromStateIssue(
+      issue,
+      {
+        kind: "runtimeAdmissionInvalid",
+        combatantId: input.combatant.combatantId,
+        origin: isAuthoredStatBlockBattleInitInput(input.combatant)
+          ? "statBlock"
+          : "character",
+        issueIndex,
+      },
+      ownerPath,
+    );
+  return battleInitializationIssueFromLeafIssues([
+    initializationIssueFor(firstStateIssue, 0),
+    ...remainingStateIssues.map((issue, index) =>
+      initializationIssueFor(issue, index + 1),
+    ),
+  ]);
+}
+
 export function addBattleCombatant(
   input: AddBattleCombatantInput,
-): Result.Result<BattleState, BattleStateInitIssue> {
-  return Result.map(
-    admitBattleCombatant(input),
-    (admission) => admission.state,
-  );
+): Result.Result<BattleState, BattleInitializationIssue> {
+  const admission = admitPublicBattleCombatant(input);
+  return Result.map(admission, ({ state }) => state);
 }
 
 export function addBattleRuntimeCombatant(input: {
   readonly session: BattleRuntimeSession;
   readonly combatant: BattleCreatureInit;
   readonly tieOrderIndex?: number;
-}): Result.Result<BattleRuntimeSession, BattleStateInitIssue> {
-  return Result.map(
-    admitBattleCombatant({
-      state: input.session.state,
-      combatant: input.combatant,
-      ...optionalProperty("tieOrderIndex", input.tieOrderIndex),
-    }),
-    (admission) => {
-      const characters = new Map(input.session.context.characters);
-      if (
-        admission.characterContext !== undefined &&
-        input.combatant.creatureInit.kind === "character" &&
-        "displayName" in input.combatant
-      ) {
-        characters.set(input.combatant.combatantId, {
-          ...admission.characterContext,
-          displayName: input.combatant.displayName,
-        });
-      }
-      const statBlocks = new Map(input.session.context.statBlocks);
-      if (admission.statBlockPresentation !== undefined) {
-        statBlocks.set(
-          input.combatant.combatantId,
-          admission.statBlockPresentation,
-        );
-      }
-      return battleRuntimeSessionFromAdmittedContext(
-        admission.state,
-        battleRuntimeContextFromCharacterAdmission(characters, statBlocks),
+  readonly ownerPath?: readonly (string | number)[];
+}): Result.Result<BattleRuntimeSession, BattleInitializationIssue> {
+  const admitted = admitPublicBattleCombatant({
+    state: input.session.state,
+    combatant: input.combatant,
+    ...optionalProperty("tieOrderIndex", input.tieOrderIndex),
+    ...optionalProperty("ownerPath", input.ownerPath),
+  });
+  return Result.map(admitted, (admission) => {
+    const characters = new Map(input.session.context.characters);
+    if (
+      admission.characterContext !== undefined &&
+      admission.combatant.creatureInit.kind === "character" &&
+      "displayName" in admission.combatant
+    ) {
+      characters.set(admission.combatant.combatantId, {
+        ...admission.characterContext,
+        displayName: admission.combatant.displayName,
+      });
+    }
+    const statBlocks = new Map(input.session.context.statBlocks);
+    if (admission.statBlockPresentation !== undefined) {
+      statBlocks.set(
+        admission.combatant.combatantId,
+        admission.statBlockPresentation,
       );
-    },
-  );
+    }
+    return battleRuntimeSessionFromAdmittedContext(
+      admission.state,
+      battleRuntimeContextFromCharacterAdmission(characters, statBlocks),
+    );
+  });
 }
 
 export function removeBattleRuntimeCombatants(input: {

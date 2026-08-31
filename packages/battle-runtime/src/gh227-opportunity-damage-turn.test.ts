@@ -181,15 +181,12 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
 
   test("a resistant mover survives a mitigated OA before a later OA reaches zero and turns reset", () => {
     const resistant = resistantSkeletonCreatureInit({ initiative: 20 });
-    if (resistant.creatureInit.kind !== "statBlock") {
-      throw new Error("Expected the resistant fixture to be a stat block.");
-    }
     const state = startBattleRight({
       battleId: battleId("gh227-opportunity-resistant-mover"),
       combatants: [
         {
           ...resistant,
-          creatureInit: { ...resistant.creatureInit, currentHp: Hp(4) },
+          currentHp: Hp(4),
         },
         statBlockCreatureInit({ initiative: 10 }),
       ],

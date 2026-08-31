@@ -39,8 +39,8 @@ describe("extracted Stat Block parity branches", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "battleStatBlockProjectionFailure",
         reason: "nonLiteralSize",
       },

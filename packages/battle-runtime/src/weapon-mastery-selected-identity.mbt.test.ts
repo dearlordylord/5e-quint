@@ -65,6 +65,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -75,7 +76,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type WeaponMasteryProjection = {
   readonly primaryTargetHp: number;
@@ -861,10 +862,7 @@ function weaponAttack(
   weaponUnitId: (typeof weaponMasteryPropertyScenarios)[WeaponMasteryPropertyUnitId]["weaponUnitId"],
   weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
+  Extract<CharacterBattleCreatureInit, { readonly kind: "character" }>["attack"]
 > {
   const weapon = unitLibrary.requireUnit(weaponUnitId);
   if (weapon.kind !== "weapon") {
@@ -888,7 +886,7 @@ function weaponAttack(
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {
@@ -1109,7 +1107,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

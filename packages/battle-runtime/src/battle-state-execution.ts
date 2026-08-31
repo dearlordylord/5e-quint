@@ -248,6 +248,7 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
+import type { BattleStatBlockProjectionFailure } from "./stat-block-authored-projection.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -258,7 +259,7 @@ import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
 } from "./battle-interrupt-triggers.ts";
-import { Match, type Option } from "effect";
+import { Match, Option } from "effect";
 import {
   type ActionHideSubject,
   type ActionSearchSubject,
@@ -4643,6 +4644,12 @@ export type BattleInitializationLeafIssue =
       readonly ownerPath: readonly (string | number)[];
     }
   | {
+      readonly tag: "statBlockProjectionFailure";
+      readonly combatantId: CombatantId;
+      readonly failure: BattleStatBlockProjectionFailure;
+      readonly ownerPath: readonly (string | number)[];
+    }
+  | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
       readonly ownerPath?: readonly (string | number)[];
@@ -4871,19 +4878,6 @@ export type BattleTurnConstraintSomaticSpellFailureOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "turnConstraintSomaticSpellFailureOutcome";
-  readonly label: string;
-  readonly actorId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly failurePercent: 25;
-  readonly activeEffectSources: readonly {
-    readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly sourceCombatantId: CombatantId;
-  }[];
-};
-export type BattleSlowSomaticSpellFailureOutcomeHole = {
-  readonly holeInstanceKey: HoleInstanceKey;
-  readonly holeId: BattleHoleId;
-  readonly kind: "slowSomaticSpellFailureOutcome";
   readonly label: string;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -6617,7 +6611,6 @@ export type BattleHole =
   | BattleHelpAttackEnemyDecisionHole
   | BattleSpellCastReactionFactsHole
   | BattleTurnConstraintSomaticSpellFailureOutcomeHole
-  | BattleSlowSomaticSpellFailureOutcomeHole
   | BattleLinkedEffectSeparationFactsHole
   | BattleAreaWindStrengthHole
   | BattleObjectTargetChoiceHole
@@ -7014,13 +7007,6 @@ export type BattleFill =
     }
   | {
       readonly kind: "turnConstraintSomaticSpellFailureOutcome";
-      readonly holeId: BattleHoleId;
-      readonly value: {
-        readonly spellFailed: boolean;
-      };
-    }
-  | {
-      readonly kind: "slowSomaticSpellFailureOutcome";
       readonly holeId: BattleHoleId;
       readonly value: {
         readonly spellFailed: boolean;

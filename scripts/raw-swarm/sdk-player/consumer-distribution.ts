@@ -204,8 +204,8 @@ function declarationDiagnosticFingerprint(diagnostic: string): string | null {
 
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
-  files: 536,
-  bytes: 5_710_631,
+  files: 530,
+  bytes: 4_667_450,
 } as const;
 /**
  * The reviewed declaration graph uses every admitted file. Any graph growth

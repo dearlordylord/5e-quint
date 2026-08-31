@@ -105,7 +105,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       draftId: sdk.characterDraftId(`${plan.id}-build`),
     });
     const abilityScores = sdk.abilityScoreAssignment(plan.scores);
-    if (sdk.isLeft(abilityScores)) {
+    if (sdk.isFailure(abilityScores)) {
       return {
         kind: "obstructed",
         obstruction: `The public SDK rejected ${plan.id}'s surfaced standard-array assignment.`,
@@ -315,7 +315,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       conditions: [],
       unitLibrary: unitCatalog,
     });
-    if (sdk.isLeft(sheet)) {
+    if (sdk.isFailure(sheet)) {
       return {
         kind: "obstructed",
         obstruction: `The public SDK finalized ${plan.id}'s build but could not create its fresh Character Sheet: ${sdk.characterSheetConstructionIssuesSummary(sheet.failure)}`,

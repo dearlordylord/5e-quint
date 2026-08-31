@@ -291,7 +291,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
               ...combatant,
               activeEffectOccurrences: [
                 ...combatant.activeEffectOccurrences,
-                { ...ordinaryHasteOccurrence, effectRef: foreignEffectRef },
+                {
+                  ...ordinaryHasteOccurrence,
+                  effectRef: foreignEffectRef,
+                },
               ],
             }
           : combatant,

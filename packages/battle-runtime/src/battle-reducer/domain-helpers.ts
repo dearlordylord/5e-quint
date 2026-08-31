@@ -15,6 +15,7 @@ import type {
   BattleStateInitLeafIssue,
 } from "../battle-state-execution.ts";
 import type { StatBlockResourceGraphAdmissionFailure } from "../stat-block-execution-state.ts";
+import { battleStatBlockProjectionFailureMessage } from "../stat-block-authored-projection.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -53,6 +54,9 @@ export function battleStateInitIssueMessage(
     Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
     Match.when({ tag: "statBlockResourceGraphIssue" }, ({ issues }) =>
       issues.map(statBlockResourceGraphIssueMessage).join("; "),
+    ),
+    Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
+      battleStatBlockProjectionFailureMessage(failure),
     ),
     Match.exhaustive,
   );

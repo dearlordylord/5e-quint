@@ -579,7 +579,7 @@ export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union([
 export type BattleInterruptAttackExecutionSelection =
   typeof BattleInterruptAttackExecutionSelectionSchema.Type;
 
-export const battleAttackExecutionSelectionWithFields = <
+export const battleInterruptAttackExecutionSelectionWithFields = <
   const Fields extends Schema.Struct.Fields,
 >(
   fields: Fields,
@@ -588,9 +588,6 @@ export const battleAttackExecutionSelectionWithFields = <
     CharacterAttackExecutionSelectionSchema.pipe(Schema.fieldsAssign(fields)),
     StatBlockAttackExecutionSelectionSchema.pipe(Schema.fieldsAssign(fields)),
   ]);
-
-export const battleInterruptAttackExecutionSelectionWithFields =
-  battleAttackExecutionSelectionWithFields;
 
 const BattleInterruptReleaseReadiedSpellSubjectSchema = Schema.Struct({
   tag: Schema.Literal("runtimeCommand"),
@@ -1054,9 +1051,9 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literals([
+    command: Schema.Literal(
       "endPersistentAreaSaveConditionEscapeForAreaRemoval",
-    ]),
+    ),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,

@@ -5,7 +5,7 @@ import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { isDeepStrictEqual } from "node:util";
 
-import { Match, Result } from "effect";
+import { Result, Match } from "effect";
 import { describe, it } from "vitest";
 
 import type {

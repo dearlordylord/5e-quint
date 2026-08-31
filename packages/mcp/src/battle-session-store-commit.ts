@@ -1,5 +1,5 @@
 import type { BattleRuntimeSession } from "@dnd/battle-runtime";
-import { Match, Result } from "effect";
+import { Result, Match } from "effect";
 
 import type { BattleCharacterSessionSettlement } from "./battle-handoff.ts";
 import { projectCharacterSessionInBattle } from "./character-session-occupancy.ts";

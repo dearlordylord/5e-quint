@@ -13,11 +13,18 @@ import {
   type McpBattleRosterOperation,
   type McpBattleRosterTransitionIssue,
 } from "./session-store.ts";
-import { projectBattleCombatant } from "./start-battle-tool.ts";
-import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
+import {
+  projectActiveRosterCombatant,
+  type ActiveRosterCombatantProjectionIssue,
+} from "./start-battle-roster-entry.ts";
+import { schemaJsonContent } from "./schema-codec.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
-import { errorContent, jsonContentPayload } from "./tool-content.ts";
+import { errorContent } from "./tool-content.ts";
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
+import {
+  battleRosterIssuePayload,
+  battleRuntimeIssuePayload,
+} from "./battle-start-failure.ts";
 
 export const BATTLE_LIFECYCLE_RECOVERY = {
   tag: "battleAndCharacterSessionsUnchanged",
@@ -60,22 +67,28 @@ function addCombatant(
     { readonly kind: "addCombatant" }
   >["combatant"],
 ) {
-  const projection = projectBattleCombatant({
+  const projection = projectActiveRosterCombatant({
     root,
     combatant,
     ownerPath: ["operation", "combatant"],
   });
   if (Result.isFailure(projection)) {
-    return lifecycleFailureFromToolError(projection.failure);
+    return activeRosterProjectionFailure(projection.failure);
   }
 
   const operation: Extract<
     McpBattleRosterOperation,
     { readonly kind: "addCharacter" | "addStatBlock" }
   > =
-    projection.success.kind === "characterSheet"
-      ? { kind: "addCharacter", combatant: projection.success.combatant }
-      : { kind: "addStatBlock", combatant: projection.success.combatant };
+    projection.success.tag === "availableCharacter"
+      ? {
+          kind: "addCharacter",
+          combatant: projection.success.admission.combatant,
+        }
+      : {
+          kind: "addStatBlock",
+          combatant: projection.success.admission.combatant,
+        };
   const planned = root.sessionStore.planActiveBattleRosterTransition(operation);
   if (Result.isFailure(planned))
     return rosterTransitionFailure(planned.failure);
@@ -182,7 +195,7 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
         combatantId: matched.combatantId,
         ownerPath: matched.ownerPath,
-        message: matched.message,
+        issues: battleRuntimeIssuePayload(matched.issue),
       }),
     ),
     Match.when({ tag: "battleRosterCombatantRemovalFailed" }, (matched) =>
@@ -289,27 +302,35 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
   );
 }
 
-function lifecycleFailureFromToolError(failure: ToolError) {
-  const payload = jsonContentPayload(failure);
-  if (!isJsonObject(payload)) {
-    return battleLifecycleError("Battle lifecycle operation failed.", {
-      code: "BATTLE_LIFECYCLE_FAILED",
-    });
-  }
-  const details = isJsonObject(payload.details) ? payload.details : {};
-  const issues = Array.isArray(details.issues) ? details.issues : [];
-  const singleIssue =
-    issues.length === 1 && isJsonObject(issues[0]) ? issues[0] : undefined;
-  return battleLifecycleError(
-    typeof payload.error === "string"
-      ? payload.error
-      : "Battle lifecycle operation failed.",
-    singleIssue ?? details,
+function activeRosterProjectionFailure(
+  issue: ActiveRosterCombatantProjectionIssue,
+) {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "characterDisplayUnavailable" }, (matched) =>
+      battleLifecycleError("Character session cannot be displayed.", {
+        code: matched.code,
+        ownerPath: matched.ownerPath,
+        characterId: matched.characterId,
+        message: matched.message,
+        issues: matched.issues,
+      }),
+    ),
+    Match.when({ tag: "battleRosterRejected" }, (matched) => {
+      const payloads = matched.issues.flatMap((rosterIssue) =>
+        battleRosterIssuePayload(rosterIssue, () => matched.ownerPath),
+      );
+      return battleLifecycleError(
+        "Invalid active Battle roster combatant.",
+        payloads.length === 1 ? payloads[0] : { issues: payloads },
+      );
+    }),
+    Match.when({ tag: "battleRosterProjectionInvariant" }, (matched) =>
+      battleLifecycleError("Battle roster projection failed.", {
+        code: "BATTLE_ROSTER_PROJECTION_INVALID",
+        ownerPath: matched.ownerPath,
+        message: matched.message,
+      }),
+    ),
+    Match.exhaustive,
   );
-}
-
-function isJsonObject(
-  value: unknown,
-): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

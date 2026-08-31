@@ -113,8 +113,9 @@ export const battleId: (value: string) => BattleId = BattleId.make;
 
 export type CharacterId = string & Brand.Brand<"CharacterId">;
 const CharacterId = Brand.nominal<CharacterId>();
-export const CharacterIdSchema: Schema.Codec<CharacterId, string> =
-  Schema.String.pipe(Schema.brand("CharacterId"));
+export const CharacterIdSchema = Schema.String.pipe(
+  Schema.brand("CharacterId"),
+);
 export const characterId: (value: string) => CharacterId = CharacterId;
 
 export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
@@ -145,6 +146,9 @@ export const BattleProcedureExecutionRef = NonEmptyTrimmedStringSchema.pipe(
 );
 export type BattleProcedureExecutionRef =
   typeof BattleProcedureExecutionRef.Type;
+export const isBattleProcedureExecutionRef = Schema.is(
+  BattleProcedureExecutionRef,
+);
 
 export const BattleProcedureExecutionCursor = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
@@ -168,6 +172,9 @@ export const BattleAttackProcedureExecutionRef =
   );
 export type BattleAttackProcedureExecutionRef =
   typeof BattleAttackProcedureExecutionRef.Type;
+export const isBattleAttackProcedureExecutionRef = Schema.is(
+  BattleAttackProcedureExecutionRef,
+);
 
 export const BattleStatBlockProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
@@ -182,6 +189,9 @@ export const BattleStatBlockProcedureExecutionRef =
   );
 export type BattleStatBlockProcedureExecutionRef =
   typeof BattleStatBlockProcedureExecutionRef.Type;
+export const isBattleStatBlockProcedureExecutionRef = Schema.is(
+  BattleStatBlockProcedureExecutionRef,
+);
 
 export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(

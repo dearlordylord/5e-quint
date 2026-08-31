@@ -48,6 +48,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleObjectDamageDisposition,
@@ -59,7 +60,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type Level1DamageSpellUnitId =
   | "burning_hands"
@@ -125,7 +126,7 @@ type ObjectTargetChoiceFill = Extract<
   { readonly kind: "objectTargetChoice" }
 >;
 type CharacterCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >;
 type CharacterSpellcastingInit = NonNullable<
@@ -1169,7 +1170,7 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

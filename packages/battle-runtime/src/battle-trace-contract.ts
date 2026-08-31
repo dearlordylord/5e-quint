@@ -51,7 +51,6 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "persistentAreaSourceTurnTranslation",
   "savingThrowOutcome",
   "turnConstraintSomaticSpellFailureOutcome",
-  "slowSomaticSpellFailureOutcome",
   "deathSavingThrow",
   "statBlockRechargeRoll",
   "concentrationSavingThrow",

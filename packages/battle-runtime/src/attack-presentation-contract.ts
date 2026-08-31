@@ -1,24 +1,26 @@
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
-
 export const ATTACK_PRESENTATION_JOIN_ISSUE_REASONS = [
   "characterContextMissing",
   "weaponPresentationMissing",
   "statBlockAdmissionMissing",
   "statBlockPresentationMissing",
+  "statBlockProcedurePresentationJoin",
 ] as const;
 
 export type AttackPresentationJoinIssueReason =
-  | (typeof ATTACK_PRESENTATION_JOIN_ISSUE_REASONS)[number]
-  | "statBlockProcedurePresentationJoin";
+  (typeof ATTACK_PRESENTATION_JOIN_ISSUE_REASONS)[number];
 
 export type AttackPresentationJoinIssue =
   | {
       readonly tag: "attackPresentationJoinIssue";
-      readonly reason: (typeof ATTACK_PRESENTATION_JOIN_ISSUE_REASONS)[number];
+      readonly reason: Exclude<
+        AttackPresentationJoinIssueReason,
+        "statBlockProcedurePresentationJoin"
+      >;
     }
   | {
       readonly tag: "attackPresentationJoinIssue";
       readonly reason: "statBlockProcedurePresentationJoin";
-      readonly issues: ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>;
+      readonly issues: import("@dnd/shared/types").ReadonlyNonEmptyArray<
+        import("./stat-block-presentation-contract.ts").StatBlockProcedurePresentationJoinIssue
+      >;
     };

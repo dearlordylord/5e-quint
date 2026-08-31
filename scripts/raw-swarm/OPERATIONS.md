@@ -200,25 +200,20 @@ role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
 The Effect 4 public declaration graph is a reviewed deterministic measurement:
-523 declaration files and 3,965,396 bytes. The file gate admits exactly those
-523 files, so any added file requires review. The reviewed byte gate is 10 MiB,
-leaving 6,520,364 bytes of explicit margin. Deterministic verification asserts
+530 declaration files and 4,667,450 bytes. The file gate admits exactly those
+530 files, so any added file requires review. The reviewed byte gate is 10 MiB,
+leaving 5,818,310 bytes of explicit margin. Deterministic verification asserts
 the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
 both limits; raising either bound requires a new measured graph and review. The
 canonical measurement is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
-distribution test.
-
-The SR-00 integration added twelve reviewed declaration owners while reducing
-the complete bundle by 109,296 bytes. `battle-runtime-transaction`,
-`character-display`, and `workflow-horizon` are public transaction, display,
-and workflow contracts. `battle-mechanical-attack-options`,
-`interrupt-checkpoint-identity`, `usage-limit-admission`, `semantic-refinement`,
-and `structural-value` are implementation dependencies of retained public
-roots. `stat-block-catalog-core`, `stat-block-catalog-data`, `unit-catalog-core`,
-and `unit-catalog-data` are the core/data pairs created by the intentional
-Surface catalog split. These files are not additional model-facing SDK context,
-and the split replaces the former monolithic catalog declarations.
+distribution test. The
+[master-reconciliation declaration certificate](../../docs/migrations/effect-4/final-parity-report.md#master-reconciliation-declaration-certificate)
+records the reviewed ten additions and three removals from the previous
+reconciliation certificate and their owning reachability. That comparison is
+pinned to commit `38e79b814`: 523 files and 3,962,445 bytes, with independently
+reproduced sorted POSIX relative-path ledger SHA-256
+`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a

@@ -1,8 +1,10 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  resolveBattleSubject,
+  runtimeStatBlockCatalog,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { isDeepStrictEqual } from "node:util";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
@@ -86,7 +88,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import { statBlockCatalog } from "./unit-profile-admission-catalog.test-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
 type FamiliarStatus = (typeof FAMILIAR_STATUSES)[number];
@@ -96,22 +98,30 @@ const FAMILIAR_FORMS = ["none", "cat", "rat"] as const;
 type FamiliarForm = (typeof FAMILIAR_FORMS)[number];
 const CREATURE_TYPE_OVERRIDES = ["none", "fey"] as const;
 type CreatureTypeOverride = (typeof CREATURE_TYPE_OVERRIDES)[number];
-type LastResult =
-  | "init"
-  | "createdCat"
-  | "replacedRat"
-  | "sharedSenses"
-  | "touchDelivered"
-  | "pactAttack";
-const FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
-  Record<string, LastResult>
-> = {
+const FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS = [
+  "Init",
+  "CreatedCat",
+  "ReplacedRat",
+  "SharedSenses",
+  "TouchDelivered",
+  "PactAttack",
+] as const;
+type FindFamiliarCompanionLifecycleQntEventTag =
+  (typeof FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS)[number];
+const FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG = {
   Init: "init",
   CreatedCat: "createdCat",
   ReplacedRat: "replacedRat",
   SharedSenses: "sharedSenses",
   TouchDelivered: "touchDelivered",
   PactAttack: "pactAttack",
+} as const satisfies Readonly<
+  Record<FindFamiliarCompanionLifecycleQntEventTag, string>
+>;
+type SpawnedCompanionLifecycleEventTag =
+  (typeof FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG)[FindFamiliarCompanionLifecycleQntEventTag];
+type SpawnedCompanionLifecycleEvent = {
+  readonly tag: SpawnedCompanionLifecycleEventTag;
 };
 
 type SpawnedCompanionProjection = {
@@ -125,16 +135,14 @@ type SpawnedCompanionProjection = {
   readonly bonusActionAvailable: boolean;
   readonly ownerAttackAvailable: boolean;
   readonly familiarReactionAvailable: boolean;
-  readonly touchDeliveryReactionSpent: boolean;
-  readonly pactReactionAttackResolved: boolean;
   readonly spellSlotCommitted: boolean;
   readonly targetHp: number;
-  readonly lastResult: LastResult;
+  readonly event: SpawnedCompanionLifecycleEvent;
 };
 
 type SpawnedCompanionRuntimeState = {
   readonly battle: BattleRuntimeSession;
-  readonly lastResult: LastResult;
+  readonly event: SpawnedCompanionLifecycleEvent;
 };
 
 const casterId = combatantId("find-familiar-mbt-caster");
@@ -267,7 +275,7 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
         creatureTypeOverride: "fey",
         companionCount: 1,
         telepathyAvailable: true,
-        lastResult: "createdCat",
+        event: { tag: "createdCat" },
       },
     );
     expect(
@@ -279,7 +287,7 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
       creatureTypeOverride: "fey",
       companionCount: 1,
       telepathyAvailable: true,
-      lastResult: "replacedRat",
+      event: { tag: "replacedRat" },
     });
   });
 
@@ -292,16 +300,15 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
       sharedSensesActive: true,
       bonusActionAvailable: false,
       familiarReactionAvailable: true,
-      lastResult: "sharedSenses",
+      event: { tag: "sharedSenses" },
     });
     expect(
       spawnedCompanionLifecycleCompanionProjection(delivered),
     ).toMatchObject({
       familiarReactionAvailable: false,
-      touchDeliveryReactionSpent: true,
       spellSlotCommitted: true,
       targetHp: initialTargetHp,
-      lastResult: "touchDelivered",
+      event: { tag: "touchDelivered" },
     });
   });
 
@@ -315,9 +322,23 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
     ).toMatchObject({
       ownerAttackAvailable: false,
       familiarReactionAvailable: false,
-      pactReactionAttackResolved: true,
       targetHp: initialTargetHp - 1,
-      lastResult: "pactAttack",
+      event: { tag: "pactAttack" },
+    });
+  });
+
+  it("preserves a spent familiar Reaction when the familiar adopts a new form", () => {
+    const attacked = resolvePactFamiliarAttack(
+      createCatFamiliar(initialRuntimeState()),
+    );
+    const replaced = replaceWithRatFamiliar(attacked);
+
+    expect(
+      spawnedCompanionLifecycleCompanionProjection(replaced),
+    ).toMatchObject({
+      familiarForm: "rat",
+      familiarReactionAvailable: false,
+      event: { tag: "replacedRat" },
     });
   });
 
@@ -387,9 +408,9 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
     heldObjectIds: [],
   });
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
-    state: withFreshMagicAction(requireResolved(dismissed)),
+    state: requireResolved(dismissed),
     casterId,
-    catalog: statBlockCatalog,
+    catalog: runtimeStatBlockCatalog,
     initiative: initiativeScore(18),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
@@ -573,9 +594,9 @@ function initialRuntimeState(): SpawnedCompanionRuntimeState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
-  return { battle: result.success, lastResult: "init" };
+  return { battle: result.success, event: { tag: "init" } };
 }
 
 function createCatFamiliar(
@@ -593,7 +614,10 @@ function replaceWithRatFamiliar(
 function castNormalFamiliar(
   state: SpawnedCompanionRuntimeState,
   formId: Extract<FamiliarForm, "cat" | "rat">,
-  lastResult: Extract<LastResult, "createdCat" | "replacedRat">,
+  event: Extract<
+    SpawnedCompanionLifecycleEventTag,
+    "createdCat" | "replacedRat"
+  >,
 ): SpawnedCompanionRuntimeState {
   const result = castNormalFamiliarResult(state, formId);
   return {
@@ -601,7 +625,7 @@ function castNormalFamiliar(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult,
+    event: { tag: event },
   };
 }
 
@@ -636,7 +660,7 @@ function shareSenses(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult: "sharedSenses",
+    event: { tag: "sharedSenses" },
   };
 }
 
@@ -677,7 +701,7 @@ function deliverTouchSpell(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult: "touchDelivered",
+    event: { tag: "touchDelivered" },
   };
 }
 
@@ -694,7 +718,7 @@ function resolvePactFamiliarAttack(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult: "pactAttack",
+    event: { tag: "pactAttack" },
   };
 }
 
@@ -745,13 +769,9 @@ function spawnedCompanionLifecycleCompanionProjection(
     ownerAttackAvailable:
       state.battle.state.currentTurnResources.actionResources.length > 0,
     familiarReactionAvailable,
-    touchDeliveryReactionSpent:
-      spellSlotCommitted && !familiarReactionAvailable,
-    pactReactionAttackResolved:
-      targetHp === initialTargetHp - 1 && !spellSlotCommitted,
     spellSlotCommitted,
     targetHp,
-    lastResult: state.lastResult,
+    event: state.event,
   } satisfies SpawnedCompanionProjection;
   expect(projection.companionCount).toBe(
     projection.familiarStatus === "present" ? 1 : 0,
@@ -875,16 +895,6 @@ function requireSpawnedCompanionEligibility(
     throw new Error("Expected Find Familiar form eligibility.");
   }
   return eligibility;
-}
-
-function withFreshMagicAction(state: BattleState): BattleState {
-  return {
-    ...state,
-    currentTurnResources: {
-      ...state.currentTurnResources,
-      actionResources: [{ kind: "action", source: "turn" }],
-    },
-  };
 }
 
 function touchSpellTargetFill(
@@ -1101,12 +1111,10 @@ function normalizeSpawnedCompanionQuintState(
       "Expected Find Familiar companion witness holes to be empty.",
     );
   }
-  const scenarioResult = spawnedCompanionLifecycleCompanionLastResult(
-    state["qScenarioOutcome"],
-  );
+  const event = spawnedCompanionLifecycleEvent(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Find Familiar companion lifecycle",
-    scenarioOutcome: scenarioResult,
+    scenarioOutcome: event.tag,
     protocol,
   });
   return {
@@ -1129,17 +1137,9 @@ function normalizeSpawnedCompanionQuintState(
       state,
       "qFamiliarReactionAvailable",
     ),
-    touchDeliveryReactionSpent: booleanField(
-      state,
-      "qTouchDeliveryReactionSpent",
-    ),
-    pactReactionAttackResolved: booleanField(
-      state,
-      "qPactReactionAttackResolved",
-    ),
     spellSlotCommitted: booleanField(state, "qSpellSlotCommitted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: scenarioResult,
+    event,
   };
 }
 
@@ -1158,22 +1158,32 @@ function spawnedCompanionLifecycleCompanionUnexpectedHole(raw: unknown): never {
   );
 }
 
-function spawnedCompanionLifecycleCompanionLastResult(
+function spawnedCompanionLifecycleEvent(
   raw: unknown,
-): LastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
-  if (value !== undefined) {
-    return value;
-  }
-  throw new Error(`Unknown Find Familiar companion result: ${tag}.`);
+): SpawnedCompanionLifecycleEvent {
+  const tag = literalField(
+    quintVariantTag(raw, "qScenarioOutcome"),
+    FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS,
+  );
+  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag];
+  return { tag: value };
 }
 
 function compareSpawnedCompanionStates(
-  runtime: SpawnedCompanionProjection,
-  quint: SpawnedCompanionProjection,
+  spec: SpawnedCompanionProjection,
+  implementation: SpawnedCompanionProjection,
 ): boolean {
-  return isDeepStrictEqual(runtime, quint);
+  try {
+    expect(implementation).toEqual(spec);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\n${JSON.stringify({ spec, implementation }, null, 2)}`,
+      );
+    }
+    throw error;
+  }
+  return true;
 }
 
 function familiarFormForWitness(

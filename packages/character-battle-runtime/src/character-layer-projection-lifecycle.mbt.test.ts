@@ -6,7 +6,6 @@ import * as path from "node:path";
 
 import {
   battleId,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   combatantId,
   initiativeScore,
   discoverBattleActs,
@@ -63,24 +62,8 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return requireSuccess(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
-
 const characterLifecycleLayers = [
   "Draft",
   "Build",
@@ -515,7 +498,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
       battleId: battleId("battle:layer-projection-lifecycle"),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        authoredStatBlockBattleInit({
           combatantId: lifecycleSkeletonCombatantId,
           statBlock: assertStatBlockForTest(
             statBlockCatalog,

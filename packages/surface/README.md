@@ -132,8 +132,10 @@ installer requires every path to be a structured Unit or Stat Block path and
 keeps it correlated with the matching authored-record root. Arbitrary strings,
 presentation fields, and cross-family paths are not accepted.
 
-Detailed record-family rules live next to the code that owns them. For monster
-Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
+Detailed record-family rules live next to the code that owns them. Unit and
+Stat Block catalog mechanics each have one implementation in their
+`*-catalog-core.ts` owner. The corresponding `*-catalog.ts` module is the public
+facade that adds its eager canonical corpus from `*-catalog-data.ts`.
 
 `buildStatBlockCatalog` admits only validated `SrdStatBlockCollection` values
 and returns an `SrdStatBlockCatalog`. Its lookup methods retain the SRD record
@@ -162,6 +164,13 @@ Like Stat Blocks, the SRD Unit collection admits only `srd-5.2.1` provenance and
 the catalog rejects duplicate Unit ids across installed collections. Catalog
 lookup returns generic `UnitRecord` values; SRD is represented by the
 collection/provenance boundary, not by a runtime-facing record subtype.
+
+`src/surface/srd-unit-publication-membership.json` owns the ordered selection of
+canonical Unit identities published by that collection. The checked generated
+aggregate resolves each identity to its canonical Dhall/strict-JSON peer and
+supplies the static imports consumed by `unit-catalog-data.ts`. Change
+publication membership in the manifest, then run
+`pnpm generate:surface-unit-aggregate`; do not hand-maintain catalog imports.
 
 Runtime packages may narrow catalog records through package-private support
 gates, but authored content remains provenance-bearing Surface data.

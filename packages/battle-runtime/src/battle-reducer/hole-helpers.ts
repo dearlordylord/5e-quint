@@ -266,10 +266,6 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
     )
     .pipe(
-      byBattleHoleKind(
-        "slowSomaticSpellFailureOutcome",
-        () => "slowSomaticSpellFailureOutcome" as const,
-      ),
       byBattleHoleKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleHoleKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleHoleKind("skillChoice", () => "skillChoice" as const),

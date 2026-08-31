@@ -148,11 +148,11 @@ module battleRuntimeCommandOptionNextTurnMbt {
       false,
       qRoute.concat(List(
         commandDiscoverRoute(
-          Set(SpellTargetListHoleKind, CommandOptionChoiceHoleKind),
+          Set(SpellTargetListHoleKind, CompelledBehaviorOptionChoiceHoleKind),
           BattleSpellSlotAndActionEconomyOwner,
         ),
         commandResolveRoute(
-          CommandOptionChoiceFillKind,
+          CompelledBehaviorOptionChoiceFillKind,
           Set(SavingThrowOutcomeHoleKind),
           BattleHoleFrontierOwner,
         ),

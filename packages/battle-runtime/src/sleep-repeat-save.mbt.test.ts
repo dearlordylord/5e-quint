@@ -1,6 +1,7 @@
 import { sameBattleSubject } from "./battle-subjects.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleep-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -32,7 +33,7 @@ import {
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   fighterId,
   resolveBattleSubject,
@@ -49,6 +50,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -730,7 +732,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -756,7 +758,7 @@ function requireNeedsHoles(
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {

@@ -122,51 +122,36 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const combatantInits = [
-    sdk.battleCreatureInitFromStatBlock({
+    {
       combatantId: wolfId,
       statBlock: wolfStatBlock,
       initiative: sdk.initiativeScore(18),
       ammunitionStocks: [],
       conditions: [],
-    }),
-    sdk.battleCreatureInitFromStatBlock({
+    },
+    {
       combatantId: skeletonId,
       statBlock: skeletonStatBlock,
       initiative: sdk.initiativeScore(12),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    }),
-    sdk.battleCreatureInitFromStatBlock({
+    },
+    {
       combatantId: goblinId,
       statBlock: goblinStatBlock,
       initiative: sdk.initiativeScore(6),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    }),
+    },
   ];
-  const invalidCombatant = combatantInits.find(sdk.isFailure);
-  if (invalidCombatant !== undefined) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.failure),
-      observation: {
-        scenarioId: "table-authored-three-shove-cycle",
-        obstruction: "stat-block-battle-initialization-failed",
-      },
-    };
-  }
-  const combatants = combatantInits
-    .filter((combatant) => !sdk.isFailure(combatant))
-    .map((combatant) => combatant.success);
-
   const battle = sdk.startBattle({
     battleId: sdk.battleId("table-authored-three-shove-cycle"),
-    combatants,
+    combatants: combatantInits,
   });
   if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
+      obstruction: sdk.battleInitializationIssueMessage(battle.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "battle-start-failed",

@@ -2,16 +2,7 @@ export function spellAttackSequencePartName(): "attack" {
   return "attack";
 }
 
-export function sameStringSet(
-  left: readonly string[],
-  right: readonly string[],
-): boolean {
-  return (
-    left.length === right.length &&
-    left.every((value) => right.includes(value)) &&
-    right.every((value) => left.includes(value))
-  );
-}
+export { sameStringSet } from "../same-string-set.ts";
 
 export function targetSelectionFromAttachment(
   attachment: Attachment,

@@ -34,7 +34,7 @@ import {
 import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import type { BattleState } from "./unit-profile-admission.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const BARBARIAN_DANGER_SENSE_UNIT_ID = "barbarian_danger_sense";
 
@@ -165,7 +165,7 @@ function dangerSenseBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

@@ -1,9 +1,6 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import {
-  battleProcedureExecutionRefForTest,
-  battleStateWithAllocatedEffectForTest,
-} from "./battle-runtime.test-support.ts";
+import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import {
   magicSuppressionEmanationEffectTemplateForTest,
@@ -60,7 +57,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -514,7 +511,7 @@ function preserveLifeBattle(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -554,9 +551,7 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(clericPreserveLifeUnitId),
-        ),
+        sourceProcedureRef: hole.healingPool.sourceProcedureRef,
         rangeFeet: movementFeet(30),
       })),
   };

@@ -4,7 +4,11 @@ export {
   isPactMagicSpellcastingCreation,
   isWizardSpellcastingCreation,
 } from "./class-spellcasting.ts";
-export { characterBuildDisplayName } from "./character-display.ts";
+export {
+  characterBuildDisplayName,
+  type CharacterBuildDisplayNameIssue,
+  type CharacterBuildDisplayNameIssues,
+} from "./character-display.ts";
 
 export {
   CHARACTER_CREATION_FEATURE_PATH_DISPOSITIONS,
@@ -514,5 +518,7 @@ export {
   characterCreationWorkflowProgressions,
   deriveCharacterCreationWorkflowRoots,
   type CharacterCreationWorkflowHorizon,
+  type CharacterCreationWorkflowRootIssue,
+  type CharacterCreationWorkflowRootIssues,
   type CharacterCreationWorkflowRoots,
 } from "./workflow-horizon.ts";

@@ -26,13 +26,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@effect/platform-node": "4.0.0-rc.112",
     "@dnd/battle-runtime": "workspace:*",
     "@dnd/character-creation-runtime": "workspace:*",
     "@dnd/character-battle-runtime": "workspace:*",
     "@dnd/character-sheet-runtime": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "@effect/platform-node": "4.0.0-rc.112",
     "ajv": "^8.18.0",
     "effect": "4.0.0-rc.112"
   },

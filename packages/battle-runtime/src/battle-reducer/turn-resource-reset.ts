@@ -22,6 +22,7 @@ export function resetBattleTurnResources(
     huntersPreyHordeBreakerUsedThisTurn: [],
     recklessAttackWhileRagingUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],
+    weaponMasteryCleaveAttackersUsedThisTurn: [],
     grapplerPunchAndGrabUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,

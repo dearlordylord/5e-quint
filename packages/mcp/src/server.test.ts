@@ -10,7 +10,7 @@ import {
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleActSpellPresentation,
   battleAmmunitionStock,
-  battleCreatureInitFromStatBlock,
+  battleInitializationIssueMessage,
   BattleFillSchema,
   battleId,
   battlePendingTransactionView,
@@ -27,6 +27,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleSubject,
   type BattleRuntimeSession,
@@ -93,7 +94,6 @@ import {
 import {
   battleCreatureInitFromCharacterBuild,
   characterBattleSupportProjection,
-  characterBattleRuntimeIssueMessage,
   type CharacterBattleRuntimeIssue,
 } from "@dnd/character-battle-runtime";
 import {
@@ -103,7 +103,6 @@ import {
 import { characterBuildDisplayName } from "./character-display.ts";
 import {
   completeMagicalCunningRite,
-  characterSheetCurrentHp,
   characterSheetTempHp,
   parseCharacterSheet,
   parseCharacterSheetRetainedCompanionId,
@@ -146,6 +145,7 @@ import {
   buildUnitCatalog,
   defineSrdUnitCollection,
   srdUnitCollection,
+  type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import { adminProjection } from "./admin-mirror.ts";
 
@@ -175,31 +175,34 @@ function testBattleCreatureStateWithoutKnockOut(
   };
 }
 
-type TestBattleRosterProjection = Result.Result<
-  BattleCreatureInit,
-  CharacterBattleRuntimeIssue
->;
+type TestBattleRosterInput =
+  | BattleCreatureInit
+  | Result.Result<BattleCreatureInit, CharacterBattleRuntimeIssue>;
 
 function startBattleFromProjectedRosterFixture(input: {
   readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
   readonly projections: readonly [
-    TestBattleRosterProjection,
-    ...TestBattleRosterProjection[],
+    TestBattleRosterInput,
+    ...TestBattleRosterInput[],
   ];
 }): BattleRuntimeSession {
   const combatants: BattleCreatureInit[] = [];
   for (const projection of input.projections) {
-    if (Result.isFailure(projection)) {
-      throw new Error(JSON.stringify(projection.failure));
+    if (Result.isResult(projection)) {
+      if (Result.isFailure(projection)) {
+        throw new Error(JSON.stringify(projection.failure));
+      }
+      combatants.push(projection.success);
+    } else {
+      combatants.push(projection);
     }
-    combatants.push(projection.success);
   }
   const result = startBattle({
     battleId: input.battleId,
     combatants,
   });
   if (Result.isFailure(result)) {
-    throw new Error(characterBattleRuntimeIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -403,7 +406,7 @@ describe("MCP server route", () => {
     });
   });
 
-  test("falls back to canonical ids when optional authored display records are absent", () => {
+  test("reports absent authored display records without presenting their ids", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const syntheticClassId = classUnitId(unitId("class_synthetic_missing"));
@@ -420,9 +423,24 @@ describe("MCP server route", () => {
       },
     });
 
-    expect(displayName).toContain("species_synthetic_missing");
-    expect(displayName).toContain("background_synthetic_missing");
-    expect(displayName).toContain("class_synthetic_missing");
+    expect(displayName).toEqual(
+      Result.fail(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tag: "characterBuildDisplayUnitMissing",
+            role: "species",
+          }),
+          expect.objectContaining({
+            tag: "characterBuildDisplayUnitMissing",
+            role: "background",
+          }),
+          expect.objectContaining({
+            tag: "characterBuildDisplayUnitMissing",
+            role: "class",
+          }),
+        ]),
+      ),
+    );
   });
 
   test("lists projected resource rows and in-battle character ownership", () => {
@@ -1009,7 +1027,9 @@ describe("MCP server route", () => {
   test("reports character-list projection failures from the supplied catalog boundary", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:list-invalid-catalog";
+    const secondDraftId = "draft:list-invalid-catalog-second";
     createFinalizedFighterSheet(root, draftId);
+    createFinalizedFighterSheet(root, secondDraftId);
     const emptyCatalog = buildUnitCatalog({
       collections: [defineSrdUnitCollection({ units: [] })],
     });
@@ -1025,7 +1045,27 @@ describe("MCP server route", () => {
     expect(
       readPayload(handleToolCall(invalidCatalogRoot, "list_characters", {})),
     ).toMatchObject({
-      details: { code: "CHARACTER_LIST_INVALID" },
+      details: {
+        code: "CHARACTER_LIST_INVALID",
+        issues: [
+          {
+            ownerPath: ["characters", 0],
+            characterId: testCharacterId(draftId),
+            issue: {
+              tag: "hitPointMaximumUnavailable",
+              issue: { tag: "characterSheetIssue" },
+            },
+          },
+          {
+            ownerPath: ["characters", 1],
+            characterId: testCharacterId(secondDraftId),
+            issue: {
+              tag: "hitPointMaximumUnavailable",
+              issue: { tag: "characterSheetIssue" },
+            },
+          },
+        ],
+      },
     });
     expect(
       readPayload(
@@ -1034,7 +1074,67 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({
-      details: { code: "CHARACTER_SESSION_DETAIL_INVALID" },
+      details: {
+        code: "CHARACTER_SESSION_DETAIL_INVALID",
+        issue: {
+          tag: "hitPointMaximumUnavailable",
+          issue: { tag: "characterSheetIssue" },
+        },
+      },
+    });
+    const hiddenDisplayUnitIds = new Set(["background_soldier", "species_orc"]);
+    const displayRoot = createMcpPlaySessionRoot();
+    const displayDraftId = "draft:display-catalog-issue";
+    createFinalizedFighterSheet(displayRoot, displayDraftId);
+    const displayCharacterId = testCharacterId(displayDraftId);
+    const displaySession =
+      displayRoot.sessionStore.characters.get(displayCharacterId);
+    if (displaySession?.tag !== "available") {
+      throw new Error("Expected an available display test session.");
+    }
+    displayRoot.sessionStore.characters.set({
+      tag: "inBattle",
+      battleId: battleId("battle:display-catalog-issue"),
+      sheet: displaySession,
+    });
+    const displayCatalogRoot = {
+      ...displayRoot,
+      unitLibrary: {
+        getUnit: (unitId: string) =>
+          hiddenDisplayUnitIds.has(unitId)
+            ? Option.none()
+            : displayRoot.unitLibrary.getUnit(unitId),
+        listUnits: () =>
+          displayRoot.unitLibrary
+            .listUnits()
+            .filter((unit) => !hiddenDisplayUnitIds.has(String(unit.id))),
+        requireUnit: (unitId: string) =>
+          displayRoot.unitLibrary.requireUnit(unitId),
+      },
+    };
+    expect(
+      readPayload(
+        handleToolCall(displayCatalogRoot, "inspect_character_session", {
+          characterId: displayCharacterId,
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_DETAIL_INVALID",
+        issue: {
+          tag: "characterDisplayUnavailable",
+          issues: expect.arrayContaining([
+            expect.objectContaining({
+              tag: "characterBuildDisplayUnitMissing",
+              role: "species",
+            }),
+            expect.objectContaining({
+              tag: "characterBuildDisplayUnitMissing",
+              role: "background",
+            }),
+          ]),
+        },
+      },
     });
     expect(
       readPayload(
@@ -1050,6 +1150,13 @@ describe("MCP server route", () => {
               combatantId: "fighter",
               initiative: 10,
             },
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: testCharacterId(secondDraftId),
+              combatantId: "second-fighter",
+              initiative: 9,
+            },
           ],
         }),
       ),
@@ -1057,10 +1164,30 @@ describe("MCP server route", () => {
       details: {
         code: "INVALID_BATTLE_COMBATANTS",
         issues: [
-          {
-            kind: "characterSheetProjection",
-            code: "CHARACTER_BATTLE_INIT_INVALID",
-          },
+          expect.objectContaining({
+            code: "INVALID_CHARACTER_DISPLAY_CATALOG",
+            ownerPath: ["initialCombatants", 0],
+            characterId: testCharacterId(draftId),
+            issues: expect.arrayContaining([
+              expect.objectContaining({
+                tag: "characterBuildDisplayUnitMissing",
+                role: "species",
+              }),
+              expect.objectContaining({
+                tag: "characterBuildDisplayUnitMissing",
+                role: "background",
+              }),
+              expect.objectContaining({
+                tag: "characterBuildDisplayUnitMissing",
+                role: "class",
+              }),
+            ]),
+          }),
+          expect.objectContaining({
+            code: "INVALID_CHARACTER_DISPLAY_CATALOG",
+            ownerPath: ["initialCombatants", 1],
+            characterId: testCharacterId(secondDraftId),
+          }),
         ],
       },
     });
@@ -1124,8 +1251,14 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "CHARACTER_LIST_INVALID",
-        message:
-          "Class feature use-count resource requires an installed rest-reset class feature.",
+        issues: [
+          expect.objectContaining({
+            ownerPath: ["characters", 0],
+            characterId: testCharacterId(draftId),
+            message:
+              "Class feature use-count resource requires an installed rest-reset class feature.",
+          }),
+        ],
       },
     });
   });
@@ -1235,7 +1368,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1246,7 +1379,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1341,7 +1474,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1352,7 +1485,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1396,7 +1529,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1407,7 +1540,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     const combatant = state.combatants.get(fighterId);
@@ -1465,7 +1598,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: supportedLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1476,7 +1609,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1529,7 +1662,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: unsupportedLibrary,
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -1540,7 +1673,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     ).toThrow(
@@ -1567,7 +1700,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: supportedLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1578,7 +1711,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1622,7 +1755,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: rogueBattleUnitLibrary(root),
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1633,7 +1766,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1673,7 +1806,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: rogueBattleUnitLibrary(root),
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1684,7 +1817,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
@@ -1713,7 +1846,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: rogueBattleUnitLibrary(root),
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1724,7 +1857,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1758,7 +1891,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: rogueBattleUnitLibrary(root),
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1769,7 +1902,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1815,7 +1948,7 @@ describe("MCP server route", () => {
               evasionUnit: unsupportedEvasionUnit,
             }),
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -1826,7 +1959,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     ).toThrow("Unsupported battle save-damage replacement Unit hook");
@@ -1852,7 +1985,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: rogueBattleUnitLibrary(root),
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -1863,7 +1996,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -1884,10 +2017,7 @@ describe("MCP server route", () => {
     }
     const unsupportedUnit: UnitRecord = {
       ...uncannyDodgeUnit,
-      provenance: {
-        kind: "xphb",
-        section: "structured-input-only",
-      },
+      provenance: { kind: "synthetic-test", section: "synthetic-test" },
       mechanics: {
         family: "reaction_roll_or_damage_reduction",
         modifiers: [
@@ -1925,7 +2055,7 @@ describe("MCP server route", () => {
               uncannyDodgeUnit: unsupportedUnit,
             }),
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -1936,7 +2066,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     ).toThrow("Unsupported battle reaction roll or damage reduction Unit hook");
@@ -1990,7 +2120,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -2001,7 +2131,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -2042,7 +2172,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: root.unitLibrary,
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: goblinWarriorMultiattackStatBlock(root),
@@ -2050,7 +2180,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       });
     const goblinTurn = resolvedState(
@@ -2097,7 +2227,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -2108,7 +2238,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -3570,7 +3700,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: root.unitLibrary,
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -3581,7 +3711,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     );
@@ -3658,7 +3788,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: root.unitLibrary,
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -3669,7 +3799,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     );
@@ -3736,7 +3866,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: rogueBattleUnitLibrary(root),
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -3747,7 +3877,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     );
@@ -4086,9 +4216,11 @@ describe("MCP server route", () => {
     const secondDraftId = "draft:mcp-runtime-owner-invalid-second";
     createFinalizedFighterSheet(root, firstDraftId);
     createFinalizedFighterSheet(root, secondDraftId);
-    const baseStatBlock = assertStatBlockForTest(
-      root.statBlockCatalog,
-      statBlockId("stat_block_mage"),
+    const baseStatBlock = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
     );
     const unsupportedStatBlock = {
       ...baseStatBlock,
@@ -4096,10 +4228,14 @@ describe("MCP server route", () => {
       name: "Synthetic MCP Runtime Owner Invalid Stat Block",
       statBlock: {
         ...baseStatBlock.statBlock,
+        hp: { kind: "literal", value: -1 },
       },
     } satisfies StatBlockRecord;
     const incompleteUnitLibrary = {
-      getUnit: () => Option.none(),
+      getUnit: (requestedUnitId: string) =>
+        requestedUnitId === "fighter_fighting_style"
+          ? Option.none()
+          : root.unitLibrary.getUnit(requestedUnitId),
       listUnits: () => root.unitLibrary.listUnits(),
       requireUnit: root.unitLibrary.requireUnit,
     };
@@ -4155,16 +4291,16 @@ describe("MCP server route", () => {
             characterId: testCharacterId(firstDraftId),
           }),
           expect.objectContaining({
-            kind: "statBlockProjection",
-            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-            ownerPath: ["initialCombatants", 1],
-            combatantId: "invalid-stat-block",
-          }),
-          expect.objectContaining({
             kind: "characterSheetProjection",
             code: "CHARACTER_BATTLE_INIT_INVALID",
             ownerPath: ["initialCombatants", 2],
             characterId: testCharacterId(secondDraftId),
+          }),
+          expect.objectContaining({
+            kind: "battleInitialization",
+            code: "BATTLE_INITIALIZATION_INVALID",
+            ownerPath: ["initialCombatants", 1],
+            statBlockId: unsupportedStatBlock.id,
           }),
         ],
       },
@@ -4651,23 +4787,28 @@ describe("MCP server route", () => {
     const invalidCharacterId = testCharacterId(
       "draft:mixed-roster-admission-invalid-character",
     );
+    const invalidCharacterBuild = fighterCharacterBuildAtLevel(
+      root.unitLibrary,
+      2,
+    );
     root.sessionStore.characters.set(
       availableCharacterSessionRight({
         characterId: invalidCharacterId,
-        build: {
-          ...validCharacter.build,
-          species: unitId("species_elf"),
-        },
-        currentHp: characterSheetCurrentHp(validCharacter),
+        build: invalidCharacterBuild,
+        currentHp: Hp(
+          characterBuildMaximumHp(invalidCharacterBuild, root.unitLibrary),
+        ),
         tempHp: characterSheetTempHp(validCharacter),
         hitPointMaximumReduction: validCharacter.hitPointMaximumReduction,
         unitLibrary: root.unitLibrary,
       }),
     );
 
-    const skeleton = assertStatBlockForTest(
-      root.statBlockCatalog,
-      statBlockId("stat_block_skeleton"),
+    const skeleton = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
     );
     const malformedStatBlock = {
       ...skeleton,
@@ -4689,13 +4830,15 @@ describe("MCP server route", () => {
       collections: [
         defineSrdUnitCollection({
           units: srdUnitCollection.units.filter(
-            (unit) => unit.id !== "species_elf",
+            (unit) => unit.id !== "fighter_action_surge",
           ),
         }),
       ],
     });
     if (unitCatalog.tag !== "ok") {
-      throw new Error("Expected the missing-species test catalog to build.");
+      throw new Error(
+        "Expected the missing runtime feature test catalog to build.",
+      );
     }
     const startRoot = {
       ...root,
@@ -4776,19 +4919,9 @@ describe("MCP server route", () => {
             issueTag: "battleCreatureInitIssue",
             reason: "characterBuildProjection",
             phase: "hitPoints",
-            cause: "unknownUnit",
-            role: "species",
-            unitId: "species_elf",
-            message: expect.stringContaining("species_elf"),
-          },
-          {
-            kind: "statBlockProjection",
-            ownerPath: ["initialCombatants", 4],
-            combatantId: "mixed-invalid-stat-block",
-            issueTag: "battleStateInitIssue",
-            reason: "statBlockSourceInvalid",
-            statBlockId: malformedStatBlock.id,
-            constraint: "positiveMaximumHitPointsRequired",
+            cause: "missingHitPointMaximumGrantSourceUnit",
+            sourceUnitId: "fighter_action_surge",
+            message: expect.stringContaining("fighter_action_surge"),
           },
           {
             kind: "battleInitialization",
@@ -4797,6 +4930,14 @@ describe("MCP server route", () => {
             reason: "ammunitionStockInvalid",
             combatantId: "mixed-goblin-missing-ammunition",
             ammunition: "arrow",
+          },
+          {
+            kind: "battleInitialization",
+            ownerPath: ["initialCombatants", 4],
+            issueTag: "battleStateInitIssue",
+            reason: "statBlockSourceInvalid",
+            statBlockId: malformedStatBlock.id,
+            constraint: "positiveMaximumHitPointsRequired",
           },
         ],
       },
@@ -5310,9 +5451,11 @@ describe("MCP server route", () => {
       },
     });
 
-    const base = assertStatBlockForTest(
-      invalidHpRoot.statBlockCatalog,
-      statBlockId("stat_block_goblin_warrior"),
+    const base = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        invalidHpRoot.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
+      ),
     );
     const invalidMechanicsRecord = {
       ...base,
@@ -5353,8 +5496,8 @@ describe("MCP server route", () => {
         code: "INVALID_BATTLE_COMBATANTS",
         issues: [
           {
-            kind: "statBlockProjection",
-            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+            kind: "battleInitialization",
+            code: "BATTLE_INITIALIZATION_INVALID",
           },
         ],
       },
@@ -5437,23 +5580,15 @@ describe("MCP server route", () => {
       }),
     );
 
-    const deliveryAct = readPayload(
+    const deliveryActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).envelope.frontier.acts.find(
-      (act: {
-        readonly subject: {
-          readonly tag: string;
-          readonly procedureRef?: string;
-        };
-        readonly presentation: {
-          readonly kind: string;
-          readonly invocation?: { readonly spellId?: string };
-        };
-      }) =>
+    ).envelope.frontier.acts.filter(
+      (act: AvailableBattleAct) =>
         act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
-        act.presentation.kind === "spell" &&
-        act.presentation.invocation?.spellId === "cure_wounds",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
+    expect(deliveryActs).toHaveLength(1);
+    const deliveryAct = deliveryActs[0];
     expect(deliveryAct).toBeDefined();
     if (deliveryAct === undefined) return;
     expect(deliveryAct.subject.procedureRef).toEqual(expect.any(String));
@@ -7741,7 +7876,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: root.unitLibrary,
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -7752,7 +7887,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     );
@@ -8799,7 +8934,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -8810,7 +8945,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -8853,7 +8988,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -8864,7 +8999,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -8917,7 +9052,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -8928,7 +9063,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
 
@@ -8980,7 +9115,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -8991,7 +9126,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     root.sessionStore.storeActiveBattle(
@@ -9129,7 +9264,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -9140,7 +9275,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     root.sessionStore.storeActiveBattle(
@@ -9327,7 +9462,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -9338,7 +9473,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     root.sessionStore.storeActiveBattle(
@@ -9676,7 +9811,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -9687,7 +9822,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     root.sessionStore.storeActiveBattle(
@@ -9828,7 +9963,7 @@ describe("MCP server route", () => {
           ammunitionStocks: [],
           unitLibrary: root.unitLibrary,
         }),
-        battleCreatureInitFromStatBlock({
+        {
           ...{
             combatantId: goblinId,
             statBlock: assertStatBlockForTest(
@@ -9839,7 +9974,7 @@ describe("MCP server route", () => {
           },
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
-        }),
+        },
       ],
     });
     root.sessionStore.storeActiveBattle(
@@ -10117,7 +10252,7 @@ describe("MCP server route", () => {
             ammunitionStocks: [],
             unitLibrary: root.unitLibrary,
           }),
-          battleCreatureInitFromStatBlock({
+          {
             ...{
               combatantId: goblinId,
               statBlock: assertStatBlockForTest(
@@ -10128,7 +10263,7 @@ describe("MCP server route", () => {
             },
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
-          }),
+          },
         ],
       }),
     ).toThrow("Character battle initialization current HP exceeds max HP.");
@@ -10858,7 +10993,7 @@ function initialClassHoleIds(): readonly CreationHoleIdText[] {
 function fighterUnitLibraryWithClassFeatureGrant(
   unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
-): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
+): UnitCatalog {
   const fighter = unitLibrary.requireUnit("class_fighter");
   if (fighter.kind !== "class") {
     throw new Error("Expected Fighter class Unit.");
@@ -11010,7 +11145,7 @@ function characterBuildForClassProgression(input: {
 function unitLibraryWithOverrides(
   unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   overrides: readonly UnitRecord[],
-): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
+): UnitCatalog {
   const unitById = new Map(
     unitLibrary.listUnits().map((unit) => [unit.id, unit]),
   );

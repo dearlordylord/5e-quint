@@ -70,7 +70,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { characterUnitProcedureBindings } from "./character-execution-queries.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
@@ -146,7 +146,7 @@ function remarkableAthleteRuntimeSession(input: {
   });
   expect(Result.isSuccess(state)).toBe(true);
   if (Result.isFailure(state)) {
-    throw new Error(battleStateInitIssueMessage(state.failure));
+    throw new Error(battleInitializationIssueMessage(state.failure));
   }
   return state.success;
 }
@@ -599,7 +599,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(Result.isSuccess(state)).toBe(true);
     if (Result.isFailure(state)) {
-      throw new Error(battleStateInitIssueMessage(state.failure));
+      throw new Error(battleInitializationIssueMessage(state.failure));
     }
     expect(
       requiredInitiativeRollModeForCombatant(
@@ -661,7 +661,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(Result.isSuccess(state)).toBe(true);
     if (Result.isFailure(state)) {
-      throw new Error(battleStateInitIssueMessage(state.failure));
+      throw new Error(battleInitializationIssueMessage(state.failure));
     }
 
     expect(
@@ -697,7 +697,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(Result.isSuccess(state)).toBe(true);
     if (Result.isFailure(state)) {
-      throw new Error(battleStateInitIssueMessage(state.failure));
+      throw new Error(battleInitializationIssueMessage(state.failure));
     }
     const actor = state.success.state.combatants.get(remarkableAthleteActorId);
     if (actor?.origin.kind !== "character") {

@@ -34,6 +34,7 @@ import {
   resolveFallingCreatureMitigationLanding,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFallingCreatureMitigationTriggerFact,
   type BattleFill,
   type BattleHole,
@@ -49,7 +50,7 @@ import {
   spellSlotInvocationRef,
   type BattleInterruptSubject,
 } from "./battle-subjects.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleFrontierInterruptDecisionForState,
@@ -130,8 +131,7 @@ describe("Feather Fall Reaction spell", () => {
             awaitingReaction.state,
           )?.choices.some(
             (choice) =>
-              choice.kind === "nestedProcedure" &&
-              choice.subject.command === "castTriggeredReactionSpell" &&
+              isTriggeredReactionSpellChoice(choice) &&
               choice.subject.reactorId === casterId,
           )
         : false,
@@ -716,7 +716,7 @@ function battleWithFeatherFall(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -782,16 +782,16 @@ function characterCreature(
   displayName: string,
   initiative: number,
   spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"],
   options: {
     readonly resources?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["resources"];
     readonly characterUnitRefs?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["characterUnitRefs"];
   } = {},

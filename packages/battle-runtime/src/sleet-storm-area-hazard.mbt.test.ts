@@ -221,7 +221,7 @@ describe("Sleet Storm area hazard MBT parity", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Sleet Storm save was already resolved for this target this turn.",
+        "persistent-area save-composite save was already resolved for this target this turn.",
     });
     expect(sleetStormProjection(saved)).toMatchObject({
       savedThisTurn: true,
@@ -275,7 +275,7 @@ describe("Sleet Storm area hazard MBT parity", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Sleet Storm save was already resolved for this target this turn.",
+        "persistent-area save-composite save was already resolved for this target this turn.",
     });
     expect(sleetStormProjection(saved)).toMatchObject({
       savedThisTurn: true,

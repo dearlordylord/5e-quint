@@ -9,7 +9,6 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-  battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleAdmittedSpellPresentations,
   battleId,
@@ -20,10 +19,12 @@ import {
   combatantId,
   initiativeScore,
   startBattle,
-  battleStateInitIssueMessage,
+  battleInitializationIssueMessage,
+  type AuthoredStatBlockBattleInitInput,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type BattleUnitRef,
+  type CharacterBattleCombatantInit,
   type CharacterBattleClassLevelInits,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
@@ -70,7 +71,7 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Character fighter weapon weapon_longsword has missing authored presentation source.",
     );
   });
@@ -1167,10 +1168,7 @@ describe("manual MCP battle surface coverage", () => {
 });
 
 type Root = ReturnType<typeof createMcpPlaySessionRoot>;
-type CharacterCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "character" }
->;
+type CharacterCreatureInit = CharacterBattleCombatantInit["creatureInit"];
 type BattleResolutionOutput = Schema.Schema.Type<
   typeof BattleResolutionOutputSchema
 >;
@@ -1348,7 +1346,7 @@ function startBattleRight(
     combatants,
   });
   if (Result.isFailure(result))
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   return result.success;
 }
 
@@ -1360,7 +1358,7 @@ function statBlock(
     readonly initiative: number;
     readonly creatureType?: "beast";
   },
-): BattleCreatureInit {
+): AuthoredStatBlockBattleInitInput {
   const statBlock = assertStatBlockForTest(
     root.statBlockCatalog,
     statBlockId("stat_block_goblin_warrior"),
@@ -1375,32 +1373,18 @@ function statBlock(
             creatureType: input.creatureType,
           },
         };
-  const init = Result.getOrThrow(
-    battleCreatureInitFromStatBlock({
-      combatantId: input.combatantId,
-      statBlock: battleStatBlock,
-      initiative: initiativeScore(input.initiative),
-      currentHp: Hp(10),
-      tempHp: Hp(0),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-    }),
-  );
-  return input.displayName === undefined
-    ? init
-    : {
-        ...init,
-        creatureInit:
-          init.creatureInit.kind === "statBlock"
-            ? {
-                ...init.creatureInit,
-                presentation: {
-                  ...init.creatureInit.presentation,
-                  displayName: input.displayName,
-                },
-              }
-            : init.creatureInit,
-      };
+  return {
+    combatantId: input.combatantId,
+    statBlock:
+      input.displayName === undefined
+        ? battleStatBlock
+        : { ...battleStatBlock, name: input.displayName },
+    initiative: initiativeScore(input.initiative),
+    currentHp: Hp(10),
+    tempHp: Hp(0),
+    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    conditions: [],
+  };
 }
 
 function character(

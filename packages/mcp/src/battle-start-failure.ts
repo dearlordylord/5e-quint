@@ -1,6 +1,7 @@
 import {
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,
+  battleStatBlockProjectionFailureMessage,
   type BattleInitializationIssue,
 } from "@dnd/battle-runtime";
 import {
@@ -85,9 +86,6 @@ export function battleRosterIssuePayload(
     ]),
     Match.when({ kind: "characterSheetProjection" }, (matched) => [
       characterProjectionIssuePayload(matched, ownerPath),
-    ]),
-    Match.when({ kind: "statBlockProjection" }, (matched) => [
-      statBlockProjectionIssuePayload(matched, ownerPath),
     ]),
     Match.exhaustive,
   );
@@ -210,29 +208,6 @@ function characterProjectionReasonPayload(
   );
 }
 
-function statBlockProjectionIssuePayload(
-  issue: Extract<BattleRosterIssue, { kind: "statBlockProjection" }>,
-  ownerPath: OwnerPath,
-): Record<string, unknown> {
-  const {
-    kind: _kind,
-    index: _index,
-    issueTag: _issueTag,
-    message: _message,
-    combatantId,
-    ...fields
-  } = issue;
-  return {
-    kind: issue.kind,
-    ownerPath,
-    code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-    combatantId,
-    issueTag: issue.issueTag,
-    ...fields,
-    message: issue.message,
-  };
-}
-
 export function battleCompanionRosterIssuePayload(
   issue: BattleCompanionRosterIssue,
 ): readonly Record<string, unknown>[] {
@@ -338,6 +313,15 @@ export function battleRuntimeIssuePayload(
         issueTag: matched.tag,
         combatantId: matched.combatantId,
         issues: matched.issues,
+      })),
+      Match.when({ tag: "statBlockProjectionFailure" }, (matched) => ({
+        kind: "battleInitialization",
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        ownerPath: matched.ownerPath,
+        issueTag: matched.tag,
+        combatantId: matched.combatantId,
+        failure: matched.failure,
+        message: battleStatBlockProjectionFailureMessage(matched.failure),
       })),
       Match.exhaustive,
     ),

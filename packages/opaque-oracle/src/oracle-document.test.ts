@@ -1,5 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js";
-import { Result } from "effect";
+import { Record as EffectRecord, Result, Schema } from "effect";
+import * as AST from "effect/SchemaAST";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -18,13 +19,28 @@ import {
 } from "./oracle-case-trace.ts";
 import {
   OracleCaseDocumentJsonSchema,
+  OracleCaseDocumentSchema,
   OracleEvaluationBatchDocumentJsonSchema,
+  OracleEvaluationBatchDocumentSchema,
   OracleTraceDocumentJsonSchema,
+  OracleTraceDocumentSchema,
+  documentJsonSchema,
+  documentSchema,
 } from "./oracle-document.ts";
+import {
+  OracleCaseSchema,
+  OracleTraceSchema,
+} from "./oracle-case-trace-schema.ts";
 import {
   canonicalStructuralKey,
   canonicalizeStringSet,
 } from "./oracle-canonical.ts";
+import {
+  isSemanticRefinementReason,
+  SEMANTIC_REFINEMENT_REASONS,
+  SemanticRefinementAnnotationId,
+  type SemanticRefinementReason,
+} from "@dnd/shared/semantic-refinement";
 
 const documentSchemas = [
   ["Case", OracleCaseDocumentJsonSchema],
@@ -364,6 +380,65 @@ function recursiveCase(depth: number): unknown {
   };
 }
 
+function astChildren(ast: AST.AST): readonly AST.AST[] {
+  switch (ast._tag) {
+    case "Objects":
+      return [
+        ...ast.propertySignatures.map(({ type }) => type),
+        ...ast.indexSignatures.flatMap(({ parameter, type }) => [
+          parameter,
+          type,
+        ]),
+      ];
+    case "Arrays":
+      return [...ast.elements, ...ast.rest];
+    case "Union":
+      return ast.types;
+    case "Suspend":
+      return [ast.thunk()];
+    default:
+      return [];
+  }
+}
+
+function leafChecks(
+  checks: readonly AST.Check<unknown>[] | undefined,
+): readonly AST.Filter<unknown>[] {
+  return (checks ?? []).flatMap((check) =>
+    check._tag === "FilterGroup" ? leafChecks(check.checks) : [check],
+  );
+}
+
+function sourceSemanticRefinementReasonCounts(): Readonly<
+  Record<SemanticRefinementReason, number>
+> {
+  const counts: Record<SemanticRefinementReason, number> =
+    EffectRecord.fromEntries(
+      SEMANTIC_REFINEMENT_REASONS.map((reason) => [reason, 0] as const),
+    );
+  const pending: AST.AST[] = [OracleCaseSchema.ast, OracleTraceSchema.ast];
+  const visited = new Set<object>();
+  while (pending.length > 0) {
+    const ast = pending.pop();
+    if (ast === undefined || visited.has(ast)) continue;
+    visited.add(ast);
+    for (const check of leafChecks(ast.checks)) {
+      const reason =
+        check.annotations !== undefined &&
+        SemanticRefinementAnnotationId in check.annotations
+          ? check.annotations[SemanticRefinementAnnotationId]
+          : undefined;
+      if (reason === undefined) continue;
+      if (!isSemanticRefinementReason(reason)) {
+        throw new Error("Unmarked semantic refinement in source AST");
+      }
+      counts[reason] += 1;
+    }
+    pending.push(...astChildren(ast));
+  }
+  return counts;
+}
+
 const readyActionTrace = {
   ...builtTrace,
   creation: {
@@ -410,7 +485,7 @@ function documentResult<A, E>(result: Result.Result<A, E>): boolean {
   return Result.isSuccess(result);
 }
 
-function isFailureWithIssues(value: unknown): boolean {
+function isLeftWithIssues(value: unknown): boolean {
   if (
     typeof value !== "object" ||
     value === null ||
@@ -650,16 +725,16 @@ describe("Opaque Oracle document JSON Schemas", () => {
       ]),
       battleEntryRejectedTrace([
         {
-          tag: "characterBattleEncounterProjectionIssues",
+          tag: "battleEncounterProjectionIssues",
           issues: [
             {
-              tag: "characterBattleEncounterProjectionIssue",
+              tag: "battleEncounterProjectionIssue",
               origin: "characterSheet",
               combatantId: "oracle:character",
               issue: { tag: "battleCreatureInitIssue" },
             },
             {
-              tag: "characterBattleEncounterProjectionIssue",
+              tag: "battleEncounterProjectionIssue",
               origin: "statBlock",
               combatantId: "oracle:stat-block",
               issue: { tag: "battleStateInitIssue" },
@@ -1197,10 +1272,9 @@ describe("Opaque Oracle document JSON Schemas", () => {
       for (const payload of [deepArray, deepObject]) {
         expect(() => decoder(payload), `${name} deep input`).not.toThrow();
         const result: unknown = decoder(payload);
-        expect(
-          isFailureWithIssues(result),
-          `${name} deep input should fail`,
-        ).toBe(true);
+        expect(isLeftWithIssues(result), `${name} deep input should fail`).toBe(
+          true,
+        );
       }
     }
 
@@ -1227,7 +1301,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
         expect(() => decoder(value), `${name} hostile input`).not.toThrow();
         const result: unknown = decoder(value);
         expect(
-          isFailureWithIssues(result),
+          isLeftWithIssues(result),
           `${name} hostile input should fail`,
         ).toBe(true);
       }
@@ -1248,7 +1322,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       for (const value of [deeplyNestedObject, deeplyNestedArray]) {
         expect(() => decoder(value), `${name} direct deep input`).not.toThrow();
         expect(
-          isFailureWithIssues(decoder(value)),
+          isLeftWithIssues(decoder(value)),
           `${name} direct deep input should fail`,
         ).toBe(true);
       }
@@ -1334,7 +1408,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
         `${decoderName} ${inputName} should be total`,
       ).not.toThrow();
       expect(
-        isFailureWithIssues(fullDecoder(value)),
+        isLeftWithIssues(fullDecoder(value)),
         `${decoderName} ${inputName} should fail with issues`,
       ).toBe(true);
       const documentDecoder =
@@ -1348,7 +1422,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
         `${decoderName} ${inputName} Document should be total`,
       ).not.toThrow();
       expect(
-        isFailureWithIssues(documentDecoder(value)),
+        isLeftWithIssues(documentDecoder(value)),
         `${decoderName} ${inputName} Document should fail with issues`,
       ).toBe(true);
     }
@@ -1383,13 +1457,80 @@ describe("Opaque Oracle document JSON Schemas", () => {
         result = decoder(value);
       }, `${name} recursive input`).not.toThrow();
       expect(
-        isFailureWithIssues(result),
+        isLeftWithIssues(result),
         `${name} should return typed issues`,
       ).toBe(true);
     }
   }, 120_000);
 
-  it("publishes the closed structural constraints through Effect 4 JSON Schema", () => {
+  it("retains only closed, annotated structural AST refinements", () => {
+    const identifiers: string[] = [];
+    const openNodes: string[] = [];
+    const inventory = {
+      refinements: 0,
+      unannotatedRefinements: 0,
+      uniqueItems: 0,
+      minItems: 0,
+      identifiers,
+      openNodes,
+    };
+    const pending: AST.AST[] = [
+      OracleCaseDocumentSchema.ast,
+      OracleTraceDocumentSchema.ast,
+      OracleEvaluationBatchDocumentSchema.ast,
+    ];
+    const visited = new Set<object>();
+    while (pending.length > 0) {
+      const ast = pending.pop();
+      if (ast === undefined || visited.has(ast)) continue;
+      visited.add(ast);
+      const identifier = ast.annotations?.identifier;
+      if (typeof identifier === "string")
+        inventory.identifiers.push(identifier);
+      if (
+        ast._tag === "Any" ||
+        ast._tag === "Unknown" ||
+        ast._tag === "Declaration" ||
+        ast._tag === "ObjectKeyword"
+      ) {
+        inventory.openNodes.push(ast._tag);
+      }
+      for (const check of leafChecks(ast.checks)) {
+        inventory.refinements += 1;
+        const annotation = check.annotations?.toJsonSchema?.({
+          type: undefined,
+          schemas: [],
+        });
+        if (annotation === undefined) inventory.unannotatedRefinements += 1;
+        if (typeof annotation === "object" && annotation !== null) {
+          if ("uniqueItems" in annotation && annotation.uniqueItems === true) {
+            inventory.uniqueItems += 1;
+          }
+          if ("minItems" in annotation && annotation.minItems !== undefined) {
+            inventory.minItems += 1;
+          }
+        }
+      }
+      pending.push(...astChildren(ast));
+    }
+    expect(inventory.openNodes).toEqual([]);
+    expect(inventory.refinements).toBeGreaterThan(0);
+    expect(inventory.unannotatedRefinements).toBe(0);
+    expect(inventory.uniqueItems).toBeGreaterThan(0);
+    expect(inventory.minItems).toBeGreaterThan(0);
+    expect(inventory.identifiers).toContain("OracleBattleEntered");
+
+    expect(sourceSemanticRefinementReasonCounts()).toEqual({
+      canonicalExecutionReferenceSyntax: 9,
+      creationHoleIdSyntax: 1,
+      creationHoleSourceCorrelation: 1,
+      creationHoleCardinalityCorrelation: 1,
+      creationFrontierCorrelation: 0,
+      checkpointFrontierCorrelation: 4,
+      corpusBatchTraceLengthCorrelation: 0,
+      constraintFreeBrand: 0,
+    });
+
     const schemaText = JSON.stringify({
       OracleCaseDocumentJsonSchema,
       OracleTraceDocumentJsonSchema,
@@ -1404,6 +1545,63 @@ describe("Opaque Oracle document JSON Schemas", () => {
       expect(schemaText).toContain(`^${slot}:(?=\\\\S)`);
     }
     expect(schemaText).not.toContain('"steps"');
+  });
+
+  it("returns a typed issue for an unmarked semantic refinement", () => {
+    const unmarked = Schema.String.pipe(
+      Schema.check(Schema.makeFilter((value) => value.length > 0)),
+    );
+    expect(documentSchema(unmarked)).toEqual(
+      Result.fail([
+        {
+          tag: "unannotatedRefinement",
+          path: "$<check:0>",
+          annotationKeys: [],
+        },
+      ]),
+    );
+
+    const nested = Schema.Struct({
+      first: Schema.suspend(() => unmarked),
+      second: unmarked,
+    });
+    expect(documentSchema(nested)).toEqual(
+      Result.fail([
+        {
+          tag: "unannotatedRefinement",
+          path: "$<property:second><check:0>",
+          annotationKeys: [],
+        },
+        {
+          tag: "unannotatedRefinement",
+          path: "$<property:first><suspend><check:0>",
+          annotationKeys: [],
+        },
+      ]),
+    );
+  });
+
+  it("uses an Effect brand as the identifier for its structural Document projection", () => {
+    const branded = Schema.String.pipe(
+      Schema.check(Schema.makeFilter((value) => value.length > 0)),
+      Schema.brand("SyntheticNonEmptyText"),
+    );
+    const document = documentSchema(branded);
+    expect(Result.isSuccess(document)).toBe(true);
+    if (Result.isFailure(document)) return;
+
+    expect(Result.isFailure(Schema.decodeUnknownResult(branded)(""))).toBe(
+      true,
+    );
+    expect(
+      Result.isSuccess(Schema.decodeUnknownResult(document.success)("")),
+    ).toBe(true);
+    expect(documentJsonSchema(document.success)).toMatchObject({
+      $ref: "#/$defs/SyntheticNonEmptyText",
+      $defs: {
+        SyntheticNonEmptyText: { type: "string" },
+      },
+    });
   });
 
   it("keeps canonical equality type-aware, order-aware, and set sorting non-deduplicating", () => {

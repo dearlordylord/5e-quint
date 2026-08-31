@@ -86,7 +86,7 @@ import {
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
 } from "./battle-state-execution.ts";
-import type { BattleCreatureInit } from "./battle-init.ts";
+import type { CharacterBattleCreatureInit } from "./battle-init.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
@@ -5158,7 +5158,7 @@ function stateWithOrdinaryMindSpikeConcentration(
 
 function spellCastInterruptionReactionSpellcasting(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"]
 > {

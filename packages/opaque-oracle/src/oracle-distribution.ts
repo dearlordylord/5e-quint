@@ -58,6 +58,22 @@ export type OracleDistributionPayload = {
 
 const oracleApplicationBrand: unique symbol = Symbol("OracleApplication");
 
+type Utf8DecodeIssue = {
+  readonly tag: "invalidUtf8";
+};
+
+function decodeUtf8Total(
+  bytes: Uint8Array,
+): Result.Result<string, Utf8DecodeIssue> {
+  try {
+    return Result.succeed(
+      new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+    );
+  } catch {
+    return Result.fail({ tag: "invalidUtf8" });
+  }
+}
+
 /** Loader-created application; the private brand prevents identity/service pairing by callers. */
 export type OracleApplication = {
   readonly [oracleApplicationBrand]: true;
@@ -253,16 +269,14 @@ function buildOracleApplicationFromProjection(input: {
 function parseProjectionJson(
   bytes: Uint8Array,
 ): Result.Result<unknown, OracleApplicationBuildIssue> {
-  let text: string;
-  try {
-    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  } catch {
+  const text = decodeUtf8Total(bytes);
+  if (Result.isFailure(text)) {
     return Result.fail({
       tag: "projectionJson",
       issues: [{ path: "", code: "invalidJson" }],
     });
   }
-  const parsed = parseJsonWithDuplicateDetection(text);
+  const parsed = parseJsonWithDuplicateDetection(text.success);
   return Result.isFailure(parsed)
     ? Result.fail({ tag: "projectionJson", issues: parsed.failure })
     : Result.succeed(parsed.success);
@@ -429,16 +443,14 @@ function readAsset(
 function decodeDistributionIdentity(
   bytes: Uint8Array,
 ): Result.Result<OracleIdentityResponse, OracleDistributionLoadIssue> {
-  let text: string;
-  try {
-    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  } catch {
+  const text = decodeUtf8Total(bytes);
+  if (Result.isFailure(text)) {
     return Result.fail({
       tag: "identityDecode",
       issues: [{ path: "", code: "invalidJson" }],
     });
   }
-  const parsed = parseJsonWithDuplicateDetection(text);
+  const parsed = parseJsonWithDuplicateDetection(text.success);
   if (Result.isFailure(parsed)) {
     return Result.fail({ tag: "identityDecode", issues: parsed.failure });
   }
@@ -459,10 +471,10 @@ function decodeDistributionIdentity(
   return Result.succeed(decoded.success);
 }
 
-function bytesEqual(first: Uint8Array, second: Uint8Array): boolean {
-  if (first.byteLength !== second.byteLength) return false;
-  for (let index = 0; index < first.byteLength; index += 1) {
-    if (first[index] !== second[index]) return false;
+function bytesEqual(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.byteLength !== right.byteLength) return false;
+  for (let index = 0; index < left.byteLength; index += 1) {
+    if (left[index] !== right[index]) return false;
   }
   return true;
 }

@@ -1,19 +1,17 @@
-import type {
-  BattleCreatureState,
-  BattlePendingTransaction,
-  BattleRuntimeSession,
-  CombatantId,
-} from "@dnd/battle-runtime";
 import {
   addBattleRuntimeCombatant,
   battleStateInitIssueMessage,
   battlePendingTransactionView,
   removeBattleRuntimeCombatants,
+  type BattleCreatureState,
+  type BattlePendingTransaction,
+  type BattleRuntimeSession,
+  type CombatantId,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import type { SrdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Match, Option, Result } from "effect";
+import { Result, Match, Option } from "effect";
 
 import type { CharacterSessionRegistry } from "./session-store.ts";
 import {
@@ -185,13 +183,14 @@ function planAddCharacterBattleCombatant(input: {
   const admitted = addBattleRuntimeCombatant({
     session: input.activeBattle,
     combatant: operation.combatant,
+    ownerPath: ["operation", "combatant"],
   });
   if (Result.isFailure(admitted)) {
     return Result.fail({
       tag: "battleRosterCombatantAdmissionFailed",
       combatantId: operation.combatant.combatantId,
       ownerPath: ["operation", "combatant"],
-      message: battleStateInitIssueMessage(admitted.failure),
+      issue: admitted.failure,
     });
   }
   return Result.succeed(
@@ -228,13 +227,14 @@ function planAddStatBlockBattleCombatant(input: {
   const admitted = addBattleRuntimeCombatant({
     session: input.activeBattle,
     combatant: input.operation.combatant,
+    ownerPath: ["operation", "combatant"],
   });
   if (Result.isFailure(admitted)) {
     return Result.fail({
       tag: "battleRosterCombatantAdmissionFailed",
       combatantId: input.operation.combatant.combatantId,
       ownerPath: ["operation", "combatant"],
-      message: battleStateInitIssueMessage(admitted.failure),
+      issue: admitted.failure,
     });
   }
   return Result.succeed(

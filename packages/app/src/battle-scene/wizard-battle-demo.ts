@@ -3,13 +3,13 @@ import {
   type BattleCreatureInit,
   type BattleHole,
   battleId,
+  battleInitializationIssueMessage,
   battleObjectId,
   type BattleObjectIgnitionOutcome,
   type BattleRuntimeContext,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
-  battleStateInitIssueMessage,
   characterId,
   type CombatantId,
   combatantId,
@@ -806,8 +806,7 @@ function resolveCounterspellChain(
 
     const choice = requireCounterspellChoice(pendingInterrupt, {
       reactorId: link.reactorId,
-      slotLevel: counterspellSlotLevel,
-      spellId: counterspellUnitId
+      slotLevel: counterspellSlotLevel
     })
     const nextLink = chain.at(index + 1)
     const counterspellSave = counterspellSavingThrowOutcomeFill(
@@ -876,8 +875,7 @@ function resolveDeclinedCounterspell(
   requireNeedsReaction(result, `Expected ${wizardBattleCombatantDisplayName(decline.reactorId)} Counterspell window.`)
   requireCounterspellChoice(result, {
     reactorId: decline.reactorId,
-    slotLevel: counterspellSlotLevel,
-    spellId: counterspellUnitId
+    slotLevel: counterspellSlotLevel
   })
   const waitingBuilder = pushStep(builder, {
     title: "Counterspell window",
@@ -1022,12 +1020,7 @@ function counterspellFactsForPlan(context: BattleRuntimeContext, plan: AreaSpell
       counterspellTriggerFact({
         reactorId: plan.reaction.reactorId,
         casterId: plan.casterId,
-        sourceProcedureRef: requireCounterspellProcedureRef(
-          context,
-          plan.reaction.reactorId,
-          counterspellUnitId,
-          counterspellSlotLevel
-        ),
+        sourceProcedureRef: requireCounterspellProcedureRef(context, plan.reaction.reactorId, counterspellSlotLevel),
         rangeFeet: counterspellRangeFeet
       })
     ]
@@ -1054,12 +1047,7 @@ function counterspellFactForLink(context: BattleRuntimeContext, link: Counterspe
   return counterspellTriggerFact({
     reactorId: link.reactorId,
     casterId,
-    sourceProcedureRef: requireCounterspellProcedureRef(
-      context,
-      link.reactorId,
-      counterspellUnitId,
-      counterspellSlotLevel
-    ),
+    sourceProcedureRef: requireCounterspellProcedureRef(context, link.reactorId, counterspellSlotLevel),
     rangeFeet: counterspellRangeFeet
   })
 }
@@ -1159,7 +1147,7 @@ function requireInitialSession(spellsById: Readonly<Record<WizardBattleSpellId, 
   })
   /* v8 ignore next -- @preserve -- battle setup inputs are checked-in typed fixture records */
   if (Result.isFailure(session)) {
-    throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.failure)}`)
+    throw new Error(`Wizard battle demo fixture is invalid: ${battleInitializationIssueMessage(session.failure)}`)
   }
   return session.success
 }

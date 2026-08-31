@@ -63,7 +63,7 @@ describe("MCP output JSON Schema identity", () => {
     const codec = Schema.Struct({
       $id: Schema.String,
       value: Schema.String,
-    }).pipe(Schema.annotate({ jsonSchema: { $id: "urn:source-schema" } }));
+    }).annotate({ jsonSchema: { $id: "urn:source-schema" } });
 
     const advertised = mcpOutputJsonSchema(codec);
 

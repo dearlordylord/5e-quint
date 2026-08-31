@@ -25,7 +25,6 @@ import {
   ITFVariant,
 } from "@firfi/quint-connect/effect";
 import { Match, Result, Schema, SchemaGetter } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
@@ -80,7 +79,6 @@ import {
   wizardId as interruptWizardId,
   resolveBattleSubject,
   nonSpellExecutableProcedureEntry,
-  projectedStatBlockRuntimeSource,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -104,9 +102,11 @@ import type {
   BattleInterruptSubject,
   CharacterProcedureBattleSubject,
 } from "./battle-subjects.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  BATTLE_REDUCER_ROUTE_FILL_KINDS,
+  BATTLE_REDUCER_ROUTE_HOLE_KINDS,
   BATTLE_INVALID_REASON_CODES,
   battleAmmunitionStock,
   battleId,
@@ -130,6 +130,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
@@ -682,8 +683,7 @@ type MbtHole =
   | "SpellDamageRoll"
   | "StatBlockRechargeRoll"
   | "LevitateAltitudeChange"
-  | "LevitateInitialRise"
-  | "SlowSomaticSpellFailureOutcome";
+  | "LevitateInitialRise";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
 type SpellTargetSubject =
@@ -891,6 +891,15 @@ type ReducerRouteOwnerGroup = BattleReducerRouteOwnerGroup;
 type ReducerRouteHole = BattleReducerRouteHole;
 type ReducerRouteFill = BattleReducerRouteFill;
 type ReducerRouteFillKind = Extract<BattleReducerRouteFill, string>;
+type ReducerRouteQntFillKind = Exclude<
+  ReducerRouteFillKind,
+  "weaponAttackDamageEnhancementTargetItem"
+>;
+const REDUCER_ROUTE_STRUCTURED_FILL_KIND_VARIANT_TAGS = [
+  "AbilityChoiceFillKind",
+  "SkillChoiceFillKind",
+  "TargetAbilityChoicesFillKind",
+] as const;
 type ReducerRouteAbilityChoice = Ability;
 type ReducerRouteSkillChoice = SurfaceSkill;
 type ReducerRouteEvent = BattleReducerRouteEvent;
@@ -1580,19 +1589,9 @@ function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
-}
-
-function requireBattleStatBlockCombatantSource(
-  statBlock: Parameters<typeof battleStatBlockCombatantSource>[0],
-) {
-  const source = battleStatBlockCombatantSource(statBlock);
-  if (Result.isFailure(source)) {
-    throw new Error(battleStateInitIssueMessage(source.failure));
-  }
-  return source.success;
 }
 
 export function reducerRouteStartBattle(
@@ -12530,80 +12529,57 @@ const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNER_BY_VARIANT_TAG = {
   Record<string, ConditionImmunityTemporaryHitPointOwner>
 >;
 
-const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
-  AbilityCheckHoleKind: "abilityCheck",
-  AbilityChoiceHoleKind: "abilityChoice",
-  AttackDamageDispositionHoleKind: "attackDamageDisposition",
-  AttackRollHoleKind: "attackRoll",
-  CommandOptionChoiceHoleKind: "compelledBehaviorOptionChoice",
-  CompanionReappearanceInitiativeHoleKind: "companionReappearanceInitiative",
-  ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
-  ConditionChoiceHoleKind: "conditionChoice",
-  DamageTypeChoiceHoleKind: "damageTypeChoice",
-  DeathSavingThrowHoleKind: "deathSavingThrow",
-  GrappleOutcomeHoleKind: "grappleOutcome",
-  GustOfWindLineDirectionChoiceHoleKind:
-    "directionalPersistentAreaDirectionChoice",
-  HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
-  InterruptDecisionHoleKind: "interruptDecision",
-  LevitateAltitudeChangeHoleKind: "controlledVerticalSuspensionAltitudeChange",
-  LevitateInitialRiseHoleKind: "controlledVerticalSuspensionInitialRise",
-  MovementHoleKind: "movement",
-  ObjectDropResolutionHoleKind: "objectDropResolution",
-  OngoingSpellTargetChoiceHoleKind: "ongoingSpellTargetChoice",
-  RolledDiceHoleKind: "rolledDice",
-  SanctuaryInterdictionOutcomeHoleKind: "targetingSaveInterdictionOutcome",
-  SavingThrowOutcomeHoleKind: "savingThrowOutcome",
-  SelfTransformationModeChoiceHoleKind: "selfTransformationModeChoice",
-  ShoveOutcomeHoleKind: "shoveOutcome",
-  SkillChoiceHoleKind: "skillChoice",
-  SlowSomaticSpellFailureOutcomeHoleKind:
-    "turnConstraintSomaticSpellFailureOutcome",
-  SpellcastingAbilityCheckHoleKind: "spellcastingAbilityCheck",
-  SpellTargetAllocationHoleKind: "spellTargetAllocation",
-  SpellTargetListHoleKind: "spellTargetList",
-  StatBlockRechargeRollHoleKind: "statBlockRechargeRoll",
-  TargetAbilityChoicesHoleKind: "targetAbilityChoices",
-  TargetChoiceHoleKind: "targetChoice",
-  UnitFeatureDecisionHoleKind: "unitFeatureDecision",
-  WildShapeEquipmentDispositionHoleKind: "wildShapeEquipmentDisposition",
-} as const satisfies Readonly<Record<string, ReducerRouteHole>>;
+function reducerRouteVariantDictionary<
+  const Kinds extends readonly string[],
+  const Suffix extends "HoleKind" | "FillKind",
+>(
+  kinds: Kinds,
+  suffix: Suffix,
+): {
+  readonly tags: readonly `${Capitalize<Kinds[number]>}${Suffix}`[];
+  readonly byTag: Readonly<
+    Record<`${Capitalize<Kinds[number]>}${Suffix}`, Kinds[number]>
+  >;
+} {
+  const entries = kinds.map((kind) => [
+    `${kind.charAt(0).toUpperCase()}${kind.slice(1)}${suffix}`,
+    kind,
+  ]);
+  // Object.fromEntries and Array.map erase the key/value correlation established
+  // by this single construction over the fixed ASCII route-kind vocabulary.
+  return {
+    tags: entries.map(([tag]) => tag),
+    byTag: Object.fromEntries(entries),
+  } as {
+    readonly tags: readonly `${Capitalize<Kinds[number]>}${Suffix}`[];
+    readonly byTag: Readonly<
+      Record<`${Capitalize<Kinds[number]>}${Suffix}`, Kinds[number]>
+    >;
+  };
+}
 
-const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
-  AbilityCheckFillKind: "abilityCheck",
-  AttackDamageDispositionFillKind: "attackDamageDisposition",
-  AttackRollFillKind: "attackRoll",
-  CommandOptionChoiceFillKind: "compelledBehaviorOptionChoice",
-  CompanionReappearanceInitiativeFillKind: "companionReappearanceInitiative",
-  ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
-  ConditionChoiceFillKind: "conditionChoice",
-  DamageTypeChoiceFillKind: "damageTypeChoice",
-  DeathSavingThrowFillKind: "deathSavingThrow",
-  GrappleOutcomeFillKind: "grappleOutcome",
-  GustOfWindLineDirectionChoiceFillKind:
-    "directionalPersistentAreaDirectionChoice",
-  HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
-  InterruptDecisionFillKind: "interruptDecision",
-  LevitateAltitudeChangeFillKind: "controlledVerticalSuspensionAltitudeChange",
-  LevitateInitialRiseFillKind: "controlledVerticalSuspensionInitialRise",
-  MagicWeaponTargetItemFillKind: "weaponAttackDamageEnhancementTargetItem",
-  MovementFillKind: "movement",
-  ObjectDropResolutionFillKind: "objectDropResolution",
-  OngoingSpellTargetChoiceFillKind: "ongoingSpellTargetChoice",
-  RolledDiceFillKind: "rolledDice",
-  SanctuaryInterdictionOutcomeFillKind: "targetingSaveInterdictionOutcome",
-  SavingThrowOutcomeFillKind: "savingThrowOutcome",
-  SelfTransformationModeChoiceFillKind: "selfTransformationModeChoice",
-  ShoveOutcomeFillKind: "shoveOutcome",
-  SlowSomaticSpellFailureOutcomeFillKind:
-    "turnConstraintSomaticSpellFailureOutcome",
-  SpellTargetAllocationFillKind: "spellTargetAllocation",
-  SpellTargetListFillKind: "spellTargetList",
-  StatBlockRechargeRollFillKind: "statBlockRechargeRoll",
-  TargetChoiceFillKind: "targetChoice",
-  UnitFeatureDecisionFillKind: "unitFeatureDecision",
-  WildShapeEquipmentDispositionFillKind: "wildShapeEquipmentDisposition",
-} as const satisfies Readonly<Record<string, ReducerRouteFillKind>>;
+const REDUCER_ROUTE_HOLE_VARIANTS = reducerRouteVariantDictionary(
+  BATTLE_REDUCER_ROUTE_HOLE_KINDS,
+  "HoleKind",
+);
+const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = REDUCER_ROUTE_HOLE_VARIANTS.byTag;
+const REDUCER_ROUTE_QNT_FILL_KINDS = BATTLE_REDUCER_ROUTE_FILL_KINDS.filter(
+  (kind): kind is ReducerRouteQntFillKind =>
+    kind !== "weaponAttackDamageEnhancementTargetItem",
+);
+const REDUCER_ROUTE_FILL_VARIANTS = reducerRouteVariantDictionary(
+  REDUCER_ROUTE_QNT_FILL_KINDS,
+  "FillKind",
+);
+const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = REDUCER_ROUTE_FILL_VARIANTS.byTag;
+
+export function reducerRouteVariantTags() {
+  return {
+    holeKinds: REDUCER_ROUTE_HOLE_VARIANTS.tags,
+    genericFillKinds: REDUCER_ROUTE_FILL_VARIANTS.tags,
+    structuredFillKinds: REDUCER_ROUTE_STRUCTURED_FILL_KIND_VARIANT_TAGS,
+  };
+}
 
 const REDUCER_ROUTE_ABILITY_CHOICE_BY_VARIANT_TAG = {
   RouteAbilityStr: "str",
@@ -17005,7 +16981,7 @@ function interruptShieldCharacterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
@@ -17624,7 +17600,7 @@ function deathSavingThrowCharacterInit(input: {
   readonly initiative: number;
   readonly currentHp: number;
   readonly zeroHpLifecycle?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["zeroHpLifecycle"];
 }): BattleCreatureInit {
@@ -17714,7 +17690,7 @@ function preserveLifeUnitRef(
     null | "unsupported"
   >,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17738,7 +17714,7 @@ function preserveLifeUnitRef(
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17754,7 +17730,7 @@ function extraAttackUnitRef(
 function adrenalineRushUnitRef(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17785,7 +17761,7 @@ function activeFeatureSpellBenefitUnit(): Extract<
 function unitRefWithSupportProfilesForMbt(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17801,7 +17777,7 @@ function unitRefWithSupportProfilesForMbt(
 function rogueSteadyAimUnitRef(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17842,7 +17818,7 @@ function resourceUsesRemaining(
 
 function daggerAttack(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
@@ -17863,7 +17839,7 @@ function daggerAttack(): NonNullable<
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {
@@ -17882,25 +17858,15 @@ function baseUnarmedStrike(): Extract<
 function skeletonCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
+  const statBlock = skeletonMultiattackStatBlock();
   return {
     combatantId: skeletonId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource(
-        projectedStatBlockRuntimeSource(skeletonMultiattackStatBlock()),
-      ),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-      presentation: {
-        displayName: "Skeleton",
-        communication: { kind: "none" },
-        traits: [],
-        orderedProcedures: [],
-      },
-    },
+    statBlock,
+    currentHp: Hp(13),
+    tempHp: Hp(0),
+    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   };
 }
 
@@ -18551,11 +18517,8 @@ function reducerRouteHolesFromRuntimeHole(
   }
   if (hole.kind === "shoveOutcome") return ["shoveOutcome"];
   if (hole.kind === "skillChoice") return ["skillChoice"];
-  if (
-    hole.kind === "slowSomaticSpellFailureOutcome" ||
-    hole.kind === "turnConstraintSomaticSpellFailureOutcome"
-  ) {
-    return ["slowSomaticSpellFailureOutcome"];
+  if (hole.kind === "turnConstraintSomaticSpellFailureOutcome") {
+    return ["turnConstraintSomaticSpellFailureOutcome"];
   }
   if (hole.kind === "spellcastingAbilityCheck") {
     return ["spellcastingAbilityCheck"];
@@ -18688,11 +18651,10 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "controlledVerticalSuspensionInitialRise") {
     return ["LevitateInitialRise"];
   }
-  if (
-    hole.kind === "slowSomaticSpellFailureOutcome" ||
-    hole.kind === "turnConstraintSomaticSpellFailureOutcome"
-  ) {
-    return ["SlowSomaticSpellFailureOutcome"];
+  if (hole.kind === "turnConstraintSomaticSpellFailureOutcome") {
+    throw new Error(
+      "Generic battle runtime MBT leaves turn-constraint Somatic spell-failure holes to the focused Slow witness.",
+    );
   }
   if (hole.kind === "targetAbilityChoices") {
     throw new Error(
@@ -18872,8 +18834,7 @@ function holeName(raw: unknown): MbtHole {
     tag === "SpellDamageRoll" ||
     tag === "StatBlockRechargeRoll" ||
     tag === "LevitateAltitudeChange" ||
-    tag === "LevitateInitialRise" ||
-    tag === "SlowSomaticSpellFailureOutcome"
+    tag === "LevitateInitialRise"
   ) {
     return tag;
   }
@@ -19166,7 +19127,7 @@ function commandOrderingStage(raw: unknown): CommandOrderingStage {
 function commandOrderingHole(raw: unknown): CommandOrderingHole {
   const tag = quintVariantTag(raw);
   if (tag === "SpellTargetListHoleKind") return "spellTargetList";
-  if (tag === "CommandOptionChoiceHoleKind")
+  if (tag === "CompelledBehaviorOptionChoiceHoleKind")
     return "compelledBehaviorOptionChoice";
   if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
   if (tag === "MovementHoleKind") return "movement";

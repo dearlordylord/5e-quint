@@ -169,7 +169,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     wis: 12,
     cha: 10,
   });
-  if (sdk.isLeft(abilityScores)) {
+  if (sdk.isFailure(abilityScores)) {
     return {
       kind: "obstructed",
       obstruction:
@@ -372,7 +372,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       conditions: [],
       unitLibrary: unitCatalog,
     });
-    if (sdk.isLeft(sheet)) {
+    if (sdk.isFailure(sheet)) {
       return {
         kind: "obstructed",
         obstruction: `The public SDK finalized ${plan.id} but could not create its fresh Character Sheet.`,

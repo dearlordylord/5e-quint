@@ -5,7 +5,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { expect } from "vitest";
-import { type BattleCreatureInit } from "./index.ts";
+import { type CharacterBattleCombatantInit } from "./index.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
 import { unitId as parseUnitId } from "@dnd/shared/game-facts";
 import { abilityModifier } from "@dnd/shared/types";
@@ -266,7 +266,7 @@ export function eldritchBlastWithTargetCount(
 
 export function singleSpellcastingSourceClassName(
   classLevels: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"],
 ): ClassName {

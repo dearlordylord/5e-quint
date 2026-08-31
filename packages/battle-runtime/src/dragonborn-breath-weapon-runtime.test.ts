@@ -49,8 +49,8 @@ import {
   startBattle,
 } from "./unit-profile-admission.test-support.ts";
 import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const breathWeaponUnit = unitLibrary.requireUnit(
   speciesDragonbornBreathWeaponUnitId,
@@ -652,7 +652,7 @@ function breathWeaponBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

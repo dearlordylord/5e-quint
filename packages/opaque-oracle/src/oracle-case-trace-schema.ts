@@ -34,20 +34,23 @@ import {
   UnitId as UnitIdSchema,
   type AmmunitionKind,
 } from "@dnd/shared/game-facts";
-import { Index, SIZES } from "@dnd/shared/types";
+import { SIZES, type Index } from "@dnd/shared/types";
 import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { CombatantId } from "@dnd/battle-runtime";
+import { UnitRecordSchema } from "@dnd/surface/surface/schema";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
 );
 const IntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
-const OracleIndexSchema = Schema.fromBrand(
-  "Index",
-  Index,
-)(NonNegativeIntegerSchema).annotate(semanticRefinement("constraintFreeBrand"));
+const [firstUnitRecordSchema, ...remainingUnitRecordSchemas] =
+  UnitRecordSchema.members;
+const UnitRecordKindSchema = Schema.Union([
+  firstUnitRecordSchema.fields.kind,
+  ...remainingUnitRecordSchemas.map((member) => member.fields.kind),
+]);
+const OracleIndexSchema = NonNegativeIntegerSchema.pipe(Schema.brand("Index"));
 
 // CreationFillFactSchema owns the choice optionIds set refinement and its
 // uniqueItems annotation. Reuse that schema directly so the surrounding fill
@@ -69,7 +72,6 @@ export const FreshSheetInputSchema = Schema.Union([
       Schema.check(
         Schema.makeFilter((values) => !hasDuplicateStructuralValues(values), {
           message: "statBlockIds must not contain duplicate members",
-          oracleUniqueItems: true,
           toJsonSchema: () => ({ minItems: 1, uniqueItems: true }),
         }),
       ),
@@ -100,7 +102,6 @@ const OracleBattleConditionsSchema = Schema.Array(Schema.Literal("prone")).pipe(
       (conditions) => !hasDuplicateStructuralValues(conditions),
       {
         message: "conditions must not contain duplicate members",
-        oracleUniqueItems: true,
         toJsonSchema: () => ({ uniqueItems: true }),
       },
     ),
@@ -119,7 +120,7 @@ const OracleStatBlockRosterEntrySchema = Schema.Struct({
   initiative: IntegerSchema,
   ammunitionStocks: OracleAmmunitionStocksSchema,
   conditions: OracleBattleConditionsSchema,
-  currentHp: Schema.optionalKey(NonNegativeIntegerSchema),
+  currentHp: Schema.optional(NonNegativeIntegerSchema),
   tempHp: NonNegativeIntegerSchema,
 });
 
@@ -311,20 +312,20 @@ export type OracleBattleStateInitIssue = Schema.Schema.Type<
 >;
 
 const BattleProjectionIssueSchema = Schema.Struct({
-  tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
+  tag: Schema.Literal("battleEncounterProjectionIssue"),
   origin: Schema.Literal("characterSheet"),
   combatantId: CombatantId,
   issue: CharacterBattleCreatureInitIssueSchema,
 });
 const StatBlockBattleProjectionIssueSchema = Schema.Struct({
-  tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
+  tag: Schema.Literal("battleEncounterProjectionIssue"),
   origin: Schema.Literal("statBlock"),
   combatantId: CombatantId,
   issue: BattleStateInitIssueSchema,
 });
 
 const BattleProjectionIssuesSchema = Schema.Struct({
-  tag: Schema.Literal("characterBattleEncounterProjectionIssues"),
+  tag: Schema.Literal("battleEncounterProjectionIssues"),
   issues: Schema.NonEmptyArray(
     Schema.Union([
       BattleProjectionIssueSchema,
@@ -337,6 +338,24 @@ export type OracleBattleProjectionIssue = Schema.Schema.Type<
 >["issues"][number];
 
 const BattleEntryIssueSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("characterDisplayUnavailable"),
+    issues: Schema.NonEmptyArray(
+      Schema.Union([
+        Schema.Struct({
+          tag: Schema.Literal("characterBuildDisplayUnitMissing"),
+          role: Schema.Literals(["species", "background", "class"]),
+          unitId: UnitIdSchema,
+        }),
+        Schema.Struct({
+          tag: Schema.Literal("characterBuildDisplayUnitKindMismatch"),
+          role: Schema.Literals(["species", "background", "class"]),
+          unitId: UnitIdSchema,
+          actualKind: UnitRecordKindSchema,
+        }),
+      ]),
+    ),
+  }),
   Schema.Struct({
     tag: Schema.Literal("statBlockUnavailable"),
     statBlockId: StatBlockIdSchema,
@@ -377,7 +396,6 @@ const OracleBattleCreatureSnapshotSchema = Schema.Struct({
         (conditions) => !hasDuplicateStructuralValues(conditions),
         {
           message: "conditions must not contain duplicate members",
-          oracleUniqueItems: true,
           toJsonSchema: () => ({ uniqueItems: true }),
         },
       ),
@@ -502,8 +520,12 @@ interface OracleBattleAttemptSegmentEncoded {
 }
 
 interface OracleBattleContinuationEncoded {
-  readonly checkpoint: (typeof OracleBattleCheckpointSchema)["Encoded"];
-  readonly frontier: (typeof OracleBattleNonterminalFrontierSchema)["Encoded"];
+  readonly checkpoint: Schema.Codec.Encoded<
+    typeof OracleBattleCheckpointSchema
+  >;
+  readonly frontier: Schema.Codec.Encoded<
+    typeof OracleBattleNonterminalFrontierSchema
+  >;
   readonly segment: OracleBattleAttemptSegmentEncoded;
 }
 
@@ -551,22 +573,23 @@ export interface OracleCreationTrace {
 
 export const OracleBattleContinuationSchema: Schema.Codec<
   OracleBattleContinuation,
-  OracleBattleContinuationEncoded
-> = Schema.suspend(
-  (): Schema.Codec<OracleBattleContinuation, OracleBattleContinuationEncoded> =>
-    Schema.Struct({
-      checkpoint: OracleBattleCheckpointSchema,
-      frontier: OracleBattleNonterminalFrontierSchema,
-      segment: OracleBattleAttemptSegmentSchema,
-    }).pipe(
-      Schema.check(
-        Schema.makeFilter(oracleBattleCheckpointFrontierInvariantsHold, {
-          message:
-            "Battle frontier references must agree with the projected checkpoint.",
-          ...semanticRefinement("checkpointFrontierCorrelation"),
-        }),
-      ),
+  OracleBattleContinuationEncoded,
+  never,
+  never
+> = Schema.suspend(() =>
+  Schema.Struct({
+    checkpoint: OracleBattleCheckpointSchema,
+    frontier: OracleBattleNonterminalFrontierSchema,
+    segment: OracleBattleAttemptSegmentSchema,
+  }).pipe(
+    Schema.check(
+      Schema.makeFilter(oracleBattleCheckpointFrontierInvariantsHold, {
+        message:
+          "Battle frontier references must agree with the projected checkpoint.",
+        ...semanticRefinement("checkpointFrontierCorrelation"),
+      }),
     ),
+  ),
 ).annotate({
   identifier: "OracleBattleContinuation",
   parseOptions: { onExcessProperty: "error" },
@@ -590,7 +613,11 @@ const OracleBattleEnteredShapeSchema = Schema.Struct({
   checkpoint: OracleBattleEnteredCheckpointSchema,
   frontier: OracleBattleActsFrontierSchema,
   segment: OracleBattleAttemptSegmentSchema,
-}).pipe(
+}).annotate({
+  identifier: "OracleBattleEntered",
+  parseOptions: { onExcessProperty: "error" },
+});
+export const OracleBattleEnteredSchema = OracleBattleEnteredShapeSchema.pipe(
   Schema.check(
     Schema.makeFilter(oracleBattleEnteredInvariantsHold, {
       message:
@@ -599,11 +626,6 @@ const OracleBattleEnteredShapeSchema = Schema.Struct({
     }),
   ),
 );
-export const OracleBattleEnteredSchema =
-  OracleBattleEnteredShapeSchema.annotate({
-    identifier: "OracleBattleEntered",
-    parseOptions: { onExcessProperty: "error" },
-  });
 
 const OracleSheetConstructionSuccessSchema = Schema.Struct({
   tag: Schema.Literal("constructed"),

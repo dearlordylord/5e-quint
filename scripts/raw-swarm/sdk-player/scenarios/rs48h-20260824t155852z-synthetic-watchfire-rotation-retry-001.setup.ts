@@ -131,7 +131,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         "The supplied canonical SRD stat-block catalog is missing one or more scenario-fixed combatant records.",
       observation: {
         scenarioId: SCENARIO_ID,
-        blockedOperation: "battleCreatureInitFromStatBlock",
+        blockedOperation: "startBattle",
         requiredStatBlockIds,
         missingStatBlockIds: statBlockResolution.missingStatBlockIds,
       },
@@ -140,26 +140,14 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const combatants = [];
   for (const { input, statBlock } of statBlockResolution.statBlocks) {
-    const initialized = context.sdk.battleCreatureInitFromStatBlock({
+    const initialized = {
       combatantId: input.combatantId,
       statBlock,
       initiative: context.sdk.initiativeScore(input.initiative),
       ammunitionStocks: input.ammunitionStocks,
       conditions: [],
-    });
-    if (context.sdk.isFailure(initialized)) {
-      return {
-        kind: "obstructed",
-        obstruction: context.sdk.battleStateInitIssueMessage(
-          initialized.failure,
-        ),
-        observation: {
-          setup: "stat-block-combatant-initialization",
-          statBlockId: input.statBlockId,
-        },
-      };
-    }
-    combatants.push(initialized.success);
+    };
+    combatants.push(initialized);
   }
 
   const battle = context.sdk.startBattle({
@@ -169,7 +157,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (context.sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: context.sdk.battleStateInitIssueMessage(battle.failure),
+      obstruction: context.sdk.battleInitializationIssueMessage(battle.failure),
       observation: { setup: "battle-start" },
     };
   }

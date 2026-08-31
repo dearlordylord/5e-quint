@@ -62,6 +62,7 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptSubject,
@@ -72,7 +73,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
   test("invisibility admits as a touch target-list condition spell with slot-scaled targets", () => {
@@ -703,7 +704,7 @@ function castInvisibilityOnTargets(
 
 type CharacterSpellcastingInit = NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"]
 >;
@@ -761,7 +762,7 @@ function invisibilityReactionBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

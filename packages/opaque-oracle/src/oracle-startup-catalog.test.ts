@@ -57,4 +57,33 @@ describe("Oracle startup catalog", () => {
       previousIndex = index;
     }
   });
+
+  it("reports missing workflow roots through the typed startup failure channel", () => {
+    const units = srdSurface.units.filter(
+      (unit) => unit.id !== "class_fighter",
+    );
+    const firstUnit = units[0];
+    if (firstUnit === undefined) {
+      throw new Error("Expected a nonempty synthetic startup catalog");
+    }
+    const result = buildOracleStartupCatalog({
+      ...srdSurface,
+      units: [firstUnit, ...units.slice(1)],
+    });
+
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toEqual([
+      {
+        tag: "oracleStartupCatalogIssue",
+        stage: "workflowRoots",
+        issues: [
+          {
+            tag: "missingCharacterCreationWorkflowRoot",
+            unitId: "class_fighter",
+          },
+        ],
+      },
+    ]);
+  });
 });

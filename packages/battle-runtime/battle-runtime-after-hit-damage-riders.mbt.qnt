@@ -23,7 +23,7 @@ module battleRuntimeAfterHitSpellsMbt {
     | AttackDamageNeeded
     | AfterDamage
     | TurnStartDamageNeeded
-    | TurnStartDamageSaveNeeded
+    | TurnStartSaveNeeded(int)
     | EscapeCheckNeeded
     | Cleaned
 
@@ -62,6 +62,18 @@ module battleRuntimeAfterHitSpellsMbt {
 
   pure def hitDamage(weaponDiePip: int, riderDice: int, riderDiePip: int): int =
     weaponDiePip + (riderDice * riderDiePip)
+
+  pure def isTurnStartSaveNeeded(phase: AfterHitPhase): bool =
+    match phase {
+      | TurnStartSaveNeeded(_) => true
+      | _ => false
+    }
+
+  pure def turnStartDamageForSave(phase: AfterHitPhase): int =
+    match phase {
+      | TurnStartSaveNeeded(turnStartDamage) => turnStartDamage
+      | _ => 0
+    }
 
   pure def protocolFor(
     holes: Set[AfterHitHole],
@@ -521,13 +533,13 @@ module battleRuntimeAfterHitSpellsMbt {
     ),
   }
 
-  action doDiscoverSearingStartTurnDamageAndSave = all {
+  action doDiscoverSearingStartTurnDamage = all {
     qState.qScenario == SearingSmiteHit,
     qState.qPhase == AfterDamage,
     qState.qSearingBurning,
     recordProjection(
       SearingSmiteHit,
-      TurnStartDamageSaveNeeded,
+      TurnStartDamageNeeded,
       qState.qTargetHp,
       false,
       true,
@@ -537,33 +549,54 @@ module battleRuntimeAfterHitSpellsMbt {
       false,
       true,
       false,
-      Set(TurnStartDamageRoll, TurnStartSaveOutcome),
+      Set(TurnStartDamageRoll),
       WNeedsHoles,
     ),
   }
 
-  action doFillSearingStartTurnDamageAndSave = {
+  action doFillSearingStartTurnDamage = {
     nondet damageDiePip = Set(1, 4).oneOf()
     all {
       qState.qScenario == SearingSmiteHit,
-      qState.qPhase == TurnStartDamageSaveNeeded,
-      qState.protocol.holes == Set(TurnStartDamageRoll, TurnStartSaveOutcome),
+      qState.qPhase == TurnStartDamageNeeded,
+      qState.protocol.holes == Set(TurnStartDamageRoll),
       recordProjection(
         SearingSmiteHit,
-        Cleaned,
-        damageAfter(qState.qTargetHp, 3 * damageDiePip),
-        true,
+        TurnStartSaveNeeded(3 * damageDiePip),
+        qState.qTargetHp,
+        false,
         true,
         0,
+        true,
         false,
         false,
+        true,
         false,
-        false,
-        false,
-        noHoles,
-        WResolved,
+        Set(TurnStartSaveOutcome),
+        WNeedsHoles,
       ),
     }
+  }
+
+  action doFillSearingStartTurnSave = all {
+    qState.qScenario == SearingSmiteHit,
+    isTurnStartSaveNeeded(qState.qPhase),
+    qState.protocol.holes == Set(TurnStartSaveOutcome),
+    recordProjection(
+      SearingSmiteHit,
+      Cleaned,
+      damageAfter(qState.qTargetHp, turnStartDamageForSave(qState.qPhase)),
+      true,
+      true,
+      0,
+      false,
+      false,
+      false,
+      false,
+      false,
+      noHoles,
+      WResolved,
+    ),
   }
 
   action doBreakShiningConcentration = all {
@@ -656,8 +689,9 @@ module battleRuntimeAfterHitSpellsMbt {
     doDiscoverEnsnaringStartTurnDamage,
     doFillEnsnaringStartTurnDamage,
     doFillEnsnaringEscapeCheck,
-    doDiscoverSearingStartTurnDamageAndSave,
-    doFillSearingStartTurnDamageAndSave,
+    doDiscoverSearingStartTurnDamage,
+    doFillSearingStartTurnDamage,
+    doFillSearingStartTurnSave,
     doBreakShiningConcentration,
     doStartDivineSmiteFreeCast,
     doStartEnsnaringFailedSave,

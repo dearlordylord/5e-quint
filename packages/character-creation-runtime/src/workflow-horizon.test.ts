@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildUnitCatalog,
   srdUnitCollection,
+  type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
+import { Option, Result } from "effect";
 import {
   CHARACTER_CREATION_WORKFLOW_HORIZON,
   characterCreationWorkflowProgressions,
@@ -44,10 +46,12 @@ describe("character creation workflow horizon", () => {
     const roots = deriveCharacterCreationWorkflowRoots({
       unitLibrary: unitCatalogResult.catalog,
     });
-    const rootIds = new Set(roots.unitIds.map(String));
+    expect(Result.isSuccess(roots)).toBe(true);
+    if (Result.isFailure(roots)) return;
+    const rootIds = new Set(roots.success.unitIds.map(String));
     const units = unitCatalogResult.catalog.listUnits();
 
-    expect(rootIds.size).toBe(roots.unitIds.length);
+    expect(rootIds.size).toBe(roots.success.unitIds.length);
     expect(
       units
         .filter((unit) => unit.kind === "class")
@@ -78,5 +82,37 @@ describe("character creation workflow horizon", () => {
         )
         .every((unit) => rootIds.has(String(unit.id))),
     ).toBe(true);
+  });
+
+  it("reports every support-profile root absent from the supplied catalog", () => {
+    const missingUnitIds = new Set(["class_fighter", "background_soldier"]);
+    const units = unitCatalogResult.catalog
+      .listUnits()
+      .filter((unit) => !missingUnitIds.has(String(unit.id)));
+    const unitsById = new Map(units.map((unit) => [String(unit.id), unit]));
+    const incompleteCatalog: UnitCatalog = {
+      listUnits: () => units,
+      getUnit: (unitId) => Option.fromNullishOr(unitsById.get(unitId)),
+      requireUnit: (unitId) => unitsById.get(unitId)!,
+    };
+
+    const roots = deriveCharacterCreationWorkflowRoots({
+      unitLibrary: incompleteCatalog,
+    });
+
+    expect(roots).toEqual(
+      Result.fail(
+        expect.arrayContaining([
+          {
+            tag: "missingCharacterCreationWorkflowRoot",
+            unitId: "class_fighter",
+          },
+          {
+            tag: "missingCharacterCreationWorkflowRoot",
+            unitId: "background_soldier",
+          },
+        ]),
+      ),
+    );
   });
 });

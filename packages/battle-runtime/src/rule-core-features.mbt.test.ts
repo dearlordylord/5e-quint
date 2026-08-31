@@ -119,6 +119,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleProcedureExecutionRef,
@@ -133,7 +134,7 @@ import type { CharacterBattleResourceState } from "./character-battle-resources.
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 import { unitSupportProfileKind } from "./character-execution-queries.ts";
 import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-fixtures.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { frenzyDamageTypeSelection } from "./battle-reducer/statblock-attacks.ts";
 
 const ruleCoreFeatureMbtHoles = [
@@ -1888,7 +1889,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -2291,11 +2292,11 @@ function reactionModifierBattle(input: {
   readonly className: "bard" | "monk" | "rogue";
   readonly level: number;
   readonly supportProfile?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["characterUnitRefs"][number]["supportProfiles"][number];
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["resources"];
 }): BattleState {
@@ -2336,29 +2337,29 @@ function featureActor(input: {
   readonly initiative: number;
   readonly currentHp?: number;
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["classLevels"];
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["resources"];
   readonly unitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["unitFeatures"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly attack?:
     | Extract<
-        BattleCreatureInit["creatureInit"],
+        CharacterBattleCreatureInit,
         { readonly kind: "character" }
       >["attack"]
     | null;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
@@ -2456,11 +2457,11 @@ function featureTarget(initiative: number): BattleCreatureInit {
 function supportedCharacterUnitRef(
   unitId: string,
   classLevels: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["classLevels"],
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(unitId);
@@ -2480,10 +2481,7 @@ function zeroAbilityWeaponAttack(
     | "weapon_shortbow"
     | "weapon_shortsword",
 ): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
+  Extract<CharacterBattleCreatureInit, { readonly kind: "character" }>["attack"]
 > {
   const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
@@ -2504,7 +2502,7 @@ function unitResource(
   unitId: string,
 ): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["resources"]
 >[number] {

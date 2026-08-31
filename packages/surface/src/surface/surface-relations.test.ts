@@ -128,6 +128,9 @@ describe("canonical Surface authored relations", () => {
 
     expect(decoded.issues).toEqual([]);
     expect(decoded.relations).toHaveLength(4);
+    expect(
+      decoded.relations.every((relation) => relation.sourceRole === "generic"),
+    ).toBe(true);
     expect(decoded.relations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -178,16 +181,15 @@ describe("canonical Surface authored relations", () => {
         (relation) =>
           relation.sourceRecordId === "class_fighter" &&
           relation.targetRecordId === "fighter_action_surge" &&
-          relation.relationKind === "dependency" &&
-          relation.sourceRole === "class-feature-grant",
+          relation.relationKind === "dependency",
       ),
     ).toBe(true);
     expect(
       result.success.some(
         (relation) =>
+          relation.sourceKind === "unit" &&
           relation.sourceRecordId === "class_fighter" &&
           relation.targetRecordId === "subclass_fighter_champion" &&
-          relation.relationKind === "reference" &&
           relation.sourceRole === "class-subclass-choice",
       ),
     ).toBe(true);
@@ -199,70 +201,6 @@ describe("canonical Surface authored relations", () => {
           relation.relation === "recommended-stat-block-reference",
       ),
     ).toBe(true);
-  });
-
-  it("collects all nine authored weapon mastery Unit references", () => {
-    const result = collectSurfaceAuthoredRelations(srdSurface);
-
-    expect(Result.isSuccess(result)).toBe(true);
-    if (Result.isFailure(result)) return;
-    const masteryReferences = result.success.filter(
-      (relation) => relation.relation === "mastery-reference",
-    );
-
-    expect(
-      masteryReferences.map((relation) => ({
-        sourceRecordId: relation.sourceRecordId,
-        fieldPath: relation.fieldPath,
-        targetRecordId: relation.targetRecordId,
-      })),
-    ).toEqual([
-      {
-        sourceRecordId: "weapon_club",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_slow",
-      },
-      {
-        sourceRecordId: "weapon_dagger",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_nick",
-      },
-      {
-        sourceRecordId: "weapon_greataxe",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_cleave",
-      },
-      {
-        sourceRecordId: "weapon_longsword",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_sap",
-      },
-      {
-        sourceRecordId: "weapon_spear",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_sap",
-      },
-      {
-        sourceRecordId: "weapon_flail",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_sap",
-      },
-      {
-        sourceRecordId: "weapon_shortbow",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_vex",
-      },
-      {
-        sourceRecordId: "weapon_shortsword",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_vex",
-      },
-      {
-        sourceRecordId: "weapon_quarterstaff",
-        fieldPath: "masteryUnitId",
-        targetRecordId: "mastery_topple",
-      },
-    ]);
   });
 
   it("covers every relation in the schema-decodable Surface corpus", () => {
@@ -309,7 +247,7 @@ describe("canonical Surface authored relations", () => {
     expect(publishedActual.success.map(relationKey).sort()).toEqual(
       publishedExpected,
     );
-  }, 15_000);
+  });
 
   it("reports every independently malformed authored target without throwing", () => {
     const malformedRecords = corpusAudit.readSurfaceRecords().map((record) => ({

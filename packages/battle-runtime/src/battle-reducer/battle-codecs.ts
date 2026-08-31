@@ -27,7 +27,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
-import { HasteActionResourceRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
+import { AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
@@ -44,7 +44,8 @@ import {
 } from "@dnd/shared/types";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
-import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../character-execution-vocabulary.ts";
+import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../effect-occurrence-source-vocabulary.ts";
+import { isUnitFeatureProcedureOwner } from "../unit-procedure-kind.ts";
 import { BATTLE_ACTIVE_EFFECT_KINDS } from "../active-effect/types.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
@@ -93,18 +94,12 @@ import {
   type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import {
-  STAT_BLOCK_ACTION_PROJECTION_SECTIONS,
-  STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS,
-  STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS,
-} from "../stat-block-presentation-contract.ts";
-import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
-  battleAttackExecutionSelectionWithFields,
   battleSubjectBoundExecutionReferences,
   battleSubjectProcedureRefs,
+  BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
-  CharacterAttackExecutionSelectionSchema,
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
@@ -148,7 +143,7 @@ import {
 } from "../identity.ts";
 import type { BattleExecutionScopeRef } from "../identity.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
-import type { SupportedCreatureAttackRollMechanics } from "../battle-action-options.ts";
+import { StatBlockAttackDamageSelection } from "../stat-block-attack-damage-selection.ts";
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
 import {
@@ -163,7 +158,6 @@ import {
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   SELF_TRANSFORMATION_MODE_KINDS,
   SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
-  SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { BattleDamageRelationshipQuestionIdSchema } from "./damage-relationship-question-id.ts";
@@ -191,11 +185,18 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
+import type {
+  BattleCreatureOriginSnapshot,
+  BattleCreatureSnapshot,
+  BattleFill,
+  BattleHole,
+  BattlePresentedCreatureSnapshot,
+  BattlePresentedSnapshot,
+  BattleSnapshot,
+} from "../battle-state-execution.ts";
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
-  type BattleFill,
-  type BattleHole,
 } from "../battle-state-execution.ts";
 import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
@@ -714,20 +715,41 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     firstTargetId: CombatantId,
     secondTargetId: CombatantId,
   }),
-  CharacterAttackExecutionSelectionSchema.pipe(
-    Schema.fieldsAssign({
-      kind: Schema.Literal("weaponMasteryPushDisposition"),
-      attackerId: CombatantId,
-      targetId: CombatantId,
-      disposition: BattleImmediateAreaPushDispositionSchema,
-    }),
-  ),
-  battleAttackExecutionSelectionWithFields({
-    kind: Schema.Literal("attackTargetDistance"),
-    actorId: CombatantId,
+  Schema.Struct({
+    kind: Schema.Literal("weaponMasteryPushDisposition"),
+    attackerId: CombatantId,
     targetId: CombatantId,
-    distanceFeet: MovementFeet,
+    procedureRef: BattleAttackProcedureExecutionRef,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalKey(Schema.Never),
+    statBlockDamageSelection: Schema.optionalKey(Schema.Never),
+    disposition: BattleImmediateAreaPushDispositionSchema,
   }),
+  Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetDistance"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleAttackProcedureExecutionRef,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalKey(Schema.Never),
+      statBlockDamageSelection: Schema.optionalKey(Schema.Never),
+      distanceFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetDistance"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
+      attackAbility: Schema.optionalKey(Schema.Never),
+      attackDamageType: Schema.optionalKey(Schema.Never),
+      attackName: Schema.optionalKey(Schema.Never),
+      statBlockDamageSelection: StatBlockAttackDamageSelection,
+      distanceFeet: MovementFeet,
+    }),
+  ]),
   Schema.Struct({
     kind: Schema.Literal("attackAttackerCannotSeeTarget"),
     attackerId: CombatantId,
@@ -745,9 +767,9 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     sense: Schema.Literals(PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES),
   }),
   Schema.Struct({
-    kind: Schema.Literals([
+    kind: Schema.Literal(
       "attackerUnaffectedByDuplicateHitInterceptionWithSense",
-    ]),
+    ),
     attackerId: CombatantId,
     targetId: CombatantId,
     sense: Schema.Literals(DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES),
@@ -1018,9 +1040,9 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literals([
+    kind: Schema.Literal(
       "spellCastInterruptionTriggerCasterVisibleWithinRange",
-    ]),
+    ),
     reactorId: CombatantId,
     casterId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -1421,22 +1443,11 @@ const SpellConditionRepeatSaveSchema = Schema.Struct({
 
 const EmptySpellAreaChoicesSchema = Schema.Tuple([]);
 
-function exhaustiveBattleHoleSchema<S extends Schema.Top>(
-  schema: S &
-    ([BattleHole] extends [S["Type"]]
-      ? unknown
-      : {
-          readonly missingBattleHoleVariants: Exclude<BattleHole, S["Type"]>;
-        }) &
-    ([S["Type"]] extends [BattleHole]
-      ? unknown
-      : {
-          readonly unsupportedBattleHoleVariants: Exclude<
-            S["Type"],
-            BattleHole
-          >;
-        }),
+function exhaustiveBattleHoleSchema<S extends Schema.Schema<BattleHole>>(
+  schema: S,
+  allBattleHolesAreRepresented: (hole: BattleHole) => S["Type"],
 ): S {
+  void allBattleHolesAreRepresented;
   return schema;
 }
 
@@ -2212,24 +2223,9 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
     actorId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    failurePercent: Schema.Literals([
+    failurePercent: Schema.Literal(
       SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
-    ]),
-    activeEffectSources: Schema.Array(
-      Schema.Struct({
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        sourceCombatantId: CombatantId,
-      }),
     ),
-  }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
-    actorId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    failurePercent: Schema.Literals([
-      SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
-    ]),
     activeEffectSources: Schema.Array(
       Schema.Struct({
         sourceProcedureRef: BattleProcedureExecutionRef,
@@ -2576,9 +2572,9 @@ const BattleHolePayloadMembers = [
         DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
       ),
       dieSize: Schema.Literal(DUPLICATE_HIT_INTERCEPTION_DIE_SIZE),
-      successAtLeast: Schema.Literals([
+      successAtLeast: Schema.Literal(
         DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
-      ]),
+      ),
     }),
   }),
   pairedBattleHoleMember({
@@ -2700,9 +2696,9 @@ const BattleHolePayloadMembers = [
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("temporaryAbilityCheckRollModeActiveEffectCount"),
     sourceProcedureRef: BattleProcedureExecutionRef,
-    maximumActiveOneMinuteEffects: Schema.Literals([
+    maximumActiveOneMinuteEffects: Schema.Literal(
       TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-    ]),
+    ),
     requiresTableSpellEffectCount: Schema.Literal(true),
   }),
   pairedBattleHoleMember({
@@ -3274,6 +3270,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
 
 const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
   BattleHolePayloadUnionSchema,
+  (hole) => hole,
 );
 
 export const BattleHoleSchema = BattleHolePayloadSchema.pipe(
@@ -3311,8 +3308,8 @@ const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.brand("DieRollResult"),
 );
 
-const BattleD6RollResultSchema = Schema.Int.pipe(
-  Schema.check(Schema.isBetween({ minimum: 1, maximum: 6 })),
+const BattleD6RollResultSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 6 })),
   Schema.brand("PositiveInteger"),
   Schema.brand("DieRollResult"),
   Schema.brand("D6RollResult"),
@@ -3678,8 +3675,9 @@ type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
       };
     };
 
-type BattleInterruptAttackExecutionSelectionEncoded =
-  typeof BattleInterruptAttackExecutionSelectionSchema.Encoded;
+type BattleInterruptAttackExecutionSelectionEncoded = Schema.Codec.Encoded<
+  typeof BattleInterruptAttackExecutionSelectionSchema
+>;
 
 type BattleDamageRelationshipDecisionEncoded = {
   readonly questionId: string;
@@ -3851,13 +3849,6 @@ type BattleFillEncoded =
     }
   | {
       readonly kind: "turnConstraintSomaticSpellFailureOutcome";
-      readonly holeId: string;
-      readonly value: {
-        readonly spellFailed: boolean;
-      };
-    }
-  | {
-      readonly kind: "slowSomaticSpellFailureOutcome";
       readonly holeId: string;
       readonly value: {
         readonly spellFailed: boolean;
@@ -5091,13 +5082,6 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
-      holeId: BattleHoleIdSchema,
-      value: Schema.Struct({
-        spellFailed: Schema.Boolean,
-      }),
-    }),
-    Schema.Struct({
       kind: Schema.Literal("hitPointHealingDistribution"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -5414,9 +5398,9 @@ export const BattleFillSchema: Schema.Codec<
           }),
           affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
-              kind: Schema.Literals([
+              kind: Schema.Literal(
                 "magicSuppressionAffectedOngoingSpellEffect",
-              ]),
+              ),
               effect: BattleMagicSuppressionOngoingSpellEffectRefSchema,
               sourceKind: Schema.Literals(
                 BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
@@ -5929,7 +5913,7 @@ export const RuntimeActionResourceSchema = Schema.Union([
     sourceOwnerId: Schema.optionalKey(Schema.Never),
     sourceEffectRef: BattleEffectExecutionRef,
     sourceProcedureRef: Schema.optionalKey(Schema.Never),
-    restriction: HasteActionResourceRestrictionSchema,
+    restriction: AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
@@ -6089,19 +6073,15 @@ const StatBlockResourcePoolStateSchema = Schema.Union([
   }),
 ]);
 
-const SupportedCreatureAttackRollMechanicsSchema =
-  Schema.declare<SupportedCreatureAttackRollMechanics>(
-    (input): input is SupportedCreatureAttackRollMechanics =>
-      Schema.is(CreatureAttackRollMechanicsSchema)(input) &&
-      creatureAttackRollMechanicsAreSupported(input),
-    { description: "A structurally valid, admitted Stat Block attack." },
-  );
-
 const StatBlockAttackProcedureSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
   section: Schema.Literals(["actions", "legendaryActions"]),
   procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  attack: SupportedCreatureAttackRollMechanicsSchema,
+  attack: CreatureAttackRollMechanicsSchema.pipe(
+    Schema.refine(creatureAttackRollMechanicsAreSupported, {
+      message: "Unsupported Stat Block attack procedure mechanics.",
+    }),
+  ),
   traitAttackRollModes: Schema.optionalKey(
     Schema.NonEmptyArray(
       Schema.Struct({
@@ -6115,25 +6095,24 @@ const StatBlockAttackProcedureSchema = Schema.Struct({
 const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
   kind: Schema.Literal("unarmedStrike"),
   section: Schema.Literal("actions"),
-  attack: SupportedCreatureAttackRollMechanicsSchema,
+  attack: CreatureAttackRollMechanicsSchema.pipe(
+    Schema.refine(creatureAttackRollMechanicsAreSupported, {
+      message: "Unsupported Stat Block Unarmed Strike mechanics.",
+    }),
+  ),
 });
 
 const StatBlockSpellcastingInvocationOutcomeSchema = Schema.Struct({
   kind: Schema.Literals(["unrestricted", "restricted"]),
 });
 
-const EffectOccurrenceSourceProcedureSchema = Schema.Struct({
-  kind: Schema.Literal("effectOccurrenceSource"),
-  effectRef: BattleEffectExecutionRef,
-  effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
-});
-
-const StatBlockSpellcastingSpellSaveDcSchema = Schema.Int.pipe(
-  Schema.check(Schema.isGreaterThanOrEqualTo(1)),
+const StatBlockSpellcastingSpellSaveDcSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("PositiveInteger"),
 );
 
-const StatBlockSpellcastingAttackBonusSchema = Schema.Int.pipe(
+const StatBlockSpellcastingAttackBonusSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
   Schema.brand("Integer"),
 );
 
@@ -6153,6 +6132,12 @@ const StatBlockSpellcastingGroupSchema = Schema.Union([
     ),
   }),
 ]);
+
+const EffectOccurrenceSourceProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("effectOccurrenceSource"),
+  effectRef: BattleEffectExecutionRef,
+  effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
+});
 
 const StatBlockSpellcastingProcedureSchema = Schema.Struct({
   kind: Schema.Literal("spellcasting"),
@@ -6218,7 +6203,7 @@ const StatBlockProcedureBindingSnapshotSchema = Schema.Union([
   Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: EffectOccurrenceSourceProcedureSchema,
-    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+    resourcePoolRefs: Schema.Tuple([]),
   }),
 ]);
 
@@ -6238,22 +6223,22 @@ export const StatBlockExecutionSnapshotSchema =
     ),
   );
 
-type EncodedStatBlockExecutionSnapshot = Schema.Schema.Type<
+type StatBlockExecutionSnapshotInvariantInput = Schema.Schema.Type<
   typeof StatBlockExecutionSnapshotShapeSchema
 >;
-type EncodedStatBlockProcedureBinding = Schema.Schema.Type<
+type StatBlockProcedureBindingInvariantInput = Schema.Schema.Type<
   typeof StatBlockProcedureBindingSnapshotSchema
 >;
-type EncodedStatBlockAttackProcedureBinding = Extract<
-  EncodedStatBlockProcedureBinding,
+type StatBlockAttackProcedureBindingInvariantInput = Extract<
+  StatBlockProcedureBindingInvariantInput,
   { readonly procedure: { readonly kind: "attack" } }
 >;
-type EncodedStatBlockResourcePool = Schema.Schema.Type<
+type StatBlockResourcePoolInvariantInput = Schema.Schema.Type<
   typeof StatBlockResourcePoolStateSchema
 >;
 
 function statBlockExecutionSnapshotGraphIsValid(
-  snapshot: EncodedStatBlockExecutionSnapshot,
+  snapshot: StatBlockExecutionSnapshotInvariantInput,
 ): boolean {
   const procedureRefs = snapshot.procedureBindings.map(
     (binding) => binding.procedureRef,
@@ -6338,7 +6323,7 @@ function statBlockExecutionSnapshotGraphIsValid(
 }
 
 function statBlockExecutionSnapshotRefsAreValid(input: {
-  readonly snapshot: EncodedStatBlockExecutionSnapshot;
+  readonly snapshot: StatBlockExecutionSnapshotInvariantInput;
   readonly procedureRefs: readonly BattleStatBlockProcedureExecutionRef[];
   readonly procedureOrdinalKeys: readonly string[];
   readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
@@ -6363,12 +6348,12 @@ function statBlockExecutionSnapshotRefsAreValid(input: {
 }
 
 function statBlockProcedureBindingGraphIsValid(input: {
-  readonly binding: EncodedStatBlockProcedureBinding;
+  readonly binding: StatBlockProcedureBindingInvariantInput;
   readonly resourcePoolsByRef: ReadonlyMap<
     BattleResourcePoolExecutionRef,
-    EncodedStatBlockResourcePool
+    StatBlockResourcePoolInvariantInput
   >;
-  readonly legendaryPool: EncodedStatBlockResourcePool | undefined;
+  readonly legendaryPool: StatBlockResourcePoolInvariantInput | undefined;
   readonly actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
   readonly limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
 }): boolean {
@@ -6395,8 +6380,8 @@ function statBlockProcedureBindingGraphIsValid(input: {
 }
 
 function statBlockProcedurePoolShapeIsValid(
-  binding: EncodedStatBlockProcedureBinding,
-  pools: readonly EncodedStatBlockResourcePool[],
+  binding: StatBlockProcedureBindingInvariantInput,
+  pools: readonly StatBlockResourcePoolInvariantInput[],
 ): boolean {
   const legendaryPoolCount = pools.filter(
     (pool) => pool.kind === "legendaryActions",
@@ -6422,13 +6407,13 @@ function statBlockProcedurePoolShapeIsValid(
 }
 
 function statBlockProcedureRequiresNoResourcePools(
-  kind: EncodedStatBlockProcedureBinding["procedure"]["kind"],
+  kind: StatBlockProcedureBindingInvariantInput["procedure"]["kind"],
 ): boolean {
   return kind === "unarmedStrike" || kind === "effectOccurrenceSource";
 }
 
 function statBlockProcedureResourcePoolRefs(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
 ): readonly BattleResourcePoolExecutionRef[] {
   return binding.procedure.kind === "spellcasting"
     ? [
@@ -6441,7 +6426,7 @@ function statBlockProcedureResourcePoolRefs(
 }
 
 function statBlockProcedureResourceRefsAreUnique(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
 ): boolean {
   if (binding.procedure.kind !== "spellcasting") {
     return (
@@ -6455,10 +6440,10 @@ function statBlockProcedureResourceRefsAreUnique(
 }
 
 function legendaryProcedurePoolOwnershipIsValid(
-  binding: EncodedStatBlockProcedureBinding,
-  legendaryPool: EncodedStatBlockResourcePool | undefined,
+  binding: StatBlockProcedureBindingInvariantInput,
+  legendaryPool: StatBlockResourcePoolInvariantInput | undefined,
 ): boolean {
-  if (!isEncodedStatBlockAttackProcedureBinding(binding)) {
+  if (!isStatBlockAttackProcedureBindingInvariantInput(binding)) {
     return true;
   }
   if (binding.procedure.section !== "legendaryActions") {
@@ -6470,14 +6455,14 @@ function legendaryProcedurePoolOwnershipIsValid(
   );
 }
 
-function isEncodedStatBlockAttackProcedureBinding(
-  binding: EncodedStatBlockProcedureBinding,
-): binding is EncodedStatBlockAttackProcedureBinding {
+function isStatBlockAttackProcedureBindingInvariantInput(
+  binding: StatBlockProcedureBindingInvariantInput,
+): binding is StatBlockAttackProcedureBindingInvariantInput {
   return binding.procedure.kind === "attack";
 }
 
 function multiattackBindingDispatchIsValid(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
   actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
   limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
 ): boolean {
@@ -6494,7 +6479,7 @@ function multiattackBindingDispatchIsValid(
 }
 
 function bonusActionOptionBindingIsNonempty(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
 ): boolean {
   return (
     binding.procedure.kind !== "bonusActionOption" ||
@@ -6512,7 +6497,7 @@ function legendaryProcedurePoolCardinalityIsValid(
 }
 
 function runtimeProcedureOrdinalKey(
-  procedure: EncodedStatBlockProcedureBinding["procedure"],
+  procedure: StatBlockProcedureBindingInvariantInput["procedure"],
 ): string {
   if (procedure.kind === "unarmedStrike") return "actions:unarmedStrike";
   if (procedure.kind === "effectOccurrenceSource") {
@@ -6530,7 +6515,7 @@ function runtimeProcedureOrdinalKey(
 }
 
 function resourcePoolStateGraphIsValid(
-  pool: EncodedStatBlockResourcePool,
+  pool: StatBlockResourcePoolInvariantInput,
   bindingCountByPoolRef: ReadonlyMap<BattleResourcePoolExecutionRef, number>,
 ): boolean {
   const count = bindingCountByPoolRef.get(pool.resourcePoolRef) ?? 0;
@@ -6540,7 +6525,7 @@ function resourcePoolStateGraphIsValid(
 }
 
 function resourcePoolUsageBoundsAreValid(
-  pool: EncodedStatBlockResourcePool,
+  pool: StatBlockResourcePoolInvariantInput,
 ): boolean {
   if (pool.kind !== "daily" && pool.kind !== "legendaryActions") return true;
   return (
@@ -6602,11 +6587,7 @@ const CharacterProcedureBindingSnapshotSchema = Schema.Union([
   }),
   Schema.Struct({
     procedureRef: BattleProcedureExecutionRef,
-    procedure: Schema.Struct({
-      kind: Schema.Literal("effectOccurrenceSource"),
-      effectRef: BattleEffectExecutionRef,
-      effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
-    }),
+    procedure: EffectOccurrenceSourceProcedureSchema,
   }),
 ]);
 
@@ -6726,9 +6707,13 @@ const BattleCreatureSnapshotInvariantShapeSchema = Schema.Struct({
 type BattleCreatureSnapshotInvariantInput = Schema.Schema.Type<
   typeof BattleCreatureSnapshotInvariantShapeSchema
 >;
-type EncodedCharacterBattleCreatureOrigin = Extract<
-  BattleCreatureSnapshotInvariantInput["origin"],
-  { readonly kind: "character" }
+type AssignableTo<Expected, Actual extends Expected> = Actual;
+type EncodedCharacterBattleCreatureOrigin = AssignableTo<
+  Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }>,
+  Extract<
+    BattleCreatureSnapshotInvariantInput["origin"],
+    { readonly kind: "character" }
+  >
 >;
 
 function battleCreatureSnapshotInvariantsHold(
@@ -6761,33 +6746,7 @@ function characterBattleCreatureSnapshotInvariantsHold(
       characterOrigin.execution.scopeRef,
       combatantId,
     ) &&
-    characterOrigin.execution.procedureBindings.every((binding) =>
-      battleProcedureExecutionRefBelongsToScope(
-        binding.procedureRef,
-        characterOrigin.execution.scopeRef,
-      ),
-    ) &&
-    new Set(
-      characterOrigin.execution.procedureBindings.map(
-        (binding) => binding.procedureRef,
-      ),
-    ).size === characterOrigin.execution.procedureBindings.length &&
-    characterOrigin.execution.procedureBindings.every((binding) => {
-      const procedure = binding.procedure;
-      if (
-        procedure.kind !== "unitFeature" &&
-        procedure.kind !== "unitSupportProfile"
-      ) {
-        return true;
-      }
-      const source = procedure.source;
-      return (
-        source.kind === "intrinsic" ||
-        characterOrigin.resources.some(
-          (resource) => resource.resourcePoolRef === source.resourcePoolRef,
-        )
-      );
-    }) &&
+    characterProcedureBindingsAreValid(characterOrigin) &&
     characterOrigin.resources.every((resource) =>
       battleResourcePoolExecutionRefBelongsToScope(
         resource.resourcePoolRef,
@@ -6807,6 +6766,43 @@ function characterBattleCreatureSnapshotInvariantsHold(
     ) &&
     new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
     characterWildShapeFormScopesAreValid(characterOrigin, combatantId)
+  );
+}
+
+function characterProcedureBindingsAreValid(
+  characterOrigin: EncodedCharacterBattleCreatureOrigin,
+): boolean {
+  const { procedureBindings, scopeRef } = characterOrigin.execution;
+  return (
+    procedureBindings.every((binding) =>
+      battleProcedureExecutionRefBelongsToScope(binding.procedureRef, scopeRef),
+    ) &&
+    new Set(procedureBindings.map((binding) => binding.procedureRef)).size ===
+      procedureBindings.length &&
+    procedureBindings.every((binding) =>
+      characterProcedureBindingSourceIsValid(
+        binding,
+        characterOrigin.resources,
+      ),
+    )
+  );
+}
+
+function characterProcedureBindingSourceIsValid(
+  binding: EncodedCharacterBattleCreatureOrigin["execution"]["procedureBindings"][number],
+  resources: EncodedCharacterBattleCreatureOrigin["resources"],
+): boolean {
+  const { procedure } = binding;
+  if (
+    procedure.kind !== "unitFeature" &&
+    procedure.kind !== "unitSupportProfile"
+  ) {
+    return true;
+  }
+  const { source } = procedure;
+  if (source.kind === "intrinsic") return true;
+  return resources.some(
+    (resource) => resource.resourcePoolRef === source.resourcePoolRef,
   );
 }
 
@@ -6891,9 +6887,14 @@ const BattleCreatureSnapshotShapeSchema = Schema.Union([
   }),
 ]);
 
+type BattleCreatureSnapshotDomainInput = AssignableTo<
+  Schema.Schema.Type<typeof BattleCreatureSnapshotShapeSchema>,
+  BattleCreatureSnapshot
+>;
+
 const BattleCreatureSnapshotSchema = BattleCreatureSnapshotShapeSchema.pipe(
   Schema.check(
-    Schema.makeFilter<unknown>(
+    Schema.makeFilter<BattleCreatureSnapshotDomainInput>(
       (snapshot) =>
         Schema.is(BattleCreatureSnapshotInvariantShapeSchema)(snapshot) &&
         battleCreatureSnapshotInvariantsHold(snapshot),
@@ -6915,10 +6916,15 @@ const BattlePresentedCreatureSnapshotShapeSchema = Schema.Union([
   }),
 ]);
 
+type BattlePresentedCreatureSnapshotDomainInput = AssignableTo<
+  Schema.Schema.Type<typeof BattlePresentedCreatureSnapshotShapeSchema>,
+  BattlePresentedCreatureSnapshot
+>;
+
 const BattlePresentedCreatureSnapshotSchema =
   BattlePresentedCreatureSnapshotShapeSchema.pipe(
     Schema.check(
-      Schema.makeFilter<unknown>(
+      Schema.makeFilter<BattlePresentedCreatureSnapshotDomainInput>(
         (snapshot) =>
           Schema.is(BattleCreatureSnapshotInvariantShapeSchema)(snapshot) &&
           battleCreatureSnapshotInvariantsHold(snapshot),
@@ -6953,41 +6959,14 @@ export const BattleSpellPresentationSchema = Schema.Struct({
   invocation: SpellInvocationRefSchema,
 });
 
-const StatBlockProcedurePresentationJoinIssueSchema = Schema.Union([
-  Schema.Struct({
-    tag: Schema.Literal("statBlockProcedurePresentationJoinIssue"),
-    reason: Schema.Literal("missingPresentation"),
-    section: Schema.Literals(STAT_BLOCK_ACTION_PROJECTION_SECTIONS),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    executionKind: Schema.Literals(STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("statBlockProcedurePresentationJoinIssue"),
-    reason: Schema.Literal("presentationKindMismatch"),
-    section: Schema.Literals(STAT_BLOCK_ACTION_PROJECTION_SECTIONS),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    executionKind: Schema.Literals(STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS),
-    presentationKind: Schema.Literals(STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS),
-  }),
-]);
-
 export const BattleActPresentationSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("intrinsic") }),
   Schema.Struct({
     kind: Schema.Literal("presentationIssue"),
-    issue: Schema.Union([
-      Schema.Struct({
-        tag: Schema.Literal("attackPresentationJoinIssue"),
-        reason: Schema.Literals(ATTACK_PRESENTATION_JOIN_ISSUE_REASONS),
-      }),
-      Schema.Struct({
-        tag: Schema.Literal("attackPresentationJoinIssue"),
-        reason: Schema.Literal("statBlockProcedurePresentationJoin"),
-        issues: Schema.NonEmptyArray(
-          StatBlockProcedurePresentationJoinIssueSchema,
-        ),
-      }),
-    ]),
+    issue: Schema.Struct({
+      tag: Schema.Literal("attackPresentationJoinIssue"),
+      reason: Schema.Literals(ATTACK_PRESENTATION_JOIN_ISSUE_REASONS),
+    }),
   }),
   Schema.Struct({
     kind: Schema.Literal("attack"),
@@ -7399,6 +7378,8 @@ type EncodedRuntimeCommandBattleSubject = Extract<
   { readonly tag: "runtimeCommand" }
 >;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
+type EncodedBattleStoredLightEmitter =
+  typeof BattleStoredLightEmitterSchema.Type;
 type SerializedActiveEffectKind =
   EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number]["activeEffectKind"];
 type SerializedActiveEffectLocationExpectation =
@@ -7987,12 +7968,6 @@ function serializedBattleHoleExecutionReferences(
           Match.exhaustive,
         ),
       turnConstraintSomaticSpellFailureOutcome: (value) => [
-        source(value.sourceProcedureRef, value.actorId),
-        ...value.activeEffectSources.map((effect) =>
-          owned(effect.sourceProcedureRef, effect.sourceCombatantId),
-        ),
-      ],
-      slowSomaticSpellFailureOutcome: (value) => [
         source(value.sourceProcedureRef, value.actorId),
         ...value.activeEffectSources.map((effect) =>
           owned(effect.sourceProcedureRef, effect.sourceCombatantId),
@@ -8657,39 +8632,207 @@ function serializedObscurementZoneOwnsSource(
   );
 }
 
+function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
+  hole: EncodedBattleHole,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  storedLightEmitters: readonly EncodedBattleStoredLightEmitter[],
+): boolean {
+  if (
+    hole.kind !== "spellcastingAbilityCheck" ||
+    hole.spellcastingAbilityCheck.target.kind === "magicalEffect"
+  ) {
+    return true;
+  }
+  const { target, checkedOccurrence } = hole.spellcastingAbilityCheck;
+  if (checkedOccurrence === undefined) return false;
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === checkedOccurrence.ownerId,
+  );
+  if (owner === undefined) return false;
+  return Match.value(checkedOccurrence.effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellLightEmitter: ({ effectRef }) =>
+        storedLightEmitters.some(
+          (emitter) =>
+            emitter.kind === "spellLightEmitter" &&
+            emitter.effectRef === effectRef &&
+            battleEffectExecutionRefBelongsToScope(
+              emitter.effectRef,
+              owner.origin.execution.scopeRef,
+            ) &&
+            Match.value(target).pipe(
+              Match.discriminatorsExhaustive("kind")({
+                combatant: ({ combatantId }) =>
+                  emitter.attachment.kind === "combatant" &&
+                  emitter.attachment.combatantId === combatantId,
+                object: ({ objectId }) =>
+                  emitter.attachment.kind === "object" &&
+                  emitter.attachment.objectId === objectId,
+              }),
+            ),
+        ),
+      spellActiveEffect: ({ effectRef, activeEffectKind }) =>
+        target.kind === "object" &&
+        activeEffectKind === "spellObjectContactDamage" &&
+        owner.activeEffectOccurrences.some(
+          (occurrence) =>
+            occurrence.kind === "activeEffect" &&
+            occurrence.effectRef === effectRef &&
+            occurrence.activeEffectKind === activeEffectKind &&
+            occurrence.location.kind === "object" &&
+            occurrence.location.objectId === target.objectId,
+        ),
+    }),
+  );
+}
+
+function serializedActiveEffectMatchesExpectation(
+  occurrence: EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number],
+  reference: Extract<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  expectation: Extract<
+    SerializedEffectOccurrenceExpectation,
+    { readonly kind: "activeEffect" }
+  >,
+): boolean {
+  return (
+    occurrence.effectRef === reference.ref &&
+    expectation.activeEffectKinds.some(
+      (activeEffectKind) => activeEffectKind === occurrence.activeEffectKind,
+    ) &&
+    serializedActiveEffectLocationMatchesExpectation(
+      occurrence.location,
+      expectation.location,
+    )
+  );
+}
+
+function serializedEffectOccurrenceReferenceIsOwned(
+  reference: Extract<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  storedLightEmitters: readonly EncodedBattleStoredLightEmitter[],
+): boolean {
+  const eligibleOwners =
+    reference.ownerId === undefined
+      ? combatants
+      : combatants.filter(
+          (combatant) => combatant.combatantId === reference.ownerId,
+        );
+  return Match.value(reference.expectation).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      activeEffect: (expectation) =>
+        eligibleOwners.some((combatant) =>
+          combatant.activeEffectOccurrences.some((occurrence) =>
+            serializedActiveEffectMatchesExpectation(
+              occurrence,
+              reference,
+              expectation,
+            ),
+          ),
+        ),
+      storedLightEmitter: () =>
+        eligibleOwners.some((combatant) =>
+          storedLightEmitters.some(
+            (emitter) =>
+              emitter.effectRef === reference.ref &&
+              battleEffectExecutionRefBelongsToScope(
+                emitter.effectRef,
+                combatant.origin.execution.scopeRef,
+              ),
+          ),
+        ),
+    }),
+  );
+}
+
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
-  readonly storedLightEmitters: BattleSnapshotInvariantInput["storedLightEmitters"];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
   readonly boundExecutionRefs: ReadonlySet<string>;
   readonly expectedProcedureRefs:
     | ReadonlySet<BattleProcedureExecutionRef>
     | undefined;
 }): boolean {
-  const { hole, combatants, boundExecutionRefs, expectedProcedureRefs } = input;
-  return serializedBattleHoleExecutionReferences(hole).every((reference) => {
-    if (!boundExecutionRefs.has(reference.ref)) return false;
-    if (reference.kind === "effectOccurrence") {
-      return serializedEffectOccurrenceReferenceMatches(
-        reference,
-        combatants,
-        input.storedLightEmitters,
-      );
-    }
-    if (
-      reference.kind === "subjectProcedure" &&
-      expectedProcedureRefs !== undefined &&
-      expectedProcedureRefs.size > 0 &&
-      !expectedProcedureRefs.has(reference.ref as BattleProcedureExecutionRef)
-    ) {
-      return false;
-    }
-    return serializedExecutionReferenceOwnerIsValid(reference, combatants);
-  });
+  const {
+    hole,
+    combatants,
+    storedLightEmitters,
+    boundExecutionRefs,
+    expectedProcedureRefs,
+  } = input;
+  if (
+    !serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
+      hole,
+      combatants,
+      storedLightEmitters,
+    )
+  ) {
+    return false;
+  }
+  const expectedProcedureRefStrings =
+    expectedProcedureRefs === undefined
+      ? undefined
+      : new Set<string>(expectedProcedureRefs);
+  return serializedBattleHoleExecutionReferences(hole).every((reference) =>
+    serializedBattleHoleExecutionReferenceIsOwned({
+      reference,
+      combatants,
+      storedLightEmitters,
+      boundExecutionRefs,
+      expectedProcedureRefStrings,
+    }),
+  );
+}
+
+function serializedBattleHoleExecutionReferenceIsOwned(input: {
+  readonly reference: SerializedExecutionReferenceOwnership;
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
+  readonly boundExecutionRefs: ReadonlySet<string>;
+  readonly expectedProcedureRefStrings: ReadonlySet<string> | undefined;
+}): boolean {
+  const { reference } = input;
+  if (!input.boundExecutionRefs.has(reference.ref)) return false;
+  if (reference.kind === "effectOccurrence") {
+    return serializedEffectOccurrenceReferenceIsOwned(
+      reference,
+      input.combatants,
+      input.storedLightEmitters,
+    );
+  }
+  if (!serializedSubjectProcedureReferenceIsExpected(reference, input)) {
+    return false;
+  }
+  return serializedExecutionReferenceOwnerIsValid(reference, input.combatants);
+}
+
+function serializedSubjectProcedureReferenceIsExpected(
+  reference: Exclude<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  input: {
+    readonly expectedProcedureRefStrings: ReadonlySet<string> | undefined;
+  },
+): boolean {
+  if (reference.kind !== "subjectProcedure") return true;
+  const expected = input.expectedProcedureRefStrings;
+  return (
+    expected === undefined || expected.size === 0 || expected.has(reference.ref)
+  );
 }
 
 function serializedExecutionReferenceOwnerIsValid(
-  reference: SerializedExecutionReferenceOwnership,
+  reference: Exclude<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   if (reference.ownerId === undefined) return true;
@@ -8704,66 +8847,10 @@ function serializedExecutionReferenceOwnerIsValid(
   );
 }
 
-function serializedEffectOccurrenceReferenceMatches(
-  reference: Extract<
-    SerializedExecutionReferenceOwnership,
-    { readonly kind: "effectOccurrence" }
-  >,
-  combatants: readonly EncodedBattleCreatureSnapshot[],
-  storedLightEmitters: BattleSnapshotInvariantInput["storedLightEmitters"],
-): boolean {
-  return Match.value(reference.expectation).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      activeEffect: (expectation) =>
-        serializedActiveEffectOccurrenceReferenceMatches(
-          reference,
-          expectation,
-          combatants,
-        ),
-      storedLightEmitter: () =>
-        storedLightEmitters.some(
-          (emitter) =>
-            emitter.effectRef === reference.ref &&
-            (reference.ownerId === undefined ||
-              emitter.sourceCombatantId === reference.ownerId),
-        ),
-    }),
-  );
-}
-
-function serializedActiveEffectOccurrenceReferenceMatches(
-  reference: Extract<
-    SerializedExecutionReferenceOwnership,
-    { readonly kind: "effectOccurrence" }
-  >,
-  expectation: Extract<
-    SerializedEffectOccurrenceExpectation,
-    { readonly kind: "activeEffect" }
-  >,
-  combatants: readonly EncodedBattleCreatureSnapshot[],
-): boolean {
-  const occurrence = combatants
-    .flatMap((combatant) =>
-      reference.ownerId === undefined ||
-      combatant.combatantId === reference.ownerId
-        ? combatant.activeEffectOccurrences
-        : [],
-    )
-    .find((candidate) => candidate.effectRef === reference.ref);
-  return (
-    occurrence !== undefined &&
-    expectation.activeEffectKinds.includes(occurrence.activeEffectKind) &&
-    serializedActiveEffectLocationMatchesExpectation(
-      occurrence.location,
-      expectation.location,
-    )
-  );
-}
-
 function serializedBattleHolesOwnBoundExecutionReferences(input: {
   readonly holes: readonly EncodedBattleHole[];
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
-  readonly storedLightEmitters: BattleSnapshotInvariantInput["storedLightEmitters"];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
   readonly boundExecutionRefs: ReadonlySet<string>;
   readonly expectedProcedureRefs:
     | ReadonlySet<BattleProcedureExecutionRef>
@@ -9228,7 +9315,7 @@ function serializedMonkFocusStrikeOwnsBoundProcedures(
     owner.origin.attackExecution.unarmedStrikeProcedureRef ===
       subject.procedureRef &&
     focusBinding !== undefined &&
-    focusBinding.procedure.kind === "unitSupportProfile" &&
+    isUnitFeatureProcedureOwner(focusBinding.procedure) &&
     (typeof focusBinding.procedure.execution === "string"
       ? focusBinding.procedure.execution
       : focusBinding.procedure.execution.kind) ===
@@ -9394,12 +9481,25 @@ function battleSnapshotInvariantsHold(
   );
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
+    battleSnapshotActionResourcesAreValid(snapshot) &&
     serializedBattleExecutionIdentityGraphIsValid(snapshot) &&
+    snapshot.readiedResponses.spells.every((readied) =>
+      serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
+    ) &&
+    snapshot.readiedResponses.actionsOrMovements.every((readied) =>
+      serializedReadiedResponseIsBound(snapshot.combatants, readied),
+    ) &&
+    battleSnapshotEnvironmentalSourcesAreValid(snapshot) &&
     snapshot.combatants.every((combatant) =>
       battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
-    ) &&
-    battleSnapshotActionResourcesAreValid(snapshot) &&
-    battleSnapshotReadiedResponsesAreValid(snapshot) &&
+    )
+  );
+}
+
+function battleSnapshotEnvironmentalSourcesAreValid(
+  snapshot: BattleSnapshotInvariantInput,
+): boolean {
+  return (
     snapshot.storedLightEmitters.every((emitter) =>
       serializedStoredLightEmitterIsValid(emitter, snapshot.combatants),
     ) &&
@@ -9412,22 +9512,9 @@ function battleSnapshotInvariantsHold(
   );
 }
 
-function battleSnapshotReadiedResponsesAreValid(
-  snapshot: BattleSnapshotInvariantInput,
-): boolean {
-  return (
-    snapshot.readiedResponses.spells.every((readied) =>
-      serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
-    ) &&
-    snapshot.readiedResponses.actionsOrMovements.every((readied) =>
-      serializedReadiedResponseIsBound(snapshot.combatants, readied),
-    )
-  );
-}
-
 function serializedStoredLightEmitterIsValid(
-  emitter: BattleSnapshotInvariantInput["storedLightEmitters"][number],
-  combatants: BattleSnapshotInvariantInput["combatants"],
+  emitter: EncodedBattleStoredLightEmitter,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   const owners = combatants.filter((combatant) =>
     battleEffectExecutionRefBelongsToScope(
@@ -9591,13 +9678,22 @@ const battleSnapshotInvariantAnnotations = {
     "Battle combatants, execution scopes, and scope cursors must be unique, battle-owned, and monotonic.",
 };
 
-export const BattlePresentedSnapshotSchema = Schema.Struct({
+const BattlePresentedSnapshotShapeSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattlePresentedCreatureSnapshotSchema),
-}).pipe(
+});
+
+export const BattlePresentedSnapshotSchema: Schema.Codec<
+  BattlePresentedSnapshot,
+  Schema.Codec.Encoded<typeof BattlePresentedSnapshotShapeSchema>,
+  never,
+  never
+> = BattlePresentedSnapshotShapeSchema.pipe(
   Schema.check(
-    Schema.makeFilter(
+    Schema.makeFilter<
+      Schema.Schema.Type<typeof BattlePresentedSnapshotShapeSchema>
+    >(
       (snapshot) =>
         Schema.is(BattleSnapshotInvariantShapeSchema)(snapshot) &&
         battleSnapshotInvariantsHold(snapshot),
@@ -9607,13 +9703,20 @@ export const BattlePresentedSnapshotSchema = Schema.Struct({
   Schema.annotate({ identifier: "BattlePresentedSnapshot" }),
 );
 
-export const BattleSnapshotSchema = Schema.Struct({
+const BattleSnapshotShapeSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
-}).pipe(
+});
+
+export const BattleSnapshotSchema: Schema.Codec<
+  BattleSnapshot,
+  Schema.Codec.Encoded<typeof BattleSnapshotShapeSchema>,
+  never,
+  never
+> = BattleSnapshotShapeSchema.pipe(
   Schema.check(
-    Schema.makeFilter(
+    Schema.makeFilter<Schema.Schema.Type<typeof BattleSnapshotShapeSchema>>(
       (snapshot) =>
         Schema.is(BattleSnapshotInvariantShapeSchema)(snapshot) &&
         battleSnapshotInvariantsHold(snapshot),
@@ -9693,7 +9796,7 @@ type BattleCheckpointFrontierEnvelopeShapeSchema = Schema.Struct<{
   frontier: BattleCheckpointFrontierShapeSchema;
 }>;
 
-type EncodedBattleCheckpointFrontierEnvelope =
+type BattleCheckpointFrontierEnvelopeInvariantInput =
   Schema.Schema.Type<BattleCheckpointFrontierEnvelopeShapeSchema>;
 
 function serializedInterruptChoiceSubject(
@@ -9832,7 +9935,7 @@ function serializedInterruptChoiceInvariantsHold(input: {
 }
 
 function battleCheckpointFrontierInvariantsHold(
-  envelope: EncodedBattleCheckpointFrontierEnvelope,
+  envelope: BattleCheckpointFrontierEnvelopeInvariantInput,
 ): boolean {
   const { checkpoint, frontier } = envelope;
   const boundExecutionRefs = new Set([
@@ -9911,7 +10014,12 @@ function battleCheckpointFrontierInvariantsHold(
   );
 }
 
-export const BattleCheckpointFrontierEnvelopeSchema = Schema.Struct({
+export const BattleCheckpointFrontierEnvelopeSchema: Schema.Codec<
+  Schema.Schema.Type<BattleCheckpointFrontierEnvelopeShapeSchema>,
+  Schema.Codec.Encoded<BattleCheckpointFrontierEnvelopeShapeSchema>,
+  never,
+  never
+> = Schema.Struct({
   checkpoint: BattleSnapshotSchema,
   frontier: Schema.Union([
     BattleCheckpointFrontierActsSchema,

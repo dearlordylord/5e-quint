@@ -25,14 +25,11 @@ import {
   LOADOUT_SLOTS,
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
-  isCharacterBuildToolProficiencyId,
-  isCopperPieceAmount,
-  parseCharacterEquipmentItemId,
-  parseCreationHoleId,
   CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
+  isCharacterBuildToolProficiencyId,
+  parseCreationHoleId,
   type CharacterBuild,
   type CharacterBuildProjectionCause,
-  type CharacterEquipmentItemIdText,
   type CharacterEquipmentItemSlot,
   type CreationChoiceOptionDecodeCause,
   type CreationBatchFillIssue,
@@ -78,9 +75,13 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
 );
 const CopperPieceAmountSchema = Schema.Number.pipe(
   Schema.check(
-    Schema.makeFilter((value) =>
-      isCopperPieceAmount(value) ? undefined : "invalid copper-piece amount",
-    ),
+    Schema.isInt({ message: "invalid copper-piece amount" }),
+    Schema.isGreaterThanOrEqualTo(0, {
+      message: "invalid copper-piece amount",
+    }),
+    Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER, {
+      message: "invalid copper-piece amount",
+    }),
   ),
   Schema.brand("NonNegativeInteger"),
   Schema.brand("CopperPieceAmount"),
@@ -153,15 +154,17 @@ const CreationChoiceOptionFactSchema = Schema.Struct({
   optionId: CreationChoiceOptionIdSchema,
   unitRef: Schema.optionalKey(UnitRefSchema),
 });
-
 const CreationFillOptionIdsSchema = Schema.Array(
   CreationChoiceOptionIdSchema,
 ).pipe(
   Schema.check(
-    Schema.makeFilter((optionIds) => !hasDuplicateStructuralValues(optionIds), {
-      message: "choice optionIds must not contain duplicate members",
-      jsonSchema: { uniqueItems: true },
-    }),
+    Schema.makeFilter(
+      (optionIds) =>
+        !hasDuplicateStructuralValues(optionIds)
+          ? undefined
+          : "choice optionIds must not contain duplicate members",
+      { toJsonSchema: () => ({ uniqueItems: true }) },
+    ),
   ),
 );
 
@@ -232,17 +235,19 @@ const ProgressionSchema = Schema.Struct({
     }),
   ),
 });
-const OriginLanguagesSchema = Schema.Array(
+const OriginLanguagesSchema = Schema.Tuple([
+  Schema.Literal("Common").annotate({
+    message: "origin languages must contain Common and two others",
+  }),
   Schema.Literals(STANDARD_LANGUAGES),
-).pipe(
+  Schema.Literals(STANDARD_LANGUAGES),
+]).pipe(
   Schema.refine(
     (languages): languages is CharacterStartingLanguages =>
-      languages.length === 3 &&
-      languages[0] === "Common" &&
       !hasDuplicateStructuralValues(languages),
     {
       message: "origin languages must contain Common and two others",
-      jsonSchema: { minItems: 3, maxItems: 3, uniqueItems: true },
+      toJsonSchema: () => ({ minItems: 3, maxItems: 3, uniqueItems: true }),
     },
   ),
 );
@@ -358,15 +363,15 @@ const characterEquipmentItemIdSchema = <
   slot?: Slot,
 ) =>
   Schema.String.pipe(
-    Schema.refine(
-      (value): value is CharacterEquipmentItemIdText<Slot> => {
-        const parsed = parseCharacterEquipmentItemId(value);
-        return (
-          Result.isSuccess(parsed) &&
-          (slot === undefined || parsed.success.slot === slot)
-        );
-      },
-      { message: "invalid Character Equipment Item id" },
+    Schema.check(
+      Schema.isPattern(
+        new RegExp(
+          slot === undefined
+            ? "^(?:armor|shield|main|off):(?=\\S)[\\s\\S]*\\S$"
+            : `^${slot}:(?=\\S)[\\s\\S]*\\S$`,
+        ),
+        { message: "invalid Character Equipment Item id" },
+      ),
     ),
     Schema.brand("CharacterEquipmentItemId"),
   );
@@ -401,7 +406,9 @@ const EquipmentSchema = Schema.Struct({
                   ? undefined
                   : "invalid Character Build tool proficiency id",
               {
-                jsonSchema: { enum: [...CHARACTER_BUILD_TOOL_PROFICIENCY_IDS] },
+                toJsonSchema: () => ({
+                  enum: [...CHARACTER_BUILD_TOOL_PROFICIENCY_IDS],
+                }),
               },
             ),
           ),

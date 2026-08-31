@@ -2,16 +2,14 @@ import { statBlockId } from "@dnd/shared/game-facts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { Result } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 import {
   battleActTraceCheckpoint,
@@ -151,7 +149,7 @@ function startBattleRight(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -247,25 +245,14 @@ function statBlockCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
   const statBlock = statBlockRecord();
-  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
+    statBlock,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: (() => {
-        const source = battleStatBlockCombatantSource(projected.runtime);
-        if (Result.isFailure(source)) {
-          throw new Error(battleStateInitIssueMessage(source.failure));
-        }
-        return source.success;
-      })(),
-      currentHp: Hp(statBlock.statBlock.hp.value),
-      tempHp: Hp(0),
-      ammunitionStocks: [],
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    currentHp: Hp(statBlock.statBlock.hp.value),
+    tempHp: Hp(0),
+    ammunitionStocks: [],
+    conditions: [],
   };
 }
 

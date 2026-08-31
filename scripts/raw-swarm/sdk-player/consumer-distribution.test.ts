@@ -103,7 +103,7 @@ function observedPinnedDeclarationDiagnostics(
 
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(536);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(530);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
     expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(
       PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -

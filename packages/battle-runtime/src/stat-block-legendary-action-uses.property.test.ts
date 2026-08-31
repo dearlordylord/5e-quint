@@ -131,8 +131,8 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
         };
         const sourceAdmission = battleStatBlockCombatantSource(malformed);
         expect(sourceAdmission).toMatchObject({
-          _tag: "Left",
-          left: {
+          _tag: "Failure",
+          failure: {
             tag: "battleStateInitIssue",
             message:
               "Battle runtime requires Stat Block Legendary Action uses to be a positive integer.",
@@ -150,8 +150,8 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
           snapshot,
         );
         expect(restoredAdmission).toMatchObject({
-          _tag: "Left",
-          left: {
+          _tag: "Failure",
+          failure: {
             reason: "invalidLegendaryActionUses",
           },
         });
@@ -172,8 +172,8 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
     };
     const sourceAdmission = battleStatBlockCombatantSource(malformed);
     expect(sourceAdmission).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "battleStateInitIssue",
         message:
           "Battle runtime requires Stat Block Legendary Action uses to be a positive integer.",

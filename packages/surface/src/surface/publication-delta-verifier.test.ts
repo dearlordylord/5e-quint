@@ -147,6 +147,18 @@ function fixtureArrayField(
   return field;
 }
 
+function fixtureAggregateCandidateDigest(
+  certificate: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(certificate, "artifacts"),
+      "aggregate",
+    ),
+    "candidate",
+  );
+}
+
 function canonicalizeFixture(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalizeFixture);
   if (!isFixtureObject(value)) return value;
@@ -272,17 +284,13 @@ describe("Surface publication delta verifier", () => {
   }, 180_000);
 
   test("production verification cannot be redirected to caller-selected certificate authority", () => {
-    const options: SurfacePublicationDeltaVerificationOptions & {
-      readonly certificateAuthority: {
-        readonly path: string;
-        readonly sha256: string;
-      };
-    } = {
+    const options: SurfacePublicationDeltaVerificationOptions = {
       repoRoot: repositoryRoot,
-      certificateAuthority: {
-        path: "/tmp/unreviewed-surface-certificate.json",
-        sha256: "0".repeat(64),
-      },
+    };
+    // @ts-expect-error Certificate authority belongs only to fixture verification.
+    options.certificateAuthority = {
+      path: "/tmp/unreviewed-surface-certificate.json",
+      sha256: "0".repeat(64),
     };
 
     const result = verifySurfacePublicationDelta(options);
@@ -325,17 +333,12 @@ describe("Surface publication delta verifier", () => {
         JSON.parse(readFileSync(fixturePath, "utf8")),
         "certificate",
       );
-      const candidate = fixtureObjectField(
-        fixtureObjectField(
-          fixtureObjectField(certificate, "artifacts"),
-          "aggregate",
-        ),
-        "candidate",
-      );
-      if (typeof candidate.byteLength !== "number") {
-        throw new Error("Expected candidate byte length");
+      const candidate = fixtureAggregateCandidateDigest(certificate);
+      const byteLength = candidate.byteLength;
+      if (typeof byteLength !== "number") {
+        throw new Error("Expected candidate byteLength number");
       }
-      candidate.byteLength += 1;
+      candidate.byteLength = byteLength + 1;
       writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
     });
 
@@ -349,14 +352,14 @@ describe("Surface publication delta verifier", () => {
         JSON.parse(readFileSync(fixturePath, "utf8")),
         "certificate",
       );
-      const candidate = fixtureObjectField(
-        fixtureObjectField(
-          fixtureObjectField(certificate, "artifacts"),
-          "aggregate",
-        ),
-        "candidate",
-      );
-      candidate.sha256 = "0".repeat(64);
+      const candidate = fixtureAggregateCandidateDigest(certificate);
+      const candidateSha256 = candidate.sha256;
+      if (typeof candidateSha256 !== "string") {
+        throw new Error("Expected candidate SHA-256 string");
+      }
+      candidate.sha256 = `${candidateSha256.startsWith("0") ? "1" : "0"}${candidateSha256.slice(
+        1,
+      )}`;
       writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
     });
 
@@ -634,6 +637,8 @@ describe("Surface publication delta verifier", () => {
   }, 180_000);
 
   test.each([
+    ["added", "authored-cross-record-reference"],
+    ["removed", "authored-cross-record-reference"],
     ["added", "authored-persistent-rule-facts"],
     ["removed", "authored-persistent-rule-facts"],
     ["added", "authored-stat-block-fidelity"],

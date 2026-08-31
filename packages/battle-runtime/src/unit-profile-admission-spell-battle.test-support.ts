@@ -10,7 +10,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 import { expect } from "vitest";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleId,
   battleFrontierInterruptDecisionForState,
@@ -19,7 +19,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   startBattle,
-  type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleResolutionResult,
   type BattleState,
   type BattleRuntimeSession,
@@ -61,20 +61,20 @@ export function spellBattle(input: {
   readonly preparedSpells?: readonly SpellRecord[];
   readonly casterFeaturePreparedSpells?: NonNullable<
     Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["spellcasting"]
   >["featurePreparedSpells"];
   readonly attack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly offHandAttack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["offHandAttack"];
   readonly selectedLoadout?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
   readonly spellSlots?: readonly {
@@ -83,7 +83,7 @@ export function spellBattle(input: {
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
   readonly extraTargetSpellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
   readonly extraTargetHp?: number;
@@ -92,56 +92,56 @@ export function spellBattle(input: {
   readonly targetMaxHp?: number;
   readonly targetStatBlock?: StatBlockRecord;
   readonly targetAttack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly targetArmorClass?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["armorClass"];
   readonly targetResources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly targetUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly targetUnitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
   readonly targetClassLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly targetSpellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
   readonly targetPreparedSpells?: readonly SpellRecord[];
   readonly casterClassLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly casterD20Statistics?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["d20Statistics"];
   readonly casterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly casterUnitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
   readonly casterResources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly casterMetamagic?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["metamagic"];
   readonly casterProficiencyBonus?: ProficiencyBonus;
@@ -260,7 +260,7 @@ export function spellBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

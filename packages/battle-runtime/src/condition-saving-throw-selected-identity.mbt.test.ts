@@ -10,7 +10,7 @@ import {
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
-// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveStagedConditionRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_monster doResolveHoldMonsterFailedSavingThrow doResolveHoldMonsterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
@@ -49,6 +49,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -62,7 +63,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type ConditionSavingThrowSelectedIdentityProjection = {
   readonly targetCharmed: boolean;
@@ -99,7 +100,7 @@ type ActionSpellAct = AvailableBattleAct & {
   >;
 };
 type CharacterCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >;
 type CharacterClassName =
@@ -254,7 +255,7 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: "hideous_laughter",
       procedures: [
         {
-          actionName: "doResolveStagedConditionRepeatSavingThrowSuccess",
+          actionName: "doResolveHideousLaughterRepeatSavingThrowSuccess",
           discover: () =>
             resolvedProjection(
               resolveStagedConditionRepeatSavingThrowSuccess(),
@@ -1213,7 +1214,7 @@ function conditionSpellBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

@@ -17,7 +17,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
-describe("Find Familiar projection failures", () => {
+describe("Spawned companion Stat Block projection failures", () => {
   test("preserves every accumulated unsupported procedure location", () => {
     const result = castInvalidFamiliar(unsupportedFamiliarStatBlock());
 
@@ -25,7 +25,7 @@ describe("Find Familiar projection failures", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Companion form projection failed in actions procedure 1, actions procedure 3: the procedure binding is not supported by battle execution.",
+        "Spawned companion Stat Block projection failed in actions procedure 1, actions procedure 3: the procedure binding is not supported by battle execution.",
     });
   });
 
@@ -36,7 +36,7 @@ describe("Find Familiar projection failures", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Companion form projection failed: battle initialization requires a concrete Size.",
+        "Spawned companion Stat Block projection failed: battle initialization requires a concrete Size.",
     });
   });
 });

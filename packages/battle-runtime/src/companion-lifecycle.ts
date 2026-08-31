@@ -5,7 +5,7 @@ import {
   ownerLongRestExpiringFamiliarLikeProtocol,
 } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 import * as Option from "effect/Option";
@@ -33,12 +33,6 @@ import {
   withSpawnedCompanionCombatant,
 } from "./companion-lifecycle-execution.ts";
 import { spawnedCompanionDisappearedAtZeroHitPointsState } from "./companion-state.ts";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlockWithCreatureType,
-  type AuthoredStatBlockProjection,
-  type BattleStatBlockProjectionFailure,
-} from "./stat-block-authored-projection.ts";
 
 import type {
   BattleAmmunitionStock,
@@ -65,14 +59,18 @@ import {
 } from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
-import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
+import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlockWithCreatureType,
+} from "./stat-block-authored-projection.ts";
 
 export type SpawnedCompanionReappearanceInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly catalog: FindFamiliarStatBlockCatalog;
+  readonly catalog: BattleStatBlockExecutionCatalog;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
     import("./companion-state.ts").BattleCompanionPlacement,
@@ -341,61 +339,27 @@ export type ResolvedSpawnedCompanionCastInput = Omit<
   readonly retainedTransition: "reject" | "sessionOwned";
 };
 
-export type SpawnedCompanionCastWithPresentation =
-  | {
-      readonly result: Extract<
-        BattleResolutionResult,
-        { readonly tag: "resolved" }
-      >;
-      readonly presentation: {
-        readonly combatantId: CombatantId;
-        readonly source: import("./battle-runtime-context.ts").BattleStatBlockPresentationSource;
-      };
-    }
-  | {
-      readonly result: Extract<
-        BattleResolutionResult,
-        { readonly tag: "invalid" }
-      >;
-    };
-
-type SpawnedCompanionCastPreparation = {
-  readonly prior: SpawnedCompanionCastPrior;
-  readonly familiarId: CombatantId;
-};
-
-function prepareSpawnedCompanionIdentity(
+export function castResolvedSpawnedCompanion(
   input: ResolvedSpawnedCompanionCastInput,
-  prior: SpawnedCompanionCastPrior,
-): Result.Result<
-  SpawnedCompanionCastPreparation,
-  Extract<BattleResolutionResult, { readonly tag: "invalid" }>
-> {
-  if (
-    prior.tag !== "none" &&
-    prior.familiar.identity.tag === "retainedBetweenBattles" &&
-    input.retainedTransition !== "sessionOwned"
-  ) {
-    return Result.fail(
-      invalidSpawnedCompanionResult(
-        input.state,
-        "invalidFill",
-        "Retained companion recast requires the session-owned authored selection transition.",
-      ),
+): BattleResolutionResult {
+  /* v8 ignore start -- @preserve -- Stale direct call: discovered Find Familiar acts retain a caster already present in the same battle state. */
+  if (!input.state.combatants.has(input.casterId)) {
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "missingCombatant",
+      "Companion owner is not in this battle.",
     );
   }
-  const requestedIdentityIssue = spawnedCompanionIdentityIssue(
-    input.state,
-    input.casterId,
-    input.familiarId,
+  /* v8 ignore stop -- @preserve */
+  const prior = spawnedCompanionCastPrior(
+    findCompanionEntryByOwner(input.state.companions, input.casterId)
+      ?.companion,
   );
-  if (requestedIdentityIssue !== null) {
-    return Result.fail(
-      invalidSpawnedCompanionResult(
-        input.state,
-        "invalidFill",
-        requestedIdentityIssue,
-      ),
+  if (!spawnedCompanionRetainedTransitionIsAllowed(prior, input)) {
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "invalidFill",
+      "Retained companion recast requires the session-owned authored selection transition.",
     );
   }
   const familiarId =
@@ -405,68 +369,21 @@ function prepareSpawnedCompanionIdentity(
     input.casterId,
     familiarId,
   );
-  return identityIssue === null
-    ? Result.succeed({ prior, familiarId })
-    : Result.fail(
-        invalidSpawnedCompanionResult(
-          input.state,
-          "invalidFill",
-          identityIssue,
-        ),
-      );
-}
-
-function prepareSpawnedCompanionCast(
-  input: ResolvedSpawnedCompanionCastInput,
-): Result.Result<
-  SpawnedCompanionCastPreparation,
-  Extract<BattleResolutionResult, { readonly tag: "invalid" }>
-> {
-  /* v8 ignore start -- @preserve -- Stale direct call: discovered companion acts retain an owner already present in the same battle state. */
-  if (!input.state.combatants.has(input.casterId)) {
-    return Result.fail(
-      invalidSpawnedCompanionResult(
-        input.state,
-        "missingCombatant",
-        "Companion owner is not in this battle.",
-      ),
+  if (identityIssue !== null) {
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "invalidFill",
+      identityIssue,
     );
   }
-  /* v8 ignore stop -- @preserve */
-  const prior = spawnedCompanionCastPrior(
-    findCompanionEntryByOwner(input.state.companions, input.casterId)
-      ?.companion,
-  );
-  return prepareSpawnedCompanionIdentity(input, prior);
-}
-
-export function castResolvedSpawnedCompanion(
-  input: ResolvedSpawnedCompanionCastInput,
-): BattleResolutionResult {
-  return castResolvedSpawnedCompanionWithPresentation(input).result;
-}
-
-export function castResolvedSpawnedCompanionWithPresentation(
-  input: ResolvedSpawnedCompanionCastInput,
-): SpawnedCompanionCastWithPresentation {
-  const preparation = prepareSpawnedCompanionCast(input);
-  if (Result.isFailure(preparation)) {
-    return { result: preparation.failure };
-  }
-  const { prior, familiarId } = preparation.success;
   const resolvedForm = input.resolvedForm;
-  const projected = projectSpawnedCompanionStatBlock(resolvedForm);
-  if (Result.isFailure(projected)) {
-    return {
-      result: invalidSpawnedCompanionResult(
-        input.state,
-        "invalidFill",
-        battleStatBlockProjectionFailureMessage(
-          projected.failure,
-          "Companion form projection failed",
-        ),
-      ),
-    };
+  const projectedForm = projectCompanionRuntimeStatBlock(resolvedForm);
+  if (Result.isFailure(projectedForm)) {
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "invalidFill",
+      projectedForm.failure,
+    );
   }
   const nextFamiliar = spawnedCompanionPresentState({
     form: {
@@ -483,17 +400,15 @@ export function castResolvedSpawnedCompanionWithPresentation(
   const preservedHitPoints = hitPointsForSpawnedCompanionCast({
     state: input.state,
     prior,
-    statBlock: projected.success.runtime,
+    statBlock: projectedForm.success,
   });
   /* v8 ignore start -- @preserve -- Corrupt retained state: admitted present/dismissed companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
-    return {
-      result: invalidSpawnedCompanionResult(
-        input.state,
-        "invalidFill",
-        preservedHitPoints,
-      ),
-    };
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "invalidFill",
+      preservedHitPoints,
+    );
   }
   /* v8 ignore stop -- @preserve */
   const reactionAvailable = reactionAvailableForSpawnedCompanionCast({
@@ -502,13 +417,11 @@ export function castResolvedSpawnedCompanionWithPresentation(
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
   if (Result.isFailure(reactionAvailable)) {
-    return {
-      result: invalidSpawnedCompanionResult(
-        input.state,
-        "missingCombatant",
-        reactionAvailable.failure.message,
-      ),
-    };
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "missingCombatant",
+      reactionAvailable.failure.message,
+    );
   }
   /* v8 ignore stop -- @preserve */
   const nextState = withAdmittedSpawnedCompanionCombatant({
@@ -517,7 +430,7 @@ export function castResolvedSpawnedCompanionWithPresentation(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: projected.success.runtime,
+    statBlock: projectedForm.success,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.success,
     ...(preservedHitPoints === null
@@ -529,20 +442,25 @@ export function castResolvedSpawnedCompanionWithPresentation(
   });
   /* v8 ignore start -- @preserve -- The resolved catalog form and collision-checked combatant identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
-    return { result: nextState };
+    return nextState;
   }
   /* v8 ignore stop -- @preserve */
-  return {
-    result: resolvedSpawnedCompanionResult(
-      nextState.state,
-      [],
-      spawnedCompanionLifecycleRouteEvents(),
-    ),
-    presentation: {
-      combatantId: familiarId,
-      source: projected.success.presentation,
-    },
-  };
+  return resolvedSpawnedCompanionResult(
+    nextState.state,
+    [],
+    spawnedCompanionLifecycleRouteEvents(),
+  );
+}
+
+function spawnedCompanionRetainedTransitionIsAllowed(
+  prior: ReturnType<typeof spawnedCompanionCastPrior>,
+  input: Pick<ResolvedSpawnedCompanionCastInput, "retainedTransition">,
+): boolean {
+  return (
+    prior.tag === "none" ||
+    prior.familiar.identity.tag !== "retainedBetweenBattles" ||
+    input.retainedTransition === "sessionOwned"
+  );
 }
 
 export function castWildCompanion(
@@ -575,10 +493,21 @@ export function castWildCompanion(
     return spent;
   }
   /* v8 ignore stop -- @preserve */
-  const projected = wildCompanionFormProjection(input, spent.state);
-  if (Result.isFailure(projected)) {
-    return projected.failure;
+  const admittedForm = resolveWildCompanionRuntimeForm({
+    catalog: input.catalog,
+    eligibility: input.eligibility,
+    selection: input.selection,
+  });
+  /* v8 ignore start -- @preserve -- Malformed authored selection: the Surface form resolver owns unknown Wild Companion form diagnostics. */
+  if (Result.isFailure(admittedForm)) {
+    return invalidSpawnedCompanionResult(
+      spent.state,
+      "invalidFill",
+      admittedForm.failure,
+    );
   }
+  /* v8 ignore stop -- @preserve */
+  const projectedForm = admittedForm.success;
   const prior = spawnedCompanionCastPrior(
     findCompanionEntryByOwner(spent.state.companions, input.casterId)
       ?.companion,
@@ -614,7 +543,7 @@ export function castWildCompanion(
   const preservedHitPoints = hitPointsForSpawnedCompanionCast({
     state: spent.state,
     prior,
-    statBlock: projected.success.runtime,
+    statBlock: projectedForm,
   });
   /* v8 ignore start -- @preserve -- Corrupt retained state: admitted Wild Companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
@@ -644,7 +573,7 @@ export function castWildCompanion(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: projected.success.runtime,
+    statBlock: projectedForm,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.success,
     ...(preservedHitPoints === null
@@ -662,41 +591,19 @@ export function castWildCompanion(
   return resolvedSpawnedCompanionResult(nextState.state, []);
 }
 
-function wildCompanionFormProjection(
-  input: WildCompanionCastInput,
-  state: BattleState,
-): Result.Result<
-  AuthoredStatBlockProjection,
-  Extract<BattleResolutionResult, { readonly tag: "invalid" }>
-> {
+function resolveWildCompanionRuntimeForm(
+  input: Pick<WildCompanionCastInput, "catalog" | "eligibility" | "selection">,
+): Result.Result<BattleStatBlockExecutionSource, string> {
   const resolvedForm = resolveSpawnedCompanionForm({
-    catalog: input.catalog,
-    eligibility: input.eligibility,
-    selection: input.selection,
+    ...input,
     creatureTypeOverrideChoiceId: "fey",
   });
-  /* v8 ignore start -- @preserve -- Malformed authored selection: the Surface form resolver owns unknown Wild Companion form diagnostics. */
-  if (resolvedForm.tag === "issue") {
-    return Result.fail(
-      invalidSpawnedCompanionResult(state, "invalidFill", resolvedForm.message),
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  return Result.mapError(
-    projectSpawnedCompanionStatBlock({
-      statBlock: resolvedForm.form.statBlock,
-      creatureTypeOverride: "fey",
-    }),
-    (failure) =>
-      invalidSpawnedCompanionResult(
-        state,
-        "invalidFill",
-        battleStatBlockProjectionFailureMessage(
-          failure,
-          "Companion form projection failed",
-        ),
-      ),
-  );
+  if (resolvedForm.tag === "issue") return Result.fail(resolvedForm.message);
+  const projectedForm = projectCompanionRuntimeStatBlock({
+    statBlock: resolvedForm.form.statBlock,
+    creatureTypeOverride: "fey",
+  });
+  return projectedForm;
 }
 
 type CompanionFormResolutionFacts = Extract<
@@ -804,54 +711,13 @@ function companionAdmissionPreconditionIssue(
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
 ): Result.Result<BattleState, BattleStateInitIssue> {
-  return Result.map(
-    admitCompanionToBattleWithPresentation(input),
-    (admitted) => admitted.state,
-  );
-}
-
-export type CompanionBattleAdmissionWithPresentation =
-  | {
-      readonly tag: "embodiedOutsideBattle";
-      readonly state: BattleState;
-      readonly companionId: CombatantId;
-      readonly presentation: import("./battle-runtime-context.ts").BattleStatBlockPresentationSource;
-    }
-  | {
-      readonly tag: "stored";
-      readonly state: BattleState;
-    };
-
-export function admitCompanionToBattleWithPresentation(
-  input: CompanionBattleAdmissionInput,
-): Result.Result<
-  CompanionBattleAdmissionWithPresentation,
-  BattleStateInitIssue
-> {
   const preconditionIssue = companionAdmissionPreconditionIssue(input);
   if (preconditionIssue !== undefined) return Result.fail(preconditionIssue);
   if (!("companionId" in input)) {
-    return Result.map(admitAbsentCompanionToBattle({ ...input }), (state) => ({
-      tag: "stored" as const,
-      state,
-    }));
+    return admitAbsentCompanionToBattle({
+      ...input,
+    });
   }
-  return admitEmbodiedCompanionToBattleWithPresentation(input);
-}
-
-type EmbodiedCompanionBattleAdmissionInput = CompanionBattleAdmissionInput & {
-  readonly companionId: CombatantId;
-};
-
-function admitEmbodiedCompanionToBattleWithPresentation(
-  input: EmbodiedCompanionBattleAdmissionInput,
-): Result.Result<
-  Extract<
-    CompanionBattleAdmissionWithPresentation,
-    { readonly tag: "embodiedOutsideBattle" }
-  >,
-  BattleStateInitIssue
-> {
   /* v8 ignore start -- @preserve -- Type-level invariant: the companionId branch of CompanionBattleAdmissionInput requires an embodied manifestation. */
   if (input.manifestation.tag !== "embodiedOutsideBattle") {
     return companionStateInitIssue(
@@ -884,19 +750,12 @@ function admitEmbodiedCompanionToBattleWithPresentation(
     return companionStateInitIssue(resolvedForm.facts, resolvedForm.message);
   }
   /* v8 ignore stop -- @preserve */
-  const projected = projectSpawnedCompanionStatBlock(resolvedForm.form);
-  if (Result.isFailure(projected)) {
-    return companionStateInitIssue(
-      {
-        kind: "companionCombatantAdmissionInvalid",
-        ownerId: input.ownerId,
-        companionCombatantId: input.companionId,
-      },
-      battleStatBlockProjectionFailureMessage(
-        projected.failure,
-        "Companion form projection failed",
-      ),
-    );
+  const projectedForm = projectCompanionRuntimeStatBlock(resolvedForm.form);
+  if (Result.isFailure(projectedForm)) {
+    return Result.fail({
+      tag: "battleStateInitIssue",
+      message: projectedForm.failure,
+    });
   }
   const nextCompanion = spawnedCompanionPresentState({
     form: { formAccess: input.manifestation.storedForm.formAccess },
@@ -913,7 +772,7 @@ function admitEmbodiedCompanionToBattleWithPresentation(
     familiarId: input.companionId,
     familiar: nextCompanion,
     initiative: input.manifestation.initiative,
-    statBlock: projected.success.runtime,
+    statBlock: projectedForm.success,
     ammunitionStocks: input.manifestation.ammunitionStocks,
     currentHp: input.manifestation.hitPoints.currentHp,
     tempHp: input.manifestation.hitPoints.tempHp,
@@ -943,19 +802,12 @@ function admitEmbodiedCompanionToBattleWithPresentation(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const state = withInitialInitiativeOrder(
+  return withInitialInitiativeOrder(
     nextState.state,
     input.ownerId,
     input.companionId,
     input.initialCombatantOrder,
   );
-  if (Result.isFailure(state)) return Result.fail(state.failure);
-  return Result.succeed({
-    tag: "embodiedOutsideBattle",
-    state: state.success,
-    companionId: input.companionId,
-    presentation: projected.success.presentation,
-  });
 }
 
 function spawnedCompanionIdentityStateInitIssue(
@@ -1203,6 +1055,23 @@ function hitPointsForSpawnedCompanionCast(input: {
   });
 }
 
+function projectCompanionRuntimeStatBlock(
+  form: SpawnedCompanionResolvedForm,
+): Result.Result<BattleStatBlockExecutionSource, string> {
+  const projection = projectAuthoredStatBlockWithCreatureType(
+    form.statBlock,
+    form.creatureTypeOverride,
+  );
+  return Result.isFailure(projection)
+    ? Result.fail(
+        battleStatBlockProjectionFailureMessage(
+          projection.failure,
+          "Spawned companion Stat Block projection failed",
+        ),
+      )
+    : Result.succeed(projection.success.runtime);
+}
+
 function reactionAvailableForSpawnedCompanionCast(input: {
   readonly state: BattleState;
   readonly prior: SpawnedCompanionCastPrior;
@@ -1244,18 +1113,6 @@ function hitPointsForAdoptedFamiliarForm(input: {
     currentHp,
     tempHp: input.hitPoints.tempHp,
   };
-}
-
-function projectSpawnedCompanionStatBlock(
-  form: SpawnedCompanionResolvedForm,
-): Result.Result<
-  AuthoredStatBlockProjection,
-  BattleStatBlockProjectionFailure
-> {
-  return projectAuthoredStatBlockWithCreatureType(
-    form.statBlock,
-    form.creatureTypeOverride,
-  );
 }
 
 function resolveStoredSpawnedCompanionForm(input: {

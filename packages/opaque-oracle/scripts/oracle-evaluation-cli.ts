@@ -1,6 +1,5 @@
 import { pathToFileURL } from "node:url";
 
-import { Command, Flag } from "effect/unstable/cli";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import type { ErrorObject, ValidateFunction } from "ajv";
 import {
@@ -54,7 +53,8 @@ import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 export const DEFAULT_CORPUS_PATH = "corpus/oracle-evaluation-corpus.json";
 export const DEFAULT_PUBLICATION_DIRECTORY = "publication";
 
-const CLI_VERSION = "0.0.0";
+const CLI_COMMANDS = ["generate", "check", "write"] as const;
+type OracleEvaluationCliCommandName = (typeof CLI_COMMANDS)[number];
 
 export type OracleCatalogIssue =
   | {
@@ -139,6 +139,10 @@ export type OracleCorpusValidationIssue =
     };
 
 export type OracleEvaluationCliError =
+  | {
+      readonly tag: "invalidArguments";
+      readonly message: string;
+    }
   | {
       readonly tag: "catalogBuildFailed";
       readonly issues: ReadonlyNonEmptyArray<OracleCatalogIssue>;
@@ -226,97 +230,87 @@ export function buildProductionOracleEvaluationServices(): Result.Result<
   }
 }
 
-/** Run the Effect CLI with injected evaluator services and platform layers. */
+type OracleEvaluationCliCommand =
+  | {
+      readonly tag: "generate";
+      readonly publicationDirectory: string;
+    }
+  | {
+      readonly tag: "check" | "write";
+      readonly paths: OracleEvaluationCliPaths;
+    };
+
+/** Parse and run the CLI with injected evaluator services and platform layers. */
 export function runOracleEvaluationCli(
   args: ReadonlyArray<string>,
   services: OracleEvaluationServices,
   dependencies: OracleEvaluationCliDependencies = {},
 ) {
-  const command = makeRootCommand(
-    services,
-    dependencies.buildCorpus ?? buildOracleEvaluationCorpus,
-  );
-  return Command.runWith(command, {
-    version: CLI_VERSION,
-  })(normalizeCliArgs(args));
-}
-
-function normalizeCliArgs(args: ReadonlyArray<string>): ReadonlyArray<string> {
-  // The short form keeps the exported runner convenient for focused tests;
-  // process.argv includes the executable and script path.
-  return args[0] === "generate" || args[0] === "check" || args[0] === "write"
-    ? args
-    : args.slice(2);
-}
-
-function makeRootCommand(
-  services: OracleEvaluationServices,
-  buildCorpus: OracleEvaluationCorpusBuilder,
-) {
-  const corpusOption = Flag.string("corpus").pipe(
-    Flag.withDefault(DEFAULT_CORPUS_PATH),
-    Flag.withDescription("Path to the one Oracle evaluation corpus."),
-  );
-  const publicationDirectoryOption = Flag.string("publication-directory").pipe(
-    Flag.withDefault(DEFAULT_PUBLICATION_DIRECTORY),
-    Flag.withDescription("Directory containing committed publication schemas."),
-  );
-
-  const generate = Command.make(
-    "generate",
-    { publicationDirectory: publicationDirectoryOption },
-    ({ publicationDirectory }) =>
+  const command = parseCliArguments(args);
+  if (Result.isFailure(command)) return Effect.fail(command.failure);
+  const buildCorpus = dependencies.buildCorpus ?? buildOracleEvaluationCorpus;
+  return Match.value(command.success).pipe(
+    Match.when({ tag: "generate" }, ({ publicationDirectory }) =>
       generateEffect(services, buildCorpus, publicationDirectory),
-  ).pipe(
-    Command.withDescription(
-      "Generate the canonical corpus to stdout without filesystem writes.",
     ),
-  );
-  const check = Command.make(
-    "check",
-    {
-      corpus: corpusOption,
-      publicationDirectory: publicationDirectoryOption,
-    },
-    ({ corpus, publicationDirectory }) =>
-      checkEffect(
-        services,
-        {
-          corpusPath: corpus,
-          publicationDirectory,
-        },
-        buildCorpus,
-      ),
-  ).pipe(
-    Command.withDescription(
-      "Validate the corpus, schemas, and live evaluator output without writes.",
+    Match.when({ tag: "check" }, ({ paths }) =>
+      checkEffect(services, paths, buildCorpus),
     ),
-  );
-  const write = Command.make(
-    "write",
-    {
-      corpus: corpusOption,
-      publicationDirectory: publicationDirectoryOption,
-    },
-    ({ corpus, publicationDirectory }) =>
-      writeEffect(
-        services,
-        {
-          corpusPath: corpus,
-          publicationDirectory,
-        },
-        buildCorpus,
-      ),
-  ).pipe(
-    Command.withDescription(
-      "Generate, validate, and atomically replace the committed corpus.",
+    Match.when({ tag: "write" }, ({ paths }) =>
+      writeEffect(services, paths, buildCorpus),
     ),
+    Match.exhaustive,
   );
+}
 
-  return Command.make("oracle", {}).pipe(
-    Command.withDescription("Opaque Oracle evaluation corpus tools."),
-    Command.withSubcommands([generate, check, write]),
-  );
+function isCliCommand(
+  value: string | undefined,
+): value is OracleEvaluationCliCommandName {
+  return CLI_COMMANDS.some((command) => command === value);
+}
+
+function parseCliArguments(
+  args: ReadonlyArray<string>,
+): Result.Result<OracleEvaluationCliCommand, OracleEvaluationCliError> {
+  const commandArguments = isCliCommand(args[0]) ? args : args.slice(2);
+  const command = commandArguments[0];
+  if (!isCliCommand(command)) {
+    return Result.fail(invalidArguments("Expected generate, check, or write."));
+  }
+
+  let corpusPath = DEFAULT_CORPUS_PATH;
+  let publicationDirectory = DEFAULT_PUBLICATION_DIRECTORY;
+  const seen = new Set<string>();
+  for (let position = 1; position < commandArguments.length; position += 2) {
+    const option = commandArguments[position];
+    const value = commandArguments[position + 1];
+    if (
+      value === undefined ||
+      (option !== "--corpus" && option !== "--publication-directory") ||
+      seen.has(option)
+    ) {
+      return Result.fail(
+        invalidArguments(
+          `Invalid or duplicate option: ${option ?? "<missing>"}.`,
+        ),
+      );
+    }
+    if (command === "generate" && option === "--corpus") {
+      return Result.fail(
+        invalidArguments("The generate command does not accept --corpus."),
+      );
+    }
+    seen.add(option);
+    if (option === "--corpus") corpusPath = value;
+    if (option === "--publication-directory") publicationDirectory = value;
+  }
+
+  return command === "generate"
+    ? Result.succeed({ tag: command, publicationDirectory })
+    : Result.succeed({
+        tag: command,
+        paths: { corpusPath, publicationDirectory },
+      });
 }
 
 function generateEffect(
@@ -406,6 +400,7 @@ function validationIssuesOrFail(
     Match.when({ tag: "sourceBuildFailed" }, failValidation),
     Match.when({ tag: "filesystemFailed" }, failValidation),
     Match.when({ tag: "terminalFailed" }, failValidation),
+    Match.when({ tag: "invalidArguments" }, failValidation),
     Match.exhaustive,
   );
 }
@@ -430,6 +425,7 @@ function canonicalIssuesOrFail(
     Match.when({ tag: "filesystemFailed" }, failValidation),
     Match.when({ tag: "corpusValidationFailed" }, failValidation),
     Match.when({ tag: "terminalFailed" }, failValidation),
+    Match.when({ tag: "invalidArguments" }, failValidation),
     Match.exhaustive,
   );
 }
@@ -482,7 +478,7 @@ function buildGeneratedCorpus(
       ? Effect.fail(
           sourceBuildFailed(
             toReadonlyNonEmpty(result.failure.map(sourceIssue), () => ({
-              tag: "sourceDefect" as const,
+              tag: "sourceDefect",
               cause: new Error("Source builder returned no diagnostic issues."),
             })),
           ),
@@ -1088,6 +1084,12 @@ function terminalError(
   error: PlatformError,
 ): Extract<OracleEvaluationCliError, { readonly tag: "terminalFailed" }> {
   return { tag: "terminalFailed", error };
+}
+
+function invalidArguments(
+  message: string,
+): Extract<OracleEvaluationCliError, { readonly tag: "invalidArguments" }> {
+  return { tag: "invalidArguments", message };
 }
 
 function sourceIssue(issue: OracleCorpusIssue): OracleSourceIssue {

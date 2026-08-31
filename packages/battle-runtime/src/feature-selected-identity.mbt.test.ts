@@ -36,6 +36,7 @@ import {
   type ActiveOngoingFeatureOccurrence,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -45,7 +46,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type InnateSorcerySpellAttackRollMode = "none" | "advantage" | "disadvantage";
 type InnateSorcerySelectedIdentityLastResult =
@@ -420,7 +421,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -430,15 +431,15 @@ function characterCombatant(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly classLevels: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
@@ -507,7 +508,7 @@ function wizardSpellListSource(): import("./index.ts").CharacterBattleSpellListF
 
 function innateSorceryResource(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {

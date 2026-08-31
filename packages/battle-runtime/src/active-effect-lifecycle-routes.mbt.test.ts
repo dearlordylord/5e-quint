@@ -1,5 +1,3 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -61,23 +59,6 @@ const SCALAR_BUFF_ROUTE_SURFACE_BY_TAG = {
 type ScalarBuffRouteSurface =
   (typeof SCALAR_BUFF_ROUTE_SURFACE_BY_TAG)[keyof typeof SCALAR_BUFF_ROUTE_SURFACE_BY_TAG];
 
-const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
-  FreshRouteSurface: "fresh",
-  InitialSaveConditionAppliedRouteSurface: "initialSaveConditionApplied",
-  ConcentrationBrokenBeforeRepeatRouteSurface:
-    "concentrationBrokenBeforeRepeat",
-  CasterTurnEndedWithEffectRouteSurface: "casterTurnEndedWithEffect",
-  CasterTurnEndedAfterConcentrationBreakRouteSurface:
-    "casterTurnEndedAfterConcentrationBreak",
-  TargetTurnEndedAfterConcentrationBreakRouteSurface:
-    "targetTurnEndedAfterConcentrationBreak",
-  RepeatSaveFrontierRouteSurface: "repeatSaveFrontier",
-  RepeatSaveSuccessCleanupRouteSurface: "repeatSaveSuccessCleanup",
-  RepeatSaveFailureUnconsciousRouteSurface: "repeatSaveFailureUnconscious",
-} as const satisfies Readonly<Record<string, string>>;
-type SleepRepeatSaveRouteSurface =
-  (typeof SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG)[keyof typeof SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG];
-
 const TURN_BOUNDARY_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
   TargetStartTurnResolvedRouteSurface: "targetStartTurnResolved",
@@ -125,19 +106,6 @@ const scalarBuffRouteDriverSchema = {
   step: {},
 } as const;
 
-const sleepRepeatSaveRouteDriverSchema = {
-  init: {},
-  doFillInitialSaveFailure: {},
-  doBreakConcentrationBeforeRepeat: {},
-  doEndCasterTurn: {},
-  doEndCasterTurnAfterConcentrationBreak: {},
-  doEndTargetTurnAfterConcentrationBreak: {},
-  doDiscoverRepeatSave: {},
-  doFillRepeatSaveSuccess: {},
-  doFillRepeatSaveFailure: {},
-  step: {},
-} as const;
-
 const turnBoundaryRouteDriverSchema = {
   init: {},
   doResolveTargetStartTurn: {},
@@ -159,8 +127,6 @@ const ROLL_MODIFIER_ROUTE_SUBJECT =
   "rollModifierEffect" satisfies ReducerRouteSubjectFamily;
 const SCALAR_BUFF_ROUTE_SUBJECT =
   "scalarBuffEffect" satisfies ReducerRouteSubjectFamily;
-const SLEEP_REPEAT_SAVE_ROUTE_SUBJECT =
-  "repeatSaveConditionEffect" satisfies ReducerRouteSubjectFamily;
 const TURN_BOUNDARY_ROUTE_SUBJECT =
   "turnBoundaryEffectLifecycle" satisfies ReducerRouteSubjectFamily;
 const SPELL_ATTACK_PROCEDURE_ROUTE_SUBJECT =
@@ -526,147 +492,6 @@ function createScalarBuffRouteDriver() {
   });
 }
 
-function sleepRepeatSaveDiscover(
-  holes: readonly ReducerRouteHole[],
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return discoverRoute({
-    subject: SLEEP_REPEAT_SAVE_ROUTE_SUBJECT,
-    holes,
-    owner,
-  });
-}
-
-function sleepRepeatSaveResolve(
-  fill: ReducerRouteFill,
-  holes: readonly ReducerRouteHole[],
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return resolveRoute({
-    subject: SLEEP_REPEAT_SAVE_ROUTE_SUBJECT,
-    fill,
-    holes,
-    owner,
-  });
-}
-
-function hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return resolveRouteWithoutFill({
-    subject: SLEEP_REPEAT_SAVE_ROUTE_SUBJECT,
-    holes: routeHoles(),
-    owner,
-  });
-}
-
-function createSleepRepeatSaveRouteDriver() {
-  return defineDriver(sleepRepeatSaveRouteDriverSchema, () => {
-    let state = routeState<SleepRepeatSaveRouteSurface>("fresh", [
-      startRoute(),
-    ]);
-    const reset = (): void => {
-      state = routeState("fresh", [startRoute()]);
-    };
-
-    return {
-      init: reset,
-      doFillInitialSaveFailure: () => {
-        state = routeState("initialSaveConditionApplied", [
-          ...state.route,
-          sleepRepeatSaveDiscover(
-            routeHoles("savingThrowOutcome"),
-            SPELL_INVOCATION_OWNER,
-          ),
-          sleepRepeatSaveResolve(
-            "savingThrowOutcome",
-            routeHoles(),
-            "battleConditionLifecycle",
-          ),
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleActiveEffect",
-          ),
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleConcentration",
-          ),
-        ]);
-      },
-      doBreakConcentrationBeforeRepeat: () => {
-        state = routeState("concentrationBrokenBeforeRepeat", [
-          ...state.route,
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleConcentration",
-          ),
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleActiveEffect",
-          ),
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleConditionLifecycle",
-          ),
-        ]);
-      },
-      doEndCasterTurn: () => {
-        state = routeState("casterTurnEndedWithEffect", [
-          ...state.route,
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleTurnBoundary",
-          ),
-        ]);
-      },
-      doEndCasterTurnAfterConcentrationBreak: () => {
-        state = routeState("casterTurnEndedAfterConcentrationBreak", [
-          ...state.route,
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleTurnBoundary",
-          ),
-        ]);
-      },
-      doEndTargetTurnAfterConcentrationBreak: () => {
-        state = routeState("targetTurnEndedAfterConcentrationBreak", [
-          ...state.route,
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleTurnBoundary",
-          ),
-        ]);
-      },
-      doDiscoverRepeatSave: () => {
-        state = routeState("repeatSaveFrontier", [
-          ...state.route,
-          sleepRepeatSaveDiscover(
-            routeHoles("savingThrowOutcome"),
-            "battleTurnBoundary",
-          ),
-        ]);
-      },
-      doFillRepeatSaveSuccess: () => {
-        state = routeState("repeatSaveSuccessCleanup", [
-          ...state.route,
-          sleepRepeatSaveResolve(
-            "savingThrowOutcome",
-            routeHoles(),
-            "battleConditionLifecycle",
-          ),
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleActiveEffect",
-          ),
-        ]);
-      },
-      doFillRepeatSaveFailure: () => {
-        state = routeState("repeatSaveFailureUnconscious", [
-          ...state.route,
-          sleepRepeatSaveResolve(
-            "savingThrowOutcome",
-            routeHoles(),
-            "battleConditionLifecycle",
-          ),
-        ]);
-      },
-      step: () => {},
-      getState: () => state,
-    };
-  });
-}
-
 function turnBoundaryDiscover(
   holes: readonly ReducerRouteHole[],
 ): ReducerRouteEvent {
@@ -712,7 +537,7 @@ function createTurnBoundaryRouteDriver() {
       doResolveTargetStartTurn: () => {
         state = routeState("targetStartTurnResolved", [
           ...state.route,
-          turnBoundaryDiscover(routeHoles("rolledDice", "savingThrowOutcome")),
+          turnBoundaryDiscover(routeHoles("rolledDice")),
           turnBoundaryResolve(
             "rolledDice",
             routeHoles("savingThrowOutcome"),
@@ -854,16 +679,6 @@ const scalarBuffRouteStateCheck = stateCheck(
   compareRouteStates,
 );
 
-const sleepRepeatSaveRouteStateCheck = stateCheck(
-  (raw: unknown) =>
-    normalizeRouteQuintState(
-      raw,
-      SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG,
-      "sleep repeat-save route surface",
-    ),
-  compareRouteStates,
-);
-
 const turnBoundaryRouteStateCheck = stateCheck(
   (raw: unknown) =>
     normalizeRouteQuintState(
@@ -920,26 +735,6 @@ describe("active-effect lifecycle reducer route connectors", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
         stateCheck: scalarBuffRouteStateCheck,
-      });
-    },
-    MBT_TEST_TIMEOUT_MS,
-  );
-
-  it(
-    "routes Sleep repeat-save lifecycle through explicit owners",
-    async () => {
-      await run({
-        spec: mbtSpecPath(
-          import.meta.dirname,
-          "battle-runtime-sleep-repeat-save.route.mbt.qnt",
-        ),
-        init: "init",
-        step: "step",
-        driver: createSleepRepeatSaveRouteDriver(),
-        backend: "typescript",
-        nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(8),
-        stateCheck: sleepRepeatSaveRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

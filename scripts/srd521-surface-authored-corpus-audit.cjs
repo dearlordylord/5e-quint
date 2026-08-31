@@ -2,8 +2,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { isDeepStrictEqual } = require("node:util");
 require("tsx/cjs");
-const { Result, Schema } = require("effect");
-const SchemaAST = require("effect/SchemaAST");
+const {
+  effect: { Result, Schema },
+  schemaAst: SchemaAST,
+} = require("#dnd-package-effect-runtime").effectRuntimeForPackageOwners([
+  "surface",
+]);
 const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");
 const {
   PublishedSrdSurfaceSchema,
@@ -709,7 +713,7 @@ function decodeSurfaceRecord(record) {
   })(record.value);
   if (Result.isFailure(decoded)) {
     throw new Error(
-      `Surface record failed schema decoding at ${record.contentPath}`,
+      `Surface record failed schema decoding at ${record.contentPath}: ${decoded.failure.message}`,
     );
   }
   return { ...record, value: decoded.success };

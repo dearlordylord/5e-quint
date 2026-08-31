@@ -1,27 +1,27 @@
 import { Brand, Result } from "effect";
 import * as Option from "effect/Option";
 
-import type { BattleState } from "./battle-state-execution.ts";
+import type {
+  BattleStatBlockExecutionCatalog,
+  BattleState,
+} from "./battle-state-execution.ts";
 import type { SpawnedCompanionCreatureTypeOverride } from "@dnd/shared/game-facts";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   findCompanionEntryByOwner,
   type BattleCompanionStoredForm,
 } from "./companion-state.ts";
 import type { AdmittedSpawnedCompanionReappearance } from "./companion-admission-state.ts";
-import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
-import { spawnedCompanionIdentityIssue } from "./companion-lifecycle-execution.ts";
+import {
+  familiarStatBlockWithCreatureTypeOverride,
+  spawnedCompanionIdentityIssue,
+} from "./companion-lifecycle-execution.ts";
 import {
   battleExecutionScopeInitialOrNextOrdinal,
   type CombatantId,
 } from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
+import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlockWithCreatureType,
-} from "./stat-block-authored-projection.ts";
 
 const AdmittedSpawnedCompanionReappearance =
   Brand.nominal<AdmittedSpawnedCompanionReappearance>();
@@ -29,11 +29,10 @@ const AdmittedSpawnedCompanionReappearance =
 export function admitSpawnedCompanionReappearance(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly catalog: FindFamiliarStatBlockCatalog;
+  readonly catalog: BattleStatBlockExecutionCatalog;
 }): Result.Result<
   {
     readonly mechanics: AdmittedSpawnedCompanionReappearance;
-    readonly presentation: BattleStatBlockPresentationSource;
   },
   {
     readonly tag: "companionReappearanceAdmissionIssue";
@@ -68,23 +67,16 @@ export function admitSpawnedCompanionReappearance(input: {
   if (Result.isFailure(resolvedForm)) {
     return issue(input.state, resolvedForm.failure);
   }
-  const projection = projectAuthoredStatBlockWithCreatureType(
-    resolvedForm.success.statBlock,
-    resolvedForm.success.creatureTypeOverride,
+  const statBlock = familiarStatBlockWithCreatureTypeOverride(
+    resolvedForm.success,
   );
-  if (Result.isFailure(projection)) {
-    return issue(
-      input.state,
-      battleStatBlockProjectionFailureMessage(projection.failure),
-    );
-  }
   const allocation = input.state.executionScopeCursors.get(
     familiar.reappearanceCombatantId,
   );
   const combatantAdmission = admitBattleStatBlockCombatant({
     battleId: input.state.battleId,
     combatantId: familiar.reappearanceCombatantId,
-    statBlock: projection.success.runtime,
+    statBlock,
     startingScopeOrdinal: battleExecutionScopeInitialOrNextOrdinal(
       allocation?.nextScopeOrdinal,
     ),
@@ -105,17 +97,16 @@ export function admitSpawnedCompanionReappearance(input: {
       },
       combatantAdmission: combatantAdmission.success,
     }),
-    presentation: projection.success.presentation,
   });
 }
 
 function resolveStoredSpawnedCompanionReappearanceForm(input: {
-  readonly catalog: FindFamiliarStatBlockCatalog;
+  readonly catalog: BattleStatBlockExecutionCatalog;
   readonly storedForm: BattleCompanionStoredForm;
   readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
 }): Result.Result<
   {
-    readonly statBlock: StatBlockRecord;
+    readonly statBlock: BattleStatBlockExecutionSource;
     readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
   },
   string

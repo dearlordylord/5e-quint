@@ -20,7 +20,10 @@ import {
 } from "@dnd/surface/surface/surface-relations";
 import { decodeSrdSurfaceResult } from "@dnd/surface/surface/schema";
 import type { SrdSurface } from "@dnd/surface/surface/types";
-import { deriveCharacterCreationWorkflowRoots } from "@dnd/character-creation-runtime/workflow-horizon";
+import {
+  deriveCharacterCreationWorkflowRoots,
+  type CharacterCreationWorkflowRootIssues,
+} from "@dnd/character-creation-runtime/workflow-horizon";
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
 
 type OracleCatalogBuildIssue =
@@ -42,6 +45,11 @@ export type OracleStartupCatalogIssue =
       readonly stage: "catalogInvariant";
       readonly catalogStage: "canonicalCatalog" | "projectedCatalog";
       readonly message: string;
+    }
+  | {
+      readonly tag: "oracleStartupCatalogIssue";
+      readonly stage: "workflowRoots";
+      readonly issues: CharacterCreationWorkflowRootIssues;
     }
   | {
       readonly tag: "oracleStartupCatalogIssue";
@@ -224,7 +232,19 @@ export function buildOracleStartupCatalog(
   const roots = deriveCharacterCreationWorkflowRoots({
     unitLibrary: fullCatalogs.success.unitCatalog,
   });
-  const projection = startupSurfaceProjection(canonicalSurface, roots.unitIds);
+  if (Result.isFailure(roots)) {
+    return Result.fail([
+      {
+        tag: "oracleStartupCatalogIssue",
+        stage: "workflowRoots",
+        issues: roots.failure,
+      },
+    ]);
+  }
+  const projection = startupSurfaceProjection(
+    canonicalSurface,
+    roots.success.unitIds,
+  );
   if (Result.isFailure(projection)) return Result.fail(projection.failure);
 
   const projectionBytes = encodeOracleStartupSurface(projection.success);

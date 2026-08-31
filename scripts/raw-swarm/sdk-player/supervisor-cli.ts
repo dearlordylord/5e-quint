@@ -29,8 +29,9 @@ import {
   type BattleRuntimeTableD20TestResolutionResult,
   type BattleHole,
 } from "../../../packages/battle-runtime/src/index.ts";
-import { Result, Match, Schema } from "effect";
+import type { Schema as SchemaTypes } from "effect";
 
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 import type {
   JsonValue,
   PlayerContinuationOutcome,
@@ -68,6 +69,10 @@ import {
   decodeSdkCallInput,
   type SdkCallInput,
 } from "./sdk-replay-input.ts";
+
+const { Result, Match, Schema } = effectRuntimeForPackageOwners([
+  "battle-runtime",
+]).effect;
 import {
   playerCurrentTurnProjection,
   playerInitialTurnProjection,
@@ -138,7 +143,7 @@ const PrefixSchema = Schema.Struct({
   continuationCount: NonNegativeIntegerSchema,
   run: PlayerExecutionStateSchema,
 });
-type FrozenPrefix = Schema.Schema.Type<typeof PrefixSchema>;
+type FrozenPrefix = SchemaTypes.Schema.Type<typeof PrefixSchema>;
 
 const PROGRAM_PREFIX = `import type { PlayerContinuation } from "@dnd/player-sdk";
 `;
@@ -242,7 +247,7 @@ async function initialize(
   scenarioId: ScenarioId,
   gitSha: string,
   consumerIsolation: string,
-  startedAt: Schema.Schema.Type<typeof StartedAtSchema>,
+  startedAt: SchemaTypes.Schema.Type<typeof StartedAtSchema>,
   replaySupervisorSha256: string,
   scenarioSha256: string,
   scenarioReviewSha256: string,

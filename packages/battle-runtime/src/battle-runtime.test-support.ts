@@ -186,6 +186,7 @@ import {
 import {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
+  characterBattleResourceInitFromAdmissionInput,
   parseCharacterBattleClassLevels,
   type CharacterBattleFeatureInit,
 } from "./character-battle-resources.ts";
@@ -315,7 +316,7 @@ import {
   type BattleAttackProcedureExecutionRef,
   type BattleCreatureInit,
   type CharacterBattleCombatantInit,
-  type StatBlockBattleCombatantInit,
+  type AuthoredStatBlockBattleInitInput,
   type BattleCreatureState,
   type BattleFill,
   type BattleHidePrerequisite,
@@ -1036,22 +1037,19 @@ export function requireElapsedHours(hours: number) {
   return parsed.success;
 }
 
-function requireBattleStatBlockCombatantSource(
-  statBlock: Parameters<typeof battleStatBlockCombatantSource>[0],
-) {
-  const source = battleStatBlockCombatantSource(statBlock);
-  if (Result.isFailure(source)) {
-    throw new Error(battleStateInitIssueMessage(source.failure));
-  }
-  return source.success;
-}
-
 if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
   throw new Error("Battle runtime test catalogs must build successfully.");
 }
 
 export const unitLibrary = unitCatalogResult.catalog;
 export const statBlockCatalog = statBlockCatalogResult.catalog;
+export const runtimeStatBlockCatalog = {
+  getStatBlock: (id: Parameters<typeof statBlockCatalog.getStatBlock>[0]) =>
+    Option.map(
+      statBlockCatalog.getStatBlock(id),
+      projectedStatBlockRuntimeSource,
+    ),
+};
 const testSpellRecords = new Map(
   [
     magicMissileInput,
@@ -1198,15 +1196,15 @@ export function hidePrerequisites(
 export function fighterVsGoblinBattle(input?: {
   readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly weaponMasteries?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["weaponMasteries"];
   readonly attack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
 }): BattleState {
@@ -1232,7 +1230,7 @@ export function fighterVsGoblinBattle(input?: {
 }
 
 export function criticalRange19UnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   return [
@@ -1244,7 +1242,7 @@ export function criticalRange19UnitRefs(): Extract<
 }
 
 export function sneakAttackUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   return [
@@ -1256,7 +1254,7 @@ export function sneakAttackUnitRefs(): Extract<
 }
 
 export function cunningStrikeUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   const unit = rogueCunningStrikeUnit();
@@ -1274,7 +1272,7 @@ export function cunningStrikeUnitRefs(): Extract<
 }
 
 export function masterySapUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   return [
@@ -1286,7 +1284,7 @@ export function masterySapUnitRefs(): Extract<
 }
 
 export function masteryToppleUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   return [
@@ -1298,7 +1296,7 @@ export function masteryToppleUnitRefs(): Extract<
 }
 
 export function masteryCleaveUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   return [
@@ -1310,7 +1308,7 @@ export function masteryCleaveUnitRefs(): Extract<
 }
 
 export function tacticalMasterReplacementUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   return [
@@ -1339,7 +1337,7 @@ export function tacticalMasterReplacementUnitRefs(): Extract<
 }
 
 export function grapplerUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   const grapplerUnit = unitLibrary.requireUnit("feat_grappler");
@@ -1358,7 +1356,7 @@ export function grapplerUnitRefs(): Extract<
 }
 
 export function halflingNimblenessUnitRefs(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"] {
   const unit = unitLibrary.requireUnit("species_halfling_nimbleness");
@@ -1377,7 +1375,7 @@ export function halflingNimblenessUnitRefs(): Extract<
 }
 
 export function longswordWeaponMasterySelections(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["weaponMasteries"] {
   return [
@@ -1388,7 +1386,7 @@ export function longswordWeaponMasterySelections(): Extract<
 }
 
 export function greataxeWeaponMasterySelections(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["weaponMasteries"] {
   return [
@@ -1399,7 +1397,7 @@ export function greataxeWeaponMasterySelections(): Extract<
 }
 
 export function longbowWeaponMasterySelections(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["weaponMasteries"] {
   return [
@@ -1410,7 +1408,7 @@ export function longbowWeaponMasterySelections(): Extract<
 }
 
 export function quarterstaffWeaponMasterySelections(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["weaponMasteries"] {
   return [
@@ -2410,17 +2408,11 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   const admission = admitSpawnedCompanionReappearance({
     state: input.state,
     casterId: input.subject.actorId,
-    catalog,
+    catalog: {
+      getStatBlock: (id) =>
+        Option.map(catalog.getStatBlock(id), projectedStatBlockRuntimeSource),
+    },
   });
-  if (Result.isSuccess(admission)) {
-    statBlockPresentationsByExecutionScopeForTest.set(
-      String(
-        admission.success.mechanics.combatantAdmission.origin.execution
-          .scopeRef,
-      ),
-      admission.success.presentation,
-    );
-  }
   return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
     : resolveAdmittedCompanionReappearanceSubject({
@@ -3666,83 +3658,83 @@ export function characterSeed(input: {
   readonly initiative: number;
   readonly classLevel?: number;
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly currentHp?: number;
   readonly maxHp?: number;
   readonly tempHp?: number;
   readonly conditions?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["conditions"];
   readonly positiveHpUnconscious?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["zeroHpLifecycle"];
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly unarmoredArmorClassBases?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unarmoredArmorClassBases"];
   readonly selectedLoadout?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
   readonly weaponMasteries?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["weaponMasteries"];
   readonly attack?:
     | Extract<
-        BattleCreatureInit["creatureInit"],
+        CharacterBattleCombatantInit["creatureInit"],
         { readonly kind: "character" }
       >["attack"]
     | null;
   readonly ammunitionStocks?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["ammunitionStocks"];
   readonly unarmedStrike?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unarmedStrike"];
   readonly offHandAttack?: TestCharacterWeaponAttack;
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly metamagic?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["metamagic"];
   readonly unitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
   readonly invocationFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["invocationFeatures"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly knownLanguages?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["knownLanguages"];
   readonly d20Statistics?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["d20Statistics"];
   readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
   readonly size?: Size;
@@ -3791,7 +3783,7 @@ export function characterSeed(input: {
       ? undefined
       : (input.resources ?? []).flatMap((resource) => {
           const profile = parseSupportedUnitFeatureProfile(
-            resource.unit,
+            characterBattleResourceInitFromAdmissionInput(resource).unit,
             parseCharacterBattleClassLevelsRight(classLevels),
           );
           return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
@@ -3828,13 +3820,16 @@ export function characterSeed(input: {
       : druidWildShapeAvailableForms.success;
   const resourceUnitRefs = (input.resources ?? []).map((resource) => {
     const supportProfiles = battleUnitSupportProfilesForUnit({
-      unit: resource.unit,
+      unit: characterBattleResourceInitFromAdmissionInput(resource).unit,
       classLevels: parseCharacterBattleClassLevelsRight(classLevels),
     });
     if (Result.isFailure(supportProfiles)) {
       throw new Error(supportProfiles.failure.message);
     }
-    return { unit: resource.unit, supportProfiles: supportProfiles.success };
+    return {
+      unit: characterBattleResourceInitFromAdmissionInput(resource).unit,
+      supportProfiles: supportProfiles.success,
+    };
   });
   const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
     (candidate) => {
@@ -3927,7 +3922,7 @@ export function characterSeed(input: {
 
 function armorClassStateForLoadout(
   loadout: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"],
 ): ReturnType<typeof defaultArmorClassState> {
@@ -3982,7 +3977,7 @@ export function testLongswordAttack(): TestCharacterWeaponAttack {
 }
 
 export function testUnarmedStrikeDamageAttack(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {
@@ -3999,7 +3994,7 @@ export function testUnarmedStrikeDamageAttack(): Extract<
 }
 
 export function testUnarmedStrikeDieAttack(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {
@@ -4162,11 +4157,8 @@ export function statBlockCreatureInit(input: {
   readonly initiative: number;
   readonly currentHp?: number;
   readonly tempHp?: number;
-  readonly ammunitionStocks?: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "statBlock" }
-  >["ammunitionStocks"];
-}): StatBlockBattleCombatantInit {
+  readonly ammunitionStocks?: AuthoredStatBlockBattleInitInput["ammunitionStocks"];
+}): AuthoredStatBlockBattleInitInput {
   const statBlock = input.statBlock ?? statBlockRecord();
   const namedStatBlock =
     input.statBlockName === undefined
@@ -4188,16 +4180,12 @@ export function statBlockCreatureInit(input: {
     ]).map((ammunition) => battleAmmunitionStock(ammunition, 20));
   return {
     combatantId: input.combatantId ?? goblinId,
+    statBlock: namedStatBlock,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource(projected.runtime),
-      currentHp: Hp(input.currentHp ?? maxHp),
-      tempHp: Hp(input.tempHp ?? 0),
-      ammunitionStocks,
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    currentHp: Hp(input.currentHp ?? maxHp),
+    tempHp: Hp(input.tempHp ?? 0),
+    ammunitionStocks,
+    conditions: [],
   };
 }
 
@@ -4623,7 +4611,7 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
 
 export function skeletonCreatureInit(input: {
   readonly initiative: number;
-}): StatBlockBattleCombatantInit {
+}): AuthoredStatBlockBattleInitInput {
   return statBlockCreatureInit({
     combatantId: skeletonId,
     statBlockName: "Skeleton",
@@ -4631,7 +4619,7 @@ export function skeletonCreatureInit(input: {
       statBlockCatalog,
       statBlockId("stat_block_skeleton"),
     ),
-    initiative: input.initiative,
+    initiative: initiativeScore(input.initiative),
     currentHp: 13,
     ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
   });
@@ -4639,7 +4627,7 @@ export function skeletonCreatureInit(input: {
 
 export function resistantSkeletonCreatureInit(input: {
   readonly initiative: number;
-}): StatBlockBattleCombatantInit {
+}): AuthoredStatBlockBattleInitInput {
   const skeleton = assertStatBlockForTest(
     statBlockCatalog,
     statBlockId("stat_block_skeleton"),
@@ -4652,20 +4640,20 @@ export function resistantSkeletonCreatureInit(input: {
   return statBlockCreatureInit({
     combatantId: skeletonId,
     statBlockName: "Slashing Resistant Skeleton",
+    initiative: initiativeScore(input.initiative),
     statBlock: {
       ...skeleton,
       id: statBlockId("stat_block_slashing_resistant_skeleton"),
       name: "Slashing Resistant Skeleton",
       provenance: {
         kind: "synthetic-test",
-        section: "slashing-resistant skeleton fixture",
+        section: "slashing resistance fixture",
       },
       statBlock: {
         ...statBlockWithoutDamageModifiers,
         resistances: { kind: "fixed", damageTypes: ["slashing"] },
       },
     },
-    initiative: input.initiative,
     currentHp: 13,
     ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
   });
@@ -4676,7 +4664,7 @@ export function actionSurgeResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4697,7 +4685,7 @@ export function resource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4728,7 +4716,7 @@ export function rageResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4751,7 +4739,7 @@ export function innateSorceryResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4775,7 +4763,7 @@ export function rangerFavoredEnemyResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4799,7 +4787,7 @@ export function paladinsSmiteResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4821,7 +4809,7 @@ export function paladinsSmiteResource(input?: {
 
 export function recklessAttackFeature(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
@@ -4838,7 +4826,7 @@ export function sneakAttackFeature(input?: {
   readonly classLevel?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
@@ -4856,7 +4844,7 @@ export function cunningStrikeFeature(input?: {
   readonly acquiredAtLevel?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
@@ -4873,7 +4861,7 @@ function evasionFeature(input?: {
   readonly ability?: "dex" | "con";
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
@@ -4887,7 +4875,7 @@ export function reactionModifierUnitRef(
   unitId: string,
 ): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"]
 >[number] {
@@ -4904,7 +4892,7 @@ export function reactionModifierUnitRefWithProfile(
     | typeof ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
 ): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"]
 >[number] {
@@ -4918,7 +4906,7 @@ export function monkDeflectAttacksFocusResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4929,7 +4917,7 @@ export function monksFocusResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4946,7 +4934,7 @@ export function cuttingWordsResource(input?: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -4982,7 +4970,7 @@ function bardicInspirationResource(input: {
   readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -5160,7 +5148,7 @@ export function characterResourceUses(
 export function goblinAttacksReactionModifierCharacter(input: {
   readonly unit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
   readonly className: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"][number]["className"];
   readonly level: number;
@@ -5168,7 +5156,7 @@ export function goblinAttacksReactionModifierCharacter(input: {
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly resources?: NonNullable<
     Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["resources"]
   >;
@@ -5876,7 +5864,7 @@ export function unsupportedClassRiderResource(
   name: string,
 ): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
@@ -6026,19 +6014,19 @@ export function wizardSpellcasting(input?: {
   }[];
   readonly invocationSpellAccesses?: NonNullable<
     Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["spellcasting"]
   >["invocationSpellAccesses"];
   readonly bookOfShadowsSpellAccesses?: NonNullable<
     Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["spellcasting"]
   >["bookOfShadowsSpellAccesses"];
 }): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"]
 > {

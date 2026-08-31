@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   resolveBattleSubject,
+  runtimeStatBlockCatalog,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
@@ -22,7 +23,7 @@ import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   characterCreature,
   requireHole,
@@ -197,7 +198,7 @@ function observeDismissAndReappearSpawnedCompanionRoute(): readonly BattleReduce
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: withFreshMagicAction(requireResolved(dismissed)),
     casterId,
-    catalog: statBlockCatalog,
+    catalog: runtimeStatBlockCatalog,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
@@ -337,7 +338,7 @@ function dismissAndReappearSpawnedCompanionProjection(): SpawnedCompanionSelecte
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: withFreshMagicAction(dismissed.state),
     casterId,
-    catalog: statBlockCatalog,
+    catalog: runtimeStatBlockCatalog,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
@@ -449,7 +450,7 @@ function startSpellcasterFixtureSession(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

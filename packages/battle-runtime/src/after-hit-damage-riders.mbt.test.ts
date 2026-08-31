@@ -1,5 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
+import { characterBattleResourceInitFromAdmissionInput } from "./character-battle-resources.ts";
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-after-hit-damage-illumination
 
 import { describe, expect, it } from "vitest";
@@ -101,7 +102,7 @@ type AfterHitPhase =
   | "attackDamageNeeded"
   | "afterDamage"
   | "turnStartDamageNeeded"
-  | "turnStartDamageSaveNeeded"
+  | "turnStartSaveNeeded"
   | "escapeCheckNeeded"
   | "cleaned";
 
@@ -203,8 +204,13 @@ type PendingInvocation =
       readonly sourceBattle: BattleState;
     }
   | {
-      readonly tag: "turnStartDamageAndSave";
+      readonly tag: "searingTurnStartDamage";
       readonly sourceBattle: BattleState;
+    }
+  | {
+      readonly tag: "searingTurnStartSave";
+      readonly sourceBattle: BattleState;
+      readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
     }
   | {
       readonly tag: "escapeCheck";
@@ -479,10 +485,7 @@ function afterHitRouteForAction(
     ]),
     doRouteTurnStartSaveCleanup: routeState("turnStartSaveCleanup", [
       afterHitStartRoute(),
-      afterHitDiscoverRoute(
-        routeHoles("rolledDice", "savingThrowOutcome"),
-        "battleActiveEffect",
-      ),
+      afterHitDiscoverRoute(rolledDice, "battleActiveEffect"),
       afterHitResolveRoute("rolledDice", savingThrowOutcome, "battleHitPoint"),
       afterHitResolveRoute("savingThrowOutcome", noHoles, "battleActiveEffect"),
     ]),
@@ -641,6 +644,15 @@ function appendObservedRouteEvents(
   events: readonly BattleReducerRouteEvent[] | undefined,
 ): readonly ReducerRouteEvent[] {
   return events === undefined ? route : [...route, ...events];
+}
+
+function afterHitSpellRouteEvents(
+  route: readonly ReducerRouteEvent[],
+): readonly NonStartReducerRouteEvent[] {
+  return route.filter(
+    (event): event is NonStartReducerRouteEvent =>
+      event.kind !== "startBattle" && event.subject === AFTER_HIT_ROUTE_SUBJECT,
+  );
 }
 
 function afterHitChoiceReady(
@@ -802,12 +814,42 @@ function observeAfterHitTurnStartDamageRoute(): AfterHitRuntimeState {
 }
 
 function observeAfterHitTurnStartSaveCleanupRoute(): AfterHitRuntimeState {
-  const state = discoverTurnStartDamageAndSave(afterHitSearingAfterDamage());
-  expectObservedHoleKinds(state, ["rolledDice", "savingThrowOutcome"]);
-  const cleaned = fillSearingStartTurnDamageAndSave(state, 1);
+  const afterDamage = afterHitSearingAfterDamage();
+  const damageNeeded = discoverSearingStartTurnDamage(afterDamage);
+  expectObservedHoleKinds(damageNeeded, ["rolledDice"]);
+  const afterDamageRoute = afterHitSpellRouteEvents(afterDamage.route);
+  const damageNeededRoute = afterHitSpellRouteEvents(damageNeeded.route);
+  expect(damageNeededRoute.slice(afterDamageRoute.length)).toEqual([
+    afterHitDiscoverRoute(routeHoles("rolledDice"), "battleActiveEffect"),
+  ]);
+  const saveNeeded = fillSearingStartTurnDamage(damageNeeded, 1);
+  expect(afterHitProjection(saveNeeded).searingBurning).toBe(true);
+  expectObservedHoleKinds(saveNeeded, ["savingThrowOutcome"]);
+  const saveNeededRoute = afterHitSpellRouteEvents(saveNeeded.route);
+  expect(saveNeededRoute.slice(damageNeededRoute.length)).toEqual([
+    afterHitResolveRoute(
+      "rolledDice",
+      routeHoles("savingThrowOutcome"),
+      "battleHitPoint",
+    ),
+  ]);
+  const cleaned = fillSearingStartTurnSave(saveNeeded);
   expect(afterHitProjection(cleaned).searingBurning).toBe(false);
   expect(afterHitProjection(cleaned).concentrationActive).toBe(false);
   expectObservedHoleKinds(cleaned, []);
+  const cleanedRoute = afterHitSpellRouteEvents(cleaned.route);
+  expect(cleanedRoute.slice(saveNeededRoute.length)).toEqual([
+    afterHitResolveRoute(
+      "rolledDice",
+      routeHoles("savingThrowOutcome"),
+      "battleHitPoint",
+    ),
+    afterHitResolveRoute(
+      "savingThrowOutcome",
+      routeHoles(),
+      "battleActiveEffect",
+    ),
+  ]);
   return cleaned;
 }
 
@@ -927,7 +969,7 @@ const AFTER_HIT_PHASE_BY_TAG = {
   AttackDamageNeeded: "attackDamageNeeded",
   AfterDamage: "afterDamage",
   TurnStartDamageNeeded: "turnStartDamageNeeded",
-  TurnStartDamageSaveNeeded: "turnStartDamageSaveNeeded",
+  TurnStartSaveNeeded: "turnStartSaveNeeded",
   EscapeCheckNeeded: "escapeCheckNeeded",
   Cleaned: "cleaned",
 } as const satisfies Readonly<Record<string, AfterHitPhase>>;
@@ -986,10 +1028,11 @@ const afterHitDriverSchema = {
     damageDiePip: mbtPickSchemas.int,
   },
   doFillEnsnaringEscapeCheck: {},
-  doDiscoverSearingStartTurnDamageAndSave: {},
-  doFillSearingStartTurnDamageAndSave: {
+  doDiscoverSearingStartTurnDamage: {},
+  doFillSearingStartTurnDamage: {
     damageDiePip: mbtPickSchemas.int,
   },
+  doFillSearingStartTurnSave: {},
   doBreakShiningConcentration: {},
   doStartDivineSmiteFreeCast: {},
   doStartEnsnaringFailedSave: {},
@@ -1008,8 +1051,9 @@ const REQUIRED_AFTER_HIT_ACTIONS = [
   "doFillEnsnaringStartTurnDamage",
   "doFillEnsnaringEscapeCheck",
   "doFillSearingSmiteDamage",
-  "doDiscoverSearingStartTurnDamageAndSave",
-  "doFillSearingStartTurnDamageAndSave",
+  "doDiscoverSearingStartTurnDamage",
+  "doFillSearingStartTurnDamage",
+  "doFillSearingStartTurnSave",
   "doChooseShiningSmite",
   "doFillShiningSmiteDamage",
   "doBreakShiningConcentration",
@@ -1128,16 +1172,21 @@ function createAfterHitSpellsDriver(
           fillEnsnaringEscapeCheck(state),
         );
       },
-      doDiscoverSearingStartTurnDamageAndSave: () => {
-        transition("doDiscoverSearingStartTurnDamageAndSave", () =>
-          discoverTurnStartDamageAndSave(state),
+      doDiscoverSearingStartTurnDamage: () => {
+        transition("doDiscoverSearingStartTurnDamage", () =>
+          discoverSearingStartTurnDamage(state),
         );
       },
-      doFillSearingStartTurnDamageAndSave: (input: {
+      doFillSearingStartTurnDamage: (input: {
         readonly damageDiePip: number;
       }) => {
-        transition("doFillSearingStartTurnDamageAndSave", () =>
-          fillSearingStartTurnDamageAndSave(state, input.damageDiePip),
+        transition("doFillSearingStartTurnDamage", () =>
+          fillSearingStartTurnDamage(state, input.damageDiePip),
+        );
+      },
+      doFillSearingStartTurnSave: () => {
+        transition("doFillSearingStartTurnSave", () =>
+          fillSearingStartTurnSave(state),
         );
       },
       doBreakShiningConcentration: () => {
@@ -1289,7 +1338,8 @@ function paladinFreeCastBattle(): BattleRuntimeSession {
           },
           featurePreparedSpells: [
             {
-              sourceUnitId: resource.unit.id,
+              sourceUnitId:
+                characterBattleResourceInitFromAdmissionInput(resource).unit.id,
               spell: spellRecord(divineSmiteUnitId),
             },
           ],
@@ -1685,7 +1735,7 @@ function fillEnsnaringEscapeCheck(
   };
 }
 
-function discoverTurnStartDamageAndSave(
+function discoverSearingStartTurnDamage(
   state: AfterHitRuntimeState,
 ): AfterHitRuntimeState {
   const awaitingTurnStart = requireNeedsHoles(
@@ -1693,20 +1743,19 @@ function discoverTurnStartDamageAndSave(
       state: state.battle.state,
       actorId: spellCasterId,
     }),
-    "Expected Searing Smite to request turn-start damage and save.",
+    "Expected Searing Smite to request turn-start damage.",
   );
   const damageHole = requireHole(awaitingTurnStart.holes, "rolledDice");
-  const saveHole = requireHole(awaitingTurnStart.holes, "savingThrowOutcome");
   return {
     ...state,
     battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: awaitingTurnStart.state,
     }),
-    phase: "turnStartDamageSaveNeeded",
-    holes: [damageHole, saveHole],
+    phase: "turnStartDamageNeeded",
+    holes: [damageHole],
     pending: {
-      tag: "turnStartDamageAndSave",
+      tag: "searingTurnStartDamage",
       sourceBattle: state.battle.state,
     },
     lastResult: "needsHoles",
@@ -1717,21 +1766,62 @@ function discoverTurnStartDamageAndSave(
   };
 }
 
-function fillSearingStartTurnDamageAndSave(
+function fillSearingStartTurnDamage(
   state: AfterHitRuntimeState,
   damageDiePip: number,
 ): AfterHitRuntimeState {
-  if (state.pending.tag !== "turnStartDamageAndSave") {
-    throw new Error("Expected pending Searing Smite turn-start damage/save.");
+  if (state.pending.tag !== "searingTurnStartDamage") {
+    throw new Error("Expected pending Searing Smite turn-start damage.");
+  }
+  const damageFill = damageRollFillWithGroups(
+    requireHole(state.holes, "rolledDice"),
+    [Array.from({ length: 3 }, () => damageDiePip)],
+  );
+  const awaitingTurnStartSave = requireNeedsHoles(
+    endTurn({
+      state: state.pending.sourceBattle,
+      actorId: spellCasterId,
+      fills: [damageFill],
+    }),
+    "Expected Searing Smite turn-start save after damage.",
+  );
+  const saveHole = requireHole(
+    awaitingTurnStartSave.holes,
+    "savingThrowOutcome",
+  );
+  return {
+    ...state,
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: awaitingTurnStartSave.state,
+    }),
+    phase: "turnStartSaveNeeded",
+    holes: [saveHole],
+    pending: {
+      tag: "searingTurnStartSave",
+      sourceBattle: state.pending.sourceBattle,
+      damageFill,
+    },
+    route: appendObservedRouteEvents(
+      state.route,
+      awaitingTurnStartSave.routeEvents,
+    ),
+    lastResult: "needsHoles",
+  };
+}
+
+function fillSearingStartTurnSave(
+  state: AfterHitRuntimeState,
+): AfterHitRuntimeState {
+  if (state.pending.tag !== "searingTurnStartSave") {
+    throw new Error("Expected pending Searing Smite turn-start save.");
   }
   const targetTurn = requireResolved(
     endTurn({
       state: state.pending.sourceBattle,
       actorId: spellCasterId,
       fills: [
-        damageRollFillWithGroups(requireHole(state.holes, "rolledDice"), [
-          Array.from({ length: 3 }, () => damageDiePip),
-        ]),
+        state.pending.damageFill,
         savingThrowOutcomeFill(requireHole(state.holes, "savingThrowOutcome"), [
           { targetId: spellTargetId, succeeded: true },
         ]),
@@ -1839,13 +1929,13 @@ function battleHolesToAfterHitHoles(
   holes: readonly BattleHole[],
   pending: PendingInvocation,
 ): readonly AfterHitHole[] {
-  return holes.map((hole) => {
+  const projectedHoles = holes.map((hole) => {
     if (hole.kind === "targetChoice") return "TargetChoice";
     if (hole.kind === "attackRoll") return "AttackRoll";
     if (hole.kind === "interruptDecision") return "InterruptDecision";
     if (
       hole.kind === "savingThrowOutcome" &&
-      pending.tag === "turnStartDamageAndSave"
+      pending.tag === "searingTurnStartSave"
     ) {
       return "TurnStartSaveOutcome";
     }
@@ -1856,7 +1946,7 @@ function battleHolesToAfterHitHoles(
     if (
       hole.kind === "rolledDice" &&
       (pending.tag === "turnStartDamage" ||
-        pending.tag === "turnStartDamageAndSave")
+        pending.tag === "searingTurnStartDamage")
     ) {
       return "TurnStartDamageRoll";
     }
@@ -1865,6 +1955,7 @@ function battleHolesToAfterHitHoles(
     }
     throw new Error(`Unexpected after-hit damage rider hole ${hole.kind}.`);
   });
+  return projectedHoles;
 }
 
 function normalizeAfterHitRouteQuintState(raw: unknown): AfterHitRouteState {

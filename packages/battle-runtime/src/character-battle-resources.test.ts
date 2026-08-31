@@ -17,7 +17,9 @@ import {
   effectiveCharacterBattlePreparedSpells,
   parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
+  projectCharacterBattleResourceFeature,
 } from "./character-battle-resources.ts";
+import { admitResourceFeature } from "./procedure-admission/resource-feature-admission.ts";
 import {
   characterBattleResourceIsPointPool,
   characterBattleResourceIsUnlimited,
@@ -62,7 +64,7 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 function classLevelsFor(
   className: ClassName,
@@ -92,7 +94,7 @@ function expectBattleStartIssue(
 ) {
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(battleStateInitIssueMessage(result.failure)).toBe(message);
+    expect(battleInitializationIssueMessage(result.failure)).toBe(message);
   }
 }
 
@@ -102,7 +104,7 @@ function expectBattleStartIssueContaining(
 ) {
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(battleStateInitIssueMessage(result.failure)).toContain(message);
+    expect(battleInitializationIssueMessage(result.failure)).toContain(message);
   }
 }
 
@@ -145,6 +147,23 @@ describe("character battle resource projections", () => {
       ).toBe(expected);
     },
   );
+
+  test("rejects a projected resource feature paired with another source Unit", () => {
+    const monkFocus = unitLibrary.requireUnit(monkMonksFocusUnitId);
+    const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const admission = admitResourceFeature(monkFocus);
+    if (admission.tag !== "admitted") {
+      throw new Error("Expected admitted Monk Focus resource feature.");
+    }
+
+    expect(
+      projectCharacterBattleResourceFeature({ unit: indomitable }, admission),
+    ).toEqual({
+      tag: "sourceMismatch",
+      message:
+        "Character battle resource feature source does not match its resource Unit: monk_monks_focus != fighter_indomitable.",
+    });
+  });
 
   test("ability-modifier caps honor a minimum and an omitted minimum", () => {
     const bardicInspiration = unitLibrary.requireUnit(
@@ -253,7 +272,13 @@ describe("character battle resource projections", () => {
       characterBattleMetamagicState(
         metamagic,
         [resource],
-        [{ resourcePoolRef, unit, purpose: { tag: "unitResource" } }],
+        [
+          {
+            resourcePoolRef,
+            unit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
       ),
     ).toEqual({
       sorceryPointResourcePoolRef: resourcePoolRef,
@@ -483,9 +508,9 @@ describe("character battle resource projections", () => {
     );
     expect(Result.isFailure(missingExpenditures)).toBe(true);
     if (Result.isFailure(missingExpenditures)) {
-      expect(battleStateInitIssueMessage(missingExpenditures.failure)).toBe(
-        "Spell Slot expenditure state must match slot capacity.",
-      );
+      expect(
+        battleInitializationIssueMessage(missingExpenditures.failure),
+      ).toBe("Spell Slot expenditure state must match slot capacity.");
     }
 
     const duplicateExpenditures = start(
@@ -505,9 +530,9 @@ describe("character battle resource projections", () => {
     );
     expect(Result.isFailure(duplicateExpenditures)).toBe(true);
     if (Result.isFailure(duplicateExpenditures)) {
-      expect(battleStateInitIssueMessage(duplicateExpenditures.failure)).toBe(
-        "Spell Slot expenditure state must match slot capacity.",
-      );
+      expect(
+        battleInitializationIssueMessage(duplicateExpenditures.failure),
+      ).toBe("Spell Slot expenditure state must match slot capacity.");
     }
 
     const untracedFeatureSpell = start(
@@ -525,9 +550,9 @@ describe("character battle resource projections", () => {
     );
     expect(Result.isFailure(untracedFeatureSpell)).toBe(true);
     if (Result.isFailure(untracedFeatureSpell)) {
-      expect(battleStateInitIssueMessage(untracedFeatureSpell.failure)).toBe(
-        "Feature-prepared spells must trace to a character Unit grant.",
-      );
+      expect(
+        battleInitializationIssueMessage(untracedFeatureSpell.failure),
+      ).toBe("Feature-prepared spells must trace to a character Unit grant.");
     }
 
     expectBattleStartIssue(
@@ -739,7 +764,7 @@ describe("character battle resource projections", () => {
     );
     expect(Result.isFailure(wrongList)).toBe(true);
     if (Result.isFailure(wrongList)) {
-      expect(battleStateInitIssueMessage(wrongList.failure)).toContain(
+      expect(battleInitializationIssueMessage(wrongList.failure)).toContain(
         "Magic Initiate Spell Access list source must match its parsed source mechanics.",
       );
     }
@@ -751,7 +776,9 @@ describe("character battle resource projections", () => {
     );
     expect(Result.isFailure(mismatchedResource)).toBe(true);
     if (Result.isFailure(mismatchedResource)) {
-      expect(battleStateInitIssueMessage(mismatchedResource.failure)).toContain(
+      expect(
+        battleInitializationIssueMessage(mismatchedResource.failure),
+      ).toContain(
         "Magic Initiate Spell Access must have exactly one one-use free-cast resource for its level-1 spell.",
       );
     }

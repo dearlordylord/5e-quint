@@ -89,71 +89,35 @@ export const setupScenario: ScenarioSetup = (context) => {
   const goblinWarriorId = sdk.combatantId(GOBLIN_WARRIOR_ID);
   const arrowStock = () => [sdk.battleAmmunitionStock("arrow", 20)];
 
-  const wolf = sdk.battleCreatureInitFromStatBlock({
+  const wolf = {
     combatantId: wolfId,
     statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.wolf),
     ammunitionStocks: [],
     conditions: [],
-  });
-  if (sdk.isFailure(wolf)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: WOLF_ID,
-      },
-    };
-  }
-
-  const skeleton = sdk.battleCreatureInitFromStatBlock({
+  };
+  const skeleton = {
     combatantId: skeletonId,
     statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.skeleton),
     ammunitionStocks: arrowStock(),
     conditions: [],
-  });
-  if (sdk.isFailure(skeleton)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: SKELETON_ID,
-      },
-    };
-  }
-
-  const goblinWarrior = sdk.battleCreatureInitFromStatBlock({
+  };
+  const goblinWarrior = {
     combatantId: goblinWarriorId,
     statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(INITIATIVE_SCORES.goblinWarrior),
     ammunitionStocks: arrowStock(),
     conditions: [],
-  });
-  if (sdk.isFailure(goblinWarrior)) {
-    return {
-      kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.failure),
-      observation: {
-        scenarioId: SCENARIO_ID,
-        capability: "canonical-stat-block-battle-initialization",
-        combatant: GOBLIN_WARRIOR_ID,
-      },
-    };
-  }
-
+  };
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [wolf.success, skeleton.success, goblinWarrior.success],
+    combatants: [wolf, skeleton, goblinWarrior],
   });
   if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
+      obstruction: sdk.battleInitializationIssueMessage(battle.failure),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-battle-start",

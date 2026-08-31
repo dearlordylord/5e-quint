@@ -1,3 +1,4 @@
+/** Public SRD Stat Block catalog boundary: canonical mechanics plus eager corpus data. */
 import { Match } from "effect";
 
 import { srdStatBlockCollection } from "./stat-block-catalog-data.ts";

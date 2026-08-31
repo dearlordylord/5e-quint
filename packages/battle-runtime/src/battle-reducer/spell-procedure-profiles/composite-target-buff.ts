@@ -14,11 +14,13 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { HASTE_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
-import type { StandardActionKind } from "@dnd/shared/game-facts";
+import {
+  ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
+  AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
+  isAttackOnceOrDashDisengageHideUtilizeActionRestriction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type {
-  ActionRestriction,
   AreaDirectEffectAtom,
   EffectAtom,
 } from "@dnd/surface/surface/types";
@@ -64,35 +66,10 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-const COMPOSITE_TARGET_BUFF_GRANTED_ACTIONS = [
-  "attack",
-  "dash",
-  "disengage",
-  "hide",
-  "utilize",
-] as const satisfies ReadonlyArray<StandardActionKind>;
-
 const CompositeTargetBuffWithAftermathExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
   durationTicks: ElapsedTimeTicksSchema,
-});
-
-const CompositeTargetBuffWithAftermathActionRestrictionSchema = Schema.Struct({
-  kind: Schema.Literal("allow_only"),
-  actions: Schema.Tuple([
-    Schema.Struct({
-      action: Schema.Literal("attack"),
-      attackLimit: Schema.Struct({
-        kind: Schema.Literal("attack_count"),
-        count: Schema.Literal(1),
-      }),
-    }),
-    Schema.Struct({ action: Schema.Literal("dash") }),
-    Schema.Struct({ action: Schema.Literal("disengage") }),
-    Schema.Struct({ action: Schema.Literal("hide") }),
-    Schema.Struct({ action: Schema.Literal("utilize") }),
-  ]),
 });
 
 function admitCompositeTargetBuffWithAftermath(
@@ -200,7 +177,7 @@ function compositeTargetBuffWithAftermathSpellProjection(
     savingThrowAdvantage.attackRollTarget !== undefined ||
     savingThrowAdvantage.count !== undefined ||
     savingThrowAdvantage.expiresOn !== undefined ||
-    !isCompositeTargetBuffWithAftermathActionRestriction(
+    !isAttackOnceOrDashDisengageHideUtilizeActionRestriction(
       extraAction?.restriction,
     ) ||
     spellEndLethargy?.condition !== "incapacitated" ||
@@ -248,7 +225,8 @@ function compositeTargetBuffWithAftermathSpellProjection(
       grantedActionResource: {
         kind: "spellGrantedActionResource",
         sourceCombatantId: actorId,
-        restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
+        restriction:
+          ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
         expiresAt,
       },
       spellEndTargetState: {
@@ -287,25 +265,6 @@ function ordinaryEffectAtoms(
     ordinaryEffects.push(effect);
   }
   return ordinaryEffects;
-}
-
-function isCompositeTargetBuffWithAftermathActionRestriction(
-  restriction: ActionRestriction | undefined,
-): restriction is Extract<ActionRestriction, { readonly kind: "allow_only" }> {
-  if (restriction?.kind !== "allow_only") {
-    return false;
-  }
-  const attack = restriction.actions.find(
-    (action) => action.action === "attack",
-  );
-  return (
-    sameStringSet(
-      restriction.actions.map((action) => action.action),
-      COMPOSITE_TARGET_BUFF_GRANTED_ACTIONS,
-    ) &&
-    attack?.attackLimit.kind === "attack_count" &&
-    attack.attackLimit.count === 1
-  );
 }
 
 function discoverCompositeTargetBuffWithAftermathCastAct(
@@ -530,7 +489,8 @@ const CompositeTargetBuffWithAftermathInvocationSchema =
           ...BattleEffectOccurrenceTemplateSchemaFields,
           kind: Schema.Literal("spellGrantedActionResource"),
           sourceCombatantId: CombatantId,
-          restriction: CompositeTargetBuffWithAftermathActionRestrictionSchema,
+          restriction:
+            AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
           expiresAt: CompositeTargetBuffWithAftermathExpirationSchema,
         }),
         spellEndTargetState: Schema.Struct({

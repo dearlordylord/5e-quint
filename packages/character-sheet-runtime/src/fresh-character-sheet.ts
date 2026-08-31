@@ -52,7 +52,7 @@ const CommonFreshCharacterSheetProjectionFields = {
             {
               message:
                 "druidWildShapeKnownForms.statBlockIds must be nonempty and must not contain duplicate members",
-              jsonSchema: { minItems: 1, uniqueItems: true },
+              toJsonSchema: () => ({ minItems: 1, uniqueItems: true }),
             },
           ),
         ),
