@@ -83,13 +83,11 @@ export function afterHitSpellDiscoveryRoutesForResolution(
     );
     /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
     if (invocation === undefined) continue;
-    if ("resource" in invocation && invocation.resource.tag === "spellSlot") {
+    const resourceTag = afterHitSpellResourceTag(invocation);
+    if (resourceTag === "spellSlot") {
       owners.add("battleSpellSlotAndActionEconomy");
     }
-    if (
-      "resource" in invocation &&
-      invocation.resource.tag === "spellAccessFreeCast"
-    ) {
+    if (resourceTag === "spellAccessFreeCast") {
       owners.add("battleFeatureResource");
     }
     if (invocation.procedure === "afterHitDamageAndIllumination") {
@@ -184,7 +182,8 @@ export function afterHitSpellRouteForInterrupt(input: {
     ),
   ];
 
-  if ("resource" in invocation && invocation.resource.tag === "spellSlot") {
+  const resourceTag = afterHitSpellResourceTag(invocation);
+  if (resourceTag === "spellSlot") {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -197,10 +196,7 @@ export function afterHitSpellRouteForInterrupt(input: {
       ),
     );
   }
-  if (
-    "resource" in invocation &&
-    invocation.resource.tag === "spellAccessFreeCast"
-  ) {
+  if (resourceTag === "spellAccessFreeCast") {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -275,6 +271,16 @@ export function afterHitSpellRouteForInterrupt(input: {
   }
 
   return nonEmptyRouteEvents(route);
+}
+
+function afterHitSpellResourceTag(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForInterruptChoice>>,
+): "spellSlot" | "spellAccessFreeCast" | undefined {
+  if (!("resource" in invocation)) return undefined;
+  if (invocation.resource.tag === "spellSlot") return "spellSlot";
+  return invocation.resource.tag === "spellAccessFreeCast"
+    ? "spellAccessFreeCast"
+    : undefined;
 }
 
 export function afterHitSpellEscapeRouteForResolution(
