@@ -1640,13 +1640,10 @@ function characterBattleResourceUnitIds(input: {
     if (useCountUnitId !== null) {
       battleUseCountResourceUnitIds.add(useCountUnitId);
     }
-    const pointPoolUnitId =
-      characterSheetPointPoolResourceUnitIdForBattleResource(resource);
-    if (
-      pointPoolUnitId !== null &&
-      characterBattleResourceIsPointPool(resource.state)
-    ) {
-      battlePointPoolResourceUnitIds.add(pointPoolUnitId);
+    const pointPoolResource =
+      characterBattlePointPoolResourceForSheet(resource);
+    if (pointPoolResource !== null) {
+      battlePointPoolResourceUnitIds.add(pointPoolResource.ownership.unit.id);
     }
   }
   if (input.wildShapeResource.tag === "present") {
@@ -1876,7 +1873,8 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
     input.resource,
   );
   if (pointPoolResource === null) return Result.succeed(null);
-  const { resource, unitId: pointPoolUnitId } = pointPoolResource;
+  const resource = pointPoolResource;
+  const pointPoolUnitId = resource.ownership.unit.id;
   const maxPoints = characterBattleResourceMaxPointsForExecutionFacts({
     unit: resource.ownership.unit,
     resource: ownedResourceExecutionFacts(resource),
@@ -2028,23 +2026,44 @@ type OwnedCharacterBattleUnitResource = Extract<
   { readonly tag: "unitResource" }
 >;
 
-type OwnedCharacterBattlePointPoolResource =
-  OwnedCharacterBattleUnitResource & {
-    readonly state: CharacterBattlePointPoolResourceState;
+type CharacterSheetPointPoolResourceUnit = UnitRecord & {
+  readonly id: CharacterSheetPointPoolResourceUnitId;
+};
+
+type CharacterSheetSupportedOwnedBattlePointPoolResource = Omit<
+  OwnedCharacterBattleUnitResource,
+  "state" | "ownership"
+> & {
+  readonly state: CharacterBattlePointPoolResourceState;
+  readonly ownership: Omit<
+    OwnedCharacterBattleUnitResource["ownership"],
+    "unit"
+  > & {
+    readonly unit: CharacterSheetPointPoolResourceUnit;
   };
+};
+
+function isCharacterSheetPointPoolResourceUnit(
+  unit: UnitRecord,
+): unit is CharacterSheetPointPoolResourceUnit {
+  return isCharacterSheetPointPoolResourceUnitId(unit.id);
+}
 
 function characterBattlePointPoolResourceForSheet(
   resource: OwnedCharacterBattleResource,
-): {
-  readonly resource: OwnedCharacterBattlePointPoolResource;
-  readonly unitId: CharacterSheetPointPoolResourceUnitId;
-} | null {
+): CharacterSheetSupportedOwnedBattlePointPoolResource | null {
   if (resource.tag !== "unitResource") return null;
   if (!characterBattleResourceIsPointPool(resource.state)) return null;
-  const unitId = resource.ownership.unit.id;
-  return isCharacterSheetPointPoolResourceUnitId(unitId)
-    ? { resource: { ...resource, state: resource.state }, unitId }
-    : null;
+  const unit = resource.ownership.unit;
+  if (!isCharacterSheetPointPoolResourceUnit(unit)) return null;
+  return {
+    ...resource,
+    state: resource.state,
+    ownership: {
+      ...resource.ownership,
+      unit,
+    },
+  };
 }
 
 function ownedResourceIsDruidWildShape(
@@ -2277,16 +2296,6 @@ function characterBattleOwnedUnitResource(input: {
           : unsupported(),
     }),
   );
-}
-
-function characterSheetPointPoolResourceUnitIdForBattleResource(
-  resource: OwnedCharacterBattleResource,
-): CharacterSheetPointPoolResourceUnitId | null {
-  return resource.tag === "unitResource" &&
-    characterBattleResourceIsPointPool(resource.state) &&
-    isCharacterSheetPointPoolResourceUnitId(resource.ownership.unit.id)
-    ? resource.ownership.unit.id
-    : null;
 }
 
 function characterSheetUseCountResourceUnitIdForBattleResource(
