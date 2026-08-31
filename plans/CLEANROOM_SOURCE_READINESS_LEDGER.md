@@ -13,17 +13,18 @@ This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-31
 - Current frontier: `SR-04`
-- Active work: Paused before #474 Battle spell mechanics procedure admission
-- Active owner: None while paused
+- Active work: #474 Battle spell mechanics procedure admission
+- Active owner: Codex orchestrator
 - Last completed landing unit: `SR-04F` Battle feature and mastery mechanics
   projection, #471
 - Last accepted milestone SHA: `d383f8a7a`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: None
-- Next action: wait for operator authorization, then start #474 from the
-  ledger-receipted `master`; do not reuse the completed SR-04F worktree as the
-  next landing unit
+- Active landing unit: `integration/cleanroom-sr-04g` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`
+- Next action: regenerate the #474 complete/partial/no-owner spell-profile
+  inventory from current master `42c838942`, map repeated SpellRecord
+  recognition, and divide profile-owner implementation leases
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -143,8 +144,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
-| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                 | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `42c838942` | Spell profile-owner static projection, exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence | Active |
 
 ## Landing discipline
 
