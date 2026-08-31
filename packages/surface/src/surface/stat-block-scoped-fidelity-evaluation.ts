@@ -58,6 +58,10 @@ export type StatBlockScopedProjectionFailure =
       readonly message: string;
     }
   | {
+      readonly tag: "projection-invalid";
+      readonly message: string;
+    }
+  | {
       readonly tag: "source-not-supplied";
       readonly sourcePath: SrdStatBlockSourcePath;
     }
@@ -86,6 +90,7 @@ function scopedProjectionFailure(
       errorName,
       message,
     })),
+    Match.when({ tag: "projection-invalid" }, (invalid) => invalid),
     Match.when({ tag: "source-path-mismatch" }, (unchanged) => unchanged),
     Match.exhaustive,
   );
@@ -596,6 +601,8 @@ function projectionFailureOrderKey(
     Match.discriminatorsExhaustive("tag")({
       "projection-threw": ({ errorName, message }) =>
         JSON.stringify(["projection-threw", errorName, message]),
+      "projection-invalid": ({ message }) =>
+        JSON.stringify(["projection-invalid", message]),
       "source-not-supplied": ({ sourcePath }) =>
         JSON.stringify(["source-not-supplied", sourcePath]),
       "source-path-mismatch": ({ suppliedSourcePath, occurrenceSourcePath }) =>

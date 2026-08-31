@@ -230,6 +230,7 @@ function isProjectionOutcomeNotSupplied(
   return Match.value(failure).pipe(
     Match.when({ tag: "projection-outcome-not-supplied" }, () => true),
     Match.when({ tag: "projection-threw" }, () => false),
+    Match.when({ tag: "projection-invalid" }, () => false),
     Match.when({ tag: "source-not-supplied" }, () => false),
     Match.when({ tag: "source-path-mismatch" }, () => false),
     Match.when({ tag: "projection-outside-parity-denominator" }, () => false),

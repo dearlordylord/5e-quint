@@ -142,16 +142,14 @@ describe("qualified condition Immunity fidelity", () => {
       names: ["Vampire Familiar"],
     }).projection[0];
     expect(
-      archmage?.generalFacts.immunities.kind === "some"
-        && "qualifiedConditions" in archmage.generalFacts.immunities.value
+      archmage?.generalFacts.immunities.kind === "some" &&
+        "qualifiedConditions" in archmage.generalFacts.immunities.value
         ? archmage.generalFacts.immunities.value.qualifiedConditions
         : undefined,
-    ).toEqual([
-      { condition: "charmed", qualifier: "with *Mind Blank*" },
-    ]);
+    ).toEqual([{ condition: "charmed", qualifier: "with *Mind Blank*" }]);
     expect(
-      vampireFamiliar?.generalFacts.immunities.kind === "some"
-        && "qualifiedConditions" in vampireFamiliar.generalFacts.immunities.value
+      vampireFamiliar?.generalFacts.immunities.kind === "some" &&
+        "qualifiedConditions" in vampireFamiliar.generalFacts.immunities.value
         ? vampireFamiliar.generalFacts.immunities.value.qualifiedConditions
         : undefined,
     ).toEqual([

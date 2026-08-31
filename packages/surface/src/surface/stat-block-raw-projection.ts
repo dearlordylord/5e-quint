@@ -1,4 +1,4 @@
-import { Match, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import {
   ABILITIES,
@@ -13,11 +13,23 @@ import {
 } from "@dnd/shared/types";
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
 import {
+  AbilitySchema,
+  ChallengeRatingSchema,
+  ConditionSchema,
+  CreatureTypeSchema,
+  DamageTypeSchema,
+  SizeSchema,
+  SkillSchema,
   StandaloneStatBlockSpeedEntrySchema,
+  StandaloneStatBlockSizeAndSwarmSchema,
+  StandaloneCreatureSenseSchema,
+  StandaloneStatBlockAbilityScoresSchema,
   StatBlockCommunicationSchema,
+  StatBlockTextOnlyReasonSchema,
   CreatureTraitSchema,
   CreatureImmunityListSchema,
 } from "./schema.ts";
+import { exactOptional, nonEmpty, strictStruct } from "./schema-helpers.ts";
 import {
   isChallengeRating,
   statBlockProficiencyBonusForChallengeRating,
@@ -166,7 +178,10 @@ type DamageProjection = {
 
 type ResistanceProjection =
   | { readonly kind: "none" }
-  | { readonly kind: "fixed"; readonly damageTypes: ReadonlyNonEmptyArray<DamageType> }
+  | {
+      readonly kind: "fixed";
+      readonly damageTypes: ReadonlyNonEmptyArray<DamageType>;
+    }
   | {
       readonly kind: "choose_one_from";
       readonly options: ReadonlyNonEmptyArray<DamageType>;
@@ -233,7 +248,10 @@ type ProcedureProjection =
         }
       | {
           readonly attackType: "ranged";
-          readonly rangeFeet: { readonly normal: number; readonly long: number };
+          readonly rangeFeet: {
+            readonly normal: number;
+            readonly long: number;
+          };
           readonly ammunition?: string;
         }
     ))
@@ -367,6 +385,322 @@ export type StatBlockScopedFidelityProjection = {
   readonly procedures: readonly ProcedureProjection[];
 };
 
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+const SignedIntegerSchema = Schema.Number.pipe(Schema.int());
+const NonEmptyStringSchema = Schema.NonEmptyTrimmedString;
+const ProcedureSectionSchema = Schema.Literal(...PROCEDURE_SECTIONS);
+const AttackAbilitySchema = Schema.Literal(...ATTACK_ABILITY_NAMES);
+
+const ResourceLimitProjectionSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("daily"),
+    uses: PositiveIntegerSchema,
+    ownership: Schema.Literal("shared", "each"),
+  }),
+  strictStruct({
+    kind: Schema.Literal("recharge"),
+    minimumRoll: Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
+    ownership: Schema.Literal("shared", "each"),
+  }),
+  strictStruct({
+    kind: Schema.Literal("recharge_after_rest"),
+    rest: Schema.Literal("short_or_long"),
+    ownership: Schema.Literal("shared", "each"),
+  }),
+);
+
+const DamageAmountProjectionSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    static: PositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    static: PositiveIntegerSchema,
+    expr: strictStruct({
+      dice: PositiveIntegerSchema,
+      dieSize: PositiveIntegerSchema,
+      flat: exactOptional(SignedIntegerSchema),
+      spellcastingMod: exactOptional(Schema.Literal(true)),
+      abilityModifier: exactOptional(AbilitySchema),
+    }),
+  }),
+);
+
+const DamageProjectionSchema = strictStruct({
+  kind: Schema.Literal("damage"),
+  damageType: DamageTypeSchema,
+  amount: DamageAmountProjectionSchema,
+});
+
+const AttackEffectProjectionSchema = Schema.Union(
+  DamageProjectionSchema,
+  strictStruct({
+    kind: Schema.Literal("conditional_bonus_damage"),
+    when: Schema.Literal("attack_roll_had_advantage"),
+    damageType: DamageTypeSchema,
+    amount: DamageAmountProjectionSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("apply_condition_if_target_size_at_most"),
+    condition: ConditionSchema,
+    maxCreatureSize: SizeSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("apply_condition"),
+    condition: ConditionSchema,
+    expiresAt: Schema.Literal("source_next_turn_end", "target_next_turn_end"),
+  }),
+);
+
+const AttackAbilityEvidenceSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("resolved"),
+    ability: AttackAbilitySchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("unresolved"),
+    candidates: nonEmpty(AttackAbilitySchema).pipe(
+      Schema.filter(
+        (candidates) =>
+          candidates.length >= 2 &&
+          new Set(candidates).size === candidates.length,
+        {
+          message: () =>
+            "Unresolved attack evidence requires at least two distinct abilities.",
+        },
+      ),
+    ),
+  }),
+);
+
+const SpellProjectionSchema = strictStruct({
+  spellId: NonEmptyStringSchema,
+  count: exactOptional(PositiveIntegerSchema),
+  castAtLevel: exactOptional(PositiveIntegerSchema),
+  restriction: exactOptional(NonEmptyStringSchema),
+});
+
+const SpellcastingGroupProjectionSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("at_will"),
+    spells: nonEmpty(SpellProjectionSchema),
+    resourceLimits: Schema.Tuple(),
+  }),
+  strictStruct({
+    kind: Schema.Literal("limited"),
+    spells: nonEmpty(SpellProjectionSchema),
+    resourceLimits: nonEmpty(ResourceLimitProjectionSchema),
+  }),
+);
+
+const ProcedureBaseFields = {
+  section: ProcedureSectionSchema,
+  name: NonEmptyStringSchema,
+  resourceLimits: Schema.Array(ResourceLimitProjectionSchema),
+} as const;
+
+const ProcedureProjectionSchema = Schema.Union(
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("textOnly"),
+    description: NonEmptyStringSchema,
+    reason: StatBlockTextOnlyReasonSchema,
+  }),
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("attack_roll"),
+    attackType: Schema.Literal("melee"),
+    attackBonus: SignedIntegerSchema,
+    attackAbilityEvidence: AttackAbilityEvidenceSchema,
+    multiattackCount: exactOptional(PositiveIntegerSchema),
+    reachFeet: PositiveIntegerSchema,
+    onHit: nonEmpty(AttackEffectProjectionSchema),
+  }),
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("attack_roll"),
+    attackType: Schema.Literal("ranged"),
+    attackBonus: SignedIntegerSchema,
+    attackAbilityEvidence: AttackAbilityEvidenceSchema,
+    multiattackCount: exactOptional(PositiveIntegerSchema),
+    rangeFeet: strictStruct({
+      normal: PositiveIntegerSchema,
+      long: PositiveIntegerSchema,
+    }).pipe(
+      Schema.filter(({ normal, long }) => normal <= long, {
+        message: () => "Normal attack range cannot exceed long range.",
+      }),
+    ),
+    ammunition: exactOptional(NonEmptyStringSchema),
+    onHit: nonEmpty(AttackEffectProjectionSchema),
+  }),
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("save"),
+    ability: AbilitySchema,
+    dc: PositiveIntegerSchema,
+    area: Schema.Union(
+      strictStruct({
+        kind: Schema.Literal("line"),
+        lengthFeet: PositiveIntegerSchema,
+        widthFeet: PositiveIntegerSchema,
+      }),
+      strictStruct({
+        kind: Schema.Literal("cone"),
+        lengthFeet: PositiveIntegerSchema,
+      }),
+    ),
+    onFail: DamageProjectionSchema,
+    onSuccess: Schema.Literal("half_damage"),
+    multiattackCount: exactOptional(PositiveIntegerSchema),
+  }),
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("multiattack"),
+    dispatches: nonEmpty(
+      strictStruct({
+        procedureName: NonEmptyStringSchema,
+        count: PositiveIntegerSchema,
+      }),
+    ),
+  }),
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("action_option"),
+    options: nonEmpty(NonEmptyStringSchema),
+  }),
+  strictStruct({
+    ...ProcedureBaseFields,
+    kind: Schema.Literal("spellcasting"),
+    ability: AbilitySchema,
+    spellSaveDc: exactOptional(PositiveIntegerSchema),
+    spellAttackBonus: exactOptional(SignedIntegerSchema),
+    components: Schema.Union(
+      strictStruct({ kind: Schema.Literal("spell_definition") }),
+      strictStruct({
+        kind: Schema.Literal("fixed"),
+        v: Schema.Boolean,
+        s: Schema.Boolean,
+        m: Schema.Union(Schema.Literal(false), NonEmptyStringSchema),
+      }),
+    ),
+    groups: nonEmpty(SpellcastingGroupProjectionSchema),
+  }),
+);
+
+const NamedAbilityModifierSchema = strictStruct({
+  name: AbilitySchema,
+  modifier: SignedIntegerSchema,
+});
+const NamedSkillModifierSchema = strictStruct({
+  name: SkillSchema,
+  modifier: SignedIntegerSchema,
+});
+const VulnerabilityProjectionSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("none") }),
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    damageTypes: nonEmpty(DamageTypeSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("qualified"),
+    damageTypes: nonEmpty(DamageTypeSchema),
+    qualifier: NonEmptyStringSchema,
+  }),
+);
+const ResistanceProjectionSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("none") }),
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    damageTypes: nonEmpty(DamageTypeSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("choose_one_from"),
+    options: nonEmpty(DamageTypeSchema),
+  }),
+);
+
+export const StatBlockScopedFidelityProjectionSchema = strictStruct({
+  generalFacts: strictStruct({
+    challengeRating: ChallengeRatingSchema,
+    sizeAndSwarm: StandaloneStatBlockSizeAndSwarmSchema,
+    creatureType: CreatureTypeSchema,
+    creatureTypeTags: Schema.Array(NonEmptyStringSchema),
+    alignment: Schema.Union(
+      Schema.Literal("unaligned"),
+      strictStruct({
+        order: Schema.Literal(...ALIGNMENT_ORDERS),
+        morality: Schema.Literal(...ALIGNMENT_MORALITIES),
+      }),
+    ),
+    ac: strictStruct({
+      kind: Schema.Literal("literal"),
+      value: PositiveIntegerSchema,
+      annotations: Schema.Array(NonEmptyStringSchema),
+    }),
+    hp: strictStruct({
+      kind: Schema.Literal("literal"),
+      value: PositiveIntegerSchema,
+    }),
+    speeds: nonEmpty(StandaloneStatBlockSpeedEntrySchema),
+    abilityScores: StandaloneStatBlockAbilityScoresSchema,
+    initiative: strictStruct({
+      modifier: SignedIntegerSchema,
+      score: PositiveIntegerSchema,
+    }),
+    savingThrowModifiers: Schema.Array(NamedAbilityModifierSchema),
+    saveProficiencies: Schema.Array(AbilitySchema),
+    skillModifiers: Schema.Array(NamedSkillModifierSchema),
+    vulnerabilities: VulnerabilityProjectionSchema,
+    resistances: ResistanceProjectionSchema,
+    immunities: Schema.Union(
+      strictStruct({ kind: Schema.Literal("none") }),
+      strictStruct({
+        kind: Schema.Literal("some"),
+        value: CreatureImmunityListSchema,
+      }),
+    ),
+    senses: Schema.Array(StandaloneCreatureSenseSchema),
+    passivePerception: PositiveIntegerSchema,
+    gear: Schema.Array(
+      strictStruct({
+        item: NonEmptyStringSchema,
+        quantity: PositiveIntegerSchema,
+      }),
+    ),
+    communication: StatBlockCommunicationSchema,
+    legendaryActionUses: exactOptional(
+      Schema.Union(
+        strictStruct({
+          kind: Schema.Literal("fixed"),
+          uses: PositiveIntegerSchema,
+        }),
+        strictStruct({
+          kind: Schema.Literal("lair_bonus"),
+          usesOutsideLair: PositiveIntegerSchema,
+          additionalUsesInLair: PositiveIntegerSchema,
+        }),
+      ),
+    ),
+  }),
+  resources: Schema.Array(ResourceLimitProjectionSchema),
+  entryNames: Schema.Array(NonEmptyStringSchema),
+  traits: Schema.Array(CreatureTraitSchema),
+  textOnlyProcedures: Schema.Array(
+    strictStruct({
+      section: ProcedureSectionSchema,
+      name: NonEmptyStringSchema,
+      description: NonEmptyStringSchema,
+      reason: StatBlockTextOnlyReasonSchema,
+    }),
+  ),
+  procedures: Schema.Array(ProcedureProjectionSchema),
+});
+
 const procedureResourceLimits = (
   procedures: readonly ProcedureProjection[],
 ): readonly ResourceLimitProjection[] =>
@@ -404,9 +738,7 @@ const normalizedProcedureName = (value: string): string =>
 const isRawSection = (value: string): value is RawSection =>
   RAW_SECTIONS.some((section) => section === value);
 
-const isAttackAbility = (
-  ability: Ability,
-): ability is AttackAbility =>
+const isAttackAbility = (ability: Ability): ability is AttackAbility =>
   ATTACK_ABILITY_NAMES.some((attackAbility) => attackAbility === ability);
 
 const rawAttackAbilityCandidates = (
@@ -613,19 +945,19 @@ const parseSpeeds = (
       );
       if (gmChoice !== null) {
         const feet = Number(gmChoice[2]);
-        const alternatives = (gmChoice[1] ?? "")
-          .split(" or ")
-          .map((kind) => ({
-            kind: parsedLiteral(
-              SPEED_TYPES,
-              kind.toLowerCase(),
-              `${context} GM Speed choice`,
-            ),
-            feet: { kind: "literal" as const, value: feet },
-          }));
+        const alternatives = (gmChoice[1] ?? "").split(" or ").map((kind) => ({
+          kind: parsedLiteral(
+            SPEED_TYPES,
+            kind.toLowerCase(),
+            `${context} GM Speed choice`,
+          ),
+          feet: { kind: "literal" as const, value: feet },
+        }));
         const [first, second, ...rest] = alternatives;
         if (first === undefined || second === undefined) {
-          throw new Error(`${context} GM Speed choice requires two alternatives`);
+          throw new Error(
+            `${context} GM Speed choice requires two alternatives`,
+          );
         }
         return Schema.decodeUnknownSync(StandaloneStatBlockSpeedEntrySchema)({
           kind: "gm_choice",
@@ -1058,8 +1390,7 @@ const parseResistances = (lines: readonly string[]): ResistanceProjection => {
               damageType.replace(/^or /, "").toLowerCase(),
               "chosen resistance damage type",
             ),
-          ) ??
-        []);
+          ) ?? []);
   return chosen === null
     ? {
         kind: "fixed",
@@ -1710,8 +2041,7 @@ const parseSimpleAttack = (
             expr: {
               dice: totalAmount.expr.dice - baseAmount.expr.dice,
               dieSize: totalAmount.expr.dieSize,
-              ...((totalAmount.expr.flat ?? 0) -
-                (baseAmount.expr.flat ?? 0) ===
+              ...((totalAmount.expr.flat ?? 0) - (baseAmount.expr.flat ?? 0) ===
               0
                 ? {}
                 : {
@@ -2659,15 +2989,12 @@ const projectExecutableProcedure = (
           attackType: "melee" as const,
           reachFeet,
         })),
-        Match.when(
-          { attackType: "ranged" },
-          ({ rangeFeet, ammunition }) => ({
-            ...commonAttack,
-            attackType: "ranged" as const,
-            rangeFeet,
-            ...(ammunition === undefined ? {} : { ammunition }),
-          }),
-        ),
+        Match.when({ attackType: "ranged" }, ({ rangeFeet, ammunition }) => ({
+          ...commonAttack,
+          attackType: "ranged" as const,
+          rangeFeet,
+          ...(ammunition === undefined ? {} : { ammunition }),
+        })),
         Match.exhaustive,
       );
     }),
@@ -2879,14 +3206,15 @@ const bindAuthoredResourceLimits = (
       return {
         ...spellcasting,
         groups: nonEmptyValues(
-          spellcasting.groups.map((group): SpellcastingGroupProjection =>
-            group === targetGroup
-              ? {
-                  ...group,
-                  kind: "limited",
-                  resourceLimits: limits,
-                }
-              : group,
+          spellcasting.groups.map(
+            (group): SpellcastingGroupProjection =>
+              group === targetGroup
+                ? {
+                    ...group,
+                    kind: "limited",
+                    resourceLimits: limits,
+                  }
+                : group,
           ),
           "bound spellcasting groups",
         ),
@@ -3249,8 +3577,9 @@ const projectAuthoredStatBlockUnsafe = (
               Match.exhaustive,
             ),
       immunities: projectImmunities(record),
-      senses: [...(record.statBlock.senses ?? [])]
-        .sort((left, right) => left.kind.localeCompare(right.kind)),
+      senses: [...(record.statBlock.senses ?? [])].sort((left, right) =>
+        left.kind.localeCompare(right.kind),
+      ),
       passivePerception: record.statBlock.passivePerception,
       gear: [...(record.statBlock.gear ?? [])]
         .map((gear) => ({ item: gear.item, quantity: gear.quantity ?? 1 }))
@@ -3294,6 +3623,10 @@ export type StatBlockScopedProjectionFailure =
       readonly tag: "projection-error";
       readonly errorName: string;
       readonly message: string;
+    }
+  | {
+      readonly tag: "projection-invalid";
+      readonly message: string;
     };
 
 export type StatBlockScopedProjectionResult =
@@ -3310,7 +3643,19 @@ function projectionResult(
   project: () => StatBlockScopedFidelityProjection,
 ): StatBlockScopedProjectionResult {
   try {
-    return { tag: "projected", projection: project() };
+    const projection = project();
+    const decoded = Schema.decodeUnknownEither(
+      StatBlockScopedFidelityProjectionSchema,
+    )(projection);
+    return Either.isLeft(decoded)
+      ? {
+          tag: "failed",
+          failure: {
+            tag: "projection-invalid",
+            message: String(decoded.left),
+          },
+        }
+      : { tag: "projected", projection };
   } catch (error) {
     return error instanceof Error
       ? {

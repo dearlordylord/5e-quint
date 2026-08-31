@@ -38,6 +38,9 @@ function requireProjected(
         Match.when({ tag: "projection-error" }, ({ errorName, message }) => {
           throw new Error(`${errorName}: ${message}`);
         }),
+        Match.when({ tag: "projection-invalid" }, ({ message }) => {
+          throw new Error(`Invalid projection: ${message}`);
+        }),
         Match.when(
           { tag: "source-path-mismatch" },
           ({ suppliedSourcePath, occurrenceSourcePath }) => {
