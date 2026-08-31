@@ -8,7 +8,6 @@ import type { SpellAdmissionContext } from "./profile.ts";
 import {
   admitBattleSpellMechanicsFrom,
   type AdmittedSpellProcedureMechanicsView,
-  type AnySpellProcedureMechanicsAdmission,
   type BattleSpellMechanicsAdmission,
   type SpellMechanicsAdmissionSource,
 } from "./spell-mechanics-admission.ts";
@@ -29,26 +28,11 @@ function admitSupportedSpellProcedures(
 }
 
 /**
- * Compatibility view for callers that only need to inspect the derived
- * admission operations. The canonical declarations contain only the static
- * owner hook; contextual admission is bound by each supported static result.
- */
-export type AnySpellProcedureAdmission = {
-  readonly admit: AnySpellProcedureMechanicsAdmission["admitMechanics"];
-};
-
-export function registeredSpellProcedureAdmissions(): readonly AnySpellProcedureAdmission[] {
-  return registeredSpellProcedureMechanicsAdmissions().map(
-    ({ admitMechanics }) => ({ admit: admitMechanics }),
-  );
-}
-
-/**
  * Static readers are derived from the canonical declaration table. This is a
  * registry view, not a second table: procedure ownership remains in each
  * profile declaration and synthesized execution-only procedures are omitted.
  */
-export function registeredSpellProcedureMechanicsAdmissions(): readonly AnySpellProcedureMechanicsAdmission[] {
+export function registeredSpellProcedureMechanicsAdmissions() {
   return Object.values(registeredSpellProcedureDeclarations()).flatMap(
     ({ admission }) =>
       admission.kind === "authored"

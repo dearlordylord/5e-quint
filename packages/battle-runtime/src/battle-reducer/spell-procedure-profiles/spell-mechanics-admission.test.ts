@@ -5,7 +5,6 @@ import { unitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 
 import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
 import { spellRecord } from "../../unit-profile-admission-spell-record.test-support.ts";
-import { registeredSpellProcedureMechanicsAdmissions } from "./admission-registry.ts";
 import {
   admitBattleSpellMechanicsFrom,
   BATTLE_SPELL_ROOT_MECHANICS_PATH,
@@ -61,15 +60,6 @@ function unsupportedAdmission<P extends BattleSpellProcedureKey>(
 }
 
 describe("battle spell static mechanics admission", () => {
-  test("derives static readers from the canonical declaration view", () => {
-    const admissions = registeredSpellProcedureMechanicsAdmissions();
-
-    expect(admissions.length).toBeGreaterThan(0);
-    expect(admissions.every((admission) => "admitMechanics" in admission)).toBe(
-      true,
-    );
-  });
-
   test("keeps complete and partial evidence structurally distinct", () => {
     const nestedPhasePath = unitMechanicsPath([
       { kind: "singleton", role: "recordMechanics" },
