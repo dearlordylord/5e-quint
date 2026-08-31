@@ -1,10 +1,11 @@
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
 
 export function ongoingConcentrationAreaSpellFacts(
-  spell: BattleSpellAdmissionSource,
+  source: SpellMechanics | Pick<BattleSpellAdmissionSource, "mechanics">,
 ) {
-  const mechanics = spell.mechanics;
+  const mechanics = "mechanics" in source ? source.mechanics : source;
   if (mechanics.family !== "ongoing_effect") {
     return null;
   }
