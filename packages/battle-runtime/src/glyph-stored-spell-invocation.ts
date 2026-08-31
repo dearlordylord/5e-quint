@@ -1,4 +1,3 @@
-import type { SpellMechanics } from "@dnd/surface/surface/types";
 import type {
   LeveledSpellInvocationResource,
   PreparedSpellAccess,
@@ -7,6 +6,7 @@ import type {
   SpellTargeting,
   SupportedSpellInvocation,
 } from "./battle-state-execution.ts";
+import type { SpellDefinitionRuleFacts } from "./procedure-execution/spell-rule-facts.ts";
 import {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
   GLYPH_STORED_AREA_ONGOING_PROCEDURES,
@@ -34,18 +34,18 @@ export type {
 type GlyphStoredSpellExecutionSource = SupportedSpellInvocation["spell"];
 type GlyphStoredConcentrationSpellExecutionSource =
   GlyphStoredSpellExecutionSource & {
-    readonly mechanics: SpellMechanics & {
+    readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts & {
       readonly duration: Extract<
-        SpellMechanics["duration"],
+        SpellDefinitionRuleFacts["duration"],
         { readonly kind: "concentration" }
       >;
     };
   };
 type GlyphStoredNonConcentrationSpellExecutionSource =
   GlyphStoredSpellExecutionSource & {
-    readonly mechanics: SpellMechanics & {
+    readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts & {
       readonly duration: Exclude<
-        SpellMechanics["duration"],
+        SpellDefinitionRuleFacts["duration"],
         { readonly kind: "concentration" }
       >;
     };

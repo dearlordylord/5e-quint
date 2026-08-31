@@ -1418,7 +1418,7 @@ function glyphStoredSpellInvocationValidation(input: {
 }): GlyphStoredSpellInvocationValidationResult {
   const storedInvocation = input.release.storedInvocation;
   const storedSpellLevel = parseBattleSpellEffectLevel(
-    storedInvocation.spell.mechanics.level,
+    storedInvocation.spell.spellDefinitionRuleFacts.level,
   );
   const storedSlotLevel = parseBattleSpellEffectLevel(
     Number(storedInvocation.resource.slotLevel),
@@ -1446,7 +1446,7 @@ function glyphStoredSpellInvocationRequiresFullDurationOwner(
     ("spellRuleFacts" in invocation
       ? invocation.spellRuleFacts.duration.kind
       : "spell" in invocation
-        ? invocation.spell.mechanics.duration.kind
+        ? invocation.spell.spellDefinitionRuleFacts.duration.kind
         : null) === "concentration"
   );
 }
