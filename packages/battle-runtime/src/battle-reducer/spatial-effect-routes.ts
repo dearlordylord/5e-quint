@@ -119,9 +119,55 @@ export function spatialEffectCompositionRouteForResolution(
     return undefined;
   }
   const invocation = spellInvocationForRouteSubject(input.state, input.subject);
-  const procedure = invocation?.procedure;
+  const invocationRoute = spatialEffectInvocationRoute(invocation);
+  if (invocationRoute !== undefined) {
+    return invocationRoute;
+  }
+  if (invocation?.procedure !== "saveGatedDamage") {
+    return undefined;
+  }
+  if (!isForcedMovementCubeBurstPostSaveAreaEffect(invocation)) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "savingThrowOutcome") {
+    return [
+      spatialCompositionResolve(
+        "movementPresentation",
+        "savingThrowOutcome",
+        ["movement"],
+        "battleSavingThrowOutcome",
+      ),
+    ];
+  }
+  if (routeFill !== "rolledDice" || result.tag !== "resolved") {
+    return undefined;
+  }
+  return spatialEffectForcedMovementResolutionRoute;
+}
+
+function spatialEffectInvocationRoute(
+  invocation: BattleSpellProcedureExecution | undefined,
+): BattleReducerRouteEvents | undefined {
+  return (
+    spatialEffectManifestationInvocationRoute(invocation) ??
+    persistentAreaCompositionInvocationRoute(invocation) ??
+    objectLightInvocationRoute(invocation)
+  );
+}
+
+function spatialEffectManifestationInvocationRoute(
+  invocation: BattleSpellProcedureExecution | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (invocation === undefined) {
+    return undefined;
+  }
   if (
-    invocation?.procedure === "movableLightManifestation" &&
+    invocation.procedure === "movableLightManifestation" &&
     invocation.operation === "create"
   ) {
     return [
@@ -140,7 +186,7 @@ export function spatialEffectCompositionRouteForResolution(
     ];
   }
   if (
-    invocation?.procedure === "movableLightManifestation" &&
+    invocation.procedure === "movableLightManifestation" &&
     invocation.operation === "reposition"
   ) {
     return [
@@ -156,7 +202,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "saveGatedAttackRollAdvantage") {
+  if (invocation.procedure === "saveGatedAttackRollAdvantage") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -192,7 +238,16 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (invocation?.procedure === "persistentAreaTrait") {
+  return undefined;
+}
+
+function persistentAreaCompositionInvocationRoute(
+  invocation: BattleSpellProcedureExecution | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (invocation === undefined) {
+    return undefined;
+  }
+  if (invocation.procedure === "persistentAreaTrait") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -218,7 +273,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (invocation?.procedure === "persistentAreaSaveCondition") {
+  if (invocation.procedure === "persistentAreaSaveCondition") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -238,53 +293,19 @@ export function spatialEffectCompositionRouteForResolution(
     ];
   }
   if (
-    invocation?.procedure === "persistentAreaSaveDamage" ||
-    invocation?.procedure === "areaMovementDistanceDamage" ||
-    invocation?.procedure === "persistentAreaSaveConditionEscape"
+    invocation.procedure === "persistentAreaSaveDamage" ||
+    invocation.procedure === "areaMovementDistanceDamage" ||
+    invocation.procedure === "persistentAreaSaveConditionEscape"
   ) {
-    return [
-      spatialCompositionResolve(
-        "spatialEffect",
-        "targetChoice",
-        [],
-        "battleAreaShape",
-      ),
-      spatialCompositionResolveWithoutFill(
-        "spatialEffect",
-        "battleActiveEffect",
-      ),
-      spatialCompositionResolveWithoutFill(
-        "spatialEffect",
-        "battleConcentration",
-      ),
-      ...(procedure === "persistentAreaSaveDamage"
-        ? [
-            spatialCompositionResolveWithoutFill(
-              "spatialEffect",
-              "battleLightProjection",
-            ),
-          ]
-        : []),
-      spatialCompositionResolveWithoutFill("spatialEffect", "battleAreaHazard"),
-      spatialCompositionResolveWithoutFill(
-        "spatialEffect",
-        "battleCreatureSpaceMovement",
-      ),
-      ...(procedure === "persistentAreaSaveConditionEscape"
-        ? [
-            spatialCompositionResolveWithoutFill(
-              "spatialEffect",
-              "battleObscurementProjection",
-            ),
-            spatialCompositionResolveWithoutFill(
-              "spatialEffect",
-              "battleSightProjection",
-            ),
-          ]
-        : []),
-    ];
+    return persistentAreaInvocationRoute(invocation.procedure);
   }
-  if (procedure === "objectLight") {
+  return undefined;
+}
+
+function objectLightInvocationRoute(
+  invocation: BattleSpellProcedureExecution | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (invocation?.procedure === "objectLight") {
     return [
       spatialCompositionResolve(
         "objectLightRider",
@@ -306,7 +327,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "heldLight") {
+  if (invocation?.procedure === "heldLight") {
     return [
       spatialCompositionResolveWithoutFill(
         "objectLightRider",
@@ -322,59 +343,80 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (invocation?.procedure !== "saveGatedDamage") {
-    return undefined;
-  }
-  if (
-    invocation === undefined ||
-    !isForcedMovementCubeBurstPostSaveAreaEffect(invocation)
-  ) {
-    return undefined;
-  }
-  const fill = input.fills.at(-1);
-  if (fill === undefined) {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === "savingThrowOutcome") {
-    return [
-      spatialCompositionResolve(
-        "movementPresentation",
-        "savingThrowOutcome",
-        ["movement"],
-        "battleSavingThrowOutcome",
-      ),
-    ];
-  }
-  if (routeFill !== "rolledDice" || result.tag !== "resolved") {
-    return undefined;
-  }
+  return undefined;
+}
+
+function persistentAreaInvocationRoute(
+  procedure:
+    | "persistentAreaSaveDamage"
+    | "areaMovementDistanceDamage"
+    | "persistentAreaSaveConditionEscape",
+): BattleReducerRouteEvents {
   return [
     spatialCompositionResolve(
-      "movementPresentation",
-      "movement",
+      "spatialEffect",
+      "targetChoice",
       [],
-      "battleMovementResource",
+      "battleAreaShape",
     ),
+    spatialCompositionResolveWithoutFill("spatialEffect", "battleActiveEffect"),
     spatialCompositionResolveWithoutFill(
-      "movementPresentation",
-      "battleTablePresentation",
+      "spatialEffect",
+      "battleConcentration",
     ),
-    spatialCompositionDiscover(
-      "movementPresentation",
-      [],
-      "battleObjectTargetBoundary",
-    ),
+    ...(procedure === "persistentAreaSaveDamage"
+      ? [
+          spatialCompositionResolveWithoutFill(
+            "spatialEffect",
+            "battleLightProjection",
+          ),
+        ]
+      : []),
+    spatialCompositionResolveWithoutFill("spatialEffect", "battleAreaHazard"),
     spatialCompositionResolveWithoutFill(
-      "movementPresentation",
-      "battleObjectTargetBoundary",
+      "spatialEffect",
+      "battleCreatureSpaceMovement",
     ),
-    spatialCompositionResolveWithoutFill(
-      "movementPresentation",
-      "battleTablePresentation",
-    ),
+    ...(procedure === "persistentAreaSaveConditionEscape"
+      ? [
+          spatialCompositionResolveWithoutFill(
+            "spatialEffect",
+            "battleObscurementProjection",
+          ),
+          spatialCompositionResolveWithoutFill(
+            "spatialEffect",
+            "battleSightProjection",
+          ),
+        ]
+      : []),
   ];
 }
+
+const spatialEffectForcedMovementResolutionRoute = [
+  spatialCompositionResolve(
+    "movementPresentation",
+    "movement",
+    [],
+    "battleMovementResource",
+  ),
+  spatialCompositionResolveWithoutFill(
+    "movementPresentation",
+    "battleTablePresentation",
+  ),
+  spatialCompositionDiscover(
+    "movementPresentation",
+    [],
+    "battleObjectTargetBoundary",
+  ),
+  spatialCompositionResolveWithoutFill(
+    "movementPresentation",
+    "battleObjectTargetBoundary",
+  ),
+  spatialCompositionResolveWithoutFill(
+    "movementPresentation",
+    "battleTablePresentation",
+  ),
+] as const satisfies BattleReducerRouteEvents;
 
 function spatialEffectCompositionRuntimeRouteForResolution(
   input: BattleResolutionInput,
