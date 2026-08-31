@@ -165,6 +165,7 @@ type MonkFocusRootAdmissionFailedFact = Exclude<
 export type MonkFocusProcedureAdmissionIssue =
   | (MonkFocusProcedureAdmissionIssueBase & {
       readonly failedFact: MonkFocusRootAdmissionFailedFact;
+      readonly procedureKind?: never;
     })
   | (MonkFocusProcedureAdmissionIssueBase & {
       readonly failedFact: "unsupportedOptionProcedure";
@@ -197,11 +198,22 @@ type MonkFocusBattleExecution = NonNullable<
   ResourceContainerMechanics["optionSet"]["initialOptions"][number]["battleExecution"]
 >;
 
-type OptionObservation = {
-  readonly ordinal: number;
-  readonly procedureKind: MonkFocusOptionProcedureKind | null;
-  readonly supported: boolean;
-};
+type OptionObservation =
+  | {
+      readonly ordinal: number;
+      readonly procedureKind: null;
+      readonly supported: false;
+    }
+  | {
+      readonly ordinal: number;
+      readonly procedureKind: MonkFocusOptionProcedureKind;
+      readonly supported: boolean;
+    };
+
+type RecognizedOptionInspection = Omit<
+  Extract<OptionObservation, { readonly procedureKind: string }>,
+  "ordinal"
+>;
 
 export function admitMonkFocusProcedure(
   unit: AuthoredUnitSource,
@@ -234,17 +246,15 @@ function inspectOptionProcedures(
 ): readonly OptionObservation[] {
   return mechanics.optionSet.initialOptions.map((option, index) => {
     const inspection = inspectMonkFocusOptionProcedure(option.battleExecution);
-    return {
-      ordinal: index + 1,
-      procedureKind: inspection?.procedureKind ?? null,
-      supported: inspection?.supported ?? false,
-    };
+    return inspection === null
+      ? { ordinal: index + 1, procedureKind: null, supported: false }
+      : { ordinal: index + 1, ...inspection };
   });
 }
 
 function inspectMonkFocusOptionProcedure(
   execution: MonkFocusBattleExecution | undefined,
-): Pick<OptionObservation, "procedureKind" | "supported"> | null {
+): RecognizedOptionInspection | null {
   if (execution === undefined) return null;
   return Match.value(execution).pipe(
     Match.discriminatorsExhaustive("kind")({
@@ -280,7 +290,7 @@ function inspectMonkFocusOptionProcedure(
 function optionInspection(
   procedureKind: MonkFocusOptionProcedureKind,
   supported: boolean,
-): Pick<OptionObservation, "procedureKind" | "supported"> {
+): RecognizedOptionInspection {
   return { procedureKind, supported };
 }
 

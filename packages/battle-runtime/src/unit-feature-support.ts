@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { optionalProperty } from "./optional-property.ts";
 import { Match, Result } from "effect";
+import { sameStringSet } from "./same-string-set.ts";
 import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
@@ -2786,17 +2787,6 @@ function attackDamageRiderMechanicsProjection(
     };
   }
   return null;
-}
-
-function sameStringSet(
-  left: readonly string[],
-  right: readonly string[],
-): boolean {
-  return (
-    left.length === right.length &&
-    left.every((leftValue) => right.includes(leftValue)) &&
-    right.every((rightValue) => left.includes(rightValue))
-  );
 }
 
 export type BattleSaveDamageReplacementSupport =
