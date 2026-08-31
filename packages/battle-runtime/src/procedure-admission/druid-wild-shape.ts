@@ -14,6 +14,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { isStatBlockTransformTargetEffect } from "@dnd/surface/surface/types";
 import { Match } from "effect";
+import { sameStringSet } from "../same-string-set.ts";
 
 import type { CharacterBattleClassLevels } from "../character-class-level.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
@@ -467,17 +468,6 @@ function hasSupportedTemporaryHitPoints(
     amount.perLevel.dieSize === undefined &&
     amount.perLevel.flat === 1 &&
     amount.startingAtLevel === 1
-  );
-}
-
-function sameStringSet(
-  actual: readonly string[],
-  expected: readonly string[],
-): boolean {
-  return (
-    actual.length === expected.length &&
-    actual.every((value) => expected.includes(value)) &&
-    expected.every((value) => actual.includes(value))
   );
 }
 

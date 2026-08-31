@@ -5,6 +5,7 @@ import {
 import type { AuthoredUnitSource } from "@dnd/surface/surface/types";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
+import { sameStringSet } from "../same-string-set.ts";
 
 import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
 
@@ -260,7 +261,7 @@ function acrobaticMovementAdmissionIssues(
   );
   if (
     unarmored?.kind !== "not_wearing_armor" ||
-    !stringSetMatches(unarmored.categories, ["light", "medium", "heavy"]) ||
+    !sameStringSet(unarmored.categories, ["light", "medium", "heavy"]) ||
     unshielded?.kind !== "not_wielding_shield"
   ) {
     failedFacts.push("unsupportedEquipmentCondition");
@@ -293,15 +294,4 @@ function acrobaticMovementAdmissionIssue(
     mechanicsPath: ATOMIC_CLASS_FEATURE_ROOT_MECHANICS_PATH,
     message: `Unsupported Acrobatic Movement mechanics fact: ${failedFact}.`,
   };
-}
-
-function stringSetMatches(
-  actual: readonly string[],
-  expected: readonly string[],
-): boolean {
-  return (
-    actual.length === expected.length &&
-    actual.every((value) => expected.includes(value)) &&
-    expected.every((value) => actual.includes(value))
-  );
 }

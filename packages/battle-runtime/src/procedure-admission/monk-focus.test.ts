@@ -191,9 +191,9 @@ describe("Monk Focus composite admission", () => {
         .filter(({ branch }) => branch.kind === "optionExecution")
         .map(evidenceCoordinate),
     ).toEqual([
-      "consumed|optionExecution:bonusActionMobilityModes|recordMechanics/effect:1",
-      "consumed|optionExecution:bonusActionDefensiveModes|recordMechanics/effect:2",
       "consumed|optionExecution:bonusActionUnarmedStrikeSequence|recordMechanics/effect:3",
+      "consumed|optionExecution:bonusActionDefensiveModes|recordMechanics/effect:2",
+      "consumed|optionExecution:bonusActionMobilityModes|recordMechanics/effect:1",
     ]);
   });
 
@@ -283,10 +283,10 @@ describe("Monk Focus composite admission", () => {
     expect(result.tag).toBe("rejected");
     if (result.tag !== "rejected") return;
     expect(
-      result.issues.map(({ failedFact, procedureKind }) =>
-        procedureKind === undefined
-          ? failedFact
-          : `${failedFact}:${procedureKind}`,
+      result.issues.map((issue) =>
+        "procedureKind" in issue
+          ? `${issue.failedFact}:${issue.procedureKind}`
+          : issue.failedFact,
       ),
     ).toEqual([
       "unexpectedOptionCount",
