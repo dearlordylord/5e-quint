@@ -607,36 +607,35 @@ describe("Character Build advancement typed boundaries", () => {
       );
     }
 
-    expect(
-      advanceCharacterBuildClassLevel({
-        build: {
-          ...build,
-          progression: {
-            ...build.progression,
-            advancements: [
-              {
-                classUnitId: fighterUnitId,
-                hitPointRule: fixedHitPoints,
-              },
-              {
-                classUnitId: fighterUnitId,
-                hitPointRule: fixedHitPoints,
-              },
-            ],
-          },
-        },
-        unitLibrary,
-        levelGain: levelGain.success,
-      }),
-    ).toMatchObject({
-      _tag: "Success",
-      success: {
-        features: fighterWeaponMasteryFeatures(selectedWeaponUnitIds),
+    const fighterAdvancement = advanceCharacterBuildClassLevel({
+      build: {
+        ...build,
         progression: {
-          advancements: [{}, {}, {}],
+          ...build.progression,
+          advancements: [
+            {
+              classUnitId: fighterUnitId,
+              hitPointRule: fixedHitPoints,
+            },
+            {
+              classUnitId: fighterUnitId,
+              hitPointRule: fixedHitPoints,
+            },
+          ],
         },
       },
+      unitLibrary,
+      levelGain: levelGain.success,
     });
+    expect(Result.isSuccess(fighterAdvancement)).toBe(true);
+    if (Result.isSuccess(fighterAdvancement)) {
+      expect(fighterAdvancement.success.features).toEqual(
+        fighterWeaponMasteryFeatures(selectedWeaponUnitIds),
+      );
+      expect(fighterAdvancement.success.progression.advancements).toHaveLength(
+        3,
+      );
+    }
   });
 
   test("rejects incoherent Fighter level-four Weapon Mastery selections", () => {
@@ -1568,26 +1567,27 @@ describe("Character Build advancement typed boundaries", () => {
       },
     ]);
 
-    expect(
-      advanceCharacterBuildClassLevel({
-        build: {
-          ...sorcererAtLevelTwo,
-          progression: {
-            ...sorcererAtLevelTwo.progression,
-            advancements: classAdvancementEntries(sorcererUnitId, 2),
-          },
+    const sorcererAdvancement = advanceCharacterBuildClassLevel({
+      build: {
+        ...sorcererAtLevelTwo,
+        progression: {
+          ...sorcererAtLevelTwo.progression,
+          advancements: classAdvancementEntries(sorcererUnitId, 2),
         },
-        unitLibrary,
-        levelGain: {
-          tag: "classLevelGain",
-          classUnitId: sorcererUnitId,
-          hitPointRule: fixedHitPoints,
-        },
-      }),
-    ).toMatchObject({
-      _tag: "Right",
-      right: { features: sorcererAtLevelTwo.features },
+      },
+      unitLibrary,
+      levelGain: {
+        tag: "classLevelGain",
+        classUnitId: sorcererUnitId,
+        hitPointRule: fixedHitPoints,
+      },
     });
+    expect(Result.isSuccess(sorcererAdvancement)).toBe(true);
+    if (Result.isSuccess(sorcererAdvancement)) {
+      expect(sorcererAdvancement.success.features).toEqual(
+        sorcererAtLevelTwo.features,
+      );
+    }
 
     expect(
       advanceCharacterBuildClassLevel({
@@ -1603,8 +1603,8 @@ describe("Character Build advancement typed boundaries", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWarlockPactMagicCantripGainCount",
         warlockLevel: 4,
         expectedGains: 1,

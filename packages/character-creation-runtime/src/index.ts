@@ -7,6 +7,7 @@ export {
 export { characterBuildDisplayName } from "./character-display.ts";
 
 export {
+  admitCharacterDefinitionMechanicsGraph,
   projectCharacterDefinition,
   type CharacterDefinitionAdmissionInput,
   type CharacterDefinitionAdmissionIssue,

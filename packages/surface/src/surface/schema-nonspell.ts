@@ -38,7 +38,7 @@ import {
   StandardActionKindSchema,
   surfaceSchemaRole,
   type SurfaceIdentityKind,
-  type SurfaceLinkSourceRole,
+  type SurfaceSpecializedLinkSourceRole,
   type SurfaceProjectionKind,
   type SurfaceProtocolKind,
   type SurfaceUnitDependencyRelation,
@@ -97,7 +97,7 @@ const surfaceProjection = <A extends string, I, RD, RE>(
 const surfaceReference = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitReferenceRelation,
-  sourceRole?: SurfaceLinkSourceRole,
+  sourceRole?: SurfaceSpecializedLinkSourceRole,
 ): Schema.Codec<UnitIdType, I, RD, RE> => {
   const role =
     sourceRole === undefined
@@ -117,7 +117,7 @@ const surfaceReference = <A extends string, I, RD, RE>(
 const surfaceDependency = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitDependencyRelation,
-  sourceRole?: SurfaceLinkSourceRole,
+  sourceRole?: SurfaceSpecializedLinkSourceRole,
 ): Schema.Codec<UnitIdType, I, RD, RE> => {
   const role =
     sourceRole === undefined

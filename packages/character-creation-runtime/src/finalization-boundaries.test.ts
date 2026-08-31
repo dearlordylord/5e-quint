@@ -214,8 +214,8 @@ function expectUnsupportedHitPointDelta(input: {
       catalogWithHitPointMaximumFeature(featureUnitId, input.delta),
     ),
   ).toMatchObject({
-    _tag: "Left",
-    left: [
+    _tag: "Failure",
+    failure: [
       {
         cause: {
           tag: "unsupportedHitPointMaximumGrant",

@@ -94,6 +94,10 @@ export type SurfaceProseEvidencePolicy =
   (typeof SURFACE_PROSE_EVIDENCE_POLICIES)[number];
 export type SurfaceProjectionKind = (typeof SURFACE_PROJECTION_KINDS)[number];
 export type SurfaceLinkSourceRole = (typeof SURFACE_LINK_SOURCE_ROLES)[number];
+export type SurfaceSpecializedLinkSourceRole = Exclude<
+  SurfaceLinkSourceRole,
+  "generic"
+>;
 
 export type SurfaceSchemaFieldRole =
   | {
@@ -119,7 +123,8 @@ export type SurfaceSchemaFieldRole =
       readonly category: "reference";
       readonly relation: SurfaceUnitReferenceRelation;
       readonly targetKind: "unit";
-      readonly sourceRole?: SurfaceLinkSourceRole;
+      /** Absence is the single spelling of the generic source role. */
+      readonly sourceRole?: SurfaceSpecializedLinkSourceRole;
     }
   | {
       readonly category: "reference";
@@ -130,7 +135,8 @@ export type SurfaceSchemaFieldRole =
       readonly category: "dependency";
       readonly relation: SurfaceUnitDependencyRelation;
       readonly targetKind: "unit";
-      readonly sourceRole?: SurfaceLinkSourceRole;
+      /** Absence is the single spelling of the generic source role. */
+      readonly sourceRole?: SurfaceSpecializedLinkSourceRole;
     }
   | {
       readonly category: "dependency";
@@ -218,7 +224,9 @@ export function isSurfaceSchemaRole(
       typeof role.relation === "string" &&
       typeof role.targetKind === "string" &&
       (!hasSourceRole ||
-        (typeof role.sourceRole === "string" &&
+        (role.targetKind === "unit" &&
+          typeof role.sourceRole === "string" &&
+          role.sourceRole !== "generic" &&
           SURFACE_LINK_SOURCE_ROLES.some(
             (sourceRole) => sourceRole === role.sourceRole,
           ))) &&

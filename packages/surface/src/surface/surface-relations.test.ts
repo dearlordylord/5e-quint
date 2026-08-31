@@ -178,7 +178,17 @@ describe("canonical Surface authored relations", () => {
         (relation) =>
           relation.sourceRecordId === "class_fighter" &&
           relation.targetRecordId === "fighter_action_surge" &&
-          relation.relationKind === "dependency",
+          relation.relationKind === "dependency" &&
+          relation.sourceRole === "class-feature-grant",
+      ),
+    ).toBe(true);
+    expect(
+      result.success.some(
+        (relation) =>
+          relation.sourceRecordId === "class_fighter" &&
+          relation.targetRecordId === "subclass_fighter_champion" &&
+          relation.relationKind === "reference" &&
+          relation.sourceRole === "class-subclass-choice",
       ),
     ).toBe(true);
     expect(

@@ -6,7 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.bard-magical-secrets-spell-access
 import { Brand, Result, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
-import { classCreationFacts } from "@dnd/surface/surface/character-creation-readers";
+import { projectClassDefinitionFacts } from "./character-definition-projection.ts";
 import {
   allCantripsFromClassSpellList,
   classSpellListForClassName,
@@ -742,7 +742,7 @@ export function fighterClassUnitId(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   if (facts.className !== FIGHTER_CLASS_NAME) {
     return Result.fail({
       code: "nonFighterClassLevelGain",
@@ -765,7 +765,7 @@ export function warlockClassUnitId(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   if (facts.className !== WARLOCK_CLASS_NAME) {
     return Result.fail({
       code: "nonWarlockClassLevelGain",
@@ -788,7 +788,7 @@ export function sorcererClassUnitId(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   if (facts.className !== SORCERER_CLASS_NAME) {
     return Result.fail({
       code: "nonSorcererClassLevelGain",
@@ -1513,7 +1513,7 @@ function updateSpellcastingForClassLevelGain(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   if (facts.className !== WARLOCK_CLASS_NAME) {
     return Result.succeed(input.build.spellcasting);
   }
@@ -1859,7 +1859,7 @@ function plainClassLevelGainFeatures(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   if (facts.className === SORCERER_CLASS_NAME) {
     const sorcererClassUnitId = SorcererClassUnitId(
       input.levelGain.classUnitId,
@@ -2597,7 +2597,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   if (!("spellcasting" in facts)) {
     return Result.fail({
       code: "missingListPreparedSpellcasting",
@@ -3693,7 +3693,7 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   const holes = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3763,7 +3763,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   const choices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3862,7 +3862,7 @@ function eldritchInvocationFeatureForWarlockClass(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   const featureChoices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3926,7 +3926,7 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   const featureChoices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -4383,7 +4383,7 @@ function warlockPactMagicSpellcastingForClass(input: {
   if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.success);
+  const facts = projectClassDefinitionFacts(classUnit.success);
   /* v8 ignore start -- @preserve -- The branded Warlock class route is admitted only from class facts containing Pact Magic creation data. */
   if (facts.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
     return Result.fail({

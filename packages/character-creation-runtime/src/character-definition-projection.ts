@@ -1,6 +1,7 @@
 import { Match, Result } from "effect";
 
 import { PositiveInteger } from "@dnd/shared/types";
+import { canonicalStructuralKey } from "@dnd/shared/structural-value";
 import {
   backgroundCreationFacts,
   classCreationFacts,
@@ -28,6 +29,7 @@ import {
 import type {
   SrdSurface,
   SrdUnitRecord,
+  ClassRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 
@@ -98,7 +100,7 @@ export function projectCharacterDefinition(
       tag: "readable" as const,
       value: {
         kind: "class" as const,
-        facts: classMechanicsFacts(classUnit),
+        facts: projectClassDefinitionFacts(classUnit),
       },
     })),
     Match.when({ kind: "subclass" }, (subclassUnit) => ({
@@ -215,7 +217,7 @@ function inspectCharacterDefinitionRoot(
       issues,
       "ambiguous_mechanics",
       rootMechanicsPath(),
-      "The Character Definition admission root has the installed id but different decoded mechanics.",
+      "The Character Definition admission root has the installed id but different decoded structure.",
     );
     return;
   }
@@ -307,6 +309,17 @@ function inspectCharacterDefinitionUnitLink(input: {
     | Extract<UnitRecord, { readonly kind: "class" }>["className"]
     | undefined;
 }): void {
+  const expectation = expectedCharacterDefinitionTarget(input.link);
+  if (expectation.tag === "unowned") {
+    addAdmissionIssue(
+      input.issues,
+      "unsupported_mechanics",
+      input.linkPath,
+      `The Character Definition ${input.link.relation} authored ${input.link.relationKind} has no owner projection.`,
+    );
+    return;
+  }
+
   const target = input.unitIds.get(input.link.targetRecordId);
   if (target === undefined) {
     if (input.link.relationKind === "dependency") {
@@ -320,16 +333,6 @@ function inspectCharacterDefinitionUnitLink(input: {
     return;
   }
 
-  const expectation = expectedCharacterDefinitionTarget(input.link);
-  if (expectation.tag === "unowned") {
-    addAdmissionIssue(
-      input.issues,
-      "unsupported_mechanics",
-      input.linkPath,
-      `The Character Definition ${input.link.relation} authored ${input.link.relationKind} has no owner projection.`,
-    );
-    return;
-  }
   if (!expectation.targetKinds.includes(target.kind)) {
     addAdmissionIssue(
       input.issues,
@@ -464,37 +467,7 @@ function sameCharacterDefinitionStructure(
   left: SrdUnitRecord,
   right: SrdUnitRecord,
 ): boolean {
-  return sameStructuralValue(left, right);
-}
-
-function sameStructuralValue(left: unknown, right: unknown): boolean {
-  if (Object.is(left, right)) return true;
-  if (typeof left !== typeof right || left === null || right === null) {
-    return false;
-  }
-  if (Array.isArray(left) || Array.isArray(right)) {
-    if (!Array.isArray(left) || !Array.isArray(right)) return false;
-    return (
-      left.length === right.length &&
-      left.every((value, index) => sameStructuralValue(value, right[index]))
-    );
-  }
-  if (!isStructuralRecord(left) || !isStructuralRecord(right)) return false;
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  return (
-    leftKeys.length === rightKeys.length &&
-    leftKeys.every(
-      (key) =>
-        Object.hasOwn(right, key) && sameStructuralValue(left[key], right[key]),
-    )
-  );
-}
-
-function isStructuralRecord(
-  value: unknown,
-): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return canonicalStructuralKey(left) === canonicalStructuralKey(right);
 }
 
 function addAdmissionIssue(
@@ -521,9 +494,9 @@ function unsupportedCharacterDefinitionUnit(
   };
 }
 
-function classMechanicsFacts(
-  unit: Parameters<typeof classCreationFacts>[0],
-): ClassMechanicsFacts {
+export function projectClassDefinitionFacts(
+  unit: ClassRecord,
+): CharacterDefinitionClassFacts {
   const facts = classCreationFacts(unit);
   if (isWizardClassCreationFacts(facts)) {
     return withoutRecordId(facts);
