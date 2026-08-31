@@ -3583,114 +3583,226 @@ function spendSpellCreatedHeldObjectAttackResolutionResources(
 function spendSpellActResolutionResources(
   input: SpellActResolutionResourceInput,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const spendSpellCast = (invocation: BattleExecutableSpellInvocation) =>
+    spendSpellCastResources({ ...input, invocation });
+  return Match.value(input.invocation).pipe(
+    Match.when(
+      {
+        procedure: "spatialMeleeSpellAttackProxy",
+        operation: "createAndAttack",
+      },
+      (invocation) =>
+        spendSpatialMeleeSpellAttackProxyCreationResources({
+          ...input,
+          invocation,
+        }),
+    ),
+    Match.when(
+      {
+        procedure: "spatialMeleeSpellAttackProxy",
+        operation: "repositionAndAttack",
+      },
+      (invocation) =>
+        spendSpatialMeleeSpellAttackProxyRepositionResources({
+          ...input,
+          invocation,
+        }),
+    ),
+    Match.discriminatorsExhaustive("procedure")({
+      damageReduction: spendSpellCast,
+      rollModifier: spendSpellCast,
+      makeStable: spendSpellCast,
+      heldLight: spendSpellCast,
+      heldLightHurl: spendSpellCast,
+      objectLight: spendSpellCast,
+      temporaryAbilityCheckRollMode: spendSpellCast,
+      perceptionGatedAttackRollDefense: spendSpellCast,
+      seeInvisibleObserverSight: spendSpellCast,
+      duplicateHitInterception: spendSpellCast,
+      persistentArmorEffect: spendSpellCast,
+      weaponAttackDamageEnhancement: spendSpellCast,
+      linkedDefenseResistanceDamageShare: spendSpellCast,
+      creatureTypeProtection: spendSpellCast,
+      conditionRemovalProtection: spendSpellCast,
+      chosenDamageResistance: spendSpellCast,
+      compositeTargetBuffWithAftermath: spendSpellCast,
+      directCondition: spendSpellCast,
+      directConditionRemoval: spendSpellCast,
+      conditionImmunityAndTurnStartTemporaryHitPoints: spendSpellCast,
+      creatureSizeIncrease: spendSpellCast,
+      creatureSizeDecrease: spendSpellCast,
+      controlledVerticalSuspension: spendSpellCast,
+      scalarBuff: spendSpellCast,
+      directHitPointRestoration: spendSpellCast,
+      grantedAlternateActionCost: spendSpellCast,
+      fixedCostMovementReplacement: spendSpellCast,
+      fallingCreatureMitigationReaction: spendSpellCast,
+      selfTeleport: spendSpellCast,
+      selfTransformationMode: spendSpellCast,
+      grantedAreaSaveDamageAction: spendSpellCast,
+      targetingSaveInterdiction: spendSpellCast,
+      markedDamageRider: spendSpellCast,
+      weaponDamageRider: spendSpellCast,
+      afterHitDamage: spendSpellCast,
+      afterHitSaveGatedCondition: spendSpellCast,
+      afterHitTimedDamageAndSave: spendSpellCast,
+      afterHitDamageAndIllumination: spendSpellCast,
+      weaponAttackOverride: spendSpellCast,
+      spellHostedWeaponAttack: spendSpellCast,
+      saveGatedDamage: spendSpellCast,
+      saveGatedCondition: spendSpellCast,
+      saveGatedConditionImmunity: spendSpellCast,
+      saveGatedAttackRollAdvantage: spendSpellCast,
+      abilityD20TestRollModeSaveGate: spendSpellCast,
+      stagedSaveCondition: spendSpellCast,
+      saveGatedConditionWithRepeat: spendSpellCast,
+      saveGatedAreaControl: spendSpellCast,
+      saveGatedTurnConstraintBundle: spendSpellCast,
+      persistentAreaSaveCondition: spendSpellCast,
+      directionalPersistentArea: spendSpellCast,
+      persistentAreaSaveDamage: spendSpellCast,
+      persistentAreaTrait: spendSpellCast,
+      areaMovementDistanceDamage: spendSpellCast,
+      persistentAreaSaveConditionEscape: spendSpellCast,
+      persistentAreaSaveComposite: spendSpellCast,
+      magicalDarknessPointOrigin: spendSpellCast,
+      magicSuppressionEmanation: spendSpellCast,
+      compelledNextTurnBehavior: spendSpellCast,
+      spellCastInterruptionReaction: spendSpellCast,
+      triggeredArmorDefense: spendSpellCast,
+      spellAttackDamage: spendSpellCast,
+      spellAttackSequence: spendSpellCast,
+      spellCreatedHeldObject: spendSpellCast,
+      spellCreatedHeldObjectAttack: () =>
+        spendSpellCreatedHeldObjectAttackResolutionResources(input),
+      spellCreatedHeldObjectReEvoke: spendSpellCast,
+      objectContactDamage: spendSpellCast,
+      objectContactDamageRepeat: spendSpellCast,
+      ongoingSpellEnd: spendSpellCast,
+      chainedSpellAttackDamage: spendSpellCast,
+      attackBurstSaveDamage: spendSpellCast,
+      repeatedDamageAllocation: spendSpellCast,
+      movableLightManifestation: spendSpellCast,
+    }),
+  );
+}
+
+function spendSpatialMeleeSpellAttackProxyCreationResources(
+  input: SpellActResolutionResourceInput & {
+    readonly invocation: Extract<
+      BattleExecutableSpellInvocation,
+      {
+        readonly procedure: "spatialMeleeSpellAttackProxy";
+        readonly operation: "createAndAttack";
+      }
+    >;
+  },
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
-    input.invocation.operation === "createAndAttack"
+    input.spatialMeleeSpellAttackProxyPosition === undefined ||
+    input.spatialMeleeSpellAttackProxyPosition.mode !== "cast"
   ) {
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      input.spatialMeleeSpellAttackProxyPosition === undefined ||
-      input.spatialMeleeSpellAttackProxyPosition.mode !== "cast"
-    ) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.errorState,
-        "invalidFill",
-        "spatial melee spell-attack proxy cast requires a table-supplied force position.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-    const spent = spendSpellCastResources({
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      "spatial melee spell-attack proxy cast requires a table-supplied force position.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const spent = spendSpellCastResources({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.errorState,
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
+  });
+  if (spent.tag !== "resolved") {
+    return spent;
+  }
+  const nextState = applySpatialMeleeSpellAttackProxyEffect({
+    state: spent.state,
+    actorId: input.actorId,
+    forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
+    repeatTargeting: { kind: "unrestricted" },
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function spendSpatialMeleeSpellAttackProxyRepositionResources(
+  input: SpellActResolutionResourceInput & {
+    readonly invocation: Extract<
+      BattleExecutableSpellInvocation,
+      {
+        readonly procedure: "spatialMeleeSpellAttackProxy";
+        readonly operation: "repositionAndAttack";
+      }
+    >;
+  },
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (
+    !spatialMeleeSpellAttackProxyRepeatIsLaterTurn({
       state: input.state,
       actorId: input.actorId,
       invocation: input.invocation,
-      errorState: input.errorState,
-      ...optionalProperty("actionCostOverride", input.actionCostOverride),
-      ...optionalProperty("metamagicApplications", input.metamagicApplications),
-    });
-    if (spent.tag !== "resolved") {
-      return spent;
-    }
-    const nextState = applySpatialMeleeSpellAttackProxyEffect({
-      state: spent.state,
-      actorId: input.actorId,
-      forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
-      repeatTargeting: { kind: "unrestricted" },
-      invocation: input.invocation,
-    });
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
-  }
-  if (
-    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
-    input.invocation.operation === "repositionAndAttack"
+    })
   ) {
-    if (
-      !spatialMeleeSpellAttackProxyRepeatIsLaterTurn({
-        state: input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-      })
-    ) {
-      return invalidResult(
-        input.errorState,
-        "staleSubject",
-        "spatial melee spell-attack proxy repeat attack is only available on later turns.",
-      );
-    }
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      input.spatialMeleeSpellAttackProxyPosition === undefined ||
-      input.spatialMeleeSpellAttackProxyPosition.mode !== "reposition"
-    ) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.errorState,
-        "invalidFill",
-        "spatial melee spell-attack proxy repeat attack requires a table-supplied reposition.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-    const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
-      input.state,
-      input.actorId,
+    return invalidResult(
+      input.errorState,
+      "staleSubject",
+      "spatial melee spell-attack proxy repeat attack is only available on later turns.",
     );
-    const spent = spendActivationResource(
-      spellAttackState.currentTurnResources,
-      { kind: "bonusAction" },
+  }
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (
+    input.spatialMeleeSpellAttackProxyPosition === undefined ||
+    input.spatialMeleeSpellAttackProxyPosition.mode !== "reposition"
+  ) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      "spatial melee spell-attack proxy repeat attack requires a table-supplied reposition.",
     );
-    if (Result.isFailure(spent)) {
-      return invalidResult(
-        input.errorState,
-        "staleSubject",
-        "spatial melee spell-attack proxy repeat attack requires an available Bonus Action.",
-      );
-    }
-    const repositioned = repositionSpatialMeleeSpellAttackProxyEffect({
-      state: {
-        ...spellAttackState,
-        currentTurnResources:
-          clearPendingAttackRollMissToHitReplacementSelection(
-            spent.success,
-            input.actorId,
-          ),
-      },
-      invocation: input.invocation,
-      forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
-    });
-    return {
-      tag: "resolved",
-      state: repositioned,
-      snapshot: snapshotBattle(repositioned),
-    };
   }
-  if (input.invocation.procedure !== "spellCreatedHeldObjectAttack") {
-    return spendSpellCastResources(input);
+  /* v8 ignore stop -- @preserve */
+  const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
+    input.state,
+    input.actorId,
+  );
+  const spent = spendActivationResource(spellAttackState.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Result.isFailure(spent)) {
+    return invalidResult(
+      input.errorState,
+      "staleSubject",
+      "spatial melee spell-attack proxy repeat attack requires an available Bonus Action.",
+    );
   }
-  return spendSpellCreatedHeldObjectAttackResolutionResources(input);
+  const repositioned = repositionSpatialMeleeSpellAttackProxyEffect({
+    state: {
+      ...spellAttackState,
+      currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+        spent.success,
+        input.actorId,
+      ),
+    },
+    invocation: input.invocation,
+    forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
+  });
+  return {
+    tag: "resolved",
+    state: repositioned,
+    snapshot: snapshotBattle(repositioned),
+  };
 }
 
 export function resolveBonusActionSpellAct(

@@ -145,62 +145,173 @@ function persistentAreaSaveDamageSpell(
   spell: BattleSpellAdmissionSource,
 ): StationaryPersistentAreaProfileShape | null {
   const ongoing = ongoingConcentrationAreaSpellFacts(spell);
-  if (ongoing === null) {
-    return null;
-  }
+  return ongoing === null
+    ? null
+    : stationaryPersistentAreaProfileShape(ongoing);
+}
+
+function stationaryPersistentAreaProfileShape(
+  ongoing: NonNullable<ReturnType<typeof ongoingConcentrationAreaSpellFacts>>,
+): StationaryPersistentAreaProfileShape | null {
   const { mechanics, duration, durationTicks, area } = ongoing;
-  const passiveOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "passive",
-  );
-  const enterOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_enters_area",
-  );
-  const endTurnOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
-  );
-  const initialPhase = mechanics.initialPhase;
-  const initialDamageAmount =
-    stationaryPersistentAreaSaveGateDamageAmount(initialPhase);
-  const initialUsageLimit =
-    initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
-  const saveLimitGroup = sharedOncePerTurnLimitGroup([
-    initialUsageLimit,
-    enterOperation?.usageLimit,
-    endTurnOperation?.usageLimit,
-  ]);
+  const damageAmount = stationaryPersistentAreaOperationDamage(mechanics);
 
-  if (
-    mechanics.level !== STATIONARY_PERSISTENT_AREA_LEVEL ||
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== STATIONARY_PERSISTENT_AREA_RANGE_FEET ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== STATIONARY_PERSISTENT_AREA_DURATION_MINUTES ||
-    mechanics.operations.length !==
-      STATIONARY_PERSISTENT_AREA_OPERATION_COUNT ||
-    Result.isFailure(durationTicks) ||
-    area?.kind !== "area" ||
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== STATIONARY_PERSISTENT_AREA_RADIUS_FEET ||
-    !isStationaryPersistentAreaPassiveOperation(passiveOperation?.effect) ||
-    initialDamageAmount === null ||
-    stationaryPersistentAreaSaveGateDamageAmount(enterOperation?.effect) ===
-      null ||
-    stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
-      null ||
-    saveLimitGroup === null ||
-    saveLimitGroup.length === 0
-  ) {
-    return null;
-  }
-
+  if (!isStationaryPersistentAreaSpellHeader(mechanics)) return null;
+  if (!isStationaryPersistentAreaDuration(duration)) return null;
+  if (Result.isFailure(durationTicks)) return null;
+  if (!isStationaryPersistentAreaGeometry(area)) return null;
+  if (damageAmount === null) return null;
   return {
     durationTicks: durationTicks.success,
     rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
-    damageAmount: initialDamageAmount,
+    damageAmount,
   };
+}
+
+function stationaryPersistentAreaOperationDamage(
+  mechanics: StationaryPersistentAreaMechanics,
+): StationaryPersistentAreaProfileShape["damageAmount"] | null {
+  const { passiveOperation, enterOperation, endTurnOperation } =
+    stationaryPersistentAreaOperations(mechanics);
+  const initialDamageAmount = stationaryPersistentAreaSaveGateDamageAmount(
+    mechanics.initialPhase,
+  );
+  if (initialDamageAmount === null) return null;
+  const saveLimitGroup = sharedOncePerTurnLimitGroup([
+    stationaryPersistentAreaInitialUsageLimit(mechanics.initialPhase),
+    enterOperation?.usageLimit,
+    endTurnOperation?.usageLimit,
+  ]);
+  return hasStationaryPersistentAreaOperations({
+    mechanics,
+    passiveOperation,
+    enterOperation,
+    endTurnOperation,
+    saveLimitGroup,
+  })
+    ? initialDamageAmount
+    : null;
+}
+
+function stationaryPersistentAreaInitialUsageLimit(
+  initialPhase: StationaryPersistentAreaMechanics["initialPhase"],
+) {
+  return initialPhase?.kind === "save_gate"
+    ? initialPhase.usageLimit
+    : undefined;
+}
+
+function stationaryPersistentAreaOperations(
+  mechanics: StationaryPersistentAreaMechanics,
+) {
+  return {
+    passiveOperation: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "passive",
+    ),
+    enterOperation: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "on_creature_enters_area",
+    ),
+    endTurnOperation: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+    ),
+  };
+}
+
+function isStationaryPersistentAreaSpellHeader(
+  mechanics: StationaryPersistentAreaMechanics,
+): mechanics is StationaryPersistentAreaMechanics & {
+  readonly range: { readonly kind: "point"; readonly feet: number };
+} {
+  return (
+    mechanics.level === STATIONARY_PERSISTENT_AREA_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === STATIONARY_PERSISTENT_AREA_RANGE_FEET
+  );
+}
+
+function isStationaryPersistentAreaDuration(
+  duration: NonNullable<
+    ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+  >["duration"],
+): boolean {
+  return (
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === STATIONARY_PERSISTENT_AREA_DURATION_MINUTES
+  );
+}
+
+function isStationaryPersistentAreaGeometry(
+  area: NonNullable<
+    ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+  >["area"],
+): area is NonNullable<
+  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+>["area"] & {
+  readonly origin: { readonly kind: "point_within_range" };
+  readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+} {
+  return (
+    area.kind === "area" &&
+    area.origin.kind === "point_within_range" &&
+    area.shape.kind === "sphere" &&
+    area.shape.radiusFeet === STATIONARY_PERSISTENT_AREA_RADIUS_FEET
+  );
+}
+
+function hasStationaryPersistentAreaOperations(input: {
+  readonly mechanics: StationaryPersistentAreaMechanics;
+  readonly passiveOperation:
+    | StationaryPersistentAreaMechanics["operations"][number]
+    | undefined;
+  readonly enterOperation:
+    | StationaryPersistentAreaMechanics["operations"][number]
+    | undefined;
+  readonly endTurnOperation:
+    | StationaryPersistentAreaMechanics["operations"][number]
+    | undefined;
+  readonly saveLimitGroup: ReturnType<typeof sharedOncePerTurnLimitGroup>;
+}): boolean {
+  if (
+    input.mechanics.operations.length !==
+    STATIONARY_PERSISTENT_AREA_OPERATION_COUNT
+  ) {
+    return false;
+  }
+  if (
+    !isStationaryPersistentAreaPassiveOperation(input.passiveOperation?.effect)
+  ) {
+    return false;
+  }
+  return (
+    hasStationaryPersistentAreaTriggeredDamage(
+      input.enterOperation,
+      input.endTurnOperation,
+    ) && hasStationaryPersistentAreaSaveLimitGroup(input.saveLimitGroup)
+  );
+}
+
+function hasStationaryPersistentAreaTriggeredDamage(
+  enterOperation:
+    | StationaryPersistentAreaMechanics["operations"][number]
+    | undefined,
+  endTurnOperation:
+    | StationaryPersistentAreaMechanics["operations"][number]
+    | undefined,
+): boolean {
+  return (
+    stationaryPersistentAreaSaveGateDamageAmount(enterOperation?.effect) !==
+      null &&
+    stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) !==
+      null
+  );
+}
+
+function hasStationaryPersistentAreaSaveLimitGroup(
+  saveLimitGroup: ReturnType<typeof sharedOncePerTurnLimitGroup>,
+): boolean {
+  return saveLimitGroup !== null && saveLimitGroup.length > 0;
 }
 
 function isStationaryPersistentAreaPassiveOperation(

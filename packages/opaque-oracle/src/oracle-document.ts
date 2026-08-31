@@ -78,6 +78,13 @@ function projectDocumentCheck(
     return documentSchemaFailure(semantic.failure);
   }
   if (semantic.success) return Result.succeed(undefined);
+  return projectNonSemanticDocumentCheck(check, path);
+}
+
+function projectNonSemanticDocumentCheck(
+  check: AST.Check<unknown>,
+  path: string,
+): Result.Result<AST.Check<unknown> | undefined, DocumentSchemaIssues> {
   if (check._tag === "FilterGroup") {
     return projectDocumentFilterGroup(check, path);
   }
@@ -130,23 +137,15 @@ function documentCheckIdentifiers(
     return documentSchemaFailure(semantic.failure);
   }
   if (semantic.success) return Result.succeed([]);
+  return nonSemanticDocumentCheckIdentifiers(check, path);
+}
+
+function nonSemanticDocumentCheckIdentifiers(
+  check: AST.Check<unknown>,
+  path: string,
+): Result.Result<readonly string[], DocumentSchemaIssues> {
   if (check._tag === "FilterGroup") {
-    const identifiers: string[] = [];
-    const issues: DocumentSchemaIssue[] = [];
-    for (const [index, nested] of check.checks.entries()) {
-      const nestedIdentifiers = documentCheckIdentifiers(
-        nested,
-        `${path}<${index}>`,
-      );
-      if (Result.isFailure(nestedIdentifiers)) {
-        issues.push(...nestedIdentifiers.failure);
-      } else {
-        identifiers.push(...nestedIdentifiers.success);
-      }
-    }
-    const failure = nonEmptyDocumentSchemaIssues(issues);
-    if (failure !== undefined) return documentSchemaFailure(failure);
-    return Result.succeed(identifiers);
+    return documentFilterGroupIdentifiers(check, path);
   }
   if (check.annotations?.toJsonSchema !== undefined) return Result.succeed([]);
   const identifier = documentBrandedRefinementIdentifier(check, path);
@@ -156,6 +155,29 @@ function documentCheckIdentifiers(
   return Result.succeed(
     identifier.success === undefined ? [] : [identifier.success],
   );
+}
+
+function documentFilterGroupIdentifiers(
+  check: AST.FilterGroup<unknown>,
+  path: string,
+): Result.Result<readonly string[], DocumentSchemaIssues> {
+  const identifiers: string[] = [];
+  const issues: DocumentSchemaIssue[] = [];
+  for (const [index, nested] of check.checks.entries()) {
+    const nestedIdentifiers = documentCheckIdentifiers(
+      nested,
+      `${path}<${index}>`,
+    );
+    if (Result.isFailure(nestedIdentifiers)) {
+      issues.push(...nestedIdentifiers.failure);
+    } else {
+      identifiers.push(...nestedIdentifiers.success);
+    }
+  }
+  const failure = nonEmptyDocumentSchemaIssues(issues);
+  return failure === undefined
+    ? Result.succeed(identifiers)
+    : documentSchemaFailure(failure);
 }
 
 function documentCheckIsSemantic(
@@ -354,33 +376,7 @@ function validateDocumentAst(
   while (pending.length > 0) {
     const current = pending.pop();
     if (current === undefined || current.ancestors.has(current.ast)) continue;
-    const annotatedIdentifier = documentAnnotatedIdentifier(
-      current.ast,
-      current.path,
-    );
-    if (Result.isFailure(annotatedIdentifier)) {
-      issues.push(...annotatedIdentifier.failure);
-    }
-    const checks = projectDocumentChecks(current.ast.checks, current.path);
-    if (Result.isFailure(checks)) issues.push(...checks.failure);
-    if (Result.isSuccess(annotatedIdentifier)) {
-      const identifier = documentAstIdentifier(
-        current.ast.checks,
-        current.path,
-        annotatedIdentifier.success,
-      );
-      if (Result.isFailure(identifier)) {
-        issues.push(...identifier.failure);
-      } else {
-        const cloned = cloneDocumentAst(
-          current.ast,
-          current.ast.checks,
-          identifier.success,
-          current.path,
-        );
-        if (Result.isFailure(cloned)) issues.push(...cloned.failure);
-      }
-    }
+    issues.push(...validateDocumentAstNode(current.ast, current.path));
     const ancestors = new Set(current.ancestors).add(current.ast);
     for (const child of documentAstChildren(current.ast, current.path)) {
       pending.push({ ...child, ancestors });
@@ -392,6 +388,32 @@ function validateDocumentAst(
   return failure === undefined
     ? Result.succeed(undefined)
     : documentSchemaFailure(failure);
+}
+
+function validateDocumentAstNode(
+  ast: AST.AST,
+  path: string,
+): readonly DocumentSchemaIssue[] {
+  const issues: DocumentSchemaIssue[] = [];
+  const annotatedIdentifier = documentAnnotatedIdentifier(ast, path);
+  if (Result.isFailure(annotatedIdentifier)) {
+    issues.push(...annotatedIdentifier.failure);
+  }
+  const checks = projectDocumentChecks(ast.checks, path);
+  if (Result.isFailure(checks)) issues.push(...checks.failure);
+  if (Result.isFailure(annotatedIdentifier)) return issues;
+  const identifier = documentAstIdentifier(
+    ast.checks,
+    path,
+    annotatedIdentifier.success,
+  );
+  if (Result.isFailure(identifier)) {
+    issues.push(...identifier.failure);
+    return issues;
+  }
+  const cloned = cloneDocumentAst(ast, ast.checks, identifier.success, path);
+  if (Result.isFailure(cloned)) issues.push(...cloned.failure);
+  return issues;
 }
 
 function uniqueDocumentSchemaIssues(

@@ -54,46 +54,24 @@ type AfterHitSpellSelection = Extract<
 export function afterHitSpellDiscoveryRoutesForResolution(
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  if (result.tag !== "needsHoles") {
-    return undefined;
-  }
-  const holes = battleReducerRouteHoles(result.holes);
-  if (!holes.includes("interruptDecision")) {
-    return undefined;
-  }
-  const frame = currentInterruptCheckpoint(result.state);
-  if (
-    frame?.trigger !== "attackHit" ||
-    !frame.choices.some(isAfterHitSpellChoice)
-  ) {
-    return undefined;
-  }
+  const discovery = afterHitSpellInterruptDiscovery(result);
+  if (discovery === undefined) return undefined;
 
   const owners = new Set<BattleReducerRouteOwnerGroup>([
     "battleInterruptStack",
   ]);
-  for (const choice of frame.choices) {
+  for (const choice of discovery.frame.choices) {
     if (!isAfterHitSpellChoice(choice)) {
       continue;
     }
     const invocation = spellInvocationForInterruptChoice(
-      result.state,
+      discovery.state,
       interruptChoiceResponderId(choice),
       choice.subject.procedureRef,
     );
     /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
     if (invocation === undefined) continue;
-    const resourceTag = afterHitSpellResourceTag(invocation);
-    if (resourceTag === "spellSlot") {
-      owners.add("battleSpellSlotAndActionEconomy");
-    }
-    if (resourceTag === "spellAccessFreeCast") {
-      owners.add("battleFeatureResource");
-    }
-    if (invocation.procedure === "afterHitDamageAndIllumination") {
-      owners.add("battleActiveEffect");
-      owners.add("battleConcentration");
-    }
+    addAfterHitSpellDiscoveryOwners(owners, invocation);
   }
 
   return nonEmptyRouteEvents(
@@ -101,6 +79,40 @@ export function afterHitSpellDiscoveryRoutesForResolution(
       afterHitSpellDiscoverRoute(["interruptDecision"], owner),
     ),
   );
+}
+
+function afterHitSpellInterruptDiscovery(result: BattleResolutionResult):
+  | {
+      readonly frame: BattleInterruptCheckpoint;
+      readonly state: BattleState;
+    }
+  | undefined {
+  if (result.tag !== "needsHoles") return undefined;
+  if (!battleReducerRouteHoles(result.holes).includes("interruptDecision")) {
+    return undefined;
+  }
+  const frame = currentInterruptCheckpoint(result.state);
+  return frame?.trigger === "attackHit" &&
+    frame.choices.some(isAfterHitSpellChoice)
+    ? { frame, state: result.state }
+    : undefined;
+}
+
+function addAfterHitSpellDiscoveryOwners(
+  owners: Set<BattleReducerRouteOwnerGroup>,
+  invocation: NonNullable<ReturnType<typeof spellInvocationForInterruptChoice>>,
+): void {
+  const resourceTag = afterHitSpellResourceTag(invocation);
+  if (resourceTag === "spellSlot") {
+    owners.add("battleSpellSlotAndActionEconomy");
+  }
+  if (resourceTag === "spellAccessFreeCast") {
+    owners.add("battleFeatureResource");
+  }
+  if (invocation.procedure === "afterHitDamageAndIllumination") {
+    owners.add("battleActiveEffect");
+    owners.add("battleConcentration");
+  }
 }
 
 export function afterHitSpellDiscoveryRoutesForDiscoveredAct(
