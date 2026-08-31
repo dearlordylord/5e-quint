@@ -677,6 +677,7 @@ describe("Surface authored string role traversal", () => {
           kind: "literal",
         }),
         required: Schema.optionalKey(Schema.Unknown),
+        extra: Schema.optionalKey(Schema.Unknown),
         text: surfaceSchemaRole(Schema.String, {
           category: "identity",
           kind: "label",
@@ -688,6 +689,25 @@ describe("Surface authored string role traversal", () => {
       { kind: "tagged", text: "missing required" },
       { kind: "tagged", required: 1, text: "wrong required type" },
       { kind: "tagged", required: "x", text: "failed refinement" },
+      {
+        kind: "tagged",
+        required: "valid",
+        text: "excess property",
+        extra: true,
+      },
+      { kind: "tagged", text: "missing and excess", extra: true },
+      {
+        kind: "tagged",
+        required: 1,
+        text: "wrong type and excess",
+        extra: true,
+      },
+      {
+        kind: "tagged",
+        required: "x",
+        text: "failed refinement and excess",
+        extra: true,
+      },
     ];
 
     for (const value of incompatibleValues) {
@@ -708,6 +728,26 @@ describe("Surface authored string role traversal", () => {
       ).not.toThrow();
       expect(roles).toEqual(["vocabulary", "identity"]);
     }
+
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 2 }),
+        fc.string(),
+        fc.jsonValue(),
+        (required, text, extra) => {
+          const value = { kind: "tagged", required, text, extra };
+          const retained = traversal.decoderCompatibleUnionBranches(
+            types,
+            value,
+          );
+          expect(retained).toHaveLength(1);
+          expect(traversal.matchingUnionBranches(types, value)).toEqual(
+            retained,
+          );
+        },
+      ),
+      { numRuns: 50 },
+    );
   });
 
   it("uses tuple shape and element compatibility for union reachability", () => {
