@@ -1,8 +1,6 @@
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import {
-  unitMechanicsPath,
-  type UnitMechanicsPath,
-} from "@dnd/surface/surface/mechanics-graph-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import type { SpellMechanicsBranchPath } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 
 import type {
@@ -12,15 +10,6 @@ import type {
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
-
-/**
- * The root of every Unit spell mechanics graph. Keep this coordinate in the
- * Battle owner so admission evidence cannot silently drift to a stat-block
- * path or to an authored-record identity.
- */
-export const BATTLE_SPELL_ROOT_MECHANICS_PATH = unitMechanicsPath([
-  { kind: "singleton", role: "recordMechanics" },
-]);
 
 /**
  * Static admission receives only the already-decoded mechanics graph and the
@@ -38,13 +27,13 @@ export type SpellMechanicsAdmissionSource = {
  * non-empty tuple is the type-level partial-root guarantee.
  */
 export type CompleteSpellProcedureMechanicsEvidence = {
-  readonly consumed: ReadonlyNonEmptyArray<UnitMechanicsPath>;
+  readonly consumed: ReadonlyNonEmptyArray<SpellMechanicsBranchPath>;
   readonly unowned: readonly [];
 };
 
 export type PartialSpellProcedureMechanicsEvidence = {
-  readonly consumed: ReadonlyNonEmptyArray<UnitMechanicsPath>;
-  readonly unowned: ReadonlyNonEmptyArray<UnitMechanicsPath>;
+  readonly consumed: ReadonlyNonEmptyArray<SpellMechanicsBranchPath>;
+  readonly unowned: ReadonlyNonEmptyArray<SpellMechanicsBranchPath>;
 };
 
 export type SpellProcedureMechanicsEvidence =
