@@ -78,6 +78,9 @@ type PersistentAreaSaveCompositeProfileShape = {
   readonly radiusFeet: number;
   readonly heightFeet: number;
 };
+type OngoingPersistentAreaSaveCompositeFacts = NonNullable<
+  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+>;
 
 const PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL = 3;
 const PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET = 150;
@@ -85,6 +88,130 @@ const PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES = 1;
 const PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT = 5;
 const PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET = 20;
 const PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET = 40;
+
+function persistentAreaSaveCompositeOperations(mechanics: OngoingMechanics) {
+  return {
+    enter: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "on_creature_enters_area",
+    ),
+    startTurn: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "on_creature_starts_turn_in_area",
+    ),
+    difficultTerrain: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "passive" &&
+        operation.effect.kind === "area_is_difficult_terrain",
+    ),
+    heavilyObscured: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "passive" &&
+        operation.effect.kind === "area_is_heavily_obscured",
+    ),
+    exposedFlames: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "passive" &&
+        operation.effect.kind === "douse_exposed_flames",
+    ),
+  };
+}
+
+type PersistentAreaSaveCompositeOperations = ReturnType<
+  typeof persistentAreaSaveCompositeOperations
+>;
+
+function persistentAreaSaveCompositeBasicFactsAreSupported(
+  mechanics: OngoingMechanics,
+): boolean {
+  return (
+    mechanics.level === PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET &&
+    mechanics.operations.length ===
+      PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT
+  );
+}
+
+function persistentAreaSaveCompositeDurationIsSupported(
+  duration: OngoingPersistentAreaSaveCompositeFacts["duration"],
+): boolean {
+  return (
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES
+  );
+}
+
+function persistentAreaSaveCompositeCylinderFacts(
+  area: OngoingPersistentAreaSaveCompositeFacts["area"],
+): Pick<
+  PersistentAreaSaveCompositeProfileShape,
+  "radiusFeet" | "heightFeet"
+> | null {
+  if (area?.kind !== "area") return null;
+  if (area.origin.kind !== "point_within_range") return null;
+  if (area.shape.kind !== "cylinder") return null;
+  if (area.shape.radiusFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET) {
+    return null;
+  }
+  if (area.shape.heightFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET) {
+    return null;
+  }
+  return {
+    radiusFeet: area.shape.radiusFeet,
+    heightFeet: area.shape.heightFeet,
+  };
+}
+
+function persistentAreaSaveCompositeSaveOperationsAreSupported(
+  operations: PersistentAreaSaveCompositeOperations,
+): boolean {
+  if (!isPersistentAreaSaveCompositeSaveGate(operations.enter?.effect)) {
+    return false;
+  }
+  if (!isPersistentAreaSaveCompositeSaveGate(operations.startTurn?.effect)) {
+    return false;
+  }
+  return (
+    sharedOncePerTurnLimitGroup([
+      operations.enter.usageLimit,
+      operations.startTurn.usageLimit,
+    ]) !== null
+  );
+}
+
+function persistentAreaSaveCompositeOperationsAreSupported(
+  operations: PersistentAreaSaveCompositeOperations,
+): boolean {
+  return (
+    persistentAreaSaveCompositeSaveOperationsAreSupported(operations) &&
+    operations.difficultTerrain !== undefined &&
+    operations.heavilyObscured !== undefined &&
+    operations.exposedFlames !== undefined
+  );
+}
+
+function persistentAreaSaveCompositeProfileShape(
+  ongoing: OngoingPersistentAreaSaveCompositeFacts,
+): PersistentAreaSaveCompositeProfileShape | null {
+  const { mechanics, duration, durationTicks, area } = ongoing;
+  const cylinder = persistentAreaSaveCompositeCylinderFacts(area);
+  const operations = persistentAreaSaveCompositeOperations(mechanics);
+  if (!persistentAreaSaveCompositeBasicFactsAreSupported(mechanics)) {
+    return null;
+  }
+  if (!persistentAreaSaveCompositeDurationIsSupported(duration)) return null;
+  if (Result.isFailure(durationTicks)) return null;
+  if (cylinder === null) return null;
+  if (!persistentAreaSaveCompositeOperationsAreSupported(operations)) {
+    return null;
+  }
+  return {
+    durationTicks: durationTicks.success,
+    rangeFeet: PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET,
+    ...cylinder,
+  };
+}
 
 function admitPersistentAreaSaveComposite(
   spell: BattleSpellAdmissionSource,
@@ -128,64 +255,7 @@ function persistentAreaSaveCompositeSpell(
   if (ongoing === null) {
     return null;
   }
-  const { mechanics, duration, durationTicks, area } = ongoing;
-  const enterOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_enters_area",
-  );
-  const startTurnOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_starts_turn_in_area",
-  );
-  const difficultTerrainOperation = mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "area_is_difficult_terrain",
-  );
-  const heavilyObscuredOperation = mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "area_is_heavily_obscured",
-  );
-  const exposedFlamesOperation = mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "douse_exposed_flames",
-  );
-  const sharedSaveLimitGroup = sharedOncePerTurnLimitGroup([
-    enterOperation?.usageLimit,
-    startTurnOperation?.usageLimit,
-  ]);
-
-  if (
-    mechanics.level !== PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL ||
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES ||
-    mechanics.operations.length !==
-      PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT ||
-    Result.isFailure(durationTicks) ||
-    area?.kind !== "area" ||
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "cylinder" ||
-    area.shape.radiusFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET ||
-    area.shape.heightFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET ||
-    !isPersistentAreaSaveCompositeSaveGate(enterOperation?.effect) ||
-    !isPersistentAreaSaveCompositeSaveGate(startTurnOperation?.effect) ||
-    sharedSaveLimitGroup === null ||
-    difficultTerrainOperation === undefined ||
-    heavilyObscuredOperation === undefined ||
-    exposedFlamesOperation === undefined
-  ) {
-    return null;
-  }
-
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet: mechanics.range.feet,
-    radiusFeet: area.shape.radiusFeet,
-    heightFeet: area.shape.heightFeet,
-  };
+  return persistentAreaSaveCompositeProfileShape(ongoing);
 }
 
 function isPersistentAreaSaveCompositeSaveGate(

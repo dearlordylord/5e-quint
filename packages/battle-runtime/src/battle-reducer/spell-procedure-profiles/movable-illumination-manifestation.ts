@@ -201,54 +201,94 @@ type MovableLightSpellProfile = {
   readonly maxMoveFeet: MovementFeet;
   readonly spacingFeet: MovementFeet;
 };
+type MovableLightMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+
+function movableLightBasicFactsAreSupported(
+  mechanics: MovableLightMechanics,
+): boolean {
+  return (
+    mechanics.level === 0 &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === MOVABLE_LIGHT_RANGE_FEET &&
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount === MOVABLE_LIGHT_DURATION_MINUTES
+  );
+}
+
+function movableLightOperations(mechanics: MovableLightMechanics) {
+  return {
+    light: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "passive" &&
+        operation.effect.kind === "emit_dim_illumination",
+    ),
+    reposition: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "on_caster_spends_action" &&
+        operation.trigger.cost?.kind === "bonus_action" &&
+        operation.effect.kind === "reposition_attachment",
+    ),
+  };
+}
+
+type MovableLightOperations = ReturnType<typeof movableLightOperations>;
+
+function movableLightOperationFacts(
+  operations: MovableLightOperations,
+): Pick<MovableLightSpellProfile, "dimRadiusFeet" | "maxMoveFeet"> | null {
+  if (operations.light?.effect.kind !== "emit_dim_illumination") return null;
+  if (
+    operations.light.effect.radiusFeet !==
+    Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET)
+  ) {
+    return null;
+  }
+  if (operations.reposition?.effect.kind !== "reposition_attachment") {
+    return null;
+  }
+  if (
+    operations.reposition.effect.maxMoveFeet !==
+    MOVABLE_LIGHT_REPOSITION_MAX_FEET
+  ) {
+    return null;
+  }
+  return {
+    dimRadiusFeet: MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET,
+    maxMoveFeet: movementFeet(operations.reposition.effect.maxMoveFeet),
+  };
+}
+
+function movableLightProfileShape(
+  mechanics: MovableLightMechanics,
+): MovableLightSpellProfile | null {
+  if (!movableLightBasicFactsAreSupported(mechanics)) return null;
+  const operationFacts = movableLightOperationFacts(
+    movableLightOperations(mechanics),
+  );
+  if (operationFacts === null) return null;
+  if (mechanics.duration.kind !== "concentration") return null;
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    mechanics.duration.upTo,
+  );
+  if (Result.isFailure(durationTicks)) return null;
+  return {
+    durationTicks: durationTicks.success,
+    ...operationFacts,
+    rangeFeet: movementFeet(MOVABLE_LIGHT_RANGE_FEET),
+    spacingFeet: movementFeet(MOVABLE_LIGHT_SPACING_FEET),
+  };
+}
 
 function movableLightSpell(
   spell: BattleSpellAdmissionSource,
 ): MovableLightSpellProfile | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== MOVABLE_LIGHT_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== MOVABLE_LIGHT_DURATION_MINUTES
-  ) {
-    return null;
-  }
-  const lightOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_dim_illumination",
-  );
-  const repositionOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_caster_spends_action" &&
-      operation.trigger.cost?.kind === "bonus_action" &&
-      operation.effect.kind === "reposition_attachment",
-  );
-  if (
-    lightOperation?.effect.kind !== "emit_dim_illumination" ||
-    lightOperation.effect.radiusFeet !==
-      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET) ||
-    repositionOperation?.effect.kind !== "reposition_attachment" ||
-    repositionOperation.effect.maxMoveFeet !== MOVABLE_LIGHT_REPOSITION_MAX_FEET
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        durationTicks: durationTicks.success,
-        dimRadiusFeet: MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET,
-        rangeFeet: movementFeet(spell.mechanics.range.feet),
-        maxMoveFeet: movementFeet(repositionOperation.effect.maxMoveFeet),
-        spacingFeet: movementFeet(MOVABLE_LIGHT_SPACING_FEET),
-      };
+  if (spell.mechanics.family !== "ongoing_effect") return null;
+  return movableLightProfileShape(spell.mechanics);
 }
 
 function discoverMovableLightCastAct(
