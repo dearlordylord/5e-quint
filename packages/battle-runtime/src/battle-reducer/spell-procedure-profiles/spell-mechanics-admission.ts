@@ -66,7 +66,8 @@ export type AdmittedSpellProcedureMechanics<
 export type SpellProcedureMechanicsInspection<
   P extends BattleSpellProcedureKey,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
-  Issue extends SpellProcedureAdmissionIssue<P> = SpellProcedureAdmissionIssue<P>,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
 > =
   | { readonly tag: "notRepresented" }
   | {
@@ -85,7 +86,8 @@ export type SpellProcedureMechanicsInspection<
 export type SpellProcedureMechanicsAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
-  Issue extends SpellProcedureAdmissionIssue<P> = SpellProcedureAdmissionIssue<P>,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
 > = {
   readonly admitMechanics: (
     mechanics: SpellMechanics,
@@ -97,7 +99,11 @@ export type AnySpellProcedureMechanicsAdmission = {
   readonly procedure: BattleSpellProcedureKey;
   readonly admitMechanics: (
     mechanics: SpellMechanics,
-  ) => SpellProcedureMechanicsInspection;
+  ) => SpellProcedureMechanicsInspection<
+    BattleSpellProcedureKey,
+    SpellProcedureMechanicsFacts,
+    SpellProcedureAdmissionIssue
+  >;
 };
 
 export type AdmittedSpellProcedureMechanicsView =
@@ -110,9 +116,7 @@ export type BattleSpellMechanicsAdmission =
   | { readonly tag: "notBattleOwned" }
   | {
       readonly tag: "admitted";
-      readonly procedures: ReadonlyNonEmptyArray<
-        AdmittedSpellProcedureMechanicsView
-      >;
+      readonly procedures: ReadonlyNonEmptyArray<AdmittedSpellProcedureMechanicsView>;
       /**
        * A represented candidate may reject a branch while another owner
        * admits a supported branch.  Preserve every typed issue for callers;
@@ -155,7 +159,9 @@ function isUnsupportedInspection(
   return inspection.tag === "unsupported";
 }
 
-function nonEmpty<T>(values: readonly T[]): ReadonlyNonEmptyArray<T> | undefined {
+function nonEmpty<T>(
+  values: readonly T[],
+): ReadonlyNonEmptyArray<T> | undefined {
   const [first, ...rest] = values;
   return first === undefined ? undefined : [first, ...rest];
 }
