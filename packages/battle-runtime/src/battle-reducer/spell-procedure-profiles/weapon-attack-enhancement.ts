@@ -68,6 +68,32 @@ type WeaponAttackDamageEnhancementProjection = {
     { readonly kind: "grant_weapon_attack_enhancement" }
   >["bonus"];
 };
+type WeaponAttackDamageEnhancementMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+> & {
+  readonly duration: Extract<
+    BattleSpellAdmissionSource["mechanics"]["duration"],
+    { readonly kind: "timed" }
+  >;
+};
+
+function weaponAttackDamageEnhancementMechanicsAreSupported(
+  mechanics: Extract<
+    BattleSpellAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >,
+): mechanics is WeaponAttackDamageEnhancementMechanics {
+  return (
+    mechanics.level === 2 &&
+    mechanics.castingTime.kind === "bonus_action" &&
+    mechanics.range.kind === "touch" &&
+    mechanics.duration.kind === "timed" &&
+    weaponAttackEnhancementAttachmentIsSupported(mechanics.attachment) &&
+    weaponAttackEnhancementDurationEarlyEndIsSupported(mechanics.duration) &&
+    mechanics.operations.length === 1
+  );
+}
 
 function admitWeaponAttackDamageEnhancement(
   spell: BattleSpellAdmissionSource,
@@ -106,18 +132,10 @@ function admitWeaponAttackDamageEnhancement(
 function weaponAttackDamageEnhancementProjection(
   spell: BattleSpellAdmissionSource,
 ): WeaponAttackDamageEnhancementProjection | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    !weaponAttackEnhancementAttachmentIsSupported(spell.mechanics.attachment) ||
-    !weaponAttackEnhancementDurationEarlyEndIsSupported(
-      spell.mechanics.duration,
-    ) ||
-    spell.mechanics.operations.length !== 1
-  ) {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  if (!weaponAttackDamageEnhancementMechanicsAreSupported(spell.mechanics)) {
     return null;
   }
   const operation = spell.mechanics.operations[0];
