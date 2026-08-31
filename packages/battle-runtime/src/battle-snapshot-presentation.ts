@@ -3,6 +3,7 @@ import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   AvailableBattleAct,
+  BattleActPresentation,
   BattleCreatureSnapshot,
   BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
@@ -56,11 +57,7 @@ const BattlePresentedInterruptChoiceSchema = Schema.Union([
   }),
 ]);
 
-export const BattlePresentedCheckpointFrontierEnvelopeSchema: Schema.Schema<
-  BattlePresentedCheckpointFrontierEnvelope,
-  EncodedBattlePresentedCheckpointFrontierEnvelope,
-  never
-> = Schema.Struct({
+export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
   checkpoint: BattlePresentedSnapshotSchema,
   frontier: Schema.Union([
     Schema.Struct({
