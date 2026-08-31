@@ -347,7 +347,6 @@ function deriveInstalledCatalogIssues(
     issues.push({
       kind: "duplicate-identity",
       name: identityRecord.name,
-      normalizedIdentity: normalizeStatBlockIdentity(identityRecord.name),
       statBlockIds: identityRecord.statBlockIds,
     });
   }

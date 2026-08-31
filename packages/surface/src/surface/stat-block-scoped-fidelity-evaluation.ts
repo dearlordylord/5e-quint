@@ -661,7 +661,7 @@ function blocksRawAuthoredComparison(
     ),
     Match.when(
       { kind: "duplicate-identity" },
-      ({ normalizedIdentity }) => normalizedIdentity === rawIdentity,
+      ({ name }) => normalizeIdentity(name) === rawIdentity,
     ),
     Match.when(
       { kind: "divergent-source" },

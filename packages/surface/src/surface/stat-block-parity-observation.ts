@@ -1,6 +1,5 @@
 import { Match } from "effect";
 
-import type { NormalizedStatBlockIdentity } from "./stat-block-identity.ts";
 import type { StatBlockRecord } from "./types.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observation.ts";
 
@@ -105,7 +104,6 @@ export type SrdStatBlockParityIssue =
   | {
       readonly kind: "duplicate-identity";
       readonly name: string;
-      readonly normalizedIdentity: NormalizedStatBlockIdentity;
       readonly statBlockIds: readonly StatBlockRecord["id"][];
     }
   | {
