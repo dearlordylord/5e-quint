@@ -1,15 +1,18 @@
 import { Option } from "effect";
-import { StatBlockId as StatBlockIdSchema } from "@dnd/shared/game-facts";
 import type {
   Provenance,
   SrdProvenance,
   SrdStatBlockRecord,
   StatBlockRecord,
 } from "./types.ts";
+import type {
+  StatBlockCatalog as StatBlockCatalogContract,
+  StatBlockId,
+} from "./stat-block-catalog-contract.ts";
+
+export type { StatBlockId } from "./stat-block-catalog-contract.ts";
 
 export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
-
-export type StatBlockId = StatBlockRecord["id"];
 
 export type Srd521Provenance = SrdProvenance;
 
@@ -21,10 +24,8 @@ export type SrdStatBlockCollection = {
   readonly statBlocks: readonly Srd521StatBlock[];
 };
 
-export type StatBlockCatalog = {
-  readonly getStatBlock: (id: string) => Option.Option<StatBlockRecord>;
-  readonly listStatBlocks: () => readonly StatBlockRecord[];
-  readonly requireStatBlock: (id: string) => StatBlockRecord;
+export type StatBlockCatalog = StatBlockCatalogContract & {
+  readonly requireStatBlock: (id: StatBlockId) => StatBlockRecord;
 };
 
 export type StatBlockCatalogBuildIssue =
@@ -118,10 +119,15 @@ export function buildStatBlockCatalog(input: {
   return {
     tag: "ok",
     catalog: {
-      getStatBlock: (id) =>
-        Option.fromNullishOr(records.get(StatBlockIdSchema.make(id))),
+      getStatBlock: (id) => Option.fromNullishOr(records.get(id)),
       listStatBlocks: () => Array.from(records.values()),
-      requireStatBlock: (id) => records.get(StatBlockIdSchema.make(id))!,
+      requireStatBlock: (id) => {
+        const statBlock = records.get(id);
+        if (statBlock === undefined) {
+          throw new Error(`Required Stat Block is unavailable: ${id}`);
+        }
+        return statBlock;
+      },
     },
   };
 }

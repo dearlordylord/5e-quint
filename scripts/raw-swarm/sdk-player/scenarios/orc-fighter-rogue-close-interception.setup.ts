@@ -123,7 +123,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isFailure(battle)) {
     return obstructed(
-      `The canonical battle could not start: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
+      `The canonical battle could not start: ${sdk.battleInitializationIssueMessage(battle.failure)}`,
       { code: "battle-start-rejected" },
     );
   }

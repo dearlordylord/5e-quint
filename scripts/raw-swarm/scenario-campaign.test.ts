@@ -432,7 +432,7 @@ describe("scenario generation campaign", () => {
       "bounded capability context",
     );
     expect(prompt).toContain(
-      "battleCreatureInitFromStatBlock accepts a resolved currentHp",
+      "startBattle accepts authored Stat Block inputs with a resolved currentHp",
     );
     expect(prompt).toContain(
       "does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow",

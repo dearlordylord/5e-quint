@@ -157,7 +157,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (context.sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: context.sdk.battleStateInitIssueMessage(battle.failure),
+      obstruction: context.sdk.battleInitializationIssueMessage(battle.failure),
       observation: { setup: "battle-start" },
     };
   }

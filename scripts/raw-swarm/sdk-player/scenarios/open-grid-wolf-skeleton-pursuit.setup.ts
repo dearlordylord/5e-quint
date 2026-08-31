@@ -46,7 +46,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
+      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleInitializationIssueMessage(battle.failure)}`,
       observation: { stage: "battle-start" },
     };
   }

@@ -66,7 +66,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: `The canonical battle could not be started: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
+      obstruction: `The canonical battle could not be started: ${sdk.battleInitializationIssueMessage(battle.failure)}`,
       observation: { stage: "battle-setup" },
     };
   }

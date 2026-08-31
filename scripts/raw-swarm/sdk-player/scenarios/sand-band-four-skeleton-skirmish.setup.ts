@@ -99,7 +99,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       kind: "obstructed",
       obstruction:
         "The canonical battle could not be started: " +
-        sdk.battleStateInitIssueMessage(battle.failure),
+        sdk.battleInitializationIssueMessage(battle.failure),
       observation: {
         scenarioId: "sand-band-four-skeleton-skirmish",
         battleStarted: false,

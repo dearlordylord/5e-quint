@@ -151,7 +151,7 @@ import type {
 } from "./battle-runtime-context.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { bonusSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
@@ -745,7 +745,10 @@ test("an active Wild Shape form restores a spent recharge action from its start-
       : active?.admission.execution.procedureBindings.find(
           (binding) =>
             isNonSpellStatBlockProcedureBinding(binding) &&
-            binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
+            binding.resourcePoolRefs.some(
+              (resourcePoolRef) =>
+                resourcePoolRef === rechargePool.resourcePoolRef,
+            ),
         );
   if (
     active === null ||
@@ -2540,7 +2543,7 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Druid Wild Shape battle initialization requires an available known-form subset.",
     );
   }
@@ -3534,7 +3537,6 @@ test("surfaces active Wild Shape non-attack presentation join issues", () => {
           `Expected ${procedureCase.presentationKind} presentation.`,
         );
       }
-      const executionProcedureOrdinal = binding.procedure.procedureOrdinal;
       const orderedProcedures = source.orderedProcedures.map((procedure) => {
         if (procedure !== selectedPresentation) return procedure;
         if (joinMode === "missing") {

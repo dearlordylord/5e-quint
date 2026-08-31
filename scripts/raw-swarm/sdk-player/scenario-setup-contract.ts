@@ -2,7 +2,7 @@ import type {
   battleAmmunitionStock,
   battleId,
   battleObjectId,
-  battleStateInitIssueMessage,
+  battleInitializationIssueMessage,
   combatantId,
   initiativeScore,
   startBattle,
@@ -72,7 +72,7 @@ export type ScenarioSetupSdk = {
   readonly battleAmmunitionStock: typeof battleAmmunitionStock;
   readonly battleId: typeof battleId;
   readonly battleObjectId: typeof battleObjectId;
-  readonly battleStateInitIssueMessage: typeof battleStateInitIssueMessage;
+  readonly battleInitializationIssueMessage: typeof battleInitializationIssueMessage;
   readonly characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage;
   readonly characterSheetBattleInit: CharacterSheetBattleInit;
   readonly combatantId: typeof combatantId;

@@ -44,7 +44,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     statBlock: wolf,
     initiative: sdk.initiativeScore(7),
     ammunitionStocks: [],
-    conditions: ["prone"],
+    conditions: ["prone"] as const,
   };
   const battle = sdk.startBattle({
     battleId: sdk.battleId("prone-target-roll-mode-distance-probe"),
@@ -53,7 +53,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
+      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleInitializationIssueMessage(battle.failure)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "battle-start",

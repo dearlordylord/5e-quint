@@ -100,6 +100,7 @@ import {
 } from "./identity.ts";
 import {
   admittedStatBlockExecutionState,
+  isNonSpellStatBlockProcedureBinding,
   spendStatBlockMultiattackActivationResources,
   statBlockMultiattackResourcesAvailable,
   statBlockProcedureBinding,
@@ -271,7 +272,13 @@ function procedureRefForOrdinal(
   }
   const origin = actor.origin;
   const binding = origin.execution.procedureBindings.find((candidate) => {
-    if (candidate.procedure.kind === "unarmedStrike") return false;
+    if (
+      !isNonSpellStatBlockProcedureBinding(candidate) ||
+      candidate.procedure.kind === "effectOccurrenceSource" ||
+      candidate.procedure.kind === "unarmedStrike"
+    ) {
+      return false;
+    }
     return (
       candidate.procedure.section === section &&
       candidate.procedure.procedureOrdinal ===
@@ -2341,7 +2348,7 @@ describe("battle runtime: Stat Block actions", () => {
               })
             : baseTurn;
           const actorForPlan = stateForPlan.combatants.get(goblinId);
-          if (actorForPlan?.origin.kind !== "statBlock") {
+          if (!isStatBlockBattleCreatureState(actorForPlan)) {
             throw new Error("Expected the Stat Block resource-plan actor.");
           }
           const dispatchResourceDemand =
@@ -2354,9 +2361,9 @@ describe("battle runtime: Stat Block actions", () => {
             ? [dispatchPoolRef]
             : [ownPoolRef, dispatchPoolRef];
           const execution = admittedStatBlockExecutionState({
-            ...actor.origin.execution,
+            ...actorForPlan.origin.execution,
             procedureBindings: [
-              ...actor.origin.execution.procedureBindings,
+              ...actorForPlan.origin.execution.procedureBindings,
               binding,
             ],
             resourcePools: actor.origin.execution.resourcePools.map((pool) =>

@@ -1608,12 +1608,13 @@ describe("Stat Block execution references", () => {
               (candidate) => {
                 if (
                   candidate.procedureRef !== binding.procedureRef ||
-                  !isNonSpellStatBlockProcedureBinding(candidate)
+                  candidate.procedure.kind !== "attack"
                 ) {
                   return candidate;
                 }
                 return {
-                  ...candidate,
+                  procedureRef: candidate.procedureRef,
+                  procedure: candidate.procedure,
                   resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
                 };
               },
@@ -1632,7 +1633,9 @@ describe("Stat Block execution references", () => {
     expect(twice).toBe(once);
     expect(once.resourcePools).toEqual(
       admission.execution.resourcePools.map((pool) =>
-        binding.resourcePoolRefs.includes(pool.resourcePoolRef)
+        binding.resourcePoolRefs.some(
+          (resourcePoolRef) => resourcePoolRef === pool.resourcePoolRef,
+        )
           ? pool.kind === "daily" || pool.kind === "legendaryActions"
             ? { ...pool, usesRemaining: Number(pool.usesRemaining) - 1 }
             : { ...pool, available: false }

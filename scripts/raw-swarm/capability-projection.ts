@@ -39,7 +39,6 @@ export const PUBLIC_CAPABILITY_OPERATIONS = [
   "createFreshCharacterSheet",
   "startBattle",
   "createScenarioSession",
-  "battleCreatureInitFromStatBlock",
   "characterSheetBattleInit",
   "tableAuthoredSpatialDecision",
   "discoverBattleActs",
@@ -127,7 +126,7 @@ export type CapabilityBoundary = Schema.Schema.Type<
 >;
 
 export const STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY =
-  "battleCreatureInitFromStatBlock accepts a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow.";
+  "startBattle accepts authored Stat Block inputs with a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow.";
 export const SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY =
   "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready.";
 export const SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY =
@@ -221,8 +220,7 @@ const CANONICAL_CAPABILITIES = [
     operation: "startBattle",
     summary:
       "Start the canonical battle from supplied character and stat-block inputs.",
-    boundary:
-      "Project scenario-fixed setup facts only; leave Initiative, placement, and delegated Table choices to their owners.",
+    boundary: `${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Project scenario-fixed setup facts only, use the admitted catalog record and typed supported initial conditions, and leave Initiative, placement, and delegated Table choices to their owners; do not dispatch mechanics by authored name, id, slug, or provenance.`,
   },
   {
     id: "scenario-session",
@@ -232,14 +230,6 @@ const CANONICAL_CAPABILITIES = [
       "Compose the canonical battle session with the auxiliary scenario boundary.",
     boundary:
       "Keep geometry auxiliary and retain one source for each exact spatial question; do not add a map or spatial registry to battle state.",
-  },
-  {
-    id: "stat-block-creature-init",
-    roles: ["setupAuthoring"],
-    operation: "battleCreatureInitFromStatBlock",
-    summary:
-      "Construct a battle creature from a supplied canonical stat block with a resolved currentHp and explicit supported initial conditions.",
-    boundary: `${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Use the admitted catalog record and only the initializer's typed supported initial conditions; do not dispatch mechanics by authored name, id, slug, or provenance.`,
   },
   {
     id: "character-battle-init",
