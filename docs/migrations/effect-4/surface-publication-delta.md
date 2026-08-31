@@ -36,7 +36,7 @@ spell fields first. The evidence records both complete key orders and the
 canonical value hash. The verifier discovers key-order changes only within
 records whose canonical values are equal and rejects unclassified, stale, or
 substituted order evidence. The exact canonical record hashes authenticate the
-semantic content of the 18 record changes, and the whole-artifact byte digests
+semantic content of the 39 record changes, and the whole-artifact byte digests
 authenticate their byte layout; the verifier does not claim any ordering inside
 those semantic changes as an independent order-only delta.
 
