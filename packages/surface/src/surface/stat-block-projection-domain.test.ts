@@ -2,6 +2,8 @@ import { Either, Match, Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
+import { DAMAGE_TYPES } from "@dnd/shared/types";
+
 import {
   StatBlockScopedFidelityProjectionSchema,
   type StatBlockScopedFidelityProjection,
@@ -9,18 +11,7 @@ import {
 
 const positiveInteger = fc.integer({ min: 1, max: 300 });
 const attackAbility = fc.constantFrom("str", "dex", "int", "wis", "cha");
-const damageType = fc.constantFrom(
-  "acid",
-  "cold",
-  "fire",
-  "force",
-  "lightning",
-  "necrotic",
-  "poison",
-  "psychic",
-  "radiant",
-  "thunder",
-);
+const damageType = fc.constantFrom(...DAMAGE_TYPES);
 
 const damageAmount = fc.oneof(
   positiveInteger.map((staticDamage) => ({
@@ -258,7 +249,7 @@ const projectionArbitrary = fc
         creatureType: "construct",
         creatureTypeTags: [],
         alignment: "unaligned",
-        ac: { kind: "literal", value: 12, annotations: [] },
+        ac: { value: { kind: "literal", value: 12 } },
         hp: { kind: "literal", value: 20 },
         speeds: speedValues,
         abilityScores: {
@@ -293,6 +284,74 @@ const decodeProjection = Schema.decodeUnknownEither(
   StatBlockScopedFidelityProjectionSchema,
 );
 
+type ProjectionProcedure =
+  StatBlockScopedFidelityProjection["procedures"][number];
+type ProjectionAttack = Extract<
+  ProjectionProcedure,
+  { readonly kind: "attack_roll" }
+>;
+type ProjectionAttackEffect = ProjectionAttack["onHit"][number];
+
+function expectIndependentDamageAmount(
+  amount: Extract<
+    ProjectionAttackEffect,
+    { readonly kind: "damage" }
+  >["amount"],
+): void {
+  Match.value(amount).pipe(
+    Match.when({ kind: "static" }, (staticAmount) => {
+      expect(staticAmount.static).toBeGreaterThan(0);
+      expect("expr" in staticAmount).toBe(false);
+    }),
+    Match.when({ kind: "dice_expression" }, (diceAmount) => {
+      expect(diceAmount.static).toBeGreaterThan(0);
+      expect(diceAmount.expr.dice).toBeGreaterThan(0);
+      expect(diceAmount.expr.dieSize).toBeGreaterThan(0);
+    }),
+    Match.exhaustive,
+  );
+}
+
+function expectIndependentAttackEffect(effect: ProjectionAttackEffect): void {
+  Match.value(effect).pipe(
+    Match.when({ kind: "damage" }, ({ amount }) =>
+      expectIndependentDamageAmount(amount),
+    ),
+    Match.when({ kind: "conditional_bonus_damage" }, ({ amount }) =>
+      expectIndependentDamageAmount(amount),
+    ),
+    Match.when(
+      { kind: "apply_condition_if_target_size_at_most" },
+      ({ condition, maxCreatureSize }) => {
+        expect(condition.length).toBeGreaterThan(0);
+        expect(maxCreatureSize.length).toBeGreaterThan(0);
+      },
+    ),
+    Match.when({ kind: "apply_condition" }, ({ condition, expiresAt }) => {
+      expect(condition.length).toBeGreaterThan(0);
+      expect(["source_next_turn_end", "target_next_turn_end"]).toContain(
+        expiresAt,
+      );
+    }),
+    Match.exhaustive,
+  );
+}
+
+function expectIndependentAttackEvidence(
+  evidence: ProjectionAttack["attackAbilityEvidence"],
+): void {
+  Match.value(evidence).pipe(
+    Match.when({ kind: "resolved" }, ({ ability }) => {
+      expect(ability.length).toBe(3);
+    }),
+    Match.when({ kind: "unresolved" }, ({ candidates }) => {
+      expect(candidates.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(candidates).size).toBe(candidates.length);
+    }),
+    Match.exhaustive,
+  );
+}
+
 function expectIndependentProjectionInvariants(
   projection: StatBlockScopedFidelityProjection,
 ): void {
@@ -303,6 +362,8 @@ function expectIndependentProjectionInvariants(
         expect("rangeFeet" in attack).toBe(false);
         expect("ammunition" in attack).toBe(false);
         expect(attack.onHit.length).toBeGreaterThan(0);
+        expectIndependentAttackEvidence(attack.attackAbilityEvidence);
+        attack.onHit.forEach(expectIndependentAttackEffect);
       }),
       Match.when({ kind: "attack_roll", attackType: "ranged" }, (attack) => {
         expect(attack.rangeFeet.normal).toBeLessThanOrEqual(
@@ -310,11 +371,13 @@ function expectIndependentProjectionInvariants(
         );
         expect("reachFeet" in attack).toBe(false);
         expect(attack.onHit.length).toBeGreaterThan(0);
+        expectIndependentAttackEvidence(attack.attackAbilityEvidence);
+        attack.onHit.forEach(expectIndependentAttackEffect);
       }),
       Match.when({ kind: "textOnly" }, () => undefined),
       Match.when({ kind: "save" }, (save) => {
         expect(save.dc).toBeGreaterThan(0);
-        expect(save.onFail.amount.static).toBeGreaterThan(0);
+        expectIndependentDamageAmount(save.onFail.amount);
       }),
       Match.when({ kind: "multiattack" }, (multiattack) => {
         expect(multiattack.dispatches.length).toBeGreaterThan(0);
@@ -399,6 +462,76 @@ function expectIndependentProjectionInvariants(
     }),
     Match.exhaustive,
   );
+  const savingThrowAbilities = projection.generalFacts.savingThrowModifiers.map(
+    ({ ability }) => ability,
+  );
+  expect(new Set(savingThrowAbilities).size).toBe(savingThrowAbilities.length);
+  expect(
+    projection.generalFacts.creatureTypeTags.every(
+      (tag) => !tag.toLowerCase().includes("swarm"),
+    ),
+  ).toBe(true);
+  const hasLegendaryProcedures = projection.procedures.some(
+    ({ section }) => section === "Legendary Actions",
+  );
+  expect(projection.generalFacts.legendaryActionUses !== undefined).toBe(
+    hasLegendaryProcedures,
+  );
+  for (const trait of projection.traits) {
+    if (trait.effect === undefined) continue;
+    Match.value(trait.effect).pipe(
+      Match.when(
+        {
+          kind: "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
+        },
+        () => undefined,
+      ),
+      Match.when({ kind: "caster_shared_resistance" }, ({ chosenFrom }) => {
+        expect(chosenFrom).toBe("resistances_list");
+      }),
+      Match.when({ kind: "caster_heal_link" }, ({ rangeFeet }) => {
+        expect(rangeFeet).toBeGreaterThan(0);
+      }),
+      Match.exhaustive,
+    );
+  }
+  Match.value(projection.generalFacts.communication).pipe(
+    Match.when({ kind: "none" }, () => undefined),
+    Match.when({ kind: "understands_commands_only" }, () => undefined),
+    Match.when({ kind: "spoken_and_understood" }, ({ languages }) => {
+      Match.value(languages).pipe(
+        Match.when({ kind: "named" }, ({ languages: names }) => {
+          expect(names.length).toBeGreaterThan(0);
+        }),
+        Match.when({ kind: "all" }, () => undefined),
+        Match.when(
+          { kind: "named_plus_other_languages" },
+          ({ languages: names, additionalLanguages }) => {
+            expect(names.length).toBeGreaterThan(0);
+            expect(additionalLanguages).toBeGreaterThan(0);
+          },
+        ),
+        Match.exhaustive,
+      );
+    }),
+    Match.when({ kind: "understood_but_cannot_speak" }, ({ languages }) => {
+      Match.value(languages).pipe(
+        Match.when({ kind: "named" }, ({ languages: names }) => {
+          expect(names.length).toBeGreaterThan(0);
+        }),
+        Match.when({ kind: "all" }, () => undefined),
+        Match.when(
+          { kind: "named_plus_other_languages" },
+          ({ languages: names, additionalLanguages }) => {
+            expect(names.length).toBeGreaterThan(0);
+            expect(additionalLanguages).toBeGreaterThan(0);
+          },
+        ),
+        Match.exhaustive,
+      );
+    }),
+    Match.exhaustive,
+  );
 }
 
 describe("domain-valid scoped Stat Block projections", () => {
@@ -474,472 +607,525 @@ describe("domain-valid scoped Stat Block projections", () => {
       Match.exhaustive,
     );
     const damage = procedure.onHit[0];
-    const invalidCandidates: readonly unknown[] = [
+    const invalidCases = [
       {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            attackType: "melee",
-            reachFeet: 5,
-            rangeFeet: { normal: 30, long: 120 },
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            attackType: "ranged",
-            rangeFeet: { normal: 30, long: 120 },
-            reachFeet: 5,
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [{ ...procedure, onHit: [] }],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            attackType: "ranged",
-            rangeFeet: { normal: 120, long: 30 },
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            attackAbilityEvidence: {
-              kind: "unresolved",
-              candidates: ["str", "str"],
-            },
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            attackAbilityEvidence: {
-              kind: "unresolved",
-              candidates: ["str"],
-            },
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            onHit: [
-              {
-                ...damage,
-                amount: {
-                  kind: "dice_expression",
-                  static: 4,
-                  expr: { dice: 1 },
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            onHit: [
-              {
-                ...damage,
-                amount: {
-                  kind: "dice_expression",
-                  static: 4,
-                  expr: { dieSize: 6 },
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            onHit: [
-              {
-                ...damage,
-                amount: {
-                  kind: "static",
-                  static: 4,
-                  spellcastingMod: true,
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          speeds: [
+        label: "melee attack with range",
+        candidate: {
+          ...candidate,
+          procedures: [
             {
-              kind: "walk",
-              feet: { kind: "literal", value: 30 },
-              hover: false,
+              ...procedure,
+              attackType: "melee",
+              reachFeet: 5,
+              rangeFeet: { normal: 30, long: 120 },
             },
           ],
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          speeds: [
+        label: "ranged attack with reach",
+        candidate: {
+          ...candidate,
+          procedures: [
             {
-              kind: "walk",
-              feet: { kind: "literal", value: 30 },
-              hover: true,
+              ...procedure,
+              attackType: "ranged",
+              rangeFeet: { normal: 30, long: 120 },
+              reachFeet: 5,
             },
           ],
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          speeds: [
+        label: "attack with empty on-hit effects",
+        candidate: {
+          ...candidate,
+          procedures: [{ ...procedure, onHit: [] }],
+        },
+      },
+      {
+        label: "ranged attack with reversed range",
+        candidate: {
+          ...candidate,
+          procedures: [
             {
-              kind: "gm_choice",
-              alternatives: [
-                { kind: "walk", feet: { kind: "literal", value: 30 } },
+              ...procedure,
+              attackType: "ranged",
+              rangeFeet: { normal: 120, long: 30 },
+            },
+          ],
+        },
+      },
+      {
+        label: "ambiguous attack with duplicate abilities",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              ...procedure,
+              attackAbilityEvidence: {
+                kind: "unresolved",
+                candidates: ["str", "str"],
+              },
+            },
+          ],
+        },
+        expectedMessage: "distinct abilities",
+      },
+      {
+        label: "ambiguous attack with one ability",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              ...procedure,
+              attackAbilityEvidence: {
+                kind: "unresolved",
+                candidates: ["str"],
+              },
+            },
+          ],
+        },
+      },
+      {
+        label: "damage dice without die size",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              ...procedure,
+              onHit: [
+                {
+                  ...damage,
+                  amount: {
+                    kind: "dice_expression",
+                    static: 4,
+                    expr: { dice: 1 },
+                  },
+                },
               ],
             },
           ],
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          speeds: [
+        label: "damage die size without dice",
+        candidate: {
+          ...candidate,
+          procedures: [
             {
-              kind: "gm_choice",
-              alternatives: [
-                { kind: "walk", feet: { kind: "literal", value: 30 } },
-                { kind: "walk", feet: { kind: "literal", value: 30 } },
+              ...procedure,
+              onHit: [
+                {
+                  ...damage,
+                  amount: {
+                    kind: "dice_expression",
+                    static: 4,
+                    expr: { dieSize: 6 },
+                  },
+                },
               ],
             },
           ],
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          sizeAndSwarm: { size: "medium", swarm: null },
-        },
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          sizeAndSwarm: {
-            size: "tiny",
-            swarm: { constituentSize: "tiny" },
-          },
-        },
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          resistances: { kind: "fixed", damageTypes: [] },
-        },
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          resistances: { kind: "choose_one_from", options: [] },
-        },
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          immunities: { kind: "some", value: {} },
-        },
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          immunities: {
-            kind: "some",
-            value: {
-              conditions: ["charmed"],
-              qualifiedConditions: [
-                { condition: "charmed", qualifier: "synthetic source" },
+        label: "static damage with a modifier",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              ...procedure,
+              onHit: [
+                {
+                  ...damage,
+                  amount: {
+                    kind: "static",
+                    static: 4,
+                    spellcastingMod: true,
+                  },
+                },
               ],
             },
+          ],
+        },
+      },
+      {
+        label: "non-fly speed with explicit false hover",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            speeds: [
+              {
+                kind: "walk",
+                feet: { kind: "literal", value: 30 },
+                hover: false,
+              },
+            ],
           },
         },
       },
       {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Multiattack",
-            kind: "multiattack",
-            dispatches: [],
-            resourceLimits: [],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Options",
-            kind: "action_option",
-            options: [],
-            resourceLimits: [],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Spellcasting",
-            kind: "spellcasting",
-            ability: "int",
-            components: { kind: "fixed", v: true, s: true, m: true },
-            groups: [
+        label: "non-fly speed with true hover",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            speeds: [
               {
-                kind: "at_will",
-                spells: [{ spellId: "synthetic_spell" }],
-                resourceLimits: [],
+                kind: "walk",
+                feet: { kind: "literal", value: 30 },
+                hover: true,
               },
             ],
-            resourceLimits: [],
           },
-        ],
+        },
       },
       {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Spellcasting",
-            kind: "spellcasting",
-            ability: "int",
-            components: { kind: "spell_definition" },
-            groups: [],
-            resourceLimits: [],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Spellcasting",
-            kind: "spellcasting",
-            ability: "int",
-            components: { kind: "spell_definition" },
-            groups: [{ kind: "at_will", spells: [], resourceLimits: [] }],
-            resourceLimits: [],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Spellcasting",
-            kind: "spellcasting",
-            ability: "int",
-            components: { kind: "spell_definition" },
-            groups: [
+        label: "GM speed choice with one alternative",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            speeds: [
               {
-                kind: "limited",
-                spells: [{ spellId: "synthetic_spell" }],
-                resourceLimits: [],
-              },
-            ],
-            resourceLimits: [],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            section: "Actions",
-            name: "Synthetic Spellcasting",
-            kind: "spellcasting",
-            ability: "int",
-            components: { kind: "spell_definition" },
-            groups: [
-              {
-                kind: "at_will",
-                spells: [{ spellId: "synthetic_spell" }],
-                resourceLimits: [
-                  { kind: "daily", uses: 1, ownership: "shared" },
+                kind: "gm_choice",
+                alternatives: [
+                  { kind: "walk", feet: { kind: "literal", value: 30 } },
                 ],
               },
             ],
-            resourceLimits: [],
           },
-        ],
-      },
-      {
-        ...candidate,
-        generalFacts: { ...generalFacts, creatureTypeTags: ["swarm"] },
-      },
-      {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          savingThrowModifiers: [
-            { ability: "dex", modifier: 2 },
-            { ability: "dex", modifier: 4 },
-          ],
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          legendaryActionUses: { kind: "fixed", uses: 3 },
+        label: "GM speed choice with duplicate alternatives",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            speeds: [
+              {
+                kind: "gm_choice",
+                alternatives: [
+                  { kind: "walk", feet: { kind: "literal", value: 30 } },
+                  { kind: "walk", feet: { kind: "literal", value: 30 } },
+                ],
+              },
+            ],
+          },
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          speeds: [{ kind: "gm_choice", alternatives: [] }],
+        label: "nullable swarm sentinel",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            sizeAndSwarm: { size: "medium", swarm: null },
+          },
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          speeds: [
+        label: "swarm with invalid aggregate size",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            sizeAndSwarm: {
+              size: "tiny",
+              swarm: { constituentSize: "tiny" },
+            },
+          },
+        },
+      },
+      {
+        label: "empty fixed resistance",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            resistances: { kind: "fixed", damageTypes: [] },
+          },
+        },
+      },
+      {
+        label: "empty chosen resistance",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            resistances: { kind: "choose_one_from", options: [] },
+          },
+        },
+      },
+      {
+        label: "empty present immunity",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            immunities: { kind: "some", value: {} },
+          },
+        },
+      },
+      {
+        label: "overlapping fixed and qualified immunity",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            immunities: {
+              kind: "some",
+              value: {
+                conditions: ["charmed"],
+                qualifiedConditions: [
+                  { condition: "charmed", qualifier: "synthetic source" },
+                ],
+              },
+            },
+          },
+        },
+        expectedMessage: "cannot be both fixed and qualified",
+      },
+      {
+        label: "empty multiattack dispatches",
+        candidate: {
+          ...candidate,
+          procedures: [
             {
-              kind: "gm_choice",
-              alternatives: [
-                {
-                  kind: "walk",
-                  feet: { kind: "literal", value: 20 },
-                  availability: {
-                    kind: "forms_only",
-                    forms: ["synthetic_form"],
-                  },
-                },
-                { kind: "fly", feet: { kind: "literal", value: 20 } },
-              ],
+              section: "Actions",
+              name: "Synthetic Multiattack",
+              kind: "multiattack",
+              dispatches: [],
+              resourceLimits: [],
             },
           ],
         },
       },
       {
-        ...candidate,
-        generalFacts: {
-          ...generalFacts,
-          communication: {
-            kind: "spoken_and_understood",
-            languages: { kind: "named", languages: [] },
+        label: "empty action options",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              section: "Actions",
+              name: "Synthetic Options",
+              kind: "action_option",
+              options: [],
+              resourceLimits: [],
+            },
+          ],
+        },
+      },
+      {
+        label: "material component true sentinel",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              section: "Actions",
+              name: "Synthetic Spellcasting",
+              kind: "spellcasting",
+              ability: "int",
+              components: { kind: "fixed", v: true, s: true, m: true },
+              groups: [
+                {
+                  kind: "at_will",
+                  spells: [{ spellId: "synthetic_spell" }],
+                  resourceLimits: [],
+                },
+              ],
+              resourceLimits: [],
+            },
+          ],
+        },
+      },
+      {
+        label: "spellcasting with no groups",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              section: "Actions",
+              name: "Synthetic Spellcasting",
+              kind: "spellcasting",
+              ability: "int",
+              components: { kind: "spell_definition" },
+              groups: [],
+              resourceLimits: [],
+            },
+          ],
+        },
+      },
+      {
+        label: "at-will group with no spells",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              section: "Actions",
+              name: "Synthetic Spellcasting",
+              kind: "spellcasting",
+              ability: "int",
+              components: { kind: "spell_definition" },
+              groups: [{ kind: "at_will", spells: [], resourceLimits: [] }],
+              resourceLimits: [],
+            },
+          ],
+        },
+      },
+      {
+        label: "limited group with no resources",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              section: "Actions",
+              name: "Synthetic Spellcasting",
+              kind: "spellcasting",
+              ability: "int",
+              components: { kind: "spell_definition" },
+              groups: [
+                {
+                  kind: "limited",
+                  spells: [{ spellId: "synthetic_spell" }],
+                  resourceLimits: [],
+                },
+              ],
+              resourceLimits: [],
+            },
+          ],
+        },
+      },
+      {
+        label: "at-will group with a resource",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              section: "Actions",
+              name: "Synthetic Spellcasting",
+              kind: "spellcasting",
+              ability: "int",
+              components: { kind: "spell_definition" },
+              groups: [
+                {
+                  kind: "at_will",
+                  spells: [{ spellId: "synthetic_spell" }],
+                  resourceLimits: [
+                    { kind: "daily", uses: 1, ownership: "shared" },
+                  ],
+                },
+              ],
+              resourceLimits: [],
+            },
+          ],
+        },
+      },
+      {
+        label: "swarm encoded as creature type tag",
+        candidate: {
+          ...candidate,
+          generalFacts: { ...generalFacts, creatureTypeTags: ["swarm"] },
+        },
+      },
+      {
+        label: "duplicate saving throw abilities",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            savingThrowModifiers: [
+              { ability: "dex", modifier: 2 },
+              { ability: "dex", modifier: 4 },
+            ],
           },
         },
       },
       {
-        ...candidate,
-        traits: [
-          {
-            name: "Synthetic Trait",
-            description: "Synthetic comparison evidence.",
-            effect: null,
+        label: "legendary uses without legendary actions",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            legendaryActionUses: { kind: "fixed", uses: 3 },
           },
-        ],
+        },
+        expectedMessage:
+          "Legendary Action uses and a nonempty Legendary Action section",
       },
-    ];
-
-    const invalidLabels = [
-      "melee attack with range",
-      "ranged attack with reach",
-      "attack with empty on-hit effects",
-      "ranged attack with reversed range",
-      "ambiguous attack with duplicate abilities",
-      "ambiguous attack with one ability",
-      "damage dice without die size",
-      "damage die size without dice",
-      "static damage with a modifier",
-      "non-fly speed with explicit false hover",
-      "non-fly speed with true hover",
-      "GM speed choice with one alternative",
-      "GM speed choice with duplicate alternatives",
-      "nullable swarm sentinel",
-      "swarm with invalid aggregate size",
-      "empty fixed resistance",
-      "empty chosen resistance",
-      "empty present immunity",
-      "overlapping fixed and qualified immunity",
-      "empty multiattack dispatches",
-      "empty action options",
-      "material component true sentinel",
-      "spellcasting with no groups",
-      "at-will group with no spells",
-      "limited group with no resources",
-      "at-will group with a resource",
-      "swarm encoded as creature type tag",
-      "duplicate saving throw abilities",
-      "legendary uses without legendary actions",
-      "GM speed choice with no alternatives",
-      "GM speed choice with restricted alternative",
-      "named language set with no languages",
-      "trait null effect sentinel",
+      {
+        label: "GM speed choice with no alternatives",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            speeds: [{ kind: "gm_choice", alternatives: [] }],
+          },
+        },
+      },
+      {
+        label: "GM speed choice with restricted alternative",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            speeds: [
+              {
+                kind: "gm_choice",
+                alternatives: [
+                  {
+                    kind: "walk",
+                    feet: { kind: "literal", value: 20 },
+                    availability: {
+                      kind: "forms_only",
+                      forms: ["synthetic_form"],
+                    },
+                  },
+                  { kind: "fly", feet: { kind: "literal", value: 20 } },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      {
+        label: "named language set with no languages",
+        candidate: {
+          ...candidate,
+          generalFacts: {
+            ...generalFacts,
+            communication: {
+              kind: "spoken_and_understood",
+              languages: { kind: "named", languages: [] },
+            },
+          },
+        },
+      },
+      {
+        label: "trait null effect sentinel",
+        candidate: {
+          ...candidate,
+          traits: [
+            {
+              name: "Synthetic Trait",
+              description: "Synthetic comparison evidence.",
+              effect: null,
+            },
+          ],
+        },
+      },
     ] as const;
 
-    expect(invalidCandidates).toHaveLength(invalidLabels.length);
-
-    invalidCandidates.forEach((invalid, index) => {
-      const label = invalidLabels[index] ?? "unlabeled invalid projection";
+    invalidCases.forEach(({ label, candidate: invalid, ...expectation }) => {
       const decoded = decodeProjection(invalid);
       expect(Either.isLeft(decoded), label).toBe(true);
-      if (Either.isLeft(decoded)) {
-        const message = String(decoded.left);
-        if (label === "ambiguous attack with duplicate abilities") {
-          expect(message, label).toContain("distinct abilities");
-        }
-        if (label === "overlapping fixed and qualified immunity") {
-          expect(message, label).toContain(
-            "cannot be both fixed and qualified",
-          );
-        }
-        if (label === "legendary uses without legendary actions") {
-          expect(message, label).toContain(
-            "Legendary Action uses and a nonempty Legendary Action section",
-          );
-        }
+      if (Either.isLeft(decoded) && "expectedMessage" in expectation) {
+        expect(String(decoded.left), label).toContain(
+          expectation.expectedMessage,
+        );
       }
     });
   });

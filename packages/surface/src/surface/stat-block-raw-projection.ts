@@ -19,6 +19,8 @@ import {
   CreatureTypeSchema,
   CreatureSavingThrowModifiersSchema,
   CreatureSkillModifierSchema,
+  CreatureResistanceListSchema,
+  CreatureVulnerabilityListSchema,
   DamageTypeSchema,
   SizeSchema,
   StandaloneStatBlockSpeedEntrySchema,
@@ -26,7 +28,13 @@ import {
   StandaloneCreatureSenseSchema,
   StandaloneStatBlockAbilityScoresSchema,
   StandaloneStatBlockCreatureTypeTagsSchema,
+  StandaloneStatBlockValueSchema,
+  StatBlockAlignmentSchema,
+  StatBlockArmorClassSchema,
   StatBlockCommunicationSchema,
+  StatBlockGearEntrySchema,
+  StatBlockInitiativeSchema,
+  StatBlockPassivePerceptionSchema,
   StatBlockTextOnlyReasonSchema,
   CreatureTraitSchema,
   CreatureImmunityListSchema,
@@ -333,26 +341,11 @@ const ProcedureProjectionSchema = Schema.Union(
 
 const VulnerabilityProjectionSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("none") }),
-  strictStruct({
-    kind: Schema.Literal("fixed"),
-    damageTypes: nonEmpty(DamageTypeSchema),
-  }),
-  strictStruct({
-    kind: Schema.Literal("qualified"),
-    damageTypes: nonEmpty(DamageTypeSchema),
-    qualifier: NonEmptyStringSchema,
-  }),
+  CreatureVulnerabilityListSchema,
 );
 const ResistanceProjectionSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("none") }),
-  strictStruct({
-    kind: Schema.Literal("fixed"),
-    damageTypes: nonEmpty(DamageTypeSchema),
-  }),
-  strictStruct({
-    kind: Schema.Literal("choose_one_from"),
-    options: nonEmpty(DamageTypeSchema),
-  }),
+  CreatureResistanceListSchema,
 );
 
 export const StatBlockScopedFidelityProjectionSchema = strictStruct({
@@ -364,28 +357,12 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
       Schema.Tuple(),
       StandaloneStatBlockCreatureTypeTagsSchema,
     ),
-    alignment: Schema.Union(
-      Schema.Literal("unaligned"),
-      strictStruct({
-        order: Schema.Literal(...ALIGNMENT_ORDERS),
-        morality: Schema.Literal(...ALIGNMENT_MORALITIES),
-      }),
-    ),
-    ac: strictStruct({
-      kind: Schema.Literal("literal"),
-      value: PositiveIntegerSchema,
-      annotations: Schema.Array(NonEmptyStringSchema),
-    }),
-    hp: strictStruct({
-      kind: Schema.Literal("literal"),
-      value: PositiveIntegerSchema,
-    }),
+    alignment: StatBlockAlignmentSchema,
+    ac: StatBlockArmorClassSchema,
+    hp: StandaloneStatBlockValueSchema,
     speeds: nonEmpty(StandaloneStatBlockSpeedEntrySchema),
     abilityScores: StandaloneStatBlockAbilityScoresSchema,
-    initiative: strictStruct({
-      modifier: SignedIntegerSchema,
-      score: PositiveIntegerSchema,
-    }),
+    initiative: StatBlockInitiativeSchema,
     savingThrowModifiers: Schema.Union(
       Schema.Tuple(),
       CreatureSavingThrowModifiersSchema,
@@ -401,14 +378,12 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
         value: CreatureImmunityListSchema,
       }),
     ),
-    senses: Schema.Array(StandaloneCreatureSenseSchema),
-    passivePerception: PositiveIntegerSchema,
-    gear: Schema.Array(
-      strictStruct({
-        item: NonEmptyStringSchema,
-        quantity: PositiveIntegerSchema,
-      }),
+    senses: Schema.Union(
+      Schema.Tuple(),
+      nonEmpty(StandaloneCreatureSenseSchema),
     ),
+    passivePerception: StatBlockPassivePerceptionSchema,
+    gear: Schema.Union(Schema.Tuple(), nonEmpty(StatBlockGearEntrySchema)),
     communication: StatBlockCommunicationSchema,
     legendaryActionUses: exactOptional(
       Schema.Union(
@@ -1359,9 +1334,7 @@ const parseSenses = (
           return { kind, rangeFeet: Number(sense[2]) };
         });
   return {
-    senses: [...senses].sort((left, right) =>
-      left.kind.localeCompare(right.kind),
-    ),
+    senses: sortedAbsentOrNonEmpty(senses, ({ kind }) => kind),
     passivePerception: Number(passive[1]),
   };
 };
@@ -1374,7 +1347,7 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
   if (line === undefined) {
     return [];
   }
-  return line
+  const gearEntries = line
     .replace("**Gear**", "")
     .trim()
     .split(", ")
@@ -1388,6 +1361,7 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
       };
     })
     .sort((left, right) => left.item.localeCompare(right.item));
+  return nonEmptyValues(gearEntries, "Gear entry");
 };
 
 const NUMBER_WORDS = [
@@ -1549,9 +1523,8 @@ const parseRawGeneralFacts = (
     challengeRating,
     ...parseMetadata(lines, name),
     ac: {
-      kind: "literal",
-      value: Number(ac[1]),
-      annotations: ac[2] === undefined ? [] : [ac[2]],
+      value: { kind: "literal", value: Number(ac[1]) },
+      ...(ac[2] === undefined ? {} : { annotations: [ac[2]] }),
     },
     hp: { kind: "literal", value: Number(hp[1]) },
     speeds: parseSpeeds(lines, name),
@@ -3131,10 +3104,13 @@ const projectAuthoredProcedures = (
             {
               abilityScores: record.statBlock.abilityScores,
               challengeRating: record.challengeRating,
-              gear: (record.statBlock.gear ?? []).map((gear) => ({
-                item: gear.item,
-                quantity: gear.quantity ?? 1,
-              })),
+              gear: sortedAbsentOrNonEmpty(
+                (record.statBlock.gear ?? []).map((gear) => ({
+                  item: gear.item,
+                  quantity: gear.quantity ?? 1,
+                })),
+                ({ item }) => item,
+              ),
             },
             ammunitionByWeapon,
             inheritedSpellcasting?.ability,
@@ -3353,10 +3329,7 @@ const projectAuthoredStatBlockUnsafe = (
               `${record.name} creature type tag`,
             ),
       alignment: record.statBlock.alignment,
-      ac: {
-        ...record.statBlock.ac.value,
-        annotations: record.statBlock.ac.annotations ?? [],
-      },
+      ac: record.statBlock.ac,
       hp: record.statBlock.hp,
       speeds: record.statBlock.speeds,
       abilityScores: record.statBlock.abilityScores,
@@ -3394,13 +3367,18 @@ const projectAuthoredStatBlockUnsafe = (
               Match.exhaustive,
             ),
       immunities: projectImmunities(record),
-      senses: [...(record.statBlock.senses ?? [])].sort((left, right) =>
-        left.kind.localeCompare(right.kind),
+      senses: sortedAbsentOrNonEmpty(
+        record.statBlock.senses ?? [],
+        ({ kind }) => kind,
       ),
       passivePerception: record.statBlock.passivePerception,
-      gear: [...(record.statBlock.gear ?? [])]
-        .map((gear) => ({ item: gear.item, quantity: gear.quantity ?? 1 }))
-        .sort((left, right) => left.item.localeCompare(right.item)),
+      gear: sortedAbsentOrNonEmpty(
+        (record.statBlock.gear ?? []).map((gear) => ({
+          item: gear.item,
+          quantity: gear.quantity ?? 1,
+        })),
+        ({ item }) => item,
+      ),
       communication: record.statBlock.communication,
       ...(legendaryActionUses === undefined ? {} : { legendaryActionUses }),
     },

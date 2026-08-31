@@ -6511,6 +6511,8 @@ export const StatBlockInitiativeSchema = Schema.Struct({
   score: NonNegativeIntegerSchema,
 });
 
+export const StatBlockPassivePerceptionSchema = NonNegativeIntegerSchema;
+
 const StandaloneNonFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
   Schema.filter((kind): kind is Exclude<SpeedType, "fly"> => kind !== "fly"),
 );
@@ -6810,7 +6812,7 @@ const StandaloneStatBlockSharedSchema = Schema.Struct({
   resistances: CreatureStatBlockProjectionFields.resistances,
   immunities: CreatureStatBlockProjectionFields.immunities,
   senses: optionalExact(nonEmpty(StandaloneCreatureSenseSchema)),
-  passivePerception: NonNegativeIntegerSchema,
+  passivePerception: StatBlockPassivePerceptionSchema,
   gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
   communication: StatBlockCommunicationSchema,
   ...StandaloneStatBlockProcedureFields,

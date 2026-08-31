@@ -101,6 +101,7 @@ export {
   StatBlockGearEntrySchema,
   StatBlockInitiativeModifierSchema,
   StatBlockInitiativeSchema,
+  StatBlockPassivePerceptionSchema,
   StatBlockLiteralValueSchema,
   StatBlockLanguageSetSchema,
   StatBlockTelepathySchema,
