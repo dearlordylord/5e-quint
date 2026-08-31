@@ -52,28 +52,19 @@ zero-diagnostic inventory; it remains a pending final gate.
 The immutable [Effect 3 behavioral oracle](./effect3-behavioral-oracle.json)
 remains 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-At the integration-parent checkpoint, no public mutation command remained. Its
-Effect 4 capture is 50,667,014
-bytes with SHA-256
-`bc95144d489f310abe399cf15524ad09a49cd69dc2d2752a9ecb55ac9c37e077`.
-
-The reviewed [finite delta certificate](./effect4-oracle-delta-certificate.json)
-classifies and lists 8,811 recursive JSON-pointer leaf identities, including
-the owning classification, operation, path, and SHA-256 digest or explicit
-missing tag for both sides. Its overall identity
-SHA-256 is
-`ba67544243e10d3d719604d27e2a125d6e6b368f5e490085b2d36e33411bd05e`,
-and the certificate artifact SHA-256 is
-`a6cf7ef35595314566c0e56ab568e4714b2bd5358c41b60912e66c635239f81e`.
-At the frozen-master checkpoint, the Effect 4 candidate is 52,152,897 bytes
-with SHA-256
-`06caf573f4a04809c8f8e4ec75e7ca8166aa70b3e050ffca5e76dcabe36dc2bb`.
+At the Stat Block integration checkpoint, no public mutation command remains.
+The Effect 4 capture is 50,667,014 bytes with SHA-256
+`c05360a0ab9e66c7b824ae9c5e651f549aa812f85d415670cc8f12b0ba0ac1ff`.
 
 The v2 [finite delta certificate](./effect4-oracle-delta-certificate.json)
-reviews exactly 7,246 recursive identities. Its overall identity SHA-256 is
-`f580748a45802d4f0d04f621a5fad558abe85021294654e3b2d41e4390ccdc8d`;
-the staged certificate is 4,656,210 bytes with SHA-256
-`63eade8b0bd7bfa304d7bff83bfade023d70cc9cd1f9435d271b9bc208eed502`.
+reviews exactly 8,963 recursive identities. Its overall identity SHA-256 is
+`0a0f9b4b840b4e3da7aaf58c71af87c92557a03de335fcccb4d85dddbf44ad46`;
+the certificate is 5,566,415 bytes with SHA-256
+`6a7b06a3fadb0767fb0d955861a2f36c4e07a03be2c8b3061a93f5001a25d26c`.
+Relative to the preceding certificate, 8,939 exact reviewed identities are
+unchanged. The remaining 24 identities retain the same structural authorities;
+the audit found zero prior-classification disagreements and zero unclassified
+identities.
 
 | Reviewed reason               | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
@@ -81,7 +72,7 @@ the staged certificate is 4,656,210 bytes with SHA-256
 | MCP protocol entrypoints      |      3,565 | 1,060 |   1,582 |     923 |
 | MCP authenticated projection  |      2,094 |   761 |   1,190 |     143 |
 | Surface publication authority |          4 |     0 |       0 |       4 |
-| Surface authored authority    |        773 |   651 |       0 |     122 |
+| Surface authored authority    |        925 |   651 |       0 |     274 |
 | Persisted session codecs      |         22 |     6 |      12 |       4 |
 | Raw Swarm artifact authority  |         63 |    43 |       0 |      20 |
 

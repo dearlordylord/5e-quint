@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50667014,
-    "sha256": "07c9cd2b3e812fa7426df112c4f66dcb91a62dfd9da1406e9e279cc5b941dc44"
+    "sha256": "c05360a0ab9e66c7b824ae9c5e651f549aa812f85d415670cc8f12b0ba0ac1ff"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -291,7 +291,7 @@
       {
         "delta": {
           "baselineSha256": "02c4732c8a1aa03f6e8727f459f03b9abc2c843202caabdd3b827c41494c50a9",
-          "candidateSha256": "9a2f9f2036aa3f2f35fd6a30839af27d5f5a943eed0e984380fa9d1d7df1ab73",
+          "candidateSha256": "83d75349373da1b73e672c0715420d2531b9f0d35f9b097e54f171aa2d66858b",
           "operation": "changed",
           "segments": [
             "surface",
@@ -29603,7 +29603,7 @@
       {
         "delta": {
           "baselineSha256": "31dc4263bcfd887e249c3b2a7dc2bdb4933719cb7c9ee24ba29f45b89dae8cf7",
-          "candidateSha256": "d165064d3b4f96895cd60654a51691e176179956ba73b04f47093fabc8c39e12",
+          "candidateSha256": "782e1cefab77f8192575603d08ecf4f91cbc1d2f00177b9076e0e818f358fb93",
           "operation": "changed",
           "segments": [
             "surface",
@@ -33917,7 +33917,13 @@
         "delta": {
           "baselineSha256": "3aa617bfaf2740466e8a485ef2caa14abe1fa16483afc04ec8d5e6a73f8a3701",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "saved", "value", "tenure"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "tenure"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -34705,7 +34711,13 @@
         "delta": {
           "baselineSha256": "3f2a142ac0701fe8bb3e4336f5f4549d99335f6b49e365c722850f83b5171dc3",
           "operation": "removed",
-          "segments": ["mcp", "registered", "end_turn", "inputSchema", "$defs"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "inputSchema",
+            "$defs"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -39193,7 +39205,12 @@
           "baselineSha256": "431ebf2e715367aef3b2823e3857b25d38e704aaf7004d706846f631cbc19559",
           "candidateSha256": "07bd194cdd2b64df417a5e540efe8634d97cf2a6581f6bfd0ff39056cd4fa713",
           "operation": "changed",
-          "segments": ["persistence", "fixtures", "guest", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -39202,7 +39219,12 @@
           "baselineSha256": "431ebf2e715367aef3b2823e3857b25d38e704aaf7004d706846f631cbc19559",
           "candidateSha256": "07bd194cdd2b64df417a5e540efe8634d97cf2a6581f6bfd0ff39056cd4fa713",
           "operation": "changed",
-          "segments": ["persistence", "fixtures", "saved", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -39250,7 +39272,13 @@
         "delta": {
           "baselineSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "guest", "value", "revision"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "revision"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -39258,7 +39286,13 @@
         "delta": {
           "baselineSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "saved", "value", "revision"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "revision"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -42404,7 +42438,13 @@
           "baselineSha256": "520c8a1399e4721f8ed300d4e71864a74a6d848337cf35a2d2c8b5311f1982d6",
           "candidateSha256": "ce054e13936dcb03bd2291216e293478fd1579ee0b652075ed8ca783b34db848",
           "operation": "changed",
-          "segments": ["mcp", "registered", "end_battle", "outputSchema", "$id"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_battle",
+            "outputSchema",
+            "$id"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -43132,7 +43172,10 @@
           "baselineSha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
           "candidateSha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
           "operation": "changed",
-          "segments": ["persistence", "formatVersion"]
+          "segments": [
+            "persistence",
+            "formatVersion"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -61067,7 +61110,12 @@
           "baselineSha256": "6e07251b09ea114ec94d421db9f2aea54528e7cd958ceda474637b41acafba6c",
           "candidateSha256": "0cab7b214129c81f11768caa8a1a27b77eca8ae2d94d8721a2c119eedcb8a015",
           "operation": "changed",
-          "segments": ["mcp", "registered", "list_stat_blocks", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "list_stat_blocks",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -64880,7 +64928,12 @@
           "baselineSha256": "71fed27ce81949da9113278a24e1645e33224fc08f047b80e8b1c15d01e7a5e9",
           "candidateSha256": "ec1b5c9d55e906b2b792e8b158a3df8d68bca276d15b59680cfa8eb365f73766",
           "operation": "changed",
-          "segments": ["mcp", "registered", "fill_battle_hole", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_battle_hole",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -76417,7 +76470,13 @@
           "baselineSha256": "9f27402d73b0585b873f21212736fb02014cab6f5fa6a62714eae556bc134f96",
           "candidateSha256": "7417a3cb3455dd9ac5b06fb4f8275182d17c059c618a11a738581d4d842775fe",
           "operation": "changed",
-          "segments": ["mcp", "registered", "end_turn", "outputSchema", "$id"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "outputSchema",
+            "$id"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -77604,7 +77663,12 @@
           "baselineSha256": "a8f5725d6169f0cde5d1852caf201b460b61c4872667500eab181da2a9cb09ac",
           "candidateSha256": "9d152894b5ce8c1ff82dae7f1699772242cbc635215403f27f725306edb1bff1",
           "operation": "changed",
-          "segments": ["mcp", "registered", "read_battle_state", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "read_battle_state",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -88970,7 +89034,7 @@
       {
         "delta": {
           "baselineSha256": "b37a110a5614989e3179f3947b5947b47f99620575a77bcd07d0c0b42780205a",
-          "candidateSha256": "83183cd1c8459c8a790ad238cfeb7d36dc0dbcbdf474e619125acca372773440",
+          "candidateSha256": "cd20465ff0bbdcf6f78a4e06582e61bd380d9f9e2a9845d95c6a487db88d805b",
           "operation": "changed",
           "segments": [
             "surface",
@@ -117804,7 +117868,13 @@
         "delta": {
           "baselineSha256": "d84fac02ad4e6075f999e807b59a02d353eb23d9085761f28c8127a6be9189f1",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "guest", "value", "tenure"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "tenure"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -118965,7 +119035,12 @@
           "baselineSha256": "e10047905fe255897a54fa019b02d0daac0bf0de714a57b88ccc40b47f5ae77c",
           "candidateSha256": "cbde51eb4d0b89ed5e67754e34891947e447bc88f3445b5061d8f60ed270b727",
           "operation": "changed",
-          "segments": ["mcp", "registered", "roll_dice", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "roll_dice",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -122751,7 +122826,13 @@
           "baselineSha256": "eeb0a151322bbeb33a642c345cef15522e1268edef4099674ed1e3287510c9d6",
           "candidateSha256": "360a7dc432577949da2a664c17df9268581eaed97baf6a910ff48ca9eae29e87",
           "operation": "changed",
-          "segments": ["mcp", "registered", "roll_dice", "outputSchema", "$id"]
+          "segments": [
+            "mcp",
+            "registered",
+            "roll_dice",
+            "outputSchema",
+            "$id"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -128247,7 +128328,7 @@
       {
         "delta": {
           "baselineSha256": "fa39529ae8918c2cb33041a4d15cd2573c1d5beffdfb6a5784e84840725950fd",
-          "candidateSha256": "061bc1d8343f322448e913fb128b7ea60358a3b0f4af86292a8272424df9e861",
+          "candidateSha256": "1220d03e0e72308449e7fddb7c74d2460eb5236673c9fdec23cbc9a926e9dc26",
           "operation": "changed",
           "segments": [
             "surface",
@@ -128798,7 +128879,13 @@
         "delta": {
           "baselineSha256": "fdef9925044994da47813be619a43c5dab379132bcad18aac4076ce180f59b34",
           "operation": "removed",
-          "segments": ["mcp", "registered", "end_turn", "outputSchema", "type"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "outputSchema",
+            "type"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -129335,6 +129422,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "027f1d5e0a3a2e980374c4080e36789facade810f6363547c52279c6fb7d575c",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_hell_hound.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "02b61b0dd0bb4272a07c9ac9dfb2e96d904b2750dd574f7c761f7e5eed4597fc",
           "operation": "added",
           "segments": [
@@ -129431,6 +129530,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "04bcd33bc5436e08f30c6b1a615a18df01b5a610c1efafec4738e204bab4031e",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_werewolf.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "04dd3fae32b64ad02dd3eb619d8288f15190c3986d029bf46627d7f61b62be65",
           "operation": "added",
           "segments": [
@@ -129473,18 +129584,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_couatl.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "06a2c235f755b61ff4d95ba51463d464700fd1fba26e5a64c4d2049c1591815a",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_stone_giant.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -129829,18 +129928,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_violet_fungus.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "0859345f6c46fe0598b4de763b09edb9bb8d3eb1640273569ab315a611228c9b",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_winter_wolf.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -130280,6 +130367,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "0ca8da473ac72871916c2584287e96c4308667d3e5752e975b10ab21b613c8ed",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_tough_boss.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "0cee8001544093e35f17baabd5da084585c37b1ba29261093b303299049f6fdf",
           "operation": "added",
           "segments": [
@@ -130563,7 +130662,13 @@
         "delta": {
           "candidateSha256": "12c9b6bf32355180cb46072e7d41712daba34ba890cb91187f55f6c5864e3532",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "guest", "value", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -130571,7 +130676,13 @@
         "delta": {
           "candidateSha256": "12c9b6bf32355180cb46072e7d41712daba34ba890cb91187f55f6c5864e3532",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "saved", "value", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -130583,18 +130694,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_giant_rat.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "13259b620d3f2fb3c56e918f4b68ae24d6d2d78cc3be8b25dc2ff972495759ee",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_hell_hound.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -130631,6 +130730,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_giant_goat.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "13a09f68ff82a13211c10f36d74f3ff7da3409fca4aad6dbf18a622c73450684",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_kobold_warrior.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -131415,18 +131526,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_iron_golem.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "18f9b41ffe3650ecc1667bd07dc44b6590b3bca5f4e735c721b7036d446a23a3",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_hobgoblin_warrior.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -132390,6 +132489,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_gray_ooze.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "1f81ebf52f8f64b351eb3d9fdeb31817695be33eb6b3906beceb119e173deea5",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_tough.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -133562,18 +133673,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_drider.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "266b95a7ab6fefea2c8a01407a590e89eedd975a674acd5f2fcb6328120adf15",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_giant_wolf_spider.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -148044,18 +148143,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "271f4221500fb557e0b71b61e598c8aa482df91c22ea022663fb9a18b50b6c90",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_hell_hound.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "2730afd3c40365f0f170a53665486ee1d52cb22587f1719449601be439ad940d",
           "operation": "added",
           "segments": [
@@ -151304,6 +151391,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "31e4b5f9667a7b5f2a7f65818eca68f8504586ba94a93124bff1cb34b7599d8d",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_warrior_infantry.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "31e8e10378f312e19724bdd39d4e07e4fee49a820cc3e06e988e4415e6278c8a",
           "operation": "added",
           "segments": [
@@ -154400,6 +154499,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "4555537787ac8c3b34c59af1a52887f787d3083c3612994e67983d112700de0a",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_winter_wolf.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "45809f0c82c9f7d732c729e017b7a954bb8fbeaa5c25381fcaedc14cf4b98188",
           "operation": "added",
           "segments": [
@@ -154596,18 +154707,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_salamander.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "4cfa94759215c808a11f7e0c408bf19411cf55dfdb673edcca63f0f31bb083a9",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_tough_boss.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -155171,18 +155270,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_giant_crocodile.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "4e88a23a831b4fc5a151d2266498fdad8fc8da3e5fea3bc7bf9fc2a5a28a0915",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_werewolf.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -156375,6 +156462,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "55ba9cb1a18bbea576dd13d326ee1c8c9418bf0a02a4596cd0f72b368b34969b",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_giant_wolf_spider.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "560626dbe0ed7fa16be3ee09311656a3848ebf4dec646cf7500646e7dfd5569f",
           "operation": "added",
           "segments": [
@@ -156752,18 +156851,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_cloaker.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "5a3703ad0648acd2e4f81847b276ccf3d8d876632657c37cfefad40bfe7eb779",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_warrior_infantry.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -157545,6 +157632,18 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "609d0697b22b19ab9d61b0a836cbb4ac5145f8cab03946a3852d67aa44651692",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_werewolf.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -159384,6 +159483,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "655d5016d4ae530571df1cea4f51369e0632ed512ded189ff109a0c373043ebb",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_kobold_warrior.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "6652b32ac6677f4e2d866586bcb33cf1282346560231f4598bb70421c7998d49",
           "operation": "added",
           "segments": [
@@ -159879,6 +159990,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_ettin.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "6c18cf9ef9b5f7d3d6c24c133d5f548303e9ad4ae82c280d5acb03b8bda1e001",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_tough.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -160582,6 +160705,18 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "7158cd4d723a7797df3ddd2c5c5d84c684de7c25e8ed4eaf55919749867c81c7",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_hobgoblin_warrior.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -161625,6 +161760,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "77f2198ea9f721d1901bd0deae97365591ee64943eca82f8e96081e8d8aab993",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_hobgoblin_warrior.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "780a198af86c4449f4dc3f92f151e0844240d8aa50fa856ec93d609961c5fae2",
           "operation": "added",
           "segments": [
@@ -161915,6 +162062,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_scout.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "79dfe6504a81925d47d2fb445b921fde03d0944260cf70e8162a6812ed6795c4",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_winter_wolf.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -162405,18 +162564,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_earth_elemental.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "7d09eddd94c662481cee054928c9e7898d4424b2108539a32afa46e95fb47cd0",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_winter_wolf.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -163240,18 +163387,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "8620b71b11c171eabb5d0dbda1e0a86a7d25bd04d820bbafd31ed538499f37a5",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_tough_boss.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "86421290f89ec0ca125aa7c6a174d522d4299189f61597e0a52bb921481e1a0a",
           "operation": "added",
           "segments": [
@@ -163863,18 +163998,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "906a9f23b410a707b0d9f19e8babded192eb8f722025d95cd1a4d32877948b44",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_tough.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "90f6ce0e6281f2da69af81fa112c2f568b4cfc1b2f61ad59cf67de4012f17449",
           "operation": "added",
           "segments": [
@@ -163913,7 +164036,13 @@
         "delta": {
           "candidateSha256": "9268dc3739412703975284a5ea88d563372735b5f994bde77f1a8202a2845d29",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "guest", "value", "reason"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "reason"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -163921,7 +164050,13 @@
         "delta": {
           "candidateSha256": "9268dc3739412703975284a5ea88d563372735b5f994bde77f1a8202a2845d29",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "saved", "value", "reason"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "reason"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -164300,18 +164435,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_deva.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "9822bc3136fffbbc450d3a92f9869ba96ba097c757d63e91f0a4d160c64beff7",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_warrior_infantry.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -165716,7 +165839,13 @@
         "delta": {
           "candidateSha256": "9eabd79e1040d255934cb963b9d9bbfdeb4905789ad6f8bb51d9a884c6975a6f",
           "operation": "added",
-          "segments": ["mcp", "registered", "end_turn", "outputSchema", "anyOf"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "outputSchema",
+            "anyOf"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -166332,24 +166461,24 @@
       },
       {
         "delta": {
-          "candidateSha256": "a5f735167e66905cb354eeceb69a84b9e022377324e05a806d4e5c2613fe815e",
+          "candidateSha256": "a5ed497ad53304bda7ca27a3e89ec8f3e5ab43157653975c800b1d47427f6dcb",
           "operation": "added",
           "segments": [
             "surface",
             "content",
-            "@path=packages/surface/content/stat_block_jackal.json"
+            "@path=packages/surface/content/stat_block_warrior_infantry.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
-          "candidateSha256": "a6117f3d735cae8f8ab89978a0eb5707282b145b5cee974831be05774ec7ab5f",
+          "candidateSha256": "a5f735167e66905cb354eeceb69a84b9e022377324e05a806d4e5c2613fe815e",
           "operation": "added",
           "segments": [
             "surface",
             "content",
-            "@path=packages/surface/content/stat_block_tough.dhall"
+            "@path=packages/surface/content/stat_block_jackal.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -181005,18 +181134,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "ad45587bc5501f6b8a8390f8966c16a9bd76cff329d8f6122ada2d37123f4154",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_kobold_warrior.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "ad7c389055983c7c5bfad62d5b6683fe5c7990b87b80fd555982d752b2962d5a",
           "operation": "added",
           "segments": [
@@ -181651,18 +181768,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_ape.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "b6a6b0217e8c2e06fb28dc473635a48bbdb607fae83f2664e76d940d526213dd",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_giant_wolf_spider.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -182650,6 +182755,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_ancient_gold_dragon.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "bbb23b31f23ea9e748022ce9417fb6a3cde462596195af1677f326556a643c0e",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_hell_hound.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -183937,18 +184054,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "c83c6e15a92f412ae6a217a40611414eb5e4723803dce055d458f59186813f9b",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_stone_giant.json"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "c864313767ba24d44217d6116848112bf0a36f3f2f536af25024dc55c8a06725",
           "operation": "added",
           "segments": [
@@ -184124,18 +184229,6 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_ancient_silver_dragon.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "c93375f7702c6822872d0695380771e41d94dcb7033a1ea77292d1ae689f0033",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_werewolf.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -184867,6 +184960,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_magma_mephit.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "cdf61b0400a7cc1d14cf4bae73cf625ad568b43ff47beaa8dc0d37a381c3e806",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_giant_wolf_spider.dhall"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -187300,6 +187405,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "dce1070b259a07f6820f69bf94273fcfbcdda25dcd67629eedfd4c16206171b3",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_tough_boss.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "dcf9cca8693aa24978f7914d228611f3cab84d683f7439d147bdc4617113f752",
           "operation": "added",
           "segments": [
@@ -187386,7 +187503,13 @@
         "delta": {
           "candidateSha256": "de23f313873ee739f2416aa0c0589c29bc31bcc1ed9a60be737bb30979d27a65",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "guest", "value", "message"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "message"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -187394,7 +187517,13 @@
         "delta": {
           "candidateSha256": "de23f313873ee739f2416aa0c0589c29bc31bcc1ed9a60be737bb30979d27a65",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "saved", "value", "message"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "message"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -193475,18 +193604,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "f0ebdafe0a3868e7152da4b8862e2488c868639a5dd739043d9f97c4f81efb7c",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_hobgoblin_warrior.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "f0f554afb1c1a46b1fb379e15c9de6ca5e4b03a3c1f79844ae411df321d6536c",
           "operation": "added",
           "segments": [
@@ -194178,6 +194295,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "f5f69646ec475833354be469a12da43dc3e2c79027253687abb14875628be45b",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_stone_giant.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "f675a9ca6099b0e734662151e046324a2b982bb4d68917987fa5d38a7277023d",
           "operation": "added",
           "segments": [
@@ -194794,18 +194923,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "f8eb879f52ae8df3c0a3417c5250a0e18dc48c400fbbf93a4a0a0b10fdca8fcf",
-          "operation": "added",
-          "segments": [
-            "surface",
-            "content",
-            "@path=packages/surface/content/stat_block_kobold_warrior.dhall"
-          ]
-        },
-        "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
           "candidateSha256": "f9196b1c581b4c446edb9ebf07ff46156bcade33556d3aa792a9d764c41637ac",
           "operation": "added",
           "segments": [
@@ -195150,6 +195267,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_axe_beak.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "fc63ffd35550d4564b32393d7e3e4d32227a0ef17edf89b50c7a91d2df6dd128",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/stat_block_stone_giant.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -196686,7 +196815,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "b8a867f7c681af144dbc43bc33d2de966692e7eb4552173782cb41d53edc8dd4",
+    "identitySha256": "0a0f9b4b840b4e3da7aaf58c71af87c92557a03de335fcccb4d85dddbf44ad46",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -196737,7 +196866,9 @@
         "siteSha256": "0aa3cc8bb60ed27ea4e5e0bdf8b44accc094e935c174934070247482a0b27da5"
       },
       {
-        "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
+        "changedCollectionAuthorityIds": [
+          "raw-swarm-artifacts"
+        ],
         "deltaCount": 63,
         "deltaIdentitySha256": "28c0a02e0c02135dfd2c87213229a7664375c686d59940d8e78973ddc37efa1d",
         "id": "raw-swarm-effect-runtime-artifacts",
@@ -196751,7 +196882,7 @@
       {
         "changedCollectionAuthorityIds": [],
         "deltaCount": 4,
-        "deltaIdentitySha256": "63b88af5242b2afbd7a6866a3dca0b5d20c83f36b4ab0476d15b9b4b3c88c79c",
+        "deltaIdentitySha256": "13ec066ab6fab25fbf7bfe935aab44cfb58aca6ed622d3f882374b3f69bede02",
         "id": "surface-publication-contract-convergence",
         "operations": {
           "added": 0,
@@ -196761,9 +196892,11 @@
         "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270"
       },
       {
-        "changedCollectionAuthorityIds": ["surface-content-artifacts"],
+        "changedCollectionAuthorityIds": [
+          "surface-content-artifacts"
+        ],
         "deltaCount": 925,
-        "deltaIdentitySha256": "18374918ab474f1c80114709ba1411ba0a98bacee92a6b1b93a3c7ac8d08b679",
+        "deltaIdentitySha256": "50f64ededbc378057a56ad9be7ec8bca8745e52706181faff712f63656067ad8",
         "id": "surface-authored-contract-convergence",
         "operations": {
           "added": 651,

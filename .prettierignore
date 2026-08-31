@@ -7,6 +7,7 @@ packages/opaque-oracle/corpus/*.json
 # Effect 3 migration oracle bytes are emitted by their canonicalizer; the
 # verifier owns their exact formatting and source-order arrays.
 docs/migrations/effect-4/effect3-behavioral-oracle.json
+docs/migrations/effect-4/effect4-oracle-delta-certificate.json
 
 # Portable parity cases are generated from the independent oracle; the drift
 # gate compares their exact generator bytes and owns their formatting.
