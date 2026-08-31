@@ -733,7 +733,7 @@ export function resolvePersistentAreaSaveConditionSpellAct(input: {
   };
 }
 
-export function resolveStagedSaveConditionSpellAct(input: {
+type StagedSaveConditionSpellActInput = {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
@@ -741,67 +741,35 @@ export function resolveStagedSaveConditionSpellAct(input: {
     { readonly procedure: "stagedSaveCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+};
+
+function stagedSaveConditionFillIssue(
+  fillSet: StagedSaveConditionSpellActInput["fillSet"],
+): string | null {
+  if (fillSet.targetId !== undefined || fillSet.targetList !== undefined) {
+    return "hit-point-budget condition target admission uses one point-origin Sphere Saving Throw fill.";
+  }
   if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined
+    fillSet.attackRoll !== undefined ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.damageDispositions.length > 0
   ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "hit-point-budget condition target admission uses one point-origin Sphere Saving Throw fill.",
-    );
+    return "hit-point-budget condition target admission does not use attack or damage fills.";
   }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "hit-point-budget condition target admission does not use attack or damage fills.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
-  }
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.actorId,
-    undefined,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (savingThrowValidation !== null) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      savingThrowValidation,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  assertAreaSavingThrowOutcomes(input.fillSet.savingThrowOutcomes);
-  const selectedTargetIds =
-    input.fillSet.savingThrowOutcomes.area.affectedTargetIds;
+  return null;
+}
+
+function resolveFilledStagedSaveConditionSpellAct(
+  input: StagedSaveConditionSpellActInput,
+  savingThrowOutcomes: NonNullable<
+    StagedSaveConditionSpellActInput["fillSet"]["savingThrowOutcomes"]
+  >,
+): BattleResolutionResult {
+  assertAreaSavingThrowOutcomes(savingThrowOutcomes);
+  const selectedTargetIds = savingThrowOutcomes.area.affectedTargetIds;
   const failedTargets = failedSavingThrowTargetIds(
-    input.fillSet.savingThrowOutcomes.outcomes,
+    savingThrowOutcomes.outcomes,
   );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
@@ -837,6 +805,49 @@ export function resolveStagedSaveConditionSpellAct(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+export function resolveStagedSaveConditionSpellAct(
+  input: StagedSaveConditionSpellActInput,
+): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  const fillIssue = stagedSaveConditionFillIssue(input.fillSet);
+  if (fillIssue !== null) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
+    return invalidResult(input.input.state, "invalidFill", fillIssue);
+  }
+  /* v8 ignore stop -- @preserve */
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    input.invocation,
+    input.input.state,
+    input.actorId,
+    undefined,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (savingThrowValidation !== null) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return resolveFilledStagedSaveConditionSpellAct(
+    input,
+    input.fillSet.savingThrowOutcomes,
+  );
 }
 
 export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
@@ -4001,6 +4012,21 @@ function validatePersistentAreaSaveConditionSavingThrowOutcomes(input: {
   if (!input.state.combatants.has(input.area.originAnchorId)) {
     return "ground-area prone hazard ground-area origin anchor must be a combatant in this battle.";
   }
+  return validatePersistentAreaSaveConditionTargets({
+    value: input.value,
+    area: input.area,
+    state: input.state,
+  });
+}
+
+function validatePersistentAreaSaveConditionTargets(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly area: Extract<
+    BattleSpellAreaChoice,
+    { readonly kind: "persistentAreaSaveConditionArea" }
+  >;
+  readonly state: BattleState;
+}): string | null {
   const selectedTargets = new Set(input.area.affectedTargetIds);
   if (selectedTargets.size !== input.area.affectedTargetIds.length) {
     return "ground-area prone hazard ground-area affected targets must not duplicate targets.";

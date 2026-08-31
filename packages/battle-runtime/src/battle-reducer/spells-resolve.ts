@@ -400,6 +400,124 @@ type SpellActInternalInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
 
+type InitialSpellAttackRollResolution =
+  | {
+      readonly tag: "admitted";
+      readonly actor: BattleCreatureState | undefined;
+      readonly attackRoll: BattleAttackRollResult;
+      readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+    }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult };
+
+function resolveInitialSpellAttackRoll(input: {
+  readonly castingState: BattleState;
+  readonly errorState: BattleState;
+  readonly subject: SpellActInternalInput["subject"];
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly invocation: Parameters<typeof spellAttackRollHole>[2];
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): InitialSpellAttackRollResolution {
+  const requiredRollMode = requiredSpellAttackRollMode(
+    input.castingState,
+    input.actorId,
+    input.targetId,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
+  );
+  if (input.fillSet.attackRoll == null) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.castingState, input.subject, [
+        spellAttackRollHole(
+          input.castingState,
+          input.actorId,
+          input.invocation,
+          requiredRollMode,
+        ),
+      ]),
+    };
+  }
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (!attackRollResultIsValid(input.fillSet.attackRoll)) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.errorState,
+        "invalidFill",
+        "Spell attack roll result is outside the d20 attack-roll protocol.",
+      ),
+    };
+  }
+  if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.errorState,
+        "invalidFill",
+        "Spell attack roll mode does not match the current attack-roll rule.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const actor = input.castingState.combatants.get(input.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor,
+      originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+      rollMode: input.fillSet.attackRoll.rollMode,
+      rolledD20s: input.fillSet.attackRoll.rolledD20s,
+      decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.castingState, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          spellAttackRollHole(
+            input.castingState,
+            input.actorId,
+            input.invocation,
+            requiredRollMode,
+          ),
+        ),
+      ]),
+    };
+  }
+  const naturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor,
+    total: input.fillSet.attackRoll.total,
+    originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+    rollMode: input.fillSet.attackRoll.rollMode,
+    rolledD20s: input.fillSet.attackRoll.rolledD20s,
+    decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+    otherD20RerollPresent:
+      input.fillSet.attackRoll.spellAttackReroll !== undefined,
+  });
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (naturalOneRerollIssue !== null) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.errorState,
+        "invalidFill",
+        naturalOneRerollIssue,
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return {
+    tag: "admitted",
+    actor,
+    attackRoll: input.fillSet.attackRoll,
+    requiredRollMode,
+  };
+}
+
 type SpellInvocationResolutionAdmission =
   | {
       readonly tag: "ok";
@@ -2435,86 +2553,23 @@ function resolveSpellActInternal(
   const spellDamageContext = (():
     | BattleResolutionResult
     | SpellDamageResolutionContext => {
-    const requiredRollMode = requiredSpellAttackRollMode(
+    const initialAttackRoll = resolveInitialSpellAttackRoll({
       castingState,
-      subject.actorId,
-      target.combatantId,
-      invocationForResolution,
-      fillSet.targetSpatialFacts,
-    );
-    if (fillSet.attackRoll == null) {
-      return needsHolesResult(castingState, input.subject, [
-        spellAttackRollHole(
-          castingState,
-          subject.actorId,
-          invocationForResolution,
-          requiredRollMode,
-        ),
-      ]);
-    }
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollResultIsValid(fillSet.attackRoll)) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell attack roll result is outside the d20 attack-roll protocol.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell attack roll mode does not match the current attack-roll rule.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-    const actorBeforeSpellAttack = castingState.combatants.get(subject.actorId);
-    if (
-      d20TestNaturalOneRerollRollDecisionRequired({
-        actor: actorBeforeSpellAttack,
-        originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-        rollMode: fillSet.attackRoll.rollMode,
-        rolledD20s: fillSet.attackRoll.rolledD20s,
-        decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-      })
-    ) {
-      return needsHolesResult(castingState, input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
-          spellAttackRollHole(
-            castingState,
-            subject.actorId,
-            invocationForResolution,
-            requiredRollMode,
-          ),
-        ),
-      ]);
-    }
-    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-      actor: actorBeforeSpellAttack,
-      total: fillSet.attackRoll.total,
-      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-      rollMode: fillSet.attackRoll.rollMode,
-      rolledD20s: fillSet.attackRoll.rolledD20s,
-      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-      requiredRollMode,
-      otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
+      errorState: input.state,
+      subject: input.subject,
+      actorId: subject.actorId,
+      targetId: target.combatantId,
+      invocation: invocationForResolution,
+      fillSet,
     });
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (d20TestNaturalOneRerollIssue !== null) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        d20TestNaturalOneRerollIssue,
-      );
+    if (initialAttackRoll.tag === "result") {
+      return initialAttackRoll.result;
     }
-    /* v8 ignore stop -- @preserve */
+    const requiredRollMode = initialAttackRoll.requiredRollMode;
+    const actorBeforeSpellAttack = initialAttackRoll.actor;
+    const attackRoll = initialAttackRoll.attackRoll;
     const naturalOneEffectiveAttackRoll =
-      effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll);
+      effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
     const originalHit = attackRollHits(
       naturalOneEffectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(input.state, target)),
@@ -2552,10 +2607,10 @@ function resolveSpellActInternal(
       ]);
     }
     const seekingApplication =
-      fillSet.attackRoll.spellAttackReroll?.kind === "reroll"
+      attackRoll.spellAttackReroll?.kind === "reroll"
         ? seekingSpellRerollApplicationForAttackRoll({
             actor: actorBeforeSpellAttack,
-            attackRoll: fillSet.attackRoll,
+            attackRoll,
             castApplications: metamagicApplicationsForResolution ?? [],
           })
         : null;
@@ -2563,7 +2618,7 @@ function resolveSpellActInternal(
       seekingApplication !== null && typeof seekingApplication !== "string"
         ? [...(metamagicApplicationsForResolution ?? []), seekingApplication]
         : metamagicApplicationsForResolution;
-    const effectiveAttackRoll = effectiveSpellAttackRoll(fillSet.attackRoll);
+    const effectiveAttackRoll = effectiveSpellAttackRoll(attackRoll);
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(input.state, target)),
@@ -2578,7 +2633,7 @@ function resolveSpellActInternal(
     });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
-      fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
+      attackRoll.missToHitReplacementProcedureRef !== undefined &&
       missToHitReplacement === null
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -3472,7 +3527,7 @@ function spatialMeleeSpellAttackProxyRepeatTargetingInvalidReason(
     : "Glyph-stored spatial melee spell-attack proxy repeat attacks must target the triggering creature.";
 }
 
-function spendSpellActResolutionResources(input: {
+type SpellActResolutionResourceInput = {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
@@ -3483,7 +3538,40 @@ function spendSpellActResolutionResources(input: {
     BattleFill,
     { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
   >["value"];
-}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+};
+
+function spendSpellCreatedHeldObjectAttackResolutionResources(
+  input: SpellActResolutionResourceInput,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
+    input.state,
+    input.actorId,
+  );
+  const spent = spendAction(spellAttackState.currentTurnResources, "magic");
+  if (Result.isFailure(spent)) {
+    return invalidResult(
+      input.errorState,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const nextState = {
+    ...spellAttackState,
+    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+      spent.success,
+      input.actorId,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function spendSpellActResolutionResources(
+  input: SpellActResolutionResourceInput,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (
     input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
     input.invocation.operation === "createAndAttack"
@@ -3591,30 +3679,7 @@ function spendSpellActResolutionResources(input: {
   if (input.invocation.procedure !== "spellCreatedHeldObjectAttack") {
     return spendSpellCastResources(input);
   }
-  const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
-    input.state,
-    input.actorId,
-  );
-  const spent = spendAction(spellAttackState.currentTurnResources, "magic");
-  if (Result.isFailure(spent)) {
-    return invalidResult(
-      input.errorState,
-      "staleSubject",
-      "Magic action is no longer available for the current actor.",
-    );
-  }
-  const nextState = {
-    ...spellAttackState,
-    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      spent.success,
-      input.actorId,
-    ),
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return spendSpellCreatedHeldObjectAttackResolutionResources(input);
 }
 
 export function resolveBonusActionSpellAct(
