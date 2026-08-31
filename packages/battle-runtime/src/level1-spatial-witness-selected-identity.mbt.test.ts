@@ -2255,7 +2255,10 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         ],
       });
       const mismatchedAffectedTargetRejected =
-        mismatched.tag === "invalid" && mismatched.reason === "invalidFill";
+        mismatched.tag === "invalid" &&
+        mismatched.reason === "invalidFill" &&
+        mismatched.message ===
+          "ground-area prone hazard Saving Throw outcomes must match the table-supplied ground-area affected targets.";
 
       const cast = resolveBattleSubject({
         state,
@@ -2296,7 +2299,10 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         ],
       });
       const mismatchedAffectedTargetRejected =
-        mismatched.tag === "invalid" && mismatched.reason === "invalidFill";
+        mismatched.tag === "invalid" &&
+        mismatched.reason === "invalidFill" &&
+        mismatched.message ===
+          "ground-area prone hazard Saving Throw outcomes must match the table-supplied ground-area affected targets.";
 
       const cast = resolveBattleSubject({
         state,

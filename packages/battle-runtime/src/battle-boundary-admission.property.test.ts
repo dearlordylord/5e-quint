@@ -930,7 +930,7 @@ describe("battle boundary admission owners", () => {
         },
       }),
       codecRolled("spikeGrowth", {
-        spikeGrowthMovement: {
+        areaMovementDistanceDamage: {
           ...codecSource,
           effectRef: occurrenceRef("areaMovementDistanceDamage"),
           areaId: battleAreaId("boundary-spike"),

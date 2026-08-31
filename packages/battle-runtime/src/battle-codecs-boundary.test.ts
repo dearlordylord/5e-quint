@@ -1355,10 +1355,10 @@ const rolledDiceCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "spikeGrowthMovement",
-    rolled("spikeGrowthMovement", {
+    "areaMovementDistanceDamage",
+    rolled("areaMovementDistanceDamage", {
       critical: false,
-      spikeGrowthMovement: {
+      areaMovementDistanceDamage: {
         ...source,
         effectRef: fixture.spikeGrowthEffectRef,
         areaId: battleAreaId("area:codec-spike-growth"),
