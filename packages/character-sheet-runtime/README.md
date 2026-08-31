@@ -114,6 +114,11 @@ Current executable state:
   Defense are read from Surface class-feature mechanics; a multiclass build
   with multiple available class-feature base formulas must provide one
   `baseChoice`.
+- `projectCharacterSheetEquipmentDefinition` is the sheet-owned static
+  admission boundary for ordinary armor and Shields. It retains correlated
+  Armor Class, training, Strength, Stealth, donning, doffing, weight, and cost
+  facts without authored identity; Armor Class calculation consumes this same
+  projection rather than reading the Surface record again.
 - `parseCharacterSheet` is the boundary parser for serialized sheets before app
   or MCP code consumes them.
 

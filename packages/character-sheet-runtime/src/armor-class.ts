@@ -28,6 +28,12 @@ import type {
 import { Result } from "effect";
 
 import {
+  projectCharacterSheetEquipmentDefinition,
+  type CharacterSheetArmorDefinitionFacts,
+  type CharacterSheetEquipmentDefinitionProjection,
+} from "./equipment-definition-projection.ts";
+
+import {
   characterSheetIssue,
   getRequiredUnit,
   type CharacterSheetArmorClassBaseChoice,
@@ -90,23 +96,47 @@ export function characterSheetArmorClassState(
   }
   /* v8 ignore stop -- @preserve */
 
+  const armorDefinition = projectSelectedEquipmentDefinition(
+    armor === undefined || Result.isFailure(armor) ? undefined : armor.success,
+    "armor",
+  );
+  if (Result.isFailure(armorDefinition)) {
+    return Result.fail(armorDefinition.failure);
+  }
+  const armorFacts = armorDefinition.success?.facts;
+
+  const shieldDefinition = projectSelectedEquipmentDefinition(
+    shield === undefined || Result.isFailure(shield)
+      ? undefined
+      : shield.success,
+    "shield",
+  );
+  if (Result.isFailure(shieldDefinition)) {
+    return Result.fail(shieldDefinition.failure);
+  }
+  const shieldFacts = shieldDefinition.success?.facts;
+
   const base =
-    armor?.success.kind === "armor"
-      ? Result.succeed(armorBaseSource(armor.success))
+    armorFacts !== undefined
+      ? Result.succeed(armorBaseSource(armorFacts))
       : selectedUnarmoredBaseSource(input, {
           wearingArmor: false,
-          wieldingShield: shield?.success.kind === "shield",
+          wieldingShield: shieldFacts !== undefined,
         });
   /* v8 ignore next -- @preserve -- Base selection rejection is malformed stored choice or build/catalog input. */
   if (Result.isFailure(base)) return Result.fail(base.failure);
 
   const bonuses: ArmorClassState["bonuses"][number][] = [];
-  if (shield?.success.kind === "shield") {
+  if (
+    shield !== undefined &&
+    Result.isSuccess(shield) &&
+    shieldFacts !== undefined
+  ) {
     bonuses.push({
       kind: "shield",
-      bonus: armorClassDelta(shield.success.armorClassProjection.bonus),
-      handUse: shield.success.armorClassProjection.handUse,
-      trainingRequired: shield.success.armorClassProjection.trainingRequired,
+      bonus: armorClassDelta(shieldFacts.armorClassProjection.bonus),
+      handUse: shieldFacts.armorClassProjection.handUse,
+      trainingRequired: shieldFacts.armorClassProjection.trainingRequired,
       sourceUnitId: shield.success.id,
     });
   }
@@ -118,13 +148,50 @@ export function characterSheetArmorClassState(
     bonuses,
     armorTraining: new Set(armorTraining.success),
     leftHandUse:
-      shield?.success.kind === "shield"
+      shieldFacts !== undefined
         ? "shield"
         : loadout.offHandWeapon == null
           ? "free"
           : "offWeapon",
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
   });
+}
+
+function projectSelectedEquipmentDefinition(
+  unit: UnitRecord | undefined,
+  expectedKind: "armor",
+): Result.Result<
+  | Extract<CharacterSheetEquipmentDefinitionProjection, { kind: "armor" }>
+  | undefined,
+  CharacterSheetIssue
+>;
+function projectSelectedEquipmentDefinition(
+  unit: UnitRecord | undefined,
+  expectedKind: "shield",
+): Result.Result<
+  | Extract<CharacterSheetEquipmentDefinitionProjection, { kind: "shield" }>
+  | undefined,
+  CharacterSheetIssue
+>;
+function projectSelectedEquipmentDefinition(
+  unit: UnitRecord | undefined,
+  expectedKind: CharacterSheetEquipmentDefinitionProjection["kind"],
+): Result.Result<
+  CharacterSheetEquipmentDefinitionProjection | undefined,
+  CharacterSheetIssue
+> {
+  if (unit === undefined) return Result.succeed(undefined);
+  const definition = projectCharacterSheetEquipmentDefinition(unit);
+  if (Result.isFailure(definition)) {
+    return characterSheetIssue(
+      definition.failure.map(({ message }) => message).join("; "),
+    );
+  }
+  return definition.success.kind === expectedKind
+    ? Result.succeed(definition.success)
+    : characterSheetIssue(
+        `The selected ${expectedKind} loadout root must project ${expectedKind} facts.`,
+      );
 }
 
 export function characterSheetUnarmoredArmorClassBase(
@@ -382,7 +449,7 @@ function armorClassBaseSourceForFormula(
 }
 
 function armorBaseSource(
-  armor: Extract<UnitRecord, { readonly kind: "armor" }>,
+  armor: CharacterSheetArmorDefinitionFacts,
 ): ArmorClassBaseSource {
   return {
     kind: "armor",

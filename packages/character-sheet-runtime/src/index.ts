@@ -46,6 +46,14 @@ export {
   characterSheetArmorClassState,
   characterSheetUnarmoredArmorClassBase,
 } from "./armor-class.ts";
+export { projectCharacterSheetEquipmentDefinition } from "./equipment-definition-projection.ts";
+export type {
+  CharacterSheetArmorDefinitionFacts,
+  CharacterSheetEquipmentDefinitionIssue,
+  CharacterSheetEquipmentDefinitionIssues,
+  CharacterSheetEquipmentDefinitionProjection,
+  CharacterSheetShieldDefinitionFacts,
+} from "./equipment-definition-projection.ts";
 export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetClassFeatureSelectedReferenceProjection,

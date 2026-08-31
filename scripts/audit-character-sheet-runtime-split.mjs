@@ -33,6 +33,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetAbilityCheckProficiencyBonusInput",
   "CharacterSheetArcaneRecoveryRestRouteResult",
   "CharacterSheetArcaneRecoverySlotRefund",
+  "CharacterSheetArmorDefinitionFacts",
   "CharacterSheetArmorClassBaseChoice",
   "CharacterSheetArmorClassProjection",
   "CharacterSheetArmorClassProjectionRoute",
@@ -56,6 +57,9 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetDruidWildShapeKnownFormReplacement",
   "CharacterSheetDruidWildShapeKnownForms",
   "CharacterSheetElapsedTimeResult",
+  "CharacterSheetEquipmentDefinitionIssue",
+  "CharacterSheetEquipmentDefinitionIssues",
+  "CharacterSheetEquipmentDefinitionProjection",
   "CharacterSheetFontOfMagicSlotToSorceryPointsInput",
   "CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput",
   "CharacterSheetFontOfMagicSpellSlotSource",
@@ -132,6 +136,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetShortRestInterruptionOutcome",
   "CharacterSheetShortRestStart",
   "CharacterSheetShortRestStartInput",
+  "CharacterSheetShieldDefinitionFacts",
   "CharacterSheetSpellInvocation",
   "CharacterSheetSpellInvocationInput",
   "CharacterSheetSpellInvocationKind",
@@ -230,6 +235,7 @@ const EXPECTED_EXPORTS = [
   "isFreshSpellcastingCharacterSheet",
   "parseCharacterSheet",
   "parseFreshCharacterSheet",
+  "projectCharacterSheetEquipmentDefinition",
   "replaceOrdinarySpellSlotExpenditure",
   "replaceCharacterSheetSpellSlotSourceState",
   "replaceCharacterSheetCompanion",
@@ -321,6 +327,36 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "characterSheetArmorClassProjection",
     reason:
       "Character Sheet owns Armor Class projection from build, loadout, armor training, ability scores, and Surface Unit mechanics; exposing the projection-with-route entrypoint lets route replay observe selected-reference and Armor Class qRoute events without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "projectCharacterSheetEquipmentDefinition",
+    reason:
+      "Character Sheet owns static armor and Shield admission; exporting its production-consumed projector lets terminal Cleanroom composition reuse the same source-free boundary and accumulated mechanics-path failures without another parser.",
+  },
+  {
+    name: "CharacterSheetEquipmentDefinitionProjection",
+    reason:
+      "Character Sheet owns the correlated source-free armor and Shield fact union consumed by Armor Class and terminal Cleanroom composition.",
+  },
+  {
+    name: "CharacterSheetArmorDefinitionFacts",
+    reason:
+      "Character Sheet owns correlated armor category, Armor Class formula, Strength, Stealth, donning, doffing, weight, and cost facts; exporting the type prevents downstream reconstruction.",
+  },
+  {
+    name: "CharacterSheetShieldDefinitionFacts",
+    reason:
+      "Character Sheet owns Shield training, Armor Class bonus, hand use, donning, doffing, weight, and cost facts; exporting the type prevents downstream reconstruction.",
+  },
+  {
+    name: "CharacterSheetEquipmentDefinitionIssue",
+    reason:
+      "Character Sheet owns precise static-equipment rejection with typed Unit mechanics paths; exporting the issue keeps terminal composition on the owner diagnostic vocabulary.",
+  },
+  {
+    name: "CharacterSheetEquipmentDefinitionIssues",
+    reason:
+      "Character Sheet owns non-empty accumulated static-equipment rejection; exporting the collection type makes rejected partial projections unrepresentable at composition boundaries.",
   },
   {
     name: "characterSheetUnarmoredArmorClassBase",
