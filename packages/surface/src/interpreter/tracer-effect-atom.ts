@@ -11,6 +11,7 @@ import { traceObjectAndBarrierEffectAtom } from "./tracer-effect-objects-barrier
 import { traceAttachmentAndAreaEffectAtom } from "./tracer-effect-attachments-areas.ts";
 
 import { traceCompositeAndCountermagicEffectAtom } from "./tracer-effect-composite-countermagic.ts";
+import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
 
 export function traceEffectAtom(
   e: AreaDirectEffectAtom,
@@ -18,6 +19,15 @@ export function traceEffectAtom(
   ids: IdGen,
   edges?: TraceEdge[],
 ): string | null {
+  if (isIlluminationEffectAtom(e)) {
+    return traceAttachmentAndAreaEffectAtom(
+      e,
+      nodes,
+      ids,
+      edges,
+      traceEffectAtom,
+    );
+  }
   switch (e.kind) {
     case "spell_created_held_object": {
       const id = ids("eff");
@@ -195,10 +205,6 @@ export function traceEffectAtom(
     case "remote_perception":
     case "set_speed":
     case "set_speed_ratio":
-    case "emit_bright_and_dim_illumination":
-    case "emit_bright_illumination":
-    case "emit_dim_illumination":
-    case "emit_dim_illumination_until_end_of_caster_next_turn":
     case "block_reanimation":
     case "ignite_objects":
     case "create_object":
