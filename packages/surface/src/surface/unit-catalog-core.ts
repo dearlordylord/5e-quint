@@ -29,6 +29,48 @@ export type UnitCatalog = {
   readonly requireUnit: (id: string) => UnitRecord;
 };
 
+export type AuthoredUnitReferenceResolution = {
+  readonly authoredReference: string;
+  readonly canonicalUnitId: UnitId;
+  readonly unit: UnitRecord;
+};
+
+/** Resolve an authored reference without retaining a parallel alias registry. */
+export function resolveAuthoredUnitReference(
+  authoredReference: string,
+  units: readonly UnitRecord[],
+): AuthoredUnitReferenceResolution | undefined {
+  const exact = units.find((unit) => unit.id === authoredReference);
+  if (exact !== undefined) {
+    return {
+      authoredReference,
+      canonicalUnitId: exact.id,
+      unit: exact,
+    };
+  }
+
+  const key = authoredUnitReferenceKey(authoredReference);
+  const matches = units.filter(
+    (unit) => authoredUnitReferenceKey(unit.id) === key,
+  );
+  const [match] = matches;
+  return matches.length === 1 && match !== undefined
+    ? {
+        authoredReference,
+        canonicalUnitId: match.id,
+        unit: match,
+      }
+    : undefined;
+}
+
+function authoredUnitReferenceKey(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0027\u2019]/g, "");
+}
+
 export type ClassSpellListName = SpellcastingClassRecord["className"];
 
 export type ClassSpellList = {

@@ -111,8 +111,10 @@ installer requires every path to be a structured Unit or Stat Block path and
 keeps it correlated with the matching authored-record root. Arbitrary strings,
 presentation fields, and cross-family paths are not accepted.
 
-Detailed record-family rules live next to the code that owns them. For monster
-Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
+Detailed record-family rules live next to the code that owns them. Unit and
+Stat Block catalog mechanics each have one implementation in their
+`*-catalog-core.ts` owner. The corresponding `*-catalog.ts` module is the public
+facade that adds its eager canonical corpus from `*-catalog-data.ts`.
 
 `buildStatBlockCatalog` admits only validated `SrdStatBlockCollection` values
 and returns an `SrdStatBlockCatalog`. Its lookup methods retain the SRD record
