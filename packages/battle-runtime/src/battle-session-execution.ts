@@ -15,9 +15,7 @@ import {
 } from "./battle-execution-composition.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
 import {
-  battleRuntimeSessionWithStatBlockPresentation,
   battleRuntimeSessionWithState,
-  type BattleStatBlockPresentationSource,
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
@@ -60,7 +58,7 @@ export type BattleRuntimeResolutionInput = {
   readonly session: BattleRuntimeSession;
   readonly subject: BattleSubject;
   readonly fills: BattleResolutionInput["fills"];
-  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 };
 
 type ResolvedBattleResult = Extract<
@@ -442,11 +440,10 @@ function resolveBattleRuntimeSubjectWithInterruptRoute(
       fills: input.fills,
       admission: admission.success.mechanics,
     });
-    return battleRuntimeResolutionWithFamiliarPresentation(
+    return battleRuntimeResolutionFromMechanical(
       input.session,
       result,
-      admission.success.mechanics.combatantAdmission.combatantId,
-      admission.success.presentation,
+      "ordinary",
       input,
     );
   }
@@ -598,42 +595,6 @@ export function resolveBattleRuntimeSubjectWithTableD20TestCircumstances(
             : [],
       }
     : result;
-}
-
-function battleRuntimeResolutionWithFamiliarPresentation(
-  session: BattleRuntimeSession,
-  result: BattleResolutionResult,
-  combatantId: CombatantId,
-  presentation: BattleStatBlockPresentationSource,
-  retryInput: BattleRuntimeResolutionInput,
-): BattleRuntimeResolutionResult {
-  if (result.tag !== "resolved") {
-    return battleRuntimeResolutionFromMechanical(
-      session,
-      result,
-      "ordinary",
-      retryInput,
-    );
-  }
-  const combatant = result.state.combatants.get(combatantId);
-  if (combatant === undefined) {
-    return invalidBattleRuntimeResult(
-      retryInput,
-      "invalidFill",
-      "Resolved familiar reappearance did not create its admitted combatant.",
-    );
-  }
-  const { state: _state, snapshot: _snapshot, ...outcome } = result;
-  return {
-    ...outcome,
-    envelope: battleResolvedFrontierEnvelope(result.state),
-    session: battleRuntimeSessionWithStatBlockPresentation(
-      session,
-      result.state,
-      combatantId,
-      presentation,
-    ),
-  };
 }
 
 function battleRuntimeResolutionFromMechanical(

@@ -19,7 +19,6 @@ export {
 export { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
 import {
   familiarMaxHp,
-  familiarStatBlockWithCreatureTypeOverride,
   spawnedCompanionCurrentHitPoints,
   spawnedCompanionIdentityIssueFacts,
   spawnedCompanionIdentityIssueMessage,
@@ -502,6 +501,17 @@ export function castWildCompanion(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const projectedForm = projectCompanionRuntimeStatBlock({
+    statBlock: resolvedForm.form.statBlock,
+    creatureTypeOverride: "fey",
+  });
+  if (Result.isFailure(projectedForm)) {
+    return invalidSpawnedCompanionResult(
+      spent.state,
+      "invalidFill",
+      projectedForm.failure,
+    );
+  }
   const prior = spawnedCompanionCastPrior(
     findCompanionEntryByOwner(spent.state.companions, input.casterId)
       ?.companion,
@@ -1032,6 +1042,23 @@ function hitPointsForSpawnedCompanionCast(input: {
     hitPoints,
     statBlock: input.statBlock,
   });
+}
+
+function projectCompanionRuntimeStatBlock(
+  form: SpawnedCompanionResolvedForm,
+): Result.Result<BattleStatBlockExecutionSource, string> {
+  const projection = projectAuthoredStatBlockWithCreatureType(
+    form.statBlock,
+    form.creatureTypeOverride,
+  );
+  return Result.isFailure(projection)
+    ? Result.fail(
+        battleStatBlockProjectionFailureMessage(
+          projection.failure,
+          "Spawned companion Stat Block projection failed",
+        ),
+      )
+    : Result.succeed(projection.success.runtime);
 }
 
 function reactionAvailableForSpawnedCompanionCast(input: {

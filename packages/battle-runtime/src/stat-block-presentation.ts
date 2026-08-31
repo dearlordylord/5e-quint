@@ -24,6 +24,7 @@ import type {
   StatBlockExecutionState,
   StatBlockActionProjectionShape,
   StatBlockProcedure,
+  StatBlockProcedureBindingFor,
 } from "./stat-block-execution-state.ts";
 import type {
   StatBlockActionProjectionSection,
@@ -254,7 +255,7 @@ export function statBlockProcedurePresentations(
   const issues: StatBlockProcedurePresentationJoinIssue[] = [];
   const presentations: StatBlockProcedurePresentation[] = [];
   for (const binding of admission.execution.procedureBindings) {
-    if (binding.procedure.kind === "effectOccurrenceSource") continue;
+    if (!isPresentedStatBlockProcedureBinding(binding)) continue;
     const joined = statBlockProcedurePresentationForBinding(binding, labels);
     if (Result.isFailure(joined)) {
       issues.push(joined.failure);
@@ -268,10 +269,17 @@ export function statBlockProcedurePresentations(
     : Result.fail([firstIssue, ...remainingIssues]);
 }
 
+function isPresentedStatBlockProcedureBinding(
+  binding: StatBlockExecutionState["procedureBindings"][number],
+): binding is StatBlockProcedureBindingFor<
+  Exclude<StatBlockProcedure, { readonly kind: "effectOccurrenceSource" }>
+> {
+  return binding.procedure.kind !== "effectOccurrenceSource";
+}
+
 function statBlockProcedurePresentationForBinding(
-  binding: Exclude<
-    StatBlockExecutionState["procedureBindings"][number],
-    { readonly procedure: { readonly kind: "effectOccurrenceSource" } }
+  binding: StatBlockProcedureBindingFor<
+    Exclude<StatBlockProcedure, { readonly kind: "effectOccurrenceSource" }>
   >,
   labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]

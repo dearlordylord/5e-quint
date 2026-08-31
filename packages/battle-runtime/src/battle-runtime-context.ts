@@ -269,10 +269,22 @@ function battleRuntimeContextForState(
   context: BattleRuntimeContext,
   state: import("./battle-state-execution.ts").BattleState,
 ): BattleRuntimeContext {
-  const rosterStillOwnsContext = [
-    ...context.characters.keys(),
-    ...context.statBlocks.keys(),
-  ].every((combatantId) => state.combatants.has(combatantId));
+  const retainedTemporarilyDismissedStatBlockIds = new Set(
+    [...state.companions.values()].flatMap((companion) =>
+      companion.status === "temporarilyDismissed"
+        ? [companion.reappearanceCombatantId]
+        : [],
+    ),
+  );
+  const rosterStillOwnsContext =
+    [...context.characters.keys()].every((combatantId) =>
+      state.combatants.has(combatantId),
+    ) &&
+    [...context.statBlocks.keys()].every(
+      (combatantId) =>
+        state.combatants.has(combatantId) ||
+        retainedTemporarilyDismissedStatBlockIds.has(combatantId),
+    );
   if (rosterStillOwnsContext) return context;
   const characters = new Map(
     [...context.characters].filter(([combatantId]) =>
@@ -280,8 +292,10 @@ function battleRuntimeContextForState(
     ),
   );
   const statBlocks = new Map(
-    [...context.statBlocks].filter(([combatantId]) =>
-      state.combatants.has(combatantId),
+    [...context.statBlocks].filter(
+      ([combatantId]) =>
+        state.combatants.has(combatantId) ||
+        retainedTemporarilyDismissedStatBlockIds.has(combatantId),
     ),
   );
   return new RuntimeContext(characters, statBlocks);

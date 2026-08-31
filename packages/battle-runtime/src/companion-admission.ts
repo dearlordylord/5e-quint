@@ -11,7 +11,6 @@ import {
   type BattleCompanionStoredForm,
 } from "./companion-state.ts";
 import type { AdmittedSpawnedCompanionReappearance } from "./companion-admission-state.ts";
-import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import {
   familiarStatBlockWithCreatureTypeOverride,
   spawnedCompanionIdentityIssue,
@@ -34,7 +33,6 @@ export function admitSpawnedCompanionReappearance(input: {
 }): Result.Result<
   {
     readonly mechanics: AdmittedSpawnedCompanionReappearance;
-    readonly presentation: BattleStatBlockPresentationSource;
   },
   {
     readonly tag: "companionReappearanceAdmissionIssue";
@@ -99,14 +97,6 @@ export function admitSpawnedCompanionReappearance(input: {
       },
       combatantAdmission: combatantAdmission.success,
     }),
-    presentation: {
-      displayName: statBlock.statBlock.displayName,
-      languages: statBlockLanguagePresentation(statBlock),
-      procedures: statBlockProcedurePresentations({
-        statBlock,
-        execution: combatantAdmission.success.origin.execution,
-      }),
-    },
   });
 }
 

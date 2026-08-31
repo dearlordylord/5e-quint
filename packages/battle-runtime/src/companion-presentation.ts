@@ -12,7 +12,11 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type {
+  SpawnedCompanionCreatureTypeOverride,
+  SpawnedCompanionResolvedForm,
+} from "@dnd/surface/surface/find-familiar-forms";
 import {
   admitCompanionToBattle,
   castResolvedSpawnedCompanion,
@@ -23,9 +27,9 @@ import { resolveSpawnedCompanionForm } from "@dnd/surface/surface/find-familiar-
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "./stat-block-presentation.ts";
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlockWithCreatureType,
+} from "./stat-block-authored-projection.ts";
 
 type WithoutBattleState<Input> = Input extends unknown
   ? Omit<Input, "state">
@@ -52,6 +56,7 @@ export function admitCompanionToBattleRuntime(
           combatantId: input.companionId,
           statBlockId: input.manifestation.storedForm.resolvedStatBlockId,
           catalog: input.catalog,
+          creatureTypeOverride: input.manifestation.creatureTypeOverride,
         })
       : Result.succeed(undefined);
   /* v8 ignore next -- @preserve -- Successful embodied admission proves the same catalog entry and Stat Block combatant consumed by presentation projection. */
@@ -179,7 +184,7 @@ export function castRetainedSpawnedCompanionRuntime(
   const presentation = companionPresentationFromSource({
     state: result.state,
     combatantId: input.familiarId,
-    statBlock: resolvedForm.form.statBlock,
+    resolvedForm: resolvedForm.form,
   });
   /* v8 ignore start -- @preserve -- A resolved familiar cast just admitted this combatant from the same resolved Stat Block source, so presentation cannot observe a missing/non-Stat-Block combatant. */
   if (Result.isFailure(presentation)) {
@@ -221,7 +226,8 @@ function companionPresentationFromCatalog(input: {
   readonly state: import("./battle-state-execution.ts").BattleState;
   readonly combatantId: CombatantId;
   readonly statBlockId: import("@dnd/shared/game-facts").StatBlockId;
-  readonly catalog: import("./battle-state-execution.ts").BattleStatBlockExecutionCatalog;
+  readonly catalog: StatBlockCatalog;
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
 }): Result.Result<
   | {
       readonly combatantId: CombatantId;
@@ -246,14 +252,17 @@ function companionPresentationFromCatalog(input: {
   return companionPresentationFromSource({
     state: input.state,
     combatantId: input.combatantId,
-    statBlock: statBlock.value,
+    resolvedForm: {
+      statBlock: statBlock.value,
+      creatureTypeOverride: input.creatureTypeOverride,
+    },
   });
 }
 
 function companionPresentationFromSource(input: {
   readonly state: import("./battle-state-execution.ts").BattleState;
   readonly combatantId: CombatantId;
-  readonly statBlock: BattleStatBlockExecutionSource;
+  readonly resolvedForm: SpawnedCompanionResolvedForm;
 }): Result.Result<
   {
     readonly combatantId: CombatantId;
@@ -261,6 +270,19 @@ function companionPresentationFromSource(input: {
   },
   BattleStateInitIssue
 > {
+  const projection = projectAuthoredStatBlockWithCreatureType(
+    input.resolvedForm.statBlock,
+    input.resolvedForm.creatureTypeOverride,
+  );
+  if (Result.isFailure(projection)) {
+    return Result.fail({
+      tag: "battleStateInitIssue",
+      message: battleStatBlockProjectionFailureMessage(
+        projection.failure,
+        "Companion presentation Stat Block projection failed",
+      ),
+    });
+  }
   const combatant = input.state.combatants.get(input.combatantId);
   /* v8 ignore start -- @preserve -- Both admission and recast call this projection only after successfully admitting the familiar as a Stat Block combatant. */
   if (combatant?.origin.kind !== "statBlock") {
@@ -268,7 +290,7 @@ function companionPresentationFromSource(input: {
       tag: "battleStateInitIssue",
       kind: "companionPresentationCombatantMissing",
       companionCombatantId: input.combatantId,
-      statBlockId: input.statBlock.id,
+      statBlockId: input.resolvedForm.statBlock.id,
       message:
         "Committed companion presentation requires its Stat Block combatant.",
     });
@@ -276,13 +298,6 @@ function companionPresentationFromSource(input: {
   /* v8 ignore stop -- @preserve */
   return Result.succeed({
     combatantId: input.combatantId,
-    source: {
-      displayName: input.statBlock.statBlock.displayName,
-      languages: statBlockLanguagePresentation(input.statBlock),
-      procedures: statBlockProcedurePresentations({
-        statBlock: input.statBlock,
-        execution: combatant.origin.execution,
-      }),
-    },
+    source: projection.success.presentation,
   });
 }
