@@ -13,16 +13,16 @@ This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-31
 - Current frontier: `SR-04`
-- Active work: none; the next landing unit may claim #464, #477, or #471 from
-  the accepted `SR-03` revision
-- Active owner: none
+- Active work: #464 Character Definition static projection
+- Active owner: Codex orchestrator
 - Last completed checkpoint: `SR-03` typed weapon-mastery references, #476
 - Last accepted milestone SHA: `1520c58f3`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: none
-- Next action: claim the first `SR-04` landing unit from `1520c58f3`; #464,
-  #477, and #471 are the independent train heads
+- Active landing unit: `integration/cleanroom-sr-04a` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04a`
+- Next action: audit existing Character Definition readers and production
+  consumers for #464 from lease base `a5b66bf8b`
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -136,10 +136,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
-| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
-
-_No active landing-unit write lease._
+| Checkpoint/unit | Ticket/slice                                | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                      | State  |
+| --------------- | ------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| `SR-04A`        | #464 Character Definition static projection | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04a`; `integration/cleanroom-sr-04a` | `a5b66bf8b` | Surface Character Definition projection plus character-creation discovery/finalization consumers, focused verification, and reviewer convergence | Active |
 
 ## Landing discipline
 
