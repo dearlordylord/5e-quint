@@ -1658,6 +1658,189 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     ]);
   });
 
+  test("accumulates every nonempty subset of separate Score and Save cell failures in domain order", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name, anchor }) =>
+        name === "Aboleth" && anchor.sourcePath.endsWith("Monsters-A-B.md"),
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutations = {
+      score0: {
+        prefix: "| **Score**",
+        cellIndex: 0,
+        field: "abilityScores.0",
+        evidence: "bad-score-str",
+      },
+      score1: {
+        prefix: "| **Score**",
+        cellIndex: 1,
+        field: "abilityScores.1",
+        evidence: "bad-score-dex",
+      },
+      save0: {
+        prefix: "| **Save**",
+        cellIndex: 0,
+        field: "savingThrowModifiers.0",
+        evidence: "bad-save-str",
+      },
+      save1: {
+        prefix: "| **Save**",
+        cellIndex: 1,
+        field: "savingThrowModifiers.1",
+        evidence: "bad-save-dex",
+      },
+    } as const;
+    type MutationKey = keyof typeof mutations;
+    const domainOrder = [
+      "score0",
+      "score1",
+      "save0",
+      "save1",
+    ] as const satisfies readonly MutationKey[];
+
+    fc.assert(
+      fc.property(
+        fc.uniqueArray(fc.constantFrom(...domainOrder), {
+          minLength: 1,
+          maxLength: domainOrder.length,
+        }),
+        (selected) => {
+          const selectedSet = new Set(selected);
+          const mutatedSource = canonicalSource
+            .split(/\r?\n/)
+            .map((line, lineIndex) => {
+              if (
+                lineIndex + 1 < occurrence.anchor.lineStart ||
+                lineIndex + 1 > occurrence.anchor.lineEnd
+              ) {
+                return line;
+              }
+              const mutationsForLine = domainOrder.filter(
+                (key) =>
+                  selectedSet.has(key) &&
+                  line.startsWith(mutations[key].prefix),
+              );
+              if (mutationsForLine.length === 0) return line;
+              const cells = line.split("|");
+              for (const key of mutationsForLine) {
+                cells[mutations[key].cellIndex + 2] =
+                  ` ${mutations[key].evidence} `;
+              }
+              return cells.join("|");
+            })
+            .join("\n");
+          const result = projectRawStatBlock(
+            {
+              sourcePath: occurrence.anchor.sourcePath,
+              contents: mutatedSource,
+            },
+            occurrence,
+            equipmentSource,
+          );
+          expect(result.tag).toBe("failed");
+          if (
+            result.tag !== "failed" ||
+            result.failure.tag !== "projection-issues"
+          ) {
+            return;
+          }
+          expect(
+            result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+              kind,
+              field: anchor.field,
+              evidence: "evidence" in issue ? issue.evidence : undefined,
+            })),
+          ).toEqual(
+            domainOrder
+              .filter((key) => selectedSet.has(key))
+              .map((key) => ({
+                kind: "malformed-evidence",
+                field: mutations[key].field,
+                evidence: mutations[key].evidence,
+              })),
+          );
+        },
+      ),
+      { numRuns: 50 },
+    );
+  });
+
+  test("accumulates every malformed combined ability cell with its original evidence", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Earth Elemental",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const evidence = ["bad", "worse"] as const;
+
+    fc.assert(
+      fc.property(
+        fc.uniqueArray(fc.constantFrom(0, 1), {
+          minLength: 1,
+          maxLength: 2,
+        }),
+        (selected) => {
+          const selectedSet = new Set(selected);
+          const mutatedSource = canonicalSource
+            .split(/\r?\n/)
+            .map((line, lineIndex) => {
+              if (
+                lineIndex + 1 < occurrence.anchor.lineStart ||
+                lineIndex + 1 > occurrence.anchor.lineEnd ||
+                !line.startsWith("| 20 (+5)")
+              ) {
+                return line;
+              }
+              const cells = line.split("|");
+              for (const index of selectedSet) {
+                cells[index + 1] = ` ${evidence[index]} `;
+              }
+              return cells.join("|");
+            })
+            .join("\n");
+          const result = projectRawStatBlock(
+            {
+              sourcePath: occurrence.anchor.sourcePath,
+              contents: mutatedSource,
+            },
+            occurrence,
+            equipmentSource,
+          );
+          expect(result.tag).toBe("failed");
+          if (
+            result.tag !== "failed" ||
+            result.failure.tag !== "projection-issues"
+          ) {
+            return;
+          }
+          expect(
+            result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+              kind,
+              field: anchor.field,
+              evidence: "evidence" in issue ? issue.evidence : undefined,
+            })),
+          ).toEqual(
+            [0, 1]
+              .filter((index) => selectedSet.has(index))
+              .map((index) => ({
+                kind: "malformed-evidence",
+                field: `abilityScores.${index}`,
+                evidence: evidence[index],
+              })),
+          );
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
   test("reports a missing resistance option list once without an empty-options cascade", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name }) => name === "Half-Dragon",
@@ -1717,6 +1900,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       }
       const mutatedProcedure: typeof procedure = {
         ...procedure,
+        area: { kind: "sphere", radiusFeet: 20 },
         onFail: {
           kind: "conditional_bonus_damage",
           when: { kind: "attack_roll_had_advantage" },
@@ -1766,6 +1950,125 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         kind: "unsupported-evidence",
         field: "procedures.Acid Spray.onSuccess",
         evidence: "damage",
+      },
+      {
+        kind: "unsupported-evidence",
+        field: "procedures.Acid Spray.area",
+        evidence: "sphere",
+      },
+    ]);
+  });
+
+  test("continues independent procedure validation after a malformed general fact", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) => {
+        if (
+          index + 1 < occurrence.anchor.lineStart ||
+          index + 1 > occurrence.anchor.lineEnd
+        ) {
+          return line;
+        }
+        if (line.startsWith("**Speed**")) return "**Speed** malformed";
+        return line.startsWith("**Bite.") ? line.replace("2d10", "2d7") : line;
+      })
+      .join("\n");
+
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor }) => ({
+        kind,
+        field: anchor.field,
+      })),
+    ).toEqual([
+      { kind: "malformed-evidence", field: "speeds.0" },
+      {
+        kind: "malformed-evidence",
+        field: "procedures.Bite.onHit.0.dieSize",
+      },
+    ]);
+  });
+
+  test("continues authored on-hit validation after unsupported attack ability evidence", () => {
+    const allosaurus = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(allosaurus).toBeDefined();
+    if (allosaurus === undefined) return;
+    const actions = allosaurus.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const [firstAction, ...remainingActions] = actions;
+    const mutateAction = (
+      action: (typeof actions)[number],
+    ): (typeof actions)[number] => {
+      if (action.kind !== "executable") return action;
+      const procedure = action.procedure;
+      if (procedure.kind !== "attack_roll" || procedure.name !== "Bite") {
+        return action;
+      }
+      const mutatedProcedure: typeof procedure = {
+        ...procedure,
+        attackAbility: "int",
+        onHit: [
+          {
+            kind: "conditional_bonus_damage",
+            damageType: "piercing",
+            amount: { kind: "fixed", static: 1 },
+            when: { kind: "target_creature_type", types: ["beast"] },
+          },
+        ],
+      };
+      return { ...action, procedure: mutatedProcedure };
+    };
+    const mutated = {
+      ...allosaurus,
+      statBlock: {
+        ...allosaurus.statBlock,
+        actions: [
+          mutateAction(firstAction),
+          ...remainingActions.map(mutateAction),
+        ] as const,
+      },
+    };
+
+    const result = projectAuthoredStatBlock(mutated, equipmentSource);
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+        kind,
+        field: anchor.field,
+        evidence: "evidence" in issue ? issue.evidence : undefined,
+      })),
+    ).toEqual([
+      {
+        kind: "unsupported-evidence",
+        field: "procedures.Bite.attackAbility",
+        evidence: "int",
+      },
+      {
+        kind: "unsupported-evidence",
+        field: "procedures.Bite.onHit.0.when",
+        evidence: "target_creature_type",
       },
     ]);
   });

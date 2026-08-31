@@ -975,6 +975,7 @@ const parseSpeeds = (
   if (speedLine === undefined) {
     return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
   }
+  const speedItemIssueCount = issueContext.issues.length;
   const speeds = speedLine
     .replace("**Speed**", "")
     .trim()
@@ -1101,6 +1102,9 @@ const parseSpeeds = (
     });
   const [first, ...rest] = speeds;
   if (first === undefined) {
+    if (issueContext.issues.length > speedItemIssueCount) {
+      return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
+    }
     return missingEvidence(issueContext, "speeds", `${contextLabel} Speed`, [
       { kind: "walk", feet: { kind: "literal", value: 1 } },
     ]);
@@ -1114,25 +1118,32 @@ const parseAbilityRow = (
   label: "Score" | "Save",
   contextLabel: string,
 ): readonly number[] => {
-  const field = `abilityScores.${label.toLowerCase()}`;
+  const field = label === "Score" ? "abilityScores" : "savingThrowModifiers";
   const row = assess(issueContext, () =>
     requireLine(issueContext, lines, `| **${label}**`, field),
   );
   if (row === undefined) return [0, 0, 0, 0, 0, 0];
-  const values = row
+  const cells = row
     .split("|")
     .slice(2, 8)
-    .map((value) => signedNumber(value.trim()));
-  if (values.length !== ABILITY_NAMES.length) {
+    .map((value) => value.trim());
+  if (cells.length !== ABILITY_NAMES.length) {
     return malformedEvidence(
       issueContext,
       field,
-      JSON.stringify(values),
+      JSON.stringify(cells),
       `six ${contextLabel} ${label} values`,
       [0, 0, 0, 0, 0, 0],
     );
   }
-  return values;
+  return cells.map((cell, index) =>
+    parseAbilityMatrixNumber(
+      issueContext,
+      cell,
+      label === "Score" ? /^\d+$/ : /^[+−-]?\d+$/,
+      `${field}.${index}`,
+    ),
+  );
 };
 
 const abilityRecord = (
@@ -1372,20 +1383,32 @@ const parseAbilityScores = (
       "abilityScores",
     );
   }
-  const scoreCells = lines
-    .map((line) =>
-      line
-        .split("|")
-        .slice(1, -1)
-        .map((cell) => cell.trim()),
-    )
-    .find(
-      (cells) =>
-        cells.length === ABILITY_NAMES.length &&
-        cells.every((cell) =>
-          /^\d+ \([+−-]?\d+\)(?: Save [ +−-]?\d+)?$/.test(cell),
-        ),
+  const abilityHeaderIndex = lines.findIndex((line) => {
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim().toLowerCase());
+    return (
+      cells.length === ABILITY_NAMES.length &&
+      cells.every((cell, index) => cell === ABILITY_NAMES[index])
     );
+  });
+  const scoreCells =
+    abilityHeaderIndex === -1
+      ? undefined
+      : lines
+          .slice(abilityHeaderIndex + 1)
+          .map((line) =>
+            line
+              .split("|")
+              .slice(1, -1)
+              .map((cell) => cell.trim()),
+          )
+          .find(
+            (cells) =>
+              cells.length === ABILITY_NAMES.length &&
+              !cells.every((cell) => /^[-:]+$/.test(cell)),
+          );
   if (scoreCells === undefined) {
     return missingEvidence(
       issueContext,
@@ -1396,9 +1419,17 @@ const parseAbilityScores = (
   }
   return abilityRecord(
     issueContext,
-    scoreCells.map((cell) =>
-      Number(requireMatch(issueContext, cell, /^(\d+)/, "abilityScores")[1]),
-    ),
+    scoreCells.map((cell, index) => {
+      const score = assess(issueContext, () =>
+        requireMatch(
+          issueContext,
+          cell,
+          /^(\d+) \([+−-]?\d+\)(?: Save [ +−-]?\d+)?$/,
+          `abilityScores.${index}`,
+        ),
+      );
+      return Number(score?.[1] ?? 0);
+    }),
     "abilityScores",
   );
 };
@@ -2052,7 +2083,7 @@ const parseRawGeneralFacts = (
   issueContext: ProjectionIssueContext,
   name: string,
   lines: readonly string[],
-): ScopedGeneralFacts | undefined => {
+): ScopedGeneralFacts => {
   const metadata = assess(issueContext, () =>
     parseMetadata(issueContext, lines, name),
   );
@@ -2115,8 +2146,11 @@ const parseRawGeneralFacts = (
   const abilityScores = assess(issueContext, () =>
     parseAbilityScores(issueContext, lines, name),
   );
+  const usesSeparateAbilityRows = lines.some((line) =>
+    line.startsWith("| **Save**"),
+  );
   const savingThrowModifiers =
-    abilityScores === undefined
+    abilityScores === undefined && !usesSeparateAbilityRows
       ? undefined
       : assess(issueContext, () =>
           parseSavingThrowModifiers(issueContext, lines, name),
@@ -2138,45 +2172,41 @@ const parseRawGeneralFacts = (
   const communication = assess(issueContext, () =>
     parseCommunication(issueContext, lines, name),
   );
-  if (
-    metadata === undefined ||
-    speeds === undefined ||
-    abilityScores === undefined ||
-    savingThrowModifiers === undefined ||
-    skillModifiers === undefined ||
-    vulnerabilities === undefined ||
-    resistances === undefined ||
-    immunities === undefined ||
-    senses === undefined ||
-    gear === undefined ||
-    communication === undefined
-  ) {
-    return undefined;
-  }
-
   return {
     challengeRating,
-    ...metadata,
+    ...(metadata ?? {
+      sizeAndSwarm: { size: "medium" },
+      creatureType: "beast",
+      creatureTypeTags: [],
+      alignment: "unaligned",
+    }),
     ac: {
       value: { kind: "literal", value: Number(ac[1]) },
       ...(ac[2] === undefined ? {} : { annotations: [ac[2]] }),
     },
     hp: { kind: "literal", value: Number(hp[1]) },
-    speeds,
-    abilityScores,
+    speeds: speeds ?? [{ kind: "walk", feet: { kind: "literal", value: 1 } }],
+    abilityScores: abilityScores ?? {
+      str: 10,
+      dex: 10,
+      con: 10,
+      int: 10,
+      wis: 10,
+      cha: 10,
+    },
     initiative: {
       modifier: signedNumber(initiative[1] ?? ""),
       score: Number(initiative[2]),
     },
-    savingThrowModifiers,
+    savingThrowModifiers: savingThrowModifiers ?? [],
     saveProficiencies: [],
-    skillModifiers,
-    vulnerabilities,
-    resistances,
-    immunities,
-    ...senses,
-    gear,
-    communication,
+    skillModifiers: skillModifiers ?? [],
+    vulnerabilities: vulnerabilities ?? { kind: "none" },
+    resistances: resistances ?? { kind: "none" },
+    immunities: immunities ?? { kind: "none" },
+    ...(senses ?? { senses: [], passivePerception: 1 }),
+    gear: gear ?? [],
+    communication: communication ?? { kind: "none" },
   };
 };
 
@@ -3230,22 +3260,19 @@ const projectRawStatBlockUnsafe = (
     lines,
   );
   const spellcasting = uniqueSpellcastingFacts(issueContext, entries);
-  const parsedProcedures =
-    generalFacts === undefined
-      ? []
-      : entries.flatMap((entry) => {
-          const procedure = assess(issueContext, () =>
-            parseRawProcedure(
-              issueContext,
-              entry,
-              generalFacts,
-              ammunitionByWeapon,
-              spellcasting?.ability,
-              spellcasting?.spellAttackBonus,
-            ),
-          );
-          return procedure === undefined ? [] : [procedure];
-        });
+  const parsedProcedures = entries.flatMap((entry) => {
+    const procedure = assess(issueContext, () =>
+      parseRawProcedure(
+        issueContext,
+        entry,
+        generalFacts,
+        ammunitionByWeapon,
+        spellcasting?.ability,
+        spellcasting?.spellAttackBonus,
+      ),
+    );
+    return procedure === undefined ? [] : [procedure];
+  });
   const structurallyPresentNames = new Set(
     entries
       .filter((entry) => procedureSection(entry.section) !== undefined)
@@ -3296,8 +3323,6 @@ const projectRawStatBlockUnsafe = (
     parseLegendaryActionUses(issueContext, lines),
   );
   const resources = procedureResourceLimits(procedures);
-
-  if (generalFacts === undefined) return undefined;
 
   return {
     generalFacts: {
@@ -3605,7 +3630,6 @@ const projectExecutableProcedure = (
         }
         return evidence;
       })();
-      if (attackAbility === undefined) return undefined;
       const effectIssueCount = issueContext.issues.length;
       const projectedEffects = attack.onHit.flatMap((effect, index) => {
         const projected = assess(issueContext, () =>
@@ -3628,6 +3652,7 @@ const projectExecutableProcedure = (
               undefined,
             );
       }
+      if (attackAbility === undefined) return undefined;
       const onHit: ReadonlyNonEmptyArray<AttackEffectProjection> = [
         firstEffect,
         ...remainingEffects,
@@ -3704,60 +3729,60 @@ const projectExecutableProcedure = (
         ),
         Match.exhaustive,
       );
-      if (onFail === undefined || onSuccess === undefined) return undefined;
-      if (!("area" in save)) {
-        return unsupportedEvidence(
+      const projectedArea =
+        "area" in save
+          ? Match.value(save.area).pipe(
+              Match.when({ kind: "line" }, (line) => ({
+                kind: "line" as const,
+                lengthFeet: line.lengthFeet,
+                widthFeet: line.widthFeet,
+              })),
+              Match.when({ kind: "cone" }, (cone) => ({
+                kind: "cone" as const,
+                lengthFeet: cone.lengthFeet,
+              })),
+              Match.when({ kind: "sphere" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "circle" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "sphere_cluster" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "cube" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "cube_cluster" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "cylinder" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "emanation" }, () => {
+                return undefined;
+              }),
+              Match.when({ kind: "wall_volume" }, () => {
+                return undefined;
+              }),
+              Match.exhaustive,
+            )
+          : undefined;
+      const area =
+        projectedArea ??
+        unsupportedEvidence(
           issueContext,
           `procedures.${save.name}.area`,
-          "absent",
+          "area" in save ? save.area.kind : "absent",
           "line or cone",
           undefined,
         );
-      }
-      const area = Match.value(save.area).pipe(
-        Match.when({ kind: "line" }, (line) => ({
-          kind: "line" as const,
-          lengthFeet: line.lengthFeet,
-          widthFeet: line.widthFeet,
-        })),
-        Match.when({ kind: "cone" }, (cone) => ({
-          kind: "cone" as const,
-          lengthFeet: cone.lengthFeet,
-        })),
-        Match.when({ kind: "sphere" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "circle" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "sphere_cluster" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "cube" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "cube_cluster" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "cylinder" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "emanation" }, () => {
-          return undefined;
-        }),
-        Match.when({ kind: "wall_volume" }, () => {
-          return undefined;
-        }),
-        Match.exhaustive,
-      );
-      if (area === undefined) {
-        return unsupportedEvidence(
-          issueContext,
-          `procedures.${save.name}.area`,
-          save.area.kind,
-          "line or cone",
-          undefined,
-        );
+      if (
+        onFail === undefined ||
+        onSuccess === undefined ||
+        area === undefined
+      ) {
+        return undefined;
       }
       return {
         section,
