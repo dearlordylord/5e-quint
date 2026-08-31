@@ -78,10 +78,8 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/unit-catalog-core";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import type {
   DragonbornSpeciesRecord,
-  SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
@@ -90,6 +88,11 @@ import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
+import { characterSheetSpellHasRitualTag } from "./spell-profile-shape.ts";
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
 import { parseHp } from "./hit-points.ts";
@@ -1055,11 +1058,11 @@ function storedBookOfShadowsSelectionIssue(
       "Character Build Book of Shadows Ritual spells must be level-1 spells from class spell lists.",
     );
   }
-  const cantrips = spellRecordsForIds(unitLibrary, access.cantrips);
+  const cantrips = spellSourcesForIds(unitLibrary, access.cantrips);
   if (Result.isFailure(cantrips)) {
     return Result.fail(cantrips.failure);
   }
-  const ritualSpells = spellRecordsForIds(unitLibrary, access.ritualSpells);
+  const ritualSpells = spellSourcesForIds(unitLibrary, access.ritualSpells);
   if (Result.isFailure(ritualSpells)) {
     return Result.fail(ritualSpells.failure);
   }
@@ -1071,7 +1074,7 @@ function storedBookOfShadowsSelectionIssue(
   if (
     ritualSpells.success.some(
       (spell) =>
-        spell.mechanics.level !== 1 || !spellHasTopLevelRitualTag(spell),
+        spell.mechanics.level !== 1 || !characterSheetSpellHasRitualTag(spell),
     )
   ) {
     return characterSheetIssue(
@@ -1113,30 +1116,27 @@ function hasSelectedWarlockEldritchInvocation(
   });
 }
 
-function spellRecordsForIds(
+function spellSourcesForIds(
   unitLibrary: UnitCatalog,
   spellIds: readonly UnitRecord["id"][],
-): Result.Result<readonly SpellRecord[], CharacterSheetIssue> {
-  const spells: SpellRecord[] = [];
+): Result.Result<readonly CharacterSheetSpellSource[], CharacterSheetIssue> {
+  const spells: CharacterSheetSpellSource[] = [];
   for (const spellId of spellIds) {
     const spell = getRequiredUnit(unitLibrary, spellId);
     /* v8 ignore start -- @preserve -- Malformed stored build: an admitted Book of Shadows selection references a missing or non-spell Unit. */
     if (Result.isFailure(spell)) {
       return Result.fail(spell.failure);
     }
-    if (!isSpellRecord(spell.success)) {
+    const projection = projectCharacterSheetSpellSource(spell.success);
+    if (Option.isNone(projection)) {
       return characterSheetIssue(
         `Character Build Book of Shadows selection must reference Spell Definitions: ${spellId}`,
       );
     }
     /* v8 ignore stop -- @preserve */
-    spells.push(spell.success);
+    spells.push(projection.value);
   }
   return Result.succeed(spells);
-}
-
-function isSpellRecord(unit: UnitRecord): unit is SpellRecord {
-  return unit.kind === "spell";
 }
 
 function parseStoredOriginLanguages(

@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -95,7 +95,7 @@ function modifyMemoryEditIssue(
 }
 
 function modifyMemoryInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly target: CharacterSheetModifyMemoryTarget;
   readonly memoryEdit: CharacterSheetModifyMemoryMemoryEdit;
 }): Result.Result<CharacterSheetModifyMemoryInvocation, CharacterSheetIssue> {
@@ -113,7 +113,7 @@ function modifyMemoryInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== MODIFY_MEMORY_DURATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
+    spell.mechanics.components.material.kind !== "absent"
   ) {
     return characterSheetIssue(
       "Modify Memory requires the supported level-5 Enchantment memory-edit profile.",
@@ -155,7 +155,7 @@ function modifyMemoryInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "modify_memory",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

@@ -3,8 +3,8 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   LEGEND_LORE_MATERIAL_COMPONENTS,
@@ -47,7 +47,7 @@ export function castLegendLore(input: {
 }
 
 function legendLoreInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly subject: CharacterSheetLegendLoreSubject;
   readonly casting: CharacterSheetLegendLoreCasting;
 }): Result.Result<CharacterSheetLegendLoreInvocation, CharacterSheetIssue> {
@@ -62,8 +62,9 @@ function legendLoreInvocationFromSpell(input: {
     spell.mechanics.duration.kind !== "instantaneous" ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !== 450
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !== 450
   ) {
     return characterSheetIssue(
       "Legend Lore requires the supported self-range level-5 Divination profile.",
@@ -80,7 +81,7 @@ function legendLoreInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "legendLore",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

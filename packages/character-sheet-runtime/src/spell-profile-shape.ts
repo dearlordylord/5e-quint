@@ -1,4 +1,26 @@
-import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
+import type { ActivationPhase } from "@dnd/surface/surface/types";
+
+import type {
+  CharacterSheetSpellFacts,
+  CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
+
+export function characterSheetTopLevelSpellCastingTime(
+  mechanics: CharacterSheetSpellFacts["mechanics"],
+) {
+  return "castingTime" in mechanics ? mechanics.castingTime : null;
+}
+
+export function characterSheetSpellHasRitualTag(
+  spell: CharacterSheetSpellSource,
+): boolean {
+  const castingTime = characterSheetTopLevelSpellCastingTime(spell.mechanics);
+  return (
+    castingTime !== null &&
+    "ritual" in castingTime &&
+    castingTime.ritual === true
+  );
+}
 
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 type HoleAttachment = Extract<
@@ -6,7 +28,9 @@ type HoleAttachment = Extract<
   { readonly kind: "hole" }
 >;
 
-export function hasSingleDirectSelfNoEffectPhase(spell: SpellRecord): boolean {
+export function hasSingleDirectSelfNoEffectPhase(
+  spell: CharacterSheetSpellFacts,
+): boolean {
   return (
     spell.mechanics.family === "activation" &&
     spell.mechanics.phases.some(
@@ -21,7 +45,7 @@ export function hasSingleDirectSelfNoEffectPhase(spell: SpellRecord): boolean {
 }
 
 export function hasWisdomSaveGatePhase(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellFacts,
   holeId: string,
   supports: (phase: SaveGatePhase, attachment: HoleAttachment) => boolean,
 ): boolean {

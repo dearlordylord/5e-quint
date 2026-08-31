@@ -7,8 +7,8 @@ import {
 } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   SCRYING_MATERIAL_COMPONENTS,
@@ -98,7 +98,7 @@ function scryingTargetIssue(
 }
 
 function scryingInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetScryingCasting;
   readonly target: CharacterSheetScryingTarget;
 }): Result.Result<CharacterSheetScryingInvocation, CharacterSheetIssue> {
@@ -115,8 +115,9 @@ function scryingInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== SCRYING_CONCENTRATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !==
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !==
       SCRYING_MATERIAL_COMPONENTS.focusCostGpMinimum
   ) {
     return characterSheetIssue(
@@ -168,7 +169,7 @@ function scryingInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "scrying",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

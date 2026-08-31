@@ -14,7 +14,6 @@ import {
 import type {
   DamageType,
   DruidCircleLandChoice,
-  SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
@@ -23,6 +22,7 @@ import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import {
   characterSheetIssue,
   type CharacterSheet,
@@ -228,7 +228,7 @@ export function removeSelfRestorationConditionAtTurnEnd(input: {
 export function empoweredEvocationDamageRollModifier(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spellSourceUnitId: UnitRecord["id"];
 }): Result.Result<CharacterSheetEmpoweredEvocation, CharacterSheetIssue> {
   const featureOwned = ownedClassFeature(
@@ -265,10 +265,7 @@ export function empoweredEvocationDamageRollModifier(input: {
       "Empowered Evocation requires Wizard Spell Access.",
     );
   }
-  if (
-    !("school" in input.spell.mechanics) ||
-    input.spell.mechanics.school !== mechanics.school
-  ) {
+  if (input.spell.mechanics.school !== mechanics.school) {
     return characterSheetIssue(
       "Empowered Evocation requires an Evocation Spell Definition.",
     );
@@ -296,7 +293,7 @@ export function empoweredEvocationDamageRollModifier(input: {
     ...spellSource.preparedSpells,
   ];
   /* v8 ignore start -- @preserve -- A spell passed to this narrowed operation must already belong to the selected Wizard spell-access source. */
-  if (!spellAccess.includes(input.spell.id)) {
+  if (!spellAccess.includes(input.spell.unitId)) {
     return characterSheetIssue(
       "Empowered Evocation requires the spell to be present in Wizard Spell Access.",
     );

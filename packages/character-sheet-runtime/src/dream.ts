@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -101,7 +101,7 @@ function dreamModeIssue(mode: CharacterSheetDreamMode): string | null {
 }
 
 function dreamInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetDreamCasting;
   readonly target: CharacterSheetDreamTarget;
   readonly messenger: CharacterSheetDreamMessenger;
@@ -120,7 +120,7 @@ function dreamInvocationFromSpell(input: {
     spell.mechanics.duration.value.amount !== DREAM_DURATION_HOURS ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "a handful of sand"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Dream requires the supported level-5 Illusion session profile.",
@@ -151,7 +151,7 @@ function dreamInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "dream",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

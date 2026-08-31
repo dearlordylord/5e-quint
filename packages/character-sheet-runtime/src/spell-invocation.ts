@@ -7,17 +7,18 @@ import {
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import {
-  spellHasTopLevelRitualTag,
-  type SpellRecord,
-  type UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
 import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
+import { characterSheetSpellHasRitualTag } from "./spell-profile-shape.ts";
 import {
   RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
   characterSheetIssue,
@@ -90,16 +91,17 @@ export function characterSheetSpellbookRitualAccessesForBuild(input: {
       /* v8 ignore next -- @preserve -- A spellbook id must resolve in the same Unit catalog used to parse the build. */
       if (Result.isFailure(spell)) return Result.fail(spell.failure);
       /* v8 ignore start -- @preserve -- Spellbook ids are parsed against the same Unit catalog and must resolve to Spell records. */
-      if (!isSpellRecord(spell.success)) {
+      const spellSource = projectCharacterSheetSpellSource(spell.success);
+      if (Option.isNone(spellSource)) {
         return characterSheetIssue(
           "Spellbook Ritual Access requires Spell records in the spellbook.",
         );
       }
       /* v8 ignore stop -- @preserve */
-      if (!spellHasLeveledRitualTag(spell.success)) continue;
+      if (!spellHasLeveledRitualTag(spellSource.value)) continue;
       accesses.push({
         tag: "spellbookRitual",
-        spell: spell.success,
+        spell: spellSource.value,
         spellcastingSourceUnitId: source.sourceUnitId,
         featureUnitId: feature.success.unitId,
       });
@@ -159,7 +161,7 @@ function characterSheetBookOfShadowsRitualInvocation(
       "Book of Shadows Ritual requires the book on your person.",
     );
   }
-  const spell = requiredRitualSpell(input, spellHasTopLevelRitualTag);
+  const spell = requiredRitualSpell(input, characterSheetSpellHasRitualTag);
   /* v8 ignore next -- @preserve -- Ritual spell rejection is malformed Book of Shadows spell/catalog input. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   return Result.succeed({
@@ -187,7 +189,7 @@ function characterSheetSpellbookRitualInvocation(
   if (Result.isFailure(access)) return Result.fail(access.failure);
   return Result.succeed({
     tag: "spellbookRitual",
-    spellId: access.success.spell.id,
+    spellId: access.success.spell.unitId,
     spellLevel: access.success.spell.mechanics.level,
     spellcastingSourceUnitId: access.success.spellcastingSourceUnitId,
     featureUnitId: access.success.featureUnitId,
@@ -246,18 +248,19 @@ function requiredRitualSpell(
     CharacterSheetSpellbookRitualAccessInput,
     "spellId" | "unitLibrary"
   >,
-  hasRequiredRitualTag: (spell: SpellRecord) => boolean,
-): Result.Result<SpellRecord, CharacterSheetIssue> {
+  hasRequiredRitualTag: (spell: CharacterSheetSpellSource) => boolean,
+): Result.Result<CharacterSheetSpellSource, CharacterSheetIssue> {
   const spell = getRequiredUnit(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- A selected ritual spell id must resolve in the same Unit catalog. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   /* v8 ignore start -- @preserve -- A ritual spell id resolving to a non-Spell Unit is a build/catalog correlation failure. */
-  if (!isSpellRecord(spell.success)) {
+  const spellSource = projectCharacterSheetSpellSource(spell.success);
+  if (Option.isNone(spellSource)) {
     return characterSheetIssue("Ritual spell invocation requires a Spell.");
   }
   /* v8 ignore stop -- @preserve */
-  return hasRequiredRitualTag(spell.success)
-    ? Result.succeed(spell.success)
+  return hasRequiredRitualTag(spellSource.value)
+    ? Result.succeed(spellSource.value)
     : characterSheetIssue(
         "Ritual spell invocation requires a ritual-tagged Spell Definition.",
       );
@@ -358,12 +361,8 @@ function optionalSpellbookRitualAccessFeatureForBuild(
   return Result.succeed(feature);
 }
 
-function isSpellRecord(unit: UnitRecord): unit is SpellRecord {
-  return unit.kind === "spell";
-}
-
-function spellHasLeveledRitualTag(spell: SpellRecord): boolean {
-  return spell.mechanics.level >= 1 && spellHasTopLevelRitualTag(spell);
+function spellHasLeveledRitualTag(spell: CharacterSheetSpellSource): boolean {
+  return spell.mechanics.level >= 1 && characterSheetSpellHasRitualTag(spell);
 }
 
 function isSpellcastingBuild(

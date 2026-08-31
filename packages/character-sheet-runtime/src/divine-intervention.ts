@@ -8,17 +8,18 @@ import {
   allCantripsFromClassSpellList,
   classSpellListPreparedSpellLevel,
 } from "@dnd/surface/surface/unit-catalog-core";
-import {
-  topLevelSpellCastingTime,
-  type SpellRecord,
-  type UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
 import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
+import { characterSheetTopLevelSpellCastingTime } from "./spell-profile-shape.ts";
 import { characterSheetResources } from "./resources.ts";
 import {
   characterSheetIssue,
@@ -81,13 +82,14 @@ export function castDivineIntervention(input: {
   /* v8 ignore next -- @preserve -- Malformed selection/catalog correlation: the selected Divine Intervention spell id comes from this admitted Unit catalog. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   /* v8 ignore start -- @preserve -- A spell id selected from Divine Intervention's admitted catalog must resolve to a Spell Unit. */
-  if (spell.success.kind !== "spell") {
+  const spellSource = projectCharacterSheetSpellSource(spell.success);
+  if (Option.isNone(spellSource)) {
     return characterSheetIssue("Divine Intervention requires a Spell record.");
   }
   /* v8 ignore stop -- @preserve */
 
   const invocation = divineInterventionInvocationFromSpell({
-    spell: spell.success,
+    spell: spellSource.value,
     featureUnitId: feature.success.unitId,
     unitLibrary: input.unitLibrary,
   });
@@ -166,7 +168,7 @@ function divineInterventionResource(input: {
 }
 
 function divineInterventionInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly featureUnitId: UnitRecord["id"];
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<
@@ -183,7 +185,9 @@ function divineInterventionInvocationFromSpell(input: {
       "Divine Intervention requires a Cleric spell of level 5 or lower.",
     );
   }
-  const castingTime = topLevelSpellCastingTime(input.spell.mechanics);
+  const castingTime = characterSheetTopLevelSpellCastingTime(
+    input.spell.mechanics,
+  );
   if (castingTime?.kind !== "action") {
     return characterSheetIssue(
       "Divine Intervention session handoff supports action-time Cleric spells.",
@@ -191,7 +195,7 @@ function divineInterventionInvocationFromSpell(input: {
   }
   return Result.succeed({
     tag: "divineIntervention",
-    spellId: input.spell.id,
+    spellId: input.spell.unitId,
     spellLevel: input.spell.mechanics.level,
     featureUnitId: input.featureUnitId,
     spellList: "cleric",
@@ -208,7 +212,7 @@ function divineInterventionInvocationFromSpell(input: {
 }
 
 function isClericSpellAtSupportedDivineInterventionLevel(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
   unitLibrary: UnitCatalog,
 ): boolean {
   /* v8 ignore start -- @preserve -- Spells above level 5 are outside Divine Intervention's narrowed selectable spell contract. */
@@ -219,14 +223,14 @@ function isClericSpellAtSupportedDivineInterventionLevel(
   if (spell.mechanics.level === 0) {
     return allCantripsFromClassSpellList({
       className: "cleric",
-      spellIds: [spell.id],
+      spellIds: [spell.unitId],
       unitLibrary,
     });
   }
   return (
     classSpellListPreparedSpellLevel({
       className: "cleric",
-      spellId: spell.id,
+      spellId: spell.unitId,
       unitLibrary,
     }) === spell.mechanics.level
   );

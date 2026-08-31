@@ -73,6 +73,25 @@ export {
   type PartialCharacterSheetFeatureProjectionResult,
 } from "./character-feature-projection.ts";
 export {
+  CHARACTER_SHEET_SPELL_EVIDENCE_BRANCHES,
+  CHARACTER_SHEET_SPELL_PATH_DISPOSITIONS,
+  PARTIAL_CHARACTER_SHEET_SPELL_PROJECTION_ISSUE_CODES,
+  projectCharacterSheetSpell,
+  projectCharacterSheetSpellSource,
+  projectPartialCharacterSheetSpell,
+  type CharacterSheetSpellComponents,
+  type CharacterSheetSpellEvidenceBranch,
+  type CharacterSheetSpellFacts,
+  type CharacterSheetSpellMechanics,
+  type CharacterSheetSpellPathDisposition,
+  type CharacterSheetSpellPathEvidence,
+  type CharacterSheetSpellSource,
+  type PartialCharacterSheetSpellProjection,
+  type PartialCharacterSheetSpellProjectionIssue,
+  type PartialCharacterSheetSpellProjectionIssueCode,
+  type PartialCharacterSheetSpellProjectionResult,
+} from "./character-spell-projection.ts";
+export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetClassFeatureSelectedReferenceProjection,
   characterSheetSpellAccessesForBuild,

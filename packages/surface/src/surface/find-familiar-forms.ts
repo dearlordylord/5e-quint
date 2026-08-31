@@ -68,6 +68,16 @@ type SpawnedCreatureMechanics = Extract<
   SpellRecord["mechanics"],
   { readonly family: "spawned_creature" }
 >;
+type SpellMechanicsSource = {
+  readonly mechanics:
+    | Pick<SpawnedCreatureMechanics, "family" | "creature" | "mode">
+    | {
+        readonly family: Exclude<
+          SpellRecord["mechanics"]["family"],
+          "spawned_creature"
+        >;
+      };
+};
 type FamiliarFormCatalogCreature = Extract<
   SpawnedCreatureMechanics["creature"],
   { readonly kind: "familiar_form_catalog" }
@@ -142,7 +152,7 @@ type CreatureTypeOverrideChoiceResolution =
     };
 
 export function spawnedCompanionFormEligibilityForSpell(
-  spell: SpellRecord,
+  spell: SpellMechanicsSource,
 ): SpawnedCompanionFormEligibility | null {
   if (
     spell.mechanics.family !== "spawned_creature" ||
@@ -176,7 +186,7 @@ export function spawnedCompanionFormEligibilityForSpell(
 }
 
 export function pactOfTheChainSpawnedCompanionFormEligibilityForSpell(
-  spell: SpellRecord,
+  spell: SpellMechanicsSource,
 ): PactOfTheChainSpawnedCompanionFormEligibility | null {
   const baseEligibility = spawnedCompanionFormEligibilityForSpell(spell);
   return baseEligibility === null
@@ -290,7 +300,7 @@ export function resolvePactOfTheChainSpawnedCompanionForm(input: {
 }
 
 function spawnedCompanionCreatureTypeOverrideChoicesForSpell(
-  spell: SpellRecord,
+  spell: SpellMechanicsSource,
 ): readonly SpawnedCompanionCreatureTypeOverrideChoice[] | null {
   const mode =
     spell.mechanics.family === "spawned_creature"

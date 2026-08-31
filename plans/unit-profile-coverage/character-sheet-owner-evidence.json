@@ -230,7 +230,7 @@
         "packages/character-sheet-runtime/src/spell-invocation.ts:characterSheetSpellInvocation",
         "packages/character-sheet-runtime/src/spell-invocation.ts:characterSheetSpellbookRitualInvocation",
         "packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild",
-        "packages/character-sheet-runtime/src/spell-invocation.ts:spellHasRitualTag"
+        "packages/character-sheet-runtime/src/spell-profile-shape.ts:characterSheetSpellHasRitualTag"
       ],
       "tests": [
         "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptAdmitsSpellbookRitualTestName",

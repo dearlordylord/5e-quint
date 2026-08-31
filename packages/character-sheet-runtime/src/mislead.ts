@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -51,7 +51,7 @@ export function castMislead(input: {
 }
 
 function misleadInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetMisleadCasting;
 }): Result.Result<CharacterSheetMisleadInvocation, CharacterSheetIssue> {
   const spell = input.spell;
@@ -67,7 +67,7 @@ function misleadInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== MISLEAD_DURATION_HOURS ||
     spell.mechanics.components.v !== false ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
+    spell.mechanics.components.material.kind !== "absent"
   ) {
     return characterSheetIssue(
       "Mislead requires the supported self-range level-5 Illusion profile.",
@@ -113,7 +113,7 @@ function misleadInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "mislead",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -162,7 +162,10 @@ function misleadInvocationFromSpell(input: {
   });
 }
 
-function hasDurationEnd(spell: SpellRecord, kind: string): boolean {
+function hasDurationEnd(
+  spell: CharacterSheetSpellSource,
+  kind: string,
+): boolean {
   return spell.mechanics.duration.kind === "concentration"
     ? spell.mechanics.duration.earlyEnd?.some(
         (trigger) => trigger.kind === kind,

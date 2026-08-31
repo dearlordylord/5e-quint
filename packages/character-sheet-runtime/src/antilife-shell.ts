@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -46,7 +46,7 @@ export function castAntilifeShell(input: {
 }
 
 function antilifeShellInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly placement: CharacterSheetAntilifeShellBarrierPlacement;
 }): Result.Result<CharacterSheetAntilifeShellInvocation, CharacterSheetIssue> {
   const spell = input.spell;
@@ -62,7 +62,7 @@ function antilifeShellInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== ANTILIFE_SHELL_DURATION_HOURS ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
+    spell.mechanics.components.material.kind !== "absent"
   ) {
     return characterSheetIssue(
       "Antilife Shell requires the supported level-5 creature barrier profile.",
@@ -94,7 +94,7 @@ function antilifeShellInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "antilifeShell",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -128,7 +128,9 @@ function antilifeShellInvocationFromSpell(input: {
   });
 }
 
-function hasSupportedAntilifeShellAttachment(spell: SpellRecord): boolean {
+function hasSupportedAntilifeShellAttachment(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before attachment projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const attachment = spell.mechanics.attachment;
@@ -140,7 +142,9 @@ function hasSupportedAntilifeShellAttachment(spell: SpellRecord): boolean {
   );
 }
 
-function hasSupportedAntilifeShellOperation(spell: SpellRecord): boolean {
+function hasSupportedAntilifeShellOperation(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   return spell.mechanics.operations.some((operation) => {

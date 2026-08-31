@@ -7,12 +7,15 @@ import {
   CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
   CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID,
   supportedClassFeatureSpellFreeCastGrantsForUnit,
-  type SpellRecord,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { Result, Option } from "effect";
 
 import { characterSheetClassFeaturePreparedSpellAccessesForBuild } from "./class-feature-spells.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
 import {
   characterSheetResources,
   spendCharacterSheetSpellAccessFreeCast,
@@ -89,13 +92,14 @@ export function castContactPatron(input: {
   /* v8 ignore next -- @preserve -- Malformed support catalog: the fixed Contact Other Plane reference is required when Contact Patron is admitted. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   /* v8 ignore start -- @preserve -- The fixed Contact Other Plane id must resolve to its Spell Unit in the same catalog. */
-  if (spell.success.kind !== "spell") {
+  const spellSource = projectCharacterSheetSpellSource(spell.success);
+  if (Option.isNone(spellSource)) {
     return characterSheetIssue("Contact Patron requires a Spell record.");
   }
   /* v8 ignore stop -- @preserve */
 
   const invocation = contactPatronInvocationFromSpell({
-    spell: spell.success,
+    spell: spellSource.value,
     featureUnitId: resource.success.sourceUnitId,
   });
   /* v8 ignore next -- @preserve -- Unsupported authored data: admission verifies the exact Contact Other Plane invocation profile before this projector runs. */
@@ -150,7 +154,7 @@ function contactPatronFreeCastResource(input: {
 }
 
 function contactPatronInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly featureUnitId: UnitRecord["id"];
 }): Result.Result<CharacterSheetContactPatronInvocation, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Unsupported authored Contact Other Plane data: Contact Patron admission requires activation mechanics before save-phase projection. */
@@ -190,12 +194,12 @@ function contactPatronInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "contactPatron",
-    spellId: input.spell.id,
+    spellId: input.spell.unitId,
     spellLevel: input.spell.mechanics.level,
     featureUnitId: input.featureUnitId,
     freeCastResource: {
       sourceUnitId: input.featureUnitId,
-      spellId: input.spell.id,
+      spellId: input.spell.unitId,
     },
     spellSlotCost: { kind: "none" },
     preparationRequirement: "prepared",

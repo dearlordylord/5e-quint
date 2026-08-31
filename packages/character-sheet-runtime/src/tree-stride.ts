@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -77,7 +77,7 @@ export function resolveTreeStrideTransit(
 }
 
 function treeStrideInvocationFromSpell(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
 ): Result.Result<CharacterSheetTreeStrideInvocation, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Tree Stride support profile required by this projector. */
   if (
@@ -119,7 +119,7 @@ function treeStrideInvocationFromSpell(
 
   return Result.succeed({
     tag: "treeStride",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

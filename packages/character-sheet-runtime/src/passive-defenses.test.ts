@@ -34,6 +34,8 @@ import {
   characterSheetPassiveDefenseProjection,
   parseStoredFiendishResilience,
 } from "./passive-defenses.ts";
+import { projectCharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Option } from "effect";
 
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
@@ -547,10 +549,11 @@ function wizardEvokerLevelTenBuild(): CharacterBuild {
 
 function spellRecord(unitId: string) {
   const unit = unitLibrary.requireUnit(unitId);
-  if (unit.kind !== "spell") {
+  const spell = projectCharacterSheetSpellSource(unit);
+  if (Option.isNone(spell)) {
     throw new Error(`Expected ${unitId} to be a Spell Definition.`);
   }
-  return unit;
+  return spell.value;
 }
 
 const passiveDefenseSelectedIdentityActions = {

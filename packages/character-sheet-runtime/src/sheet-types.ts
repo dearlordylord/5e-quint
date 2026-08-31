@@ -76,11 +76,12 @@ import {
   type DruidCircleLandChoice,
   type PointPoolResource,
   type RestResetCadence,
-  type SpellRecord,
   type UnitRecord,
   type UseCountResource,
 } from "@dnd/surface/surface/types";
 import { Brand, Result, Option, Schema } from "effect";
+
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 
 export const WEAPON_PROFICIENCY_CATEGORY_VALUES = [
   "simple",
@@ -1749,7 +1750,7 @@ export type CharacterSheetSpellbookRitualAccessInput = {
 
 export type CharacterSheetSpellbookRitualAccess = {
   readonly tag: "spellbookRitual";
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spellcastingSourceUnitId: UnitRecord["id"];
   readonly featureUnitId: UnitRecord["id"];
 };
@@ -1757,7 +1758,7 @@ export type CharacterSheetSpellbookRitualAccess = {
 export type CharacterSheetSpellbookRitualInvocation = {
   readonly tag: "spellbookRitual";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellcastingSourceUnitId: UnitRecord["id"];
   readonly featureUnitId: UnitRecord["id"];
   readonly spellSlotCost: { readonly kind: "none" };
@@ -1820,7 +1821,7 @@ export type CharacterSheetSpellbookRitualInvocationProjection =
 export type CharacterSheetBookOfShadowsRitualInvocation = {
   readonly tag: "bookOfShadowsRitual";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellcastingSourceUnitId: UnitRecord["id"];
   readonly spellSlotCost: { readonly kind: "none" };
   readonly preparationRequirement: "prepared";
@@ -1832,7 +1833,7 @@ export type CharacterSheetBookOfShadowsRitualInvocation = {
 export type CharacterSheetContactPatronInvocation = {
   readonly tag: "contactPatron";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly featureUnitId: UnitRecord["id"];
   readonly freeCastResource: CharacterSheetSpellAccessFreeCastKey;
   readonly spellSlotCost: { readonly kind: "none" };
@@ -1862,7 +1863,7 @@ export type CharacterSheetContactPatronResult = {
 export type CharacterSheetDivineInterventionInvocation = {
   readonly tag: "divineIntervention";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly featureUnitId: UnitRecord["id"];
   readonly spellList: "cleric";
   readonly activationAction: "magic";
@@ -1884,7 +1885,7 @@ export type CharacterSheetDivineInterventionResult = {
 export type CharacterSheetCommuneInvocation = {
   readonly tag: "commune";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -1920,7 +1921,7 @@ export type CharacterSheetCommuneWithNatureFactCategory =
 export type CharacterSheetCommuneWithNatureInvocation = {
   readonly tag: "communeWithNature";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -1997,7 +1998,7 @@ export type CharacterSheetLegendLoreOutcome =
 export type CharacterSheetLegendLoreInvocation = {
   readonly tag: "legendLore";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2027,7 +2028,7 @@ export type CharacterSheetTelepathicBondTarget = {
 export type CharacterSheetTelepathicBondInvocation = {
   readonly tag: "telepathicBond";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2160,7 +2161,7 @@ export type CharacterSheetScryingOutcome =
 export type CharacterSheetScryingInvocation = {
   readonly tag: "scrying";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2254,7 +2255,7 @@ export type CharacterSheetSeemingTargetOutcome =
 export type CharacterSheetSeemingInvocation = {
   readonly tag: "seeming";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2362,7 +2363,7 @@ export type CharacterSheetDreamOutcome =
 export type CharacterSheetDreamInvocation = {
   readonly tag: "dream";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2463,7 +2464,7 @@ export type CharacterSheetAwakenCharmContract = {
 export type CharacterSheetAwakenInvocation = {
   readonly tag: "awaken";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2562,7 +2563,7 @@ export type CharacterSheetGeasOutcome =
 export type CharacterSheetGeasInvocation = {
   readonly tag: "geas";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2627,7 +2628,7 @@ export type CharacterSheetDominatePersonOutcome =
 export type CharacterSheetDominatePersonInvocation = {
   readonly tag: "dominate_person";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2712,7 +2713,7 @@ export type CharacterSheetModifyMemoryOutcome =
 export type CharacterSheetModifyMemoryInvocation = {
   readonly tag: "modify_memory";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2757,7 +2758,7 @@ export type CharacterSheetMisleadCasting = {
 export type CharacterSheetMisleadInvocation = {
   readonly tag: "mislead";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2828,7 +2829,7 @@ export type CharacterSheetTeleportationCircleDestination = {
 export type CharacterSheetTeleportationCircleInvocation = {
   readonly tag: "teleportationCircle";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2889,7 +2890,7 @@ export type CharacterSheetPasswallDimensions = {
 export type CharacterSheetPasswallInvocation = {
   readonly tag: "passwall";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2935,7 +2936,7 @@ export type CharacterSheetWallOfForcePlacement = {
 export type CharacterSheetWallOfForceInvocation = {
   readonly tag: "wallOfForce";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -2991,7 +2992,7 @@ export type CharacterSheetAntilifeShellBarrierPlacement = {
 export type CharacterSheetAntilifeShellInvocation = {
   readonly tag: "antilifeShell";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3044,7 +3045,7 @@ export type CharacterSheetWallOfStonePlacement = {
 export type CharacterSheetWallOfStoneInvocation = {
   readonly tag: "wallOfStone";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3103,7 +3104,7 @@ export type CharacterSheetTreeStrideDestinationTree =
 export type CharacterSheetTreeStrideInvocation = {
   readonly tag: "treeStride";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3157,7 +3158,7 @@ export type CharacterSheetCreationObject = {
 export type CharacterSheetCreationInvocation = {
   readonly tag: "creation";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3244,7 +3245,7 @@ export type CharacterSheetTelekinesisEffect =
 export type CharacterSheetTelekinesisInvocation = {
   readonly tag: "telekinesis";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
@@ -3284,7 +3285,7 @@ export type CharacterSheetArcaneHandSpace = {
 export type CharacterSheetArcaneHandInvocation = {
   readonly tag: "arcaneHand";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3398,7 +3399,7 @@ export type CharacterSheetAnimatedObjectContract = {
 export type CharacterSheetAnimateObjectsInvocation = {
   readonly tag: "animateObjects";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3449,7 +3450,7 @@ export type CharacterSheetConjureElementalSpirit = {
 export type CharacterSheetConjureElementalInvocation = {
   readonly tag: "conjureElemental";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3512,7 +3513,7 @@ export type CharacterSheetSummonDragonSpirit = {
 export type CharacterSheetSummonDragonInvocation = {
   readonly tag: "summonDragon";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3597,7 +3598,7 @@ export type CharacterSheetPlanarBindingTarget = {
 export type CharacterSheetPlanarBindingInvocation = {
   readonly tag: "planarBinding";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly castLevel: SpellSlotLevel;
   readonly spellSlotCost: {
     readonly kind: "ordinary";
@@ -3714,7 +3715,7 @@ export type CharacterSheetHallowExtraEffect =
 export type CharacterSheetHallowInvocation = {
   readonly tag: "hallow";
   readonly spellId: UnitRecord["id"];
-  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellLevel: CharacterSheetSpellSource["mechanics"]["level"];
   readonly spellSlotCost: {
     readonly kind: "ordinary";
     readonly spellLevel: SpellSlotLevel;
