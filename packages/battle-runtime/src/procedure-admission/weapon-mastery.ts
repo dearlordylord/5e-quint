@@ -184,103 +184,195 @@ export function battleWeaponMasterySapSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleWeaponMasterySapSupport {
   if (unit.kind !== "mastery") return null;
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit" &&
-    unit.mechanics.optional === false &&
-    unit.mechanics.effect.kind === "modify_roll_advantage" &&
-    unit.mechanics.effect.mode === "disadvantage" &&
-    unit.mechanics.effect.count === 1 &&
-    unit.mechanics.effect.on.length === 1 &&
-    unit.mechanics.effect.on[0] === "attack_roll" &&
-    unit.mechanics.effect.expiresOn.kind === "target_uses_or_turn_start";
-  if (supported) return WEAPON_MASTERY_SAP_SUPPORT_PROFILE;
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "modify_roll_advantage"
-    ? "unsupported"
-    : null;
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "on_hit_trigger" ||
+    mechanics.effect.kind !== "modify_roll_advantage"
+  ) {
+    return null;
+  }
+  return hasSupportedSapMechanics(mechanics, mechanics.effect)
+    ? WEAPON_MASTERY_SAP_SUPPORT_PROFILE
+    : "unsupported";
 }
 
 export function battleWeaponMasteryPushSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleWeaponMasteryPushSupport {
   if (unit.kind !== "mastery") return null;
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.kind === "push_creature" &&
-    unit.mechanics.effect.maxDistanceFeet === 10 &&
-    unit.mechanics.effect.direction === "straight_away_from_self" &&
-    unit.mechanics.effect.maximumTargetSize === "large";
-  if (supported) return WEAPON_MASTERY_PUSH_SUPPORT_PROFILE;
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "push_creature"
-    ? "unsupported"
-    : null;
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "on_hit_trigger" ||
+    mechanics.effect.kind !== "push_creature"
+  ) {
+    return null;
+  }
+  return hasSupportedPushMechanics(mechanics, mechanics.effect)
+    ? WEAPON_MASTERY_PUSH_SUPPORT_PROFILE
+    : "unsupported";
 }
 
 export function battleWeaponMasteryToppleSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleWeaponMasteryToppleSupport {
   if (unit.kind !== "mastery") return null;
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.kind === "save_gate" &&
-    unit.mechanics.effect.ability === "con" &&
-    unit.mechanics.effect.dc.kind === "weapon_attack_dc" &&
-    unit.mechanics.effect.dc.base === 8 &&
-    unit.mechanics.effect.onFail.kind === "apply_condition" &&
-    unit.mechanics.effect.onFail.condition === "prone" &&
-    unit.mechanics.effect.onSuccess.kind === "none";
-  if (supported) return WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE;
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "save_gate"
-    ? "unsupported"
-    : null;
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "on_hit_trigger" ||
+    mechanics.effect.kind !== "save_gate"
+  ) {
+    return null;
+  }
+  return hasSupportedToppleMechanics(mechanics, mechanics.effect)
+    ? WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE
+    : "unsupported";
 }
 
 export function battleWeaponMasterySlowSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleWeaponMasterySlowSupport {
   if (unit.kind !== "mastery") return null;
-  const supported =
-    unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.trigger.kind === "weapon_hit_with_damage" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.kind === "speed_delta" &&
-    unit.mechanics.effect.deltaFeet === -10 &&
-    unit.mechanics.effect.maximumReductionFeet === 10 &&
-    unit.mechanics.effect.expiresOn.kind === "start_of_attacker_next_turn";
-  if (supported) return WEAPON_MASTERY_SLOW_SUPPORT_PROFILE;
-  return unit.mechanics.family === "on_hit_trigger" &&
-    unit.mechanics.effect.kind === "speed_delta"
-    ? "unsupported"
-    : null;
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "on_hit_trigger" ||
+    mechanics.effect.kind !== "speed_delta"
+  ) {
+    return null;
+  }
+  return hasSupportedSlowMechanics(mechanics, mechanics.effect)
+    ? WEAPON_MASTERY_SLOW_SUPPORT_PROFILE
+    : "unsupported";
 }
 
 export function battleWeaponMasteryCleaveSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleWeaponMasteryCleaveSupport {
   if (unit.kind !== "mastery") return null;
+  const mechanics = unit.mechanics;
   if (
-    unit.mechanics.family !== "on_hit_trigger" ||
-    unit.mechanics.effect.kind !== "grant_weapon_attack" ||
-    !("usageLimit" in unit.mechanics)
+    mechanics.family !== "on_hit_trigger" ||
+    mechanics.effect.kind !== "grant_weapon_attack" ||
+    !("usageLimit" in mechanics)
   ) {
     return null;
   }
-  return unit.mechanics.trigger.kind === "weapon_hit_melee_only" &&
-    unit.mechanics.optional === true &&
-    unit.mechanics.effect.attackKind === "melee_weapon_attack" &&
-    unit.mechanics.effect.secondaryTarget.kind === "adjacent_to_primary" &&
-    unit.mechanics.effect.secondaryTarget.constraint ===
-      "within_5ft_and_reach" &&
-    unit.mechanics.effect.onHit.kind === "weapon_damage" &&
-    unit.mechanics.effect.onHit.abilityModifier === "negative_only" &&
-    unit.mechanics.usageLimit.kind === "once_per_turn"
+  return hasSupportedCleaveMechanics(
+    mechanics,
+    mechanics.effect,
+    mechanics.usageLimit,
+  )
     ? WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE
     : "unsupported";
+}
+
+type OnHitTriggerMasteryMechanics = Extract<
+  Extract<AuthoredUnitSource, { readonly kind: "mastery" }>["mechanics"],
+  { readonly family: "on_hit_trigger" }
+>;
+
+type MasteryEffect<
+  Kind extends OnHitTriggerMasteryMechanics["effect"]["kind"],
+> = Extract<OnHitTriggerMasteryMechanics["effect"], { readonly kind: Kind }>;
+
+function hasSupportedSapMechanics(
+  mechanics: OnHitTriggerMasteryMechanics,
+  effect: MasteryEffect<"modify_roll_advantage">,
+): boolean {
+  return (
+    mechanics.trigger.kind === "weapon_hit" &&
+    mechanics.optional === false &&
+    effect.mode === "disadvantage" &&
+    effect.count === 1 &&
+    effect.on.length === 1 &&
+    effect.on[0] === "attack_roll" &&
+    effect.expiresOn.kind === "target_uses_or_turn_start"
+  );
+}
+
+function hasSupportedPushMechanics(
+  mechanics: OnHitTriggerMasteryMechanics,
+  effect: MasteryEffect<"push_creature">,
+): boolean {
+  return (
+    mechanics.trigger.kind === "weapon_hit" &&
+    mechanics.optional === true &&
+    effect.maxDistanceFeet === 10 &&
+    effect.direction === "straight_away_from_self" &&
+    effect.maximumTargetSize === "large"
+  );
+}
+
+function hasSupportedToppleMechanics(
+  mechanics: OnHitTriggerMasteryMechanics,
+  effect: MasteryEffect<"save_gate">,
+): boolean {
+  return (
+    mechanics.trigger.kind === "weapon_hit" &&
+    mechanics.optional === true &&
+    effect.ability === "con" &&
+    hasSupportedToppleDifficultyClass(effect) &&
+    hasSupportedToppleOutcome(effect)
+  );
+}
+
+type ToppleEffect = MasteryEffect<"save_gate">;
+
+function hasSupportedToppleDifficultyClass(effect: ToppleEffect): boolean {
+  return effect.dc.kind === "weapon_attack_dc" && effect.dc.base === 8;
+}
+
+function hasSupportedToppleOutcome(effect: ToppleEffect): boolean {
+  return (
+    effect.onFail.kind === "apply_condition" &&
+    effect.onFail.condition === "prone" &&
+    effect.onSuccess.kind === "none"
+  );
+}
+
+function hasSupportedSlowMechanics(
+  mechanics: OnHitTriggerMasteryMechanics,
+  effect: MasteryEffect<"speed_delta">,
+): boolean {
+  return (
+    mechanics.trigger.kind === "weapon_hit_with_damage" &&
+    mechanics.optional === true &&
+    effect.deltaFeet === -10 &&
+    effect.maximumReductionFeet === 10 &&
+    effect.expiresOn.kind === "start_of_attacker_next_turn"
+  );
+}
+
+function hasSupportedCleaveMechanics(
+  mechanics: OnHitTriggerMasteryMechanics,
+  effect: MasteryEffect<"grant_weapon_attack">,
+  usageLimit: CleaveUsageLimit,
+): boolean {
+  return (
+    mechanics.trigger.kind === "weapon_hit_melee_only" &&
+    mechanics.optional === true &&
+    effect.attackKind === "melee_weapon_attack" &&
+    hasSupportedCleaveSecondaryTarget(effect) &&
+    hasSupportedCleaveDamage(effect) &&
+    usageLimit.kind === "once_per_turn"
+  );
+}
+
+type CleaveEffect = MasteryEffect<"grant_weapon_attack">;
+type CleaveUsageLimit = Extract<
+  OnHitTriggerMasteryMechanics,
+  { readonly usageLimit: unknown }
+>["usageLimit"];
+
+function hasSupportedCleaveSecondaryTarget(effect: CleaveEffect): boolean {
+  return (
+    effect.secondaryTarget.kind === "adjacent_to_primary" &&
+    effect.secondaryTarget.constraint === "within_5ft_and_reach"
+  );
+}
+
+function hasSupportedCleaveDamage(effect: CleaveEffect): boolean {
+  return (
+    effect.onHit.kind === "weapon_damage" &&
+    effect.onHit.abilityModifier === "negative_only"
+  );
 }
