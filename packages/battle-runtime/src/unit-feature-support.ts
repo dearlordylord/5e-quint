@@ -2489,7 +2489,8 @@ export type SupportedUnitFeatureFacts =
   | {
       readonly kind: "retaliationReactionAttack";
       readonly retaliation: RetaliationReactionAttackProfile;
-    };
+    }
+  | MonkFocusProcedureFacts;
 
 export type SupportedUnitFeatureProfile = SupportedUnitFeatureFacts & {
   readonly unit: AuthoredUnitSource;
