@@ -2877,7 +2877,10 @@ test("retains text-only traits without inferring typed attack-roll support", () 
 
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isSuccess(result)) {
-    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
+    expect(result.success.map((form) => form.id)).toEqual([
+      ridingHorseId,
+      syntheticUntypedCoordinatedShapeId,
+    ]);
   }
 });
 
