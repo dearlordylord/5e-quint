@@ -91,9 +91,18 @@ export function projectSrdStatBlockPeerObservation(
   observation: SurfacePublicationPeerObservation,
 ): SrdStatBlockPeerObservation | undefined {
   return Match.value(observation).pipe(
-    Match.when({ recordKind: "statBlock" }, (statBlock) => statBlock),
-    Match.when({ recordKind: "other" }, () => undefined),
-    Match.when({ recordKind: "unknown" }, () => undefined),
+    Match.when(
+      { recordKind: SURFACE_PUBLICATION_RECORD_KINDS[0] },
+      (statBlock) => statBlock,
+    ),
+    Match.when(
+      { recordKind: SURFACE_PUBLICATION_RECORD_KINDS[1] },
+      () => undefined,
+    ),
+    Match.when(
+      { recordKind: SURFACE_PUBLICATION_RECORD_KINDS[2] },
+      () => undefined,
+    ),
     Match.exhaustive,
   );
 }

@@ -6,7 +6,7 @@ import {
   projectRawStatBlocks,
 } from "./stat-block-raw-projection.test-support.ts";
 import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
-import { projectStatBlockScopedMechanicsList } from "./stat-block-scoped-fidelity.ts";
+import { projectStatBlockScopedMechanicsList } from "./stat-block-scoped-fidelity.test-support.ts";
 import { SrdStatBlockRecordSchema } from "./schema.ts";
 
 const {

@@ -358,9 +358,6 @@ type ScopedSpeedEntry =
     };
 
 export type StatBlockScopedFidelityProjection = {
-  readonly id: string;
-  readonly name: string;
-  readonly sourceSection: string;
   readonly generalFacts: ScopedGeneralFacts;
   readonly resources: readonly ResourceLimitProjection[];
   readonly entryNames: readonly string[];
@@ -413,14 +410,6 @@ const normalizedProcedureName = (value: string): string =>
     (_, qualifier: string | undefined) =>
       qualifier === undefined ? "" : ` (${qualifier})`,
   );
-
-const statBlockIdFromRawName = (name: string): string =>
-  `stat_block_${name
-    .normalize("NFKC")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "")}`;
 
 const isRawSection = (value: string): value is RawSection =>
   RAW_SECTIONS.some((section) => section === value);
@@ -2198,12 +2187,6 @@ const projectRawStatBlockUnsafe = (
   const resources = procedureResourceLimits(procedures);
 
   return {
-    id: statBlockIdFromRawName(occurrence.name),
-    name: occurrence.name,
-    sourceSection: occurrence.anchor.section.replace(
-      ".references/srd-5.2.1/",
-      "",
-    ),
     generalFacts: {
       ...generalFacts,
       ...(legendaryActionUses === undefined ? {} : { legendaryActionUses }),
@@ -3047,9 +3030,6 @@ const projectAuthoredStatBlockUnsafe = (
   const legendaryActionUses = projectLegendaryActionUses(record);
   const resistances = record.statBlock.resistances;
   return {
-    id: record.id,
-    name: record.name,
-    sourceSection: record.provenance.section,
     generalFacts: {
       challengeRating: record.challengeRating,
       size: record.statBlock.size,

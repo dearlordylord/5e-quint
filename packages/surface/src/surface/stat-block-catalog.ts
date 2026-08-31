@@ -4,7 +4,10 @@ import {
 } from "@dnd/shared/types";
 import { Brand, Either, Match, Option } from "effect";
 
-import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
+import {
+  normalizeStatBlockIdentity,
+  type NormalizedStatBlockIdentity,
+} from "./stat-block-identity.ts";
 
 import {
   decodeStatBlockRecordEither,
@@ -61,7 +64,7 @@ export type StatBlockCatalogBuildIssue =
     }
   | {
       readonly code: "duplicateStatBlockIdentity";
-      readonly normalizedIdentity: string;
+      readonly normalizedIdentity: NormalizedStatBlockIdentity;
       readonly statBlockId: StatBlockId;
       readonly priorStatBlockId: StatBlockId;
     }
@@ -340,7 +343,7 @@ function collectStatBlockCatalogIssues(
 } {
   const issues: StatBlockCatalogBuildIssue[] = [];
   const records = new Map<StatBlockId, Srd521StatBlock>();
-  const identityOwners = new Map<string, StatBlockId>();
+  const identityOwners = new Map<NormalizedStatBlockIdentity, StatBlockId>();
 
   for (const collection of collections) {
     for (const statBlock of collection.statBlocks) {
