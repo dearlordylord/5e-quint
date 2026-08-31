@@ -282,6 +282,69 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
     );
   });
 
+  it("retains precise scoped-projection issues in the public diagnostic", () => {
+    const installed = installedAssessment(canonical);
+    expect(installed.scopedFidelity.tag).toBe("assessed");
+    if (installed.scopedFidelity.tag !== "assessed") return;
+    expect(installed.scopedFidelity.result.tag).toBe("consistent");
+    if (installed.scopedFidelity.result.tag !== "consistent") return;
+    const occurrence = installed.scopedFidelity.result.occurrences[0];
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const failure = {
+      tag: "projection-issues" as const,
+      issues: [
+        {
+          kind: "unsupported-evidence" as const,
+          anchor: {
+            kind: "raw" as const,
+            sourcePath: occurrence.source.anchor.sourcePath,
+            heading: occurrence.source.anchor.heading,
+            lineStart: occurrence.source.anchor.lineStart,
+            lineEnd: occurrence.source.anchor.lineEnd,
+            field: "challengeRating",
+          },
+          evidence: "99",
+          supported: "a canonical challenge rating",
+        },
+      ] as const,
+    };
+    const mutated: SrdStatBlockCatalogDiagnosticObservation = {
+      ...canonical,
+      catalogAssessment: {
+        ...installed,
+        scopedFidelity: {
+          tag: "assessed",
+          result: {
+            tag: "inconsistent",
+            issues: [
+              {
+                kind: "raw-projection-failed",
+                source: occurrence.source,
+                failure,
+              },
+            ],
+            authoredAdmissions:
+              installed.scopedFidelity.result.authoredAdmissions,
+          },
+        },
+      },
+    };
+
+    const result = evaluateSrdStatBlockCatalogDiagnostic(mutated);
+    expect(result.tag).toBe("rejected");
+    expect(result.diagnostic.catalogAssessment).toMatchObject({
+      tag: "installed",
+      scopedFidelity: {
+        tag: "assessed",
+        result: {
+          tag: "inconsistent",
+          issues: [{ failure }],
+        },
+      },
+    });
+  });
+
   it("retains exact blocker sets for every nonempty mutation subset and order", () => {
     fc.assert(
       fc.property(

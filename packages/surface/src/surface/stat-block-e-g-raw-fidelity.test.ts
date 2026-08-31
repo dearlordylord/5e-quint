@@ -84,7 +84,7 @@ describe("E–G independent RAW fidelity", () => {
         ),
         EQUIPMENT_SOURCE,
       ),
-    ).toThrow(/outside RAW-derived attack ability candidates str, dex/);
+    ).toThrow(/unsupported-evidence.*int.*supported.*str, dex/);
   });
 
   test("retains ambiguous RAW candidates without executable admission", () => {

@@ -35,11 +35,8 @@ function requireProjected(
     Match.when({ tag: "projected" }, ({ projection }) => projection),
     Match.when({ tag: "failed" }, ({ failure }) =>
       Match.value(failure).pipe(
-        Match.when({ tag: "projection-error" }, ({ errorName, message }) => {
-          throw new Error(`${errorName}: ${message}`);
-        }),
-        Match.when({ tag: "projection-invalid" }, ({ message }) => {
-          throw new Error(`Invalid projection: ${message}`);
+        Match.when({ tag: "projection-issues" }, ({ issues }) => {
+          throw new Error(`Projection issues: ${JSON.stringify(issues)}`);
         }),
         Match.when(
           { tag: "source-path-mismatch" },

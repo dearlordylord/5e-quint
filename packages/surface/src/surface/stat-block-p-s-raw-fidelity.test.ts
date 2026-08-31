@@ -96,13 +96,13 @@ describe("P–S repeated source occurrences", () => {
     expect(empty).not.toBe(tToZ.statBlockSource);
     expect(unknownAbility).not.toBe(tToZ.statBlockSource);
     expect(() => projectMutation(widened)).toThrow(
-      /exactly twelve nonempty cells/,
+      /malformed-evidence.*abilityScores\.matrix\.0.*twelve nonempty Stone Giant cells/,
     );
     expect(() => projectMutation(empty)).toThrow(
-      /exactly twelve nonempty cells/,
+      /malformed-evidence.*abilityScores\.matrix\.0.*twelve nonempty Stone Giant cells/,
     );
     expect(() => projectMutation(unknownAbility)).toThrow(
-      /Unrecognized Stone Giant ability label: POWER/,
+      /unsupported-evidence.*abilityScores\.label.*POWER.*str, dex, con, int, wis, cha/,
     );
   });
 });

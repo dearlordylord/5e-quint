@@ -229,8 +229,7 @@ function isProjectionOutcomeNotSupplied(
 ): boolean {
   return Match.value(failure).pipe(
     Match.when({ tag: "projection-outcome-not-supplied" }, () => true),
-    Match.when({ tag: "projection-threw" }, () => false),
-    Match.when({ tag: "projection-invalid" }, () => false),
+    Match.when({ tag: "projection-issues" }, () => false),
     Match.when({ tag: "source-not-supplied" }, () => false),
     Match.when({ tag: "source-path-mismatch" }, () => false),
     Match.when({ tag: "projection-outside-parity-denominator" }, () => false),
@@ -240,9 +239,22 @@ function isProjectionOutcomeNotSupplied(
 }
 
 const SYNTHETIC_PROJECTION_FAILURE = {
-  tag: "projection-threw",
-  errorName: "SyntheticProjectionFailure",
-  message: "Synthetic projection failure.",
+  tag: "projection-issues",
+  issues: [
+    {
+      kind: "malformed-evidence",
+      anchor: {
+        kind: "raw",
+        sourcePath: ".references/srd-5.2.1/Animals.md",
+        heading: "Synthetic Projection",
+        lineStart: 1,
+        lineEnd: 1,
+        field: "synthetic",
+      },
+      evidence: "synthetic-invalid",
+      expected: "synthetic-valid",
+    },
+  ],
 } as const satisfies StatBlockScopedProjectionFailure;
 
 function nonemptyRawProjections(
@@ -1298,6 +1310,143 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         occurrenceSourcePath: SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
       },
     });
+  });
+
+  test("accumulates exact typed RAW field issues for every nonempty subset and mutation order", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ anchor }) => anchor.sourcePath === SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+
+    const mutations = {
+      ac: {
+        linePrefix: "**AC**",
+        replace: (line: string) =>
+          line.replace(/^\*\*AC\*\* \d+/, "**AC** malformed"),
+        kind: "malformed-evidence",
+        evidence: (selected: readonly string[]) =>
+          selected.includes("initiative")
+            ? "**AC** malformed **Initiative** malformed"
+            : "**AC** malformed **Initiative** +1 (11)",
+      },
+      hp: {
+        linePrefix: "**HP**",
+        replace: () => "",
+        kind: "missing-required-evidence",
+        evidence: () => undefined,
+      },
+      initiative: {
+        linePrefix: "**AC**",
+        replace: (line: string) =>
+          line.replace(
+            /\*\*Initiative\*\* [^ ]+ \(\d+\)/,
+            "**Initiative** malformed",
+          ),
+        kind: "malformed-evidence",
+        evidence: (selected: readonly string[]) =>
+          selected.includes("ac")
+            ? "**AC** malformed **Initiative** malformed"
+            : "**AC** 13 **Initiative** malformed",
+      },
+      challengeRating: {
+        linePrefix: "**CR**",
+        replace: () => "**CR** 99",
+        kind: "unsupported-evidence",
+        evidence: () => "99",
+      },
+    } as const;
+    type MutationKey = keyof typeof mutations;
+    const orderedKeys = [
+      "ac",
+      "hp",
+      "initiative",
+      "challengeRating",
+    ] as const satisfies readonly MutationKey[];
+    const mutate = (
+      source: string,
+      selected: readonly MutationKey[],
+    ): string => {
+      const selectedSet = new Set(selected);
+      return source
+        .split(/\r?\n/)
+        .map((line, index) => {
+          const lineNumber = index + 1;
+          if (
+            lineNumber < occurrence.anchor.lineStart ||
+            lineNumber > occurrence.anchor.lineEnd
+          ) {
+            return line;
+          }
+          return orderedKeys.reduce(
+            (current, key) =>
+              selectedSet.has(key) && line.startsWith(mutations[key].linePrefix)
+                ? mutations[key].replace(current)
+                : current,
+            line,
+          );
+        })
+        .join("\n");
+    };
+    const projectIssues = (selected: readonly MutationKey[]) => {
+      const result = projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: mutate(canonicalSource, selected),
+        },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag).toBe("failed");
+      if (result.tag !== "failed") return [];
+      expect(result.failure.tag).toBe("projection-issues");
+      return result.failure.tag === "projection-issues"
+        ? result.failure.issues
+        : [];
+    };
+
+    fc.assert(
+      fc.property(
+        fc.uniqueArray(fc.constantFrom(...orderedKeys), {
+          minLength: 1,
+          maxLength: orderedKeys.length,
+        }),
+        (selected) => {
+          const issues = projectIssues(selected);
+          const canonicalSelection = orderedKeys.filter((key) =>
+            selected.includes(key),
+          );
+          expect(projectIssues(canonicalSelection)).toEqual(issues);
+          expect(
+            issues.map(({ kind, anchor, ...issue }) => ({
+              kind,
+              field: anchor.field,
+              evidence: "evidence" in issue ? issue.evidence : undefined,
+            })),
+            JSON.stringify(issues),
+          ).toEqual(
+            canonicalSelection.map((key) => ({
+              kind: mutations[key].kind,
+              field: key,
+              evidence: mutations[key].evidence(selected),
+            })),
+          );
+          expect(
+            issues.every(
+              ({ anchor }) =>
+                anchor.kind === "raw" &&
+                anchor.sourcePath === occurrence.anchor.sourcePath &&
+                anchor.lineStart === occurrence.anchor.lineStart &&
+                anchor.lineEnd === occurrence.anchor.lineEnd,
+            ),
+          ).toBe(true);
+        },
+      ),
+      { numRuns: 50 },
+    );
   });
 
   test("matches 334 unique source anchors to 330 records and preserves four repeated identities", () => {

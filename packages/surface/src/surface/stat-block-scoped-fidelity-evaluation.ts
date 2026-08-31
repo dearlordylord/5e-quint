@@ -17,7 +17,9 @@ import {
   projectAuthoredStatBlock,
   projectRawStatBlock,
   type StatBlockScopedFidelityProjection,
+  type StatBlockScopedProjectionEvidenceAnchor as RawProjectionEvidenceAnchor,
   type StatBlockScopedProjectionFailure as RawProjectionFailure,
+  type StatBlockScopedProjectionIssue as RawProjectionIssue,
 } from "./stat-block-raw-projection.ts";
 import type { SrdStatBlockRecord } from "./types.ts";
 
@@ -52,15 +54,7 @@ type SrdStatBlockAuthoredFidelityEvidence = {
 };
 
 export type StatBlockScopedProjectionFailure =
-  | {
-      readonly tag: "projection-threw";
-      readonly errorName: string;
-      readonly message: string;
-    }
-  | {
-      readonly tag: "projection-invalid";
-      readonly message: string;
-    }
+  | RawProjectionFailure
   | {
       readonly tag: "source-not-supplied";
       readonly sourcePath: SrdStatBlockSourcePath;
@@ -81,19 +75,14 @@ export type StatBlockScopedProjectionFailure =
       readonly cause: "repeated-candidates";
     };
 
+export type StatBlockScopedProjectionEvidenceAnchor =
+  RawProjectionEvidenceAnchor;
+export type StatBlockScopedProjectionIssue = RawProjectionIssue;
+
 function scopedProjectionFailure(
   failure: RawProjectionFailure,
 ): StatBlockScopedProjectionFailure {
-  return Match.value(failure).pipe(
-    Match.when({ tag: "projection-error" }, ({ errorName, message }) => ({
-      tag: "projection-threw" as const,
-      errorName,
-      message,
-    })),
-    Match.when({ tag: "projection-invalid" }, (invalid) => invalid),
-    Match.when({ tag: "source-path-mismatch" }, (unchanged) => unchanged),
-    Match.exhaustive,
-  );
+  return failure;
 }
 
 type StatBlockScopedProjectionOutcome =
@@ -599,10 +588,8 @@ function projectionFailureOrderKey(
 ): string {
   return Match.value(failure).pipe(
     Match.discriminatorsExhaustive("tag")({
-      "projection-threw": ({ errorName, message }) =>
-        JSON.stringify(["projection-threw", errorName, message]),
-      "projection-invalid": ({ message }) =>
-        JSON.stringify(["projection-invalid", message]),
+      "projection-issues": ({ issues }) =>
+        JSON.stringify(["projection-issues", issues]),
       "source-not-supplied": ({ sourcePath }) =>
         JSON.stringify(["source-not-supplied", sourcePath]),
       "source-path-mismatch": ({ suppliedSourcePath, occurrenceSourcePath }) =>
