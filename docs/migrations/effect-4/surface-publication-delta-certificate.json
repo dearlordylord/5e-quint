@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2192968,
-        "sha256": "50b301607ea04a435099f9fcc645e3d46a72da93dbeb18880dc5f74f55510d06"
+        "byteLength": 2186122,
+        "sha256": "0aea62ab4531869d274632932c17278161da946bf9a8e3b4ce287239d0dd5e37"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "b9c154b6709ab9c71607388aa099f76b573efae533bf55ddd0b88107c8eb84c4",
+        "candidateCanonicalJsonSha256": "f1c4ae718f26c4984f1b17db26f8d7ee88a98caf249a0b82b2d5e49a8b228bd4",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -366,7 +366,7 @@
             "family": "statBlocks",
             "id": "stat_block_pseudodragon",
             "baselineCanonicalJsonSha256": "50737d802ffbd3d0ae2b949b7079adbf6f871765bc805ad4198912ee12bd494c",
-            "candidateCanonicalJsonSha256": "17cec71aa9e45d2086b4d2d2d10817eda077a0458d8626bd2d41caec60b1c9b3",
+            "candidateCanonicalJsonSha256": "a4232010f59e7420c112df5b5ab7f14623c1d7be22c4abf77f214a7b79639c65",
             "semanticClass": "authored-stat-block-fidelity"
           },
           {
@@ -374,7 +374,7 @@
             "family": "statBlocks",
             "id": "stat_block_quasit",
             "baselineCanonicalJsonSha256": "58c9ae14c1f5706cb6a2910ac7373eb47edd9c0e421dd54d15e114db5126d27e",
-            "candidateCanonicalJsonSha256": "f1a37a7f002be51ab4f76f16748302f5446dcde43f17ac5885022ea6e3be24b5",
+            "candidateCanonicalJsonSha256": "0ada7b0cff74ff9b363800b45b14bc6380c6ba984c3565be6f33b4e9f4d59495",
             "semanticClass": "authored-stat-block-fidelity"
           },
           {
@@ -382,7 +382,7 @@
             "family": "statBlocks",
             "id": "stat_block_sprite",
             "baselineCanonicalJsonSha256": "98f9718c690489a1ef13dc7e49f3bc1a4750bdf465fb3557e76c22a5bd260329",
-            "candidateCanonicalJsonSha256": "401ee5154a93ee94c125766dee2bd794e8569189fd0ae3fb0d33e51b85500bbf",
+            "candidateCanonicalJsonSha256": "13187aa2c4b4afe09277613298d4b0792a6913c535f1668d53c76929bc715603",
             "semanticClass": "authored-stat-block-fidelity"
           },
           {
@@ -414,7 +414,7 @@
             "family": "statBlocks",
             "id": "stat_block_skeleton",
             "baselineCanonicalJsonSha256": "b82d898efc8ae8c12eee493159dadb46f1f603bda61946be4e523a37eb1c8798",
-            "candidateCanonicalJsonSha256": "51b907451906ce051204a71622eabc997377e610e6cc195084282c2adaa96159",
+            "candidateCanonicalJsonSha256": "1be2e538643855e8bdaa393729ed5ce38013d0167b3ac3f042437d4e54365200",
             "semanticClass": "authored-stat-block-fidelity"
           },
           {
@@ -422,7 +422,7 @@
             "family": "statBlocks",
             "id": "stat_block_sphinx_of_wonder",
             "baselineCanonicalJsonSha256": "7788126c2feb28de3aac85c75c680a22f8e6caf9502cd2c4408dcb69f71dada7",
-            "candidateCanonicalJsonSha256": "9c03041e54f95aecdaa10a7f3bbe5aca9271859586670be98343bc2ef1715f62",
+            "candidateCanonicalJsonSha256": "e45ef7d342c6383d887203377052b9186807f8ce214f5704a91c07f886ddc7ef",
             "semanticClass": "authored-stat-block-fidelity"
           },
           {
@@ -2312,301 +2312,301 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_pegasus",
-            "candidateCanonicalJsonSha256": "03e45e30fc10daa00c25f0dcba6ebd4a05e0867b69d801763586da636095b387",
+            "candidateCanonicalJsonSha256": "6e2c9dac9a748b25f3edfcc4e6d93a1d7e26ff5e8b7d08e8b40c08c745bcfc4c",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_phase_spider",
-            "candidateCanonicalJsonSha256": "80f7201527c5f42198904794523ba900c4efecacee95052281bc45f41528fed4",
+            "candidateCanonicalJsonSha256": "c0013ad8e21d28648432fd376a480b6a9d6836588806c0d83357e9816c4d742c",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_pirate",
-            "candidateCanonicalJsonSha256": "1fdf2d1188e21112b43e76ecfcfda658eea5ce327ee2c05831b3ab9d969d3283",
+            "candidateCanonicalJsonSha256": "5102cd528c80ae23c667b2f138ea0b9f98b31bd1a82bc4f117187888af1b0b93",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_pirate_captain",
-            "candidateCanonicalJsonSha256": "4a01a3c4a351e6ae58cd3e50a6078243160bd055ccde377a172b9b8f4b7ee323",
+            "candidateCanonicalJsonSha256": "4b228601ff3e77655e1a52ce8cf96077dec30939d8ec2f2e1cfdd4c6b1fb0597",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_pit_fiend",
-            "candidateCanonicalJsonSha256": "300e01952ec298ab01e7d06f06b7ecf23aca11670be89bd0527809b8f810c92f",
+            "candidateCanonicalJsonSha256": "3a62b0edd96bd0b7d661a5805556794dcf457eb582b3d9bbe833b288ff36d4e8",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_planetar",
-            "candidateCanonicalJsonSha256": "01d6889d38fac4df3a2cd8fc07c9bad4996aa4cdaf0d94c36b93db67f56689f6",
+            "candidateCanonicalJsonSha256": "ed3c1ea324e851b5f32f6a676b169061e42357d5a5bacb9cee4394002fc21573",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_priest_acolyte",
-            "candidateCanonicalJsonSha256": "bc4e5e92cdb3b83550744ba550f2805d524afb599cbb41a4dc4c83318154cebc",
+            "candidateCanonicalJsonSha256": "b9178ab3ab9d7f67f84105ecec30a9049e5fbd693f0c44aae49167e399bd5d06",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_priest",
-            "candidateCanonicalJsonSha256": "2392362d51670225721700c5a8850310155266e7300150d2a52ba06901db7695",
+            "candidateCanonicalJsonSha256": "f29dc6febe551e2a2b72c80e841efaf3c47063e828a00fb3fac220c90a69e779",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_purple_worm",
-            "candidateCanonicalJsonSha256": "17fa147635c60b0be98cba1758d36e5dd173530deed8a530ab6231197eed98e4",
+            "candidateCanonicalJsonSha256": "59a6e24d4fd500f79c9b2fa16051ea29a28af28e913b47917031bb85a339ea9d",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_rakshasa",
-            "candidateCanonicalJsonSha256": "60c3e4e3508b57f4ef8c0fc0e18caf1fe17045b47206f3c6faf21f58e119c90d",
+            "candidateCanonicalJsonSha256": "f69d59476a0bb46a8a36db99b766db06dd769203c8cfe01fb4794647a22d5587",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_red_dragon_wyrmling",
-            "candidateCanonicalJsonSha256": "41c163e6a2bef7e8a3796d41ccaedc64cfdfedfea4b939b20b211c534c25ece6",
+            "candidateCanonicalJsonSha256": "d9d5a226ea806ee399a8a30810b7e6584670dc7ae8485dc617f09c59ab742934",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_young_red_dragon",
-            "candidateCanonicalJsonSha256": "4b6388d602b5c981bd21f9ea736947d9694acc1652cacc950f2a49b2e2f8305b",
+            "candidateCanonicalJsonSha256": "5b05fded9b7f02c3dda0d6fcf3c3a006c31788cca329ad34747404a4237a0981",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_adult_red_dragon",
-            "candidateCanonicalJsonSha256": "8edc6e1d091c738790453331a1cbd13f26279fa8619916f640167d9ebacc0cc8",
+            "candidateCanonicalJsonSha256": "2da5d5c287e1a17817c3afba1df62e48c3d513a642c0280258ac4df98528d5e2",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_ancient_red_dragon",
-            "candidateCanonicalJsonSha256": "21ce1c22a66d2e25b08d2e9b8acb2ba7d9f40132c7526ae334f1f848e8b0a904",
+            "candidateCanonicalJsonSha256": "62e517c00819de699f39c1f5eedf6dcd0efa2e56d8a96a965464698b2e88a35e",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_remorhaz",
-            "candidateCanonicalJsonSha256": "51d15ad5c03b17e8a06bfe4e4373a4a1f6a352ab4341b401be628a6ebce9771d",
+            "candidateCanonicalJsonSha256": "29b6b39320cc0889508bb95306d3dd83d2a8b7ff8c767130f0aa3a5a7b05f00c",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_roc",
-            "candidateCanonicalJsonSha256": "f23220b619f65d4ff6afb21256a1edc6ee79d99c4c92bfade1cb7776c0002cbb",
+            "candidateCanonicalJsonSha256": "1b912cf7fcb01b4139c8706c5ea373f32cfd72bb92c3b08fae4679b55b06c10d",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_roper",
-            "candidateCanonicalJsonSha256": "dd644322d821b1ac884a6c03dc3baaa3c81bcfae2729532c07e2aca2b3fed52c",
+            "candidateCanonicalJsonSha256": "24ddd1c03e614cdd5c5618b90fe9ade9431dcae7a6859d3ccc77422fb61154f3",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_rust_monster",
-            "candidateCanonicalJsonSha256": "1201ddc872ee9099f07b8d4c3c70f430e977234193579da944f343ce6ef87112",
+            "candidateCanonicalJsonSha256": "ae6d28bb9182a9de6797f668513fefff6bbfe57f8efec5c985b6ba88c258a466",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_sahuagin_warrior",
-            "candidateCanonicalJsonSha256": "b579e202f6cd703d08aedaaf8da06a3e7a1c01f9948c8b8aef126908c52d0227",
+            "candidateCanonicalJsonSha256": "d21ffcaecf75afabced589c73638e44987c29bd571d82b967c589cf16b0a18d5",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_salamander",
-            "candidateCanonicalJsonSha256": "25ee94d878e446e18abd466956fe3adc416fbb176f237cbdfcbee4992e2cf609",
+            "candidateCanonicalJsonSha256": "47195b805b29f3358b8cc42f56d9893cba97eb4ea4e2b27d6fc0cf3f5b3d8dab",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_satyr",
-            "candidateCanonicalJsonSha256": "dea158a97f5aee989d3c9b824c560adb2d9cf57ed1828a758e664ebfa08fa0b4",
+            "candidateCanonicalJsonSha256": "be7e922a7e2408a6896fbf94823adf08783b1c4eade15bd1e5c316c204bb873a",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_scout",
-            "candidateCanonicalJsonSha256": "f6935c53a5029f0304adae4c2a98b2cbb239cdef85ba7db4e9c374b7158a2a71",
+            "candidateCanonicalJsonSha256": "56207b2bd04334b05aceeec2c4d839a4e3f81db8a833f374b8dc45aa7d556364",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_sea_hag",
-            "candidateCanonicalJsonSha256": "79296c20a6a9e13f002f2fdf6f70b9fb45e0b5426639db2e170a3014b451ed17",
+            "candidateCanonicalJsonSha256": "d9e55e66bdb4520593ab7be602d79396c944128fd78dab9e20e9d3dc1cd5055d",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_shadow",
-            "candidateCanonicalJsonSha256": "a050eb35bba17e24f338efc3263ab5595c01366fc64e692aca6da643bc41f2ef",
+            "candidateCanonicalJsonSha256": "a40b82f79c53e6d98bd97c5f37e31a998de35851cf99b060609022a8695063a5",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_shambling_mound",
-            "candidateCanonicalJsonSha256": "fd86ea25b7f481eb3b87a9f32c7846d49e094dee11a1ea22486f78c6df4722fc",
+            "candidateCanonicalJsonSha256": "681fd440564464be68a9970fc63c2ff9a73ba51c23c676d73ad01c0eb3848254",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_shield_guardian",
-            "candidateCanonicalJsonSha256": "cd0c3d35a24992d0476812135fa6686dc541b12176a41dc2e6eccf66099a30d5",
+            "candidateCanonicalJsonSha256": "9c9ef1cbca18290ab49625c21782bf93f7e33f386b30f01664b984f63dfa3771",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_silver_dragon_wyrmling",
-            "candidateCanonicalJsonSha256": "4ca8869f305ff5ef36b7960f74077bd51bdfa7341960dfa9f3dc50dbdf950c92",
+            "candidateCanonicalJsonSha256": "92c9bf5e285834a9d3f6b4f441e1b379e865cac90b3731dafa52a695ff0cebde",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_young_silver_dragon",
-            "candidateCanonicalJsonSha256": "f88a370b8b8f215c746c599526100b6012392e01b14b4ef2208e64149ae46f24",
+            "candidateCanonicalJsonSha256": "64aca16976eadf22912edfb2928e950a9249bc9ad8fa562488383119074b9c62",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_adult_silver_dragon",
-            "candidateCanonicalJsonSha256": "cca107d68c0dbd5dca61f384ce62e0f43aa05ea902b92c62172385e34e2c7e00",
+            "candidateCanonicalJsonSha256": "1f841e587706e0f52a6caef6553f99f6283d5dbd49b4ec15cc59328710057605",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_ancient_silver_dragon",
-            "candidateCanonicalJsonSha256": "cfd3d45a3a674bd4bc222d2580586ed4a5ae314f3f2a5e100994ad2ae24a17f0",
+            "candidateCanonicalJsonSha256": "0ff7f90e7bdda063b804298013f7c041160cc3e94b961b3bbedd5a77e417f051",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_warhorse_skeleton",
-            "candidateCanonicalJsonSha256": "31eb56cd0f5590119ba464f9546c7561d2bf137b128a11c3f054c734d4932530",
+            "candidateCanonicalJsonSha256": "c762c8d682746a18230f44c5ed3afc3cd94419be5eb439d98e1d03e45ce66db5",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_minotaur_skeleton",
-            "candidateCanonicalJsonSha256": "2fbd34d6d56e257175b92241bf6d3255e9ed10328e9a8b56625fd1c213855fde",
+            "candidateCanonicalJsonSha256": "cb3250da9bc37728fd07b20a7700ba0df7283872a65dccc5a7e9c4a8a8574ff0",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_solar",
-            "candidateCanonicalJsonSha256": "b1ae9f7d3d4d2dff2d0ebb86e7b9d54c8f2e76d574e517f869f5523812e05b85",
+            "candidateCanonicalJsonSha256": "930f3b281a3a9aee28e41334645982adfce1bc3218cd94864a970ba5684b4173",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_specter",
-            "candidateCanonicalJsonSha256": "11d9562370359032fd1f2cf4adb85e60eedb7dc91164b7363bcf82702062a734",
+            "candidateCanonicalJsonSha256": "d08b735146e5b1786cd100804c7dbf2ed18590b61d06fb5a3e6ed7b17740de6c",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_sphinx_of_lore",
-            "candidateCanonicalJsonSha256": "e1ac47d67c151431b5bb82df571e4d606aba9aa8fc8f3ba58a1236e38041114a",
+            "candidateCanonicalJsonSha256": "456c631be84609f767174c506bdd95adda668b9de00bd08a8cdd38688349f5a2",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_sphinx_of_valor",
-            "candidateCanonicalJsonSha256": "721fac7418b3fac775165b2b52d4bf05e2011a09c2aa0cca4d0108dfbaabaeb0",
+            "candidateCanonicalJsonSha256": "92f5d5b9648de8251a7dea2621decea8b1225b78573c9644941eccf5151f230a",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_spirit_naga",
-            "candidateCanonicalJsonSha256": "57301bf4bfdf54adf31f86d94ed43fcd9c1a9efb321348f9fea141be640cd569",
+            "candidateCanonicalJsonSha256": "9d81350b356a48189a6f1ccef9a2c55565adf5115d1f7e333dcb0b3bc7d0b550",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_spy",
-            "candidateCanonicalJsonSha256": "d760b73a5a450863f391e8dc64b6784604e9dc788ec92dc8cee9e084cfc3f8b7",
+            "candidateCanonicalJsonSha256": "4051b2ca761ef43af8df6422ecab100b1f80a5c63198ce030b0ac43841679bf9",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_stirge",
-            "candidateCanonicalJsonSha256": "acb9f0bb01c37565b9b3aab5b966284da1afe88cca5759ca3c8a5cbdd43dd506",
+            "candidateCanonicalJsonSha256": "3b44374d3e194f9c2919e02c6ea042a85de129c8e65520458f6aaade3084576c",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_stone_giant",
-            "candidateCanonicalJsonSha256": "841166f6308bbe7b1ce90f4cf0a7f47685626b64164ee76f8a4fb20d4bc321ab",
+            "candidateCanonicalJsonSha256": "1df74dfc547837ac025b67c9022aaaa7bf24cf284038ac6abfad1955097daa2b",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_stone_golem",
-            "candidateCanonicalJsonSha256": "0c86fa77844abca36566db37ced308c4d385aa83272b45e204b0cf9b7291819f",
+            "candidateCanonicalJsonSha256": "8f0a4ea830a3c79e37ff294ee6dbd911f9b4e6042bc8c47bf3abf855a3a02b7b",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_storm_giant",
-            "candidateCanonicalJsonSha256": "3d28fabba2de9ced60f0287bdbc8da8b142998ed10a9daa54ed32c7309e15b2d",
+            "candidateCanonicalJsonSha256": "834a95c353612d53c02887f14eb4212b05fee8c34fdecc7a58f38e18e041568e",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_succubus",
-            "candidateCanonicalJsonSha256": "63f60cb1cfdf11832e99005b83ab440abac0b8a4f0b0f8a43f2bc86e06b964fd",
+            "candidateCanonicalJsonSha256": "bf947c3ad0bfdd1a545adf7d91c7f75f3c81e296d1c9d39156fe7c95a15381e2",
             "semanticClass": "authored-catalog-membership"
           },
           {

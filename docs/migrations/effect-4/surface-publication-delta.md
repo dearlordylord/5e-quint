@@ -32,14 +32,6 @@ Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
 retains its printed Darkvision, and Stone Giant retains its printed Dexterity
 save. These corrections change the authenticated candidate shapes without
 changing their existing `added` classification or catalog membership.
-The subsequent reconciled P-S generated publication refreshes the affected Stat
-Block shapes. Baseline-present records remain classified as changed authored
-Stat Block fidelity records, and catalog additions retain their existing
-classification. Their projections consistently normalize presentation-only
-Markdown emphasis in local SRD spans, including metadata, qualifiers,
-legendary-action-use lines, and procedure evidence. This changes their
-authenticated candidate shapes without changing the reviewed delta identities,
-semantic classes, or aggregate membership.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
