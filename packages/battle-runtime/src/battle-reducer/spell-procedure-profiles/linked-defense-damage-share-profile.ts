@@ -11,7 +11,10 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // cleanup, Saving Throw projections, and separation acts consume them outside
 // cast resolution.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Result } from "effect";
 
 import { LinkedDefenseResistanceDamageShareTemplateSchema } from "../../active-effect/codecs.ts";
@@ -95,52 +98,113 @@ function linkedDefenseResistanceDamageShareSpellProjection(
   LinkedDefenseResistanceDamageShareSpellInvocation,
   "activeEffect" | "rangeFeet" | "connectionRangeFeet"
 > | null {
+  const envelope = linkedDefenseResistanceDamageShareSpellEnvelope(spell);
+  if (envelope === null) return null;
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "hour" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "caster_target_bond" ||
-    spell.mechanics.attachment.range.kind !== "within_feet" ||
-    spell.mechanics.attachment.range.feet !==
-      Number(LINKED_DEFENSE_CONNECTION_RANGE_FEET) ||
-    spell.mechanics.attachment.target.kind !== "hole" ||
-    spell.mechanics.attachment.target.value.kind !== "target" ||
-    spell.mechanics.attachment.target.value.selection.mode !== "one" ||
-    !("disposition" in spell.mechanics.attachment.target.value.selection) ||
-    spell.mechanics.attachment.target.value.selection.disposition !==
-      "willing" ||
-    !sameStringSet(
-      spell.mechanics.attachment.target.value.selection.targetKinds ?? [],
-      ["creature"],
+    !linkedDefenseResistanceDamageShareAttachmentIsSupported(
+      envelope.mechanics.attachment,
     ) ||
     !linkedDefenseResistanceDamageShareMaterialComponentIsSupported(spell) ||
     !linkedDefenseResistanceDamageShareEarlyEndsAreSupported(
-      spell.mechanics.duration.earlyEnd,
+      envelope.duration.earlyEnd,
     ) ||
     !linkedDefenseResistanceDamageShareOperationsAreSupported(
-      spell.mechanics.operations,
+      envelope.mechanics.operations,
     )
   ) {
     return null;
   }
+  return {
+    rangeFeet: LINKED_DEFENSE_CAST_RANGE_FEET,
+    connectionRangeFeet: LINKED_DEFENSE_CONNECTION_RANGE_FEET,
+    activeEffect: {
+      kind: "linkedDefenseResistanceDamageShare",
+      sourceCombatantId: actorId,
+      expiresAt: { kind: "duration", durationTicks: envelope.durationTicks },
+    },
+  };
+}
+
+type LinkedDefenseResistanceDamageShareMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+
+function linkedDefenseResistanceDamageShareSpellEnvelope(
+  spell: BattleSpellAdmissionSource,
+): {
+  readonly mechanics: LinkedDefenseResistanceDamageShareMechanics;
+  readonly duration: Extract<
+    LinkedDefenseResistanceDamageShareMechanics["duration"],
+    { readonly kind: "timed" }
+  >;
+  readonly durationTicks: ElapsedTimeTicks;
+} | null {
+  const mechanics = spell.mechanics;
+  if (mechanics.family !== "ongoing_effect") return null;
+  if (!linkedDefenseResistanceDamageShareCastingFactsAreSupported(mechanics))
+    return null;
+  if (mechanics.duration.kind !== "timed") return null;
+  if (mechanics.duration.value.unit !== "hour") return null;
+  if (mechanics.duration.value.amount !== 1) return null;
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
+    mechanics.duration.value,
   );
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        rangeFeet: LINKED_DEFENSE_CAST_RANGE_FEET,
-        connectionRangeFeet: LINKED_DEFENSE_CONNECTION_RANGE_FEET,
-        activeEffect: {
-          kind: "linkedDefenseResistanceDamageShare",
-          sourceCombatantId: actorId,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
-        },
-      };
+  if (Result.isFailure(durationTicks)) return null;
+  return {
+    mechanics,
+    duration: mechanics.duration,
+    durationTicks: durationTicks.success,
+  };
+}
+
+function linkedDefenseResistanceDamageShareCastingFactsAreSupported(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): boolean {
+  return (
+    mechanics.level === 2 &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "touch"
+  );
+}
+
+function linkedDefenseResistanceDamageShareAttachmentIsSupported(
+  attachment: LinkedDefenseResistanceDamageShareMechanics["attachment"],
+): boolean {
+  if (attachment.kind !== "caster_target_bond") return false;
+  return (
+    linkedDefenseResistanceDamageShareBondRangeIsSupported(attachment.range) &&
+    linkedDefenseResistanceDamageShareTargetIsSupported(attachment.target)
+  );
+}
+
+function linkedDefenseResistanceDamageShareBondRangeIsSupported(
+  range: Extract<
+    LinkedDefenseResistanceDamageShareMechanics["attachment"],
+    { readonly kind: "caster_target_bond" }
+  >["range"],
+): boolean {
+  return (
+    range.kind === "within_feet" &&
+    range.feet === Number(LINKED_DEFENSE_CONNECTION_RANGE_FEET)
+  );
+}
+
+function linkedDefenseResistanceDamageShareTargetIsSupported(
+  target: Extract<
+    LinkedDefenseResistanceDamageShareMechanics["attachment"],
+    { readonly kind: "caster_target_bond" }
+  >["target"],
+): boolean {
+  if (target.kind !== "hole") return false;
+  if (target.value.kind !== "target") return false;
+  const selection = target.value.selection;
+  if (selection.mode !== "one") return false;
+  if (!("disposition" in selection)) return false;
+  return (
+    selection.disposition === "willing" &&
+    sameStringSet(selection.targetKinds ?? [], ["creature"])
+  );
 }
 
 function linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
@@ -150,10 +214,24 @@ function linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
     return false;
   }
   const material = spell.mechanics.components.m;
+  if (typeof material !== "object") return false;
+  if (material === null) return false;
+  if (material.kind !== "paired_worn_items") return false;
+  return linkedDefenseResistanceDamageSharePairedMaterialIsSupported(material);
+}
+
+function linkedDefenseResistanceDamageSharePairedMaterialIsSupported(
+  material: Extract<
+    NonNullable<
+      Extract<
+        BattleSpellAdmissionSource["mechanics"],
+        { readonly components: unknown }
+      >["components"]["m"]
+    >,
+    { readonly kind: "paired_worn_items" }
+  >,
+): boolean {
   return (
-    typeof material === "object" &&
-    material !== null &&
-    material.kind === "paired_worn_items" &&
     material.itemKind === "ring" &&
     material.material === "platinum" &&
     material.minimumValueGpEach === 50 &&
