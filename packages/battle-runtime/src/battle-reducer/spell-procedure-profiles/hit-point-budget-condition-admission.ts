@@ -219,11 +219,7 @@ function isStagedSaveConditionPhase(
     phase.attachment.value.shape.kind === "sphere" &&
     phase.attachment.value.shape.radiusFeet ===
       SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET &&
-    automaticSuccess?.kind === "any" &&
-    automaticSuccess.predicates.length === 2 &&
-    automaticSuccess.predicates[0]?.kind === "does_not_sleep" &&
-    automaticSuccess.predicates[1]?.kind === "has_condition_immunity" &&
-    automaticSuccess.predicates[1].condition === "exhaustion" &&
+    hasStagedSaveAutomaticSuccess(automaticSuccess) &&
     phase.onFail.kind === "composite" &&
     phase.onFail.effects.length === 2 &&
     phase.onFail.effects[0]?.kind === "apply_condition" &&
@@ -239,6 +235,21 @@ function isStagedSaveConditionPhase(
     repeatSave.onSuccess === "ends_on_target" &&
     repeatFailure?.kind === "apply_condition" &&
     repeatFailure.condition === "unconscious"
+  );
+}
+
+function hasStagedSaveAutomaticSuccess(
+  automaticSuccess: Extract<
+    ActivationPhase,
+    { readonly kind: "save_gate" }
+  >["autoSuccessIfTarget"],
+): boolean {
+  return (
+    automaticSuccess?.kind === "any" &&
+    automaticSuccess.predicates.length === 2 &&
+    automaticSuccess.predicates[0]?.kind === "does_not_sleep" &&
+    automaticSuccess.predicates[1]?.kind === "has_condition_immunity" &&
+    automaticSuccess.predicates[1].condition === "exhaustion"
   );
 }
 

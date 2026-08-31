@@ -212,10 +212,7 @@ function movablePersistentAreaSpell(
   );
 
   if (
-    spell.mechanics.level !== MOVABLE_PERSISTENT_AREA_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== MOVABLE_PERSISTENT_AREA_RANGE_FEET ||
+    !hasMovablePersistentAreaHeader(spell.mechanics) ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !==
@@ -254,6 +251,20 @@ function movablePersistentAreaSpell(
     repositionMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
     damageAmount: initialDamage.amount,
   };
+}
+
+function hasMovablePersistentAreaHeader(
+  mechanics: Extract<
+    BattleSpellAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >,
+): boolean {
+  return (
+    mechanics.level === MOVABLE_PERSISTENT_AREA_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET
+  );
 }
 
 function isMovablePersistentAreaInitialSaveGate(

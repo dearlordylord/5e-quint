@@ -83,18 +83,8 @@ export function afterHitSpellDiscoveryRoutesForResolution(
     );
     /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
     if (invocation === undefined) continue;
-    if ("resource" in invocation && invocation.resource.tag === "spellSlot") {
-      owners.add("battleSpellSlotAndActionEconomy");
-    }
-    if (
-      "resource" in invocation &&
-      invocation.resource.tag === "spellAccessFreeCast"
-    ) {
-      owners.add("battleFeatureResource");
-    }
-    if (invocation.procedure === "afterHitDamageAndIllumination") {
-      owners.add("battleActiveEffect");
-      owners.add("battleConcentration");
+    for (const owner of afterHitSpellInvocationOwners(invocation)) {
+      owners.add(owner);
     }
   }
 
@@ -247,34 +237,62 @@ export function afterHitSpellRouteForInterrupt(input: {
       );
     }
   }
-  if (
-    invocation.procedure === "afterHitDamageAndIllumination" &&
-    input.result.tag !== "invalid"
-  ) {
-    if (combatantsActiveEffectsChanged(input.before, input.result.state)) {
-      route.push(
-        afterHitSpellResolveRoute(
-          "interruptDecision",
-          input.holes,
-          "battleActiveEffect",
-        ),
-      );
-    }
-    if (combatantsConcentrationChanged(input.before, input.result.state)) {
-      route.push(
-        afterHitSpellResolveRoute(
-          "interruptDecision",
-          input.holes,
-          "battleConcentration",
-        ),
-      );
-    }
-  }
+  route.push(...afterHitDamageAndIlluminationRoutes(input, invocation));
   if (input.holes.includes("rolledDice")) {
     route.push(afterHitSpellDiscoverRoute(input.holes, "battleHitPoint"));
   }
 
   return nonEmptyRouteEvents(route);
+}
+
+function afterHitSpellInvocationOwners(
+  invocation: ReturnType<typeof spellInvocationForInterruptChoice>,
+): readonly BattleReducerRouteOwnerGroup[] {
+  if (invocation === undefined) return [];
+  const hasResource = "resource" in invocation;
+  return [
+    ...(hasResource && invocation.resource.tag === "spellSlot"
+      ? (["battleSpellSlotAndActionEconomy"] as const)
+      : []),
+    ...(hasResource && invocation.resource.tag === "spellAccessFreeCast"
+      ? (["battleFeatureResource"] as const)
+      : []),
+    ...(invocation.procedure === "afterHitDamageAndIllumination"
+      ? (["battleActiveEffect", "battleConcentration"] as const)
+      : []),
+  ];
+}
+
+function afterHitDamageAndIlluminationRoutes(
+  input: Parameters<typeof afterHitSpellRouteForInterrupt>[0],
+  invocation: NonNullable<ReturnType<typeof spellInvocationForInterruptChoice>>,
+): readonly BattleReducerRouteEvent[] {
+  if (
+    invocation.procedure !== "afterHitDamageAndIllumination" ||
+    input.result.tag === "invalid"
+  ) {
+    return [];
+  }
+  return [
+    ...(combatantsActiveEffectsChanged(input.before, input.result.state)
+      ? [
+          afterHitSpellResolveRoute(
+            "interruptDecision",
+            input.holes,
+            "battleActiveEffect",
+          ),
+        ]
+      : []),
+    ...(combatantsConcentrationChanged(input.before, input.result.state)
+      ? [
+          afterHitSpellResolveRoute(
+            "interruptDecision",
+            input.holes,
+            "battleConcentration",
+          ),
+        ]
+      : []),
+  ];
 }
 
 export function afterHitSpellEscapeRouteForResolution(

@@ -19,6 +19,7 @@ import type {
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
   BattleReactionModifierChoice,
+  BattleCreatureState,
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -229,10 +230,7 @@ export function resolveInterruptLifecycleDecision(input: {
   }
   /* v8 ignore stop -- @preserve */
   const choiceTurnResource = interruptChoiceTurnResource(admittedChoice.choice);
-  if (
-    choiceTurnResource === "reaction" &&
-    !combatantCanTakeReactions(responder)
-  ) {
+  if (interruptChoiceReactionIsUnavailable(choiceTurnResource, responder)) {
     return withoutInterruptRoute(
       invalidResult(
         input.state,
@@ -242,35 +240,7 @@ export function resolveInterruptLifecycleDecision(input: {
     );
   }
   if (admittedChoice.tag === "modifier") {
-    const currentChoice = reactionRollOrDamageReductionChoices(
-      input.state,
-      frame,
-    ).find(
-      (candidate): candidate is BattleInterruptProcedureModifierChoice =>
-        candidate.kind === "reactionModifier" &&
-        candidate.responderId === admittedChoice.choice.responderId &&
-        candidate.modifier.procedureRef ===
-          admittedChoice.choice.modifier.procedureRef &&
-        candidate.modifier.kind === admittedChoice.choice.modifier.kind,
-    );
-    if (currentChoice === undefined) {
-      return withoutInterruptRoute(
-        invalidResult(
-          input.state,
-          "staleSubject",
-          "The selected Reaction modifier is no longer bound to this responder.",
-        ),
-      );
-    }
-    return withInterruptRoute(
-      resolveReactionRollOrDamageReduction({
-        state: input.state,
-        frame,
-        choice: currentChoice,
-        selection: admittedChoice.selection,
-        execution: input.execution,
-      }),
-    );
+    return resolveInterruptModifierChoice(input, frame, admittedChoice);
   }
 
   const choice = admittedChoice.choice;
@@ -331,6 +301,59 @@ export function resolveInterruptLifecycleDecision(input: {
   });
   return withInterruptRoute(
     completeResolvedActiveInterruptIfPending(interruptResult, input.execution),
+  );
+}
+
+function interruptChoiceReactionIsUnavailable(
+  resource: ReturnType<typeof interruptChoiceTurnResource>,
+  responder: BattleCreatureState,
+): boolean {
+  return resource === "reaction" && !combatantCanTakeReactions(responder);
+}
+
+function resolveInterruptModifierChoice(
+  input: Parameters<typeof resolveInterruptLifecycleDecision>[0],
+  frame: BattleInterruptCheckpoint,
+  admittedChoice: Extract<
+    NonNullable<ReturnType<typeof admittedInterruptChoice>>,
+    { readonly tag: "modifier" }
+  >,
+): InterruptLifecycleDecisionOutcome {
+  const currentChoice = reactionRollOrDamageReductionChoices(
+    input.state,
+    frame,
+  ).find((candidate) =>
+    reactionModifierChoiceMatches(candidate, admittedChoice.choice),
+  );
+  if (currentChoice === undefined) {
+    return withoutInterruptRoute(
+      invalidResult(
+        input.state,
+        "staleSubject",
+        "The selected Reaction modifier is no longer bound to this responder.",
+      ),
+    );
+  }
+  return withInterruptRoute(
+    resolveReactionRollOrDamageReduction({
+      state: input.state,
+      frame,
+      choice: currentChoice,
+      selection: admittedChoice.selection,
+      execution: input.execution,
+    }),
+  );
+}
+
+function reactionModifierChoiceMatches(
+  candidate: BattleInterruptProcedureChoice,
+  selected: BattleInterruptProcedureModifierChoice,
+): candidate is BattleInterruptProcedureModifierChoice {
+  return (
+    candidate.kind === "reactionModifier" &&
+    candidate.responderId === selected.responderId &&
+    candidate.modifier.procedureRef === selected.modifier.procedureRef &&
+    candidate.modifier.kind === selected.modifier.kind
   );
 }
 

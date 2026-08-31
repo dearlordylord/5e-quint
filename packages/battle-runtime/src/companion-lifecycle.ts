@@ -486,32 +486,21 @@ export function castWildCompanion(
     return spent;
   }
   /* v8 ignore stop -- @preserve */
-  const resolvedForm = resolveSpawnedCompanionForm({
+  const admittedForm = resolveWildCompanionRuntimeForm({
     catalog: input.catalog,
     eligibility: input.eligibility,
     selection: input.selection,
-    creatureTypeOverrideChoiceId: "fey",
   });
   /* v8 ignore start -- @preserve -- Malformed authored selection: the Surface form resolver owns unknown Wild Companion form diagnostics. */
-  if (resolvedForm.tag === "issue") {
+  if (Result.isFailure(admittedForm)) {
     return invalidSpawnedCompanionResult(
       spent.state,
       "invalidFill",
-      resolvedForm.message,
+      admittedForm.failure,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const projectedForm = projectCompanionRuntimeStatBlock({
-    statBlock: resolvedForm.form.statBlock,
-    creatureTypeOverride: "fey",
-  });
-  if (Result.isFailure(projectedForm)) {
-    return invalidSpawnedCompanionResult(
-      spent.state,
-      "invalidFill",
-      projectedForm.failure,
-    );
-  }
+  const projectedForm = admittedForm.success;
   const prior = spawnedCompanionCastPrior(
     findCompanionEntryByOwner(spent.state.companions, input.casterId)
       ?.companion,
@@ -547,7 +536,7 @@ export function castWildCompanion(
   const preservedHitPoints = hitPointsForSpawnedCompanionCast({
     state: spent.state,
     prior,
-    statBlock: projectedForm.success,
+    statBlock: projectedForm,
   });
   /* v8 ignore start -- @preserve -- Corrupt retained state: admitted Wild Companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
@@ -577,7 +566,7 @@ export function castWildCompanion(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: projectedForm.success,
+    statBlock: projectedForm,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.success,
     ...(preservedHitPoints === null
@@ -593,6 +582,21 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   return resolvedSpawnedCompanionResult(nextState.state, []);
+}
+
+function resolveWildCompanionRuntimeForm(
+  input: Pick<WildCompanionCastInput, "catalog" | "eligibility" | "selection">,
+): Result.Result<BattleStatBlockExecutionSource, string> {
+  const resolvedForm = resolveSpawnedCompanionForm({
+    ...input,
+    creatureTypeOverrideChoiceId: "fey",
+  });
+  if (resolvedForm.tag === "issue") return Result.fail(resolvedForm.message);
+  const projectedForm = projectCompanionRuntimeStatBlock({
+    statBlock: resolvedForm.form.statBlock,
+    creatureTypeOverride: "fey",
+  });
+  return projectedForm;
 }
 
 type CompanionFormResolutionFacts = Extract<

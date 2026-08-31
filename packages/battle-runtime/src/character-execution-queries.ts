@@ -425,41 +425,7 @@ function executableSpellProcedureFromLiveEffects(
     stored.procedure === "markedDamageRider" &&
     stored.action === "transfer"
   ) {
-    if (liveActor === undefined) return undefined;
-    const source = characterRetainedSpellProcedureExecution(
-      execution,
-      stored.activeEffectSourceProcedureRef,
-    );
-    const activeEffect = liveActor.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "spellMarkedDamageRider" }
-      > =>
-        effect.kind === "spellMarkedDamageRider" &&
-        effect.effectRef === stored.activeEffectRef &&
-        effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
-        effect.sourceCombatantId === liveActor.combatantId,
-    );
-    return activeEffect !== undefined &&
-      source?.procedure === "markedDamageRider" &&
-      source.action === "cast"
-      ? {
-          spellRuleFacts: source.spellRuleFacts,
-          access: {
-            tag: "spellEffect",
-            sourceCombatantId: liveActor.combatantId,
-          },
-          resource: { tag: "none" },
-          procedure: stored.procedure,
-          action: stored.action,
-          actionCost: "bonusAction",
-          activeEffect,
-          rangeFeet: source.rangeFeet,
-          targeting: { kind: "singleCombatant" },
-        }
-      : undefined;
+    return executableMarkedDamageRiderTransfer(execution, stored, liveActor);
   }
   if (stored.procedure === "objectContactDamageRepeat") {
     if (liveActor === undefined) return undefined;
@@ -540,4 +506,54 @@ function executableSpellProcedureFromLiveEffects(
       : undefined;
   }
   return stored;
+}
+
+function executableMarkedDamageRiderTransfer(
+  execution: CharacterExecutionState,
+  stored: Extract<
+    BattleStoredSpellProcedureExecution,
+    { readonly procedure: "markedDamageRider"; readonly action: "transfer" }
+  >,
+  liveActor:
+    | {
+        readonly combatantId: CombatantId;
+        readonly activeEffects: readonly BattleActiveEffect[];
+      }
+    | undefined,
+): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
+  if (liveActor === undefined) return undefined;
+  const source = characterRetainedSpellProcedureExecution(
+    execution,
+    stored.activeEffectSourceProcedureRef,
+  );
+  const activeEffect = liveActor.activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellMarkedDamageRider" }
+    > =>
+      effect.kind === "spellMarkedDamageRider" &&
+      effect.effectRef === stored.activeEffectRef &&
+      effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
+      effect.sourceCombatantId === liveActor.combatantId,
+  );
+  return activeEffect !== undefined &&
+    source?.procedure === "markedDamageRider" &&
+    source.action === "cast"
+    ? {
+        spellRuleFacts: source.spellRuleFacts,
+        access: {
+          tag: "spellEffect",
+          sourceCombatantId: liveActor.combatantId,
+        },
+        resource: { tag: "none" },
+        procedure: stored.procedure,
+        action: stored.action,
+        actionCost: "bonusAction",
+        activeEffect,
+        rangeFeet: source.rangeFeet,
+        targeting: { kind: "singleCombatant" },
+      }
+    : undefined;
 }

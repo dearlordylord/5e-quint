@@ -81,7 +81,7 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { optionalProperty } from "../optional-property.ts";
 import {
   characterUnitProcedureBindings,
@@ -2559,9 +2559,10 @@ function resolveSpellActInternal(
           })
         : null;
     const metamagicApplicationsForDamageAndSpend =
-      seekingApplication !== null && typeof seekingApplication !== "string"
-        ? [...(metamagicApplicationsForResolution ?? []), seekingApplication]
-        : metamagicApplicationsForResolution;
+      spellDamageMetamagicApplications(
+        metamagicApplicationsForResolution,
+        seekingApplication,
+      );
     const effectiveAttackRoll = effectiveSpellAttackRoll(fillSet.attackRoll);
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
@@ -2576,17 +2577,17 @@ function resolveSpellActInternal(
       ordinaryHit,
     });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
-      missToHitReplacement === null
-    ) {
+    const missToHitReplacementIssue = spellMissToHitReplacementIssue(
+      fillSet.attackRoll.missToHitReplacementProcedureRef,
+      missToHitReplacement,
+      ordinaryHit,
+    );
+    if (missToHitReplacementIssue !== null) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
-        ordinaryHit
-          ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
-          : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
+        missToHitReplacementIssue,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -3355,6 +3356,28 @@ function resolveSpellActInternal(
   };
 }
 
+function spellDamageMetamagicApplications(
+  applications: readonly SpellMetamagicApplicationFact[] | undefined,
+  seekingApplication: ReturnType<
+    typeof seekingSpellRerollApplicationForAttackRoll
+  >,
+): readonly SpellMetamagicApplicationFact[] | undefined {
+  return seekingApplication !== null && typeof seekingApplication !== "string"
+    ? [...(applications ?? []), seekingApplication]
+    : applications;
+}
+
+function spellMissToHitReplacementIssue(
+  selectedProcedureRef: BattleProcedureExecutionRef | undefined,
+  replacement: ReturnType<typeof selectedAttackRollMissToHitReplacement>,
+  ordinaryHit: boolean,
+): string | null {
+  if (selectedProcedureRef === undefined || replacement !== null) return null;
+  return ordinaryHit
+    ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+    : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.";
+}
+
 function stateAfterSpellAttackRollMadeForInvocation(
   state: BattleState,
   actorId: CombatantId,
@@ -3476,8 +3499,7 @@ function spendSpellActResolutionResources(input: {
   >["value"];
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (
-    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
-    input.invocation.operation === "createAndAttack"
+    isSpatialMeleeSpellAttackProxyOperation(input.invocation, "createAndAttack")
   ) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -3517,8 +3539,10 @@ function spendSpellActResolutionResources(input: {
     };
   }
   if (
-    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
-    input.invocation.operation === "repositionAndAttack"
+    isSpatialMeleeSpellAttackProxyOperation(
+      input.invocation,
+      "repositionAndAttack",
+    )
   ) {
     if (
       !spatialMeleeSpellAttackProxyRepeatIsLaterTurn({
@@ -3606,6 +3630,24 @@ function spendSpellActResolutionResources(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function isSpatialMeleeSpellAttackProxyOperation<
+  Operation extends "createAndAttack" | "repositionAndAttack",
+>(
+  invocation: BattleExecutableSpellInvocation,
+  operation: Operation,
+): invocation is Extract<
+  BattleExecutableSpellInvocation,
+  {
+    readonly procedure: "spatialMeleeSpellAttackProxy";
+    readonly operation: Operation;
+  }
+> {
+  return (
+    invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    invocation.operation === operation
+  );
 }
 
 export function resolveBonusActionSpellAct(

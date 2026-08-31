@@ -554,11 +554,9 @@ export function repeatSaveConditionEffectRouteForResolution(
   ) {
     return undefined;
   }
-  const includesStagedConditionRepeatSave =
-    fillsIncludeStagedConditionRepeatSave(input);
+  const conditionsChanged = repeatSaveConditionStateChanged(input, result);
   return nonEmptyRouteEvents([
-    ...(includesStagedConditionRepeatSave ||
-    combatantsConditionsChanged(input.state, result.state)
+    ...(conditionsChanged
       ? [
           resolveBattleSubjectRoute(
             "repeatSaveConditionEffect" as const,
@@ -587,6 +585,16 @@ export function repeatSaveConditionEffectRouteForResolution(
         ]
       : []),
   ]);
+}
+
+function repeatSaveConditionStateChanged(
+  input: BattleResolutionInput,
+  result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): boolean {
+  return (
+    fillsIncludeStagedConditionRepeatSave(input) ||
+    combatantsConditionsChanged(input.state, result.state)
+  );
 }
 
 function fillsIncludeRepeatSaveConditionEffect(

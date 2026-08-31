@@ -336,32 +336,14 @@ export function glyphStoredSpellRelease(
       GLYPH_STORED_AREA_ONGOING_PROCEDURES,
     )
   ) {
-    if (
-      !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
-      !glyphStoredProcedureTargetsArea(storedProcedure)
-    )
-      return null;
-    return {
-      kind: "spellGlyph",
-      executionKind: "areaOngoing",
-      storedProcedure,
-    };
+    return glyphStoredOngoingAreaRelease(storedProcedure);
   } else if (
     glyphStoredProcedureHasProcedure(
       storedProcedure,
       GLYPH_STORED_AREA_CONTROL_PROCEDURES,
     )
   ) {
-    if (
-      !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
-      !glyphStoredProcedureTargetsArea(storedProcedure)
-    )
-      return null;
-    return {
-      kind: "spellGlyph",
-      executionKind: "areaControl",
-      storedProcedure,
-    };
+    return glyphStoredAreaControlRelease(storedProcedure);
   } else if (storedProcedure.procedure === "persistentAreaSaveCondition") {
     if (
       !glyphStoredProcedureDoesNotRequireConcentration(storedProcedure) ||
@@ -464,4 +446,38 @@ export function glyphStoredSpellRelease(
       Match.exhaustive,
     );
   }
+}
+
+function glyphStoredOngoingAreaRelease(
+  storedProcedure: GlyphStoredProcedureFor<
+    (typeof GLYPH_STORED_AREA_ONGOING_PROCEDURES)[number]
+  >,
+): Extract<
+  GlyphStoredSpellRelease,
+  { readonly executionKind: "areaOngoing" }
+> | null {
+  if (
+    !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
+    !glyphStoredProcedureTargetsArea(storedProcedure)
+  ) {
+    return null;
+  }
+  return { kind: "spellGlyph", executionKind: "areaOngoing", storedProcedure };
+}
+
+function glyphStoredAreaControlRelease(
+  storedProcedure: GlyphStoredProcedureFor<
+    (typeof GLYPH_STORED_AREA_CONTROL_PROCEDURES)[number]
+  >,
+): Extract<
+  GlyphStoredSpellRelease,
+  { readonly executionKind: "areaControl" }
+> | null {
+  if (
+    !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
+    !glyphStoredProcedureTargetsArea(storedProcedure)
+  ) {
+    return null;
+  }
+  return { kind: "spellGlyph", executionKind: "areaControl", storedProcedure };
 }

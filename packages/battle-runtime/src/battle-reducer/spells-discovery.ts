@@ -649,14 +649,23 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
-    (invocation.procedure !== "movableLightManifestation" ||
-      invocation.operation !== "reposition" ||
-      actor.activeEffects.some(
-        (effect) =>
-          effect.kind === "movableLightManifestation" &&
-          effect.effectRef === invocation.activeEffectRef &&
-          effect.sourceCombatantId === actor.combatantId,
-      ))
+    movableLightManifestationPrerequisiteIsMet(actor, invocation)
+  );
+}
+
+function movableLightManifestationPrerequisiteIsMet(
+  actor: BattleCreatureState,
+  invocation: BattleExecutableSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure !== "movableLightManifestation" ||
+    invocation.operation !== "reposition" ||
+    actor.activeEffects.some(
+      (effect) =>
+        effect.kind === "movableLightManifestation" &&
+        effect.effectRef === invocation.activeEffectRef &&
+        effect.sourceCombatantId === actor.combatantId,
+    )
   );
 }
 

@@ -108,11 +108,7 @@ export function spellAttackProcedureRouteForDiscoveredAct(
     invocation.procedure === "spellAttackSequence"
       ? spellAttackSequenceRouteHoles(holes)
       : holes,
-    invocation.procedure === "spellAttackSequence"
-      ? "battleSpellAttackProcedure"
-      : "resource" in invocation && invocation.resource.tag === "spellSlot"
-        ? "battleSpellSlotAndActionEconomy"
-        : "battleActionEconomy",
+    spellAttackDiscoveryOwner(invocation),
   );
   const objectTargetBoundary =
     invocation.procedure !== "spellAttackSequence" &&
@@ -130,6 +126,17 @@ export function spellAttackProcedureRouteForDiscoveredAct(
         ]
       : [];
   return nonEmptyRouteEvents([actionEconomyEvent, ...objectTargetBoundary]);
+}
+
+function spellAttackDiscoveryOwner(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForRouteSubject>>,
+): BattleReducerRouteOwnerGroup {
+  if (invocation.procedure === "spellAttackSequence") {
+    return "battleSpellAttackProcedure";
+  }
+  return "resource" in invocation && invocation.resource.tag === "spellSlot"
+    ? "battleSpellSlotAndActionEconomy"
+    : "battleActionEconomy";
 }
 
 function spellAttackSequenceRouteHoles(

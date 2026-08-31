@@ -152,10 +152,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     spell.mechanics.attachment.kind !== "hole" ||
     spell.mechanics.attachment.value.kind !== "target" ||
     spell.mechanics.attachment.value.selection.mode !== "one" ||
-    spell.mechanics.operations.length !== 3 ||
-    !spell.mechanics.operations.every(
-      (operation) => operation.trigger.kind === "passive",
-    )
+    !hasThreePassiveAfterHitOperations(spell.mechanics)
   ) {
     return null;
   }
@@ -197,8 +194,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     damage?.kind !== "damage" ||
     damage.damageType !== "radiant" ||
     damage.amount === undefined ||
-    (illumination?.emission.kind !== "bright" &&
-      illumination?.emission.kind !== "brightAndDim") ||
+    !hasVisibleAfterHitIllumination(illumination) ||
     attackAdvantage?.kind !== "modify_roll_advantage" ||
     attackAdvantage.mode !== "advantage" ||
     attackAdvantage.affects !== "rolls_against_self" ||
@@ -226,6 +222,34 @@ function afterHitDamageAndIlluminationSpellProjection(
       durationTicks: durationTicks.success,
     },
   };
+}
+
+function hasThreePassiveAfterHitOperations(
+  mechanics: Extract<
+    BattleSpellAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >,
+): boolean {
+  return (
+    mechanics.operations.length === 3 &&
+    mechanics.operations.every(
+      (operation) => operation.trigger.kind === "passive",
+    )
+  );
+}
+
+function hasVisibleAfterHitIllumination(
+  illumination: ReturnType<typeof illuminationEmissionFactsFromSurface> | null,
+): illumination is NonNullable<typeof illumination> & {
+  readonly emission: Extract<
+    NonNullable<typeof illumination>["emission"],
+    { readonly kind: "bright" | "brightAndDim" }
+  >;
+} {
+  return (
+    illumination?.emission.kind === "bright" ||
+    illumination?.emission.kind === "brightAndDim"
+  );
 }
 
 function discoverAfterHitDamageAndIlluminationCastAct(): readonly BattleActDiscoveryCandidate[] {

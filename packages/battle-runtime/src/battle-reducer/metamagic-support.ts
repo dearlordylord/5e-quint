@@ -734,15 +734,16 @@ export function subtleSpellComponentProjectionFact(
 ): SubtleSpellComponentProjectionFact | null {
   if (!("spellRuleFacts" in invocation)) return null;
   const components = invocation.spellRuleFacts.components;
+  const preservesMaterial = subtleSpellPreservesMaterialComponent(components);
   const suppressedComponents: SubtleSpellSuppressedComponentFact[] = [
     ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
     ...(components.somatic ? ([{ kind: "somatic" }] as const) : []),
-    ...(components.hasMaterial && !components.hasPricedOrConsumedMaterial
+    ...(components.hasMaterial && !preservesMaterial
       ? ([{ kind: "material" }] as const)
       : []),
   ];
   const preservedComponents: readonly SubtleSpellPreservedComponentFact[] =
-    components.hasMaterial && components.hasPricedOrConsumedMaterial
+    preservesMaterial
       ? [{ kind: "material", preservation: "pricedOrConsumed" }]
       : [];
   const nonEmptySuppressed = readonlyNonEmptyArray(suppressedComponents);
@@ -753,6 +754,13 @@ export function subtleSpellComponentProjectionFact(
   return nonEmptyPreserved === null
     ? null
     : { suppressedComponents: [], preservedComponents: nonEmptyPreserved };
+}
+
+function subtleSpellPreservesMaterialComponent(components: {
+  readonly hasMaterial: boolean;
+  readonly hasPricedOrConsumedMaterial: boolean;
+}): boolean {
+  return components.hasMaterial && components.hasPricedOrConsumedMaterial;
 }
 
 export function subtleSpellComponentProjectionForApplications(
@@ -941,6 +949,24 @@ function isTransmutedSpellDamageType(
 function twinnedSpellEffectiveTargetCount(
   invocation: RuntimeSpellProcedure,
 ): number | null {
+  const facts = twinnedSpellTargetingFacts(invocation);
+  if (facts === null) return null;
+  const countByEffectiveLevel = twinnedTargetCountFromExecutionFacts(
+    invocation.spellRuleFacts.twinnedTargetCount,
+  );
+  if (countByEffectiveLevel === null) return null;
+  const currentCount = countByEffectiveLevel(facts.slotLevel);
+  const nextEffectiveLevel = spellSlotLevel(Number(facts.slotLevel) + 1);
+  const nextCount = countByEffectiveLevel(nextEffectiveLevel);
+  return currentCount === facts.maxTargets && nextCount === currentCount + 1
+    ? nextCount
+    : null;
+}
+
+function twinnedSpellTargetingFacts(invocation: RuntimeSpellProcedure): {
+  readonly slotLevel: ReturnType<typeof spellSlotLevel>;
+  readonly maxTargets: number;
+} | null {
   if (
     !("resource" in invocation) ||
     invocation.resource.tag !== "spellSlot" ||
@@ -951,19 +977,10 @@ function twinnedSpellEffectiveTargetCount(
   ) {
     return null;
   }
-  const countByEffectiveLevel = twinnedTargetCountFromExecutionFacts(
-    invocation.spellRuleFacts.twinnedTargetCount,
-  );
-  if (countByEffectiveLevel === null) return null;
-  const currentCount = countByEffectiveLevel(invocation.resource.slotLevel);
-  const nextEffectiveLevel = spellSlotLevel(
-    Number(invocation.resource.slotLevel) + 1,
-  );
-  const nextCount = countByEffectiveLevel(nextEffectiveLevel);
-  return currentCount === invocation.targeting.maxTargets &&
-    nextCount === currentCount + 1
-    ? nextCount
-    : null;
+  return {
+    slotLevel: invocation.resource.slotLevel,
+    maxTargets: invocation.targeting.maxTargets,
+  };
 }
 
 function twinnedTargetCountFromExecutionFacts(
