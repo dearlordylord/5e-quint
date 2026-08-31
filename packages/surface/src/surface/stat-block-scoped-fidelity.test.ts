@@ -2263,7 +2263,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       expect.objectContaining({
         kind: "malformed-evidence",
         anchor: expect.objectContaining({
-          field: "procedures.Bite.description",
+          field: "procedures.actions.0.description",
         }),
         evidence: "",
       }),
@@ -2871,6 +2871,58 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         ],
       },
       {
+        name: "Hydra",
+        mutate: (line: string) =>
+          line.startsWith("**Immunities**")
+            ? "**Immunities** Blinded, Bogus (while sleeping)"
+            : line,
+        expected: [
+          {
+            kind: "unsupported-evidence",
+            field: "immunities.qualifiedConditions.1.condition",
+            evidence: "bogus",
+          },
+        ],
+      },
+      {
+        name: "Hydra",
+        mutate: (line: string) =>
+          line.startsWith("**Immunities**")
+            ? "**Immunities** Poisoned, Blinded, Poisoned (first), Blinded (second)"
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "immunities.qualifiedConditions.2.condition",
+            evidence: "Poisoned (first)",
+          },
+          {
+            kind: "malformed-evidence",
+            field: "immunities.qualifiedConditions.3.condition",
+            evidence: "Blinded (second)",
+          },
+        ],
+      },
+      {
+        name: "Hydra",
+        mutate: (line: string) =>
+          line.startsWith("**Immunities**")
+            ? "**Immunities** Blinded, Blinded (first), Blinded (second)"
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "immunities.qualifiedConditions.1.condition",
+            evidence: "Blinded (first)",
+          },
+          {
+            kind: "malformed-evidence",
+            field: "immunities.qualifiedConditions.2.condition",
+            evidence: "Blinded (second)",
+          },
+        ],
+      },
+      {
         name: "Dretch",
         mutate: (line: string) =>
           line.startsWith("**Languages**")
@@ -2929,6 +2981,37 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
             kind: "malformed-evidence",
             field: "challengeRating.denominator",
             evidence: "0",
+          },
+        ],
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.") ? line.replace("**Bite.", "**.") : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "procedures.actions.0.name",
+            evidence: "",
+          },
+        ],
+      },
+      {
+        name: "Ettercap",
+        mutate: (line: string) =>
+          line.startsWith("***Multiattack.") || line.startsWith("***Reel.")
+            ? "***Shared.***"
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "procedures.actions.0.description",
+            evidence: "",
+          },
+          {
+            kind: "malformed-evidence",
+            field: "procedures.bonus_actions.0.description",
+            evidence: "",
           },
         ],
       },
@@ -3099,10 +3182,61 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       expect.objectContaining({
         kind: "malformed-evidence",
         anchor: expect.objectContaining({
-          field: "procedures.Spellcasting.description",
+          field: "procedures.actions.2.description",
         }),
         evidence: "",
       }),
+    ]);
+  });
+
+  test("distinguishes same-named authored description issues by section and ordinal", () => {
+    const giantOwl = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Giant Owl",
+    );
+    expect(giantOwl).toBeDefined();
+    if (giantOwl === undefined) return;
+    const actions = giantOwl.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const spellcasting = actions.find(
+      (entry) => entry.kind === "textOnly" && entry.name === "Spellcasting",
+    );
+    expect(spellcasting).toBeDefined();
+    if (spellcasting === undefined || spellcasting.kind !== "textOnly") return;
+    const [firstAction, ...remainingActions] = actions;
+    const invalidDescription = { ...spellcasting, description: "***" };
+    const mutated: typeof giantOwl = {
+      ...giantOwl,
+      statBlock: {
+        ...giantOwl.statBlock,
+        actions: [
+          firstAction === spellcasting ? invalidDescription : firstAction,
+          ...remainingActions.map((entry) =>
+            entry === spellcasting ? invalidDescription : entry,
+          ),
+        ] as const,
+        bonusActions: [{ ...invalidDescription }] as const,
+      },
+    };
+    const result = projectAuthoredStatBlock(mutated, equipmentSource);
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor }) => ({
+        kind,
+        field: anchor.field,
+      })),
+    ).toEqual([
+      {
+        kind: "malformed-evidence",
+        field: "procedures.actions.2.description",
+      },
+      {
+        kind: "malformed-evidence",
+        field: "procedures.bonus_actions.2.description",
+      },
     ]);
   });
 

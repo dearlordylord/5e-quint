@@ -1916,10 +1916,18 @@ const parseImmunities = (
             ),
         );
   const parseConditions = (value: string) => {
-    const conditions: Condition[] = [];
+    const conditions: {
+      readonly sourceIndex: number;
+      readonly sourceEvidence: string;
+      readonly value: Condition;
+    }[] = [];
     const qualifiedConditions: {
-      readonly condition: Condition;
-      readonly qualifier: string;
+      readonly sourceIndex: number;
+      readonly sourceEvidence: string;
+      readonly value: {
+        readonly condition: Condition;
+        readonly qualifier: string;
+      };
     }[] = [];
     for (const [index, item] of (value === ""
       ? []
@@ -1927,7 +1935,7 @@ const parseImmunities = (
     ).entries()) {
       const qualified = item.match(/^([A-Za-z]+) \((.+)\)$/);
       if (qualified === null) {
-        conditions.push(
+        const condition = assess(issueContext, () =>
           parsedLiteral(
             issueContext,
             CONDITIONS,
@@ -1935,23 +1943,34 @@ const parseImmunities = (
             `immunities.conditions.${index}`,
           ),
         );
+        if (condition !== undefined) {
+          conditions.push({
+            sourceIndex: index,
+            sourceEvidence: item,
+            value: condition,
+          });
+        }
       } else {
-        qualifiedConditions.push({
-          condition: parsedLiteral(
+        const condition = assess(issueContext, () =>
+          parsedLiteral(
             issueContext,
             CONDITIONS,
             (qualified[1] ?? "").toLowerCase(),
             `immunities.qualifiedConditions.${index}.condition`,
           ),
-          qualifier: qualified[2] ?? "",
-        });
+        );
+        if (condition !== undefined) {
+          qualifiedConditions.push({
+            sourceIndex: index,
+            sourceEvidence: item,
+            value: { condition, qualifier: qualified[2] ?? "" },
+          });
+        }
       }
     }
     return {
-      conditions: sortedStrings(conditions),
-      qualifiedConditions: [...qualifiedConditions].sort((left, right) =>
-        left.condition.localeCompare(right.condition),
-      ),
+      conditions,
+      qualifiedConditions,
     };
   };
   const conditionNames = new Set<string>(CONDITIONS);
@@ -1993,21 +2012,14 @@ const parseImmunities = (
   const qualifiedConditions = firstGroupIsConditions
     ? firstConditionValues.qualifiedConditions
     : explicitConditionValues.qualifiedConditions;
-  const fixedConditionSet = new Set(conditions);
-  const conditionItems = (
-    firstGroupIsConditions ? firstGroup : (explicitConditions ?? "")
-  ).split(", ");
+  const fixedConditionSet = new Set(conditions.map(({ value }) => value));
   const nonOverlappingQualifiedConditions = qualifiedConditions.filter(
-    ({ condition }) => {
-      if (!fixedConditionSet.has(condition)) return true;
-      const sourceIndex = conditionItems.findIndex(
-        (item) =>
-          item.match(/^([A-Za-z]+) \(.+\)$/)?.[1]?.toLowerCase() === condition,
-      );
+    ({ sourceIndex, sourceEvidence, value }) => {
+      if (!fixedConditionSet.has(value.condition)) return true;
       malformedEvidence(
         issueContext,
-        `immunities.qualifiedConditions.${Math.max(sourceIndex, 0)}.condition`,
-        conditionItems[sourceIndex] ?? condition,
+        `immunities.qualifiedConditions.${sourceIndex}.condition`,
+        sourceEvidence,
         "a condition not already declared as a fixed immunity",
         undefined,
       );
@@ -2021,10 +2033,20 @@ const parseImmunities = (
       CreatureImmunityListSchema,
       {
         ...(damageTypes.length === 0 ? {} : { damageTypes }),
-        ...(conditions.length === 0 ? {} : { conditions }),
+        ...(conditions.length === 0
+          ? {}
+          : {
+              conditions: sortedStrings(conditions.map(({ value }) => value)),
+            }),
         ...(nonOverlappingQualifiedConditions.length === 0
           ? {}
-          : { qualifiedConditions: nonOverlappingQualifiedConditions }),
+          : {
+              qualifiedConditions: nonOverlappingQualifiedConditions
+                .map(({ value }) => value)
+                .sort((left, right) =>
+                  left.condition.localeCompare(right.condition),
+                ),
+            }),
       },
       "immunities",
       DEPENDENCY_FALLBACK_IMMUNITY,
@@ -2625,7 +2647,9 @@ const parseRawEntries = (
     if (current !== undefined) {
       const descriptionEvidence = normalizedProse(current.parts.join(" "));
       const isTrait = current.section === "Traits";
-      const owner = isTrait ? "traits" : "procedures";
+      const descriptionField = isTrait
+        ? `traits.${current.index}.description`
+        : `procedures.${normalizedIdentifier(current.section)}.${current.index}.description`;
       entries.push({
         section: current.section,
         name: current.name,
@@ -2636,7 +2660,7 @@ const parseRawEntries = (
             : StatBlockProcedureDescriptionSchema,
           descriptionEvidence,
           descriptionEvidence,
-          `${owner}.${normalizedProcedureName(current.name)}.description`,
+          descriptionField,
           isTrait
             ? "a canonical trait description"
             : "a nonempty procedure description",
@@ -2662,7 +2686,7 @@ const parseRawEntries = (
       );
       continue;
     }
-    const entry = line.match(/^\*{2,3}(.+?)\.\*{2,3}\s*(.*)$/);
+    const entry = line.match(/^\*{2,3}(.*?)\.\*{2,3}\s*(.*)$/);
     if (entry !== null && section !== undefined) {
       flush();
       const index = entryCounts.get(section) ?? 0;
@@ -4968,7 +4992,7 @@ const projectAuthoredStatBlockUnsafe = (
     StatBlockProcedureEntry,
     { readonly projection: string; readonly procedureEvidence: string }
   >();
-  for (const { entry } of procedures) {
+  for (const { section, entry } of procedures) {
     if (entry.kind !== "textOnly") continue;
     const normalized = normalizedProse(entry.description);
     const projection = decodeEvidenceValue(
@@ -4976,7 +5000,7 @@ const projectAuthoredStatBlockUnsafe = (
       StatBlockProcedureDescriptionSchema,
       normalized,
       normalized,
-      `procedures.${normalizedProcedureName(entry.name)}.description`,
+      `procedures.${normalizedIdentifier(section)}.${entry.procedureOrdinal}.description`,
       "a nonempty normalized authored procedure description",
       "Unsupported procedure description.",
     );
