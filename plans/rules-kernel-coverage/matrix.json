@@ -4490,7 +4490,7 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/active-effect-lifecycle-routes.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
           "stepAction": "step"
         },
