@@ -86,7 +86,7 @@ module battleRuntimeCommandOrdering {
   pure def compelledFillKindForBattleFillKind(fillKind: BattleFillKind): CompelledBehaviorFillKind =
     if (fillKind == SpellTargetListFillKind)
       CompelledTargetListFill
-    else if (fillKind == CommandOptionChoiceFillKind)
+    else if (fillKind == CompelledBehaviorOptionChoiceFillKind)
       CompelledBehaviorChoiceFill
     else if (fillKind == SavingThrowOutcomeFillKind)
       CompelledSavingThrowOutcomeFill
@@ -118,7 +118,7 @@ module battleRuntimeCommandOrdering {
   pure def commandHoleFrontier(stage: CommandFrontierStage): Set[BattleHoleFamilyKind] =
     compelledBehaviorHoleFrontier(compelledStageForCommandStage(stage)).map(hole => match hole {
       | CompelledTargetListHole => SpellTargetListHoleKind
-      | CompelledBehaviorChoiceHole => CommandOptionChoiceHoleKind
+      | CompelledBehaviorChoiceHole => CompelledBehaviorOptionChoiceHoleKind
       | CompelledSavingThrowOutcomeHole => SavingThrowOutcomeHoleKind
       | CompelledMovementHole => MovementHoleKind
     })

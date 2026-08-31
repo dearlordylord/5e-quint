@@ -12526,7 +12526,7 @@ const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityChoiceHoleKind: "abilityChoice",
   AttackDamageDispositionHoleKind: "attackDamageDisposition",
   AttackRollHoleKind: "attackRoll",
-  CommandOptionChoiceHoleKind: "compelledBehaviorOptionChoice",
+  CompelledBehaviorOptionChoiceHoleKind: "compelledBehaviorOptionChoice",
   CompanionReappearanceInitiativeHoleKind: "companionReappearanceInitiative",
   ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
   ConditionChoiceHoleKind: "conditionChoice",
@@ -12564,7 +12564,7 @@ const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
   AbilityCheckFillKind: "abilityCheck",
   AttackDamageDispositionFillKind: "attackDamageDisposition",
   AttackRollFillKind: "attackRoll",
-  CommandOptionChoiceFillKind: "compelledBehaviorOptionChoice",
+  CompelledBehaviorOptionChoiceFillKind: "compelledBehaviorOptionChoice",
   CompanionReappearanceInitiativeFillKind: "companionReappearanceInitiative",
   ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
   ConditionChoiceFillKind: "conditionChoice",
@@ -19142,7 +19142,7 @@ function commandOrderingStage(raw: unknown): CommandOrderingStage {
 function commandOrderingHole(raw: unknown): CommandOrderingHole {
   const tag = quintVariantTag(raw);
   if (tag === "SpellTargetListHoleKind") return "spellTargetList";
-  if (tag === "CommandOptionChoiceHoleKind")
+  if (tag === "CompelledBehaviorOptionChoiceHoleKind")
     return "compelledBehaviorOptionChoice";
   if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
   if (tag === "MovementHoleKind") return "movement";
