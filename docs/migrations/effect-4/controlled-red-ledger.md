@@ -6,7 +6,7 @@ Cutover starting point: `fba977c5ed3abf554631ce43c006b5a0ad4c5557`
 Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
 Status: closed by the final issue #386 certification. The current owner sweep
-records all 13 package owners green with zero raw and zero deduplicated
+records all 14 package owners green with zero raw and zero deduplicated
 diagnostics. Historical controlled-red snapshots below remain evidence of the
 migration sequence; none is a current waiver or exception.
 
@@ -1198,10 +1198,12 @@ not run for this issue snapshot.
 ## Issue #386 final certification and controlled-red closure
 
 Issue #386 removes the migration exception rather than extending it. The final
-inventory covers all 13 package owners and records zero raw and zero
-deduplicated diagnostics. The retired inventory generator and mutation package
-scripts are absent; `pnpm typecheck` is the current executable owner and any
-future diagnostic is an ordinary blocking failure.
+inventory covers all 14 package owners and records zero raw and zero
+deduplicated diagnostics. Its SHA-256 is
+`47bcb642a9e7907630022930c73c9d75e9b4926b68e5c4a3814417417f608f72`.
+The retired inventory generator and mutation package scripts are absent;
+`pnpm typecheck` is the current executable owner and any future diagnostic is
+an ordinary blocking failure.
 
 The repository and installed dependency graph select Effect
 `4.0.0-rc.112`, `@effect/platform-node@4.0.0-rc.112`,

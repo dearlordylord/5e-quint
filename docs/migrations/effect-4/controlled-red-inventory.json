@@ -49,6 +49,13 @@
       "rawDiagnostics": 0
     },
     {
+      "package": "@dnd/opaque-oracle",
+      "manifest": "packages/opaque-oracle/package.json",
+      "command": "pnpm --filter @dnd/opaque-oracle run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
       "package": "@dnd/shared",
       "manifest": "packages/shared/package.json",
       "command": "pnpm --filter @dnd/shared run typecheck --pretty false",

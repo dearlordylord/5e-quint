@@ -27,10 +27,10 @@ platform-node-shared at `4.0.0-rc.112`.
 
 ## Controlled-red closure
 
-The final [controlled-red inventory](./controlled-red-inventory.json) covers 13
+The final [controlled-red inventory](./controlled-red-inventory.json) covers 14
 typecheck owners and records zero raw and zero deduplicated diagnostics. Its
 SHA-256 is
-`347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
+`47bcb642a9e7907630022930c73c9d75e9b4926b68e5c4a3814417417f608f72`.
 The migration-only inventory generator and its package scripts have been
 removed. Any future diagnostic is therefore an ordinary blocking failure, not
 an admitted migration exception.
@@ -172,10 +172,11 @@ completed.
 
 ## Public verification
 
-The following public commands were run directly under their owning repository
-locks at the prior certification fixed point:
+The public typecheck was rerun directly under its owning repository lock at
+committed tip `99ee3da75`. The other public results retain their prior
+certification fixed-point evidence:
 
-- `pnpm typecheck`: passed, 13 of 13 owners.
+- `pnpm typecheck`: passed, 14 of 14 owners in 1m0.703s.
 - `pnpm test`: passed, 10 of 10 workspace tasks. Notable uncached owners were
   battle-runtime (261 files, 2,887 passed and 132 documented proof-lane skips),
   MCP (57 files, 416 passed), and app (18 files, 88 passed).
@@ -183,7 +184,8 @@ locks at the prior certification fixed point:
   production bundle. The existing large-chunk advisory remains non-fatal.
 - `pnpm quality:milestone`: pending final reviewer convergence.
 
-The master-reconciliation checkpoint was not subjected to these broad commands
+Apart from the current public typecheck recorded above, the
+master-reconciliation checkpoint was not subjected to the other broad commands
 while implementation and review lanes were active. Its focused Effect cohort,
 certification typecheck, finite-oracle verification, authored-identity audit,
 Opaque Oracle checks, and exact Raw Swarm consumer-distribution lifecycle tests
