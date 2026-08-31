@@ -12,22 +12,22 @@
 This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-30
-- Current frontier: `SR-00`
-- Active work: integrate and certify #368–#386 from the read-only
-  `work/effect4-certification-gh386` candidate
-- Active owner: Codex orchestrator
-- Last completed checkpoint: none under this ledger
-- Last accepted milestone SHA: none
+- Current frontier: `SR-01`
+- Active work: none; `SR-01` is available to claim from the exact `SR-00`
+  landing
+- Active owner: none
+- Last completed checkpoint: `SR-00` operational landing, with the explicit
+  proof/quality verification exception retained on #386
+- Last accepted milestone SHA: `ec966d06e`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: `integration/cleanroom-sr-00` at
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-00`
-- Next action: merge the candidate into the integration branch, synchronize the
-  ledger-only lease commit from `master`, resolve convergence findings, and run
-  #386's final review and public gates
-- Next action after `SR-00`: start `SR-01` from the exact #386 landing SHA
-- Parallel work allowed now: none that modifies behavior or files owned by
-  #368–#386
+- Active landing unit: none
+- Next action: claim `SR-01`, create its short-lived integration worktree from
+  `ec966d06e`, and reconcile #479 / PR #480 without importing the reserved line
+  blindly
+- Next action after `SR-01`: establish the exact common-base receipt in `SR-02`
+- Parallel work allowed now: only disjoint read-only preparation until the
+  `SR-01` landing unit records its write lease
 - Cleanroom Acceptance Run #39: excluded
 
 Before acting, compare this section with current `master`, live native GitHub
@@ -96,28 +96,28 @@ short-lived integration branch and one coherent master merge. The coordination
 checkpoint becomes `Complete` only after all of its landing units and named
 results are on one coherent `master` line.
 
-| ID      | State   | Outcome / tickets                                          | Start after                  | Complete after                     |
-| ------- | ------- | ---------------------------------------------------------- | ---------------------------- | ---------------------------------- |
-| `SR-00` | Active  | Land and certify the user-owned #368–#386 line             | current user session         | #386 receipt                       |
-| `SR-01` | Waiting | Reconcile and land #479 / PR #480                          | `SR-00`                      | #479 receipt                       |
-| `SR-02` | Waiting | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
-| `SR-03` | Waiting | Land typed weapon-mastery references, #476                 | `SR-02`                      | #476 receipt                       |
-| `SR-04` | Waiting | Land owner projections, #464/#469/#477/#470/#473/#471/#474 | `SR-03`                      | every named ticket receipt         |
-| `SR-05` | Waiting | Land joins/composition and close #465–#468/#52             | `SR-04`                      | #52 receipt                        |
-| `SR-06` | Waiting | Bind admitted mechanics, #117                              | `SR-05`                      | #117 receipt                       |
-| `SR-07` | Waiting | Derive dynamic availability, #118                          | `SR-06`                      | #118 receipt                       |
-| `SR-08` | Waiting | Generate the Cleanroom Mechanics Slice, #29                | `SR-07`                      | #29 receipt                        |
-| `SR-09` | Waiting | Implement the typed two-slot publication store, #99        | `SR-03` shared-Surface lease | #99 receipt                        |
-| `SR-10` | Waiting | Add live cross-process leasing/recovery, #409              | `SR-09`                      | #409 receipt                       |
-| `SR-11` | Waiting | Route the public CLI and close #410/#45                    | `SR-10`                      | #410 and #45 receipts              |
-| `SR-12` | Waiting | Land QNT protocol/context spine, #389–#393                 | `SR-02`                      | every named ticket receipt         |
-| `SR-13` | Waiting | Land QNT prerequisites/verticals, #394–#408                | `SR-12`; see execution order | `SR-08` plus all vertical receipts |
-| `SR-14` | Waiting | Recalibrate, run #211, and close #31                       | `SR-08`, `SR-13`             | #211 and #31 receipts              |
-| `SR-15` | Waiting | Publish Core and calibrate Oracle, #34/#40                 | `SR-08`, `SR-14`             | #34 and #40 receipts               |
-| `SR-16` | Waiting | Publish the minimal Rust Adapter, #35                      | `SR-15`                      | #35 receipt                        |
-| `SR-17` | Waiting | Assemble the Cleanroom Harness, #36                        | `SR-15`, `SR-16`             | #36 receipt                        |
-| `SR-18` | Waiting | Run and repair Dirty-Cleanroom Rehearsal, #37              | `SR-17`                      | #37 receipt                        |
-| `SR-19` | Waiting | Establish atomic Source Readiness, #38                     | `SR-11`, `SR-18`             | #38 closed                         |
+| ID      | State     | Outcome / tickets                                          | Start after                  | Complete after                     |
+| ------- | --------- | ---------------------------------------------------------- | ---------------------------- | ---------------------------------- |
+| `SR-00` | Complete  | Land and certify the user-owned #368–#386 line             | current user session         | #386 receipt                       |
+| `SR-01` | Available | Reconcile and land #479 / PR #480                          | `SR-00`                      | #479 receipt                       |
+| `SR-02` | Waiting   | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
+| `SR-03` | Waiting   | Land typed weapon-mastery references, #476                 | `SR-02`                      | #476 receipt                       |
+| `SR-04` | Waiting   | Land owner projections, #464/#469/#477/#470/#473/#471/#474 | `SR-03`                      | every named ticket receipt         |
+| `SR-05` | Waiting   | Land joins/composition and close #465–#468/#52             | `SR-04`                      | #52 receipt                        |
+| `SR-06` | Waiting   | Bind admitted mechanics, #117                              | `SR-05`                      | #117 receipt                       |
+| `SR-07` | Waiting   | Derive dynamic availability, #118                          | `SR-06`                      | #118 receipt                       |
+| `SR-08` | Waiting   | Generate the Cleanroom Mechanics Slice, #29                | `SR-07`                      | #29 receipt                        |
+| `SR-09` | Waiting   | Implement the typed two-slot publication store, #99        | `SR-03` shared-Surface lease | #99 receipt                        |
+| `SR-10` | Waiting   | Add live cross-process leasing/recovery, #409              | `SR-09`                      | #409 receipt                       |
+| `SR-11` | Waiting   | Route the public CLI and close #410/#45                    | `SR-10`                      | #410 and #45 receipts              |
+| `SR-12` | Waiting   | Land QNT protocol/context spine, #389–#393                 | `SR-02`                      | every named ticket receipt         |
+| `SR-13` | Waiting   | Land QNT prerequisites/verticals, #394–#408                | `SR-12`; see execution order | `SR-08` plus all vertical receipts |
+| `SR-14` | Waiting   | Recalibrate, run #211, and close #31                       | `SR-08`, `SR-13`             | #211 and #31 receipts              |
+| `SR-15` | Waiting   | Publish Core and calibrate Oracle, #34/#40                 | `SR-08`, `SR-14`             | #34 and #40 receipts               |
+| `SR-16` | Waiting   | Publish the minimal Rust Adapter, #35                      | `SR-15`                      | #35 receipt                        |
+| `SR-17` | Waiting   | Assemble the Cleanroom Harness, #36                        | `SR-15`, `SR-16`             | #36 receipt                        |
+| `SR-18` | Waiting   | Run and repair Dirty-Cleanroom Rehearsal, #37              | `SR-17`                      | #37 receipt                        |
+| `SR-19` | Waiting   | Establish atomic Source Readiness, #38                     | `SR-11`, `SR-18`             | #38 closed                         |
 
 ## Milestone receipt ledger
 
@@ -126,8 +126,9 @@ coordination checkpoint. Ticket/slice landings inside a checkpoint first append
 rows such as `SR-04A`; the final checkpoint row consolidates them after every
 required unit has landed.
 
-| Checkpoint/unit | Base SHA | Accepted SHA | Result | Verification | Ticket evidence | Unlocked |
-| --------------- | -------- | ------------ | ------ | ------------ | --------------- | -------- |
+| Checkpoint/unit | Base SHA    | Accepted SHA | Result                                                                                                          | Verification                                                                                                                                                                                          | Ticket evidence                                                                                                                                                                                        | Unlocked |
+| --------------- | ----------- | ------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `SR-00`         | `f566a5dca` | `ec966d06e`  | Operational landing complete; #386 certification remains open with an operator-accepted proof/quality exception | Final reviews converged; five public Battle MBTs passed; Oracle self-tests 15/15 and 7,246-identity verifier passed; complexity regressions zero; no terminal proof or milestone-quality pass claimed | [#381 closed receipt](https://github.com/dearlordylord/5e-quint/issues/381#issuecomment-5472588960); [#386 open receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5472589098) | `SR-01`  |
 
 ## Active landing table
 
@@ -135,9 +136,8 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner              | Worktree/branch                                                                             | Base SHA    | Write lease                                                                                 | State  |
-| --------------- | ------------ | ------------------ | ------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------- | ------ |
-| `SR-00`         | #368–#386    | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-00`; `integration/cleanroom-sr-00` | `301229532` | integration and certification of the read-only `work/effect4-certification-gh386` candidate | Active |
+| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
+| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
 
 ## Landing discipline
 
