@@ -14,15 +14,16 @@ This section is the sole mutable handoff for a new session.
 - Ledger state observed: 2026-08-31
 - Current frontier: `SR-03`
 - Active work: claim the typed weapon-mastery reference landing for #476
-- Active owner: unclaimed
+- Active owner: Codex orchestrator
 - Last completed checkpoint: `SR-02` exact common-base convergence, with the
   operator-waived broad/full run and separate #481 parity diagnostic recorded
 - Last accepted milestone SHA: `22aa1a6f8`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: none
-- Next action: claim `SR-03` from accepted revision `22aa1a6f8`, audit live #476
-  dependencies, and create its short-lived integration worktree
+- Active landing unit: `integration/cleanroom-sr-03` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-03`
+- Next action: implement #476 from lease base `1a2a16177`, regenerate its
+  Surface artifacts, and converge focused review
 - Parallel work allowed now: `SR-12` read-only topology/spec review; shared
   Surface writes remain serialized through the next claimed landing unit
 - Cleanroom Acceptance Run #39: excluded
@@ -135,8 +136,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
-| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
+| Checkpoint/unit | Ticket/slice                         | Owner              | Worktree/branch                                                                             | Base SHA    | Write lease                                                                                                                                                              | State  |
+| --------------- | ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| `SR-03`         | #476 typed weapon-mastery references | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-03`; `integration/cleanroom-sr-03` | `1a2a16177` | Surface weapon schema/content, typed authored-link extraction and catalog diagnostics, publication/portable regeneration, focused verification, and reviewer convergence | Active |
 
 ## Landing discipline
 
