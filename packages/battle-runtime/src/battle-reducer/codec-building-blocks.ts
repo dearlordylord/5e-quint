@@ -18,7 +18,6 @@ import {
 } from "@dnd/shared/types";
 import {
   AbilitySchema,
-  CreatureAttackRollMechanicsSchema,
   DamageTypeSchema,
   DcSourceSchema,
   DiceExprSchema,
@@ -34,16 +33,9 @@ import {
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-import {
-  STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
-  type SupportedCreatureAttackRollMechanics,
-  type SupportedStaticDamageCreatureAttackRollMechanics,
-} from "../battle-action-options.ts";
-import { creatureAttackRollMechanicsAreSupported } from "../statblock-attack-execution-mechanics.ts";
-import {
-  statBlockAttackDamageSupportsStaticNotation,
-  supportedStatBlockAttackDamage,
-} from "../statblock-attack-damage-support.ts";
+import { STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES } from "../battle-action-options.ts";
+import { StatBlockAttackDamageComponentRef } from "../stat-block-attack-damage-selection.ts";
+import { selectedStatBlockAttackDamageHasCanonicalComponentRefs } from "../statblock-attack-damage-support.ts";
 import {
   CharacterWeaponAttackExecutionWeaponFactsSchema,
   CharacterWeaponAttackExecutionWeaponSchema,
@@ -291,58 +283,96 @@ export const BoundCharacterWeaponAttackActionOptionSchema =
     Schema.fieldsAssign({ procedureRef: BattleAttackProcedureExecutionRef }),
   );
 
-const SupportedCreatureAttackRollMechanicsSchema =
-  CreatureAttackRollMechanicsSchema.pipe(
-    Schema.check(
-      Schema.makeFilter(creatureAttackRollMechanicsAreSupported, {
-        message: "Unsupported Stat Block attack mechanics.",
-      }),
-    ),
-  );
+const SelectedStatBlockAttackDamageComponentSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    componentRef: StatBlockAttackDamageComponentRef,
+    amount: Schema.Number,
+    damageType: DamageTypeSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("rolled"),
+    componentRef: StatBlockAttackDamageComponentRef,
+    expr: DiceExprSchema,
+    damageType: DamageTypeSchema,
+  }),
+]);
 
-const SupportedStaticDamageCreatureAttackRollMechanicsSchema =
-  SupportedCreatureAttackRollMechanicsSchema.pipe(
-    Schema.check(
-      Schema.makeFilter(
-        (
-          attack: SupportedCreatureAttackRollMechanics,
-        ): attack is SupportedStaticDamageCreatureAttackRollMechanics =>
-          statBlockAttackDamageSupportsStaticNotation(
-            supportedStatBlockAttackDamage(attack),
-          ),
-        {
-          /* v8 ignore next -- @preserve -- Only malformed authored static-damage data requests this diagnostic; valid static attacks satisfy the predicate above. */
-          message: "Static Stat Block damage requires static damage facts.",
-        },
-      ),
-    ),
-  );
+const SelectedStatBlockAttackDamageSchema = Schema.Struct({
+  baseComponents: Schema.NonEmptyArray(
+    SelectedStatBlockAttackDamageComponentSchema,
+  ),
+  advantageBonus: Schema.optionalKey(
+    SelectedStatBlockAttackDamageComponentSchema,
+  ),
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(selectedStatBlockAttackDamageHasCanonicalComponentRefs, {
+      message:
+        "Selected Stat Block damage component refs must form the canonical role bijection.",
+    }),
+  ),
+  Schema.brand("SelectedStatBlockAttackDamage"),
+);
+
+const StatBlockAttackHitTargetSizeConditionRiderSchema = Schema.Struct({
+  condition: Schema.Literal("prone"),
+  targetSizePredicate: Schema.Struct({
+    kind: Schema.Literal("targetCreatureSizeAtMost"),
+    maxCreatureSize: SizeSchema,
+  }),
+});
+
+const SelectedStatBlockAttackHitEffectsSchema = Schema.Struct({
+  damage: SelectedStatBlockAttackDamageSchema,
+  conditionRider: Schema.optionalKey(
+    StatBlockAttackHitTargetSizeConditionRiderSchema,
+  ),
+});
+
+const SelectedStatBlockAttackRollCommonFields = {
+  attackAbility: Schema.Union([AbilitySchema, Schema.Literal("spellcasting")]),
+  attackBonus: Schema.Struct({
+    kind: Schema.Literal("literal"),
+    value: Schema.Number,
+  }),
+  multiattackCount: Schema.optionalKey(Schema.Never),
+  onHit: SelectedStatBlockAttackHitEffectsSchema,
+} as const;
+
+const SelectedStatBlockAttackRollMechanicsSchema = Schema.Union([
+  Schema.Struct({
+    ...SelectedStatBlockAttackRollCommonFields,
+    attackType: Schema.Literal("melee"),
+    reachFeet: Schema.Number,
+    rangeFeet: Schema.optionalKey(Schema.Never),
+    ammunition: Schema.optionalKey(Schema.Never),
+  }),
+  Schema.Struct({
+    ...SelectedStatBlockAttackRollCommonFields,
+    attackType: Schema.Literal("ranged"),
+    reachFeet: Schema.optionalKey(Schema.Never),
+    rangeFeet: Schema.Struct({
+      normal: Schema.Number,
+      long: Schema.Number,
+    }),
+    ammunition: Schema.optionalKey(AmmunitionKindSchema),
+  }),
+]);
 
 const StatBlockTraitAttackRollModeSchema = Schema.Struct({
   mode: Schema.Literal("advantage"),
   predicate: Schema.Literals(STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES),
 });
 
-const StatBlockAttackActionOptionSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("statBlockAttack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attack: SupportedCreatureAttackRollMechanicsSchema,
-    damageNotation: Schema.Literal("rolled"),
-    traitAttackRollModes: Schema.optionalKey(
-      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("statBlockAttack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attack: SupportedStaticDamageCreatureAttackRollMechanicsSchema,
-    damageNotation: Schema.Literal("static"),
-    traitAttackRollModes: Schema.optionalKey(
-      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
-    ),
-  }),
-]);
+const StatBlockAttackActionOptionSchema = Schema.Struct({
+  kind: Schema.Literal("statBlockAttack"),
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  attack: SelectedStatBlockAttackRollMechanicsSchema,
+  traitAttackRollModes: Schema.optionalKey(
+    Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
+  ),
+});
 
 export const SupportedAttackActionOptionSchema = Schema.Union([
   CharacterWeaponAttackActionOptionSchema,
@@ -383,132 +413,8 @@ export const SupportedAttackActionOptionSchema = Schema.Union([
   StatBlockAttackActionOptionSchema,
 ]);
 
-const MechanicalStatBlockDamageAmountFields = {
-  kind: Schema.Literal("fixed"),
-  expr: DiceExprSchema,
-} as const;
-
-const MechanicalStatBlockDamageAmountSchema = Schema.Struct({
-  ...MechanicalStatBlockDamageAmountFields,
-  static: Schema.optionalKey(Schema.Number),
-});
-
-const MechanicalStaticStatBlockDamageAmountSchema = Schema.Struct({
-  ...MechanicalStatBlockDamageAmountFields,
-  static: Schema.Number,
-});
-
-const MechanicalStatBlockBaseDamageFields = {
-  kind: Schema.Literal("damage"),
-  damageType: DamageTypeSchema,
-  timing: Schema.optionalKey(Schema.Literal("end_of_next_turn")),
-} as const;
-
-const MechanicalStatBlockConditionalBonusDamageFields = {
-  kind: Schema.Literal("conditional_bonus_damage"),
-  when: Schema.Struct({
-    kind: Schema.Literal("attack_roll_had_advantage"),
-  }),
-  damageType: DamageTypeSchema,
-} as const;
-
-const MechanicalStatBlockTargetSizeConditionFields = {
-  kind: Schema.Literal("apply_condition_if_target_size_at_most"),
-  condition: Schema.Literal("prone"),
-  maxCreatureSize: SizeSchema,
-} as const;
-
-const MechanicalStatBlockAttackEffectSchema = Schema.Union([
-  Schema.Struct({
-    ...MechanicalStatBlockBaseDamageFields,
-    amount: MechanicalStatBlockDamageAmountSchema,
-  }),
-  Schema.Struct({
-    ...MechanicalStatBlockConditionalBonusDamageFields,
-    amount: MechanicalStatBlockDamageAmountSchema,
-  }),
-  Schema.Struct(MechanicalStatBlockTargetSizeConditionFields),
-]);
-
-const MechanicalStaticStatBlockAttackEffectSchema = Schema.Union([
-  Schema.Struct({
-    ...MechanicalStatBlockBaseDamageFields,
-    amount: MechanicalStaticStatBlockDamageAmountSchema,
-  }),
-  Schema.Struct({
-    ...MechanicalStatBlockConditionalBonusDamageFields,
-    amount: MechanicalStaticStatBlockDamageAmountSchema,
-  }),
-  Schema.Struct(MechanicalStatBlockTargetSizeConditionFields),
-]);
-
-const MechanicalStatBlockAttackRollMechanicsFields = {
-  attackAbility: Schema.Union([AbilitySchema, Schema.Literal("spellcasting")]),
-  attackBonus: Schema.Struct({
-    kind: Schema.Literal("literal"),
-    value: Schema.Number,
-  }),
-} as const;
-
-const MechanicalStatBlockAttackRollMechanicsSchema = Schema.Union([
-  Schema.Struct({
-    ...MechanicalStatBlockAttackRollMechanicsFields,
-    attackType: Schema.Literal("melee"),
-    reachFeet: Schema.Number,
-    onHit: Schema.NonEmptyArray(MechanicalStatBlockAttackEffectSchema),
-  }),
-  Schema.Struct({
-    ...MechanicalStatBlockAttackRollMechanicsFields,
-    attackType: Schema.Literal("ranged"),
-    rangeFeet: Schema.Struct({
-      normal: Schema.Number,
-      long: Schema.Number,
-    }),
-    ammunition: Schema.optionalKey(AmmunitionKindSchema),
-    onHit: Schema.NonEmptyArray(MechanicalStatBlockAttackEffectSchema),
-  }),
-]);
-
-const MechanicalStaticStatBlockAttackRollMechanicsSchema = Schema.Union([
-  Schema.Struct({
-    ...MechanicalStatBlockAttackRollMechanicsFields,
-    attackType: Schema.Literal("melee"),
-    reachFeet: Schema.Number,
-    onHit: Schema.NonEmptyArray(MechanicalStaticStatBlockAttackEffectSchema),
-  }),
-  Schema.Struct({
-    ...MechanicalStatBlockAttackRollMechanicsFields,
-    attackType: Schema.Literal("ranged"),
-    rangeFeet: Schema.Struct({
-      normal: Schema.Number,
-      long: Schema.Number,
-    }),
-    ammunition: Schema.optionalKey(AmmunitionKindSchema),
-    onHit: Schema.NonEmptyArray(MechanicalStaticStatBlockAttackEffectSchema),
-  }),
-]);
-
-const MechanicalStatBlockAttackActionOptionSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("statBlockAttack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attack: MechanicalStatBlockAttackRollMechanicsSchema,
-    damageNotation: Schema.Literal("rolled"),
-    traitAttackRollModes: Schema.optionalKey(
-      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("statBlockAttack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attack: MechanicalStaticStatBlockAttackRollMechanicsSchema,
-    damageNotation: Schema.Literal("static"),
-    traitAttackRollModes: Schema.optionalKey(
-      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
-    ),
-  }),
-]);
-
+const MechanicalStatBlockAttackActionOptionSchema =
+  StatBlockAttackActionOptionSchema;
 const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: CharacterWeaponAttackExecutionWeaponFactsSchema,

@@ -14,13 +14,11 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  HASTE_ACTION_RESOURCE_RESTRICTION,
-  HasteActionResourceRestrictionSchema,
-  isHasteActionResourceRestriction,
-} from "@dnd/shared-algebras/action-economy-algebra";
+import { HASTE_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
+import type { StandardActionKind } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
 import type {
+  ActionRestriction,
   AreaDirectEffectAtom,
   EffectAtom,
 } from "@dnd/surface/surface/types";

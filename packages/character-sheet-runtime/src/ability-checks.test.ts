@@ -87,7 +87,7 @@ describe("Character Sheet runtime / ability checks", () => {
     });
 
     expect(
-      requireRight(characterSheetLinkedSpeedGrants(rangerBuild, unitLibrary)),
+      requireSuccess(characterSheetLinkedSpeedGrants(rangerBuild, unitLibrary)),
     ).toEqual([
       {
         sourceUnitId: authoredUnitId("ranger_roving"),

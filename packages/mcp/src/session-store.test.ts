@@ -820,7 +820,7 @@ describe("MCP character sessions", () => {
         subject: subjectAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (pending.tag !== "needsHoles") {
       throw new Error("Expected a pending battle transaction for the plan.");

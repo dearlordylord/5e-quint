@@ -131,7 +131,7 @@ describe("battle tool payload boundaries", () => {
         subject: pendingAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (pending.tag !== "needsHoles") {
       throw new Error("Expected the selected act to need holes.");
@@ -256,7 +256,7 @@ describe("battle tool payload boundaries", () => {
         subject: act.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (result.tag !== "needsHoles") {
       throw new Error("Expected the test battle act to need hole fills.");
@@ -373,7 +373,7 @@ describe("battle tool payload boundaries", () => {
         subject: pendingAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     if (pendingResult.tag !== "needsHoles") {
       throw new Error("Expected the test battle act to need hole fills.");
@@ -534,7 +534,7 @@ describe("battle tool payload boundaries", () => {
         subject: pendingAct.subject,
         fills: [],
       },
-      statBlockCatalog: root.statBlockCatalog,
+      statBlockCatalog: root.battleStatBlockExecutionCatalog,
     });
     expect(pending.tag).toBe("needsHoles");
     expect(

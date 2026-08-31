@@ -1,5 +1,4 @@
 import type {
-  AttackPresentationJoinIssue,
   BattleActDiscoveryCandidate,
   BattleActPresentation,
   BattleState,
@@ -9,11 +8,16 @@ import type {
 import type { AuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Match, Result } from "effect";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleStatBlockExecutionScopeRef,
+  CombatantId,
+} from "./identity.ts";
 import { spellActiveEffectForExecutionRef } from "./effect-execution-ref.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "./battle-action-options.ts";
 import {
@@ -23,7 +27,10 @@ import {
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 import { maxFixedCostMovementReplacementDistanceFeet } from "./battle-reducer/fixed-cost-movement-replacement.ts";
 import { boundFixedCostMovementReplacementEffect } from "./battle-reducer/spell-modifier-binding.ts";
-import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
+import {
+  statBlockProcedurePresentationsForActor,
+  statBlockProjectionIssuesForActor,
+} from "./stat-block-presentation.ts";
 import type {
   BattleSubject,
   CharacterProcedureBattleSubject,
@@ -60,39 +67,6 @@ type IntrinsicBattleSubject = Exclude<
   BattleSubject,
   CharacterProcedureBattleSubject
 >;
-
-type IntrinsicAttackSubject = Extract<
-  IntrinsicBattleSubject,
-  | { readonly tag: "action"; readonly action: "attack" }
-  | { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
->;
-
-type IntrinsicRuntimeAttackSubject = Extract<
-  IntrinsicBattleSubject,
-  {
-    readonly tag: "runtimeCommand";
-    readonly command: "opportunityAttack" | "retaliationAttack";
-  }
->;
-
-type IntrinsicPresentation = Extract<
-  BattleActPresentation,
-  { readonly kind: "intrinsic" }
->;
-
-type IntrinsicAttackPresentation = Extract<
-  BattleActPresentation,
-  { readonly kind: "attack" | "presentationIssue" }
->;
-
-type IntrinsicProcedurePresentation = Extract<
-  BattleActPresentation,
-  { readonly kind: "intrinsic" | "presentationIssue" }
->;
-
-type IntrinsicActPresentation =
-  | IntrinsicPresentation
-  | IntrinsicAttackPresentation;
 
 export function battleActSpellPresentation(
   act: AvailableBattleAct,
@@ -389,17 +363,6 @@ function intrinsicSubjectPresentation(
     }
     return undefined;
   }
-  return {
-    kind: "presentationIssue",
-    issue: {
-      tag: "attackPresentationJoinIssue",
-      reason: "statBlockProcedurePresentationJoin",
-      issues: presentations.failure,
-    },
-  };
-}
-
-function intrinsicSubjectPresentationFallback(): IntrinsicPresentation {
   return { kind: "intrinsic" };
 }
 

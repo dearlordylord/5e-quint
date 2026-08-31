@@ -631,7 +631,9 @@ function runtimeSpeed(
   return {
     kind: speed.kind,
     feet: speed.feet,
-    ...(speed.kind === "fly" && speed.hover === true ? { hover: true } : {}),
+    ...(speed.kind === "fly" && "hover" in speed && speed.hover === true
+      ? { hover: true }
+      : {}),
   };
 }
 

@@ -37,6 +37,7 @@ import type {
   CharacterBattleResourceOwnership,
   CharacterBattleResourceState,
   CharacterBattleSpellcastingExecutionState,
+  AuthoredStatBlockBattleInitIssue,
 } from "@dnd/battle-runtime";
 import {
   battleRuntimeContextForTest,
@@ -251,16 +252,22 @@ function startBattleFromProjectedRosterFixture(input: {
   readonly projections: readonly [
     Result.Result<
       BattleCreatureInit,
-      BattleStateInitIssue | BattleCreatureInitIssue
+      | BattleStateInitIssue
+      | BattleCreatureInitIssue
+      | AuthoredStatBlockBattleInitIssue
     >,
     ...Result.Result<
       BattleCreatureInit,
-      BattleStateInitIssue | BattleCreatureInitIssue
+      | BattleStateInitIssue
+      | BattleCreatureInitIssue
+      | AuthoredStatBlockBattleInitIssue
     >[],
   ];
 }): Result.Result<
   BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
+  | BattleStateInitIssue
+  | BattleCreatureInitIssue
+  | AuthoredStatBlockBattleInitIssue
 > {
   const combatants: BattleCreatureInit[] = [];
   for (const projection of input.projections) {
@@ -12321,6 +12328,7 @@ function attackMeleeReachFact(
         targetId,
         distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
+        statBlockDamageSelection: subject.statBlockDamageSelection,
       }
     : {
         kind: "attackTargetDistance",

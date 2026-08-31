@@ -4215,8 +4215,8 @@ describe("MCP server route", () => {
     const secondDraftId = "draft:mcp-runtime-owner-invalid-second";
     createFinalizedFighterSheet(root, firstDraftId);
     createFinalizedFighterSheet(root, secondDraftId);
-    const baseStatBlock = root.statBlockCatalog.requireStatBlock(
-      "stat_block_skeleton",
+    const baseStatBlock = Option.getOrThrow(
+      root.statBlockCatalog.getStatBlock(statBlockId("stat_block_skeleton")),
     );
     const unsupportedStatBlock = {
       ...baseStatBlock,

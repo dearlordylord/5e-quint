@@ -11,7 +11,7 @@ import {
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-core";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   DRUID_CIRCLE_LAND_CHOICES,
   type DruidCircleLandChoice,

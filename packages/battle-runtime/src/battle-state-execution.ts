@@ -248,7 +248,6 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
-import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -259,7 +258,7 @@ import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
 } from "./battle-interrupt-triggers.ts";
-import { Match } from "effect";
+import { Match, Option } from "effect";
 import {
   type ActionHideSubject,
   type ActionSearchSubject,

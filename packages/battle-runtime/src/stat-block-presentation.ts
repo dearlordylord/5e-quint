@@ -13,10 +13,6 @@ import {
 import { activeDruidWildShape } from "./battle-reducer/druid-wild-shape.ts";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import type { CombatantId } from "./identity.ts";
-import {
-  statBlockPresentationAllocation,
-  type StatBlockExecutionAdmission,
-} from "./stat-block-execution.ts";
 import { Match, Result } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -45,7 +41,7 @@ export type StatBlockPresentationAdmission = {
 
 type ExecutableStatBlockProcedure = Exclude<
   StatBlockProcedure,
-  { readonly kind: "unarmedStrike" }
+  { readonly kind: "unarmedStrike" | "effectOccurrenceSource" }
 >;
 
 export type StatBlockProcedurePresentationResult = Result.Result<
@@ -126,7 +122,10 @@ function statBlockProjectionIssues(
 ): readonly StatBlockProjectionIssue[] {
   const admitted = procedureCoordinateIndex(
     execution.procedureBindings.flatMap((binding) =>
-      binding.procedure.kind === "unarmedStrike" ? [] : [binding.procedure],
+      binding.procedure.kind === "unarmedStrike" ||
+      binding.procedure.kind === "effectOccurrenceSource"
+        ? []
+        : [binding.procedure],
     ),
   );
   type TraitIssue = Extract<
@@ -231,7 +230,8 @@ export function statBlockProcedurePresentations(
 ): StatBlockProcedurePresentationResult {
   if (admission.presentation === undefined) {
     const issues = admission.execution.procedureBindings.flatMap((binding) =>
-      binding.procedure.kind === "unarmedStrike"
+      binding.procedure.kind === "unarmedStrike" ||
+      binding.procedure.kind === "effectOccurrenceSource"
         ? []
         : [
             {
@@ -254,6 +254,7 @@ export function statBlockProcedurePresentations(
   const issues: StatBlockProcedurePresentationJoinIssue[] = [];
   const presentations: StatBlockProcedurePresentation[] = [];
   for (const binding of admission.execution.procedureBindings) {
+    if (binding.procedure.kind === "effectOccurrenceSource") continue;
     const joined = statBlockProcedurePresentationForBinding(binding, labels);
     if (Result.isFailure(joined)) {
       issues.push(joined.failure);
@@ -268,7 +269,10 @@ export function statBlockProcedurePresentations(
 }
 
 function statBlockProcedurePresentationForBinding(
-  binding: StatBlockExecutionState["procedureBindings"][number],
+  binding: Exclude<
+    StatBlockExecutionState["procedureBindings"][number],
+    { readonly procedure: { readonly kind: "effectOccurrenceSource" } }
+  >,
   labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]
   >,
@@ -416,45 +420,21 @@ export function attackActionOptionPresentationName(
         reason: "weaponPresentationMissing",
       });
     }
-    const actor = state.combatants.get(actorId);
-    const baseAttack =
-      actor?.origin.kind === "character"
-        ? actor.origin.attack?.weapon.weaponUnitId ===
-          attack.weapon.weaponUnitId
-          ? actor.origin.attack
-          : actor.origin.offHandAttack
-        : undefined;
-    const suffixes = [
-      ...(baseAttack != null && baseAttack.ability !== attack.ability
-        ? [abilityPresentationName(attack.ability)]
-        : []),
-      ...(attack.weapon.damage.kind === "dice" &&
-      (baseAttack?.damageTypeChoices !== undefined ||
-        attack.damageTypeChoices !== undefined ||
-        (source.success.damage.kind === "dice" &&
-          source.success.damage.damageType !== attack.weapon.damage.damageType))
-        ? [attack.weapon.damage.damageType]
-        : []),
-    ];
+    const baseAttack = characterWeaponBaseAttack(
+      state,
+      actorId,
+      attack.weapon.weaponUnitId,
+    );
+    const suffixes = characterWeaponPresentationSuffixes(
+      attack,
+      baseAttack,
+      source.success,
+    );
     return Result.succeed(
-      suffixes.length === 0
-        ? source.success.name
-        : `${source.success.name} (${suffixes.join(", ")})`,
+      formatWeaponPresentationName(source.success.name, suffixes),
     );
   }
-  const baseAttack = characterWeaponBaseAttack(
-    state,
-    actorId,
-    attack.weapon.weaponUnitId,
-  );
-  const suffixes = characterWeaponPresentationSuffixes(
-    attack,
-    baseAttack,
-    source.success,
-  );
-  return Result.succeed(
-    formatWeaponPresentationName(source.success.name, suffixes),
-  );
+  return statBlockAttackPresentationName(state, context, actorId, attack);
 }
 
 function characterWeaponBaseAttack(

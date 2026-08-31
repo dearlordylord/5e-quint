@@ -31,9 +31,7 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import {
-  admitStatBlockResourceGraph,
   admittedStatBlockExecutionState,
-  parseStatBlockLegendaryActionUses,
   type BattleStatBlockClosedResourceGraph,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
@@ -52,25 +50,6 @@ export * from "./stat-block-execution-state.ts";
 type BattleStatBlockClosedExecutionSource =
   | BattleStatBlockCombatantSource
   | BattleDruidWildShapeKnownFormRuntime;
-
-type RestoredStatBlockExecutionSource<
-  TStatBlock extends BattleStatBlockExecutionSource,
-> = Omit<
-  BattleStatBlockClosedResourceGraph<TStatBlock>,
-  "legendaryActionUses"
-> &
-  BattleStatBlockExecutionSource;
-
-type RestoredStatBlockExecutionAdmission<
-  TStatBlock extends BattleStatBlockExecutionSource,
-> = StatBlockExecutionAdmission<RestoredStatBlockExecutionSource<TStatBlock>>;
-
-type ValidatedStatBlockExecutionRestoration<
-  TStatBlock extends BattleStatBlockExecutionSource,
-> = {
-  readonly statBlock: RestoredStatBlockExecutionSource<TStatBlock>;
-  readonly snapshot: StatBlockExecutionSnapshot;
-};
 
 export type StatBlockExecutionRestoreIssue = {
   readonly tag: "invalidStatBlockExecutionSnapshot";
@@ -899,154 +878,6 @@ export function restoreStatBlockExecutionAdmissions<
     return Result.fail([firstIssue, ...issues.slice(1)]);
   }
   return Result.succeed(restored);
-}
-
-function validateStatBlockExecutionRestoration<
-  TStatBlock extends BattleStatBlockExecutionSource,
->(
-  battleId: BattleId,
-  combatantId: CombatantId,
-  restorationIndex: number,
-  restoration: StatBlockExecutionRestoration<TStatBlock>,
-  restoredScopeRefs: Set<BattleStatBlockExecutionScopeRef>,
-): Result.Result<
-  ValidatedStatBlockExecutionRestoration<TStatBlock>,
-  StatBlockExecutionRestoreIssue
-> {
-  const { snapshot } = restoration;
-  const legendaryActionUses = parseStatBlockLegendaryActionUses(
-    restoration.statBlock.legendaryActionUses,
-  );
-  if (Result.isFailure(legendaryActionUses)) {
-    return Result.fail(
-      statBlockExecutionRestoreIssue(
-        restorationIndex,
-        snapshot.scopeRef,
-        "invalidLegendaryActionUses",
-      ),
-    );
-  }
-  if (snapshot.resourcePools.some(resourcePoolStateIsOutOfBounds)) {
-    return Result.fail(
-      statBlockExecutionRestoreIssue(
-        restorationIndex,
-        snapshot.scopeRef,
-        "invalidResourceCount",
-      ),
-    );
-  }
-  if (
-    restoredScopeRefs.has(snapshot.scopeRef) ||
-    !battleStatBlockExecutionScopeRefBelongsToBattle(
-      snapshot.scopeRef,
-      battleId,
-    ) ||
-    !battleStatBlockExecutionScopeRefBelongsToCombatant(
-      snapshot.scopeRef,
-      combatantId,
-    )
-  ) {
-    return Result.fail(
-      statBlockExecutionRestoreIssue(
-        restorationIndex,
-        snapshot.scopeRef,
-        "procedureBindingsMismatch",
-      ),
-    );
-  }
-  restoredScopeRefs.add(snapshot.scopeRef);
-  const source = admitStatBlockResourceGraph(restoration.statBlock);
-  if (Result.isFailure(source)) {
-    return Result.fail(
-      statBlockExecutionRestoreIssue(
-        restorationIndex,
-        snapshot.scopeRef,
-        "procedureBindingsMismatch",
-      ),
-    );
-  }
-  const {
-    legendaryActionUses: _sourceLegendaryActionUses,
-    ...sourceWithoutLegendaryActionUses
-  } = source.success;
-  return Result.succeed({
-    snapshot,
-    statBlock: {
-      ...sourceWithoutLegendaryActionUses,
-      ...optionalProperty("legendaryActionUses", legendaryActionUses.success),
-    },
-  });
-}
-
-function restoreStatBlockExecutionAdmissionAtIndex<
-  TStatBlock extends BattleStatBlockExecutionSource,
->(
-  battleId: BattleId,
-  combatantId: CombatantId,
-  restorationIndex: number,
-  restoration: StatBlockExecutionRestoration<TStatBlock>,
-  restoredScopeRefs: Set<BattleStatBlockExecutionScopeRef>,
-): Result.Result<
-  RestoredStatBlockExecutionAdmission<TStatBlock>,
-  StatBlockExecutionRestoreIssue
-> {
-  const validated = validateStatBlockExecutionRestoration(
-    battleId,
-    combatantId,
-    restorationIndex,
-    restoration,
-    restoredScopeRefs,
-  );
-  if (Result.isFailure(validated)) return Result.fail(validated.failure);
-  const { snapshot, statBlock } = validated.success;
-  const admitted = admitStatBlock(statBlock);
-  const allocated = allocateStatBlockExecution(
-    executionReferenceAllocator(snapshot.scopeRef),
-    admitted.occurrences,
-  );
-  const expected = Brand.nominal<
-    RestoredStatBlockExecutionAdmission<TStatBlock>
-  >()({
-    statBlock,
-    execution: allocated.execution,
-  });
-  if (
-    !procedureBindingSnapshotsEqual(
-      snapshot.procedureBindings,
-      statBlockProcedureBindingSnapshots(expected.execution),
-    )
-  ) {
-    return Result.fail(
-      statBlockExecutionRestoreIssue(
-        restorationIndex,
-        snapshot.scopeRef,
-        "procedureBindingsMismatch",
-      ),
-    );
-  }
-  const restoredResourcePools = restoredResourcePoolsInExecutionOrder(
-    snapshot.resourcePools,
-    expected.execution.resourcePools,
-  );
-  if (restoredResourcePools === null) {
-    return Result.fail(
-      statBlockExecutionRestoreIssue(
-        restorationIndex,
-        snapshot.scopeRef,
-        "resourcePoolsMismatch",
-      ),
-    );
-  }
-  return Result.succeed(
-    Brand.nominal<RestoredStatBlockExecutionAdmission<TStatBlock>>()({
-      statBlock,
-      execution: admittedStatBlockExecutionState({
-        scopeRef: snapshot.scopeRef,
-        procedureBindings: expected.execution.procedureBindings,
-        resourcePools: restoredResourcePools,
-      }),
-    }),
-  );
 }
 
 function statBlockExecutionRestoreIssue(

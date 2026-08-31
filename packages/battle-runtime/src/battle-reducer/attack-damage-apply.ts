@@ -67,7 +67,10 @@ import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
   ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
-import { isStatBlockMultiattackActionResource } from "./action-resource-kinds.ts";
+import {
+  hasStatBlockMultiattackContinuationResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
+} from "./action-resource-kinds.ts";
 import { weaponAttackDamageEnhancementBonus } from "./spell-modifier-binding.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {

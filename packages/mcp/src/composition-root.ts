@@ -34,10 +34,15 @@ import {
   type DiceSeed,
   type DiceSamplingService,
 } from "./dice-sampling-service.ts";
+import {
+  battleStatBlockExecutionCatalog,
+  type McpBattleStatBlockExecutionCatalog,
+} from "./battle-stat-block-execution-catalog.ts";
 
 export type McpApplicationServices = {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: SrdStatBlockCatalog;
+  readonly battleStatBlockExecutionCatalog: McpBattleStatBlockExecutionCatalog;
   readonly createAdminMirrorPublication: (
     mirrorSessionId: AdminMirrorSessionId,
   ) => AdminMirrorPublication;
@@ -82,6 +87,9 @@ export function createMcpApplicationServices(
   return {
     unitLibrary: unitCatalog.catalog,
     statBlockCatalog: statBlockCatalog.catalog,
+    battleStatBlockExecutionCatalog: battleStatBlockExecutionCatalog(
+      statBlockCatalog.catalog,
+    ),
     createAdminMirrorPublication: adminMirror.create,
     configuredAdminMirrorSessionId: adminMirror.sessionId,
     characterCreationSupportProfile:

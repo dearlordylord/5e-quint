@@ -7,8 +7,10 @@ import {
   StatBlockSpellReferenceSchema,
 } from "./schema-spell.ts";
 
-const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
-  Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
+const decode = <A, I>(
+  schema: Schema.Codec<A, I, never, never>,
+  input: unknown,
+): A => Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
 
 const allDeltas = [
   {

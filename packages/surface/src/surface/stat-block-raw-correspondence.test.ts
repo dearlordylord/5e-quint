@@ -42,10 +42,10 @@ import { bindRawCorrespondence } from "./stat-block-raw-correspondence-binding.t
 
 type NonEmpty<T> = readonly [T, ...T[]];
 
-type EncodedLiteralValue = Schema.Schema.Encoded<
+type EncodedLiteralValue = Schema.Codec.Encoded<
   typeof StatBlockLiteralValueSchema
 >;
-type EncodedProcedure = Schema.Schema.Encoded<
+type EncodedProcedure = Schema.Codec.Encoded<
   typeof AuthoredExecutableProcedureSchema
 >;
 type EncodedProcedureEffect = Extract<
@@ -61,14 +61,14 @@ type EncodedDamageExpression = Extract<
   EncodedDamageAmount,
   { readonly expr: unknown }
 >["expr"];
-type EncodedResourceRefs = Schema.Schema.Encoded<
+type EncodedResourceRefs = Schema.Codec.Encoded<
   typeof StatBlockProcedureResourceRefsSchema
 >;
 type EncodedSomeResourceRefs = Extract<
   EncodedResourceRefs,
   { readonly kind: "some" }
 >;
-type EncodedStandaloneStatBlock = Schema.Schema.Encoded<
+type EncodedStandaloneStatBlock = Schema.Codec.Encoded<
   typeof StandaloneStatBlockSchema
 >;
 type EncodedStandaloneSpeed = Schema.Schema.Type<
@@ -81,21 +81,21 @@ type EncodedStandaloneConcreteSpeed = Exclude<
 type EncodedStandaloneSense = Schema.Schema.Type<
   typeof StandaloneCreatureSenseSchema
 >;
-type EncodedCommunication = Schema.Schema.Encoded<
+type EncodedCommunication = Schema.Codec.Encoded<
   typeof StatBlockCommunicationSchema
 >;
-type EncodedLanguageSet = Schema.Schema.Encoded<
+type EncodedLanguageSet = Schema.Codec.Encoded<
   typeof StatBlockLanguageSetSchema
 >;
-type EncodedTrait = Schema.Schema.Encoded<typeof CreatureTraitSchema>;
-type EncodedTextOnlyReason = Schema.Schema.Encoded<
+type EncodedTrait = Schema.Codec.Encoded<typeof CreatureTraitSchema>;
+type EncodedTextOnlyReason = Schema.Codec.Encoded<
   typeof StatBlockTextOnlyReasonSchema
 >;
 
-const decode = <S extends Schema.Schema.AnyNoContext>(
+const decode = <S extends Schema.Codec<unknown, unknown, never, never>>(
   schema: S,
-  input: Schema.Schema.Encoded<S>,
-): Schema.Schema.Type<S> => Schema.decodeUnknownSync(schema)(input);
+  input: Schema.Codec.Encoded<S>,
+): S["Type"] => Schema.decodeUnknownSync(schema)(input);
 
 const noResourceRefs: Extract<EncodedResourceRefs, { readonly kind: "none" }> =
   { kind: "none" };
@@ -412,7 +412,7 @@ const standaloneStatBlock = (
 };
 
 type SourceRecordInput = Omit<
-  Schema.Schema.Encoded<typeof SrdStatBlockRecordSchema>,
+  Schema.Codec.Encoded<typeof SrdStatBlockRecordSchema>,
   "kind" | "provenance" | "statBlock"
 > & {
   readonly source: string;

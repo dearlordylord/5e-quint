@@ -14,7 +14,15 @@ import type {
   CombatantId,
 } from "./identity.ts";
 import type { WeaponId } from "@dnd/shared/game-facts";
-import type { WeaponRecord } from "@dnd/surface/surface/types";
+import type {
+  CreatureTraitEffect,
+  StatBlockCommunication,
+  StatBlockProcedureOrdinal,
+  StatBlockProcedureResourceOrdinal,
+  StatBlockTextOnlyReason,
+  WeaponRecord,
+} from "@dnd/surface/surface/types";
+import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import { Result } from "effect";
 import type {
   SpawnedCompanionFormSelection,

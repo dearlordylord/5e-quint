@@ -103,7 +103,7 @@ export function handleBattleToolCall(
           transaction: null,
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
-          statBlockCatalog: root.statBlockCatalog,
+          statBlockCatalog: root.battleStatBlockExecutionCatalog,
         });
         return storedBattleTransactionContent(root, state.success, result);
       }
@@ -138,7 +138,7 @@ export function handleBattleToolCall(
         operation: battleRuntimeTransactionOperationForSubject(
           matched.args.subject,
         ),
-        statBlockCatalog: root.statBlockCatalog,
+        statBlockCatalog: root.battleStatBlockExecutionCatalog,
       });
       return storedBattleTransactionContent(root, state.success, result);
     }),
@@ -157,7 +157,7 @@ export function handleBattleToolCall(
         session: state.success,
         transaction: null,
         operation: battleRuntimeTransactionOperationForSubject(subject),
-        statBlockCatalog: root.statBlockCatalog,
+        statBlockCatalog: root.battleStatBlockExecutionCatalog,
       });
       return storedBattleTransactionContent(root, state.success, result);
     }),

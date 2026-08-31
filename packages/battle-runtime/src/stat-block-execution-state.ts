@@ -43,6 +43,7 @@ import type {
 } from "./battle-action-options.ts";
 import type { SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
 import { selectedStatBlockAttackRollOptions } from "./statblock-attack-damage-support.ts";
+import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import type {
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
@@ -553,6 +554,7 @@ export type StatBlockProcedure =
   | StatBlockUnarmedStrikeProcedure
   | StatBlockMultiattackProcedure
   | StatBlockBonusActionOptionProcedure
+  | StatBlockSpellcastingProcedure
   | EffectOccurrenceSourceProcedure;
 
 /**

@@ -2649,7 +2649,7 @@ const projectAuthoredConcreteSpeed = (
 ): ScopedConcreteSpeed => ({
   kind: speed.kind,
   feet: speed.feet.value,
-  hover: speed.kind === "fly" && speed.hover === true,
+  hover: "hover" in speed && speed.hover === true,
   ...(!("availability" in speed) ? {} : { availability: speed.availability }),
 });
 

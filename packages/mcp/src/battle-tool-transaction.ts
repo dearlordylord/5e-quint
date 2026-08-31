@@ -67,7 +67,7 @@ export function handleFillBattleHoleToolCall(
     session,
     transaction: previous,
     operation: admission.operation,
-    statBlockCatalog: root.statBlockCatalog,
+    statBlockCatalog: root.battleStatBlockExecutionCatalog,
   });
   return storedBattleTransactionContent(root, session, result);
 }
