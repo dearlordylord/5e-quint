@@ -72,9 +72,9 @@ function copyDistribution(source: string, destination: string): void {
 
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(528);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(529);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
-    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(6_387_080);
+    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(6_391_199);
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
     writeFileSync(
       join(directory, "allowed.d.ts"),
@@ -197,6 +197,8 @@ describe("SDK player consumer distribution", () => {
         "packages/character-battle-runtime/src/battle-handoff-issue.d.ts",
         "packages/character-battle-runtime/src/character-battle-route.d.ts",
         "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.d.ts",
+        "packages/surface/src/surface/generated/srd-stat-block-aggregate.d.ts",
+        "packages/surface/src/surface/stat-block-identity.d.ts",
         "scripts/raw-swarm/transcript.d.ts",
         "scripts/raw-swarm/raw-swarm-identities.d.ts",
       ]) {

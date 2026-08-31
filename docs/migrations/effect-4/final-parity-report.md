@@ -109,9 +109,9 @@ exercised by the clean-consumer smoke.
 
 ### Master-reconciliation declaration certificate
 
-The fixed Surface and Battle Runtime consumer graph now contains exactly 528
-declaration files and 4,098,680 bytes. The 10 MiB byte cap is unchanged and
-leaves 6,387,080 bytes of margin; the file cap is the exact reviewed count, not
+The fixed Surface and Battle Runtime consumer graph now contains exactly 529
+declaration files and 4,094,561 bytes. The 10 MiB byte cap is unchanged and
+leaves 6,391,199 bytes of margin; the file cap is the exact reviewed count, not
 a permissive growth allowance. Relative to the prior 523-file reconciliation
 certificate, the current graph adds these ten declarations:
 
@@ -126,11 +126,11 @@ certificate, the current graph adds these ten declarations:
 - `packages/surface/src/surface/stat-block-catalog-contract.d.ts`
 - `packages/surface/src/surface/stat-block-speed-readers.d.ts`
 
-It removes five declarations: the retired
+It removes four declarations: the retired
 `battle-reducer/spell-procedure-profiles/usage-limit-admission.d.ts` owner and
 the Surface `stat-block-catalog.d.ts`, `stat-block-catalog-core.d.ts`,
-`stat-block-catalog-data.d.ts`, and `unit-catalog-data.d.ts` runtime/data
-owners. The lightweight catalog type is now owned by
+and `stat-block-catalog-data.d.ts` runtime/data owners. The lightweight Stat
+Block catalog type is now owned by
 [`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
 so type-only consumers do not pull the runtime catalog into the public graph.
 The 1,599,076-byte generated `srd-stat-block-aggregate.d.ts` and its
