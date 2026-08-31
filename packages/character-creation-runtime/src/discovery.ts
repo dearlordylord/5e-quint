@@ -11,7 +11,12 @@ import {
   type SelectableStandardLanguage,
 } from "@dnd/shared/game-facts";
 import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
-import { readMagicInitiateSpellAccessSourceFacts } from "@dnd/surface/surface/character-creation-readers";
+import {
+  MAGIC_INITIATE_SELECTED_CANTRIPS,
+  MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL,
+  MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
+  readMagicInitiateSpellAccessSourceFacts,
+} from "@dnd/surface/surface/character-creation-readers";
 import {
   allCantripsFromClassSpellList,
   classSpellListForClassName,
@@ -142,10 +147,8 @@ import {
   type CharacterProgression,
 } from "./character-progression-types.ts";
 import {
-  isWeaponMasteryChoiceFeature,
   weaponMasteryChoiceProfileForClassLevel,
   weaponMasteryChoiceProfileForFeature,
-  type WeaponMasteryChoiceFeature,
 } from "./weapon-mastery.ts";
 import {
   availableSpellSlotLevels,
@@ -159,6 +162,12 @@ import {
   projectCharacterDefinition,
   type CharacterDefinitionProjection,
 } from "./character-definition-projection.ts";
+import {
+  projectCharacterCreationFeature,
+  type CharacterCreationClassFeatureFacts,
+  type CharacterCreationFeatFacts,
+  type CharacterCreationSpeciesTraitFacts,
+} from "./character-feature-projection.ts";
 
 type GrantExpertiseEffect = Extract<
   EffectAtom,
@@ -706,7 +715,7 @@ function classFeatureHasOwnedSkillExpertiseChoice(
   featureUnitId: UnitRecord["id"],
   unitLibrary: UnitCatalog,
 ): boolean {
-  const feature = requireClassFeature(unitLibrary, featureUnitId);
+  const feature = projectClassFeatureFacts(unitLibrary, featureUnitId);
   if (feature === undefined || feature.mechanics.family !== "passive") {
     return false;
   }
@@ -771,15 +780,20 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
     }
 
     const feature = input.unitLibrary.getUnit(selection.source.unitId);
-    if (
-      Option.isNone(feature) ||
-      feature.value.kind !== "class_feature" ||
-      feature.value.className !== input.classFacts.className ||
-      feature.value.mechanics.family !== "class_feature_acquisition_choice"
-    ) {
+    if (Option.isNone(feature)) {
       return [];
     }
-    const featureChoiceKey = unitChoiceKey(feature.value.mechanics.choiceKey);
+    const projection = projectCharacterCreationFeature(feature.value);
+    if (
+      projection.tag !== "readable" ||
+      projection.value.kind !== "class_feature" ||
+      projection.value.facts.className !== input.classFacts.className ||
+      projection.value.facts.mechanics.family !==
+        "class_feature_acquisition_choice"
+    )
+      return [];
+    const mechanics = projection.value.facts.mechanics;
+    const featureChoiceKey = unitChoiceKey(mechanics.choiceKey);
     if (
       Result.isFailure(featureChoiceKey) ||
       featureChoiceKey.success !== selection.source.choiceKey
@@ -797,7 +811,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
       ),
     );
     const optionIds = new Set(choiceSelectionOptionIds(selection));
-    return feature.value.mechanics.options
+    return mechanics.options
       .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
       .flatMap((option) =>
         option.mechanics.grants.flatMap((grant) => {
@@ -1063,22 +1077,22 @@ function speciesTraitGrantChoiceHoles(input: {
     input.unitLibrary,
   );
   return selectedSpeciesTraitUnits(input).flatMap((trait) => {
-    if (trait.mechanics.family === "species_lineage_choice") {
-      return speciesLineageChoiceHoles(trait.id, trait.mechanics);
+    if (trait.facts.mechanics.family === "species_lineage_choice") {
+      return speciesLineageChoiceHoles(trait.unitId, trait.facts.mechanics);
     }
 
-    if (trait.mechanics.family !== "passive") {
+    if (trait.facts.mechanics.family !== "passive") {
       return [];
     }
 
-    return trait.mechanics.grants.flatMap((grant) =>
-      passiveGrantChoiceHoles(trait.id, grant, input.unitLibrary, {
+    return trait.facts.mechanics.grants.flatMap((grant) =>
+      passiveGrantChoiceHoles(trait.unitId, grant, input.unitLibrary, {
         ownedSkillProficiencies: draftOwnedSkillProficiencies(
           input.draft,
           input.unitLibrary,
           (selection) =>
             selection.kind === "unitChoice" &&
-            selection.source.unitId === trait.id &&
+            selection.source.unitId === trait.unitId &&
             selection.source.choiceKey === SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         ),
         ownedToolProficiencies: draftOwnedToolProficiencies(
@@ -1158,7 +1172,10 @@ function speciesSelectedOriginFeatGrantChoiceHoles(input: {
 function selectedSpeciesTraitUnits(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-}): readonly Extract<UnitRecord, { readonly kind: "species_trait" }>[] {
+}): readonly {
+  readonly unitId: UnitRecord["id"];
+  readonly facts: CharacterCreationSpeciesTraitFacts;
+}[] {
   const speciesUnitId = input.draft.selections.species;
   if (
     speciesUnitId == null ||
@@ -1181,8 +1198,11 @@ function selectedSpeciesTraitUnits(input: {
   return Object.values(projection.value.facts.traits).flatMap((traitUnitId) => {
     const traitUnit = input.unitLibrary.getUnit(traitUnitId);
     /* v8 ignore start -- @preserve -- Admitted species facts reference installed species-trait Units in the same catalog. */
-    return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
-      ? [traitUnit.value]
+    if (Option.isNone(traitUnit)) return [];
+    const traitProjection = projectCharacterCreationFeature(traitUnit.value);
+    return traitProjection.tag === "readable" &&
+      traitProjection.value.kind === "species_trait"
+      ? [{ unitId: traitUnit.value.id, facts: traitProjection.value.facts }]
       : [];
     /* v8 ignore stop -- @preserve */
   });
@@ -1897,7 +1917,7 @@ export function classFeatureGrantChoiceHoles(
     readonly knownLanguages?: readonly Language[];
   } = {},
 ): readonly ChoiceCreationHole[] {
-  const feature = requireClassFeature(unitLibrary, featureUnitId);
+  const feature = projectClassFeatureFacts(unitLibrary, featureUnitId);
   /* v8 ignore start -- @preserve -- Admitted class feature grants reference an installed class-feature Unit. */
   if (feature === undefined) {
     return [];
@@ -1981,8 +2001,12 @@ export function classFeatureGrantChoiceHoles(
     );
   }
 
-  if (isWeaponMasteryChoiceFeature(feature)) {
-    const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary, input);
+  if (feature.mechanics.family === "weapon_mastery_choice") {
+    const hole = weaponMasteryFeatureHoleSource(
+      featureUnitId,
+      unitLibrary,
+      input,
+    );
     /* v8 ignore start -- @preserve -- The admitted Weapon Mastery feature produces a well-formed choice hole. */
     return hole === undefined ? [] : [hole];
     /* v8 ignore stop -- @preserve */
@@ -2005,10 +2029,9 @@ export function originFeatGrantChoiceHoles(
     return [];
   }
 
-  const magicInitiateFacts = readMagicInitiateSpellAccessSourceFacts(feat);
-  if (magicInitiateFacts.tag === "readable") {
+  if (feat.mechanics.family === "magic_initiate") {
     const spellList = classSpellListForClassName({
-      className: magicInitiateFacts.value.spellList,
+      className: feat.mechanics.spellList,
       unitLibrary,
     });
     if (spellList === undefined) return [];
@@ -2026,7 +2049,7 @@ export function originFeatGrantChoiceHoles(
           ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
         ),
         cardinality: exactChoiceCardinality(
-          magicInitiateFacts.value.selectedCantrips.count,
+          MAGIC_INITIATE_SELECTED_CANTRIPS.count,
         ),
         options: unitOptions(spellList.cantrips),
       }),
@@ -2036,12 +2059,11 @@ export function originFeatGrantChoiceHoles(
           ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
         ),
         cardinality: exactChoiceCardinality(
-          magicInitiateFacts.value.selectedLevelOneSpell.count,
+          MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL.count,
         ),
         options: unitOptions(
           spellList.leveled.flatMap(({ spellId, spellLevel }) =>
-            spellLevel ===
-            magicInitiateFacts.value.selectedLevelOneSpell.spellLevel
+            spellLevel === MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL.spellLevel
               ? [spellId]
               : [],
           ),
@@ -2053,12 +2075,10 @@ export function originFeatGrantChoiceHoles(
           ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
         ),
         cardinality: exactChoiceCardinality(1),
-        options: magicInitiateFacts.value.spellcastingAbilityOptions.map(
-          (ability) => ({
-            optionId: creationChoiceOptionId(ability),
-            label: ability,
-          }),
-        ),
+        options: MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS.map((ability) => ({
+          optionId: creationChoiceOptionId(ability),
+          label: ability,
+        })),
       }),
     ].flatMap((hole) =>
       hole !== undefined && hole.kind === "choice" ? [hole] : [],
@@ -2067,7 +2087,7 @@ export function originFeatGrantChoiceHoles(
 
   if (feat.mechanics.family !== "passive") return [];
 
-  return feat.mechanics.grants.flatMap((grant) =>
+  return feat.mechanics.grants.flatMap((grant: EffectAtom) =>
     passiveGrantChoiceHoles(featUnitId, grant, unitLibrary, {
       ownedSkillProficiencies: input.ownedSkillProficiencies ?? [],
       ownedToolProficiencies: input.ownedToolProficiencies ?? [],
@@ -2441,15 +2461,18 @@ function fixedClassFeatureLanguages(
   unitLibrary: UnitCatalog,
 ): readonly Language[] {
   const unit = unitLibrary.getUnit(featureUnitId);
-  if (
-    Option.isNone(unit) ||
-    unit.value.kind !== "class_feature" ||
-    unit.value.mechanics.family !== "passive"
-  ) {
+  if (Option.isNone(unit)) {
     return [];
   }
+  const feature = projectCharacterCreationFeature(unit.value);
+  if (
+    feature.tag !== "readable" ||
+    feature.value.kind !== "class_feature" ||
+    feature.value.facts.mechanics.family !== "passive"
+  )
+    return [];
 
-  return fixedPassiveGrantLanguages(unit.value.mechanics.grants);
+  return fixedPassiveGrantLanguages(feature.value.facts.mechanics.grants);
 }
 
 function selectedClassFeatureLanguageChoices(
@@ -2583,15 +2606,18 @@ export function grantExpertiseSkillSourceForSelection(
     return undefined;
   }
   const feature = unitLibrary.getUnit(selection.source.unitId);
-  if (
-    Option.isNone(feature) ||
-    feature.value.kind !== "class_feature" ||
-    feature.value.mechanics.family !== "passive"
-  ) {
+  if (Option.isNone(feature)) {
     return undefined;
   }
+  const projection = projectCharacterCreationFeature(feature.value);
+  if (
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature" ||
+    projection.value.facts.mechanics.family !== "passive"
+  )
+    return undefined;
 
-  const grant = feature.value.mechanics.grants.find(
+  const grant = projection.value.facts.mechanics.grants.find(
     (candidate): candidate is GrantExpertiseEffect =>
       candidate.kind === "grant_expertise",
   );
@@ -2816,36 +2842,46 @@ function fixedProficiencySubjects(
   return [];
 }
 
-function requireClassFeature(
+function projectClassFeatureFacts(
   unitLibrary: UnitCatalog,
   featureUnitId: UnitRecord["id"],
-): ClassFeatureRecord | undefined {
+): CharacterCreationClassFeatureFacts | undefined {
   const feature = unitLibrary.getUnit(featureUnitId);
   /* v8 ignore start -- @preserve -- Feature grants in admitted class facts reference installed class-feature Units. */
-  if (Option.isNone(feature) || feature.value.kind !== "class_feature") {
+  if (Option.isNone(feature)) {
     return undefined;
   }
-  /* v8 ignore stop -- @preserve */
-
-  return feature.value;
-}
-
-function requireOriginFeat(
-  unitLibrary: UnitCatalog,
-  featUnitId: UnitRecord["id"],
-): FeatRecord | undefined {
-  const feat = unitLibrary.getUnit(featUnitId);
-  /* v8 ignore start -- @preserve -- Origin-feat grants in admitted creation facts reference installed Origin feat Units. */
+  const projection = projectCharacterCreationFeature(feature.value);
   if (
-    Option.isNone(feat) ||
-    feat.value.kind !== "feat" ||
-    feat.value.category !== "origin"
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature"
   ) {
     return undefined;
   }
   /* v8 ignore stop -- @preserve */
 
-  return feat.value;
+  return projection.value.facts;
+}
+
+function requireOriginFeat(
+  unitLibrary: UnitCatalog,
+  featUnitId: UnitRecord["id"],
+): CharacterCreationFeatFacts | undefined {
+  const feat = unitLibrary.getUnit(featUnitId);
+  /* v8 ignore start -- @preserve -- Origin-feat grants in admitted creation facts reference installed Origin feat Units. */
+  if (Option.isNone(feat)) {
+    return undefined;
+  }
+  const projection = projectCharacterCreationFeature(feat.value);
+  if (
+    projection.tag !== "readable" ||
+    projection.value.kind !== "feat" ||
+    projection.value.facts.category !== "origin"
+  )
+    return undefined;
+  /* v8 ignore stop -- @preserve */
+
+  return projection.value.facts;
 }
 
 function featGrantFeatureHoleSource(
@@ -3023,18 +3059,23 @@ export function abilityScoreIncreaseOptions(
 export function selectedFeatAbilityScoreIncreaseOptions(
   unit: UnitRecord,
 ): readonly CreationChoiceOption[] {
-  return unit.kind === "feat" && unit.abilityScoreIncreaseChoice != null
-    ? abilityScoreIncreaseChoiceOptions(unit.abilityScoreIncreaseChoice)
+  const projection = projectCharacterCreationFeature(unit);
+  return projection.tag === "readable" &&
+    projection.value.kind === "feat" &&
+    projection.value.facts.abilityScoreIncreaseChoice != null
+    ? abilityScoreIncreaseChoiceOptions(
+        projection.value.facts.abilityScoreIncreaseChoice,
+      )
     : [];
 }
 
 function weaponMasteryFeatureHoleSource(
-  feature: WeaponMasteryChoiceFeature,
+  featureUnitId: UnitRecord["id"],
   unitLibrary: UnitCatalog,
   input: { readonly classLevel?: number },
 ): ChoiceCreationHole | undefined {
   const profile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: feature.id,
+    featureUnitId,
     unitLibrary,
   });
   /* v8 ignore start -- @preserve -- An admitted Weapon Mastery choice feature has a profile covering its supported class level. */
@@ -3052,7 +3093,7 @@ function weaponMasteryFeatureHoleSource(
 
   return requireChoiceCreationHole(
     choiceHole({
-      source: unitSource(feature.id, WEAPON_MASTERY_OPTIONS_CHOICE_KEY),
+      source: unitSource(featureUnitId, WEAPON_MASTERY_OPTIONS_CHOICE_KEY),
       cardinality: exactChoiceCardinality(projectedProfile.value.choiceCount),
       options,
     }),

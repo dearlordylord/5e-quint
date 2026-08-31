@@ -2,32 +2,33 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Result, Option } from "effect";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
-import type {
-  ClassFeatureRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { CharacterBuild, UnitCatalog } from "./types.ts";
 import { characterBuildFeatureUnitIds } from "./finalization.ts";
 import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import {
   characterBuildSorcererFontOfMagicFacts,
-  SORCERER_FONT_OF_MAGIC_UNIT_ID,
   type CharacterBuildSorcererFontOfMagicFacts,
 } from "./sorcerer-font-of-magic.ts";
 import {
   sorcererMetamagicOptionId,
   type SorcererMetamagicOptionId,
 } from "./types.ts";
+import {
+  projectCharacterCreationClassFeatureSources,
+  type CharacterCreationClassFeatureFacts,
+  type CharacterCreationClassFeatureSource,
+} from "./character-feature-projection.ts";
 
 export const SORCERER_METAMAGIC_UNIT_ID = authoredUnitId("sorcerer_metamagic");
 
 type SorcererMetamagicMechanics = Extract<
-  ClassFeatureRecord["mechanics"],
+  CharacterCreationClassFeatureFacts["mechanics"],
   { readonly family: "metamagic_options" }
 >;
 
-type SorcererMetamagicFeature = ClassFeatureRecord & {
+type SorcererMetamagicFeature = CharacterCreationClassFeatureFacts & {
   readonly className: "sorcerer";
   readonly mechanics: SorcererMetamagicMechanics;
 };
@@ -42,13 +43,13 @@ export type CharacterBuildSorcererMetamagicOptionFact = {
 };
 
 export type CharacterBuildSorcererMetamagicFacts = {
-  readonly unitId: typeof SORCERER_METAMAGIC_UNIT_ID;
+  readonly unitId: UnitRecord["id"];
   readonly ownerClassLevel: number;
   readonly choiceCount: number;
   readonly knownOptions: readonly CharacterBuildSorcererMetamagicOptionFact[];
   readonly selectionRepeatability: "unique";
   readonly sorceryPointResource: {
-    readonly resourceUnitId: typeof SORCERER_FONT_OF_MAGIC_UNIT_ID;
+    readonly resourceUnitId: UnitRecord["id"];
     readonly poolId: CharacterBuildSorcererFontOfMagicFacts["sorceryPointPool"]["poolId"];
   };
   readonly spellUseLimit: "one_per_spell_unless_option_allows_stacking";
@@ -66,43 +67,63 @@ export function characterBuildSorcererMetamagicFacts(input: {
   CharacterBuildSorcererMetamagicFacts | undefined,
   CharacterBuildSorcererMetamagicFactsIssue
 > {
-  const selectedOptionIds = characterBuildSorcererMetamagicOptionIds(
+  const featureUnitIds = characterBuildFeatureUnitIds(
     input.build,
-    authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
+    input.unitLibrary,
   );
-  if (
-    !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
-    )
-  ) {
-    return selectedOptionIds.length === 0
-      ? Result.succeed(undefined)
-      : sorcererMetamagicFactsIssue(
-          "Metamagic option selections require the retained Metamagic feature.",
-        );
-  }
-
-  const featureUnit = input.unitLibrary.getUnit(SORCERER_METAMAGIC_UNIT_ID);
-  if (Option.isNone(featureUnit)) {
-    return sorcererMetamagicFactsIssue("Metamagic requires an installed Unit.");
-  }
-  if (!isSorcererMetamagicFeature(featureUnit.value)) {
+  const featureUnits = projectCharacterCreationClassFeatureSources(
+    featureUnitIds,
+    input.unitLibrary,
+  ).filter(
+    (
+      source,
+    ): source is CharacterCreationClassFeatureSource & {
+      readonly facts: SorcererMetamagicFeature;
+    } => isSorcererMetamagicFeature(source.facts),
+  );
+  if (featureUnits.length > 1) {
     return sorcererMetamagicFactsIssue(
-      "Metamagic requires the installed Surface feature record.",
+      "Metamagic projection supports exactly one matching feature.",
     );
   }
+  const featureUnit = featureUnits[0];
+  if (featureUnit === undefined) {
+    const hasSelections = input.build.features.some(
+      (feature) => feature.kind === "selectedSorcererMetamagicOption",
+    );
+    if (featureUnitIds.includes(SORCERER_METAMAGIC_UNIT_ID)) {
+      const installed = input.unitLibrary.getUnit(SORCERER_METAMAGIC_UNIT_ID);
+      if (Option.isNone(installed)) {
+        return sorcererMetamagicFactsIssue(
+          "Metamagic requires an installed Unit.",
+        );
+      }
+      return sorcererMetamagicFactsIssue(
+        "Metamagic requires the installed Surface feature record.",
+      );
+    }
+    return hasSelections
+      ? sorcererMetamagicFactsIssue(
+          "Metamagic option selections require the retained Metamagic feature.",
+        )
+      : Result.succeed(undefined);
+  }
+  const selectedOptionIds = characterBuildSorcererMetamagicOptionIds(
+    input.build,
+    featureUnit.unitId,
+  );
 
   const ownerClassLevel = characterBuildClassFeatureOwnerLevel({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    feature: featureUnit.value,
+    feature: featureUnit.facts,
   });
   if (Result.isFailure(ownerClassLevel)) {
     return sorcererMetamagicFactsIssue(ownerClassLevel.failure.message);
   }
 
   const choiceCount = classLevelChoiceCountAtLevel(
-    featureUnit.value.mechanics.choiceCount,
+    featureUnit.facts.mechanics.choiceCount,
     ownerClassLevel.success,
   );
   if (selectedOptionIds.length !== choiceCount) {
@@ -118,7 +139,7 @@ export function characterBuildSorcererMetamagicFacts(input: {
 
   const knownOptions: CharacterBuildSorcererMetamagicOptionFact[] = [];
   for (const optionId of selectedOptionIds) {
-    const optionFact = metamagicOptionFact(featureUnit.value, optionId);
+    const optionFact = metamagicOptionFact(featureUnit.facts, optionId);
     /* v8 ignore start -- @preserve -- Finalization admitted each selected id from this installed Metamagic roster. */
     if (optionFact === null) {
       return sorcererMetamagicFactsIssue(
@@ -140,19 +161,19 @@ export function characterBuildSorcererMetamagicFacts(input: {
   }
 
   return Result.succeed({
-    unitId: SORCERER_METAMAGIC_UNIT_ID,
+    unitId: featureUnit.unitId,
     ownerClassLevel: ownerClassLevel.success,
     choiceCount,
     knownOptions,
     selectionRepeatability:
-      featureUnit.value.mechanics.selectionRepeatability.kind,
+      featureUnit.facts.mechanics.selectionRepeatability.kind,
     sorceryPointResource: {
       resourceUnitId: authoredUnitId(
-        featureUnit.value.mechanics.spends.resourceUnitId,
+        featureUnit.facts.mechanics.spends.resourceUnitId,
       ),
       poolId: fontOfMagicFacts.success.sorceryPointPool.poolId,
     },
-    spellUseLimit: featureUnit.value.mechanics.spellUseLimit.kind,
+    spellUseLimit: featureUnit.facts.mechanics.spellUseLimit.kind,
   });
 }
 
@@ -169,10 +190,9 @@ function characterBuildSorcererMetamagicOptionIds(
 }
 
 function isSorcererMetamagicFeature(
-  unit: UnitRecord,
+  unit: CharacterCreationClassFeatureFacts,
 ): unit is SorcererMetamagicFeature {
   return (
-    unit.kind === "class_feature" &&
     unit.className === "sorcerer" &&
     unit.mechanics.family === "metamagic_options"
   );

@@ -8,7 +8,6 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
-  ClassFeatureRecord,
   PointPoolResource,
   ResourcePoolOperation,
   UnitRecord,
@@ -21,6 +20,11 @@ import {
 } from "./class-level-scaling.ts";
 import type { CharacterBuild } from "./types.ts";
 import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
+import {
+  projectCharacterCreationClassFeatureSources,
+  type CharacterCreationClassFeatureFacts,
+  type CharacterCreationClassFeatureSource,
+} from "./character-feature-projection.ts";
 
 export const SORCERER_FONT_OF_MAGIC_UNIT_ID = authoredUnitId(
   "sorcerer_font_of_magic",
@@ -31,10 +35,10 @@ type SorcererFontOfMagicSpellSlotCreationOperation = Extract<
   { readonly kind: "point_pool_to_spell_slot" }
 >;
 
-type SorcererFontOfMagicFeature = ClassFeatureRecord & {
+type SorcererFontOfMagicFeature = CharacterCreationClassFeatureFacts & {
   readonly className: "sorcerer";
   readonly mechanics: Extract<
-    ClassFeatureRecord["mechanics"],
+    CharacterCreationClassFeatureFacts["mechanics"],
     { readonly family: "resource_pool" }
   > & {
     readonly resource: PointPoolResource & {
@@ -45,7 +49,7 @@ type SorcererFontOfMagicFeature = ClassFeatureRecord & {
 };
 
 export type CharacterBuildSorcererFontOfMagicFacts = {
-  readonly unitId: typeof SORCERER_FONT_OF_MAGIC_UNIT_ID;
+  readonly unitId: UnitRecord["id"];
   readonly sorceryPointPool: {
     readonly poolId: PointPoolResource["poolId"];
     readonly maximum: ResourceCount;
@@ -69,51 +73,68 @@ export function characterBuildSorcererFontOfMagicFacts(input: {
   CharacterBuildSorcererFontOfMagicFacts | undefined,
   CharacterBuildSorcererFontOfMagicFactsIssue
 > {
-  if (
-    !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      authoredUnitId(SORCERER_FONT_OF_MAGIC_UNIT_ID),
-    )
-  ) {
+  const featureUnitIds = characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  );
+  const featureUnits = projectCharacterCreationClassFeatureSources(
+    featureUnitIds,
+    input.unitLibrary,
+  ).filter(
+    (
+      source,
+    ): source is CharacterCreationClassFeatureSource & {
+      readonly facts: SorcererFontOfMagicFeature;
+    } => isSorcererFontOfMagicFeature(source.facts),
+  );
+  if (featureUnits.length > 1) {
+    return sorcererFontOfMagicFactsIssue(
+      "Sorcery-point projection supports exactly one matching feature.",
+    );
+  }
+  const featureUnit = featureUnits[0];
+  if (featureUnit === undefined) {
+    if (featureUnitIds.includes(SORCERER_FONT_OF_MAGIC_UNIT_ID)) {
+      const installed = input.unitLibrary.getUnit(
+        SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      );
+      if (Option.isNone(installed)) {
+        return sorcererFontOfMagicFactsIssue(
+          "Font of Magic requires an installed Unit.",
+        );
+      }
+      return sorcererFontOfMagicFactsIssue(
+        "Font of Magic requires the installed Surface feature record.",
+      );
+    }
     return Result.succeed(undefined);
-  }
-
-  const featureUnit = input.unitLibrary.getUnit(SORCERER_FONT_OF_MAGIC_UNIT_ID);
-  if (Option.isNone(featureUnit)) {
-    return sorcererFontOfMagicFactsIssue(
-      "Font of Magic requires an installed Unit.",
-    );
-  }
-  if (!isSorcererFontOfMagicFeature(featureUnit.value)) {
-    return sorcererFontOfMagicFactsIssue(
-      "Font of Magic requires the installed Surface feature record.",
-    );
   }
 
   const ownerClassLevel = characterBuildClassFeatureOwnerLevel({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    feature: featureUnit.value,
+    feature: featureUnit.facts,
   });
   if (Result.isFailure(ownerClassLevel)) {
     return sorcererFontOfMagicFactsIssue(ownerClassLevel.failure.message);
   }
 
   const maximum = sorceryPointMaximum({
-    feature: featureUnit.value,
+    feature: featureUnit.facts,
     ownerClassLevel: ownerClassLevel.success,
   });
   if (Result.isFailure(maximum)) return Result.fail(maximum.failure);
   const spellSlotCreation = fontOfMagicSpellSlotCreationOperation(
-    featureUnit.value,
+    featureUnit.facts,
   );
   if (Result.isFailure(spellSlotCreation)) {
     return Result.fail(spellSlotCreation.failure);
   }
 
   return Result.succeed({
-    unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+    unitId: featureUnit.unitId,
     sorceryPointPool: {
-      poolId: featureUnit.value.mechanics.resource.poolId,
+      poolId: featureUnit.facts.mechanics.resource.poolId,
       maximum: maximum.success,
       longRestRefillsAll: true,
     },
@@ -125,10 +146,9 @@ export function characterBuildSorcererFontOfMagicFacts(input: {
 }
 
 function isSorcererFontOfMagicFeature(
-  unit: UnitRecord,
+  unit: CharacterCreationClassFeatureFacts,
 ): unit is SorcererFontOfMagicFeature {
   return (
-    unit.kind === "class_feature" &&
     unit.className === "sorcerer" &&
     unit.mechanics.family === "resource_pool" &&
     unit.mechanics.resource.kind === "point_pool" &&

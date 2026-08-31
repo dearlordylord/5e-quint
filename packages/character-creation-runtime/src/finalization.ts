@@ -53,7 +53,6 @@ import {
 import { characterBuildSpeciesOriginFeatUnitIds } from "./magic-initiate-spell-access.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
-  classUnitId,
   classLevelForUnit,
   computeTotalLevel,
   progressionClassUnitIds,
@@ -84,6 +83,11 @@ import {
   type CharacterDefinitionProjection,
   type CharacterDefinitionSpeciesFacts,
 } from "./character-definition-projection.ts";
+import {
+  projectCharacterCreationFeature,
+  type CharacterCreationSpeciesTraitFacts,
+} from "./character-feature-projection.ts";
+import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
   decodeProficiencyGrantSubjectOptionId,
@@ -749,9 +753,11 @@ function selectedFeatPrerequisitesSupported(
       if (featUnitId === undefined) return true;
       const featUnit = selectedFeatUnits.get(featUnitId);
       if (featUnit === undefined) return true;
+      const projection = projectCharacterCreationFeature(featUnit);
       if (
-        featUnit.kind !== "feat" ||
-        featUnit.mechanics.family !== "grappler"
+        projection.tag !== "readable" ||
+        projection.value.kind !== "feat" ||
+        projection.value.facts.mechanics.family !== "grappler"
       ) {
         return true;
       }
@@ -1038,14 +1044,17 @@ function speciesLineageChoiceSource(
 ): Result.Result<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
   const sources = Object.values(speciesFacts.traits).flatMap((traitUnitId) => {
     const traitUnit = unitLibrary.getUnit(traitUnitId);
-    if (Option.isNone(traitUnit) || traitUnit.value.kind !== "species_trait") {
+    if (Option.isNone(traitUnit)) {
       return [];
     }
-    return traitUnit.value.mechanics.family === "species_lineage_choice"
+    const trait = projectCharacterCreationFeature(traitUnit.value);
+    return trait.tag === "readable" &&
+      trait.value.kind === "species_trait" &&
+      trait.value.facts.mechanics.family === "species_lineage_choice"
       ? [
           {
             traitUnitId: traitUnit.value.id,
-            mechanics: traitUnit.value.mechanics,
+            mechanics: trait.value.facts.mechanics,
           },
         ]
       : [];
@@ -2155,26 +2164,30 @@ function hitPointMaximumGrantBonusForSourceUnit(input: {
       ],
     };
   }
-  if (
-    unit.value.kind !== "class_feature" &&
-    unit.value.kind !== "species_trait"
-  ) {
+  const feature = projectCharacterCreationFeature(unit.value);
+  if (feature.tag !== "readable") {
     return { total: 0, issues: [] };
   }
+  const sourceClassLevelResult =
+    feature.value.kind === "class_feature"
+      ? characterBuildClassFeatureOwnerLevel({
+          build: input.build,
+          unitLibrary: input.unitLibrary,
+          feature: feature.value.facts,
+        })
+      : undefined;
   const sourceClassLevel =
-    unit.value.kind === "class_feature"
-      ? classLevelForUnit(
-          input.build.progression,
-          classUnitId(authoredUnitId(`class_${unit.value.className}`)),
-        )
+    sourceClassLevelResult !== undefined &&
+    Result.isSuccess(sourceClassLevelResult)
+      ? sourceClassLevelResult.success
       : undefined;
   const components: PassiveMechanics[] =
-    unit.value.mechanics.family === "composite"
-      ? unit.value.mechanics.parts.filter(
+    feature.value.facts.mechanics.family === "composite"
+      ? feature.value.facts.mechanics.parts.filter(
           (part): part is PassiveMechanics => part.family === "passive",
         )
-      : unit.value.mechanics.family === "passive"
-        ? [unit.value.mechanics]
+      : feature.value.facts.mechanics.family === "passive"
+        ? [feature.value.facts.mechanics]
         : [];
   return hitPointMaximumGrantBonusForComponents({
     components,
@@ -2523,15 +2536,18 @@ function finalizedClassFeatureLanguages(
 
   for (const unitId of characterBuildFeatureUnitIds(input, input.unitLibrary)) {
     const unit = input.unitLibrary.getUnit(unitId);
-    if (
-      Option.isNone(unit) ||
-      unit.value.kind !== "class_feature" ||
-      unit.value.mechanics.family !== "passive"
-    ) {
+    if (Option.isNone(unit)) {
       continue;
     }
+    const feature = projectCharacterCreationFeature(unit.value);
+    if (
+      feature.tag !== "readable" ||
+      feature.value.kind !== "class_feature" ||
+      feature.value.facts.mechanics.family !== "passive"
+    )
+      continue;
 
-    for (const grant of unit.value.mechanics.grants) {
+    for (const grant of feature.value.facts.mechanics.grants) {
       if (grant.kind === "grant_language") {
         const language = languageFromSurfaceLanguageId(grant.languageId);
         /* v8 ignore start -- @preserve -- Supported passive language grants carry only Surface language ids admitted by the codec. */
@@ -3207,22 +3223,22 @@ function speciesTraitGrantChoiceHolesForFinalization(
     input.unitLibrary,
   );
   return selectedSpeciesTraitUnitsForFinalization(input).flatMap((trait) => {
-    if (trait.mechanics.family === "species_lineage_choice") {
-      return speciesLineageChoiceHoles(trait.id, trait.mechanics);
+    if (trait.facts.mechanics.family === "species_lineage_choice") {
+      return speciesLineageChoiceHoles(trait.unitId, trait.facts.mechanics);
     }
 
-    if (trait.mechanics.family !== "passive") {
+    if (trait.facts.mechanics.family !== "passive") {
       return [];
     }
 
-    return trait.mechanics.grants.flatMap((grant) =>
-      passiveGrantChoiceHoles(trait.id, grant, input.unitLibrary, {
+    return trait.facts.mechanics.grants.flatMap((grant) =>
+      passiveGrantChoiceHoles(trait.unitId, grant, input.unitLibrary, {
         ownedSkillProficiencies: selectedSkillProficiencies(
           input.selections,
           input.unitLibrary,
           (selection) =>
             selection.kind === "unitChoice" &&
-            selection.source.unitId === trait.id &&
+            selection.source.unitId === trait.unitId &&
             selection.source.choiceKey === SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         ),
         ownedToolProficiencies: selectedAndFixedToolProficiencies({
@@ -3231,7 +3247,7 @@ function speciesTraitGrantChoiceHolesForFinalization(
           classFactsByUnitId: input.classFactsByUnitId,
           shouldIgnoreSelection: (selection) =>
             selection.kind === "unitChoice" &&
-            selection.source.unitId === trait.id &&
+            selection.source.unitId === trait.unitId &&
             selection.source.choiceKey === SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         }),
         proficiencyChoiceKey: SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
@@ -3275,7 +3291,10 @@ function selectedSpeciesTraitUnitsForFinalization(
     SupportedFinalizationChoiceHoleInput,
     "selections" | "unitLibrary"
   >,
-): readonly Extract<UnitRecord, { readonly kind: "species_trait" }>[] {
+): readonly {
+  readonly unitId: UnitRecord["id"];
+  readonly facts: CharacterCreationSpeciesTraitFacts;
+}[] {
   if (
     !speciesUnitIdsWithSupportedTraitChoices().includes(
       input.selections.species,
@@ -3296,8 +3315,10 @@ function selectedSpeciesTraitUnitsForFinalization(
 
   return Object.values(projection.value.facts.traits).flatMap((traitUnitId) => {
     const traitUnit = input.unitLibrary.getUnit(traitUnitId);
-    return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
-      ? [traitUnit.value]
+    if (Option.isNone(traitUnit)) return [];
+    const trait = projectCharacterCreationFeature(traitUnit.value);
+    return trait.tag === "readable" && trait.value.kind === "species_trait"
+      ? [{ unitId: traitUnit.value.id, facts: trait.value.facts }]
       : [];
   });
   /* v8 ignore stop -- @preserve */
@@ -5502,17 +5523,22 @@ function classFeatureAcquisitionChoiceMechanicsForSelection(
   unitLibrary: UnitCatalog,
 ): ClassFeatureAcquisitionChoiceMechanics | undefined {
   const feature = unitLibrary.getUnit(selection.source.unitId);
-  if (
-    Option.isNone(feature) ||
-    feature.value.kind !== "class_feature" ||
-    feature.value.mechanics.family !== "class_feature_acquisition_choice"
-  ) {
+  if (Option.isNone(feature)) {
     return undefined;
   }
-  const featureChoiceKey = unitChoiceKey(feature.value.mechanics.choiceKey);
+  const projection = projectCharacterCreationFeature(feature.value);
+  if (
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature" ||
+    projection.value.facts.mechanics.family !==
+      "class_feature_acquisition_choice"
+  )
+    return undefined;
+  const mechanics = projection.value.facts.mechanics;
+  const featureChoiceKey = unitChoiceKey(mechanics.choiceKey);
   return Result.isSuccess(featureChoiceKey) &&
     featureChoiceKey.success === selection.source.choiceKey
-    ? feature.value.mechanics
+    ? mechanics
     : undefined;
 }
 
@@ -5559,15 +5585,19 @@ function characterBuildResourcesForUnit(
   unit: UnitRecord,
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CharacterBuildResource[] {
+  const projection = projectCharacterCreationFeature(unit);
   if (
-    unit.kind === "class_feature" &&
+    projection.tag === "readable" &&
+    projection.value.kind === "class_feature" &&
     supportsCharacterBuildResourceUnitId(unit.id, supportProfile) &&
-    (unit.mechanics.family === "activation" ||
-      unit.mechanics.family === "resource_container" ||
-      unit.mechanics.family === "resource_pool") &&
-    unit.mechanics.resource !== undefined
+    (projection.value.facts.mechanics.family === "activation" ||
+      projection.value.facts.mechanics.family === "resource_container" ||
+      projection.value.facts.mechanics.family === "resource_pool") &&
+    projection.value.facts.mechanics.resource !== undefined
   ) {
-    return [{ unitId: unit.id, resource: unit.mechanics.resource }];
+    return [
+      { unitId: unit.id, resource: projection.value.facts.mechanics.resource },
+    ];
   }
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {

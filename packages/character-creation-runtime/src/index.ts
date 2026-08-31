@@ -7,6 +7,27 @@ export {
 export { characterBuildDisplayName } from "./character-display.ts";
 
 export {
+  CHARACTER_CREATION_FEATURE_PATH_DISPOSITIONS,
+  CHARACTER_CREATION_FEATURE_EVIDENCE_BRANCHES,
+  PARTIAL_CHARACTER_CREATION_FEATURE_PROJECTION_ISSUE_CODES,
+  projectCharacterCreationFeature,
+  projectCharacterCreationClassFeatureSources,
+  projectPartialCharacterCreationFeature,
+  type CharacterCreationClassFeatureFacts,
+  type CharacterCreationClassFeatureSource,
+  type CharacterCreationFeatFacts,
+  type CharacterCreationFeatureProjection,
+  type CharacterCreationFeaturePathDisposition,
+  type CharacterCreationFeaturePathEvidence,
+  type CharacterCreationFeatureEvidenceBranch,
+  type CharacterCreationSpeciesTraitFacts,
+  type PartialCharacterCreationFeatureProjection,
+  type PartialCharacterCreationFeatureProjectionIssue,
+  type PartialCharacterCreationFeatureProjectionIssueCode,
+  type PartialCharacterCreationFeatureProjectionResult,
+} from "./character-feature-projection.ts";
+
+export {
   admitCharacterDefinitionMechanicsGraph,
   projectCharacterDefinition,
   type CharacterDefinitionAdmissionInput,
