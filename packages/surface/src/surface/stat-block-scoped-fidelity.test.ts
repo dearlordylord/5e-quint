@@ -3169,6 +3169,14 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         expectedField: "size.options.1",
       },
       {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("*Large Beast")
+            ? line.replace("Large", "Bogus")
+            : line,
+        expectedField: "size",
+      },
+      {
         name: "Swarm of Insects",
         mutate: (line: string) =>
           line.startsWith("*Medium Swarm")
@@ -3342,6 +3350,12 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         expectedField: "abilityScores.5",
       },
       {
+        name: "Aboleth",
+        mutate: (line: string) =>
+          line.startsWith("| **Score**") ? "| **Score** | 18 |" : line,
+        expectedField: "abilityScores",
+      },
+      {
         name: "Allosaurus",
         mutate: (line: string) =>
           line.startsWith("**Skills**") ? "**Skills** Perception" : line,
@@ -3372,6 +3386,14 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         mutate: (line: string) =>
           line.startsWith("**Gear**") ? line.replace("(3)", "(0)") : line,
         expectedField: "gear.0.quantity",
+      },
+      {
+        name: "Goblin Warrior",
+        mutate: (line: string) =>
+          line.startsWith("***Shortbow.")
+            ? line.replace("range 80/320 ft.", "range 320/80 ft.")
+            : line,
+        expectedField: "procedures.Shortbow.rangeFeet",
       },
       {
         name: "Chimera",
@@ -3416,6 +3438,22 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         mutate: (line: string) =>
           line.startsWith("**Fire Breath") ? line.replace("7d8", "7d7") : line,
         expectedField: "procedures.Fire Breath (Recharge 5–6).onFail.dieSize",
+      },
+      {
+        name: "Adult Gold Dragon",
+        mutate: (line: string) =>
+          line.startsWith("*Legendary Action Uses:")
+            ? line.replace("Uses: 3", "Uses: 0")
+            : line,
+        expectedField: "legendaryActionUses.usesOutsideLair",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**CR**")
+            ? `${line}\n*Legendary Action Uses: 3.`
+            : line,
+        expectedField: "legendaryActionUses",
       },
     ] as const;
 
@@ -3493,6 +3531,15 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         mutate: (line: string) =>
           line.startsWith("**Bite.")
             ? line.replace("11 (2d6 + 4)", "11")
+            : line,
+      },
+      {
+        evidence: "missing alternative damage",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("18 (4d6 + 4) Piercing damage", "18 points")
             : line,
       },
       {
@@ -3597,6 +3644,42 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       ),
       { numRuns: 5, seed: 352482 },
     );
+  });
+
+  test("sorts multiple qualified RAW condition immunities", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Archmage",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const contents = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.startsWith("**Immunities** Psychic; Charmed")
+          ? `${line}, Frightened (from a synthetic ward)`
+          : line,
+      )
+      .join("\n");
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag !== "projected") return;
+    const immunities = result.projection.generalFacts.immunities;
+    expect(immunities.kind).toBe("some");
+    if (immunities.kind !== "some") return;
+    expect(
+      "qualifiedConditions" in immunities.value
+        ? immunities.value.qualifiedConditions.map(({ condition }) => condition)
+        : [],
+    ).toEqual(["charmed", "frightened"]);
   });
 
   test("uses the trait description owner rather than the procedure description owner", () => {
