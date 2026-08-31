@@ -6220,22 +6220,22 @@ export const StatBlockExecutionSnapshotSchema =
     ),
   );
 
-type EncodedStatBlockExecutionSnapshot = Schema.Schema.Type<
+type StatBlockExecutionSnapshotInvariantInput = Schema.Schema.Type<
   typeof StatBlockExecutionSnapshotShapeSchema
 >;
-type EncodedStatBlockProcedureBinding = Schema.Schema.Type<
+type StatBlockProcedureBindingInvariantInput = Schema.Schema.Type<
   typeof StatBlockProcedureBindingSnapshotSchema
 >;
-type EncodedStatBlockAttackProcedureBinding = Extract<
-  EncodedStatBlockProcedureBinding,
+type StatBlockAttackProcedureBindingInvariantInput = Extract<
+  StatBlockProcedureBindingInvariantInput,
   { readonly procedure: { readonly kind: "attack" } }
 >;
-type EncodedStatBlockResourcePool = Schema.Schema.Type<
+type StatBlockResourcePoolInvariantInput = Schema.Schema.Type<
   typeof StatBlockResourcePoolStateSchema
 >;
 
 function statBlockExecutionSnapshotGraphIsValid(
-  snapshot: EncodedStatBlockExecutionSnapshot,
+  snapshot: StatBlockExecutionSnapshotInvariantInput,
 ): boolean {
   const procedureRefs = snapshot.procedureBindings.map(
     (binding) => binding.procedureRef,
@@ -6320,7 +6320,7 @@ function statBlockExecutionSnapshotGraphIsValid(
 }
 
 function statBlockExecutionSnapshotRefsAreValid(input: {
-  readonly snapshot: EncodedStatBlockExecutionSnapshot;
+  readonly snapshot: StatBlockExecutionSnapshotInvariantInput;
   readonly procedureRefs: readonly BattleStatBlockProcedureExecutionRef[];
   readonly procedureOrdinalKeys: readonly string[];
   readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
@@ -6345,12 +6345,12 @@ function statBlockExecutionSnapshotRefsAreValid(input: {
 }
 
 function statBlockProcedureBindingGraphIsValid(input: {
-  readonly binding: EncodedStatBlockProcedureBinding;
+  readonly binding: StatBlockProcedureBindingInvariantInput;
   readonly resourcePoolsByRef: ReadonlyMap<
     BattleResourcePoolExecutionRef,
-    EncodedStatBlockResourcePool
+    StatBlockResourcePoolInvariantInput
   >;
-  readonly legendaryPool: EncodedStatBlockResourcePool | undefined;
+  readonly legendaryPool: StatBlockResourcePoolInvariantInput | undefined;
   readonly actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
   readonly limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
 }): boolean {
@@ -6377,8 +6377,8 @@ function statBlockProcedureBindingGraphIsValid(input: {
 }
 
 function statBlockProcedurePoolShapeIsValid(
-  binding: EncodedStatBlockProcedureBinding,
-  pools: readonly EncodedStatBlockResourcePool[],
+  binding: StatBlockProcedureBindingInvariantInput,
+  pools: readonly StatBlockResourcePoolInvariantInput[],
 ): boolean {
   const legendaryPoolCount = pools.filter(
     (pool) => pool.kind === "legendaryActions",
@@ -6404,7 +6404,7 @@ function statBlockProcedurePoolShapeIsValid(
 }
 
 function statBlockProcedureResourcePoolRefs(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
 ): readonly BattleResourcePoolExecutionRef[] {
   return binding.procedure.kind === "spellcasting"
     ? [
@@ -6417,7 +6417,7 @@ function statBlockProcedureResourcePoolRefs(
 }
 
 function statBlockProcedureResourceRefsAreUnique(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
 ): boolean {
   if (binding.procedure.kind !== "spellcasting") {
     return (
@@ -6431,10 +6431,10 @@ function statBlockProcedureResourceRefsAreUnique(
 }
 
 function legendaryProcedurePoolOwnershipIsValid(
-  binding: EncodedStatBlockProcedureBinding,
-  legendaryPool: EncodedStatBlockResourcePool | undefined,
+  binding: StatBlockProcedureBindingInvariantInput,
+  legendaryPool: StatBlockResourcePoolInvariantInput | undefined,
 ): boolean {
-  if (!isEncodedStatBlockAttackProcedureBinding(binding)) {
+  if (!isStatBlockAttackProcedureBindingInvariantInput(binding)) {
     return true;
   }
   if (binding.procedure.section !== "legendaryActions") {
@@ -6446,14 +6446,14 @@ function legendaryProcedurePoolOwnershipIsValid(
   );
 }
 
-function isEncodedStatBlockAttackProcedureBinding(
-  binding: EncodedStatBlockProcedureBinding,
-): binding is EncodedStatBlockAttackProcedureBinding {
+function isStatBlockAttackProcedureBindingInvariantInput(
+  binding: StatBlockProcedureBindingInvariantInput,
+): binding is StatBlockAttackProcedureBindingInvariantInput {
   return binding.procedure.kind === "attack";
 }
 
 function multiattackBindingDispatchIsValid(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
   actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
   limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
 ): boolean {
@@ -6470,7 +6470,7 @@ function multiattackBindingDispatchIsValid(
 }
 
 function bonusActionOptionBindingIsNonempty(
-  binding: EncodedStatBlockProcedureBinding,
+  binding: StatBlockProcedureBindingInvariantInput,
 ): boolean {
   return (
     binding.procedure.kind !== "bonusActionOption" ||
@@ -6488,7 +6488,7 @@ function legendaryProcedurePoolCardinalityIsValid(
 }
 
 function runtimeProcedureOrdinalKey(
-  procedure: EncodedStatBlockProcedureBinding["procedure"],
+  procedure: StatBlockProcedureBindingInvariantInput["procedure"],
 ): string {
   if (procedure.kind === "unarmedStrike") return "actions:unarmedStrike";
   if (procedure.kind === "effectOccurrenceSource") {
@@ -6506,7 +6506,7 @@ function runtimeProcedureOrdinalKey(
 }
 
 function resourcePoolStateGraphIsValid(
-  pool: EncodedStatBlockResourcePool,
+  pool: StatBlockResourcePoolInvariantInput,
   bindingCountByPoolRef: ReadonlyMap<BattleResourcePoolExecutionRef, number>,
 ): boolean {
   const count = bindingCountByPoolRef.get(pool.resourcePoolRef) ?? 0;
@@ -6516,7 +6516,7 @@ function resourcePoolStateGraphIsValid(
 }
 
 function resourcePoolUsageBoundsAreValid(
-  pool: EncodedStatBlockResourcePool,
+  pool: StatBlockResourcePoolInvariantInput,
 ): boolean {
   if (pool.kind !== "daily" && pool.kind !== "legendaryActions") return true;
   return (
@@ -9779,7 +9779,7 @@ type BattleCheckpointFrontierEnvelopeShapeSchema = Schema.Struct<{
   frontier: BattleCheckpointFrontierShapeSchema;
 }>;
 
-type EncodedBattleCheckpointFrontierEnvelope =
+type BattleCheckpointFrontierEnvelopeInvariantInput =
   Schema.Schema.Type<BattleCheckpointFrontierEnvelopeShapeSchema>;
 
 function serializedInterruptChoiceSubject(
@@ -9918,7 +9918,7 @@ function serializedInterruptChoiceInvariantsHold(input: {
 }
 
 function battleCheckpointFrontierInvariantsHold(
-  envelope: EncodedBattleCheckpointFrontierEnvelope,
+  envelope: BattleCheckpointFrontierEnvelopeInvariantInput,
 ): boolean {
   const { checkpoint, frontier } = envelope;
   const boundExecutionRefs = new Set([
@@ -10005,10 +10005,7 @@ export const BattleCheckpointFrontierEnvelopeSchema: Schema.Codec<
 > = Schema.Struct({
   checkpoint: BattleSnapshotSchema,
   frontier: Schema.Union([
-    Schema.Struct({
-      kind: Schema.Literal("acts"),
-      acts: Schema.Array(BattleActDiscoveryCandidateSchema),
-    }),
+    BattleCheckpointFrontierActsSchema,
     BattleCheckpointFrontierHolesSchema,
     BattleInterruptDecisionFrontierSchema,
   ]),
