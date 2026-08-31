@@ -2941,7 +2941,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         expected: [
           {
             kind: "malformed-evidence",
-            field: "procedures.0.name",
+            field: "procedures.actions.0.name",
             evidence: " Bite",
           },
         ],
@@ -2957,6 +2957,25 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
             kind: "malformed-evidence",
             field: "legendaryActionUses.usesInLair",
             evidence: "2",
+          },
+        ],
+      },
+      {
+        name: "Adult Red Dragon",
+        mutate: (line: string) =>
+          line.startsWith("*Legendary Action Uses:")
+            ? line.replace("3 (4 in Lair)", "0 (0 in Lair)")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "legendaryActionUses.usesOutsideLair",
+            evidence: "0",
+          },
+          {
+            kind: "malformed-evidence",
+            field: "legendaryActionUses.usesInLair",
+            evidence: "0",
           },
         ],
       },

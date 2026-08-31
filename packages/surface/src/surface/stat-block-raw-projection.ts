@@ -2677,7 +2677,9 @@ const parseRawEntries = (
           isTrait ? CreatureTraitNameSchema : StatBlockProcedureNameSchema,
           nameEvidence,
           nameEvidence,
-          `${isTrait ? "traits" : "procedures"}.${index}.name`,
+          isTrait
+            ? `traits.${index}.name`
+            : `procedures.${normalizedIdentifier(section)}.${index}.name`,
           isTrait
             ? "a canonical trait name"
             : "a nonempty trimmed procedure name",
@@ -3743,8 +3745,11 @@ const parseLegendaryActionUses = (
       "legendaryActionUses.usesOutsideLair",
     ),
   );
-  if (usesOutsideLair === undefined) return undefined;
-  if (uses[2] === undefined) return { kind: "fixed", uses: usesOutsideLair };
+  if (uses[2] === undefined) {
+    return usesOutsideLair === undefined
+      ? undefined
+      : { kind: "fixed", uses: usesOutsideLair };
+  }
   const usesInLair = assess(issueContext, () =>
     positiveIntegerEvidence(
       issueContext,
@@ -3752,7 +3757,9 @@ const parseLegendaryActionUses = (
       "legendaryActionUses.usesInLair",
     ),
   );
-  if (usesInLair === undefined) return undefined;
+  if (usesOutsideLair === undefined || usesInLair === undefined) {
+    return undefined;
+  }
   if (usesInLair <= usesOutsideLair) {
     malformedEvidence(
       issueContext,
