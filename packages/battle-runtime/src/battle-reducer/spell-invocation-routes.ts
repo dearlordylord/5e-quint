@@ -103,33 +103,50 @@ export function spellAttackProcedureRouteForDiscoveredAct(
     return undefined;
   }
   const holes = battleReducerRouteHoles(act.initialHoles);
-  const actionEconomyEvent = discoverBattleActsRoute(
+  const actionEconomyEvent = spellAttackDiscoveryActionEconomyRoute(
+    invocation,
+    holes,
+  );
+  const objectTargetBoundary = spellAttackDiscoveryObjectTargetRoutes(
+    invocation,
+    act,
+  );
+  return nonEmptyRouteEvents([actionEconomyEvent, ...objectTargetBoundary]);
+}
+
+function spellAttackDiscoveryActionEconomyRoute(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForRouteSubject>>,
+  holes: readonly BattleReducerRouteHole[],
+): BattleReducerRouteEvent {
+  const isSequence = invocation.procedure === "spellAttackSequence";
+  return discoverBattleActsRoute(
     "spellAttackProcedure",
-    invocation.procedure === "spellAttackSequence"
-      ? spellAttackSequenceRouteHoles(holes)
-      : holes,
-    invocation.procedure === "spellAttackSequence"
+    isSequence ? spellAttackSequenceRouteHoles(holes) : holes,
+    isSequence
       ? "battleSpellAttackProcedure"
       : spellInvocationUsesSpellSlot(invocation)
         ? "battleSpellSlotAndActionEconomy"
         : "battleActionEconomy",
   );
-  const objectTargetBoundary =
-    invocation.procedure !== "spellAttackSequence" &&
-    act.initialHoles.some((hole) => hole.kind === "objectTargetChoice")
-      ? [
-          discoverBattleActsRoute(
-            "spellAttackProcedure",
-            battleReducerRouteHoles(
-              act.initialHoles.filter(
-                (hole) => hole.kind === "objectTargetChoice",
-              ),
-            ),
-            "battleObjectTargetBoundary",
-          ),
-        ]
-      : [];
-  return nonEmptyRouteEvents([actionEconomyEvent, ...objectTargetBoundary]);
+}
+
+function spellAttackDiscoveryObjectTargetRoutes(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForRouteSubject>>,
+  act: BattleActDiscoveryCandidate,
+): readonly BattleReducerRouteEvent[] {
+  if (invocation.procedure === "spellAttackSequence") return [];
+  const objectTargetHoles = act.initialHoles.filter(
+    (hole) => hole.kind === "objectTargetChoice",
+  );
+  return objectTargetHoles.length === 0
+    ? []
+    : [
+        discoverBattleActsRoute(
+          "spellAttackProcedure",
+          battleReducerRouteHoles(objectTargetHoles),
+          "battleObjectTargetBoundary",
+        ),
+      ];
 }
 
 function spellAttackSequenceRouteHoles(
