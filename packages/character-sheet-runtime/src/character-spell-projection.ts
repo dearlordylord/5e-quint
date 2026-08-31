@@ -173,7 +173,8 @@ const SHEET_SAVE_FAILURE_KINDS = new Set<SavePhase["onFail"]["kind"]>([
   "create_sensor",
   "create_illusion",
 ]);
-const SHEET_OWNED_DIRECT_EFFECT_KINDS = new Set<DirectEffect["kind"]>([
+type DirectEffectSetCandidateKind = DirectEffect["kind"];
+const SHEET_OWNED_DIRECT_EFFECT_KINDS = new Set<DirectEffectSetCandidateKind>([
   "grant_rest_benefit",
   "spell_recipient_rest_lockout",
   "remove_condition",
@@ -512,7 +513,7 @@ function reincarnationPhaseBranchIssues(
 
 function ownedDirectPhaseBranchIssues(
   effects: readonly DirectEffect[],
-  ownedCandidateKind: Parameters<typeof validateOwnedEffectSet>[1],
+  ownedCandidateKind: DirectEffectSetCandidateKind,
 ): readonly PartialCharacterSheetSpellProjectionIssue[] {
   const validation = validateOwnedEffectSet(effects, ownedCandidateKind);
   const issues = validation.unsupportedIndices.map((unsupportedEffectIndex) =>
@@ -549,11 +550,7 @@ function hasUnsupportedNoEffectAttachment(
 
 function validateOwnedEffectSet(
   effects: readonly DirectEffect[],
-  ownedCandidateKind: typeof SHEET_OWNED_DIRECT_EFFECT_KINDS extends Set<
-    infer Kind
-  >
-    ? Kind
-    : never,
+  ownedCandidateKind: DirectEffectSetCandidateKind,
 ): {
   readonly unsupportedIndices: readonly number[];
   readonly missingRequired: boolean;
