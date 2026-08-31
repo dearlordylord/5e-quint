@@ -42,10 +42,8 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import chromaticOrbInput from "../../surface/content/chromatic_orb.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";

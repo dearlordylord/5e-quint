@@ -4,7 +4,7 @@ import { Match } from "effect";
 import fc from "fast-check";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { NonNegativeInteger } from "../packages/shared/src/types.ts";
+import { PositiveInteger } from "../packages/shared/src/types.ts";
 import { projectSrdStatBlockPeerObservation } from "../packages/surface/src/surface/surface-publication-peer-observation.ts";
 import { decodeStatBlockRecords } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
@@ -142,9 +142,14 @@ function applyMutation(
         catalogAssessment: {
           tag: "strict-decode-rejected" as const,
           strictDecode,
-          provenance: observation.catalogAssessment.provenance,
-          installedMembership:
-            observation.catalogAssessment.installedMembership,
+          partialProvenance: {
+            tag: "homogeneous" as const,
+            records: [],
+          },
+          decodedSrdMembership: {
+            tag: "unavailable" as const,
+            cause: "no-decoded-srd-records" as const,
+          },
         },
       };
     }),
@@ -183,7 +188,7 @@ function applyMutation(
               ...installed,
               installedMembership: {
                 ...installed.installedMembership,
-                installedCount: NonNegativeInteger(
+                installedCount: PositiveInteger(
                   installed.installedMembership.installedCount - 1,
                 ),
               },
@@ -358,6 +363,14 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
       occurrenceCount: 334,
       identityCount: 330,
       issues: [],
+    });
+    expect(result.diagnostic.catalogAssessment).toMatchObject({
+      tag: "strict-decode-rejected",
+      partialProvenance: { tag: "homogeneous", records: [] },
+      decodedSrdMembership: {
+        tag: "unavailable",
+        cause: "no-decoded-srd-records",
+      },
     });
   });
 

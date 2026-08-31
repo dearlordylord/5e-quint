@@ -7,8 +7,6 @@ import {
   evaluateSrdStatBlockProvenance,
 } from "./stat-block-catalog.ts";
 
-export * from "./stat-block-catalog.ts";
-
 const decodedRecords = decodeStatBlockRecords(srdStatBlockAggregateInputs);
 
 const decodedStatBlockRecords = Match.value(decodedRecords).pipe(

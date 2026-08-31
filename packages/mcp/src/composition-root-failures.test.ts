@@ -3,7 +3,7 @@ import { Option } from "effect";
 import type {
   SrdStatBlockCollection,
   StatBlockCatalog,
-} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+} from "@dnd/surface/surface/stat-block-catalog";
 import type {
   SrdUnitCollection,
   UnitCatalog,

@@ -54,6 +54,7 @@ export type SrdStatBlockCatalog = {
 const toSrdStatBlockCatalog = Brand.nominal<SrdStatBlockCatalog>();
 
 export type StatBlockCatalogBuildIssue =
+  | { readonly code: "emptyStatBlockCollection" }
   | {
       readonly code: "duplicateStatBlockId";
       readonly statBlockId: StatBlockId;
@@ -71,6 +72,11 @@ export type StatBlockCatalogBuildIssue =
       readonly actual: Provenance;
       readonly statBlockId: StatBlockId;
     };
+
+export type SrdStatBlockCatalogBuildIssue = Exclude<
+  StatBlockCatalogBuildIssue,
+  { readonly code: "mixedProvenance" }
+>;
 
 type StatBlockCatalogBuildResult =
   | { readonly tag: "ok"; readonly catalog: SrdStatBlockCatalog }
@@ -91,7 +97,10 @@ type StatBlockRecordDecodeIssue = {
 export type StatBlockRecordsDecodeResult =
   | {
       readonly tag: "decoded";
-      readonly decodedRecords: readonly DecodedStatBlockRecord[];
+      readonly decodedRecords: readonly [
+        DecodedStatBlockRecord,
+        ...DecodedStatBlockRecord[],
+      ];
     }
   | {
       readonly tag: "rejected";
@@ -137,8 +146,8 @@ type SrdStatBlockCatalogFromRecordsResult =
   | {
       readonly tag: "invalid";
       readonly issues: readonly [
-        StatBlockCatalogBuildIssue,
-        ...StatBlockCatalogBuildIssue[],
+        SrdStatBlockCatalogBuildIssue,
+        ...SrdStatBlockCatalogBuildIssue[],
       ];
     };
 
@@ -210,13 +219,23 @@ export function decodeStatBlockRecords(
   }
 
   const firstIssue = issues[0];
-  return firstIssue === undefined
-    ? { tag: "decoded", decodedRecords }
-    : {
-        tag: "rejected",
-        issues: [firstIssue, ...issues.slice(1)],
-        decodedRecords,
-      };
+  if (firstIssue !== undefined) {
+    return {
+      tag: "rejected",
+      issues: [firstIssue, ...issues.slice(1)],
+      decodedRecords,
+    };
+  }
+  const firstDecodedRecord = decodedRecords[0];
+  /* v8 ignore start -- @preserve -- non-empty aggregate input with no decode failures necessarily produced a decoded record */
+  if (firstDecodedRecord === undefined) {
+    throw new Error("Successful Stat Block decode has no decoded record");
+  }
+  /* v8 ignore stop -- @preserve */
+  return {
+    tag: "decoded",
+    decodedRecords: [firstDecodedRecord, ...decodedRecords.slice(1)],
+  };
 }
 
 export function evaluateSrdStatBlockProvenance(
@@ -250,6 +269,12 @@ export function evaluateSrdStatBlockProvenance(
 export function buildSrdStatBlockCatalogFromRecords(
   records: readonly Srd521StatBlock[],
 ): SrdStatBlockCatalogFromRecordsResult {
+  if (records.length === 0) {
+    return {
+      tag: "invalid",
+      issues: [{ code: "emptyStatBlockCollection" }],
+    };
+  }
   const collection = {
     kind: "srdStatBlockCollection",
     provenance: { kind: "srd-5.2.1" },
@@ -263,8 +288,27 @@ export function buildSrdStatBlockCatalogFromRecords(
     })),
     Match.when({ tag: "invalid" }, ({ issues }) => ({
       tag: "invalid" as const,
-      issues,
+      issues: [
+        narrowSrdStatBlockCatalogBuildIssue(issues[0]),
+        ...issues.slice(1).map(narrowSrdStatBlockCatalogBuildIssue),
+      ] as const,
     })),
+    Match.exhaustive,
+  );
+}
+
+function narrowSrdStatBlockCatalogBuildIssue(
+  issue: StatBlockCatalogBuildIssue,
+): SrdStatBlockCatalogBuildIssue {
+  return Match.value(issue).pipe(
+    Match.when({ code: "emptyStatBlockCollection" }, (srdIssue) => srdIssue),
+    Match.when({ code: "duplicateStatBlockId" }, (srdIssue) => srdIssue),
+    Match.when({ code: "duplicateStatBlockIdentity" }, (srdIssue) => srdIssue),
+    Match.when({ code: "mixedProvenance" }, () => {
+      /* v8 ignore start -- @preserve -- Srd521StatBlock input makes mixed provenance impossible */
+      throw new Error("Typed SRD Stat Block records produced mixed provenance");
+      /* v8 ignore stop -- @preserve */
+    }),
     Match.exhaustive,
   );
 }

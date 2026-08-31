@@ -19,10 +19,8 @@ import {
 import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/index.ts";
 import { armorClass } from "../../../packages/shared-algebras/src/armor-class-algebra.ts";
 import { Hp, movementFeet } from "../../../packages/shared/src/types.ts";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "../../../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "../../../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
+import { buildStatBlockCatalog } from "../../../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   buildUnitCatalog,
   srdUnitCollection,

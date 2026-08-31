@@ -92,16 +92,47 @@ export function evaluateSrdStatBlockAggregateSync(
     Match.when({ tag: "available" }, () => undefined),
     Match.exhaustive,
   );
-  if (
-    expected.tag === "available" &&
-    installed.tag === "available" &&
-    !installed.bytes.equals(expected.bytes)
-  ) {
-    issues.push({
-      kind: "aggregate-out-of-sync",
-      file: SRD_STAT_BLOCK_AGGREGATE_RELATIVE_PATH,
-    });
-  }
+  const synchronizationPair = Match.value(expected).pipe(
+    Match.when({ tag: "available" }, (availableExpected) =>
+      Match.value(installed).pipe(
+        Match.when({ tag: "available" }, (availableInstalled) => ({
+          tag: "both-available" as const,
+          expected: availableExpected,
+          installed: availableInstalled,
+        })),
+        Match.when({ tag: "unavailable" }, () => ({
+          tag: "installed-unavailable" as const,
+        })),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when({ tag: "unavailable" }, () =>
+      Match.value(installed).pipe(
+        Match.when({ tag: "available" }, () => ({
+          tag: "expected-unavailable" as const,
+        })),
+        Match.when({ tag: "unavailable" }, () => ({
+          tag: "both-unavailable" as const,
+        })),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+  Match.value(synchronizationPair).pipe(
+    Match.when({ tag: "both-available" }, ({ expected, installed }) => {
+      if (!installed.bytes.equals(expected.bytes)) {
+        issues.push({
+          kind: "aggregate-out-of-sync",
+          file: SRD_STAT_BLOCK_AGGREGATE_RELATIVE_PATH,
+        });
+      }
+    }),
+    Match.when({ tag: "installed-unavailable" }, () => undefined),
+    Match.when({ tag: "expected-unavailable" }, () => undefined),
+    Match.when({ tag: "both-unavailable" }, () => undefined),
+    Match.exhaustive,
+  );
 
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined

@@ -8,10 +8,8 @@ import {
   resolveFindFamiliarSelectedForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "./find-familiar-forms.ts";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "./installed-srd-stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
+import { buildStatBlockCatalog } from "./stat-block-catalog.ts";
 import type { SpellRecord } from "./types.ts";
 import { srdUnitCollection } from "./unit-catalog.ts";
 

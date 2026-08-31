@@ -41,10 +41,8 @@ import {
   proficiencyBonus,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   DamageType,
   SpellRecord,

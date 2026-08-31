@@ -48,10 +48,8 @@ import {
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { DieRollResult, Hp } from "@dnd/shared/types";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,

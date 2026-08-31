@@ -31,10 +31,8 @@ import {
   applyCondition,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,

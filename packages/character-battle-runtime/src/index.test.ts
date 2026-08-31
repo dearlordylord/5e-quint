@@ -130,11 +130,11 @@ import {
   srdUnitCollection,
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import {
   buildStatBlockCatalog,
-  srdStatBlockCollection,
   type StatBlockCatalog,
-} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+} from "@dnd/surface/surface/stat-block-catalog";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   decodeCreatureImmunityDeclarationSync,

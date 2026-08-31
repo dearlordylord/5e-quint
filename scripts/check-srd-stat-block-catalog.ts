@@ -6,6 +6,8 @@ import { Match } from "effect";
 import {
   NonNegativeInteger,
   type NonNegativeInteger as NonNegativeIntegerType,
+  PositiveInteger,
+  type PositiveInteger as PositiveIntegerType,
 } from "../packages/shared/src/types.ts";
 
 import {
@@ -18,8 +20,8 @@ import {
   decodeStatBlockRecords,
   evaluateSrdStatBlockProvenance,
   type SrdStatBlockProvenanceResult,
+  type SrdStatBlockCatalogBuildIssue,
   type StatBlockRecordsDecodeResult,
-  type StatBlockCatalogBuildIssue,
 } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import { srdStatBlockAggregateInputs } from "../packages/surface/src/surface/generated/srd-stat-block-aggregate.ts";
 import {
@@ -114,7 +116,7 @@ function ownedParityIssues(
 type SrdStatBlockInstalledMembershipResult =
   | {
       readonly tag: "installed";
-      readonly installedCount: NonNegativeIntegerType;
+      readonly installedCount: PositiveIntegerType;
       readonly catalog: Extract<
         ReturnType<typeof buildSrdStatBlockCatalogFromRecords>,
         { readonly tag: "ok" }
@@ -123,10 +125,33 @@ type SrdStatBlockInstalledMembershipResult =
   | {
       readonly tag: "rejected";
       readonly issues: readonly [
-        StatBlockCatalogBuildIssue,
-        ...StatBlockCatalogBuildIssue[],
+        SrdStatBlockMembershipIssue,
+        ...SrdStatBlockMembershipIssue[],
       ];
     };
+
+type SrdStatBlockPartialMembershipResult =
+  | {
+      readonly tag: "partial";
+      readonly observedSrdCount: PositiveIntegerType;
+    }
+  | {
+      readonly tag: "partial-rejected";
+      readonly observedSrdCount: PositiveIntegerType;
+      readonly issues: readonly [
+        SrdStatBlockMembershipIssue,
+        ...SrdStatBlockMembershipIssue[],
+      ];
+    }
+  | {
+      readonly tag: "unavailable";
+      readonly cause: "no-decoded-srd-records";
+    };
+
+type SrdStatBlockMembershipIssue = Exclude<
+  SrdStatBlockCatalogBuildIssue,
+  { readonly code: "emptyStatBlockCollection" }
+>;
 
 type SrdStatBlockScopedFidelityAssessment =
   | {
@@ -138,6 +163,85 @@ type SrdStatBlockScopedFidelityAssessment =
       readonly message: string;
     };
 
+type CompleteSrdStatBlockProvenanceResult =
+  | Extract<SrdStatBlockProvenanceResult, { readonly tag: "mixed" }>
+  | {
+      readonly tag: "homogeneous";
+      readonly records: readonly [
+        Extract<
+          SrdStatBlockProvenanceResult,
+          { readonly tag: "homogeneous" }
+        >["records"][number],
+        ...Extract<
+          SrdStatBlockProvenanceResult,
+          { readonly tag: "homogeneous" }
+        >["records"][number][],
+      ];
+    };
+
+function evaluateCompleteSrdStatBlockProvenance(
+  decodedRecords: Extract<
+    StatBlockRecordsDecodeResult,
+    { readonly tag: "decoded" }
+  >["decodedRecords"],
+): CompleteSrdStatBlockProvenanceResult {
+  return Match.value(evaluateSrdStatBlockProvenance(decodedRecords)).pipe(
+    Match.when({ tag: "mixed" }, (mixed) => mixed),
+    Match.when({ tag: "homogeneous" }, ({ records }) => {
+      const firstRecord = records[0];
+      /* v8 ignore start -- @preserve -- homogeneous provenance over a non-empty fully decoded aggregate proves one SRD record */
+      if (firstRecord === undefined) {
+        throw new Error("Complete homogeneous provenance has no SRD record");
+      }
+      /* v8 ignore stop -- @preserve */
+      return {
+        tag: "homogeneous" as const,
+        records: [firstRecord, ...records.slice(1)] as const,
+      };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function isEmptyStatBlockCollectionIssue(
+  issue: SrdStatBlockCatalogBuildIssue,
+): boolean {
+  return Match.value(issue).pipe(
+    Match.when({ code: "emptyStatBlockCollection" }, () => true),
+    Match.when({ code: "duplicateStatBlockId" }, () => false),
+    Match.when({ code: "duplicateStatBlockIdentity" }, () => false),
+    Match.exhaustive,
+  );
+}
+
+function requirePositiveSrdStatBlockMembershipIssues(
+  issues: readonly [
+    SrdStatBlockCatalogBuildIssue,
+    ...SrdStatBlockCatalogBuildIssue[],
+  ],
+): readonly [SrdStatBlockMembershipIssue, ...SrdStatBlockMembershipIssue[]] {
+  const narrow = (
+    issue: SrdStatBlockCatalogBuildIssue,
+  ): SrdStatBlockMembershipIssue =>
+    Match.value(issue).pipe(
+      Match.when(
+        { code: "duplicateStatBlockId" },
+        (membershipIssue) => membershipIssue,
+      ),
+      Match.when(
+        { code: "duplicateStatBlockIdentity" },
+        (membershipIssue) => membershipIssue,
+      ),
+      Match.when({ code: "emptyStatBlockCollection" }, () => {
+        /* v8 ignore start -- @preserve -- callers establish positive SRD membership before narrowing rejection issues */
+        throw new Error("Positive SRD membership produced an empty issue");
+        /* v8 ignore stop -- @preserve */
+      }),
+      Match.exhaustive,
+    );
+  return [narrow(issues[0]), ...issues.slice(1).map(narrow)];
+}
+
 export type SrdStatBlockCatalogAssessment =
   | {
       readonly tag: "strict-decode-rejected";
@@ -145,8 +249,8 @@ export type SrdStatBlockCatalogAssessment =
         StatBlockRecordsDecodeResult,
         { readonly tag: "rejected" }
       >;
-      readonly provenance: SrdStatBlockProvenanceResult;
-      readonly installedMembership: SrdStatBlockInstalledMembershipResult;
+      readonly partialProvenance: SrdStatBlockProvenanceResult;
+      readonly decodedSrdMembership: SrdStatBlockPartialMembershipResult;
     }
   | {
       readonly tag: "provenance-rejected";
@@ -158,7 +262,7 @@ export type SrdStatBlockCatalogAssessment =
         SrdStatBlockProvenanceResult,
         { readonly tag: "mixed" }
       >;
-      readonly installedMembership: SrdStatBlockInstalledMembershipResult;
+      readonly decodedSrdMembership: SrdStatBlockPartialMembershipResult;
     }
   | {
       readonly tag: "installed-membership-rejected";
@@ -167,7 +271,7 @@ export type SrdStatBlockCatalogAssessment =
         { readonly tag: "decoded" }
       >;
       readonly provenance: Extract<
-        SrdStatBlockProvenanceResult,
+        CompleteSrdStatBlockProvenanceResult,
         { readonly tag: "homogeneous" }
       >;
       readonly installedMembership: Extract<
@@ -182,7 +286,7 @@ export type SrdStatBlockCatalogAssessment =
         { readonly tag: "decoded" }
       >;
       readonly provenance: Extract<
-        SrdStatBlockProvenanceResult,
+        CompleteSrdStatBlockProvenanceResult,
         { readonly tag: "homogeneous" }
       >;
       readonly installedMembership: Extract<
@@ -288,9 +392,20 @@ export function evaluateSrdStatBlockCatalogDiagnostic(
     Match.when({ tag: "installed-membership-rejected" }, () => false),
     Match.exhaustive,
   );
-  const localProvenanceIssues = Match.value(
-    observation.catalogAssessment.provenance,
-  ).pipe(
+  const provenanceEvidence = Match.value(observation.catalogAssessment).pipe(
+    Match.when(
+      { tag: "strict-decode-rejected" },
+      ({ partialProvenance }) => partialProvenance,
+    ),
+    Match.when({ tag: "provenance-rejected" }, ({ provenance }) => provenance),
+    Match.when(
+      { tag: "installed-membership-rejected" },
+      ({ provenance }) => provenance,
+    ),
+    Match.when({ tag: "installed" }, ({ provenance }) => provenance),
+    Match.exhaustive,
+  );
+  const localProvenanceIssues = Match.value(provenanceEvidence).pipe(
     Match.when({ tag: "mixed" }, ({ issues }) => issues),
     Match.when({ tag: "homogeneous" }, () => []),
     Match.exhaustive,
@@ -359,22 +474,24 @@ export function evaluateSrdStatBlockCatalogDiagnostic(
   ).pipe(
     Match.when(
       { tag: "strict-decode-rejected" },
-      ({ installedMembership }) => ({
+      ({ decodedSrdMembership }) => ({
         strictDecode: true,
-        installedMembership: Match.value(installedMembership).pipe(
-          Match.when({ tag: "rejected" }, () => true),
-          Match.when({ tag: "installed" }, () => false),
+        installedMembership: Match.value(decodedSrdMembership).pipe(
+          Match.when({ tag: "partial-rejected" }, () => true),
+          Match.when({ tag: "partial" }, () => false),
+          Match.when({ tag: "unavailable" }, () => false),
           Match.exhaustive,
         ),
         scopedFidelity: false,
         catalogReachability: false,
       }),
     ),
-    Match.when({ tag: "provenance-rejected" }, ({ installedMembership }) => ({
+    Match.when({ tag: "provenance-rejected" }, ({ decodedSrdMembership }) => ({
       strictDecode: false,
-      installedMembership: Match.value(installedMembership).pipe(
-        Match.when({ tag: "rejected" }, () => true),
-        Match.when({ tag: "installed" }, () => false),
+      installedMembership: Match.value(decodedSrdMembership).pipe(
+        Match.when({ tag: "partial-rejected" }, () => true),
+        Match.when({ tag: "partial" }, () => false),
+        Match.when({ tag: "unavailable" }, () => false),
         Match.exhaustive,
       ),
       scopedFidelity: false,
@@ -472,6 +589,35 @@ function readSourceMaterials(repositoryRoot: string): SourceMaterials {
   }
 }
 
+function publicationCheckOwnershipIssues(
+  issues: readonly PublicationIssue[],
+): readonly Extract<
+  PublicationIssue,
+  { readonly kind: "publication-check-failed" }
+>[] {
+  return issues.flatMap((issue) =>
+    Match.value(issue).pipe(
+      Match.when({ kind: "publication-check-failed" }, (owned) => [owned]),
+      Match.when({ kind: "missing-json" }, () => []),
+      Match.when({ kind: "orphaned-json" }, () => []),
+      Match.when({ kind: "out-of-sync-json" }, () => []),
+      Match.when({ kind: "compile-failed" }, () => []),
+      Match.when({ kind: "decode-failed" }, () => []),
+      Match.when({ kind: "missing-publication-artifact" }, () => []),
+      Match.when({ kind: "out-of-sync-publication-artifact" }, () => []),
+      Match.when({ kind: "unreadable-publication-artifact" }, () => []),
+      Match.when({ kind: "missing-portable-case-artifact" }, () => []),
+      Match.when({ kind: "out-of-sync-portable-case-artifact" }, () => []),
+      Match.when({ kind: "unreadable-portable-case-artifact" }, () => []),
+      Match.when({ kind: "portable-case-generation-failed" }, () => []),
+      Match.when({ kind: "publication-schema-bound-exceeded" }, () => []),
+      Match.when({ kind: "publication-generation-failed" }, () => []),
+      Match.when({ kind: "peer-family-mismatch" }, () => []),
+      Match.exhaustive,
+    ),
+  );
+}
+
 export function runSrdStatBlockCatalogDiagnostic(input: {
   readonly repositoryRoot: string;
   readonly compile: (
@@ -483,56 +629,108 @@ export function runSrdStatBlockCatalogDiagnostic(input: {
   const strictDecode = decodeStatBlockRecords(
     input.aggregateInputs ?? srdStatBlockAggregateInputs,
   );
-  const decodedRecords = strictDecode.decodedRecords;
-  const provenance = evaluateSrdStatBlockProvenance(decodedRecords);
-  const srdRecords = Match.value(provenance).pipe(
-    Match.when({ tag: "homogeneous" }, ({ records }) => records),
-    Match.when({ tag: "mixed" }, ({ srdRecords }) => srdRecords),
+  const decodedPhase = Match.value(strictDecode).pipe(
+    Match.when({ tag: "rejected" }, (rejected) => {
+      const provenance = evaluateSrdStatBlockProvenance(
+        rejected.decodedRecords,
+      );
+      return {
+        tag: "partial" as const,
+        strictDecode: rejected,
+        provenance,
+        srdRecords: Match.value(provenance).pipe(
+          Match.when({ tag: "homogeneous" }, ({ records }) => records),
+          Match.when({ tag: "mixed" }, ({ srdRecords }) => srdRecords),
+          Match.exhaustive,
+        ),
+      };
+    }),
+    Match.when({ tag: "decoded" }, (decoded) => {
+      const provenance = evaluateCompleteSrdStatBlockProvenance(
+        decoded.decodedRecords,
+      );
+      return {
+        tag: "complete" as const,
+        strictDecode: decoded,
+        provenance,
+        srdRecords: Match.value(provenance).pipe(
+          Match.when({ tag: "homogeneous" }, ({ records }) => records),
+          Match.when({ tag: "mixed" }, ({ srdRecords }) => srdRecords),
+          Match.exhaustive,
+        ),
+      };
+    }),
     Match.exhaustive,
   );
-  const catalogBuild = buildSrdStatBlockCatalogFromRecords(srdRecords);
-  const installedMembership: SrdStatBlockInstalledMembershipResult =
-    Match.value(catalogBuild).pipe(
-      Match.when({ tag: "ok" }, ({ collection, catalog }) => ({
-        tag: "installed" as const,
-        installedCount: NonNegativeInteger(collection.statBlocks.length),
-        catalog,
-      })),
-      Match.when({ tag: "invalid" }, ({ issues }) => ({
-        tag: "rejected" as const,
-        issues,
-      })),
-      Match.exhaustive,
-    );
-  const catalogPhase = Match.value(strictDecode).pipe(
-    Match.when({ tag: "rejected" }, (rejected) => ({
-      tag: "strict-decode-rejected" as const,
-      strictDecode: rejected,
-      provenance,
-      installedMembership,
+  const catalogBuild = buildSrdStatBlockCatalogFromRecords(
+    decodedPhase.srdRecords,
+  );
+  const partialMembership: SrdStatBlockPartialMembershipResult = Match.value(
+    catalogBuild,
+  ).pipe(
+    Match.when({ tag: "ok" }, ({ collection }) => ({
+      tag: "partial" as const,
+      observedSrdCount: PositiveInteger(collection.statBlocks.length),
     })),
-    Match.when({ tag: "decoded" }, (decoded) =>
-      Match.value(provenance).pipe(
+    Match.when({ tag: "invalid" }, ({ issues }) =>
+      isEmptyStatBlockCollectionIssue(issues[0])
+        ? {
+            tag: "unavailable" as const,
+            cause: "no-decoded-srd-records" as const,
+          }
+        : {
+            tag: "partial-rejected" as const,
+            observedSrdCount: PositiveInteger(decodedPhase.srdRecords.length),
+            issues: requirePositiveSrdStatBlockMembershipIssues(issues),
+          },
+    ),
+    Match.exhaustive,
+  );
+  const catalogPhase = Match.value(decodedPhase).pipe(
+    Match.when({ tag: "partial" }, (partial) => ({
+      tag: "strict-decode-rejected" as const,
+      strictDecode: partial.strictDecode,
+      partialProvenance: partial.provenance,
+      decodedSrdMembership: partialMembership,
+    })),
+    Match.when({ tag: "complete" }, (complete) =>
+      Match.value(complete.provenance).pipe(
         Match.when({ tag: "mixed" }, (mixed) => ({
           tag: "provenance-rejected" as const,
-          strictDecode: decoded,
+          strictDecode: complete.strictDecode,
           provenance: mixed,
-          installedMembership,
+          decodedSrdMembership: partialMembership,
         })),
         Match.when({ tag: "homogeneous" }, (homogeneous) =>
-          Match.value(installedMembership).pipe(
-            Match.when({ tag: "rejected" }, (rejected) => ({
-              tag: "installed-membership-rejected" as const,
-              strictDecode: decoded,
-              provenance: homogeneous,
-              installedMembership: rejected,
-            })),
-            Match.when({ tag: "installed" }, (installed) => ({
+          Match.value(catalogBuild).pipe(
+            Match.when({ tag: "ok" }, ({ collection, catalog }) => ({
               tag: "ready" as const,
-              strictDecode: decoded,
+              strictDecode: complete.strictDecode,
               provenance: homogeneous,
-              installedMembership: installed,
+              installedMembership: {
+                tag: "installed" as const,
+                installedCount: PositiveInteger(collection.statBlocks.length),
+                catalog,
+              },
             })),
+            Match.when({ tag: "invalid" }, ({ issues }) => {
+              /* v8 ignore start -- @preserve -- complete homogeneous provenance over non-empty decoded input proves at least one SRD record */
+              if (isEmptyStatBlockCollectionIssue(issues[0])) {
+                throw new Error(
+                  "Complete homogeneous SRD records produced empty membership",
+                );
+              }
+              /* v8 ignore stop -- @preserve */
+              return {
+                tag: "installed-membership-rejected" as const,
+                strictDecode: complete.strictDecode,
+                provenance: homogeneous,
+                installedMembership: {
+                  tag: "rejected" as const,
+                  issues: requirePositiveSrdStatBlockMembershipIssues(issues),
+                },
+              };
+            }),
             Match.exhaustive,
           ),
         ),
@@ -611,14 +809,7 @@ export function runSrdStatBlockCatalogDiagnostic(input: {
       input.repositoryRoot,
     ),
     parity,
-    publicationCheckIssues: publication.issues.filter(
-      (
-        issue,
-      ): issue is Extract<
-        PublicationIssue,
-        { readonly kind: "publication-check-failed" }
-      > => issue.kind === "publication-check-failed",
-    ),
+    publicationCheckIssues: publicationCheckOwnershipIssues(publication.issues),
     catalogAssessment,
   });
 }
