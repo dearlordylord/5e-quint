@@ -2,7 +2,7 @@ import { Either, Match, Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
-import { DAMAGE_TYPES } from "@dnd/shared/types";
+import { DAMAGE_DIE_SIZES, DAMAGE_TYPES } from "@dnd/shared/types";
 
 import {
   StatBlockScopedFidelityProjectionSchema,
@@ -22,7 +22,7 @@ const damageAmount = fc.oneof(
     .record({
       staticDamage: positiveInteger,
       dice: fc.integer({ min: 1, max: 20 }),
-      dieSize: fc.constantFrom(4, 6, 8, 10, 12),
+      dieSize: fc.constantFrom(...DAMAGE_DIE_SIZES),
       flat: fc.option(fc.integer({ min: -5, max: 20 }), { nil: undefined }),
     })
     .map(({ staticDamage, dice, dieSize, flat }) => ({
@@ -722,6 +722,27 @@ describe("domain-valid scoped Stat Block projections", () => {
                     kind: "dice_expression",
                     static: 4,
                     expr: { dieSize: 6 },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        label: "damage expression with non-domain die size",
+        candidate: {
+          ...candidate,
+          procedures: [
+            {
+              ...procedure,
+              onHit: [
+                {
+                  ...damage,
+                  amount: {
+                    kind: "dice_expression",
+                    static: 4,
+                    expr: { dice: 1, dieSize: 7 },
                   },
                 },
               ],

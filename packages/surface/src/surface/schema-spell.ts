@@ -1,5 +1,8 @@
 import { Schema } from "effect";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  DamageDieSizeSchema,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -5266,7 +5269,7 @@ export const StatBlockProcedureDcSourceSchema = strictStruct({
 
 const StatBlockProcedureDiceExprSchema = strictStruct({
   dice: StatBlockProcedurePositiveIntegerSchema,
-  dieSize: StatBlockProcedurePositiveIntegerSchema,
+  dieSize: DamageDieSizeSchema,
   flat: optionalExact(StatBlockProcedureSignedValueSchema.fields.value),
   spellcastingMod: optionalExact(Schema.Literal(true)),
   abilityModifier: optionalExact(AbilitySchema),

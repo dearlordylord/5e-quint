@@ -8,6 +8,7 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   DAMAGE_TYPES,
+  DamageDieSizeSchema,
   SIZES,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -165,7 +166,7 @@ const DamageAmountProjectionSchema = Schema.Union(
     static: PositiveIntegerSchema,
     expr: strictStruct({
       dice: PositiveIntegerSchema,
-      dieSize: PositiveIntegerSchema,
+      dieSize: DamageDieSizeSchema,
       flat: exactOptional(SignedIntegerSchema),
       spellcastingMod: exactOptional(Schema.Literal(true)),
       abilityModifier: exactOptional(AbilitySchema),
@@ -1704,7 +1705,9 @@ const parseDamage = (
           static: staticDamage,
           expr: {
             dice: Number(match[2]),
-            dieSize: Number(match[3]),
+            dieSize: Schema.decodeUnknownSync(DamageDieSizeSchema)(
+              Number(match[3]),
+            ),
             ...flat,
           },
         };
@@ -2974,8 +2977,12 @@ const bindAuthoredResourceLimits = (
       resourceLimits: authoredResourceLimits,
     })),
     Match.when({ kind: "spellcasting" }, (spellcasting) => {
-      const limitedGroups = spellcasting.groups.filter(
-        (group) => group.kind === "limited",
+      const limitedGroups = spellcasting.groups.filter((group) =>
+        Match.value(group).pipe(
+          Match.when({ kind: "at_will" }, () => false),
+          Match.when({ kind: "limited" }, () => true),
+          Match.exhaustive,
+        ),
       );
       const targetGroup =
         limitedGroups.length === 1
