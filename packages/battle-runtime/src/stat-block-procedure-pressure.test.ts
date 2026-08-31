@@ -106,8 +106,8 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
 
     expect(report.dispositionCounts).toEqual({
-      executable: 1142,
-      textOnly: 912,
+      executable: 1150,
+      textOnly: 904,
       tableOwned: 54,
       missingOwner: 494,
       malformed: 0,
