@@ -30,6 +30,7 @@ import {
 import {
   battleAmmunitionStock,
   battleId,
+  battleInitializationIssueMessage,
   combatantId,
   initiativeScore,
   startBattle,
@@ -446,7 +447,7 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
     combatants: roster.admissions.map((admission) => admission.combatant),
   });
   if (Result.isFailure(session)) {
-    throw new Error(characterBattleRuntimeIssueMessage(session.failure));
+    throw new Error(battleInitializationIssueMessage(session.failure));
   }
 
   return selectedReferenceRouteEvents(

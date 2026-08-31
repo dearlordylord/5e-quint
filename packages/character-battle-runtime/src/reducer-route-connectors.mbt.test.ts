@@ -12,6 +12,7 @@ import {
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleInitializationIssue,
+  battleInitializationIssueMessage,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -121,6 +122,7 @@ import {
   type CharacterBattleRouteSubject,
   type CharacterBattleSettlementRouteAction,
   type CharacterSessionSheetDerivedBattleActsRouteAction,
+  type BattleRosterIssue,
 } from "./index.ts";
 
 import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
@@ -131,7 +133,10 @@ type RouteCharacterBattleRuntimeEntry = {
   readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
 };
 
-type RouteCharacterBattleRuntimeEntryIssue = BattleInitializationIssue & {
+type RouteCharacterBattleRuntimeEntryIssue = (
+  | BattleRosterIssue
+  | BattleInitializationIssue
+) & {
   readonly routeEvents: readonly [];
 };
 
@@ -145,8 +150,7 @@ function startBattleFromTestRoster(input: {
   const roster = composeBattleRoster(input.entries);
   if (roster.tag === "rejected") {
     return Result.fail({
-      tag: "battleStateInitIssue" as const,
-      message: `Roster admission failed: ${roster.issues[0].kind}`,
+      ...roster.issues[0],
       routeEvents: [],
     });
   }
@@ -1537,7 +1541,11 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
     ],
   });
   if (Result.isFailure(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.failure));
+    throw new Error(
+      "tag" in entry.failure
+        ? battleInitializationIssueMessage(entry.failure)
+        : `Roster admission failed: ${entry.failure.kind}`,
+    );
   }
   return selectedReferenceRouteEvents(entry.success.initProjectionRouteEvents);
 }
