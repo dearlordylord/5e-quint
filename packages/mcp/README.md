@@ -19,7 +19,7 @@ the character-creation and battle runtimes. Its immutable application services
 build:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
-- `srdStatBlockCollection` through `buildStatBlockCatalog`;
+- the canonical installed `srdStatBlockCatalog`;
 - the Character Creation support profile and Admin Mirror publication factory.
 
 The resulting application-service boundary retains Surface's nominal

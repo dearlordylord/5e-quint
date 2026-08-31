@@ -11,11 +11,8 @@ import {
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
-import {
-  buildStatBlockCatalog,
-  type StatBlockCatalog,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   DRUID_CIRCLE_LAND_CHOICES,
   type DruidCircleLandChoice,
@@ -43,10 +40,6 @@ type DruidWildShapeKnownFormsConstructionIssue =
         | "wildShapeKnownFormsInvalid";
     }
   | DruidWildShapeKnownFormIssue;
-
-const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
-  collections: [srdStatBlockCollection],
-});
 
 export function characterSheetDruidWildShapeKnownForms(
   sheet: CharacterSheet,
@@ -142,18 +135,13 @@ export function druidWildShapeKnownFormsConstruction(
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.statBlockCatalog,
   );
-  /* v8 ignore start -- @preserve -- The caller-supplied or bundled SRD Stat Block catalog must parse before known-form construction. */
-  if (Either.isLeft(statBlockCatalog)) {
-    return Either.left([{ code: "wildShapeKnownFormsInvalid" }]);
-  }
-  /* v8 ignore stop -- @preserve */
   if (input.druidWildShapeKnownFormStatBlockIds === undefined) {
     return Either.left([{ code: "wildShapeKnownFormsRequired" }]);
   }
   const knownFormIssues = validateDruidWildShapeKnownFormIssues({
     facts: facts.right,
     knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
-    statBlockCatalog: statBlockCatalog.right,
+    statBlockCatalog,
   });
   if (knownFormIssues !== undefined) return Either.left(knownFormIssues);
   return Either.right({
@@ -213,16 +201,8 @@ export function isDruidCircleLandChoice(
 
 export function druidWildShapeStatBlockCatalogFromInput(
   statBlockCatalog: StatBlockCatalog | undefined,
-): Either.Either<StatBlockCatalog, CharacterSheetIssue> {
-  if (statBlockCatalog !== undefined) return Either.right(statBlockCatalog);
-  /* v8 ignore start -- @preserve -- The bundled SRD Stat Block collection is static and must build successfully at module initialization. */
-  if (DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT.tag === "invalid") {
-    return characterSheetIssue(
-      "Wild Shape known forms require a valid SRD Stat Block catalog.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  return Either.right(DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT.catalog);
+): StatBlockCatalog {
+  return statBlockCatalog ?? srdStatBlockCatalog;
 }
 
 export function druidWildShapeKnownFormsAfterLongRest(input: {
@@ -259,15 +239,11 @@ export function druidWildShapeKnownFormsAfterLongRest(input: {
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.input.statBlockCatalog,
   );
-  /* v8 ignore start -- @preserve -- Malformed Long Rest input: a Wild Shape replacement requires the same parsed StatBlock catalog used to admit known forms. */
-  if (Either.isLeft(statBlockCatalog))
-    return Either.left(statBlockCatalog.left);
-  /* v8 ignore stop -- @preserve */
   const replaced = replaceDruidWildShapeKnownForm({
     facts: facts.right,
     currentKnownFormStatBlockIds: sheet.druidWildShapeKnownForms.statBlockIds,
     replacement: input.input.druidWildShapeKnownFormReplacement,
-    statBlockCatalog: statBlockCatalog.right,
+    statBlockCatalog,
   });
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: replacement forms must satisfy the retained Wild Shape profile and known-form roster. */
   if (Either.isLeft(replaced))

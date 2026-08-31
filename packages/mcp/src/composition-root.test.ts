@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 
 import {
   createMcpApplicationServices,
@@ -17,6 +18,7 @@ describe("MCP application services and Play Session roots", () => {
 
     expect(services).not.toHaveProperty("sessionStore");
     expect(services).not.toHaveProperty("adminMirrorPublication");
+    expect(services.statBlockCatalog).toBe(srdStatBlockCatalog);
     expect(first.sessionStore).not.toBe(second.sessionStore);
     expect(first.unitLibrary).toBe(services.unitLibrary);
     expect(second.statBlockCatalog).toBe(services.statBlockCatalog);

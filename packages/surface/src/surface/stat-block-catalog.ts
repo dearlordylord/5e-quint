@@ -57,7 +57,6 @@ export type SrdStatBlockCatalog = {
 const toSrdStatBlockCatalog = Brand.nominal<SrdStatBlockCatalog>();
 
 export type StatBlockCatalogBuildIssue =
-  | { readonly code: "emptyStatBlockCollection" }
   | {
       readonly code: "duplicateStatBlockId";
       readonly statBlockId: StatBlockId;
@@ -76,10 +75,13 @@ export type StatBlockCatalogBuildIssue =
       readonly statBlockId: StatBlockId;
     };
 
-export type SrdStatBlockCatalogBuildIssue = Exclude<
-  StatBlockCatalogBuildIssue,
-  { readonly code: "mixedProvenance" }
->;
+type EmptySrdStatBlockCollectionIssue = {
+  readonly code: "emptyStatBlockCollection";
+};
+
+export type SrdStatBlockCatalogBuildIssue =
+  | EmptySrdStatBlockCollectionIssue
+  | Exclude<StatBlockCatalogBuildIssue, { readonly code: "mixedProvenance" }>;
 
 type StatBlockCatalogBuildResult =
   | { readonly tag: "ok"; readonly catalog: SrdStatBlockCatalog }
@@ -304,7 +306,6 @@ function narrowSrdStatBlockCatalogBuildIssue(
   issue: StatBlockCatalogBuildIssue,
 ): SrdStatBlockCatalogBuildIssue {
   return Match.value(issue).pipe(
-    Match.when({ code: "emptyStatBlockCollection" }, (srdIssue) => srdIssue),
     Match.when({ code: "duplicateStatBlockId" }, (srdIssue) => srdIssue),
     Match.when({ code: "duplicateStatBlockIdentity" }, (srdIssue) => srdIssue),
     Match.when({ code: "mixedProvenance" }, () => {
