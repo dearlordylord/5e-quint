@@ -1,0 +1,270 @@
+[mbt-proof-check] waiting: bash
+[mbt-proof-check] acquired: bash
+SWEEP_START head=c4d42c94f068cb4be4663955fc96772cf14ecded total=133 start_epoch=1788188041
+OWNER_START 001/133 packages/battle-runtime/battle-runtime-acid-arrow.qnt
+OWNER_PASS 001/133 elapsed_seconds=1 packages/battle-runtime/battle-runtime-acid-arrow.qnt
+OWNER_START 002/133 packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt
+OWNER_PASS 002/133 elapsed_seconds=2 packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt
+OWNER_START 003/133 packages/battle-runtime/battle-runtime-antimagic-suppression.qnt
+OWNER_PASS 003/133 elapsed_seconds=30 packages/battle-runtime/battle-runtime-antimagic-suppression.qnt
+OWNER_START 004/133 packages/battle-runtime/battle-runtime-area-trigger-timing.qnt
+OWNER_PASS 004/133 elapsed_seconds=31 packages/battle-runtime/battle-runtime-area-trigger-timing.qnt
+OWNER_START 005/133 packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt
+OWNER_PASS 005/133 elapsed_seconds=60 packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt
+OWNER_START 006/133 packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt
+OWNER_PASS 006/133 elapsed_seconds=89 packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt
+OWNER_START 007/133 packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt
+OWNER_PASS 007/133 elapsed_seconds=90 packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt
+OWNER_START 008/133 packages/battle-runtime/battle-runtime-concentration.qnt
+OWNER_PASS 008/133 elapsed_seconds=117 packages/battle-runtime/battle-runtime-concentration.qnt
+OWNER_START 009/133 packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt
+OWNER_PASS 009/133 elapsed_seconds=118 packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt
+OWNER_START 010/133 packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt
+OWNER_PASS 010/133 elapsed_seconds=148 packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt
+OWNER_START 011/133 packages/battle-runtime/battle-runtime-creature-size-change.qnt
+OWNER_PASS 011/133 elapsed_seconds=178 packages/battle-runtime/battle-runtime-creature-size-change.qnt
+OWNER_START 012/133 packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt
+OWNER_PASS 012/133 elapsed_seconds=199 packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt
+OWNER_START 013/133 packages/battle-runtime/battle-runtime-creature-type-protection.qnt
+OWNER_PASS 013/133 elapsed_seconds=219 packages/battle-runtime/battle-runtime-creature-type-protection.qnt
+OWNER_START 014/133 packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt
+OWNER_PASS 014/133 elapsed_seconds=220 packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt
+OWNER_START 015/133 packages/battle-runtime/battle-runtime-direct-condition-removal.qnt
+OWNER_PASS 015/133 elapsed_seconds=248 packages/battle-runtime/battle-runtime-direct-condition-removal.qnt
+OWNER_START 016/133 packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt
+OWNER_PASS 016/133 elapsed_seconds=290 packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt
+OWNER_START 017/133 packages/battle-runtime/battle-runtime-dragons-breath.qnt
+OWNER_PASS 017/133 elapsed_seconds=319 packages/battle-runtime/battle-runtime-dragons-breath.qnt
+OWNER_START 018/133 packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt
+OWNER_PASS 018/133 elapsed_seconds=319 packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt
+OWNER_START 019/133 packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt
+OWNER_PASS 019/133 elapsed_seconds=338 packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt
+OWNER_START 020/133 packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt
+OWNER_PASS 020/133 elapsed_seconds=356 packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt
+OWNER_START 021/133 packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt
+OWNER_PASS 021/133 elapsed_seconds=357 packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt
+OWNER_START 022/133 packages/battle-runtime/battle-runtime-feather-fall.qnt
+OWNER_PASS 022/133 elapsed_seconds=386 packages/battle-runtime/battle-runtime-feather-fall.qnt
+OWNER_START 023/133 packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt
+OWNER_PASS 023/133 elapsed_seconds=404 packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt
+OWNER_START 024/133 packages/battle-runtime/battle-runtime-find-familiar.qnt
+OWNER_PASS 024/133 elapsed_seconds=424 packages/battle-runtime/battle-runtime-find-familiar.qnt
+OWNER_START 025/133 packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt
+OWNER_PASS 025/133 elapsed_seconds=424 packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt
+OWNER_START 026/133 packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt
+OWNER_PASS 026/133 elapsed_seconds=456 packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt
+OWNER_START 027/133 packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt
+OWNER_PASS 027/133 elapsed_seconds=487 packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt
+OWNER_START 028/133 packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt
+OWNER_PASS 028/133 elapsed_seconds=488 packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt
+OWNER_START 029/133 packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt
+OWNER_PASS 029/133 elapsed_seconds=489 packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt
+OWNER_START 030/133 packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt
+OWNER_PASS 030/133 elapsed_seconds=530 packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt
+OWNER_START 031/133 packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt
+OWNER_PASS 031/133 elapsed_seconds=572 packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt
+OWNER_START 032/133 packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt
+OWNER_PASS 032/133 elapsed_seconds=605 packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt
+OWNER_START 033/133 packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt
+OWNER_PASS 033/133 elapsed_seconds=648 packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt
+OWNER_START 034/133 packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt
+OWNER_PASS 034/133 elapsed_seconds=650 packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt
+OWNER_START 035/133 packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt
+OWNER_PASS 035/133 elapsed_seconds=709 packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt
+OWNER_START 036/133 packages/battle-runtime/battle-runtime-gust-of-wind.qnt
+OWNER_PASS 036/133 elapsed_seconds=753 packages/battle-runtime/battle-runtime-gust-of-wind.qnt
+OWNER_START 037/133 packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt
+OWNER_PASS 037/133 elapsed_seconds=790 packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt
+OWNER_START 038/133 packages/battle-runtime/battle-runtime-invisibility.qnt
+OWNER_PASS 038/133 elapsed_seconds=818 packages/battle-runtime/battle-runtime-invisibility.qnt
+OWNER_START 039/133 packages/battle-runtime/battle-runtime-jump-movement.qnt
+OWNER_PASS 039/133 elapsed_seconds=861 packages/battle-runtime/battle-runtime-jump-movement.qnt
+OWNER_START 040/133 packages/battle-runtime/battle-runtime-levitate-creature.qnt
+OWNER_PASS 040/133 elapsed_seconds=894 packages/battle-runtime/battle-runtime-levitate-creature.qnt
+OWNER_START 041/133 packages/battle-runtime/battle-runtime-light-emitters.qnt
+OWNER_PASS 041/133 elapsed_seconds=924 packages/battle-runtime/battle-runtime-light-emitters.qnt
+OWNER_START 042/133 packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt
+OWNER_PASS 042/133 elapsed_seconds=973 packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt
+OWNER_START 043/133 packages/battle-runtime/battle-runtime-light-spell-attacks.qnt
+OWNER_PASS 043/133 elapsed_seconds=1016 packages/battle-runtime/battle-runtime-light-spell-attacks.qnt
+OWNER_START 044/133 packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt
+OWNER_PASS 044/133 elapsed_seconds=1052 packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt
+OWNER_START 045/133 packages/battle-runtime/battle-runtime-light.qnt
+OWNER_PASS 045/133 elapsed_seconds=1071 packages/battle-runtime/battle-runtime-light.qnt
+OWNER_START 046/133 packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt
+OWNER_PASS 046/133 elapsed_seconds=1071 packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt
+OWNER_START 047/133 packages/battle-runtime/battle-runtime-magic-suppression.qnt
+OWNER_PASS 047/133 elapsed_seconds=1071 packages/battle-runtime/battle-runtime-magic-suppression.qnt
+OWNER_START 048/133 packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt
+OWNER_PASS 048/133 elapsed_seconds=1098 packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt
+OWNER_START 049/133 packages/battle-runtime/battle-runtime-marked-riders.qnt
+OWNER_PASS 049/133 elapsed_seconds=1117 packages/battle-runtime/battle-runtime-marked-riders.qnt
+OWNER_START 050/133 packages/battle-runtime/battle-runtime-marked-spells.qnt
+OWNER_PASS 050/133 elapsed_seconds=1143 packages/battle-runtime/battle-runtime-marked-spells.qnt
+OWNER_START 051/133 packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt
+OWNER_PASS 051/133 elapsed_seconds=1144 packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt
+OWNER_START 052/133 packages/battle-runtime/battle-runtime-mirror-image.qnt
+OWNER_PASS 052/133 elapsed_seconds=1163 packages/battle-runtime/battle-runtime-mirror-image.qnt
+OWNER_START 053/133 packages/battle-runtime/battle-runtime-moonbeam-cast.qnt
+OWNER_PASS 053/133 elapsed_seconds=1195 packages/battle-runtime/battle-runtime-moonbeam-cast.qnt
+OWNER_START 054/133 packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt
+OWNER_PASS 054/133 elapsed_seconds=1222 packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt
+OWNER_START 055/133 packages/battle-runtime/battle-runtime-moonbeam-facts.qnt
+OWNER_PASS 055/133 elapsed_seconds=1223 packages/battle-runtime/battle-runtime-moonbeam-facts.qnt
+OWNER_START 056/133 packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt
+OWNER_PASS 056/133 elapsed_seconds=1225 packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt
+OWNER_START 057/133 packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt
+OWNER_PASS 057/133 elapsed_seconds=1247 packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt
+OWNER_START 058/133 packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt
+OWNER_PASS 058/133 elapsed_seconds=1277 packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt
+OWNER_START 059/133 packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt
+OWNER_PASS 059/133 elapsed_seconds=1314 packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt
+OWNER_START 060/133 packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt
+OWNER_PASS 060/133 elapsed_seconds=1334 packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt
+OWNER_START 061/133 packages/battle-runtime/battle-runtime-moonbeam-state.qnt
+OWNER_PASS 061/133 elapsed_seconds=1352 packages/battle-runtime/battle-runtime-moonbeam-state.qnt
+OWNER_START 062/133 packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt
+OWNER_PASS 062/133 elapsed_seconds=1389 packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt
+OWNER_START 063/133 packages/battle-runtime/battle-runtime-movement.qnt
+OWNER_PASS 063/133 elapsed_seconds=1427 packages/battle-runtime/battle-runtime-movement.qnt
+OWNER_START 064/133 packages/battle-runtime/battle-runtime-object-contact-damage.qnt
+OWNER_PASS 064/133 elapsed_seconds=1456 packages/battle-runtime/battle-runtime-object-contact-damage.qnt
+OWNER_START 065/133 packages/battle-runtime/battle-runtime-observer-sight-grant.qnt
+OWNER_PASS 065/133 elapsed_seconds=1457 packages/battle-runtime/battle-runtime-observer-sight-grant.qnt
+OWNER_START 066/133 packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt
+OWNER_PASS 066/133 elapsed_seconds=1476 packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt
+OWNER_START 067/133 packages/battle-runtime/battle-runtime-opportunity-attack.qnt
+OWNER_PASS 067/133 elapsed_seconds=1512 packages/battle-runtime/battle-runtime-opportunity-attack.qnt
+OWNER_START 068/133 packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt
+OWNER_PASS 068/133 elapsed_seconds=1513 packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt
+OWNER_START 069/133 packages/battle-runtime/battle-runtime-persistent-area-core.qnt
+OWNER_PASS 069/133 elapsed_seconds=1513 packages/battle-runtime/battle-runtime-persistent-area-core.qnt
+OWNER_START 070/133 packages/battle-runtime/battle-runtime-protection-from-poison.qnt
+OWNER_PASS 070/133 elapsed_seconds=1560 packages/battle-runtime/battle-runtime-protection-from-poison.qnt
+OWNER_START 071/133 packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt
+OWNER_PASS 071/133 elapsed_seconds=1595 packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt
+OWNER_START 072/133 packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt
+OWNER_PASS 072/133 elapsed_seconds=1622 packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt
+OWNER_START 073/133 packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt
+OWNER_PASS 073/133 elapsed_seconds=1659 packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt
+OWNER_START 074/133 packages/battle-runtime/battle-runtime-reaction-window.qnt
+OWNER_PASS 074/133 elapsed_seconds=1695 packages/battle-runtime/battle-runtime-reaction-window.qnt
+OWNER_START 075/133 packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt
+OWNER_PASS 075/133 elapsed_seconds=1696 packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt
+OWNER_START 076/133 packages/battle-runtime/battle-runtime-replay-equivalence.qnt
+OWNER_PASS 076/133 elapsed_seconds=1696 packages/battle-runtime/battle-runtime-replay-equivalence.qnt
+OWNER_START 077/133 packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt
+OWNER_PASS 077/133 elapsed_seconds=1741 packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt
+OWNER_START 078/133 packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt
+OWNER_PASS 078/133 elapsed_seconds=1771 packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt
+OWNER_START 079/133 packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt
+OWNER_PASS 079/133 elapsed_seconds=1789 packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt
+OWNER_START 080/133 packages/battle-runtime/battle-runtime-save-condition-blindness.qnt
+OWNER_PASS 080/133 elapsed_seconds=1833 packages/battle-runtime/battle-runtime-save-condition-blindness.qnt
+OWNER_START 081/133 packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt
+OWNER_PASS 081/133 elapsed_seconds=1861 packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt
+OWNER_START 082/133 packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt
+OWNER_PASS 082/133 elapsed_seconds=1900 packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt
+OWNER_START 083/133 packages/battle-runtime/battle-runtime-save-condition-entangle.qnt
+OWNER_PASS 083/133 elapsed_seconds=1934 packages/battle-runtime/battle-runtime-save-condition-entangle.qnt
+OWNER_START 084/133 packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt
+OWNER_PASS 084/133 elapsed_seconds=1976 packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt
+OWNER_START 085/133 packages/battle-runtime/battle-runtime-save-condition-hold.qnt
+OWNER_PASS 085/133 elapsed_seconds=2016 packages/battle-runtime/battle-runtime-save-condition-hold.qnt
+OWNER_START 086/133 packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt
+OWNER_PASS 086/133 elapsed_seconds=2055 packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt
+OWNER_START 087/133 packages/battle-runtime/battle-runtime-save-condition-target-list.qnt
+OWNER_PASS 087/133 elapsed_seconds=2093 packages/battle-runtime/battle-runtime-save-condition-target-list.qnt
+OWNER_START 088/133 packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt
+OWNER_PASS 088/133 elapsed_seconds=2125 packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt
+OWNER_START 089/133 packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt
+OWNER_PASS 089/133 elapsed_seconds=2126 packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt
+OWNER_START 090/133 packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt
+OWNER_PASS 090/133 elapsed_seconds=2126 packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt
+OWNER_START 091/133 packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt
+OWNER_PASS 091/133 elapsed_seconds=2175 packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt
+OWNER_START 092/133 packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt
+OWNER_PASS 092/133 elapsed_seconds=2223 packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt
+OWNER_START 093/133 packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt
+OWNER_PASS 093/133 elapsed_seconds=2263 packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt
+OWNER_START 094/133 packages/battle-runtime/battle-runtime-save-gated-facts.qnt
+OWNER_PASS 094/133 elapsed_seconds=2294 packages/battle-runtime/battle-runtime-save-gated-facts.qnt
+OWNER_START 095/133 packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt
+OWNER_PASS 095/133 elapsed_seconds=2312 packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt
+OWNER_START 096/133 packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt
+OWNER_PASS 096/133 elapsed_seconds=2363 packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt
+OWNER_START 097/133 packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt
+OWNER_PASS 097/133 elapsed_seconds=2364 packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt
+OWNER_START 098/133 packages/battle-runtime/battle-runtime-see-invisibility.qnt
+OWNER_PASS 098/133 elapsed_seconds=2395 packages/battle-runtime/battle-runtime-see-invisibility.qnt
+OWNER_START 099/133 packages/battle-runtime/battle-runtime-self-transformation.qnt
+OWNER_PASS 099/133 elapsed_seconds=2433 packages/battle-runtime/battle-runtime-self-transformation.qnt
+OWNER_START 100/133 packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt
+OWNER_PASS 100/133 elapsed_seconds=2466 packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt
+OWNER_START 101/133 packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt
+OWNER_PASS 101/133 elapsed_seconds=2503 packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt
+OWNER_START 102/133 packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt
+OWNER_PASS 102/133 elapsed_seconds=2537 packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt
+OWNER_START 103/133 packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt
+OWNER_PASS 103/133 elapsed_seconds=2538 packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt
+OWNER_START 104/133 packages/battle-runtime/battle-runtime-spell-attack-facts.qnt
+OWNER_PASS 104/133 elapsed_seconds=2575 packages/battle-runtime/battle-runtime-spell-attack-facts.qnt
+OWNER_START 105/133 packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt
+OWNER_PASS 105/133 elapsed_seconds=2598 packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt
+OWNER_START 106/133 packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt
+OWNER_PASS 106/133 elapsed_seconds=2598 packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt
+OWNER_START 107/133 packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt
+OWNER_PASS 107/133 elapsed_seconds=2641 packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt
+OWNER_START 108/133 packages/battle-runtime/battle-runtime-spell-cast-resources.qnt
+OWNER_PASS 108/133 elapsed_seconds=2667 packages/battle-runtime/battle-runtime-spell-cast-resources.qnt
+OWNER_START 109/133 packages/battle-runtime/battle-runtime-spell-slot-classification.qnt
+OWNER_PASS 109/133 elapsed_seconds=2690 packages/battle-runtime/battle-runtime-spell-slot-classification.qnt
+OWNER_START 110/133 packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt
+OWNER_PASS 110/133 elapsed_seconds=2730 packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt
+OWNER_START 111/133 packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt
+OWNER_PASS 111/133 elapsed_seconds=2748 packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt
+OWNER_START 112/133 packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt
+OWNER_PASS 112/133 elapsed_seconds=2749 packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt
+OWNER_START 113/133 packages/battle-runtime/battle-runtime-thaumaturgy.qnt
+OWNER_PASS 113/133 elapsed_seconds=2769 packages/battle-runtime/battle-runtime-thaumaturgy.qnt
+OWNER_START 114/133 packages/battle-runtime/battle-runtime-timed-effects.qnt
+OWNER_PASS 114/133 elapsed_seconds=2803 packages/battle-runtime/battle-runtime-timed-effects.qnt
+OWNER_START 115/133 packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt
+OWNER_PASS 115/133 elapsed_seconds=2851 packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt
+OWNER_START 116/133 packages/battle-runtime/battle-runtime-turn-advancement.qnt
+OWNER_PASS 116/133 elapsed_seconds=2883 packages/battle-runtime/battle-runtime-turn-advancement.qnt
+OWNER_START 117/133 packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt
+OWNER_PASS 117/133 elapsed_seconds=2884 packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt
+OWNER_START 118/133 packages/battle-runtime/battle-runtime-weapon-attacks.qnt
+OWNER_PASS 118/133 elapsed_seconds=2934 packages/battle-runtime/battle-runtime-weapon-attacks.qnt
+OWNER_START 119/133 packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt
+OWNER_PASS 119/133 elapsed_seconds=2981 packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt
+OWNER_START 120/133 packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt
+OWNER_PASS 120/133 elapsed_seconds=3011 packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt
+OWNER_START 121/133 packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt
+OWNER_PASS 121/133 elapsed_seconds=3050 packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt
+OWNER_START 122/133 packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt
+OWNER_PASS 122/133 elapsed_seconds=3097 packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt
+OWNER_START 123/133 packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt
+OWNER_PASS 123/133 elapsed_seconds=3132 packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt
+OWNER_START 124/133 packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt
+OWNER_PASS 124/133 elapsed_seconds=3133 packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt
+OWNER_START 125/133 packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt
+OWNER_PASS 125/133 elapsed_seconds=3135 packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt
+OWNER_START 126/133 packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt
+OWNER_PASS 126/133 elapsed_seconds=3136 packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt
+OWNER_START 127/133 packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt
+OWNER_PASS 127/133 elapsed_seconds=3136 packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt
+OWNER_START 128/133 packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt
+OWNER_PASS 128/133 elapsed_seconds=3138 packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt
+OWNER_START 129/133 packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt
+OWNER_PASS 129/133 elapsed_seconds=3139 packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt
+OWNER_START 130/133 packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt
+OWNER_PASS 130/133 elapsed_seconds=3139 packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt
+OWNER_START 131/133 packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt
+OWNER_PASS 131/133 elapsed_seconds=3140 packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt
+OWNER_START 132/133 packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt
+OWNER_PASS 132/133 elapsed_seconds=3140 packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt
+OWNER_START 133/133 packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt
+OWNER_PASS 133/133 elapsed_seconds=3141 packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt
+SWEEP_PASS completed=133/133 elapsed_seconds=3141
