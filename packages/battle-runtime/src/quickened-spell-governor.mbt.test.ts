@@ -195,7 +195,7 @@ type MetamagicBattleInput = {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
-  readonly spellCastInterruptionReactioner?: true;
+  readonly includeCounterspellReactor?: true;
 };
 
 const INITIAL_SORCERY_POINTS = 4;
@@ -203,6 +203,8 @@ const HIGH_SORCERY_POINTS = 5;
 const UNAFFORDABLE_SORCERY_POINTS = 1;
 const INITIAL_TARGET_HP = 4;
 const QUICKENED_HEALING_RESULT_HP = 14;
+const counterspellUnitId = "counterspell";
+const counterspellSlotLevel = 3;
 type CounterspellOutcome = "success" | "decline" | "failure";
 const CONCENTRATION_COUNTERSPELL_LAST_RESULT = {
   success: "counteredQuickenedConcentration",
@@ -951,7 +953,7 @@ function resolveQuickenedConcentrationCounterspell(
   outcome: CounterspellOutcome,
 ): QuickenedSpellGovernorRuntimeState {
   const state = initialRuntimeState({
-    spellCastInterruptionReactioner: true,
+    includeCounterspellReactor: true,
     preparedSpellIds: [parseSharedUnitId("bless")],
     casterSpellSlots: [{ spellLevel: 1, count: 1 }],
   });
@@ -983,7 +985,7 @@ function resolveQuickenedConcentrationCounterspell(
 
 function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): QuickenedSpellGovernorRuntimeState {
   const initial = initialRuntimeState({
-    spellCastInterruptionReactioner: true,
+    includeCounterspellReactor: true,
     preparedSpellIds: [
       parseSharedUnitId("bless"),
       parseSharedUnitId("cure_wounds"),
@@ -1590,11 +1592,11 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
         initiative: 10,
         currentHp: INITIAL_TARGET_HP,
         maxHp: 20,
-        ...(input?.spellCastInterruptionReactioner === true
+        ...(input?.includeCounterspellReactor === true
           ? {
               spellcasting: wizardSpellcasting({
-                preparedSpells: [spellRecord("spellCastInterruptionReaction")],
-                spellSlots: [{ spellLevel: 3, count: 1 }],
+                preparedSpells: [spellRecord(counterspellUnitId)],
+                spellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
               }),
             }
           : {}),
@@ -1810,8 +1812,8 @@ function spellCastInterruptionReactionTriggerFact(
       session,
       fighterId,
       spellSlotInvocationRef(
-        "spellCastInterruptionReaction",
-        3,
+        counterspellUnitId,
+        counterspellSlotLevel,
         "spellCastInterruptionReaction",
       ),
     ),
@@ -1860,9 +1862,9 @@ function requireCounterspellChoice(
     );
     return (
       invocation.tag === "spellSlot" &&
-      invocation.spellId === "spellCastInterruptionReaction" &&
+      invocation.spellId === counterspellUnitId &&
       invocation.procedure === "spellCastInterruptionReaction" &&
-      Number(invocation.slotLevel) === 3
+      Number(invocation.slotLevel) === counterspellSlotLevel
     );
   });
   if (choice === undefined) {

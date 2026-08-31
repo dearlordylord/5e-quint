@@ -149,12 +149,12 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 const magicMissileUnitId = "magic_missile";
-const spellCastInterruptionReactionUnitId = "counterspell";
+const counterspellUnitId = "counterspell";
 const hellishRebukeUnitId = "hellish_rebuke";
 const triggerCreatureId = combatantId("reaction-casting-time-trigger-creature");
 const reactorId = combatantId("reaction-casting-time-reactor");
 const initialHp = 30;
-const spellCastInterruptionReactionSlotLevel = 3;
+const counterspellSlotLevel = 3;
 const hellishRebukeSlotLevel = 2;
 const magicMissileFirstSlotLevel = 1;
 const magicMissileFourthSlotLevel = 4;
@@ -289,12 +289,8 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
     battle: reactionCastingTimeBattle({
       triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
       triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
-      reactorPreparedSpells: [
-        srdSpellRecord(spellCastInterruptionReactionUnitId),
-      ],
-      reactorSpellSlots: [
-        { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
-      ],
+      reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
+      reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
     }).state,
     triggerKind: "none",
     continuationKind: "none",
@@ -306,12 +302,8 @@ function spellCastInterruptionReactionEndsSpellCast(): ReactionCastingTimeRuntim
   const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
-    reactorPreparedSpells: [
-      srdSpellRecord(spellCastInterruptionReactionUnitId),
-    ],
-    reactorSpellSlots: [
-      { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
-    ],
+    reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
+    reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
     session,
@@ -348,12 +340,8 @@ function spellCastInterruptionReactionAllowsSpellCastResume(): ReactionCastingTi
     triggerCreatureSpellSlots: [
       { spellLevel: magicMissileFourthSlotLevel, count: 1 },
     ],
-    reactorPreparedSpells: [
-      srdSpellRecord(spellCastInterruptionReactionUnitId),
-    ],
-    reactorSpellSlots: [
-      { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
-    ],
+    reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
+    reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
     session,
@@ -866,8 +854,8 @@ function spellCastInterruptionReactionTriggerFact(
       session,
       reactorId,
       spellSlotInvocationRef(
-        spellCastInterruptionReactionUnitId,
-        spellCastInterruptionReactionSlotLevel,
+        counterspellUnitId,
+        counterspellSlotLevel,
         "spellCastInterruptionReaction",
       ),
     ),
@@ -890,9 +878,9 @@ function requireCounterspellChoice(
 ): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     result,
-    spellId: spellCastInterruptionReactionUnitId,
+    spellId: counterspellUnitId,
     procedure: "spellCastInterruptionReaction",
-    slotLevel: spellCastInterruptionReactionSlotLevel,
+    slotLevel: counterspellSlotLevel,
   });
 }
 
