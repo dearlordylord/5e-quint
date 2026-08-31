@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
+import { PositiveInteger } from "@dnd/shared/types";
 import { unitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 
@@ -9,6 +10,7 @@ import {
   BATTLE_SPELL_ROOT_MECHANICS_PATH,
   type AnySpellProcedureMechanicsAdmission,
   type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
 } from "./spell-mechanics-admission.ts";
 import { registeredSpellProcedureMechanicsAdmissions } from "./admission-registry.ts";
 
@@ -16,13 +18,7 @@ const spellMechanics = spellRecord("fire_bolt").mechanics;
 
 function supportedAdmission(
   procedure: AnySpellProcedureMechanicsAdmission["procedure"],
-  evidence: {
-    readonly consumed: readonly [
-      ReturnType<typeof unitMechanicsPath>,
-      ...ReturnType<typeof unitMechanicsPath>[],
-    ];
-    readonly unowned: readonly ReturnType<typeof unitMechanicsPath>[];
-  },
+  evidence: SpellProcedureMechanicsEvidence,
 ): AnySpellProcedureMechanicsAdmission {
   return {
     procedure,
@@ -71,8 +67,12 @@ describe("battle spell static mechanics admission", () => {
   test("keeps complete and partial evidence structurally distinct", () => {
     const nestedPhasePath = unitMechanicsPath([
       { kind: "singleton", role: "recordMechanics" },
-      { kind: "occurrence", role: "procedure", ordinal: 1 },
-      { kind: "occurrence", role: "effect", ordinal: 1 },
+      {
+        kind: "occurrence",
+        role: "procedure",
+        ordinal: PositiveInteger(1),
+      },
+      { kind: "occurrence", role: "effect", ordinal: PositiveInteger(1) },
     ]);
     const result = admitBattleSpellMechanicsFrom(spellMechanics, [
       supportedAdmission("spellAttackDamage", {
@@ -101,13 +101,25 @@ describe("battle spell static mechanics admission", () => {
   test("accumulates every represented unsupported issue", () => {
     const firstPath = unitMechanicsPath([
       { kind: "singleton", role: "recordMechanics" },
-      { kind: "occurrence", role: "generalFact", ordinal: 4 },
-      { kind: "occurrence", role: "resource", ordinal: 1 },
+      {
+        kind: "occurrence",
+        role: "generalFact",
+        ordinal: PositiveInteger(4),
+      },
+      { kind: "occurrence", role: "resource", ordinal: PositiveInteger(1) },
     ]);
     const secondPath = unitMechanicsPath([
       { kind: "singleton", role: "recordMechanics" },
-      { kind: "occurrence", role: "procedure", ordinal: 1 },
-      { kind: "occurrence", role: "procedure", ordinal: 1 },
+      {
+        kind: "occurrence",
+        role: "procedure",
+        ordinal: PositiveInteger(1),
+      },
+      {
+        kind: "occurrence",
+        role: "procedure",
+        ordinal: PositiveInteger(1),
+      },
     ]);
     const result = admitBattleSpellMechanicsFrom(spellMechanics, [
       unsupportedAdmission("spellAttackDamage", "materialCost", firstPath),
