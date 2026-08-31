@@ -1,4 +1,5 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { readFileSync } from "node:fs";
 import {
   statBlockId,
   unitId as parseSharedUnitId,
@@ -158,6 +159,26 @@ const ratId = statBlockId("stat_block_rat");
 const ridingHorseId = statBlockId("stat_block_riding_horse");
 const lizardId = statBlockId("stat_block_lizard");
 const catId = statBlockId("stat_block_cat");
+
+test("keeps resource feature projection parse-once across Wild Shape and execution", () => {
+  const source = readFileSync(
+    new URL("./battle-reducer/creature-state.ts", import.meta.url),
+    "utf8",
+  );
+
+  expect([
+    ...source.matchAll(/parseSupportedUnitFeatureProfile\s*\(/g),
+  ]).toHaveLength(0);
+  expect(source).toMatch(
+    /projectCharacterResourceAdmissionInputs\(creatureInit\.resources \?\? \[\]\)/,
+  );
+  expect(source).toMatch(
+    /resourceFeatureProcedures,\s*unitFeatureProcedures: explicitUnitFeatureProcedures/,
+  );
+  expect(source).toMatch(
+    /characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*execution\.success\.execution\.procedureBindings/,
+  );
+});
 
 type DruidWildShapeInputPhase =
   (typeof druidWildShapeInput.mechanics.phases)[number];
@@ -2547,6 +2568,31 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
   }
 });
 
+test("rejects duplicate Wild Shape resources through the shared resource admission", () => {
+  const wildShape = unitLibrary.requireUnit("druid_wild_shape");
+  const result = startBattle({
+    battleId: battleId("battle-druid-wild-shape-duplicate-resource"),
+    combatants: [
+      characterSeed({
+        combatantId: druidId,
+        displayName: "Druid",
+        initiative: 20,
+        classLevels: [{ className: "druid", level: 2 }],
+        resources: [{ unit: wildShape }, { unit: wildShape }],
+        druidWildShapeAvailableForms: druidWildShapeKnownFormsWith(catId),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
+      "Duplicate character battle resource unit: druid_wild_shape",
+    );
+  }
+});
+
 test("rejects ineligible known Beast forms before battle initialization", () => {
   const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
   expect(parseSupportedUnitFeatureProfile(wildShapeUnit, [])).toBeNull();
@@ -2611,6 +2657,34 @@ test("projects canonical level-2 Wild Shape access and rejects a transform-free 
   expect(
     parseSupportedUnitFeatureProfile(withoutTransform, levelTwo),
   ).toBeNull();
+
+  const validInit = characterSeed({
+    combatantId: druidId,
+    displayName: "Druid",
+    initiative: 20,
+    classLevels: [{ className: "druid", level: 2 }],
+    resources: [{ unit: wildShape }],
+    druidWildShapeAvailableForms: druidWildShapeKnownFormsWith(catId),
+  });
+  const battle = startBattle({
+    battleId: battleId("battle-druid-wild-shape-transform-free-resource"),
+    combatants: [
+      {
+        ...validInit,
+        creatureInit: {
+          ...validInit.creatureInit,
+          resources: [{ unit: withoutTransform }],
+        },
+      },
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  expect(Result.isFailure(battle)).toBe(true);
+  if (Result.isFailure(battle)) {
+    expect(battleStateInitIssueMessage(battle.failure)).toBe(
+      "Unsupported Wild Shape mechanics fact: activationPhase.; Unsupported Wild Shape mechanics fact: transformation.; Unsupported Wild Shape mechanics fact: knownFormRoster.; Unsupported Wild Shape mechanics fact: reversion.; Unsupported Wild Shape mechanics fact: temporaryHitPoints.",
+    );
+  }
 });
 
 test("rejects decoded synthetic Wild Shape mechanics outside the admitted support profile", () => {

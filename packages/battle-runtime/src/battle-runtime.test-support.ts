@@ -188,6 +188,7 @@ import {
 import {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
+  characterBattleResourceInitFromAdmissionInput,
   parseCharacterBattleClassLevels,
   type CharacterBattleFeatureInit,
 } from "./character-battle-resources.ts";
@@ -3784,7 +3785,7 @@ export function characterSeed(input: {
       ? undefined
       : (input.resources ?? []).flatMap((resource) => {
           const profile = parseSupportedUnitFeatureProfile(
-            resource.unit,
+            characterBattleResourceInitFromAdmissionInput(resource).unit,
             parseCharacterBattleClassLevelsRight(classLevels),
           );
           return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
@@ -3821,13 +3822,16 @@ export function characterSeed(input: {
       : druidWildShapeAvailableForms.success;
   const resourceUnitRefs = (input.resources ?? []).map((resource) => {
     const supportProfiles = battleUnitSupportProfilesForUnit({
-      unit: resource.unit,
+      unit: characterBattleResourceInitFromAdmissionInput(resource).unit,
       classLevels: parseCharacterBattleClassLevelsRight(classLevels),
     });
     if (Result.isFailure(supportProfiles)) {
       throw new Error(supportProfiles.failure.message);
     }
-    return { unit: resource.unit, supportProfiles: supportProfiles.success };
+    return {
+      unit: characterBattleResourceInitFromAdmissionInput(resource).unit,
+      supportProfiles: supportProfiles.success,
+    };
   });
   const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
     (candidate) => {

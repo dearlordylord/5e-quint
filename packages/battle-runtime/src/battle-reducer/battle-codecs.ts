@@ -45,6 +45,7 @@ import {
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
 import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../effect-occurrence-source-vocabulary.ts";
+import { isUnitFeatureProcedureOwner } from "../unit-procedure-kind.ts";
 import { BATTLE_ACTIVE_EFFECT_KINDS } from "../active-effect/types.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
@@ -9314,7 +9315,7 @@ function serializedMonkFocusStrikeOwnsBoundProcedures(
     owner.origin.attackExecution.unarmedStrikeProcedureRef ===
       subject.procedureRef &&
     focusBinding !== undefined &&
-    focusBinding.procedure.kind === "unitSupportProfile" &&
+    isUnitFeatureProcedureOwner(focusBinding.procedure) &&
     (typeof focusBinding.procedure.execution === "string"
       ? focusBinding.procedure.execution
       : focusBinding.procedure.execution.kind) ===

@@ -288,6 +288,20 @@ export {
 } from "./character-battle-resources.ts";
 
 export {
+  admitResourceFeature,
+  resourceFeatureExecutionFacts,
+  type AdmittedResourceFeature,
+  type ResourceFeatureAdmission,
+  type ResourceFeatureAdmissionIssue,
+  type UnboundResourceFeatureProcedure,
+} from "./procedure-admission/resource-feature-admission.ts";
+
+export {
+  projectDruidWildShapeAtClassLevels,
+  type DruidWildShapeClassLevelProjection,
+} from "./procedure-admission/druid-wild-shape.ts";
+
+export {
   admitCompanionToBattle,
   applySpawnedCompanionZeroHitPointDisappearance,
   castSpawnedCompanion,

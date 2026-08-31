@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { characterBattleResourceInitFromAdmissionInput } from "./character-battle-resources.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-after-hit-damage-illumination
 
@@ -1337,7 +1338,8 @@ function paladinFreeCastBattle(): BattleRuntimeSession {
           },
           featurePreparedSpells: [
             {
-              sourceUnitId: resource.unit.id,
+              sourceUnitId:
+                characterBattleResourceInitFromAdmissionInput(resource).unit.id,
               spell: spellRecord(divineSmiteUnitId),
             },
           ],

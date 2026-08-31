@@ -98,13 +98,16 @@ function failedSavingThrowRerollExecutionForTest(
       trigger: "failedSavingThrow",
       reroll: {
         use: "newRoll",
-        bonus: { kind: "classLevel", className: "fighter" },
+        bonus: {
+          kind: "classLevel",
+          className: "fighter",
+          level: classLevel(9),
+        },
       },
       spends: {
         resourcePoolRef,
         amount: 1,
       },
-      resetCadence: "longRest",
     },
   };
 }
@@ -172,7 +175,6 @@ const indomitableSelectedIdentityActions = {
           resource.resourcePoolRef,
         ),
         resource,
-        fighterLevel: classLevel(9),
         failedSave: {
           ability: "wis",
           dc: difficultyClass(15),
@@ -610,8 +612,6 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
           use: "newRoll",
           bonus: { kind: "classLevel", className: "fighter" },
         },
-        spends: { resourceUnitId: fighterIndomitableUnitId, amount: 1 },
-        resetCadence: "longRest",
       },
     } as const;
 
@@ -620,7 +620,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     ).toEqual(
       Result.succeed({
         unit,
-        supportProfiles: [supportProfile],
+        supportProfiles: [],
       }),
     );
     expect(battleFailedSavingThrowRerollSupportForUnit(unit)).toEqual(
@@ -702,7 +702,6 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
           resource.resourcePoolRef,
         ),
         resource,
-        fighterLevel: classLevel(9),
         failedSave: {
           ability: "wis",
           dc: difficultyClass(15),
@@ -747,7 +746,6 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
           resource.resourcePoolRef,
         ),
         resource,
-        fighterLevel: classLevel(9),
         failedSave: {
           ability: "con",
           dc: difficultyClass(20),
@@ -803,7 +801,6 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       execution: failedSavingThrowRerollExecutionForTest(
         resource.resourcePoolRef,
       ),
-      fighterLevel: classLevel(9),
       failedSave: {
         ability: "dex" as const,
         dc: difficultyClass(15),

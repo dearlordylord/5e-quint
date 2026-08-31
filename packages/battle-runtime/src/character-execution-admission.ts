@@ -29,7 +29,7 @@ export {
   type CharacterUnitProcedureQuery,
 } from "./character-execution-queries.ts";
 import { Result } from "effect";
-import type { CharacterBattleClassLevel } from "./character-class-level.ts";
+import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import {
   NonNegativeInteger,
   type ReadonlyNonEmptyArray,
@@ -59,6 +59,7 @@ import {
   type BattleUnitSupportProfile,
   type BattleUnitSupportProfileIssue,
   type BattleUnitSupportSource,
+  type SupportedUnitFeatureFacts,
   type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import type {
@@ -74,6 +75,10 @@ import type {
   CharacterUnitProcedureSource,
   UnitFeatureProcedureExecution,
 } from "./character-execution-vocabulary.ts";
+import { bindFailedSavingThrowRerollProcedure } from "./procedure-admission/failed-saving-throw-reroll.ts";
+import { bindDruidWildShapeProcedure } from "./procedure-admission/druid-wild-shape.ts";
+import { bindMonkFocusProcedure } from "./procedure-admission/monk-focus.ts";
+import type { AdmittedResourceFeature } from "./procedure-admission/resource-feature-admission.ts";
 export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
@@ -126,6 +131,20 @@ export type CharacterUnitProcedureOwnership = {
   readonly procedureRef: BattleProcedureExecutionRef;
 };
 
+export type BoundUnitFeatureProcedureFacts<
+  Facts extends SupportedUnitFeatureFacts = SupportedUnitFeatureFacts,
+> = {
+  readonly sourceUnitId: AuthoredUnitSource["id"];
+  readonly facts: Facts;
+};
+
+export function boundUnitFeatureProcedureFactsFromProfile(
+  profile: SupportedUnitFeatureProfile,
+): BoundUnitFeatureProcedureFacts {
+  const { unit, ...facts } = profile;
+  return { sourceUnitId: unit.id, facts };
+}
+
 export type UnitSupportProcedureExecutionContext = {
   readonly resourcePoolRefsByUnitId: ReadonlyMap<
     AuthoredUnitSource["id"],
@@ -170,13 +189,114 @@ type UnitFeatureProcedureCandidate = {
   readonly execution: UnitFeatureProcedureExecution;
 };
 
-function resourceSelectedAreaDamageReplacementProfiles(input: {
+type ResourceFeatureProcedureBinding =
+  | {
+      readonly tag: "bound";
+      readonly candidate: UnitFeatureProcedureCandidate;
+    }
+  | { readonly tag: "notAvailable" }
+  | {
+      readonly tag: "rejected";
+      readonly messages: ReadonlyNonEmptyArray<string>;
+    };
+
+function resourceFeatureBindingMessages(
+  issues: ReadonlyNonEmptyArray<{ readonly message: string }>,
+): ReadonlyNonEmptyArray<string> {
+  const [firstIssue, ...remainingIssues] = issues;
+  return [firstIssue.message, ...remainingIssues.map(({ message }) => message)];
+}
+
+function bindResourceFeatureProcedure(
+  feature: AdmittedResourceFeature,
+  input: {
+    readonly resourcePoolRefsByUnitId: ReadonlyMap<
+      AuthoredUnitSource["id"],
+      BattleResourcePoolExecutionRef
+    >;
+    readonly classLevels: CharacterBattleClassLevels;
+  },
+): ResourceFeatureProcedureBinding {
+  return Match.value(feature.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      failedSavingThrowReroll: ({ admitted }) => {
+        const binding = bindFailedSavingThrowRerollProcedure(
+          { sourceUnitId: feature.sourceUnitId, facts: admitted.facts },
+          input,
+        );
+        return binding.tag === "rejected"
+          ? {
+              tag: "rejected" as const,
+              messages: resourceFeatureBindingMessages(binding.issues),
+            }
+          : {
+              tag: "bound" as const,
+              candidate: {
+                unitId: feature.sourceUnitId,
+                execution: binding.procedure.execution,
+              },
+            };
+      },
+      druidWildShape: ({ admitted }) => {
+        const binding = bindDruidWildShapeProcedure(
+          { sourceUnitId: feature.sourceUnitId, projection: admitted },
+          input,
+        );
+        return Match.value(binding).pipe(
+          Match.discriminatorsExhaustive("tag")({
+            bound: ({ procedure }) => ({
+              tag: "bound" as const,
+              candidate: {
+                unitId: feature.sourceUnitId,
+                execution: procedure.execution,
+              },
+            }),
+            notAvailable: () => ({ tag: "notAvailable" as const }),
+            rejected: ({ issues }) => ({
+              tag: "rejected" as const,
+              messages: resourceFeatureBindingMessages(issues),
+            }),
+          }),
+        );
+      },
+      monkFocus: ({ admitted }) => {
+        const binding = bindMonkFocusProcedure(
+          { sourceUnitId: feature.sourceUnitId, procedure: admitted },
+          input,
+        );
+        if (binding.tag === "rejected") {
+          return {
+            tag: "rejected" as const,
+            messages: resourceFeatureBindingMessages(binding.issues),
+          };
+        }
+        const execution = unitFeatureProcedureExecution(
+          binding.procedure.facts,
+          input,
+        );
+        return execution === undefined
+          ? {
+              tag: "rejected" as const,
+              messages: [
+                "Bound Monk Focus facts must project a Battle execution.",
+              ] as const,
+            }
+          : {
+              tag: "bound" as const,
+              candidate: { unitId: feature.sourceUnitId, execution },
+            };
+      },
+    }),
+  );
+}
+
+function resourceSelectedAreaDamageReplacementProcedures(input: {
   readonly resourceUnits: readonly AuthoredUnitSource[];
   readonly unitRefs: readonly {
     readonly unit: BattleUnitSupportSource;
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
   }[];
-}): readonly SupportedUnitFeatureProfile[] {
+}): readonly BoundUnitFeatureProcedureFacts[] {
   const resourceUnitsById = new Map(
     input.resourceUnits.map((unit) => [unit.id, unit]),
   );
@@ -184,10 +304,10 @@ function resourceSelectedAreaDamageReplacementProfiles(input: {
     const resourceUnit = resourceUnitsById.get(unitRef.unit.id);
     if (resourceUnit === undefined) return [];
     return unitRef.supportProfiles.flatMap(
-      (profile): readonly SupportedUnitFeatureProfile[] =>
+      (profile): readonly BoundUnitFeatureProcedureFacts[] =>
         typeof profile === "object" &&
         profile.kind === "attackActionAreaSaveDamageReplacement"
-          ? [{ ...profile, unit: resourceUnit }]
+          ? [{ sourceUnitId: resourceUnit.id, facts: profile }]
           : [],
     );
   });
@@ -198,6 +318,17 @@ function unitSupportProcedureIsOwnedByUnitFeature(
   candidate: UnitSupportProcedureCandidate,
   context: UnitSupportProcedureExecutionContext,
 ): boolean {
+  if (
+    typeof candidate.profile === "object" &&
+    candidate.profile.kind === "failedSavingThrowReroll"
+  ) {
+    const supportProfileKind = candidate.profile.kind;
+    return unitFeatureProcedures.some(
+      (feature) =>
+        feature.unitId === candidate.unitId &&
+        feature.execution.kind === supportProfileKind,
+    );
+  }
   const supportExecution = unitSupportProcedureExecution(
     candidate.profile,
     context,
@@ -216,14 +347,15 @@ export function characterExecutionFromUnits(input: {
   readonly battleId: BattleId;
   readonly combatantId: CombatantId;
   readonly scopeOrdinal: BattleExecutionScopeOrdinal;
-  readonly unitFeatureProfiles: readonly SupportedUnitFeatureProfile[];
+  readonly unitFeatureProcedures: readonly BoundUnitFeatureProcedureFacts[];
+  readonly resourceFeatureProcedures: readonly AdmittedResourceFeature[];
   readonly resourceUnits: readonly AuthoredUnitSource[];
   readonly units: readonly AuthoredUnitSource[];
   readonly unitRefs: readonly {
     readonly unit: BattleUnitSupportSource;
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
   }[];
-  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly classLevels: CharacterBattleClassLevels;
 }): Result.Result<
   CharacterExecutionAdmission,
   ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>
@@ -243,48 +375,115 @@ export function characterExecutionFromUnits(input: {
   const unitFeatureExecutionContext: UnitFeatureProcedureExecutionContext = {
     resourcePoolRefsByUnitId,
   };
-  const resourceSelectedProfiles =
-    resourceSelectedAreaDamageReplacementProfiles(input);
-  const unitFeatureProfiles = [
-    ...input.unitFeatureProfiles,
-    ...resourceSelectedProfiles.filter(
+  const resourceSelectedProcedures =
+    resourceSelectedAreaDamageReplacementProcedures(input);
+  const unitFeatureProcedures = [
+    ...input.unitFeatureProcedures,
+    ...resourceSelectedProcedures.filter(
       (selected) =>
-        !input.unitFeatureProfiles.some(
-          (profile) =>
-            profile.unit.id === selected.unit.id &&
-            profile.kind === selected.kind,
+        !input.unitFeatureProcedures.some(
+          (procedure) =>
+            procedure.sourceUnitId === selected.sourceUnitId &&
+            procedure.facts.kind === selected.facts.kind,
         ),
     ),
   ];
-  const unitProcedures = unitFeatureProfiles.flatMap((profile) => {
-    const execution = unitFeatureProcedureExecution(
-      profile,
-      unitFeatureExecutionContext,
-    );
-    if (
-      execution === undefined &&
-      profile.kind !== "cunningStrike" &&
-      profile.kind !== "cunningStrikeOptionGrant"
-    ) {
-      supportProfileIssues.push({
-        tag: "battleUnitSupportProfileIssue",
-        message: `Unit feature profile ${profile.kind} references an unavailable mechanical execution resource.`,
+  const resourceFeatureUnitProcedures = input.resourceFeatureProcedures.flatMap(
+    (feature) => {
+      const binding = bindResourceFeatureProcedure(feature, {
+        resourcePoolRefsByUnitId,
+        classLevels: input.classLevels,
       });
-    }
-    return execution === undefined
-      ? []
-      : [
-          {
-            unitId: profile.unit.id,
-            execution,
-            source: characterUnitProcedureSourceForAdmission(
-              scopeRef,
-              input.resourceUnits,
-              profile.unit.id,
-            ),
-          },
-        ];
-  });
+      if (binding.tag === "rejected") {
+        supportProfileIssues.push(
+          ...binding.messages.map((message) => ({
+            tag: "battleUnitSupportProfileIssue" as const,
+            message,
+          })),
+        );
+        return [];
+      }
+      return binding.tag === "notAvailable"
+        ? []
+        : [
+            {
+              ...binding.candidate,
+              source: characterUnitProcedureSourceForAdmission(
+                scopeRef,
+                input.resourceUnits,
+                binding.candidate.unitId,
+              ),
+            },
+          ];
+    },
+  );
+  const boundProfileUnitProcedures = unitFeatureProcedures.flatMap(
+    (procedure) => {
+      const failedSavingThrowBinding =
+        procedure.facts.kind === "failedSavingThrowReroll"
+          ? bindFailedSavingThrowRerollProcedure(
+              {
+                sourceUnitId: procedure.sourceUnitId,
+                facts: procedure.facts,
+              },
+              {
+                resourcePoolRefsByUnitId,
+                classLevels: input.classLevels,
+              },
+            )
+          : null;
+      if (failedSavingThrowBinding?.tag === "rejected") {
+        supportProfileIssues.push(
+          ...failedSavingThrowBinding.issues.map((issue) => ({
+            tag: "battleUnitSupportProfileIssue" as const,
+            message: issue.message,
+          })),
+        );
+        return [];
+      }
+      const execution =
+        failedSavingThrowBinding?.procedure.execution ??
+        unitFeatureProcedureExecution(
+          procedure.facts,
+          unitFeatureExecutionContext,
+        );
+      if (
+        execution === undefined &&
+        procedure.facts.kind !== "cunningStrike" &&
+        procedure.facts.kind !== "cunningStrikeOptionGrant"
+      ) {
+        supportProfileIssues.push({
+          tag: "battleUnitSupportProfileIssue",
+          message: `Unit feature profile ${procedure.facts.kind} references an unavailable mechanical execution resource.`,
+        });
+      }
+      return execution === undefined
+        ? []
+        : [
+            {
+              unitId: procedure.sourceUnitId,
+              execution,
+              source: characterUnitProcedureSourceForAdmission(
+                scopeRef,
+                input.resourceUnits,
+                procedure.sourceUnitId,
+              ),
+            },
+          ];
+    },
+  );
+  const resourceFeatureProcedureKeys = new Set(
+    resourceFeatureUnitProcedures.map(
+      ({ unitId, execution }) => `${unitId}\u0000${execution.kind}`,
+    ),
+  );
+  const unitProcedures = [
+    ...resourceFeatureUnitProcedures,
+    ...boundProfileUnitProcedures.filter(
+      ({ unitId, execution }) =>
+        !resourceFeatureProcedureKeys.has(`${unitId}\u0000${execution.kind}`),
+    ),
+  ];
   if (supportProfileIssues.length > 0) {
     const [firstIssue, ...remainingIssues] = supportProfileIssues;
     return Result.fail([firstIssue, ...remainingIssues]);
@@ -670,7 +869,7 @@ function characterUnitProcedureSourceForAdmission(
 }
 
 export function unitFeatureProcedureExecution(
-  profile: SupportedUnitFeatureProfile,
+  profile: SupportedUnitFeatureFacts,
   context: UnitFeatureProcedureExecutionContext,
 ) {
   return Match.value(profile).pipe(
@@ -990,23 +1189,8 @@ export function unitFeatureProcedureExecution(
             };
       },
       failedSavingThrowReroll: (value) => {
-        const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
-          value.savingThrow.spends.resourceUnitId,
-        );
-        return resourcePoolRef === undefined
-          ? undefined
-          : {
-              kind: value.kind,
-              savingThrow: {
-                trigger: value.savingThrow.trigger,
-                reroll: value.savingThrow.reroll,
-                spends: {
-                  resourcePoolRef,
-                  amount: value.savingThrow.spends.amount,
-                },
-                resetCadence: value.savingThrow.resetCadence,
-              },
-            };
+        void value;
+        return undefined;
       },
       spellSlotHealingModifier: (value) => ({
         kind: value.kind,
@@ -1083,6 +1267,25 @@ export function unitFeatureProcedureExecution(
       bonusActionDelegatedStandardActions: (value) => ({
         kind: value.kind,
         actionEconomy: value.actionEconomy,
+      }),
+      monkFocusBattleOptions: (value) => ({
+        kind: value.kind,
+        effectSaveDc: value.effectSaveDc,
+        flurryOfBlows: {
+          focusPointCost: value.flurryOfBlows.focusPointCost,
+          strikeCount: value.flurryOfBlows.strikeCount,
+        },
+        patientDefense: {
+          freeAction: value.patientDefense.freeAction,
+          focusPointCost: value.patientDefense.focusPointCost,
+          focusActions: value.patientDefense.focusActions,
+        },
+        stepOfTheWind: {
+          freeAction: value.stepOfTheWind.freeAction,
+          focusPointCost: value.stepOfTheWind.focusPointCost,
+          focusActions: value.stepOfTheWind.focusActions,
+          jumpDistanceMultiplier: value.stepOfTheWind.jumpDistanceMultiplier,
+        },
       }),
       remarkableAthlete: (value) => ({
         kind: value.kind,
@@ -1338,23 +1541,8 @@ export function unitSupportProcedureExecution(
             };
       },
       failedSavingThrowReroll: (value) => {
-        const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
-          value.savingThrow.spends.resourceUnitId,
-        );
-        return resourcePoolRef === undefined
-          ? undefined
-          : {
-              kind: value.kind,
-              savingThrow: {
-                trigger: value.savingThrow.trigger,
-                reroll: value.savingThrow.reroll,
-                spends: {
-                  resourcePoolRef,
-                  amount: value.savingThrow.spends.amount,
-                },
-                resetCadence: value.savingThrow.resetCadence,
-              },
-            };
+        void value;
+        return undefined;
       },
       magicActionHealingPool: (value) => {
         const resourcePoolRef = context.resourcePoolRefsByUnitId.get(

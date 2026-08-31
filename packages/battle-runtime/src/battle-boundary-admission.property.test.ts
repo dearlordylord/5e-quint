@@ -2,7 +2,7 @@
 import fc from "fast-check";
 import { Match, Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
-import { classLevel, resourceCount } from "@dnd/shared/types";
+import { resourceCount } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { decodeStatBlockRecordResult } from "@dnd/surface/surface/schema";
@@ -124,10 +124,12 @@ import {
   type StatBlockProcedureBinding,
 } from "./stat-block-execution-state.ts";
 import {
+  boundUnitFeatureProcedureFactsFromProfile,
   characterExecutionFromUnits,
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
 } from "./character-execution-admission.ts";
+import { parseCharacterBattleClassLevels } from "./character-class-level.ts";
 import {
   parseSupportedUnitFeatureProfile,
   battleUnitSupportProfilesForUnit,
@@ -2333,22 +2335,27 @@ describe("battle boundary admission owners", () => {
       ),
     ).toMatchObject({ _tag: "Failure" });
 
+    const fighterLevelsResult = parseCharacterBattleClassLevels([
+      { className: "fighter", level: 2 },
+    ]);
+    if (Result.isFailure(fighterLevelsResult)) {
+      throw new Error("Expected valid Fighter class levels.");
+    }
+    const fighterLevels = fighterLevelsResult.success;
     expect(
       characterExecutionFromUnits({
         battleId: battleId("boundary-character-execution"),
         combatantId: combatantId("boundary-character-execution"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        unitFeatureProfiles: [],
+        resourceFeatureProcedures: [],
+        unitFeatureProcedures: [],
         resourceUnits: [],
         units: [],
         unitRefs: [],
-        classLevels: [],
+        classLevels: fighterLevels,
       }),
     ).toMatchObject({ _tag: "Success" });
     const tacticalMind = unitLibrary.requireUnit("fighter_tactical_mind");
-    const fighterLevels = [
-      { className: "fighter" as const, level: classLevel(2) },
-    ];
     const tacticalProfile = parseSupportedUnitFeatureProfile(
       tacticalMind,
       fighterLevels,
@@ -2365,7 +2372,10 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-missing-resource"),
         combatantId: combatantId("boundary-character-missing-resource"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        unitFeatureProfiles: [tacticalProfile],
+        resourceFeatureProcedures: [],
+        unitFeatureProcedures: [
+          boundUnitFeatureProcedureFactsFromProfile(tacticalProfile),
+        ],
         resourceUnits: [],
         units: [tacticalMind],
         unitRefs: [],
