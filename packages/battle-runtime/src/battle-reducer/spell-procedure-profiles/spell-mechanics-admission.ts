@@ -5,16 +5,32 @@ import {
 } from "@dnd/surface/surface/mechanics-graph-path";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import type { SpellAdmissionContext } from "./profile.ts";
 
 /**
- * The root of every Unit spell mechanics graph.  Keep this coordinate in the
+ * The root of every Unit spell mechanics graph. Keep this coordinate in the
  * Battle owner so admission evidence cannot silently drift to a stat-block
  * path or to an authored-record identity.
  */
 export const BATTLE_SPELL_ROOT_MECHANICS_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
 ]);
+
+/**
+ * Static admission receives only the already-decoded mechanics graph and the
+ * common Definition projection. Authored identity and all cast-time state are
+ * deliberately absent from this carrier.
+ */
+export type SpellMechanicsAdmissionSource = {
+  readonly mechanics: SpellMechanics;
+  readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
+};
 
 /**
  * A profile's static projection has to account for at least one owned path.
@@ -36,12 +52,19 @@ export type SpellProcedureMechanicsEvidence =
   | PartialSpellProcedureMechanicsEvidence;
 
 /**
- * Facts are intentionally generic and source-free.  Concrete profile modules
- * choose their own narrowed shape; this contract never carries SpellRecord
- * identity, provenance, caster, targets, slot/resource, turn, session/table,
- * or Battle State.
+ * Facts are the source-free Definition projection carried by a static
+ * profile. Profile owners may refine this type with additional static facts;
+ * the registry keeps the procedure-discriminated admitted union intact.
  */
-export type SpellProcedureMechanicsFacts = object;
+export type SpellProcedureMechanicsFacts = SpellDefinitionRuleFacts;
+
+export type SpellProcedureMechanicsFactsByProcedure = {
+  readonly [P in BattleSpellProcedureKey]: SpellProcedureMechanicsFacts;
+};
+
+export type SpellProcedureMechanicsInvocation<
+  P extends BattleSpellProcedureKey,
+> = Extract<SupportedSpellInvocation, { readonly procedure: P }>;
 
 export type SpellProcedureAdmissionIssue<
   P extends BattleSpellProcedureKey = BattleSpellProcedureKey,
@@ -53,26 +76,40 @@ export type SpellProcedureAdmissionIssue<
   readonly message: string;
 };
 
+/**
+ * A supported static projection binds its contextual admission operation to
+ * the exact procedure facts it just produced. This is the parse-once seam:
+ * contextual admission receives only the mechanics-free execution source and
+ * context, never the authored mechanics graph.
+ */
 export type AdmittedSpellProcedureMechanics<
   P extends BattleSpellProcedureKey,
   Facts extends SpellProcedureMechanicsFacts,
+  Invocation extends SupportedSpellInvocation =
+    SpellProcedureMechanicsInvocation<P>,
 > = {
   readonly binding: "ready";
   readonly procedure: P;
   readonly facts: Facts;
   readonly evidence: SpellProcedureMechanicsEvidence;
+  readonly admit: (
+    source: BattleSpellExecutionSource,
+    ctx: SpellAdmissionContext,
+  ) => readonly Invocation[];
 };
 
 export type SpellProcedureMechanicsInspection<
   P extends BattleSpellProcedureKey,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Invocation extends SupportedSpellInvocation =
+    SpellProcedureMechanicsInvocation<P>,
   Issue extends SpellProcedureAdmissionIssue<P> =
     SpellProcedureAdmissionIssue<P>,
 > =
   | { readonly tag: "notRepresented" }
   | {
       readonly tag: "supported";
-      readonly procedure: AdmittedSpellProcedureMechanics<P, Facts>;
+      readonly admitted: AdmittedSpellProcedureMechanics<P, Facts, Invocation>;
     }
   | {
       readonly tag: "unsupported";
@@ -86,78 +123,70 @@ export type SpellProcedureMechanicsInspection<
 export type SpellProcedureMechanicsAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Invocation extends SupportedSpellInvocation =
+    SpellProcedureMechanicsInvocation<P>,
   Issue extends SpellProcedureAdmissionIssue<P> =
     SpellProcedureAdmissionIssue<P>,
 > = {
   readonly admitMechanics: (
-    mechanics: SpellMechanics,
-  ) => SpellProcedureMechanicsInspection<P, Facts, Issue>;
+    source: SpellMechanicsAdmissionSource,
+  ) => SpellProcedureMechanicsInspection<P, Facts, Invocation, Issue>;
 };
 
-/** Erased only at the registry view; profile hooks retain their concrete Facts type. */
-export type AnySpellProcedureMechanicsAdmission = {
-  readonly procedure: BattleSpellProcedureKey;
+/**
+ * Heterogeneous static reader view derived from the canonical declaration
+ * table. The mapped union preserves each reader's procedure/facts relation;
+ * there is no independently writable procedure field beside the admitted
+ * value's discriminator.
+ */
+export type AnySpellProcedureMechanicsAdmission<
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+    SpellProcedureMechanicsFactsByProcedure,
+> = {
   readonly admitMechanics: (
-    mechanics: SpellMechanics,
-  ) => SpellProcedureMechanicsInspection<
-    BattleSpellProcedureKey,
-    SpellProcedureMechanicsFacts,
-    SpellProcedureAdmissionIssue
-  >;
+    source: SpellMechanicsAdmissionSource,
+  ) => SpellProcedureMechanicsInspectionView<FactsByProcedure>;
 };
 
-export type AdmittedSpellProcedureMechanicsView =
-  AdmittedSpellProcedureMechanics<
-    BattleSpellProcedureKey,
-    SpellProcedureMechanicsFacts
+export type AdmittedSpellProcedureMechanicsView<
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+    SpellProcedureMechanicsFactsByProcedure,
+> = {
+  readonly [P in BattleSpellProcedureKey]: AdmittedSpellProcedureMechanics<
+    P,
+    FactsByProcedure[P],
+    SpellProcedureMechanicsInvocation<P>
   >;
+}[BattleSpellProcedureKey];
 
-export type BattleSpellMechanicsAdmission =
+export type SpellProcedureMechanicsInspectionView<
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+    SpellProcedureMechanicsFactsByProcedure,
+> =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "supported";
+      readonly admitted: AdmittedSpellProcedureMechanicsView<FactsByProcedure>;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
+    };
+export type BattleSpellMechanicsAdmission<
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+    SpellProcedureMechanicsFactsByProcedure,
+> =
   | { readonly tag: "notBattleOwned" }
   | {
       readonly tag: "admitted";
-      readonly procedures: ReadonlyNonEmptyArray<AdmittedSpellProcedureMechanicsView>;
-      /**
-       * A represented candidate may reject a branch while another owner
-       * admits a supported branch.  Preserve every typed issue for callers;
-       * do not turn an unowned/no-owner root into a capability prerequisite.
-       */
-      readonly issues: readonly SpellProcedureAdmissionIssue[];
+      readonly procedures: ReadonlyNonEmptyArray<
+        AdmittedSpellProcedureMechanicsView<FactsByProcedure>
+      >;
     }
   | {
       readonly tag: "rejected";
       readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
     };
-
-function isSupportedInspection(
-  inspection: SpellProcedureMechanicsInspection<
-    BattleSpellProcedureKey,
-    SpellProcedureMechanicsFacts
-  >,
-): inspection is Extract<
-  SpellProcedureMechanicsInspection<
-    BattleSpellProcedureKey,
-    SpellProcedureMechanicsFacts
-  >,
-  { readonly tag: "supported" }
-> {
-  return inspection.tag === "supported";
-}
-
-function isUnsupportedInspection(
-  inspection: SpellProcedureMechanicsInspection<
-    BattleSpellProcedureKey,
-    SpellProcedureMechanicsFacts
-  >,
-): inspection is Extract<
-  SpellProcedureMechanicsInspection<
-    BattleSpellProcedureKey,
-    SpellProcedureMechanicsFacts
-  >,
-  { readonly tag: "unsupported" }
-> {
-  return inspection.tag === "unsupported";
-}
 
 function nonEmpty<T>(
   values: readonly T[],
@@ -167,36 +196,35 @@ function nonEmpty<T>(
 }
 
 /**
- * Compose static readers from a canonical declaration view.  The injected
+ * Compose static readers from a canonical declaration view. The injected
  * `admissions` parameter makes the fold independently testable without
  * introducing a production registry or status table; production callers use
  * the declaration-derived view from admission-registry.ts.
  */
-export function admitBattleSpellMechanicsFrom(
-  mechanics: SpellMechanics,
-  admissions: readonly AnySpellProcedureMechanicsAdmission[],
-): BattleSpellMechanicsAdmission {
+export function admitBattleSpellMechanicsFrom<
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+    SpellProcedureMechanicsFactsByProcedure,
+>(
+  source: SpellMechanicsAdmissionSource,
+  admissions: readonly AnySpellProcedureMechanicsAdmission<FactsByProcedure>[],
+): BattleSpellMechanicsAdmission<FactsByProcedure> {
   const inspections = admissions.map(({ admitMechanics }) =>
-    admitMechanics(mechanics),
+    admitMechanics(source),
   );
-  const supported = inspections
-    .filter(isSupportedInspection)
-    .map(({ procedure }) => procedure);
-  const issues = inspections
-    .filter(isUnsupportedInspection)
-    .flatMap(({ issues: inspectionIssues }) => inspectionIssues);
+  const supported = inspections.flatMap((inspection) =>
+    inspection.tag === "supported" ? [inspection.admitted] : [],
+  );
+  const issues = inspections.flatMap((inspection) =>
+    inspection.tag === "unsupported" ? inspection.issues : [],
+  );
 
-  const supportedProcedures = nonEmpty(supported);
   const unsupportedIssues = nonEmpty(issues);
-  if (supportedProcedures !== undefined) {
-    return {
-      tag: "admitted",
-      procedures: supportedProcedures,
-      issues,
-    };
-  }
   if (unsupportedIssues !== undefined) {
     return { tag: "rejected", issues: unsupportedIssues };
   }
-  return { tag: "notBattleOwned" };
+
+  const admittedProcedures = nonEmpty(supported);
+  return admittedProcedures === undefined
+    ? { tag: "notBattleOwned" }
+    : { tag: "admitted", procedures: admittedProcedures };
 }

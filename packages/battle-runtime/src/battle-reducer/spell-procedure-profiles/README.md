@@ -9,7 +9,8 @@ Definition, Spell Access, Spell Invocation, Spell Effect).
 A **Spell Procedure Declaration** is the canonical procedure-keyed composition
 for one class of spell behavior. It joins two independently consumed views:
 
-- **admission** — authored Spell Definition traversal through `admit`.
+- **admission** — authored Spell Definition traversal through the static
+  `admitMechanics` owner hook and its bound contextual closure.
 - **static mechanics admission** — a profile-owned, context-independent
   projection of already-decoded `SpellMechanics` through `admitMechanics`.
 - **execution** — codecs, discovery, resolution, and metamagic compatibility.
@@ -43,14 +44,17 @@ the execution view and its authored-free contract, while authored traversal
 imports the admission view.
 
 Static mechanics admission is another derived view of that same declaration
-table. Every authored profile must expose `admitMechanics`; its contextual
-`admit` consumer remains responsible for state-dependent invocation creation.
-The static result carries source-free profile facts
-and exact `UnitMechanicsPath` evidence. Complete evidence has at least one
-consumed path and no unowned paths; partial evidence has at least one of each.
-Represented-but-unsupported candidates return accumulated typed issues. A root
-with no represented owner returns `notBattleOwned`; it is not a capability
-prerequisite. Authored id, name, kind, provenance, caster, targets,
+table. Every authored profile must expose `admitMechanics`; a supported result
+binds its contextual admission closure to the correlated source-free facts.
+The closure receives only the mechanics-free execution source and contextual
+state, so contextual admission cannot reparse authored `SpellMechanics`.
+The static result carries source-free profile facts and exact
+`UnitMechanicsPath` evidence. Complete evidence has at least one consumed path
+and no unowned paths; partial evidence has at least one of each.
+Represented-but-unsupported candidates return accumulated typed issues; any
+such issue rejects the whole root, even when another profile supports it. A
+root with no represented owner returns `notBattleOwned`; it is not a
+capability prerequisite. Authored id, name, kind, provenance, caster, targets,
 slot/resource, turn, session/table facts, and Battle State are not part of the
 static projection.
 

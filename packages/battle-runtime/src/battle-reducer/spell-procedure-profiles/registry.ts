@@ -94,25 +94,25 @@ import type {
   SpellProcedureDeclaration,
   SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
+import type { SpellProcedureMechanicsFacts } from "./spell-mechanics-admission.ts";
 import { snapshotBattle } from "../battle-snapshot.ts";
 import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
 
-type RegisteredSpellProcedureDeclaration<P extends BattleSpellProcedureKey> = {
+type RegisteredSpellProcedureDeclaration<
+  P extends BattleSpellProcedureKey,
+  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+> = {
   readonly procedure: P;
   readonly execution: SpellProcedureExecutionDeclaration<P>;
 } & (
   | {
       readonly admission: {
         readonly kind: "authored";
-        /** Contextual invocation admission owned by the profile. */
-        readonly admit: SpellProcedureAdmissionDeclaration<
-          P,
-          SpellInvocationAdmittedByRegisteredProcedure<P>
-        >["admit"];
         /** Context-independent mechanics admission owned by the profile. */
         readonly admitMechanics: SpellProcedureAdmissionDeclaration<
           P,
-          SpellInvocationAdmittedByRegisteredProcedure<P>
+          SpellInvocationAdmittedByRegisteredProcedure<P>,
+          Facts
         >["admitMechanics"];
       };
     }
@@ -123,14 +123,18 @@ export type RegisteredSpellProcedureDeclarations = {
   readonly [P in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<P>;
 };
 
-function registeredSpellProcedureDeclaration<P extends BattleSpellProcedureKey>(
+function registeredSpellProcedureDeclaration<
+  P extends BattleSpellProcedureKey,
+  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+>(
   declaration:
     | SpellProcedureDeclaration<
         P,
-        SpellInvocationAdmittedByRegisteredProcedure<P>
+        SpellInvocationAdmittedByRegisteredProcedure<P>,
+        Facts
       >
     | SynthesizedSpellProcedureDeclaration<P>,
-): RegisteredSpellProcedureDeclaration<P> {
+): RegisteredSpellProcedureDeclaration<P, Facts> {
   const execution = {
     procedure: declaration.procedure,
     discoverCastAct: declaration.discoverCastAct,
@@ -148,7 +152,6 @@ function registeredSpellProcedureDeclaration<P extends BattleSpellProcedureKey>(
     procedure: declaration.procedure,
     admission: {
       kind: "authored",
-      admit: declaration.admit,
       admitMechanics: declaration.admitMechanics,
     },
     execution,

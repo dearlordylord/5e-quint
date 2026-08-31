@@ -2,44 +2,50 @@ import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
 import { PositiveInteger } from "@dnd/shared/types";
 import { unitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
 
+import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
 import { spellRecord } from "../../unit-profile-admission-spell-record.test-support.ts";
+import { registeredSpellProcedureMechanicsAdmissions } from "./admission-registry.ts";
 import {
   admitBattleSpellMechanicsFrom,
   BATTLE_SPELL_ROOT_MECHANICS_PATH,
-  type AnySpellProcedureMechanicsAdmission,
+  type SpellMechanicsAdmissionSource,
   type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsAdmissionDeclaration,
   type SpellProcedureMechanicsEvidence,
 } from "./spell-mechanics-admission.ts";
-import { registeredSpellProcedureMechanicsAdmissions } from "./admission-registry.ts";
+import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 
 const spellMechanics = spellRecord("fire_bolt").mechanics;
+const mechanicsSource: SpellMechanicsAdmissionSource = {
+  mechanics: spellMechanics,
+  spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(spellMechanics),
+};
 
-function supportedAdmission(
-  procedure: AnySpellProcedureMechanicsAdmission["procedure"],
+function supportedAdmission<P extends BattleSpellProcedureKey>(
+  procedure: P,
   evidence: SpellProcedureMechanicsEvidence,
-): AnySpellProcedureMechanicsAdmission {
+): SpellProcedureMechanicsAdmissionDeclaration<P> {
   return {
-    procedure,
-    admitMechanics: (_mechanics: SpellMechanics) => ({
+    admitMechanics: (_source: SpellMechanicsAdmissionSource) => ({
       tag: "supported",
-      procedure: {
+      admitted: {
         binding: "ready",
         procedure,
-        facts: { kind: "syntheticSpellProcedureFacts" },
+        facts: mechanicsSource.spellDefinitionRuleFacts,
         evidence,
+        admit: (_executionSource, _ctx) => [],
       },
     }),
   };
 }
 
-function unsupportedAdmission(
-  procedure: AnySpellProcedureMechanicsAdmission["procedure"],
+function unsupportedAdmission<P extends BattleSpellProcedureKey>(
+  procedure: P,
   failedFact: string,
   mechanicsPath: ReturnType<typeof unitMechanicsPath>,
-): AnySpellProcedureMechanicsAdmission {
-  const issue: SpellProcedureAdmissionIssue = {
+): SpellProcedureMechanicsAdmissionDeclaration<P> {
+  const issue: SpellProcedureAdmissionIssue<P> = {
     tag: "spellProcedureAdmissionIssue",
     procedure,
     failedFact,
@@ -47,8 +53,7 @@ function unsupportedAdmission(
     message: `Synthetic ${failedFact} is not owned by this profile.`,
   };
   return {
-    procedure,
-    admitMechanics: (_mechanics: SpellMechanics) => ({
+    admitMechanics: (_source: SpellMechanicsAdmissionSource) => ({
       tag: "unsupported",
       issues: [issue],
     }),
@@ -58,10 +63,11 @@ function unsupportedAdmission(
 describe("battle spell static mechanics admission", () => {
   test("derives static readers from the canonical declaration view", () => {
     const admissions = registeredSpellProcedureMechanicsAdmissions();
-    const procedures = admissions.map(({ procedure }) => procedure);
 
     expect(admissions.length).toBeGreaterThan(0);
-    expect(new Set(procedures).size).toBe(procedures.length);
+    expect(admissions.every((admission) => "admitMechanics" in admission)).toBe(
+      true,
+    );
   });
 
   test("keeps complete and partial evidence structurally distinct", () => {
@@ -74,7 +80,7 @@ describe("battle spell static mechanics admission", () => {
       },
       { kind: "occurrence", role: "effect", ordinal: PositiveInteger(1) },
     ]);
-    const result = admitBattleSpellMechanicsFrom(spellMechanics, [
+    const result = admitBattleSpellMechanicsFrom(mechanicsSource, [
       supportedAdmission("spellAttackDamage", {
         consumed: [BATTLE_SPELL_ROOT_MECHANICS_PATH],
         unowned: [],
@@ -88,17 +94,19 @@ describe("battle spell static mechanics admission", () => {
     expect(result.tag).toBe("admitted");
     if (result.tag !== "admitted") return;
     expect(result.procedures).toHaveLength(2);
+    expect(result.procedures[0]?.procedure).toBe("spellAttackDamage");
     expect(result.procedures[0]?.evidence).toEqual({
       consumed: [BATTLE_SPELL_ROOT_MECHANICS_PATH],
       unowned: [],
     });
+    expect(result.procedures[1]?.procedure).toBe("saveGatedDamage");
     expect(result.procedures[1]?.evidence).toEqual({
       consumed: [BATTLE_SPELL_ROOT_MECHANICS_PATH],
       unowned: [nestedPhasePath],
     });
   });
 
-  test("accumulates every represented unsupported issue", () => {
+  test("accumulates every unsupported issue and rejects the whole root", () => {
     const firstPath = unitMechanicsPath([
       { kind: "singleton", role: "recordMechanics" },
       {
@@ -121,7 +129,11 @@ describe("battle spell static mechanics admission", () => {
         ordinal: PositiveInteger(1),
       },
     ]);
-    const result = admitBattleSpellMechanicsFrom(spellMechanics, [
+    const result = admitBattleSpellMechanicsFrom(mechanicsSource, [
+      supportedAdmission("spellHostedWeaponAttack", {
+        consumed: [BATTLE_SPELL_ROOT_MECHANICS_PATH],
+        unowned: [],
+      }),
       unsupportedAdmission("spellAttackDamage", "materialCost", firstPath),
       unsupportedAdmission("saveGatedDamage", "repeatSave", secondPath),
     ]);
@@ -144,7 +156,7 @@ describe("battle spell static mechanics admission", () => {
   });
 
   test("does not make an unowned root a capability prerequisite", () => {
-    expect(admitBattleSpellMechanicsFrom(spellMechanics, [])).toEqual({
+    expect(admitBattleSpellMechanicsFrom(mechanicsSource, [])).toEqual({
       tag: "notBattleOwned",
     });
   });
@@ -164,19 +176,43 @@ describe("battle spell static mechanics admission", () => {
     ];
 
     const originalAdmission = admitBattleSpellMechanicsFrom(
-      original.mechanics,
+      {
+        mechanics: original.mechanics,
+        spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(
+          original.mechanics,
+        ),
+      },
       admissions,
     );
     const renamedAdmission = admitBattleSpellMechanicsFrom(
-      renamedSynthetic.mechanics,
+      {
+        mechanics: renamedSynthetic.mechanics,
+        spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(
+          renamedSynthetic.mechanics,
+        ),
+      },
       admissions,
     );
 
-    expect(renamedAdmission).toEqual(originalAdmission);
+    if (
+      originalAdmission.tag !== "admitted" ||
+      renamedAdmission.tag !== "admitted"
+    ) {
+      throw new Error("Expected both synthetic records to be admitted.");
+    }
+    expect(
+      renamedAdmission.procedures.map(
+        ({ admit: _admit, ...procedure }) => procedure,
+      ),
+    ).toEqual(
+      originalAdmission.procedures.map(
+        ({ admit: _admit, ...procedure }) => procedure,
+      ),
+    );
   });
 
   test("a complete-root control rejects an unsupported represented branch", () => {
-    const result = admitBattleSpellMechanicsFrom(spellMechanics, [
+    const result = admitBattleSpellMechanicsFrom(mechanicsSource, [
       unsupportedAdmission(
         "spellAttackDamage",
         "extraPhase",
