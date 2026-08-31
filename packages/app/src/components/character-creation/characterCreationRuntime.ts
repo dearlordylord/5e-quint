@@ -35,8 +35,8 @@ import {
 } from "@dnd/character-sheet-runtime"
 import type { Ability } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog"
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog-contract"
-import { buildStatBlockCatalog, srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
 import { Result } from "effect"
 
@@ -48,16 +48,6 @@ if (catalogBuild.tag !== "ok") {
 }
 
 export const characterCreationUnitLibrary = catalogBuild.catalog
-
-const statBlockCatalogBuild = buildStatBlockCatalog({
-  collections: [srdStatBlockCollection]
-})
-/* v8 ignore next -- @preserve -- the imported checked-in SRD collection is validated by Surface catalog tests */
-if (statBlockCatalogBuild.tag !== "ok") {
-  throw new Error(`SRD Stat Block catalog failed to build: ${JSON.stringify(statBlockCatalogBuild.issues)}`)
-}
-
-export const characterCreationStatBlockCatalog = statBlockCatalogBuild.catalog
 
 export type DraftAssessment = {
   readonly holes: ReadonlyArray<CreationHole>
@@ -119,7 +109,7 @@ export function createCharacterSheetFromDraft(
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary: characterCreationUnitLibrary,
-    statBlockCatalog: characterCreationStatBlockCatalog,
+    statBlockCatalog: srdStatBlockCatalog,
     ...(input.druidWildShapeKnownFormStatBlockIds === undefined
       ? {}
       : { druidWildShapeKnownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds })
