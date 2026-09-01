@@ -248,7 +248,7 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
-import type { BattleStatBlockProjectionFailure } from "./stat-block-authored-projection.ts";
+import type { BattleStatBlockProjectionFailure } from "./stat-block-projection-failure.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (

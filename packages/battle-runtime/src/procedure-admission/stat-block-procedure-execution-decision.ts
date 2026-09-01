@@ -36,11 +36,7 @@ import type {
 } from "../battle-action-options.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { mapReadonlyNonEmptyArray } from "../readonly-non-empty-array.ts";
-
-export type BattleStatBlockUnsupportedProcedureBinding = {
-  readonly section: StatBlockProcedureSection;
-  readonly procedureOrdinal: StatBlockProcedureOrdinal;
-};
+import type { BattleStatBlockUnsupportedProcedureBinding } from "../stat-block-projection-failure.ts";
 
 export function procedureBindingIssue(
   section: StatBlockProcedureSection,
