@@ -108,6 +108,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetId",
   "CharacterSheetInput",
   "CharacterSheetIssue",
+  "CharacterSheetIssueSchema",
   "CharacterSheetJumpDistanceAbility",
   "CharacterSheetJumpDistanceAbilityInput",
   "CharacterSheetJumpDistanceAbilitySubstitution",
@@ -460,6 +461,11 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetIdSchema",
     reason:
       "Character Sheet owns the durable Character Session identity boundary; exporting its parser keeps MCP session identifiers on the canonical sheet brand rather than the battle identity surface.",
+  },
+  {
+    name: "CharacterSheetIssueSchema",
+    reason:
+      "Character Sheet owns its structured failure boundary; exporting the canonical schema lets MCP validate the issue union without duplicating discriminants or fixed-message invariants.",
   },
   {
     name: "FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES",

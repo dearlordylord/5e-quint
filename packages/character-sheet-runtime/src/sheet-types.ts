@@ -1410,24 +1410,36 @@ export type CharacterSheetHitPointMaximumProjection = {
   readonly qRoute: CharacterSheetHitPointMaximumProjectionRoute;
 };
 
-export const WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE =
+const WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE =
   "Wild Shape known forms require a valid SRD Stat Block catalog.";
 
-type CharacterSheetMessageIssue = {
-  readonly tag: "characterSheetIssue";
-  readonly code?: never;
-  readonly message: string;
-};
+const CharacterSheetMessageIssueSchema = Schema.Struct({
+  tag: Schema.Literal("characterSheetIssue"),
+  code: Schema.optionalKey(Schema.Never),
+  message: Schema.String,
+});
+const CharacterSheetWildShapeStatBlockCatalogRequiredIssueSchema =
+  Schema.Struct({
+    tag: Schema.Literal("characterSheetIssue"),
+    code: Schema.Literal("wildShapeStatBlockCatalogRequired"),
+    message: Schema.Literal(WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE),
+  });
 
-export type CharacterSheetWildShapeStatBlockCatalogRequiredIssue = {
-  readonly tag: "characterSheetIssue";
-  readonly code: "wildShapeStatBlockCatalogRequired";
-  readonly message: typeof WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE;
-};
+export const CharacterSheetIssueSchema = Schema.Union([
+  CharacterSheetMessageIssueSchema,
+  CharacterSheetWildShapeStatBlockCatalogRequiredIssueSchema,
+]);
 
-export type CharacterSheetIssue =
-  | CharacterSheetMessageIssue
-  | CharacterSheetWildShapeStatBlockCatalogRequiredIssue;
+type CharacterSheetMessageIssue = Schema.Schema.Type<
+  typeof CharacterSheetMessageIssueSchema
+>;
+export type CharacterSheetWildShapeStatBlockCatalogRequiredIssue =
+  Schema.Schema.Type<
+    typeof CharacterSheetWildShapeStatBlockCatalogRequiredIssueSchema
+  >;
+export type CharacterSheetIssue = Schema.Schema.Type<
+  typeof CharacterSheetIssueSchema
+>;
 
 export function characterSheetIssue(
   message: string,

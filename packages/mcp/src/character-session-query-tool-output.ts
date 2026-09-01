@@ -1,6 +1,6 @@
 import {
   CharacterSheetIdSchema,
-  WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE,
+  CharacterSheetIssueSchema,
 } from "@dnd/character-sheet-runtime";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
@@ -248,18 +248,6 @@ const CharacterSheetSpellbookRitualInvocationSchema = Schema.Struct({
   additionalCastingTimeMinutes: PositiveIntegerSchema,
   requiresReadingSpellbook: Schema.Literal(true),
 });
-const CharacterSheetIssueSchema = Schema.Union([
-  Schema.Struct({
-    tag: Schema.Literal("characterSheetIssue"),
-    code: Schema.optionalKey(Schema.Never),
-    message: Schema.String,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("characterSheetIssue"),
-    code: Schema.Literal("wildShapeStatBlockCatalogRequired"),
-    message: Schema.Literal(WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE),
-  }),
-]);
 const CharacterSheetSpellbookRitualInvocationRetainRouteSchema = Schema.Struct({
   kind: Schema.Literal("retainCharacterSheetSelectedReferences"),
   subject: Schema.Literal("selectedReferenceProjection"),
