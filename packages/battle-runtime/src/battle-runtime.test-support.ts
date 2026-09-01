@@ -3685,7 +3685,13 @@ function admitSelectedWeaponMasteryForCharacterSeed(
   const weaponExecution = Result.getOrThrow(
     admitResolvedCharacterWeaponExecutionWeapon(resolution),
   );
-  return { ...attack, weapon: weaponExecution };
+  return {
+    ...attack,
+    weapon: {
+      ...attack.weapon,
+      masteryProperty: weaponExecution.masteryProperty,
+    },
+  };
 }
 
 export function characterSeed(input: {

@@ -102,6 +102,26 @@ describe("shared character seed weapon mastery admission", () => {
     );
   });
 
+  test("adds selected mastery without rewriting explicit non-mastery weapon facts", () => {
+    const directAttack = testLongswordAttack();
+    const alteredWeapon = {
+      ...directAttack.weapon,
+      category: "simple",
+      costGp: 137,
+      properties: [],
+    } satisfies typeof directAttack.weapon;
+    const seed = characterSeed({
+      initiative: 20,
+      attack: { ...directAttack, weapon: alteredWeapon },
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+
+    expect(seed.creatureInit.attack?.weapon).toEqual({
+      ...alteredWeapon,
+      masteryProperty: "sap",
+    });
+  });
+
   test("preserves an explicitly admitted synthetic mastery projection", () => {
     const seed = characterSeed({
       initiative: 20,
