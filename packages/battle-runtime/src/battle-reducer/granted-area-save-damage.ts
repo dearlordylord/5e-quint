@@ -689,9 +689,9 @@ function grantedAreaSaveDamageActionDamageExpr(
   effect: GrantedAreaSaveDamageActionEffect,
 ): {
   readonly dice: number;
-  readonly dieSize: 6;
+  readonly dieSize: number;
 } {
-  return { dice: Number(effect.castLevel) + 1, dieSize: 6 };
+  return { dice: Number(effect.damageDice), dieSize: effect.damageDieSize };
 }
 
 function activeGrantedAreaSaveDamageActionEffect(

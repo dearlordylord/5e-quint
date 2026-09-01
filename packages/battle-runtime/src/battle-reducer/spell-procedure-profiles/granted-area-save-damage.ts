@@ -1,7 +1,6 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 //
@@ -21,21 +20,27 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //     Spell Slot, Spell Invocation, Spell Effect, and Spell Save DC.
 
 import {
-  elapsedTimeTicksFromTimeSpanDuration,
   ElapsedTimeTicksSchema,
+  type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import { Result } from "effect";
+import { CombatantId } from "../../identity.ts";
+import {
+  MovementFeet,
+  PositiveInteger,
+  movementFeet,
+  type DamageType,
+} from "@dnd/shared/types";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
+import { Schema } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type GrantedAreaSaveDamageActionSpellInvocation,
+  type BattleSpellExecutionSource,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
@@ -43,7 +48,6 @@ import { invalidResult } from "../result-helpers.ts";
 import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import { applyGrantedAreaSaveDamageActionSpellEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
-import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetListHole } from "../spells-targeting.ts";
 import type {
@@ -51,7 +55,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -60,10 +63,44 @@ import {
 import {
   DamageTypeSchema,
   DcSourceSchema,
-  MovementFeet,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  admitSpellAreaAttachment,
+  admitSpellTargetAttachment,
+  isSpellCanonicalDurationValue,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
+  spellHasOnlyNamedFields,
+  spellProcedureNonEmpty,
+  spellTouchRangeFeet,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  spellOngoingInitialPhasePath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThan(0)),
+  Schema.brand("Integer"),
+  Schema.brand("PositiveInteger"),
+);
 
 type GrantedAreaSaveDamageActionInvocation = Extract<
   SupportedSpellInvocation,
@@ -72,128 +109,582 @@ type GrantedAreaSaveDamageActionInvocation = Extract<
 type GrantedAreaSaveDamageActionResolveInput =
   SpellProcedureProfileResolveInput<GrantedAreaSaveDamageActionInvocation>;
 
-function admitGrantedAreaSaveDamageAction(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
+type GrantedAreaSaveDamageActionMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly ability: "dex";
+  readonly dc: GrantedAreaSaveDamageActionInvocation["dc"];
+  readonly rangeFeet: MovementFeet;
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly coneLengthFeet: MovementFeet;
+  readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
+  readonly damage: {
+    readonly baseDice: PositiveInteger;
+    readonly dieSize: PositiveInteger;
+    readonly perSlotDice: PositiveInteger;
+    readonly startingAtLevel: PositiveInteger;
+  };
+};
+
+type GrantedAreaSaveDamageActionFailedFact =
+  | "level"
+  | "castingTime"
+  | "range"
+  | "duration"
+  | "durationValue"
+  | "durationExtension"
+  | "durationEnding"
+  | "rootShape"
+  | "attachment"
+  | "phase"
+  | "operationCount"
+  | "operation"
+  | "trigger"
+  | "effect"
+  | "saveAbility"
+  | "saveDc"
+  | "saveAttachment"
+  | "cone"
+  | "successOutcome"
+  | "damageEffect"
+  | "damageAmount"
+  | "damageType"
+  | "damageTypeChoices"
+  | "extraOperation"
+  | "authoredConditionalEffects"
+  | "requiredFacts";
+
+type GrantedAreaSaveDamageActionMechanicsIssue = SpellProcedureAdmissionIssue<
+  "grantedAreaSaveDamageAction",
+  GrantedAreaSaveDamageActionFailedFact,
+  SpellMechanicsBranchPath
+>;
+
+const GRANTED_AREA_SAVE_DAMAGE_FAILED_FACT_MESSAGES = {
+  level: "Dragon's Breath requires a second-level spell.",
+  castingTime: "Dragon's Breath requires a Bonus Action casting time.",
+  range: "Dragon's Breath requires a Touch range.",
+  duration: "Dragon's Breath requires one minute of concentration.",
+  durationValue: "Dragon's Breath requires a one-minute concentration value.",
+  durationExtension: "Dragon's Breath has an unsupported duration extension.",
+  durationEnding: "Dragon's Breath has an unsupported duration ending.",
+  rootShape: "Dragon's Breath has unsupported ongoing root fields.",
+  attachment: "Dragon's Breath requires one willing creature target.",
+  phase: "Dragon's Breath has an unsupported ongoing phase.",
+  operationCount: "Dragon's Breath requires exactly one ongoing operation.",
+  operation: "Dragon's Breath has an unsupported operation field.",
+  trigger: "Dragon's Breath requires an attached Magic Action trigger.",
+  effect: "Dragon's Breath requires one ongoing save gate.",
+  saveAbility: "Dragon's Breath requires a Dexterity Saving Throw.",
+  saveDc: "Dragon's Breath requires the caster's Spell Save DC.",
+  saveAttachment: "Dragon's Breath requires an attached-creature Cone.",
+  cone: "Dragon's Breath requires a 15-foot Cone.",
+  successOutcome: "Dragon's Breath requires half damage on a successful save.",
+  damageEffect: "Dragon's Breath requires damage on a failed save.",
+  damageAmount: "Dragon's Breath has unsupported damage scaling.",
+  damageType: "Dragon's Breath requires a damage-type choice.",
+  damageTypeChoices: "Dragon's Breath has unsupported damage-type choices.",
+  extraOperation: "Dragon's Breath has an unsupported additional operation.",
+  authoredConditionalEffects:
+    "Dragon's Breath has unsupported authored conditional effects.",
+  requiredFacts: "Dragon's Breath did not retain required projected facts.",
+} as const satisfies Record<GrantedAreaSaveDamageActionFailedFact, string>;
+
+function grantedAreaSaveDamageIssue(
+  failedFact: GrantedAreaSaveDamageActionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): GrantedAreaSaveDamageActionMechanicsIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "grantedAreaSaveDamageAction",
+    failedFact,
+    mechanicsPath,
+    message: GRANTED_AREA_SAVE_DAMAGE_FAILED_FACT_MESSAGES[failedFact],
+  };
+}
+
+function dragonDurationIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): GrantedAreaSaveDamageActionMechanicsIssue[] {
+  const issues: GrantedAreaSaveDamageActionMechanicsIssue[] = [];
+  const duration = mechanics.duration;
+  if (duration.kind !== "concentration") {
+    issues.push(
+      grantedAreaSaveDamageIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    );
+    return issues;
+  }
+  if (
+    !isSpellCanonicalDurationValue(duration.upTo) ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== 1
+  ) {
+    issues.push(
+      grantedAreaSaveDamageIssue("durationValue", spellDurationValuePath()),
+    );
+  }
+  for (const child of spellDurationChildCoordinates(duration)) {
+    issues.push(
+      grantedAreaSaveDamageIssue(
+        child.branch === "extension" ? "durationExtension" : "durationEnding",
+        spellDurationChildPath(child),
+      ),
+    );
+  }
+  return issues;
+}
+
+function dragonDamageTypeChoices(
+  value: unknown,
+): readonly [DamageType, ...DamageType[]] | null {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("kind" in value) ||
+    value.kind !== "hole" ||
+    !("value" in value) ||
+    typeof value.value !== "object" ||
+    value.value === null ||
+    !("kind" in value.value) ||
+    value.value.kind !== "choice" ||
+    !("options" in value.value) ||
+    !Array.isArray(value.value.options) ||
+    value.value.options.length === 0 ||
+    !spellHasOnlyNamedFields(value, ["kind", "holeId", "label", "value"]) ||
+    !spellHasOnlyNamedFields(value.value, ["kind", "label", "options"])
+  ) {
+    return null;
+  }
+  const options = value.value.options.filter((option): option is DamageType =>
+    Schema.is(DamageTypeSchema)(option),
+  );
+  if (options.length !== value.value.options.length) return null;
+  const [first, ...rest] = options;
+  return first === undefined ? null : [first, ...rest];
+}
+
+function dragonDamageAmountSupported(amount: unknown): amount is {
+  readonly kind: "linear_per_level";
+  readonly axis: "slot";
+  readonly base: {
+    readonly dice: PositiveInteger;
+    readonly dieSize: PositiveInteger;
+  };
+  readonly perLevel: {
+    readonly dice: PositiveInteger;
+    readonly dieSize?: PositiveInteger;
+  };
+  readonly startingAtLevel: PositiveInteger;
+} {
+  if (
+    typeof amount !== "object" ||
+    amount === null ||
+    !("kind" in amount) ||
+    amount.kind !== "linear_per_level" ||
+    !("axis" in amount) ||
+    amount.axis !== "slot" ||
+    !("base" in amount) ||
+    !("perLevel" in amount) ||
+    !("startingAtLevel" in amount) ||
+    typeof amount.base !== "object" ||
+    amount.base === null ||
+    typeof amount.perLevel !== "object" ||
+    amount.perLevel === null ||
+    !("dice" in amount.base) ||
+    !("dieSize" in amount.base) ||
+    !("dice" in amount.perLevel) ||
+    amount.base.dice !== 3 ||
+    amount.base.dieSize !== 6 ||
+    amount.perLevel.dice !== 1 ||
+    amount.startingAtLevel !== 2 ||
+    !spellHasOnlyNamedFields(amount, [
+      "kind",
+      "axis",
+      "base",
+      "perLevel",
+      "startingAtLevel",
+    ]) ||
+    !spellHasOnlyNamedFields(amount.base, ["dice", "dieSize"]) ||
+    !spellHasOnlyNamedFields(amount.perLevel, ["dice", "dieSize"]) ||
+    ("dieSize" in amount.perLevel && amount.perLevel.dieSize !== 6)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function dragonRootAttachmentSupported(
+  attachment: import("@dnd/surface/surface/types").Attachment,
+): boolean {
+  const result = admitSpellTargetAttachment(attachment, [
+    "mode",
+    "targetKinds",
+    "disposition",
+  ]);
+  if (result.tag !== "admitted") return false;
+  const selection = result.attachment.value.selection;
+  return (
+    selection.mode === "one" &&
+    "disposition" in selection &&
+    selection.disposition === "willing" &&
+    selection.targetKinds?.length === 1 &&
+    selection.targetKinds[0] === "creature"
+  );
+}
+
+function dragonOngoingRootShape(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): boolean {
+  return (
+    mechanics.operations.some(
+      (operation) => operation.trigger.kind === "on_attached_spends_action",
+    ) || dragonRootAttachmentSupported(mechanics.attachment)
+  );
+}
+
+function grantedAreaSaveDamageActionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellOngoingAttachmentPath(),
+    spellOngoingOperationPath(PositiveInteger(1)),
+    spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function grantedAreaSaveDamageActionInvocationsFromFacts(
+  spell: BattleSpellExecutionSource,
+  facts: GrantedAreaSaveDamageActionMechanicsFacts,
+  actorId: CombatantId,
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly GrantedAreaSaveDamageActionInvocation[] {
-  return ctx.spellCastOptions.flatMap(
+  return castOptions.flatMap(
     (slot): readonly GrantedAreaSaveDamageActionInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const projection = grantedAreaSaveDamageActionSpellProjection(
-        ctx.actor.combatantId,
-        spell,
+      if (Number(slot.spellLevel) < Number(facts.level)) return [];
+      const damageDice = PositiveInteger(
+        Number(facts.damage.baseDice) +
+          Math.max(
+            0,
+            Number(slot.spellLevel) - Number(facts.damage.startingAtLevel),
+          ) *
+            Number(facts.damage.perSlotDice),
       );
-      return projection === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "grantedAreaSaveDamageAction",
-              spell,
-              actionCost: "bonusAction",
-              targeting: {
-                kind: "targetList",
-                minTargets: 1,
-                maxTargets: 1,
-              },
-              ...projection,
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "grantedAreaSaveDamageAction",
+          spell,
+          actionCost: "bonusAction",
+          ability: facts.ability,
+          targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+          activeEffect: {
+            kind: "grantedAreaSaveDamageAction",
+            sourceCombatantId: actorId,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: actorId,
+              durationTicks: facts.durationTicks,
             },
-          ];
+          },
+          dc: facts.dc,
+          damageTypeChoices: facts.damageTypeChoices,
+          coneLengthFeet: facts.coneLengthFeet,
+          damageDice,
+          damageDieSize: facts.damage.dieSize,
+          rangeFeet: facts.rangeFeet,
+        },
+      ];
     },
   );
 }
 
-function grantedAreaSaveDamageActionSpellProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  GrantedAreaSaveDamageActionSpellInvocation,
-  "ability" | "activeEffect" | "damageTypeChoices" | "dc" | "rangeFeet"
-> | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const mechanics = spell.mechanics;
-  const operation = mechanics.operations[0];
-  const selection =
-    mechanics.attachment.kind === "hole" &&
-    mechanics.attachment.value.kind === "target"
-      ? mechanics.attachment.value.selection
-      : null;
-  const effect = operation?.effect;
-  const attachment = effect?.kind === "save_gate" ? effect.attachment : null;
-  const damage = effect?.kind === "save_gate" ? effect.onFail : null;
-  const damageType = damage?.kind === "damage" ? damage.damageType : null;
-  const damageTypeChoice =
-    typeof damageType === "object" &&
-    damageType !== null &&
-    damageType.kind === "hole" &&
-    typeof damageType.value === "object" &&
-    damageType.value.kind === "choice"
-      ? damageType.value
-      : null;
+function admitGrantedAreaSaveDamageActionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "grantedAreaSaveDamageAction",
+  GrantedAreaSaveDamageActionMechanicsFacts,
+  GrantedAreaSaveDamageActionInvocation,
+  GrantedAreaSaveDamageActionMechanicsIssue
+> {
+  if (source.mechanics.family !== "ongoing_effect")
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  if (!dragonOngoingRootShape(mechanics)) return { tag: "notRepresented" };
+  const issues: GrantedAreaSaveDamageActionMechanicsIssue[] = [];
+  const push = (
+    failedFact: GrantedAreaSaveDamageActionFailedFact,
+    path: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push(grantedAreaSaveDamageIssue(failedFact, path));
+  };
+  if (mechanics.level !== 2) push("level", spellMechanicsHeaderPath("level"));
   if (
-    mechanics.level !== 2 ||
     mechanics.castingTime.kind !== "bonus_action" ||
+    !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
+  ) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (
     mechanics.range.kind !== "touch" ||
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== 1 ||
-    selection?.mode !== "one" ||
-    !("disposition" in selection) ||
-    selection.disposition !== "willing" ||
-    !("targetKinds" in selection) ||
-    selection.targetKinds === undefined ||
-    !sameStringSet(selection.targetKinds, ["creature"]) ||
-    mechanics.operations.length !== 1 ||
-    operation === undefined ||
+    !spellHasOnlyNamedFields(mechanics.range, ["kind"])
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  issues.push(...dragonDurationIssues(mechanics));
+  if (
+    !spellHasOnlyNamedFields(mechanics, [
+      "level",
+      "school",
+      "range",
+      "components",
+      "duration",
+      "castingTime",
+      "family",
+      "attachment",
+      "initialPhase",
+      "operations",
+      "authoredConditionalEffects",
+    ])
+  ) {
+    push("rootShape", spellMechanicsHeaderPath("family"));
+  }
+  for (const [index] of (
+    mechanics.authoredConditionalEffects ?? []
+  ).entries()) {
+    push(
+      "authoredConditionalEffects",
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+    );
+  }
+  if (!dragonRootAttachmentSupported(mechanics.attachment)) {
+    push("attachment", spellOngoingAttachmentPath());
+  }
+  if (mechanics.initialPhase !== undefined) {
+    push("phase", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.operations.length !== 1) {
+    for (const [index] of mechanics.operations.entries()) {
+      if (index > 0) {
+        push(
+          "extraOperation",
+          spellOngoingOperationPath(PositiveInteger(index + 1)),
+        );
+      }
+    }
+    if (mechanics.operations.length === 0) {
+      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+    }
+  }
+  const operation = mechanics.operations[0];
+  if (operation === undefined) {
+    const nonEmptyIssues = spellProcedureNonEmpty(
+      spellUniqueMechanicsIssues(issues),
+    );
+    if (nonEmptyIssues === undefined) {
+      return {
+        tag: "unsupported",
+        issues: [
+          grantedAreaSaveDamageIssue(
+            "requiredFacts",
+            spellOngoingOperationPath(PositiveInteger(1)),
+          ),
+        ],
+      };
+    }
+    const [first, ...rest] = nonEmptyIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        grantedAreaSaveDamageIssue(first.failedFact, first.mechanicsPath),
+        ...rest.map((issue) =>
+          grantedAreaSaveDamageIssue(issue.failedFact, issue.mechanicsPath),
+        ),
+      ],
+    };
+  }
+  if (!spellHasOnlyNamedFields(operation, ["trigger", "effect"])) {
+    push("operation", spellOngoingOperationPath(PositiveInteger(1)));
+  }
+  if (
     operation.trigger.kind !== "on_attached_spends_action" ||
+    !spellHasOnlyNamedFields(operation.trigger, ["kind", "cost"]) ||
     operation.trigger.cost.kind !== "standard_action" ||
     operation.trigger.cost.action !== "magic" ||
-    effect?.kind !== "save_gate" ||
-    effect.ability !== "dex" ||
-    effect.dc.kind !== "caster_spell_save_dc" ||
-    attachment?.kind !== "area" ||
-    !("origin" in attachment) ||
-    attachment.origin.kind !== "on_attached_creature" ||
-    !("shape" in attachment) ||
-    attachment.shape.kind !== "cone" ||
-    attachment.shape.lengthFeet !== 15 ||
-    effect.onSuccess.kind !== "half_damage" ||
-    damage?.kind !== "damage" ||
-    damage.amount.kind !== "linear_per_level" ||
-    damage.amount.axis !== "slot" ||
-    damage.amount.base.dice !== 3 ||
-    damage.amount.base.dieSize !== 6 ||
-    damage.amount.perLevel.dice !== 1 ||
-    damage.amount.startingAtLevel !== 2 ||
-    damageTypeChoice === null
+    !spellHasOnlyNamedFields(operation.trigger.cost, ["kind", "action"])
   ) {
-    return null;
+    push("trigger", spellOngoingOperationPath(PositiveInteger(1)));
   }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    mechanics.duration.upTo,
+  const effect = operation.effect;
+  if (
+    effect.kind !== "save_gate" ||
+    !spellHasOnlyNamedFields(effect, [
+      "kind",
+      "attachment",
+      "ability",
+      "dc",
+      "onFail",
+      "onSuccess",
+    ])
+  ) {
+    push("effect", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const saveGate = effect.kind === "save_gate" ? effect : null;
+  if (saveGate?.ability !== "dex") {
+    push("saveAbility", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  if (
+    saveGate?.dc.kind !== "caster_spell_save_dc" ||
+    (saveGate !== null && !spellHasOnlyNamedFields(saveGate.dc, ["kind"]))
+  ) {
+    push("saveDc", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const areaAdmission =
+    saveGate?.attachment === undefined
+      ? null
+      : admitSpellAreaAttachment(saveGate.attachment, [], []);
+  const areaAttachment =
+    areaAdmission?.tag === "admitted" ? areaAdmission.attachment : null;
+  const areaValue =
+    areaAttachment === null
+      ? null
+      : areaAttachment.kind === "hole"
+        ? areaAttachment.value
+        : areaAttachment;
+  if (
+    areaAttachment === null ||
+    areaValue === null ||
+    areaValue.origin.kind !== "on_attached_creature" ||
+    !spellHasOnlyNamedFields(areaValue.origin, ["kind"]) ||
+    areaValue.shape.kind !== "cone" ||
+    !spellHasOnlyNamedFields(areaValue.shape, ["kind", "lengthFeet"])
+  ) {
+    push("saveAttachment", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const coneLengthFeet =
+    areaValue?.shape.kind === "cone" && areaValue.shape.lengthFeet === 15
+      ? movementFeet(areaValue.shape.lengthFeet)
+      : null;
+  if (coneLengthFeet === null) {
+    push("cone", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  if (
+    saveGate?.onSuccess.kind !== "half_damage" ||
+    !spellHasOnlyNamedFields(saveGate?.onSuccess ?? { kind: "none" }, ["kind"])
+  ) {
+    push("successOutcome", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const failedDamage =
+    saveGate?.onFail.kind === "damage" ? saveGate.onFail : null;
+  if (
+    failedDamage === null ||
+    !spellHasOnlyNamedFields(failedDamage, ["kind", "damageType", "amount"])
+  ) {
+    push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const damageAmount = failedDamage?.amount;
+  if (!dragonDamageAmountSupported(damageAmount)) {
+    push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const damageTypeChoices = dragonDamageTypeChoices(failedDamage?.damageType);
+  if (damageTypeChoices === null) {
+    push("damageType", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  const expectedDamageTypes = [
+    "acid",
+    "cold",
+    "fire",
+    "lightning",
+    "poison",
+  ] as const;
+  if (
+    damageTypeChoices === null ||
+    damageTypeChoices.length !== expectedDamageTypes.length ||
+    expectedDamageTypes.some((type) => !damageTypeChoices.includes(type))
+  ) {
+    push(
+      "damageTypeChoices",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    );
+  }
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
   );
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        ability: "dex",
-        dc: effect.dc,
-        rangeFeet: movementFeet(5),
-        damageTypeChoices: damageTypeChoice.options,
-        activeEffect: {
-          kind: "grantedAreaSaveDamageAction",
-          sourceCombatantId: actorId,
-          expiresAt: {
-            kind: "concentration",
-            combatantId: actorId,
-            durationTicks: durationTicks.success,
-          },
-        },
-      };
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        grantedAreaSaveDamageIssue(first.failedFact, first.mechanicsPath),
+        ...rest.map((issue) =>
+          grantedAreaSaveDamageIssue(issue.failedFact, issue.mechanicsPath),
+        ),
+      ],
+    };
+  }
+  const duration = mechanics.duration;
+  if (
+    coneLengthFeet === null ||
+    damageAmount === undefined ||
+    damageTypeChoices === null ||
+    failedDamage === null ||
+    !dragonDamageAmountSupported(damageAmount) ||
+    saveGate === null ||
+    duration.kind !== "concentration" ||
+    !isSpellCanonicalDurationValue(duration.upTo)
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        grantedAreaSaveDamageIssue(
+          "requiredFacts",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ability: "dex" as const,
+    dc: saveGate.dc,
+    rangeFeet: spellTouchRangeFeet(),
+    durationTicks: spellDurationTicksFromCanonicalValue(duration.upTo),
+    coneLengthFeet,
+    damageTypeChoices,
+    damage: {
+      baseDice: PositiveInteger(damageAmount.base.dice),
+      dieSize: PositiveInteger(damageAmount.base.dieSize),
+      perSlotDice: PositiveInteger(damageAmount.perLevel.dice),
+      startingAtLevel: PositiveInteger(damageAmount.startingAtLevel),
+    },
+  } satisfies GrantedAreaSaveDamageActionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "grantedAreaSaveDamageAction",
+      facts,
+      evidence: grantedAreaSaveDamageActionMechanicsEvidence(mechanics),
+      admit: (executionSource: BattleSpellExecutionSource, ctx) =>
+        grantedAreaSaveDamageActionInvocationsFromFacts(
+          executionSource,
+          facts,
+          ctx.actor.combatantId,
+          ctx.spellCastOptions,
+        ),
+    },
+  };
 }
 
 function discoverGrantedAreaSaveDamageActionCastAct(
@@ -312,13 +803,16 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
         }),
       }),
       damageTypeChoices: Schema.Array(DamageTypeSchema),
+      coneLengthFeet: MovementFeet,
+      damageDice: PositiveIntegerSchema,
+      damageDieSize: PositiveIntegerSchema,
       rangeFeet: MovementFeet,
     }),
   );
 export const grantedAreaSaveDamageActionProfile = {
   procedure: "grantedAreaSaveDamageAction",
   executionSchema: GrantedAreaSaveDamageActionInvocationSchema,
-  admit: admitGrantedAreaSaveDamageAction,
+  admitMechanics: admitGrantedAreaSaveDamageActionMechanics,
   discoverCastAct: discoverGrantedAreaSaveDamageActionCastAct,
   resolve: resolveGrantedAreaSaveDamageAction,
 } satisfies SpellProcedureDeclaration<

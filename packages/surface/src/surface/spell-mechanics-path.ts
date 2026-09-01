@@ -75,6 +75,7 @@ const SPELL_ACTIVATION_BRANCH_COORDINATES = {
 const SPELL_ONGOING_BRANCH_COORDINATES = {
   attachment: { role: "effect", ordinal: PositiveInteger(1) },
   operationEffect: { role: "effect", ordinal: PositiveInteger(1) },
+  authoredConditionalEffect: { role: "effect" },
 } as const;
 
 const SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES = {
@@ -221,6 +222,18 @@ export function spellOngoingOperationEffectPath(
   return spellMechanicsPath(
     occurrence("procedure", operationOrdinal),
     occurrence(effect.role, effect.ordinal),
+  );
+}
+
+/** Canonical coordinate for each root-authored ongoing conditional effect. */
+export function spellOngoingAuthoredConditionalEffectPath(
+  ordinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellMechanicsPath(
+    occurrence(
+      SPELL_ONGOING_BRANCH_COORDINATES.authoredConditionalEffect.role,
+      ordinal,
+    ),
   );
 }
 

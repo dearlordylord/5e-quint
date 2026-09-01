@@ -297,6 +297,21 @@ type SpellTargetSelectionFieldShape = {
   readonly [Field in SpellTargetSelectionField]?: unknown;
 };
 
+type SpellAreaAttachmentField =
+  | "selection"
+  | "occupantDispositionFilter"
+  | "occupantPerceptionFilter"
+  | "excludedAreas"
+  | "rangeOrigin";
+
+type SpellAreaAttachmentValue = Extract<Attachment, { readonly kind: "area" }>;
+type SpellAreaHoleAttachment = Extract<
+  Attachment,
+  { readonly kind: "hole" }
+> & {
+  readonly value: SpellAreaAttachmentValue;
+};
+
 type AdmittedSpellTargetSelection<
   AllowedFields extends SpellTargetSelectionField,
 > = TargetSelection & {
@@ -354,9 +369,9 @@ const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
   "selection",
 ] as const satisfies ReadonlyArray<keyof SpellTargetAttachmentValue>;
 
-function hasOnlyNamedFields<Value extends object>(
+export function spellHasOnlyNamedFields<Value extends object>(
   value: Value,
-  allowedFields: readonly (keyof Value)[],
+  allowedFields: readonly PropertyKey[],
 ): boolean {
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
@@ -374,7 +389,7 @@ function isAdmittedSpellTargetSelection<
   selection: TargetSelection,
   allowedFields: AllowedFields,
 ): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
-  return hasOnlyNamedFields<SpellTargetSelectionFieldShape>(
+  return spellHasOnlyNamedFields<SpellTargetSelectionFieldShape>(
     selection,
     allowedFields,
   );
@@ -400,8 +415,11 @@ export function admitSpellTargetAttachment<
     };
   }
   if (
-    !hasOnlyNamedFields(attachment, SPELL_TARGET_ATTACHMENT_FIELDS) ||
-    !hasOnlyNamedFields(attachment.value, SPELL_TARGET_ATTACHMENT_VALUE_FIELDS)
+    !spellHasOnlyNamedFields(attachment, SPELL_TARGET_ATTACHMENT_FIELDS) ||
+    !spellHasOnlyNamedFields(
+      attachment.value,
+      SPELL_TARGET_ATTACHMENT_VALUE_FIELDS,
+    )
   ) {
     return {
       tag: "rejected",
@@ -426,6 +444,101 @@ export function admitSpellTargetAttachment<
     tag: "admitted",
     attachment: admittedAttachment,
   };
+}
+
+export type SpellAreaAttachmentAdmissionResult =
+  | {
+      readonly tag: "admitted";
+      readonly attachment: SpellAreaAttachmentValue | SpellAreaHoleAttachment;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly reason:
+        | "areaAttachmentMissing"
+        | "areaAttachmentConstraint"
+        | "areaSelectionConstraint";
+    };
+
+const SPELL_AREA_ATTACHMENT_FIELDS = [
+  "kind",
+  "shape",
+  "origin",
+  "selection",
+  "occupantDispositionFilter",
+  "occupantPerceptionFilter",
+  "excludedAreas",
+  "rangeOrigin",
+] as const;
+const SPELL_AREA_HOLE_ATTACHMENT_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const;
+
+function isSpellAreaAttachment(
+  attachment: Attachment,
+): attachment is SpellAreaAttachmentValue | SpellAreaHoleAttachment {
+  if (attachment.kind === "area") return true;
+  return attachment.kind === "hole" && attachment.value.kind === "area";
+}
+
+/**
+ * Admit the area attachment shape consumed by a save-gate procedure. The
+ * caller names every optional area field it projects; unknown or future
+ * fields, including range-origin metadata, are rejected unless explicitly
+ * owned. A target-selection field list is required whenever `selection` is
+ * part of the admitted area shape.
+ */
+export function admitSpellAreaAttachment<
+  const AllowedSelectionFields extends readonly SpellTargetSelectionField[],
+  const AllowedAreaFields extends readonly SpellAreaAttachmentField[] =
+    readonly [],
+>(
+  attachment: Attachment,
+  allowedSelectionFields: AllowedSelectionFields,
+  allowedAreaFields?: AllowedAreaFields,
+): SpellAreaAttachmentAdmissionResult {
+  if (!isSpellAreaAttachment(attachment)) {
+    return { tag: "rejected", reason: "areaAttachmentMissing" };
+  }
+
+  const areaValue = attachment.kind === "area" ? attachment : attachment.value;
+  const namedAreaFields: readonly string[] = allowedAreaFields ?? [];
+  const allowedAreaValueFields = new Set<PropertyKey>([
+    "kind",
+    "shape",
+    "origin",
+    ...namedAreaFields,
+  ]);
+  if (!spellHasOnlyNamedFields(areaValue, [...allowedAreaValueFields])) {
+    return { tag: "rejected", reason: "areaAttachmentConstraint" };
+  }
+  if (attachment.kind === "hole") {
+    if (
+      !spellHasOnlyNamedFields(attachment, SPELL_AREA_HOLE_ATTACHMENT_FIELDS)
+    ) {
+      return { tag: "rejected", reason: "areaAttachmentConstraint" };
+    }
+  } else if (
+    !spellHasOnlyNamedFields(attachment, SPELL_AREA_ATTACHMENT_FIELDS)
+  ) {
+    return { tag: "rejected", reason: "areaAttachmentConstraint" };
+  }
+
+  const selection = areaValue.selection;
+  if (selection !== undefined) {
+    if (
+      !namedAreaFields.includes("selection") ||
+      !isAdmittedSpellTargetSelection(selection, allowedSelectionFields)
+    ) {
+      return { tag: "rejected", reason: "areaSelectionConstraint" };
+    }
+  } else if (namedAreaFields.includes("selection")) {
+    // The field is owned by this procedure, but its absent value is a valid
+    // domain state for procedures that intentionally do not select occupants.
+  }
+  return { tag: "admitted", attachment };
 }
 
 /** Stable issue identity: only the failed fact and its exact source path. */

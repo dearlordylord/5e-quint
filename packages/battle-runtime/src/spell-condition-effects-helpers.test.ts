@@ -390,6 +390,7 @@ describe("spell condition effect source ownership", () => {
       expiresAt: {
         kind: "concentration" as const,
         combatantId: fighterId,
+        durationTicks: elapsedTimeTicks(10),
       },
     } as const satisfies BattleActiveEffect;
     const sleeping = {
@@ -481,6 +482,7 @@ describe("spell condition effect source ownership", () => {
       expiresAt: {
         kind: "concentration" as const,
         combatantId: fighterId,
+        durationTicks: elapsedTimeTicks(10),
       },
     } as const;
     const laughterAllocation = allocateActiveEffectForTest(
@@ -554,11 +556,11 @@ describe("spell condition effect source ownership", () => {
         conditionHadNonSpellProneSource: false,
         conditionHadNonSpellIncapacitatedSource: false,
         repeatSaveRollMode: null,
-        save: {
-          ability: "wis",
-          dc: { kind: "fixed", dc: difficultyClass(13) },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: fighterId,
+          durationTicks: elapsedTimeTicks(10),
         },
-        expiresAt: { kind: "concentration", combatantId: fighterId },
       },
     );
     const staleClone = allocation.effect;

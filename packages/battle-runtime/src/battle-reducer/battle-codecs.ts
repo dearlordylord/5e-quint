@@ -157,7 +157,6 @@ import {
   DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   SELF_TRANSFORMATION_MODE_KINDS,
-  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { BattleDamageRelationshipQuestionIdSchema } from "./damage-relationship-question-id.ts";
@@ -243,6 +242,10 @@ const PositiveHpSchema = Schema.Number.pipe(
   Schema.check(Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("NonNegativeInteger"),
   Schema.brand("Hp"),
+  Schema.brand("PositiveInteger"),
+);
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("PositiveInteger"),
 );
 const InitiativeScoreSchema = Schema.Number.pipe(
@@ -2223,9 +2226,7 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
     actorId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    failurePercent: Schema.Literal(
-      SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
-    ),
+    failurePercent: PositiveIntegerSchema,
     activeEffectSources: Schema.Array(
       Schema.Struct({
         sourceProcedureRef: BattleProcedureExecutionRef,
@@ -2987,7 +2988,7 @@ const BattleHolePayloadMembers = [
       grantedAreaSaveDamageAction: Schema.Struct({
         sourceCombatantId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
-        lengthFeet: Schema.Literal(15),
+        lengthFeet: MovementFeet,
       }),
       ability: Schema.Literal("dex"),
       dc: DcSourceSchema,

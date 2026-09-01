@@ -22,17 +22,24 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //     Invocation, Area of Effect/Cube, Saving Throw, Speed, Armor Class,
 //     Reaction, and Spell Effect.
 
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
-import { Result, Schema } from "effect";
+  Integer,
+  MovementFeet,
+  PositiveInteger,
+  movementFeet,
+} from "@dnd/shared/types";
+import type {
+  ActivationPhase,
+  EffectAtom,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
+import { Match, Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleSpellSavingThrowOutcomeValue,
+  type BattleSpellExecutionSource,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
@@ -60,7 +67,6 @@ import {
 import { invalidResult } from "../result-helpers.ts";
 import {
   DcSourceSchema,
-  MovementFeet,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -72,221 +78,149 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import type { SaveGatedTurnConstraintFacts } from "../../procedure-execution/spell-procedure-execution.ts";
+import {
+  admitSpellAreaAttachment,
+  isSpellCanonicalDurationValue,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
+  spellHasOnlyNamedFields,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+
+const IntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.brand("Integer"),
+);
+const PositiveIntegerSchema = IntegerSchema.pipe(
+  Schema.check(Schema.isGreaterThan(0)),
+  Schema.brand("PositiveInteger"),
+);
 
 type SaveGatedTurnConstraintBundleSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "saveGatedTurnConstraintBundle" }
 >;
 
-type SaveGatedTurnConstraintBundlePhase = Extract<
-  ActivationPhase,
-  { readonly kind: "save_gate" }
-> & {
-  readonly ability: "wis";
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "area";
-      readonly origin: { readonly kind: "point_within_range" };
-      readonly shape: { readonly kind: "cube"; readonly sideFeet: 40 };
-      readonly selection: {
-        readonly mode: "choose_up_to";
-        readonly count: 6;
-        readonly targetKinds: readonly ["creature"];
-      };
-    };
-  };
-};
-
 type SaveGatedTurnConstraintBundleResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedTurnConstraintBundleSpellInvocation>;
 
-type SaveGatedTurnConstraintBundleProfileShape = {
-  readonly phase: SaveGatedTurnConstraintBundlePhase;
-  readonly rangeFeet: number;
-  readonly durationTicks: ElapsedTimeTicks;
+type SaveGatedTurnConstraintBundleMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly ability: "wis";
+  readonly dc: SaveGatedTurnConstraintBundleSpellInvocation["dc"];
+  readonly targeting: SaveGatedTurnConstraintBundleSpellInvocation["targeting"];
   readonly maxTargets: 6;
+  readonly rangeFeet: MovementFeet;
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly constraints: SaveGatedTurnConstraintFacts;
 };
+
+type SaveGatedTurnConstraintBundleFailedFact =
+  | "level"
+  | "castingTime"
+  | "range"
+  | "duration"
+  | "durationValue"
+  | "durationExtension"
+  | "durationEnding"
+  | "rootShape"
+  | "phaseCount"
+  | "phaseOrder"
+  | "phaseShape"
+  | "phaseAbility"
+  | "phaseDc"
+  | "attachment"
+  | "successOutcome"
+  | "failedSaveEffect"
+  | "extraFailedSaveEffect"
+  | "missingFailedSaveEffect"
+  | "repeatSave"
+  | "extraRepeatSave"
+  | "requiredFacts";
+
+type SaveGatedTurnConstraintBundleMechanicsIssue = SpellProcedureAdmissionIssue<
+  "saveGatedTurnConstraintBundle",
+  SaveGatedTurnConstraintBundleFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 const SAVE_GATED_TURN_CONSTRAINT_LEVEL = 3;
 const SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET = 120;
 const SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES = 1;
 const SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET = 40;
 const SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS = 6;
-const SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_COUNT = 7;
+const SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES = [
+  "speedRatio",
+  "armorClass",
+  "dexteritySavingThrow",
+  "reactionRestriction",
+  "actionOrBonusAction",
+  "attackCap",
+  "somaticFailure",
+] as const;
+type SaveGatedTurnConstraintFailedEffectRole =
+  (typeof SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES)[number];
 
-function admitSaveGatedTurnConstraintBundle(
-  spell: SaveGatedTurnConstraintBundleSpellInvocation["spell"],
-  ctx: SpellAdmissionContext,
-): readonly SaveGatedTurnConstraintBundleSpellInvocation[] {
-  const profileShape = saveGatedTurnConstraintBundleSpell(spell);
-  if (profileShape === null) {
-    return [];
-  }
-  return ctx.spellCastOptions.flatMap(
-    (slot): readonly SaveGatedTurnConstraintBundleSpellInvocation[] =>
-      Number(slot.spellLevel) < SAVE_GATED_TURN_CONSTRAINT_LEVEL
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "saveGatedTurnConstraintBundle",
-              spell,
-              actionCost: "magicAction",
-              ability: profileShape.phase.ability,
-              dc: profileShape.phase.dc,
-              targeting: {
-                kind: "pointOriginCube",
-                sideFeet: movementFeet(
-                  profileShape.phase.attachment.value.shape.sideFeet,
-                ),
-              },
-              maxTargets: profileShape.maxTargets,
-              rangeFeet: movementFeet(profileShape.rangeFeet),
-              durationTicks: profileShape.durationTicks,
-            },
-          ],
-  );
-}
+const SAVE_GATED_TURN_CONSTRAINT_FAILED_FACT_MESSAGES = {
+  level: "Slow requires a third-level spell.",
+  castingTime: "Slow requires an action casting time.",
+  range: "Slow requires a 120-foot point range.",
+  duration: "Slow requires one minute of concentration.",
+  durationValue: "Slow requires a one-minute concentration value.",
+  durationExtension: "Slow has an unsupported duration extension.",
+  durationEnding: "Slow has an unsupported duration ending.",
+  rootShape: "Slow has unsupported activation root fields.",
+  phaseCount: "Slow requires exactly one activation phase.",
+  phaseOrder: "Slow's save gate must be the first activation phase.",
+  phaseShape: "Slow has an unsupported save-gate field.",
+  phaseAbility: "Slow requires a Wisdom Saving Throw.",
+  phaseDc: "Slow requires the caster's Spell Save DC.",
+  attachment:
+    "Slow requires a point-origin 40-foot Cube for up to six creatures.",
+  successOutcome: "Slow requires no successful-save effect.",
+  failedSaveEffect: "Slow requires a composite failed-save effect bundle.",
+  extraFailedSaveEffect:
+    "Slow has an unsupported additional failed-save effect.",
+  missingFailedSaveEffect: "Slow is missing a required failed-save effect.",
+  repeatSave: "Slow has an unsupported repeat save.",
+  extraRepeatSave: "Slow has an unsupported additional repeat save.",
+  requiredFacts: "Slow's admitted mechanics did not retain its required facts.",
+} as const satisfies Record<SaveGatedTurnConstraintBundleFailedFact, string>;
 
-function saveGatedTurnConstraintBundleSpell(
-  spell: SaveGatedTurnConstraintBundleSpellInvocation["spell"],
-): SaveGatedTurnConstraintBundleProfileShape | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  if (
-    spell.mechanics.level !== SAVE_GATED_TURN_CONSTRAINT_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !==
-      SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES ||
-    spell.mechanics.phases.length !== 1 ||
-    !isSaveGatedTurnConstraintBundlePhase(phase) ||
-    durationTicks === null ||
-    Result.isFailure(durationTicks)
-  ) {
-    return null;
-  }
+function saveGatedTurnConstraintBundleIssue(
+  failedFact: SaveGatedTurnConstraintBundleFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): SaveGatedTurnConstraintBundleMechanicsIssue {
   return {
-    phase,
-    rangeFeet: spell.mechanics.range.feet,
-    durationTicks: durationTicks.success,
-    maxTargets: SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS,
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "saveGatedTurnConstraintBundle",
+    failedFact,
+    mechanicsPath,
+    message: SAVE_GATED_TURN_CONSTRAINT_FAILED_FACT_MESSAGES[failedFact],
   };
-}
-
-function isSaveGatedTurnConstraintBundlePhase(
-  phase: ActivationPhase | undefined,
-): phase is SaveGatedTurnConstraintBundlePhase {
-  const failedEffects =
-    phase?.kind === "save_gate" && phase.onFail.kind === "composite"
-      ? phase.onFail.effects
-      : [];
-  const repeatSaves =
-    phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
-  const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
-  const selection =
-    phase?.kind === "save_gate" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "area"
-      ? phase.attachment.value.selection
-      : undefined;
-  return (
-    phase?.kind === "save_gate" &&
-    phase.ability === "wis" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "area" &&
-    phase.attachment.value.origin.kind === "point_within_range" &&
-    phase.attachment.value.shape.kind === "cube" &&
-    phase.attachment.value.shape.sideFeet ===
-      SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET &&
-    selection?.mode === "choose_up_to" &&
-    selection.count === SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS &&
-    sameStringSet(selection.targetKinds, ["creature"]) &&
-    failedEffects.length === SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_COUNT &&
-    failedEffects.some(isTurnHinderingSpeedRatioEffect) &&
-    failedEffects.some(isTurnHinderingArmorClassPenaltyEffect) &&
-    failedEffects.some(isTurnHinderingDexteritySavingThrowPenaltyEffect) &&
-    failedEffects.some(isTurnHinderingReactionRestrictionEffect) &&
-    failedEffects.some(
-      (effect) => effect.kind === "choose_action_or_bonus_action_each_turn",
-    ) &&
-    failedEffects.some(
-      (effect) =>
-        effect.kind === "cap_attack_action_attacks" && effect.maxAttacks === 1,
-    ) &&
-    failedEffects.some(
-      (effect) =>
-        effect.kind === "somatic_spell_failure_chance" &&
-        effect.percent === SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
-    ) &&
-    repeatSave !== undefined &&
-    repeatSave.cadence === "end_of_target_turn" &&
-    repeatSave.rollMode === undefined &&
-    repeatSave.onSuccess === "ends_on_target" &&
-    repeatSave.onFailAgain === undefined
-  );
-}
-
-function isTurnHinderingSpeedRatioEffect(effect: EffectAtom): boolean {
-  return (
-    effect.kind === "set_speed_ratio" &&
-    effect.numerator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator &&
-    effect.denominator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator
-  );
-}
-
-function isTurnHinderingArmorClassPenaltyEffect(effect: EffectAtom): boolean {
-  return (
-    effect.kind === "modify_ac" &&
-    effect.delta.kind === "fixed_number" &&
-    effect.delta.sign === "-" &&
-    effect.delta.amount ===
-      Math.abs(SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA)
-  );
-}
-
-function isTurnHinderingDexteritySavingThrowPenaltyEffect(
-  effect: EffectAtom,
-): boolean {
-  if (effect.kind !== "modify_roll_numeric") {
-    return false;
-  }
-  const abilityFilter = effect.abilityFilter;
-  return (
-    sameStringSet(effect.on, ["saving_throw"]) &&
-    Array.isArray(abilityFilter) &&
-    sameStringSet(abilityFilter, ["dex"]) &&
-    effect.weaponFilter === undefined &&
-    effect.skillFilter === undefined &&
-    effect.count === undefined &&
-    effect.delta.kind === "fixed_number" &&
-    effect.delta.sign === "-" &&
-    effect.delta.amount === Math.abs(SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA)
-  );
-}
-
-function isTurnHinderingReactionRestrictionEffect(effect: EffectAtom): boolean {
-  return (
-    effect.kind === "restrict_action_usage" &&
-    sameStringSet(effect.actions, ["reaction"])
-  );
 }
 
 function sameStringSet(
@@ -297,6 +231,566 @@ function sameStringSet(
     actual !== undefined &&
     actual.length === expected.length &&
     expected.every((value) => actual.includes(value))
+  );
+}
+
+type SlowFailedEffectRoleEffect =
+  | Extract<EffectAtom, { readonly kind: "set_speed_ratio" }>
+  | Extract<EffectAtom, { readonly kind: "modify_ac" }>
+  | Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>
+  | Extract<EffectAtom, { readonly kind: "restrict_action_usage" }>
+  | Extract<
+      EffectAtom,
+      { readonly kind: "choose_action_or_bonus_action_each_turn" }
+    >
+  | Extract<EffectAtom, { readonly kind: "cap_attack_action_attacks" }>
+  | Extract<EffectAtom, { readonly kind: "somatic_spell_failure_chance" }>;
+
+function slowFailedEffectRoleEffect(
+  effect: EffectAtom,
+): SlowFailedEffectRoleEffect | undefined {
+  if (
+    effect.kind === "set_speed_ratio" &&
+    effect.numerator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator &&
+    effect.denominator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator &&
+    spellHasOnlyNamedFields(effect, ["kind", "numerator", "denominator"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "modify_ac" &&
+    spellHasOnlyNamedFields(effect, ["kind", "delta"]) &&
+    effect.delta.kind === "fixed_number" &&
+    effect.delta.sign === "-" &&
+    effect.delta.amount ===
+      Math.abs(SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA) &&
+    spellHasOnlyNamedFields(effect.delta, ["kind", "amount", "sign"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "modify_roll_numeric" &&
+    spellHasOnlyNamedFields(effect, ["kind", "on", "delta", "abilityFilter"]) &&
+    sameStringSet(effect.on, ["saving_throw"]) &&
+    Array.isArray(effect.abilityFilter) &&
+    sameStringSet(effect.abilityFilter, ["dex"]) &&
+    effect.delta.kind === "fixed_number" &&
+    effect.delta.sign === "-" &&
+    effect.delta.amount ===
+      Math.abs(SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA) &&
+    spellHasOnlyNamedFields(effect.delta, ["kind", "amount", "sign"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "restrict_action_usage" &&
+    sameStringSet(effect.actions, ["reaction"]) &&
+    spellHasOnlyNamedFields(effect, ["kind", "actions"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "choose_action_or_bonus_action_each_turn" &&
+    spellHasOnlyNamedFields(effect, ["kind"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "cap_attack_action_attacks" &&
+    effect.maxAttacks === 1 &&
+    spellHasOnlyNamedFields(effect, ["kind", "maxAttacks"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "somatic_spell_failure_chance" &&
+    effect.percent === SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT &&
+    spellHasOnlyNamedFields(effect, ["kind", "percent"])
+  ) {
+    return effect;
+  }
+  return undefined;
+}
+
+function slowFailedEffectRole(
+  effect: EffectAtom,
+): SaveGatedTurnConstraintFailedEffectRole | null {
+  const roleEffect = slowFailedEffectRoleEffect(effect);
+  if (roleEffect === undefined) return null;
+  return Match.value(roleEffect).pipe(
+    Match.when({ kind: "set_speed_ratio" }, () => "speedRatio" as const),
+    Match.when({ kind: "modify_ac" }, () => "armorClass" as const),
+    Match.when(
+      { kind: "modify_roll_numeric" },
+      () => "dexteritySavingThrow" as const,
+    ),
+    Match.when(
+      { kind: "restrict_action_usage" },
+      () => "reactionRestriction" as const,
+    ),
+    Match.when(
+      { kind: "choose_action_or_bonus_action_each_turn" },
+      () => "actionOrBonusAction" as const,
+    ),
+    Match.when(
+      { kind: "cap_attack_action_attacks" },
+      () => "attackCap" as const,
+    ),
+    Match.when(
+      { kind: "somatic_spell_failure_chance" },
+      () => "somaticFailure" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function slowRootPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "save_gate" &&
+    phase.onFail.kind === "composite" &&
+    phase.onFail.effects.some(
+      (effect) =>
+        slowFailedEffectRole(effect) !== null ||
+        effect.kind === "set_speed_ratio" ||
+        effect.kind === "modify_ac" ||
+        effect.kind === "modify_roll_numeric" ||
+        effect.kind === "restrict_action_usage" ||
+        effect.kind === "choose_action_or_bonus_action_each_turn" ||
+        effect.kind === "cap_attack_action_attacks" ||
+        effect.kind === "somatic_spell_failure_chance",
+    )
+  );
+}
+
+function slowDurationIssues(
+  duration: SpellMechanics["duration"],
+): SaveGatedTurnConstraintBundleMechanicsIssue[] {
+  const issues: SaveGatedTurnConstraintBundleMechanicsIssue[] = [];
+  if (duration.kind !== "concentration") {
+    issues.push(
+      saveGatedTurnConstraintBundleIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    );
+    return issues;
+  }
+  if (
+    !isSpellCanonicalDurationValue(duration.upTo) ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES
+  ) {
+    issues.push(
+      saveGatedTurnConstraintBundleIssue(
+        "durationValue",
+        spellDurationValuePath(),
+      ),
+    );
+  }
+  for (const child of spellDurationChildCoordinates(duration)) {
+    issues.push(
+      saveGatedTurnConstraintBundleIssue(
+        child.branch === "extension" ? "durationExtension" : "durationEnding",
+        spellDurationChildPath(child),
+      ),
+    );
+  }
+  return issues;
+}
+
+function slowFactsFromEffects(
+  effects: readonly EffectAtom[],
+): SaveGatedTurnConstraintFacts | undefined {
+  const byRole = new Map<SaveGatedTurnConstraintFailedEffectRole, EffectAtom>();
+  for (const effect of effects) {
+    const role = slowFailedEffectRole(effect);
+    if (role !== null && !byRole.has(role)) byRole.set(role, effect);
+  }
+  const speedRatio = byRole.get("speedRatio");
+  const armorClass = byRole.get("armorClass");
+  const dexterity = byRole.get("dexteritySavingThrow");
+  const attackCap = byRole.get("attackCap");
+  const somaticFailure = byRole.get("somaticFailure");
+  if (
+    speedRatio?.kind !== "set_speed_ratio" ||
+    armorClass?.kind !== "modify_ac" ||
+    dexterity?.kind !== "modify_roll_numeric" ||
+    attackCap?.kind !== "cap_attack_action_attacks" ||
+    somaticFailure?.kind !== "somatic_spell_failure_chance" ||
+    armorClass.delta.kind !== "fixed_number" ||
+    dexterity.delta.kind !== "fixed_number"
+  ) {
+    return undefined;
+  }
+  return {
+    speedRatio: {
+      numerator: PositiveInteger(speedRatio.numerator),
+      denominator: PositiveInteger(speedRatio.denominator),
+    },
+    armorClassDelta: Integer(-armorClass.delta.amount),
+    dexteritySavingThrowDelta: Integer(-dexterity.delta.amount),
+    restrictsReactions: true,
+    actionOrBonusActionChoice: true,
+    maxAttacks: PositiveInteger(attackCap.maxAttacks),
+    somaticFailurePercent: PositiveInteger(somaticFailure.percent),
+  };
+}
+
+function slowMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+): SpellProcedureMechanicsEvidence {
+  const failedEffects =
+    phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellActivationPhasePath(PositiveInteger(1)),
+    spellActivationAttachmentPath(PositiveInteger(1)),
+    ...failedEffects.map((_effect, index) =>
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(index + 1)),
+    ),
+    ...(phase.repeatSaves ?? []).map((_repeat, index) =>
+      spellActivationRepeatPath(PositiveInteger(1), PositiveInteger(index + 1)),
+    ),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitSaveGatedTurnConstraintBundleMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "saveGatedTurnConstraintBundle",
+  SaveGatedTurnConstraintBundleMechanicsFacts,
+  SaveGatedTurnConstraintBundleSpellInvocation,
+  SaveGatedTurnConstraintBundleMechanicsIssue
+> {
+  if (source.mechanics.family !== "activation")
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const phaseIndex = mechanics.phases.findIndex(slowRootPhase);
+  if (phaseIndex < 0) return { tag: "notRepresented" };
+  const phase = mechanics.phases[phaseIndex];
+  if (phase?.kind !== "save_gate") return { tag: "notRepresented" };
+  const issues: SaveGatedTurnConstraintBundleMechanicsIssue[] = [];
+  const push = (
+    failedFact: SaveGatedTurnConstraintBundleFailedFact,
+    path: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push(saveGatedTurnConstraintBundleIssue(failedFact, path));
+  };
+  if (mechanics.level !== SAVE_GATED_TURN_CONSTRAINT_LEVEL) {
+    push("level", spellMechanicsHeaderPath("level"));
+  }
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
+  ) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET ||
+    !spellHasOnlyNamedFields(mechanics.range, ["kind", "feet"])
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  issues.push(...slowDurationIssues(mechanics.duration));
+  if (
+    !spellHasOnlyNamedFields(mechanics, [
+      "level",
+      "school",
+      "castingTime",
+      "range",
+      "components",
+      "duration",
+      "family",
+      "phases",
+    ])
+  ) {
+    push("rootShape", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index !== phaseIndex) {
+        push(
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(index + 1)),
+        );
+      }
+    }
+    if (mechanics.phases.length === 0) {
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+    }
+  }
+  if (phaseIndex !== 0) {
+    push(
+      "phaseOrder",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (
+    !spellHasOnlyNamedFields(phase, [
+      "kind",
+      "attachment",
+      "ability",
+      "dc",
+      "onFail",
+      "onSuccess",
+      "repeatSaves",
+    ])
+  ) {
+    push(
+      "phaseShape",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (phase.ability !== "wis") {
+    push(
+      "phaseAbility",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    !spellHasOnlyNamedFields(phase.dc, ["kind"])
+  ) {
+    push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
+  }
+  const areaAdmission = admitSpellAreaAttachment(
+    phase.attachment,
+    ["mode", "count", "targetKinds"],
+    ["selection"],
+  );
+  const areaAttachment =
+    areaAdmission.tag === "admitted" ? areaAdmission.attachment : null;
+  const areaValue =
+    areaAttachment === null
+      ? null
+      : areaAttachment.kind === "hole"
+        ? areaAttachment.value
+        : areaAttachment;
+  const selection = areaValue?.selection;
+  const attachmentSupported =
+    areaAttachment?.kind === "hole" &&
+    areaValue !== null &&
+    areaValue.origin.kind === "point_within_range" &&
+    spellHasOnlyNamedFields(areaValue.origin, ["kind"]) &&
+    areaValue.shape.kind === "cube" &&
+    spellHasOnlyNamedFields(areaValue.shape, ["kind", "sideFeet"]) &&
+    areaValue.shape.sideFeet === SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET &&
+    selection !== undefined &&
+    selection.mode === "choose_up_to" &&
+    selection.count === SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS &&
+    sameStringSet(selection.targetKinds, ["creature"]);
+  if (!attachmentSupported) {
+    push(
+      "attachment",
+      spellActivationAttachmentPath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (
+    phase.onSuccess.kind !== "none" ||
+    !spellHasOnlyNamedFields(phase.onSuccess, ["kind"])
+  ) {
+    push(
+      "successOutcome",
+      spellActivationEffectPath(
+        PositiveInteger(phaseIndex + 1),
+        PositiveInteger(1),
+      ),
+    );
+  }
+  const failedEffects =
+    phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  if (
+    phase.onFail.kind !== "composite" ||
+    !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
+  ) {
+    push(
+      "failedSaveEffect",
+      spellActivationEffectPath(
+        PositiveInteger(phaseIndex + 1),
+        PositiveInteger(1),
+      ),
+    );
+  } else {
+    const seenRoles = new Set<SaveGatedTurnConstraintFailedEffectRole>();
+    for (const [index, effect] of failedEffects.entries()) {
+      const role = slowFailedEffectRole(effect);
+      if (role === null || seenRoles.has(role)) {
+        push(
+          "extraFailedSaveEffect",
+          spellActivationEffectPath(
+            PositiveInteger(phaseIndex + 1),
+            PositiveInteger(index + 1),
+          ),
+        );
+      } else {
+        seenRoles.add(role);
+      }
+    }
+    for (const [
+      index,
+      role,
+    ] of SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES.entries()) {
+      if (!seenRoles.has(role)) {
+        push(
+          "missingFailedSaveEffect",
+          spellActivationEffectPath(
+            PositiveInteger(phaseIndex + 1),
+            PositiveInteger(failedEffects.length + index + 1),
+          ),
+        );
+      }
+    }
+  }
+  const repeatSaves = phase.repeatSaves ?? [];
+  const supportedRepeatIndexes = repeatSaves.flatMap((repeatSave, index) =>
+    repeatSave.cadence === "end_of_target_turn" &&
+    repeatSave.onSuccess === "ends_on_target" &&
+    spellHasOnlyNamedFields(repeatSave, ["cadence", "onSuccess"])
+      ? [index]
+      : [],
+  );
+  for (const [index, repeatSave] of repeatSaves.entries()) {
+    if (
+      repeatSave.cadence !== "end_of_target_turn" ||
+      repeatSave.onSuccess !== "ends_on_target" ||
+      !spellHasOnlyNamedFields(repeatSave, ["cadence", "onSuccess"]) ||
+      index !== supportedRepeatIndexes[0]
+    ) {
+      push(
+        index === 0 && supportedRepeatIndexes.length === 0
+          ? "repeatSave"
+          : "extraRepeatSave",
+        spellActivationRepeatPath(
+          PositiveInteger(phaseIndex + 1),
+          PositiveInteger(index + 1),
+        ),
+      );
+    }
+  }
+  if (repeatSaves.length === 0) {
+    push(
+      "repeatSave",
+      spellActivationRepeatPath(
+        PositiveInteger(phaseIndex + 1),
+        PositiveInteger(1),
+      ),
+    );
+  }
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues;
+    return {
+      tag: "unsupported",
+      issues: [first, ...rest],
+    };
+  }
+  if (
+    !attachmentSupported ||
+    areaValue === null ||
+    areaValue.shape.kind !== "cube" ||
+    selection === undefined ||
+    selection.mode !== "choose_up_to" ||
+    selection.count !== SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS ||
+    mechanics.range.kind !== "point" ||
+    typeof mechanics.range.feet !== "number" ||
+    mechanics.duration.kind !== "concentration" ||
+    !isSpellCanonicalDurationValue(mechanics.duration.upTo)
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        saveGatedTurnConstraintBundleIssue(
+          "requiredFacts",
+          spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+        ),
+      ],
+    };
+  }
+  const constraints = slowFactsFromEffects(failedEffects);
+  if (constraints === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        saveGatedTurnConstraintBundleIssue(
+          "requiredFacts",
+          spellActivationEffectPath(
+            PositiveInteger(phaseIndex + 1),
+            PositiveInteger(1),
+          ),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ability: "wis" as const,
+    dc: phase.dc,
+    targeting: {
+      kind: "pointOriginCube" as const,
+      sideFeet: movementFeet(areaValue.shape.sideFeet),
+    },
+    maxTargets: 6 as const,
+    rangeFeet: movementFeet(mechanics.range.feet),
+    durationTicks: spellDurationTicksFromCanonicalValue(
+      mechanics.duration.upTo,
+    ),
+    constraints,
+  } satisfies SaveGatedTurnConstraintBundleMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "saveGatedTurnConstraintBundle",
+      facts,
+      evidence: slowMechanicsEvidence(mechanics, phase),
+      admit: (executionSource: BattleSpellExecutionSource, ctx) =>
+        saveGatedTurnConstraintBundleInvocationsFromFacts(
+          executionSource,
+          facts,
+          ctx.spellCastOptions,
+        ),
+    },
+  };
+}
+
+function saveGatedTurnConstraintBundleInvocationsFromFacts(
+  spell: BattleSpellExecutionSource,
+  facts: SaveGatedTurnConstraintBundleMechanicsFacts,
+  castOptions: SpellAdmissionContext["spellCastOptions"],
+): readonly SaveGatedTurnConstraintBundleSpellInvocation[] {
+  return castOptions.flatMap(
+    (slot): readonly SaveGatedTurnConstraintBundleSpellInvocation[] =>
+      Number(slot.spellLevel) < Number(facts.level)
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "saveGatedTurnConstraintBundle",
+              spell,
+              actionCost: "magicAction",
+              ability: facts.ability,
+              dc: facts.dc,
+              targeting: facts.targeting,
+              maxTargets: facts.maxTargets,
+              rangeFeet: facts.rangeFeet,
+              durationTicks: facts.durationTicks,
+              constraints: facts.constraints,
+            },
+          ],
   );
 }
 
@@ -342,6 +836,7 @@ function resolveSaveGatedTurnConstraintBundle(
   const savingThrowOutcomes = areaSave.savingThrowOutcomes;
   const areaWitnessValidation = validateTurnConstraintAreaWitness(
     savingThrowOutcomes,
+    input.invocation.targeting.sideFeet,
     input.invocation.maxTargets,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -475,7 +970,8 @@ function applyTurnHinderingActivePenaltyEffects(
 /* v8 ignore start -- @preserve -- Malformed area-witness validator: Slow discovery supplies the typed Cube geometry, unique chosen targets, and matching outcomes; admitted Slow execution remains measured. */
 function validateTurnConstraintAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
-  maxTargets: 6,
+  cubeSideFeet: MovementFeet,
+  maxTargets: number,
 ): string | null {
   if (!("area" in savingThrowOutcomes)) {
     return "turn-hindering effect requires a point-origin Cube area witness.";
@@ -484,8 +980,8 @@ function validateTurnConstraintAreaWitness(
   if (area.kind !== "saveGatedTurnConstraintBundleArea") {
     return "The turn-constraint procedure requires explicit Cube membership and caster-choice witnesses.";
   }
-  if (area.cubeSideFeet !== SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET) {
-    return "The turn-constraint procedure requires a 40-foot Cube witness.";
+  if (Number(area.cubeSideFeet) !== Number(cubeSideFeet)) {
+    return "The turn-constraint procedure requires the admitted Cube geometry.";
   }
   if (area.affectedTargetIds.length > maxTargets) {
     return "The turn-constraint Cube must not exceed six affected creatures.";
@@ -537,17 +1033,28 @@ const SaveGatedTurnConstraintBundleInvocationSchema =
       maxTargets: Schema.Literal(6),
       rangeFeet: MovementFeet,
       durationTicks: ElapsedTimeTicksSchema,
+      constraints: Schema.Struct({
+        speedRatio: Schema.Struct({
+          numerator: PositiveIntegerSchema,
+          denominator: PositiveIntegerSchema,
+        }),
+        armorClassDelta: IntegerSchema,
+        dexteritySavingThrowDelta: IntegerSchema,
+        restrictsReactions: Schema.Literal(true),
+        actionOrBonusActionChoice: Schema.Literal(true),
+        maxAttacks: PositiveIntegerSchema,
+        somaticFailurePercent: PositiveIntegerSchema,
+      }),
     }),
   );
 
 export const saveGatedTurnConstraintBundleProfile = {
   procedure: "saveGatedTurnConstraintBundle",
   executionSchema: SaveGatedTurnConstraintBundleInvocationSchema,
-  admit: admitSaveGatedTurnConstraintBundle,
+  admitMechanics: admitSaveGatedTurnConstraintBundleMechanics,
   discoverCastAct: discoverSaveGatedTurnConstraintBundleCastAct,
   resolve: resolveSaveGatedTurnConstraintBundle,
 } satisfies SpellProcedureDeclaration<
   "saveGatedTurnConstraintBundle",
   SaveGatedTurnConstraintBundleSpellInvocation
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";

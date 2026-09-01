@@ -4,6 +4,8 @@ import type {
   AbilityModifier,
   AttackBonus,
   MovementFeet,
+  Integer,
+  PositiveInteger,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -518,6 +520,9 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
       "damageType"
     >;
     readonly dc: DcSource;
+    readonly coneLengthFeet: MovementFeet;
+    readonly damageDice: PositiveInteger;
+    readonly damageDieSize: PositiveInteger;
     readonly damageTypeChoices: readonly DamageType[];
     readonly procedure: "grantedAreaSaveDamageAction";
     readonly rangeFeet: MovementFeet;
@@ -697,6 +702,8 @@ export type SaveGatedConditionWithRepeatSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly dc: DcSource;
     readonly procedure: "saveGatedConditionWithRepeat";
+    readonly rangeFeet: MovementFeet;
+    readonly durationTicks: ElapsedTimeTicks;
     readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "targetList";
@@ -704,6 +711,20 @@ export type SaveGatedConditionWithRepeatSpellProcedureExecution =
       readonly maxTargets: number;
     };
   };
+
+/** Immutable rule facts projected from Slow's seven failed-save effects. */
+export type SaveGatedTurnConstraintFacts = {
+  readonly speedRatio: {
+    readonly numerator: PositiveInteger;
+    readonly denominator: PositiveInteger;
+  };
+  readonly armorClassDelta: Integer;
+  readonly dexteritySavingThrowDelta: Integer;
+  readonly restrictsReactions: true;
+  readonly actionOrBonusActionChoice: true;
+  readonly maxAttacks: PositiveInteger;
+  readonly somaticFailurePercent: PositiveInteger;
+};
 
 export type SaveGatedAreaControlSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
@@ -1213,6 +1234,7 @@ export type StagedSaveConditionSpellProcedureExecution =
     readonly ability: "wis";
     readonly access: PreparedSpellAccess;
     readonly dc: DcSource;
+    readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "stagedSaveCondition";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
@@ -1247,6 +1269,7 @@ export type SaveGatedTurnConstraintBundleSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly dc: DcSource;
     readonly durationTicks: ElapsedTimeTicks;
+    readonly constraints: SaveGatedTurnConstraintFacts;
     readonly maxTargets: 6;
     readonly procedure: "saveGatedTurnConstraintBundle";
     readonly rangeFeet: MovementFeet;

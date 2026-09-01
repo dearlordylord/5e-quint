@@ -171,6 +171,7 @@ import {
   DifficultyClass,
   Hp,
   MovementFeet,
+  PositiveInteger,
   movementFeet,
   type Condition,
   type CoverType,
@@ -183,7 +184,6 @@ import {
 import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
-  ClassName,
   DamageType,
   DcSource,
   DiceExpr,
@@ -313,6 +313,7 @@ import type {
   SpawnedCompanionLifecycleExecutionFacts,
   CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
+  SaveGatedTurnConstraintFacts,
   StagedSaveConditionAutomaticSuccessPredicates,
   StagedSaveConditionEscapeAction,
   TemporaryAbilityCheckRollModeConcurrentDurationModeLimit,
@@ -2732,6 +2733,9 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
     "damageType"
   >;
   readonly dc: DcSource;
+  readonly coneLengthFeet: MovementFeet;
+  readonly damageDice: PositiveInteger;
+  readonly damageDieSize: PositiveInteger;
   readonly damageTypeChoices: readonly DamageType[];
   readonly rangeFeet: MovementFeet;
 };
@@ -3406,6 +3410,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "stagedSaveCondition";
+      readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
       readonly ability: Extract<Ability, "wis">;
       readonly dc: DcSource;
@@ -3421,6 +3426,8 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedConditionWithRepeat";
+      readonly rangeFeet: MovementFeet;
+      readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
@@ -3449,6 +3456,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedTurnConstraintBundle";
+      readonly constraints: SaveGatedTurnConstraintFacts;
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
@@ -4898,7 +4906,7 @@ export type BattleTurnConstraintSomaticSpellFailureOutcomeHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly failurePercent: 25;
+  readonly failurePercent: PositiveInteger;
   readonly activeEffectSources: readonly {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
@@ -6236,7 +6244,7 @@ export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly grantedAreaSaveDamageAction: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly lengthFeet: 15;
+    readonly lengthFeet: MovementFeet;
   };
   readonly ability: Extract<Ability, "dex">;
   readonly dc: DcSource;

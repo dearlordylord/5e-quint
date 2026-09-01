@@ -127,10 +127,7 @@ import {
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
 } from "./magic-suppression-ongoing-effect.ts";
-import {
-  STAGED_CONDITION_DURATION_TICKS,
-  SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
-} from "./domain-constants.ts";
+import { SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET } from "./domain-constants.ts";
 import {
   battleCreatureWithSpellCreatedHeldObjectHand,
   spellCreatedHeldObjectFreeHand,
@@ -1915,6 +1912,7 @@ export function applyStagedSaveConditionPendingRepeatEffects(
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,
+          durationTicks: invocation.durationTicks,
         },
       },
     });
@@ -1967,7 +1965,7 @@ export function applySaveGatedConditionWithRepeatEffects(
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,
-          durationTicks: STAGED_CONDITION_DURATION_TICKS,
+          durationTicks: invocation.durationTicks,
         },
       },
     });

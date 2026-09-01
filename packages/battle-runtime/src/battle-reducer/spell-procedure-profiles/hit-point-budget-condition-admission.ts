@@ -12,17 +12,32 @@
 //     Action, and Spell Invocation.
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 
-import { movementFeet, MovementFeet } from "@dnd/shared/types";
-import type { ActivationPhase } from "@dnd/surface/surface/types";
+import { MovementFeet, PositiveInteger, movementFeet } from "@dnd/shared/types";
 import {
+  ElapsedTimeTicksSchema,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import type {
+  ActivationPhase,
+  EffectAtom,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
+import {
+  battleSpellExecutionSourceFromAdmission,
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
+  type BattleSpellAdmissionSource,
   type BattleResolutionResult,
   type BattleState,
   type SpellTargeting,
   type SupportedSpellInvocation,
+  type BattleSpellExecutionSource,
 } from "../../battle-state-execution.ts";
+import type {
+  StagedSaveConditionAutomaticSuccessPredicates,
+  StagedSaveConditionEscapeAction,
+} from "../../procedure-execution/spell-procedure-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { resolveStagedSaveConditionSpellAct } from "../spells-resolve-save-gates.ts";
@@ -31,7 +46,8 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -41,6 +57,32 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  admitSpellAreaAttachment,
+  isSpellCanonicalDurationValue,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  spellHasOnlyNamedFields,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellMechanicsHeaderPath,
+  spellDurationValuePath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
@@ -49,261 +91,679 @@ type StagedSaveConditionSpellInvocation = Extract<
   { readonly procedure: "stagedSaveCondition" }
 >;
 
-type StagedSaveConditionPhase = Extract<
-  ActivationPhase,
-  { readonly kind: "save_gate" }
-> & {
+type StagedSaveConditionMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly ability: "wis";
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "area";
-      readonly origin: { readonly kind: "point_within_range" };
-      readonly shape: {
-        readonly kind: "sphere";
-        readonly radiusFeet: number;
-      };
-    };
-  };
-  readonly autoSuccessIfTarget: {
-    readonly kind: "any";
-    readonly predicates: readonly [
-      { readonly kind: "does_not_sleep" },
-      {
-        readonly kind: "has_condition_immunity";
-        readonly condition: "exhaustion";
-      },
-    ];
-  };
-  readonly onFail: {
-    readonly kind: "composite";
-    readonly effects: readonly [
-      { readonly kind: "apply_condition"; readonly condition: "incapacitated" },
-      {
-        readonly kind: "target_effect_escape_action";
-        readonly actor: "another_creature";
-        readonly cost: "action";
-        readonly method: "shake_awake";
-        readonly outcome: "end_current_effect";
-      },
-    ];
-  };
-};
-
-type StagedSaveConditionResolveInput =
-  SpellProcedureProfileResolveInput<StagedSaveConditionSpellInvocation>;
-
-function admitStagedSaveCondition(
-  spell: StagedSaveConditionSpellInvocation["spell"],
-  ctx: SpellAdmissionContext,
-): readonly StagedSaveConditionSpellInvocation[] {
-  return supportedPreparedStagedSaveConditionProfile(
-    spell,
-    ctx.spellCastOptions,
-  );
-}
-
-export function supportedPreparedStagedSaveConditionProfile(
-  spell: StagedSaveConditionSpellInvocation["spell"],
-  castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly StagedSaveConditionSpellInvocation[] {
-  const hitPointBudgetConditionProfileShape = stagedSaveConditionSpell(spell);
-  if (hitPointBudgetConditionProfileShape === null) {
-    return [];
-  }
-
-  return castOptions.flatMap(
-    (slot): readonly StagedSaveConditionSpellInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
-          procedure: "stagedSaveCondition",
-          spell,
-          ability: hitPointBudgetConditionProfileShape.phase.ability,
-          dc: hitPointBudgetConditionProfileShape.phase.dc,
-          targeting: hitPointBudgetConditionProfileShape.targeting,
-          rangeFeet: hitPointBudgetConditionProfileShape.rangeFeet,
-          automaticSuccessPredicates:
-            hitPointBudgetConditionProfileShape.automaticSuccessPredicates,
-          escapeAction: hitPointBudgetConditionProfileShape.escapeAction,
-        },
-      ];
-    },
-  );
-}
-
-function stagedSaveConditionSpell(
-  spell: StagedSaveConditionSpellInvocation["spell"],
-): {
-  readonly phase: StagedSaveConditionPhase;
+  readonly dc: StagedSaveConditionSpellInvocation["dc"];
   readonly targeting: Extract<
     SpellTargeting,
     { readonly kind: "pointOriginSphere" }
   >;
   readonly rangeFeet: MovementFeet;
-  readonly automaticSuccessPredicates: readonly [
-    { readonly kind: "doesNotSleep" },
-    { readonly kind: "conditionImmunity"; readonly condition: "exhaustion" },
-  ];
-  readonly escapeAction: {
-    readonly kind: "endCurrentEffect";
-    readonly actor: "anotherCreature";
-    readonly cost: "action";
-    readonly method: "shakeAwake";
-  };
-} | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const earlyEnd =
-    spell.mechanics.duration.kind === "concentration"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    earlyEnd.length !== 1 ||
-    earlyEnd[0]?.kind !== "target_takes_damage" ||
-    spell.mechanics.phases.length !== 1 ||
-    !isStagedSaveConditionPhase(phase)
-  ) {
-    return null;
-  }
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
+  readonly escapeAction: StagedSaveConditionEscapeAction;
+};
 
+type StagedSaveConditionResolveInput =
+  SpellProcedureProfileResolveInput<StagedSaveConditionSpellInvocation>;
+
+type StagedSaveConditionFailedFact =
+  | "level"
+  | "castingTime"
+  | "range"
+  | "duration"
+  | "durationValue"
+  | "durationExtension"
+  | "durationEnding"
+  | "rootShape"
+  | "phaseCount"
+  | "phaseOrder"
+  | "phaseShape"
+  | "phaseAbility"
+  | "phaseDc"
+  | "phaseAttachment"
+  | "phaseAutomaticSuccess"
+  | "successOutcome"
+  | "failedSaveEffect"
+  | "extraFailureEffect"
+  | "missingFailureEffect"
+  | "missingRepeat"
+  | "repeatSave"
+  | "extraRepeat"
+  | "requiredFacts";
+
+type StagedSaveConditionMechanicsIssue = SpellProcedureAdmissionIssue<
+  "stagedSaveCondition",
+  StagedSaveConditionFailedFact,
+  SpellMechanicsBranchPath
+>;
+
+const STAGED_SAVE_CONDITION_FAILED_FACT_MESSAGES = {
+  level: "Sleep requires a first-level spell.",
+  castingTime: "Sleep requires an action casting time.",
+  range: "Sleep requires a 60-foot point range.",
+  duration: "Sleep requires one minute of concentration.",
+  durationValue: "Sleep requires a one-minute concentration value.",
+  durationExtension: "Sleep has an unsupported duration extension.",
+  durationEnding: "Sleep has an unsupported duration ending.",
+  rootShape: "Sleep has unsupported activation root fields.",
+  phaseCount: "Sleep requires exactly one activation phase.",
+  phaseOrder: "Sleep's save gate must be the first activation phase.",
+  phaseShape: "Sleep has an unsupported save-gate field.",
+  phaseAbility: "Sleep requires a Wisdom Saving Throw.",
+  phaseDc: "Sleep requires the caster's Spell Save DC.",
+  phaseAttachment: "Sleep requires a point-origin 5-foot Sphere.",
+  phaseAutomaticSuccess:
+    "Sleep has an unsupported automatic-success predicate set.",
+  successOutcome: "Sleep requires no successful-save effect.",
+  failedSaveEffect: "Sleep has an unsupported failed-save effect bundle.",
+  extraFailureEffect: "Sleep has an unsupported additional failed-save effect.",
+  missingFailureEffect: "Sleep is missing a required failed-save effect.",
+  missingRepeat: "Sleep is missing its required repeat save.",
+  repeatSave: "Sleep has an unsupported repeat save.",
+  extraRepeat: "Sleep has an unsupported additional repeat save.",
+  requiredFacts:
+    "Sleep's admitted mechanics did not retain its required facts.",
+} as const satisfies Record<StagedSaveConditionFailedFact, string>;
+
+function stagedSaveConditionIssue(
+  failedFact: StagedSaveConditionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): StagedSaveConditionMechanicsIssue {
   return {
-    phase,
-    targeting: {
-      kind: "pointOriginSphere",
-      radiusFeet: movementFeet(phase.attachment.value.shape.radiusFeet),
-    },
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
-    automaticSuccessPredicates: [
-      { kind: "doesNotSleep" },
-      { kind: "conditionImmunity", condition: "exhaustion" },
-    ],
-    escapeAction: {
-      kind: "endCurrentEffect",
-      actor: "anotherCreature",
-      cost: "action",
-      method: "shakeAwake",
-    },
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "stagedSaveCondition",
+    failedFact,
+    mechanicsPath,
+    message: STAGED_SAVE_CONDITION_FAILED_FACT_MESSAGES[failedFact],
   };
-}
-
-function isStagedSaveConditionPhase(
-  phase: ActivationPhase | undefined,
-): phase is StagedSaveConditionPhase {
-  if (phase?.kind !== "save_gate") return false;
-  return (
-    stagedSaveConditionBaseFactsAreSupported(phase) &&
-    stagedSaveConditionAttachmentIsSupported(phase) &&
-    stagedSaveConditionAutomaticSuccessIsSupported(phase) &&
-    stagedSaveConditionFailureIsSupported(phase) &&
-    stagedSaveConditionRepeatSaveIsSupported(phase)
-  );
 }
 
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 
-function stagedSaveConditionBaseFactsAreSupported(
-  phase: SaveGatePhase,
-): boolean {
+function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
   return (
-    phase.ability === "wis" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none"
+    phase.kind === "save_gate" &&
+    phase.onFail.kind === "composite" &&
+    phase.onFail.effects.some(
+      (effect) => effect.kind === "target_effect_escape_action",
+    )
   );
 }
 
-function stagedSaveConditionAttachmentIsSupported(
-  phase: SaveGatePhase,
-): boolean {
-  const attachment = phase.attachment;
-  if (attachment.kind !== "hole") return false;
-  if (attachment.value.kind !== "area") return false;
-  if (attachment.value.origin.kind !== "point_within_range") return false;
-  if (attachment.value.shape.kind !== "sphere") return false;
+function isStagedConditionDuration(
+  duration: SpellMechanics["duration"],
+): duration is Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "concentration" }
+> & {
+  readonly upTo: Extract<
+    SpellMechanics["duration"],
+    { readonly kind: "concentration" }
+  >["upTo"] & {
+    readonly amount: PositiveInteger;
+  };
+} {
   return (
-    attachment.value.shape.radiusFeet ===
-    SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET
+    duration.kind === "concentration" &&
+    isSpellCanonicalDurationValue(duration.upTo) &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === 1
   );
 }
 
-function stagedSaveConditionAutomaticSuccessIsSupported(
-  phase: SaveGatePhase,
-): boolean {
-  const automaticSuccess = phase.autoSuccessIfTarget;
-  if (automaticSuccess?.kind !== "any") return false;
-  if (automaticSuccess.predicates.length !== 2) return false;
-  const [doesNotSleep, exhaustionImmunity] = automaticSuccess.predicates;
-  if (exhaustionImmunity?.kind !== "has_condition_immunity") return false;
-  return (
-    doesNotSleep?.kind === "does_not_sleep" &&
-    exhaustionImmunity.condition === "exhaustion"
-  );
+function stagedSaveConditionDurationIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): StagedSaveConditionMechanicsIssue[] {
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
+  const duration = mechanics.duration;
+  if (duration.kind !== "concentration") {
+    issues.push(
+      stagedSaveConditionIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    );
+    return issues;
+  }
+  if (
+    !isStagedConditionDuration(duration) ||
+    !isSpellCanonicalDurationValue(duration.upTo) ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== 1
+  ) {
+    issues.push(
+      stagedSaveConditionIssue("durationValue", spellDurationValuePath()),
+    );
+  }
+  const earlyEnd = duration.earlyEnd ?? [];
+  const expectedEndingPresent = earlyEnd[0]?.kind === "target_takes_damage";
+  for (const [index, ending] of earlyEnd.entries()) {
+    if (index !== 0 || ending.kind !== "target_takes_damage") {
+      issues.push(
+        stagedSaveConditionIssue(
+          "durationEnding",
+          spellDurationChildPath({
+            branch: "ending",
+            ordinal: PositiveInteger(index + 1),
+            ending: { kind: "earlyEnd", trigger: ending },
+          }),
+        ),
+      );
+    }
+  }
+  if (!expectedEndingPresent) {
+    issues.push(
+      stagedSaveConditionIssue(
+        "durationEnding",
+        // The required ending is absent, so its ordinal is not an authored
+        // coordinate. Keep the missing witness on the owned duration header;
+        // this also cannot collide with a separately authored permanent
+        // ending at the first available ending ordinal.
+        spellMechanicsHeaderPath("duration"),
+      ),
+    );
+  }
+  if (duration.permanentIfMaintainedFull === true) {
+    issues.push(
+      stagedSaveConditionIssue(
+        "durationEnding",
+        spellDurationChildPath({
+          branch: "ending",
+          ordinal: PositiveInteger(earlyEnd.length + 1),
+          ending: { kind: "permanentIfMaintainedFull" },
+        }),
+      ),
+    );
+  }
+  for (const child of spellDurationChildCoordinates(duration)) {
+    if (child.branch === "extension") {
+      issues.push(
+        stagedSaveConditionIssue(
+          "durationExtension",
+          spellDurationChildPath(child),
+        ),
+      );
+    }
+  }
+  return issues;
 }
 
-function stagedSaveConditionFailureIsSupported(phase: SaveGatePhase): boolean {
-  const failure = phase.onFail;
-  if (failure.kind !== "composite") return false;
-  if (failure.effects.length !== 2) return false;
-  return (
-    isIncapacitatedFailure(failure.effects[0]) &&
-    isShakeAwakeEscape(failure.effects[1])
+function stagedSaveConditionAutoSuccessSupported(
+  value: SaveGatePhase["autoSuccessIfTarget"],
+): value is StagedSaveConditionPhaseAutoSuccess {
+  if (
+    value?.kind !== "any" ||
+    value.predicates.length !== 2 ||
+    !spellHasOnlyNamedFields(value, ["kind", "predicates"])
+  ) {
+    return false;
+  }
+  const doesNotSleep = value.predicates.filter(
+    (predicate) =>
+      predicate.kind === "does_not_sleep" &&
+      spellHasOnlyNamedFields(predicate, ["kind"]),
   );
+  const exhaustionImmunity = value.predicates.filter(
+    (predicate) =>
+      predicate.kind === "has_condition_immunity" &&
+      predicate.condition === "exhaustion" &&
+      spellHasOnlyNamedFields(predicate, ["kind", "condition"]),
+  );
+  return doesNotSleep.length === 1 && exhaustionImmunity.length === 1;
 }
 
-function isIncapacitatedFailure(
-  effect: SaveGatePhase["onFail"] | undefined,
-): boolean {
-  return (
-    effect?.kind === "apply_condition" && effect.condition === "incapacitated"
-  );
-}
+type StagedSaveConditionPhaseAutoSuccess = {
+  readonly kind: "any";
+  readonly predicates: readonly [
+    { readonly kind: "does_not_sleep" },
+    {
+      readonly kind: "has_condition_immunity";
+      readonly condition: "exhaustion";
+    },
+  ];
+};
 
-function isShakeAwakeEscape(
-  effect: SaveGatePhase["onFail"] | undefined,
-): boolean {
-  if (effect?.kind !== "target_effect_escape_action") return false;
-  return (
+type StagedSaveConditionFailureRoleEffect =
+  | Extract<EffectAtom, { readonly kind: "apply_condition" }>
+  | Extract<EffectAtom, { readonly kind: "target_effect_escape_action" }>;
+
+function stagedSaveConditionFailureRoleEffect(
+  effect: EffectAtom,
+): StagedSaveConditionFailureRoleEffect | undefined {
+  if (
+    effect.kind === "apply_condition" &&
+    effect.condition === "incapacitated" &&
+    spellHasOnlyNamedFields(effect, ["kind", "condition"])
+  ) {
+    return effect;
+  }
+  if (
+    effect.kind === "target_effect_escape_action" &&
     effect.actor === "another_creature" &&
     effect.cost === "action" &&
     effect.method === "shake_awake" &&
-    effect.outcome === "end_current_effect"
+    effect.outcome === "end_current_effect" &&
+    spellHasOnlyNamedFields(effect, [
+      "kind",
+      "actor",
+      "cost",
+      "method",
+      "outcome",
+    ])
+  ) {
+    return effect;
+  }
+  return undefined;
+}
+
+function stagedSaveConditionFailureRole(
+  effect: EffectAtom,
+): "incapacitated" | "escape" | null {
+  const roleEffect = stagedSaveConditionFailureRoleEffect(effect);
+  if (roleEffect === undefined) return null;
+  return Match.value(roleEffect).pipe(
+    Match.when({ kind: "apply_condition" }, () => "incapacitated" as const),
+    Match.when(
+      { kind: "target_effect_escape_action" },
+      () => "escape" as const,
+    ),
+    Match.exhaustive,
   );
 }
 
-function stagedSaveConditionRepeatSaveIsSupported(
-  phase: SaveGatePhase,
+function stagedSaveConditionRepeatSupported(
+  repeatSave: NonNullable<SaveGatePhase["repeatSaves"]>[number],
 ): boolean {
-  const repeatSaves = phase.repeatSaves ?? [];
-  if (repeatSaves.length !== 1) return false;
-  const repeatSave = repeatSaves[0];
-  if (repeatSave === undefined) return false;
   return (
     repeatSave.cadence === "end_of_target_turn" &&
     repeatSave.rollMode === undefined &&
     repeatSave.onSuccess === "ends_on_target" &&
-    isUnconsciousFailure(repeatSave.onFailAgain)
+    repeatSave.onFailAgain?.kind === "apply_condition" &&
+    repeatSave.onFailAgain.condition === "unconscious" &&
+    spellHasOnlyNamedFields(repeatSave, [
+      "cadence",
+      "onSuccess",
+      "onFailAgain",
+    ]) &&
+    spellHasOnlyNamedFields(repeatSave.onFailAgain, ["kind", "condition"])
   );
 }
 
-function isUnconsciousFailure(
-  effect: SaveGatePhase["onFail"] | undefined,
-): boolean {
-  return (
-    effect?.kind === "apply_condition" && effect.condition === "unconscious"
+function stagedSaveConditionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: SaveGatePhase,
+): SpellProcedureMechanicsEvidence {
+  const effects = phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellActivationPhasePath(PositiveInteger(1)),
+    spellActivationAttachmentPath(PositiveInteger(1)),
+    ...effects.map((_effect, index) =>
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(index + 1)),
+    ),
+    ...(phase.repeatSaves ?? []).map((_repeat, index) =>
+      spellActivationRepeatPath(PositiveInteger(1), PositiveInteger(index + 1)),
+    ),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitStagedSaveConditionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "stagedSaveCondition",
+  StagedSaveConditionMechanicsFacts,
+  StagedSaveConditionSpellInvocation,
+  StagedSaveConditionMechanicsIssue
+> {
+  if (source.mechanics.family !== "activation") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const phaseIndex = mechanics.phases.findIndex(stagedSaveConditionRootPhase);
+  if (phaseIndex < 0) {
+    return { tag: "notRepresented" };
+  }
+  const phase = mechanics.phases[phaseIndex];
+  if (phase?.kind !== "save_gate") {
+    return { tag: "notRepresented" };
+  }
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
+  const push = (
+    failedFact: StagedSaveConditionFailedFact,
+    path: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push(stagedSaveConditionIssue(failedFact, path));
+  };
+  if (mechanics.level !== 1) push("level", spellMechanicsHeaderPath("level"));
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
+  ) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 60 ||
+    !spellHasOnlyNamedFields(mechanics.range, ["kind", "feet"])
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  issues.push(...stagedSaveConditionDurationIssues(mechanics));
+  if (
+    !spellHasOnlyNamedFields(mechanics, [
+      "level",
+      "school",
+      "range",
+      "components",
+      "duration",
+      "castingTime",
+      "family",
+      "phases",
+    ])
+  ) {
+    push("rootShape", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index !== phaseIndex) {
+        push(
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(index + 1)),
+        );
+      }
+    }
+    if (mechanics.phases.length < 1) {
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+    }
+  }
+  if (phaseIndex !== 0) {
+    push(
+      "phaseOrder",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (
+    !spellHasOnlyNamedFields(phase, [
+      "kind",
+      "attachment",
+      "ability",
+      "dc",
+      "onFail",
+      "onSuccess",
+      "repeatSaves",
+      "autoSuccessIfTarget",
+    ])
+  ) {
+    push(
+      "phaseShape",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (phase.ability !== "wis") {
+    push(
+      "phaseAbility",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    !spellHasOnlyNamedFields(phase.dc, ["kind"])
+  ) {
+    push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
+  }
+  const areaAdmission = admitSpellAreaAttachment(phase.attachment, [], []);
+  const admittedArea =
+    areaAdmission.tag === "admitted" ? areaAdmission.attachment : null;
+  const areaValue =
+    admittedArea?.kind === "hole"
+      ? admittedArea.value
+      : admittedArea?.kind === "area"
+        ? admittedArea
+        : null;
+  const attachmentSupported =
+    admittedArea?.kind === "hole" &&
+    areaValue !== null &&
+    areaValue.origin.kind === "point_within_range" &&
+    spellHasOnlyNamedFields(areaValue.origin, ["kind"]) &&
+    areaValue.shape.kind === "sphere" &&
+    spellHasOnlyNamedFields(areaValue.shape, ["kind", "radiusFeet"]) &&
+    typeof areaValue.shape.radiusFeet === "number" &&
+    areaValue.shape.radiusFeet === SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET;
+  if (!attachmentSupported) {
+    push(
+      "phaseAttachment",
+      spellActivationAttachmentPath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  if (
+    phase.onSuccess.kind !== "none" ||
+    !spellHasOnlyNamedFields(phase.onSuccess, ["kind"])
+  ) {
+    push(
+      "successOutcome",
+      spellActivationEffectPath(
+        PositiveInteger(phaseIndex + 1),
+        PositiveInteger(1),
+      ),
+    );
+  }
+  if (!stagedSaveConditionAutoSuccessSupported(phase.autoSuccessIfTarget)) {
+    push(
+      "phaseAutomaticSuccess",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+    );
+  }
+  const failureEffects =
+    phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  if (
+    phase.onFail.kind !== "composite" ||
+    !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
+  ) {
+    push(
+      "failedSaveEffect",
+      spellActivationEffectPath(
+        PositiveInteger(phaseIndex + 1),
+        PositiveInteger(1),
+      ),
+    );
+  } else {
+    const roles = new Set<string>();
+    for (const [index, effect] of failureEffects.entries()) {
+      const role = stagedSaveConditionFailureRole(effect);
+      if (role === null || roles.has(role)) {
+        push(
+          "extraFailureEffect",
+          spellActivationEffectPath(
+            PositiveInteger(phaseIndex + 1),
+            PositiveInteger(index + 1),
+          ),
+        );
+      } else {
+        roles.add(role);
+      }
+    }
+    const missingRoles = (["incapacitated", "escape"] as const).filter(
+      (role) => !roles.has(role),
+    );
+    for (const [missingIndex] of missingRoles.entries()) {
+      push(
+        "missingFailureEffect",
+        spellActivationEffectPath(
+          PositiveInteger(phaseIndex + 1),
+          PositiveInteger(failureEffects.length + missingIndex + 1),
+        ),
+      );
+    }
+  }
+  const repeatSaves = phase.repeatSaves ?? [];
+  const supportedRepeatIndexes = repeatSaves.flatMap((repeat, index) =>
+    stagedSaveConditionRepeatSupported(repeat) ? [index] : [],
   );
+  for (const [index, repeat] of repeatSaves.entries()) {
+    if (
+      !stagedSaveConditionRepeatSupported(repeat) ||
+      index !== supportedRepeatIndexes[0]
+    ) {
+      push(
+        index === 0 && supportedRepeatIndexes.length === 0
+          ? "repeatSave"
+          : "extraRepeat",
+        spellActivationRepeatPath(
+          PositiveInteger(phaseIndex + 1),
+          PositiveInteger(index + 1),
+        ),
+      );
+    }
+  }
+  if (supportedRepeatIndexes.length === 0) {
+    push(
+      "missingRepeat",
+      spellActivationRepeatPath(
+        PositiveInteger(phaseIndex + 1),
+        PositiveInteger(repeatSaves.length + 1),
+      ),
+    );
+  }
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        stagedSaveConditionIssue(first.failedFact, first.mechanicsPath),
+        ...rest.map((issue) =>
+          stagedSaveConditionIssue(issue.failedFact, issue.mechanicsPath),
+        ),
+      ],
+    };
+  }
+  if (
+    !isStagedConditionDuration(mechanics.duration) ||
+    areaValue === null ||
+    areaValue.shape.kind !== "sphere" ||
+    typeof areaValue.shape.radiusFeet !== "number" ||
+    phase.autoSuccessIfTarget?.kind !== "any"
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stagedSaveConditionIssue(
+          "requiredFacts",
+          spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+        ),
+      ],
+    };
+  }
+  const rangeFeet =
+    mechanics.range.kind === "point" && typeof mechanics.range.feet === "number"
+      ? movementFeet(mechanics.range.feet)
+      : null;
+  if (rangeFeet === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stagedSaveConditionIssue(
+          "requiredFacts",
+          spellMechanicsHeaderPath("range"),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ability: "wis" as const,
+    dc: phase.dc,
+    targeting: {
+      kind: "pointOriginSphere" as const,
+      radiusFeet: movementFeet(areaValue.shape.radiusFeet),
+    },
+    rangeFeet,
+    durationTicks: spellDurationTicksFromCanonicalValue(
+      mechanics.duration.upTo,
+    ),
+    automaticSuccessPredicates: [
+      { kind: "doesNotSleep" as const },
+      { kind: "conditionImmunity" as const, condition: "exhaustion" as const },
+    ],
+    escapeAction: {
+      kind: "endCurrentEffect" as const,
+      actor: "anotherCreature" as const,
+      cost: "action" as const,
+      method: "shakeAwake" as const,
+    },
+  } satisfies StagedSaveConditionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "stagedSaveCondition",
+      facts,
+      evidence: stagedSaveConditionMechanicsEvidence(mechanics, phase),
+      admit: (executionSource: BattleSpellExecutionSource, ctx) =>
+        stagedSaveConditionInvocationsFromFacts(
+          executionSource,
+          facts,
+          ctx.spellCastOptions,
+        ),
+    },
+  };
+}
+
+function stagedSaveConditionInvocationsFromFacts(
+  spell: BattleSpellExecutionSource,
+  facts: StagedSaveConditionMechanicsFacts,
+  castOptions: SpellAdmissionContext["spellCastOptions"],
+): readonly StagedSaveConditionSpellInvocation[] {
+  return castOptions.flatMap(
+    (slot): readonly StagedSaveConditionSpellInvocation[] =>
+      Number(slot.spellLevel) < Number(facts.level)
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "stagedSaveCondition",
+              spell,
+              ability: facts.ability,
+              dc: facts.dc,
+              targeting: facts.targeting,
+              rangeFeet: facts.rangeFeet,
+              durationTicks: facts.durationTicks,
+              automaticSuccessPredicates: facts.automaticSuccessPredicates,
+              escapeAction: facts.escapeAction,
+            },
+          ],
+  );
+}
+
+/** Compatibility projection retained for reducer/unit fixtures during the static-admission migration. */
+export function supportedPreparedStagedSaveConditionProfile(
+  spell: BattleSpellAdmissionSource,
+  castOptions: SpellAdmissionContext["spellCastOptions"],
+): readonly StagedSaveConditionSpellInvocation[] {
+  const result = admitStagedSaveConditionMechanics({
+    mechanics: spell.mechanics,
+    spellDefinitionRuleFacts: spell.spellDefinitionRuleFacts,
+  });
+  return result.tag === "supported"
+    ? stagedSaveConditionInvocationsFromFacts(
+        battleSpellExecutionSourceFromAdmission(spell),
+        result.admitted.facts,
+        castOptions,
+      )
+    : [];
 }
 
 function discoverStagedSaveConditionCastAct(
@@ -358,6 +818,7 @@ const StagedSaveConditionInvocationSchema = spellProcedureExecutionSchema(
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
+    durationTicks: ElapsedTimeTicksSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginSphere"),
       radiusFeet: MovementFeet,
@@ -381,11 +842,10 @@ const StagedSaveConditionInvocationSchema = spellProcedureExecutionSchema(
 export const stagedSaveConditionProfile = {
   procedure: "stagedSaveCondition",
   executionSchema: StagedSaveConditionInvocationSchema,
-  admit: admitStagedSaveCondition,
+  admitMechanics: admitStagedSaveConditionMechanics,
   discoverCastAct: discoverStagedSaveConditionCastAct,
   resolve: resolveStagedSaveCondition,
 } satisfies SpellProcedureDeclaration<
   "stagedSaveCondition",
   StagedSaveConditionSpellInvocation
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";
