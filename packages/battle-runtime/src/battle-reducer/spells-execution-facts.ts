@@ -12,6 +12,33 @@ export function targetSelectionFromAttachment(
     : null;
 }
 
+/**
+ * Check that a target-selection projection accounts for every authored field.
+ * Profiles provide the keys their execution targeting actually consumes.
+ */
+export function targetSelectionHasOnlyKeys(
+  selection: TargetSelection,
+  supportedKeys: readonly TargetSelectionKey[],
+): boolean {
+  return Object.keys(selection).every((key) =>
+    supportedKeys.some((supportedKey) => supportedKey === key),
+  );
+}
+
+/**
+ * Check that an attachment's authored value accounts for every field it
+ * carries. Hole protocol metadata remains outside this projection boundary.
+ */
+export function attachmentValueHasOnlyKeys(
+  attachment: Attachment,
+  supportedKeys: readonly AttachmentValueKey[],
+): boolean {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  return Object.keys(value).every((key) =>
+    supportedKeys.some((supportedKey) => supportedKey === key),
+  );
+}
+
 export function supportedDamageAmountExpr(input: {
   readonly amount: SurfaceDiceAmount;
   readonly spellLevel?: number | undefined;
@@ -124,6 +151,14 @@ import type {
 } from "@dnd/surface/surface/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
 import type { SpellAdmissionCastOption } from "./spell-procedure-profiles/profile.ts";
+
+type DistributiveKeyOf<Value> = Value extends unknown ? keyof Value : never;
+type TargetSelectionKey = Extract<DistributiveKeyOf<TargetSelection>, string>;
+type AttachmentValue = Extract<
+  Attachment,
+  { readonly kind: "hole"; readonly value: unknown }
+>["value"];
+type AttachmentValueKey = Extract<DistributiveKeyOf<AttachmentValue>, string>;
 
 type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;

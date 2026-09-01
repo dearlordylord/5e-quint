@@ -12,9 +12,13 @@ import {
 } from "@dnd/surface/surface/spell-mechanics-path";
 
 import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
-import { spellRecord } from "../../unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "../../unit-profile-admission-spell-record.test-support.ts";
 import {
   admitBattleSpellMechanicsFrom,
+  admitSpellTargetAttachment,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsAdmissionDeclaration,
@@ -202,6 +206,104 @@ describe("battle spell static mechanics admission", () => {
     expect(result.issues[0]).toMatchObject({
       failedFact: "extraPhase",
       mechanicsPath: spellMechanicsRootPath(),
+    });
+  });
+
+  test("admits only the complete target-hole shape owned by a procedure", () => {
+    const energy = spellRecord("protection_from_energy");
+    if (
+      energy.mechanics.family !== "activation" ||
+      energy.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Protection from Energy direct mechanics.");
+    }
+    const phase = energy.mechanics.phases[0];
+    if (
+      phase.attachment.kind !== "hole" ||
+      phase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Protection from Energy target attachment.");
+    }
+
+    const admitted = admitSpellTargetAttachment(phase.attachment, [
+      "mode",
+      "targetKinds",
+      "disposition",
+    ] as const);
+    expect(admitted).toEqual({
+      tag: "admitted",
+      attachment: phase.attachment,
+    });
+
+    const withRangeOrigin = decodeSpellRecordForTest({
+      ...energy,
+      mechanics: {
+        ...energy.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                rangeOrigin: "spell_sensor",
+              },
+            },
+          },
+        ],
+      },
+    });
+    if (
+      withRangeOrigin.mechanics.family !== "activation" ||
+      withRangeOrigin.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected malformed direct mechanics.");
+    }
+    expect(
+      admitSpellTargetAttachment(
+        withRangeOrigin.mechanics.phases[0].attachment,
+        ["mode", "targetKinds", "disposition"] as const,
+      ),
+    ).toEqual({
+      tag: "rejected",
+      reason: "targetAttachmentConstraint",
+    });
+
+    const withTypeFilter = decodeSpellRecordForTest({
+      ...energy,
+      mechanics: {
+        ...energy.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection: {
+                  ...phase.attachment.value.selection,
+                  typeFilter: ["humanoid"],
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+    if (
+      withTypeFilter.mechanics.family !== "activation" ||
+      withTypeFilter.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected malformed direct mechanics.");
+    }
+    expect(
+      admitSpellTargetAttachment(
+        withTypeFilter.mechanics.phases[0].attachment,
+        ["mode", "targetKinds", "disposition"] as const,
+      ),
+    ).toEqual({
+      tag: "rejected",
+      reason: "targetSelectionConstraint",
     });
   });
 });

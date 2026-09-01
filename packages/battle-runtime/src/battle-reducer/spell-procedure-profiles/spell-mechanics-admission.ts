@@ -1,14 +1,34 @@
 import {
+  ELAPSED_TIME_TICKS_PER_DAY,
+  ELAPSED_TIME_TICKS_PER_HOUR,
+  ELAPSED_TIME_TICKS_PER_MINUTE,
+  elapsedTimeTicks,
+  type ElapsedTimeTicks,
+} from "@dnd/shared/elapsed-time";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  PositiveInteger,
   movementFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
   spellMaterialComponentPath,
+  spellDurationValuePath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  Attachment,
+  Components,
+  DurationEndTrigger,
+  DurationValue,
+  SpellMechanics,
+  TargetSelection,
+  TimedPermanentAfter,
+} from "@dnd/surface/surface/types";
 
 import type {
   BattleSpellExecutionSource,
@@ -17,7 +37,7 @@ import type {
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 
 /**
  * Static admission receives only the already-decoded mechanics graph and the
@@ -28,6 +48,14 @@ export type SpellMechanicsAdmissionSource = {
   readonly mechanics: SpellMechanics;
   readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
 };
+
+/** Derive elapsed ticks from a validated authored duration value. */
+export function spellDurationValueTicks(
+  value: DurationValue,
+): ElapsedTimeTicks | null {
+  const ticks = elapsedTimeTicksFromTimeSpanDuration(value);
+  return Result.isFailure(ticks) ? null : ticks.success;
+}
 
 /**
  * A profile's static projection has to account for at least one owned path.
@@ -82,6 +110,355 @@ export function spellDefinitionPointRangeFeet(
   return range.kind === "point" && typeof range.feet === "number"
     ? movementFeet(range.feet)
     : undefined;
+}
+
+/**
+ * A parsed DurationValue has positive integral units at the Surface boundary.
+ * Carrying that proof lets execution derive elapsed time without reparsing or
+ * falling back to an empty invocation list.
+ */
+export type SpellCanonicalDurationValue = Omit<DurationValue, "amount"> & {
+  readonly amount: PositiveInteger;
+};
+
+export function isSpellCanonicalDurationValue(
+  value: DurationValue,
+): value is SpellCanonicalDurationValue {
+  return Number.isInteger(value.amount) && value.amount > 0;
+}
+
+export function spellDurationTicksFromCanonicalValue(
+  value: SpellCanonicalDurationValue,
+): ElapsedTimeTicks {
+  return elapsedTimeTicks(
+    Match.value(value.unit).pipe(
+      Match.when("round", () => Number(value.amount)),
+      Match.when(
+        "minute",
+        () => Number(value.amount) * ELAPSED_TIME_TICKS_PER_MINUTE,
+      ),
+      Match.when(
+        "hour",
+        () => Number(value.amount) * ELAPSED_TIME_TICKS_PER_HOUR,
+      ),
+      Match.when(
+        "day",
+        () => Number(value.amount) * ELAPSED_TIME_TICKS_PER_DAY,
+      ),
+      Match.exhaustive,
+    ),
+  );
+}
+
+/**
+ * Duration child coordinates are traversed once for every profile. Values
+ * are retained for ending discrimination while coordinates retain authored
+ * ordinals, including concentration upcast tiers.
+ */
+export type SpellDurationEnding =
+  | {
+      readonly kind: "earlyEnd";
+      readonly trigger: DurationEndTrigger;
+    }
+  | {
+      readonly kind: "permanentAfter";
+      readonly transition: TimedPermanentAfter;
+    }
+  | {
+      readonly kind: "permanentIfMaintainedFull";
+    }
+  | {
+      readonly kind: "endsOn";
+      readonly trigger: NonNullable<
+        Extract<
+          SpellMechanics["duration"],
+          { readonly kind: "permanent" }
+        >["endsOn"]
+      >[number];
+    };
+
+export type SpellDurationChild =
+  | {
+      readonly branch: "extension";
+      readonly ordinal: PositiveInteger;
+    }
+  | {
+      readonly branch: "ending";
+      readonly ordinal: PositiveInteger;
+      readonly ending: SpellDurationEnding;
+    };
+
+export function spellDurationChildCoordinates(
+  duration: SpellMechanics["duration"],
+): readonly SpellDurationChild[] {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, (timed) => [
+      ...(timed.value.upcastTiers ?? []).map((_tier, index) => ({
+        branch: "extension" as const,
+        ordinal: PositiveInteger(index + 1),
+      })),
+      ...(timed.earlyEnd ?? []).map((ending, index) => ({
+        branch: "ending" as const,
+        ordinal: PositiveInteger(index + 1),
+        ending: { kind: "earlyEnd" as const, trigger: ending },
+      })),
+      ...(timed.permanentAfter === undefined
+        ? []
+        : [
+            {
+              branch: "ending" as const,
+              ordinal: PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
+              ending: {
+                kind: "permanentAfter" as const,
+                transition: timed.permanentAfter,
+              },
+            },
+          ]),
+    ]),
+    Match.when({ kind: "concentration" }, (concentration) => [
+      ...(concentration.upTo.upcastTiers ?? []).map((_tier, index) => ({
+        branch: "extension" as const,
+        ordinal: PositiveInteger(index + 1),
+      })),
+      ...(concentration.earlyEnd ?? []).map((ending, index) => ({
+        branch: "ending" as const,
+        ordinal: PositiveInteger(index + 1),
+        ending: { kind: "earlyEnd" as const, trigger: ending },
+      })),
+      ...(concentration.permanentIfMaintainedFull === true
+        ? [
+            {
+              branch: "ending" as const,
+              ordinal: PositiveInteger(
+                (concentration.earlyEnd?.length ?? 0) + 1,
+              ),
+              ending: {
+                kind: "permanentIfMaintainedFull" as const,
+              },
+            },
+          ]
+        : []),
+    ]),
+    Match.when({ kind: "permanent" }, (permanent) =>
+      (permanent.endsOn ?? []).map((trigger, index) => ({
+        branch: "ending" as const,
+        ordinal: PositiveInteger(index + 1),
+        ending: { kind: "endsOn" as const, trigger },
+      })),
+    ),
+    Match.when({ kind: "slot_tiered" }, (slotTiered) =>
+      slotTiered.tiers.map((_tier, index) => ({
+        branch: "extension" as const,
+        ordinal: PositiveInteger(index + 1),
+      })),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function spellDurationChildPath(
+  child: SpellDurationChild,
+): SpellMechanicsBranchPath {
+  return child.branch === "extension"
+    ? spellDurationExtensionPath(child.ordinal)
+    : spellDurationEndingPath(child.ordinal);
+}
+
+/** The duration value branch exists for timed, concentration, and tiered forms. */
+export function spellDurationValueEvidencePaths(
+  duration: SpellMechanics["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, () => [spellDurationValuePath()]),
+    Match.when({ kind: "concentration" }, () => [spellDurationValuePath()]),
+    Match.when({ kind: "permanent" }, () => []),
+    Match.when({ kind: "slot_tiered" }, () => [spellDurationValuePath()]),
+    Match.exhaustive,
+  );
+}
+
+/** Project the complete canonical duration evidence shape in one place. */
+export function spellDurationEvidencePaths(
+  duration: SpellMechanics["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  return [
+    ...spellDurationValueEvidencePaths(duration),
+    ...spellDurationChildCoordinates(duration).map(spellDurationChildPath),
+  ];
+}
+
+/** Surface Touch has one canonical movement-distance projection. */
+export function spellTouchRangeFeet(): MovementFeet {
+  return movementFeet(5);
+}
+
+/**
+ * Target-selection procedures own only these selection fields. Callers pass the
+ * subset consumed by their procedure-specific cardinality and disposition
+ * witness; every other field is rejected by the target-attachment admission
+ * below.
+ */
+type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
+type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
+type SpellTargetSelectionFieldShape = {
+  readonly [Field in SpellTargetSelectionField]?: unknown;
+};
+
+type AdmittedSpellTargetSelection<
+  AllowedFields extends SpellTargetSelectionField,
+> = TargetSelection & {
+  readonly [Field in Exclude<
+    UnionKeys<TargetSelection>,
+    AllowedFields
+  >]?: never;
+};
+
+type SpellTargetHoleAttachment = Extract<Attachment, { readonly kind: "hole" }>;
+
+type SpellTargetAttachmentValue = Extract<
+  SpellTargetHoleAttachment["value"],
+  { readonly kind: "target" }
+>;
+
+type SpellTargetAttachment = Omit<SpellTargetHoleAttachment, "value"> & {
+  readonly value: SpellTargetAttachmentValue;
+};
+
+type AdmittedSpellTargetAttachment<
+  AllowedFields extends SpellTargetSelectionField,
+> = Omit<SpellTargetAttachment, "value"> & {
+  readonly value: Omit<
+    SpellTargetAttachmentValue,
+    "rangeOrigin" | "selection"
+  > & {
+    readonly selection: AdmittedSpellTargetSelection<AllowedFields>;
+  };
+};
+
+export type SpellTargetAttachmentAdmissionResult<
+  AllowedFields extends SpellTargetSelectionField,
+> =
+  | {
+      readonly tag: "admitted";
+      readonly attachment: AdmittedSpellTargetAttachment<AllowedFields>;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly reason:
+        | "targetAttachmentMissing"
+        | "targetAttachmentConstraint"
+        | "targetSelectionConstraint";
+    };
+
+const SPELL_TARGET_ATTACHMENT_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const satisfies ReadonlyArray<keyof SpellTargetAttachment>;
+const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
+  "kind",
+  "selection",
+] as const satisfies ReadonlyArray<keyof SpellTargetAttachmentValue>;
+
+function hasOnlyNamedFields<Value extends object>(
+  value: Value,
+  allowedFields: readonly (keyof Value)[],
+): boolean {
+  const allowed = new Set<PropertyKey>(allowedFields);
+  return Reflect.ownKeys(value).every((field) => allowed.has(field));
+}
+
+function isSpellTargetAttachment(
+  attachment: Attachment,
+): attachment is SpellTargetAttachment {
+  return attachment.kind === "hole" && attachment.value.kind === "target";
+}
+
+function isAdmittedSpellTargetSelection<
+  const AllowedFields extends readonly SpellTargetSelectionField[],
+>(
+  selection: TargetSelection,
+  allowedFields: AllowedFields,
+): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
+  return hasOnlyNamedFields<SpellTargetSelectionFieldShape>(
+    selection,
+    allowedFields,
+  );
+}
+
+/**
+ * Admit the complete target-hole shape consumed by a target-selection
+ * procedure. The attachment/value key sets deliberately exclude rangeOrigin,
+ * while the caller's selection field list makes procedure ownership explicit.
+ * Own-key inspection keeps a future Surface schema field from being silently
+ * dropped.
+ */
+export function admitSpellTargetAttachment<
+  const AllowedFields extends readonly SpellTargetSelectionField[],
+>(
+  attachment: Attachment,
+  allowedSelectionFields: AllowedFields,
+): SpellTargetAttachmentAdmissionResult<AllowedFields[number]> {
+  if (!isSpellTargetAttachment(attachment)) {
+    return {
+      tag: "rejected",
+      reason: "targetAttachmentMissing",
+    };
+  }
+  if (
+    !hasOnlyNamedFields(attachment, SPELL_TARGET_ATTACHMENT_FIELDS) ||
+    !hasOnlyNamedFields(attachment.value, SPELL_TARGET_ATTACHMENT_VALUE_FIELDS)
+  ) {
+    return {
+      tag: "rejected",
+      reason: "targetAttachmentConstraint",
+    };
+  }
+  const selection = attachment.value.selection;
+  if (!isAdmittedSpellTargetSelection(selection, allowedSelectionFields)) {
+    return {
+      tag: "rejected",
+      reason: "targetSelectionConstraint",
+    };
+  }
+  const admittedAttachment = {
+    ...attachment,
+    value: {
+      ...attachment.value,
+      selection,
+    },
+  } satisfies AdmittedSpellTargetAttachment<AllowedFields[number]>;
+  return {
+    tag: "admitted",
+    attachment: admittedAttachment,
+  };
+}
+
+/** Stable issue identity: only the failed fact and its exact source path. */
+export function spellMechanicsIssueKey(issue: {
+  readonly failedFact: string;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+}): string {
+  return JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
+}
+
+/** Dedupe only exact failed-fact/path pairs while preserving discovery order. */
+export function spellUniqueMechanicsIssues<
+  Issue extends {
+    readonly failedFact: string;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  },
+>(issues: readonly Issue[]): readonly Issue[] {
+  const seen = new Set<string>();
+  return issues.filter((issue) => {
+    const key = spellMechanicsIssueKey(issue);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**
@@ -223,12 +600,14 @@ export type BattleSpellMechanicsAdmission<
       readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
     };
 
-export function spellProcedureNonEmpty<T>(
+export function spellNonEmpty<T>(
   values: readonly T[],
 ): ReadonlyNonEmptyArray<T> | undefined {
   const [first, ...rest] = values;
   return first === undefined ? undefined : [first, ...rest];
 }
+
+export const spellProcedureNonEmpty = spellNonEmpty;
 
 /**
  * Named admission policies keep the witness count and tolerated loss coupled.
