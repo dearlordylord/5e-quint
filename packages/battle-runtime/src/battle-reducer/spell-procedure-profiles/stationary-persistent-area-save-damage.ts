@@ -288,7 +288,7 @@ function hasStationaryPersistentAreaOperations(input: {
     hasStationaryPersistentAreaTriggeredDamage(
       input.enterOperation,
       input.endTurnOperation,
-    ) && hasStationaryPersistentAreaSaveLimitGroup(input.saveLimitGroup)
+    ) && input.saveLimitGroup !== null
   );
 }
 
@@ -306,12 +306,6 @@ function hasStationaryPersistentAreaTriggeredDamage(
     stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) !==
       null
   );
-}
-
-function hasStationaryPersistentAreaSaveLimitGroup(
-  saveLimitGroup: ReturnType<typeof sharedOncePerTurnLimitGroup>,
-): boolean {
-  return saveLimitGroup !== null && saveLimitGroup.length > 0;
 }
 
 function isStationaryPersistentAreaPassiveOperation(
