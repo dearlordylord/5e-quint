@@ -778,6 +778,47 @@ describe("battle presentation joins", () => {
     });
   });
 
+  test("surfaces missing Stat Block admission for a non-attack subject", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("stat-block-presentation-multiattack-missing"),
+      combatants: [
+        statBlockCreatureInit({
+          statBlock: monsterMultiattackStatBlock(),
+          initiative: 10,
+        }),
+      ],
+    });
+    const actor = session.state.combatants.get(goblinId);
+    if (actor?.origin.kind !== "statBlock") {
+      throw new Error("Expected Multiattack Stat Block actor.");
+    }
+    const multiattackBinding = actor.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "multiattack",
+    );
+    if (multiattackBinding?.procedure.kind !== "multiattack") {
+      throw new Error("Expected admitted Multiattack procedure.");
+    }
+    const sessionWithoutPresentationAdmission = battleRuntimeSessionForTest({
+      state: session.state,
+      context: emptyBattleRuntimeContext(),
+    });
+
+    expect(
+      battleSubjectPresentation(sessionWithoutPresentationAdmission, {
+        tag: "action",
+        actorId: goblinId,
+        action: "multiattack",
+        procedureRef: multiattackBinding.procedureRef,
+      }),
+    ).toEqual({
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockAdmissionMissing",
+      },
+    });
+  });
+
   test("reports a missing authored weapon source separately from character context", () => {
     const session = presentationSession();
     const actor = session.state.combatants.get(fighterId);
