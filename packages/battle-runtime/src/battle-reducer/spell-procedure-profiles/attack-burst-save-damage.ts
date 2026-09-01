@@ -63,6 +63,8 @@ import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -74,11 +76,7 @@ import {
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import {
-  attackBonus,
-  PositiveInteger,
-  type ReadonlyNonEmptyArray,
-} from "@dnd/shared/types";
+import { attackBonus, PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -280,20 +278,6 @@ function attackBurstSaveDamageAmountIsRepresented(
   );
 }
 
-function attackBurstSaveDamageNonEmpty<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> | undefined {
-  const [first, ...rest] = values;
-  return first === undefined ? undefined : [first, ...rest];
-}
-
-function attackBurstSaveDamageIssueKey(
-  failedFact: AttackBurstSaveDamageFailedFact,
-  path: SpellMechanicsBranchPath,
-): string {
-  return JSON.stringify([failedFact, path.nodes]);
-}
-
 function admitAttackBurstSaveDamageMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -335,14 +319,10 @@ function admitAttackBurstSaveDamageMechanics(
   const attackPhaseOrdinal = PositiveInteger(attackPhaseIndex + 1);
   const burstPhaseOrdinal = PositiveInteger(burstPhaseIndex + 1);
   const issues: AttackBurstSaveDamageMechanicsIssue[] = [];
-  const issueKeys = new Set<string>();
   const pushIssue = (
     failedFact: AttackBurstSaveDamageMechanicsIssue["failedFact"],
     path: SpellMechanicsBranchPath,
   ): void => {
-    const key = attackBurstSaveDamageIssueKey(failedFact, path);
-    if (issueKeys.has(key)) return;
-    issueKeys.add(key);
     issues.push(attackBurstSaveDamageMechanicsIssue(failedFact, path));
   };
   if (mechanics.level !== 1) {
@@ -486,7 +466,9 @@ function admitAttackBurstSaveDamageMechanics(
       spellActivationEffectPath(burstPhaseOrdinal, PositiveInteger(1)),
     );
   }
-  const nonEmptyIssues = attackBurstSaveDamageNonEmpty(issues);
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
   if (nonEmptyIssues !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(
       attackBurstSaveDamageIssueResult,

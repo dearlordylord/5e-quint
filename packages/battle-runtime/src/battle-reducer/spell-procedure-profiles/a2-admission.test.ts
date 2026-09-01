@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import {
   spellActivationAttachmentPath,
@@ -375,6 +375,82 @@ describe("SR-04G-A2 static spell procedure admission", () => {
         expect(invocation.spell).not.toHaveProperty("mechanics");
       }
     }
+  });
+
+  test("retains literal duration facts and derives their total closure ticks", () => {
+    const directSource = spellAdmissionSource(spellRecord("invisibility"));
+    const directResult = directConditionProfile.admitMechanics({
+      mechanics: directSource.mechanics,
+      spellDefinitionRuleFacts: directSource.spellDefinitionRuleFacts,
+    });
+    expect(directResult.tag).toBe("supported");
+    if (directResult.tag !== "supported") return;
+    expectTypeOf(
+      directResult.admitted.facts.duration.upTo.unit,
+    ).toEqualTypeOf<"hour">();
+    expectTypeOf(
+      directResult.admitted.facts.duration.upTo.amount,
+    ).toEqualTypeOf<PositiveInteger & 1>();
+    expect(directResult.admitted.facts.duration.upTo).toEqual({
+      amount: 1,
+      unit: "hour",
+    });
+    const directInvocations = directResult.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(directSource),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: directSource.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(directInvocations).toHaveLength(1);
+    expect(directInvocations[0]).toMatchObject({
+      activeEffect: {
+        expiresAt: {
+          durationTicks: 600,
+        },
+      },
+    });
+
+    const duplicateSource = spellAdmissionSource(spellRecord("mirror_image"));
+    const duplicateResult = duplicateHitInterceptionProfile.admitMechanics({
+      mechanics: duplicateSource.mechanics,
+      spellDefinitionRuleFacts: duplicateSource.spellDefinitionRuleFacts,
+    });
+    expect(duplicateResult.tag).toBe("supported");
+    if (duplicateResult.tag !== "supported") return;
+    expectTypeOf(
+      duplicateResult.admitted.facts.duration.value.unit,
+    ).toEqualTypeOf<"minute">();
+    expectTypeOf(
+      duplicateResult.admitted.facts.duration.value.amount,
+    ).toEqualTypeOf<PositiveInteger & 1>();
+    expect(duplicateResult.admitted.facts.duration.value).toEqual({
+      amount: 1,
+      unit: "minute",
+    });
+    const duplicateInvocations = duplicateResult.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(duplicateSource),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: duplicateSource.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(duplicateInvocations).toHaveLength(1);
+    expect(duplicateInvocations[0]).toMatchObject({
+      activeEffect: {
+        expiresAt: {
+          durationTicks: 10,
+        },
+      },
+    });
   });
 
   test("does not claim sibling procedure shapes", () => {

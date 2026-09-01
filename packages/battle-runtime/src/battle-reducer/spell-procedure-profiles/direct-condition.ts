@@ -52,10 +52,12 @@ import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-r
 import {
   spellConsumedMaterialEvidencePaths,
   spellDurationEvidencePaths,
-  spellDurationValueTicks,
-  spellNonEmpty,
+  isSpellCanonicalDurationValue,
+  spellDurationTicksFromCanonicalValue,
+  spellProcedureNonEmpty,
   spellTouchRangeFeet,
   spellUniqueMechanicsIssues,
+  type SpellCanonicalDurationValue,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -108,20 +110,14 @@ type DirectConditionRange = Extract<
   SpellDefinitionRuleFacts["range"],
   { readonly kind: "touch" }
 >;
-type DirectConditionDuration = Omit<
-  Extract<
-    SpellDefinitionRuleFacts["duration"],
-    { readonly kind: "concentration" }
-  >,
-  "upTo"
+type DirectConditionDuration = Extract<
+  SpellDefinitionRuleFacts["duration"],
+  { readonly kind: "concentration" }
 > & {
-  readonly upTo: Omit<
-    Extract<
-      SpellDefinitionRuleFacts["duration"],
-      { readonly kind: "concentration" }
-    >["upTo"],
-    "unit" | "amount"
-  > & { readonly unit: "hour"; readonly amount: 1 };
+  readonly upTo: SpellCanonicalDurationValue & {
+    readonly unit: "hour";
+    readonly amount: 1;
+  };
 };
 type DirectConditionAppliedCondition = Extract<
   DirectConditionInvocation["activeEffect"],
@@ -198,8 +194,9 @@ function admitDirectCondition(
   ctx: SpellAdmissionContext,
   facts: DirectConditionMechanicsFacts,
 ): readonly DirectConditionInvocation[] {
-  const durationTicks = spellDurationValueTicks(facts.duration.upTo);
-  if (durationTicks === null) return [];
+  const durationTicks = spellDurationTicksFromCanonicalValue(
+    facts.duration.upTo,
+  );
   return ctx.spellCastOptions.flatMap(
     (slot): readonly DirectConditionInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
@@ -232,20 +229,15 @@ function admitDirectCondition(
   );
 }
 
-function directConditionDurationProjection(
+function isDirectConditionDuration(
   duration: SpellDefinitionRuleFacts["duration"],
-): DirectConditionDuration | null {
-  if (
-    duration.kind !== "concentration" ||
-    duration.upTo.unit !== "hour" ||
-    duration.upTo.amount !== 1
-  ) {
-    return null;
-  }
-  return {
-    ...duration,
-    upTo: { ...duration.upTo, unit: "hour", amount: 1 },
-  };
+): duration is DirectConditionDuration {
+  return (
+    duration.kind === "concentration" &&
+    duration.upTo.unit === "hour" &&
+    duration.upTo.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.upTo)
+  );
 }
 
 export const DIRECT_CONDITION_FAILED_FACTS = [
@@ -342,7 +334,9 @@ function admitDirectConditionMechanics(
     representationMismatchCount <=
     DIRECT_CONDITION_MAX_TOLERATED_REPRESENTATION_MISMATCHES;
   const range = mechanics.range.kind === "touch" ? mechanics.range : null;
-  const duration = directConditionDurationProjection(mechanics.duration);
+  const duration = isDirectConditionDuration(mechanics.duration)
+    ? mechanics.duration
+    : null;
   const phaseIndex = mechanics.phases.findIndex(
     (phase) =>
       phase.kind === "direct" &&
@@ -481,7 +475,9 @@ function admitDirectConditionMechanics(
       ),
     );
   }
-  const nonEmptyIssues = spellNonEmpty(spellUniqueMechanicsIssues(issues));
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
   if (nonEmptyIssues !== undefined) {
     const [first, ...rest] = nonEmptyIssues.map(directConditionIssueResult);
     return { tag: "unsupported", issues: [first, ...rest] };
@@ -643,7 +639,8 @@ const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
 );
 export const directConditionProfile: SpellProcedureDeclaration<
   "directCondition",
-  DirectConditionInvocation
+  DirectConditionInvocation,
+  DirectConditionMechanicsFacts
 > = {
   procedure: "directCondition",
   executionSchema: DirectConditionInvocationSchema,

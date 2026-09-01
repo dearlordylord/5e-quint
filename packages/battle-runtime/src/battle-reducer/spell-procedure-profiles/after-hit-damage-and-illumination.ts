@@ -63,6 +63,8 @@ import type {
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -77,7 +79,7 @@ import {
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -237,25 +239,6 @@ function afterHitDamageAndIlluminationMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function afterHitDamageAndIlluminationNonEmpty<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> | undefined {
-  const [first, ...rest] = values;
-  return first === undefined ? undefined : [first, ...rest];
-}
-
-function afterHitDamageAndIlluminationUniqueIssues(
-  issues: readonly AfterHitDamageAndIlluminationMechanicsIssue[],
-): readonly AfterHitDamageAndIlluminationMechanicsIssue[] {
-  const issueKeys = new Set<string>();
-  return issues.filter((issue) => {
-    const key = JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
-    if (issueKeys.has(key)) return false;
-    issueKeys.add(key);
-    return true;
-  });
-}
-
 function admitAfterHitDamageAndIlluminationMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -293,14 +276,10 @@ function admitAfterHitDamageAndIlluminationMechanics(
     return { tag: "notRepresented" };
   }
   const issues: AfterHitDamageAndIlluminationMechanicsIssue[] = [];
-  const issueKeys = new Set<string>();
   const pushIssue = (
     failedFact: AfterHitDamageAndIlluminationMechanicsIssue["failedFact"],
     mechanicsPath: SpellMechanicsBranchPath,
   ): void => {
-    const key = JSON.stringify([failedFact, mechanicsPath.nodes]);
-    if (issueKeys.has(key)) return;
-    issueKeys.add(key);
     issues.push(
       afterHitDamageAndIlluminationMechanicsIssue(failedFact, mechanicsPath),
     );
@@ -480,8 +459,8 @@ function admitAfterHitDamageAndIlluminationMechanics(
       spellOngoingOperationPath(PositiveInteger(index + 1)),
     );
   }
-  const nonEmptyIssues = afterHitDamageAndIlluminationNonEmpty(
-    afterHitDamageAndIlluminationUniqueIssues(issues),
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
   );
   if (nonEmptyIssues !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(

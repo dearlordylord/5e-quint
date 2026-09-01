@@ -71,6 +71,7 @@ import type {
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
+import { spellUniqueMechanicsIssues } from "./spell-mechanics-admission.ts";
 import {
   spellDurationEndingPath,
   spellDurationValuePath,
@@ -164,28 +165,6 @@ type AfterHitSaveGatedConditionNonEmptyIssues = readonly [
   ...AfterHitSaveGatedConditionMechanicsIssue[],
 ];
 
-function afterHitSaveGatedConditionIssueKey(
-  failedFact: AfterHitSaveGatedConditionFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
-): string {
-  return JSON.stringify([failedFact, mechanicsPath.nodes]);
-}
-
-function afterHitSaveGatedConditionUniqueIssues(
-  issues: readonly AfterHitSaveGatedConditionMechanicsIssue[],
-): readonly AfterHitSaveGatedConditionMechanicsIssue[] {
-  const issueKeys = new Set<string>();
-  return issues.filter((issue) => {
-    const key = afterHitSaveGatedConditionIssueKey(
-      issue.failedFact,
-      issue.mechanicsPath,
-    );
-    if (issueKeys.has(key)) return false;
-    issueKeys.add(key);
-    return true;
-  });
-}
-
 function afterHitSaveGatedConditionWithMandatoryEscape(
   issues: readonly AfterHitSaveGatedConditionMechanicsIssue[],
   escapeIssue: AfterHitSaveGatedConditionMechanicsIssue,
@@ -233,14 +212,10 @@ function admitAfterHitSaveGatedConditionMechanics(
     spellOngoingInitialPhasePath(),
   );
   const issues: AfterHitSaveGatedConditionMechanicsIssue[] = [];
-  const issueKeys = new Set<string>();
   const pushIssue = (
     failedFact: AfterHitSaveGatedConditionMechanicsIssue["failedFact"],
     mechanicsPath: SpellMechanicsBranchPath,
   ): void => {
-    const key = afterHitSaveGatedConditionIssueKey(failedFact, mechanicsPath);
-    if (issueKeys.has(key)) return;
-    issueKeys.add(key);
     issues.push(
       afterHitSaveGatedConditionMechanicsIssue(failedFact, mechanicsPath),
     );
@@ -333,7 +308,7 @@ function admitAfterHitSaveGatedConditionMechanics(
     );
   }
   const unsupportedIssues = afterHitSaveGatedConditionWithMandatoryEscape(
-    afterHitSaveGatedConditionUniqueIssues(issues),
+    spellUniqueMechanicsIssues(issues),
     escapeIssue,
   );
   const [firstIssue, ...remainingIssues] = unsupportedIssues;

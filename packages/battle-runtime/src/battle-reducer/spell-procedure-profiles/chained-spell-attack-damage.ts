@@ -63,7 +63,7 @@ import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-r
 import {
   spellConsumedMaterialEvidencePaths,
   spellDurationEvidencePaths,
-  spellNonEmpty,
+  spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
@@ -712,7 +712,9 @@ function admitChainedSpellAttackDamageMechanics(
   ) {
     pushIssue("leapDamageAmount", leapRepeatPath);
   }
-  const nonEmptyIssues = spellNonEmpty(spellUniqueMechanicsIssues(issues));
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
   if (nonEmptyIssues !== undefined) {
     const [first, ...rest] = nonEmptyIssues.map(
       chainedSpellAttackDamageIssueResult,

@@ -73,6 +73,8 @@ import type {
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -84,7 +86,7 @@ import {
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -210,25 +212,6 @@ function afterHitDamageMechanicsEvidence(
     ...spellConsumedMaterialEvidencePaths(mechanics.components),
   ];
   return { consumed, unowned: [] };
-}
-
-function afterHitDamageNonEmpty<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> | undefined {
-  const [first, ...rest] = values;
-  return first === undefined ? undefined : [first, ...rest];
-}
-
-function afterHitDamageUniqueIssues(
-  issues: readonly AfterHitDamageMechanicsIssue[],
-): readonly AfterHitDamageMechanicsIssue[] {
-  const issueKeys = new Set<string>();
-  return issues.filter((issue) => {
-    const key = JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
-    if (issueKeys.has(key)) return false;
-    issueKeys.add(key);
-    return true;
-  });
 }
 
 function admitAfterHitDamageMechanics(
@@ -371,8 +354,8 @@ function admitAfterHitDamageMechanics(
       ),
     );
   }
-  const nonEmptyIssues = afterHitDamageNonEmpty(
-    afterHitDamageUniqueIssues(issues),
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
   );
   if (nonEmptyIssues !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(

@@ -95,7 +95,7 @@ import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-r
 import {
   spellConsumedMaterialEvidencePaths,
   spellDurationEvidencePaths,
-  spellNonEmpty,
+  spellProcedureNonEmpty,
   spellTouchRangeFeet,
   spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
@@ -502,7 +502,9 @@ function admitDirectHitPointRestorationMechanics(
       ),
     );
   }
-  const nonEmptyIssues = spellNonEmpty(spellUniqueMechanicsIssues(issues));
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
   if (nonEmptyIssues !== undefined) {
     const [first, ...rest] = nonEmptyIssues.map(
       directHitPointRestorationIssueResult,
