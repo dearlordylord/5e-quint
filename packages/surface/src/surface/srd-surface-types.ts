@@ -13,16 +13,13 @@ export const SRD_SURFACE_KIND = "srd-5.2.1-surface-catalog" as const;
 type RulesExcerpt = string;
 
 type ProvenanceBearingRecord = {
-  readonly provenance: { readonly section: string };
+  readonly provenance: unknown;
 };
 
 type SrdUnitRecordValue<Record extends ProvenanceBearingRecord> =
   Record extends ProvenanceBearingRecord
     ? Omit<Record, "provenance"> & {
-        readonly provenance: {
-          readonly kind: SrdProvenance["kind"];
-          readonly section: SrdProvenance["section"];
-        };
+        readonly provenance: SrdProvenance;
       }
     : never;
 

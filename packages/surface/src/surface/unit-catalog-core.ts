@@ -14,6 +14,7 @@ import {
   unitMechanicsPath,
   type UnitMechanicsPath,
 } from "./mechanics-graph-path.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 
 export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
@@ -340,7 +341,7 @@ export type UnitCatalogBuildResult =
 export function isSrd521Provenance(
   value: Provenance,
 ): value is Srd521Provenance {
-  return value.kind === "srd-5.2.1";
+  return value.kind === SRD_PROVENANCE_KIND;
 }
 
 export function isSrd521Unit(unit: UnitRecord): unit is Srd521Unit {
@@ -362,7 +363,7 @@ export function defineSrdUnitCollection(input: {
 }): SrdUnitCollection {
   const collection = {
     kind: "srdUnitCollection",
-    provenance: { kind: "srd-5.2.1" },
+    provenance: { kind: SRD_PROVENANCE_KIND },
     units: input.units,
   } as const satisfies SrdUnitCollection;
   const provenanceIssues = validateSrdUnitCollection(collection);

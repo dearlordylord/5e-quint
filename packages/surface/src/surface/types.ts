@@ -12,6 +12,7 @@ import {
   WEAPON_PROFICIENCY_CATEGORIES as SCHEMA_WEAPON_PROFICIENCY_CATEGORIES,
 } from "./schema-base.ts";
 import * as SurfaceSchema from "./schema.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 import type { StatBlockRecord } from "./stat-block-types.ts";
 
 export type { SrdSurface, SrdUnitRecord } from "./srd-surface-types.ts";
@@ -1504,7 +1505,7 @@ export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
 function supportedClassFeatureSpellFreeCastProfileForUnit(
   unit: PassiveClassFeatureUnitRecord,
 ): SupportedClassFeatureSpellFreeCastProfile | null {
-  if (unit.provenance.kind !== "srd-5.2.1") {
+  if (unit.provenance.kind !== SRD_PROVENANCE_KIND) {
     return null;
   }
   return (

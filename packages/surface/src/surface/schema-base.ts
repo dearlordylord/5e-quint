@@ -13,6 +13,7 @@ import {
 import { DAMAGE_TYPES } from "@dnd/shared/types";
 
 import { exactOptional } from "./schema-helpers.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 
 export const SURFACE_SCHEMA_ROLE_ANNOTATION =
   "dnd.surface.schema-role" as const;
@@ -1073,7 +1074,7 @@ export const GrantedSpellDurationOverrideSchema = Schema.Struct({
 });
 
 export const ProvenanceSchema = Schema.Struct({
-  kind: Schema.Literals(["srd-5.2.1", "xphb", "synthetic-test"]),
+  kind: Schema.Literals([SRD_PROVENANCE_KIND, "xphb", "synthetic-test"]),
   section: surfaceSchemaRole(Schema.String, { category: "provenance" }),
 });
 

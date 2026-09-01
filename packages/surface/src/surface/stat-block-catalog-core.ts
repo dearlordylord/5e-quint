@@ -13,6 +13,7 @@ import {
   decodeStatBlockRecordResult,
   formatSurfaceDecodeError,
 } from "./schema.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 import type { Provenance, SrdProvenance } from "./types.ts";
 import type {
   SrdStatBlockRecord,
@@ -161,7 +162,7 @@ type SrdStatBlockCatalogFromRecordsResult =
 export function isSrd521Provenance(
   value: Provenance,
 ): value is Srd521Provenance {
-  return value.kind === "srd-5.2.1";
+  return value.kind === SRD_PROVENANCE_KIND;
 }
 
 export function isSrd521StatBlock(
@@ -187,7 +188,7 @@ export function defineSrdStatBlockCollection(input: {
 }): SrdStatBlockCollection {
   const collection = {
     kind: "srdStatBlockCollection",
-    provenance: { kind: "srd-5.2.1" },
+    provenance: { kind: SRD_PROVENANCE_KIND },
     statBlocks: input.statBlocks,
   } as const satisfies SrdStatBlockCollection;
   const collectionIssues = collectStatBlockCatalogIssues([collection]).issues;
@@ -284,7 +285,7 @@ export function buildSrdStatBlockCatalogFromRecords(
   }
   const collection = {
     kind: "srdStatBlockCollection",
-    provenance: { kind: "srd-5.2.1" },
+    provenance: { kind: SRD_PROVENANCE_KIND },
     statBlocks: records,
   } as const satisfies SrdStatBlockCollection;
   return Match.value(buildStatBlockCatalog({ collections: [collection] })).pipe(
