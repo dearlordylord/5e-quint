@@ -38,12 +38,12 @@ import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts"
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { hasSharedNonEmptyOncePerTurnLimitGroup } from "./once-per-turn-limit-group-admission.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import {
   preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
@@ -306,12 +306,12 @@ function hasMovablePersistentAreaTriggeredSaveGates(
     isMovablePersistentAreaSaveGate(saveGates.endTurn.effect) !== null &&
     isMovablePersistentAreaSaveGate(saveGates.enter.effect) !== null &&
     isMovablePersistentAreaSaveGate(saveGates.moveInto.effect) !== null &&
-    hasSharedNonEmptyOncePerTurnLimitGroup([
+    sharedOncePerTurnLimitGroup([
       saveGates.initial.usageLimit,
       saveGates.moveInto.usageLimit,
       saveGates.enter.usageLimit,
       saveGates.endTurn.usageLimit,
-    ])
+    ]) !== null
   );
 }
 
