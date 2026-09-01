@@ -1314,13 +1314,14 @@ describe("character creation hole discovery", () => {
         "weapon_spear",
         "weapon_flail",
         "weapon_greataxe",
+        "weapon_quarterstaff",
       ]),
     );
     if (weaponMasteryHole === undefined) {
       throw new Error("Expected the Fighter Weapon Mastery choice hole.");
     }
     expect(supportedHoleOptionIds(weaponMasteryHole)).toEqual(
-      expect.arrayContaining(["weapon_greataxe"]),
+      expect.arrayContaining(["weapon_greataxe", "weapon_quarterstaff"]),
     );
     expect(
       holeById(
