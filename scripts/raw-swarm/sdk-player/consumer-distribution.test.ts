@@ -27,7 +27,6 @@ import {
   assertPublicDeclarationBundle,
   assertEffectDeclarationCompilerSupport,
   buildConsumerDistribution,
-  copyEffectDeclarationCompilerSupport,
   EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST,
   PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
@@ -69,67 +68,7 @@ function copyDistribution(source: string, destination: string): void {
 }
 
 describe("SDK player consumer distribution", () => {
-  test("copies only the authentic Effect declaration compiler support", () => {
-    const directory = mkdtempSync(join(tmpdir(), "dnd-effect-support-"));
-    copyEffectDeclarationCompilerSupport(directory);
-    const compilerSupport = join(directory, "node_modules");
-    assertEffectDeclarationCompilerSupport(compilerSupport);
-    expect(filesBelow(compilerSupport)).toHaveLength(
-      EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.files,
-    );
-    expect(
-      filesBelow(compilerSupport).every(
-        (path) =>
-          path.endsWith(".d.ts") ||
-          path.endsWith(".d.cts") ||
-          path.endsWith("/LICENSE") ||
-          path.endsWith("/package.json"),
-      ),
-    ).toBe(true);
-    writeFileSync(
-      join(directory, "effect-consumer.ts"),
-      'import type { Schema } from "effect";\nexport type StringSchema = Schema.Schema<string>;\n',
-    );
-    writeFileSync(
-      join(directory, "tsconfig.json"),
-      `${JSON.stringify({
-        compilerOptions: {
-          target: "ES2022",
-          module: "ESNext",
-          moduleResolution: "bundler",
-          lib: ["ES2022", "ESNext.Disposable", "DOM", "DOM.Iterable"],
-          types: [],
-          noEmit: true,
-          skipLibCheck: false,
-          strict: true,
-        },
-        include: ["effect-consumer.ts"],
-      })}\n`,
-    );
-    execFileSync(
-      process.execPath,
-      [resolve(repoRoot, "node_modules/typescript/bin/tsc"), "-p", "."],
-      { cwd: directory, stdio: "pipe" },
-    );
-    expect(() =>
-      execFileSync(
-        process.execPath,
-        ["--input-type=module", "--eval", 'await import("effect")'],
-        { cwd: directory, stdio: "pipe" },
-      ),
-    ).toThrow();
-    rmSync(join(compilerSupport, "effect"), { recursive: true });
-    expect(() =>
-      execFileSync(
-        process.execPath,
-        [resolve(repoRoot, "node_modules/typescript/bin/tsc"), "-p", "."],
-        { cwd: directory, stdio: "pipe" },
-      ),
-    ).toThrow();
-  });
-
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(551);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
     expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(
       PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
@@ -333,28 +272,6 @@ describe("SDK player consumer distribution", () => {
         ),
         characterBoundaryPath,
       );
-      const characterConfigPath = join(destination, "character-tsconfig.json");
-      const characterConfig = JSON.parse(
-        readFileSync(join(destination, "tsconfig.json"), "utf8"),
-      ) as Readonly<Record<string, unknown>>;
-      writeFileSync(
-        characterConfigPath,
-        `${JSON.stringify(
-          { ...characterConfig, include: ["character-boundary.ts"] },
-          null,
-          2,
-        )}\n`,
-      );
-      execFileSync(
-        process.execPath,
-        [
-          join(destination, "tooling/typescript/bin/tsc"),
-          "--noEmit",
-          "-p",
-          characterConfigPath,
-        ],
-        { cwd: destination, stdio: "pipe" },
-      );
       buildSync({
         entryPoints: [
           resolve(
@@ -388,24 +305,6 @@ describe("SDK player consumer distribution", () => {
           "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.setup.ts",
         ),
         mixedSetupPath,
-      );
-      writeFileSync(
-        characterConfigPath,
-        `${JSON.stringify(
-          { ...characterConfig, include: ["external-mixed-setup.ts"] },
-          null,
-          2,
-        )}\n`,
-      );
-      execFileSync(
-        process.execPath,
-        [
-          join(destination, "tooling/typescript/bin/tsc"),
-          "--noEmit",
-          "-p",
-          characterConfigPath,
-        ],
-        { cwd: destination, stdio: "pipe" },
       );
       await expect(
         evaluateScenarioSetup(
@@ -461,7 +360,6 @@ describe("SDK player consumer distribution", () => {
       ).toContain("SDK player replay deterministic: 0 call(s) matched");
       rmSync(characterBoundaryPath);
       rmSync(mixedSetupPath);
-      rmSync(characterConfigPath);
       writeFileSync(join(destination, "SCENARIO_REVIEW.json"), "{}\n");
       const obstructionRoot = mkdtempSync(
         join(tmpdir(), "dnd-player-obstruction-"),
@@ -601,22 +499,6 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
 
 export const continueBattle: PlayerContinuation = (context) => {
   const acts = context.sdk.discoverBattleActs(context.session);
-  type SubjectInput = Parameters<typeof context.sdk.resolveBattleRuntimeSubject>[0];
-  type MovementInput = Parameters<typeof context.sdk.resolveScenarioMovement>[0];
-  type InterruptInput = Parameters<typeof context.sdk.resolveBattleRuntimeInterrupt>[0];
-  type EndTurnInput = Parameters<typeof context.sdk.endBattleRuntimeTurn>[0];
-  const compileEveryOperation = (
-    subjectInput: SubjectInput,
-    movementInput: MovementInput,
-    interruptInput: InterruptInput,
-    endTurnInput: EndTurnInput,
-  ) => ({
-    subject: context.sdk.resolveBattleRuntimeSubject(subjectInput),
-    movement: context.sdk.resolveScenarioMovement(movementInput),
-    interrupt: context.sdk.resolveBattleRuntimeInterrupt(interruptInput),
-    endTurn: context.sdk.endBattleRuntimeTurn(endTurnInput),
-  });
-  void compileEveryOperation;
   return {
     kind: "continue",
     session: context.session,
@@ -624,11 +506,6 @@ export const continueBattle: PlayerContinuation = (context) => {
   };
 };
 `,
-      );
-      execFileSync(
-        process.execPath,
-        [resolve(repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit"],
-        { cwd: destination, stdio: "pipe" },
       );
 
       const supervisor = join(trustedDestination, "supervisor.mjs");

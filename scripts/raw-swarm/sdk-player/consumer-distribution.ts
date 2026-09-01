@@ -103,13 +103,13 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
       "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
   },
   measure: {
-    files: 551,
-    bytes: 4_776_741,
+    files: 570,
+    bytes: 10_276_508,
   },
   pathLedgerSha256:
-    "dc3ea33493cb0ae40c85e6fb3c61b82e6b69cdb41f2dfd828e6961c687c76912",
+    "ffb4af1d4d447085b8a1072fae7332e9ac0a48d402cb2879fdaffaaaa174ecac",
   contentLedgerSha256:
-    "aed1b2c5d979e1ed3f3766e7de0fe1d1c840410bca32a0aa5f111e6f92dad971",
+    "dcd52abbdee08a4492e85b5efd54a2f39345703cc46ef26ff8c4d7c55dd1a58a",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
@@ -430,6 +430,10 @@ export function emitPublicDeclarations(
       `Public declaration emission failed:\n${result.stdout}${result.stderr}`,
     );
   }
+  copyFileSync(
+    resolve(repoRoot, "packages/shared/src/non-empty-array.d.ts"),
+    resolve(declarationsDirectory, "packages/shared/src/non-empty-array.d.ts"),
+  );
 
   const requiredDeclarations = [
     "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
@@ -441,12 +445,33 @@ export function emitPublicDeclarations(
     "packages/battle-runtime/src/battle-state-execution.d.ts",
     "packages/battle-runtime/src/battle-session-execution.d.ts",
     "packages/character-creation-runtime/src/index.d.ts",
+    "packages/character-creation-runtime/src/phase1-manifest.d.ts",
     "packages/character-sheet-runtime/src/index.d.ts",
+    "packages/shared/src/non-empty-array.d.ts",
     "packages/tactical-space/src/index.d.ts",
   ];
   for (const relativePath of requiredDeclarations) {
     if (!existsSync(resolve(declarationsDirectory, relativePath))) {
       throw new Error(`Public declaration emission omitted ${relativePath}.`);
+    }
+  }
+  const phaseOneWeaponExports = readFileSync(
+    resolve(
+      declarationsDirectory,
+      "packages/character-creation-runtime/src/phase1-manifest.d.ts",
+    ),
+    "utf8",
+  );
+  for (const exportName of [
+    "PHASE1_WEAPON_FLAIL_UNIT_ID",
+    "PHASE1_WEAPON_SPEAR_UNIT_ID",
+  ] as const) {
+    if (
+      !phaseOneWeaponExports.includes(`export declare const ${exportName}:`)
+    ) {
+      throw new Error(
+        `Public declaration emission omitted Character Creation export ${exportName}.`,
+      );
     }
   }
   for (const relativePath of PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS) {
@@ -497,11 +522,23 @@ function compilerDeclarationPackagePaths(
           `Public declaration compiler path has no package owner: ${specifier}.`,
         );
       }
+      const sourceSubpath = specifier.slice(owner.specifierPrefix.length);
+      const declarationSubpath = sourceSubpath.endsWith(".d.ts")
+        ? sourceSubpath
+        : `${sourceSubpath.replace(/\.(?:js|ts)$/, "")}.d.ts`;
+      const declarationTarget = resolve(
+        declarationsDirectory,
+        owner.declarationRoot,
+        declarationSubpath,
+      );
+      if (!existsSync(declarationTarget)) {
+        throw new Error(
+          `Public declaration compiler path target does not exist: ${specifier} -> ${declarationSubpath}.`,
+        );
+      }
       return [
         specifier,
-        [
-          `./declarations/${owner.declarationRoot}/${specifier.slice(owner.specifierPrefix.length)}`,
-        ],
+        [`./declarations/${owner.declarationRoot}/${declarationSubpath}`],
       ];
     }),
   );
@@ -665,7 +702,7 @@ export function buildConsumerDistribution(
   );
   writeFileSync(
     resolve(input.trustedDestination, "tsconfig.json"),
-    consumerTsconfig(input.trustedDestination, ["submissions/*.ts"]),
+    consumerTsconfig(input.trustedDestination, ["attempt.ts"]),
   );
   writeFileSync(
     resolve(input.destination, "attempt.ts"),
