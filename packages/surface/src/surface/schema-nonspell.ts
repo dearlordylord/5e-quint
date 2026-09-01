@@ -1,10 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.fighter-heroic-warrior character-sheet.cleric-divine-intervention-session-invocation
 import { Effect, Schema, SchemaTransformation } from "effect";
-import {
-  UnitId,
-  type ClassName,
-  type UnitId as UnitIdType,
-} from "@dnd/shared/game-facts";
+import { UnitId, type UnitId as UnitIdType } from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
 
 import {
@@ -15,7 +11,6 @@ import {
   BackgroundRecordKindSchema,
   ClassLevelChoiceCountSchema,
   ClassRecordKindSchema,
-  CLASS_NAMES,
   SubclassRecordKindSchema,
   ClassNameSchema,
   ConditionSchema,
@@ -55,112 +50,731 @@ import {
   exactOptional,
   strictStruct,
 } from "./schema-helpers.ts";
+import { MAGIC_INITIATE_SPELL_LISTS } from "./nonspell-vocabulary.ts";
 import type {
-  ActivatedAbilityMechanics,
-  ActivatedAbilityMechanicsEncoded,
-  ArmorTemplateRecord,
-  ArmorTemplateRecordEncoded,
-  BarbarianClassFeatureMechanics,
-  BarbarianClassFeatureMechanicsEncoded,
-  BarbarianClassFeatureRecord,
-  BarbarianClassFeatureRecordEncoded,
-  BardClassFeatureMechanics,
-  BardClassFeatureMechanicsEncoded,
-  BardClassFeatureRecord,
-  BardClassFeatureRecordEncoded,
-  ClassFeatureRecord,
-  ClassFeatureRecordEncoded,
-  ClassFeatureMechanics,
-  ClassFeatureMechanicsEncoded,
-  ClassGeneralFeatureMechanics,
-  ClassGeneralFeatureMechanicsEncoded,
-  ClassFeatureAcquisitionChoiceMechanics,
-  ClassFeatureAcquisitionChoiceMechanicsEncoded,
-  ClassFeatureActivationMechanics,
-  ClassFeatureActivationMechanicsEncoded,
-  ClassFeatureComponentMechanics,
-  ClassFeatureComponentMechanicsEncoded,
-  CompositeClassFeatureMechanics,
-  CompositeClassFeatureMechanicsEncoded,
-  ClericClassFeatureMechanics,
-  ClericClassFeatureMechanicsEncoded,
-  ClericClassFeatureRecord,
-  ClericClassFeatureRecordEncoded,
-  DruidClassFeatureMechanics,
-  DruidClassFeatureMechanicsEncoded,
-  DruidClassFeatureRecord,
-  DruidClassFeatureRecordEncoded,
-  FighterClassFeatureMechanics,
-  FighterClassFeatureMechanicsEncoded,
-  FighterClassFeatureRecord,
-  FighterClassFeatureRecordEncoded,
-  FeatMechanics,
-  FeatMechanicsEncoded,
-  FeatRecord,
-  FeatRecordEncoded,
-  MagicItemSpawnedCreatureMechanics,
-  MagicItemSpawnedCreatureMechanicsEncoded,
-  MagicEquipmentTrait,
-  MagicEquipmentTraitEncoded,
-  MagicEquipmentVariant,
-  MagicEquipmentVariantEncoded,
-  MagicItemComponentMechanics,
-  MagicItemComponentMechanicsEncoded,
-  MagicItemMechanics,
-  MagicItemMechanicsEncoded,
-  MagicItemRecord,
-  MagicItemRecordEncoded,
-  MagicItemVariant,
-  MagicItemVariantEncoded,
-  CompositeMagicItemMechanics,
-  CompositeMagicItemMechanicsEncoded,
-  PassiveMechanics,
-  PassiveMechanicsEncoded,
-  PassiveOperation,
-  PassiveOperationEncoded,
-  MonkClassFeatureMechanics,
-  MonkClassFeatureMechanicsEncoded,
-  MonkClassFeatureRecord,
-  MonkClassFeatureRecordEncoded,
-  OtherClassFeatureRecord,
-  OtherClassFeatureRecordEncoded,
-  PaladinClassFeatureMechanics,
-  PaladinClassFeatureMechanicsEncoded,
-  PaladinClassFeatureRecord,
-  PaladinClassFeatureRecordEncoded,
-  RangerClassFeatureMechanics,
-  RangerClassFeatureMechanicsEncoded,
-  RangerClassFeatureRecord,
-  RangerClassFeatureRecordEncoded,
-  RogueClassFeatureMechanics,
-  RogueClassFeatureMechanicsEncoded,
-  RogueClassFeatureRecord,
-  RogueClassFeatureRecordEncoded,
-  SorcererClassFeatureMechanics,
-  SorcererClassFeatureMechanicsEncoded,
-  SorcererClassFeatureRecord,
-  SorcererClassFeatureRecordEncoded,
-  SpeciesTraitMechanics,
-  SpeciesTraitMechanicsEncoded,
-  SpeciesTraitRecord,
-  SpeciesTraitRecordEncoded,
-  TriggeredReactionAbilityMechanics,
-  TriggeredReactionAbilityMechanicsEncoded,
-  UnitRecord,
-  UnitRecordEncoded,
-  ShieldTemplateRecord,
-  ShieldTemplateRecordEncoded,
-  WarlockClassFeatureMechanics,
-  WarlockClassFeatureMechanicsEncoded,
-  WarlockClassFeatureRecord,
-  WarlockClassFeatureRecordEncoded,
-  WizardClassFeatureMechanics,
-  WizardClassFeatureMechanicsEncoded,
-  WizardClassFeatureRecord,
-  WizardClassFeatureRecordEncoded,
-  WeaponTemplateRecord,
-  WeaponTemplateRecordEncoded,
+  ActivatedAbilityMechanics as OwnedActivatedAbilityMechanics,
+  ActivatedAbilityMechanicsEncoded as OwnedActivatedAbilityMechanicsEncoded,
+  ArmorTemplateRecord as OwnedArmorTemplateRecord,
+  ArmorTemplateRecordEncoded as OwnedArmorTemplateRecordEncoded,
+  BarbarianClassFeatureMechanics as OwnedBarbarianClassFeatureMechanics,
+  BarbarianClassFeatureMechanicsEncoded as OwnedBarbarianClassFeatureMechanicsEncoded,
+  BarbarianClassFeatureRecord as OwnedBarbarianClassFeatureRecord,
+  BarbarianClassFeatureRecordEncoded as OwnedBarbarianClassFeatureRecordEncoded,
+  BardClassFeatureMechanics as OwnedBardClassFeatureMechanics,
+  BardClassFeatureMechanicsEncoded as OwnedBardClassFeatureMechanicsEncoded,
+  BardClassFeatureRecord as OwnedBardClassFeatureRecord,
+  BardClassFeatureRecordEncoded as OwnedBardClassFeatureRecordEncoded,
+  ClassFeatureRecord as OwnedClassFeatureRecord,
+  ClassFeatureRecordEncoded as OwnedClassFeatureRecordEncoded,
+  ClassFeatureMechanics as OwnedClassFeatureMechanics,
+  ClassFeatureMechanicsEncoded as OwnedClassFeatureMechanicsEncoded,
+  ClassGeneralFeatureMechanics as OwnedClassGeneralFeatureMechanics,
+  ClassGeneralFeatureMechanicsEncoded as OwnedClassGeneralFeatureMechanicsEncoded,
+  ClassFeatureAcquisitionChoiceMechanics as OwnedClassFeatureAcquisitionChoiceMechanics,
+  ClassFeatureAcquisitionChoiceMechanicsEncoded as OwnedClassFeatureAcquisitionChoiceMechanicsEncoded,
+  ClassFeatureActivationMechanics as OwnedClassFeatureActivationMechanics,
+  ClassFeatureActivationMechanicsEncoded as OwnedClassFeatureActivationMechanicsEncoded,
+  ClassFeatureComponentMechanics as OwnedClassFeatureComponentMechanics,
+  ClassFeatureComponentMechanicsEncoded as OwnedClassFeatureComponentMechanicsEncoded,
+  CompositeClassFeatureMechanics as OwnedCompositeClassFeatureMechanics,
+  CompositeClassFeatureMechanicsEncoded as OwnedCompositeClassFeatureMechanicsEncoded,
+  ClericClassFeatureMechanics as OwnedClericClassFeatureMechanics,
+  ClericClassFeatureMechanicsEncoded as OwnedClericClassFeatureMechanicsEncoded,
+  ClericClassFeatureRecord as OwnedClericClassFeatureRecord,
+  ClericClassFeatureRecordEncoded as OwnedClericClassFeatureRecordEncoded,
+  DruidClassFeatureMechanics as OwnedDruidClassFeatureMechanics,
+  DruidClassFeatureMechanicsEncoded as OwnedDruidClassFeatureMechanicsEncoded,
+  DruidClassFeatureRecord as OwnedDruidClassFeatureRecord,
+  DruidClassFeatureRecordEncoded as OwnedDruidClassFeatureRecordEncoded,
+  FighterClassFeatureMechanics as OwnedFighterClassFeatureMechanics,
+  FighterClassFeatureMechanicsEncoded as OwnedFighterClassFeatureMechanicsEncoded,
+  FighterClassFeatureRecord as OwnedFighterClassFeatureRecord,
+  FighterClassFeatureRecordEncoded as OwnedFighterClassFeatureRecordEncoded,
+  FeatMechanics as OwnedFeatMechanics,
+  FeatMechanicsEncoded as OwnedFeatMechanicsEncoded,
+  FeatRecord as OwnedFeatRecord,
+  FeatRecordEncoded as OwnedFeatRecordEncoded,
+  MagicItemSpawnedCreatureMechanics as OwnedMagicItemSpawnedCreatureMechanics,
+  MagicItemSpawnedCreatureMechanicsEncoded as OwnedMagicItemSpawnedCreatureMechanicsEncoded,
+  MagicEquipmentTrait as OwnedMagicEquipmentTrait,
+  MagicEquipmentTraitEncoded as OwnedMagicEquipmentTraitEncoded,
+  MagicEquipmentVariant as OwnedMagicEquipmentVariant,
+  MagicEquipmentVariantEncoded as OwnedMagicEquipmentVariantEncoded,
+  MagicItemComponentMechanics as OwnedMagicItemComponentMechanics,
+  MagicItemComponentMechanicsEncoded as OwnedMagicItemComponentMechanicsEncoded,
+  MagicItemMechanics as OwnedMagicItemMechanics,
+  MagicItemMechanicsEncoded as OwnedMagicItemMechanicsEncoded,
+  MagicItemRecord as OwnedMagicItemRecord,
+  MagicItemRecordEncoded as OwnedMagicItemRecordEncoded,
+  MagicItemVariant as OwnedMagicItemVariant,
+  MagicItemVariantEncoded as OwnedMagicItemVariantEncoded,
+  CompositeMagicItemMechanics as OwnedCompositeMagicItemMechanics,
+  CompositeMagicItemMechanicsEncoded as OwnedCompositeMagicItemMechanicsEncoded,
+  PassiveMechanics as OwnedPassiveMechanics,
+  PassiveMechanicsEncoded as OwnedPassiveMechanicsEncoded,
+  PassiveOperation as OwnedPassiveOperation,
+  PassiveOperationEncoded as OwnedPassiveOperationEncoded,
+  MonkClassFeatureMechanics as OwnedMonkClassFeatureMechanics,
+  MonkClassFeatureMechanicsEncoded as OwnedMonkClassFeatureMechanicsEncoded,
+  MonkClassFeatureRecord as OwnedMonkClassFeatureRecord,
+  MonkClassFeatureRecordEncoded as OwnedMonkClassFeatureRecordEncoded,
+  PaladinClassFeatureMechanics as OwnedPaladinClassFeatureMechanics,
+  PaladinClassFeatureMechanicsEncoded as OwnedPaladinClassFeatureMechanicsEncoded,
+  PaladinClassFeatureRecord as OwnedPaladinClassFeatureRecord,
+  PaladinClassFeatureRecordEncoded as OwnedPaladinClassFeatureRecordEncoded,
+  RangerClassFeatureMechanics as OwnedRangerClassFeatureMechanics,
+  RangerClassFeatureMechanicsEncoded as OwnedRangerClassFeatureMechanicsEncoded,
+  RangerClassFeatureRecord as OwnedRangerClassFeatureRecord,
+  RangerClassFeatureRecordEncoded as OwnedRangerClassFeatureRecordEncoded,
+  RogueClassFeatureMechanics as OwnedRogueClassFeatureMechanics,
+  RogueClassFeatureMechanicsEncoded as OwnedRogueClassFeatureMechanicsEncoded,
+  RogueClassFeatureRecord as OwnedRogueClassFeatureRecord,
+  RogueClassFeatureRecordEncoded as OwnedRogueClassFeatureRecordEncoded,
+  SorcererClassFeatureMechanics as OwnedSorcererClassFeatureMechanics,
+  SorcererClassFeatureMechanicsEncoded as OwnedSorcererClassFeatureMechanicsEncoded,
+  SorcererClassFeatureRecord as OwnedSorcererClassFeatureRecord,
+  SorcererClassFeatureRecordEncoded as OwnedSorcererClassFeatureRecordEncoded,
+  SpeciesTraitMechanics as OwnedSpeciesTraitMechanics,
+  SpeciesTraitMechanicsEncoded as OwnedSpeciesTraitMechanicsEncoded,
+  SpeciesTraitRecord as OwnedSpeciesTraitRecord,
+  SpeciesTraitRecordEncoded as OwnedSpeciesTraitRecordEncoded,
+  TriggeredReactionAbilityMechanics as OwnedTriggeredReactionAbilityMechanics,
+  TriggeredReactionAbilityMechanicsEncoded as OwnedTriggeredReactionAbilityMechanicsEncoded,
+  UnitRecord as OwnedUnitRecord,
+  UnitRecordEncoded as OwnedUnitRecordEncoded,
+  ShieldTemplateRecord as OwnedShieldTemplateRecord,
+  ShieldTemplateRecordEncoded as OwnedShieldTemplateRecordEncoded,
+  WarlockClassFeatureMechanics as OwnedWarlockClassFeatureMechanics,
+  WarlockClassFeatureMechanicsEncoded as OwnedWarlockClassFeatureMechanicsEncoded,
+  WarlockClassFeatureRecord as OwnedWarlockClassFeatureRecord,
+  WarlockClassFeatureRecordEncoded as OwnedWarlockClassFeatureRecordEncoded,
+  WizardClassFeatureMechanics as OwnedWizardClassFeatureMechanics,
+  WizardClassFeatureMechanicsEncoded as OwnedWizardClassFeatureMechanicsEncoded,
+  WizardClassFeatureRecord as OwnedWizardClassFeatureRecord,
+  WizardClassFeatureRecordEncoded as OwnedWizardClassFeatureRecordEncoded,
+  WeaponTemplateRecord as OwnedWeaponTemplateRecord,
+  WeaponTemplateRecordEncoded as OwnedWeaponTemplateRecordEncoded,
 } from "./nonspell-types.ts";
+type NonspellSchemaSupport = {
+  readonly ActivationPhase: Schema.Schema.Type<typeof ActivationPhaseSchema>;
+  readonly ActivationPhaseEncoded: Schema.Codec.Encoded<
+    typeof ActivationPhaseSchema
+  >;
+  readonly CreatureControl: Schema.Schema.Type<typeof CreatureControlSchema>;
+  readonly CreatureControlEncoded: Schema.Codec.Encoded<
+    typeof CreatureControlSchema
+  >;
+  readonly CreatureDismissal: Schema.Schema.Type<
+    typeof CreatureDismissalSchema
+  >;
+  readonly CreatureDismissalEncoded: Schema.Codec.Encoded<
+    typeof CreatureDismissalSchema
+  >;
+  readonly CreatureMode: Schema.Schema.Type<typeof CreatureModeSchema>;
+  readonly CreatureModeEncoded: Schema.Codec.Encoded<typeof CreatureModeSchema>;
+  readonly EffectAtom: Schema.Schema.Type<typeof EffectAtomSchema>;
+  readonly EffectAtomEncoded: Schema.Codec.Encoded<typeof EffectAtomSchema>;
+  readonly OngoingPredicate: Schema.Schema.Type<typeof OngoingPredicateSchema>;
+  readonly OngoingPredicateEncoded: Schema.Codec.Encoded<
+    typeof OngoingPredicateSchema
+  >;
+  readonly Range: Schema.Schema.Type<typeof RangeSchema>;
+  readonly RangeEncoded: Schema.Codec.Encoded<typeof RangeSchema>;
+  readonly ReactionTrigger: Schema.Schema.Type<typeof ReactionTriggerSchema>;
+  readonly ReactionTriggerEncoded: Schema.Codec.Encoded<
+    typeof ReactionTriggerSchema
+  >;
+  readonly SpellRecord: Schema.Schema.Type<typeof SpellRecordSchema>;
+  readonly SpellRecordEncoded: Schema.Codec.Encoded<typeof SpellRecordSchema>;
+  readonly SpawnedCreatureStatBlock: Schema.Schema.Type<
+    typeof SpawnedCreatureStatBlockSchema
+  >;
+  readonly SpawnedCreatureStatBlockEncoded: Schema.Codec.Encoded<
+    typeof SpawnedCreatureStatBlockSchema
+  >;
+  readonly AbjureFoesMechanics: Schema.Schema.Type<
+    typeof AbjureFoesMechanicsSchema
+  >;
+  readonly AbjureFoesMechanicsEncoded: Schema.Codec.Encoded<
+    typeof AbjureFoesMechanicsSchema
+  >;
+  readonly AcrobaticMovementMechanics: Schema.Schema.Type<
+    typeof AcrobaticMovementMechanicsSchema
+  >;
+  readonly AcrobaticMovementMechanicsEncoded: Schema.Codec.Encoded<
+    typeof AcrobaticMovementMechanicsSchema
+  >;
+  readonly AlternateActionCostMechanics: Schema.Schema.Type<
+    typeof AlternateActionCostMechanicsSchema
+  >;
+  readonly AlternateActionCostMechanicsEncoded: Schema.Codec.Encoded<
+    typeof AlternateActionCostMechanicsSchema
+  >;
+  readonly ActivationResource: Schema.Schema.Type<
+    typeof ActivationResourceSchema
+  >;
+  readonly ActivationResourceEncoded: Schema.Codec.Encoded<
+    typeof ActivationResourceSchema
+  >;
+  readonly ArmorRecord: Schema.Schema.Type<typeof ArmorRecordSchema>;
+  readonly ArmorRecordEncoded: Schema.Codec.Encoded<typeof ArmorRecordSchema>;
+  readonly BackgroundRecord: Schema.Schema.Type<typeof BackgroundRecordSchema>;
+  readonly BackgroundRecordEncoded: Schema.Codec.Encoded<
+    typeof BackgroundRecordSchema
+  >;
+  readonly BonusActionDelegatedStandardActionsMechanics: Schema.Schema.Type<
+    typeof BonusActionDelegatedStandardActionsMechanicsSchema
+  >;
+  readonly BonusActionDelegatedStandardActionsMechanicsEncoded: Schema.Codec.Encoded<
+    typeof BonusActionDelegatedStandardActionsMechanicsSchema
+  >;
+  readonly BrutalStrikeMechanics: Schema.Schema.Type<
+    typeof BrutalStrikeMechanicsSchema
+  >;
+  readonly BrutalStrikeMechanicsEncoded: Schema.Codec.Encoded<
+    typeof BrutalStrikeMechanicsSchema
+  >;
+  readonly ClassFeatureActivationCost: Schema.Schema.Type<
+    typeof ClassFeatureActivationCostSchema
+  >;
+  readonly ClassFeatureActivationCostEncoded: Schema.Codec.Encoded<
+    typeof ClassFeatureActivationCostSchema
+  >;
+  readonly ClassFeatureDuration: Schema.Schema.Type<
+    typeof ClassFeatureDurationSchema
+  >;
+  readonly ClassFeatureDurationEncoded: Schema.Codec.Encoded<
+    typeof ClassFeatureDurationSchema
+  >;
+  readonly ClassFeatureResourceContainerMechanics: Schema.Schema.Type<
+    typeof ClassFeatureResourceContainerMechanicsSchema
+  >;
+  readonly ClassFeatureResourceContainerMechanicsEncoded: Schema.Codec.Encoded<
+    typeof ClassFeatureResourceContainerMechanicsSchema
+  >;
+  readonly ClassFeatureResourcePoolMechanics: Schema.Schema.Type<
+    typeof ClassFeatureResourcePoolMechanicsSchema
+  >;
+  readonly ClassFeatureResourcePoolMechanicsEncoded: Schema.Codec.Encoded<
+    typeof ClassFeatureResourcePoolMechanicsSchema
+  >;
+  readonly ClassSpellcastingProjectionMechanics: Schema.Schema.Type<
+    typeof ClassSpellcastingProjectionMechanicsSchema
+  >;
+  readonly ClassSpellcastingProjectionMechanicsEncoded: Schema.Codec.Encoded<
+    typeof ClassSpellcastingProjectionMechanicsSchema
+  >;
+  readonly MasteryRecord: Schema.Schema.Type<typeof MasteryRecordSchema>;
+  readonly MasteryRecordEncoded: Schema.Codec.Encoded<
+    typeof MasteryRecordSchema
+  >;
+  readonly CombatTurnStartHeroicInspirationMechanics: Schema.Schema.Type<
+    typeof CombatTurnStartHeroicInspirationMechanicsSchema
+  >;
+  readonly CombatTurnStartHeroicInspirationMechanicsEncoded: Schema.Codec.Encoded<
+    typeof CombatTurnStartHeroicInspirationMechanicsSchema
+  >;
+  readonly CunningStrikeMechanics: Schema.Schema.Type<
+    typeof CunningStrikeMechanicsSchema
+  >;
+  readonly CunningStrikeMechanicsEncoded: Schema.Codec.Encoded<
+    typeof CunningStrikeMechanicsSchema
+  >;
+  readonly DruidWildCompanionSpellCastMechanics: Schema.Schema.Type<
+    typeof DruidWildCompanionSpellCastMechanicsSchema
+  >;
+  readonly DruidWildCompanionSpellCastMechanicsEncoded: Schema.Codec.Encoded<
+    typeof DruidWildCompanionSpellCastMechanicsSchema
+  >;
+  readonly D20TestNaturalOneRerollMechanics: Schema.Schema.Type<
+    typeof D20TestNaturalOneRerollMechanicsSchema
+  >;
+  readonly D20TestNaturalOneRerollMechanicsEncoded: Schema.Codec.Encoded<
+    typeof D20TestNaturalOneRerollMechanicsSchema
+  >;
+  readonly EnemyZeroHitPointTemporaryHitPointsMechanics: Schema.Schema.Type<
+    typeof EnemyZeroHitPointTemporaryHitPointsMechanicsSchema
+  >;
+  readonly EnemyZeroHitPointTemporaryHitPointsMechanicsEncoded: Schema.Codec.Encoded<
+    typeof EnemyZeroHitPointTemporaryHitPointsMechanicsSchema
+  >;
+  readonly EquipmentPredicate: Schema.Schema.Type<
+    typeof EquipmentPredicateSchema
+  >;
+  readonly EquipmentPredicateEncoded: Schema.Codec.Encoded<
+    typeof EquipmentPredicateSchema
+  >;
+  readonly FailedAbilityCheckResourceBoostMechanics: Schema.Schema.Type<
+    typeof FailedAbilityCheckResourceBoostMechanicsSchema
+  >;
+  readonly FailedAbilityCheckResourceBoostMechanicsEncoded: Schema.Codec.Encoded<
+    typeof FailedAbilityCheckResourceBoostMechanicsSchema
+  >;
+  readonly FeatureChoiceMechanics: Schema.Schema.Type<
+    typeof FeatureChoiceMechanicsSchema
+  >;
+  readonly FeatureChoiceMechanicsEncoded: Schema.Codec.Encoded<
+    typeof FeatureChoiceMechanicsSchema
+  >;
+  readonly GnomishLineageMechanics: Schema.Schema.Type<
+    typeof GnomishLineageMechanicsSchema
+  >;
+  readonly GnomishLineageMechanicsEncoded: Schema.Codec.Encoded<
+    typeof GnomishLineageMechanicsSchema
+  >;
+  readonly HideActionObscurementPermissionMechanics: Schema.Schema.Type<
+    typeof HideActionObscurementPermissionMechanicsSchema
+  >;
+  readonly HideActionObscurementPermissionMechanicsEncoded: Schema.Codec.Encoded<
+    typeof HideActionObscurementPermissionMechanicsSchema
+  >;
+  readonly HuntersPreyMechanics: Schema.Schema.Type<
+    typeof HuntersPreyMechanicsSchema
+  >;
+  readonly HuntersPreyMechanicsEncoded: Schema.Codec.Encoded<
+    typeof HuntersPreyMechanicsSchema
+  >;
+  readonly IndomitableMechanics: Schema.Schema.Type<
+    typeof IndomitableMechanicsSchema
+  >;
+  readonly IndomitableMechanicsEncoded: Schema.Codec.Encoded<
+    typeof IndomitableMechanicsSchema
+  >;
+  readonly LightExtraAttackDamageAbilityModifierMechanics: Schema.Schema.Type<
+    typeof LightExtraAttackDamageAbilityModifierMechanicsSchema
+  >;
+  readonly LightExtraAttackDamageAbilityModifierMechanicsEncoded: Schema.Codec.Encoded<
+    typeof LightExtraAttackDamageAbilityModifierMechanicsSchema
+  >;
+  readonly MagicActionAreaSaveDamageHealingMechanics: Schema.Schema.Type<
+    typeof MagicActionAreaSaveDamageHealingMechanicsSchema
+  >;
+  readonly MagicActionAreaSaveDamageHealingMechanicsEncoded: Schema.Codec.Encoded<
+    typeof MagicActionAreaSaveDamageHealingMechanicsSchema
+  >;
+  readonly MagicActionHealingPoolMechanics: Schema.Schema.Type<
+    typeof MagicActionHealingPoolMechanicsSchema
+  >;
+  readonly MagicActionHealingPoolMechanicsEncoded: Schema.Codec.Encoded<
+    typeof MagicActionHealingPoolMechanicsSchema
+  >;
+  readonly MagicItemAttunement: Schema.Schema.Type<
+    typeof MagicItemAttunementSchema
+  >;
+  readonly MagicItemAttunementEncoded: Schema.Codec.Encoded<
+    typeof MagicItemAttunementSchema
+  >;
+  readonly MagicItemAttunementRestriction: Schema.Schema.Type<
+    typeof MagicItemAttunementRestrictionSchema
+  >;
+  readonly MagicItemAttunementRestrictionEncoded: Schema.Codec.Encoded<
+    typeof MagicItemAttunementRestrictionSchema
+  >;
+  readonly MasteryOrWeaponDamageDiceRerollMechanics: Schema.Schema.Type<
+    typeof MasteryOrWeaponDamageDiceRerollMechanicsSchema
+  >;
+  readonly MasteryOrWeaponDamageDiceRerollMechanicsEncoded: Schema.Codec.Encoded<
+    typeof MasteryOrWeaponDamageDiceRerollMechanicsSchema
+  >;
+  readonly MonkInitiativeFocusRecoveryMechanics: Schema.Schema.Type<
+    typeof MonkInitiativeFocusRecoveryMechanicsSchema
+  >;
+  readonly MonkInitiativeFocusRecoveryMechanicsEncoded: Schema.Codec.Encoded<
+    typeof MonkInitiativeFocusRecoveryMechanicsSchema
+  >;
+  readonly OnHitTriggerMechanics: Schema.Schema.Type<
+    typeof OnHitTriggerMechanicsSchema
+  >;
+  readonly OnHitTriggerMechanicsEncoded: Schema.Codec.Encoded<
+    typeof OnHitTriggerMechanicsSchema
+  >;
+  readonly OpenHandTechniqueMechanics: Schema.Schema.Type<
+    typeof OpenHandTechniqueMechanicsSchema
+  >;
+  readonly OpenHandTechniqueMechanicsEncoded: Schema.Codec.Encoded<
+    typeof OpenHandTechniqueMechanicsSchema
+  >;
+  readonly PotentCantripMechanics: Schema.Schema.Type<
+    typeof PotentCantripMechanicsSchema
+  >;
+  readonly PotentCantripMechanicsEncoded: Schema.Codec.Encoded<
+    typeof PotentCantripMechanicsSchema
+  >;
+  readonly PreparedSpellListExpansionMechanics: Schema.Schema.Type<
+    typeof PreparedSpellListExpansionMechanicsSchema
+  >;
+  readonly PreparedSpellListExpansionMechanicsEncoded: Schema.Codec.Encoded<
+    typeof PreparedSpellListExpansionMechanicsSchema
+  >;
+  readonly CreatureSpaceMovementPermissionMechanics: Schema.Schema.Type<
+    typeof CreatureSpaceMovementPermissionMechanicsSchema
+  >;
+  readonly CreatureSpaceMovementPermissionMechanicsEncoded: Schema.Codec.Encoded<
+    typeof CreatureSpaceMovementPermissionMechanicsSchema
+  >;
+  readonly RemarkableAthleteMechanics: Schema.Schema.Type<
+    typeof RemarkableAthleteMechanicsSchema
+  >;
+  readonly RemarkableAthleteMechanicsEncoded: Schema.Codec.Encoded<
+    typeof RemarkableAthleteMechanicsSchema
+  >;
+  readonly ReactionRollOrDamageReductionMechanics: Schema.Schema.Type<
+    typeof ReactionRollOrDamageReductionMechanicsSchema
+  >;
+  readonly ReactionRollOrDamageReductionMechanicsEncoded: Schema.Codec.Encoded<
+    typeof ReactionRollOrDamageReductionMechanicsSchema
+  >;
+  readonly ResetCadence: Schema.Schema.Type<typeof ResetCadenceSchema>;
+  readonly ResetCadenceEncoded: Schema.Codec.Encoded<typeof ResetCadenceSchema>;
+  readonly RestTriggeredHeroicInspirationMechanics: Schema.Schema.Type<
+    typeof RestTriggeredHeroicInspirationMechanicsSchema
+  >;
+  readonly RestTriggeredHeroicInspirationMechanicsEncoded: Schema.Codec.Encoded<
+    typeof RestTriggeredHeroicInspirationMechanicsSchema
+  >;
+  readonly RestSpellSlotRecoveryMechanics: Schema.Schema.Type<
+    typeof RestSpellSlotRecoveryMechanicsSchema
+  >;
+  readonly RestSpellSlotRecoveryMechanicsEncoded: Schema.Codec.Encoded<
+    typeof RestSpellSlotRecoveryMechanicsSchema
+  >;
+  readonly NonWizardClassRecord: Schema.Schema.Type<
+    typeof NonWizardClassRecordSchema
+  >;
+  readonly NonWizardClassRecordEncoded: Schema.Codec.Encoded<
+    typeof NonWizardClassRecordSchema
+  >;
+  readonly SacredWeaponMechanics: Schema.Schema.Type<
+    typeof SacredWeaponMechanicsSchema
+  >;
+  readonly SacredWeaponMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SacredWeaponMechanicsSchema
+  >;
+  readonly SaveDamageReplacementMechanics: Schema.Schema.Type<
+    typeof SaveDamageReplacementMechanicsSchema
+  >;
+  readonly SaveDamageReplacementMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SaveDamageReplacementMechanicsSchema
+  >;
+  readonly SorcererMetamagicMechanics: Schema.Schema.Type<
+    typeof SorcererMetamagicMechanicsSchema
+  >;
+  readonly SorcererMetamagicMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SorcererMetamagicMechanicsSchema
+  >;
+  readonly SorcererSorcerousRestorationMechanics: Schema.Schema.Type<
+    typeof SorcererSorcerousRestorationMechanicsSchema
+  >;
+  readonly SorcererSorcerousRestorationMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SorcererSorcerousRestorationMechanicsSchema
+  >;
+  readonly SpellbookRitualAccessMechanics: Schema.Schema.Type<
+    typeof SpellbookRitualAccessMechanicsSchema
+  >;
+  readonly SpellbookRitualAccessMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SpellbookRitualAccessMechanicsSchema
+  >;
+  readonly SpellDamageRollAbilityModifierMechanics: Schema.Schema.Type<
+    typeof SpellDamageRollAbilityModifierMechanicsSchema
+  >;
+  readonly SpellDamageRollAbilityModifierMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SpellDamageRollAbilityModifierMechanicsSchema
+  >;
+  readonly SpellSlotHealingModifierMechanics: Schema.Schema.Type<
+    typeof SpellSlotHealingModifierMechanicsSchema
+  >;
+  readonly SpellSlotHealingModifierMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SpellSlotHealingModifierMechanicsSchema
+  >;
+  readonly SteadyAimMechanics: Schema.Schema.Type<
+    typeof SteadyAimMechanicsSchema
+  >;
+  readonly SteadyAimMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SteadyAimMechanicsSchema
+  >;
+  readonly StunningStrikeMechanics: Schema.Schema.Type<
+    typeof StunningStrikeMechanicsSchema
+  >;
+  readonly StunningStrikeMechanicsEncoded: Schema.Codec.Encoded<
+    typeof StunningStrikeMechanicsSchema
+  >;
+  readonly SupremeSneakMechanics: Schema.Schema.Type<
+    typeof SupremeSneakMechanicsSchema
+  >;
+  readonly SupremeSneakMechanicsEncoded: Schema.Codec.Encoded<
+    typeof SupremeSneakMechanicsSchema
+  >;
+  readonly TacticalMasterMechanics: Schema.Schema.Type<
+    typeof TacticalMasterMechanicsSchema
+  >;
+  readonly TacticalMasterMechanicsEncoded: Schema.Codec.Encoded<
+    typeof TacticalMasterMechanicsSchema
+  >;
+  readonly TriggeredReplacementMechanics: Schema.Schema.Type<
+    typeof TriggeredReplacementMechanicsSchema
+  >;
+  readonly TriggeredReplacementMechanicsEncoded: Schema.Codec.Encoded<
+    typeof TriggeredReplacementMechanicsSchema
+  >;
+  readonly ShieldRecord: Schema.Schema.Type<typeof ShieldRecordSchema>;
+  readonly ShieldRecordEncoded: Schema.Codec.Encoded<typeof ShieldRecordSchema>;
+  readonly SpeciesRecord: Schema.Schema.Type<typeof SpeciesRecordSchema>;
+  readonly SpeciesRecordEncoded: Schema.Codec.Encoded<
+    typeof SpeciesRecordSchema
+  >;
+  readonly SubclassRecord: Schema.Schema.Type<typeof SubclassRecordSchema>;
+  readonly SubclassRecordEncoded: Schema.Codec.Encoded<
+    typeof SubclassRecordSchema
+  >;
+  readonly WarlockPactSlotRecoveryMechanics: Schema.Schema.Type<
+    typeof WarlockPactSlotRecoveryMechanicsSchema
+  >;
+  readonly WarlockPactSlotRecoveryMechanicsEncoded: Schema.Codec.Encoded<
+    typeof WarlockPactSlotRecoveryMechanicsSchema
+  >;
+  readonly WeaponMasteryChoiceMechanics: Schema.Schema.Type<
+    typeof WeaponMasteryChoiceMechanicsSchema
+  >;
+  readonly WeaponMasteryChoiceMechanicsEncoded: Schema.Codec.Encoded<
+    typeof WeaponMasteryChoiceMechanicsSchema
+  >;
+  readonly WeaponAttackDamageDieFloorMechanics: Schema.Schema.Type<
+    typeof WeaponAttackDamageDieFloorMechanicsSchema
+  >;
+  readonly WeaponAttackDamageDieFloorMechanicsEncoded: Schema.Codec.Encoded<
+    typeof WeaponAttackDamageDieFloorMechanicsSchema
+  >;
+  readonly WeaponRecord: Schema.Schema.Type<typeof WeaponRecordSchema>;
+  readonly WeaponRecordEncoded: Schema.Codec.Encoded<typeof WeaponRecordSchema>;
+  readonly WizardClassRecord: Schema.Schema.Type<
+    typeof WizardClassRecordSchema
+  >;
+  readonly WizardClassRecordEncoded: Schema.Codec.Encoded<
+    typeof WizardClassRecordSchema
+  >;
+  readonly ItemDestructionPolicy: Schema.Schema.Type<
+    typeof ItemDestructionPolicySchema
+  >;
+  readonly ItemDestructionPolicyEncoded: Schema.Codec.Encoded<
+    typeof ItemDestructionPolicySchema
+  >;
+  readonly WizardSpellbookLearningMechanics: Schema.Schema.Type<
+    typeof WizardSpellbookLearningMechanicsSchema
+  >;
+  readonly WizardSpellbookLearningMechanicsEncoded: Schema.Codec.Encoded<
+    typeof WizardSpellbookLearningMechanicsSchema
+  >;
+  readonly ArmorCategory: Schema.Schema.Type<typeof ArmorCategorySchema>;
+  readonly ArmorCategoryEncoded: Schema.Codec.Encoded<
+    typeof ArmorCategorySchema
+  >;
+  readonly Condition: Schema.Schema.Type<typeof ConditionSchema>;
+  readonly ConditionEncoded: Schema.Codec.Encoded<typeof ConditionSchema>;
+  readonly FeatCategory: Schema.Schema.Type<typeof FeatCategorySchema>;
+  readonly FeatCategoryEncoded: Schema.Codec.Encoded<typeof FeatCategorySchema>;
+  readonly MagicItemRarity: Schema.Schema.Type<typeof MagicItemRaritySchema>;
+  readonly MagicItemRarityEncoded: Schema.Codec.Encoded<
+    typeof MagicItemRaritySchema
+  >;
+  readonly WeaponCategory: Schema.Schema.Type<typeof WeaponCategorySchema>;
+  readonly WeaponCategoryEncoded: Schema.Codec.Encoded<
+    typeof WeaponCategorySchema
+  >;
+  readonly Provenance: Schema.Schema.Type<typeof ProvenanceSchema>;
+  readonly ProvenanceEncoded: Schema.Codec.Encoded<typeof ProvenanceSchema>;
+};
+export type ActivatedAbilityMechanics =
+  OwnedActivatedAbilityMechanics<NonspellSchemaSupport>;
+type ActivatedAbilityMechanicsEncoded =
+  OwnedActivatedAbilityMechanicsEncoded<NonspellSchemaSupport>;
+export type ArmorTemplateRecord =
+  OwnedArmorTemplateRecord<NonspellSchemaSupport>;
+type ArmorTemplateRecordEncoded =
+  OwnedArmorTemplateRecordEncoded<NonspellSchemaSupport>;
+export type BarbarianClassFeatureMechanics =
+  OwnedBarbarianClassFeatureMechanics<NonspellSchemaSupport>;
+type BarbarianClassFeatureMechanicsEncoded =
+  OwnedBarbarianClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type BarbarianClassFeatureRecord =
+  OwnedBarbarianClassFeatureRecord<NonspellSchemaSupport>;
+type BarbarianClassFeatureRecordEncoded =
+  OwnedBarbarianClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type BardClassFeatureMechanics =
+  OwnedBardClassFeatureMechanics<NonspellSchemaSupport>;
+type BardClassFeatureMechanicsEncoded =
+  OwnedBardClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type BardClassFeatureRecord =
+  OwnedBardClassFeatureRecord<NonspellSchemaSupport>;
+type BardClassFeatureRecordEncoded =
+  OwnedBardClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type ClassFeatureRecord = OwnedClassFeatureRecord<NonspellSchemaSupport>;
+type ClassFeatureRecordEncoded =
+  OwnedClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type ClassFeatureMechanics =
+  OwnedClassFeatureMechanics<NonspellSchemaSupport>;
+type ClassFeatureMechanicsEncoded =
+  OwnedClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type ClassGeneralFeatureMechanics =
+  OwnedClassGeneralFeatureMechanics<NonspellSchemaSupport>;
+type ClassGeneralFeatureMechanicsEncoded =
+  OwnedClassGeneralFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type ClassFeatureAcquisitionChoiceMechanics =
+  OwnedClassFeatureAcquisitionChoiceMechanics<NonspellSchemaSupport>;
+type ClassFeatureAcquisitionChoiceMechanicsEncoded =
+  OwnedClassFeatureAcquisitionChoiceMechanicsEncoded<NonspellSchemaSupport>;
+export type ClassFeatureActivationMechanics =
+  OwnedClassFeatureActivationMechanics<NonspellSchemaSupport>;
+type ClassFeatureActivationMechanicsEncoded =
+  OwnedClassFeatureActivationMechanicsEncoded<NonspellSchemaSupport>;
+export type ClassFeatureComponentMechanics =
+  OwnedClassFeatureComponentMechanics<NonspellSchemaSupport>;
+type ClassFeatureComponentMechanicsEncoded =
+  OwnedClassFeatureComponentMechanicsEncoded<NonspellSchemaSupport>;
+export type CompositeClassFeatureMechanics =
+  OwnedCompositeClassFeatureMechanics<NonspellSchemaSupport>;
+type CompositeClassFeatureMechanicsEncoded =
+  OwnedCompositeClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type ClericClassFeatureMechanics =
+  OwnedClericClassFeatureMechanics<NonspellSchemaSupport>;
+type ClericClassFeatureMechanicsEncoded =
+  OwnedClericClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type ClericClassFeatureRecord =
+  OwnedClericClassFeatureRecord<NonspellSchemaSupport>;
+type ClericClassFeatureRecordEncoded =
+  OwnedClericClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type DruidClassFeatureMechanics =
+  OwnedDruidClassFeatureMechanics<NonspellSchemaSupport>;
+type DruidClassFeatureMechanicsEncoded =
+  OwnedDruidClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type DruidClassFeatureRecord =
+  OwnedDruidClassFeatureRecord<NonspellSchemaSupport>;
+type DruidClassFeatureRecordEncoded =
+  OwnedDruidClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type FighterClassFeatureMechanics =
+  OwnedFighterClassFeatureMechanics<NonspellSchemaSupport>;
+type FighterClassFeatureMechanicsEncoded =
+  OwnedFighterClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type FighterClassFeatureRecord =
+  OwnedFighterClassFeatureRecord<NonspellSchemaSupport>;
+type FighterClassFeatureRecordEncoded =
+  OwnedFighterClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type FeatMechanics = OwnedFeatMechanics<NonspellSchemaSupport>;
+type FeatMechanicsEncoded = OwnedFeatMechanicsEncoded<NonspellSchemaSupport>;
+export type FeatRecord = OwnedFeatRecord<NonspellSchemaSupport>;
+type FeatRecordEncoded = OwnedFeatRecordEncoded<NonspellSchemaSupport>;
+export type MagicItemSpawnedCreatureMechanics =
+  OwnedMagicItemSpawnedCreatureMechanics<NonspellSchemaSupport>;
+type MagicItemSpawnedCreatureMechanicsEncoded =
+  OwnedMagicItemSpawnedCreatureMechanicsEncoded<NonspellSchemaSupport>;
+export type MagicEquipmentTrait =
+  OwnedMagicEquipmentTrait<NonspellSchemaSupport>;
+type MagicEquipmentTraitEncoded =
+  OwnedMagicEquipmentTraitEncoded<NonspellSchemaSupport>;
+export type MagicEquipmentVariant =
+  OwnedMagicEquipmentVariant<NonspellSchemaSupport>;
+type MagicEquipmentVariantEncoded =
+  OwnedMagicEquipmentVariantEncoded<NonspellSchemaSupport>;
+export type MagicItemComponentMechanics =
+  OwnedMagicItemComponentMechanics<NonspellSchemaSupport>;
+type MagicItemComponentMechanicsEncoded =
+  OwnedMagicItemComponentMechanicsEncoded<NonspellSchemaSupport>;
+export type MagicItemMechanics = OwnedMagicItemMechanics<NonspellSchemaSupport>;
+type MagicItemMechanicsEncoded =
+  OwnedMagicItemMechanicsEncoded<NonspellSchemaSupport>;
+export type MagicItemRecord = OwnedMagicItemRecord<NonspellSchemaSupport>;
+type MagicItemRecordEncoded =
+  OwnedMagicItemRecordEncoded<NonspellSchemaSupport>;
+export type MagicItemVariant = OwnedMagicItemVariant<NonspellSchemaSupport>;
+type MagicItemVariantEncoded =
+  OwnedMagicItemVariantEncoded<NonspellSchemaSupport>;
+export type CompositeMagicItemMechanics =
+  OwnedCompositeMagicItemMechanics<NonspellSchemaSupport>;
+type CompositeMagicItemMechanicsEncoded =
+  OwnedCompositeMagicItemMechanicsEncoded<NonspellSchemaSupport>;
+export type PassiveMechanics = OwnedPassiveMechanics<NonspellSchemaSupport>;
+type PassiveMechanicsEncoded =
+  OwnedPassiveMechanicsEncoded<NonspellSchemaSupport>;
+export type PassiveOperation = OwnedPassiveOperation<NonspellSchemaSupport>;
+type PassiveOperationEncoded =
+  OwnedPassiveOperationEncoded<NonspellSchemaSupport>;
+export type MonkClassFeatureMechanics =
+  OwnedMonkClassFeatureMechanics<NonspellSchemaSupport>;
+type MonkClassFeatureMechanicsEncoded =
+  OwnedMonkClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type MonkClassFeatureRecord =
+  OwnedMonkClassFeatureRecord<NonspellSchemaSupport>;
+type MonkClassFeatureRecordEncoded =
+  OwnedMonkClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type PaladinClassFeatureMechanics =
+  OwnedPaladinClassFeatureMechanics<NonspellSchemaSupport>;
+type PaladinClassFeatureMechanicsEncoded =
+  OwnedPaladinClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type PaladinClassFeatureRecord =
+  OwnedPaladinClassFeatureRecord<NonspellSchemaSupport>;
+type PaladinClassFeatureRecordEncoded =
+  OwnedPaladinClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type RangerClassFeatureMechanics =
+  OwnedRangerClassFeatureMechanics<NonspellSchemaSupport>;
+type RangerClassFeatureMechanicsEncoded =
+  OwnedRangerClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type RangerClassFeatureRecord =
+  OwnedRangerClassFeatureRecord<NonspellSchemaSupport>;
+type RangerClassFeatureRecordEncoded =
+  OwnedRangerClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type RogueClassFeatureMechanics =
+  OwnedRogueClassFeatureMechanics<NonspellSchemaSupport>;
+type RogueClassFeatureMechanicsEncoded =
+  OwnedRogueClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type RogueClassFeatureRecord =
+  OwnedRogueClassFeatureRecord<NonspellSchemaSupport>;
+type RogueClassFeatureRecordEncoded =
+  OwnedRogueClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type SorcererClassFeatureMechanics =
+  OwnedSorcererClassFeatureMechanics<NonspellSchemaSupport>;
+type SorcererClassFeatureMechanicsEncoded =
+  OwnedSorcererClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type SorcererClassFeatureRecord =
+  OwnedSorcererClassFeatureRecord<NonspellSchemaSupport>;
+type SorcererClassFeatureRecordEncoded =
+  OwnedSorcererClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type SpeciesTraitMechanics =
+  OwnedSpeciesTraitMechanics<NonspellSchemaSupport>;
+type SpeciesTraitMechanicsEncoded =
+  OwnedSpeciesTraitMechanicsEncoded<NonspellSchemaSupport>;
+export type SpeciesTraitRecord = OwnedSpeciesTraitRecord<NonspellSchemaSupport>;
+type SpeciesTraitRecordEncoded =
+  OwnedSpeciesTraitRecordEncoded<NonspellSchemaSupport>;
+export type TriggeredReactionAbilityMechanics =
+  OwnedTriggeredReactionAbilityMechanics<NonspellSchemaSupport>;
+type TriggeredReactionAbilityMechanicsEncoded =
+  OwnedTriggeredReactionAbilityMechanicsEncoded<NonspellSchemaSupport>;
+export type UnitRecord = OwnedUnitRecord<NonspellSchemaSupport>;
+type UnitRecordEncoded = OwnedUnitRecordEncoded<NonspellSchemaSupport>;
+export type ShieldTemplateRecord =
+  OwnedShieldTemplateRecord<NonspellSchemaSupport>;
+type ShieldTemplateRecordEncoded =
+  OwnedShieldTemplateRecordEncoded<NonspellSchemaSupport>;
+export type WarlockClassFeatureMechanics =
+  OwnedWarlockClassFeatureMechanics<NonspellSchemaSupport>;
+type WarlockClassFeatureMechanicsEncoded =
+  OwnedWarlockClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type WarlockClassFeatureRecord =
+  OwnedWarlockClassFeatureRecord<NonspellSchemaSupport>;
+type WarlockClassFeatureRecordEncoded =
+  OwnedWarlockClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type WizardClassFeatureMechanics =
+  OwnedWizardClassFeatureMechanics<NonspellSchemaSupport>;
+type WizardClassFeatureMechanicsEncoded =
+  OwnedWizardClassFeatureMechanicsEncoded<NonspellSchemaSupport>;
+export type WizardClassFeatureRecord =
+  OwnedWizardClassFeatureRecord<NonspellSchemaSupport>;
+type WizardClassFeatureRecordEncoded =
+  OwnedWizardClassFeatureRecordEncoded<NonspellSchemaSupport>;
+export type WeaponTemplateRecord =
+  OwnedWeaponTemplateRecord<NonspellSchemaSupport>;
+type WeaponTemplateRecordEncoded =
+  OwnedWeaponTemplateRecordEncoded<NonspellSchemaSupport>;
+
 import {
   ActivationPhaseSchema,
   CreatureControlSchema,
@@ -292,55 +906,10 @@ const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literals([
   ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
 ]);
 
-type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
-
-const [firstClassName, ...rawClassNameTail] = CLASS_NAMES;
-const classNameTail: ReadonlyArray<ClassName> = rawClassNameTail;
-
-const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
-  "bard",
-  "cleric",
-  "druid",
-  "fighter",
-  "monk",
-  "paladin",
-  "ranger",
-  "rogue",
-  "sorcerer",
-  "wizard",
-  "warlock",
-] as const satisfies ReadonlyArray<ClassName>;
-type ClassFeatureRecordWithSpecificMechanicsClassName =
-  (typeof CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES)[number];
-
-const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = [
-  firstClassName,
-  ...classNameTail.filter(
-    (
-      className,
-    ): className is Exclude<
-      ClassName,
-      ClassFeatureRecordWithSpecificMechanicsClassName
-    > =>
-      // Widen the literal tuple so ReadonlyArray.includes accepts any ClassName.
-      !(
-        CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES as ReadonlyArray<ClassName>
-      ).includes(className),
-  ),
-] as const satisfies NonEmptyReadonlyArray<
-  Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>
->;
-
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
   ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
   ...NON_SPELLCASTING_CLASS_NAMES,
 ] as const;
-
-const MAGIC_INITIATE_SPELL_LISTS = [
-  "cleric",
-  "druid",
-  "wizard",
-] as const satisfies ReadonlyArray<ClassName>;
 
 const numberTierSchema = Schema.Struct({
   atLevel: Schema.Number,
@@ -3914,15 +4483,6 @@ export const WarlockClassFeatureRecordSchema = Schema.Struct({
   WarlockClassFeatureRecordEncoded
 >;
 
-export const OtherClassFeatureRecordSchema = Schema.Struct({
-  ...ClassFeatureRecordBaseFields,
-  className: Schema.Literals(GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES),
-  mechanics: ClassGeneralFeatureMechanicsSchema,
-}) satisfies Schema.Codec<
-  OtherClassFeatureRecord,
-  OtherClassFeatureRecordEncoded
->;
-
 export const ClassFeatureRecordSchema: Schema.Codec<
   ClassFeatureRecord,
   ClassFeatureRecordEncoded
@@ -3939,7 +4499,6 @@ export const ClassFeatureRecordSchema: Schema.Codec<
   RogueClassFeatureRecordSchema,
   SorcererClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
-  OtherClassFeatureRecordSchema,
 ]);
 
 export const SubclassRecordSchema = Schema.Struct({
@@ -4767,7 +5326,6 @@ export const UNIT_RECORD_MEMBER_SCHEMAS = [
   RogueClassFeatureRecordSchema,
   SorcererClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
-  OtherClassFeatureRecordSchema,
   BackgroundRecordSchema,
   MasteryRecordSchema,
   FeatRecordSchema,
