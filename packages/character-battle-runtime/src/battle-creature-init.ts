@@ -70,11 +70,10 @@ import {
   battleCreatureInitIssuesFromMessages,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
-  characterAttackActionOption,
+  characterWeaponAttackActionOptions,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
   characterInvocationFeatures,
-  characterOffHandAttackActionOption,
   characterPactBladeBondedWeaponItemId,
   characterSpellcasting,
   getRequiredUnit,
@@ -352,18 +351,15 @@ export function battleCreatureInitFromCharacterBuild(
         unitLibrary: input.unitLibrary,
         itemId: input.pactBladeBondedWeaponItemId,
       });
-    const attack = yield* characterAttackActionOption(
-      input.build,
-      input.unitLibrary,
+    const weaponAttackOptions = yield* characterWeaponAttackActionOptions({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      weaponMasteries: weaponMasteries.success,
       classLevels,
-      pactBladeBondedWeaponItemId,
-    );
-    const offHandAttack = yield* characterOffHandAttackActionOption(
-      input.build,
-      input.unitLibrary,
-      classLevels,
-      pactBladeBondedWeaponItemId,
-    );
+      ...(pactBladeBondedWeaponItemId === undefined
+        ? {}
+        : { pactBladeBondedWeaponItemId }),
+    });
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
     const unitFeatures = yield* characterBattleFeatures(
       input.build,
@@ -478,9 +474,11 @@ export function battleCreatureInitFromCharacterBuild(
         selectedLoadout,
         weaponMasteries: weaponMasteries.success,
         invocationFeatures: characterInvocationFeatures(input.build),
-        attack,
+        attack: weaponAttackOptions.attack,
         unarmedStrike,
-        ...(offHandAttack === undefined ? {} : { offHandAttack }),
+        ...(weaponAttackOptions.offHandAttack === undefined
+          ? {}
+          : { offHandAttack: weaponAttackOptions.offHandAttack }),
         unitFeatures,
         resources,
         ...(metamagic === undefined ? {} : { metamagic }),
