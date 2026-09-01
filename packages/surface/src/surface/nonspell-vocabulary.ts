@@ -5,6 +5,3 @@ export const MAGIC_INITIATE_SPELL_LISTS = [
   "druid",
   "wizard",
 ] as const satisfies ReadonlyArray<ClassName>;
-
-export type MagicInitiateSpellList =
-  (typeof MAGIC_INITIATE_SPELL_LISTS)[number];
