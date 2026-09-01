@@ -47,7 +47,7 @@ const FORBIDDEN_OWNERS = [
   },
 ];
 
-const authoredSurfaceOwnerCache = new Map();
+const admissionSurfaceImportCache = new Map();
 const SURFACE_SOURCE_ROOT = path.join(ROOT, "packages/surface/src");
 const SURFACE_SCHEMA_ROOT = path.join(SURFACE_SOURCE_ROOT, "surface/schema");
 const SURFACE_TYPES_MODULE = path.join(SURFACE_SOURCE_ROOT, "surface/types");
@@ -55,16 +55,107 @@ const SURFACE_STAT_BLOCK_TYPES_MODULE = path.join(
   SURFACE_SOURCE_ROOT,
   "surface/stat-block-types",
 );
-
-function isAuthoredSurfaceSymbol(name) {
-  return (
-    name.startsWith("Authored") ||
-    name.startsWith("CreatureNamed") ||
-    name.includes("Record") ||
-    name.includes("SrdSurface") ||
-    name.includes("Provenance")
-  );
-}
+const MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS = new Map([
+  [
+    SURFACE_SCHEMA_ROOT,
+    new Set([
+      "AbilitySchema",
+      "ActionRestrictionSchema",
+      "CUNNING_STRIKE_OPTION_SELECTION_IDS",
+      "ClassNameSchema",
+      "CreatureTypeSchema",
+      "DamageTypeSchema",
+      "DcSourceSchema",
+      "DiceExprSchema",
+      "DurationSchema",
+      "RangeSchema",
+      "SORCERER_METAMAGIC_EFFECT_KINDS",
+      "SizeSchema",
+      "SpellLevelSchema",
+      "WeaponCategorySchema",
+      "WeaponDamageSchema",
+      "WeaponMasteryNameSchema",
+      "WeaponPropertyDetailSchema",
+      "WeaponUsageSchema",
+    ]),
+  ],
+  [
+    SURFACE_STAT_BLOCK_TYPES_MODULE,
+    new Set([
+      "ChallengeRating",
+      "StatBlockId",
+      "StatBlockProcedureOrdinal",
+      "StatBlockProcedureResource",
+      "StatBlockProcedureResourceOrdinal",
+      "StatBlockTextOnlyReason",
+    ]),
+  ],
+  [
+    SURFACE_TYPES_MODULE,
+    new Set([
+      "Ability",
+      "ActionRestriction",
+      "ActionRestrictionAllowedAction",
+      "ActivationPhase",
+      "ActivationResource",
+      "AreaDirectEffectAtom",
+      "ArmorAcFormula",
+      "ArmorCategory",
+      "ArmorTrainingCategory",
+      "Attachment",
+      "ClassName",
+      "CreatureAttackRollMechanics",
+      "CreatureImmunityList",
+      "CreatureLimitedUse",
+      "CreatureRechargeMinimumRoll",
+      "CreatureResistanceList",
+      "CreatureSavingThrowModifier",
+      "CreatureSense",
+      "CreatureSkillModifier",
+      "CreatureSpeed",
+      "CreatureVulnerabilityList",
+      "DamageType",
+      "DamageTypeRef",
+      "DcSource",
+      "DiceAmount",
+      "DiceExpr",
+      "DiceExprDelta",
+      "Duration",
+      "EffectAtom",
+      "GlyphWardingExplosiveRuneBranch",
+      "GlyphWardingMechanics",
+      "GlyphWardingOccurrence",
+      "GlyphWardingSpellGlyphBranch",
+      "GlyphWardingTrigger",
+      "LinearPerLevel",
+      "OngoingEffect",
+      "PointPoolResource",
+      "Range",
+      "SKILLS",
+      "SixAbilityScores",
+      "Size",
+      "Skill",
+      "SkillFilter",
+      "SpellLevel",
+      "SpellMechanics",
+      "StatBlockLiteralValue",
+      "StatBlockValue",
+      "TargetSelection",
+      "TopLevelSpellCastingTime",
+      "UsageLimit",
+      "WeaponCategory",
+      "WeaponDamage",
+      "WeaponMasteryName",
+      "WeaponProficiency",
+      "WeaponPropertyDetail",
+      "WeaponUsage",
+      "isEffectAtom",
+      "isFixedDistancePointRange",
+      "isThresholdTierPointRange",
+      "topLevelSpellCastingTime",
+    ]),
+  ],
+]);
 
 const EXECUTION_SHAPE_FORBIDDEN_FIELDS = new Map([
   [
@@ -130,16 +221,28 @@ function isMixedSurfacePath(file) {
   );
 }
 
-function surfaceModuleOwnership(specifier, importingFile) {
+function resolvedMixedSurfaceModule(specifier, importingFile) {
   const withoutExtension = specifier.replace(/\.[cm]?[jt]sx?$/, "");
-  if (withoutExtension.startsWith("@dnd/surface")) {
-    return withoutExtension === "@dnd/surface/surface/types" ||
-      withoutExtension === "@dnd/surface/surface/stat-block-types" ||
-      withoutExtension === "@dnd/surface/surface/schema" ||
-      withoutExtension.startsWith("@dnd/surface/surface/schema-")
-      ? "mixed"
-      : "admission";
+  if (withoutExtension.startsWith("@dnd/surface/")) {
+    const resolved = path.join(
+      SURFACE_SOURCE_ROOT,
+      withoutExtension.slice("@dnd/surface/".length),
+    );
+    return isMixedSurfacePath(resolved) ? resolved : undefined;
   }
+  if (!specifier.startsWith(".")) return undefined;
+  const resolved = withoutSourceExtension(
+    path.resolve(path.dirname(importingFile), specifier),
+  );
+  return isMixedSurfacePath(resolved) ? resolved : undefined;
+}
+
+function surfaceModuleOwnership(specifier, importingFile) {
+  if (resolvedMixedSurfaceModule(specifier, importingFile) !== undefined) {
+    return "mixed";
+  }
+  const withoutExtension = specifier.replace(/\.[cm]?[jt]sx?$/, "");
+  if (withoutExtension.startsWith("@dnd/surface")) return "admission";
   if (!specifier.startsWith(".")) return undefined;
   const resolved = withoutSourceExtension(
     path.resolve(path.dirname(importingFile), specifier),
@@ -150,7 +253,21 @@ function surfaceModuleOwnership(specifier, importingFile) {
   ) {
     return undefined;
   }
-  return isMixedSurfacePath(resolved) ? "mixed" : "admission";
+  return "admission";
+}
+
+function mixedSurfaceSymbolsAreExecutionSafe(
+  specifier,
+  importingFile,
+  importedNames,
+) {
+  const module = resolvedMixedSurfaceModule(specifier, importingFile);
+  if (module === undefined || importedNames.length === 0) return false;
+  const safeSymbols = MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS.get(module);
+  return (
+    safeSymbols !== undefined &&
+    importedNames.every((name) => safeSymbols.has(name))
+  );
 }
 
 function isAuthoredSurfaceFile(file) {
@@ -344,15 +461,15 @@ function forbiddenOwner(file, zone) {
   if (isMixedSurfaceFile(file)) return undefined;
   if (
     (zone === undefined || zone === "admission") &&
-    (isAuthoredSurfaceFile(file) || importsAuthoredSurfaceSymbol(file))
+    (isAuthoredSurfaceFile(file) || requiresSurfaceAdmission(file))
   ) {
     return { zone: "admission", path: repoPath };
   }
   return undefined;
 }
 
-function importsAuthoredSurfaceSymbol(file) {
-  const cached = authoredSurfaceOwnerCache.get(file);
+function requiresSurfaceAdmission(file) {
+  const cached = admissionSurfaceImportCache.get(file);
   if (cached !== undefined) return cached;
   const source = fs.readFileSync(file, "utf8");
   const sourceFile = ts.createSourceFile(
@@ -361,20 +478,47 @@ function importsAuthoredSurfaceSymbol(file) {
     ts.ScriptTarget.Latest,
     false,
   );
-  let importsAuthoredRecord = false;
+  let importsAdmissionSurface = false;
   const visit = (node) => {
-    if (importsAuthoredRecord) return;
+    if (importsAdmissionSurface) return;
+    if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) &&
+          node.expression.text === "require")) &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteralLike(node.arguments[0]) &&
+      surfaceModuleOwnership(node.arguments[0].text, file) !== undefined
+    ) {
+      importsAdmissionSurface = true;
+      return;
+    }
+    if (
+      ts.isImportEqualsDeclaration(node) &&
+      ts.isExternalModuleReference(node.moduleReference) &&
+      node.moduleReference.expression !== undefined &&
+      ts.isStringLiteralLike(node.moduleReference.expression) &&
+      surfaceModuleOwnership(node.moduleReference.expression.text, file) !==
+        undefined
+    ) {
+      importsAdmissionSurface = true;
+      return;
+    }
     if (
       ts.isImportTypeNode(node) &&
       ts.isLiteralTypeNode(node.argument) &&
       ts.isStringLiteral(node.argument.literal) &&
       surfaceModuleOwnership(node.argument.literal.text, file) !== undefined
     ) {
-      const importedName = node.qualifier?.getText(sourceFile) ?? "";
-      importsAuthoredRecord =
+      const importedName = node.qualifier?.getText(sourceFile);
+      importsAdmissionSurface =
         surfaceModuleOwnership(node.argument.literal.text, file) ===
-          "admission" || isAuthoredSurfaceSymbol(importedName);
-      if (importsAuthoredRecord) return;
+          "admission" ||
+        importedName === undefined ||
+        !mixedSurfaceSymbolsAreExecutionSafe(node.argument.literal.text, file, [
+          importedName,
+        ]);
+      if (importsAdmissionSurface) return;
     }
     ts.forEachChild(node, visit);
   };
@@ -391,34 +535,44 @@ function importsAuthoredSurfaceSymbol(file) {
     }
     const specifier = statement.moduleSpecifier.text;
     if (surfaceModuleOwnership(specifier, file) === "admission") {
-      importsAuthoredRecord = true;
+      importsAdmissionSurface = true;
       break;
     }
     if (ts.isImportDeclaration(statement)) {
+      const clause = statement.importClause;
       const bindings = statement.importClause?.namedBindings;
-      importsAuthoredRecord =
-        bindings === undefined
-          ? statement.importClause?.name !== undefined
-          : ts.isNamespaceImport(bindings) ||
-            bindings.elements.some((element) =>
-              isAuthoredSurfaceSymbol(
-                (element.propertyName ?? element.name).text,
-              ),
-            );
-      if (importsAuthoredRecord) break;
+      importsAdmissionSurface =
+        clause === undefined ||
+        clause.name !== undefined ||
+        bindings === undefined ||
+        ts.isNamespaceImport(bindings) ||
+        !mixedSurfaceSymbolsAreExecutionSafe(
+          specifier,
+          file,
+          bindings.elements.map(
+            (element) => (element.propertyName ?? element.name).text,
+          ),
+        );
+      if (importsAdmissionSurface) break;
       continue;
     }
-    importsAuthoredRecord =
+    importsAdmissionSurface =
       statement.exportClause === undefined ||
       !ts.isNamedExports(statement.exportClause) ||
-      statement.exportClause.elements.some((element) =>
-        isAuthoredSurfaceSymbol((element.propertyName ?? element.name).text),
+      !mixedSurfaceSymbolsAreExecutionSafe(
+        specifier,
+        file,
+        ts.isNamedExports(statement.exportClause)
+          ? statement.exportClause.elements.map(
+              (element) => (element.propertyName ?? element.name).text,
+            )
+          : [],
       );
-    if (importsAuthoredRecord) break;
+    if (importsAdmissionSurface) break;
   }
-  if (!importsAuthoredRecord) visit(sourceFile);
-  authoredSurfaceOwnerCache.set(file, importsAuthoredRecord);
-  return importsAuthoredRecord;
+  if (!importsAdmissionSurface) visit(sourceFile);
+  admissionSurfaceImportCache.set(file, importsAdmissionSurface);
+  return importsAdmissionSurface;
 }
 
 function compilerOptions() {
@@ -723,6 +877,11 @@ function runSelfTests() {
     const fixtureForbidden = path.join(fixtureRoot, "forbidden.ts");
     const fixtureAuthored = path.join(fixtureRoot, "authored.ts");
     const fixtureLaundered = path.join(fixtureRoot, "laundered.ts");
+    const assertSurfaceImportRequiresAdmission = (source, expected) => {
+      fs.writeFileSync(fixtureAuthored, source);
+      admissionSurfaceImportCache.delete(fixtureAuthored);
+      assert.equal(requiresSurfaceAdmission(fixtureAuthored), expected);
+    };
     fs.writeFileSync(fixtureExecution, 'import "./helper.ts";\n');
     fs.writeFileSync(fixtureHelper, 'export * from "./forbidden.ts";\n');
     fs.writeFileSync(fixtureForbidden, "export const forbidden = true;\n");
@@ -746,13 +905,13 @@ function runSelfTests() {
         path: [fixtureExecution, fixtureHelper, fixtureForbidden],
       },
     );
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     fs.writeFileSync(
       fixtureAuthored,
       'import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";\nexport type Fixture = CreatureNamedAttackRoll;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     assert.equal(
       forbiddenOwner(fixtureAuthored, "admission")?.zone,
       "admission",
@@ -761,8 +920,8 @@ function runSelfTests() {
       fixtureAuthored,
       'import type { CreatureAttackRollMechanics } from "@dnd/surface/surface/types";\nexport type Fixture = CreatureAttackRollMechanics;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), false);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), false);
     fs.writeFileSync(
       fixtureLaundered,
       "export type CharacterWeaponAttackExecutionWeapon = { readonly name: string; readonly usage: 'melee' };\n",
@@ -779,8 +938,8 @@ function runSelfTests() {
       fixtureAuthored,
       'import type { AuthoredSpellSource, AuthoredUnitSource } from "@dnd/surface/surface/types";\nexport type Fixture = AuthoredSpellSource | AuthoredUnitSource;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     assert.equal(
       forbiddenOwner(fixtureAuthored, "admission")?.zone,
       "admission",
@@ -789,20 +948,20 @@ function runSelfTests() {
       fixtureAuthored,
       'type Fixture = import("@dnd/surface/surface/types").SpellRecord;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     fs.writeFileSync(
       fixtureAuthored,
       'import { SrdSurfaceSchema } from "@dnd/surface/surface/schema";\nvoid SrdSurfaceSchema;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     fs.writeFileSync(
       fixtureAuthored,
       'import { SrdProvenanceSchema } from "@dnd/surface/surface/schema";\nvoid SrdProvenanceSchema;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     assert.equal(
       forbiddenOwner(fixtureAuthored, "admission")?.zone,
       "admission",
@@ -832,6 +991,66 @@ function runSelfTests() {
       ),
       "mixed",
     );
+    assertSurfaceImportRequiresAdmission(
+      'import type { DiceExpr } from "@dnd/surface/surface/types";\nexport type Fixture = DiceExpr;\n',
+      false,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import type { StandaloneStatBlock } from "@dnd/surface/surface/types";\nexport type Fixture = StandaloneStatBlock;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import { DiceExprSchema } from "@dnd/surface/surface/schema";\nvoid DiceExprSchema;\n',
+      false,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import { StandaloneStatBlockSchema } from "@dnd/surface/surface/schema";\nvoid StandaloneStatBlockSchema;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import SurfaceTypes from "@dnd/surface/surface/types";\nvoid SurfaceTypes;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import * as SurfaceTypes from "@dnd/surface/surface/types";\nvoid SurfaceTypes;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import "@dnd/surface/surface/types";\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'void import("@dnd/surface/surface/types");\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'const SurfaceTypes = require("@dnd/surface/surface/types");\nvoid SurfaceTypes;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import SurfaceTypes = require("@dnd/surface/surface/types");\nvoid SurfaceTypes;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import type { UnknownExecutionFact } from "@dnd/surface/surface/types";\nexport type Fixture = UnknownExecutionFact;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'type Fixture = import("@dnd/surface/surface/types").DiceExpr;\n',
+      false,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'type Fixture = import("@dnd/surface/surface/types").StandaloneStatBlock;\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'type Fixture = import("@dnd/surface/surface/types");\n',
+      true,
+    );
+    assertSurfaceImportRequiresAdmission(
+      'import { DiceExprSchema } from "@dnd/surface/surface/schema-spell";\nvoid DiceExprSchema;\n',
+      true,
+    );
     const relativeStatBlockTypes = path.relative(
       path.dirname(fixtureAuthored),
       `${SURFACE_STAT_BLOCK_TYPES_MODULE}.ts`,
@@ -840,18 +1059,28 @@ function runSelfTests() {
       fixtureAuthored,
       `import type { StatBlockRecord } from ${JSON.stringify(relativeStatBlockTypes)};\nexport type Fixture = StatBlockRecord;\n`,
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     assert.equal(
       forbiddenOwner(fixtureAuthored, "admission")?.zone,
       "admission",
     );
+    for (const authoredShape of [
+      "StandaloneStatBlock",
+      "StatBlockProcedureEntry",
+      "StatBlockSpellReference",
+    ]) {
+      assertSurfaceImportRequiresAdmission(
+        `import type { ${authoredShape} } from ${JSON.stringify(relativeStatBlockTypes)};\nexport type Fixture = ${authoredShape};\n`,
+        true,
+      );
+    }
     fs.writeFileSync(
       fixtureAuthored,
       `import type { StatBlockProcedureOrdinal } from ${JSON.stringify(relativeStatBlockTypes)};\nexport type Fixture = StatBlockProcedureOrdinal;\n`,
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), false);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), false);
     assert.equal(
       forbiddenOwner(`${SURFACE_STAT_BLOCK_TYPES_MODULE}.ts`),
       undefined,
@@ -868,8 +1097,8 @@ function runSelfTests() {
       fixtureAuthored,
       'import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";\nvoid decodeSpellRecordSync;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     const relativeCatalog = path.relative(
       path.dirname(fixtureAuthored),
       path.join(SURFACE_SOURCE_ROOT, "surface/unit-catalog.ts"),
@@ -878,8 +1107,8 @@ function runSelfTests() {
       fixtureAuthored,
       `import { srdUnitCollection } from ${JSON.stringify(relativeCatalog)};\nvoid srdUnitCollection;\n`,
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     assert.equal(
       forbiddenOwner(
         path.join(SURFACE_SOURCE_ROOT, "surface/unit-catalog.ts"),
@@ -891,8 +1120,8 @@ function runSelfTests() {
       fixtureAuthored,
       'import { decodeUnitRecordEither, BackgroundRecordKindSchema } from "@dnd/surface/surface/schema";\nvoid decodeUnitRecordEither;\nvoid BackgroundRecordKindSchema;\n',
     );
-    authoredSurfaceOwnerCache.delete(fixtureAuthored);
-    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    admissionSurfaceImportCache.delete(fixtureAuthored);
+    assert.equal(requiresSurfaceAdmission(fixtureAuthored), true);
     fs.writeFileSync(
       fixtureExecution,
       '/// <reference path="./forbidden.ts" />\nexport const execution = true;\n',
