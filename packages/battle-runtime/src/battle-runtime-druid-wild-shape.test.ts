@@ -3588,6 +3588,7 @@ test("surfaces active Wild Shape non-attack presentation join issues", () => {
           `Expected ${procedureCase.presentationKind} presentation.`,
         );
       }
+      const executionProcedureOrdinal = binding.procedure.procedureOrdinal;
       const orderedProcedures = source.orderedProcedures.map((procedure) => {
         if (procedure !== selectedPresentation) return procedure;
         if (joinMode === "missing") {
@@ -3626,7 +3627,31 @@ test("surfaces active Wild Shape non-attack presentation join issues", () => {
         }),
         subject,
       );
-      expect(presentation).toEqual({ kind: "intrinsic" });
+      const issue =
+        joinMode === "missing"
+          ? {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "missingPresentation" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+            }
+          : {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "presentationKindMismatch" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+              presentationKind: "textOnly" as const,
+            };
+      expect(presentation).toEqual({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: [issue],
+        },
+      });
     }
   }
 });
