@@ -62,6 +62,8 @@ import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -77,7 +79,7 @@ import {
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -259,25 +261,6 @@ function afterHitTimedDamageAndSaveMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function afterHitTimedDamageAndSaveNonEmpty<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> | undefined {
-  const [first, ...rest] = values;
-  return first === undefined ? undefined : [first, ...rest];
-}
-
-function afterHitTimedDamageAndSaveUniqueIssues(
-  issues: readonly AfterHitTimedDamageAndSaveMechanicsIssue[],
-): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
-  const issueKeys = new Set<string>();
-  return issues.filter((issue) => {
-    const key = JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
-    if (issueKeys.has(key)) return false;
-    issueKeys.add(key);
-    return true;
-  });
-}
-
 function admitAfterHitTimedDamageAndSaveMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -308,14 +291,10 @@ function admitAfterHitTimedDamageAndSaveMechanics(
     return { tag: "notRepresented" };
   }
   const issues: AfterHitTimedDamageAndSaveMechanicsIssue[] = [];
-  const issueKeys = new Set<string>();
   const pushIssue = (
     failedFact: AfterHitTimedDamageAndSaveMechanicsIssue["failedFact"],
     mechanicsPath: SpellMechanicsBranchPath,
   ): void => {
-    const key = JSON.stringify([failedFact, mechanicsPath.nodes]);
-    if (issueKeys.has(key)) return;
-    issueKeys.add(key);
     issues.push(
       afterHitTimedDamageAndSaveMechanicsIssue(failedFact, mechanicsPath),
     );
@@ -470,8 +449,8 @@ function admitAfterHitTimedDamageAndSaveMechanics(
       spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
     );
   }
-  const nonEmptyIssues = afterHitTimedDamageAndSaveNonEmpty(
-    afterHitTimedDamageAndSaveUniqueIssues(issues),
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
   );
   if (nonEmptyIssues !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(

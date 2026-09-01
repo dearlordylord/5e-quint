@@ -57,9 +57,11 @@ import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-r
 import {
   spellConsumedMaterialEvidencePaths,
   spellDurationEvidencePaths,
-  spellDurationValueTicks,
-  spellNonEmpty,
+  isSpellCanonicalDurationValue,
+  spellDurationTicksFromCanonicalValue,
+  spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
+  type SpellCanonicalDurationValue,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -85,8 +87,9 @@ function admitDuplicateHitInterception(
   ctx: SpellAdmissionContext,
   facts: DuplicateHitInterceptionMechanicsFacts,
 ): readonly DuplicateHitInterceptionInvocation[] {
-  const durationTicks = spellDurationValueTicks(facts.duration.value);
-  if (durationTicks === null) return [];
+  const durationTicks = spellDurationTicksFromCanonicalValue(
+    facts.duration.value,
+  );
   return ctx.spellCastOptions.flatMap(
     (slot): readonly DuplicateHitInterceptionInvocation[] =>
       Number(slot.spellLevel) < facts.level
@@ -117,17 +120,14 @@ type DuplicateHitInterceptionInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "duplicateHitInterception" }
 >;
-type DuplicateHitInterceptionDuration = Omit<
-  Extract<SpellDefinitionRuleFacts["duration"], { readonly kind: "timed" }>,
-  "value"
+type DuplicateHitInterceptionDuration = Extract<
+  SpellDefinitionRuleFacts["duration"],
+  { readonly kind: "timed" }
 > & {
-  readonly value: Omit<
-    Extract<
-      SpellDefinitionRuleFacts["duration"],
-      { readonly kind: "timed" }
-    >["value"],
-    "unit" | "amount"
-  > & { readonly unit: "minute"; readonly amount: 1 };
+  readonly value: SpellCanonicalDurationValue & {
+    readonly unit: "minute";
+    readonly amount: 1;
+  };
 };
 type DuplicateHitInterceptionRange = Extract<
   SpellDefinitionRuleFacts["range"],
@@ -199,20 +199,15 @@ function duplicateHitInterceptionMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function duplicateHitInterceptionDurationProjection(
+function isDuplicateHitInterceptionDuration(
   duration: SpellDefinitionRuleFacts["duration"],
-): DuplicateHitInterceptionDuration | null {
-  if (
-    duration.kind !== "timed" ||
-    duration.value.unit !== "minute" ||
-    duration.value.amount !== 1
-  ) {
-    return null;
-  }
-  return {
-    ...duration,
-    value: { ...duration.value, unit: "minute", amount: 1 },
-  };
+): duration is DuplicateHitInterceptionDuration {
+  return (
+    duration.kind === "timed" &&
+    duration.value.unit === "minute" &&
+    duration.value.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.value)
+  );
 }
 
 function admitDuplicateHitInterceptionMechanics(
@@ -228,9 +223,9 @@ function admitDuplicateHitInterceptionMechanics(
   }
   const mechanics = source.mechanics;
   const range = mechanics.range.kind === "self" ? mechanics.range : null;
-  const duration = duplicateHitInterceptionDurationProjection(
-    mechanics.duration,
-  );
+  const duration = isDuplicateHitInterceptionDuration(mechanics.duration)
+    ? mechanics.duration
+    : null;
   const issues: DuplicateHitInterceptionMechanicsIssue[] = [];
   const pushIssue = (
     failedFact: DuplicateHitInterceptionFailedFact,
@@ -293,7 +288,7 @@ function admitDuplicateHitInterceptionMechanics(
     pushIssue("duplicatePool", spellMechanicsHeaderPath("family"));
   }
   const uniqueIssues = spellUniqueMechanicsIssues(issues);
-  const nonEmptyIssues = spellNonEmpty(uniqueIssues);
+  const nonEmptyIssues = spellProcedureNonEmpty(uniqueIssues);
   if (nonEmptyIssues !== undefined) {
     const [first, ...rest] = nonEmptyIssues.map(
       duplicateHitInterceptionIssueResult,
@@ -406,7 +401,8 @@ const DuplicateHitInterceptionInvocationSchema = spellProcedureExecutionSchema(
 );
 export const duplicateHitInterceptionProfile: SpellProcedureDeclaration<
   "duplicateHitInterception",
-  DuplicateHitInterceptionInvocation
+  DuplicateHitInterceptionInvocation,
+  DuplicateHitInterceptionMechanicsFacts
 > = {
   procedure: "duplicateHitInterception",
   executionSchema: DuplicateHitInterceptionInvocationSchema,
