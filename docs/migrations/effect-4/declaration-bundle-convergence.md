@@ -121,6 +121,23 @@ exact 571-file count, byte measure, path ledger, and content ledger. Boundary
 tests separately prove acceptance at each coarse limit and rejection one unit
 beyond it.
 
+## Canonical Character Sheet issue-schema revision (2026-09-01)
+
+At integration source `b88a923f6`, Character Sheet replaces three provisional
+Wild Shape issue exports with one package-owned `CharacterSheetIssueSchema`.
+MCP consumes that canonical schema instead of reconstructing its discriminants
+and fixed-message invariant. The declaration path set remains exactly 571
+files. The schema contract increases the graph by 621 bytes to 10,277,269
+bytes, leaving 208,491 bytes below the unchanged 10 MiB byte cap. The sorted
+POSIX path-ledger SHA-256 remains
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`;
+the recertified sorted content-ledger SHA-256 is
+`526516c516d516386d180db6f003c61616112de1ddc1e31db42dcc0d0e1b1dc7`.
+
+The 1,000-file coarse safety ceiling is unchanged. Production emission still
+fails closed on this exact count, byte measure, path ledger, and content
+ledger.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

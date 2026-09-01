@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50677668,
-    "sha256": "048a32dff4f4c085c2e88fd62e9c784bfaa4153e72a189ecf4efee68a6d497f8"
+    "sha256": "e9521b1f7e4d29c6e75ac8bb75116a29b41cc73acc3f212bba07f9e87db58413"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -97464,7 +97464,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "3552d50cf6a3cd1adba7f8354d7e14ef695b785139dc75e08cf97643b6f08825",
+          "candidateSha256": "8127242963139aebc4f8a348654b5c89c038b37cdf0ae6a3e3ad16f1f472f94a",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -197253,7 +197253,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "50937e86a92d6798b28b8f2de49ecc3f9cea392397e097f73f188b1a8b02ea4d",
+    "identitySha256": "9020d8a2b79685c985ff4a1bc02b64c3421c33e5f40121e1a88fd534abb43327",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -197306,7 +197306,7 @@
       {
         "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
         "deltaCount": 65,
-        "deltaIdentitySha256": "7f7c2443d831c4d5c9392460095f503764b987b6123f80d3adcfd0ee0f348c26",
+        "deltaIdentitySha256": "23c90f96c080a7374532cdbf60ab15f4e6845a8aeb931510f1aae06f371ec88f",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
           "added": 43,

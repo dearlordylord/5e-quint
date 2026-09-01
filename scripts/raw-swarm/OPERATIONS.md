@@ -199,10 +199,10 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
-At integration source `86954931f`, the
+At integration source `b88a923f6`, the
 Effect 4 public declaration graph is a reviewed deterministic measurement: 571
-declaration files and 10,276,648 bytes. The byte gate remains 10 MiB, leaving
-209,112 bytes of explicit margin; the coarse file safety ceiling is 1,000.
+declaration files and 10,277,269 bytes. The byte gate remains 10 MiB, leaving
+208,491 bytes of explicit margin; the coarse file safety ceiling is 1,000.
 Deterministic verification asserts exact-manifest acceptance plus coarse-cap
 and cap-plus-one boundary tests; changing either bound, any admitted path, or
 any declaration content requires a new measured graph and review. The canonical
