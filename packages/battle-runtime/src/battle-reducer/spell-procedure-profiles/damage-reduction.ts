@@ -1,6 +1,6 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-reduction
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -24,9 +24,9 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 //                            spells-active-effects.ts (kept as a file-local
 //                            helper; not exported from the profile)
 //
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { DamageType } from "@dnd/surface/surface/types";
+import type { DamageType, SpellMechanics } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 import type { CombatantId } from "../../identity.ts";
@@ -35,7 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
-  type DamageReductionSpellInvocation,
+  type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { selectSingleSpellTargetAndDamageType } from "../single-spell-target.ts";
@@ -59,77 +59,270 @@ import {
   MovementFeet,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
-// Shape extractor: given a return the fields of a damageReduction
-// invocation that are derivable from the spell definition, or null if the
-// spell does not fit the profile. Today only the SRD Resistance shape is
-// admitted.
-function damageReductionShape(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  DamageReductionSpellInvocation,
-  "amount" | "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"
-> | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "target" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    !("disposition" in spell.mechanics.attachment.value.selection) ||
-    spell.mechanics.attachment.value.selection.disposition !== "willing" ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const operation = spell.mechanics.operations[0];
-  const effect = operation?.effect;
-  const damageType =
-    effect?.kind === "reduce_damage_taken" ? effect.damageType : undefined;
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
+type DamageReductionSpellInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "damageReduction" }
+>;
+type DamageReductionMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+type DamageReductionProfileShape = {
+  readonly damageTypeChoices: readonly DamageType[];
+};
+type DamageReductionMechanicsFacts = SpellProcedureMechanicsFacts &
+  DamageReductionProfileShape;
+type DamageReductionFailedFact =
+  | "level"
+  | "castingTime"
+  | "range"
+  | "duration"
+  | "attachment"
+  | "passiveOperation"
+  | "damage"
+  | "operationCount";
+type DamageReductionAdmissionIssue = SpellProcedureAdmissionIssue<
+  "damageReduction",
+  DamageReductionFailedFact,
+  SpellMechanicsBranchPath
+>;
+
+const DAMAGE_REDUCTION_LEVEL = 0;
+const DAMAGE_REDUCTION_OPERATION_COUNT = 1;
+
+type DamageReductionOperationOccurrence = {
+  readonly operation: DamageReductionMechanics["operations"][number];
+  readonly ordinal: PositiveInteger;
+};
+
+function damageReductionOperationOccurrences(
+  mechanics: DamageReductionMechanics,
+): readonly DamageReductionOperationOccurrence[] {
+  return mechanics.operations.map((operation, index) => ({
+    operation,
+    ordinal: PositiveInteger(index + 1),
+  }));
+}
+
+function damageReductionOperationEffectPath(
+  occurrence: DamageReductionOperationOccurrence | undefined,
+): SpellMechanicsBranchPath {
+  const ordinal = occurrence?.ordinal ?? PositiveInteger(1);
+  return spellOngoingOperationEffectPath(ordinal);
+}
+
+function isDamageReductionRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is DamageReductionMechanics {
+  if (mechanics.family !== "ongoing_effect") return false;
+  const hasTargetAttachment =
+    mechanics.attachment.kind === "hole" &&
+    mechanics.attachment.value.kind === "target";
+  const hasDamageReductionEffect = mechanics.operations.some(
+    ({ effect }) => effect.kind === "reduce_damage_taken",
   );
-  if (
-    operation?.trigger.kind !== "passive" ||
-    effect?.kind !== "reduce_damage_taken" ||
-    effect.amount.kind !== "fixed" ||
-    effect.amount.expr.dice !== 1 ||
-    effect.amount.expr.dieSize !== 4 ||
-    (effect.amount.expr.flat ?? 0) !== 0 ||
-    typeof damageType !== "object" ||
-    damageType?.kind !== "hole" ||
-    expiresAt === null
-  ) {
-    return null;
-  }
-  const choiceValue = damageType.value;
-  if (typeof choiceValue !== "object" || choiceValue.kind !== "choice") {
-    return null;
-  }
-  const choices = choiceValue.options.filter((option): option is DamageType =>
-    Schema.is(DamageTypeSchema)(option),
-  );
-  if (choices.length !== choiceValue.options.length) {
-    return null;
-  }
+  if (!hasDamageReductionEffect) return false;
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [
+      hasTargetAttachment,
+      hasDamageReductionEffect,
+      mechanics.range.kind === "touch",
+    ],
+  });
+}
+
+function damageReductionIssue(
+  failedFact: DamageReductionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): DamageReductionAdmissionIssue {
   return {
-    targeting: {
-      kind: "targetList",
-      minTargets: 1,
-      maxTargets: 1,
-      requiredTargetDisposition: "willing",
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "damageReduction",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported damageReduction mechanics fact: ${failedFact}.`,
+  };
+}
+
+function damageReductionMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "damageReduction",
+  DamageReductionMechanicsFacts,
+  DamageReductionSpellInvocation,
+  DamageReductionAdmissionIssue
+> {
+  if (!isDamageReductionRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+
+  const mechanics = source.mechanics;
+  const occurrences = damageReductionOperationOccurrences(mechanics);
+  const expected = occurrences.find(
+    ({ operation }) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "reduce_damage_taken",
+  );
+  const selectedOrdinal = expected?.ordinal;
+  const extraOperations = occurrences.filter(
+    ({ ordinal }) => ordinal !== selectedOrdinal,
+  );
+  const issues: Array<{
+    readonly failedFact: DamageReductionFailedFact;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  }> = [];
+  const pushIssue = (
+    failedFact: DamageReductionFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (mechanics.level !== DAMAGE_REDUCTION_LEVEL) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (mechanics.range.kind !== "touch") {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    mechanics.duration.kind !== "concentration" ||
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.duration.upTo.amount !== 1
+  ) {
+    pushIssue("duration", spellDurationValuePath());
+  }
+  for (const mechanicsPath of persistentAreaDurationChildPaths(
+    mechanics.duration,
+  )) {
+    pushIssue("duration", mechanicsPath);
+  }
+  if (
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "target" ||
+    mechanics.attachment.value.selection.mode !== "one" ||
+    !("disposition" in mechanics.attachment.value.selection) ||
+    mechanics.attachment.value.selection.disposition !== "willing"
+  ) {
+    pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+  if (expected === undefined || expected.operation.trigger.kind !== "passive") {
+    pushIssue("passiveOperation", damageReductionOperationEffectPath(expected));
+  }
+  if (expected?.operation.effect.kind !== "reduce_damage_taken") {
+    pushIssue("damage", damageReductionOperationEffectPath(expected));
+  }
+  const damageEffect =
+    expected?.operation.effect.kind === "reduce_damage_taken"
+      ? expected.operation.effect
+      : undefined;
+  const damageType = damageEffect?.damageType;
+  let damageTypeChoices: readonly DamageType[] = [];
+  if (
+    damageEffect === undefined ||
+    damageEffect.amount.kind !== "fixed" ||
+    damageEffect.amount.expr.dice !== 1 ||
+    damageEffect.amount.expr.dieSize !== 4 ||
+    (damageEffect.amount.expr.flat ?? 0) !== 0 ||
+    typeof damageType !== "object" ||
+    damageType.kind !== "hole" ||
+    typeof damageType.value !== "object" ||
+    damageType.value.kind !== "choice"
+  ) {
+    pushIssue("damage", damageReductionOperationEffectPath(expected));
+  } else {
+    const choices = damageType.value.options.filter(
+      (option): option is DamageType => Schema.is(DamageTypeSchema)(option),
+    );
+    if (
+      choices.length !== damageType.value.options.length ||
+      choices.length === 0
+    ) {
+      pushIssue("damage", damageReductionOperationEffectPath(expected));
+    } else {
+      damageTypeChoices = choices;
+    }
+  }
+  if (
+    mechanics.operations.length !== DAMAGE_REDUCTION_OPERATION_COUNT &&
+    extraOperations.length === 0
+  ) {
+    pushIssue(
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    );
+  }
+  for (const occurrence of extraOperations) {
+    pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
+  }
+
+  const failures = spellProcedureNonEmpty(issues);
+  if (failures !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        failures,
+        ({ failedFact, mechanicsPath }) =>
+          damageReductionIssue(failedFact, mechanicsPath),
+      ),
+    };
+  }
+
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    damageTypeChoices,
+  } satisfies DamageReductionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "damageReduction",
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          spellOngoingAttachmentPath(),
+          spellOngoingOperationPath(PositiveInteger(1)),
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+          ...spellConsumedMaterialEvidencePaths(mechanics.components),
+        ],
+        unowned: [],
+      },
+      admit: (executionSource, ctx) =>
+        admitDamageReduction(executionSource, ctx, facts),
     },
-    damageTypeChoices: choices,
-    amount: { dice: 1, dieSize: 4 },
-    expiresAt,
-    rangeFeet: movementFeet(5),
   };
 }
 
@@ -160,13 +353,15 @@ function applyDamageReductionEffect(
 }
 
 function admitDamageReduction(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: DamageReductionMechanicsFacts,
 ): readonly DamageReductionSpellInvocation[] {
-  const shape = damageReductionShape(ctx.actor.combatantId, spell);
-  if (shape === null) {
-    return [];
-  }
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    ctx.actor.combatantId,
+    facts.duration,
+  );
+  if (expiresAt === null) return [];
   return [
     {
       access: cantripSpellAccessFor(spell.castingSource),
@@ -174,7 +369,16 @@ function admitDamageReduction(
       procedure: "damageReduction",
       spell,
       actionCost: "magicAction",
-      ...shape,
+      targeting: {
+        kind: "targetList",
+        minTargets: 1,
+        maxTargets: 1,
+        requiredTargetDisposition: "willing",
+      },
+      damageTypeChoices: facts.damageTypeChoices,
+      amount: { dice: 1, dieSize: 4 },
+      expiresAt,
+      rangeFeet: movementFeet(5),
     },
   ];
 }
@@ -267,10 +471,12 @@ export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(
 );
 export const damageReductionProfile: SpellProcedureDeclaration<
   "damageReduction",
-  DamageReductionSpellInvocation
+  DamageReductionSpellInvocation,
+  DamageReductionMechanicsFacts,
+  DamageReductionAdmissionIssue
 > = {
   procedure: "damageReduction",
-  admit: admitDamageReduction,
+  admitMechanics: damageReductionMechanicsAdmission,
   discoverCastAct: discoverDamageReductionCastAct,
   executionSchema: DamageReductionInvocationSchema,
   resolve: resolveDamageReduction,

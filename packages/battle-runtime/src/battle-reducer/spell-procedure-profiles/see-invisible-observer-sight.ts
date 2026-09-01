@@ -1,5 +1,5 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-see-invisible-observer-sight
@@ -27,7 +27,8 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //     query helpers and active-effect readers.
 //   - Duration expiry stays in the shared active-effect lifecycle.
 
-import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { PositiveInteger } from "@dnd/shared/types";
 import { Result } from "effect";
 
 import {
@@ -35,7 +36,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type SeeInvisibleObserverSightSpellInvocation,
+  type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -55,46 +56,220 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
-function seeInvisibleObserverSightShape(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<SeeInvisibleObserverSightSpellInvocation, "activeEffect"> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "hour" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const effect = effects[0];
-  const durationTicks = elapsedTimeTicksFromHours(
-    spell.mechanics.duration.value.amount,
+type SeeInvisibleObserverSightSpellInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "seeInvisibleObserverSight" }
+>;
+
+type SeeInvisibleObserverSightFailedFact =
+  | "level"
+  | "castingTime"
+  | "range"
+  | "duration"
+  | "phaseCount"
+  | "attachment"
+  | "effect";
+type SeeInvisibleObserverSightMechanicsFacts = SpellProcedureMechanicsFacts;
+type SeeInvisibleObserverSightAdmissionIssue = SpellProcedureAdmissionIssue<
+  "seeInvisibleObserverSight",
+  SeeInvisibleObserverSightFailedFact,
+  SpellMechanicsBranchPath
+>;
+
+const SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL = 2;
+
+function isSeeInvisibleObserverSightRepresentation(
+  mechanics: SpellMechanicsAdmissionSource["mechanics"],
+): mechanics is Extract<
+  SpellMechanicsAdmissionSource["mechanics"],
+  { readonly family: "activation" }
+> {
+  if (mechanics.family !== "activation") return false;
+  const hasDirectPhase = mechanics.phases.some(
+    (phase) => phase.kind === "direct",
   );
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "self" ||
-    effects.length !== 1 ||
-    effect?.kind !== "see_invisible_and_ethereal" ||
-    Result.isFailure(durationTicks)
-  ) {
-    return null;
-  }
+  const hasSightEffect = mechanics.phases.some(
+    (phase) =>
+      phase.kind === "direct" &&
+      (phase.effects ?? []).some(
+        (effect) => effect.kind === "see_invisible_and_ethereal",
+      ),
+  );
+  if (!hasSightEffect) return false;
+  const hasExpectedDuration =
+    mechanics.duration.kind === "timed" &&
+    mechanics.duration.value.unit === "hour";
+  return spellProcedureHasRedundantSignature({
+    kind: "twoWitnessesMayBeMissing",
+    witnesses: [
+      mechanics.level === SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL,
+      mechanics.range.kind === "self",
+      hasExpectedDuration,
+      hasDirectPhase,
+      hasSightEffect,
+    ],
+  });
+}
+
+function seeInvisibleObserverSightIssue(
+  failedFact: SeeInvisibleObserverSightFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): SeeInvisibleObserverSightAdmissionIssue {
   return {
-    activeEffect: {
-      kind: "seeInvisibleAndEthereal",
-      sourceCombatantId: actorId,
-      expiresAt: {
-        kind: "duration",
-        durationTicks: durationTicks.success,
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "seeInvisibleObserverSight",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported seeInvisibleObserverSight mechanics fact: ${failedFact}.`,
+  };
+}
+
+function seeInvisibleObserverSightMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "seeInvisibleObserverSight",
+  SeeInvisibleObserverSightMechanicsFacts,
+  SeeInvisibleObserverSightSpellInvocation,
+  SeeInvisibleObserverSightAdmissionIssue
+> {
+  if (!isSeeInvisibleObserverSightRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const phaseIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "direct",
+  );
+  const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
+  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
+  const issues: Array<{
+    readonly failedFact: SeeInvisibleObserverSightFailedFact;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  }> = [];
+  const pushIssue = (
+    failedFact: SeeInvisibleObserverSightFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+  if (mechanics.level !== SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (mechanics.range.kind !== "self") {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    mechanics.duration.kind !== "timed" ||
+    mechanics.duration.value.unit !== "hour" ||
+    mechanics.duration.value.amount !== 1
+  ) {
+    pushIssue("duration", spellDurationValuePath());
+  }
+  for (const mechanicsPath of persistentAreaDurationChildPaths(
+    mechanics.duration,
+  )) {
+    pushIssue("duration", mechanicsPath);
+  }
+  if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === phaseIndex && phaseIndex === 0) continue;
+      pushIssue(
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(index + 1)),
+      );
+    }
+    if (mechanics.phases.length === 0) {
+      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+    }
+  }
+  if (phase?.kind !== "direct" || phase.attachment.kind !== "self") {
+    pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
+  }
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  if (effects.length !== 1) {
+    if (effects.length === 0) {
+      pushIssue(
+        "effect",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+      );
+    } else {
+      for (const [index] of effects.entries()) {
+        if (index > 0) {
+          pushIssue(
+            "phaseCount",
+            spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+          );
+        }
+      }
+    }
+  }
+  if (effects[0]?.kind !== "see_invisible_and_ethereal") {
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    );
+  }
+  const failures = spellProcedureNonEmpty(issues);
+  if (failures !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        failures,
+        ({ failedFact, mechanicsPath }) =>
+          seeInvisibleObserverSightIssue(failedFact, mechanicsPath),
+      ),
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+  } satisfies SeeInvisibleObserverSightMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "seeInvisibleObserverSight",
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          spellActivationPhasePath(PositiveInteger(1)),
+          spellActivationAttachmentPath(PositiveInteger(1)),
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ...spellConsumedMaterialEvidencePaths(mechanics.components),
+        ],
+        unowned: [],
       },
+      admit: (executionSource, ctx) =>
+        admitSeeInvisibleObserverSight(executionSource, ctx, facts),
     },
   };
 }
@@ -107,16 +282,20 @@ const SeeInvisibleAndEtherealEffectSchema = Schema.Struct({
 });
 
 function admitSeeInvisibleObserverSight(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: SeeInvisibleObserverSightMechanicsFacts,
 ): readonly SeeInvisibleObserverSightSpellInvocation[] {
-  const shape = seeInvisibleObserverSightShape(ctx.actor.combatantId, spell);
-  if (shape === null) {
+  if (facts.duration.kind !== "timed") {
     return [];
   }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    facts.duration.value,
+  );
+  if (Result.isFailure(durationTicks)) return [];
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SeeInvisibleObserverSightSpellInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
+      Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
@@ -125,7 +304,14 @@ function admitSeeInvisibleObserverSight(
               procedure: "seeInvisibleObserverSight",
               spell,
               actionCost: "magicAction",
-              ...shape,
+              activeEffect: {
+                kind: "seeInvisibleAndEthereal",
+                sourceCombatantId: ctx.actor.combatantId,
+                expiresAt: {
+                  kind: "duration",
+                  durationTicks: durationTicks.success,
+                },
+              },
             },
           ],
   );
@@ -197,11 +383,13 @@ const SeeInvisibleObserverSightInvocationSchema = spellProcedureExecutionSchema(
 );
 export const seeInvisibleObserverSightProfile: SpellProcedureDeclaration<
   "seeInvisibleObserverSight",
-  SeeInvisibleObserverSightSpellInvocation
+  SeeInvisibleObserverSightSpellInvocation,
+  SeeInvisibleObserverSightMechanicsFacts,
+  SeeInvisibleObserverSightAdmissionIssue
 > = {
   procedure: "seeInvisibleObserverSight",
   executionSchema: SeeInvisibleObserverSightInvocationSchema,
-  admit: admitSeeInvisibleObserverSight,
+  admitMechanics: seeInvisibleObserverSightMechanicsAdmission,
   discoverCastAct: discoverSeeInvisibleObserverSightCastAct,
   resolve: resolveSeeInvisibleObserverSight,
 };
