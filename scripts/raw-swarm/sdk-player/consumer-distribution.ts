@@ -237,24 +237,15 @@ function declarationTargetCandidates(
   sourcePath: string,
   specifier: string,
 ): readonly string[] | undefined {
-  let unresolvedTarget: string;
-  if (specifier.startsWith(".")) {
-    unresolvedTarget = posix.normalize(
-      posix.join(posix.dirname(sourcePath), specifier),
-    );
-  } else if (specifier.startsWith("@dnd/")) {
-    const [scope, packageName, ...subpathParts] = specifier.split("/");
-    if (scope !== "@dnd" || packageName === undefined) return [];
-    unresolvedTarget = posix.join(
-      "packages",
-      packageName,
-      "src",
-      subpathParts.length === 0 ? "index" : subpathParts.join("/"),
-    );
-  } else if (specifier.startsWith("#")) {
-    return [];
-  } else {
-    return undefined;
+  const unresolvedTarget = specifier.startsWith(".")
+    ? posix.normalize(posix.join(posix.dirname(sourcePath), specifier))
+    : specifier.startsWith("@dnd/")
+      ? declarationDndPackageTarget(specifier)
+      : undefined;
+  if (unresolvedTarget === undefined) {
+    return specifier.startsWith("@dnd/") || specifier.startsWith("#")
+      ? []
+      : undefined;
   }
 
   if (unresolvedTarget.endsWith(".d.ts")) return [unresolvedTarget];
@@ -268,6 +259,17 @@ function declarationTargetCandidates(
     `${unresolvedTarget}.d.ts`,
     posix.join(unresolvedTarget, "index.d.ts"),
   ];
+}
+
+function declarationDndPackageTarget(specifier: string): string | undefined {
+  const [scope, packageName, ...subpathParts] = specifier.split("/");
+  if (scope !== "@dnd" || packageName === undefined) return undefined;
+  return posix.join(
+    "packages",
+    packageName,
+    "src",
+    subpathParts.length === 0 ? "index" : subpathParts.join("/"),
+  );
 }
 
 /**

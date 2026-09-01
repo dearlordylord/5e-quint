@@ -431,21 +431,23 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
     const resolution = resolveWeaponMasteryReference(weapon.value, unitLibrary);
     if (Result.isFailure(resolution)) {
       const issue = resolution.failure;
-      return battleSupportProfileIssue(
-        issue.tag === "missing"
-          ? `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`
-          : `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,
-      );
+      return issue.tag === "missing"
+        ? Result.succeed([])
+        : battleSupportProfileIssue(
+            `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,
+          );
     }
-    return Result.succeed(resolution.success.mastery.id);
+    return Result.succeed([resolution.success.mastery.id]);
   });
   return Result.isFailure(unitIds)
     ? Result.fail(unitIds.failure)
-    : Result.succeed(
-        unitIds.success.filter(
-          (unitId, index) => unitIds.success.indexOf(unitId) === index,
-        ),
-      );
+    : Result.succeed(uniqueUnitIds(unitIds.success.flat()));
+}
+
+function uniqueUnitIds(
+  unitIds: readonly UnitRecord["id"][],
+): readonly UnitRecord["id"][] {
+  return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
 }
 
 function uniqueBattleUnitAdmissions(

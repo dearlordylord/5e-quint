@@ -3,10 +3,15 @@ import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
-import { characterDraftId } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
+  PHASE1_WEAPON_SPEAR_UNIT_ID,
   characterClassLevel,
+  characterDraftId,
   classUnitId,
   progressionOptionId,
   type CharacterProgression,
@@ -134,8 +139,8 @@ const levelSixRogueExpertiseSkills = [
   "stealth",
 ] as const satisfies ReadonlyArray<Skill>;
 const levelSixRogueWeaponMasteries = [
-  "weapon_spear",
-  "weapon_quarterstaff",
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
 ] as const;
 const levelNineRangerExpertiseDraftId =
   "draft:stdio-level-nine-orc-soldier-ranger-expertise";
@@ -192,11 +197,11 @@ export const LEVEL_TEN_FIGHTER_CHARACTER_CREATION_SUPPORT_PROFILE = {
   },
 } satisfies CharacterCreationSupportProfile;
 const levelTenFighterWeaponMasteries = [
-  "weapon_longsword",
-  "weapon_spear",
-  "weapon_flail",
-  "weapon_greataxe",
-  "weapon_quarterstaff",
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
+  PHASE1_WEAPON_SPEAR_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
 ] as const;
 
 const agentConversationScenarios = [

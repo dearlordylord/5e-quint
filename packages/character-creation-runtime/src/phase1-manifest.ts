@@ -204,7 +204,6 @@ export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
   authoredUnitId(PHASE1_WEAPON_SPEAR_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_GREATAXE_UNIT_ID),
-  authoredUnitId(PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
   ...PHASE1_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId),

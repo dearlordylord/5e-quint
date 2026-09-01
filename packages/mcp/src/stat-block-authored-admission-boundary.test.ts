@@ -6,7 +6,7 @@ import {
   type CharacterBattleCombatantInit,
 } from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
-import { Hp, resourceCount } from "@dnd/shared/types";
+import { Hp, PositiveInteger, resourceCount } from "@dnd/shared/types";
 import {
   assertSrd521StatBlock,
   buildStatBlockCatalog,
@@ -83,7 +83,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         StatBlockProcedureResourceOrdinalSchema,
       )(1),
       ownership: "shared" as const,
-      limit: { kind: "daily" as const, uses: 1 },
+      limit: { kind: "daily" as const, uses: PositiveInteger(1) },
     };
     const invalid = {
       ...base,
@@ -182,8 +182,8 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         legendaryActions: {
           uses: {
             kind: "lair_bonus" as const,
-            usesOutsideLair: 3,
-            additionalUsesInLair: 1,
+            usesOutsideLair: PositiveInteger(3),
+            additionalUsesInLair: PositiveInteger(1),
           },
           entries: [firstAction],
         },
@@ -232,7 +232,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         dispatches: [
           {
             procedureOrdinal: attack.procedureOrdinal,
-            count: { kind: "literal", value: 1 },
+            count: { kind: "literal", value: PositiveInteger(1) },
           },
         ],
       },
@@ -389,46 +389,36 @@ describe("MCP authored Stat Block battle admission boundary", () => {
     });
   });
 
-  test("maps invalid resource limits to a precise projection failure", () => {
+  test("rejects invalid encoded resource limits at the Surface parser boundary", () => {
     const baseRoot = createMcpPlaySessionRoot();
-    const base = assertStatBlockForTest(
-      baseRoot.statBlockCatalog,
-      statBlockId("stat_block_goblin_warrior"),
+    const base = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        baseRoot.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
+      ),
     );
-    const invalidResource = {
-      ordinal: Schema.decodeUnknownSync(
-        StatBlockProcedureResourceOrdinalSchema,
-      )(1),
-      ownership: "each" as const,
-      limit: { kind: "daily" as const, uses: 0 },
-    };
+    const encoded = Schema.encodeSync(SrdStatBlockRecordSchema)(base);
     const invalid = {
-      ...base,
+      ...encoded,
       id: statBlockId("stat_block_synthetic_mcp_invalid_resource_limit"),
       name: "Synthetic MCP Invalid Resource Limit",
       statBlock: {
-        ...base.statBlock,
-        resources: [invalidResource],
+        ...encoded.statBlock,
+        resources: [
+          {
+            ordinal: 1,
+            ownership: "each",
+            limit: { kind: "daily", uses: 0 },
+          },
+        ],
       },
-    } satisfies StatBlockRecord;
-    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
+    };
 
-    const projected = admitStatBlockThroughStartBoundary({
-      root,
-      combatant: statBlockCombatant(invalid),
-    });
-
-    expect(Result.isFailure(projected)).toBe(true);
-    if (Result.isSuccess(projected)) return;
-    expectStatBlockProjectionIssue(projected.failure, {
-      reason: "invalidResourceLimit",
-      issues: [
-        {
-          ordinal: invalidResource.ordinal,
-          reason: "invalidDailyUses",
-        },
-      ],
-    });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(SrdStatBlockRecordSchema)(invalid),
+      ),
+    ).toBe(true);
   });
 });
 

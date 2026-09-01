@@ -82,7 +82,11 @@ describe("SDK consumer protocol boundaries", () => {
     expect(
       JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8")),
     ).toMatchObject({
-      devDependencies: { "@dnd/battle-runtime": "workspace:*" },
+      devDependencies: {
+        "@dnd/battle-runtime": "workspace:*",
+        "@dnd/character-creation-runtime": "workspace:*",
+        "@dnd/character-sheet-runtime": "workspace:*",
+      },
     });
   });
 });

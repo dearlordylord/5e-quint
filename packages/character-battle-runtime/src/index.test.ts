@@ -838,11 +838,10 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("rejects invalid and unsupported supplied mastery weapon refs", () => {
+  test("rejects invalid supplied mastery weapon refs", () => {
     const refs = characterBattleSupportProjection(build, unitLibrary, [
       { weaponUnitId: authoredUnitId("synthetic:missing-weapon") },
       { weaponUnitId: authoredUnitId("class_fighter") },
-      { weaponUnitId: authoredUnitId("weapon_dagger") },
     ]);
 
     expect(refs).toMatchObject({
@@ -854,13 +853,21 @@ describe("Character Sheet battle handoff", () => {
             "Expected selected Weapon Mastery option to be a weapon Unit",
           ),
         },
-        {
-          message: expect.stringContaining(
-            "references unknown mastery Unit mastery_nick",
-          ),
-        },
       ],
     });
+  });
+
+  test("omits selected weapon masteries outside the canonical Battle slice", () => {
+    const refs = characterBattleSupportProjection(build, unitLibrary, [
+      { weaponUnitId: authoredUnitId("weapon_dagger") },
+      { weaponUnitId: authoredUnitId("weapon_shortsword") },
+    ]);
+
+    expect(Result.isSuccess(refs)).toBe(true);
+    if (Result.isFailure(refs)) return;
+    expect(refs.success.unitRefs.map(({ unit }) => unit.id)).not.toEqual(
+      expect.arrayContaining(["mastery_nick", "mastery_vex"]),
+    );
   });
 
   test("propagates support-profile selection, source-fact, and catalog failures", () => {
@@ -986,16 +993,16 @@ describe("Character Sheet battle handoff", () => {
       },
     });
 
-    const missingMasteryProfileCatalog: UnitCatalog = {
+    const wrongKindMasteryProfileCatalog: UnitCatalog = {
       getUnit: (id) =>
         id === authoredUnitId("mastery_sap")
-          ? Option.none()
+          ? unitLibrary.getUnit(authoredUnitId("class_fighter"))
           : unitLibrary.getUnit(id),
       listUnits: () => unitLibrary.listUnits(),
       requireUnit: (id) => unitLibrary.requireUnit(id),
     };
     expect(
-      characterBattleSupportProjection(build, missingMasteryProfileCatalog, [
+      characterBattleSupportProjection(build, wrongKindMasteryProfileCatalog, [
         { weaponUnitId: authoredUnitId("weapon_longsword") },
       ]),
     ).toMatchObject({
@@ -1003,14 +1010,14 @@ describe("Character Sheet battle handoff", () => {
       failure: [
         {
           message:
-            "Selected weapon weapon_longsword references unknown mastery Unit mastery_sap through masteryUnitId.",
+            "Selected weapon weapon_longsword references mastery_sap through masteryUnitId, but that Unit has kind class instead of mastery.",
         },
       ],
     });
     expect(
       initBuild(
         weaponMasteryLongswordFighterBuild(),
-        missingMasteryProfileCatalog,
+        wrongKindMasteryProfileCatalog,
       ),
     ).toMatchObject({ _tag: "Failure" });
   });
