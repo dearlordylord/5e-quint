@@ -4,7 +4,6 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
-import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { druidWildShapeStatBlockCatalogFromInput } from "./druid-features.ts";
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
@@ -36,9 +35,13 @@ import {
 } from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / druid features", () => {
-  test("uses the canonical installed Stat Block catalog by default", () => {
-    expect(druidWildShapeStatBlockCatalogFromInput(undefined)).toBe(
-      srdStatBlockCatalog,
+  test("requires callers to supply the Stat Block catalog", () => {
+    expect(druidWildShapeStatBlockCatalogFromInput(undefined)).toEqual(
+      Result.fail({
+        tag: "characterSheetIssue",
+        message:
+          "Wild Shape known forms require a valid SRD Stat Block catalog.",
+      }),
     );
   });
 

@@ -25,7 +25,7 @@ import type {
 import {
   resolveWeaponMasteryReference,
   type UnitCatalog,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import { Match, Option, Result } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
 
