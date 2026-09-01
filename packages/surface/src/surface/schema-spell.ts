@@ -1,6 +1,7 @@
 import { Effect, Schema, Tuple } from "effect";
 import {
   DamageDieSizeSchema,
+  SPELL_SCHOOLS,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -61,29 +62,31 @@ import {
   strictStruct,
 } from "./schema-helpers.ts";
 import {
-  STAT_BLOCK_REACTION_FALL_RANGE_FEET,
-  STAT_BLOCK_REACTION_SPELL_COMPONENTS,
-  STAT_BLOCK_REACTION_SPELL_LEVELS,
-  STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES,
-  STAT_BLOCK_REACTION_SPELL_SCHOOLS,
-  STAT_BLOCK_REACTION_TRIGGER_ANY_OF,
-  STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL,
-  STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL,
-  STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
-  STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME,
-  STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
-  STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
-  STAT_BLOCK_REACTION_WEAPON_CATEGORIES,
-  STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM,
-  STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
-  STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY,
-  STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY,
-  STAT_BLOCK_REACTION_WEAPON_PROPERTIES,
   type AuthoredStatBlockReactionTrigger,
   type AuthoredStatBlockReactionTriggerEncoded,
   type StandaloneStatBlock,
   type StandaloneStatBlockEncoded,
 } from "./stat-block-types.ts";
+import {
+  SURFACE_REACTION_FALL_RANGE_FEET as STAT_BLOCK_REACTION_FALL_RANGE_FEET,
+  SURFACE_REACTION_SPELL_COMPONENTS as STAT_BLOCK_REACTION_SPELL_COMPONENTS,
+  SURFACE_REACTION_SPELL_SAVE_OUTCOMES as STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES,
+  SURFACE_REACTION_TRIGGER_ANY_OF as STAT_BLOCK_REACTION_TRIGGER_ANY_OF,
+  SURFACE_REACTION_TRIGGER_CREATURE_CASTS_SPELL as STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL,
+  SURFACE_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL as STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL,
+  SURFACE_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS as STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+  SURFACE_REACTION_TRIGGER_SPELL_SAVE_OUTCOME as STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME,
+  SURFACE_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE as STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+  SURFACE_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL as STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+  SURFACE_SPELL_LEVELS as STAT_BLOCK_REACTION_SPELL_LEVELS,
+  SURFACE_WEAPON_FILTER_CATEGORIES as STAT_BLOCK_REACTION_WEAPON_CATEGORIES,
+  SURFACE_WEAPON_FILTER_SOURCE_ITEM as STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM,
+  SURFACE_WEAPON_FILTER_SPECIFIC_ITEM as STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
+  SURFACE_WEAPON_FILTER_WEAPON_CATEGORY as STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY,
+  SURFACE_WEAPON_FILTER_WEAPON_PROPERTY as STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY,
+  SURFACE_WEAPON_PROPERTIES as STAT_BLOCK_REACTION_WEAPON_PROPERTIES,
+  type SurfaceReactionTrigger,
+} from "./surface-vocabulary.ts";
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
@@ -182,7 +185,9 @@ export const SPELL_SLOT_LEVELS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9,
 ] as const satisfies ReadonlyArray<number>;
 
-export const SpellLevelSchema = Schema.Literals([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+export const SpellLevelSchema = Schema.Literals(
+  STAT_BLOCK_REACTION_SPELL_LEVELS,
+);
 export const SpellSlotLevelSchema = Schema.Literals(SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
@@ -199,16 +204,7 @@ const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
   "utilize",
 ] as const satisfies ReadonlyArray<StandardActionKind>;
 
-export const SpellSchoolSchema = Schema.Literals([
-  "abjuration",
-  "conjuration",
-  "divination",
-  "enchantment",
-  "evocation",
-  "illusion",
-  "necromancy",
-  "transmutation",
-]);
+export const SpellSchoolSchema = Schema.Literals(SPELL_SCHOOLS);
 
 const DETECTION_PROPERTIES = [
   "magic",
@@ -885,39 +881,8 @@ type ModifyAcSetFloorEffect = Schema.Schema.Type<
   typeof ModifyAcSetFloorEffectSchema
 >;
 type RollKind = Schema.Schema.Type<typeof RollKindSchema>;
-type SpellLevel = Schema.Schema.Type<typeof SpellLevelSchema>;
-type SpellSchool = Schema.Schema.Type<typeof SpellSchoolSchema>;
 
-type ReactionTrigger =
-  | {
-      readonly kind: "hit_by_attack_roll";
-      readonly weaponFilter?: WeaponFilter;
-    }
-  | {
-      readonly kind: "takes_damage_from_creature";
-      readonly requiresVisibleCreature?: true;
-      readonly rangeFeet?: number;
-    }
-  | { readonly kind: "self_or_visible_creature_falls"; readonly rangeFeet: 60 }
-  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
-  | {
-      readonly kind: "creature_casts_spell";
-      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly requiresVisibleCaster?: true;
-    }
-  | {
-      readonly kind: "spell_save_outcome";
-      readonly outcome: "success" | "failure";
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly spellSchool?: SpellSchool;
-      readonly spellTargetsOnlySelf?: true;
-      readonly spellHasNoAreaOfEffect?: true;
-    }
-  | {
-      readonly kind: "any_of";
-      readonly triggers: ReadonlyNonEmptyArray<ReactionTrigger>;
-    };
+type ReactionTrigger = SurfaceReactionTrigger<UnitId>;
 
 type AttackRollAbilityCheckDisadvantageUntilCasterTurnStart = {
   readonly kind: "modify_roll_advantage";
@@ -2131,38 +2096,46 @@ export const ReactionTriggerSchema: Schema.Codec<
   (): Schema.Codec<ReactionTrigger, unknown, never, never> =>
     Schema.Union([
       Schema.Struct({
-        kind: Schema.Literal("hit_by_attack_roll"),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL),
         weaponFilter: optionalExact(WeaponFilterSchema),
       }),
       Schema.Struct({
-        kind: Schema.Literal("takes_damage_from_creature"),
+        kind: Schema.Literal(
+          STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+        ),
         requiresVisibleCreature: optionalExact(Schema.Literal(true)),
         rangeFeet: optionalExact(Schema.Number),
       }),
       Schema.Struct({
-        kind: Schema.Literal("self_or_visible_creature_falls"),
-        rangeFeet: Schema.Literal(60),
+        kind: Schema.Literal(
+          STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+        ),
+        rangeFeet: Schema.Literal(STAT_BLOCK_REACTION_FALL_RANGE_FEET),
       }),
       Schema.Struct({
-        kind: Schema.Literal("targeted_by_named_spell"),
+        kind: Schema.Literal(
+          STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+        ),
         spellId: surfaceReference(Schema.String, "spell-reference"),
       }),
       Schema.Struct({
-        kind: Schema.Literal("creature_casts_spell"),
-        components: nonEmpty(Schema.Literals(["V", "S", "M"])),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL),
+        components: nonEmpty(
+          Schema.Literals(STAT_BLOCK_REACTION_SPELL_COMPONENTS),
+        ),
         spellLevelAtMost: optionalExact(SpellLevelSchema),
         requiresVisibleCaster: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
-        kind: Schema.Literal("spell_save_outcome"),
-        outcome: Schema.Literals(["success", "failure"]),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME),
+        outcome: Schema.Literals(STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES),
         spellLevelAtMost: optionalExact(SpellLevelSchema),
         spellSchool: optionalExact(SpellSchoolSchema),
         spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
         spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
-        kind: Schema.Literal("any_of"),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_ANY_OF),
         triggers: nonEmpty(ReactionTriggerSchema),
       }),
     ]),
@@ -5993,9 +5966,7 @@ export const AuthoredStatBlockReactionTriggerNonRecursiveSchema = Schema.Union([
     spellLevelAtMost: optionalExact(
       Schema.Literals(STAT_BLOCK_REACTION_SPELL_LEVELS),
     ),
-    spellSchool: optionalExact(
-      Schema.Literals(STAT_BLOCK_REACTION_SPELL_SCHOOLS),
-    ),
+    spellSchool: optionalExact(SpellSchoolSchema),
     spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
     spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
   }),

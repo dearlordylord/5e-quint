@@ -13,6 +13,15 @@ import {
 import { DAMAGE_TYPES } from "@dnd/shared/types";
 
 import { exactOptional } from "./schema-helpers.ts";
+import {
+  SURFACE_WEAPON_FILTER_CATEGORIES,
+  SURFACE_WEAPON_FILTER_SOURCE_ITEM,
+  SURFACE_WEAPON_FILTER_SPECIFIC_ITEM,
+  SURFACE_WEAPON_FILTER_WEAPON_CATEGORY,
+  SURFACE_WEAPON_FILTER_WEAPON_PROPERTY,
+  SURFACE_WEAPON_PROPERTIES,
+  type SurfaceWeaponFilter,
+} from "./surface-vocabulary.ts";
 
 export const SURFACE_SCHEMA_ROLE_ANNOTATION =
   "dnd.surface.schema-role" as const;
@@ -401,32 +410,27 @@ export const RollKindSchema = Schema.Literals([
   "death_saving_throw",
 ]);
 
-export const WeaponPropertySchema = Schema.Literals([
-  "ammunition",
-  "finesse",
-  "heavy",
-  "light",
-  "loading",
-  "reach",
-  "thrown",
-  "two_handed",
-  "versatile",
-]);
+export const WeaponPropertySchema = Schema.Literals(SURFACE_WEAPON_PROPERTIES);
 
-export const WeaponFilterSchema = Schema.Union([
+export const WeaponFilterSchema: Schema.Codec<
+  SurfaceWeaponFilter,
+  SurfaceWeaponFilter,
+  never,
+  never
+> = Schema.Union([
   Schema.Struct({
-    kind: Schema.Literal("source_item"),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_SOURCE_ITEM),
   }),
   Schema.Struct({
-    kind: Schema.Literal("weapon_category"),
-    category: Schema.Literals(["melee", "ranged"]),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_WEAPON_CATEGORY),
+    category: Schema.Literals(SURFACE_WEAPON_FILTER_CATEGORIES),
   }),
   Schema.Struct({
-    kind: Schema.Literal("weapon_property"),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_WEAPON_PROPERTY),
     property: WeaponPropertySchema,
   }),
   Schema.Struct({
-    kind: Schema.Literal("specific_item"),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_SPECIFIC_ITEM),
     itemId: surfaceSchemaRole(Schema.String, {
       category: "reference",
       relation: "item-reference",
@@ -735,7 +739,9 @@ export const WeaponProficiencySchema = Schema.Union([
   }),
 ]);
 
-export const WeaponUsageSchema = Schema.Literals(["melee", "ranged"]);
+export const WeaponUsageSchema = Schema.Literals(
+  SURFACE_WEAPON_FILTER_CATEGORIES,
+);
 
 export const WeaponDamageSchema = Schema.Union([
   Schema.Struct({
