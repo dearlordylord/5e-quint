@@ -58,6 +58,22 @@ function sourceWith(
   };
 }
 
+type OngoingEffectMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+type OngoingOperation = OngoingEffectMechanics["operations"][number];
+
+function nonEmptyOngoingOperations(
+  operations: readonly OngoingOperation[],
+): OngoingEffectMechanics["operations"] {
+  const [first, ...rest] = operations;
+  if (first === undefined) {
+    throw new Error("Expected at least one ongoing operation.");
+  }
+  return [first, ...rest];
+}
+
 function contextFor(
   castingSource: SpellAdmissionContext["castingSource"],
 ): SpellAdmissionContext {
@@ -161,7 +177,7 @@ function malformedAreaAttachment(
         ...attachment,
         value: {
           ...area,
-          shape: { ...shape, radiusFeet: shape.radiusFeet + 1 },
+          shape: { ...shape, radiusFeet: 1 },
         },
       },
     };
@@ -173,7 +189,7 @@ function malformedAreaAttachment(
         ...attachment,
         value: {
           ...area,
-          shape: { ...shape, radiusFeet: shape.radiusFeet + 1 },
+          shape: { ...shape, radiusFeet: 1 },
         },
       },
     };
@@ -473,8 +489,10 @@ describe("ongoing area spell static admission", () => {
         if (mechanics.family !== "ongoing_effect") return mechanics;
         return {
           ...mechanics,
-          operations: mechanics.operations.filter(
-            ({ effect }) => effect.kind !== "douse_exposed_flames",
+          operations: nonEmptyOngoingOperations(
+            mechanics.operations.filter(
+              ({ effect }) => effect.kind !== "douse_exposed_flames",
+            ),
           ),
         };
       }),
@@ -502,8 +520,10 @@ describe("ongoing area spell static admission", () => {
         if (mechanics.family !== "ongoing_effect") return mechanics;
         return {
           ...mechanics,
-          operations: mechanics.operations.filter(
-            ({ effect }) => effect.kind !== "area_section_burns_away",
+          operations: nonEmptyOngoingOperations(
+            mechanics.operations.filter(
+              ({ effect }) => effect.kind !== "area_section_burns_away",
+            ),
           ),
         };
       }),
@@ -532,12 +552,14 @@ describe("ongoing area spell static admission", () => {
           if (mechanics.family !== "ongoing_effect") return mechanics;
           return {
             ...mechanics,
-            operations: mechanics.operations.filter(
-              ({ effect }) =>
-                !(
-                  effect.kind === "move_area" &&
-                  effect.direction === "away_from_caster"
-                ),
+            operations: nonEmptyOngoingOperations(
+              mechanics.operations.filter(
+                ({ effect }) =>
+                  !(
+                    effect.kind === "move_area" &&
+                    effect.direction === "away_from_caster"
+                  ),
+              ),
             ),
           };
         }),
@@ -566,8 +588,10 @@ describe("ongoing area spell static admission", () => {
           if (mechanics.family !== "ongoing_effect") return mechanics;
           return {
             ...mechanics,
-            operations: mechanics.operations.filter(
-              ({ effect }) => effect.kind !== "reposition_attachment",
+            operations: nonEmptyOngoingOperations(
+              mechanics.operations.filter(
+                ({ effect }) => effect.kind !== "reposition_attachment",
+              ),
             ),
           };
         }),
@@ -679,13 +703,15 @@ describe("ongoing area spell static admission", () => {
           if (mechanics.family !== "ongoing_effect") return mechanics;
           return {
             ...mechanics,
-            operations: mechanics.operations.map((operation) =>
-              operation.effect.kind === effectKind
-                ? {
-                    ...operation,
-                    trigger: { kind: "on_caster_turn_end" as const },
-                  }
-                : operation,
+            operations: nonEmptyOngoingOperations(
+              mechanics.operations.map((operation) =>
+                operation.effect.kind === effectKind
+                  ? {
+                      ...operation,
+                      trigger: { kind: "on_caster_turn_end" as const },
+                    }
+                  : operation,
+              ),
             ),
           };
         }),
