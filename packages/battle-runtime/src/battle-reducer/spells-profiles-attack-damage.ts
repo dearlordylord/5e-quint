@@ -26,7 +26,10 @@ import type {
   BattleSpellExecutionSource,
 } from "../battle-state-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../procedure-execution/spell-rule-facts.ts";
-import type { SpellProcedureMechanicsEvidence } from "./spell-procedure-profiles/spell-mechanics-admission.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  type SpellProcedureMechanicsEvidence,
+} from "./spell-procedure-profiles/spell-mechanics-admission.ts";
 import { Match } from "effect";
 import {
   spellActivationAttachmentPath,
@@ -35,7 +38,6 @@ import {
   spellDurationEndingPath,
   spellDurationExtensionPath,
   spellDurationValuePath,
-  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -286,9 +288,7 @@ function spellAttackDamageMechanicsEvidence(
       ),
     ),
   ];
-  consumed.push(
-    ...spellAttackDamageConsumedMaterialPaths(mechanics.components),
-  );
+  consumed.push(...spellConsumedMaterialEvidencePaths(mechanics.components));
   return { consumed, unowned: [] };
 }
 
@@ -339,27 +339,6 @@ function spellAttackDamageDurationPaths(
     ]),
     Match.exhaustive,
   );
-}
-
-function spellAttackDamageConsumedMaterialPaths(
-  components: BattleSpellAdmissionSource["mechanics"]["components"],
-): readonly SpellMechanicsBranchPath[] {
-  if (components.m === false) {
-    return [];
-  }
-  const paths: SpellMechanicsBranchPath[] = [];
-  const hasCost =
-    typeof components.m === "object" ||
-    ("materialCostGp" in components && components.materialCostGp !== undefined);
-  const hasConsumption =
-    "materialConsumed" in components && components.materialConsumed === true;
-  if (hasCost) {
-    paths.push(spellMaterialComponentPath("cost"));
-  }
-  if (hasConsumption) {
-    paths.push(spellMaterialComponentPath("consumption"));
-  }
-  return paths;
 }
 
 function spellAttackDamageNonEmpty<T>(

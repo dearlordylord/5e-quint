@@ -1,6 +1,9 @@
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
-import type { SpellMechanicsBranchPath } from "@dnd/surface/surface/spell-mechanics-path";
+import {
+  spellMaterialComponentPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 
 import type {
@@ -20,6 +23,32 @@ export type SpellMechanicsAdmissionSource = {
   readonly mechanics: SpellMechanics;
   readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
 };
+
+/**
+ * Return canonical evidence paths for authored material cost and consumption
+ * branches. Material evidence is shared by every mechanics admission owner;
+ * it is not specific to any one execution profile.
+ */
+export function spellConsumedMaterialEvidencePaths(
+  components: SpellMechanics["components"],
+): readonly SpellMechanicsBranchPath[] {
+  if (components.m === false) {
+    return [];
+  }
+  const paths: SpellMechanicsBranchPath[] = [];
+  const hasCost =
+    typeof components.m === "object" ||
+    ("materialCostGp" in components && components.materialCostGp !== undefined);
+  const hasConsumption =
+    "materialConsumed" in components && components.materialConsumed === true;
+  if (hasCost) {
+    paths.push(spellMaterialComponentPath("cost"));
+  }
+  if (hasConsumption) {
+    paths.push(spellMaterialComponentPath("consumption"));
+  }
+  return paths;
+}
 
 /**
  * A profile's static projection has to account for at least one owned path.

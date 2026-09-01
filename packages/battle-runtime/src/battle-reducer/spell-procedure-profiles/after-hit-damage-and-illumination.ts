@@ -1,6 +1,9 @@
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage-illumination
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -35,11 +38,11 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
+  SpellMechanics,
 } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 
 import {
-  type AfterHitDamageAndIlluminationSpellInvocation,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -57,6 +60,24 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -70,8 +91,15 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type AfterHitDamageAndIlluminationInvocation =
-  AfterHitDamageAndIlluminationSpellInvocation;
+type AfterHitDamageAndIlluminationInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "afterHitDamageAndIllumination" }
+>;
+type AfterHitDamageAndIlluminationMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly damageAmount: SurfaceDiceAmount;
+  readonly damageType: Extract<DamageType, "radiant">;
+  readonly illumination: AfterHitDamageAndIlluminationInvocation["illumination"];
+};
 
 const AfterHitDamageAndIlluminationEffectSchema = Schema.Struct({
   ...BattleEffectOccurrenceTemplateSchemaFields,
@@ -87,20 +115,19 @@ type AfterHitDamageAndIlluminationResolveInput =
   SpellProcedureProfileResolveInput<AfterHitDamageAndIlluminationInvocation>;
 
 function admitAfterHitDamageAndIllumination(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: AfterHitDamageAndIlluminationMechanicsFacts,
 ): readonly AfterHitDamageAndIlluminationInvocation[] {
-  const projection = afterHitDamageAndIlluminationSpellProjection(
-    ctx.actor.combatantId,
-    spell,
-  );
-  if (projection === null) {
-    return [];
-  }
+  const durationTicks =
+    facts.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(facts.duration.upTo)
+      : null;
+  if (durationTicks === null || Result.isFailure(durationTicks)) return [];
   return supportedSpellSlotDamageFacts({
     slots: ctx.spellCastOptions,
-    amount: projection.damageAmount,
-    spellLevel: spell.mechanics.level,
+    amount: facts.damageAmount,
+    spellLevel: facts.level,
   }).map(
     ({
       slotLevel,
@@ -117,62 +144,230 @@ function admitAfterHitDamageAndIllumination(
       actionCost: "bonusAction",
       damage: {
         expr: damageExpr,
-        damageType: projection.damageType,
+        damageType: facts.damageType,
       },
-      illumination: projection.illumination,
+      illumination: facts.illumination,
       activeEffect: {
         kind: "afterHitDamageAndIllumination",
         sourceCombatantId: ctx.actor.combatantId,
-        expiresAt: projection.expiresAt,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: ctx.actor.combatantId,
+          durationTicks: durationTicks.success,
+        },
       },
     }),
   );
 }
 
-function afterHitDamageAndIlluminationSpellProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): {
-  readonly damageAmount: SurfaceDiceAmount;
-  readonly damageType: Extract<DamageType, "radiant">;
-  readonly illumination: AfterHitDamageAndIlluminationSpellInvocation["illumination"];
-  readonly expiresAt: AfterHitDamageAndIlluminationSpellInvocation["activeEffect"]["expiresAt"];
-} | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const mechanics = spell.mechanics;
-  if (!hasAfterHitDamageAndIlluminationInvocationShape(mechanics)) {
-    return null;
-  }
-  if (mechanics.duration.kind !== "concentration") {
-    return null;
-  }
-  if (mechanics.attachment.kind !== "hole") {
-    return null;
-  }
-  if (mechanics.attachment.value.kind !== "target") {
-    return null;
-  }
-  if (
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== 1 ||
-    mechanics.attachment.value.selection.mode !== "one"
-  ) {
-    return null;
-  }
+export const AFTER_HIT_DAMAGE_AND_ILLUMINATION_FAILED_FACTS = [
+  "level",
+  "range",
+  "duration",
+  "attachment",
+  "initialPhase",
+  "initialDamage",
+  "operationCount",
+  "operationTrigger",
+  "operationOrder",
+  "illumination",
+  "attackAdvantage",
+  "invisibleSuppression",
+] as const;
+type AfterHitDamageAndIlluminationFailedFact =
+  (typeof AFTER_HIT_DAMAGE_AND_ILLUMINATION_FAILED_FACTS)[number];
 
-  const initialPhase = spell.mechanics.initialPhase;
-  const damage =
-    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
-  const operationEffects = spell.mechanics.operations.map(
+type AfterHitDamageAndIlluminationMechanicsIssue = {
+  readonly failedFact: AfterHitDamageAndIlluminationFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+function afterHitDamageAndIlluminationMechanicsIssue(
+  failedFact: AfterHitDamageAndIlluminationMechanicsIssue["failedFact"],
+  mechanicsPath: SpellMechanicsBranchPath,
+): AfterHitDamageAndIlluminationMechanicsIssue {
+  return { failedFact, mechanicsPath };
+}
+
+function afterHitDamageAndIlluminationIssueResult(
+  issue: AfterHitDamageAndIlluminationMechanicsIssue,
+): {
+  readonly tag: "spellProcedureAdmissionIssue";
+  readonly procedure: "afterHitDamageAndIllumination";
+  readonly failedFact: AfterHitDamageAndIlluminationFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly message: string;
+} {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "afterHitDamageAndIllumination",
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported afterHitDamageAndIllumination mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function afterHitDamageAndIlluminationDurationPaths(
+  duration: SpellMechanics["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  if (duration.kind !== "concentration") return [];
+  return [spellDurationValuePath()];
+}
+
+function afterHitDamageAndIlluminationMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...afterHitDamageAndIlluminationDurationPaths(mechanics.duration),
+    spellOngoingAttachmentPath(),
+    spellOngoingInitialPhasePath(),
+    ...mechanics.operations.flatMap((_operation, index) => [
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+      spellOngoingOperationEffectPath(PositiveInteger(index + 1)),
+    ]),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function afterHitDamageAndIlluminationNonEmpty<T>(
+  values: readonly T[],
+): ReadonlyNonEmptyArray<T> | undefined {
+  const [first, ...rest] = values;
+  return first === undefined ? undefined : [first, ...rest];
+}
+
+function afterHitDamageAndIlluminationUniqueIssues(
+  issues: readonly AfterHitDamageAndIlluminationMechanicsIssue[],
+): readonly AfterHitDamageAndIlluminationMechanicsIssue[] {
+  const issueKeys = new Set<string>();
+  return issues.filter((issue) => {
+    const key = JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
+    if (issueKeys.has(key)) return false;
+    issueKeys.add(key);
+    return true;
+  });
+}
+
+function admitAfterHitDamageAndIlluminationMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "afterHitDamageAndIllumination",
+  AfterHitDamageAndIlluminationMechanicsFacts,
+  AfterHitDamageAndIlluminationInvocation,
+  ReturnType<typeof afterHitDamageAndIlluminationIssueResult>
+> {
+  if (source.mechanics.family !== "ongoing_effect") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const castingTime = mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") {
+    return { tag: "notRepresented" };
+  }
+  const trigger = castingTime.trigger;
+  const initialPhase = mechanics.initialPhase;
+  const operationEffects = mechanics.operations.map(
     (operation) => operation.effect,
   );
-  const illuminationEffect = operationEffects.find(
+  if (
+    trigger?.kind !== "after_hit_with" ||
+    trigger.attack !== "melee_weapon_or_unarmed_strike" ||
+    initialPhase?.kind !== "direct" ||
+    !operationEffects.some(
+      (effect) =>
+        effect.kind === "emit_bright_illumination" ||
+        effect.kind === "emit_bright_and_dim_illumination" ||
+        effect.kind === "emit_dim_illumination" ||
+        effect.kind === "modify_roll_advantage" ||
+        effect.kind === "suppress_condition_benefit",
+    )
+  ) {
+    return { tag: "notRepresented" };
+  }
+  const issues: AfterHitDamageAndIlluminationMechanicsIssue[] = [];
+  const issueKeys = new Set<string>();
+  const pushIssue = (
+    failedFact: AfterHitDamageAndIlluminationMechanicsIssue["failedFact"],
+    mechanicsPath: SpellMechanicsBranchPath,
+  ): void => {
+    const key = JSON.stringify([failedFact, mechanicsPath.nodes]);
+    if (issueKeys.has(key)) return;
+    issueKeys.add(key);
+    issues.push(
+      afterHitDamageAndIlluminationMechanicsIssue(failedFact, mechanicsPath),
+    );
+  };
+  if (mechanics.level !== 2) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.range.kind !== "self") {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  if (mechanics.duration.kind !== "concentration") {
+    pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  } else {
+    if (
+      mechanics.duration.upTo.unit !== "minute" ||
+      mechanics.duration.upTo.amount !== 1
+    ) {
+      pushIssue("duration", spellDurationValuePath());
+    }
+    for (const [index] of (mechanics.duration.earlyEnd ?? []).entries()) {
+      pushIssue(
+        "duration",
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      );
+    }
+    if (mechanics.duration.permanentIfMaintainedFull === true) {
+      pushIssue(
+        "duration",
+        spellDurationEndingPath(
+          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
+        ),
+      );
+    }
+  }
+  if (
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "target" ||
+    mechanics.attachment.value.selection.mode !== "one"
+  ) {
+    pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+  if (
+    initialPhase.attachment.kind !== "hole" ||
+    initialPhase.attachment.value.kind !== "target" ||
+    initialPhase.attachment.value.selection.mode !== "one" ||
+    (initialPhase.effects?.length ?? 0) !== 1
+  ) {
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  }
+  const damage = initialPhase.effects?.[0];
+  const damageProjection =
+    damage?.kind === "damage" &&
+    damage.damageType === "radiant" &&
+    damage.amount !== undefined
+      ? { amount: damage.amount }
+      : null;
+  if (damageProjection === null) {
+    pushIssue("initialDamage", spellOngoingInitialPhasePath());
+  }
+  const illuminationIndex = operationEffects.findIndex(
     (effect) =>
+      effect.kind === "emit_bright_illumination" ||
       effect.kind === "emit_bright_and_dim_illumination" ||
-      effect.kind === "emit_bright_illumination",
+      effect.kind === "emit_dim_illumination",
   );
+  const illuminationEffect =
+    illuminationIndex < 0 ? undefined : operationEffects[illuminationIndex];
   const illumination =
     illuminationEffect?.kind === "emit_bright_and_dim_illumination" ||
     illuminationEffect?.kind === "emit_bright_illumination"
@@ -181,79 +376,158 @@ function afterHitDamageAndIlluminationSpellProjection(
           opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         })
       : null;
-  const attackAdvantage = operationEffects.find(
+  const illuminationProjection =
+    illumination?.emission.kind === "bright" ||
+    illumination?.emission.kind === "brightAndDim"
+      ? {
+          emission: illumination.emission,
+          opaqueCoverInteraction: {
+            kind: illumination.opaqueCoverInteraction.kind,
+          },
+        }
+      : null;
+  if (illuminationProjection === null) {
+    pushIssue(
+      "illumination",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(illuminationIndex < 0 ? 1 : illuminationIndex + 1),
+      ),
+    );
+  } else if (illuminationIndex !== 0) {
+    pushIssue(
+      "operationOrder",
+      spellOngoingOperationPath(PositiveInteger(illuminationIndex + 1)),
+    );
+  }
+  for (const [index, operation] of mechanics.operations.entries()) {
+    if (operation.trigger.kind !== "passive") {
+      pushIssue(
+        "operationTrigger",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  const attackAdvantageIndex = operationEffects.findIndex(
     (effect) => effect.kind === "modify_roll_advantage",
   );
-  const suppressInvisible = operationEffects.find(
+  const attackAdvantage =
+    attackAdvantageIndex < 0
+      ? undefined
+      : operationEffects[attackAdvantageIndex];
+  const attackAdvantageSupported =
+    attackAdvantage?.kind === "modify_roll_advantage" &&
+    attackAdvantage.mode === "advantage" &&
+    attackAdvantage.affects === "rolls_against_self" &&
+    attackAdvantage.on !== undefined &&
+    sameStringSet(attackAdvantage.on, ["attack_roll"]);
+  if (!attackAdvantageSupported) {
+    pushIssue(
+      "attackAdvantage",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(
+          attackAdvantageIndex < 0 ? 2 : attackAdvantageIndex + 1,
+        ),
+      ),
+    );
+  } else if (attackAdvantageIndex !== 1) {
+    pushIssue(
+      "operationOrder",
+      spellOngoingOperationPath(PositiveInteger(attackAdvantageIndex + 1)),
+    );
+  }
+  const suppressInvisibleIndex = operationEffects.findIndex(
     (effect) => effect.kind === "suppress_condition_benefit",
   );
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    mechanics.duration.upTo,
-  );
-  if (
-    initialPhase?.kind !== "direct" ||
-    initialPhase.attachment.kind !== "hole" ||
-    initialPhase.attachment.value.kind !== "target" ||
-    initialPhase.attachment.value.selection.mode !== "one" ||
-    initialPhase.effects?.length !== 1 ||
-    damage?.kind !== "damage" ||
-    damage.damageType !== "radiant" ||
-    damage.amount === undefined ||
-    (illumination?.emission.kind !== "bright" &&
-      illumination?.emission.kind !== "brightAndDim") ||
-    attackAdvantage?.kind !== "modify_roll_advantage" ||
-    attackAdvantage.mode !== "advantage" ||
-    attackAdvantage.affects !== "rolls_against_self" ||
-    attackAdvantage.on === undefined ||
-    !sameStringSet(attackAdvantage.on, ["attack_roll"]) ||
-    suppressInvisible?.kind !== "suppress_condition_benefit" ||
-    suppressInvisible.condition !== "invisible" ||
-    Result.isFailure(durationTicks)
-  ) {
-    return null;
+  const suppressInvisible =
+    suppressInvisibleIndex < 0
+      ? undefined
+      : operationEffects[suppressInvisibleIndex];
+  const suppressInvisibleSupported =
+    suppressInvisible?.kind === "suppress_condition_benefit" &&
+    suppressInvisible.condition === "invisible";
+  if (!suppressInvisibleSupported) {
+    pushIssue(
+      "invisibleSuppression",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(
+          suppressInvisibleIndex < 0 ? 3 : suppressInvisibleIndex + 1,
+        ),
+      ),
+    );
+  } else if (suppressInvisibleIndex !== 2) {
+    pushIssue(
+      "operationOrder",
+      spellOngoingOperationPath(PositiveInteger(suppressInvisibleIndex + 1)),
+    );
   }
-
-  return {
-    damageAmount: damage.amount,
+  const semanticOperationIndexes = new Set(
+    [illuminationIndex, attackAdvantageIndex, suppressInvisibleIndex].filter(
+      (index) => index >= 0,
+    ),
+  );
+  if (mechanics.operations.length < 3) {
+    for (let index = mechanics.operations.length; index < 3; index += 1) {
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  for (const [index] of mechanics.operations.entries()) {
+    if (semanticOperationIndexes.has(index)) continue;
+    pushIssue(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+    );
+  }
+  const nonEmptyIssues = afterHitDamageAndIlluminationNonEmpty(
+    afterHitDamageAndIlluminationUniqueIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(
+      afterHitDamageAndIlluminationIssueResult,
+    );
+    return {
+      tag: "unsupported",
+      issues: [firstIssue, ...remainingIssues],
+    };
+  }
+  if (
+    mechanics.duration.kind !== "concentration" ||
+    damageProjection === null ||
+    illuminationProjection === null ||
+    !attackAdvantageSupported ||
+    !suppressInvisibleSupported
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        afterHitDamageAndIlluminationIssueResult(
+          afterHitDamageAndIlluminationMechanicsIssue(
+            "initialPhase",
+            spellOngoingInitialPhasePath(),
+          ),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    damageAmount: damageProjection.amount,
     damageType: "radiant",
-    illumination: {
-      emission: illumination.emission,
-      opaqueCoverInteraction: {
-        kind: illumination.opaqueCoverInteraction.kind,
-      },
-    },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: actorId,
-      durationTicks: durationTicks.success,
+    illumination: illuminationProjection,
+  } satisfies AfterHitDamageAndIlluminationMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "afterHitDamageAndIllumination",
+      facts,
+      evidence: afterHitDamageAndIlluminationMechanicsEvidence(mechanics),
+      admit: (executionSource, ctx) =>
+        admitAfterHitDamageAndIllumination(executionSource, ctx, facts),
     },
   };
-}
-
-type OngoingEffectSpellMechanics = Extract<
-  BattleSpellAdmissionSource["mechanics"],
-  { readonly family: "ongoing_effect" }
->;
-
-function hasAfterHitDamageAndIlluminationInvocationShape(
-  mechanics: OngoingEffectSpellMechanics,
-): boolean {
-  if (mechanics.castingTime.kind !== "bonus_action") {
-    return false;
-  }
-  const trigger = mechanics.castingTime.trigger;
-  if (trigger?.kind !== "after_hit_with") {
-    return false;
-  }
-  return [
-    mechanics.level === 2,
-    trigger.attack === "melee_weapon_or_unarmed_strike",
-    mechanics.range.kind === "self",
-    mechanics.operations.length === 3,
-    mechanics.operations.every(
-      (operation) => operation.trigger.kind === "passive",
-    ),
-  ].every(Boolean);
 }
 
 function discoverAfterHitDamageAndIlluminationCastAct(): readonly BattleActDiscoveryCandidate[] {
@@ -331,7 +605,7 @@ const AfterHitDamageAndIlluminationInvocationSchema =
 export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
   executionSchema: AfterHitDamageAndIlluminationInvocationSchema,
-  admit: admitAfterHitDamageAndIllumination,
+  admitMechanics: admitAfterHitDamageAndIlluminationMechanics,
   discoverCastAct: discoverAfterHitDamageAndIlluminationCastAct,
   resolve: resolveAfterHitDamageAndIllumination,
 } satisfies SpellProcedureDeclaration<
