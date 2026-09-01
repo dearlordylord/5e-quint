@@ -89,8 +89,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -296,8 +296,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -477,8 +477,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -664,8 +664,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -848,8 +848,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -1049,8 +1049,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -1259,8 +1259,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -1470,8 +1470,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -1707,8 +1707,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -1933,8 +1933,8 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_longsword",
-                  "weapon_spear"
+                  "weapon_greataxe",
+                  "weapon_longsword"
                 ]
               }
             ],
@@ -7408,12 +7408,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -13611,12 +13611,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -19198,12 +19198,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -19373,14 +19373,6 @@
                   {
                     "tag": "actionSpell",
                     "actorId": "corpus:character",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":4}",
-                    "mode": {
-                      "tag": "cast"
-                    }
-                  },
-                  {
-                    "tag": "actionSpell",
-                    "actorId": "corpus:character",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":5}",
                     "mode": {
                       "tag": "cast"
@@ -19390,6 +19382,14 @@
                     "tag": "actionSpell",
                     "actorId": "corpus:character",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":6}",
+                    "mode": {
+                      "tag": "cast"
+                    }
+                  },
+                  {
+                    "tag": "actionSpell",
+                    "actorId": "corpus:character",
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":7}",
                     "mode": {
                       "tag": "cast"
                     }
@@ -24812,12 +24812,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -30279,12 +30279,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -35964,12 +35964,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -41651,12 +41651,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -47403,12 +47403,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -53235,12 +53235,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
@@ -59319,12 +59319,12 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_longsword"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_spear"
+                "unitId": "weapon_longsword"
               }
             ],
             "magicInitiateSpellAccesses": [
