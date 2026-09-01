@@ -228,7 +228,7 @@ function translatingPersistentAreaSaveLimitIsSupported(
     operations.enter?.usageLimit,
     operations.endTurn?.usageLimit,
   ]);
-  return saveLimitGroup !== null && saveLimitGroup.length > 0;
+  return saveLimitGroup !== null;
 }
 
 function translatingPersistentAreaDamageFacts(
