@@ -1,5 +1,8 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import type {
+  BattleSpellAdmissionSource,
+  BattleSpellExecutionSource,
+} from "../../battle-state-execution.ts";
+import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -22,7 +25,21 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //     Throw, Damage Type.
 
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { PositiveInteger, movementFeet } from "@dnd/shared/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  OngoingTrigger,
+  SpellMechanics,
+  UsageLimit,
+} from "@dnd/surface/surface/types";
 import { Match, Result, Schema } from "effect";
 
 import {
@@ -47,9 +64,15 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
+import {
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 
 type StationaryPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -87,32 +110,76 @@ type StationaryPersistentAreaProfileShape = {
     { readonly kind: "damage" }
   >["amount"];
 };
+type StationaryPersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
+  StationaryPersistentAreaProfileShape;
+type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
+type StationaryPersistentAreaAdmissionIssue = Extract<
+  SpellProcedureMechanicsInspection<
+    "persistentAreaSaveDamage",
+    StationaryPersistentAreaMechanicsFacts,
+    StationaryPersistentAreaAreaHazardSpellInvocation
+  >,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
+export const STATIONARY_PERSISTENT_AREA_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "duration",
+  "durationTicks",
+  "attachment",
+  "initialSaveDamage",
+  "passiveOperation",
+  "enterOperation",
+  "endTurnOperation",
+  "operationCount",
+  "oncePerTurnLimitGroup",
+] as const;
+type StationaryPersistentAreaFailedFact =
+  (typeof STATIONARY_PERSISTENT_AREA_FAILED_FACTS)[number];
+
+const STATIONARY_PERSISTENT_AREA_CONSUMED_PATHS = [
+  spellMechanicsHeaderPath("level"),
+  spellMechanicsHeaderPath("school"),
+  spellMechanicsHeaderPath("range"),
+  spellMechanicsHeaderPath("components"),
+  spellMechanicsHeaderPath("duration"),
+  spellMechanicsHeaderPath("castingTime"),
+  spellMechanicsHeaderPath("family"),
+  spellDurationValuePath(),
+  spellOngoingAttachmentPath(),
+  spellOngoingInitialPhasePath(),
+  spellOngoingOperationPath(PositiveInteger(1)),
+  spellOngoingOperationPath(PositiveInteger(2)),
+  spellOngoingOperationPath(PositiveInteger(3)),
+  spellOngoingOperationEffectPath(PositiveInteger(1)),
+  spellOngoingOperationEffectPath(PositiveInteger(2)),
+  spellOngoingOperationEffectPath(PositiveInteger(3)),
+] as const;
+
+const STATIONARY_PERSISTENT_AREA_UNOWNED_PATHS = [] as const;
 
 const STATIONARY_PERSISTENT_AREA_LEVEL = 5;
 const STATIONARY_PERSISTENT_AREA_RANGE_FEET = 300;
 const STATIONARY_PERSISTENT_AREA_DURATION_MINUTES = 10;
 const STATIONARY_PERSISTENT_AREA_RADIUS_FEET = 20;
-const STATIONARY_PERSISTENT_AREA_OPERATION_COUNT = 3;
 const STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE = 4;
 const STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 10;
 const STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
 function admitStationaryPersistentAreaAreaHazard(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: StationaryPersistentAreaMechanicsFacts,
 ): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] {
-  const stationaryPersistentArea = persistentAreaSaveDamageSpell(spell);
-  if (stationaryPersistentArea === null) {
-    return [];
-  }
-
   return ctx.spellCastOptions.flatMap(
     (slot): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < STATIONARY_PERSISTENT_AREA_LEVEL) {
         return [];
       }
       const damageExpr = supportedDamageAmountExpr({
-        amount: stationaryPersistentArea.damageAmount,
+        amount: facts.damageAmount,
         spellLevel: STATIONARY_PERSISTENT_AREA_LEVEL,
         slotLevel: slot.spellLevel,
       });
@@ -130,10 +197,10 @@ function admitStationaryPersistentAreaAreaHazard(
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(stationaryPersistentArea.radiusFeet),
+            radiusFeet: movementFeet(facts.radiusFeet),
           },
-          durationTicks: stationaryPersistentArea.durationTicks,
-          rangeFeet: movementFeet(stationaryPersistentArea.rangeFeet),
+          durationTicks: facts.durationTicks,
+          rangeFeet: movementFeet(facts.rangeFeet),
           damage: { expr: damageExpr, damageType: "piercing" },
         },
       ];
@@ -141,57 +208,277 @@ function admitStationaryPersistentAreaAreaHazard(
   );
 }
 
-function persistentAreaSaveDamageSpell(
-  spell: BattleSpellAdmissionSource,
-): StationaryPersistentAreaProfileShape | null {
-  const ongoing = ongoingConcentrationAreaSpellFacts(spell);
-  return ongoing === null
-    ? null
-    : stationaryPersistentAreaProfileShape(ongoing);
-}
+function stationaryPersistentAreaMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "persistentAreaSaveDamage",
+  StationaryPersistentAreaMechanicsFacts,
+  StationaryPersistentAreaAreaHazardSpellInvocation
+> {
+  if (!isStationaryPersistentAreaRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
 
-function stationaryPersistentAreaProfileShape(
-  ongoing: NonNullable<ReturnType<typeof ongoingConcentrationAreaSpellFacts>>,
-): StationaryPersistentAreaProfileShape | null {
-  const { mechanics, duration, durationTicks, area } = ongoing;
-  const damageAmount = stationaryPersistentAreaOperationDamage(mechanics);
+  const ongoing = ongoingAreaSpellFacts(source.mechanics);
+  if (ongoing === null) {
+    return { tag: "notRepresented" };
+  }
 
-  if (!isStationaryPersistentAreaSpellHeader(mechanics)) return null;
-  if (!isStationaryPersistentAreaDuration(duration)) return null;
-  if (Result.isFailure(durationTicks)) return null;
-  if (!isStationaryPersistentAreaGeometry(area)) return null;
-  if (damageAmount === null) return null;
-  return {
+  const failures = stationaryPersistentAreaFailures(ongoing);
+  const [firstFailure, ...remainingFailures] = failures;
+  if (firstFailure !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stationaryPersistentAreaAdmissionIssue(firstFailure),
+        ...remainingFailures.map(stationaryPersistentAreaAdmissionIssue),
+      ],
+    };
+  }
+
+  const { mechanics, durationTicks } = ongoing;
+  const area = mechanics.attachment.value;
+  if (!isStationaryPersistentAreaSpellHeader(mechanics)) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stationaryPersistentAreaAdmissionIssue({
+          failedFact: "range",
+          mechanicsPath: spellMechanicsHeaderPath("range"),
+        }),
+      ],
+    };
+  }
+  if (!isStationaryPersistentAreaGeometry(area)) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stationaryPersistentAreaAdmissionIssue({
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        }),
+      ],
+    };
+  }
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stationaryPersistentAreaAdmissionIssue({
+          failedFact: "durationTicks",
+          mechanicsPath: spellDurationValuePath(),
+        }),
+      ],
+    };
+  }
+  const damageAmount = stationaryPersistentAreaSaveGateDamageAmount(
+    mechanics.initialPhase,
+  );
+  if (damageAmount === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        stationaryPersistentAreaAdmissionIssue({
+          failedFact: "initialSaveDamage",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        }),
+      ],
+    };
+  }
+
+  const profileShape = {
     durationTicks: durationTicks.success,
     rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
     damageAmount,
+  } satisfies StationaryPersistentAreaProfileShape;
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ...profileShape,
+  } satisfies StationaryPersistentAreaMechanicsFacts;
+
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "persistentAreaSaveDamage",
+      facts,
+      evidence: {
+        consumed: STATIONARY_PERSISTENT_AREA_CONSUMED_PATHS,
+        unowned: STATIONARY_PERSISTENT_AREA_UNOWNED_PATHS,
+      },
+      admit: (executionSource, ctx) =>
+        admitStationaryPersistentAreaAreaHazard(executionSource, ctx, facts),
+    },
   };
 }
 
-function stationaryPersistentAreaOperationDamage(
-  mechanics: StationaryPersistentAreaMechanics,
-): StationaryPersistentAreaProfileShape["damageAmount"] | null {
-  const { passiveOperation, enterOperation, endTurnOperation } =
-    stationaryPersistentAreaOperations(mechanics);
-  const initialDamageAmount = stationaryPersistentAreaSaveGateDamageAmount(
-    mechanics.initialPhase,
+type StationaryPersistentAreaFailure = {
+  readonly failedFact: StationaryPersistentAreaFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+function isStationaryPersistentAreaRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is StationaryPersistentAreaMechanics {
+  if (mechanics.family !== "ongoing_effect") {
+    return false;
+  }
+  const attachment = mechanics.attachment;
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "area" ||
+    attachment.value.shape.kind !== "sphere"
+  ) {
+    return false;
+  }
+  const hasEnterTrigger = mechanics.operations.some(
+    (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
-  if (initialDamageAmount === null) return null;
-  const saveLimitGroup = sharedOncePerTurnLimitGroup([
-    stationaryPersistentAreaInitialUsageLimit(mechanics.initialPhase),
-    enterOperation?.usageLimit,
-    endTurnOperation?.usageLimit,
-  ]);
-  return hasStationaryPersistentAreaOperations({
-    mechanics,
+  const hasEndTurnTrigger = mechanics.operations.some(
+    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+  );
+  const hasCasterTurnStartTrigger = mechanics.operations.some(
+    (operation) => operation.trigger.kind === "on_caster_turn_start",
+  );
+  const hasAreaMovesIntoCreatureSpaceTrigger = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind === "on_area_moves_into_creature_space",
+  );
+  const hasTranslatingAreaLifecycle =
+    hasCasterTurnStartTrigger && hasAreaMovesIntoCreatureSpaceTrigger;
+  return hasEnterTrigger && hasEndTurnTrigger && !hasTranslatingAreaLifecycle;
+}
+
+function stationaryPersistentAreaFailures(
+  ongoing: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>,
+): readonly StationaryPersistentAreaFailure[] {
+  const { mechanics, durationTicks } = ongoing;
+  const { duration, attachment } = mechanics;
+  const area = attachment.value;
+  const {
     passiveOperation,
     enterOperation,
     endTurnOperation,
-    saveLimitGroup,
-  })
-    ? initialDamageAmount
-    : null;
+    extraOperations,
+  } = stationaryPersistentAreaOperations(mechanics);
+  const initialDamageAmount = stationaryPersistentAreaSaveGateDamageAmount(
+    mechanics.initialPhase,
+  );
+  const failures: StationaryPersistentAreaFailure[] = [];
+  if (mechanics.level !== STATIONARY_PERSISTENT_AREA_LEVEL) {
+    failures.push({
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    });
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    failures.push({
+      failedFact: "castingTime",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    });
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== STATIONARY_PERSISTENT_AREA_RANGE_FEET
+  ) {
+    failures.push({
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    });
+  }
+  if (!isStationaryPersistentAreaDuration(duration)) {
+    failures.push({
+      failedFact: "duration",
+      mechanicsPath: spellDurationValuePath(),
+    });
+  }
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+    failures.push({
+      failedFact: "durationTicks",
+      mechanicsPath: spellDurationValuePath(),
+    });
+  }
+  if (!isStationaryPersistentAreaGeometry(area)) {
+    failures.push({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+  }
+  if (
+    mechanics.initialPhase?.kind !== "save_gate" ||
+    initialDamageAmount === null
+  ) {
+    failures.push({
+      failedFact: "initialSaveDamage",
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    });
+  }
+  if (
+    !isStationaryPersistentAreaPassiveOperation(
+      passiveOperation?.operation.effect,
+    )
+  ) {
+    failures.push({
+      failedFact: "passiveOperation",
+      mechanicsPath: stationaryPersistentAreaOperationEffectPath(
+        passiveOperation,
+        PositiveInteger(1),
+      ),
+    });
+  }
+  if (
+    stationaryPersistentAreaSaveGateDamageAmount(
+      enterOperation?.operation.effect,
+    ) === null
+  ) {
+    failures.push({
+      failedFact: "enterOperation",
+      mechanicsPath: stationaryPersistentAreaOperationEffectPath(
+        enterOperation,
+        PositiveInteger(2),
+      ),
+    });
+  }
+  if (
+    stationaryPersistentAreaSaveGateDamageAmount(
+      endTurnOperation?.operation.effect,
+    ) === null
+  ) {
+    failures.push({
+      failedFact: "endTurnOperation",
+      mechanicsPath: stationaryPersistentAreaOperationEffectPath(
+        endTurnOperation,
+        PositiveInteger(3),
+      ),
+    });
+  }
+  for (const extraOperation of extraOperations) {
+    failures.push({
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(extraOperation.ordinal),
+    });
+  }
+  failures.push(
+    ...stationaryPersistentAreaUsageLimitFailures({
+      initialPhase: mechanics.initialPhase,
+      enterOperation,
+      endTurnOperation,
+    }),
+  );
+  return failures;
+}
+
+function stationaryPersistentAreaAdmissionIssue(
+  failure: StationaryPersistentAreaFailure,
+): StationaryPersistentAreaAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "persistentAreaSaveDamage",
+    failedFact: failure.failedFact,
+    mechanicsPath: failure.mechanicsPath,
+    message: `Unsupported stationary persistent-area mechanics fact: ${failure.failedFact}.`,
+  };
 }
 
 function stationaryPersistentAreaInitialUsageLimit(
@@ -202,20 +489,134 @@ function stationaryPersistentAreaInitialUsageLimit(
     : undefined;
 }
 
+type StationaryPersistentAreaOperationRole = "passive" | "enter" | "endTurn";
+
+type StationaryPersistentAreaOperationOccurrence = {
+  readonly operation: StationaryPersistentAreaMechanics["operations"][number];
+  readonly ordinal: PositiveInteger;
+  readonly role: StationaryPersistentAreaOperationRole | null;
+};
+
+function stationaryPersistentAreaOperationPath(
+  operation: StationaryPersistentAreaOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationPath(operation?.ordinal ?? fallbackOrdinal);
+}
+
+function stationaryPersistentAreaOperationEffectPath(
+  operation: StationaryPersistentAreaOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationEffectPath(operation?.ordinal ?? fallbackOrdinal);
+}
+
+function stationaryPersistentAreaUsageLimitFailures(input: {
+  readonly initialPhase: StationaryPersistentAreaMechanics["initialPhase"];
+  readonly enterOperation:
+    | StationaryPersistentAreaOperationOccurrence
+    | undefined;
+  readonly endTurnOperation:
+    | StationaryPersistentAreaOperationOccurrence
+    | undefined;
+}): readonly StationaryPersistentAreaFailure[] {
+  const entries = [
+    {
+      limit: stationaryPersistentAreaInitialUsageLimit(input.initialPhase),
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    },
+    {
+      limit: input.enterOperation?.operation.usageLimit,
+      mechanicsPath: stationaryPersistentAreaOperationPath(
+        input.enterOperation,
+        PositiveInteger(2),
+      ),
+    },
+    {
+      limit: input.endTurnOperation?.operation.usageLimit,
+      mechanicsPath: stationaryPersistentAreaOperationPath(
+        input.endTurnOperation,
+        PositiveInteger(3),
+      ),
+    },
+  ] satisfies readonly {
+    readonly limit: UsageLimit | undefined;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  }[];
+  const sharedLimitGroup = sharedOncePerTurnLimitGroup(
+    entries.map(({ limit }) => limit),
+  );
+  if (sharedLimitGroup !== null && sharedLimitGroup.length > 0) {
+    return [];
+  }
+  return entries.map(({ mechanicsPath }) => ({
+    failedFact: "oncePerTurnLimitGroup" as const,
+    mechanicsPath,
+  }));
+}
+
 function stationaryPersistentAreaOperations(
   mechanics: StationaryPersistentAreaMechanics,
 ) {
+  const operations = mechanics.operations.map((operation, index) => ({
+    operation,
+    ordinal: PositiveInteger(index + 1),
+    role: stationaryPersistentAreaOperationRole(operation.trigger),
+  }));
   return {
-    passiveOperation: mechanics.operations.find(
-      (operation) => operation.trigger.kind === "passive",
-    ),
-    enterOperation: mechanics.operations.find(
-      (operation) => operation.trigger.kind === "on_creature_enters_area",
-    ),
-    endTurnOperation: mechanics.operations.find(
-      (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+    operations,
+    passiveOperation: operations.find(({ role }) => role === "passive"),
+    enterOperation: operations.find(({ role }) => role === "enter"),
+    endTurnOperation: operations.find(({ role }) => role === "endTurn"),
+    extraOperations: operations.filter(
+      (occurrence, index) =>
+        occurrence.role === null ||
+        operations.findIndex(({ role }) => role === occurrence.role) !== index,
     ),
   };
+}
+
+function stationaryPersistentAreaOperationRole(
+  trigger: OngoingTrigger,
+): StationaryPersistentAreaOperationRole | null {
+  return Match.value(trigger.kind).pipe(
+    Match.when("passive", () => "passive" as const),
+    Match.when("on_creature_enters_area", () => "enter" as const),
+    Match.when("on_creature_ends_turn_in_area", () => "endTurn" as const),
+    Match.whenOr(
+      "on_effect_starts",
+      "on_caster_attack_hit",
+      "on_caster_deals_damage_to_attachment",
+      "on_attached_hit_by_attack_roll",
+      "on_attached_turn_start",
+      "on_attached_turn_end",
+      "on_caster_turn_start",
+      "on_caster_turn_end",
+      "on_attached_damaged",
+      "on_attached_targeted",
+      "on_creature_moves",
+      "on_creature_starts_turn_in_area",
+      "on_creature_ends_turn_within_distance_of_area",
+      "on_creature_moves_through_area",
+      "on_creature_moves_within_area",
+      "on_creature_starts_turn_within_area",
+      "on_creature_attempts_magical_escape",
+      "on_object_section_destroyed",
+      "on_area_moves_into_creature_space",
+      "on_spatial_manifestation_moves_within_distance_of_creature",
+      "on_creature_enters_distance_of_spatial_manifestation",
+      "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+      "on_creature_exits_area",
+      "on_caster_moves_on_turn",
+      "on_structure_collapses",
+      "on_caster_spends_action",
+      "on_attached_spends_action",
+      "on_affected_creature_spends_action",
+      "on_creature_studies",
+      () => null,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function isStationaryPersistentAreaSpellHeader(
@@ -232,10 +633,11 @@ function isStationaryPersistentAreaSpellHeader(
 }
 
 function isStationaryPersistentAreaDuration(
-  duration: NonNullable<
-    ReturnType<typeof ongoingConcentrationAreaSpellFacts>
-  >["duration"],
+  duration: OngoingAreaFacts["mechanics"]["duration"],
 ): boolean {
+  if (duration.kind !== "concentration") {
+    return false;
+  }
   return (
     duration.upTo.unit === "minute" &&
     duration.upTo.amount === STATIONARY_PERSISTENT_AREA_DURATION_MINUTES
@@ -243,75 +645,16 @@ function isStationaryPersistentAreaDuration(
 }
 
 function isStationaryPersistentAreaGeometry(
-  area: NonNullable<
-    ReturnType<typeof ongoingConcentrationAreaSpellFacts>
-  >["area"],
-): area is NonNullable<
-  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
->["area"] & {
+  area: OngoingAreaFacts["mechanics"]["attachment"]["value"],
+): area is OngoingAreaFacts["mechanics"]["attachment"]["value"] & {
   readonly origin: { readonly kind: "point_within_range" };
   readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
 } {
   return (
-    area.kind === "area" &&
     area.origin.kind === "point_within_range" &&
     area.shape.kind === "sphere" &&
     area.shape.radiusFeet === STATIONARY_PERSISTENT_AREA_RADIUS_FEET
   );
-}
-
-function hasStationaryPersistentAreaOperations(input: {
-  readonly mechanics: StationaryPersistentAreaMechanics;
-  readonly passiveOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined;
-  readonly enterOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined;
-  readonly endTurnOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined;
-  readonly saveLimitGroup: ReturnType<typeof sharedOncePerTurnLimitGroup>;
-}): boolean {
-  if (
-    input.mechanics.operations.length !==
-    STATIONARY_PERSISTENT_AREA_OPERATION_COUNT
-  ) {
-    return false;
-  }
-  if (
-    !isStationaryPersistentAreaPassiveOperation(input.passiveOperation?.effect)
-  ) {
-    return false;
-  }
-  return (
-    hasStationaryPersistentAreaTriggeredDamage(
-      input.enterOperation,
-      input.endTurnOperation,
-    ) && hasStationaryPersistentAreaSaveLimitGroup(input.saveLimitGroup)
-  );
-}
-
-function hasStationaryPersistentAreaTriggeredDamage(
-  enterOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined,
-  endTurnOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined,
-): boolean {
-  return (
-    stationaryPersistentAreaSaveGateDamageAmount(enterOperation?.effect) !==
-      null &&
-    stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) !==
-      null
-  );
-}
-
-function hasStationaryPersistentAreaSaveLimitGroup(
-  saveLimitGroup: ReturnType<typeof sharedOncePerTurnLimitGroup>,
-): boolean {
-  return saveLimitGroup !== null && saveLimitGroup.length > 0;
 }
 
 function isStationaryPersistentAreaPassiveOperation(
@@ -417,11 +760,10 @@ const StationaryPersistentAreaAreaHazardInvocationSchema =
 export const stationaryPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: StationaryPersistentAreaAreaHazardInvocationSchema,
-  admit: admitStationaryPersistentAreaAreaHazard,
+  admitMechanics: stationaryPersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveStationaryPersistentAreaAreaHazard,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveDamage",
   StationaryPersistentAreaAreaHazardSpellInvocation
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";

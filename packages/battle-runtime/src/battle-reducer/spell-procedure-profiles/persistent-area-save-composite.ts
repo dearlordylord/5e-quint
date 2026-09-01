@@ -134,7 +134,7 @@ function persistentAreaSaveCompositeBasicFactsAreSupported(
 }
 
 function persistentAreaSaveCompositeDurationIsSupported(
-  duration: OngoingPersistentAreaSaveCompositeFacts["duration"],
+  duration: OngoingPersistentAreaSaveCompositeFacts["mechanics"]["duration"],
 ): boolean {
   return (
     duration.upTo.unit === "minute" &&
@@ -143,12 +143,11 @@ function persistentAreaSaveCompositeDurationIsSupported(
 }
 
 function persistentAreaSaveCompositeCylinderFacts(
-  area: OngoingPersistentAreaSaveCompositeFacts["area"],
+  area: OngoingPersistentAreaSaveCompositeFacts["mechanics"]["attachment"]["value"],
 ): Pick<
   PersistentAreaSaveCompositeProfileShape,
   "radiusFeet" | "heightFeet"
 > | null {
-  if (area?.kind !== "area") return null;
   if (area.origin.kind !== "point_within_range") return null;
   if (area.shape.kind !== "cylinder") return null;
   if (area.shape.radiusFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET) {
@@ -194,7 +193,9 @@ function persistentAreaSaveCompositeOperationsAreSupported(
 function persistentAreaSaveCompositeProfileShape(
   ongoing: OngoingPersistentAreaSaveCompositeFacts,
 ): PersistentAreaSaveCompositeProfileShape | null {
-  const { mechanics, duration, durationTicks, area } = ongoing;
+  const { mechanics, durationTicks } = ongoing;
+  const { duration, attachment } = mechanics;
+  const area = attachment.value;
   const cylinder = persistentAreaSaveCompositeCylinderFacts(area);
   const operations = persistentAreaSaveCompositeOperations(mechanics);
   if (!persistentAreaSaveCompositeBasicFactsAreSupported(mechanics)) {

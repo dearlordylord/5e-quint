@@ -130,7 +130,9 @@ function persistentAreaSaveConditionEscapeSpell(
   if (ongoing === null) {
     return null;
   }
-  const { mechanics, duration, durationTicks, area } = ongoing;
+  const { mechanics, durationTicks } = ongoing;
+  const { duration, attachment } = mechanics;
+  const area = attachment.value;
   const enterOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
@@ -173,7 +175,6 @@ function persistentAreaSaveConditionEscapeSpell(
     mechanics.operations.length !==
       PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT ||
     Result.isFailure(durationTicks) ||
-    area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "cube" ||
     area.shape.sideFeet !==
