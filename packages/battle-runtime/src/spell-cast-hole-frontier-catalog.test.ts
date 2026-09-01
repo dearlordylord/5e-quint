@@ -86,6 +86,16 @@ function exactCapacityLoadouts<T>(
   );
 }
 
+function spellsInClassListOrder(
+  spellIds: readonly string[],
+  spellsById: ReadonlyMap<string, SpellRecord>,
+): readonly SpellRecord[] {
+  return spellIds.flatMap((spellId): readonly SpellRecord[] => {
+    const spell = spellsById.get(spellId);
+    return spell === undefined ? [] : [spell];
+  });
+}
+
 type CatalogSpellPresentation = NonNullable<
   ReturnType<typeof battleActSpellPresentation>
 >;
@@ -361,21 +371,23 @@ describe("spell cast hole frontier catalog", () => {
     if (wizardSpellList === undefined) {
       throw new Error("Expected the SRD Wizard spell list.");
     }
-    const wizardCantripIds = new Set(wizardSpellList.cantrips);
-    const wizardPreparedSpellIds = new Set(
-      wizardSpellList.leveled
-        .filter(({ spellLevel }) => spellLevel <= 5)
-        .map(({ spellId }) => spellId),
-    );
     const wizardSpells = unitLibrary
       .listUnits()
       .filter((unit): unit is SpellRecord => unit.kind === "spell");
+    const wizardSpellsById = new Map(
+      wizardSpells.map((spell) => [spell.id, spell]),
+    );
     const cantripLoadouts = exactCapacityLoadouts(
-      wizardSpells.filter((spell) => wizardCantripIds.has(spell.id)),
+      spellsInClassListOrder(wizardSpellList.cantrips, wizardSpellsById),
       WIZARD_CANTRIP_CAPACITY,
     );
     const preparedSpellLoadouts = exactCapacityLoadouts(
-      wizardSpells.filter((spell) => wizardPreparedSpellIds.has(spell.id)),
+      spellsInClassListOrder(
+        wizardSpellList.leveled
+          .filter(({ spellLevel }) => spellLevel <= 5)
+          .map(({ spellId }) => spellId),
+        wizardSpellsById,
+      ),
       WIZARD_PREPARED_SPELL_CAPACITY,
     );
     const loadoutCount = Math.max(
@@ -607,7 +619,7 @@ describe("spell cast hole frontier catalog", () => {
         "scalarBuff: [targetChoice] => [targetChoice] -> resolved",
         "selfTeleport: [teleportDestination] => [teleportDestination] -> resolved",
         "selfTransformationMode: [selfTransformationModeChoice] => [selfTransformationModeChoice] -> resolved",
-        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
