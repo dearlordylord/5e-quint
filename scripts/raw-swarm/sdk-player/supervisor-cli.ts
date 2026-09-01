@@ -17,7 +17,6 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
   currentBattleCheckpointFrontierEnvelope,
@@ -42,6 +41,7 @@ import type {
 import { authoredAttemptBody } from "./attempt-source.ts";
 import {
   admitAuthoredSource,
+  authoredSourceModuleUrl,
   authoredSourceIssuesMessage,
   readAuthoredSource,
   withAuthoredSourceSnapshot,
@@ -166,7 +166,7 @@ function admittedSourceOrFail<Role extends AuthoredSourceRole>(
 ): AdmittedAuthoredSource<Role> {
   return result.tag === "admitted"
     ? result
-    : fail(authoredSourceIssuesMessage(result.issues));
+    : fail(authoredSourceIssuesMessage(result));
 }
 
 function atomicJson(path: string, value: unknown): void {
@@ -1014,7 +1014,6 @@ function typecheckSubmission(
 ): void {
   withAuthoredSourceSnapshot(submission, (snapshot) => {
     const submissionConfigPath = resolve(
-      dirname(snapshot.sourcePath),
       `.authored-source-tsconfig-${randomUUID()}.json`,
     );
     writeFileSync(
@@ -1031,6 +1030,7 @@ function typecheckSubmission(
           `--allow-fs-read=${resolve("tooling")}`,
           `--allow-fs-read=${resolve("declarations")}`,
           `--allow-fs-read=${dirname(snapshot.sourcePath)}`,
+          `--allow-fs-read=${submissionConfigPath}`,
           compiler,
           "--noEmit",
           "-p",
@@ -1141,7 +1141,6 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   );
   mkdirSync(submissionDirectory);
   const submissionPath = resolve(submissionDirectory, "attempt.ts");
-  const submissionConfigPath = resolve(submissionDirectory, "tsconfig.json");
   const submissionSource = admittedSourceOrFail(
     admitAuthoredSource({ role: "player", sourcePath: submissionPath, source }),
   );
@@ -1151,10 +1150,6 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     readFileSync(resolve("tsconfig.json"), "utf8"),
   );
   if (!isRecord(submissionConfig)) fail("Player tsconfig must be an object.");
-  writeFileSync(
-    submissionConfigPath,
-    `${JSON.stringify({ ...submissionConfig, include: ["attempt.ts"] }, null, 2)}\n`,
-  );
   writeFileSync(submissionPath, submissionSource.source, { flag: "wx" });
   const typecheckStarted = performance.now();
   try {
@@ -1326,7 +1321,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       },
     };
     const submitted: unknown = await import(
-      `${pathToFileURL(submissionPath).href}?${randomUUID()}`
+      authoredSourceModuleUrl(submissionSource)
     );
     if (
       !isRecord(submitted) ||

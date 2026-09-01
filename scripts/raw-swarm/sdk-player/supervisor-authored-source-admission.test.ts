@@ -1,10 +1,11 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   copyFileSync,
   cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -29,7 +30,7 @@ function writeCompilerConfig(root: string): void {
           moduleResolution: "bundler",
           lib: ["ES2022"],
           types: [],
-          baseUrl: root,
+          baseUrl: ".",
           paths: {
             "@dnd/player-sdk": ["./declarations/player.d.ts"],
             "@dnd/scenario-character-sdk": ["./declarations/characters.d.ts"],
@@ -98,6 +99,43 @@ function supervisorResult(root: string, args: readonly string[]) {
   );
 }
 
+function overwriteNextStoredSubmission(
+  root: string,
+  replacement: string,
+): Promise<number | null> {
+  const watcher = spawn(
+    process.execPath,
+    [
+      "-e",
+      `const fs = require("node:fs");
+const path = require("node:path");
+const [submissions, replacement] = process.argv.slice(1);
+const wait = new Int32Array(new SharedArrayBuffer(4));
+const deadline = Date.now() + 10_000;
+while (Date.now() < deadline) {
+  if (fs.existsSync(submissions)) {
+    for (const entry of fs.readdirSync(submissions)) {
+      if (entry.endsWith(".rejected")) continue;
+      const attempt = path.resolve(submissions, entry, "attempt.ts");
+      if (fs.existsSync(attempt)) {
+        fs.writeFileSync(attempt, replacement);
+        process.exit(0);
+      }
+    }
+  }
+  Atomics.wait(wait, 0, 0, 2);
+}
+process.exit(2);`,
+      resolve(root, "submissions"),
+      replacement,
+    ],
+    { stdio: "ignore" },
+  );
+  return new Promise((resolveExit) => {
+    watcher.once("exit", (code) => resolveExit(code));
+  });
+}
+
 function initArgs(): readonly string[] {
   return [
     "init",
@@ -133,7 +171,7 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
 }
 
 describe("SDK player supervisor authored-source admission", () => {
-  test("rejects trusted init, replay, and player submissions before evaluation", () => {
+  test("rejects trusted init, replay, and player submissions before evaluation", async () => {
     const base = buildSupervisorRoot();
     const initRoot = mkdtempSync(resolve(tmpdir(), "dnd-admission-init-"));
     const replayRoot = mkdtempSync(resolve(tmpdir(), "dnd-admission-replay-"));
@@ -208,6 +246,36 @@ export const composeScenarioCharacters = () => ({ kind: "obstructed", obstructio
       expect(rejectedAttempt.stderr).toContain("forbidden dynamicImport");
       expect(rejectedAttempt.stderr).not.toContain("did not typecheck");
       expect(existsSync(playerSentinel)).toBe(false);
+
+      const overwriteSentinel = resolve(playerRoot, "overwritten-evaluated");
+      const replacement = `import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(overwriteSentinel)}, "evaluated");
+export const continueBattle = async (context) => {
+  context.sdk.discoverBattleActs(context.session);
+  return { kind: "continue", session: context.session, tacticalNote: "REPLACED" };
+};
+`;
+      const watcherExit = overwriteNextStoredSubmission(
+        playerRoot,
+        replacement,
+      );
+      const retainedAttemptPath = resolve(playerRoot, "retained-attempt.ts");
+      writeFileSync(
+        retainedAttemptPath,
+        attemptSource(`  context.sdk.discoverBattleActs(context.session);
+  return { kind: "continue", session: context.session, tacticalNote: "ADMITTED" };`),
+      );
+      const retainedAttempt = supervisorResult(playerRoot, [
+        "attempt",
+        retainedAttemptPath,
+      ]);
+      expect(await watcherExit).toBe(0);
+      expect(retainedAttempt.status).toBe(0);
+      expect(retainedAttempt.stderr).toBe("");
+      expect(existsSync(overwriteSentinel)).toBe(false);
+      expect(
+        readFileSync(resolve(playerRoot, "evidence/program.ts"), "utf8"),
+      ).toContain('tacticalNote: "ADMITTED"');
     } finally {
       rmSync(base, { recursive: true });
       rmSync(initRoot, { recursive: true });

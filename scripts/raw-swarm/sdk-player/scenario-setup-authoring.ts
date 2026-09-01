@@ -1,11 +1,11 @@
-import { constants, copyFileSync, readFileSync, rmSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import {
   readAuthoredSource,
   withAuthoredSourceSnapshot,
   type AdmittedAuthoredSource,
-  type AuthoredSourceIssue,
+  type RejectedAuthoredSource,
 } from "./authored-source-admission.ts";
 
 export const scenarioSetupAuthorProtectedInputFiles = [
@@ -21,12 +21,15 @@ export const scenarioSetupAuthorProtectedInputFiles = [
 export type ScenarioSetupAuthorRole = "neutral" | "controller";
 
 export type ScenarioSetupAuthoringResult<Retained> =
-  | { readonly tag: "retained"; readonly retained: Retained }
   | {
+      readonly tag: "retained";
+      readonly source: AdmittedAuthoredSource<"scenarioSetup">;
+      readonly retained: Retained;
+    }
+  | (Omit<RejectedAuthoredSource<"scenarioSetup">, "tag"> & {
       readonly tag: "sourceRejected";
       readonly phase: "neutral" | "retained";
-      readonly issues: readonly [AuthoredSourceIssue, ...AuthoredSourceIssue[]];
-    };
+    });
 
 function protectedInputSources(scratch: string): readonly string[] {
   return scenarioSetupAuthorProtectedInputFiles.map((file) =>
@@ -78,6 +81,8 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     return {
       tag: "sourceRejected",
       phase: "neutral",
+      role: neutralSource.role,
+      sourcePath: neutralSource.sourcePath,
       issues: neutralSource.issues,
     };
   }
@@ -85,8 +90,9 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     input.typecheck("neutral", snapshot),
   );
 
-  copyFileSync(setupPath, neutralSetupPath, constants.COPYFILE_EXCL);
-  const neutralSetupSource = readFileSync(neutralSetupPath, "utf8");
+  writeFileSync(setupPath, neutralSource.source);
+  writeFileSync(neutralSetupPath, neutralSource.source, { flag: "wx" });
+  const neutralSetupSource = neutralSource.source;
   try {
     await input.runAuthor("controller");
     assertProtectedInputsUnchanged({
@@ -111,6 +117,8 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     return {
       tag: "sourceRejected",
       phase: "retained",
+      role: retainedSource.role,
+      sourcePath: retainedSource.sourcePath,
       issues: retainedSource.issues,
     };
   }
@@ -119,6 +127,7 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
   );
   return {
     tag: "retained",
+    source: retainedSource,
     retained: await input.validateRetained(retainedSource),
   };
 }

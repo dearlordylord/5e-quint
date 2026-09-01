@@ -61,6 +61,9 @@ describe("scenario setup two-owner authoring", () => {
           phases.push(phase);
           expect(source.sourcePath).not.toBe(resolve(scratch, "setup.ts"));
           expect(readFileSync(source.sourcePath, "utf8")).toBe(source.source);
+          if (phase === "neutral") {
+            writeFileSync(resolve(scratch, "setup.ts"), "REPLACED\n");
+          }
           if (phase === "retained") {
             expect(existsSync(resolve(scratch, "NEUTRAL_SETUP.ts"))).toBe(
               false,
@@ -70,13 +73,18 @@ describe("scenario setup two-owner authoring", () => {
             );
           }
         },
-        validateRetained: () => {
+        validateRetained: (source) => {
           phases.push("evaluate");
           expect(existsSync(resolve(scratch, "NEUTRAL_SETUP.ts"))).toBe(false);
-          return "evaluated";
+          writeFileSync(resolve(scratch, "setup.ts"), "REPLACED\n");
+          return source.source;
         },
       });
-      expect(result).toEqual({ tag: "retained", retained: "evaluated" });
+      expect(result).toMatchObject({
+        tag: "retained",
+        retained: CONTROLLER_SETUP_SOURCE,
+        source: { source: CONTROLLER_SETUP_SOURCE },
+      });
       expect(phases).toEqual(["neutral", "retained", "evaluate"]);
     } finally {
       rmSync(scratch, { recursive: true });
@@ -179,6 +187,8 @@ describe("scenario setup two-owner authoring", () => {
       ).resolves.toMatchObject({
         tag: "sourceRejected",
         phase: "retained",
+        role: "scenarioSetup",
+        sourcePath: resolve(scratch, "setup.ts"),
         issues: [{ tag: "forbiddenModuleEdge", edge: "sideEffectImport" }],
       });
     } finally {
@@ -204,6 +214,8 @@ describe("scenario setup two-owner authoring", () => {
       ).resolves.toMatchObject({
         tag: "sourceRejected",
         phase: "neutral",
+        role: "scenarioSetup",
+        sourcePath: resolve(scratch, "setup.ts"),
         issues: [{ tag: "forbiddenModuleEdge", edge: "sideEffectImport" }],
       });
       expect(typecheckReached).toBe(false);

@@ -253,7 +253,7 @@ export function evaluateScenarioSetup(
   return setupSource.tag === "rejected"
     ? Promise.resolve({
         tag: "invalid",
-        message: authoredSourceIssuesMessage(setupSource.issues),
+        message: authoredSourceIssuesMessage(setupSource),
       })
     : evaluateAdmittedScenarioSetup(setupSource, characterSheets);
 }

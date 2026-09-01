@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   admitAuthoredSource,
+  authoredSourceIssuesMessage,
   readAuthoredSource,
   withAuthoredSourceSnapshot,
   type AuthoredSourceAdmissionResult,
@@ -106,6 +107,32 @@ describe("authored source module-edge admission", () => {
         admitSource({
           role,
           source: `import type { ${declaration} } from ${JSON.stringify(sdkSpecifier)};\nvoid import.meta.url;`,
+        }),
+      ).toMatchObject({ tag: "admitted", role });
+    },
+  );
+
+  test.each(ROLES)("$role rejects AMD dependency directives", ({ role }) => {
+    expect(
+      admitSource({
+        role,
+        source: '/// <amd-dependency path="./side-effect" />\nexport {};',
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      role,
+      sourcePath: `${role}.ts`,
+      issues: [{ tag: "amdDependency", path: "./side-effect" }],
+    });
+  });
+
+  test.each(ROLES)(
+    "$role allows the no-default-lib compiler directive",
+    ({ role }) => {
+      expect(
+        admitSource({
+          role,
+          source: '/// <reference no-default-lib="true" />\nexport {};',
         }),
       ).toMatchObject({ tag: "admitted", role });
     },
@@ -277,5 +304,17 @@ describe("authored source module-edge admission", () => {
     } finally {
       rmSync(directory, { recursive: true });
     }
+  });
+
+  test("renders the rejected role and source path", () => {
+    const result = admitSource({
+      role: "scenarioCharacter",
+      source: 'import "node:fs";',
+    });
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") return;
+    expect(authoredSourceIssuesMessage(result)).toBe(
+      "Scenario character source scenarioCharacter.ts uses forbidden sideEffectImport syntax at 1:1.",
+    );
   });
 });

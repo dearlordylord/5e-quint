@@ -4700,7 +4700,9 @@ describe("scenario setup public-SDK boundary", () => {
         evaluateScenarioSetup(resolve(directory, "missing.ts"), []),
       ).resolves.toMatchObject({
         tag: "invalid",
-        message: expect.stringContaining("Authored source is unreadable"),
+        message: expect.stringContaining(
+          `Scenario setup source ${resolve(directory, "missing.ts")} is unreadable`,
+        ),
       });
     } finally {
       rmSync(directory, { recursive: true });

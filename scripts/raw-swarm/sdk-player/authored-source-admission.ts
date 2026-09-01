@@ -64,7 +64,6 @@ type SourceLocation = {
 export type AuthoredSourceIssue =
   | {
       readonly tag: "unreadableSource";
-      readonly sourcePath: string;
       readonly message: string;
     }
   | ({
@@ -75,6 +74,10 @@ export type AuthoredSourceIssue =
       readonly tag: "tripleSlashReference";
       readonly reference: "path" | "types" | "lib";
       readonly value: string;
+    } & SourceLocation)
+  | ({
+      readonly tag: "amdDependency";
+      readonly path: string;
     } & SourceLocation)
   | ({
       readonly tag: "forbiddenModuleEdge";
@@ -94,12 +97,16 @@ export type AdmittedAuthoredSource<Role extends AuthoredSourceRole> = {
   readonly source: string;
 };
 
+export type RejectedAuthoredSource<Role extends AuthoredSourceRole> = {
+  readonly tag: "rejected";
+  readonly role: Role;
+  readonly sourcePath: string;
+  readonly issues: readonly [AuthoredSourceIssue, ...AuthoredSourceIssue[]];
+};
+
 export type AuthoredSourceAdmissionResult<Role extends AuthoredSourceRole> =
   | AdmittedAuthoredSource<Role>
-  | {
-      readonly tag: "rejected";
-      readonly issues: readonly [AuthoredSourceIssue, ...AuthoredSourceIssue[]];
-    };
+  | RejectedAuthoredSource<Role>;
 
 function sourceLocation(
   sourceFile: tsTypes.SourceFile,
@@ -129,17 +136,16 @@ function isIdentifierRequireCall(
   return ts.isIdentifier(expression) && expression.text === "require";
 }
 
-function rejected(
+function rejected<Role extends AuthoredSourceRole>(
+  role: Role,
+  sourcePath: string,
   issues: readonly AuthoredSourceIssue[],
-): Extract<
-  AuthoredSourceAdmissionResult<AuthoredSourceRole>,
-  { tag: "rejected" }
-> {
+): RejectedAuthoredSource<Role> {
   const [first, ...rest] = issues;
   if (first === undefined) {
     throw new Error("Rejected authored source requires at least one issue.");
   }
-  return { tag: "rejected", issues: [first, ...rest] };
+  return { tag: "rejected", role, sourcePath, issues: [first, ...rest] };
 }
 
 function tripleSlashIssues(
@@ -159,6 +165,14 @@ function tripleSlashIssues(
     ...referenceIssues(sourceFile.referencedFiles, "path"),
     ...referenceIssues(sourceFile.typeReferenceDirectives, "types"),
     ...referenceIssues(sourceFile.libReferenceDirectives, "lib"),
+    ...sourceFile.amdDependencies.map(({ path }) => {
+      const position = sourceFile.text.indexOf(path);
+      return {
+        tag: "amdDependency" as const,
+        path,
+        ...sourceLocation(sourceFile, position < 0 ? 0 : position),
+      };
+    }),
   ];
 }
 
@@ -277,6 +291,8 @@ export function admitAuthoredSource<Role extends AuthoredSourceRole>(input: {
   );
   if (syntaxDiagnostics.length > 0) {
     return rejected(
+      input.role,
+      sourcePath,
       syntaxDiagnostics.map((diagnostic) => ({
         tag: "malformedSource",
         message: diagnosticMessage(diagnostic),
@@ -288,7 +304,7 @@ export function admitAuthoredSource<Role extends AuthoredSourceRole>(input: {
     ...tripleSlashIssues(sourceFile),
     ...moduleEdgeIssues(sourceFile, SDK_SPECIFIER_BY_ROLE[input.role]),
   ];
-  if (issues.length > 0) return rejected(issues);
+  if (issues.length > 0) return rejected(input.role, sourcePath, issues);
   return {
     tag: "admitted",
     [AuthoredSourceAdmissionProof]: true,
@@ -318,14 +334,13 @@ export function readAuthoredSource<Role extends AuthoredSourceRole>(input: {
         tag: "unreadable",
         issue: {
           tag: "unreadableSource",
-          sourcePath: input.sourcePath,
           message: error instanceof Error ? error.message : String(error),
         },
       };
     }
   })();
   if (read.tag === "unreadable") {
-    return { tag: "rejected", issues: [read.issue] };
+    return rejected(input.role, input.sourcePath, [read.issue]);
   }
   return admitAuthoredSource({
     role: input.role,
@@ -335,25 +350,37 @@ export function readAuthoredSource<Role extends AuthoredSourceRole>(input: {
 }
 
 export function authoredSourceIssuesMessage(
-  issues: readonly [AuthoredSourceIssue, ...AuthoredSourceIssue[]],
+  rejection: Pick<
+    RejectedAuthoredSource<AuthoredSourceRole>,
+    "role" | "sourcePath" | "issues"
+  >,
 ): string {
-  return issues
+  const roleLabel = {
+    player: "Player",
+    scenarioCharacter: "Scenario character",
+    scenarioSetup: "Scenario setup",
+  }[rejection.role];
+  const details = rejection.issues
     .map((issue) => {
       if (issue.tag === "unreadableSource") {
-        return `Authored source is unreadable: ${issue.message}`;
+        return `is unreadable: ${issue.message}`;
       }
       if (issue.tag === "malformedSource") {
-        return `Authored source is malformed at ${String(issue.line)}:${String(issue.column)}: ${issue.message}`;
+        return `is malformed at ${String(issue.line)}:${String(issue.column)}: ${issue.message}`;
       }
       if (issue.tag === "tripleSlashReference") {
-        return `Authored source uses a forbidden triple-slash ${issue.reference} reference at ${String(issue.line)}:${String(issue.column)}: ${issue.value}`;
+        return `uses a forbidden triple-slash ${issue.reference} reference at ${String(issue.line)}:${String(issue.column)}: ${issue.value}`;
+      }
+      if (issue.tag === "amdDependency") {
+        return `uses a forbidden AMD dependency at ${String(issue.line)}:${String(issue.column)}: ${issue.path}`;
       }
       if (issue.tag === "unavailableModuleSpecifier") {
-        return `Authored source imports ${issue.actualSpecifier} at ${String(issue.line)}:${String(issue.column)}; this role admits only ${issue.expectedSpecifier}.`;
+        return `imports ${issue.actualSpecifier} at ${String(issue.line)}:${String(issue.column)}; this role admits only ${issue.expectedSpecifier}.`;
       }
-      return `Authored source uses forbidden ${issue.edge} syntax at ${String(issue.line)}:${String(issue.column)}.`;
+      return `uses forbidden ${issue.edge} syntax at ${String(issue.line)}:${String(issue.column)}.`;
     })
     .join(" ");
+  return `${roleLabel} source ${rejection.sourcePath} ${details}`;
 }
 
 export function withAuthoredSourceSnapshot<Role extends AuthoredSourceRole>(

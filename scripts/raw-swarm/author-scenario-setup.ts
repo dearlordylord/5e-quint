@@ -1,8 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
-  constants,
-  copyFileSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -231,7 +229,6 @@ async function main(args: readonly string[]): Promise<void> {
     const permissionArgs = profileAvailable
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
-    const setupPath = resolve(scratch, "setup.ts");
     const authored = await authorScenarioSetupThroughOwners({
       scratch,
       runAuthor: (role) =>
@@ -269,14 +266,14 @@ async function main(args: readonly string[]): Promise<void> {
       },
     });
     if (authored.tag === "sourceRejected") {
-      fail(authoredSourceIssuesMessage(authored.issues));
+      fail(authoredSourceIssuesMessage(authored));
     }
     const evaluated = authored.retained;
     const after = currentGitRevision();
     if (after.tag === "dirty" || after.sha !== revision.sha) {
       fail("Git revision changed during scenario setup authoring.");
     }
-    copyFileSync(setupPath, outputPath, constants.COPYFILE_EXCL);
+    writeFileSync(outputPath, authored.source.source, { flag: "wx" });
     console.log(
       evaluated.tag === "ready"
         ? `Authored ready scenario setup: ${outputPath}`

@@ -221,7 +221,7 @@ export function evaluateScenarioCharacters(
   return authoredSource.tag === "rejected"
     ? Promise.resolve({
         tag: "invalid",
-        message: authoredSourceIssuesMessage(authoredSource.issues),
+        message: authoredSourceIssuesMessage(authoredSource),
       })
     : evaluateAdmittedScenarioCharacters(authoredSource);
 }

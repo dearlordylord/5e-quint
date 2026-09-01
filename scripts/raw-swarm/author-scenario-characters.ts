@@ -1,8 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
-  constants,
-  copyFileSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -186,7 +184,7 @@ async function main(args: readonly string[]): Promise<void> {
       sourcePath: charactersPath,
     });
     if (characterSource.tag === "rejected") {
-      fail(authoredSourceIssuesMessage(characterSource.issues));
+      fail(authoredSourceIssuesMessage(characterSource));
     }
     withAuthoredSourceSnapshot(characterSource, (snapshot) => {
       const typecheckConfigPath = resolve(
@@ -225,7 +223,7 @@ async function main(args: readonly string[]): Promise<void> {
     if (after.tag === "dirty" || after.sha !== revision.sha) {
       fail("Git revision changed during scenario character authoring.");
     }
-    copyFileSync(charactersPath, outputPath, constants.COPYFILE_EXCL);
+    writeFileSync(outputPath, characterSource.source, { flag: "wx" });
     console.log(
       Match.value(evaluated).pipe(
         Match.when(
