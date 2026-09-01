@@ -80,14 +80,12 @@ describe("battle start failure projection", () => {
     ]);
   });
 
-  test("retains a runtime admission diagnostic as a structured issue", () => {
+  test("retains a duplicate combatant diagnostic as a structured issue", () => {
     const duplicateCombatantId = combatantId("combatant:synthetic-duplicate");
     const issue = {
       tag: "battleStateInitIssue",
-      kind: "runtimeAdmissionInvalid",
+      kind: "duplicateCombatantId",
       combatantId: duplicateCombatantId,
-      origin: "statBlock",
-      issueIndex: 0,
       ownerPath: ["operation", "combatant"],
       message: `Duplicate combatant id: ${duplicateCombatantId}`,
     } as const satisfies BattleInitializationIssue;
@@ -98,10 +96,8 @@ describe("battle start failure projection", () => {
         code: "BATTLE_INITIALIZATION_INVALID",
         ownerPath: ["operation", "combatant"],
         issueTag: "battleStateInitIssue",
-        reason: "runtimeAdmissionInvalid",
+        reason: "duplicateCombatantId",
         combatantId: duplicateCombatantId,
-        origin: "statBlock",
-        issueIndex: 0,
         message: `Duplicate combatant id: ${duplicateCombatantId}`,
       },
     ]);

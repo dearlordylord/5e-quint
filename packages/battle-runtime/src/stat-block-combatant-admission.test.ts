@@ -493,11 +493,15 @@ describe("Stat Block combatant admission capability", () => {
       state: first.success,
       combatant: combatantFor(admission),
     });
-    expect(
-      Result.isFailure(duplicate)
-        ? battleStateInitIssueMessage(duplicate.failure)
-        : "resolved",
-    ).toBe(`Duplicate combatant id: ${admittedCombatantId}`);
+    expect(Result.isFailure(duplicate)).toBe(true);
+    if (Result.isFailure(duplicate)) {
+      expect(duplicate.failure).toEqual({
+        tag: "battleStateInitIssue",
+        kind: "duplicateCombatantId",
+        combatantId: admittedCombatantId,
+        message: `Duplicate combatant id: ${admittedCombatantId}`,
+      });
+    }
   });
 
   test("rejects an execution scope belonging to a different admitted destination", () => {
