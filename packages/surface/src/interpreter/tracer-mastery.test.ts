@@ -54,7 +54,13 @@ describe("Surface Weapon Mastery trace projections", () => {
   test("projects Graze's miss damage rule exactly", () => {
     expect(traceProjection(grazeInput)).toEqual({
       unitId: "mastery_graze",
-      atomKinds: ["attack_roll", "damage", "mastery_root"],
+      atomKinds: [
+        "attack_roll",
+        "damage",
+        "mastery_root",
+        "on_miss_window",
+        "target",
+      ],
       nodes: [
         {
           category: "source",
@@ -64,7 +70,17 @@ describe("Surface Weapon Mastery trace projections", () => {
         {
           category: "resolution",
           atomKind: "attack_roll",
-          label: "attack_roll\nweapon attack miss\noptional true",
+          label: "attack_roll\nweapon attack miss",
+        },
+        {
+          category: "window",
+          atomKind: "on_miss_window",
+          label: "on_miss_window\n(wielder choice)",
+        },
+        {
+          category: "attachment",
+          atomKind: "target",
+          label: "target\n(primary)",
         },
         {
           category: "effect",
@@ -74,7 +90,10 @@ describe("Surface Weapon Mastery trace projections", () => {
         },
       ],
       edges: [
-        { from: 1, to: 2, relation: "grants" },
+        { from: 1, to: 2, relation: "opens_window" },
+        { from: 1, to: 3, relation: "attaches_to" },
+        { from: 2, to: 4, relation: "grants" },
+        { from: 4, to: 3, relation: "attaches_to" },
         { from: 0, to: 1, relation: "roots" },
       ],
     });

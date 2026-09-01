@@ -59,8 +59,28 @@ function traceGrazeMasteryMechanics(
     id: resolutionId,
     category: "resolution",
     atomKind: "attack_roll",
-    label: `attack_roll\nweapon attack miss\noptional ${mechanics.optional}`,
+    label: "attack_roll\nweapon attack miss",
   });
+
+  const windowId = ids("win");
+  nodes.push({
+    id: windowId,
+    category: "window",
+    atomKind: "on_miss_window",
+    label: mechanics.optional
+      ? "on_miss_window\n(wielder choice)"
+      : "on_miss_window",
+  });
+  edges.push({ from: resolutionId, to: windowId, relation: "opens_window" });
+
+  const targetId = ids("att");
+  nodes.push({
+    id: targetId,
+    category: "attachment",
+    atomKind: "target",
+    label: "target\n(primary)",
+  });
+  edges.push({ from: resolutionId, to: targetId, relation: "attaches_to" });
 
   const damageId = ids("damage");
   nodes.push({
@@ -71,7 +91,8 @@ function traceGrazeMasteryMechanics(
       `damage\n${mechanics.effect.amount.kind}\n` +
       `${mechanics.effect.damageType.kind}\n${mechanics.effect.increaseLimit}`,
   });
-  edges.push({ from: resolutionId, to: damageId, relation: "grants" });
+  edges.push({ from: windowId, to: damageId, relation: "grants" });
+  edges.push({ from: damageId, to: targetId, relation: "attaches_to" });
   return resolutionId;
 }
 
