@@ -858,15 +858,62 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("omits selected weapon masteries outside the canonical Battle slice", () => {
-    const refs = characterBattleSupportProjection(build, unitLibrary, [
-      { weaponUnitId: authoredUnitId("weapon_dagger") },
-      { weaponUnitId: authoredUnitId("weapon_shortsword") },
-    ]);
+    const unsupportedWeaponUnitIds = [
+      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_shortsword"),
+    ] as const;
+    const supportedMastery = unitLibrary.requireUnit(
+      authoredUnitId("mastery_sap"),
+    );
+    if (supportedMastery.kind !== "mastery") {
+      throw new Error("Expected the supported mastery fixture.");
+    }
+    const typedUnsupportedMasteries = unsupportedWeaponUnitIds.map(
+      (weaponUnitId) => {
+        const weapon = unitLibrary.requireUnit(weaponUnitId);
+        if (weapon.kind !== "weapon") {
+          throw new Error("Expected the unsupported-mastery weapon fixture.");
+        }
+        return {
+          ...supportedMastery,
+          id: weapon.masteryUnitId,
+          name: "Synthetic Unsupported Mastery Catalog Fixture",
+          provenance: {
+            kind: "synthetic-test" as const,
+            section: weapon.id,
+          },
+        };
+      },
+    );
+    const typedUnsupportedMasteryCatalog: UnitCatalog = {
+      getUnit: (id) => {
+        const mastery = typedUnsupportedMasteries.find(
+          (candidate) => candidate.id === id,
+        );
+        return mastery === undefined
+          ? unitLibrary.getUnit(id)
+          : Option.some(mastery);
+      },
+      listUnits: () => [
+        ...unitLibrary.listUnits(),
+        ...typedUnsupportedMasteries,
+      ],
+      requireUnit: (id) =>
+        typedUnsupportedMasteries.find((candidate) => candidate.id === id) ??
+        unitLibrary.requireUnit(id),
+    };
+    const refs = characterBattleSupportProjection(
+      build,
+      typedUnsupportedMasteryCatalog,
+      unsupportedWeaponUnitIds.map((weaponUnitId) => ({ weaponUnitId })),
+    );
 
     expect(Result.isSuccess(refs)).toBe(true);
     if (Result.isFailure(refs)) return;
     expect(refs.success.unitRefs.map(({ unit }) => unit.id)).not.toEqual(
-      expect.arrayContaining(["mastery_nick", "mastery_vex"]),
+      expect.arrayContaining(
+        typedUnsupportedMasteries.map((mastery) => mastery.id),
+      ),
     );
   });
 

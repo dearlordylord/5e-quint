@@ -439,15 +439,16 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
         `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
       );
     }
+    if (!battleSupportsWeaponMasteryUnitId(weapon.value.masteryUnitId)) {
+      return Result.succeed([]);
+    }
     const resolution = resolveWeaponMasteryReference(weapon.value, unitLibrary);
     if (Result.isFailure(resolution)) {
       const issue = resolution.failure;
       if (issue.tag === "missing") {
-        return battleSupportsWeaponMasteryUnitId(issue.masteryUnitId)
-          ? battleSupportProfileIssue(
-              `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`,
-            )
-          : Result.succeed([]);
+        return battleSupportProfileIssue(
+          `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`,
+        );
       }
       return battleSupportProfileIssue(
         `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,

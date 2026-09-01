@@ -584,6 +584,16 @@ function stringAt(value: JsonObject, key: string): string | undefined {
   return typeof value[key] === "string" ? value[key] : undefined;
 }
 
+function jsonObjectWithoutKeys(
+  value: JsonObject,
+  keys: readonly string[],
+): JsonObject {
+  const omitted = new Set(keys);
+  return Object.fromEntries(
+    Object.entries(value).filter(([key]) => !omitted.has(key)),
+  );
+}
+
 function validateSchemaComparisonAuthority(
   issues: PublicationDeltaVerificationIssue[],
   repoRoot: string,
@@ -990,176 +1000,234 @@ function classifyCandidateSchema(
     unauthorized.push(classification);
     return false;
   };
+  type CandidateSchemaClassifier = (
+    value: JsonObject,
+    pointer: string,
+    transformed: JsonObject,
+  ) => JsonObject;
+  const classifyCasterHealLinkRangeFeet: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    const properties = objectAt(transformed, "properties");
+    const kind =
+      properties === undefined ? undefined : objectAt(properties, "kind");
+    const rangeFeet = properties?.rangeFeet;
+    if (
+      !reachable.has(value) ||
+      kind?.type !== "string" ||
+      !Array.isArray(kind.enum) ||
+      kind.enum.length !== 1 ||
+      kind.enum[0] !== "caster_heal_link" ||
+      rangeFeet === undefined ||
+      !isJsonObject(rangeFeet) ||
+      rangeFeet.type !== "integer" ||
+      rangeFeet.minimum !== 1 ||
+      Object.keys(rangeFeet).length !== 2
+    ) {
+      return transformed;
+    }
+    const reviewedAfter = {
+      anyOf: [
+        { type: "number" },
+        { type: "string", enum: ["Infinity", "-Infinity", "NaN"] },
+      ],
+    } satisfies JsonObject;
+    const rangeFeetPointer = jsonPointerChild(
+      jsonPointerChild(pointer, "properties"),
+      "rangeFeet",
+    );
+    return authorize(
+      "casterHealLinkRangeFeet",
+      rangeFeetPointer,
+      rangeFeet,
+      reviewedAfter,
+    )
+      ? {
+          ...transformed,
+          properties: { ...properties, rangeFeet: reviewedAfter },
+        }
+      : transformed;
+  };
+  const classifyGmSpeedChoiceMinimum: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !pointer.endsWith("/alternatives") ||
+      !reachable.has(value) ||
+      transformed.minItems !== 2 ||
+      !Array.isArray(transformed.prefixItems) ||
+      transformed.prefixItems.length !== 2 ||
+      transformed.items === undefined ||
+      !transformed.prefixItems.every(
+        (item) =>
+          schemaNodeHash(schema, item) ===
+          schemaNodeHash(schema, transformed.items!),
+      )
+    ) {
+      return transformed;
+    }
+    const proposed = jsonObjectWithoutKeys(transformed, [
+      "minItems",
+      "prefixItems",
+    ]);
+    const reviewedAfter = jsonObjectWithoutKeys(value, [
+      "minItems",
+      "prefixItems",
+    ]);
+    return authorize("gmSpeedChoiceMinimum", pointer, value, reviewedAfter)
+      ? proposed
+      : transformed;
+  };
+  const classifyUnitIdItemId: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !pointer.endsWith("/itemId") ||
+      !reachable.has(value) ||
+      transformed.type !== "string" ||
+      transformed.minLength !== 1 ||
+      typeof transformed.pattern !== "string"
+    ) {
+      return transformed;
+    }
+    const proposed = jsonObjectWithoutKeys(transformed, [
+      "minLength",
+      "pattern",
+    ]);
+    return authorize("unitIdItemId", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  const classifyFlyOnlyHover: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      !Array.isArray(transformed.anyOf) ||
+      transformed.anyOf.length !== 2
+    ) {
+      return transformed;
+    }
+    const branches = transformed.anyOf.map((branch) =>
+      resolvePureLocalReference(schema, branch),
+    );
+    if (!branches.every(isJsonObject)) return transformed;
+    const [left, right] = branches;
+    const leftProperties = objectAt(left!, "properties");
+    const rightProperties = objectAt(right!, "properties");
+    if (leftProperties === undefined || rightProperties === undefined) {
+      return transformed;
+    }
+    const candidate = [
+      [left!, right!, leftProperties, rightProperties],
+      [right!, left!, rightProperties, leftProperties],
+    ].find(([, , nonFly, fly]) => {
+      const nonFlyKind = objectAt(nonFly, "kind");
+      const flyKind = objectAt(fly, "kind");
+      const nonFlyHover = nonFly.hover;
+      const flyHover = objectAt(fly, "hover");
+      const nonFlyKinds = nonFlyKind?.anyOf;
+      if (
+        !Array.isArray(nonFlyKinds) ||
+        flyKind?.type !== "string" ||
+        !Array.isArray(flyKind.enum) ||
+        flyKind.enum.length !== 1 ||
+        flyKind.enum[0] !== "fly" ||
+        !isJsonObject(nonFlyHover) ||
+        typeof nonFlyHover.$ref !== "string" ||
+        !nonFlyHover.$ref.endsWith("/ForbiddenValue") ||
+        flyHover?.type !== "boolean" ||
+        !Array.isArray(flyHover.enum) ||
+        flyHover.enum[0] !== true
+      ) {
+        return false;
+      }
+      const sharedKeys = Object.keys(nonFly).filter(
+        (key) => key !== "kind" && key !== "hover",
+      );
+      return (
+        sharedKeys.length ===
+          Object.keys(fly).filter((key) => key !== "kind" && key !== "hover")
+            .length &&
+        sharedKeys.every(
+          (key) =>
+            schemaNodeHash(schema, nonFly[key]!) ===
+            schemaNodeHash(schema, fly[key]!),
+        )
+      );
+    });
+    if (candidate === undefined) return transformed;
+    const [nonFlyBranch, flyBranch, nonFly, fly] = candidate;
+    const nonFlyKinds = objectAt(nonFly, "kind")?.anyOf;
+    const flyKind = objectAt(fly, "kind");
+    if (!Array.isArray(nonFlyKinds) || flyKind === undefined) {
+      return transformed;
+    }
+    const widenedKind = { anyOf: [...nonFlyKinds, flyKind] };
+    const proposed = {
+      ...transformed,
+      anyOf: [
+        {
+          ...nonFlyBranch,
+          properties: { ...nonFly, kind: widenedKind },
+        },
+        {
+          ...flyBranch,
+          properties: { ...fly, kind: widenedKind },
+        },
+      ],
+    };
+    return authorize("flyOnlyHover", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  const classifiers = [
+    classifyCasterHealLinkRangeFeet,
+    classifyGmSpeedChoiceMinimum,
+    classifyUnitIdItemId,
+    classifyFlyOnlyHover,
+  ] as const;
   const transform = (value: JsonValue, pointer: string): JsonValue => {
     if (Array.isArray(value))
       return value.map((child, index) =>
         transform(child, jsonPointerChild(pointer, index)),
       );
     if (!isJsonObject(value)) return value;
-    let transformed = Object.fromEntries(
+    const recursivelyTransformed = Object.fromEntries(
       Object.entries(value).map(([key, child]) => [
         key,
         transform(child, jsonPointerChild(pointer, key)),
       ]),
     );
-    const properties = objectAt(transformed, "properties");
-    const kind =
-      properties === undefined ? undefined : objectAt(properties, "kind");
-    const rangeFeet = properties?.rangeFeet;
-    if (
-      reachable.has(value) &&
-      kind?.type === "string" &&
-      Array.isArray(kind.enum) &&
-      kind.enum.length === 1 &&
-      kind.enum[0] === "caster_heal_link" &&
-      rangeFeet !== undefined &&
-      isJsonObject(rangeFeet) &&
-      rangeFeet.type === "integer" &&
-      rangeFeet.minimum === 1 &&
-      Object.keys(rangeFeet).length === 2
-    ) {
-      const reviewedAfter = {
-        anyOf: [
-          { type: "number" },
-          { type: "string", enum: ["Infinity", "-Infinity", "NaN"] },
-        ],
-      } satisfies JsonObject;
-      const rangeFeetPointer = jsonPointerChild(
-        jsonPointerChild(pointer, "properties"),
-        "rangeFeet",
-      );
-      if (
-        authorize(
-          "casterHealLinkRangeFeet",
-          rangeFeetPointer,
-          rangeFeet,
-          reviewedAfter,
-        )
-      ) {
-        transformed = {
-          ...transformed,
-          properties: { ...properties, rangeFeet: reviewedAfter },
-        };
-      }
-    }
-    if (
-      pointer.endsWith("/alternatives") &&
-      reachable.has(value) &&
-      transformed.minItems === 2 &&
-      Array.isArray(transformed.prefixItems) &&
-      transformed.prefixItems.length === 2 &&
-      transformed.items !== undefined &&
-      transformed.prefixItems.every(
-        (item) =>
-          schemaNodeHash(schema, item) ===
-          schemaNodeHash(schema, transformed.items!),
-      )
-    ) {
-      const proposed = { ...transformed };
-      delete proposed.minItems;
-      delete proposed.prefixItems;
-      const reviewedAfter = { ...value };
-      delete reviewedAfter.minItems;
-      delete reviewedAfter.prefixItems;
-      if (authorize("gmSpeedChoiceMinimum", pointer, value, reviewedAfter)) {
-        transformed = proposed;
-      }
-    }
-    if (
-      pointer.endsWith("/itemId") &&
-      reachable.has(value) &&
-      transformed.type === "string" &&
-      transformed.minLength === 1 &&
-      typeof transformed.pattern === "string"
-    ) {
-      const proposed = { ...transformed };
-      delete proposed.minLength;
-      delete proposed.pattern;
-      if (authorize("unitIdItemId", pointer, value, proposed)) {
-        transformed = proposed;
-      }
-    }
-    if (
-      reachable.has(value) &&
-      Array.isArray(transformed.anyOf) &&
-      transformed.anyOf.length === 2
-    ) {
-      const branches = transformed.anyOf.map((branch) =>
-        resolvePureLocalReference(schema, branch),
-      );
-      if (branches.every(isJsonObject)) {
-        const [left, right] = branches;
-        const leftProperties = objectAt(left!, "properties");
-        const rightProperties = objectAt(right!, "properties");
-        if (leftProperties !== undefined && rightProperties !== undefined) {
-          const candidates = [
-            [left!, right!, leftProperties, rightProperties],
-            [right!, left!, rightProperties, leftProperties],
-          ] as const;
-          for (const [nonFlyBranch, flyBranch, nonFly, fly] of candidates) {
-            const nonFlyKind = objectAt(nonFly, "kind");
-            const flyKind = objectAt(fly, "kind");
-            const nonFlyHover = nonFly.hover;
-            const flyHover = objectAt(fly, "hover");
-            const nonFlyKinds = nonFlyKind?.anyOf;
-            if (
-              Array.isArray(nonFlyKinds) &&
-              flyKind?.type === "string" &&
-              Array.isArray(flyKind.enum) &&
-              flyKind.enum.length === 1 &&
-              flyKind.enum[0] === "fly" &&
-              isJsonObject(nonFlyHover) &&
-              typeof nonFlyHover.$ref === "string" &&
-              nonFlyHover.$ref.endsWith("/ForbiddenValue") &&
-              flyHover?.type === "boolean" &&
-              Array.isArray(flyHover.enum) &&
-              flyHover.enum[0] === true
-            ) {
-              const sharedKeys = Object.keys(nonFly).filter(
-                (key) => key !== "kind" && key !== "hover",
-              );
-              if (
-                sharedKeys.length ===
-                  Object.keys(fly).filter(
-                    (key) => key !== "kind" && key !== "hover",
-                  ).length &&
-                sharedKeys.every(
-                  (key) =>
-                    schemaNodeHash(schema, nonFly[key]!) ===
-                    schemaNodeHash(schema, fly[key]!),
-                )
-              ) {
-                const widenedKind = { anyOf: [...nonFlyKinds, flyKind] };
-                const proposed = {
-                  ...transformed,
-                  anyOf: [
-                    {
-                      ...nonFlyBranch,
-                      properties: { ...nonFly, kind: widenedKind },
-                    },
-                    {
-                      ...flyBranch,
-                      properties: { ...fly, kind: widenedKind },
-                    },
-                  ],
-                };
-                if (authorize("flyOnlyHover", pointer, value, proposed)) {
-                  transformed = proposed;
-                }
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-    return transformed;
+    return classifiers.reduce(
+      (transformed, classify) => classify(value, pointer, transformed),
+      recursivelyTransformed,
+    );
   };
   return {
     value: transform(schema, ""),
     observed,
     unauthorized,
   };
+}
+
+function schemaGraphNodeIndexes(
+  indexes: Map<SchemaDocument, Map<JsonValue, number>>,
+  schema: SchemaDocument,
+): Map<JsonValue, number> {
+  const existing = indexes.get(schema);
+  if (existing !== undefined) return existing;
+  const created = new Map<JsonValue, number>();
+  indexes.set(schema, created);
+  return created;
 }
 
 function schemaGraphPairObservation(
@@ -1182,11 +1250,7 @@ function schemaGraphPairObservation(
   const indexes = new Map<SchemaDocument, Map<JsonValue, number>>();
   const add = (schema: SchemaDocument, raw: JsonValue): number => {
     const value = resolvePureLocalReference(schema, raw);
-    let schemaIndexes = indexes.get(schema);
-    if (schemaIndexes === undefined) {
-      schemaIndexes = new Map();
-      indexes.set(schema, schemaIndexes);
-    }
+    const schemaIndexes = schemaGraphNodeIndexes(indexes, schema);
     const existing = schemaIndexes.get(value);
     if (existing !== undefined) return existing;
     const index = nodes.length;
