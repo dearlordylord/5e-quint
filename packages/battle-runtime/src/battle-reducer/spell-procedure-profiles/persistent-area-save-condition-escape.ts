@@ -635,10 +635,10 @@ function isPersistentAreaSaveConditionEscapeRepresentation(
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_section_burns_away",
   );
-  return spellProcedureHasRedundantSignature(
-    [geometryMatches, rangeMatches, burnAwayOperationMatches],
-    2,
-  );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [geometryMatches, rangeMatches, burnAwayOperationMatches],
+  });
 }
 
 function admitPersistentAreaSaveConditionEscape(

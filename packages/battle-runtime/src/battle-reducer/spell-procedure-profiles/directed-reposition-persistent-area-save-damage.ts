@@ -770,10 +770,10 @@ function isMovablePersistentAreaRepresentation(
       operation.effect.maxMoveFeet ===
         MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
   );
-  return spellProcedureHasRedundantSignature(
-    [geometryMatches, rangeMatches, repositionOperationMatches],
-    2,
-  );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [geometryMatches, rangeMatches, repositionOperationMatches],
+  });
 }
 
 function movablePersistentAreaAdmissionIssue(

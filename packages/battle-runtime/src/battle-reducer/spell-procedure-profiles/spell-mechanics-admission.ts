@@ -17,6 +17,7 @@ import type {
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
+import { Match } from "effect";
 
 /**
  * Static admission receives only the already-decoded mechanics graph and the
@@ -228,20 +229,39 @@ export function spellProcedureNonEmpty<T>(
 }
 
 /**
- * Keep a represented authored family visible when one redundant semantic
- * witness is malformed. Callers choose the number of matching witnesses that
- * distinguishes their profile; the admission itself then reports the broken
- * witness at its canonical mechanics path.
+ * Named admission policies keep the witness count and tolerated loss coupled.
+ * The three-witness policy tolerates exactly one missing witness; the
+ * five-witness policy tolerates exactly two. A caller cannot provide a
+ * threshold that disagrees with its witness tuple.
  */
+export type SpellProcedureRedundantSignaturePolicy =
+  | {
+      readonly kind: "oneWitnessMayBeMissing";
+      readonly witnesses: readonly [boolean, boolean, boolean];
+    }
+  | {
+      readonly kind: "twoWitnessesMayBeMissing";
+      readonly witnesses: readonly [
+        boolean,
+        boolean,
+        boolean,
+        boolean,
+        boolean,
+      ];
+    };
+
 export function spellProcedureHasRedundantSignature(
-  witnesses: readonly boolean[],
-  requiredMatches: number,
+  policy: SpellProcedureRedundantSignaturePolicy,
 ): boolean {
   let matches = 0;
-  for (const witness of witnesses) {
+  for (const witness of policy.witnesses) {
     if (witness) matches += 1;
   }
-  return matches >= requiredMatches;
+  return Match.value(policy.kind).pipe(
+    Match.when("oneWitnessMayBeMissing", () => matches >= 2),
+    Match.when("twoWitnessesMayBeMissing", () => matches >= 3),
+    Match.exhaustive,
+  );
 }
 
 export function spellProcedureMapNonEmpty<T, U>(

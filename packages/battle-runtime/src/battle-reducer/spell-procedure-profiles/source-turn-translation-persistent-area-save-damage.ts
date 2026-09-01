@@ -749,10 +749,10 @@ function isTranslatingPersistentAreaRepresentation(
       operation.effect.kind === "move_area" &&
       operation.effect.direction === "away_from_caster",
   );
-  return spellProcedureHasRedundantSignature(
-    [geometryMatches, rangeMatches, moveOperationMatches],
-    2,
-  );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [geometryMatches, rangeMatches, moveOperationMatches],
+  });
 }
 
 function admitTranslatingPersistentAreaAreaHazard(

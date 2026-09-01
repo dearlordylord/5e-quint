@@ -624,10 +624,10 @@ function isPersistentAreaSaveCompositeRepresentation(
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "douse_exposed_flames",
   );
-  return spellProcedureHasRedundantSignature(
-    [geometryMatches, rangeMatches, douseOperationMatches],
-    2,
-  );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [geometryMatches, rangeMatches, douseOperationMatches],
+  });
 }
 
 function persistentAreaSaveCompositeMechanicsAdmission(

@@ -379,16 +379,16 @@ function isStationaryPersistentAreaRepresentation(
   );
   return (
     !hasTranslatingAreaLifecycle &&
-    spellProcedureHasRedundantSignature(
-      [
+    spellProcedureHasRedundantSignature({
+      kind: "twoWitnessesMayBeMissing",
+      witnesses: [
         geometryMatches,
         rangeMatches,
         initialSaveMatches,
         hasEnterTrigger,
         hasEndTurnTrigger,
       ],
-      3,
-    )
+    })
   );
 }
 

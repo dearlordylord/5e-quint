@@ -86,6 +86,11 @@ type StaticAdmissionResult =
     >
   | ReturnType<typeof persistentAreaSaveDamageProfile.admitMechanics>;
 
+type StaticAdmissionIssue = Extract<
+  StaticAdmissionResult,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
 function expectSupported(result: StaticAdmissionResult) {
   if (result.tag !== "supported") {
     if (result.tag === "unsupported") {
@@ -107,8 +112,8 @@ function expectSupported(result: StaticAdmissionResult) {
 
 function expectUnsupportedFailure(
   result: StaticAdmissionResult,
-  failedFact: string,
-  mechanicsPath: unknown,
+  failedFact: StaticAdmissionIssue["failedFact"],
+  mechanicsPath: StaticAdmissionIssue["mechanicsPath"],
 ) {
   expect(result.tag).toBe("unsupported");
   if (result.tag !== "unsupported") return;
@@ -131,14 +136,18 @@ function malformedAreaAttachment(
     throw new Error("Expected an ongoing area attachment.");
   }
   const attachment = mechanics.attachment;
-  const shape = attachment.value.shape;
+  if (attachment.value.kind !== "area") {
+    throw new Error("Expected an ongoing area attachment.");
+  }
+  const area = attachment.value;
+  const shape = area.shape;
   if (shape.kind === "cube") {
     return {
       ...mechanics,
       attachment: {
         ...attachment,
         value: {
-          ...attachment.value,
+          ...area,
           shape: { ...shape, sideFeet: shape.sideFeet + 1 },
         },
       },
@@ -150,7 +159,7 @@ function malformedAreaAttachment(
       attachment: {
         ...attachment,
         value: {
-          ...attachment.value,
+          ...area,
           shape: { ...shape, radiusFeet: shape.radiusFeet + 1 },
         },
       },
@@ -162,7 +171,7 @@ function malformedAreaAttachment(
       attachment: {
         ...attachment,
         value: {
-          ...attachment.value,
+          ...area,
           shape: { ...shape, radiusFeet: shape.radiusFeet + 1 },
         },
       },
