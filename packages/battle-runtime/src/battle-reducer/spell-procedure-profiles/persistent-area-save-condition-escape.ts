@@ -618,15 +618,16 @@ function isPersistentAreaSaveConditionEscapeRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is Extract<SpellMechanics, { readonly family: "ongoing_effect" }> {
   if (mechanics.family !== "ongoing_effect") return false;
-  if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "area" ||
-    mechanics.attachment.value.shape.kind !== "cube"
-  ) {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
     return false;
   }
-  return mechanics.operations.some(
-    ({ effect }) => effect.kind === "area_section_burns_away",
+  const shape = attachment.value.shape;
+  return (
+    shape.kind === "cube" &&
+    shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET
   );
 }
 

@@ -606,15 +606,17 @@ function isPersistentAreaSaveCompositeRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is OngoingMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
-  if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "area" ||
-    mechanics.attachment.value.shape.kind !== "cylinder"
-  ) {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
     return false;
   }
-  return mechanics.operations.some(
-    ({ effect }) => effect.kind === "area_is_heavily_obscured",
+  const shape = attachment.value.shape;
+  return (
+    shape.kind === "cylinder" &&
+    shape.radiusFeet === PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET &&
+    shape.heightFeet === PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET
   );
 }
 

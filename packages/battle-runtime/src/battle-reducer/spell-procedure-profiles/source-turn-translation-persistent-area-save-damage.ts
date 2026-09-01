@@ -731,16 +731,16 @@ function isTranslatingPersistentAreaRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is TranslatingPersistentAreaMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
-  if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "area" ||
-    mechanics.attachment.value.shape.kind !== "sphere"
-  ) {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
     return false;
   }
-  return mechanics.operations.some(
-    ({ effect }) =>
-      effect.kind === "move_area" && effect.direction === "away_from_caster",
+  const shape = attachment.value.shape;
+  return (
+    shape.kind === "sphere" &&
+    shape.radiusFeet === TRANSLATING_PERSISTENT_AREA_RADIUS_FEET &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === TRANSLATING_PERSISTENT_AREA_RANGE_FEET
   );
 }
 

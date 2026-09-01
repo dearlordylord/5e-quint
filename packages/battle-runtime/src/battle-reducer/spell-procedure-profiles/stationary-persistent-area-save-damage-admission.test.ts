@@ -150,6 +150,19 @@ describe("stationary persistent-area static admission", () => {
     expect(result.admitted.evidence.unowned).toEqual([]);
   });
 
+  test("keeps stationary facts limited to profile geometry and damage", () => {
+    const result = stationaryPersistentAreaSaveDamageProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(spellRecord("insect_plague"))),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).not.toHaveProperty("durationTicks");
+    expect(result.admitted.facts).not.toHaveProperty("rangeFeet");
+    expect(result.admitted.facts).toHaveProperty("radiusFeet", 20);
+    expect(result.admitted.facts).toHaveProperty("damageAmount");
+  });
+
   test("keeps the admitted closure mechanics-free at contextual admission", () => {
     const spell = spellRecord("insect_plague");
     const source = spellAdmissionSource(spell);

@@ -391,6 +391,128 @@ describe("ongoing area spell static admission", () => {
     );
   });
 
+  test("keeps the composite sibling represented when its passive witness is missing", () => {
+    const result = persistentAreaSaveCompositeProfile.admitMechanics(
+      sourceWith("sleet_storm", (mechanics) => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        return {
+          ...mechanics,
+          operations: mechanics.operations.filter(
+            ({ effect }) => effect.kind !== "douse_exposed_flames",
+          ),
+        };
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          failedFact: "passiveDouseExposedFlamesOperation",
+          mechanicsPath: expect.objectContaining({
+            nodes: expect.arrayContaining([
+              { kind: "occurrence", ordinal: 2, role: "procedure" },
+            ]),
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("keeps the escape sibling represented when its passive witness is missing", () => {
+    const result = persistentAreaSaveConditionEscapeProfile.admitMechanics(
+      sourceWith("web", (mechanics) => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        return {
+          ...mechanics,
+          operations: mechanics.operations.filter(
+            ({ effect }) => effect.kind !== "area_section_burns_away",
+          ),
+        };
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          failedFact: "passiveBurnAwayOperation",
+          mechanicsPath: expect.objectContaining({
+            nodes: expect.arrayContaining([
+              { kind: "occurrence", ordinal: 4, role: "procedure" },
+            ]),
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("keeps the translation sibling represented when its movement witness is missing", () => {
+    const result =
+      sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(
+        sourceWith("cloudkill", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          return {
+            ...mechanics,
+            operations: mechanics.operations.filter(
+              ({ effect }) =>
+                !(
+                  effect.kind === "move_area" &&
+                  effect.direction === "away_from_caster"
+                ),
+            ),
+          };
+        }),
+      );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          failedFact: "moveOperation",
+          mechanicsPath: expect.objectContaining({
+            nodes: expect.arrayContaining([
+              { kind: "occurrence", ordinal: 2, role: "procedure" },
+            ]),
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("keeps the directed sibling represented when its reposition witness is missing", () => {
+    const result =
+      directedRepositionPersistentAreaSaveDamageProfile.admitMechanics(
+        sourceWith("moonbeam", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          return {
+            ...mechanics,
+            operations: mechanics.operations.filter(
+              ({ effect }) => effect.kind !== "reposition_attachment",
+            ),
+          };
+        }),
+      );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          failedFact: "repositionOperation",
+          mechanicsPath: expect.objectContaining({
+            nodes: expect.arrayContaining([
+              { kind: "occurrence", ordinal: 2, role: "procedure" },
+            ]),
+          }),
+        }),
+      ]),
+    );
+  });
+
   test("does not represent activation mechanics or a sibling lifecycle", () => {
     expect(
       persistentAreaSaveCompositeProfile.admitMechanics(

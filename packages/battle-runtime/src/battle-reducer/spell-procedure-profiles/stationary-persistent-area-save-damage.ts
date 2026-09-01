@@ -2,7 +2,10 @@ import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
 } from "../../battle-state-execution.ts";
-import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import {
+  ongoingAreaSpellDurationTicks,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -24,8 +27,11 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //     Area of Effect/Sphere, Difficult Terrain, Lightly Obscured, Saving
 //     Throw, Damage Type.
 
-import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { PositiveInteger, movementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet as MovementFeetType,
+} from "@dnd/shared/types";
 import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
@@ -70,6 +76,7 @@ import {
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -103,9 +110,7 @@ type StationaryPersistentAreaSaveGate = Extract<
   { readonly kind: "save_gate" }
 >;
 type StationaryPersistentAreaProfileShape = {
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly rangeFeet: number;
-  readonly radiusFeet: number;
+  readonly radiusFeet: MovementFeetType;
   readonly damageAmount: Extract<
     StationaryPersistentAreaSaveGate["onFail"],
     { readonly kind: "damage" }
@@ -174,6 +179,15 @@ function admitStationaryPersistentAreaAreaHazard(
   ctx: SpellAdmissionContext,
   facts: StationaryPersistentAreaMechanicsFacts,
 ): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] {
+  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
+  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    rangeFeet === undefined
+  ) {
+    return [];
+  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < STATIONARY_PERSISTENT_AREA_LEVEL) {
@@ -198,10 +212,10 @@ function admitStationaryPersistentAreaAreaHazard(
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(facts.radiusFeet),
+            radiusFeet: facts.radiusFeet,
           },
-          durationTicks: facts.durationTicks,
-          rangeFeet: movementFeet(facts.rangeFeet),
+          durationTicks: durationTicks.success,
+          rangeFeet,
           damage: { expr: damageExpr, damageType: "piercing" },
         },
       ];
@@ -237,7 +251,10 @@ function stationaryPersistentAreaMechanicsAdmission(
     };
   }
 
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(
+    source.spellDefinitionRuleFacts.duration,
+  );
   const area = mechanics.attachment.value;
   if (!isStationaryPersistentAreaSpellHeader(mechanics)) {
     return {
@@ -288,9 +305,7 @@ function stationaryPersistentAreaMechanicsAdmission(
   }
 
   const profileShape = {
-    durationTicks: durationTicks.success,
-    rangeFeet: mechanics.range.feet,
-    radiusFeet: area.shape.radiusFeet,
+    radiusFeet: movementFeet(area.shape.radiusFeet),
     damageAmount,
   } satisfies StationaryPersistentAreaProfileShape;
   const facts = {
@@ -357,7 +372,8 @@ function isStationaryPersistentAreaRepresentation(
 function stationaryPersistentAreaFailures(
   ongoing: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>,
 ): readonly StationaryPersistentAreaFailure[] {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const { duration, attachment } = mechanics;
   const area = attachment.value;
   const {

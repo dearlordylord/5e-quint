@@ -744,19 +744,20 @@ function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
 function isMovablePersistentAreaRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is MovablePersistentAreaMechanics {
-  if (
-    mechanics.family !== "ongoing_effect" ||
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "area" ||
-    mechanics.attachment.value.shape.kind !== "cylinder"
-  ) {
+  if (mechanics.family !== "ongoing_effect") {
     return false;
   }
-  // Reposition is the stable profile witness; independently validated Dim
-  // Light omission must remain represented for an exact passive-operation
-  // failure.
-  return mechanics.operations.some(
-    ({ effect }) => effect.kind === "reposition_attachment",
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
+    return false;
+  }
+  const shape = attachment.value.shape;
+  return (
+    shape.kind === "cylinder" &&
+    shape.radiusFeet === MOVABLE_PERSISTENT_AREA_RADIUS_FEET &&
+    shape.heightFeet === MOVABLE_PERSISTENT_AREA_HEIGHT_FEET &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET
   );
 }
 
