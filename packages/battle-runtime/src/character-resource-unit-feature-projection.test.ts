@@ -20,8 +20,14 @@ import {
 import { battleId, battleExecutionScopeOrdinal } from "./identity.ts";
 import { battleCreatureStateAdmissionFromInit } from "./battle-reducer/creature-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
-import { unitMechanicsVariant } from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  parseSupportedUnitFeatureProfile,
+} from "./unit-feature-support.ts";
+import {
+  speciesDragonbornBreathWeaponUnitId,
+  unitMechanicsVariant,
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { admitCharacterBattleResourceProcedures } from "./character-battle-resources.ts";
 import { parseCharacterBattleClassLevels } from "./character-class-level.ts";
 
@@ -51,6 +57,70 @@ describe("character resource Unit feature projection", () => {
     });
     if (admission.success[0]?.tag !== "unitFeatureProcedure") return;
     expect(admission.success[0].facts).not.toHaveProperty("unit");
+  });
+
+  test("requires order-independent unique selected facts for resource procedures", () => {
+    const breathWeapon = unitLibrary.requireUnit(
+      speciesDragonbornBreathWeaponUnitId,
+    );
+    const classLevels = parseCharacterBattleClassLevels([
+      { className: "fighter", level: 5 },
+    ]);
+    if (Result.isFailure(classLevels)) {
+      throw new Error("Expected valid Fighter class levels.");
+    }
+    const unitRef = (damageType: "cold" | "fire") => {
+      const result = battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: breathWeapon.id },
+        unit: breathWeapon,
+        sourceFacts: { draconicAncestryDamageType: damageType },
+      });
+      if (Result.isFailure(result)) {
+        throw new Error("Expected selected Breath Weapon support.");
+      }
+      return result.success;
+    };
+    const cold = unitRef("cold");
+    const fire = unitRef("fire");
+    const expectedIssue = {
+      tag: "battleUnitSupportProfileIssue",
+      message: `Resource Unit ${breathWeapon.id} has conflicting selected Draconic Ancestry damage types: cold, fire.`,
+    } as const;
+
+    for (const unitRefs of [
+      [cold, fire],
+      [fire, cold],
+    ]) {
+      expect(
+        admitCharacterBattleResourceProcedures(
+          [{ unit: breathWeapon }],
+          classLevels.success,
+          unitRefs,
+        ),
+      ).toEqual(Result.fail([expectedIssue]));
+    }
+
+    const duplicateAdmission = admitCharacterBattleResourceProcedures(
+      [{ unit: breathWeapon }],
+      classLevels.success,
+      [fire, fire],
+    );
+    expect(duplicateAdmission).toMatchObject({
+      _tag: "Success",
+      success: [
+        {
+          tag: "unitFeatureProcedure",
+          facts: {
+            kind: "attackActionAreaSaveDamageReplacement",
+            breath: {
+              damage: {
+                damageType: { kind: "draconicAncestry", value: "fire" },
+              },
+            },
+          },
+        },
+      ],
+    });
   });
 
   test("projects ordinary resource-backed Unit features into character execution", () => {

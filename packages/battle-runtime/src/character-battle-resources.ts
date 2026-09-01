@@ -250,10 +250,18 @@ export function admitCharacterBattleResourceProcedures(
     Match.value(admitResourceFeature(resource.unit)).pipe(
       Match.discriminatorsExhaustive("tag")({
         notBattleOwned: () => {
+          const selectedSourceFacts = selectedResourceProcedureSourceFacts(
+            resource,
+            unitRefs,
+          );
+          if (Result.isFailure(selectedSourceFacts)) {
+            issues.push(selectedSourceFacts.failure);
+            return;
+          }
           const profile = parseSupportedUnitFeatureProfile(
             resource.unit,
             classLevels,
-            selectedResourceProcedureSourceFacts(resource, unitRefs),
+            selectedSourceFacts.success,
           );
           admissions.push(
             profile === null
@@ -314,19 +322,38 @@ function selectedResourceProcedureSourceFacts(
     readonly unit: BattleUnitSupportSource;
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
   }[],
-): BattleUnitSupportProfileSourceFacts | undefined {
-  const resourceUnitRef = unitRefs.find(
-    ({ unit }) => unit.id === resource.unit.id,
-  );
-  const selectedProfile = resourceUnitRef?.supportProfiles.find(
-    (profile) =>
-      typeof profile === "object" &&
-      profile.kind === "attackActionAreaSaveDamageReplacement",
-  );
-  const damageType = selectedProfile?.breath.damage.damageType;
-  return damageType?.kind === "draconicAncestry"
-    ? { draconicAncestryDamageType: damageType.value }
-    : undefined;
+): Result.Result<
+  BattleUnitSupportProfileSourceFacts | undefined,
+  BattleUnitSupportProfileIssue
+> {
+  const selectedDamageTypes = [
+    ...new Set(
+      unitRefs.flatMap((unitRef) =>
+        unitRef.unit.id === resource.unit.id
+          ? unitRef.supportProfiles.flatMap((profile) => {
+              if (
+                typeof profile !== "object" ||
+                profile.kind !== "attackActionAreaSaveDamageReplacement"
+              ) {
+                return [];
+              }
+              const damageType = profile.breath.damage.damageType;
+              return damageType.kind === "draconicAncestry"
+                ? [damageType.value]
+                : [];
+            })
+          : [],
+      ),
+    ),
+  ].sort();
+  const [selectedDamageType, conflictingDamageType] = selectedDamageTypes;
+  if (selectedDamageType === undefined) return Result.succeed(undefined);
+  return conflictingDamageType === undefined
+    ? Result.succeed({ draconicAncestryDamageType: selectedDamageType })
+    : Result.fail({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Resource Unit ${resource.unit.id} has conflicting selected Draconic Ancestry damage types: ${selectedDamageTypes.join(", ")}.`,
+      });
 }
 
 type SorcererMetamagicMechanics = Extract<
