@@ -147,12 +147,14 @@ import {
   spellActivationPhasePath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type ScalarBuffInvocation = Extract<
@@ -245,6 +247,7 @@ type ScalarBuffFailedFact =
   | "castingTime"
   | "range"
   | "duration"
+  | "authoredConditionalEffects"
   | "durationExtension"
   | "durationEnding"
   | "phaseCount"
@@ -267,11 +270,15 @@ type ScalarBuffFailedFact =
   | "repeatsAllowed"
   | "occupantDispositionFilter"
   | "occupantPerceptionFilter"
-  | "excludedAreas";
+  | "excludedAreas"
+  | "predicate"
+  | "targetLimit"
+  | "usageLimit"
+  | "mode";
 type ScalarBuffAdmissionIssue = SpellProcedureAdmissionIssue<
   "scalarBuff",
   ScalarBuffFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 function isScalarBuffEffect(
@@ -295,6 +302,21 @@ type ScalarBuffActivationEffectOccurrence = {
   readonly phaseIndex: number;
   readonly effectIndex: number;
 };
+
+type ScalarBuffOngoingOperation = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>["operations"][number];
+
+function scalarBuffOperationConstraintFacts(
+  operation: ScalarBuffOngoingOperation,
+): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
+  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
+  if (operation.predicate !== undefined) facts.push("predicate");
+  if (operation.targetLimit !== undefined) facts.push("targetLimit");
+  if (operation.usageLimit !== undefined) facts.push("usageLimit");
+  return facts;
+}
 
 function scalarBuffActivationEffectOccurrences(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
@@ -323,12 +345,8 @@ function isScalarBuffRepresentation(
       ? scalarBuffActivationEffectOccurrences(mechanics).length > 0
       : mechanics.family === "ongoing_effect"
         ? mechanics.operations.some(
-            ({ trigger, predicate, targetLimit, usageLimit, effect }) =>
-              trigger.kind === "passive" &&
-              predicate === undefined &&
-              targetLimit === undefined &&
-              usageLimit === undefined &&
-              isScalarBuffEffect(effect),
+            ({ trigger, effect }) =>
+              trigger.kind === "passive" && isScalarBuffEffect(effect),
           )
         : false;
   if (!effectWitness) return false;
@@ -359,7 +377,7 @@ function isScalarBuffRepresentation(
 
 function scalarBuffIssue(
   failedFact: ScalarBuffFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): ScalarBuffAdmissionIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -571,11 +589,11 @@ function scalarBuffMechanicsAdmission(
   const mechanics = source.mechanics;
   const issues: Array<{
     readonly failedFact: ScalarBuffFailedFact;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   }> = [];
   const pushIssue = (
     failedFact: ScalarBuffFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
@@ -613,6 +631,11 @@ function scalarBuffMechanicsAdmission(
       ? spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1))
       : spellOngoingOperationEffectPath(PositiveInteger(1));
   if (mechanics.family === "activation") {
+    for (const [index, candidate] of mechanics.phases.entries()) {
+      if (candidate.kind === "direct" && candidate.mode !== undefined) {
+        pushIssue("mode", spellActivationPhasePath(PositiveInteger(index + 1)));
+      }
+    }
     const expected = scalarBuffActivationEffectOccurrences(mechanics)[0];
     const fallbackPhaseIndex = mechanics.phases.findIndex(
       (phase) => phase.kind === "direct",
@@ -679,17 +702,24 @@ function scalarBuffMechanicsAdmission(
     if (mechanics.initialPhase !== undefined) {
       pushIssue("initialPhase", spellOngoingInitialPhasePath());
     }
+    if (mechanics.authoredConditionalEffects !== undefined) {
+      pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+    }
     attachment = mechanics.attachment;
     const occurrences = mechanics.operations.map((operation, index) => ({
       operation,
       ordinal: PositiveInteger(index + 1),
     }));
+    for (const occurrence of occurrences) {
+      for (const failedFact of scalarBuffOperationConstraintFacts(
+        occurrence.operation,
+      )) {
+        pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
+      }
+    }
     const expected = occurrences.find(
       ({ operation }) =>
         operation.trigger.kind === "passive" &&
-        operation.predicate === undefined &&
-        operation.targetLimit === undefined &&
-        operation.usageLimit === undefined &&
         isScalarBuffEffect(operation.effect),
     );
     effectPath = spellOngoingOperationEffectPath(

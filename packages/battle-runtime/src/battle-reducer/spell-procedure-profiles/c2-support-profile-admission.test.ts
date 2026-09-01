@@ -24,16 +24,25 @@ import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
   spellActivationPhasePath,
+  spellActivationRepeatPath,
   spellDurationEndingPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type {
+  ActivationPhase,
   Attachment,
+  AuthoredConditionalEffect,
+  CastTimeEffectModeChoice,
   EffectAtom,
+  OngoingOperation,
+  OngoingPredicate,
+  RepeatSaveSpec,
   SpellMechanics,
   TargetSelection,
 } from "@dnd/surface/surface/types";
@@ -110,6 +119,134 @@ type NumericRollEffect = Extract<
   { readonly kind: "modify_roll_numeric" }
 >;
 type AreaAttachment = Extract<Attachment, { readonly kind: "area" }>;
+type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+type SaveGateTargetAutoSuccess = Exclude<
+  SaveGatePhase["autoSuccessIfTarget"],
+  undefined
+>;
+
+const authoredConditionalEffect: AuthoredConditionalEffect = {
+  kind: "phantasm_damage",
+  source: "dangerous_creature_or_hazard",
+  choice: "caster_may_deal",
+  timing: "each_caster_turn",
+  eligibility: {
+    kind: "target_in_phantasm_area_or_within_feet_of_phantasm",
+    feet: 5,
+  },
+  damageType: "psychic",
+  amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
+  perceivedAs: "illusion_appropriate",
+};
+const ongoingPredicate: OngoingPredicate = {
+  kind: "spell_created_held_object_active",
+};
+const ongoingTargetLimit: NonNullable<OngoingOperation["targetLimit"]> = {
+  count: 1,
+  distinct: true,
+  targetTypes: ["creature"],
+};
+const ongoingUsageLimit: NonNullable<OngoingOperation["usageLimit"]> = {
+  kind: "once_per_turn",
+};
+const directPhaseMode: CastTimeEffectModeChoice = {
+  label: "mode",
+  options: [
+    {
+      id: "mode_a",
+      displayName: "Mode A",
+      effects: [{ kind: "none" }],
+    },
+  ],
+};
+const repeatSave: RepeatSaveSpec = {
+  cadence: "end_of_target_turn",
+  onSuccess: "ends_on_target",
+};
+const saveGateTargetAutoSuccess: SaveGateTargetAutoSuccess = {
+  kind: "challenge_rating_not_equal",
+  challengeRating: 0,
+};
+
+const initialDirectPhase: ActivationPhase = {
+  kind: "direct",
+  attachment: { kind: "self" },
+  effects: [{ kind: "none" }],
+};
+
+const ongoingOperationUpdates = [
+  [
+    "predicate",
+    (operation: OngoingOperation): OngoingOperation => ({
+      ...operation,
+      predicate: ongoingPredicate,
+    }),
+  ],
+  [
+    "targetLimit",
+    (operation: OngoingOperation): OngoingOperation => ({
+      ...operation,
+      targetLimit: ongoingTargetLimit,
+    }),
+  ],
+  [
+    "usageLimit",
+    (operation: OngoingOperation): OngoingOperation => ({
+      ...operation,
+      usageLimit: ongoingUsageLimit,
+    }),
+  ],
+] as const;
+
+const saveGateOptionalUpdates = [
+  [
+    "repeatSaves",
+    (phase: SaveGatePhase): SaveGatePhase => ({
+      ...phase,
+      repeatSaves: [repeatSave],
+    }),
+    spellActivationRepeatPath(PositiveInteger(1), PositiveInteger(1)),
+  ],
+  [
+    "autoSuccessIfCasterSlotGte",
+    (phase: SaveGatePhase): SaveGatePhase => ({
+      ...phase,
+      autoSuccessIfCasterSlotGte: "triggering_spell_level",
+    }),
+    spellActivationPhasePath(PositiveInteger(1)),
+  ],
+  [
+    "autoSuccessIfTarget",
+    (phase: SaveGatePhase): SaveGatePhase => ({
+      ...phase,
+      autoSuccessIfTarget: saveGateTargetAutoSuccess,
+    }),
+    spellActivationPhasePath(PositiveInteger(1)),
+  ],
+  [
+    "saveAppliesIf",
+    (phase: SaveGatePhase): SaveGatePhase => ({
+      ...phase,
+      saveAppliesIf: "unwilling_target",
+    }),
+    spellActivationPhasePath(PositiveInteger(1)),
+  ],
+  [
+    "usageLimit",
+    (phase: SaveGatePhase): SaveGatePhase => ({
+      ...phase,
+      usageLimit: ongoingUsageLimit,
+    }),
+    spellActivationPhasePath(PositiveInteger(1)),
+  ],
+] as const;
+
+const directPhaseModeUpdate = (
+  phase: Extract<ActivationPhase, { readonly kind: "direct" }>,
+): Extract<ActivationPhase, { readonly kind: "direct" }> => ({
+  ...phase,
+  mode: directPhaseMode,
+});
 
 function expectedIssue(
   procedure: C2StaticAdmissionIssue["procedure"],
@@ -854,6 +991,145 @@ describe("C2 support profile static admission", () => {
             spellOngoingAttachmentPath(),
           ),
         ],
+      });
+    },
+  );
+
+  test.each([
+    [
+      "initialPhase",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        if (mechanics.family !== "ongoing_effect") {
+          throw new Error("Expected ongoing-effect mechanics.");
+        }
+        return { ...mechanics, initialPhase: initialDirectPhase };
+      },
+      spellOngoingInitialPhasePath(),
+    ],
+    [
+      "authoredConditionalEffects",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        if (mechanics.family !== "ongoing_effect") {
+          throw new Error("Expected ongoing-effect mechanics.");
+        }
+        return {
+          ...mechanics,
+          authoredConditionalEffects: [authoredConditionalEffect],
+        };
+      },
+      spellMechanicsRootPath(),
+    ],
+  ] as const)(
+    "rejects unsupported ongoing root %s while retaining profile ownership",
+    (failedFact, update, mechanicsPath) => {
+      for (const [spellId, profile, procedure] of [
+        ["resistance", damageReductionProfile, "damageReduction"],
+        ["bless", rollModifierProfile, "rollModifier"],
+        ["barkskin", scalarBuffProfile, "scalarBuff"],
+        ["produce_flame", heldLightProfile, "heldLight"],
+      ] as const) {
+        const result = profile.admitMechanics(sourceWith(spellId, update));
+        expect(result).toEqual({
+          tag: "unsupported",
+          issues: [expectedIssue(procedure, failedFact, mechanicsPath)],
+        });
+      }
+    },
+  );
+
+  test.each(ongoingOperationUpdates)(
+    "rejects unsupported ongoing operation %s at its operation path",
+    (failedFact, update) => {
+      for (const [spellId, profile, procedure] of [
+        ["resistance", damageReductionProfile, "damageReduction"],
+        ["bless", rollModifierProfile, "rollModifier"],
+        ["barkskin", scalarBuffProfile, "scalarBuff"],
+        ["produce_flame", heldLightProfile, "heldLight"],
+      ] as const) {
+        const result = profile.admitMechanics(
+          sourceWith(spellId, (mechanics) => {
+            if (mechanics.family !== "ongoing_effect") {
+              throw new Error("Expected ongoing-effect mechanics.");
+            }
+            const operation = mechanics.operations[0];
+            if (operation === undefined) {
+              throw new Error("Expected an ongoing operation.");
+            }
+            return {
+              ...mechanics,
+              operations: [update(operation), ...mechanics.operations.slice(1)],
+            };
+          }),
+        );
+        expect(result).toEqual({
+          tag: "unsupported",
+          issues: [
+            expectedIssue(
+              procedure,
+              failedFact,
+              spellOngoingOperationPath(PositiveInteger(1)),
+            ),
+          ],
+        });
+      }
+    },
+  );
+
+  test("rejects direct-phase mode for scalar buffs and sight at the phase path", () => {
+    for (const [spellId, profile, procedure] of [
+      ["longstrider", scalarBuffProfile, "scalarBuff"],
+      [
+        "see_invisibility",
+        seeInvisibleObserverSightProfile,
+        "seeInvisibleObserverSight",
+      ],
+    ] as const) {
+      const result = profile.admitMechanics(
+        sourceWith(spellId, (mechanics) => {
+          if (mechanics.family !== "activation") {
+            throw new Error("Expected activation mechanics.");
+          }
+          const phase = mechanics.phases[0];
+          if (phase?.kind !== "direct") {
+            throw new Error("Expected direct activation phase.");
+          }
+          return {
+            ...mechanics,
+            phases: [directPhaseModeUpdate(phase)],
+          };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            procedure,
+            "mode",
+            spellActivationPhasePath(PositiveInteger(1)),
+          ),
+        ],
+      });
+    }
+  });
+
+  test.each(saveGateOptionalUpdates)(
+    "rejects unsupported save-gate %s at its canonical path",
+    (failedFact, update, mechanicsPath) => {
+      const result = rollModifierProfile.admitMechanics(
+        sourceWith("bane", (mechanics) => {
+          if (mechanics.family !== "activation") {
+            throw new Error("Expected activation mechanics.");
+          }
+          const phase = mechanics.phases[0];
+          if (phase?.kind !== "save_gate") {
+            throw new Error("Expected Bane save gate.");
+          }
+          return { ...mechanics, phases: [update(phase)] };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [expectedIssue("rollModifier", failedFact, mechanicsPath)],
       });
     },
   );

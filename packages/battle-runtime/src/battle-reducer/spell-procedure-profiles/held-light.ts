@@ -85,11 +85,13 @@ import {
   spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
-  type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,
@@ -120,7 +122,12 @@ type HeldLightFailedFact =
   | "duration"
   | "durationExtension"
   | "durationEnding"
+  | "initialPhase"
+  | "authoredConditionalEffects"
   | "attachment"
+  | "predicate"
+  | "targetLimit"
+  | "usageLimit"
   | "operation"
   | "operationCount"
   | "light"
@@ -128,7 +135,7 @@ type HeldLightFailedFact =
 type HeldLightAdmissionIssue = SpellProcedureAdmissionIssue<
   "heldLight",
   HeldLightFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 function heldLightOperationOccurrences(
@@ -162,14 +169,14 @@ function heldLightHurlOperation(
   );
 }
 
-function heldLightUnconditionalOperation(
-  operation: HeldLightOperationOccurrence,
-): boolean {
-  return (
-    operation.operation.predicate === undefined &&
-    operation.operation.targetLimit === undefined &&
-    operation.operation.usageLimit === undefined
-  );
+function heldLightOperationConstraintFacts(
+  operation: HeldLightOperationOccurrence["operation"],
+): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
+  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
+  if (operation.predicate !== undefined) facts.push("predicate");
+  if (operation.targetLimit !== undefined) facts.push("targetLimit");
+  if (operation.usageLimit !== undefined) facts.push("usageLimit");
+  return facts;
 }
 
 function heldLightRepresentation(
@@ -177,15 +184,11 @@ function heldLightRepresentation(
 ): mechanics is HeldLightMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
   const occurrences = heldLightOperationOccurrences(mechanics);
-  const hasLightOperation = occurrences.some(
-    (occurrence) =>
-      heldLightLightOperation(occurrence) &&
-      heldLightUnconditionalOperation(occurrence),
+  const hasLightOperation = occurrences.some((occurrence) =>
+    heldLightLightOperation(occurrence),
   );
-  const hasHurlOperation = occurrences.some(
-    (occurrence) =>
-      heldLightHurlOperation(occurrence) &&
-      heldLightUnconditionalOperation(occurrence),
+  const hasHurlOperation = occurrences.some((occurrence) =>
+    heldLightHurlOperation(occurrence),
   );
   const hasBonusAction = mechanics.castingTime.kind === "bonus_action";
   const hasTenMinuteDuration =
@@ -222,7 +225,7 @@ export function isHeldFlameAttackOngoingEffectSpell(
 
 function heldLightIssue(
   failedFact: HeldLightFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): HeldLightAdmissionIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -275,11 +278,11 @@ function heldLightFactsFromMechanics(
   );
   const issues: Array<{
     readonly failedFact: HeldLightFailedFact;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   }> = [];
   const pushIssue = (
     failedFact: HeldLightFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
@@ -344,6 +347,19 @@ function heldLightFactsFromMechanics(
   if (mechanics.attachment.kind !== "self") {
     pushIssue("attachment", spellOngoingAttachmentPath());
   }
+  if (mechanics.initialPhase !== undefined) {
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.authoredConditionalEffects !== undefined) {
+    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  }
+  for (const occurrence of occurrences) {
+    for (const failedFact of heldLightOperationConstraintFacts(
+      occurrence.operation,
+    )) {
+      pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
+    }
+  }
 
   if (
     mechanics.operations.length !== 2 &&
@@ -370,7 +386,6 @@ function heldLightFactsFromMechanics(
     pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
     pushIssue("light", spellOngoingOperationEffectPath(PositiveInteger(1)));
   } else if (
-    !heldLightUnconditionalOperation(lightOperation) ||
     lightOperation.operation.effect.kind !==
       "emit_bright_and_dim_illumination" ||
     lightOperation.operation.effect.brightRadiusFeet !== 20 ||
@@ -391,7 +406,6 @@ function heldLightFactsFromMechanics(
   } else {
     const candidate = heldLightHurlDamageAmount(hurlOperation);
     if (
-      !heldLightUnconditionalOperation(hurlOperation) ||
       candidate === null ||
       supportedDamageAmountExpr({ amount: candidate, characterLevel: 1 }) ===
         null

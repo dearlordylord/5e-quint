@@ -72,11 +72,14 @@ import {
 import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type DamageReductionSpellInvocation = Extract<
@@ -97,11 +100,16 @@ type DamageReductionFailedFact =
   | "castingTime"
   | "range"
   | "duration"
+  | "initialPhase"
+  | "authoredConditionalEffects"
   | "attachment"
   | "rangeOrigin"
   | "typeFilter"
   | "stateFilter"
   | "visibility"
+  | "predicate"
+  | "targetLimit"
+  | "usageLimit"
   | "passiveOperation"
   | "damage"
   | "spellcastingMod"
@@ -110,7 +118,7 @@ type DamageReductionFailedFact =
 type DamageReductionAdmissionIssue = SpellProcedureAdmissionIssue<
   "damageReduction",
   DamageReductionFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 const DAMAGE_REDUCTION_LEVEL = 0;
@@ -137,6 +145,16 @@ function damageReductionOperationEffectPath(
   return spellOngoingOperationEffectPath(ordinal);
 }
 
+function damageReductionOperationConstraintFacts(
+  operation: DamageReductionMechanics["operations"][number],
+): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
+  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
+  if (operation.predicate !== undefined) facts.push("predicate");
+  if (operation.targetLimit !== undefined) facts.push("targetLimit");
+  if (operation.usageLimit !== undefined) facts.push("usageLimit");
+  return facts;
+}
+
 function isDamageReductionRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is DamageReductionMechanics {
@@ -160,7 +178,7 @@ function isDamageReductionRepresentation(
 
 function damageReductionIssue(
   failedFact: DamageReductionFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): DamageReductionAdmissionIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -196,11 +214,11 @@ function damageReductionMechanicsAdmission(
   );
   const issues: Array<{
     readonly failedFact: DamageReductionFailedFact;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   }> = [];
   const pushIssue = (
     failedFact: DamageReductionFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
@@ -225,6 +243,19 @@ function damageReductionMechanicsAdmission(
     mechanics.duration,
   )) {
     pushIssue("duration", mechanicsPath);
+  }
+  if (mechanics.initialPhase !== undefined) {
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.authoredConditionalEffects !== undefined) {
+    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  }
+  for (const occurrence of occurrences) {
+    for (const failedFact of damageReductionOperationConstraintFacts(
+      occurrence.operation,
+    )) {
+      pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
+    }
   }
   const targetSelection =
     mechanics.attachment.kind === "hole" &&

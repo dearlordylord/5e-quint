@@ -151,14 +151,17 @@ import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
   spellActivationPhasePath,
+  spellActivationRepeatPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 const D20RollModifierEffectSchema = Schema.Struct({
@@ -240,6 +243,7 @@ type RollModifierFailedFact =
   | "castingTime"
   | "range"
   | "duration"
+  | "authoredConditionalEffects"
   | "durationExtension"
   | "durationEnding"
   | "initialPhase"
@@ -265,11 +269,19 @@ type RollModifierFailedFact =
   | "repeatsAllowed"
   | "occupantDispositionFilter"
   | "occupantPerceptionFilter"
-  | "excludedAreas";
+  | "excludedAreas"
+  | "predicate"
+  | "targetLimit"
+  | "usageLimit"
+  | "repeatSaves"
+  | "autoSuccessIfCasterSlotGte"
+  | "autoSuccessIfTarget"
+  | "saveAppliesIf"
+  | "mode";
 type RollModifierAdmissionIssue = SpellProcedureAdmissionIssue<
   "rollModifier",
   RollModifierFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 type RollModifierOperationOccurrence = {
@@ -303,6 +315,16 @@ function rollModifierOperationEffectPath(
   return spellOngoingOperationEffectPath(
     occurrence?.ordinal ?? PositiveInteger(1),
   );
+}
+
+function rollModifierOperationConstraintFacts(
+  operation: RollModifierOperationOccurrence["operation"],
+): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
+  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
+  if (operation.predicate !== undefined) facts.push("predicate");
+  if (operation.targetLimit !== undefined) facts.push("targetLimit");
+  if (operation.usageLimit !== undefined) facts.push("usageLimit");
+  return facts;
 }
 
 function rollModifierSaveGateOccurrences(
@@ -351,12 +373,9 @@ function isRollModifierRepresentation(
 ): mechanics is RollModifierMechanics {
   if (mechanics.family === "ongoing_effect") {
     const hasRollEffect = mechanics.operations.some(
-      ({ effect, predicate, targetLimit, usageLimit }) =>
-        predicate === undefined &&
-        targetLimit === undefined &&
-        usageLimit === undefined &&
-        (effect.kind === "modify_roll_numeric" ||
-          effect.kind === "modify_roll_advantage"),
+      ({ effect }) =>
+        effect.kind === "modify_roll_numeric" ||
+        effect.kind === "modify_roll_advantage",
     );
     if (!hasRollEffect) return false;
     return spellProcedureHasRedundantSignature({
@@ -377,8 +396,7 @@ function isRollModifierRepresentation(
     const hasRollPhase = mechanics.phases.some(
       (phase) =>
         phase.kind === "save_gate" &&
-        phase.onFail.kind === "modify_roll_numeric" &&
-        phase.usageLimit === undefined,
+        phase.onFail.kind === "modify_roll_numeric",
     );
     if (!hasRollPhase) return false;
     return spellProcedureHasRedundantSignature({
@@ -401,7 +419,7 @@ function isRollModifierRepresentation(
 
 function rollModifierIssue(
   failedFact: RollModifierFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): RollModifierAdmissionIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -582,11 +600,11 @@ function rollModifierMechanicsAdmission(
   const mechanics = source.mechanics;
   const issues: Array<{
     readonly failedFact: RollModifierFailedFact;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   }> = [];
   const pushIssue = (
     failedFact: RollModifierFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
@@ -614,7 +632,17 @@ function rollModifierMechanicsAdmission(
     if (mechanics.initialPhase !== undefined) {
       pushIssue("initialPhase", spellOngoingInitialPhasePath());
     }
+    if (mechanics.authoredConditionalEffects !== undefined) {
+      pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+    }
     const occurrences = rollModifierOperationOccurrences(mechanics);
+    for (const occurrence of occurrences) {
+      for (const failedFact of rollModifierOperationConstraintFacts(
+        occurrence.operation,
+      )) {
+        pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
+      }
+    }
     const expected = occurrences.find(
       ({ operation }) =>
         operation.trigger.kind === "passive" &&
@@ -713,6 +741,40 @@ function rollModifierMechanicsAdmission(
       pushIssue("range", spellMechanicsHeaderPath("range"));
     }
   } else {
+    for (const [index, candidate] of mechanics.phases.entries()) {
+      if (candidate.kind === "direct" && candidate.mode !== undefined) {
+        pushIssue("mode", spellActivationPhasePath(PositiveInteger(index + 1)));
+      }
+      if (candidate.kind !== "save_gate") continue;
+      const phaseOrdinal = PositiveInteger(index + 1);
+      for (const [repeatIndex] of (candidate.repeatSaves ?? []).entries()) {
+        pushIssue(
+          "repeatSaves",
+          spellActivationRepeatPath(
+            phaseOrdinal,
+            PositiveInteger(repeatIndex + 1),
+          ),
+        );
+      }
+      if (candidate.autoSuccessIfCasterSlotGte !== undefined) {
+        pushIssue(
+          "autoSuccessIfCasterSlotGte",
+          spellActivationPhasePath(phaseOrdinal),
+        );
+      }
+      if (candidate.autoSuccessIfTarget !== undefined) {
+        pushIssue(
+          "autoSuccessIfTarget",
+          spellActivationPhasePath(phaseOrdinal),
+        );
+      }
+      if (candidate.saveAppliesIf !== undefined) {
+        pushIssue("saveAppliesIf", spellActivationPhasePath(phaseOrdinal));
+      }
+      if (candidate.usageLimit !== undefined) {
+        pushIssue("usageLimit", spellActivationPhasePath(phaseOrdinal));
+      }
+    }
     const expected = rollModifierSupportedSaveGateOccurrence(mechanics);
     const fallbackPhaseIndex = mechanics.phases.findIndex(
       (phase) => phase.kind === "save_gate",

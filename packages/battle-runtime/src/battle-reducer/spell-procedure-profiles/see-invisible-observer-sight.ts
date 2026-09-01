@@ -73,8 +73,8 @@ import {
   spellActivationPhasePath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
-  type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type SeeInvisibleObserverSightSpellInvocation = Extract<
@@ -89,12 +89,13 @@ type SeeInvisibleObserverSightFailedFact =
   | "duration"
   | "phaseCount"
   | "attachment"
-  | "effect";
+  | "effect"
+  | "mode";
 type SeeInvisibleObserverSightMechanicsFacts = SpellProcedureMechanicsFacts;
 type SeeInvisibleObserverSightAdmissionIssue = SpellProcedureAdmissionIssue<
   "seeInvisibleObserverSight",
   SeeInvisibleObserverSightFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 const SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL = 2;
@@ -152,7 +153,7 @@ function isSeeInvisibleObserverSightRepresentation(
 
 function seeInvisibleObserverSightIssue(
   failedFact: SeeInvisibleObserverSightFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): SeeInvisibleObserverSightAdmissionIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -184,11 +185,11 @@ function seeInvisibleObserverSightMechanicsAdmission(
   const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
   const issues: Array<{
     readonly failedFact: SeeInvisibleObserverSightFailedFact;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   }> = [];
   const pushIssue = (
     failedFact: SeeInvisibleObserverSightFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
@@ -212,6 +213,11 @@ function seeInvisibleObserverSightMechanicsAdmission(
     mechanics.duration,
   )) {
     pushIssue("duration", mechanicsPath);
+  }
+  for (const [index, candidate] of mechanics.phases.entries()) {
+    if (candidate.kind === "direct" && candidate.mode !== undefined) {
+      pushIssue("mode", spellActivationPhasePath(PositiveInteger(index + 1)));
+    }
   }
   if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
     for (const [index] of mechanics.phases.entries()) {
