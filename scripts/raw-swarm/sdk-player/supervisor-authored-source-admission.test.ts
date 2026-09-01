@@ -51,6 +51,7 @@ function buildSupervisorRoot(): string {
   const root = mkdtempSync(resolve(tmpdir(), "dnd-supervisor-admission-"));
   mkdirSync(resolve(root, "declarations"));
   mkdirSync(resolve(root, "tooling"));
+  mkdirSync(resolve(root, "node_modules/effect"), { recursive: true });
   cpSync(
     resolve(repoRoot, "node_modules/typescript"),
     resolve(root, "tooling/typescript"),
@@ -58,15 +59,23 @@ function buildSupervisorRoot(): string {
   );
   writeFileSync(
     resolve(root, "declarations/player.d.ts"),
-    "export type PlayerContinuation = (context: any) => Promise<any>;\n",
+    'import type { Effect } from "effect";\nexport type CompilerSupport = Effect<never, never, never>;\nexport type PlayerContinuation = (context: any) => Promise<any>;\n',
   );
   writeFileSync(
     resolve(root, "declarations/characters.d.ts"),
-    "export type ScenarioCharacters = (context: any) => any;\n",
+    'import type { Effect } from "effect";\nexport type CompilerSupport = Effect<never, never, never>;\nexport type ScenarioCharacters = (context: any) => any;\n',
   );
   writeFileSync(
     resolve(root, "declarations/setup.d.ts"),
-    "export type ScenarioSetup = (context: any) => any;\n",
+    'import type { Effect } from "effect";\nexport type CompilerSupport = Effect<never, never, never>;\nexport type ScenarioSetup = (context: any) => any;\n',
+  );
+  writeFileSync(
+    resolve(root, "node_modules/effect/package.json"),
+    `${JSON.stringify({ name: "effect", version: "0.0.0", types: "index.d.ts" })}\n`,
+  );
+  writeFileSync(
+    resolve(root, "node_modules/effect/index.d.ts"),
+    "export interface Effect<Success, Error, Requirements> { readonly _types: readonly [Success, Error, Requirements] }\n",
   );
   writeCompilerConfig(root);
   buildConsumerDistributionBundle({
@@ -171,6 +180,19 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
 }
 
 describe("SDK player supervisor authored-source admission", () => {
+  test("typechecks relocated declarations through relative compiler support", () => {
+    const root = buildSupervisorRoot();
+    try {
+      writeReadySources(root);
+      const initialized = supervisorResult(root, initArgs());
+      expect(initialized.status).toBe(0);
+      expect(initialized.stderr).not.toContain("Cannot find module 'effect'");
+      expect(initialized.stderr).not.toContain("ERR_ACCESS_DENIED");
+    } finally {
+      rmSync(root, { recursive: true });
+    }
+  }, 120_000);
+
   test("rejects trusted init, replay, and player submissions before evaluation", async () => {
     const base = buildSupervisorRoot();
     const initRoot = mkdtempSync(resolve(tmpdir(), "dnd-admission-init-"));

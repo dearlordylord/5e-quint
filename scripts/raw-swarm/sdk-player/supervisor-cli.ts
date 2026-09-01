@@ -1029,6 +1029,7 @@ function typecheckSubmission(
           "--permission",
           `--allow-fs-read=${resolve("tooling")}`,
           `--allow-fs-read=${resolve("declarations")}`,
+          `--allow-fs-read=${resolve("node_modules")}`,
           `--allow-fs-read=${dirname(snapshot.sourcePath)}`,
           `--allow-fs-read=${submissionConfigPath}`,
           compiler,
