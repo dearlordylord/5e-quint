@@ -199,7 +199,15 @@ import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
 } from "../battle-state-execution.ts";
-import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
+import {
+  ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS,
+  type AttackPresentationJoinIssue,
+} from "../attack-presentation-contract.ts";
+import {
+  STAT_BLOCK_ACTION_PROJECTION_SECTIONS,
+  STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS,
+  STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS,
+} from "../stat-block-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
@@ -6994,14 +7002,41 @@ export const BattleSpellPresentationSchema = Schema.Struct({
   invocation: SpellInvocationRefSchema,
 });
 
+const StatBlockProcedurePresentationJoinIssueSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("statBlockProcedurePresentationJoinIssue"),
+    reason: Schema.Literal("missingPresentation"),
+    section: Schema.Literals(STAT_BLOCK_ACTION_PROJECTION_SECTIONS),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    executionKind: Schema.Literals(STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("statBlockProcedurePresentationJoinIssue"),
+    reason: Schema.Literal("presentationKindMismatch"),
+    section: Schema.Literals(STAT_BLOCK_ACTION_PROJECTION_SECTIONS),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    executionKind: Schema.Literals(STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS),
+    presentationKind: Schema.Literals(STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS),
+  }),
+]);
+
+const AttackPresentationJoinIssueSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("attackPresentationJoinIssue"),
+    reason: Schema.Literals(ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("attackPresentationJoinIssue"),
+    reason: Schema.Literal("statBlockProcedurePresentationJoin"),
+    issues: Schema.NonEmptyArray(StatBlockProcedurePresentationJoinIssueSchema),
+  }),
+]) satisfies Schema.Codec<AttackPresentationJoinIssue, unknown>;
+
 export const BattleActPresentationSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("intrinsic") }),
   Schema.Struct({
     kind: Schema.Literal("presentationIssue"),
-    issue: Schema.Struct({
-      tag: Schema.Literal("attackPresentationJoinIssue"),
-      reason: Schema.Literals(ATTACK_PRESENTATION_JOIN_ISSUE_REASONS),
-    }),
+    issue: AttackPresentationJoinIssueSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("attack"),
