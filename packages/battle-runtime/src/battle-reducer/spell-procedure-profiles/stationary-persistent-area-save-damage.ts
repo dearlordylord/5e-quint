@@ -541,26 +541,10 @@ function stationaryPersistentAreaUsageLimitFailures(input: {
   if (sharedLimitGroup !== null && sharedLimitGroup.length > 0) {
     return [];
   }
-  const expectedLimitGroup = entries
-    .map(({ limit }) => limit)
-    .find(
-      (limit) =>
-        limit?.kind === "once_per_turn" &&
-        limit.limitGroup !== undefined &&
-        limit.limitGroup.length > 0,
-    )?.limitGroup;
-  return entries.flatMap(({ limit, mechanicsPath }) =>
-    expectedLimitGroup !== undefined &&
-    limit?.kind === "once_per_turn" &&
-    limit.limitGroup === expectedLimitGroup
-      ? []
-      : [
-          {
-            failedFact: "oncePerTurnLimitGroup" as const,
-            mechanicsPath,
-          },
-        ],
-  );
+  return entries.map(({ mechanicsPath }) => ({
+    failedFact: "oncePerTurnLimitGroup" as const,
+    mechanicsPath,
+  }));
 }
 
 function stationaryPersistentAreaOperations(

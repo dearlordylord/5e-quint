@@ -25,6 +25,7 @@ import { spellBattle } from "../../unit-profile-admission-spell-battle.test-supp
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
+import { ongoingAreaSpellDurationProjection } from "../ongoing-concentration-area-spell.ts";
 
 type OngoingSpellMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
@@ -65,6 +66,49 @@ function coordinate(path: UnitMechanicsPath): string {
 }
 
 describe("stationary persistent-area static admission", () => {
+  test("keeps duration and duration ticks correlated for every duration kind", () => {
+    const concentration = ongoingAreaSpellDurationProjection({
+      kind: "concentration",
+      upTo: { amount: 1, unit: "minute" },
+    });
+    const timed = ongoingAreaSpellDurationProjection({
+      kind: "timed",
+      value: { amount: 1, unit: "round" },
+    });
+    const instantaneous = ongoingAreaSpellDurationProjection({
+      kind: "instantaneous",
+    });
+    const permanent = ongoingAreaSpellDurationProjection({
+      kind: "permanent",
+    });
+    const slotTiered = ongoingAreaSpellDurationProjection({
+      kind: "slot_tiered",
+      base: { kind: "instantaneous" },
+      tiers: [{ atSlot: 1, duration: { kind: "instantaneous" } }],
+    });
+
+    expect(concentration.duration.kind).toBe("concentration");
+    expect(concentration.durationTicks).toBeDefined();
+    expect(timed.duration.kind).toBe("timed");
+    expect(timed.durationTicks).toBeDefined();
+    expect(instantaneous).toEqual({
+      duration: { kind: "instantaneous" },
+      durationTicks: undefined,
+    });
+    expect(permanent).toEqual({
+      duration: { kind: "permanent" },
+      durationTicks: undefined,
+    });
+    expect(slotTiered).toEqual({
+      duration: {
+        kind: "slot_tiered",
+        base: { kind: "instantaneous" },
+        tiers: [{ atSlot: 1, duration: { kind: "instantaneous" } }],
+      },
+      durationTicks: undefined,
+    });
+  });
+
   test("projects Insect Plague with exact complete-root branch evidence", () => {
     const source = spellAdmissionSource(spellRecord("insect_plague"));
     const result = stationaryPersistentAreaSaveDamageProfile.admitMechanics(
@@ -460,7 +504,7 @@ describe("stationary persistent-area static admission", () => {
     ]);
   });
 
-  test("points shared usage-limit failures at each offending operation branch", () => {
+  test("reports shared usage-limit failures at every participating branch", () => {
     const source = spellAdmissionSource(spellRecord("insect_plague"));
     if (source.mechanics.family !== "ongoing_effect") {
       throw new Error("Expected Insect Plague ongoing mechanics.");
@@ -507,9 +551,60 @@ describe("stationary persistent-area static admission", () => {
         .filter((issue) => issue.failedFact === "oncePerTurnLimitGroup")
         .map((issue) => coordinate(issue.mechanicsPath)),
     ).toEqual([
+      coordinate(spellOngoingInitialPhasePath()),
       coordinate(spellOngoingOperationPath(PositiveInteger(2))),
       coordinate(spellOngoingOperationPath(PositiveInteger(3))),
     ]);
+  });
+
+  test("reports shared usage-limit correlation symmetrically after permutation", () => {
+    const source = spellAdmissionSource(spellRecord("insect_plague"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Insect Plague ongoing mechanics.");
+    }
+    const [passiveOperation, enterOperation, endTurnOperation] =
+      source.mechanics.operations;
+    if (
+      passiveOperation === undefined ||
+      enterOperation === undefined ||
+      endTurnOperation === undefined
+    ) {
+      throw new Error("Expected Insect Plague operations.");
+    }
+    const unsupportedMechanics = {
+      ...source.mechanics,
+      operations: [
+        passiveOperation,
+        {
+          ...endTurnOperation,
+          usageLimit: {
+            kind: "once_per_turn" as const,
+            limitGroup: "synthetic_outlier_limit",
+          },
+        },
+        enterOperation,
+      ] as const,
+    } satisfies OngoingSpellMechanics;
+    const result = stationaryPersistentAreaSaveDamageProfile.admitMechanics({
+      mechanics: unsupportedMechanics,
+      spellDefinitionRuleFacts:
+        projectSpellDefinitionRuleFacts(unsupportedMechanics),
+    });
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues
+        .filter((issue) => issue.failedFact === "oncePerTurnLimitGroup")
+        .map((issue) => coordinate(issue.mechanicsPath))
+        .sort(),
+    ).toEqual(
+      [
+        coordinate(spellOngoingInitialPhasePath()),
+        coordinate(spellOngoingOperationPath(PositiveInteger(2))),
+        coordinate(spellOngoingOperationPath(PositiveInteger(3))),
+      ].sort(),
+    );
   });
 
   test("reports the singleton initial phase branch when its save gate is absent", () => {
@@ -538,7 +633,16 @@ describe("stationary persistent-area static admission", () => {
         }),
       ]),
     );
-    expect(result.issues).toHaveLength(2);
+    expect(result.issues).toHaveLength(4);
+    expect(
+      result.issues
+        .filter((issue) => issue.failedFact === "oncePerTurnLimitGroup")
+        .map((issue) => coordinate(issue.mechanicsPath)),
+    ).toEqual([
+      coordinate(spellOngoingInitialPhasePath()),
+      coordinate(spellOngoingOperationPath(PositiveInteger(2))),
+      coordinate(spellOngoingOperationPath(PositiveInteger(3))),
+    ]);
   });
 
   test("uses owned operation branches without inventing dependency coordinates", () => {
