@@ -52,9 +52,7 @@ describe("battle action option codecs", () => {
 
     expect(Result.isFailure(decoded)).toBe(true);
     if (Result.isFailure(decoded)) {
-      expect(String(decoded.failure)).toContain(
-        "Weapon attack damage type choices must contain at least two choices.",
-      );
+      expect(String(decoded.failure)).toContain('["damageTypeChoices"][1]');
     }
   });
 

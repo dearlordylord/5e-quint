@@ -40,6 +40,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolvePersistentAreaSaveCompositeSpellAct } from "../spells-resolve-area-effects.ts";
+import { hasSharedNonEmptyOncePerTurnLimitGroup } from "./once-per-turn-limit-group-admission.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -49,7 +50,6 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
-import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 
 type PersistentAreaSaveCompositeSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -172,12 +172,10 @@ function persistentAreaSaveCompositeSaveOperationsAreSupported(
   if (!isPersistentAreaSaveCompositeSaveGate(operations.startTurn?.effect)) {
     return false;
   }
-  return (
-    sharedOncePerTurnLimitGroup([
-      operations.enter.usageLimit,
-      operations.startTurn.usageLimit,
-    ]) !== null
-  );
+  return hasSharedNonEmptyOncePerTurnLimitGroup([
+    operations.enter.usageLimit,
+    operations.startTurn.usageLimit,
+  ]);
 }
 
 function persistentAreaSaveCompositeOperationsAreSupported(

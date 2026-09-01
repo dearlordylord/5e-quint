@@ -221,7 +221,6 @@ export const SpellPostDamageRiderSchema = Schema.Union([
 
 const AttackDamageAbilityModifierChoiceFields = {
   procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
-  unitIds: Schema.optionalKey(Schema.Never),
   appliedDamageAbilityModifier: AbilityModifier,
   declinedDamageAbilityModifier: AbilityModifier,
 } as const;

@@ -1,6 +1,6 @@
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import { NonNegativeInteger } from "@dnd/shared/types";
+import { NonNegativeInteger, PositiveInteger } from "@dnd/shared/types";
 
 import {
   battleExecutionScopeOrdinal,
@@ -15,6 +15,11 @@ import {
 } from "./battle-reducer/codec-building-blocks.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type { SupportedAttackActionOption } from "./battle-action-options.ts";
+import {
+  statBlockAdvantageBonusDamageComponentRef,
+  statBlockBaseDamageComponentOrdinal,
+  statBlockBaseDamageComponentRef,
+} from "./stat-block-attack-damage-selection.ts";
 
 const syntheticStatBlockProcedureRef = battleStatBlockProcedureExecutionRef(
   battleStatBlockExecutionScopeRef(
@@ -136,24 +141,28 @@ const staticStatBlockAttack = {
     attackBonus: { kind: "literal" as const, value: 4 },
     attackType: "melee" as const,
     reachFeet: 5,
-    onHit: [
-      {
-        kind: "damage" as const,
-        damageType: "piercing" as const,
-        amount: {
-          kind: "fixed" as const,
-          expr: { dice: 1, dieSize: 6 },
-          static: 4,
+    onHit: {
+      damage: {
+        baseComponents: [
+          {
+            kind: "fixed" as const,
+            componentRef: statBlockBaseDamageComponentRef(
+              statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
+            ),
+            amount: 4,
+            damageType: "piercing" as const,
+          },
+        ],
+      },
+      conditionRider: {
+        condition: "prone" as const,
+        targetSizePredicate: {
+          kind: "targetCreatureSizeAtMost" as const,
+          maxCreatureSize: "large" as const,
         },
       },
-      {
-        kind: "apply_condition_if_target_size_at_most" as const,
-        condition: "prone" as const,
-        maxCreatureSize: "large" as const,
-      },
-    ],
+    },
   },
-  damageNotation: "static" as const,
 };
 
 const rolledRangedStatBlockAttack = {
@@ -164,27 +173,27 @@ const rolledRangedStatBlockAttack = {
     attackBonus: { kind: "literal" as const, value: 4 },
     attackType: "ranged" as const,
     rangeFeet: { normal: 30, long: 120 },
-    onHit: [
-      {
-        kind: "damage" as const,
-        damageType: "piercing" as const,
-        amount: {
-          kind: "fixed" as const,
-          expr: { dice: 1, dieSize: 8 },
-        },
-      },
-      {
-        kind: "conditional_bonus_damage" as const,
-        when: { kind: "attack_roll_had_advantage" as const },
-        damageType: "piercing" as const,
-        amount: {
-          kind: "fixed" as const,
+    onHit: {
+      damage: {
+        baseComponents: [
+          {
+            kind: "rolled" as const,
+            componentRef: statBlockBaseDamageComponentRef(
+              statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
+            ),
+            expr: { dice: 1, dieSize: 8 },
+            damageType: "piercing" as const,
+          },
+        ],
+        advantageBonus: {
+          kind: "rolled" as const,
+          componentRef: statBlockAdvantageBonusDamageComponentRef,
           expr: { dice: 1, dieSize: 6 },
+          damageType: "piercing" as const,
         },
       },
-    ],
+    },
   },
-  damageNotation: "rolled" as const,
 };
 
 function decodeSupportedAttack(input: unknown): SupportedAttackActionOption {
@@ -395,24 +404,29 @@ describe("mechanical attack option projection", () => {
         attackBonus: { kind: "literal", value: 4 },
         attackType: "melee",
         reachFeet: 5,
-        onHit: [
-          {
-            kind: "damage",
-            damageType: "piercing",
-            amount: {
-              kind: "fixed",
-              expr: { dice: 1, dieSize: 6 },
-              static: 4,
+        onHit: {
+          damage: {
+            baseComponents: [
+              {
+                kind: "fixed",
+                componentRef: {
+                  kind: "baseDamageComponent",
+                  ordinal: 1,
+                },
+                amount: 4,
+                damageType: "piercing",
+              },
+            ],
+          },
+          conditionRider: {
+            condition: "prone",
+            targetSizePredicate: {
+              kind: "targetCreatureSizeAtMost",
+              maxCreatureSize: "large",
             },
           },
-          {
-            kind: "apply_condition_if_target_size_at_most",
-            condition: "prone",
-            maxCreatureSize: "large",
-          },
-        ],
+        },
       },
-      damageNotation: "static",
     });
 
     expect(
@@ -427,21 +441,28 @@ describe("mechanical attack option projection", () => {
         attackBonus: { kind: "literal", value: 4 },
         attackType: "ranged",
         rangeFeet: { normal: 30, long: 120 },
-        onHit: [
-          {
-            kind: "damage",
-            damageType: "piercing",
-            amount: { kind: "fixed", expr: { dice: 1, dieSize: 8 } },
+        onHit: {
+          damage: {
+            baseComponents: [
+              {
+                kind: "rolled",
+                componentRef: {
+                  kind: "baseDamageComponent",
+                  ordinal: 1,
+                },
+                expr: { dice: 1, dieSize: 8 },
+                damageType: "piercing",
+              },
+            ],
+            advantageBonus: {
+              kind: "rolled",
+              componentRef: { kind: "advantageBonusDamageComponent" },
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "piercing",
+            },
           },
-          {
-            kind: "conditional_bonus_damage",
-            when: { kind: "attack_roll_had_advantage" },
-            damageType: "piercing",
-            amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
-          },
-        ],
+        },
       },
-      damageNotation: "rolled",
     });
   });
 

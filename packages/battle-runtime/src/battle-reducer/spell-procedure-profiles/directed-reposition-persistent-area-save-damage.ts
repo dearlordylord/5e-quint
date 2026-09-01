@@ -38,6 +38,7 @@ import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts"
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { hasSharedNonEmptyOncePerTurnLimitGroup } from "./once-per-turn-limit-group-admission.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -299,21 +300,49 @@ function isMovablePersistentAreaRepositionOperation(
 function hasMovablePersistentAreaTriggeredSaveGates(
   mechanics: MovablePersistentAreaMechanics,
 ): boolean {
-  const endTurnEffect = mechanics.operations.find(
+  const saveGates = movablePersistentAreaTriggeredSaveGates(mechanics);
+  return (
+    saveGates !== null &&
+    isMovablePersistentAreaSaveGate(saveGates.endTurn.effect) !== null &&
+    isMovablePersistentAreaSaveGate(saveGates.enter.effect) !== null &&
+    isMovablePersistentAreaSaveGate(saveGates.moveInto.effect) !== null &&
+    hasSharedNonEmptyOncePerTurnLimitGroup([
+      saveGates.initial.usageLimit,
+      saveGates.moveInto.usageLimit,
+      saveGates.enter.usageLimit,
+      saveGates.endTurn.usageLimit,
+    ])
+  );
+}
+
+function movablePersistentAreaTriggeredSaveGates(
+  mechanics: MovablePersistentAreaMechanics,
+) {
+  const initial = mechanics.initialPhase;
+  if (initial?.kind !== "save_gate") return null;
+  const endTurnOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
-  )?.effect;
-  const enterEffect = mechanics.operations.find(
+  );
+  const enterOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
-  )?.effect;
-  const moveIntoEffect = mechanics.operations.find(
+  );
+  const moveIntoOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "on_area_moves_into_creature_space",
-  )?.effect;
-  return (
-    isMovablePersistentAreaSaveGate(endTurnEffect) !== null &&
-    isMovablePersistentAreaSaveGate(enterEffect) !== null &&
-    isMovablePersistentAreaSaveGate(moveIntoEffect) !== null
   );
+  if (
+    endTurnOperation === undefined ||
+    enterOperation === undefined ||
+    moveIntoOperation === undefined
+  ) {
+    return null;
+  }
+  return {
+    initial,
+    endTurn: endTurnOperation,
+    enter: enterOperation,
+    moveInto: moveIntoOperation,
+  };
 }
 
 function isMovablePersistentAreaInitialSaveGate(
