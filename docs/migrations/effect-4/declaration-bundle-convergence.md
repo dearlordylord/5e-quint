@@ -103,6 +103,24 @@ mechanics-path and Surface relation declarations. The resulting net growth is
 21 files and 109,291 bytes; no generated declaration, stale artifact, or
 runtime catalog remains in the reviewed delta.
 
+## Integration recertification revision (2026-09-01)
+
+At integration source `86954931f`, the reviewed graph adds the neutral
+`packages/battle-runtime/src/stat-block-projection-failure.d.ts` contract. The
+recertified graph contains exactly 571 files and 10,276,648 bytes, leaving
+209,112 bytes below the unchanged 10 MiB byte cap. Its sorted POSIX path-ledger
+SHA-256 is
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`;
+its sorted content-ledger SHA-256 is
+`a1867ba8307378e888a4ac88a0ac0a61f85843aaabac72b82f2aad2a01b3287f`.
+
+The coarse file safety ceiling is now 1,000 rather than the current exact file
+count. This avoids making an architectural owner decision merely to remain at
+an incidental count while the production manifest remains fail-closed on the
+exact 571-file count, byte measure, path ledger, and content ledger. Boundary
+tests separately prove acceptance at each coarse limit and rejection one unit
+beyond it.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

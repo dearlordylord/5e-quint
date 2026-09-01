@@ -199,18 +199,18 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
-At implementation source `fc251944e6ca824e027c710da8c85043451865df`, the
-Effect 4 public declaration graph is a reviewed deterministic measurement: 570
-declaration files and 10,276,508 bytes. The reviewed byte gate is 10 MiB,
-leaving 209,252 bytes of explicit margin. Deterministic verification asserts
-the exact measured graph and path/content-ledger manifest, exact-at-cap
-acceptance, and cap-plus-one rejection for both limits; changing either bound,
-any admitted path, or any declaration content requires a new measured graph and
-review. The canonical manifest is owned beside the declaration emitter in
+At integration source `86954931f`, the
+Effect 4 public declaration graph is a reviewed deterministic measurement: 571
+declaration files and 10,276,648 bytes. The byte gate remains 10 MiB, leaving
+209,112 bytes of explicit margin; the coarse file safety ceiling is 1,000.
+Deterministic verification asserts exact-manifest acceptance plus coarse-cap
+and cap-plus-one boundary tests; changing either bound, any admitted path, or
+any declaration content requires a new measured graph and review. The canonical
+manifest is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
 distribution test. The
 [declaration-bundle convergence certificate](../../docs/migrations/effect-4/declaration-bundle-convergence.md)
-records the repaired 22 additions and one removal from comparison commit
+records the repaired 23 additions and one removal from comparison commit
 `993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
 excluded by the lightweight mechanics-admission owner.
 

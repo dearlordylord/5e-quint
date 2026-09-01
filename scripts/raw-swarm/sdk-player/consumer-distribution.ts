@@ -103,22 +103,18 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
       "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
   },
   measure: {
-    files: 570,
-    bytes: 10_276_508,
+    files: 571,
+    bytes: 10_276_648,
   },
   pathLedgerSha256:
-    "ffb4af1d4d447085b8a1072fae7332e9ac0a48d402cb2879fdaffaaaa174ecac",
+    "4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6",
   contentLedgerSha256:
-    "dcd52abbdee08a4492e85b5efd54a2f39345703cc46ef26ff8c4d7c55dd1a58a",
+    "a1867ba8307378e888a4ac88a0ac0a61f85843aaabac72b82f2aad2a01b3287f",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
-/**
- * The reviewed declaration graph uses every admitted file. Any graph growth
- * must update the exact measure explicitly.
- */
-export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
-  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
+/** Coarse safety ceiling; the reviewed manifest below remains exact. */
+export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 1_000;
 export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN =
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
