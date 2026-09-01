@@ -1,9 +1,10 @@
 import { JsonSchema, Result, Schema, SchemaIssue, Struct, Tuple } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
 import * as SchemaAST from "effect/SchemaAST";
-import type {
-  StatBlockRecord,
-  StatBlockRecordEncoded,
+import {
+  SRD_CHALLENGE_RATINGS,
+  type StatBlockRecord,
+  type StatBlockRecordEncoded,
 } from "./stat-block-types.ts";
 
 export {
@@ -549,10 +550,7 @@ export type {
 // content surface. Consumers decode through these helpers and derive types from
 // this schema entrypoint rather than casting authored JSON.
 
-export const SRD_CHALLENGE_RATINGS = [
-  0, 0.125, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-  17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-] as const;
+export { SRD_CHALLENGE_RATINGS } from "./stat-block-types.ts";
 
 export const ChallengeRatingSchema = Schema.Literals(SRD_CHALLENGE_RATINGS);
 

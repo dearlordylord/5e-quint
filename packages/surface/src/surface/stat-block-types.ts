@@ -22,6 +22,91 @@ import type {
 
 export type { StatBlockId } from "@dnd/shared/game-facts";
 
+export const SRD_CHALLENGE_RATINGS = [
+  0, 0.125, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+  17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+] as const;
+
+export type ChallengeRating = (typeof SRD_CHALLENGE_RATINGS)[number];
+
+export const STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL =
+  "hit_by_attack_roll" as const;
+export const STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE =
+  "takes_damage_from_creature" as const;
+export const STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS =
+  "self_or_visible_creature_falls" as const;
+export const STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL =
+  "targeted_by_named_spell" as const;
+export const STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL =
+  "creature_casts_spell" as const;
+export const STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME =
+  "spell_save_outcome" as const;
+export const STAT_BLOCK_REACTION_TRIGGER_ANY_OF = "any_of" as const;
+export const STAT_BLOCK_REACTION_FALL_RANGE_FEET = 60 as const;
+
+export const AUTHORED_STAT_BLOCK_REACTION_TRIGGER_KINDS = [
+  STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL,
+  STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+  STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+  STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+  STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL,
+  STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME,
+  STAT_BLOCK_REACTION_TRIGGER_ANY_OF,
+] as const;
+
+export type AuthoredStatBlockReactionTriggerKind =
+  (typeof AUTHORED_STAT_BLOCK_REACTION_TRIGGER_KINDS)[number];
+
+export const STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM =
+  "source_item" as const;
+export const STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY =
+  "weapon_category" as const;
+export const STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY =
+  "weapon_property" as const;
+export const STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM =
+  "specific_item" as const;
+export const STAT_BLOCK_REACTION_WEAPON_FILTER_KINDS = [
+  STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
+] as const;
+export type AuthoredStatBlockReactionWeaponFilterKind =
+  (typeof STAT_BLOCK_REACTION_WEAPON_FILTER_KINDS)[number];
+export const STAT_BLOCK_REACTION_WEAPON_CATEGORIES = [
+  "melee",
+  "ranged",
+] as const;
+export const STAT_BLOCK_REACTION_WEAPON_PROPERTIES = [
+  "ammunition",
+  "finesse",
+  "heavy",
+  "light",
+  "loading",
+  "reach",
+  "thrown",
+  "two_handed",
+  "versatile",
+] as const;
+export const STAT_BLOCK_REACTION_SPELL_COMPONENTS = ["V", "S", "M"] as const;
+export const STAT_BLOCK_REACTION_SPELL_LEVELS = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+] as const;
+export const STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES = [
+  "success",
+  "failure",
+] as const;
+export const STAT_BLOCK_REACTION_SPELL_SCHOOLS = [
+  "abjuration",
+  "conjuration",
+  "divination",
+  "enchantment",
+  "evocation",
+  "illusion",
+  "necromancy",
+  "transmutation",
+] as const;
+
 export type StatBlockProcedureOrdinal = number &
   Brand.Brand<"StatBlockProcedureOrdinal">;
 export type StatBlockProcedureResourceOrdinal = number &
@@ -385,63 +470,81 @@ export type StatBlockProcedureEntry =
   | StatBlockExecutableProcedureEntry
   | StatBlockTextOnlyProcedureEntry;
 
-export type AuthoredStatBlockReactionTrigger =
+type AuthoredStatBlockReactionWeaponFilter =
   | {
-      readonly kind: "hit_by_attack_roll";
-      readonly weaponFilter?:
-        | { readonly kind: "source_item" }
-        | {
-            readonly kind: "weapon_category";
-            readonly category: "melee" | "ranged";
-          }
-        | {
-            readonly kind: "weapon_property";
-            readonly property:
-              | "ammunition"
-              | "finesse"
-              | "heavy"
-              | "light"
-              | "loading"
-              | "reach"
-              | "thrown"
-              | "two_handed"
-              | "versatile";
-          }
-        | { readonly kind: "specific_item"; readonly itemId: string };
+      readonly kind: typeof STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM;
     }
   | {
-      readonly kind: "takes_damage_from_creature";
+      readonly kind: typeof STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY;
+      readonly category: (typeof STAT_BLOCK_REACTION_WEAPON_CATEGORIES)[number];
+    }
+  | {
+      readonly kind: typeof STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY;
+      readonly property: (typeof STAT_BLOCK_REACTION_WEAPON_PROPERTIES)[number];
+    }
+  | {
+      readonly kind: typeof STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM;
+      readonly itemId: string;
+    };
+
+type AuthoredStatBlockReactionTriggerMember<SpellReference> =
+  | {
+      readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL;
+      readonly weaponFilter?: AuthoredStatBlockReactionWeaponFilter;
+    }
+  | {
+      readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE;
       readonly requiresVisibleCreature?: true;
       readonly rangeFeet?: number;
     }
-  | { readonly kind: "self_or_visible_creature_falls"; readonly rangeFeet: 60 }
-  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
   | {
-      readonly kind: "creature_casts_spell";
-      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
-      readonly spellLevelAtMost?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+      readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS;
+      readonly rangeFeet: typeof STAT_BLOCK_REACTION_FALL_RANGE_FEET;
+    }
+  | {
+      readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL;
+      readonly spellId: SpellReference;
+    }
+  | {
+      readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL;
+      readonly components: ReadonlyNonEmptyArray<
+        (typeof STAT_BLOCK_REACTION_SPELL_COMPONENTS)[number]
+      >;
+      readonly spellLevelAtMost?: (typeof STAT_BLOCK_REACTION_SPELL_LEVELS)[number];
       readonly requiresVisibleCaster?: true;
     }
   | {
-      readonly kind: "spell_save_outcome";
-      readonly outcome: "success" | "failure";
-      readonly spellLevelAtMost?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-      readonly spellSchool?:
-        | "abjuration"
-        | "conjuration"
-        | "divination"
-        | "enchantment"
-        | "evocation"
-        | "illusion"
-        | "necromancy"
-        | "transmutation";
+      readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME;
+      readonly outcome: (typeof STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES)[number];
+      readonly spellLevelAtMost?: (typeof STAT_BLOCK_REACTION_SPELL_LEVELS)[number];
+      readonly spellSchool?: (typeof STAT_BLOCK_REACTION_SPELL_SCHOOLS)[number];
       readonly spellTargetsOnlySelf?: true;
       readonly spellHasNoAreaOfEffect?: true;
-    }
-  | {
-      readonly kind: "any_of";
-      readonly triggers: ReadonlyNonEmptyArray<AuthoredStatBlockReactionTrigger>;
     };
+
+type AuthoredStatBlockReactionTriggerAnyOf = {
+  readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_ANY_OF;
+  readonly triggers: ReadonlyNonEmptyArray<AuthoredStatBlockReactionTrigger>;
+};
+
+type AuthoredStatBlockReactionTriggerAnyOfEncoded = {
+  readonly kind: typeof STAT_BLOCK_REACTION_TRIGGER_ANY_OF;
+  readonly triggers: ReadonlyNonEmptyArray<AuthoredStatBlockReactionTriggerEncoded>;
+};
+
+export type AuthoredStatBlockReactionTriggerNonRecursive =
+  AuthoredStatBlockReactionTriggerMember<UnitId>;
+
+export type AuthoredStatBlockReactionTriggerNonRecursiveEncoded =
+  AuthoredStatBlockReactionTriggerMember<string>;
+
+export type AuthoredStatBlockReactionTrigger =
+  | AuthoredStatBlockReactionTriggerNonRecursive
+  | AuthoredStatBlockReactionTriggerAnyOf;
+
+export type AuthoredStatBlockReactionTriggerEncoded =
+  | AuthoredStatBlockReactionTriggerNonRecursiveEncoded
+  | AuthoredStatBlockReactionTriggerAnyOfEncoded;
 
 type StatBlockReactionProcedureEntry =
   | (StatBlockNonSpellcastingExecutableProcedureEntry & {
@@ -529,9 +632,18 @@ type StatBlockGmSpeedChoiceAlternative = Extract<
   { readonly availability?: never }
 >;
 
-type StatBlockGmSpeedChoiceAlternatives =
-  ReadonlyArray<StatBlockGmSpeedChoiceAlternative> &
-    Brand.Brand<"StatBlockGmSpeedChoiceAlternatives">;
+export type StatBlockGmSpeedChoiceAlternatives = readonly [
+  StatBlockGmSpeedChoiceAlternative,
+  StatBlockGmSpeedChoiceAlternative,
+  ...StatBlockGmSpeedChoiceAlternative[],
+] &
+  Brand.Brand<"StatBlockGmSpeedChoiceAlternatives">;
+
+export type StatBlockGmSpeedChoiceAlternativesEncoded = readonly [
+  StatBlockGmSpeedChoiceAlternative,
+  StatBlockGmSpeedChoiceAlternative,
+  ...StatBlockGmSpeedChoiceAlternative[],
+];
 
 export type StatBlockGmSpeedChoice = {
   readonly kind: "gm_choice";
@@ -715,42 +827,6 @@ export type StandaloneStatBlock = StandaloneStatBlockFacts &
       }
   );
 
-export type ChallengeRating =
-  | 0
-  | 0.125
-  | 0.25
-  | 0.5
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17
-  | 18
-  | 19
-  | 20
-  | 21
-  | 22
-  | 23
-  | 24
-  | 25
-  | 26
-  | 27
-  | 28
-  | 29
-  | 30;
-
 export type StatBlockRecord = {
   readonly id: StatBlockId;
   readonly kind: "statBlock";
@@ -774,7 +850,7 @@ type StatBlockWireValue<A> = A extends StatBlockProcedureOrdinal
         : A extends StatBlockGmSpeedChoice
           ? {
               readonly kind: "gm_choice";
-              readonly alternatives: ReadonlyArray<StatBlockGmSpeedChoiceAlternative>;
+              readonly alternatives: StatBlockGmSpeedChoiceAlternativesEncoded;
             }
           : A extends CreatureImmunityList
             ? StatBlockWireValue<CreatureImmunityDeclaration>
@@ -789,7 +865,7 @@ type StatBlockWireValue<A> = A extends StatBlockProcedureOrdinal
                   ? {
                       readonly [Key in keyof A]: Key extends "trigger"
                         ? A[Key] extends AuthoredStatBlockReactionTrigger
-                          ? unknown
+                          ? AuthoredStatBlockReactionTriggerEncoded
                           : StatBlockWireValue<A[Key]>
                         : StatBlockWireValue<A[Key]>;
                     }

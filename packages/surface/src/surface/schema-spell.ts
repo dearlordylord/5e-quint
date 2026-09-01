@@ -60,9 +60,29 @@ import {
   nonEmpty,
   strictStruct,
 } from "./schema-helpers.ts";
-import type {
-  StandaloneStatBlock,
-  StandaloneStatBlockEncoded,
+import {
+  STAT_BLOCK_REACTION_FALL_RANGE_FEET,
+  STAT_BLOCK_REACTION_SPELL_COMPONENTS,
+  STAT_BLOCK_REACTION_SPELL_LEVELS,
+  STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES,
+  STAT_BLOCK_REACTION_SPELL_SCHOOLS,
+  STAT_BLOCK_REACTION_TRIGGER_ANY_OF,
+  STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL,
+  STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL,
+  STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+  STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME,
+  STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+  STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+  STAT_BLOCK_REACTION_WEAPON_CATEGORIES,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY,
+  STAT_BLOCK_REACTION_WEAPON_PROPERTIES,
+  type AuthoredStatBlockReactionTrigger,
+  type AuthoredStatBlockReactionTriggerEncoded,
+  type StandaloneStatBlock,
+  type StandaloneStatBlockEncoded,
 } from "./stat-block-types.ts";
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
@@ -5915,75 +5935,82 @@ type StatBlockProcedureEntry = Schema.Schema.Type<
   typeof StatBlockProcedureEntrySchema
 >;
 
-type AuthoredStatBlockReactionTrigger =
-  | {
-      readonly kind: "hit_by_attack_roll";
-      readonly weaponFilter?: WeaponFilter;
-    }
-  | {
-      readonly kind: "takes_damage_from_creature";
-      readonly requiresVisibleCreature?: true;
-      readonly rangeFeet?: number;
-    }
-  | {
-      readonly kind: "self_or_visible_creature_falls";
-      readonly rangeFeet: 60;
-    }
-  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
-  | {
-      readonly kind: "creature_casts_spell";
-      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly requiresVisibleCaster?: true;
-    }
-  | {
-      readonly kind: "spell_save_outcome";
-      readonly outcome: "success" | "failure";
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly spellSchool?: SpellSchool;
-      readonly spellTargetsOnlySelf?: true;
-      readonly spellHasNoAreaOfEffect?: true;
-    }
-  | {
-      readonly kind: "any_of";
-      readonly triggers: ReadonlyNonEmptyArray<AuthoredStatBlockReactionTrigger>;
-    };
+const AuthoredStatBlockReactionWeaponFilterSchema = Schema.Union([
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY),
+    category: Schema.Literals(STAT_BLOCK_REACTION_WEAPON_CATEGORIES),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY),
+    property: Schema.Literals(STAT_BLOCK_REACTION_WEAPON_PROPERTIES),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM),
+    itemId: surfaceSchemaRole(Schema.String, {
+      category: "reference",
+      relation: "item-reference",
+      targetKind: "unit",
+    }),
+  }),
+]);
 
-function authoredStatBlockReactionTriggerSchema() {
+export const AuthoredStatBlockReactionTriggerNonRecursiveSchema = Schema.Union([
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL),
+    weaponFilter: optionalExact(AuthoredStatBlockReactionWeaponFilterSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+    ),
+    requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+    rangeFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+    ),
+    rangeFeet: Schema.Literal(STAT_BLOCK_REACTION_FALL_RANGE_FEET),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL),
+    spellId: surfaceReference(NonEmptyTrimmedStringSchema, "spell-reference"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL),
+    components: nonEmpty(Schema.Literals(STAT_BLOCK_REACTION_SPELL_COMPONENTS)),
+    spellLevelAtMost: optionalExact(
+      Schema.Literals(STAT_BLOCK_REACTION_SPELL_LEVELS),
+    ),
+    requiresVisibleCaster: optionalExact(Schema.Literal(true)),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME),
+    outcome: Schema.Literals(STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES),
+    spellLevelAtMost: optionalExact(
+      Schema.Literals(STAT_BLOCK_REACTION_SPELL_LEVELS),
+    ),
+    spellSchool: optionalExact(
+      Schema.Literals(STAT_BLOCK_REACTION_SPELL_SCHOOLS),
+    ),
+    spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
+    spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
+  }),
+]);
+
+function authoredStatBlockReactionTriggerSchema(): Schema.Codec<
+  AuthoredStatBlockReactionTrigger,
+  AuthoredStatBlockReactionTriggerEncoded,
+  never,
+  never
+> {
   return Schema.Union([
+    AuthoredStatBlockReactionTriggerNonRecursiveSchema,
     strictStruct({
-      kind: Schema.Literal("hit_by_attack_roll"),
-      weaponFilter: optionalExact(WeaponFilterSchema),
-    }),
-    strictStruct({
-      kind: Schema.Literal("takes_damage_from_creature"),
-      requiresVisibleCreature: optionalExact(Schema.Literal(true)),
-      rangeFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-    }),
-    strictStruct({
-      kind: Schema.Literal("self_or_visible_creature_falls"),
-      rangeFeet: Schema.Literal(60),
-    }),
-    strictStruct({
-      kind: Schema.Literal("targeted_by_named_spell"),
-      spellId: surfaceReference(NonEmptyTrimmedStringSchema, "spell-reference"),
-    }),
-    strictStruct({
-      kind: Schema.Literal("creature_casts_spell"),
-      components: nonEmpty(Schema.Literals(["V", "S", "M"])),
-      spellLevelAtMost: optionalExact(SpellLevelSchema),
-      requiresVisibleCaster: optionalExact(Schema.Literal(true)),
-    }),
-    strictStruct({
-      kind: Schema.Literal("spell_save_outcome"),
-      outcome: Schema.Literals(["success", "failure"]),
-      spellLevelAtMost: optionalExact(SpellLevelSchema),
-      spellSchool: optionalExact(SpellSchoolSchema),
-      spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
-      spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
-    }),
-    strictStruct({
-      kind: Schema.Literal("any_of"),
+      kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_ANY_OF),
       triggers: nonEmpty(AuthoredStatBlockReactionTriggerSchema),
     }),
   ]);
@@ -5992,12 +6019,17 @@ function authoredStatBlockReactionTriggerSchema() {
 /* v8 ignore next -- @preserve -- full-suite collection initializes this declarative binding before V8 attributes its outer statement; stat-block-procedure-schema.test.ts decodes it directly */
 export const AuthoredStatBlockReactionTriggerSchema: Schema.Codec<
   AuthoredStatBlockReactionTrigger,
-  unknown,
+  AuthoredStatBlockReactionTriggerEncoded,
   never,
   never
-> = Schema.suspend(authoredStatBlockReactionTriggerSchema).pipe(
-  Schema.annotate({ identifier: "AuthoredStatBlockReactionTrigger" }),
-);
+> = Schema.suspend(
+  (): Schema.Codec<
+    AuthoredStatBlockReactionTrigger,
+    AuthoredStatBlockReactionTriggerEncoded,
+    never,
+    never
+  > => authoredStatBlockReactionTriggerSchema(),
+).pipe(Schema.annotate({ identifier: "AuthoredStatBlockReactionTrigger" }));
 
 /* v8 ignore next -- @preserve -- full-suite collection initializes this declarative binding before V8 attributes its outer statement; stat-block-procedure-schema.test.ts decodes it directly */
 const StatBlockReactionProcedureEntrySchema = Schema.Union([
@@ -6826,28 +6858,13 @@ export const StandaloneCreatureSpeedSchema = Schema.Union([
 const StatBlockGmSpeedChoiceAlternativeSchema =
   StandaloneUnrestrictedCreatureSpeedSchema;
 
-type StatBlockGmSpeedChoiceAlternative =
-  typeof StatBlockGmSpeedChoiceAlternativeSchema.Type;
-type StatBlockGmSpeedChoiceAlternatives = readonly [
-  StatBlockGmSpeedChoiceAlternative,
-  StatBlockGmSpeedChoiceAlternative,
-  ...StatBlockGmSpeedChoiceAlternative[],
-];
-
-const StatBlockGmSpeedChoiceAlternativesSchema = Schema.Array(
-  StatBlockGmSpeedChoiceAlternativeSchema,
+const StatBlockGmSpeedChoiceAlternativesSchema = Schema.TupleWithRest(
+  Schema.Tuple([
+    StatBlockGmSpeedChoiceAlternativeSchema,
+    StatBlockGmSpeedChoiceAlternativeSchema,
+  ]),
+  [StatBlockGmSpeedChoiceAlternativeSchema],
 ).pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (alternatives): alternatives is StatBlockGmSpeedChoiceAlternatives =>
-        alternatives.length >= 2,
-      {
-        message:
-          "A GM Speed choice must contain at least two authored alternatives.",
-        toJsonSchema: () => ({ minItems: 2 }),
-      },
-    ),
-  ),
   Schema.check(
     Schema.makeFilter(
       (alternatives) =>
