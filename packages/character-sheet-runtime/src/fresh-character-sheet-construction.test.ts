@@ -19,6 +19,7 @@ import {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssuesSchema,
   characterSheetConstructionIssuesSummary,
+  createFreshCharacterSheet as createFreshCharacterSheetWithoutFixtureCatalog,
   freshCharacterSheetProjection,
   isFreshSpellcastingCharacterSheet,
   parseFreshCharacterSheet,
@@ -26,6 +27,33 @@ import {
 import { freshCharacterSheetFromParsedState } from "./fresh-character-sheet.ts";
 
 describe("fresh Character Sheet construction", () => {
+  test("reports the missing required Wild Shape Stat Block catalog distinctly", () => {
+    const result = createFreshCharacterSheetWithoutFixtureCatalog({
+      characterId: characterSheetId("character:fresh-druid-missing-catalog"),
+      build: druidCircleLandBuild({ druidLevel: 5 }),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+      druidCircleLand: { land: "temperate" },
+      druidWildShapeKnownFormStatBlockIds:
+        druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+    });
+
+    expect(result).toEqual(
+      Result.fail([{ code: "wildShapeStatBlockCatalogRequired" }]),
+    );
+    if (Result.isFailure(result)) {
+      expect(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(CharacterSheetConstructionIssuesSchema, {
+            onExcessProperty: "error",
+          })(result.failure),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("returns freshness-narrowed facts with one spelling for empty state", () => {
     const result = createFreshCharacterSheet({
       characterId: characterSheetId("character:fresh"),

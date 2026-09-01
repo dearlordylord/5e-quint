@@ -1,5 +1,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
@@ -17,6 +20,7 @@ import {
   characterSheetId,
   characterSheetTempHp,
   rebuildCharacterSheetFixture,
+  druidCircleLandBuild,
   druidLanguageBuild,
   parseCharacterSheet,
   requireSuccess,
@@ -36,6 +40,7 @@ import {
   recoverCharacterSheetHitPoints,
 } from "./hit-points.ts";
 import { parseStoredHitPoints } from "./stored-sheet-parser.ts";
+import { rebuildCharacterSheet } from "./sheet-lifecycle.ts";
 
 export const sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName =
   sorcererMetamagicKnownOptionsSheetParsingTestName;
@@ -43,6 +48,39 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
   sorcererMetamagicKnownOptionsGateTestName;
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
+  test("preserves the missing required Wild Shape Stat Block catalog through rebuild", () => {
+    expect(
+      rebuildCharacterSheet({
+        characterId: characterSheetId(
+          "character:druid-rebuild-missing-catalog",
+        ),
+        build: druidCircleLandBuild({ druidLevel: 5 }),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidCircleLand: { land: "temperate" },
+        druidWildShapeKnownFormStatBlockIds: [
+          authoredStatBlockId("stat_block_rat"),
+          authoredStatBlockId("stat_block_riding_horse"),
+          authoredStatBlockId("stat_block_spider"),
+          authoredStatBlockId("stat_block_wolf"),
+          authoredStatBlockId("stat_block_cat"),
+          authoredStatBlockId("stat_block_frog"),
+        ],
+      }),
+    ).toEqual(
+      Result.fail({
+        tag: "characterSheetIssue",
+        code: "wildShapeStatBlockCatalogRequired",
+        message:
+          "Wild Shape known forms require a valid SRD Stat Block catalog.",
+      }),
+    );
+  });
+
   test("projects Knocked Out HP and treats zero healing as an identity operation", () => {
     const knockedOut = requireSuccess(
       characterSheetHitPoints({
