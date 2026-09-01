@@ -993,6 +993,34 @@ describe("Character Sheet battle handoff", () => {
       },
     });
 
+    const missingMasteryProfileCatalog: UnitCatalog = {
+      getUnit: (id) =>
+        id === authoredUnitId("mastery_sap")
+          ? Option.none()
+          : unitLibrary.getUnit(id),
+      listUnits: () => unitLibrary.listUnits(),
+      requireUnit: (id) => unitLibrary.requireUnit(id),
+    };
+    expect(
+      characterBattleSupportProjection(build, missingMasteryProfileCatalog, [
+        { weaponUnitId: authoredUnitId("weapon_longsword") },
+      ]),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          message:
+            "Selected weapon weapon_longsword references unknown mastery Unit mastery_sap through masteryUnitId.",
+        },
+      ],
+    });
+    expect(
+      initBuild(
+        weaponMasteryLongswordFighterBuild(),
+        missingMasteryProfileCatalog,
+      ),
+    ).toMatchObject({ _tag: "Failure" });
+
     const wrongKindMasteryProfileCatalog: UnitCatalog = {
       getUnit: (id) =>
         id === authoredUnitId("mastery_sap")
