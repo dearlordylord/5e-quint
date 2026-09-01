@@ -1,4 +1,4 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -27,13 +27,20 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { readiedSpellAct } from "../spells-discovery.ts";
-import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./_save-gate-helpers.ts";
+import {
+  abilityD20TestRollModeSaveGateInvocationsFromFacts,
+  abilityD20TestRollModeSaveGateMechanicsFacts,
+  saveGateMechanicsInspection,
+  type AbilityD20TestRollModeSaveGateMechanicsFacts,
+} from "./_save-gate-helpers.ts";
 import { resolveAbilityD20TestRollModeSaveGateSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -57,21 +64,33 @@ type AbilityD20TestRollModeSaveGateSpellInvocation = Extract<
 type AbilityD20TestRollModeSaveGateResolveInput =
   SpellProcedureProfileResolveInput<AbilityD20TestRollModeSaveGateSpellInvocation>;
 
-function admitAbilityD20TestRollModeSaveGate(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly AbilityD20TestRollModeSaveGateSpellInvocation[] {
-  return supportedPreparedAbilityD20TestRollModeSaveGateProfile(
-    ctx.actor.combatantId,
-    spell,
-    ctx.spellCastOptions,
-  ).filter(isAbilityD20TestRollModeSaveGateInvocation);
-}
-
-function isAbilityD20TestRollModeSaveGateInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is AbilityD20TestRollModeSaveGateSpellInvocation {
-  return invocation.procedure === "abilityD20TestRollModeSaveGate";
+function admitAbilityD20TestRollModeSaveGateMechanics(
+  source: SpellMechanicsAdmissionSource,
+) {
+  return saveGateMechanicsInspection<
+    "abilityD20TestRollModeSaveGate",
+    AbilityD20TestRollModeSaveGateSpellInvocation,
+    AbilityD20TestRollModeSaveGateMechanicsFacts
+  >({
+    source,
+    procedure: "abilityD20TestRollModeSaveGate",
+    projection: abilityD20TestRollModeSaveGateMechanicsFacts(source),
+    admit: (
+      facts,
+      spell: BattleSpellExecutionSource,
+      ctx: SpellAdmissionContext,
+    ) =>
+      ctx.spellCastOptions.flatMap((slot) =>
+        abilityD20TestRollModeSaveGateInvocationsFromFacts({
+          spell,
+          facts,
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          slotLevel: slot.spellLevel,
+          sourceCombatantId: ctx.actor.combatantId,
+        }),
+      ),
+  });
 }
 
 function discoverAbilityD20TestRollModeSaveGateCastAct(
@@ -183,7 +202,7 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
 export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
   executionSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
-  admit: admitAbilityD20TestRollModeSaveGate,
+  admitMechanics: admitAbilityD20TestRollModeSaveGateMechanics,
   discoverCastAct: discoverAbilityD20TestRollModeSaveGateCastAct,
   resolve: resolveAbilityD20TestRollModeSaveGate,
 } satisfies SpellProcedureDeclaration<
