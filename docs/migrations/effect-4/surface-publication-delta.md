@@ -37,6 +37,16 @@ changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
 evidence.
 
+After the publication schema was last synchronized at `bef31d34b`, the
+canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
+exposed two constraints that the typed Effect boundary already enforced but
+the previously generated Draft 2020-12 artifact did not: `hover: true` belongs
+only to Fly speeds, and a GM Speed choice has at least two alternatives. The
+regenerated schema closes those two language-neutral overacceptance gaps
+without changing the typed Effect domain or the published aggregate. The
+remaining graph delta is equivalent reference factoring, including the
+redundant Barbarian general-feature branch removed in `51307f83f`.
+
 Canonical hashes do not preserve JSON object key order. The certificate
 therefore separately binds the byte-order-only `magic_mouth` delta: the Unit's
 `/mechanics` object moved from anchored-trigger fields first to shared spell

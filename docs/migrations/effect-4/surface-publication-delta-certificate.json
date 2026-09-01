@@ -2877,19 +2877,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1589880,
-        "sha256": "cdc52f97f4b37894268442390a38efc54193e64726ae9dd52535db45f24f4a34"
+        "byteLength": 1592078,
+        "sha256": "13491da3f7cd59b70eec35b309c91e0e58474d86098925bc9e5b2c5e4f947b47"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "7f93c3a661b4bc307858b72328621de08f3c1bd61bc95f1f24b8c3f0db97ff8e",
+        "candidateCanonicalJsonSha256": "062ec61514f7563f178bfeb6ecf8330a1028a1c48f3bb415c407dbbf3a5a748a",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1190
+          "candidate": 1228
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7679
+          "candidate": 7672
         },
         "localReferencesComplete": {
           "baseline": true,

@@ -1,10 +1,13 @@
 # Effect 4 final parity report
 
-This report describes the reviewed Effect 4 integration line through
-`ad053d7de`. The source migration, master reconciliation, finite-delta
-certificates, and supplementary observed QNT-owner sweep are recorded. Issue
-#386 remains open until the terminal public commands, receipt update, and
-post-gate tracked-document attestation described below are complete.
+This report records the reviewed Effect 4 integration line through
+`ad053d7de` and the later declaration-bundle candidate evidence recorded at
+`63f6f3d9`. The source migration, master reconciliation, finite-delta
+certificates, and supplementary observed QNT-owner sweep are recorded. The
+later candidate evidence does not extend the earlier review attestations to the
+current tip. Issue #386 remains open until final current-tip review convergence,
+the terminal public commands, the receipt update, and the post-gate
+tracked-document attestation described below are complete.
 
 ## Selected cohort and controlled-red closure
 
@@ -78,60 +81,39 @@ proof lane passed.
 
 No `.qnt` file, QNT owner-role registry, or #381 generated manifest changed
 between `c4d42c94f` and `ad053d7de`. The observation therefore remains relevant
-to the unchanged selected owners without becoming a formal proof receipt.
-Focused Battle MBT and runtime suites remain semantic projection evidence;
-they are not substituted for a public proof receipt or the terminal workspace
+to the selected owners at that reviewed boundary without becoming a formal
+proof receipt or a current-tip review attestation. Focused Battle MBT and
+runtime suites remain semantic projection evidence; they are not substituted
+for a public proof receipt, final current-tip review, or the terminal workspace
 gates.
 
 ## Master-reconciliation declaration certificate
 
-At the current reconciliation through `ad053d7de`, the fixed Surface and Battle
-Runtime consumer graph contains exactly 530 declaration files and 4,667,450
-bytes. The 10 MiB byte cap is unchanged and leaves 5,818,310 bytes of margin;
-the file cap is the exact reviewed count, not a permissive growth allowance.
-The SHA-256 of the sorted relative-path ledger is
+The fixed comparison baseline is commit `993cb0b11`. Its independently
+reproduced distribution contains exactly 530 declaration files and 4,667,450
+bytes. Its sorted POSIX path-ledger SHA-256 is
 `fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e`.
-The SHA-256 of the sorted ledger that binds every relative path to its file
-SHA-256 is
-`b196b26a3dd9aa80064b55d867f41344f133738325c10895cc7290f406420809`.
+These values describe the comparison baseline, not the current candidate.
 
-The pinned comparison baseline is commit `38e79b814`. Its independently
-reproduced distribution contains 523 files and 3,962,445 bytes. Its sorted
-POSIX relative-path ledger, one path per line including the final newline, has
-SHA-256
-`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
-Relative to that baseline, the current graph adds these ten declarations:
+The canonical declaration evidence recorded at repository commit `63f6f3d9`
+identifies `b88a923f6` as the current candidate implementation source. That
+candidate contains exactly 571 declaration files and 10,277,269 bytes. Its
+sorted POSIX path-ledger SHA-256 is
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`.
+Its sorted content-ledger SHA-256 is
+`526516c516d516386d180db6f003c61616112de1ddc1e31db42dcc0d0e1b1dc7`.
+The unchanged 10 MiB byte cap leaves 208,491 bytes of margin. The 1,000-file
+cap is a coarse safety ceiling; production emission separately fails closed on
+the exact 571-file candidate manifest, byte measure, path ledger, and content
+ledger.
 
-- `packages/battle-runtime/src/battle-reducer/codec-building-blocks.d.ts`
-- `packages/battle-runtime/src/druid-wild-shape-known-form-runtime.d.ts`
-- `packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.d.ts`
-- `packages/battle-runtime/src/procedure-execution/stat-block-procedure-sections.d.ts`
-- `packages/battle-runtime/src/stat-block-attack-damage-selection.d.ts`
-- `packages/battle-runtime/src/stat-block-authored-projection.d.ts`
-- `packages/battle-runtime/src/stat-block-presentation-contract.d.ts`
-- `packages/surface/src/surface/generated/srd-unit-aggregate.d.ts`
-- `packages/surface/src/surface/stat-block-catalog-contract.d.ts`
-- `packages/surface/src/surface/stat-block-speed-readers.d.ts`
-
-It removes the three Surface runtime/data declarations
-`stat-block-catalog.d.ts`, `stat-block-catalog-core.d.ts`, and
-`stat-block-catalog-data.d.ts`. The lightweight Stat Block catalog type is
-owned by
-[`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
-so type-only consumers do not pull the runtime catalog into the public graph.
-The generated 1,599,076-byte `srd-stat-block-aggregate.d.ts` and its
-`stat-block-identity.d.ts` dependency are consequently absent.
-
-The SDK setup runtime instead consumes the eager canonical Unit collection,
-whose data owner imports the generated 572,677-byte
-`srd-unit-aggregate.d.ts`. That declaration accounts for the complete growth
-from the reviewed 529-file graph immediately preceding the final reconciliation.
-The focused relocated-supervisor test proves initialization, transcript,
-replay, and declaration emission for this graph. The canonical measure and
-limits remain executable beside the emitter in
-[`consumer-distribution.ts`](../../../scripts/raw-swarm/sdk-player/consumer-distribution.ts);
-this certificate does not claim that the pending #386 terminal public gates
-have run.
+The complete reproduced measures, owner delta, transitive-leak repair, and
+compiler boundary are recorded in the focused
+[declaration-bundle convergence certificate](./declaration-bundle-convergence.md).
+The canonical manifest and both limits remain executable beside the emitter in
+[`consumer-distribution.ts`](../../../scripts/raw-swarm/sdk-player/consumer-distribution.ts).
+This focused declaration certificate does not claim final current-tip review
+convergence or that the pending #386 terminal public gates have run.
 
 ## Shipped boundaries and review convergence
 
@@ -148,10 +130,12 @@ the terminal milestone build reconfirms it at the gated commit; the advisory
 must be recorded in the terminal receipt even if it remains a non-failing
 warning.
 
-Reviewer loops covered RAW traceability, ubiquitous language and domain shape,
-QNT/runtime parity, architecture and connascence, and repository Standards and
-Spec compliance. Reasonable findings were repaired and the reconciliation and
-certificate refreshes reached zero-finding re-review.
+Reviewer loops through the earlier reviewed boundary covered RAW traceability,
+ubiquitous language and domain shape, QNT/runtime parity, architecture and
+connascence, and repository Standards and Spec compliance. Reasonable findings
+at that boundary were repaired and reached zero-finding re-review. Final
+current-tip review convergence remains pending and is not inferred from those
+earlier attestations or from the focused declaration recertification.
 
 ## Terminal public receipts
 
@@ -192,6 +176,6 @@ is intentionally unchanged by this report.
 | Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                        |
 | Packaged/containerized lifecycle boundaries            | Complete in reviewed focused evidence; terminal quality receipt pending               |
 | Vite large-chunk advisory                              | Pending terminal milestone-build reconfirmation and receipt                           |
-| RAW/domain/QNT/runtime/architecture review convergence | Complete; supplementary selected-owner observation retained above                     |
+| RAW/domain/QNT/runtime/architecture review convergence | Earlier reviewed boundary complete; final current-tip review convergence pending      |
 | Public `typecheck`, `test`, and `quality:milestone`    | Pending at the final committed tip                                                    |
 | Live #386 and SR-00 receipt closure                    | Pending terminal receipts and post-gate tracked-document attestation                  |
