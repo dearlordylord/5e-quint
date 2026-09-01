@@ -170,10 +170,10 @@ test("keeps resource feature projection parse-once across Wild Shape and executi
     ...source.matchAll(/parseSupportedUnitFeatureProfile\s*\(/g),
   ]).toHaveLength(0);
   expect(source).toMatch(
-    /projectCharacterResourceAdmissionInputs\(creatureInit\.resources \?\? \[\]\)/,
+    /admitCharacterBattleResourceProcedures\(\s*creatureInit\.resources \?\? \[\],\s*classLevels/,
   );
   expect(source).toMatch(
-    /resourceFeatureProcedures,\s*unitFeatureProcedures: explicitUnitFeatureProcedures/,
+    /resourceAdmissions: resourceProcedureAdmissions\.success,\s*unitFeatureProcedures: explicitUnitFeatureProcedures/,
   );
   expect(source).toMatch(
     /characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*execution\.success\.execution\.procedureBindings/,
