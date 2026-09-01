@@ -3,10 +3,36 @@ import type {
   SpellInvocationAdmittedByRegisteredProcedure,
   SpellProcedureDeclaration,
 } from "./profile.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./source-turn-translation-persistent-area-save-damage.ts";
 import { collisionRepositionPersistentAreaSaveDamageProfile } from "./collision-reposition-persistent-area-save-damage.ts";
 import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
 import { directedRepositionPersistentAreaSaveDamageProfile } from "./directed-reposition-persistent-area-save-damage.ts";
+
+function persistentAreaSaveDamageMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<"persistentAreaSaveDamage"> {
+  const inspections = [
+    sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(source),
+    stationaryPersistentAreaSaveDamageProfile.admitMechanics(source),
+  ];
+  const supported = inspections.find(
+    (inspection) => inspection.tag === "supported",
+  );
+  if (supported?.tag === "supported") {
+    return supported;
+  }
+  const issues = inspections.flatMap((inspection) =>
+    inspection.tag === "unsupported" ? inspection.issues : [],
+  );
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? { tag: "notRepresented" }
+    : { tag: "unsupported", issues: [firstIssue, ...remainingIssues] };
+}
 
 export const persistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
@@ -16,15 +42,7 @@ export const persistentAreaSaveDamageProfile = {
     stationaryPersistentAreaSaveDamageProfile.executionSchema,
     directedRepositionPersistentAreaSaveDamageProfile.executionSchema,
   ]),
-  admit: (spell, context) => [
-    ...sourceTurnTranslationPersistentAreaSaveDamageProfile.admit(
-      spell,
-      context,
-    ),
-    ...collisionRepositionPersistentAreaSaveDamageProfile.admit(spell, context),
-    ...stationaryPersistentAreaSaveDamageProfile.admit(spell, context),
-    ...directedRepositionPersistentAreaSaveDamageProfile.admit(spell, context),
-  ],
+  admitMechanics: persistentAreaSaveDamageMechanicsAdmission,
   discoverCastAct:
     sourceTurnTranslationPersistentAreaSaveDamageProfile.discoverCastAct,
   resolve: (input) =>
