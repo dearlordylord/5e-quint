@@ -114,6 +114,20 @@ The canonical manifest and both limits remain executable beside the emitter in
 This focused declaration certificate does not claim final current-tip review
 convergence or that the pending #386 terminal public gates have run.
 
+### Current pre-receipt declaration candidate
+
+After the 2026-09-01 Round-1 standards fixes, the Round-1 standards candidate still
+contains exactly 571 declaration files and the unchanged path ledger
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`. The
+production emitter measured 10,300,717 bytes, leaving 185,043 bytes below the
+unchanged 10 MiB cap; its content ledger is
+`b2e1e35ccda77cd149c468428bcc017196ad6e37a1d2b9d876c2205da24e69d3`. Only
+`packages/surface/src/surface/schema-spell.d.ts` (+1,080 bytes) and
+`packages/surface/src/surface/stat-block-types.d.ts` (+27 bytes) changed from
+the reviewed 10,299,610-byte graph. This is a pre-receipt measurement; it
+does not claim terminal current-tip review convergence or completion of the
+pending #386 public gates.
+
 ## Shipped boundaries and review convergence
 
 The reviewed clean-consumer evidence exercises the packaged MCP, application,

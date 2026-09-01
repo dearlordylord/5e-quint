@@ -289,10 +289,10 @@ type StatBlockSpellInvocationEffectTerminationTrigger =
 
 type DurationValue = {
   readonly unit: "round" | "minute" | "hour" | "day";
-  readonly amount: number;
+  readonly amount: PositiveInteger;
   readonly upcastTiers?: ReadonlyNonEmptyArray<{
-    readonly atSlot: number;
-    readonly amount: number;
+    readonly atSlot: PositiveInteger;
+    readonly amount: PositiveInteger;
   }>;
 };
 

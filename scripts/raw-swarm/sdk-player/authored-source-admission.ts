@@ -3,6 +3,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import type * as tsTypes from "typescript";
+import { Match } from "effect";
 
 type TypeScriptApi = typeof tsTypes;
 const AuthoredSourceAdmissionProof: unique symbol = Symbol(
@@ -357,24 +358,39 @@ export function authoredSourceIssuesMessage(
     scenarioSetup: "Scenario setup",
   }[rejection.role];
   const details = rejection.issues
-    .map((issue) => {
-      if (issue.tag === "unreadableSource") {
-        return `is unreadable: ${issue.message}`;
-      }
-      if (issue.tag === "malformedSource") {
-        return `is malformed at ${String(issue.line)}:${String(issue.column)}: ${issue.message}`;
-      }
-      if (issue.tag === "tripleSlashReference") {
-        return `uses a forbidden triple-slash ${issue.reference} reference at ${String(issue.line)}:${String(issue.column)}: ${issue.value}`;
-      }
-      if (issue.tag === "amdDependency") {
-        return `uses a forbidden AMD dependency: ${issue.path}`;
-      }
-      if (issue.tag === "unavailableModuleSpecifier") {
-        return `imports ${issue.actualSpecifier} at ${String(issue.line)}:${String(issue.column)}; this role admits only ${issue.expectedSpecifier}.`;
-      }
-      return `uses forbidden ${issue.edge} syntax at ${String(issue.line)}:${String(issue.column)}.`;
-    })
+    .map((issue) =>
+      Match.value(issue).pipe(
+        Match.when(
+          { tag: "unreadableSource" },
+          (narrowed) => `is unreadable: ${narrowed.message}`,
+        ),
+        Match.when(
+          { tag: "malformedSource" },
+          (narrowed) =>
+            `is malformed at ${String(narrowed.line)}:${String(narrowed.column)}: ${narrowed.message}`,
+        ),
+        Match.when(
+          { tag: "tripleSlashReference" },
+          (narrowed) =>
+            `uses a forbidden triple-slash ${narrowed.reference} reference at ${String(narrowed.line)}:${String(narrowed.column)}: ${narrowed.value}`,
+        ),
+        Match.when(
+          { tag: "amdDependency" },
+          (narrowed) => `uses a forbidden AMD dependency: ${narrowed.path}`,
+        ),
+        Match.when(
+          { tag: "unavailableModuleSpecifier" },
+          (narrowed) =>
+            `imports ${narrowed.actualSpecifier} at ${String(narrowed.line)}:${String(narrowed.column)}; this role admits only ${narrowed.expectedSpecifier}.`,
+        ),
+        Match.when(
+          { tag: "forbiddenModuleEdge" },
+          (narrowed) =>
+            `uses forbidden ${narrowed.edge} syntax at ${String(narrowed.line)}:${String(narrowed.column)}.`,
+        ),
+        Match.exhaustive,
+      ),
+    )
     .join(" ");
   return `${roleLabel} source ${rejection.sourcePath} ${details}`;
 }

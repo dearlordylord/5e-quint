@@ -5709,6 +5709,19 @@ const StatBlockSpellInvocationEffectTerminationTriggerSchema = Schema.Union([
   }),
 ]);
 
+const StatBlockSpellInvocationDurationValueSchema = strictStruct({
+  unit: Schema.Literals(["round", "minute", "hour", "day"]),
+  amount: BrandedPositiveIntegerSchema,
+  upcastTiers: optionalExact(
+    nonEmpty(
+      strictStruct({
+        atSlot: BrandedPositiveIntegerSchema,
+        amount: BrandedPositiveIntegerSchema,
+      }),
+    ),
+  ),
+});
+
 export const StatBlockSpellInvocationDeltaSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal(
@@ -5765,7 +5778,7 @@ export const StatBlockSpellInvocationDeltaSchema = Schema.Union([
     kind: Schema.Literal(
       STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.durationOverride,
     ),
-    duration: DurationValueSchema,
+    duration: StatBlockSpellInvocationDurationValueSchema,
   }),
   strictStruct({
     kind: Schema.Literal(STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.targetLimit),

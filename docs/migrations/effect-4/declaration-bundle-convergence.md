@@ -169,6 +169,32 @@ closed tuple emits its member codecs directly instead of emitting two owner
 classes. The 1,000-file coarse safety ceiling remains unchanged; production
 emission fails closed on the new exact measure and content ledger.
 
+## Round-1 standards recertification (2026-09-01)
+
+The Round-1 standards candidate retains exactly 571
+declaration paths and the unchanged sorted POSIX path-ledger SHA-256
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`. The
+production emitter measured 10,300,717 bytes, leaving 185,043 bytes below the
+unchanged 10 MiB byte cap. Its sorted content-ledger SHA-256 is
+`b2e1e35ccda77cd149c468428bcc017196ad6e37a1d2b9d876c2205da24e69d3`.
+
+Compared with the reviewed 571-file graph at 10,299,610 bytes and content
+ledger `159c1666a4f2d99b4ee37e54f56034f0722ad6b9432875e3647cd3d8a61d1927`,
+exactly two declarations changed and no paths were added or removed:
+
+- `packages/surface/src/surface/schema-spell.d.ts` (+1,080 bytes,
+  4,425,218 → 4,426,298)
+- `packages/surface/src/surface/stat-block-types.d.ts` (+27 bytes,
+  24,762 → 24,789)
+
+The 1,107-byte net increase is the declaration serializer's repeated
+projection of the three `PositiveInteger` duration fields (`amount`,
+`upcastTiers.atSlot`, and `upcastTiers.amount`) through the affected Surface
+spell schema. The authored-source formatter's `Match` import has no emitted
+public declaration. The 1,000-file coarse safety ceiling remains unchanged;
+production emission continues to fail closed on the exact reviewed measure,
+path ledger, and content ledger.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

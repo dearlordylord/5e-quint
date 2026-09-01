@@ -2,7 +2,11 @@ import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
-import { D6_ROLL_RESULTS, NonNegativeInteger } from "@dnd/shared/types";
+import {
+  D6_ROLL_RESULTS,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId as parseSharedUnitId,
@@ -1034,8 +1038,8 @@ function codecStaticDartStatBlock(): StatBlockRecord {
                 damageType: "piercing",
                 amount: {
                   kind: "fixed",
-                  expr: { dice: 1, dieSize: 4 },
-                  static: 3,
+                  expr: { dice: PositiveInteger(1), dieSize: 4 },
+                  static: PositiveInteger(3),
                 },
               },
             ],

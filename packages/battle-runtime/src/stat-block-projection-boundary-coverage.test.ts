@@ -579,8 +579,8 @@ describe("Stat Block projection boundary coverage", () => {
             legendaryActions: {
               uses: {
                 kind: "lair_bonus",
-                usesOutsideLair: 3,
-                additionalUsesInLair: 1,
+                usesOutsideLair: PositiveInteger(3),
+                additionalUsesInLair: PositiveInteger(1),
               },
               entries: [firstAction],
             },
