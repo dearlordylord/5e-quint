@@ -3,7 +3,10 @@ import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
 } from "../../battle-state-execution.ts";
-import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import {
+  ongoingAreaSpellDurationTicks,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -27,8 +30,12 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration,
 //     Area of Effect/Sphere, Obscurement, Saving Throw, Damage Type.
 
-import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { PositiveInteger, movementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet as MovementFeetType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   spellDurationEndingPath,
   spellDurationValuePath,
@@ -77,9 +84,12 @@ import type {
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  persistentAreaDurationChildPaths,
-  persistentAreaMaterialPaths,
-} from "./persistent-area-save-evidence.ts";
+  spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+} from "./spell-mechanics-admission.ts";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type TranslatingPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -109,10 +119,8 @@ type TranslatingPersistentAreaSaveGate = Extract<
   { readonly kind: "save_gate" }
 >;
 type TranslatingPersistentAreaProfileShape = {
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly rangeFeet: number;
-  readonly radiusFeet: number;
-  readonly translationDistanceFeet: number;
+  readonly radiusFeet: MovementFeetType;
+  readonly translationDistanceFeet: MovementFeetType;
   readonly damageAmount: Extract<
     TranslatingPersistentAreaSaveGate["onFail"],
     { readonly kind: "damage" }
@@ -349,20 +357,20 @@ function translatingPersistentAreaDurationUnsupportedPaths(
 
 function translatingPersistentAreaRadiusFeet(
   area: OngoingTranslatingPersistentAreaFacts["mechanics"]["attachment"]["value"],
-): number | null {
+): MovementFeetType | null {
   return area.origin.kind === "point_within_range" &&
     area.shape.kind === "sphere" &&
     area.shape.radiusFeet === TRANSLATING_PERSISTENT_AREA_RADIUS_FEET
-    ? area.shape.radiusFeet
+    ? movementFeet(area.shape.radiusFeet)
     : null;
 }
 
 function translatingPersistentAreaTranslationDistanceFeet(
   operation: TranslatingPersistentAreaOperations["move"],
-): number | null {
+): MovementFeetType | null {
   return operation?.operation.effect.kind === "move_area" &&
     operation.operation.effect.direction === "away_from_caster"
-    ? operation.operation.effect.distanceFeet
+    ? movementFeet(operation.operation.effect.distanceFeet)
     : null;
 }
 
@@ -446,7 +454,7 @@ type TranslatingPersistentAreaFailure = {
 type TranslatingPersistentAreaProjection =
   | {
       readonly tag: "unsupported";
-      readonly failures: readonly TranslatingPersistentAreaFailure[];
+      readonly failures: ReadonlyNonEmptyArray<TranslatingPersistentAreaFailure>;
     }
   | {
       readonly tag: "supported";
@@ -658,7 +666,10 @@ function translatingPersistentAreaProjection(
       operations,
     }),
   );
-  if (failures.length > 0) return { tag: "unsupported", failures };
+  const unsupportedFailures = spellProcedureNonEmpty(failures);
+  if (unsupportedFailures !== undefined) {
+    return { tag: "unsupported", failures: unsupportedFailures };
+  }
   if (
     durationTicks === undefined ||
     Result.isFailure(durationTicks) ||
@@ -666,13 +677,37 @@ function translatingPersistentAreaProjection(
     translationDistanceFeet === null ||
     damageFacts === null
   ) {
-    return { tag: "unsupported", failures };
+    return {
+      tag: "unsupported",
+      failures: [
+        durationTicks === undefined || Result.isFailure(durationTicks)
+          ? {
+              failedFact: "durationTicks",
+              mechanicsPath: spellDurationValuePath(),
+            }
+          : radiusFeet === null
+            ? {
+                failedFact: "attachment",
+                mechanicsPath: spellOngoingAttachmentPath(),
+              }
+            : translationDistanceFeet === null
+              ? {
+                  failedFact: "moveOperation",
+                  mechanicsPath: translatingPersistentAreaOperationEffectPath(
+                    operations.move,
+                    PositiveInteger(2),
+                  ),
+                }
+              : {
+                  failedFact: "initialSaveDamage",
+                  mechanicsPath: spellOngoingInitialPhasePath(),
+                },
+      ],
+    };
   }
   return {
     tag: "supported",
     profileShape: {
-      durationTicks: durationTicks.success,
-      rangeFeet: TRANSLATING_PERSISTENT_AREA_RANGE_FEET,
       radiusFeet,
       translationDistanceFeet,
       damageAmount: damageFacts.damageAmount,
@@ -714,6 +749,15 @@ function admitTranslatingPersistentAreaAreaHazard(
   ctx: SpellAdmissionContext,
   facts: TranslatingPersistentAreaMechanicsFacts,
 ): readonly TranslatingPersistentAreaAreaHazardSpellInvocation[] {
+  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
+  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    rangeFeet === undefined
+  ) {
+    return [];
+  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly TranslatingPersistentAreaAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < TRANSLATING_PERSISTENT_AREA_LEVEL) {
@@ -734,7 +778,7 @@ function admitTranslatingPersistentAreaAreaHazard(
           procedure: "persistentAreaSaveDamage",
           lifecycle: {
             kind: "sourceTurnTranslation",
-            distanceFeet: movementFeet(facts.translationDistanceFeet),
+            distanceFeet: facts.translationDistanceFeet,
             direction: "awayFromSource",
             movedAreaOperation: "saveDamage",
             environmentalEnd: "strongWind",
@@ -744,10 +788,10 @@ function admitTranslatingPersistentAreaAreaHazard(
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(facts.radiusFeet),
+            radiusFeet: facts.radiusFeet,
           },
-          durationTicks: facts.durationTicks,
-          rangeFeet: movementFeet(facts.rangeFeet),
+          durationTicks: durationTicks.success,
+          rangeFeet,
           damage: { expr: damageExpr, damageType: "poison" },
         },
       ];
@@ -771,14 +815,12 @@ function translatingPersistentAreaMechanicsAdmission(
   }
   const projection = translatingPersistentAreaProjection(ongoing);
   if (projection.tag === "unsupported") {
-    const [firstFailure, ...remainingFailures] = projection.failures;
-    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
-      issues: [
-        translatingPersistentAreaAdmissionIssue(firstFailure),
-        ...remainingFailures.map(translatingPersistentAreaAdmissionIssue),
-      ],
+      issues: spellProcedureMapNonEmpty(
+        projection.failures,
+        translatingPersistentAreaAdmissionIssue,
+      ),
     };
   }
   const facts = {
@@ -794,7 +836,7 @@ function translatingPersistentAreaMechanicsAdmission(
       evidence: {
         consumed: [
           ...TRANSLATING_PERSISTENT_AREA_BASE_CONSUMED_PATHS,
-          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
+          ...spellConsumedMaterialEvidencePaths(ongoing.mechanics.components),
         ],
         unowned: TRANSLATING_PERSISTENT_AREA_UNOWNED_PATHS,
       },

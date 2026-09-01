@@ -1,7 +1,14 @@
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  movementFeet,
+  type MovementFeet,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
-import type { SpellMechanicsBranchPath } from "@dnd/surface/surface/spell-mechanics-path";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import {
+  spellMaterialComponentPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
 
 import type {
   BattleSpellExecutionSource,
@@ -39,6 +46,42 @@ export type PartialSpellProcedureMechanicsEvidence = {
 export type SpellProcedureMechanicsEvidence =
   | CompleteSpellProcedureMechanicsEvidence
   | PartialSpellProcedureMechanicsEvidence;
+
+/**
+ * Material children are part of the canonical spell-mechanics admission
+ * boundary. Generic priced material is a cost branch; explicit consumption is
+ * a separate branch. Structured material components carry cost semantics but
+ * do not imply consumption.
+ */
+export function spellConsumedMaterialEvidencePaths(
+  components: Components,
+): readonly SpellMechanicsBranchPath[] {
+  if (components.m === false) return [];
+
+  const paths: SpellMechanicsBranchPath[] = [];
+  if (
+    typeof components.m === "object" ||
+    ("materialCostGp" in components && components.materialCostGp !== undefined)
+  ) {
+    paths.push(spellMaterialComponentPath("cost"));
+  }
+  if (
+    "materialConsumed" in components &&
+    components.materialConsumed === true
+  ) {
+    paths.push(spellMaterialComponentPath("consumption"));
+  }
+  return paths;
+}
+
+/** Project a fixed point range into the branded execution distance. */
+export function spellDefinitionPointRangeFeet(
+  range: SpellDefinitionRuleFacts["range"],
+): MovementFeet | undefined {
+  return range.kind === "point" && typeof range.feet === "number"
+    ? movementFeet(range.feet)
+    : undefined;
+}
 
 /**
  * Facts are the source-free Definition projection carried by a static
@@ -177,11 +220,19 @@ export type BattleSpellMechanicsAdmission<
       readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
     };
 
-function nonEmpty<T>(
+export function spellProcedureNonEmpty<T>(
   values: readonly T[],
 ): ReadonlyNonEmptyArray<T> | undefined {
   const [first, ...rest] = values;
   return first === undefined ? undefined : [first, ...rest];
+}
+
+export function spellProcedureMapNonEmpty<T, U>(
+  values: ReadonlyNonEmptyArray<T>,
+  map: (value: T) => U,
+): ReadonlyNonEmptyArray<U> {
+  const [first, ...rest] = values;
+  return [map(first), ...rest.map(map)];
 }
 
 /**
@@ -207,12 +258,12 @@ export function admitBattleSpellMechanicsFrom<
     inspection.tag === "unsupported" ? inspection.issues : [],
   );
 
-  const unsupportedIssues = nonEmpty(issues);
+  const unsupportedIssues = spellProcedureNonEmpty(issues);
   if (unsupportedIssues !== undefined) {
     return { tag: "rejected", issues: unsupportedIssues };
   }
 
-  const admittedProcedures = nonEmpty(supported);
+  const admittedProcedures = spellProcedureNonEmpty(supported);
   return admittedProcedures === undefined
     ? { tag: "notBattleOwned" }
     : { tag: "admitted", procedures: admittedProcedures };

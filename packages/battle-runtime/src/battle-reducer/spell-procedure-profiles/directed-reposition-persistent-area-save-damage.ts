@@ -5,11 +5,18 @@ import type {
   BattleSpellExecutionSource,
   SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import {
+  ongoingAreaSpellDurationTicks,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { PositiveInteger, movementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet as MovementFeetType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   spellDurationValuePath,
@@ -73,9 +80,12 @@ import type {
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  persistentAreaDurationChildPaths,
-  persistentAreaMaterialPaths,
-} from "./persistent-area-save-evidence.ts";
+  spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+} from "./spell-mechanics-admission.ts";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 
 type MovablePersistentAreaSpellInvocation = Extract<
@@ -124,10 +134,9 @@ type MovablePersistentAreaSaveGateDamage = Extract<
   { readonly kind: "damage" }
 >;
 type MovablePersistentAreaProfileShape = {
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly radiusFeet: number;
-  readonly heightFeet: number;
-  readonly repositionMaxMoveFeet: number;
+  readonly radiusFeet: MovementFeetType;
+  readonly heightFeet: MovementFeetType;
+  readonly repositionMaxMoveFeet: MovementFeetType;
   readonly damageAmount: MovablePersistentAreaSaveGateDamage["amount"];
 };
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
@@ -524,7 +533,7 @@ function movablePersistentAreaUsageLimitFailures(
 function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   | {
       readonly tag: "unsupported";
-      readonly failures: readonly MovablePersistentAreaFailure[];
+      readonly failures: ReadonlyNonEmptyArray<MovablePersistentAreaFailure>;
     }
   | {
       readonly tag: "supported";
@@ -698,7 +707,10 @@ function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
     ...movablePersistentAreaUsageLimitFailures(mechanics, operations),
   );
 
-  if (failures.length > 0) return { tag: "unsupported", failures };
+  const unsupportedFailures = spellProcedureNonEmpty(failures);
+  if (unsupportedFailures !== undefined) {
+    return { tag: "unsupported", failures: unsupportedFailures };
+  }
   if (
     cylinder === null ||
     initialSaveDamage === null ||
@@ -719,10 +731,11 @@ function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   return {
     tag: "supported",
     shape: {
-      durationTicks: durationTicks.success,
-      radiusFeet: cylinder.radiusFeet,
-      heightFeet: cylinder.heightFeet,
-      repositionMaxMoveFeet: MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
+      radiusFeet: movementFeet(cylinder.radiusFeet),
+      heightFeet: movementFeet(cylinder.heightFeet),
+      repositionMaxMoveFeet: movementFeet(
+        MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
+      ),
       damageAmount: initialSaveDamage.amount,
     },
   };
@@ -739,10 +752,11 @@ function isMovablePersistentAreaRepresentation(
   ) {
     return false;
   }
-  // The stable gate uses the profile's authored Dim Light witness. Required
-  // lifecycle triggers may then be malformed and are reported by projection.
+  // Reposition is the stable profile witness; independently validated Dim
+  // Light omission must remain represented for an exact passive-operation
+  // failure.
   return mechanics.operations.some(
-    ({ effect }) => effect.kind === "area_emits_dim_light",
+    ({ effect }) => effect.kind === "reposition_attachment",
   );
 }
 
@@ -763,6 +777,15 @@ function admitMovablePersistentArea(
   ctx: SpellAdmissionContext,
   facts: MovablePersistentAreaMechanicsFacts,
 ): readonly MovablePersistentAreaSpellInvocation[] {
+  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
+  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    rangeFeet === undefined
+  ) {
+    return [];
+  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly MovablePersistentAreaSpellInvocation[] => {
       if (Number(slot.spellLevel) < MOVABLE_PERSISTENT_AREA_LEVEL) {
@@ -791,12 +814,12 @@ function admitMovablePersistentArea(
               dc: { kind: "caster_spell_save_dc" },
               targeting: {
                 kind: "pointOriginCylinder",
-                radiusFeet: movementFeet(facts.radiusFeet),
-                heightFeet: movementFeet(facts.heightFeet),
+                radiusFeet: facts.radiusFeet,
+                heightFeet: facts.heightFeet,
               },
-              durationTicks: facts.durationTicks,
-              rangeFeet: movementFeet(MOVABLE_PERSISTENT_AREA_RANGE_FEET),
-              repositionMaxMoveFeet: movementFeet(facts.repositionMaxMoveFeet),
+              durationTicks: durationTicks.success,
+              rangeFeet,
+              repositionMaxMoveFeet: facts.repositionMaxMoveFeet,
               damage: { expr: damageExpr, damageType: "radiant" },
             },
           ];
@@ -818,14 +841,12 @@ function movablePersistentAreaMechanicsAdmission(
   if (ongoing === null) return { tag: "notRepresented" };
   const projection = movablePersistentAreaProjection(ongoing);
   if (projection.tag === "unsupported") {
-    const [firstFailure, ...remainingFailures] = projection.failures;
-    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
-      issues: [
-        movablePersistentAreaAdmissionIssue(firstFailure),
-        ...remainingFailures.map(movablePersistentAreaAdmissionIssue),
-      ],
+      issues: spellProcedureMapNonEmpty(
+        projection.failures,
+        movablePersistentAreaAdmissionIssue,
+      ),
     };
   }
   const facts = {
@@ -841,7 +862,7 @@ function movablePersistentAreaMechanicsAdmission(
       evidence: {
         consumed: [
           ...MOVABLE_PERSISTENT_AREA_BASE_CONSUMED_PATHS,
-          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
+          ...spellConsumedMaterialEvidencePaths(ongoing.mechanics.components),
         ],
         unowned: MOVABLE_PERSISTENT_AREA_UNOWNED_PATHS,
       },

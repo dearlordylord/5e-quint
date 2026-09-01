@@ -69,6 +69,7 @@ import {
 } from "./profile.ts";
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import {
+  spellConsumedMaterialEvidencePaths,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -304,7 +305,10 @@ function stationaryPersistentAreaMechanicsAdmission(
       procedure: "persistentAreaSaveDamage",
       facts,
       evidence: {
-        consumed: STATIONARY_PERSISTENT_AREA_CONSUMED_PATHS,
+        consumed: [
+          ...STATIONARY_PERSISTENT_AREA_CONSUMED_PATHS,
+          ...spellConsumedMaterialEvidencePaths(ongoing.mechanics.components),
+        ],
         unowned: STATIONARY_PERSISTENT_AREA_UNOWNED_PATHS,
       },
       admit: (executionSource, ctx) =>

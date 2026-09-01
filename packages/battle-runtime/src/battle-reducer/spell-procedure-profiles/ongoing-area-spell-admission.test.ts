@@ -109,6 +109,7 @@ function expectedEvidence(
   operationCount: number,
   durationPaths: readonly ReturnType<typeof spellDurationValuePath>[],
   materialPaths: readonly ReturnType<typeof spellMaterialComponentPath>[] = [],
+  initialPhasePresent = true,
 ) {
   const operationOrdinals = Array.from({ length: operationCount }, (_, index) =>
     PositiveInteger(index + 1),
@@ -124,7 +125,7 @@ function expectedEvidence(
       spellMechanicsHeaderPath("family"),
       ...durationPaths,
       spellOngoingAttachmentPath(),
-      spellOngoingInitialPhasePath(),
+      ...(initialPhasePresent ? [spellOngoingInitialPhasePath()] : []),
       ...operationOrdinals.map(spellOngoingOperationPath),
       ...operationOrdinals.map(spellOngoingOperationEffectPath),
       ...materialPaths,
@@ -172,6 +173,8 @@ describe("ongoing area spell static admission", () => {
         expectedEvidence(
           spellId === "web" ? 7 : spellId === "grease" ? 3 : 5,
           durationPaths,
+          [],
+          !["sleet_storm", "web", "flaming_sphere"].includes(spellId),
         ),
       );
     },
@@ -492,6 +495,7 @@ describe("ongoing area spell static admission", () => {
         5,
         [spellDurationValuePath()],
         [spellMaterialComponentPath("cost")],
+        false,
       ),
     );
     expect(expectSupported(consumed).admitted.evidence).toEqual(

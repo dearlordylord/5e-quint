@@ -2,10 +2,9 @@ import { PositiveInteger } from "@dnd/shared/types";
 import {
   spellDurationEndingPath,
   spellDurationExtensionPath,
-  spellMaterialComponentPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { Components, Duration } from "@dnd/surface/surface/types";
+import type { Duration } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 /**
@@ -58,25 +57,4 @@ export function persistentAreaDurationChildPaths(
     ),
     Match.exhaustive,
   );
-}
-
-/** Return authored material child branches that the profile consumes. */
-export function persistentAreaMaterialPaths(
-  components: Components,
-): readonly SpellMechanicsBranchPath[] {
-  if (components.m === false) return [];
-  const paths: SpellMechanicsBranchPath[] = [];
-  if (
-    typeof components.m === "object" ||
-    ("materialCostGp" in components && components.materialCostGp !== undefined)
-  ) {
-    paths.push(spellMaterialComponentPath("cost"));
-  }
-  if (
-    "materialConsumed" in components &&
-    components.materialConsumed === true
-  ) {
-    paths.push(spellMaterialComponentPath("consumption"));
-  }
-  return paths;
 }

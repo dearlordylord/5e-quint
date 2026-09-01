@@ -2,7 +2,10 @@ import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
 } from "../../battle-state-execution.ts";
-import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import {
+  ongoingAreaSpellDurationTicks,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
@@ -27,8 +30,12 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //     Invocation, Area of Effect/Cylinder, Difficult Terrain, Heavily Obscured,
 //     Prone, and Saving Throw.
 
-import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { PositiveInteger, movementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet as MovementFeetType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
@@ -74,9 +81,12 @@ import type {
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  persistentAreaDurationChildPaths,
-  persistentAreaMaterialPaths,
-} from "./persistent-area-save-evidence.ts";
+  spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+} from "./spell-mechanics-admission.ts";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type PersistentAreaSaveCompositeSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -100,10 +110,8 @@ type PersistentAreaSaveCompositeSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 type PersistentAreaSaveCompositeProfileShape = {
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly rangeFeet: number;
-  readonly radiusFeet: number;
-  readonly heightFeet: number;
+  readonly radiusFeet: MovementFeetType;
+  readonly heightFeet: MovementFeetType;
 };
 type OngoingPersistentAreaSaveCompositeFacts = NonNullable<
   ReturnType<typeof ongoingAreaSpellFacts>
@@ -148,7 +156,9 @@ const PERSISTENT_AREA_SAVE_COMPOSITE_BASE_CONSUMED_PATHS = [
   spellMechanicsHeaderPath("family"),
   spellDurationValuePath(),
   spellOngoingAttachmentPath(),
-  spellOngoingInitialPhasePath(),
+] as const;
+
+const PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_CONSUMED_PATHS = [
   spellOngoingOperationPath(PositiveInteger(1)),
   spellOngoingOperationPath(PositiveInteger(2)),
   spellOngoingOperationPath(PositiveInteger(3)),
@@ -195,8 +205,8 @@ function persistentAreaSaveCompositeCylinderFacts(
     return null;
   }
   return {
-    radiusFeet: area.shape.radiusFeet,
-    heightFeet: area.shape.heightFeet,
+    radiusFeet: movementFeet(area.shape.radiusFeet),
+    heightFeet: movementFeet(area.shape.heightFeet),
   };
 }
 
@@ -393,7 +403,7 @@ type PersistentAreaSaveCompositeFailure = {
 type PersistentAreaSaveCompositeProjection =
   | {
       readonly tag: "unsupported";
-      readonly failures: readonly PersistentAreaSaveCompositeFailure[];
+      readonly failures: ReadonlyNonEmptyArray<PersistentAreaSaveCompositeFailure>;
     }
   | {
       readonly tag: "supported";
@@ -548,19 +558,33 @@ function persistentAreaSaveCompositeProjection(
     })),
   );
   failures.push(...persistentAreaSaveCompositeUsageLimitFailures(operations));
-  if (failures.length > 0) return { tag: "unsupported", failures };
+  const unsupportedFailures = spellProcedureNonEmpty(failures);
+  if (unsupportedFailures !== undefined) {
+    return { tag: "unsupported", failures: unsupportedFailures };
+  }
   if (
     cylinder === null ||
     durationTicks === undefined ||
     Result.isFailure(durationTicks)
   ) {
-    return { tag: "unsupported", failures };
+    return {
+      tag: "unsupported",
+      failures: [
+        cylinder === null
+          ? {
+              failedFact: "attachment",
+              mechanicsPath: spellOngoingAttachmentPath(),
+            }
+          : {
+              failedFact: "durationTicks",
+              mechanicsPath: spellDurationValuePath(),
+            },
+      ],
+    };
   }
   return {
     tag: "supported",
     profileShape: {
-      durationTicks: durationTicks.success,
-      rangeFeet: PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET,
       ...cylinder,
     },
   };
@@ -590,7 +614,7 @@ function isPersistentAreaSaveCompositeRepresentation(
     return false;
   }
   return mechanics.operations.some(
-    ({ effect }) => effect.kind === "douse_exposed_flames",
+    ({ effect }) => effect.kind === "area_is_heavily_obscured",
   );
 }
 
@@ -610,14 +634,12 @@ function persistentAreaSaveCompositeMechanicsAdmission(
   }
   const projection = persistentAreaSaveCompositeProjection(ongoing);
   if (projection.tag === "unsupported") {
-    const [firstFailure, ...remainingFailures] = projection.failures;
-    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
-      issues: [
-        persistentAreaSaveCompositeAdmissionIssue(firstFailure),
-        ...remainingFailures.map(persistentAreaSaveCompositeAdmissionIssue),
-      ],
+      issues: spellProcedureMapNonEmpty(
+        projection.failures,
+        persistentAreaSaveCompositeAdmissionIssue,
+      ),
     };
   }
   const facts = {
@@ -633,7 +655,11 @@ function persistentAreaSaveCompositeMechanicsAdmission(
       evidence: {
         consumed: [
           ...PERSISTENT_AREA_SAVE_COMPOSITE_BASE_CONSUMED_PATHS,
-          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
+          ...(ongoing.mechanics.initialPhase === undefined
+            ? []
+            : [spellOngoingInitialPhasePath()]),
+          ...PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_CONSUMED_PATHS,
+          ...spellConsumedMaterialEvidencePaths(ongoing.mechanics.components),
         ],
         unowned: PERSISTENT_AREA_SAVE_COMPOSITE_UNOWNED_PATHS,
       },
@@ -648,6 +674,15 @@ function admitPersistentAreaSaveComposite(
   ctx: SpellAdmissionContext,
   facts: PersistentAreaSaveCompositeMechanicsFacts,
 ): readonly PersistentAreaSaveCompositeSpellInvocation[] {
+  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
+  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    rangeFeet === undefined
+  ) {
+    return [];
+  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly PersistentAreaSaveCompositeSpellInvocation[] => {
       if (Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL) {
@@ -663,11 +698,11 @@ function admitPersistentAreaSaveComposite(
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginCylinder",
-            radiusFeet: movementFeet(facts.radiusFeet),
-            heightFeet: movementFeet(facts.heightFeet),
+            radiusFeet: facts.radiusFeet,
+            heightFeet: facts.heightFeet,
           },
-          durationTicks: facts.durationTicks,
-          rangeFeet: movementFeet(facts.rangeFeet),
+          durationTicks: durationTicks.success,
+          rangeFeet,
         },
       ];
     },

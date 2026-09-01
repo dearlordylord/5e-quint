@@ -5,11 +5,18 @@ import type {
   BattleResolutionResult,
   SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import {
+  ongoingAreaSpellDurationTicks,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { PositiveInteger, movementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet as MovementFeetType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   spellDurationValuePath,
@@ -70,9 +77,12 @@ import type {
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  persistentAreaDurationChildPaths,
-  persistentAreaMaterialPaths,
-} from "./persistent-area-save-evidence.ts";
+  spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+} from "./spell-mechanics-admission.ts";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type RamMovablePersistentAreaSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -116,9 +126,8 @@ type RamMovablePersistentAreaSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 type RamMovablePersistentAreaProfileShape = {
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly diameterFeet: number;
-  readonly ramMaxMoveFeet: number;
+  readonly diameterFeet: MovementFeetType;
+  readonly ramMaxMoveFeet: MovementFeetType;
   readonly damageAmount: RamMovablePersistentAreaSaveEffect["onFail"]["amount"];
 };
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
@@ -161,7 +170,9 @@ const RAM_MOVABLE_PERSISTENT_AREA_BASE_CONSUMED_PATHS = [
   spellMechanicsHeaderPath("family"),
   spellDurationValuePath(),
   spellOngoingAttachmentPath(),
-  spellOngoingInitialPhasePath(),
+] as const;
+
+const RAM_MOVABLE_PERSISTENT_AREA_OPERATION_CONSUMED_PATHS = [
   spellOngoingOperationPath(PositiveInteger(1)),
   spellOngoingOperationPath(PositiveInteger(2)),
   spellOngoingOperationPath(PositiveInteger(3)),
@@ -384,7 +395,7 @@ function isRamMovablePersistentAreaSaveEffect(
 function ramMovablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   | {
       readonly tag: "unsupported";
-      readonly failures: readonly RamMovablePersistentAreaFailure[];
+      readonly failures: ReadonlyNonEmptyArray<RamMovablePersistentAreaFailure>;
     }
   | {
       readonly tag: "supported";
@@ -566,7 +577,10 @@ function ramMovablePersistentAreaProjection(ongoing: OngoingAreaFacts):
     })),
   );
 
-  if (failures.length > 0) return { tag: "unsupported", failures };
+  const unsupportedFailures = spellProcedureNonEmpty(failures);
+  if (unsupportedFailures !== undefined) {
+    return { tag: "unsupported", failures: unsupportedFailures };
+  }
   const endTurnEffect = operations.endTurn?.operation.effect;
   if (
     !isRamMovablePersistentAreaSaveEffect(
@@ -601,9 +615,10 @@ function ramMovablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   return {
     tag: "supported",
     shape: {
-      durationTicks: durationTicks.success,
-      diameterFeet: RAM_MOVABLE_PERSISTENT_AREA_DIAMETER_FEET,
-      ramMaxMoveFeet: RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET,
+      diameterFeet: movementFeet(RAM_MOVABLE_PERSISTENT_AREA_DIAMETER_FEET),
+      ramMaxMoveFeet: movementFeet(
+        RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET,
+      ),
       damageAmount: endTurnEffect.onFail.amount,
     },
   };
@@ -647,6 +662,15 @@ function admitRamMovablePersistentArea(
   ctx: SpellAdmissionContext,
   facts: RamMovablePersistentAreaMechanicsFacts,
 ): readonly RamMovablePersistentAreaSpellInvocation[] {
+  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
+  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    rangeFeet === undefined
+  ) {
+    return [];
+  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly RamMovablePersistentAreaSpellInvocation[] => {
       if (Number(slot.spellLevel) < RAM_MOVABLE_PERSISTENT_AREA_LEVEL) {
@@ -675,11 +699,11 @@ function admitRamMovablePersistentArea(
               dc: { kind: "caster_spell_save_dc" },
               targeting: {
                 kind: "pointOriginSphereDiameter",
-                diameterFeet: movementFeet(facts.diameterFeet),
+                diameterFeet: facts.diameterFeet,
               },
-              durationTicks: facts.durationTicks,
-              rangeFeet: movementFeet(RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET),
-              ramMaxMoveFeet: movementFeet(facts.ramMaxMoveFeet),
+              durationTicks: durationTicks.success,
+              rangeFeet,
+              ramMaxMoveFeet: facts.ramMaxMoveFeet,
               damage: { expr: damageExpr, damageType: "fire" },
             },
           ];
@@ -701,14 +725,12 @@ function ramMovablePersistentAreaMechanicsAdmission(
   if (ongoing === null) return { tag: "notRepresented" };
   const projection = ramMovablePersistentAreaProjection(ongoing);
   if (projection.tag === "unsupported") {
-    const [firstFailure, ...remainingFailures] = projection.failures;
-    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
-      issues: [
-        ramMovablePersistentAreaAdmissionIssue(firstFailure),
-        ...remainingFailures.map(ramMovablePersistentAreaAdmissionIssue),
-      ],
+      issues: spellProcedureMapNonEmpty(
+        projection.failures,
+        ramMovablePersistentAreaAdmissionIssue,
+      ),
     };
   }
   const facts = {
@@ -724,7 +746,11 @@ function ramMovablePersistentAreaMechanicsAdmission(
       evidence: {
         consumed: [
           ...RAM_MOVABLE_PERSISTENT_AREA_BASE_CONSUMED_PATHS,
-          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
+          ...(ongoing.mechanics.initialPhase === undefined
+            ? []
+            : [spellOngoingInitialPhasePath()]),
+          ...RAM_MOVABLE_PERSISTENT_AREA_OPERATION_CONSUMED_PATHS,
+          ...spellConsumedMaterialEvidencePaths(ongoing.mechanics.components),
         ],
         unowned: RAM_MOVABLE_PERSISTENT_AREA_UNOWNED_PATHS,
       },
