@@ -126,6 +126,41 @@ describe("authored source module-edge admission", () => {
     });
   });
 
+  test("does not fabricate an AMD dependency location from colliding path text", () => {
+    expect(
+      admitSource({
+        role: "player",
+        source: `// ./repeated appears before either directive
+/// <amd-dependency path="./repeated" />
+export {};`,
+      }),
+    ).toEqual({
+      tag: "rejected",
+      role: "player",
+      sourcePath: "player.ts",
+      issues: [{ tag: "amdDependency", path: "./repeated" }],
+    });
+  });
+
+  test("retains repeated AMD dependencies without fabricating locations", () => {
+    expect(
+      admitSource({
+        role: "player",
+        source: `/// <amd-dependency path="./repeated" />
+/// <amd-dependency path="./repeated" />
+export {};`,
+      }),
+    ).toEqual({
+      tag: "rejected",
+      role: "player",
+      sourcePath: "player.ts",
+      issues: [
+        { tag: "amdDependency", path: "./repeated" },
+        { tag: "amdDependency", path: "./repeated" },
+      ],
+    });
+  });
+
   test.each(ROLES)(
     "$role allows the no-default-lib compiler directive",
     ({ role }) => {

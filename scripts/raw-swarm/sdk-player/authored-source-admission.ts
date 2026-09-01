@@ -75,10 +75,10 @@ export type AuthoredSourceIssue =
       readonly reference: "path" | "types" | "lib";
       readonly value: string;
     } & SourceLocation)
-  | ({
+  | {
       readonly tag: "amdDependency";
       readonly path: string;
-    } & SourceLocation)
+    }
   | ({
       readonly tag: "forbiddenModuleEdge";
       readonly edge: ForbiddenModuleEdgeKind;
@@ -165,14 +165,10 @@ function tripleSlashIssues(
     ...referenceIssues(sourceFile.referencedFiles, "path"),
     ...referenceIssues(sourceFile.typeReferenceDirectives, "types"),
     ...referenceIssues(sourceFile.libReferenceDirectives, "lib"),
-    ...sourceFile.amdDependencies.map(({ path }) => {
-      const position = sourceFile.text.indexOf(path);
-      return {
-        tag: "amdDependency" as const,
-        path,
-        ...sourceLocation(sourceFile, position < 0 ? 0 : position),
-      };
-    }),
+    ...sourceFile.amdDependencies.map(({ path }) => ({
+      tag: "amdDependency" as const,
+      path,
+    })),
   ];
 }
 
@@ -372,7 +368,7 @@ export function authoredSourceIssuesMessage(
         return `uses a forbidden triple-slash ${issue.reference} reference at ${String(issue.line)}:${String(issue.column)}: ${issue.value}`;
       }
       if (issue.tag === "amdDependency") {
-        return `uses a forbidden AMD dependency at ${String(issue.line)}:${String(issue.column)}: ${issue.path}`;
+        return `uses a forbidden AMD dependency: ${issue.path}`;
       }
       if (issue.tag === "unavailableModuleSpecifier") {
         return `imports ${issue.actualSpecifier} at ${String(issue.line)}:${String(issue.column)}; this role admits only ${issue.expectedSpecifier}.`;
