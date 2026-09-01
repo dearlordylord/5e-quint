@@ -1,39 +1,11 @@
-import type { Schema } from "effect";
+export type SpellMechanicsMember = {
+  readonly Type: unknown;
+  readonly Encoded: unknown;
+};
 
-import type {
-  ActivationMechanicsSchema,
-  AnchoredTriggerMechanicsSchema,
-  GlyphWardingMechanicsSchema,
-  MagicCircleWardMechanicsSchema,
-  MinorMagicEffectMenuMechanicsSchema,
-  ModalActivationMechanicsSchema,
-  ModalOngoingEffectMechanicsSchema,
-  ObjectRepairMechanicsSchema,
-  OngoingEffectMechanicsSchema,
-  PassiveHitInterceptMechanicsSchema,
-  ReanimatedCreatureMechanicsSchema,
-  SpawnedCreatureMechanicsSchema,
-  StoneMergeMechanicsSchema,
-  TemplatedMultiSpawnMechanicsSchema,
-  TriggeredReactionMechanicsSchema,
-} from "./schema-spell.ts";
+export type SpellMechanics<Members extends readonly SpellMechanicsMember[]> =
+  Members[number]["Type"];
 
-type SpellMechanicsCodec =
-  | typeof OngoingEffectMechanicsSchema
-  | typeof ModalOngoingEffectMechanicsSchema
-  | typeof ActivationMechanicsSchema
-  | typeof ModalActivationMechanicsSchema
-  | typeof TriggeredReactionMechanicsSchema
-  | typeof PassiveHitInterceptMechanicsSchema
-  | typeof AnchoredTriggerMechanicsSchema
-  | typeof MagicCircleWardMechanicsSchema
-  | typeof StoneMergeMechanicsSchema
-  | typeof GlyphWardingMechanicsSchema
-  | typeof SpawnedCreatureMechanicsSchema
-  | typeof ReanimatedCreatureMechanicsSchema
-  | typeof TemplatedMultiSpawnMechanicsSchema
-  | typeof ObjectRepairMechanicsSchema
-  | typeof MinorMagicEffectMenuMechanicsSchema;
-
-export type SpellMechanics = Schema.Schema.Type<SpellMechanicsCodec>;
-export type SpellMechanicsEncoded = Schema.Codec.Encoded<SpellMechanicsCodec>;
+export type SpellMechanicsEncoded<
+  Members extends readonly SpellMechanicsMember[],
+> = Members[number]["Encoded"];

@@ -766,3 +766,4 @@ export type SrdStatBlockRecord = Omit<StatBlockRecord, "provenance"> & {
     readonly section: string;
   };
 };
+export type SrdStatBlockRecordEncoded = StatBlockWireValue<SrdStatBlockRecord>;

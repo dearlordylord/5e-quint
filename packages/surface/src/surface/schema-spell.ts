@@ -88,8 +88,8 @@ import {
   type SurfaceReactionTrigger,
 } from "./surface-vocabulary.ts";
 import type {
-  SpellMechanics,
-  SpellMechanicsEncoded,
+  SpellMechanics as SpellMechanicsFromMembers,
+  SpellMechanicsEncoded as SpellMechanicsEncodedFromMembers,
 } from "./spell-mechanics-types.ts";
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
@@ -7463,7 +7463,25 @@ export const MinorMagicEffectMenuMechanicsSchema =
     ),
   );
 
-const spellMechanicsSchema = Schema.Union([
+type SpellMechanicsMemberSchemas = readonly [
+  typeof OngoingEffectMechanicsSchema,
+  typeof ModalOngoingEffectMechanicsSchema,
+  typeof ActivationMechanicsSchema,
+  typeof ModalActivationMechanicsSchema,
+  typeof TriggeredReactionMechanicsSchema,
+  typeof PassiveHitInterceptMechanicsSchema,
+  typeof AnchoredTriggerMechanicsSchema,
+  typeof MagicCircleWardMechanicsSchema,
+  typeof StoneMergeMechanicsSchema,
+  typeof GlyphWardingMechanicsSchema,
+  typeof SpawnedCreatureMechanicsSchema,
+  typeof ReanimatedCreatureMechanicsSchema,
+  typeof TemplatedMultiSpawnMechanicsSchema,
+  typeof ObjectRepairMechanicsSchema,
+  typeof MinorMagicEffectMenuMechanicsSchema,
+];
+
+const spellMechanicsMemberSchemas: SpellMechanicsMemberSchemas = [
   OngoingEffectMechanicsSchema,
   ModalOngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
@@ -7479,7 +7497,18 @@ const spellMechanicsSchema = Schema.Union([
   TemplatedMultiSpawnMechanicsSchema,
   ObjectRepairMechanicsSchema,
   MinorMagicEffectMenuMechanicsSchema,
-]) satisfies Schema.Codec<SpellMechanics, SpellMechanicsEncoded, never, never>;
+];
+
+type SpellMechanics = SpellMechanicsFromMembers<
+  typeof spellMechanicsMemberSchemas
+>;
+type SpellMechanicsEncoded = SpellMechanicsEncodedFromMembers<
+  typeof spellMechanicsMemberSchemas
+>;
+
+const spellMechanicsSchema = Schema.Union(
+  spellMechanicsMemberSchemas,
+) satisfies Schema.Codec<SpellMechanics, SpellMechanicsEncoded, never, never>;
 
 export const SpellMechanicsSchema: Schema.Codec<
   SpellMechanics,
