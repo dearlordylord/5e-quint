@@ -144,7 +144,7 @@ function translatingPersistentAreaBasicFactsAreSupported(
 }
 
 function translatingPersistentAreaDurationIsSupported(
-  duration: OngoingTranslatingPersistentAreaFacts["duration"],
+  duration: OngoingTranslatingPersistentAreaFacts["mechanics"]["duration"],
 ): boolean {
   return (
     duration.upTo.unit === "minute" &&
@@ -156,10 +156,9 @@ function translatingPersistentAreaDurationIsSupported(
 }
 
 function translatingPersistentAreaRadiusFeet(
-  area: OngoingTranslatingPersistentAreaFacts["area"],
+  area: OngoingTranslatingPersistentAreaFacts["mechanics"]["attachment"]["value"],
 ): number | null {
-  return area?.kind === "area" &&
-    area.origin.kind === "point_within_range" &&
+  return area.origin.kind === "point_within_range" &&
     area.shape.kind === "sphere" &&
     area.shape.radiusFeet === TRANSLATING_PERSISTENT_AREA_RADIUS_FEET
     ? area.shape.radiusFeet
@@ -251,7 +250,9 @@ function translatingPersistentAreaDamageFacts(
 function translatingPersistentAreaProfileShape(
   ongoing: OngoingTranslatingPersistentAreaFacts,
 ): TranslatingPersistentAreaProfileShape | null {
-  const { mechanics, duration, durationTicks, area } = ongoing;
+  const { mechanics, durationTicks } = ongoing;
+  const { duration, attachment } = mechanics;
+  const area = attachment.value;
   const operations = translatingPersistentAreaOperations(mechanics);
   const radiusFeet = translatingPersistentAreaRadiusFeet(area);
   const translationDistanceFeet =

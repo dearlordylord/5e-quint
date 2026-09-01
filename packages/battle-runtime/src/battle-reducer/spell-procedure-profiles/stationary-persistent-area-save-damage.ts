@@ -35,7 +35,11 @@ import {
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { SpellMechanics, UsageLimit } from "@dnd/surface/surface/types";
+import type {
+  OngoingTrigger,
+  SpellMechanics,
+  UsageLimit,
+} from "@dnd/surface/surface/types";
 import { Match, Result, Schema } from "effect";
 
 import {
@@ -108,6 +112,7 @@ type StationaryPersistentAreaProfileShape = {
 };
 type StationaryPersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
   StationaryPersistentAreaProfileShape;
+type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
 type StationaryPersistentAreaAdmissionIssue = Extract<
   SpellProcedureMechanicsInspection<
     "persistentAreaSaveDamage",
@@ -231,7 +236,8 @@ function stationaryPersistentAreaMechanicsAdmission(
     };
   }
 
-  const { mechanics, durationTicks, area } = ongoing;
+  const { mechanics, durationTicks } = ongoing;
+  const area = mechanics.attachment.value;
   if (!isStationaryPersistentAreaSpellHeader(mechanics)) {
     return {
       tag: "unsupported",
@@ -347,7 +353,9 @@ function isStationaryPersistentAreaRepresentation(
 function stationaryPersistentAreaFailures(
   ongoing: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>,
 ): readonly StationaryPersistentAreaFailure[] {
-  const { mechanics, duration, durationTicks, area } = ongoing;
+  const { mechanics, durationTicks } = ongoing;
+  const { duration, attachment } = mechanics;
+  const area = attachment.value;
   const {
     passiveOperation,
     enterOperation,
@@ -553,7 +561,7 @@ function stationaryPersistentAreaOperations(
   const operations = mechanics.operations.map((operation, index) => ({
     operation,
     ordinal: PositiveInteger(index + 1),
-    role: stationaryPersistentAreaOperationRole(operation),
+    role: stationaryPersistentAreaOperationRole(operation.trigger),
   }));
   return {
     operations,
@@ -569,18 +577,46 @@ function stationaryPersistentAreaOperations(
 }
 
 function stationaryPersistentAreaOperationRole(
-  operation: StationaryPersistentAreaMechanics["operations"][number],
+  trigger: OngoingTrigger,
 ): StationaryPersistentAreaOperationRole | null {
-  if (operation.trigger.kind === "passive") {
-    return "passive";
-  }
-  if (operation.trigger.kind === "on_creature_enters_area") {
-    return "enter";
-  }
-  if (operation.trigger.kind === "on_creature_ends_turn_in_area") {
-    return "endTurn";
-  }
-  return null;
+  return Match.value(trigger.kind).pipe(
+    Match.when("passive", () => "passive" as const),
+    Match.when("on_creature_enters_area", () => "enter" as const),
+    Match.when("on_creature_ends_turn_in_area", () => "endTurn" as const),
+    Match.whenOr(
+      "on_effect_starts",
+      "on_caster_attack_hit",
+      "on_caster_deals_damage_to_attachment",
+      "on_attached_hit_by_attack_roll",
+      "on_attached_turn_start",
+      "on_attached_turn_end",
+      "on_caster_turn_start",
+      "on_caster_turn_end",
+      "on_attached_damaged",
+      "on_attached_targeted",
+      "on_creature_moves",
+      "on_creature_starts_turn_in_area",
+      "on_creature_ends_turn_within_distance_of_area",
+      "on_creature_moves_through_area",
+      "on_creature_moves_within_area",
+      "on_creature_starts_turn_within_area",
+      "on_creature_attempts_magical_escape",
+      "on_object_section_destroyed",
+      "on_area_moves_into_creature_space",
+      "on_spatial_manifestation_moves_within_distance_of_creature",
+      "on_creature_enters_distance_of_spatial_manifestation",
+      "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+      "on_creature_exits_area",
+      "on_caster_moves_on_turn",
+      "on_structure_collapses",
+      "on_caster_spends_action",
+      "on_attached_spends_action",
+      "on_affected_creature_spends_action",
+      "on_creature_studies",
+      () => null,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function isStationaryPersistentAreaSpellHeader(
@@ -597,7 +633,7 @@ function isStationaryPersistentAreaSpellHeader(
 }
 
 function isStationaryPersistentAreaDuration(
-  duration: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>["duration"],
+  duration: OngoingAreaFacts["mechanics"]["duration"],
 ): boolean {
   if (duration.kind !== "concentration") {
     return false;
@@ -609,13 +645,12 @@ function isStationaryPersistentAreaDuration(
 }
 
 function isStationaryPersistentAreaGeometry(
-  area: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>["area"],
-): area is NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>["area"] & {
+  area: OngoingAreaFacts["mechanics"]["attachment"]["value"],
+): area is OngoingAreaFacts["mechanics"]["attachment"]["value"] & {
   readonly origin: { readonly kind: "point_within_range" };
   readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
 } {
   return (
-    area.kind === "area" &&
     area.origin.kind === "point_within_range" &&
     area.shape.kind === "sphere" &&
     area.shape.radiusFeet === STATIONARY_PERSISTENT_AREA_RADIUS_FEET

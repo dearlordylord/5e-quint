@@ -25,7 +25,10 @@ import { spellBattle } from "../../unit-profile-admission-spell-battle.test-supp
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
-import { ongoingAreaSpellDurationProjection } from "../ongoing-concentration-area-spell.ts";
+import {
+  ongoingAreaSpellDurationProjection,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 
 type OngoingSpellMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
@@ -107,6 +110,22 @@ describe("stationary persistent-area static admission", () => {
       },
       durationTicks: undefined,
     });
+  });
+
+  test("keeps area and duration facts owned by mechanics", () => {
+    const source = spellAdmissionSource(spellRecord("insect_plague"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Insect Plague ongoing mechanics.");
+    }
+    const facts = ongoingAreaSpellFacts(source.mechanics);
+
+    expect(facts).not.toBeNull();
+    if (facts === null) return;
+
+    expect(facts).not.toHaveProperty("duration");
+    expect(facts).not.toHaveProperty("area");
+    expect(facts.mechanics.duration).toEqual(source.mechanics.duration);
+    expect(facts.mechanics.attachment).toEqual(source.mechanics.attachment);
   });
 
   test("projects Insect Plague with exact complete-root branch evidence", () => {

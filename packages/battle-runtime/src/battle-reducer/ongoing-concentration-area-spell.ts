@@ -15,6 +15,9 @@ type OngoingArea = Extract<
   OngoingAreaAttachment["value"],
   { readonly kind: "area" }
 >;
+type OngoingAreaAttachmentWithArea = Omit<OngoingAreaAttachment, "value"> & {
+  readonly value: OngoingArea;
+};
 type DurationTicksProjection = ReturnType<
   typeof elapsedTimeTicksFromTimeSpanDuration
 >;
@@ -36,22 +39,48 @@ export type OngoingAreaSpellDurationProjection =
       readonly durationTicks: undefined;
     };
 
-export type OngoingAreaSpellFacts = OngoingAreaSpellDurationProjection & {
-  readonly mechanics: OngoingAreaSpellMechanics;
-  readonly area: OngoingArea;
-};
+type OngoingAreaSpellMechanicsForDuration<DurationBranch extends Duration> =
+  Omit<OngoingAreaSpellMechanics, "duration" | "attachment"> & {
+    readonly duration: DurationBranch;
+    readonly attachment: OngoingAreaAttachmentWithArea;
+  };
 
-export type OngoingConcentrationAreaSpellFacts = {
-  readonly mechanics: OngoingAreaSpellMechanics;
-  readonly duration: Extract<Duration, { readonly kind: "concentration" }>;
-  readonly durationTicks: DurationTicksProjection;
-  readonly area: OngoingArea;
-};
+export type OngoingAreaSpellFacts =
+  | {
+      readonly mechanics: OngoingAreaSpellMechanicsForDuration<
+        Extract<Duration, { readonly kind: "concentration" }>
+      >;
+      readonly durationTicks: DurationTicksProjection;
+    }
+  | {
+      readonly mechanics: OngoingAreaSpellMechanicsForDuration<
+        Extract<Duration, { readonly kind: "timed" }>
+      >;
+      readonly durationTicks: DurationTicksProjection;
+    }
+  | {
+      readonly mechanics: OngoingAreaSpellMechanicsForDuration<
+        Exclude<
+          Duration,
+          { readonly kind: "concentration" } | { readonly kind: "timed" }
+        >
+      >;
+      readonly durationTicks: undefined;
+    };
+
+export type OngoingConcentrationAreaSpellFacts = Extract<
+  OngoingAreaSpellFacts,
+  {
+    readonly mechanics: {
+      readonly duration: { readonly kind: "concentration" };
+    };
+  }
+>;
 
 function isOngoingConcentrationAreaSpellFacts(
   facts: OngoingAreaSpellFacts,
 ): facts is OngoingConcentrationAreaSpellFacts {
-  return facts.duration.kind === "concentration";
+  return facts.mechanics.duration.kind === "concentration";
 }
 
 export function ongoingAreaSpellDurationProjection(
@@ -94,12 +123,33 @@ export function ongoingAreaSpellFacts(
   if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
     return null;
   }
-  const durationProjection = ongoingAreaSpellDurationProjection(duration);
-  return {
-    mechanics,
-    ...durationProjection,
-    area: attachment.value,
+  const areaAttachment: OngoingAreaAttachmentWithArea = {
+    ...attachment,
+    value: attachment.value,
   };
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, (duration) => ({
+      mechanics: { ...mechanics, duration, attachment: areaAttachment },
+      durationTicks: undefined,
+    })),
+    Match.when({ kind: "concentration" }, (duration) => ({
+      mechanics: { ...mechanics, duration, attachment: areaAttachment },
+      durationTicks: elapsedTimeTicksFromTimeSpanDuration(duration.upTo),
+    })),
+    Match.when({ kind: "timed" }, (duration) => ({
+      mechanics: { ...mechanics, duration, attachment: areaAttachment },
+      durationTicks: elapsedTimeTicksFromTimeSpanDuration(duration.value),
+    })),
+    Match.when({ kind: "permanent" }, (duration) => ({
+      mechanics: { ...mechanics, duration, attachment: areaAttachment },
+      durationTicks: undefined,
+    })),
+    Match.when({ kind: "slot_tiered" }, (duration) => ({
+      mechanics: { ...mechanics, duration, attachment: areaAttachment },
+      durationTicks: undefined,
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function ongoingConcentrationAreaSpellFacts(
