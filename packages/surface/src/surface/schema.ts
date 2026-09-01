@@ -356,7 +356,6 @@ export {
   ListPreparedSpellcastingProgressionCreationSchema,
   NonWizardClassRecordSchema,
   NonSpellcastingClassRecordSchema,
-  OtherClassFeatureRecordSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassFeatureEffectSaveDcSchema,
