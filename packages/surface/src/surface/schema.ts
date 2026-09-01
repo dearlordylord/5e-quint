@@ -6,6 +6,20 @@ import {
   type StatBlockRecord,
   type StatBlockRecordEncoded,
 } from "./stat-block-types.ts";
+import {
+  SRD_PROVENANCE_KIND,
+  SRD_SURFACE_KIND,
+  type PublishedSrdSurface,
+  type PublishedSrdSurfaceEncoded,
+  type PublishedSrdUnitRecord,
+  type PublishedSrdUnitRecordEncoded,
+  type SrdSurface,
+  type SrdSurfaceEncoded,
+  type SrdUnitRecord,
+  type SrdUnitRecordEncoded,
+} from "./srd-surface-types.ts";
+
+export type { PublishedSrdSurface, SrdSurface } from "./srd-surface-types.ts";
 
 export {
   ActionBonusActionChoiceEffectSchema,
@@ -577,7 +591,7 @@ export const StatBlockRecordSchema: Schema.Codec<
 > = statBlockRecordSchema;
 
 export const SrdProvenanceSchema = Schema.Struct({
-  kind: Schema.Literal("srd-5.2.1"),
+  kind: Schema.Literal(SRD_PROVENANCE_KIND),
   section: ProvenanceSchema.fields.section,
 }).pipe(Schema.annotate({ identifier: "SrdProvenance" }));
 
@@ -768,20 +782,39 @@ const factorEncodedPublicationAst = (
   return ast;
 };
 
-export const SrdUnitRecordSchema = specializeUnitRecordSchema(
+const srdUnitRecordSchema = specializeUnitRecordSchema(
   SrdRecordFieldsSchema,
   "SrdUnitRecord",
-);
+) satisfies Schema.Codec<SrdUnitRecord, SrdUnitRecordEncoded, never, never>;
+
+export const SrdUnitRecordSchema: Schema.Codec<
+  SrdUnitRecord,
+  SrdUnitRecordEncoded,
+  never,
+  never
+> = srdUnitRecordSchema;
 
 export const SrdStatBlockRecordSchema = specializeStatBlockRecordSchema(
   SrdRecordFieldsSchema,
   "SrdStatBlockRecord",
 );
 
-export const PublishedSrdUnitRecordSchema = specializeUnitRecordSchema(
+const publishedSrdUnitRecordSchema = specializeUnitRecordSchema(
   PublishedSrdRecordFieldsSchema,
   "PublishedSrdUnitRecord",
-);
+) satisfies Schema.Codec<
+  PublishedSrdUnitRecord,
+  PublishedSrdUnitRecordEncoded,
+  never,
+  never
+>;
+
+export const PublishedSrdUnitRecordSchema: Schema.Codec<
+  PublishedSrdUnitRecord,
+  PublishedSrdUnitRecordEncoded,
+  never,
+  never
+> = publishedSrdUnitRecordSchema;
 
 export const PublishedSrdStatBlockRecordSchema =
   specializeStatBlockRecordSchema(
@@ -811,25 +844,44 @@ const PublishedSrdStatBlockPublicationSchema = Schema.suspend(
   }),
 );
 
-export const SrdSurfaceSchema = Schema.Struct({
-  kind: Schema.Literal("srd-5.2.1-surface-catalog"),
+const srdSurfaceSchema = Schema.Struct({
+  kind: Schema.Literal(SRD_SURFACE_KIND),
   units: nonEmptyPublicationArray(
     Schema.suspend(() => SrdUnitPublicationSchema),
   ),
   statBlocks: nonEmptyPublicationArray(
     Schema.suspend(() => SrdStatBlockPublicationSchema),
   ),
-});
+}) satisfies Schema.Codec<SrdSurface, SrdSurfaceEncoded, never, never>;
 
-export const PublishedSrdSurfaceSchema = Schema.Struct({
-  kind: Schema.Literal("srd-5.2.1-surface-catalog"),
+export const SrdSurfaceSchema: Schema.Codec<
+  SrdSurface,
+  SrdSurfaceEncoded,
+  never,
+  never
+> = srdSurfaceSchema;
+
+const publishedSrdSurfaceSchema = Schema.Struct({
+  kind: Schema.Literal(SRD_SURFACE_KIND),
   units: nonEmptyPublicationArray(
     Schema.suspend(() => PublishedSrdUnitPublicationSchema),
   ),
   statBlocks: nonEmptyPublicationArray(
     Schema.suspend(() => PublishedSrdStatBlockPublicationSchema),
   ),
-});
+}) satisfies Schema.Codec<
+  PublishedSrdSurface,
+  PublishedSrdSurfaceEncoded,
+  never,
+  never
+>;
+
+export const PublishedSrdSurfaceSchema: Schema.Codec<
+  PublishedSrdSurface,
+  PublishedSrdSurfaceEncoded,
+  never,
+  never
+> = publishedSrdSurfaceSchema;
 
 const encodedPublication = Schema.toEncoded(PublishedSrdSurfaceSchema);
 const factoredEncodedPublicationAst = factorEncodedPublicationAst(
@@ -850,11 +902,6 @@ export const SrdSurfaceJsonSchema = {
   $defs: encodedPublicationDocument.definitions,
   ...encodedPublicationDocument.schema,
 };
-
-export type SrdSurface = Schema.Schema.Type<typeof SrdSurfaceSchema>;
-export type PublishedSrdSurface = Schema.Schema.Type<
-  typeof PublishedSrdSurfaceSchema
->;
 
 const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 

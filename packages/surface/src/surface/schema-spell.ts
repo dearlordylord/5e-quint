@@ -87,6 +87,10 @@ import {
   SURFACE_WEAPON_PROPERTIES as STAT_BLOCK_REACTION_WEAPON_PROPERTIES,
   type SurfaceReactionTrigger,
 } from "./surface-vocabulary.ts";
+import type {
+  SpellMechanics,
+  SpellMechanicsEncoded,
+} from "./spell-mechanics-types.ts";
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
@@ -7459,7 +7463,7 @@ export const MinorMagicEffectMenuMechanicsSchema =
     ),
   );
 
-export const SpellMechanicsSchema = Schema.Union([
+const spellMechanicsSchema = Schema.Union([
   OngoingEffectMechanicsSchema,
   ModalOngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
@@ -7475,7 +7479,14 @@ export const SpellMechanicsSchema = Schema.Union([
   TemplatedMultiSpawnMechanicsSchema,
   ObjectRepairMechanicsSchema,
   MinorMagicEffectMenuMechanicsSchema,
-]);
+]) satisfies Schema.Codec<SpellMechanics, SpellMechanicsEncoded, never, never>;
+
+export const SpellMechanicsSchema: Schema.Codec<
+  SpellMechanics,
+  SpellMechanicsEncoded,
+  never,
+  never
+> = spellMechanicsSchema;
 
 const SpellRecordIdSchema = surfaceIdentity(UnitId, "id");
 const SpellRecordNameSchema = surfaceIdentity(Schema.String, "name");
