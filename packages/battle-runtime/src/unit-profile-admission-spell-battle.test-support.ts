@@ -258,10 +258,10 @@ export function spellBattle(input: {
       ),
     ],
   });
-  expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
     throw new Error(battleInitializationIssueMessage(result.failure));
   }
+  expect(Result.isSuccess(result)).toBe(true);
   return result.success;
 }
 

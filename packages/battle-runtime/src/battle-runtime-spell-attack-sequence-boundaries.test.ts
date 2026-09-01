@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
-import { classLevel, DieRollResult } from "@dnd/shared/types";
+import { DieRollResult } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
@@ -317,12 +317,6 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
       ],
       casterResources: [rageResource()],
       casterUnitRefs: [supportedBattleUnitRef(rage)],
-      casterUnitFeatures: [
-        characterBattleFeatureInitForTest(rage, [
-          { className: "barbarian", level: classLevel(1) },
-          { className: "wizard", level: classLevel(3) },
-        ]),
-      ],
     });
     const scorchingRay = spellAct({
       session,
