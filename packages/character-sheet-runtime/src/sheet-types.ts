@@ -761,6 +761,7 @@ export const CHARACTER_SHEET_CONSTRUCTION_ISSUE_NO_DETAIL_CODES = [
   "bookOfShadowsPresenceInvalid",
   "wildShapeKnownFormsUnexpected",
   "wildShapeKnownFormsRequired",
+  "wildShapeStatBlockCatalogRequired",
   "wildShapeKnownFormsInvalid",
   "druidCircleLandInvalid",
   "fiendishResilienceInvalid",
@@ -1409,15 +1410,40 @@ export type CharacterSheetHitPointMaximumProjection = {
   readonly qRoute: CharacterSheetHitPointMaximumProjectionRoute;
 };
 
-export type CharacterSheetIssue = {
+export const WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE =
+  "Wild Shape known forms require a valid SRD Stat Block catalog.";
+
+type CharacterSheetMessageIssue = {
   readonly tag: "characterSheetIssue";
+  readonly code?: never;
   readonly message: string;
 };
 
+export type CharacterSheetWildShapeStatBlockCatalogRequiredIssue = {
+  readonly tag: "characterSheetIssue";
+  readonly code: "wildShapeStatBlockCatalogRequired";
+  readonly message: typeof WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE;
+};
+
+export type CharacterSheetIssue =
+  | CharacterSheetMessageIssue
+  | CharacterSheetWildShapeStatBlockCatalogRequiredIssue;
+
 export function characterSheetIssue(
   message: string,
-): Result.Result<never, CharacterSheetIssue> {
+): Result.Result<never, CharacterSheetMessageIssue> {
   return Result.fail({ tag: "characterSheetIssue", message });
+}
+
+export function wildShapeStatBlockCatalogRequiredIssue(): Result.Result<
+  never,
+  CharacterSheetWildShapeStatBlockCatalogRequiredIssue
+> {
+  return Result.fail({
+    tag: "characterSheetIssue",
+    code: "wildShapeStatBlockCatalogRequired",
+    message: WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE,
+  });
 }
 
 export function getRequiredUnit(

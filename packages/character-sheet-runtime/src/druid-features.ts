@@ -23,6 +23,7 @@ import { Result, Match, Option } from "effect";
 import { projectCharacterSheetClassFeature } from "./character-feature-projection.ts";
 import {
   characterSheetIssue,
+  wildShapeStatBlockCatalogRequiredIssue,
   type CharacterSheet,
   type CharacterSheetDruidCircleLand,
   type CharacterSheetDruidCircleLandPreparedSpellAccess,
@@ -30,6 +31,7 @@ import {
   type CharacterSheetInput,
   type CharacterSheetIssue,
   type CharacterSheetLongRestInput,
+  type CharacterSheetWildShapeStatBlockCatalogRequiredIssue,
 } from "./sheet-types.ts";
 
 type DruidWildShapeKnownFormsConstructionIssue =
@@ -37,6 +39,7 @@ type DruidWildShapeKnownFormsConstructionIssue =
       readonly code:
         | "wildShapeKnownFormsUnexpected"
         | "wildShapeKnownFormsRequired"
+        | "wildShapeStatBlockCatalogRequired"
         | "wildShapeKnownFormsInvalid";
     }
   | DruidWildShapeKnownFormIssue;
@@ -91,6 +94,9 @@ export function druidWildShapeKnownFormsFromInput(
         "Wild Shape known forms require selected Beast Stat Block identities.",
       ),
     ),
+    Match.when("wildShapeStatBlockCatalogRequired", () =>
+      wildShapeStatBlockCatalogRequiredIssue(),
+    ),
     Match.when("wildShapeKnownFormsInvalid", () =>
       characterSheetIssue("Wild Shape known form state is invalid."),
     ),
@@ -138,11 +144,9 @@ export function druidWildShapeKnownFormsConstruction(
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.statBlockCatalog,
   );
-  /* v8 ignore start -- @preserve -- The caller-supplied SRD Stat Block catalog must parse before known-form construction. */
   if (Result.isFailure(statBlockCatalog)) {
-    return Result.fail([{ code: "wildShapeKnownFormsInvalid" }]);
+    return Result.fail([{ code: statBlockCatalog.failure.code }]);
   }
-  /* v8 ignore stop -- @preserve */
   const knownFormIssues = validateDruidWildShapeKnownFormIssues({
     facts: facts.success,
     knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
@@ -206,11 +210,12 @@ export function isDruidCircleLandChoice(
 
 export function druidWildShapeStatBlockCatalogFromInput(
   statBlockCatalog: StatBlockCatalog | undefined,
-): Result.Result<StatBlockCatalog, CharacterSheetIssue> {
+): Result.Result<
+  StatBlockCatalog,
+  CharacterSheetWildShapeStatBlockCatalogRequiredIssue
+> {
   if (statBlockCatalog !== undefined) return Result.succeed(statBlockCatalog);
-  return characterSheetIssue(
-    "Wild Shape known forms require a valid SRD Stat Block catalog.",
-  );
+  return wildShapeStatBlockCatalogRequiredIssue();
 }
 
 export function druidWildShapeKnownFormsAfterLongRest(input: {
@@ -248,10 +253,8 @@ export function druidWildShapeKnownFormsAfterLongRest(input: {
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.input.statBlockCatalog,
   );
-  /* v8 ignore start -- @preserve -- Malformed Long Rest input: a Wild Shape replacement requires the same parsed StatBlock catalog used to admit known forms. */
   if (Result.isFailure(statBlockCatalog))
     return Result.fail(statBlockCatalog.failure);
-  /* v8 ignore stop -- @preserve */
   const replaced = replaceDruidWildShapeKnownForm({
     facts: facts.success,
     currentKnownFormStatBlockIds: sheet.druidWildShapeKnownForms.statBlockIds,
