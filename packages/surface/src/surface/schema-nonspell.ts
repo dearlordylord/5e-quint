@@ -55,6 +55,112 @@ import {
   exactOptional,
   strictStruct,
 } from "./schema-helpers.ts";
+import type {
+  ActivatedAbilityMechanics,
+  ActivatedAbilityMechanicsEncoded,
+  ArmorTemplateRecord,
+  ArmorTemplateRecordEncoded,
+  BarbarianClassFeatureMechanics,
+  BarbarianClassFeatureMechanicsEncoded,
+  BarbarianClassFeatureRecord,
+  BarbarianClassFeatureRecordEncoded,
+  BardClassFeatureMechanics,
+  BardClassFeatureMechanicsEncoded,
+  BardClassFeatureRecord,
+  BardClassFeatureRecordEncoded,
+  ClassFeatureRecord,
+  ClassFeatureRecordEncoded,
+  ClassFeatureMechanics,
+  ClassFeatureMechanicsEncoded,
+  ClassGeneralFeatureMechanics,
+  ClassGeneralFeatureMechanicsEncoded,
+  ClassFeatureAcquisitionChoiceMechanics,
+  ClassFeatureAcquisitionChoiceMechanicsEncoded,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationMechanicsEncoded,
+  ClassFeatureComponentMechanics,
+  ClassFeatureComponentMechanicsEncoded,
+  CompositeClassFeatureMechanics,
+  CompositeClassFeatureMechanicsEncoded,
+  ClericClassFeatureMechanics,
+  ClericClassFeatureMechanicsEncoded,
+  ClericClassFeatureRecord,
+  ClericClassFeatureRecordEncoded,
+  DruidClassFeatureMechanics,
+  DruidClassFeatureMechanicsEncoded,
+  DruidClassFeatureRecord,
+  DruidClassFeatureRecordEncoded,
+  FighterClassFeatureMechanics,
+  FighterClassFeatureMechanicsEncoded,
+  FighterClassFeatureRecord,
+  FighterClassFeatureRecordEncoded,
+  FeatMechanics,
+  FeatMechanicsEncoded,
+  FeatRecord,
+  FeatRecordEncoded,
+  MagicItemSpawnedCreatureMechanics,
+  MagicItemSpawnedCreatureMechanicsEncoded,
+  MagicEquipmentTrait,
+  MagicEquipmentTraitEncoded,
+  MagicEquipmentVariant,
+  MagicEquipmentVariantEncoded,
+  MagicItemComponentMechanics,
+  MagicItemComponentMechanicsEncoded,
+  MagicItemMechanics,
+  MagicItemMechanicsEncoded,
+  MagicItemRecord,
+  MagicItemRecordEncoded,
+  MagicItemVariant,
+  MagicItemVariantEncoded,
+  CompositeMagicItemMechanics,
+  CompositeMagicItemMechanicsEncoded,
+  PassiveMechanics,
+  PassiveMechanicsEncoded,
+  PassiveOperation,
+  PassiveOperationEncoded,
+  MonkClassFeatureMechanics,
+  MonkClassFeatureMechanicsEncoded,
+  MonkClassFeatureRecord,
+  MonkClassFeatureRecordEncoded,
+  OtherClassFeatureRecord,
+  OtherClassFeatureRecordEncoded,
+  PaladinClassFeatureMechanics,
+  PaladinClassFeatureMechanicsEncoded,
+  PaladinClassFeatureRecord,
+  PaladinClassFeatureRecordEncoded,
+  RangerClassFeatureMechanics,
+  RangerClassFeatureMechanicsEncoded,
+  RangerClassFeatureRecord,
+  RangerClassFeatureRecordEncoded,
+  RogueClassFeatureMechanics,
+  RogueClassFeatureMechanicsEncoded,
+  RogueClassFeatureRecord,
+  RogueClassFeatureRecordEncoded,
+  SorcererClassFeatureMechanics,
+  SorcererClassFeatureMechanicsEncoded,
+  SorcererClassFeatureRecord,
+  SorcererClassFeatureRecordEncoded,
+  SpeciesTraitMechanics,
+  SpeciesTraitMechanicsEncoded,
+  SpeciesTraitRecord,
+  SpeciesTraitRecordEncoded,
+  TriggeredReactionAbilityMechanics,
+  TriggeredReactionAbilityMechanicsEncoded,
+  UnitRecord,
+  UnitRecordEncoded,
+  ShieldTemplateRecord,
+  ShieldTemplateRecordEncoded,
+  WarlockClassFeatureMechanics,
+  WarlockClassFeatureMechanicsEncoded,
+  WarlockClassFeatureRecord,
+  WarlockClassFeatureRecordEncoded,
+  WizardClassFeatureMechanics,
+  WizardClassFeatureMechanicsEncoded,
+  WizardClassFeatureRecord,
+  WizardClassFeatureRecordEncoded,
+  WeaponTemplateRecord,
+  WeaponTemplateRecordEncoded,
+} from "./nonspell-types.ts";
 import {
   ActivationPhaseSchema,
   CreatureControlSchema,
@@ -478,7 +584,10 @@ export const PassiveSuppressorSchema = Schema.Struct({
   conditions: Schema.NonEmptyArray(ConditionSchema),
 });
 
-export const PassiveOperationSchema = Schema.Struct({
+export const PassiveOperationSchema: Schema.Codec<
+  PassiveOperation,
+  PassiveOperationEncoded
+> = Schema.Struct({
   trigger: Schema.Struct({
     kind: Schema.Literal("elapsed_time"),
     unit: Schema.Literals(["hour", "day"]),
@@ -526,7 +635,10 @@ const ResourcelessOngoingFeatureAbilityFields = {
   resetCadence: exactOptional(ForbiddenValueSchema),
   duration: exactOptional(ForbiddenValueSchema),
 };
-export const ActivatedAbilityMechanicsSchema = Schema.Union([
+export const ActivatedAbilityMechanicsSchema: Schema.Codec<
+  ActivatedAbilityMechanics,
+  ActivatedAbilityMechanicsEncoded
+> = Schema.Union([
   Schema.Struct({
     ...ResourceActivatedAbilityFields,
     activationCost: ClassFeatureActivationCostSchema,
@@ -553,7 +665,10 @@ export const ActivatedAbilityMechanicsSchema = Schema.Union([
   }),
 ]);
 
-export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
+export const TriggeredReactionAbilityMechanicsSchema: Schema.Codec<
+  TriggeredReactionAbilityMechanics,
+  TriggeredReactionAbilityMechanicsEncoded
+> = Schema.Struct({
   condition: exactOptional(EquipmentPredicateSchema),
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
@@ -579,7 +694,10 @@ const MagicItemSpawnedCreaturePayloadSchema = Schema.Struct({
   dismissal: CreatureDismissalSchema,
 });
 
-export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
+export const MagicItemSpawnedCreatureMechanicsSchema: Schema.Codec<
+  MagicItemSpawnedCreatureMechanics,
+  MagicItemSpawnedCreatureMechanicsEncoded
+> = Schema.Struct({
   ...ResourceActivatedAbilityFields,
   activationCost: ClassFeatureActivationCostSchema,
   ...MagicItemSpawnedCreaturePayloadSchema.fields,
@@ -587,8 +705,10 @@ export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
   range: RangeSchema,
 });
 
-export const ClassFeatureActivationMechanicsSchema =
-  ActivatedAbilityMechanicsSchema;
+export const ClassFeatureActivationMechanicsSchema: Schema.Codec<
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationMechanicsEncoded
+> = ActivatedAbilityMechanicsSchema;
 
 export const AlternateActionCostMechanicsSchema = Schema.Struct({
   family: Schema.Literal("alternate_action_cost"),
@@ -614,7 +734,10 @@ const FeatureChoiceSelectionRepeatabilitySchema = Schema.Union([
   }),
 ]);
 
-export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
+export const ClassFeatureAcquisitionChoiceMechanicsSchema: Schema.Codec<
+  ClassFeatureAcquisitionChoiceMechanics,
+  ClassFeatureAcquisitionChoiceMechanicsEncoded
+> = Schema.Struct({
   family: Schema.Literal("class_feature_acquisition_choice"),
   choiceKey: surfaceProtocol(NonEmptyStringSchema, "choiceKey"),
   timing: Schema.Literal("class_feature_acquisition"),
@@ -1081,7 +1204,10 @@ export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
 
-export const ClassFeatureComponentMechanicsSchema = Schema.Union([
+export const ClassFeatureComponentMechanicsSchema: Schema.Codec<
+  ClassFeatureComponentMechanics,
+  ClassFeatureComponentMechanicsEncoded
+> = Schema.Union([
   Schema.suspend(() => PassiveMechanicsSchema).pipe(
     Schema.annotate({ identifier: "PassiveMechanics" }),
   ),
@@ -1098,7 +1224,10 @@ export const ClassFeatureComponentMechanicsSchema = Schema.Union([
   ),
 ]);
 
-export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
+export const CompositeClassFeatureMechanicsSchema: Schema.Codec<
+  CompositeClassFeatureMechanics,
+  CompositeClassFeatureMechanicsEncoded
+> = Schema.Struct({
   family: Schema.Literal("composite"),
   parts: Schema.NonEmptyArray(ClassFeatureComponentMechanicsSchema),
 });
@@ -1862,7 +1991,10 @@ export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   }),
 });
 
-export const PassiveMechanicsSchema = Schema.Struct({
+export const PassiveMechanicsSchema: Schema.Codec<
+  PassiveMechanics,
+  PassiveMechanicsEncoded
+> = Schema.Struct({
   family: Schema.Literal("passive"),
   condition: exactOptional(EquipmentPredicateSchema),
   suppressedBy: exactOptional(Schema.NonEmptyArray(PassiveSuppressorSchema)),
@@ -1901,7 +2033,10 @@ export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
 });
 
 /* v8 ignore start -- @preserve -- these union declarations only assemble already-tested mechanics schemas during collection */
-export const ClassFeatureMechanicsSchema = Schema.Union([
+export const ClassFeatureMechanicsSchema: Schema.Codec<
+  ClassFeatureMechanics,
+  ClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
@@ -1943,7 +2078,10 @@ export const ClassFeatureMechanicsSchema = Schema.Union([
   CombatTurnStartHeroicInspirationMechanicsSchema,
 ]);
 
-export const ClassGeneralFeatureMechanicsSchema = Schema.Union([
+export const ClassGeneralFeatureMechanicsSchema: Schema.Codec<
+  ClassGeneralFeatureMechanics,
+  ClassGeneralFeatureMechanicsEncoded
+> = Schema.Union([
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
@@ -1953,24 +2091,36 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union([
   BonusActionDelegatedStandardActionsMechanicsSchema,
 ]);
 
-export const BardClassFeatureMechanicsSchema = Schema.Union([
+export const BardClassFeatureMechanicsSchema: Schema.Codec<
+  BardClassFeatureMechanics,
+  BardClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   PreparedSpellListExpansionMechanicsSchema,
 ]);
 
-export const ClericClassFeatureMechanicsSchema = Schema.Union([
+export const ClericClassFeatureMechanicsSchema: Schema.Codec<
+  ClericClassFeatureMechanics,
+  ClericClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   SpellSlotHealingModifierMechanicsSchema,
   MagicActionHealingPoolMechanicsSchema,
 ]);
 
-export const DruidClassFeatureMechanicsSchema = Schema.Union([
+export const DruidClassFeatureMechanicsSchema: Schema.Codec<
+  DruidClassFeatureMechanics,
+  DruidClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   DruidWildCompanionSpellCastMechanicsSchema,
   MagicActionAreaSaveDamageHealingMechanicsSchema,
 ]);
 
-export const WizardClassFeatureMechanicsSchema = Schema.Union([
+export const WizardClassFeatureMechanicsSchema: Schema.Codec<
+  WizardClassFeatureMechanics,
+  WizardClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
@@ -1979,12 +2129,18 @@ export const WizardClassFeatureMechanicsSchema = Schema.Union([
   SpellDamageRollAbilityModifierMechanicsSchema,
 ]);
 
-export const BarbarianClassFeatureMechanicsSchema = Schema.Union([
+export const BarbarianClassFeatureMechanicsSchema: Schema.Codec<
+  BarbarianClassFeatureMechanics,
+  BarbarianClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   BrutalStrikeMechanicsSchema,
 ]);
 
-export const FighterClassFeatureMechanicsSchema = Schema.Union([
+export const FighterClassFeatureMechanicsSchema: Schema.Codec<
+  FighterClassFeatureMechanics,
+  FighterClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   IndomitableMechanicsSchema,
@@ -1993,7 +2149,10 @@ export const FighterClassFeatureMechanicsSchema = Schema.Union([
   CombatTurnStartHeroicInspirationMechanicsSchema,
 ]);
 
-export const MonkClassFeatureMechanicsSchema = Schema.Union([
+export const MonkClassFeatureMechanicsSchema: Schema.Codec<
+  MonkClassFeatureMechanics,
+  MonkClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
   AcrobaticMovementMechanicsSchema,
@@ -2001,31 +2160,46 @@ export const MonkClassFeatureMechanicsSchema = Schema.Union([
   StunningStrikeMechanicsSchema,
 ]);
 
-export const PaladinClassFeatureMechanicsSchema = Schema.Union([
+export const PaladinClassFeatureMechanicsSchema: Schema.Codec<
+  PaladinClassFeatureMechanics,
+  PaladinClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   AbjureFoesMechanicsSchema,
   SacredWeaponMechanicsSchema,
 ]);
 
-export const RangerClassFeatureMechanicsSchema = Schema.Union([
+export const RangerClassFeatureMechanicsSchema: Schema.Codec<
+  RangerClassFeatureMechanics,
+  RangerClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   HuntersPreyMechanicsSchema,
 ]);
 
-export const RogueClassFeatureMechanicsSchema = Schema.Union([
+export const RogueClassFeatureMechanicsSchema: Schema.Codec<
+  RogueClassFeatureMechanics,
+  RogueClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   CunningStrikeMechanicsSchema,
   SupremeSneakMechanicsSchema,
   SteadyAimMechanicsSchema,
 ]);
 
-export const SorcererClassFeatureMechanicsSchema = Schema.Union([
+export const SorcererClassFeatureMechanicsSchema: Schema.Codec<
+  SorcererClassFeatureMechanics,
+  SorcererClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   SorcererMetamagicMechanicsSchema,
   SorcererSorcerousRestorationMechanicsSchema,
 ]);
 
-export const WarlockClassFeatureMechanicsSchema = Schema.Union([
+export const WarlockClassFeatureMechanicsSchema: Schema.Codec<
+  WarlockClassFeatureMechanics,
+  WarlockClassFeatureMechanicsEncoded
+> = Schema.Union([
   ClassGeneralFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
@@ -3635,82 +3809,124 @@ export const BardClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("bard"),
   mechanics: BardClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  BardClassFeatureRecord,
+  BardClassFeatureRecordEncoded
+>;
 
 export const WizardClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("wizard"),
   mechanics: WizardClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  WizardClassFeatureRecord,
+  WizardClassFeatureRecordEncoded
+>;
 
 export const BarbarianClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("barbarian"),
   mechanics: BarbarianClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  BarbarianClassFeatureRecord,
+  BarbarianClassFeatureRecordEncoded
+>;
 
 export const FighterClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("fighter"),
   mechanics: FighterClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  FighterClassFeatureRecord,
+  FighterClassFeatureRecordEncoded
+>;
 /* v8 ignore stop -- @preserve */
 
 export const ClericClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("cleric"),
   mechanics: ClericClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  ClericClassFeatureRecord,
+  ClericClassFeatureRecordEncoded
+>;
 
 export const DruidClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("druid"),
   mechanics: DruidClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  DruidClassFeatureRecord,
+  DruidClassFeatureRecordEncoded
+>;
 
 export const MonkClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("monk"),
   mechanics: MonkClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  MonkClassFeatureRecord,
+  MonkClassFeatureRecordEncoded
+>;
 
 export const PaladinClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("paladin"),
   mechanics: PaladinClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  PaladinClassFeatureRecord,
+  PaladinClassFeatureRecordEncoded
+>;
 
 export const RangerClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("ranger"),
   mechanics: RangerClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  RangerClassFeatureRecord,
+  RangerClassFeatureRecordEncoded
+>;
 
 export const RogueClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("rogue"),
   mechanics: RogueClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  RogueClassFeatureRecord,
+  RogueClassFeatureRecordEncoded
+>;
 
 export const SorcererClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("sorcerer"),
   mechanics: SorcererClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  SorcererClassFeatureRecord,
+  SorcererClassFeatureRecordEncoded
+>;
 
 export const WarlockClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("warlock"),
   mechanics: WarlockClassFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  WarlockClassFeatureRecord,
+  WarlockClassFeatureRecordEncoded
+>;
 
 export const OtherClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literals(GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES),
   mechanics: ClassGeneralFeatureMechanicsSchema,
-});
+}) satisfies Schema.Codec<
+  OtherClassFeatureRecord,
+  OtherClassFeatureRecordEncoded
+>;
 
-export const ClassFeatureRecordSchema = Schema.Union([
+export const ClassFeatureRecordSchema: Schema.Codec<
+  ClassFeatureRecord,
+  ClassFeatureRecordEncoded
+> = Schema.Union([
   BardClassFeatureRecordSchema,
   WizardClassFeatureRecordSchema,
   BarbarianClassFeatureRecordSchema,
@@ -3741,7 +3957,10 @@ export const MasteryRecordSchema = Schema.Struct({
   mechanics: MasteryMechanicsSchema,
 });
 
-export const FeatMechanicsSchema = Schema.Union([
+export const FeatMechanicsSchema: Schema.Codec<
+  FeatMechanics,
+  FeatMechanicsEncoded
+> = Schema.Union([
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
@@ -3835,7 +4054,7 @@ export const FeatRecordSchema = Schema.Struct({
     FeatAbilityScoreIncreaseChoiceSchema,
   ),
   mechanics: FeatMechanicsSchema,
-});
+}) satisfies Schema.Codec<FeatRecord, FeatRecordEncoded>;
 
 const GnomishLineageForestMechanicsSchema = strictStruct({
   family: Schema.Literal("passive"),
@@ -4004,7 +4223,10 @@ export const RestTriggeredHeroicInspirationMechanicsSchema = strictStruct({
   grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
 });
 
-export const SpeciesTraitMechanicsSchema = Schema.Union([
+export const SpeciesTraitMechanicsSchema: Schema.Codec<
+  SpeciesTraitMechanics,
+  SpeciesTraitMechanicsEncoded
+> = Schema.Union([
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
@@ -4020,7 +4242,7 @@ export const SpeciesTraitRecordSchema = Schema.Struct({
   kind: Schema.Literal("species_trait"),
   species: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
   mechanics: SpeciesTraitMechanicsSchema,
-});
+}) satisfies Schema.Codec<SpeciesTraitRecord, SpeciesTraitRecordEncoded>;
 
 export const BackgroundToolProficiencySchema = Schema.Union([
   Schema.Struct({
@@ -4275,7 +4497,10 @@ export const SpeciesRecordSchema = Schema.Union([
   TieflingSpeciesRecordSchema,
 ]);
 
-export const MagicItemComponentMechanicsSchema = Schema.Union([
+export const MagicItemComponentMechanicsSchema: Schema.Codec<
+  MagicItemComponentMechanics,
+  MagicItemComponentMechanicsEncoded
+> = Schema.Union([
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
@@ -4283,12 +4508,18 @@ export const MagicItemComponentMechanicsSchema = Schema.Union([
   MagicItemSpawnedCreatureMechanicsSchema,
 ]);
 
-export const CompositeMagicItemMechanicsSchema = Schema.Struct({
+export const CompositeMagicItemMechanicsSchema: Schema.Codec<
+  CompositeMagicItemMechanics,
+  CompositeMagicItemMechanicsEncoded
+> = Schema.Struct({
   family: Schema.Literal("composite"),
   parts: Schema.NonEmptyArray(MagicItemComponentMechanicsSchema),
 });
 
-export const MagicItemMechanicsSchema = Schema.Union([
+export const MagicItemMechanicsSchema: Schema.Codec<
+  MagicItemMechanics,
+  MagicItemMechanicsEncoded
+> = Schema.Union([
   MagicItemComponentMechanicsSchema,
   CompositeMagicItemMechanicsSchema,
 ]);
@@ -4320,7 +4551,10 @@ export const MagicItemAttunementSchema = Schema.Union([
   }),
 ]);
 
-export const MagicItemVariantSchema = Schema.Struct({
+export const MagicItemVariantSchema: Schema.Codec<
+  MagicItemVariant,
+  MagicItemVariantEncoded
+> = Schema.Struct({
   id: surfaceIdentity(NonEmptyStringSchema, "id"),
   name: surfaceIdentity(NonEmptyStringSchema, "name"),
   description: exactOptional(surfaceProse(Schema.String)),
@@ -4330,40 +4564,53 @@ export const MagicItemVariantSchema = Schema.Struct({
   attunementOverride: exactOptional(MagicItemAttunementSchema),
 });
 
-export const MagicItemRecordSchema = Schema.Union([
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("magic_item"),
-    rarity: MagicItemRaritySchema,
-    mechanics: MagicItemMechanicsSchema,
-    destruction: ItemDestructionPolicySchema,
-    requiresAttunement: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("magic_item"),
-    rarity: MagicItemRaritySchema,
-    mechanics: MagicItemMechanicsSchema,
-    destruction: ItemDestructionPolicySchema,
-    requiresAttunement: Schema.Literal(true),
-    attunementRestriction: exactOptional(MagicItemAttunementRestrictionSchema),
-  }),
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("magic_item"),
-    defaultAttunement: MagicItemAttunementSchema,
-    variants: Schema.NonEmptyArray(MagicItemVariantSchema),
-  }),
+const MagicItemWithoutAttunementRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("magic_item"),
+  rarity: MagicItemRaritySchema,
+  mechanics: MagicItemMechanicsSchema,
+  destruction: ItemDestructionPolicySchema,
+  requiresAttunement: Schema.Literal(false),
+});
+const MagicItemWithAttunementRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("magic_item"),
+  rarity: MagicItemRaritySchema,
+  mechanics: MagicItemMechanicsSchema,
+  destruction: ItemDestructionPolicySchema,
+  requiresAttunement: Schema.Literal(true),
+  attunementRestriction: exactOptional(MagicItemAttunementRestrictionSchema),
+});
+const MagicItemVariantCollectionRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("magic_item"),
+  defaultAttunement: MagicItemAttunementSchema,
+  variants: Schema.NonEmptyArray(MagicItemVariantSchema),
+});
+
+export const MagicItemRecordSchema: Schema.Codec<
+  MagicItemRecord,
+  MagicItemRecordEncoded
+> = Schema.Union([
+  MagicItemWithoutAttunementRecordSchema,
+  MagicItemWithAttunementRecordSchema,
+  MagicItemVariantCollectionRecordSchema,
 ]);
 
-export const MagicEquipmentTraitSchema = Schema.Struct({
+export const MagicEquipmentTraitSchema: Schema.Codec<
+  MagicEquipmentTrait,
+  MagicEquipmentTraitEncoded
+> = Schema.Struct({
   rarity: MagicItemRaritySchema,
   attunement: MagicItemAttunementSchema,
   mechanics: MagicItemMechanicsSchema,
   destruction: ItemDestructionPolicySchema,
 });
 
-export const MagicEquipmentVariantSchema = Schema.Struct({
+export const MagicEquipmentVariantSchema: Schema.Codec<
+  MagicEquipmentVariant,
+  MagicEquipmentVariantEncoded
+> = Schema.Struct({
   id: surfaceIdentity(NonEmptyStringSchema, "id"),
   name: surfaceIdentity(NonEmptyStringSchema, "name"),
   description: exactOptional(surfaceProse(Schema.String)),
@@ -4415,7 +4662,7 @@ export const ArmorTemplateRecordSchema = Schema.Struct({
     ),
   }),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
-});
+}) satisfies Schema.Codec<ArmorTemplateRecord, ArmorTemplateRecordEncoded>;
 
 const shieldRecordBaseFields = {
   ...UnitMetadataSchema.fields,
@@ -4453,7 +4700,7 @@ export const ShieldTemplateRecordSchema = Schema.Struct({
     action: Schema.Literal("utilize"),
   }),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
-});
+}) satisfies Schema.Codec<ShieldTemplateRecord, ShieldTemplateRecordEncoded>;
 
 export const WeaponTemplateRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
@@ -4482,7 +4729,7 @@ export const WeaponTemplateRecordSchema = Schema.Struct({
     }),
   ]),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
-});
+}) satisfies Schema.Codec<WeaponTemplateRecord, WeaponTemplateRecordEncoded>;
 
 export const WeaponRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
@@ -4508,13 +4755,27 @@ export const UNIT_RECORD_MEMBER_SCHEMAS = [
   ...NonWizardClassRecordSchema.members,
   WizardClassRecordSchema,
   SubclassRecordSchema,
-  ...ClassFeatureRecordSchema.members,
+  BardClassFeatureRecordSchema,
+  WizardClassFeatureRecordSchema,
+  BarbarianClassFeatureRecordSchema,
+  FighterClassFeatureRecordSchema,
+  ClericClassFeatureRecordSchema,
+  DruidClassFeatureRecordSchema,
+  MonkClassFeatureRecordSchema,
+  PaladinClassFeatureRecordSchema,
+  RangerClassFeatureRecordSchema,
+  RogueClassFeatureRecordSchema,
+  SorcererClassFeatureRecordSchema,
+  WarlockClassFeatureRecordSchema,
+  OtherClassFeatureRecordSchema,
   BackgroundRecordSchema,
   MasteryRecordSchema,
   FeatRecordSchema,
   ...SpeciesRecordSchema.members,
   SpeciesTraitRecordSchema,
-  ...MagicItemRecordSchema.members,
+  MagicItemWithoutAttunementRecordSchema,
+  MagicItemWithAttunementRecordSchema,
+  MagicItemVariantCollectionRecordSchema,
   ...ArmorRecordSchema.members,
   ArmorTemplateRecordSchema,
   ...ShieldRecordSchema.members,
@@ -4523,6 +4784,15 @@ export const UNIT_RECORD_MEMBER_SCHEMAS = [
   WeaponRecordSchema,
 ] as const;
 
-export const UnitRecordSchema = Schema.Union(UNIT_RECORD_MEMBER_SCHEMAS).pipe(
-  Schema.annotate({ identifier: "UnitRecord" }),
-);
+type UnitRecordCodec = Omit<
+  Schema.Union<typeof UNIT_RECORD_MEMBER_SCHEMAS>,
+  "Type" | "Encoded"
+> &
+  Schema.Codec<UnitRecord, UnitRecordEncoded>;
+
+export const UnitRecordSchema: UnitRecordCodec = Schema.Union(
+  UNIT_RECORD_MEMBER_SCHEMAS,
+).pipe(Schema.annotate({ identifier: "UnitRecord" })) satisfies Schema.Codec<
+  UnitRecord,
+  UnitRecordEncoded
+>;

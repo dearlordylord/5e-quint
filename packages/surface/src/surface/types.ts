@@ -13,6 +13,7 @@ import {
 } from "./schema-base.ts";
 import * as SurfaceSchema from "./schema.ts";
 import type { StatBlockRecord } from "./stat-block-types.ts";
+import type { FeatMechanics, UnitRecord } from "./nonspell-types.ts";
 
 export type {
   AuthoredExecutableProcedure,
@@ -40,6 +41,112 @@ export type {
   StatBlockSpellReference,
   StatBlockTextOnlyReason,
 } from "./stat-block-types.ts";
+export type {
+  ActivatedAbilityMechanics,
+  ActivatedAbilityMechanicsEncoded,
+  ArmorTemplateRecord,
+  ArmorTemplateRecordEncoded,
+  BarbarianClassFeatureMechanics,
+  BarbarianClassFeatureMechanicsEncoded,
+  BarbarianClassFeatureRecord,
+  BarbarianClassFeatureRecordEncoded,
+  BardClassFeatureMechanics,
+  BardClassFeatureMechanicsEncoded,
+  BardClassFeatureRecord,
+  BardClassFeatureRecordEncoded,
+  ClassFeatureAcquisitionChoiceMechanics,
+  ClassFeatureAcquisitionChoiceMechanicsEncoded,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationMechanicsEncoded,
+  ClassFeatureComponentMechanics,
+  ClassFeatureComponentMechanicsEncoded,
+  ClassFeatureMechanics,
+  ClassFeatureMechanicsEncoded,
+  ClassFeatureRecord,
+  ClassFeatureRecordEncoded,
+  ClassGeneralFeatureMechanics,
+  ClassGeneralFeatureMechanicsEncoded,
+  ClericClassFeatureMechanics,
+  ClericClassFeatureMechanicsEncoded,
+  ClericClassFeatureRecord,
+  ClericClassFeatureRecordEncoded,
+  CompositeClassFeatureMechanics,
+  CompositeClassFeatureMechanicsEncoded,
+  CompositeMagicItemMechanics,
+  CompositeMagicItemMechanicsEncoded,
+  DruidClassFeatureMechanics,
+  DruidClassFeatureMechanicsEncoded,
+  DruidClassFeatureRecord,
+  DruidClassFeatureRecordEncoded,
+  FeatMechanics,
+  FeatMechanicsEncoded,
+  FeatRecord,
+  FeatRecordEncoded,
+  FighterClassFeatureMechanics,
+  FighterClassFeatureMechanicsEncoded,
+  FighterClassFeatureRecord,
+  FighterClassFeatureRecordEncoded,
+  MagicEquipmentTrait,
+  MagicEquipmentTraitEncoded,
+  MagicEquipmentVariant,
+  MagicEquipmentVariantEncoded,
+  MagicItemComponentMechanics,
+  MagicItemComponentMechanicsEncoded,
+  MagicItemMechanics,
+  MagicItemMechanicsEncoded,
+  MagicItemRecord,
+  MagicItemRecordEncoded,
+  MagicItemSpawnedCreatureMechanics,
+  MagicItemSpawnedCreatureMechanicsEncoded,
+  MagicItemVariant,
+  MagicItemVariantEncoded,
+  MonkClassFeatureMechanics,
+  MonkClassFeatureMechanicsEncoded,
+  MonkClassFeatureRecord,
+  MonkClassFeatureRecordEncoded,
+  OtherClassFeatureRecord,
+  OtherClassFeatureRecordEncoded,
+  PaladinClassFeatureMechanics,
+  PaladinClassFeatureMechanicsEncoded,
+  PaladinClassFeatureRecord,
+  PaladinClassFeatureRecordEncoded,
+  PassiveMechanics,
+  PassiveMechanicsEncoded,
+  PassiveOperation,
+  PassiveOperationEncoded,
+  RangerClassFeatureMechanics,
+  RangerClassFeatureMechanicsEncoded,
+  RangerClassFeatureRecord,
+  RangerClassFeatureRecordEncoded,
+  RogueClassFeatureMechanics,
+  RogueClassFeatureMechanicsEncoded,
+  RogueClassFeatureRecord,
+  RogueClassFeatureRecordEncoded,
+  ShieldTemplateRecord,
+  ShieldTemplateRecordEncoded,
+  SorcererClassFeatureMechanics,
+  SorcererClassFeatureMechanicsEncoded,
+  SorcererClassFeatureRecord,
+  SorcererClassFeatureRecordEncoded,
+  SpeciesTraitMechanics,
+  SpeciesTraitMechanicsEncoded,
+  SpeciesTraitRecord,
+  SpeciesTraitRecordEncoded,
+  TriggeredReactionAbilityMechanics,
+  TriggeredReactionAbilityMechanicsEncoded,
+  UnitRecord,
+  UnitRecordEncoded,
+  WarlockClassFeatureMechanics,
+  WarlockClassFeatureMechanicsEncoded,
+  WarlockClassFeatureRecord,
+  WarlockClassFeatureRecordEncoded,
+  WeaponTemplateRecord,
+  WeaponTemplateRecordEncoded,
+  WizardClassFeatureMechanics,
+  WizardClassFeatureMechanicsEncoded,
+  WizardClassFeatureRecord,
+  WizardClassFeatureRecordEncoded,
+} from "./nonspell-types.ts";
 
 // Runtime literal sets kept as values; concrete surface types derive from the Effect schemas.
 export const SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
@@ -474,9 +581,6 @@ export type OngoingEffect = Schema.Schema.Type<
 export type OngoingOperation = Schema.Schema.Type<
   typeof SurfaceSchema.OngoingOperationSchema
 >;
-export type PassiveOperation = Schema.Schema.Type<
-  typeof SurfaceSchema.PassiveOperationSchema
->;
 export type ActionRestriction = Schema.Schema.Type<
   typeof SurfaceSchema.ActionRestrictionSchema
 >;
@@ -830,29 +934,8 @@ export type ResetCadence = Schema.Schema.Type<
 export type ClassFeatureDuration = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureDurationSchema
 >;
-export type ActivatedAbilityMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ActivatedAbilityMechanicsSchema
->;
-export type TriggeredReactionAbilityMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.TriggeredReactionAbilityMechanicsSchema
->;
-export type MagicItemSpawnedCreatureMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicItemSpawnedCreatureMechanicsSchema
->;
-export type ClassFeatureActivationMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ClassFeatureActivationMechanicsSchema
->;
-export type ClassFeatureComponentMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ClassFeatureComponentMechanicsSchema
->;
-export type CompositeClassFeatureMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.CompositeClassFeatureMechanicsSchema
->;
 export type CombatTurnStartHeroicInspirationMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CombatTurnStartHeroicInspirationMechanicsSchema
->;
-export type ClassFeatureAcquisitionChoiceMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ClassFeatureAcquisitionChoiceMechanicsSchema
 >;
 export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureResourceContainerMechanicsSchema
@@ -875,12 +958,6 @@ export type ClassSpellcastingProjectionMechanics = Schema.Schema.Type<
 export type DruidWildCompanionSpellCastMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.DruidWildCompanionSpellCastMechanicsSchema
 >;
-export type ClericClassFeatureMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ClericClassFeatureMechanicsSchema
->;
-export type DruidClassFeatureMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.DruidClassFeatureMechanicsSchema
->;
 export type WarlockPactSlotRecoveryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WarlockPactSlotRecoveryMechanicsSchema
 >;
@@ -896,17 +973,11 @@ export type EquipmentPredicate = Schema.Schema.Type<
 export type PassiveSuppressor = Schema.Schema.Type<
   typeof SurfaceSchema.PassiveSuppressorSchema
 >;
-export type PassiveMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.PassiveMechanicsSchema
->;
 export type PreparedSpellListExpansionMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.PreparedSpellListExpansionMechanicsSchema
 >;
 export type SpellDamageRollAbilityModifierMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpellDamageRollAbilityModifierMechanicsSchema
->;
-export type ClassFeatureMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ClassFeatureMechanicsSchema
 >;
 export type RiderExpiry = Schema.Schema.Type<
   typeof SurfaceSchema.RiderExpirySchema
@@ -1118,12 +1189,6 @@ export type AcrobaticMovementMechanics = Schema.Schema.Type<
 export type SupremeSneakMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SupremeSneakMechanicsSchema
 >;
-export type RogueCunningStrikeClassFeatureRecord = Omit<
-  Schema.Schema.Type<typeof SurfaceSchema.RogueClassFeatureRecordSchema>,
-  "mechanics"
-> & {
-  readonly mechanics: CunningStrikeMechanics;
-};
 export type SacredWeaponMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SacredWeaponMechanicsSchema
 >;
@@ -1160,21 +1225,6 @@ export type NonSpellcastingClassRecord = Schema.Schema.Type<
 export type NonWizardClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.NonWizardClassRecordSchema
 >;
-export type ClassFeatureRecord =
-  | Schema.Schema.Type<typeof SurfaceSchema.ClassFeatureRecordSchema>
-  | RogueCunningStrikeClassFeatureRecord;
-export type PaladinClassFeatureRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.PaladinClassFeatureRecordSchema
->;
-export type RangerClassFeatureRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.RangerClassFeatureRecordSchema
->;
-export type RogueClassFeatureRecord =
-  | Schema.Schema.Type<typeof SurfaceSchema.RogueClassFeatureRecordSchema>
-  | RogueCunningStrikeClassFeatureRecord;
-export type WarlockClassFeatureRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.WarlockClassFeatureRecordSchema
->;
 export type BackgroundToolProficiency = Schema.Schema.Type<
   typeof SurfaceSchema.BackgroundToolProficiencySchema
 >;
@@ -1186,9 +1236,6 @@ export type BackgroundRecord = Schema.Schema.Type<
 >;
 export type MasteryRecord = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryRecordSchema
->;
-export type FeatMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.FeatMechanicsSchema
 >;
 export type MagicInitiateMechanics = Extract<
   FeatMechanics,
@@ -1205,12 +1252,6 @@ export type WeaponAttackDamageDieFloorFeatMechanics = Extract<
 export type LightExtraAttackDamageAbilityModifierFeatMechanics = Extract<
   FeatMechanics,
   { readonly family: "light_extra_attack_damage_ability_modifier" }
->;
-export type FeatRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.FeatRecordSchema
->;
-export type SpeciesTraitMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.SpeciesTraitMechanicsSchema
 >;
 export type D20TestNaturalOneRerollMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.D20TestNaturalOneRerollMechanicsSchema
@@ -1284,18 +1325,6 @@ export type TieflingSpeciesRecord = Schema.Schema.Type<
 export type SpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesRecordSchema
 >;
-export type SpeciesTraitRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.SpeciesTraitRecordSchema
->;
-export type MagicItemComponentMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicItemComponentMechanicsSchema
->;
-export type CompositeMagicItemMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.CompositeMagicItemMechanicsSchema
->;
-export type MagicItemMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicItemMechanicsSchema
->;
 export type MagicItemRarity = Schema.Schema.Type<
   typeof SurfaceSchema.MagicItemRaritySchema
 >;
@@ -1308,39 +1337,15 @@ export type ItemDestructionPolicy = Schema.Schema.Type<
 export type MagicItemAttunement = Schema.Schema.Type<
   typeof SurfaceSchema.MagicItemAttunementSchema
 >;
-export type MagicEquipmentTrait = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicEquipmentTraitSchema
->;
-export type MagicEquipmentVariant = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicEquipmentVariantSchema
->;
-export type MagicItemVariant = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicItemVariantSchema
->;
-export type MagicItemRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.MagicItemRecordSchema
->;
 export type ArmorRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ArmorRecordSchema
->;
-export type ArmorTemplateRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.ArmorTemplateRecordSchema
 >;
 export type ShieldRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ShieldRecordSchema
 >;
-export type ShieldTemplateRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.ShieldTemplateRecordSchema
->;
-export type WeaponTemplateRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.WeaponTemplateRecordSchema
->;
 export type WeaponRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponRecordSchema
 >;
-export type UnitRecord =
-  | Schema.Schema.Type<typeof SurfaceSchema.UnitRecordSchema>
-  | RogueCunningStrikeClassFeatureRecord;
 export type AuthoredSpellSource = SpellRecord;
 export type AuthoredUnitSource = UnitRecord;
 export type DragonbornSpeciesSource = DragonbornSpeciesRecord;
