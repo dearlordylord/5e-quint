@@ -98,8 +98,13 @@ type DamageReductionFailedFact =
   | "range"
   | "duration"
   | "attachment"
+  | "typeFilter"
+  | "stateFilter"
+  | "visibility"
   | "passiveOperation"
   | "damage"
+  | "spellcastingMod"
+  | "abilityModifier"
   | "operationCount";
 type DamageReductionAdmissionIssue = SpellProcedureAdmissionIssue<
   "damageReduction",
@@ -220,14 +225,38 @@ function damageReductionMechanicsAdmission(
   )) {
     pushIssue("duration", mechanicsPath);
   }
+  const targetSelection =
+    mechanics.attachment.kind === "hole" &&
+    mechanics.attachment.value.kind === "target"
+      ? mechanics.attachment.value.selection
+      : undefined;
   if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "target" ||
-    mechanics.attachment.value.selection.mode !== "one" ||
-    !("disposition" in mechanics.attachment.value.selection) ||
-    mechanics.attachment.value.selection.disposition !== "willing"
+    targetSelection === undefined ||
+    targetSelection.mode !== "one" ||
+    !("disposition" in targetSelection) ||
+    targetSelection.disposition !== "willing"
   ) {
     pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+  if (targetSelection !== undefined) {
+    if (
+      "typeFilter" in targetSelection &&
+      targetSelection.typeFilter !== undefined
+    ) {
+      pushIssue("typeFilter", spellOngoingAttachmentPath());
+    }
+    if (
+      "stateFilter" in targetSelection &&
+      targetSelection.stateFilter !== undefined
+    ) {
+      pushIssue("stateFilter", spellOngoingAttachmentPath());
+    }
+    if (
+      "visibility" in targetSelection &&
+      targetSelection.visibility !== undefined
+    ) {
+      pushIssue("visibility", spellOngoingAttachmentPath());
+    }
   }
   if (expected === undefined || expected.operation.trigger.kind !== "passive") {
     pushIssue("passiveOperation", damageReductionOperationEffectPath(expected));
@@ -241,12 +270,27 @@ function damageReductionMechanicsAdmission(
       : undefined;
   const damageType = damageEffect?.damageType;
   let damageTypeChoices: readonly DamageType[] = [];
+  if (damageEffect === undefined || damageEffect.amount.kind !== "fixed") {
+    pushIssue("damage", damageReductionOperationEffectPath(expected));
+  } else {
+    const expr = damageEffect.amount.expr;
+    if (expr.dice !== 1 || expr.dieSize !== 4 || (expr.flat ?? 0) !== 0) {
+      pushIssue("damage", damageReductionOperationEffectPath(expected));
+    }
+    if (expr.spellcastingMod === true) {
+      pushIssue(
+        "spellcastingMod",
+        damageReductionOperationEffectPath(expected),
+      );
+    }
+    if (expr.abilityModifier !== undefined) {
+      pushIssue(
+        "abilityModifier",
+        damageReductionOperationEffectPath(expected),
+      );
+    }
+  }
   if (
-    damageEffect === undefined ||
-    damageEffect.amount.kind !== "fixed" ||
-    damageEffect.amount.expr.dice !== 1 ||
-    damageEffect.amount.expr.dieSize !== 4 ||
-    (damageEffect.amount.expr.flat ?? 0) !== 0 ||
     typeof damageType !== "object" ||
     damageType.kind !== "hole" ||
     typeof damageType.value !== "object" ||

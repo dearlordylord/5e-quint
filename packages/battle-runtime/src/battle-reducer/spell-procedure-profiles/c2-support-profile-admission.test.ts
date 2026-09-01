@@ -31,7 +31,11 @@ import {
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  EffectAtom,
+  SpellMechanics,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
 import type { SpellAdmissionContext } from "./profile.ts";
 import { spellAdmissionContextFor } from "./admission-context.ts";
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
@@ -99,6 +103,10 @@ type C2ExpectedAdmissionIssue = SpellProcedureAdmissionIssue<
   C2StaticAdmissionIssue["procedure"],
   C2StaticAdmissionIssue["failedFact"],
   C2StaticAdmissionIssue["mechanicsPath"]
+>;
+type NumericRollEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_roll_numeric" }
 >;
 
 function expectedIssue(
@@ -471,6 +479,290 @@ describe("C2 support profile static admission", () => {
       });
     },
   );
+
+  test.each([
+    [
+      "weaponFilter",
+      (effect: NumericRollEffect) => ({
+        ...effect,
+        weaponFilter: { kind: "weapon_property", property: "finesse" },
+      }),
+    ],
+    [
+      "abilityFilter",
+      (effect: NumericRollEffect) => ({
+        ...effect,
+        abilityFilter: ["str"] as const,
+      }),
+    ],
+    ["count", (effect: NumericRollEffect) => ({ ...effect, count: 1 })],
+  ] as const)(
+    "rejects a dropped roll-modifier numeric %s constraint at its effect path",
+    (failedFact, update) => {
+      const result = rollModifierProfile.admitMechanics(
+        sourceWith("bless", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          const operation = mechanics.operations[0];
+          if (operation?.effect.kind !== "modify_roll_numeric") {
+            throw new Error("Expected Bless numeric roll-modifier effect.");
+          }
+          return {
+            ...mechanics,
+            operations: [{ ...operation, effect: update(operation.effect) }],
+          };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            "rollModifier",
+            failedFact,
+            spellOngoingOperationEffectPath(PositiveInteger(1)),
+          ),
+        ],
+      });
+    },
+  );
+
+  test.each([
+    [
+      "typeFilter",
+      (selection: TargetSelection): TargetSelection => ({
+        ...selection,
+        typeFilter: ["aberration"] as const,
+      }),
+    ],
+    [
+      "stateFilter",
+      (selection: TargetSelection): TargetSelection => ({
+        ...selection,
+        stateFilter: ["dead"] as const,
+      }),
+    ],
+    [
+      "visibility",
+      (selection: TargetSelection): TargetSelection => ({
+        ...selection,
+        visibility: "caster_can_see" as const,
+      }),
+    ],
+  ] as const)(
+    "rejects a dropped damage-reduction target %s constraint at its attachment path",
+    (failedFact, update) => {
+      const result = damageReductionProfile.admitMechanics(
+        sourceWith("resistance", (mechanics) => {
+          if (
+            mechanics.family !== "ongoing_effect" ||
+            mechanics.attachment.kind !== "hole" ||
+            mechanics.attachment.value.kind !== "target"
+          ) {
+            throw new Error("Expected Resistance target attachment.");
+          }
+          return {
+            ...mechanics,
+            attachment: {
+              ...mechanics.attachment,
+              value: {
+                ...mechanics.attachment.value,
+                selection: update(mechanics.attachment.value.selection),
+              },
+            },
+          };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            "damageReduction",
+            failedFact,
+            spellOngoingAttachmentPath(),
+          ),
+        ],
+      });
+    },
+  );
+
+  test.each([
+    ["spellcastingMod", { spellcastingMod: true }],
+    ["abilityModifier", { abilityModifier: "str" as const }],
+  ] as const)(
+    "rejects a dropped damage-reduction %s constraint at its effect path",
+    (failedFact, update) => {
+      const result = damageReductionProfile.admitMechanics(
+        sourceWith("resistance", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          const operation = mechanics.operations[0];
+          if (
+            operation?.effect.kind !== "reduce_damage_taken" ||
+            operation.effect.amount.kind !== "fixed"
+          ) {
+            throw new Error("Expected Resistance fixed damage reduction.");
+          }
+          return {
+            ...mechanics,
+            operations: [
+              {
+                ...operation,
+                effect: {
+                  ...operation.effect,
+                  amount: {
+                    ...operation.effect.amount,
+                    expr: { ...operation.effect.amount.expr, ...update },
+                  },
+                },
+              },
+            ],
+          };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            "damageReduction",
+            failedFact,
+            spellOngoingOperationEffectPath(PositiveInteger(1)),
+          ),
+        ],
+      });
+    },
+  );
+
+  test("selects the semantic roll-modifier save gate and reports a prepended sibling ordinal", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("bane", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") {
+          throw new Error("Expected Bane save gate.");
+        }
+        return {
+          ...mechanics,
+          phases: [{ ...phase, onFail: { kind: "none" } }, phase],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("selects the semantic scalar direct phase and reports its prepended sibling ordinal", () => {
+    const result = scalarBuffProfile.admitMechanics(
+      sourceWith("longstrider", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct") {
+          throw new Error("Expected Longstrider direct phase.");
+        }
+        return {
+          ...mechanics,
+          phases: [{ ...phase, effects: [{ kind: "none" }] }, phase],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "scalarBuff",
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("selects the scalar effect by semantic kind and reports its actual effect ordinal", () => {
+    const result = scalarBuffProfile.admitMechanics(
+      sourceWith("longstrider", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct") {
+          throw new Error("Expected Longstrider direct phase.");
+        }
+        return {
+          ...mechanics,
+          phases: [
+            { ...phase, effects: [{ kind: "none" }, ...(phase.effects ?? [])] },
+          ],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "scalarBuff",
+          "effect",
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("selects the semantic sight direct phase and reports its prepended sibling ordinal", () => {
+    const result = seeInvisibleObserverSightProfile.admitMechanics(
+      sourceWith("see_invisibility", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct") {
+          throw new Error("Expected See Invisibility direct phase.");
+        }
+        return {
+          ...mechanics,
+          phases: [{ ...phase, effects: [{ kind: "none" }] }, phase],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "seeInvisibleObserverSight",
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("selects the sight effect by semantic kind and reports its actual effect ordinal", () => {
+    const result = seeInvisibleObserverSightProfile.admitMechanics(
+      sourceWith("see_invisibility", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct") {
+          throw new Error("Expected See Invisibility direct phase.");
+        }
+        return {
+          ...mechanics,
+          phases: [
+            { ...phase, effects: [{ kind: "none" }, ...(phase.effects ?? [])] },
+          ],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "seeInvisibleObserverSight",
+          "phaseCount",
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
 
   test("matches held light operation roles independent of authored ordering", () => {
     const result = heldLightProfile.admitMechanics(

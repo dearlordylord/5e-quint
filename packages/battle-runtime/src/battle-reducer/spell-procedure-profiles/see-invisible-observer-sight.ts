@@ -39,6 +39,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import type {
@@ -98,6 +99,29 @@ type SeeInvisibleObserverSightAdmissionIssue = SpellProcedureAdmissionIssue<
 
 const SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL = 2;
 
+type SeeInvisibleDirectPhase = Extract<
+  Extract<SpellMechanics, { readonly family: "activation" }>["phases"][number],
+  { readonly kind: "direct" }
+>;
+type SeeInvisibleSightEffectOccurrence = {
+  readonly phase: SeeInvisibleDirectPhase;
+  readonly phaseIndex: number;
+  readonly effectIndex: number;
+};
+
+function seeInvisibleSightEffectOccurrences(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): readonly SeeInvisibleSightEffectOccurrence[] {
+  return mechanics.phases.flatMap((phase, phaseIndex) => {
+    if (phase.kind !== "direct") return [];
+    return (phase.effects ?? []).flatMap((effect, effectIndex) =>
+      effect.kind === "see_invisible_and_ethereal"
+        ? [{ phase, phaseIndex, effectIndex }]
+        : [],
+    );
+  });
+}
+
 function isSeeInvisibleObserverSightRepresentation(
   mechanics: SpellMechanicsAdmissionSource["mechanics"],
 ): mechanics is Extract<
@@ -108,13 +132,8 @@ function isSeeInvisibleObserverSightRepresentation(
   const hasDirectPhase = mechanics.phases.some(
     (phase) => phase.kind === "direct",
   );
-  const hasSightEffect = mechanics.phases.some(
-    (phase) =>
-      phase.kind === "direct" &&
-      (phase.effects ?? []).some(
-        (effect) => effect.kind === "see_invisible_and_ethereal",
-      ),
-  );
+  const hasSightEffect =
+    seeInvisibleSightEffectOccurrences(mechanics).length > 0;
   if (!hasSightEffect) return false;
   const hasExpectedDuration =
     mechanics.duration.kind === "timed" &&
@@ -156,9 +175,11 @@ function seeInvisibleObserverSightMechanicsAdmission(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(
+  const expected = seeInvisibleSightEffectOccurrences(mechanics)[0];
+  const fallbackPhaseIndex = mechanics.phases.findIndex(
     (phase) => phase.kind === "direct",
   );
+  const phaseIndex = expected?.phaseIndex ?? fallbackPhaseIndex;
   const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
   const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
   const issues: Array<{
@@ -194,7 +215,7 @@ function seeInvisibleObserverSightMechanicsAdmission(
   }
   if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
     for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex && phaseIndex === 0) continue;
+      if (index === phaseIndex) continue;
       pushIssue(
         "phaseCount",
         spellActivationPhasePath(PositiveInteger(index + 1)),
@@ -208,27 +229,29 @@ function seeInvisibleObserverSightMechanicsAdmission(
     pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
   }
   const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  if (effects.length !== 1) {
-    if (effects.length === 0) {
-      pushIssue(
-        "effect",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    } else {
-      for (const [index] of effects.entries()) {
-        if (index > 0) {
-          pushIssue(
-            "phaseCount",
-            spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-          );
-        }
-      }
-    }
-  }
-  if (effects[0]?.kind !== "see_invisible_and_ethereal") {
+  const selectedEffectIndex =
+    expected?.phaseIndex === phaseIndex ? expected.effectIndex : 0;
+  if (effects.length === 0) {
     pushIssue(
       "effect",
       spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    );
+  } else {
+    for (const [index] of effects.entries()) {
+      if (index === selectedEffectIndex) continue;
+      pushIssue(
+        "phaseCount",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+      );
+    }
+  }
+  if (effects[selectedEffectIndex]?.kind !== "see_invisible_and_ethereal") {
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(selectedEffectIndex + 1),
+      ),
     );
   }
   const failures = spellProcedureNonEmpty(issues);

@@ -247,7 +247,10 @@ type RollModifierFailedFact =
   | "saveGate"
   | "operation"
   | "operationCount"
-  | "effect";
+  | "effect"
+  | "weaponFilter"
+  | "abilityFilter"
+  | "count";
 type RollModifierAdmissionIssue = SpellProcedureAdmissionIssue<
   "rollModifier",
   RollModifierFailedFact,
@@ -259,6 +262,14 @@ type RollModifierOperationOccurrence = {
     SpellMechanics,
     { readonly family: "ongoing_effect" }
   >["operations"][number];
+  readonly ordinal: PositiveInteger;
+};
+
+type RollModifierSaveGateOccurrence = {
+  readonly phase: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >["phases"][number] & { readonly kind: "save_gate" };
   readonly ordinal: PositiveInteger;
 };
 
@@ -276,6 +287,32 @@ function rollModifierOperationEffectPath(
 ): SpellMechanicsBranchPath {
   return spellOngoingOperationEffectPath(
     occurrence?.ordinal ?? PositiveInteger(1),
+  );
+}
+
+function rollModifierSaveGateOccurrences(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): readonly RollModifierSaveGateOccurrence[] {
+  return mechanics.phases.flatMap((phase, index) =>
+    phase.kind === "save_gate"
+      ? [
+          {
+            phase,
+            ordinal: PositiveInteger(index + 1),
+          },
+        ]
+      : [],
+  );
+}
+
+function rollModifierSupportedSaveGateOccurrence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): RollModifierSaveGateOccurrence | undefined {
+  return rollModifierSaveGateOccurrences(mechanics).find(
+    ({ phase }) =>
+      phase.usageLimit === undefined &&
+      phase.onFail.kind === "modify_roll_numeric" &&
+      rollModifierNumericEffectShapeProjection(phase.onFail),
   );
 }
 
@@ -307,7 +344,7 @@ function isRollModifierRepresentation(
         (effect.kind === "modify_roll_numeric" ||
           effect.kind === "modify_roll_advantage") &&
         (effect.kind !== "modify_roll_numeric" ||
-          rollModifierNumericEffectProjection(effect)) &&
+          rollModifierNumericEffectShapeProjection(effect)) &&
         (effect.kind !== "modify_roll_advantage" ||
           rollModifierAbilityCheckEffectProjection(effect)),
     );
@@ -332,7 +369,7 @@ function isRollModifierRepresentation(
         phase.kind === "save_gate" &&
         phase.onFail.kind === "modify_roll_numeric" &&
         phase.usageLimit === undefined &&
-        rollModifierNumericEffectProjection(phase.onFail),
+        rollModifierNumericEffectShapeProjection(phase.onFail),
     );
     if (!hasRollPhase) return false;
     return spellProcedureHasRedundantSignature({
@@ -370,10 +407,31 @@ function rollModifierNumericEffectProjection(
   effect: RollModifierNumericEffect,
 ): boolean {
   return (
+    rollModifierNumericEffectShapeProjection(effect) &&
+    effect.weaponFilter === undefined &&
+    effect.abilityFilter === undefined &&
+    effect.count === undefined
+  );
+}
+
+function rollModifierNumericEffectShapeProjection(
+  effect: RollModifierNumericEffect,
+): boolean {
+  return (
     rollModifierDelta(effect.delta) !== null &&
     rollModifierKindsAreSupported(effect.on) &&
     rollModifierSkillFilter(effect.skillFilter) !== null
   );
+}
+
+function rollModifierNumericEffectConstraintIssues(
+  effect: RollModifierNumericEffect,
+): readonly RollModifierFailedFact[] {
+  const issues: RollModifierFailedFact[] = [];
+  if (effect.weaponFilter !== undefined) issues.push("weaponFilter");
+  if (effect.abilityFilter !== undefined) issues.push("abilityFilter");
+  if (effect.count !== undefined) issues.push("count");
+  return issues;
 }
 
 function rollModifierAbilityCheckEffectProjection(
@@ -512,6 +570,15 @@ function rollModifierMechanicsAdmission(
           mechanics.attachment,
         ),
       };
+    } else if (effect.kind === "modify_roll_numeric") {
+      for (const failedFact of rollModifierNumericEffectConstraintIssues(
+        effect,
+      )) {
+        pushIssue(failedFact, rollModifierOperationEffectPath(expected));
+      }
+      if (!rollModifierNumericEffectShapeProjection(effect)) {
+        pushIssue("effect", rollModifierOperationEffectPath(expected));
+      }
     } else if (
       effect.kind === "modify_roll_advantage" &&
       rollModifierAbilityCheckEffectProjection(effect)
@@ -546,14 +613,18 @@ function rollModifierMechanicsAdmission(
       pushIssue("range", spellMechanicsHeaderPath("range"));
     }
   } else {
-    const phaseIndex = mechanics.phases.findIndex(
+    const expected = rollModifierSupportedSaveGateOccurrence(mechanics);
+    const fallbackPhaseIndex = mechanics.phases.findIndex(
       (phase) => phase.kind === "save_gate",
     );
+    const phaseIndex = expected
+      ? Number(expected.ordinal) - 1
+      : fallbackPhaseIndex;
     const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
     const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
     if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
       for (const [index] of mechanics.phases.entries()) {
-        if (index === phaseIndex && phaseIndex === 0) continue;
+        if (index === phaseIndex) continue;
         pushIssue(
           "phaseCount",
           spellActivationPhasePath(PositiveInteger(index + 1)),
@@ -584,19 +655,31 @@ function rollModifierMechanicsAdmission(
           "effect",
           spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
         );
-      } else if (!rollModifierNumericEffectProjection(phase.onFail)) {
-        pushIssue(
-          "effect",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
       } else {
-        shape = {
-          kind: "numeric",
-          attachment: phase.attachment,
-          effect: phase.onFail,
-          saveGate: { ability: phase.ability, dc: phase.dc },
-          rangeRadiusFeet: null,
-        };
+        for (const failedFact of rollModifierNumericEffectConstraintIssues(
+          phase.onFail,
+        )) {
+          pushIssue(
+            failedFact,
+            spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+          );
+        }
+        if (!rollModifierNumericEffectProjection(phase.onFail)) {
+          if (!rollModifierNumericEffectShapeProjection(phase.onFail)) {
+            pushIssue(
+              "effect",
+              spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+            );
+          }
+        } else {
+          shape = {
+            kind: "numeric",
+            attachment: phase.attachment,
+            effect: phase.onFail,
+            saveGate: { ability: phase.ability, dc: phase.dc },
+            rangeRadiusFeet: null,
+          };
+        }
       }
     }
     if (scalarBuffSpellRangeFeet(mechanics.range) === null) {
@@ -605,7 +688,13 @@ function rollModifierMechanicsAdmission(
   }
   if (
     shape === undefined &&
-    !issues.some(({ failedFact }) => failedFact === "effect")
+    !issues.some(
+      ({ failedFact }) =>
+        failedFact === "effect" ||
+        failedFact === "weaponFilter" ||
+        failedFact === "abilityFilter" ||
+        failedFact === "count",
+    )
   ) {
     pushIssue("effect", spellMechanicsHeaderPath("family"));
   }

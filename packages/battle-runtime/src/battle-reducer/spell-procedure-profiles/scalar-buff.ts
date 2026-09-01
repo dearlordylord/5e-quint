@@ -276,20 +276,54 @@ function isScalarBuffEffect(
   );
 }
 
+type ScalarBuffDirectPhase = Extract<
+  Extract<SpellMechanics, { readonly family: "activation" }>["phases"][number],
+  { readonly kind: "direct" }
+>;
+type ScalarBuffActivationEffectOccurrence = {
+  readonly phase: ScalarBuffDirectPhase;
+  readonly phaseIndex: number;
+  readonly phaseOrdinal: PositiveInteger;
+  readonly effect: ScalarBuffSurfaceEffect;
+  readonly effectIndex: number;
+};
+
+function scalarBuffActivationEffectOccurrences(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  spellLevel: number,
+): readonly ScalarBuffActivationEffectOccurrence[] {
+  return mechanics.phases.flatMap((phase, phaseIndex) => {
+    if (phase.kind !== "direct") return [];
+    return (phase.effects ?? []).flatMap((candidate, effectIndex) => {
+      if (
+        !isEffectAtom(candidate) ||
+        !isScalarBuffEffect(candidate) ||
+        !scalarBuffEffectShapeSupported(candidate, spellLevel)
+      ) {
+        return [];
+      }
+      return [
+        {
+          phase,
+          phaseIndex,
+          phaseOrdinal: PositiveInteger(phaseIndex + 1),
+          effect: candidate,
+          effectIndex,
+        },
+      ];
+    });
+  });
+}
+
 function isScalarBuffRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ScalarBuffMechanics {
   const effectWitness =
     mechanics.family === "activation"
-      ? mechanics.phases.some(
-          (phase) =>
-            phase.kind === "direct" &&
-            (phase.effects ?? []).some(
-              (effect) =>
-                isScalarBuffEffect(effect) &&
-                scalarBuffEffectShapeSupported(effect, Number(mechanics.level)),
-            ),
-        )
+      ? scalarBuffActivationEffectOccurrences(
+          mechanics,
+          Number(mechanics.level),
+        ).length > 0
       : mechanics.family === "ongoing_effect"
         ? mechanics.operations.some(
             ({ trigger, predicate, targetLimit, usageLimit, effect }) =>
@@ -489,14 +523,19 @@ function scalarBuffMechanicsAdmission(
   let attachment: Attachment | undefined;
   let effect: ScalarBuffSurfaceEffect | undefined;
   if (mechanics.family === "activation") {
-    const phaseIndex = mechanics.phases.findIndex(
+    const expected = scalarBuffActivationEffectOccurrences(
+      mechanics,
+      Number(mechanics.level),
+    )[0];
+    const fallbackPhaseIndex = mechanics.phases.findIndex(
       (phase) => phase.kind === "direct",
     );
+    const phaseIndex = expected?.phaseIndex ?? fallbackPhaseIndex;
     const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
     const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
     if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
       for (const [index] of mechanics.phases.entries()) {
-        if (index === phaseIndex && phaseIndex === 0) continue;
+        if (index === phaseIndex) continue;
         pushIssue(
           "phaseCount",
           spellActivationPhasePath(PositiveInteger(index + 1)),
@@ -517,30 +556,31 @@ function scalarBuffMechanicsAdmission(
           spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
         );
       } else {
+        const selectedEffectIndex =
+          expected?.phaseIndex === phaseIndex ? expected.effectIndex : 0;
         for (const [index] of effects.entries()) {
-          if (index > 0) {
-            pushIssue(
-              "effect",
-              spellActivationEffectPath(
-                phaseOrdinal,
-                PositiveInteger(index + 1),
-              ),
-            );
-          }
+          if (index === selectedEffectIndex) continue;
+          pushIssue(
+            "effect",
+            spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+          );
         }
-      }
-      const candidate = effects[0];
-      if (
-        candidate === undefined ||
-        !isEffectAtom(candidate) ||
-        !isScalarBuffEffect(candidate)
-      ) {
-        pushIssue(
-          "effect",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      } else {
-        effect = candidate;
+        const candidate = effects[selectedEffectIndex];
+        if (
+          candidate === undefined ||
+          !isEffectAtom(candidate) ||
+          !isScalarBuffEffect(candidate)
+        ) {
+          pushIssue(
+            "effect",
+            spellActivationEffectPath(
+              phaseOrdinal,
+              PositiveInteger(selectedEffectIndex + 1),
+            ),
+          );
+        } else {
+          effect = candidate;
+        }
       }
     }
   } else {
