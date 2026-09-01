@@ -204,6 +204,12 @@ retained records.
 Character-origin creatures retain selected Unit refs, resolved attack facts,
 feature resources, and spellcasting runtime state. Character Build owns starting
 access and capacity; battle owns uses and slots expended during combat.
+Character initialization supplies each selected feature Unit through exactly one
+execution-projection path: `resources` owns Units that initialize a battle Pool,
+while `unitFeatures` carries parsed profiles only for Units without a
+battle-owned resource. Admission rejects the same Unit in both collections;
+resource Units are parsed into their feature procedure from the canonical Unit
+retained by the resource input.
 
 Stat Block-origin creatures retain a source-free execution projection and its
 presentation companion. Admission consumes the authored `StatBlockRecord` once;
