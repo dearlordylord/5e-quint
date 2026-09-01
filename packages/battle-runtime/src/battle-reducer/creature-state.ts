@@ -89,9 +89,13 @@ import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-k
 import {
   boundUnitFeatureProcedureFactsFromProfile,
   characterExecutionFromUnits,
+  type BoundUnitFeatureProcedureFacts,
   type CharacterProcedureBinding,
 } from "../character-execution-admission.ts";
-import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
+import {
+  parseSupportedUnitFeatureProfile,
+  type BattleUnitSupportProfileIssue,
+} from "../unit-feature-support.ts";
 import {
   admitResourceFeature,
   type AdmittedResourceFeature,
@@ -536,6 +540,11 @@ export function battleCreatureStateAdmissionFromInit(
     const resourceFeatureProcedures = characterResourceFeatureProcedures(
       resourceAdmissionInputs,
     );
+    const resourceUnitFeatureProcedures =
+      projectCharacterResourceUnitFeatureProcedures(
+        resourceAdmissionInputs,
+        classLevels,
+      );
     const spellAccessUnits = [
       ...resourceInits,
       ...(creatureInit.unitFeatures ?? []),
@@ -587,6 +596,9 @@ export function battleCreatureStateAdmissionFromInit(
     const explicitUnitFeatureProcedures = (creatureInit.unitFeatures ?? []).map(
       boundUnitFeatureProcedureFactsFromProfile,
     );
+    const explicitFeatureUnitIds = new Set(
+      explicitUnitFeatureProcedures.map(({ sourceUnitId }) => sourceUnitId),
+    );
     const execution = characterExecutionFromUnits({
       battleId,
       combatantId: input.combatantId,
@@ -596,7 +608,12 @@ export function battleCreatureStateAdmissionFromInit(
           characterBattleResourceInitFromAdmissionInput(resource).unit,
       ),
       resourceFeatureProcedures,
-      unitFeatureProcedures: explicitUnitFeatureProcedures,
+      unitFeatureProcedures: [
+        ...resourceUnitFeatureProcedures.filter(
+          ({ sourceUnitId }) => !explicitFeatureUnitIds.has(sourceUnitId),
+        ),
+        ...explicitUnitFeatureProcedures,
+      ],
       units: characterUnits,
       unitRefs: creatureInit.characterUnitRefs,
       classLevels,
@@ -1219,6 +1236,21 @@ function characterResourceFeatureProcedures(
         ]
       : [],
   );
+}
+
+function projectCharacterResourceUnitFeatureProcedures(
+  resources: readonly CharacterBattleResourceAdmissionInput[],
+  classLevels: CharacterBattleClassLevels,
+): readonly BoundUnitFeatureProcedureFacts[] {
+  return resources.flatMap((resource) => {
+    const profile = parseSupportedUnitFeatureProfile(
+      characterBattleResourceInitFromAdmissionInput(resource).unit,
+      classLevels,
+    );
+    return profile === null
+      ? []
+      : [boundUnitFeatureProcedureFactsFromProfile(profile)];
+  });
 }
 
 /* v8 ignore start -- @preserve -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
