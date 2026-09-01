@@ -14,6 +14,9 @@ import {
 import * as SurfaceSchema from "./schema.ts";
 import type { StatBlockRecord } from "./stat-block-types.ts";
 
+export type { SpellMechanics } from "./spell-mechanics-types.ts";
+export type { SrdSurface, SrdUnitRecord } from "./srd-surface-types.ts";
+
 export type {
   AuthoredExecutableProcedure,
   AuthoredStatBlockReactionTrigger,
@@ -794,9 +797,6 @@ export type SpawnedCreaturePayload = Schema.Schema.Type<
 export type SpawnedCreatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpawnedCreatureMechanicsSchema
 >;
-export type SpellMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.SpellMechanicsSchema
->;
 export type ClassFeatureActivationCost = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureActivationCostSchema
 >;
@@ -1003,12 +1003,6 @@ export type Provenance = Schema.Schema.Type<
 >;
 export type SrdProvenance = Schema.Schema.Type<
   typeof SurfaceSchema.SrdProvenanceSchema
->;
-export type SrdUnitRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.SrdUnitRecordSchema
->;
-export type SrdSurface = Schema.Schema.Type<
-  typeof SurfaceSchema.SrdSurfaceSchema
 >;
 export type SpellRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpellRecordSchema
