@@ -26,8 +26,6 @@ import type {
   SpellMechanics,
 } from "@dnd/surface/surface/types";
 import {
-  battleSpellExecutionSourceFromAdmission,
-  type BattleSpellAdmissionSource,
   type BattleSpellExecutionSource,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -70,6 +68,7 @@ import {
   spellDurationEvidencePaths,
   spellDurationTicksFromCanonicalValue,
   spellHasOnlyNamedFields,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
@@ -106,6 +105,13 @@ type SaveGatedConditionWithRepeatMechanicsFacts = SpellDefinitionRuleFacts & {
 type SaveGatedConditionWithRepeatResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedConditionWithRepeatSpellInvocation>;
 
+const HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING = {
+  base: 1,
+  baseLevel: 1,
+  perSlotAboveBase: 1,
+} as const;
+const HIDEOUS_LAUGHTER_TARGET_KINDS = ["creature"] as const;
+
 type SaveGatedConditionWithRepeatFailedFact =
   | "level"
   | "castingTime"
@@ -125,7 +131,6 @@ type SaveGatedConditionWithRepeatFailedFact =
   | "failedSaveEffect"
   | "extraFailureEffect"
   | "missingFailureEffect"
-  | "repeatSave"
   | "missingRepeat"
   | "extraRepeat"
   | "requiredFacts";
@@ -157,7 +162,6 @@ const SAVE_GATED_CONDITION_WITH_REPEAT_FAILED_FACT_MESSAGES = {
     "Hideous Laughter has an unsupported additional failed-save effect.",
   missingFailureEffect:
     "Hideous Laughter is missing a required failed-save effect.",
-  repeatSave: "Hideous Laughter has an unsupported repeat save.",
   missingRepeat: "Hideous Laughter is missing a required repeat save.",
   extraRepeat: "Hideous Laughter has an unsupported additional repeat save.",
   requiredFacts:
@@ -180,15 +184,43 @@ function saveGatedConditionWithRepeatIssue(
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 
 function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
-  return (
-    phase.kind === "save_gate" &&
-    phase.onFail.kind === "composite" &&
-    phase.onFail.effects.some(
-      (effect) =>
-        effect.kind === "suppress_condition_self_end" &&
-        effect.condition === "prone",
-    )
-  );
+  if (phase.kind !== "save_gate") return false;
+  const attachmentValue =
+    phase.attachment.kind === "hole" ? phase.attachment.value : null;
+  const selection =
+    attachmentValue?.kind === "target" ? attachmentValue.selection : null;
+  const targetScalingWitness =
+    selection?.mode === "choose_up_to" &&
+    typeof selection.count === "object" &&
+    selection.count.kind === "linear" &&
+    selection.count.base === HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING.base &&
+    selection.count.baseLevel ===
+      HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING.baseLevel &&
+    selection.count.perSlotAboveBase ===
+      HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING.perSlotAboveBase &&
+    selection.targetKinds?.length === HIDEOUS_LAUGHTER_TARGET_KINDS.length &&
+    selection.targetKinds[0] === HIDEOUS_LAUGHTER_TARGET_KINDS[0];
+  const endTurnRepeatWitness =
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === "end_of_target_turn" &&
+        repeatSave.onSuccess === "ends_on_target",
+    ) === true;
+  const damageRepeatWitness =
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === "on_target_takes_damage" &&
+        repeatSave.rollMode === "advantage" &&
+        repeatSave.onSuccess === "ends_on_target",
+    ) === true;
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [
+      targetScalingWitness,
+      endTurnRepeatWitness,
+      damageRepeatWitness,
+    ],
+  });
 }
 
 function isHideousLaughterDuration(
@@ -516,10 +548,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
   ) {
     push(
       "successOutcome",
-      spellActivationEffectPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   const failureEffects =
@@ -530,10 +559,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
   ) {
     push(
       "failedSaveEffect",
-      spellActivationEffectPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   } else {
     const roles = new Set<string>();
@@ -554,13 +580,10 @@ function admitSaveGatedConditionWithRepeatMechanics(
     const missingRoles = (
       ["prone", "incapacitated", "suppressProne"] as const
     ).filter((role) => !roles.has(role));
-    for (const [missingIndex] of missingRoles.entries()) {
+    if (missingRoles.length > 0) {
       push(
         "missingFailureEffect",
-        spellActivationEffectPath(
-          PositiveInteger(phaseIndex + 1),
-          PositiveInteger(failureEffects.length + missingIndex + 1),
-        ),
+        spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
       );
     }
   }
@@ -583,13 +606,10 @@ function admitSaveGatedConditionWithRepeatMechanics(
   const missingRepeatRoles = (["endOfTurn", "onDamage"] as const).filter(
     (role) => !roles.has(role),
   );
-  for (const [missingIndex] of missingRepeatRoles.entries()) {
+  if (missingRepeatRoles.length > 0) {
     push(
-      repeatSaves.length === 0 ? "missingRepeat" : "repeatSave",
-      spellActivationRepeatPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(repeatSaves.length + missingIndex + 1),
-      ),
+      "missingRepeat",
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   const nonEmptyIssues = spellProcedureNonEmpty(
@@ -659,23 +679,6 @@ function admitSaveGatedConditionWithRepeatMechanics(
         ),
     },
   };
-}
-
-export function supportedPreparedSaveGatedConditionWithRepeatProfile(
-  spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly SaveGatedConditionWithRepeatSpellInvocation[] {
-  const result = admitSaveGatedConditionWithRepeatMechanics({
-    mechanics: spell.mechanics,
-    spellDefinitionRuleFacts: spell.spellDefinitionRuleFacts,
-  });
-  return result.tag === "supported"
-    ? saveGatedConditionWithRepeatInvocationsFromFacts(
-        battleSpellExecutionSourceFromAdmission(spell),
-        result.admitted.facts,
-        castOptions,
-      )
-    : [];
 }
 
 function discoverSaveGatedConditionWithRepeatCastAct(

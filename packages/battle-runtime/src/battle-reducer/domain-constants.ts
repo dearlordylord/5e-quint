@@ -7,7 +7,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Condition, CreatureType } from "@dnd/shared/game-facts";
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, type DamageDieSize } from "@dnd/shared/types";
 import type {
   CreatureSense,
   DamageType,
@@ -120,13 +120,15 @@ export const STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:staged-condition-repeat-save:end-turn:";
 export const STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:staged-condition-repeat-save:damage:";
-export const STAGED_CONDITION_DURATION_TICKS = elapsedTimeTicks(10);
+export const GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET = 15;
+export const GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE = 6 satisfies DamageDieSize;
 export const SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO = {
   numerator: 1,
   denominator: 2,
 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA = -2;
 export const SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA = -2;
+export const SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS = 1;
 export const SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT = 25;
 export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:decision",

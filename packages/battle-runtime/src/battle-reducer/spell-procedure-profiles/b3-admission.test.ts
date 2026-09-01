@@ -1,6 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
-import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  spellSlotLevel,
+  type DamageDieSize,
+  type Integer,
+  type MovementFeet,
+} from "@dnd/shared/types";
 import { Schema } from "effect";
 import {
   spellActivationAttachmentPath,
@@ -27,6 +33,8 @@ import {
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import { spellProcedureExecution } from "../../character-execution-admission.ts";
+import { battleProcedureExecutionRefForTest } from "../../battle-runtime.test-support.ts";
+import { BattleHoleSchema } from "../battle-codecs.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import type { SpellAdmissionActor } from "./profile.ts";
 import { grantedAreaSaveDamageActionProfile } from "./granted-area-save-damage.ts";
@@ -139,6 +147,64 @@ describe("SR-04G-B3 static spell procedure admission", () => {
     },
   );
 
+  test("invokes Sleep and Hideous Laughter only through their admitted carriers", () => {
+    const actor = spellAdmissionActor();
+    const sleepSource = spellAdmissionSource(spellRecord("sleep"));
+    const sleep = stagedSaveConditionProfile.admitMechanics({
+      mechanics: sleepSource.mechanics,
+      spellDefinitionRuleFacts: sleepSource.spellDefinitionRuleFacts,
+    });
+    expect(sleep.tag).toBe("supported");
+    if (sleep.tag !== "supported") return;
+    expect(
+      sleep.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(sleepSource),
+        {
+          actor,
+          castingSource: sleepSource.castingSource,
+          battle: undefined,
+          spellCastOptions: [
+            { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+          ],
+        },
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        procedure: "stagedSaveCondition",
+        spell: expect.objectContaining({ id: sleepSource.id }),
+        targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
+      }),
+    ]);
+
+    const laughterSource = spellAdmissionSource(
+      spellRecord("hideous_laughter"),
+    );
+    const laughter = saveGatedConditionWithRepeatProfile.admitMechanics({
+      mechanics: laughterSource.mechanics,
+      spellDefinitionRuleFacts: laughterSource.spellDefinitionRuleFacts,
+    });
+    expect(laughter.tag).toBe("supported");
+    if (laughter.tag !== "supported") return;
+    expect(
+      laughter.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(laughterSource),
+        {
+          actor,
+          castingSource: laughterSource.castingSource,
+          battle: undefined,
+          spellCastOptions: [
+            { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+          ],
+        },
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        procedure: "saveGatedConditionWithRepeat",
+        spell: expect.objectContaining({ id: laughterSource.id }),
+      }),
+    ]);
+  });
+
   test("projects every Dragon's Breath execution fact instead of recomputing it", () => {
     const result = grantedAreaSaveDamageActionProfile.admitMechanics(
       mechanicsSource("dragons_breath"),
@@ -158,9 +224,15 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         startingAtLevel: 2,
       },
     });
+    expectTypeOf(result.admitted.facts.coneLengthFeet).toEqualTypeOf<
+      MovementFeet & 15
+    >();
+    expectTypeOf(result.admitted.facts.damage.dieSize).toEqualTypeOf<
+      DamageDieSize & 6
+    >();
   });
 
-  test("rejects an empty Dragon's Breath damage-type choice set at the execution boundary", () => {
+  test("rejects impossible Dragon's Breath constants and an empty choice set at the execution boundary", () => {
     const source = spellAdmissionSource(spellRecord("dragons_breath"));
     const result = grantedAreaSaveDamageActionProfile.admitMechanics({
       mechanics: source.mechanics,
@@ -182,6 +254,8 @@ describe("SR-04G-B3 static spell procedure admission", () => {
     if (invocation === undefined) {
       throw new Error("Expected a second-level Dragon's Breath invocation.");
     }
+    expectTypeOf(invocation.coneLengthFeet).toEqualTypeOf<MovementFeet & 15>();
+    expectTypeOf(invocation.damageDieSize).toEqualTypeOf<DamageDieSize & 6>();
     const execution = spellProcedureExecution(invocation);
     expect(
       Schema.is(grantedAreaSaveDamageActionProfile.executionSchema)(execution),
@@ -190,6 +264,18 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       Schema.is(grantedAreaSaveDamageActionProfile.executionSchema)({
         ...execution,
         damageTypeChoices: [],
+      }),
+    ).toBe(false);
+    expect(
+      Schema.is(grantedAreaSaveDamageActionProfile.executionSchema)({
+        ...execution,
+        coneLengthFeet: 20,
+      }),
+    ).toBe(false);
+    expect(
+      Schema.is(grantedAreaSaveDamageActionProfile.executionSchema)({
+        ...execution,
+        damageDieSize: 8,
       }),
     ).toBe(false);
   });
@@ -251,6 +337,140 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       maxAttacks: 1,
       somaticFailurePercent: 25,
     });
+    expectTypeOf(
+      slow.admitted.facts.constraints.speedRatio.numerator,
+    ).toEqualTypeOf<PositiveInteger & 1>();
+    expectTypeOf(
+      slow.admitted.facts.constraints.speedRatio.denominator,
+    ).toEqualTypeOf<PositiveInteger & 2>();
+    expectTypeOf(slow.admitted.facts.constraints.armorClassDelta).toEqualTypeOf<
+      Integer & -2
+    >();
+    expectTypeOf(
+      slow.admitted.facts.constraints.dexteritySavingThrowDelta,
+    ).toEqualTypeOf<Integer & -2>();
+    expectTypeOf(slow.admitted.facts.constraints.maxAttacks).toEqualTypeOf<1>();
+    expectTypeOf(
+      slow.admitted.facts.constraints.somaticFailurePercent,
+    ).toEqualTypeOf<PositiveInteger & 25>();
+  });
+
+  test("rejects impossible Slow constraint constants at the execution boundary", () => {
+    const source = spellAdmissionSource(spellRecord("slow"));
+    const result = saveGatedTurnConstraintBundleProfile.admitMechanics({
+      mechanics: source.mechanics,
+      spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+    });
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    const [invocation] = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    if (invocation === undefined) {
+      throw new Error("Expected a third-level Slow invocation.");
+    }
+    const execution = spellProcedureExecution(invocation);
+    const isExecution = Schema.is(
+      saveGatedTurnConstraintBundleProfile.executionSchema,
+    );
+    expect(isExecution(execution)).toBe(true);
+    const impossibleConstraints = [
+      {
+        ...execution.constraints,
+        speedRatio: { ...execution.constraints.speedRatio, numerator: 2 },
+      },
+      {
+        ...execution.constraints,
+        speedRatio: { ...execution.constraints.speedRatio, denominator: 3 },
+      },
+      { ...execution.constraints, armorClassDelta: -1 },
+      { ...execution.constraints, dexteritySavingThrowDelta: -1 },
+      { ...execution.constraints, maxAttacks: 2 },
+      { ...execution.constraints, somaticFailurePercent: 50 },
+    ];
+    for (const constraints of impossibleConstraints) {
+      expect(isExecution({ ...execution, constraints })).toBe(false);
+    }
+  });
+
+  test("rejects impossible Slow and Dragon's Breath facts at the battle-hole codec boundary", () => {
+    const slowProcedureRef =
+      battleProcedureExecutionRefForTest("b3-codec-slow");
+    const dragonProcedureRef =
+      battleProcedureExecutionRefForTest("b3-codec-dragon");
+    const slowHole = {
+      holeId: "battle:b3-codec:slow",
+      holeInstanceKey: "battle:b3-codec:slow",
+      label: "Synthetic B3 Slow codec hole",
+      kind: "turnConstraintSomaticSpellFailureOutcome",
+      actorId: spellCasterId,
+      sourceProcedureRef: slowProcedureRef,
+      failurePercent: 25,
+      activeEffectSources: [],
+    } as const;
+    const dragonHole = {
+      holeId: "battle:b3-codec:dragon",
+      holeInstanceKey: "battle:b3-codec:dragon",
+      label: "Synthetic B3 Dragon codec hole",
+      kind: "savingThrowOutcome",
+      grantedAreaSaveDamageAction: {
+        sourceCombatantId: spellCasterId,
+        sourceProcedureRef: dragonProcedureRef,
+        lengthFeet: 15,
+      },
+      ability: "dex",
+      dc: { kind: "fixed", dc: 12 },
+      areaChoices: [],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    } as const;
+    const dragonDamageHole = {
+      holeId: "battle:b3-codec:dragon-damage",
+      holeInstanceKey: "battle:b3-codec:dragon-damage",
+      label: "Synthetic B3 Dragon damage codec hole",
+      kind: "rolledDice",
+      grantedAreaSaveDamageAction: {
+        sourceCombatantId: spellCasterId,
+        sourceProcedureRef: dragonProcedureRef,
+        damageType: "fire",
+        expr: { dice: 3, dieSize: 6 },
+      },
+    } as const;
+    const isBattleHole = Schema.is(BattleHoleSchema);
+
+    expect(isBattleHole(slowHole)).toBe(true);
+    expect(isBattleHole({ ...slowHole, failurePercent: 50 })).toBe(false);
+    expect(isBattleHole(dragonHole)).toBe(true);
+    expect(
+      isBattleHole({
+        ...dragonHole,
+        grantedAreaSaveDamageAction: {
+          ...dragonHole.grantedAreaSaveDamageAction,
+          lengthFeet: 20,
+        },
+      }),
+    ).toBe(false);
+    expect(isBattleHole(dragonDamageHole)).toBe(true);
+    expect(
+      isBattleHole({
+        ...dragonDamageHole,
+        grantedAreaSaveDamageAction: {
+          ...dragonDamageHole.grantedAreaSaveDamageAction,
+          expr: {
+            ...dragonDamageHole.grantedAreaSaveDamageAction.expr,
+            dieSize: 8,
+          },
+        },
+      }),
+    ).toBe(false);
   });
 
   test("keeps static facts and evidence invariant under authored renaming", () => {
@@ -360,6 +580,391 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
       },
     ]);
+  });
+
+  test("keeps Sleep and Hideous Laughter owned when a defining failed-save effect is deleted", () => {
+    const sleep = spellRecord("sleep");
+    if (
+      sleep.mechanics.family !== "activation" ||
+      sleep.mechanics.phases[0]?.kind !== "save_gate"
+    ) {
+      throw new Error("Expected Sleep composite save-gate mechanics.");
+    }
+    const sleepPhase = sleep.mechanics.phases[0];
+    const sleepFailure = sleepPhase.onFail;
+    if (sleepFailure.kind !== "composite") {
+      throw new Error("Expected Sleep composite failed-save effects.");
+    }
+    const sleepWithoutEscape = decodeSpellRecordForTest({
+      ...sleep,
+      id: unitId("synthetic_b3_sleep_missing_escape"),
+      name: "Synthetic Sleep Missing Escape",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_sleep_missing_escape",
+      },
+      mechanics: {
+        ...sleep.mechanics,
+        phases: [
+          {
+            ...sleepPhase,
+            onFail: {
+              ...sleepFailure,
+              effects: sleepFailure.effects.filter(
+                (effect) => effect.kind !== "target_effect_escape_action",
+              ),
+            },
+          },
+        ],
+      },
+    });
+    const sleepSource = spellAdmissionSource(sleepWithoutEscape);
+    const sleepResult = stagedSaveConditionProfile.admitMechanics({
+      mechanics: sleepSource.mechanics,
+      spellDefinitionRuleFacts: sleepSource.spellDefinitionRuleFacts,
+    });
+    expect(sleepResult.tag).toBe("unsupported");
+    if (sleepResult.tag !== "unsupported") return;
+    expect(sleepResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "missingFailureEffect",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      }),
+    );
+
+    const laughter = spellRecord("hideous_laughter");
+    if (
+      laughter.mechanics.family !== "activation" ||
+      laughter.mechanics.phases[0]?.kind !== "save_gate"
+    ) {
+      throw new Error(
+        "Expected Hideous Laughter composite save-gate mechanics.",
+      );
+    }
+    const laughterPhase = laughter.mechanics.phases[0];
+    const laughterFailure = laughterPhase.onFail;
+    if (laughterFailure.kind !== "composite") {
+      throw new Error(
+        "Expected Hideous Laughter composite failed-save effects.",
+      );
+    }
+    const laughterWithoutSuppression = decodeSpellRecordForTest({
+      ...laughter,
+      id: unitId("synthetic_b3_laughter_missing_suppression"),
+      name: "Synthetic Laughter Missing Suppression",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_laughter_missing_suppression",
+      },
+      mechanics: {
+        ...laughter.mechanics,
+        phases: [
+          {
+            ...laughterPhase,
+            onFail: {
+              ...laughterFailure,
+              effects: laughterFailure.effects.filter(
+                (effect) => effect.kind !== "suppress_condition_self_end",
+              ),
+            },
+          },
+        ],
+      },
+    });
+    const laughterSource = spellAdmissionSource(laughterWithoutSuppression);
+    const laughterResult = saveGatedConditionWithRepeatProfile.admitMechanics({
+      mechanics: laughterSource.mechanics,
+      spellDefinitionRuleFacts: laughterSource.spellDefinitionRuleFacts,
+    });
+    expect(laughterResult.tag).toBe("unsupported");
+    if (laughterResult.tag !== "unsupported") return;
+    expect(laughterResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "missingFailureEffect",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      }),
+    );
+  });
+
+  test("roots absent repeat-save diagnostics on their existing save-gate phases", () => {
+    const sleep = spellRecord("sleep");
+    if (
+      sleep.mechanics.family !== "activation" ||
+      sleep.mechanics.phases[0]?.kind !== "save_gate"
+    ) {
+      throw new Error("Expected Sleep save-gate mechanics.");
+    }
+    const { repeatSaves: _sleepRepeatSaves, ...sleepPhaseWithoutRepeat } =
+      sleep.mechanics.phases[0];
+    const sleepWithoutRepeat = decodeSpellRecordForTest({
+      ...sleep,
+      id: unitId("synthetic_b3_sleep_missing_repeat"),
+      name: "Synthetic Sleep Missing Repeat",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_sleep_missing_repeat",
+      },
+      mechanics: {
+        ...sleep.mechanics,
+        phases: [sleepPhaseWithoutRepeat],
+      },
+    });
+    const sleepSource = spellAdmissionSource(sleepWithoutRepeat);
+    const sleepResult = stagedSaveConditionProfile.admitMechanics({
+      mechanics: sleepSource.mechanics,
+      spellDefinitionRuleFacts: sleepSource.spellDefinitionRuleFacts,
+    });
+    expect(sleepResult.tag).toBe("unsupported");
+    if (sleepResult.tag !== "unsupported") return;
+    expect(sleepResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "missingRepeat",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      }),
+    );
+
+    const laughter = spellRecord("hideous_laughter");
+    if (
+      laughter.mechanics.family !== "activation" ||
+      laughter.mechanics.phases[0]?.kind !== "save_gate" ||
+      laughter.mechanics.phases[0].repeatSaves === undefined
+    ) {
+      throw new Error("Expected Hideous Laughter repeat-save mechanics.");
+    }
+    const laughterWithoutDamageRepeat = decodeSpellRecordForTest({
+      ...laughter,
+      id: unitId("synthetic_b3_laughter_missing_damage_repeat"),
+      name: "Synthetic Laughter Missing Damage Repeat",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_laughter_missing_damage_repeat",
+      },
+      mechanics: {
+        ...laughter.mechanics,
+        phases: [
+          {
+            ...laughter.mechanics.phases[0],
+            repeatSaves: laughter.mechanics.phases[0].repeatSaves.filter(
+              (repeatSave) => repeatSave.cadence !== "on_target_takes_damage",
+            ),
+          },
+        ],
+      },
+    });
+    const laughterSource = spellAdmissionSource(laughterWithoutDamageRepeat);
+    const laughterResult = saveGatedConditionWithRepeatProfile.admitMechanics({
+      mechanics: laughterSource.mechanics,
+      spellDefinitionRuleFacts: laughterSource.spellDefinitionRuleFacts,
+    });
+    expect(laughterResult.tag).toBe("unsupported");
+    if (laughterResult.tag !== "unsupported") return;
+    expect(laughterResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "missingRepeat",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      }),
+    );
+
+    const slow = spellRecord("slow");
+    if (
+      slow.mechanics.family !== "activation" ||
+      slow.mechanics.phases[0]?.kind !== "save_gate"
+    ) {
+      throw new Error("Expected Slow repeat-save mechanics.");
+    }
+    const { repeatSaves: _slowRepeatSaves, ...slowPhaseWithoutRepeat } =
+      slow.mechanics.phases[0];
+    const slowWithoutRepeat = decodeSpellRecordForTest({
+      ...slow,
+      id: unitId("synthetic_b3_slow_missing_repeat"),
+      name: "Synthetic Slow Missing Repeat",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_slow_missing_repeat",
+      },
+      mechanics: {
+        ...slow.mechanics,
+        phases: [slowPhaseWithoutRepeat],
+      },
+    });
+    const slowSource = spellAdmissionSource(slowWithoutRepeat);
+    const slowResult = saveGatedTurnConstraintBundleProfile.admitMechanics({
+      mechanics: slowSource.mechanics,
+      spellDefinitionRuleFacts: slowSource.spellDefinitionRuleFacts,
+    });
+    expect(slowResult.tag).toBe("unsupported");
+    if (slowResult.tag !== "unsupported") return;
+    expect(slowResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "repeatSave",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      }),
+    );
+  });
+
+  test("roots a missing Slow failed-save effect on its existing save-gate phase", () => {
+    const slow = spellRecord("slow");
+    if (slow.mechanics.family !== "activation") {
+      throw new Error("Expected Slow composite save-gate mechanics.");
+    }
+    const phase = slow.mechanics.phases[0];
+    if (phase?.kind !== "save_gate" || phase.onFail.kind !== "composite") {
+      throw new Error("Expected Slow composite save-gate mechanics.");
+    }
+    const failedSave = phase.onFail;
+    const withoutSomaticFailure = decodeSpellRecordForTest({
+      ...slow,
+      id: unitId("synthetic_b3_slow_missing_somatic_failure"),
+      name: "Synthetic Slow Missing Somatic Failure",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_slow_missing_somatic_failure",
+      },
+      mechanics: {
+        ...slow.mechanics,
+        phases: [
+          {
+            ...phase,
+            onFail: {
+              ...failedSave,
+              effects: failedSave.effects.filter(
+                (effect) => effect.kind !== "somatic_spell_failure_chance",
+              ),
+            },
+          },
+        ],
+      },
+    });
+    const source = spellAdmissionSource(withoutSomaticFailure);
+    const result = saveGatedTurnConstraintBundleProfile.admitMechanics({
+      mechanics: source.mechanics,
+      spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+    });
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "missingFailedSaveEffect",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      }),
+    );
+  });
+
+  test("reports malformed Hideous Laughter branches at their authored ordinals", () => {
+    const base = spellRecord("hideous_laughter");
+    if (base.mechanics.family !== "activation") {
+      throw new Error(
+        "Expected Hideous Laughter composite save-gate mechanics.",
+      );
+    }
+    const phase = base.mechanics.phases[0];
+    if (phase?.kind !== "save_gate") {
+      throw new Error(
+        "Expected Hideous Laughter composite save-gate mechanics.",
+      );
+    }
+    const failedSave = phase.onFail;
+    const repeatSaves = phase.repeatSaves;
+    if (failedSave.kind !== "composite" || repeatSaves === undefined) {
+      throw new Error(
+        "Expected Hideous Laughter composite save-gate mechanics.",
+      );
+    }
+    const extraEffectOrdinal = failedSave.effects.length + 1;
+    const withExtraEffect = decodeSpellRecordForTest({
+      ...base,
+      id: unitId("synthetic_b3_laughter_extra_effect"),
+      name: "Synthetic Laughter Extra Effect",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_laughter_extra_effect",
+      },
+      mechanics: {
+        ...base.mechanics,
+        phases: [
+          {
+            ...phase,
+            onFail: {
+              ...failedSave,
+              effects: [
+                ...failedSave.effects,
+                { kind: "apply_condition", condition: "charmed" },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    const extraEffectSource = spellAdmissionSource(withExtraEffect);
+    const extraEffectResult =
+      saveGatedConditionWithRepeatProfile.admitMechanics({
+        mechanics: extraEffectSource.mechanics,
+        spellDefinitionRuleFacts: extraEffectSource.spellDefinitionRuleFacts,
+      });
+    expect(extraEffectResult.tag).toBe("unsupported");
+    if (extraEffectResult.tag !== "unsupported") return;
+    expect(extraEffectResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "extraFailureEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(extraEffectOrdinal),
+        ),
+      }),
+    );
+
+    const damageRepeatIndex = repeatSaves.findIndex(
+      (repeatSave) => repeatSave.cadence === "on_target_takes_damage",
+    );
+    if (damageRepeatIndex < 0) {
+      throw new Error("Expected Hideous Laughter damage repeat save.");
+    }
+    const withMalformedRepeat = decodeSpellRecordForTest({
+      ...base,
+      id: unitId("synthetic_b3_laughter_malformed_repeat"),
+      name: "Synthetic Laughter Malformed Repeat",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_b3_laughter_malformed_repeat",
+      },
+      mechanics: {
+        ...base.mechanics,
+        phases: [
+          {
+            ...phase,
+            repeatSaves: repeatSaves.map((repeatSave, index) =>
+              index === damageRepeatIndex
+                ? {
+                    ...repeatSave,
+                    onFailAgain: {
+                      kind: "apply_condition",
+                      condition: "charmed",
+                    },
+                  }
+                : repeatSave,
+            ),
+          },
+        ],
+      },
+    });
+    const malformedRepeatSource = spellAdmissionSource(withMalformedRepeat);
+    const malformedRepeatResult =
+      saveGatedConditionWithRepeatProfile.admitMechanics({
+        mechanics: malformedRepeatSource.mechanics,
+        spellDefinitionRuleFacts:
+          malformedRepeatSource.spellDefinitionRuleFacts,
+      });
+    expect(malformedRepeatResult.tag).toBe("unsupported");
+    if (malformedRepeatResult.tag !== "unsupported") return;
+    expect(malformedRepeatResult.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "extraRepeat",
+        mechanicsPath: spellActivationRepeatPath(
+          PositiveInteger(1),
+          PositiveInteger(damageRepeatIndex + 1),
+        ),
+      }),
+    );
   });
 
   test("matches reordered composite effects and reports duplicate witnesses at actual ordinals", () => {

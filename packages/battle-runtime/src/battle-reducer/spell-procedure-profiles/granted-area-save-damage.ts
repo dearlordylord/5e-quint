@@ -27,7 +27,7 @@ import { CombatantId } from "../../identity.ts";
 import {
   MovementFeet,
   PositiveInteger,
-  movementFeet,
+  type DamageDieSize,
   type DamageType,
 } from "@dnd/shared/types";
 import type {
@@ -46,6 +46,10 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
+import {
+  GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
+  GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+} from "../domain-constants.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -65,6 +69,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
+  DamageDieSizeSchema,
   DamageTypeSchema,
   DcSourceSchema,
   PreparedSpellAccessSchema,
@@ -105,6 +110,18 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.brand("Integer"),
   Schema.brand("PositiveInteger"),
 );
+const GrantedAreaSaveDamageConeLengthFeetSchema = Schema.Literal(
+  GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
+).pipe(Schema.brand("MovementFeet"));
+const GrantedAreaSaveDamageDieSizeSchema = DamageDieSizeSchema.pipe(
+  Schema.refine(
+    (
+      value,
+    ): value is DamageDieSize & typeof GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE =>
+      value === GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+    { expected: "the admitted granted-area damage die size" },
+  ),
+);
 
 type GrantedAreaSaveDamageActionInvocation = Extract<
   SupportedSpellInvocation,
@@ -115,7 +132,7 @@ type GrantedAreaSaveDamageActionResolveInput =
 
 const GRANTED_AREA_SAVE_DAMAGE_SCALING = {
   baseDice: 3,
-  dieSize: 6,
+  dieSize: GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
   perSlotDice: 1,
   startingAtLevel: 2,
 } as const;
@@ -136,13 +153,13 @@ type GrantedAreaSaveDamageAmount = Extract<
   readonly base: {
     readonly dice: PositiveInteger &
       (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["baseDice"];
-    readonly dieSize: PositiveInteger &
+    readonly dieSize: DamageDieSize &
       (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["dieSize"];
   };
   readonly perLevel: {
     readonly dice: PositiveInteger &
       (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["perSlotDice"];
-    readonly dieSize?: PositiveInteger &
+    readonly dieSize?: DamageDieSize &
       (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["dieSize"];
   };
   readonly startingAtLevel: PositiveInteger &
@@ -154,7 +171,7 @@ type GrantedAreaSaveDamageActionMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly dc: GrantedAreaSaveDamageActionInvocation["dc"];
   readonly rangeFeet: MovementFeet;
   readonly durationTicks: ElapsedTimeTicks;
-  readonly coneLengthFeet: MovementFeet;
+  readonly coneLengthFeet: GrantedAreaSaveDamageActionInvocation["coneLengthFeet"];
   readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
   readonly damage: {
     readonly baseDice: GrantedAreaSaveDamageAmount["base"]["dice"];
@@ -578,8 +595,11 @@ function admitGrantedAreaSaveDamageActionMechanics(
     push("saveAttachment", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
   const coneLengthFeet =
-    areaValue?.shape.kind === "cone" && areaValue.shape.lengthFeet === 15
-      ? movementFeet(areaValue.shape.lengthFeet)
+    areaValue?.shape.kind === "cone" &&
+    areaValue.shape.lengthFeet === GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET
+      ? GrantedAreaSaveDamageConeLengthFeetSchema.make(
+          areaValue.shape.lengthFeet,
+        )
       : null;
   if (coneLengthFeet === null) {
     push("cone", spellOngoingOperationEffectPath(PositiveInteger(1)));
@@ -809,9 +829,9 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
         }),
       }),
       damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
-      coneLengthFeet: MovementFeet,
+      coneLengthFeet: GrantedAreaSaveDamageConeLengthFeetSchema,
       damageDice: PositiveIntegerSchema,
-      damageDieSize: PositiveIntegerSchema,
+      damageDieSize: GrantedAreaSaveDamageDieSizeSchema,
       rangeFeet: MovementFeet,
     }),
   );

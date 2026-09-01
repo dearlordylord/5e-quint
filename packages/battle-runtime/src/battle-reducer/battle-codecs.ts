@@ -155,7 +155,10 @@ import {
   DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
   DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
   DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES,
+  GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
+  GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   SELF_TRANSFORMATION_MODE_KINDS,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
@@ -243,6 +246,19 @@ const PositiveHpSchema = Schema.Number.pipe(
   Schema.brand("NonNegativeInteger"),
   Schema.brand("Hp"),
   Schema.brand("PositiveInteger"),
+);
+const SaveGatedTurnConstraintSomaticFailurePercentSchema = Schema.Literal(
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+).pipe(Schema.brand("PositiveInteger"));
+const GrantedAreaSaveDamageConeLengthFeetSchema = Schema.Literal(
+  GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
+).pipe(Schema.brand("MovementFeet"));
+const GrantedAreaSaveDamageDieSizeSchema = DamageDieSizeSchema.pipe(
+  Schema.refine(
+    (value): value is typeof GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE =>
+      value === GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+    { expected: "the admitted granted-area damage die size" },
+  ),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
@@ -1521,6 +1537,18 @@ function pairedBattleHoleMember<const Fields extends BattleHoleFieldSchemas>(
   return pairedBattleHoleMemberVariants(fields, fields);
 }
 
+function pairedUnqualifiedBattleHoleMember<
+  const Fields extends BattleHoleFieldSchemas,
+>(fields: Fields) {
+  const pair = pairedBattleHoleMember(fields);
+  return {
+    ...pair,
+    labeled: pair.labeled.annotate({
+      parseOptions: { onExcessProperty: "error" },
+    }),
+  };
+}
+
 function pairedBattleHoleMemberVariants<
   const LabeledFields extends BattleHoleFieldSchemas,
   const MechanicalFields extends BattleHoleFieldSchemas,
@@ -2226,7 +2254,7 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
     actorId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    failurePercent: PositiveIntegerSchema,
+    failurePercent: SaveGatedTurnConstraintSomaticFailurePercentSchema,
     activeEffectSources: Schema.Array(
       Schema.Struct({
         sourceProcedureRef: BattleProcedureExecutionRef,
@@ -2517,7 +2545,10 @@ const BattleHolePayloadMembers = [
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       damageType: DamageTypeSchema,
-      expr: DiceExprSchema,
+      expr: Schema.Struct({
+        dice: PositiveIntegerSchema,
+        dieSize: GrantedAreaSaveDamageDieSizeSchema,
+      }),
     }),
   }),
   pairedBattleHoleMember({
@@ -2988,7 +3019,7 @@ const BattleHolePayloadMembers = [
       grantedAreaSaveDamageAction: Schema.Struct({
         sourceCombatantId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
-        lengthFeet: MovementFeet,
+        lengthFeet: GrantedAreaSaveDamageConeLengthFeetSchema,
       }),
       ability: Schema.Literal("dex"),
       dc: DcSourceSchema,
@@ -3058,7 +3089,7 @@ const BattleHolePayloadMembers = [
     },
     D20TestNaturalOneRerollHoleOptionsFields,
   ),
-  pairedBattleHoleMember({
+  pairedUnqualifiedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("rolledDice"),
   }),

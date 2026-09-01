@@ -23,11 +23,9 @@ import type {
   SpellMechanics,
 } from "@dnd/surface/surface/types";
 import {
-  battleSpellExecutionSourceFromAdmission,
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleSpellAdmissionSource,
   type BattleResolutionResult,
   type BattleState,
   type SpellTargeting,
@@ -66,6 +64,7 @@ import {
   spellDurationChildPath,
   spellDurationEvidencePaths,
   spellDurationTicksFromCanonicalValue,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   spellHasOnlyNamedFields,
@@ -182,13 +181,35 @@ function stagedSaveConditionIssue(
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 
 function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
-  return (
-    phase.kind === "save_gate" &&
-    phase.onFail.kind === "composite" &&
-    phase.onFail.effects.some(
-      (effect) => effect.kind === "target_effect_escape_action",
-    )
-  );
+  if (phase.kind !== "save_gate") return false;
+  const attachmentValue =
+    phase.attachment.kind === "hole" ? phase.attachment.value : null;
+  const pointSphereWitness =
+    attachmentValue?.kind === "area" &&
+    attachmentValue.origin.kind === "point_within_range" &&
+    attachmentValue.shape.kind === "sphere" &&
+    attachmentValue.shape.radiusFeet ===
+      SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET;
+  const automaticSuccessWitness =
+    phase.autoSuccessIfTarget?.kind === "any" &&
+    phase.autoSuccessIfTarget.predicates.some(
+      (predicate) => predicate.kind === "does_not_sleep",
+    );
+  const stagedRepeatWitness =
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === "end_of_target_turn" &&
+        repeatSave.onFailAgain?.kind === "apply_condition" &&
+        repeatSave.onFailAgain.condition === "unconscious",
+    ) === true;
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [
+      pointSphereWitness,
+      automaticSuccessWitness,
+      stagedRepeatWitness,
+    ],
+  });
 }
 
 function isStagedConditionDuration(
@@ -551,10 +572,7 @@ function admitStagedSaveConditionMechanics(
   ) {
     push(
       "successOutcome",
-      spellActivationEffectPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   if (!stagedSaveConditionAutoSuccessSupported(phase.autoSuccessIfTarget)) {
@@ -571,10 +589,7 @@ function admitStagedSaveConditionMechanics(
   ) {
     push(
       "failedSaveEffect",
-      spellActivationEffectPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   } else {
     const roles = new Set<string>();
@@ -595,13 +610,10 @@ function admitStagedSaveConditionMechanics(
     const missingRoles = (["incapacitated", "escape"] as const).filter(
       (role) => !roles.has(role),
     );
-    for (const [missingIndex] of missingRoles.entries()) {
+    if (missingRoles.length > 0) {
       push(
         "missingFailureEffect",
-        spellActivationEffectPath(
-          PositiveInteger(phaseIndex + 1),
-          PositiveInteger(failureEffects.length + missingIndex + 1),
-        ),
+        spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
       );
     }
   }
@@ -628,10 +640,7 @@ function admitStagedSaveConditionMechanics(
   if (supportedRepeatIndexes.length === 0) {
     push(
       "missingRepeat",
-      spellActivationRepeatPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(repeatSaves.length + 1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   const nonEmptyIssues = spellProcedureNonEmpty(
@@ -746,24 +755,6 @@ function stagedSaveConditionInvocationsFromFacts(
             },
           ],
   );
-}
-
-/** Compatibility projection retained for reducer/unit fixtures during the static-admission migration. */
-export function supportedPreparedStagedSaveConditionProfile(
-  spell: BattleSpellAdmissionSource,
-  castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly StagedSaveConditionSpellInvocation[] {
-  const result = admitStagedSaveConditionMechanics({
-    mechanics: spell.mechanics,
-    spellDefinitionRuleFacts: spell.spellDefinitionRuleFacts,
-  });
-  return result.tag === "supported"
-    ? stagedSaveConditionInvocationsFromFacts(
-        battleSpellExecutionSourceFromAdmission(spell),
-        result.admitted.facts,
-        castOptions,
-      )
-    : [];
 }
 
 function discoverStagedSaveConditionCastAct(

@@ -23,18 +23,13 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //     Reaction, and Spell Effect.
 
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  Integer,
-  MovementFeet,
-  PositiveInteger,
-  movementFeet,
-} from "@dnd/shared/types";
+import { MovementFeet, PositiveInteger, movementFeet } from "@dnd/shared/types";
 import type {
   ActivationPhase,
   EffectAtom,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
-import { Match, Schema } from "effect";
+import { Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
@@ -55,6 +50,7 @@ import { type CombatantId } from "../../identity.ts";
 import {
   SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
   SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS,
   SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO,
 } from "../domain-constants.ts";
@@ -112,14 +108,21 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 
-const IntegerSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.brand("Integer"),
-);
-const PositiveIntegerSchema = IntegerSchema.pipe(
-  Schema.check(Schema.isGreaterThan(0)),
-  Schema.brand("PositiveInteger"),
-);
+const SaveGatedTurnConstraintSpeedNumeratorSchema = Schema.Literal(
+  SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator,
+).pipe(Schema.brand("PositiveInteger"));
+const SaveGatedTurnConstraintSpeedDenominatorSchema = Schema.Literal(
+  SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator,
+).pipe(Schema.brand("PositiveInteger"));
+const SaveGatedTurnConstraintArmorClassDeltaSchema = Schema.Literal(
+  SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+).pipe(Schema.brand("Integer"));
+const SaveGatedTurnConstraintDexteritySaveDeltaSchema = Schema.Literal(
+  SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
+).pipe(Schema.brand("Integer"));
+const SaveGatedTurnConstraintSomaticFailurePercentSchema = Schema.Literal(
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+).pipe(Schema.brand("PositiveInteger"));
 
 type SaveGatedTurnConstraintBundleSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -228,57 +231,74 @@ function saveGatedTurnConstraintBundleIssue(
   };
 }
 
-type SlowFailedEffectRoleEffect =
-  | Extract<EffectAtom, { readonly kind: "set_speed_ratio" }>
-  | Extract<EffectAtom, { readonly kind: "modify_ac" }>
-  | Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>
-  | Extract<EffectAtom, { readonly kind: "restrict_action_usage" }>
-  | Extract<
-      EffectAtom,
-      { readonly kind: "choose_action_or_bonus_action_each_turn" }
-    >
-  | (Extract<EffectAtom, { readonly kind: "cap_attack_action_attacks" }> & {
-      readonly maxAttacks: 1;
-    })
-  | Extract<EffectAtom, { readonly kind: "somatic_spell_failure_chance" }>;
+type SlowFailedEffectAdmission =
+  | {
+      readonly role: "speedRatio";
+      readonly speedRatio: SaveGatedTurnConstraintFacts["speedRatio"];
+    }
+  | {
+      readonly role: "armorClass";
+      readonly armorClassDelta: SaveGatedTurnConstraintFacts["armorClassDelta"];
+    }
+  | {
+      readonly role: "dexteritySavingThrow";
+      readonly dexteritySavingThrowDelta: SaveGatedTurnConstraintFacts["dexteritySavingThrowDelta"];
+    }
+  | { readonly role: "reactionRestriction" }
+  | { readonly role: "actionOrBonusAction" }
+  | {
+      readonly role: "attackCap";
+      readonly maxAttacks: SaveGatedTurnConstraintFacts["maxAttacks"];
+    }
+  | {
+      readonly role: "somaticFailure";
+      readonly somaticFailurePercent: SaveGatedTurnConstraintFacts["somaticFailurePercent"];
+    };
 
-type SlowAttackCapEffect = Extract<
-  SlowFailedEffectRoleEffect,
-  { readonly kind: "cap_attack_action_attacks" }
->;
-
-function isSlowAttackCapEffect(
+function slowFailedEffectAdmission(
   effect: EffectAtom,
-): effect is SlowAttackCapEffect {
-  return (
-    effect.kind === "cap_attack_action_attacks" &&
-    effect.maxAttacks === 1 &&
-    spellHasOnlyNamedFields(effect, ["kind", "maxAttacks"])
-  );
-}
-
-function slowFailedEffectRoleEffect(
-  effect: EffectAtom,
-): SlowFailedEffectRoleEffect | undefined {
+): SlowFailedEffectAdmission | undefined {
   if (
     effect.kind === "set_speed_ratio" &&
     effect.numerator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator &&
     effect.denominator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator &&
     spellHasOnlyNamedFields(effect, ["kind", "numerator", "denominator"])
   ) {
-    return effect;
+    return {
+      role: "speedRatio",
+      speedRatio: {
+        numerator: SaveGatedTurnConstraintSpeedNumeratorSchema.make(
+          effect.numerator,
+        ),
+        denominator: SaveGatedTurnConstraintSpeedDenominatorSchema.make(
+          effect.denominator,
+        ),
+      },
+    };
   }
+  const armorClassDelta =
+    effect.kind === "modify_ac" && effect.delta.kind === "fixed_number"
+      ? -effect.delta.amount
+      : undefined;
   if (
     effect.kind === "modify_ac" &&
     spellHasOnlyNamedFields(effect, ["kind", "delta"]) &&
     effect.delta.kind === "fixed_number" &&
     effect.delta.sign === "-" &&
-    effect.delta.amount ===
-      Math.abs(SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA) &&
+    armorClassDelta === SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA &&
     spellHasOnlyNamedFields(effect.delta, ["kind", "amount", "sign"])
   ) {
-    return effect;
+    return {
+      role: "armorClass",
+      armorClassDelta:
+        SaveGatedTurnConstraintArmorClassDeltaSchema.make(armorClassDelta),
+    };
   }
+  const dexteritySavingThrowDelta =
+    effect.kind === "modify_roll_numeric" &&
+    effect.delta.kind === "fixed_number"
+      ? -effect.delta.amount
+      : undefined;
   if (
     effect.kind === "modify_roll_numeric" &&
     spellHasOnlyNamedFields(effect, ["kind", "on", "delta", "abilityFilter"]) &&
@@ -288,11 +308,16 @@ function slowFailedEffectRoleEffect(
     sameStringSet(effect.abilityFilter, SAVE_GATED_TURN_CONSTRAINT_ABILITIES) &&
     effect.delta.kind === "fixed_number" &&
     effect.delta.sign === "-" &&
-    effect.delta.amount ===
-      Math.abs(SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA) &&
+    dexteritySavingThrowDelta === SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA &&
     spellHasOnlyNamedFields(effect.delta, ["kind", "amount", "sign"])
   ) {
-    return effect;
+    return {
+      role: "dexteritySavingThrow",
+      dexteritySavingThrowDelta:
+        SaveGatedTurnConstraintDexteritySaveDeltaSchema.make(
+          dexteritySavingThrowDelta,
+        ),
+    };
   }
   if (
     effect.kind === "restrict_action_usage" &&
@@ -302,64 +327,33 @@ function slowFailedEffectRoleEffect(
     ) &&
     spellHasOnlyNamedFields(effect, ["kind", "actions"])
   ) {
-    return effect;
+    return { role: "reactionRestriction" };
   }
   if (
     effect.kind === "choose_action_or_bonus_action_each_turn" &&
     spellHasOnlyNamedFields(effect, ["kind"])
   ) {
-    return effect;
+    return { role: "actionOrBonusAction" };
   }
-  if (isSlowAttackCapEffect(effect)) {
-    return effect;
+  if (
+    effect.kind === "cap_attack_action_attacks" &&
+    effect.maxAttacks === SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS &&
+    spellHasOnlyNamedFields(effect, ["kind", "maxAttacks"])
+  ) {
+    return { role: "attackCap", maxAttacks: effect.maxAttacks };
   }
   if (
     effect.kind === "somatic_spell_failure_chance" &&
     effect.percent === SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT &&
     spellHasOnlyNamedFields(effect, ["kind", "percent"])
   ) {
-    return effect;
+    return {
+      role: "somaticFailure",
+      somaticFailurePercent:
+        SaveGatedTurnConstraintSomaticFailurePercentSchema.make(effect.percent),
+    };
   }
   return undefined;
-}
-
-function slowFailedEffectRole(
-  effect: EffectAtom,
-): SaveGatedTurnConstraintFailedEffectRole | null {
-  const roleEffect = slowFailedEffectRoleEffect(effect);
-  return roleEffect === undefined
-    ? null
-    : slowFailedEffectRoleForEffect(roleEffect);
-}
-
-function slowFailedEffectRoleForEffect(
-  roleEffect: SlowFailedEffectRoleEffect,
-): SaveGatedTurnConstraintFailedEffectRole {
-  return Match.value(roleEffect).pipe(
-    Match.when({ kind: "set_speed_ratio" }, () => "speedRatio" as const),
-    Match.when({ kind: "modify_ac" }, () => "armorClass" as const),
-    Match.when(
-      { kind: "modify_roll_numeric" },
-      () => "dexteritySavingThrow" as const,
-    ),
-    Match.when(
-      { kind: "restrict_action_usage" },
-      () => "reactionRestriction" as const,
-    ),
-    Match.when(
-      { kind: "choose_action_or_bonus_action_each_turn" },
-      () => "actionOrBonusAction" as const,
-    ),
-    Match.when(
-      { kind: "cap_attack_action_attacks" },
-      () => "attackCap" as const,
-    ),
-    Match.when(
-      { kind: "somatic_spell_failure_chance" },
-      () => "somaticFailure" as const,
-    ),
-    Match.exhaustive,
-  );
 }
 
 function slowRootPhase(phase: ActivationPhase): boolean {
@@ -368,7 +362,6 @@ function slowRootPhase(phase: ActivationPhase): boolean {
     phase.onFail.kind === "composite" &&
     phase.onFail.effects.some(
       (effect) =>
-        slowFailedEffectRole(effect) !== null ||
         effect.kind === "set_speed_ratio" ||
         effect.kind === "modify_ac" ||
         effect.kind === "modify_roll_numeric" ||
@@ -416,18 +409,16 @@ function slowDurationIssues(
   return issues;
 }
 
-function slowFactsFromEffects(
-  effects: readonly EffectAtom[],
+function slowFactsFromAdmissions(
+  admissions: readonly SlowFailedEffectAdmission[],
 ): SaveGatedTurnConstraintFacts | undefined {
   const byRole = new Map<
     SaveGatedTurnConstraintFailedEffectRole,
-    SlowFailedEffectRoleEffect
+    SlowFailedEffectAdmission
   >();
-  for (const effect of effects) {
-    const roleEffect = slowFailedEffectRoleEffect(effect);
-    if (roleEffect === undefined) continue;
-    const role = slowFailedEffectRoleForEffect(roleEffect);
-    if (!byRole.has(role)) byRole.set(role, roleEffect);
+  for (const admission of admissions) {
+    if (byRole.has(admission.role)) continue;
+    byRole.set(admission.role, admission);
   }
   const speedRatio = byRole.get("speedRatio");
   const armorClass = byRole.get("armorClass");
@@ -435,25 +426,20 @@ function slowFactsFromEffects(
   const attackCap = byRole.get("attackCap");
   const somaticFailure = byRole.get("somaticFailure");
   if (
-    speedRatio?.kind !== "set_speed_ratio" ||
-    armorClass?.kind !== "modify_ac" ||
-    dexterity?.kind !== "modify_roll_numeric" ||
-    attackCap?.kind !== "cap_attack_action_attacks" ||
-    somaticFailure?.kind !== "somatic_spell_failure_chance" ||
-    armorClass.delta.kind !== "fixed_number" ||
-    dexterity.delta.kind !== "fixed_number"
+    speedRatio?.role !== "speedRatio" ||
+    armorClass?.role !== "armorClass" ||
+    dexterity?.role !== "dexteritySavingThrow" ||
+    attackCap?.role !== "attackCap" ||
+    somaticFailure?.role !== "somaticFailure"
   ) {
     return undefined;
   }
   return {
-    speedRatio: {
-      numerator: PositiveInteger(speedRatio.numerator),
-      denominator: PositiveInteger(speedRatio.denominator),
-    },
-    armorClassDelta: Integer(-armorClass.delta.amount),
-    dexteritySavingThrowDelta: Integer(-dexterity.delta.amount),
+    speedRatio: speedRatio.speedRatio,
+    armorClassDelta: armorClass.armorClassDelta,
+    dexteritySavingThrowDelta: dexterity.dexteritySavingThrowDelta,
     maxAttacks: attackCap.maxAttacks,
-    somaticFailurePercent: PositiveInteger(somaticFailure.percent),
+    somaticFailurePercent: somaticFailure.somaticFailurePercent,
   };
 }
 
@@ -627,30 +613,25 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   ) {
     push(
       "successOutcome",
-      spellActivationEffectPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   const failedEffects =
     phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  const failedEffectAdmissions: SlowFailedEffectAdmission[] = [];
   if (
     phase.onFail.kind !== "composite" ||
     !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
   ) {
     push(
       "failedSaveEffect",
-      spellActivationEffectPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   } else {
     const seenRoles = new Set<SaveGatedTurnConstraintFailedEffectRole>();
     for (const [index, effect] of failedEffects.entries()) {
-      const role = slowFailedEffectRole(effect);
-      if (role === null || seenRoles.has(role)) {
+      const admission = slowFailedEffectAdmission(effect);
+      if (admission === undefined || seenRoles.has(admission.role)) {
         push(
           "extraFailedSaveEffect",
           spellActivationEffectPath(
@@ -659,22 +640,19 @@ function admitSaveGatedTurnConstraintBundleMechanics(
           ),
         );
       } else {
-        seenRoles.add(role);
+        seenRoles.add(admission.role);
+        failedEffectAdmissions.push(admission);
       }
     }
-    for (const [
-      index,
-      role,
-    ] of SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES.entries()) {
-      if (!seenRoles.has(role)) {
-        push(
-          "missingFailedSaveEffect",
-          spellActivationEffectPath(
-            PositiveInteger(phaseIndex + 1),
-            PositiveInteger(failedEffects.length + index + 1),
-          ),
-        );
-      }
+    if (
+      SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES.some(
+        (role) => !seenRoles.has(role),
+      )
+    ) {
+      push(
+        "missingFailedSaveEffect",
+        spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+      );
     }
   }
   const repeatSaves = phase.repeatSaves ?? [];
@@ -706,10 +684,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   if (repeatSaves.length === 0) {
     push(
       "repeatSave",
-      spellActivationRepeatPath(
-        PositiveInteger(phaseIndex + 1),
-        PositiveInteger(1),
-      ),
+      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   const nonEmptyIssues = spellProcedureNonEmpty(
@@ -744,7 +719,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
       ],
     };
   }
-  const constraints = slowFactsFromEffects(failedEffects);
+  const constraints = slowFactsFromAdmissions(failedEffectAdmissions);
   if (constraints === undefined) {
     return {
       tag: "unsupported",
@@ -1060,13 +1035,15 @@ const SaveGatedTurnConstraintBundleInvocationSchema =
       durationTicks: ElapsedTimeTicksSchema,
       constraints: Schema.Struct({
         speedRatio: Schema.Struct({
-          numerator: PositiveIntegerSchema,
-          denominator: PositiveIntegerSchema,
+          numerator: SaveGatedTurnConstraintSpeedNumeratorSchema,
+          denominator: SaveGatedTurnConstraintSpeedDenominatorSchema,
         }),
-        armorClassDelta: IntegerSchema,
-        dexteritySavingThrowDelta: IntegerSchema,
-        maxAttacks: Schema.Literal(1),
-        somaticFailurePercent: PositiveIntegerSchema,
+        armorClassDelta: SaveGatedTurnConstraintArmorClassDeltaSchema,
+        dexteritySavingThrowDelta:
+          SaveGatedTurnConstraintDexteritySaveDeltaSchema,
+        maxAttacks: Schema.Literal(SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS),
+        somaticFailurePercent:
+          SaveGatedTurnConstraintSomaticFailurePercentSchema,
       }),
     }),
   );

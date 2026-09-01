@@ -3,6 +3,7 @@ import type { CreatureType } from "@dnd/shared/game-facts";
 import type {
   AbilityModifier,
   AttackBonus,
+  DamageDieSize,
   MovementFeet,
   Integer,
   PositiveInteger,
@@ -84,6 +85,15 @@ import type {
 } from "./spell-invocation-vocabulary.ts";
 import type { WeaponAttackOverrideSpellProcedureExecution } from "./weapon-attack-override.ts";
 import { Schema } from "effect";
+import type {
+  GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
+  GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+  SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS,
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+  SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO,
+} from "../battle-reducer/domain-constants.ts";
 
 type SurfaceSkill = Skill;
 
@@ -520,9 +530,11 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
       "damageType"
     >;
     readonly dc: DcSource;
-    readonly coneLengthFeet: MovementFeet;
+    readonly coneLengthFeet: MovementFeet &
+      typeof GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET;
     readonly damageDice: PositiveInteger;
-    readonly damageDieSize: PositiveInteger;
+    readonly damageDieSize: DamageDieSize &
+      typeof GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE;
     readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
     readonly procedure: "grantedAreaSaveDamageAction";
     readonly rangeFeet: MovementFeet;
@@ -715,13 +727,18 @@ export type SaveGatedConditionWithRepeatSpellProcedureExecution =
 /** Immutable numeric rule facts projected from Slow's failed-save effects. */
 export type SaveGatedTurnConstraintFacts = {
   readonly speedRatio: {
-    readonly numerator: PositiveInteger;
-    readonly denominator: PositiveInteger;
+    readonly numerator: PositiveInteger &
+      (typeof SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO)["numerator"];
+    readonly denominator: PositiveInteger &
+      (typeof SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO)["denominator"];
   };
-  readonly armorClassDelta: Integer;
-  readonly dexteritySavingThrowDelta: Integer;
-  readonly maxAttacks: 1;
-  readonly somaticFailurePercent: PositiveInteger;
+  readonly armorClassDelta: Integer &
+    typeof SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA;
+  readonly dexteritySavingThrowDelta: Integer &
+    typeof SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA;
+  readonly maxAttacks: typeof SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS;
+  readonly somaticFailurePercent: PositiveInteger &
+    typeof SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT;
 };
 
 export type SaveGatedAreaControlSpellProcedureExecution =

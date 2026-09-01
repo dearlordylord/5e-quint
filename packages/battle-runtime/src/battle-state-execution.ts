@@ -171,7 +171,6 @@ import {
   DifficultyClass,
   Hp,
   MovementFeet,
-  PositiveInteger,
   movementFeet,
   type Condition,
   type CoverType,
@@ -312,6 +311,7 @@ import type {
 import type {
   SpawnedCompanionLifecycleExecutionFacts,
   CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
+  GrantedAreaSaveDamageActionSpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
   SaveGatedTurnConstraintFacts,
   StagedSaveConditionAutomaticSuccessPredicates,
@@ -2733,10 +2733,10 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
     "damageType"
   >;
   readonly dc: DcSource;
-  readonly coneLengthFeet: MovementFeet;
-  readonly damageDice: PositiveInteger;
-  readonly damageDieSize: PositiveInteger;
-  readonly damageTypeChoices: readonly DamageType[];
+  readonly coneLengthFeet: GrantedAreaSaveDamageActionSpellProcedureExecution["coneLengthFeet"];
+  readonly damageDice: GrantedAreaSaveDamageActionSpellProcedureExecution["damageDice"];
+  readonly damageDieSize: GrantedAreaSaveDamageActionSpellProcedureExecution["damageDieSize"];
+  readonly damageTypeChoices: GrantedAreaSaveDamageActionSpellProcedureExecution["damageTypeChoices"];
   readonly rangeFeet: MovementFeet;
 };
 export type CompositeTargetBuffWithAftermathSpellInvocation = {
@@ -4906,7 +4906,7 @@ export type BattleTurnConstraintSomaticSpellFailureOutcomeHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly failurePercent: PositiveInteger;
+  readonly failurePercent: SaveGatedTurnConstraintFacts["somaticFailurePercent"];
   readonly activeEffectSources: readonly {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
@@ -5385,7 +5385,10 @@ export type BattleGrantedAreaSaveDamageActionDamageRollHole = Extract<
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly damageType: DamageType;
-    readonly expr: DiceExpr;
+    readonly expr: {
+      readonly dice: GrantedAreaSaveDamageActionSpellInvocation["damageDice"];
+      readonly dieSize: GrantedAreaSaveDamageActionSpellInvocation["damageDieSize"];
+    };
   };
 };
 export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
@@ -6244,7 +6247,7 @@ export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly grantedAreaSaveDamageAction: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly lengthFeet: MovementFeet;
+    readonly lengthFeet: GrantedAreaSaveDamageActionSpellInvocation["coneLengthFeet"];
   };
   readonly ability: Extract<Ability, "dex">;
   readonly dc: DcSource;
