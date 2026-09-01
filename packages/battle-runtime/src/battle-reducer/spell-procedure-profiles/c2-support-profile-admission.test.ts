@@ -248,6 +248,84 @@ const directPhaseModeUpdate = (
   mode: directPhaseMode,
 });
 
+function updateHeldLightHurlOperation(
+  mechanics: SpellMechanics,
+  update: (operation: OngoingOperation) => OngoingOperation,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") {
+    throw new Error("Expected Produce Flame ongoing-effect mechanics.");
+  }
+  const hurlIndex = mechanics.operations.findIndex(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.effect.kind === "attack_roll",
+  );
+  if (hurlIndex < 0) {
+    throw new Error("Expected Produce Flame hurl operation.");
+  }
+  return {
+    ...mechanics,
+    operations: mechanics.operations.map((operation, index) =>
+      index === hurlIndex ? update(operation) : operation,
+    ),
+  };
+}
+
+const heldLightHurlOptionalUpdates = [
+  [
+    "laterTurnsOnly",
+    (operation: OngoingOperation): OngoingOperation => {
+      if (operation.trigger.kind !== "on_caster_spends_action") {
+        throw new Error("Expected Produce Flame hurl trigger.");
+      }
+      return {
+        ...operation,
+        trigger: { ...operation.trigger, laterTurnsOnly: true },
+      };
+    },
+    spellOngoingOperationPath(PositiveInteger(2)),
+  ],
+  [
+    "attachment",
+    (operation: OngoingOperation): OngoingOperation => {
+      if (operation.effect.kind !== "attack_roll") {
+        throw new Error("Expected Produce Flame hurl attack effect.");
+      }
+      return {
+        ...operation,
+        effect: {
+          ...operation.effect,
+          attachment: {
+            kind: "target",
+            selection: { mode: "one", targetKinds: ["creature"] },
+          },
+        },
+      };
+    },
+    spellOngoingOperationEffectPath(PositiveInteger(2)),
+  ],
+  [
+    "timing",
+    (operation: OngoingOperation): OngoingOperation => {
+      if (operation.effect.kind !== "attack_roll") {
+        throw new Error("Expected Produce Flame hurl attack effect.");
+      }
+      const hitDamage = operation.effect.onHit[0];
+      if (hitDamage?.kind !== "damage") {
+        throw new Error("Expected Produce Flame hurl damage effect.");
+      }
+      return {
+        ...operation,
+        effect: {
+          ...operation.effect,
+          onHit: [{ ...hitDamage, timing: "end_of_next_turn" }],
+        },
+      };
+    },
+    spellOngoingOperationEffectPath(PositiveInteger(2)),
+  ],
+] as const;
+
 function expectedIssue(
   procedure: C2StaticAdmissionIssue["procedure"],
   failedFact: C2StaticAdmissionIssue["failedFact"],
@@ -1072,6 +1150,21 @@ describe("C2 support profile static admission", () => {
           ],
         });
       }
+    },
+  );
+
+  test.each(heldLightHurlOptionalUpdates)(
+    "rejects dropped held-light hurl %s at its actual path",
+    (failedFact, update, mechanicsPath) => {
+      const result = heldLightProfile.admitMechanics(
+        sourceWith("produce_flame", (mechanics) =>
+          updateHeldLightHurlOperation(mechanics, update),
+        ),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [expectedIssue("heldLight", failedFact, mechanicsPath)],
+      });
     },
   );
 

@@ -128,6 +128,8 @@ type HeldLightFailedFact =
   | "predicate"
   | "targetLimit"
   | "usageLimit"
+  | "laterTurnsOnly"
+  | "timing"
   | "operation"
   | "operationCount"
   | "light"
@@ -254,6 +256,43 @@ function heldLightHurlDamageAmount(
     damageEffect.damageType === "fire"
     ? damageEffect.amount
     : null;
+}
+
+function heldLightHurlOptionalIssues(
+  occurrence: HeldLightOperationOccurrence,
+): readonly {
+  readonly failedFact: "laterTurnsOnly" | "attachment" | "timing";
+  readonly mechanicsPath: UnitMechanicsPath;
+}[] {
+  const issues: Array<{
+    readonly failedFact: "laterTurnsOnly" | "attachment" | "timing";
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const { operation } = occurrence;
+  if (
+    operation.trigger.kind === "on_caster_spends_action" &&
+    operation.trigger.laterTurnsOnly !== undefined
+  ) {
+    issues.push({
+      failedFact: "laterTurnsOnly",
+      mechanicsPath: spellOngoingOperationPath(occurrence.ordinal),
+    });
+  }
+  if (operation.effect.kind !== "attack_roll") return issues;
+  if (operation.effect.attachment !== undefined) {
+    issues.push({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingOperationEffectPath(occurrence.ordinal),
+    });
+  }
+  const hitDamage = operation.effect.onHit[0];
+  if (hitDamage?.kind === "damage" && hitDamage.timing !== undefined) {
+    issues.push({
+      failedFact: "timing",
+      mechanicsPath: spellOngoingOperationEffectPath(occurrence.ordinal),
+    });
+  }
+  return issues;
 }
 
 function heldLightFactsFromMechanics(
@@ -404,6 +443,11 @@ function heldLightFactsFromMechanics(
     pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
     pushIssue("hurl", spellOngoingOperationEffectPath(PositiveInteger(1)));
   } else {
+    for (const { failedFact, mechanicsPath } of heldLightHurlOptionalIssues(
+      hurlOperation,
+    )) {
+      pushIssue(failedFact, mechanicsPath);
+    }
     const candidate = heldLightHurlDamageAmount(hurlOperation);
     if (
       candidate === null ||
