@@ -28,6 +28,7 @@ import {
   assertPublicDeclarationBundle,
   buildConsumerDistribution,
   PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
+  PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
@@ -103,7 +104,7 @@ function observedPinnedDeclarationDiagnostics(
 
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(530);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(551);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
     expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(
       PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
@@ -259,6 +260,17 @@ describe("SDK player consumer distribution", () => {
           benchmarkContextForRole("boundedCapabilityProjection", "player"),
         ),
       );
+      const compilerPaths = JSON.parse(
+        readFileSync(join(destination, "tsconfig.json"), "utf8"),
+      ).compilerOptions.paths;
+      expect(compilerPaths).not.toHaveProperty("@dnd/shared/*");
+      expect(compilerPaths).not.toHaveProperty("@dnd/shared-algebras/*");
+      expect(compilerPaths).not.toHaveProperty("@dnd/surface/*");
+      expect(compilerPaths).toHaveProperty("@dnd/shared/types");
+      expect(compilerPaths).toHaveProperty("@dnd/surface/surface/types");
+      expect(compilerPaths).not.toHaveProperty(
+        "@dnd/surface/surface/catalog-install",
+      );
     },
     10 * 60 * 1_000,
   );
@@ -301,6 +313,7 @@ describe("SDK player consumer distribution", () => {
         "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.d.ts",
         "packages/character-battle-runtime/src/battle-creature-init.d.ts",
+        "packages/surface/src/surface/mechanics-admission.d.ts",
       ]) {
         expect(existsSync(join(declarationRoot, retainedOwner))).toBe(true);
       }
@@ -310,6 +323,7 @@ describe("SDK player consumer distribution", () => {
         "packages/character-battle-runtime/src/battle-handoff-issue.d.ts",
         "packages/character-battle-runtime/src/character-battle-route.d.ts",
         "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.d.ts",
+        ...PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
         "scripts/raw-swarm/transcript.d.ts",
         "scripts/raw-swarm/raw-swarm-identities.d.ts",
       ]) {

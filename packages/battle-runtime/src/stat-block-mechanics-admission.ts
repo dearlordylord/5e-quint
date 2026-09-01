@@ -9,7 +9,7 @@ import type {
   StatBlockMechanicsAdmissionIssueDraft,
   StatBlockMechanicsAdmissionResult,
   SurfaceMechanicsAdmission,
-} from "@dnd/surface/surface/catalog-install";
+} from "@dnd/surface/surface/mechanics-admission";
 import {
   statBlockMechanicsPath,
   type MechanicsGraphPathNode,

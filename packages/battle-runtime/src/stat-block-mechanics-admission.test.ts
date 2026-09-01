@@ -11,10 +11,8 @@ import {
 } from "@dnd/surface/surface/schema";
 import { srdSurface } from "@dnd/surface/surface/surface-catalog";
 import type { StatBlockMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
-import {
-  installSrdSurface,
-  type SurfaceMechanicsAdmission,
-} from "@dnd/surface/surface/catalog-install";
+import { installSrdSurface } from "@dnd/surface/surface/catalog-install";
+import type { SurfaceMechanicsAdmission } from "@dnd/surface/surface/mechanics-admission";
 import type {
   SrdStatBlockRecord,
   SrdSurface,

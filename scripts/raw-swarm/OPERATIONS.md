@@ -200,20 +200,18 @@ role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
 The Effect 4 public declaration graph is a reviewed deterministic measurement:
-530 declaration files and 4,667,450 bytes. The file gate admits exactly those
-530 files, so any added file requires review. The reviewed byte gate is 10 MiB,
-leaving 5,818,310 bytes of explicit margin. Deterministic verification asserts
-the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
-both limits; raising either bound requires a new measured graph and review. The
-canonical measurement is owned beside the declaration emitter in
+551 declaration files and 4,776,741 bytes. The reviewed byte gate is 10 MiB,
+leaving 5,709,019 bytes of explicit margin. Deterministic verification asserts
+the exact measured graph and path/content-ledger manifest, exact-at-cap
+acceptance, and cap-plus-one rejection for both limits; changing either bound,
+any admitted path, or any declaration content requires a new measured graph and
+review. The canonical manifest is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
 distribution test. The
-[master-reconciliation declaration certificate](../../docs/migrations/effect-4/final-parity-report.md#master-reconciliation-declaration-certificate)
-records the reviewed ten additions and three removals from the previous
-reconciliation certificate and their owning reachability. That comparison is
-pinned to commit `38e79b814`: 523 files and 3,962,445 bytes, with independently
-reproduced sorted POSIX relative-path ledger SHA-256
-`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
+[declaration-bundle convergence certificate](../../docs/migrations/effect-4/declaration-bundle-convergence.md)
+records the repaired 22 additions and one removal from comparison commit
+`993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
+excluded by the lightweight mechanics-admission owner.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a

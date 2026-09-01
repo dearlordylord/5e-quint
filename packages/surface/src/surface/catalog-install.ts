@@ -15,6 +15,13 @@ import type {
   StatBlockMechanicsPath as SurfaceStatBlockMechanicsPath,
   UnitMechanicsPath as SurfaceUnitMechanicsPath,
 } from "./mechanics-graph-path.ts";
+import type {
+  StatBlockMechanicsAdmissionIssueDraft,
+  StatBlockMechanicsAdmissionResult,
+  SurfaceMechanicsAdmission,
+  UnitMechanicsAdmissionIssueDraft,
+  UnitMechanicsAdmissionResult,
+} from "./mechanics-admission.ts";
 import {
   buildUnitCatalog,
   type SrdUnitCollection,
@@ -22,92 +29,10 @@ import {
   type UnitCatalogBuildIssue,
 } from "./unit-catalog.ts";
 
-/** Reasons a mechanics admission profile can reject an authored record. */
-export const SURFACE_MECHANICS_ADMISSION_REASONS = [
-  "unsupported_mechanics",
-  "ambiguous_mechanics",
-  "incomplete_graph",
-  "no_admitted_procedure",
-] as const;
-
-export type SurfaceMechanicsAdmissionReason =
-  (typeof SURFACE_MECHANICS_ADMISSION_REASONS)[number];
-
 /** A typed identity root for a mechanics issue. */
 export type SurfaceAuthoredRecordRoot =
   | { readonly kind: "unit"; readonly id: SrdUnitRecord["id"] }
   | { readonly kind: "statBlock"; readonly id: SrdStatBlockRecord["id"] };
-
-/**
- * A mechanics issue returned by a static admission profile before the install
- * operation attaches the authored-record root.
- *
- * The path is relative to the record's typed mechanics value. It is not a
- * persisted diagnostic path: it exists only in a rejected install result.
- */
-export type UnitMechanicsAdmissionIssueDraft<
-  UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
-> = {
-  readonly reason: SurfaceMechanicsAdmissionReason;
-  readonly mechanicsPath: UnitMechanicsPath;
-  readonly message: string;
-};
-
-export type StatBlockMechanicsAdmissionIssueDraft<
-  StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
-    SurfaceStatBlockMechanicsPath,
-> = {
-  readonly reason: SurfaceMechanicsAdmissionReason;
-  readonly mechanicsPath: StatBlockMechanicsPath;
-  readonly message: string;
-};
-
-export type UnitMechanicsAdmissionResult<
-  UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
-> =
-  | { readonly tag: "admitted" }
-  | {
-      readonly tag: "rejected";
-      readonly issues: readonly [
-        UnitMechanicsAdmissionIssueDraft<UnitMechanicsPath>,
-        ...UnitMechanicsAdmissionIssueDraft<UnitMechanicsPath>[],
-      ];
-    };
-
-export type StatBlockMechanicsAdmissionResult<
-  StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
-    SurfaceStatBlockMechanicsPath,
-> =
-  | { readonly tag: "admitted" }
-  | {
-      readonly tag: "rejected";
-      readonly issues: readonly [
-        StatBlockMechanicsAdmissionIssueDraft<StatBlockMechanicsPath>,
-        ...StatBlockMechanicsAdmissionIssueDraft<StatBlockMechanicsPath>[],
-      ];
-    };
-
-/**
- * Context-independent mechanics checks supplied by the owning runtime
- * packages. The operation calls each family-specific check against the same
- * call-local decoded surface. A record with no matching executable profile
- * must return `rejected` with a `no_admitted_procedure` issue; an empty issue
- * collection is not a successful admission state.
- */
-export type SurfaceMechanicsAdmission<
-  UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
-  StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
-    SurfaceStatBlockMechanicsPath,
-> = {
-  readonly admitUnit: (input: {
-    readonly unit: SrdUnitRecord;
-    readonly surface: SrdSurface;
-  }) => UnitMechanicsAdmissionResult<UnitMechanicsPath>;
-  readonly admitStatBlock: (input: {
-    readonly statBlock: SrdStatBlockRecord;
-    readonly surface: SrdSurface;
-  }) => StatBlockMechanicsAdmissionResult<StatBlockMechanicsPath>;
-};
 
 export type SurfaceCatalogDecodeIssue =
   | {

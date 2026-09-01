@@ -1,10 +1,12 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   realpathSync,
   writeFileSync,
@@ -203,10 +205,25 @@ function declarationDiagnosticFingerprint(diagnostic: string): string | null {
 }
 
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
-export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
-  files: 530,
-  bytes: 4_667_450,
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
+  comparisonBaseline: {
+    commit: "993cb0b11152316f8bd7e16693366267bf2ee16d",
+    files: 530,
+    bytes: 4_667_450,
+    pathLedgerSha256:
+      "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
+  },
+  measure: {
+    files: 551,
+    bytes: 4_776_741,
+  },
+  pathLedgerSha256:
+    "dc3ea33493cb0ae40c85e6fb3c61b82e6b69cdb41f2dfd828e6961c687c76912",
+  contentLedgerSha256:
+    "aed1b2c5d979e1ed3f3766e7de0fe1d1c840410bca32a0aa5f111e6f92dad971",
 } as const;
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
 /**
  * The reviewed declaration graph uses every admitted file. Any graph growth
  * must update the exact measure explicitly.
@@ -217,6 +234,15 @@ export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN =
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes;
+export const PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS = [
+  "packages/surface/src/surface/catalog-install.d.ts",
+  "packages/surface/src/surface/generated/srd-stat-block-aggregate.d.ts",
+  "packages/surface/src/surface/portable-surface.d.ts",
+  "packages/surface/src/surface/stat-block-catalog-core.d.ts",
+  "packages/surface/src/surface/stat-block-catalog-data.d.ts",
+  "packages/surface/src/surface/stat-block-catalog.d.ts",
+  "packages/surface/src/surface/stat-block-identity.d.ts",
+] as const;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;
@@ -286,6 +312,36 @@ function declarationFiles(directory: string): readonly string[] {
   return visit(directory);
 }
 
+function declarationPathLedgerSha256(
+  directory: string,
+  files: readonly string[],
+): string {
+  const root = realpathSync(directory);
+  const ledger = files
+    .map((path) => relative(root, path).split(sep).join("/"))
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(`${ledger}\n`).digest("hex");
+}
+
+function declarationContentLedgerSha256(
+  directory: string,
+  files: readonly string[],
+): string {
+  const root = realpathSync(directory);
+  const ledger = files
+    .map((path) => {
+      const relativePath = relative(root, path).split(sep).join("/");
+      const fileSha256 = createHash("sha256")
+        .update(readFileSync(path))
+        .digest("hex");
+      return `${relativePath}\t${fileSha256}`;
+    })
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(`${ledger}\n`).digest("hex");
+}
+
 /**
  * Enforce the separate declaration accessibility/size boundary. The model
  * context budget does not constrain files that are reachable by the compiler;
@@ -307,6 +363,28 @@ export function assertPublicDeclarationBundle(
     );
   }
   return { files: files.length, bytes };
+}
+
+function assertReviewedPublicDeclarationBundle(
+  directory: string,
+): PublicDeclarationBundleMeasure {
+  const measure = assertPublicDeclarationBundle(directory);
+  const files = declarationFiles(directory);
+  const pathLedgerSha256 = declarationPathLedgerSha256(directory, files);
+  const contentLedgerSha256 = declarationContentLedgerSha256(directory, files);
+  if (
+    measure.files !== PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files ||
+    measure.bytes !== PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes ||
+    pathLedgerSha256 !==
+      PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256 ||
+    contentLedgerSha256 !==
+      PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256
+  ) {
+    throw new Error(
+      `Public declaration bundle differs from the reviewed manifest: expected ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files)} files, ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes)} bytes, path ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256}, and content ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256}; received ${String(measure.files)} files, ${String(measure.bytes)} bytes, path ledger ${pathLedgerSha256}, and content ledger ${contentLedgerSha256}.`,
+    );
+  }
+  return measure;
 }
 
 export function emitPublicDeclarations(
@@ -374,7 +452,66 @@ export function emitPublicDeclarations(
       throw new Error(`Public declaration emission omitted ${relativePath}.`);
     }
   }
-  return assertPublicDeclarationBundle(declarationsDirectory);
+  for (const relativePath of PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS) {
+    if (existsSync(resolve(declarationsDirectory, relativePath))) {
+      throw new Error(
+        `Public declaration emission included forbidden runtime/data owner ${relativePath}.`,
+      );
+    }
+  }
+  return assertReviewedPublicDeclarationBundle(declarationsDirectory);
+}
+
+const DECLARATION_PACKAGE_PATH_ROOTS = [
+  {
+    specifierPrefix: "@dnd/shared/",
+    declarationRoot: "packages/shared/src",
+  },
+  {
+    specifierPrefix: "@dnd/shared-algebras/",
+    declarationRoot: "packages/shared-algebras/src",
+  },
+  {
+    specifierPrefix: "@dnd/surface/",
+    declarationRoot: "packages/surface/src",
+  },
+] as const;
+
+function compilerDeclarationPackagePaths(
+  baseUrl: string,
+): Readonly<Record<string, readonly [string]>> {
+  const declarationsDirectory = resolve(baseUrl, "declarations");
+  const specifiers = new Set<string>();
+  for (const path of declarationFiles(declarationsDirectory)) {
+    for (const match of readFileSync(path, "utf8").matchAll(
+      /["'](@dnd\/(?:shared|shared-algebras|surface)\/[^"']+)["']/g,
+    )) {
+      const specifier = match[1];
+      if (specifier !== undefined) specifiers.add(specifier);
+    }
+  }
+  return Object.fromEntries(
+    [...specifiers].sort().map((specifier) => {
+      const owner = DECLARATION_PACKAGE_PATH_ROOTS.find(({ specifierPrefix }) =>
+        specifier.startsWith(specifierPrefix),
+      );
+      if (owner === undefined) {
+        throw new Error(
+          `Public declaration compiler path has no package owner: ${specifier}.`,
+        );
+      }
+      return [
+        specifier,
+        [
+          resolve(
+            declarationsDirectory,
+            owner.declarationRoot,
+            specifier.slice(owner.specifierPrefix.length),
+          ),
+        ],
+      ];
+    }),
+  );
 }
 
 function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
@@ -424,20 +561,12 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
               "declarations/packages/character-sheet-runtime/src/index.d.ts",
             ),
           ],
-          "@dnd/shared/*": [
-            resolve(baseUrl, "declarations/packages/shared/src/*"),
-          ],
-          "@dnd/shared-algebras/*": [
-            resolve(baseUrl, "declarations/packages/shared-algebras/src/*"),
-          ],
+          ...compilerDeclarationPackagePaths(baseUrl),
           "@dnd/tactical-space": [
             resolve(
               baseUrl,
               "declarations/packages/tactical-space/src/index.d.ts",
             ),
-          ],
-          "@dnd/surface/*": [
-            resolve(baseUrl, "declarations/packages/surface/src/*"),
           ],
         },
         allowImportingTsExtensions: true,
