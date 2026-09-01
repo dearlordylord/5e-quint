@@ -80,6 +80,7 @@ import {
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -132,14 +133,11 @@ type OngoingTranslatingPersistentAreaFacts = NonNullable<
 >;
 type TranslatingPersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
   TranslatingPersistentAreaProfileShape;
-type TranslatingPersistentAreaAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
-    "persistentAreaSaveDamage",
-    TranslatingPersistentAreaMechanicsFacts,
-    TranslatingPersistentAreaAreaHazardSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+type TranslatingPersistentAreaAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveDamage",
+  TranslatingPersistentAreaFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 export const TRANSLATING_PERSISTENT_AREA_FAILED_FACTS = [
   "level",
@@ -815,7 +813,8 @@ function translatingPersistentAreaMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveDamage",
   TranslatingPersistentAreaMechanicsFacts,
-  TranslatingPersistentAreaAreaHazardSpellInvocation
+  TranslatingPersistentAreaAreaHazardSpellInvocation,
+  TranslatingPersistentAreaAdmissionIssue
 > {
   if (!isTranslatingPersistentAreaRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -962,5 +961,7 @@ export const sourceTurnTranslationPersistentAreaSaveDamageProfile = {
   resolve: resolveTranslatingPersistentAreaAreaHazard,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveDamage",
-  TranslatingPersistentAreaAreaHazardSpellInvocation
+  TranslatingPersistentAreaAreaHazardSpellInvocation,
+  TranslatingPersistentAreaMechanicsFacts,
+  TranslatingPersistentAreaAdmissionIssue
 >;

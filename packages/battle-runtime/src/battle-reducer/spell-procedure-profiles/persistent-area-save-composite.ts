@@ -77,6 +77,7 @@ import {
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -119,14 +120,11 @@ type OngoingPersistentAreaSaveCompositeFacts = NonNullable<
 >;
 type PersistentAreaSaveCompositeMechanicsFacts = SpellProcedureMechanicsFacts &
   PersistentAreaSaveCompositeProfileShape;
-type PersistentAreaSaveCompositeAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
-    "persistentAreaSaveComposite",
-    PersistentAreaSaveCompositeMechanicsFacts,
-    PersistentAreaSaveCompositeSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+type PersistentAreaSaveCompositeAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveComposite",
+  PersistentAreaSaveCompositeFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 export const PERSISTENT_AREA_SAVE_COMPOSITE_FAILED_FACTS = [
   "level",
@@ -635,7 +633,8 @@ function persistentAreaSaveCompositeMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveComposite",
   PersistentAreaSaveCompositeMechanicsFacts,
-  PersistentAreaSaveCompositeSpellInvocation
+  PersistentAreaSaveCompositeSpellInvocation,
+  PersistentAreaSaveCompositeAdmissionIssue
 > {
   if (!isPersistentAreaSaveCompositeRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -791,5 +790,7 @@ export const persistentAreaSaveCompositeProfile = {
   resolve: resolvePersistentAreaSaveComposite,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveComposite",
-  PersistentAreaSaveCompositeSpellInvocation
+  PersistentAreaSaveCompositeSpellInvocation,
+  PersistentAreaSaveCompositeMechanicsFacts,
+  PersistentAreaSaveCompositeAdmissionIssue
 >;

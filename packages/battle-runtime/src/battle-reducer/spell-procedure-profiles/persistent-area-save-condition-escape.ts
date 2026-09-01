@@ -76,6 +76,7 @@ import {
 } from "../codec-building-blocks.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -122,14 +123,12 @@ type PersistentAreaSaveConditionEscapeProfileShape = {
 type OngoingEscapeFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
 type PersistentAreaSaveConditionEscapeMechanicsFacts =
   SpellProcedureMechanicsFacts & PersistentAreaSaveConditionEscapeProfileShape;
-type PersistentAreaSaveConditionEscapeAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
+type PersistentAreaSaveConditionEscapeAdmissionIssue =
+  SpellProcedureAdmissionIssue<
     "persistentAreaSaveConditionEscape",
-    PersistentAreaSaveConditionEscapeMechanicsFacts,
-    PersistentAreaSaveConditionEscapeSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+    PersistentAreaSaveConditionEscapeFailedFact,
+    SpellMechanicsBranchPath
+  >;
 
 export const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_FAILED_FACTS = [
   "level",
@@ -687,7 +686,8 @@ function persistentAreaSaveConditionEscapeMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveConditionEscape",
   PersistentAreaSaveConditionEscapeMechanicsFacts,
-  PersistentAreaSaveConditionEscapeSpellInvocation
+  PersistentAreaSaveConditionEscapeSpellInvocation,
+  PersistentAreaSaveConditionEscapeAdmissionIssue
 > {
   if (!isPersistentAreaSaveConditionEscapeRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -807,5 +807,7 @@ export const persistentAreaSaveConditionEscapeProfile = {
   resolve: resolvePersistentAreaSaveConditionEscape,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveConditionEscape",
-  PersistentAreaSaveConditionEscapeSpellInvocation
+  PersistentAreaSaveConditionEscapeSpellInvocation,
+  PersistentAreaSaveConditionEscapeMechanicsFacts,
+  PersistentAreaSaveConditionEscapeAdmissionIssue
 >;

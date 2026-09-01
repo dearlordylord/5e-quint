@@ -73,6 +73,7 @@ import {
 } from "../codec-building-blocks.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -133,14 +134,11 @@ type RamMovablePersistentAreaProfileShape = {
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
 type RamMovablePersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
   RamMovablePersistentAreaProfileShape;
-type RamMovablePersistentAreaAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
-    "persistentAreaSaveDamage",
-    RamMovablePersistentAreaMechanicsFacts,
-    RamMovablePersistentAreaSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+type RamMovablePersistentAreaAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveDamage",
+  RamMovablePersistentAreaFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 export const RAM_MOVABLE_PERSISTENT_AREA_FAILED_FACTS = [
   "level",
@@ -716,7 +714,8 @@ function ramMovablePersistentAreaMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveDamage",
   RamMovablePersistentAreaMechanicsFacts,
-  RamMovablePersistentAreaSpellInvocation
+  RamMovablePersistentAreaSpellInvocation,
+  RamMovablePersistentAreaAdmissionIssue
 > {
   if (!isRamMovablePersistentAreaRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -830,5 +829,7 @@ export const collisionRepositionPersistentAreaSaveDamageProfile = {
   resolve: resolveRamMovablePersistentArea,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveDamage",
-  RamMovablePersistentAreaSpellInvocation
+  RamMovablePersistentAreaSpellInvocation,
+  RamMovablePersistentAreaMechanicsFacts,
+  RamMovablePersistentAreaAdmissionIssue
 >;

@@ -45,6 +45,7 @@ import {
 import { characterBattleLevel } from "../../character-class-level.ts";
 import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
 import type {
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsAdmissionDeclaration,
 } from "./spell-mechanics-admission.ts";
@@ -219,6 +220,8 @@ export type SpellProcedureAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
 > = {
   /**
    * Static authored-mechanics admission.  This is required at the declaration
@@ -230,7 +233,8 @@ export type SpellProcedureAdmissionDeclaration<
   readonly admitMechanics: SpellProcedureMechanicsAdmissionDeclaration<
     P,
     Facts,
-    I
+    I,
+    Issue
   >["admitMechanics"];
 };
 
@@ -238,7 +242,9 @@ export type SpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
-> = SpellProcedureAdmissionDeclaration<P, I, Facts> &
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
+> = SpellProcedureAdmissionDeclaration<P, I, Facts, Issue> &
   SpellProcedureExecutionDeclaration<P>;
 
 export type SynthesizedSpellProcedureDeclaration<

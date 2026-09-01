@@ -101,11 +101,13 @@ export type SpellProcedureMechanicsInvocation<
 
 export type SpellProcedureAdmissionIssue<
   P extends BattleSpellProcedureKey = BattleSpellProcedureKey,
+  FailedFact extends string = string,
+  MechanicsPath extends UnitMechanicsPath = UnitMechanicsPath,
 > = {
   readonly tag: "spellProcedureAdmissionIssue";
   readonly procedure: P;
-  readonly failedFact: string;
-  readonly mechanicsPath: UnitMechanicsPath;
+  readonly failedFact: FailedFact;
+  readonly mechanicsPath: MechanicsPath;
   readonly message: string;
 };
 

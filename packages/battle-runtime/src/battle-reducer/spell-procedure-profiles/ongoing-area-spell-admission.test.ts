@@ -28,6 +28,7 @@ import { persistentAreaSaveDamageProfile } from "./persistent-area-save-damage.t
 import { collisionRepositionPersistentAreaSaveDamageProfile } from "./collision-reposition-persistent-area-save-damage.ts";
 import { directedRepositionPersistentAreaSaveDamageProfile } from "./directed-reposition-persistent-area-save-damage.ts";
 import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./source-turn-translation-persistent-area-save-damage.ts";
+import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { spellAdmissionContextFor } from "./admission-context.ts";
@@ -84,7 +85,11 @@ type StaticAdmissionResult =
   | ReturnType<
       typeof directedRepositionPersistentAreaSaveDamageProfile.admitMechanics
     >
-  | ReturnType<typeof persistentAreaSaveDamageProfile.admitMechanics>;
+  | ReturnType<typeof persistentAreaSaveDamageProfile.admitMechanics>
+  | ReturnType<
+      typeof sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics
+    >
+  | ReturnType<typeof stationaryPersistentAreaSaveDamageProfile.admitMechanics>;
 
 type StaticAdmissionIssue = Extract<
   StaticAdmissionResult,
@@ -128,15 +133,11 @@ function expectUnsupportedFailure(
 function malformedAreaAttachment(
   mechanics: BattleSpellAdmissionSource["mechanics"],
 ): BattleSpellAdmissionSource["mechanics"] {
-  if (
-    mechanics.family !== "ongoing_effect" ||
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "area"
-  ) {
+  if (mechanics.family !== "ongoing_effect") {
     throw new Error("Expected an ongoing area attachment.");
   }
   const attachment = mechanics.attachment;
-  if (attachment.value.kind !== "area") {
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
     throw new Error("Expected an ongoing area attachment.");
   }
   const area = attachment.value;

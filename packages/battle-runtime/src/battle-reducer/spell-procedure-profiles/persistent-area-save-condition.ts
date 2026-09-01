@@ -68,6 +68,7 @@ import {
 import { Match, Result, Schema } from "effect";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -115,14 +116,11 @@ type OngoingPersistentAreaSaveConditionFacts = NonNullable<
 >;
 type PersistentAreaSaveConditionMechanicsFacts = SpellProcedureMechanicsFacts &
   PersistentAreaSaveConditionProfileShape;
-type PersistentAreaSaveConditionAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
-    "persistentAreaSaveCondition",
-    PersistentAreaSaveConditionMechanicsFacts,
-    PersistentAreaSaveConditionSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+type PersistentAreaSaveConditionAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveCondition",
+  PersistentAreaSaveConditionFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 export const PERSISTENT_AREA_SAVE_CONDITION_FAILED_FACTS = [
   "level",
@@ -559,7 +557,8 @@ function persistentAreaSaveConditionMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveCondition",
   PersistentAreaSaveConditionMechanicsFacts,
-  PersistentAreaSaveConditionSpellInvocation
+  PersistentAreaSaveConditionSpellInvocation,
+  PersistentAreaSaveConditionAdmissionIssue
 > {
   if (!isPersistentAreaSaveConditionRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -692,5 +691,7 @@ export const persistentAreaSaveConditionProfile = {
   resolve: resolvePersistentAreaSaveCondition,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveCondition",
-  PersistentAreaSaveConditionSpellInvocation
+  PersistentAreaSaveConditionSpellInvocation,
+  PersistentAreaSaveConditionMechanicsFacts,
+  PersistentAreaSaveConditionAdmissionIssue
 >;

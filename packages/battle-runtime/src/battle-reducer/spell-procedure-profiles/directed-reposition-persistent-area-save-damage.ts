@@ -76,6 +76,7 @@ import {
 } from "../codec-building-blocks.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -151,14 +152,11 @@ type OngoingArea = Extract<
 >;
 type MovablePersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
   MovablePersistentAreaProfileShape;
-type MovablePersistentAreaAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
-    "persistentAreaSaveDamage",
-    MovablePersistentAreaMechanicsFacts,
-    MovablePersistentAreaSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+type MovablePersistentAreaAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveDamage",
+  MovablePersistentAreaFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 export const MOVABLE_PERSISTENT_AREA_FAILED_FACTS = [
   "level",
@@ -848,7 +846,8 @@ function movablePersistentAreaMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveDamage",
   MovablePersistentAreaMechanicsFacts,
-  MovablePersistentAreaSpellInvocation
+  MovablePersistentAreaSpellInvocation,
+  MovablePersistentAreaAdmissionIssue
 > {
   if (!isMovablePersistentAreaRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -970,5 +969,7 @@ export const directedRepositionPersistentAreaSaveDamageProfile = {
   resolve: resolveMovablePersistentArea,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveDamage",
-  MovablePersistentAreaSpellInvocation
+  MovablePersistentAreaSpellInvocation,
+  MovablePersistentAreaMechanicsFacts,
+  MovablePersistentAreaAdmissionIssue
 >;

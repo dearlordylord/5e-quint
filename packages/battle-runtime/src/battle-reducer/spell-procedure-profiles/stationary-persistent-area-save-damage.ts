@@ -79,6 +79,7 @@ import {
   spellDefinitionPointRangeFeet,
   spellProcedureHasRedundantSignature,
   type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
@@ -120,14 +121,11 @@ type StationaryPersistentAreaProfileShape = {
 type StationaryPersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
   StationaryPersistentAreaProfileShape;
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
-type StationaryPersistentAreaAdmissionIssue = Extract<
-  SpellProcedureMechanicsInspection<
-    "persistentAreaSaveDamage",
-    StationaryPersistentAreaMechanicsFacts,
-    StationaryPersistentAreaAreaHazardSpellInvocation
-  >,
-  { readonly tag: "unsupported" }
->["issues"][number];
+type StationaryPersistentAreaAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveDamage",
+  StationaryPersistentAreaFailedFact,
+  SpellMechanicsBranchPath
+>;
 
 export const STATIONARY_PERSISTENT_AREA_FAILED_FACTS = [
   "level",
@@ -229,7 +227,8 @@ function stationaryPersistentAreaMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<
   "persistentAreaSaveDamage",
   StationaryPersistentAreaMechanicsFacts,
-  StationaryPersistentAreaAreaHazardSpellInvocation
+  StationaryPersistentAreaAreaHazardSpellInvocation,
+  StationaryPersistentAreaAdmissionIssue
 > {
   if (!isStationaryPersistentAreaRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
@@ -808,5 +807,7 @@ export const stationaryPersistentAreaSaveDamageProfile = {
   resolve: resolveStationaryPersistentAreaAreaHazard,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveDamage",
-  StationaryPersistentAreaAreaHazardSpellInvocation
+  StationaryPersistentAreaAreaHazardSpellInvocation,
+  StationaryPersistentAreaMechanicsFacts,
+  StationaryPersistentAreaAdmissionIssue
 >;

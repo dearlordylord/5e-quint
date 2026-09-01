@@ -5,6 +5,8 @@ import type {
 } from "./profile.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureMechanicsFacts,
+  SpellProcedureMechanicsInvocation,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./source-turn-translation-persistent-area-save-damage.ts";
@@ -12,18 +14,42 @@ import { collisionRepositionPersistentAreaSaveDamageProfile } from "./collision-
 import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
 import { directedRepositionPersistentAreaSaveDamageProfile } from "./directed-reposition-persistent-area-save-damage.ts";
 
+type PersistentAreaSaveDamageAdmissionResult =
+  | ReturnType<
+      typeof sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics
+    >
+  | ReturnType<
+      typeof collisionRepositionPersistentAreaSaveDamageProfile.admitMechanics
+    >
+  | ReturnType<typeof stationaryPersistentAreaSaveDamageProfile.admitMechanics>
+  | ReturnType<
+      typeof directedRepositionPersistentAreaSaveDamageProfile.admitMechanics
+    >;
+type PersistentAreaSaveDamageAdmissionIssue = Extract<
+  PersistentAreaSaveDamageAdmissionResult,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
 function persistentAreaSaveDamageMechanicsAdmission(
   source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<"persistentAreaSaveDamage"> {
-  const inspections = [
+): SpellProcedureMechanicsInspection<
+  "persistentAreaSaveDamage",
+  SpellProcedureMechanicsFacts,
+  SpellProcedureMechanicsInvocation<"persistentAreaSaveDamage">,
+  PersistentAreaSaveDamageAdmissionIssue
+> {
+  const inspections: readonly PersistentAreaSaveDamageAdmissionResult[] = [
     sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(source),
     collisionRepositionPersistentAreaSaveDamageProfile.admitMechanics(source),
     stationaryPersistentAreaSaveDamageProfile.admitMechanics(source),
     directedRepositionPersistentAreaSaveDamageProfile.admitMechanics(source),
   ];
-  const issues = inspections.flatMap((inspection) =>
-    inspection.tag === "unsupported" ? inspection.issues : [],
-  );
+  const issues: PersistentAreaSaveDamageAdmissionIssue[] = [];
+  for (const inspection of inspections) {
+    if (inspection.tag === "unsupported") {
+      issues.push(...inspection.issues);
+    }
+  }
   if (issues.length > 0) {
     const [firstIssue, ...remainingIssues] = issues;
     if (firstIssue !== undefined) {
@@ -96,5 +122,7 @@ export const persistentAreaSaveDamageProfile = {
     ),
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveDamage",
-  SpellInvocationAdmittedByRegisteredProcedure<"persistentAreaSaveDamage">
+  SpellInvocationAdmittedByRegisteredProcedure<"persistentAreaSaveDamage">,
+  SpellProcedureMechanicsFacts,
+  PersistentAreaSaveDamageAdmissionIssue
 >;
