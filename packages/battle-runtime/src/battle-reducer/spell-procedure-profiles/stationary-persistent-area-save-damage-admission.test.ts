@@ -25,10 +25,7 @@ import { spellBattle } from "../../unit-profile-admission-spell-battle.test-supp
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
-import {
-  ongoingAreaSpellDurationProjection,
-  ongoingAreaSpellFacts,
-} from "../ongoing-concentration-area-spell.ts";
+import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 
 type OngoingSpellMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
@@ -70,46 +67,41 @@ function coordinate(path: UnitMechanicsPath): string {
 
 describe("stationary persistent-area static admission", () => {
   test("keeps duration and duration ticks correlated for every duration kind", () => {
-    const concentration = ongoingAreaSpellDurationProjection({
-      kind: "concentration",
-      upTo: { amount: 1, unit: "minute" },
-    });
-    const timed = ongoingAreaSpellDurationProjection({
-      kind: "timed",
-      value: { amount: 1, unit: "round" },
-    });
-    const instantaneous = ongoingAreaSpellDurationProjection({
-      kind: "instantaneous",
-    });
-    const permanent = ongoingAreaSpellDurationProjection({
-      kind: "permanent",
-    });
-    const slotTiered = ongoingAreaSpellDurationProjection({
-      kind: "slot_tiered",
-      base: { kind: "instantaneous" },
-      tiers: [{ atSlot: 1, duration: { kind: "instantaneous" } }],
-    });
+    const source = spellAdmissionSource(spellRecord("insect_plague"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Insect Plague ongoing mechanics.");
+    }
 
-    expect(concentration.duration.kind).toBe("concentration");
-    expect(concentration.durationTicks).toBeDefined();
-    expect(timed.duration.kind).toBe("timed");
-    expect(timed.durationTicks).toBeDefined();
-    expect(instantaneous).toEqual({
-      duration: { kind: "instantaneous" },
-      durationTicks: undefined,
-    });
-    expect(permanent).toEqual({
-      duration: { kind: "permanent" },
-      durationTicks: undefined,
-    });
-    expect(slotTiered).toEqual({
-      duration: {
-        kind: "slot_tiered",
-        base: { kind: "instantaneous" },
-        tiers: [{ atSlot: 1, duration: { kind: "instantaneous" } }],
+    const durations = [
+      {
+        kind: "concentration" as const,
+        upTo: { amount: 1, unit: "minute" as const },
       },
-      durationTicks: undefined,
-    });
+      {
+        kind: "timed" as const,
+        value: { amount: 1, unit: "round" as const },
+      },
+      { kind: "instantaneous" as const },
+      { kind: "permanent" as const },
+      {
+        kind: "slot_tiered" as const,
+        base: { kind: "instantaneous" as const },
+        tiers: [{ atSlot: 1, duration: { kind: "instantaneous" as const } }],
+      },
+    ] satisfies readonly OngoingSpellMechanics["duration"][];
+
+    for (const duration of durations) {
+      const facts = ongoingAreaSpellFacts({ ...source.mechanics, duration });
+      expect(facts).not.toBeNull();
+      if (facts === null) return;
+
+      expect(facts.mechanics.duration).toEqual(duration);
+      if (duration.kind === "concentration" || duration.kind === "timed") {
+        expect(facts.durationTicks).toBeDefined();
+      } else {
+        expect(facts.durationTicks).toBeUndefined();
+      }
+    }
   });
 
   test("keeps area and duration facts owned by mechanics", () => {

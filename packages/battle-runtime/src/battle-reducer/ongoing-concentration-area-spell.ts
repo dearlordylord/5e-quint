@@ -22,23 +22,6 @@ type DurationTicksProjection = ReturnType<
   typeof elapsedTimeTicksFromTimeSpanDuration
 >;
 
-export type OngoingAreaSpellDurationProjection =
-  | {
-      readonly duration: Extract<Duration, { readonly kind: "concentration" }>;
-      readonly durationTicks: DurationTicksProjection;
-    }
-  | {
-      readonly duration: Extract<Duration, { readonly kind: "timed" }>;
-      readonly durationTicks: DurationTicksProjection;
-    }
-  | {
-      readonly duration: Exclude<
-        Duration,
-        { readonly kind: "concentration" } | { readonly kind: "timed" }
-      >;
-      readonly durationTicks: undefined;
-    };
-
 type OngoingAreaSpellMechanicsForDuration<DurationBranch extends Duration> =
   Omit<OngoingAreaSpellMechanics, "duration" | "attachment"> & {
     readonly duration: DurationBranch;
@@ -81,34 +64,6 @@ function isOngoingConcentrationAreaSpellFacts(
   facts: OngoingAreaSpellFacts,
 ): facts is OngoingConcentrationAreaSpellFacts {
   return facts.mechanics.duration.kind === "concentration";
-}
-
-export function ongoingAreaSpellDurationProjection(
-  duration: Duration,
-): OngoingAreaSpellDurationProjection {
-  return Match.value(duration).pipe(
-    Match.when({ kind: "instantaneous" }, (instantaneous) => ({
-      duration: instantaneous,
-      durationTicks: undefined,
-    })),
-    Match.when({ kind: "concentration" }, (concentration) => ({
-      duration: concentration,
-      durationTicks: elapsedTimeTicksFromTimeSpanDuration(concentration.upTo),
-    })),
-    Match.when({ kind: "timed" }, (timed) => ({
-      duration: timed,
-      durationTicks: elapsedTimeTicksFromTimeSpanDuration(timed.value),
-    })),
-    Match.when({ kind: "permanent" }, (permanent) => ({
-      duration: permanent,
-      durationTicks: undefined,
-    })),
-    Match.when({ kind: "slot_tiered" }, (slotTiered) => ({
-      duration: slotTiered,
-      durationTicks: undefined,
-    })),
-    Match.exhaustive,
-  );
 }
 
 export function ongoingAreaSpellFacts(
