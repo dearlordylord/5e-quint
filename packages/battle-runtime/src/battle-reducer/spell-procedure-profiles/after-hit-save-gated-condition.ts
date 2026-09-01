@@ -1,5 +1,5 @@
 import { optionalProperty } from "../../optional-property.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-restraint-turn-start-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
@@ -26,14 +26,9 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The metamagic table entry remains Wave 9 migration work.
 
-import type {
-  DamageType,
-  DiceAmount as SurfaceDiceAmount,
-} from "@dnd/surface/surface/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
-  type AfterHitSaveGatedConditionSpellInvocation,
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleFill,
@@ -62,18 +57,31 @@ import {
 import { spellFillSet, type SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellActTurnResourceAvailable } from "../spell-turn-resources.ts";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
-  SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureMechanicsFacts,
+  SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   AbilitySchema,
   DcSourceSchema,
@@ -82,8 +90,10 @@ import {
 } from "../codec-building-blocks.ts";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
 
-type AfterHitSaveGatedConditionInvocation =
-  AfterHitSaveGatedConditionSpellInvocation;
+type AfterHitSaveGatedConditionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "afterHitSaveGatedCondition" }
+>;
 type AttackHitBonusActionSpellCommandSubject = Extract<
   BattleSubject,
   {
@@ -103,77 +113,176 @@ type AfterHitSaveGatedConditionFillSet = Extract<
 type AfterHitSaveGatedConditionResolveInput =
   SpellProcedureProfileResolveInput<AfterHitSaveGatedConditionInvocation>;
 
-function admitAfterHitSaveGatedCondition(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly AfterHitSaveGatedConditionInvocation[] {
-  const projection = afterHitSaveGatedConditionSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
-    const damageExpr = supportedDamageAmountExpr({
-      amount: projection.turnStartDamageAmount,
-      spellLevel: spell.mechanics.level,
-      slotLevel,
-    });
-    return damageExpr === null
-      ? null
-      : {
-          ...base,
-          procedure: "afterHitSaveGatedCondition",
-          actionCost: "bonusAction",
-          ability: projection.ability,
-          dc: projection.dc,
-          targeting: { kind: "singleCombatant" },
-          effect: {
-            kind: "fixed",
-            condition: projection.condition,
-            expiresAt: "concentration",
-            escape: {
-              kind: "abilityCheck",
-              ability: "str",
-              skill: "athletics",
-              allowedActor: "targetOrCreatureWithinReach",
-              successEnds: "spell",
-            },
-            turnStartDamage: {
-              expr: damageExpr,
-              damageType: projection.turnStartDamageType,
-            },
-            repeatSave: null,
-          },
-        };
+export const AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS = [
+  "level",
+  "range",
+  "duration",
+  "attachment",
+  "initialPhase",
+  "saveGate",
+  "escape",
+  "operationCount",
+  "operationTrigger",
+  "operationOrder",
+  "operationEffect",
+] as const;
+type AfterHitSaveGatedConditionFailedFact =
+  (typeof AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS)[number];
+
+type AfterHitSaveGatedConditionMechanicsIssue = {
+  readonly failedFact: AfterHitSaveGatedConditionFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+function afterHitSaveGatedConditionMechanicsIssue(
+  failedFact: AfterHitSaveGatedConditionMechanicsIssue["failedFact"],
+  mechanicsPath: SpellMechanicsBranchPath,
+): AfterHitSaveGatedConditionMechanicsIssue {
+  return { failedFact, mechanicsPath };
+}
+
+function afterHitSaveGatedConditionIssueResult(
+  issue: AfterHitSaveGatedConditionMechanicsIssue,
+): {
+  readonly tag: "spellProcedureAdmissionIssue";
+  readonly procedure: "afterHitSaveGatedCondition";
+  readonly failedFact: AfterHitSaveGatedConditionFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly message: string;
+} {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "afterHitSaveGatedCondition",
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported afterHitSaveGatedCondition mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+type AfterHitSaveGatedConditionNonEmptyIssues = readonly [
+  AfterHitSaveGatedConditionMechanicsIssue,
+  ...AfterHitSaveGatedConditionMechanicsIssue[],
+];
+
+function afterHitSaveGatedConditionIssueKey(
+  failedFact: AfterHitSaveGatedConditionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): string {
+  return JSON.stringify([failedFact, mechanicsPath.nodes]);
+}
+
+function afterHitSaveGatedConditionUniqueIssues(
+  issues: readonly AfterHitSaveGatedConditionMechanicsIssue[],
+): readonly AfterHitSaveGatedConditionMechanicsIssue[] {
+  const issueKeys = new Set<string>();
+  return issues.filter((issue) => {
+    const key = afterHitSaveGatedConditionIssueKey(
+      issue.failedFact,
+      issue.mechanicsPath,
+    );
+    if (issueKeys.has(key)) return false;
+    issueKeys.add(key);
+    return true;
   });
 }
 
-function afterHitSaveGatedConditionSpellProjection(
-  spell: BattleSpellAdmissionSource,
-): {
-  readonly ability: "str";
-  readonly dc: { readonly kind: "caster_spell_save_dc" };
-  readonly condition: "restrained";
-  readonly turnStartDamageAmount: SurfaceDiceAmount;
-  readonly turnStartDamageType: Extract<DamageType, "piercing">;
-} | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !== "weapon" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
+function afterHitSaveGatedConditionWithMandatoryEscape(
+  issues: readonly AfterHitSaveGatedConditionMechanicsIssue[],
+  escapeIssue: AfterHitSaveGatedConditionMechanicsIssue,
+): AfterHitSaveGatedConditionNonEmptyIssues {
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? [escapeIssue]
+    : [firstIssue, ...remainingIssues, escapeIssue];
+}
+
+function admitAfterHitSaveGatedConditionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "afterHitSaveGatedCondition",
+  SpellProcedureMechanicsFacts,
+  AfterHitSaveGatedConditionInvocation,
+  ReturnType<typeof afterHitSaveGatedConditionIssueResult>
+> {
+  if (source.mechanics.family !== "ongoing_effect") {
+    return { tag: "notRepresented" };
   }
-  const initialPhase = spell.mechanics.initialPhase;
-  const operation = spell.mechanics.operations[0];
+  const mechanics = source.mechanics;
+  const castingTime = mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") {
+    return { tag: "notRepresented" };
+  }
+  const trigger = castingTime.trigger;
+  const initialPhase = mechanics.initialPhase;
+  const operation = mechanics.operations.find(
+    (candidate) => candidate.effect.kind === "damage",
+  );
   if (
+    trigger?.kind !== "after_hit_with" ||
+    trigger.attack !== "weapon" ||
     initialPhase?.kind !== "save_gate" ||
+    operation?.effect.kind !== "damage"
+  ) {
+    return { tag: "notRepresented" };
+  }
+  // The Surface Ensnaring Strike graph does not author its Strength
+  // (Athletics) escape action. Keeping this mandatory issue prevents the
+  // execution closure from claiming a mechanic that was not admitted.
+  const escapeIssue = afterHitSaveGatedConditionMechanicsIssue(
+    "escape",
+    spellOngoingInitialPhasePath(),
+  );
+  const issues: AfterHitSaveGatedConditionMechanicsIssue[] = [];
+  const issueKeys = new Set<string>();
+  const pushIssue = (
+    failedFact: AfterHitSaveGatedConditionMechanicsIssue["failedFact"],
+    mechanicsPath: SpellMechanicsBranchPath,
+  ): void => {
+    const key = afterHitSaveGatedConditionIssueKey(failedFact, mechanicsPath);
+    if (issueKeys.has(key)) return;
+    issueKeys.add(key);
+    issues.push(
+      afterHitSaveGatedConditionMechanicsIssue(failedFact, mechanicsPath),
+    );
+  };
+  if (mechanics.level !== 1) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.range.kind !== "self") {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  if (mechanics.duration.kind !== "concentration") {
+    pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  } else {
+    if (
+      mechanics.duration.upTo.unit !== "minute" ||
+      mechanics.duration.upTo.amount !== 1
+    ) {
+      pushIssue("duration", spellDurationValuePath());
+    }
+    for (const [index] of (mechanics.duration.earlyEnd ?? []).entries()) {
+      pushIssue(
+        "duration",
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      );
+    }
+    if (mechanics.duration.permanentIfMaintainedFull === true) {
+      pushIssue(
+        "duration",
+        spellDurationEndingPath(
+          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
+        ),
+      );
+    }
+  }
+  if (
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "target" ||
+    mechanics.attachment.value.selection.mode !== "one"
+  ) {
+    pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+  if (
     initialPhase.attachment.kind !== "hole" ||
     initialPhase.attachment.value.kind !== "target" ||
     initialPhase.attachment.value.selection.mode !== "one" ||
@@ -181,20 +290,59 @@ function afterHitSaveGatedConditionSpellProjection(
     initialPhase.dc.kind !== "caster_spell_save_dc" ||
     initialPhase.onFail.kind !== "apply_condition" ||
     initialPhase.onFail.condition !== "restrained" ||
-    initialPhase.onSuccess.kind !== "end_current_effect" ||
-    operation?.trigger.kind !== "on_attached_turn_start" ||
-    operation.effect.kind !== "damage" ||
+    initialPhase.onSuccess.kind !== "end_current_effect"
+  ) {
+    pushIssue("saveGate", spellOngoingInitialPhasePath());
+  }
+  const operationIndex = mechanics.operations.findIndex(
+    (candidate) => candidate.effect.kind === "damage",
+  );
+  if (mechanics.operations.length !== 1) {
+    if (mechanics.operations.length === 0) {
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(1)),
+      );
+    }
+    for (const [index] of mechanics.operations.entries()) {
+      if (index === operationIndex) continue;
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  if (operation.trigger.kind !== "on_attached_turn_start") {
+    pushIssue(
+      "operationTrigger",
+      spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
+    );
+  } else if (operationIndex !== 0) {
+    pushIssue(
+      "operationOrder",
+      spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
+    );
+  }
+  if (
     operation.effect.damageType !== "piercing" ||
     operation.effect.amount === undefined
   ) {
-    return null;
+    pushIssue(
+      "operationEffect",
+      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+    );
   }
+  const unsupportedIssues = afterHitSaveGatedConditionWithMandatoryEscape(
+    afterHitSaveGatedConditionUniqueIssues(issues),
+    escapeIssue,
+  );
+  const [firstIssue, ...remainingIssues] = unsupportedIssues;
   return {
-    ability: "str",
-    dc: { kind: "caster_spell_save_dc" },
-    condition: "restrained",
-    turnStartDamageAmount: operation.effect.amount,
-    turnStartDamageType: "piercing",
+    tag: "unsupported",
+    issues: [
+      afterHitSaveGatedConditionIssueResult(firstIssue),
+      ...remainingIssues.map(afterHitSaveGatedConditionIssueResult),
+    ],
   };
 }
 
@@ -449,7 +597,7 @@ const AfterHitSaveGatedConditionInvocationSchema =
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
   executionSchema: AfterHitSaveGatedConditionInvocationSchema,
-  admit: admitAfterHitSaveGatedCondition,
+  admitMechanics: admitAfterHitSaveGatedConditionMechanics,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,
   resolve: resolveAfterHitSaveGatedCondition,
 } satisfies SpellProcedureDeclaration<

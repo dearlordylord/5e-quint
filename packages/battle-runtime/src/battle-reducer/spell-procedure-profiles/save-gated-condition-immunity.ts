@@ -1,5 +1,5 @@
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-save-gated-condition-immunity
 import { CreatureTypeSchema } from "@dnd/surface/surface/schema";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -27,13 +27,20 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { supportedPreparedSaveGateConditionImmunityProfile } from "./_save-gate-helpers.ts";
+import {
+  saveGateMechanicsInspection,
+  saveGatedConditionImmunityInvocationsFromFacts,
+  saveGatedConditionImmunityMechanicsFacts,
+  type SaveGatedConditionImmunityMechanicsFacts,
+} from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionImmunitySpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -66,21 +73,33 @@ type SaveGatedConditionImmunitySpellInvocation = Extract<
 type SaveGatedConditionImmunityResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedConditionImmunitySpellInvocation>;
 
-function admitSaveGatedConditionImmunity(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly SaveGatedConditionImmunitySpellInvocation[] {
-  return supportedPreparedSaveGateConditionImmunityProfile(
-    ctx.actor.combatantId,
-    spell,
-    ctx.spellCastOptions,
-  ).filter(isSaveGatedConditionImmunityInvocation);
-}
-
-function isSaveGatedConditionImmunityInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is SaveGatedConditionImmunitySpellInvocation {
-  return invocation.procedure === "saveGatedConditionImmunity";
+function admitSaveGatedConditionImmunityMechanics(
+  source: SpellMechanicsAdmissionSource,
+) {
+  return saveGateMechanicsInspection<
+    "saveGatedConditionImmunity",
+    SaveGatedConditionImmunitySpellInvocation,
+    SaveGatedConditionImmunityMechanicsFacts
+  >({
+    source,
+    procedure: "saveGatedConditionImmunity",
+    projection: saveGatedConditionImmunityMechanicsFacts(source),
+    admit: (
+      facts,
+      spell: BattleSpellExecutionSource,
+      ctx: SpellAdmissionContext,
+    ) =>
+      ctx.spellCastOptions.flatMap((slot) =>
+        saveGatedConditionImmunityInvocationsFromFacts({
+          spell,
+          facts,
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          slotLevel: slot.spellLevel,
+          sourceCombatantId: ctx.actor.combatantId,
+        }),
+      ),
+  });
 }
 
 function discoverSaveGatedConditionImmunityCastAct(
@@ -124,7 +143,7 @@ const SaveGatedConditionImmunityInvocationSchema =
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
   executionSchema: SaveGatedConditionImmunityInvocationSchema,
-  admit: admitSaveGatedConditionImmunity,
+  admitMechanics: admitSaveGatedConditionImmunityMechanics,
   discoverCastAct: discoverSaveGatedConditionImmunityCastAct,
   resolve: resolveSaveGatedConditionImmunity,
 } satisfies SpellProcedureDeclaration<

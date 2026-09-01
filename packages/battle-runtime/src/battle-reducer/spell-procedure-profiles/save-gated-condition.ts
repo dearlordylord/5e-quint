@@ -3,7 +3,7 @@ import {
   savingThrowMetamagicHoles,
 } from "../saving-throw-metamagic-holes.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-save
 import {
   AbilitySchema,
@@ -38,13 +38,20 @@ import { isTargetListSpellInvocation } from "../spells-invocation-guards.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
-import { supportedPreparedSaveGateConditionProfile } from "./_save-gate-helpers.ts";
+import {
+  saveGateMechanicsInspection,
+  saveGatedConditionInvocationsFromFacts,
+  saveGatedConditionMechanicsFacts,
+  type SaveGatedConditionMechanicsFacts,
+} from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -134,20 +141,32 @@ type SaveGatedConditionSpellInvocation = Extract<
 type SaveGatedConditionResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedConditionSpellInvocation>;
 
-function admitSaveGatedCondition(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly SaveGatedConditionSpellInvocation[] {
-  return supportedPreparedSaveGateConditionProfile(
-    spell,
-    ctx.spellCastOptions,
-  ).filter(isSaveGatedConditionInvocation);
-}
-
-function isSaveGatedConditionInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is SaveGatedConditionSpellInvocation {
-  return invocation.procedure === "saveGatedCondition";
+function admitSaveGatedConditionMechanics(
+  source: SpellMechanicsAdmissionSource,
+) {
+  return saveGateMechanicsInspection<
+    "saveGatedCondition",
+    SaveGatedConditionSpellInvocation,
+    SaveGatedConditionMechanicsFacts
+  >({
+    source,
+    procedure: "saveGatedCondition",
+    projection: saveGatedConditionMechanicsFacts(source),
+    admit: (
+      facts,
+      spell: BattleSpellExecutionSource,
+      ctx: SpellAdmissionContext,
+    ) =>
+      ctx.spellCastOptions.flatMap((slot) =>
+        saveGatedConditionInvocationsFromFacts({
+          spell,
+          facts,
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          slotLevel: slot.spellLevel,
+        }),
+      ),
+  });
 }
 
 function discoverSaveGatedConditionCastAct(
@@ -280,7 +299,7 @@ const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
 export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
   executionSchema: SaveGatedConditionInvocationSchema,
-  admit: admitSaveGatedCondition,
+  admitMechanics: admitSaveGatedConditionMechanics,
   discoverCastAct: discoverSaveGatedConditionCastAct,
   resolve: resolveSaveGatedCondition,
 } satisfies SpellProcedureDeclaration<
