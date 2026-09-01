@@ -20,7 +20,6 @@ import {
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
-  characterBattleFeatureInitForTest,
   battleStateWithAllocatedEffectForTest,
   rageResource,
   requireCharacterSpellProcedureRefForTest,
@@ -636,14 +635,6 @@ function breathWeaponBattle(
             ? [supportedBattleUnitRef(rageUnit)]
             : []),
         ],
-        unitFeatures:
-          input.includeRage === true
-            ? [
-                characterBattleFeatureInitForTest(rageUnit, [
-                  { className: "barbarian", level: classLevel(1) },
-                ]),
-              ]
-            : [],
         resources: [
           {
             unit: breathWeaponUnit,
