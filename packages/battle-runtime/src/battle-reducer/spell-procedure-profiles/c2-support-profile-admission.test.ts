@@ -628,6 +628,7 @@ describe("C2 support profile static admission", () => {
     ["roll modifier bane", "bane", rollModifierProfile],
     ["roll modifier enhance ability", "enhance_ability", rollModifierProfile],
     ["scalar buff longstrider", "longstrider", scalarBuffProfile],
+    ["scalar buff fly", "fly", scalarBuffProfile],
     ["scalar buff false life", "false_life", scalarBuffProfile],
     ["scalar buff shield of faith", "shield_of_faith", scalarBuffProfile],
     ["see invisible", "see_invisibility", seeInvisibleObserverSightProfile],
@@ -700,6 +701,18 @@ describe("C2 support profile static admission", () => {
       ],
     ],
     [
+      "scalar buff flight",
+      "fly",
+      scalarBuffProfile,
+      [
+        ...commonHeaderPaths,
+        spellDurationValuePath(),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+    ],
+    [
       "scalar buff instantaneous",
       "false_life",
       scalarBuffProfile,
@@ -748,6 +761,60 @@ describe("C2 support profile static admission", () => {
       expect(result.admitted.evidence).toEqual({ consumed, unowned: [] });
     },
   );
+
+  test("reports Pass without Trace movement-trace suppression as exact unowned mechanics", () => {
+    const result = rollModifierProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(spellRecord("pass_without_trace"))),
+    );
+
+    expect(result).toMatchObject({ tag: "supported" });
+    if (result.tag !== "supported") return;
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        ...commonHeaderPaths,
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+      ],
+      unowned: [
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+      ],
+    });
+  });
+
+  test("tracks Pass without Trace ownership by effect shape after authored reordering", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("pass_without_trace", (mechanics) => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        const [rollBonus, movementTrace, ...rest] = mechanics.operations;
+        if (rollBonus === undefined || movementTrace === undefined) {
+          throw new Error("Expected Pass without Trace operation pair.");
+        }
+        return {
+          ...mechanics,
+          operations: [movementTrace, rollBonus, ...rest],
+        };
+      }),
+    );
+
+    expect(result).toMatchObject({ tag: "supported" });
+    if (result.tag !== "supported") return;
+    expect(result.admitted.evidence).toMatchObject({
+      consumed: [
+        ...commonHeaderPaths,
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+      ],
+      unowned: [
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+      ],
+    });
+  });
 
   test.each([
     [
@@ -1742,7 +1809,9 @@ describe("C2 support profile static admission", () => {
   test.each([
     ["damage reduction", "resistance", damageReductionProfile],
     ["roll modifier", "bless", rollModifierProfile],
+    ["roll modifier partial", "pass_without_trace", rollModifierProfile],
     ["scalar buff", "longstrider", scalarBuffProfile],
+    ["scalar buff flight", "fly", scalarBuffProfile],
     ["see invisible", "see_invisibility", seeInvisibleObserverSightProfile],
     ["held light", "produce_flame", heldLightProfile],
   ] as const)(

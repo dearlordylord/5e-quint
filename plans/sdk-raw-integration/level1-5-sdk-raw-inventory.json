@@ -5599,10 +5599,10 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/spatial owner",
-          "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-          "source": "deferred-mechanics",
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts.",
+          "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -5611,7 +5611,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -6552,10 +6552,10 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/spatial owner",
-          "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-          "source": "deferred-mechanics",
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts.",
+          "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -6564,7 +6564,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -7535,10 +7535,10 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/spatial owner",
-          "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-          "source": "deferred-mechanics",
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts.",
+          "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -7547,7 +7547,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -41941,10 +41941,10 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/spatial owner",
-          "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-          "source": "deferred-mechanics",
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts.",
+          "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -41953,7 +41953,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -45196,10 +45196,10 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/spatial owner",
-          "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-          "source": "deferred-mechanics",
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts.",
+          "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -45208,7 +45208,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -51035,10 +51035,10 @@
           "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/spatial owner",
-          "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-          "source": "deferred-mechanics",
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts.",
+          "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -51047,7 +51047,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }

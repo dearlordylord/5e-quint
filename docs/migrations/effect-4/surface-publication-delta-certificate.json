@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2185333,
-        "sha256": "00a95b7dc20797170c7f6fe9947aeee9d76e03970ab44bc8bfbf57ce6b88f63d"
+        "byteLength": 2185408,
+        "sha256": "a2e9acadfee183c4aa4dbc90bbb7a289c74cd59079caa4d62cdbb8fbd2fa43e9"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "8f799c929b9867ec4074acc028b0132436ec2e53d2cfcda95d5416238eea1a46",
+        "candidateCanonicalJsonSha256": "f28ea65f1d8019ec4cf197c427c42c37fadae26bbf766c86be7dc4fee0efe25a",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -168,6 +168,14 @@
             "baselineCanonicalJsonSha256": "483919bdf2bfb895d36e831054300f5803005121695eefadbf1cc1f1be9c0f35",
             "candidateCanonicalJsonSha256": "3565086e6627a3d704e3c017243b640d5be4ba4012809b362ef176923f60c8d9",
             "semanticClass": "authored-execution-vocabulary"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "pass_without_trace",
+            "baselineCanonicalJsonSha256": "49ddb020aa34028336ea89f9a3eb47d24939675acbde59ca76b6087a55652372",
+            "candidateCanonicalJsonSha256": "1bf8d945e5760abc5460a175f3f10b968dcceafa0739eca47379e423a3fcf704",
+            "semanticClass": "authored-persistent-rule-facts"
           },
           {
             "kind": "changed",
@@ -2877,19 +2885,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1588630,
-        "sha256": "ac42a65802fe15505b9c8ccff62a00b6885b1191a545043b86d9385df3a057dd"
+        "byteLength": 1589031,
+        "sha256": "5c5c9b7142d02df57dc57252ebc848ff466716a441f140d6381ba8117fd3e6b0"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "e69f96da2dcc95915f8a8578617aa3159be332a7797616dc6efe5c1e9f68a70a",
+        "candidateCanonicalJsonSha256": "605a21cf6c68fd6a2bd6a6d0e3b4ac02402111632615367dd309b545b70a0fa2",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1190
+          "candidate": 1191
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7675
+          "candidate": 7677
         },
         "localReferencesComplete": {
           "baseline": true,

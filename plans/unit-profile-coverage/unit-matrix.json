@@ -62,9 +62,9 @@
       "value": 435
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 219,
-      "numerator": 211,
-      "percent": "96.3%"
+      "denominator": 220,
+      "numerator": 212,
+      "percent": "96.4%"
     },
     "profileClassificationCoverage": {
       "denominator": 435,
@@ -92,8 +92,8 @@
       "percent": "99%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 205,
-      "numerator": 175,
+      "denominator": 206,
+      "numerator": 176,
       "percent": "85.4%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "95.1%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 199,
-      "numerator": 195,
+      "denominator": 200,
+      "numerator": 196,
       "percent": "98%"
     },
     "supportedProfileCoverage": {
       "denominator": 385,
-      "numerator": 219,
-      "percent": "56.9%"
+      "numerator": 220,
+      "percent": "57.1%"
     }
   },
   "metricSemantics": [
@@ -11253,8 +11253,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 205,
-          "numerator": 175,
+          "denominator": 206,
+          "numerator": 176,
           "percent": "85.4%"
         }
       },
@@ -13500,6 +13500,28 @@
             }
           ],
           "unitId": "flaming_sphere"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+                }
+              ],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+              ]
+            }
+          ],
+          "unitId": "fly"
         },
         {
           "joinStatus": "covered",
@@ -21646,12 +21668,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 209,
-        "profileSubsetSupportedUnits": 54,
+        "profileSubsetSupportedUnits": 53,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 148,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 148,
-        "supportedProfileUnits": 98,
+        "supportedProfileUnits": 99,
         "unsupportedOrOtherUnits": 74
       },
       {
@@ -48087,16 +48109,6 @@
           "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
           "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial owner",
-              "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands."
-            },
-            "mechanic": "automatic elevation state, can-stop-fall derivation, landing legality, and map/path geometry for Fly-ended Falling remain table/spatial facts rather than battle-owned simulation"
-          }
-        ],
         "profileIds": [
           "spell.scalar-buff"
         ],
@@ -48113,7 +48125,7 @@
           "general Speed changes compose with the granted fixed Fly Speed through the shared Speed algebra",
           "spell-end falling is represented as caller-supplied not-aloft, can-stop-fall, or cannot-stop-fall witnesses consumed by the Fly Speed grant cleanup operation; cannot-stop-fall hands off to the existing creatureFalls Reaction window and Feather Fall landing pipeline without storing elevation"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

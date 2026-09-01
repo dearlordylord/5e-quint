@@ -114,6 +114,7 @@ export function traceEffectAtom(
     case "grant_extra_action":
     case "choose_action_or_bonus_action_each_turn":
     case "modify_roll_numeric":
+    case "suppress_movement_trace":
     case "initiative_swap":
     case "jack_of_all_trades_ability_check_bonus":
     case "modify_damage_numeric":

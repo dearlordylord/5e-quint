@@ -58,7 +58,7 @@ capability prerequisite. Authored id, name, kind, provenance, caster, targets,
 slot/resource, turn, session/table facts, and Battle State are not part of the
 static projection.
 
-This contract/composer lane does not claim the 98 complete or 23 partial roots
+This contract/composer lane does not claim the 99 complete or 22 partial roots
 until each authored profile supplies its owner hook and its consumers use the
 narrowed facts. The required declaration field intentionally makes that
 remaining migration visible to the compiler.

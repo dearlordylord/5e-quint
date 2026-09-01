@@ -20,6 +20,7 @@ export type ActionAndRollEffectAtom = Extract<
       | "grant_extra_action"
       | "choose_action_or_bonus_action_each_turn"
       | "modify_roll_numeric"
+      | "suppress_movement_trace"
       | "initiative_swap"
       | "jack_of_all_trades_ability_check_bonus"
       | "modify_damage_numeric"
@@ -122,6 +123,16 @@ export function traceActionAndRollEffectAtom(
         category: "effect",
         atomKind: "modify_roll_numeric",
         label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}${describeAbilityFilter(e.abilityFilter)}${describeWeaponFilter(e.weaponFilter)}`,
+      });
+      return id;
+    }
+    case "suppress_movement_trace": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_movement_trace",
+        label: "suppress_movement_trace",
       });
       return id;
     }

@@ -127,6 +127,7 @@ import {
   type SpellOngoingOperationOccurrence,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
   type SpellTargetAttachmentAdmissionResult,
 } from "./spell-mechanics-admission.ts";
@@ -201,6 +202,10 @@ type RollModifierNumericEffect = Extract<
 type RollModifierAbilityCheckEffect = Extract<
   EffectAtom,
   { readonly kind: "modify_roll_advantage" }
+>;
+type RollModifierMovementTraceEffect = Extract<
+  EffectAtom,
+  { readonly kind: "suppress_movement_trace" }
 >;
 type RollModifierNumericDelta = Exclude<
   ReturnType<typeof rollModifierDelta>,
@@ -867,7 +872,25 @@ function rollModifierAttachmentProjection(
 }
 
 type RollModifierBranchProjection =
-  | { readonly tag: "supported"; readonly shape: RollModifierProfileShape }
+  | {
+      readonly tag: "supported";
+      readonly shape: RollModifierProfileShape;
+      readonly evidence:
+        | { readonly kind: "activation" }
+        | {
+            readonly kind: "ongoing";
+            readonly consumedOperationOrdinal: PositiveIntegerType;
+            readonly coverage:
+              | { readonly kind: "complete" }
+              | {
+                  readonly kind: "partial";
+                  readonly unowned: readonly [
+                    SpellMechanicsBranchPath,
+                    SpellMechanicsBranchPath,
+                  ];
+                };
+          };
+    }
   | { readonly tag: "unsupported" };
 
 type RollModifierAttachmentProjection =
@@ -881,6 +904,22 @@ type RollModifierAttachmentProjection =
       readonly rejections: readonly SpellAttachmentRejection[];
     }
   | { readonly tag: "unsupported" };
+
+type RollModifierMovementTraceOccurrence = SpellOngoingOperationOccurrence & {
+  readonly operation: SpellOngoingOperationOccurrence["operation"] & {
+    readonly trigger: { readonly kind: "passive" };
+    readonly effect: RollModifierMovementTraceEffect;
+  };
+};
+
+function isRollModifierMovementTraceOccurrence(
+  occurrence: SpellOngoingOperationOccurrence,
+): occurrence is RollModifierMovementTraceOccurrence {
+  return (
+    occurrence.operation.trigger.kind === "passive" &&
+    occurrence.operation.effect.kind === "suppress_movement_trace"
+  );
+}
 
 function rollModifierOngoingBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
@@ -906,8 +945,17 @@ function rollModifierOngoingBranchProjection(
       (operation.effect.kind === "modify_roll_numeric" ||
         operation.effect.kind === "modify_roll_advantage"),
   );
+  const movementTraceOccurrences = occurrences.filter(
+    isRollModifierMovementTraceOccurrence,
+  );
+  const movementTraceOccurrence =
+    movementTraceOccurrences.length === 1
+      ? movementTraceOccurrences[0]
+      : undefined;
   const extras = occurrences.filter(
-    ({ ordinal }) => ordinal !== expected?.ordinal,
+    ({ ordinal }) =>
+      ordinal !== expected?.ordinal &&
+      ordinal !== movementTraceOccurrence?.ordinal,
   );
   if (mechanics.operations.length === 0) {
     pushIssue("operationCount", spellOngoingOperationPath(FIRST_ORDINAL));
@@ -956,6 +1004,22 @@ function rollModifierOngoingBranchProjection(
     ) {
       return {
         tag: "supported",
+        evidence: {
+          kind: "ongoing",
+          consumedOperationOrdinal: expected.ordinal,
+          coverage:
+            movementTraceOccurrence === undefined
+              ? { kind: "complete" }
+              : {
+                  kind: "partial",
+                  unowned: [
+                    spellOngoingOperationPath(movementTraceOccurrence.ordinal),
+                    spellOngoingOperationEffectPath(
+                      movementTraceOccurrence.ordinal,
+                    ),
+                  ],
+                },
+        },
         shape: {
           kind: "numeric",
           targeting: attachment.targeting,
@@ -977,6 +1041,22 @@ function rollModifierOngoingBranchProjection(
     ) {
       return {
         tag: "supported",
+        evidence: {
+          kind: "ongoing",
+          consumedOperationOrdinal: expected.ordinal,
+          coverage:
+            movementTraceOccurrence === undefined
+              ? { kind: "complete" }
+              : {
+                  kind: "partial",
+                  unowned: [
+                    spellOngoingOperationPath(movementTraceOccurrence.ordinal),
+                    spellOngoingOperationEffectPath(
+                      movementTraceOccurrence.ordinal,
+                    ),
+                  ],
+                },
+        },
         shape: {
           kind: "abilityCheck",
           targeting: attachment.targeting,
@@ -1119,6 +1199,7 @@ function rollModifierActivationBranchProjection(
   }
   return {
     tag: "supported",
+    evidence: { kind: "activation" },
     shape: {
       kind: "numeric",
       targeting: attachment.targeting,
@@ -1210,37 +1291,42 @@ function rollModifierMechanicsAdmission(
     duration,
     ...branch.shape,
   } satisfies RollModifierMechanicsFacts;
+  const consumed = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    spellDurationValuePath(),
+    ...(branch.evidence.kind === "ongoing"
+      ? [
+          spellOngoingAttachmentPath(),
+          spellOngoingOperationPath(branch.evidence.consumedOperationOrdinal),
+          spellOngoingOperationEffectPath(
+            branch.evidence.consumedOperationOrdinal,
+          ),
+        ]
+      : [
+          spellActivationPhasePath(FIRST_ORDINAL),
+          spellActivationAttachmentPath(FIRST_ORDINAL),
+          spellActivationEffectPath(FIRST_ORDINAL, FIRST_ORDINAL),
+        ]),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ] as const;
+  const evidence: SpellProcedureMechanicsEvidence =
+    branch.evidence.kind === "ongoing" &&
+    branch.evidence.coverage.kind === "partial"
+      ? { consumed, unowned: branch.evidence.coverage.unowned }
+      : { consumed, unowned: [] };
   return {
     tag: "supported",
     admitted: {
       binding: "ready",
       procedure: "rollModifier",
       facts,
-      evidence: {
-        consumed: [
-          spellMechanicsHeaderPath("level"),
-          spellMechanicsHeaderPath("school"),
-          spellMechanicsHeaderPath("range"),
-          spellMechanicsHeaderPath("components"),
-          spellMechanicsHeaderPath("duration"),
-          spellMechanicsHeaderPath("castingTime"),
-          spellMechanicsHeaderPath("family"),
-          spellDurationValuePath(),
-          ...(mechanics.family === "ongoing_effect"
-            ? [
-                spellOngoingAttachmentPath(),
-                spellOngoingOperationPath(FIRST_ORDINAL),
-                spellOngoingOperationEffectPath(FIRST_ORDINAL),
-              ]
-            : [
-                spellActivationPhasePath(FIRST_ORDINAL),
-                spellActivationAttachmentPath(FIRST_ORDINAL),
-                spellActivationEffectPath(FIRST_ORDINAL, FIRST_ORDINAL),
-              ]),
-          ...spellConsumedMaterialEvidencePaths(mechanics.components),
-        ],
-        unowned: [],
-      },
+      evidence,
       admit: (executionSource, ctx) =>
         admitRollModifier(executionSource, ctx, facts),
     },

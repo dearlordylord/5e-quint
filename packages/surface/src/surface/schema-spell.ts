@@ -1165,6 +1165,7 @@ type EffectAtom =
           };
       readonly count?: number;
     }
+  | { readonly kind: "suppress_movement_trace" }
   | {
       readonly kind: "initiative_swap";
       readonly timing: "immediately_after_initiative_roll";
@@ -3529,6 +3530,7 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           abilityFilter: optionalExact(AbilityFilterSchema),
           count: optionalExact(Schema.Number),
         }),
+        strictStruct({ kind: Schema.Literal("suppress_movement_trace") }),
         strictStruct({
           kind: Schema.Literal("initiative_swap"),
           timing: Schema.Literal("immediately_after_initiative_roll"),
