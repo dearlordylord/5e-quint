@@ -205,8 +205,13 @@ import {
 import {
   admitCharacterWeaponAttackExecutionWeapon,
   admitResolvedCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";
-import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
+import { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
+import {
+  characterBattleCreatureInitWeaponAttack,
+  type CharacterBattleCreatureInitWeaponAttack,
+} from "./battle-init.ts";
 import {
   attackExecutionSelectionForOption,
   type CharacterAttackExecutionSelection,
@@ -3652,6 +3657,37 @@ export function rolledDiceGroup(
   };
 }
 
+function admitSelectedWeaponMasteryForCharacterSeed(
+  attack: CharacterBattleCreatureInitWeaponAttack,
+  weaponMasteries: Extract<
+    CharacterBattleCombatantInit["creatureInit"],
+    { readonly kind: "character" }
+  >["weaponMasteries"],
+): CharacterBattleCreatureInitWeaponAttack {
+  if (
+    "masteryProperty" in attack.weapon ||
+    !weaponMasteryIsSelectedForWeapon(
+      attack.weapon.weaponUnitId,
+      weaponMasteries,
+    )
+  ) {
+    return attack;
+  }
+  const weapon = unitLibrary.requireUnit(attack.weapon.weaponUnitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(
+      `Expected selected weapon Unit ${attack.weapon.weaponUnitId}.`,
+    );
+  }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(weapon, unitLibrary),
+  );
+  const weaponExecution = Result.getOrThrow(
+    admitResolvedCharacterWeaponExecutionWeapon(resolution),
+  );
+  return { ...attack, weapon: weaponExecution };
+}
+
 export function characterSeed(input: {
   readonly combatantId?: CombatantId;
   readonly displayName?: string;
@@ -3767,8 +3803,22 @@ export function characterSeed(input: {
           : testCharacterWeaponAttackForUnit(selectedLoadout.weapon.unitId)
         : testLongswordAttack()
       : input.attack;
+  const weaponMasteries = input.weaponMasteries ?? [];
+  const admittedAttack =
+    attack === null
+      ? null
+      : admitSelectedWeaponMasteryForCharacterSeed(attack, weaponMasteries);
   const initAttack =
-    attack === null ? null : characterBattleCreatureInitWeaponAttack(attack);
+    admittedAttack === null
+      ? null
+      : characterBattleCreatureInitWeaponAttack(admittedAttack);
+  const admittedOffHandAttack =
+    input.offHandAttack === undefined
+      ? undefined
+      : admitSelectedWeaponMasteryForCharacterSeed(
+          input.offHandAttack,
+          weaponMasteries,
+        );
   const classLevels = input.classLevels ?? [
     {
       className:
@@ -3892,14 +3942,14 @@ export function characterSeed(input: {
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
-      weaponMasteries: input.weaponMasteries ?? [],
+      weaponMasteries,
       attack: initAttack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
-      ...(input.offHandAttack === undefined
+      ...(admittedOffHandAttack === undefined
         ? {}
         : {
             offHandAttack: characterBattleCreatureInitWeaponAttack(
-              input.offHandAttack,
+              admittedOffHandAttack,
             ),
           }),
       ...(input.unitFeatures === undefined
