@@ -79,6 +79,10 @@ import { bindFailedSavingThrowRerollProcedure } from "./procedure-admission/fail
 import { bindDruidWildShapeProcedure } from "./procedure-admission/druid-wild-shape.ts";
 import { bindMonkFocusProcedure } from "./procedure-admission/monk-focus.ts";
 import type { AdmittedResourceFeature } from "./procedure-admission/resource-feature-admission.ts";
+import {
+  characterBattleResourceInitFromAdmissionInput,
+  type CharacterBattleResourceProcedureAdmission,
+} from "./character-battle-resources.ts";
 export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
@@ -363,6 +367,41 @@ function resourceSelectedAreaDamageReplacementProcedures(input: {
   });
 }
 
+function resourceUnitFeatureProcedures(
+  admissions: readonly CharacterBattleResourceProcedureAdmission[],
+): readonly BoundUnitFeatureProcedureFacts[] {
+  return admissions.flatMap((admission) =>
+    Match.value(admission).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        resourceWithoutProcedure: () => [],
+        resourceFeatureProcedure: () => [],
+        unitFeatureProcedure: ({ profile }) => [
+          boundUnitFeatureProcedureFactsFromProfile(profile),
+        ],
+      }),
+    ),
+  );
+}
+
+function admittedResourceFeatures(
+  admissions: readonly CharacterBattleResourceProcedureAdmission[],
+): readonly AdmittedResourceFeature[] {
+  return admissions.flatMap((admission) =>
+    Match.value(admission).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        resourceWithoutProcedure: () => [],
+        unitFeatureProcedure: () => [],
+        resourceFeatureProcedure: ({ resource }) => [
+          {
+            sourceUnitId: resource.init.unit.id,
+            procedure: resource.procedure,
+          },
+        ],
+      }),
+    ),
+  );
+}
+
 function unitSupportProcedureIsOwnedByUnitFeature(
   unitFeatureProcedures: readonly UnitFeatureProcedureCandidate[],
   candidate: UnitSupportProcedureCandidate,
@@ -398,9 +437,7 @@ export function characterExecutionFromUnits(input: {
   readonly combatantId: CombatantId;
   readonly scopeOrdinal: BattleExecutionScopeOrdinal;
   readonly unitFeatureProcedures: readonly BoundUnitFeatureProcedureFacts[];
-  readonly resourceFeatureProcedures: readonly AdmittedResourceFeature[];
-  readonly resourceUnits: readonly AuthoredUnitSource[];
-  readonly units: readonly AuthoredUnitSource[];
+  readonly resourceAdmissions: readonly CharacterBattleResourceProcedureAdmission[];
   readonly unitRefs: readonly {
     readonly unit: BattleUnitSupportSource;
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
@@ -416,8 +453,12 @@ export function characterExecutionFromUnits(input: {
     input.scopeOrdinal,
   );
   const supportProfileIssues: BattleUnitSupportProfileIssue[] = [];
+  const resourceUnits = input.resourceAdmissions.map(
+    ({ resource }) =>
+      characterBattleResourceInitFromAdmissionInput(resource).unit,
+  );
   const resourcePoolRefsByUnitId = new Map(
-    input.resourceUnits.map((unit, ordinal) => [
+    resourceUnits.map((unit, ordinal) => [
       unit.id,
       battleResourcePoolExecutionRef(scopeRef, NonNegativeInteger(ordinal)),
     ]),
@@ -426,8 +467,15 @@ export function characterExecutionFromUnits(input: {
     resourcePoolRefsByUnitId,
   };
   const resourceSelectedProcedures =
-    resourceSelectedAreaDamageReplacementProcedures(input);
+    resourceSelectedAreaDamageReplacementProcedures({
+      resourceUnits,
+      unitRefs: input.unitRefs,
+    });
+  const resourceProfileProcedures = resourceUnitFeatureProcedures(
+    input.resourceAdmissions,
+  );
   const unitFeatureProcedures = [
+    ...resourceProfileProcedures,
     ...input.unitFeatureProcedures,
     ...resourceSelectedProcedures.filter(
       (selected) =>
@@ -438,35 +486,35 @@ export function characterExecutionFromUnits(input: {
         ),
     ),
   ];
-  const resourceFeatureUnitProcedures = input.resourceFeatureProcedures.flatMap(
-    (feature) => {
-      const binding = bindResourceFeatureProcedure(feature, {
-        resourcePoolRefsByUnitId,
-        classLevels: input.classLevels,
-      });
-      if (binding.tag === "rejected") {
-        supportProfileIssues.push(
-          ...binding.messages.map((message) => ({
-            tag: "battleUnitSupportProfileIssue" as const,
-            message,
-          })),
-        );
-        return [];
-      }
-      return binding.tag === "notAvailable"
-        ? []
-        : [
-            {
-              ...binding.candidate,
-              source: characterUnitProcedureSourceForAdmission(
-                scopeRef,
-                input.resourceUnits,
-                binding.candidate.unitId,
-              ),
-            },
-          ];
-    },
-  );
+  const resourceFeatureUnitProcedures = admittedResourceFeatures(
+    input.resourceAdmissions,
+  ).flatMap((feature) => {
+    const binding = bindResourceFeatureProcedure(feature, {
+      resourcePoolRefsByUnitId,
+      classLevels: input.classLevels,
+    });
+    if (binding.tag === "rejected") {
+      supportProfileIssues.push(
+        ...binding.messages.map((message) => ({
+          tag: "battleUnitSupportProfileIssue" as const,
+          message,
+        })),
+      );
+      return [];
+    }
+    return binding.tag === "notAvailable"
+      ? []
+      : [
+          {
+            ...binding.candidate,
+            source: characterUnitProcedureSourceForAdmission(
+              scopeRef,
+              resourceUnits,
+              binding.candidate.unitId,
+            ),
+          },
+        ];
+  });
   const boundProfileUnitProcedures = unitFeatureProcedures.flatMap(
     (procedure) => {
       const binding = bindProfileUnitFeatureProcedure(procedure, {
@@ -490,24 +538,16 @@ export function characterExecutionFromUnits(input: {
               ...binding.candidate,
               source: characterUnitProcedureSourceForAdmission(
                 scopeRef,
-                input.resourceUnits,
+                resourceUnits,
                 procedure.sourceUnitId,
               ),
             },
           ];
     },
   );
-  const resourceFeatureProcedureKeys = new Set(
-    resourceFeatureUnitProcedures.map(
-      ({ unitId, execution }) => `${unitId}\u0000${execution.kind}`,
-    ),
-  );
   const unitProcedures = [
     ...resourceFeatureUnitProcedures,
-    ...boundProfileUnitProcedures.filter(
-      ({ unitId, execution }) =>
-        !resourceFeatureProcedureKeys.has(`${unitId}\u0000${execution.kind}`),
-    ),
+    ...boundProfileUnitProcedures,
   ];
   if (supportProfileIssues.length > 0) {
     const [firstIssue, ...remainingIssues] = supportProfileIssues;
@@ -579,7 +619,7 @@ export function characterExecutionFromUnits(input: {
           kind: "unitSupportProfile",
           source: characterUnitProcedureSourceForAdmission(
             scopeRef,
-            input.resourceUnits,
+            resourceUnits,
             unitId,
           ),
           execution,
@@ -634,7 +674,7 @@ export function characterExecutionFromUnits(input: {
           kind: "unitSupportProfile",
           source: characterUnitProcedureSourceForAdmission(
             scopeRef,
-            input.resourceUnits,
+            resourceUnits,
             unitId,
           ),
           execution,

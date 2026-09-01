@@ -9,8 +9,9 @@ import {
   resourceCount,
   spellSlotLevel,
   type ProficiencyBonus,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import { Brand } from "effect";
+import { Brand, Match, Result } from "effect";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -44,7 +45,9 @@ import {
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
+  parseSupportedUnitFeatureProfile,
   unitHasAttackActionAreaSaveDamageReplacementResourceShape,
+  type BattleUnitSupportProfileIssue,
   type SupportedUnitFeatureFacts,
 } from "./unit-feature-support.ts";
 import {
@@ -206,6 +209,84 @@ export function characterBattleResourceExecutionFacts(
 export type CharacterBattleFeatureInit = SupportedUnitFeatureFacts & {
   readonly unit: UnitRecord;
 };
+
+export type CharacterBattleResourceProcedureAdmission =
+  | {
+      readonly tag: "resourceWithoutProcedure";
+      readonly resource: CharacterBattleResourceInit;
+    }
+  | {
+      readonly tag: "resourceFeatureProcedure";
+      readonly resource: ProjectedCharacterBattleResourceInit;
+    }
+  | {
+      readonly tag: "unitFeatureProcedure";
+      readonly resource: CharacterBattleResourceInit;
+      readonly profile: CharacterBattleFeatureInit;
+    };
+
+export function admitCharacterBattleResourceProcedures(
+  resources: readonly CharacterBattleResourceInit[],
+  classLevels: CharacterBattleClassLevels,
+): Result.Result<
+  readonly CharacterBattleResourceProcedureAdmission[],
+  ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>
+> {
+  const admissions: CharacterBattleResourceProcedureAdmission[] = [];
+  const issues: BattleUnitSupportProfileIssue[] = [];
+  for (const resource of resources) {
+    if (resource.spellAccessFreeCast !== undefined) {
+      admissions.push({ tag: "resourceWithoutProcedure", resource });
+      continue;
+    }
+    Match.value(admitResourceFeature(resource.unit)).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        notBattleOwned: () => {
+          const profile = parseSupportedUnitFeatureProfile(
+            resource.unit,
+            classLevels,
+          );
+          admissions.push(
+            profile === null
+              ? { tag: "resourceWithoutProcedure", resource }
+              : { tag: "unitFeatureProcedure", resource, profile },
+          );
+        },
+        admitted: (feature) => {
+          const projection = projectCharacterBattleResourceFeature(
+            resource,
+            feature,
+          );
+          Match.value(projection).pipe(
+            Match.discriminatorsExhaustive("tag")({
+              projected: ({ input }) =>
+                admissions.push({
+                  tag: "resourceFeatureProcedure",
+                  resource: input,
+                }),
+              sourceMismatch: ({ message }) =>
+                issues.push({
+                  tag: "battleUnitSupportProfileIssue",
+                  message,
+                }),
+            }),
+          );
+        },
+        rejected: ({ issues: admissionIssues }) =>
+          issues.push(
+            ...admissionIssues.map(({ message }) => ({
+              tag: "battleUnitSupportProfileIssue" as const,
+              message,
+            })),
+          ),
+      }),
+    );
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? Result.succeed(admissions)
+    : Result.fail([firstIssue, ...remainingIssues]);
+}
 
 type SorcererMetamagicMechanics = Extract<
   ClassFeatureRecord["mechanics"],
