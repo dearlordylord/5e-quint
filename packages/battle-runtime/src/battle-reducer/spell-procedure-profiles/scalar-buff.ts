@@ -128,8 +128,11 @@ import {
 } from "../codec-building-blocks.ts";
 import { discoverSubtleSpellMetamagicSelections } from "../metamagic.ts";
 import {
+  admitSpellAreaAttachment,
   admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
+  spellOngoingOperationOccurrences,
+  spellOngoingOperationUnsupportedFacts,
   spellDurationChildCoordinates,
   spellDurationChildPath,
   spellDurationEvidencePaths,
@@ -138,6 +141,7 @@ import {
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  type SpellAttachmentRejection,
   type SpellMechanicsAdmissionSource,
   type SpellCanonicalDurationValue,
   type SpellProcedureAdmissionIssue,
@@ -374,6 +378,7 @@ const SCALAR_BUFF_TARGET_SELECTION_FIELDS = [
   "targetKinds",
   "disposition",
 ] as const;
+const SCALAR_BUFF_AREA_ATTACHMENT_FIELDS = ["kind", "shape", "origin"] as const;
 const FIRST_ORDINAL = PositiveInteger(1);
 
 type ScalarBuffActivationPhaseOccurrence = {
@@ -392,14 +397,6 @@ type ScalarBuffActivationEffectOccurrence = {
   readonly effect: EffectAtom;
   readonly effectOrdinal: PositiveInteger;
 };
-type ScalarBuffOperationOccurrence = {
-  readonly operation: Extract<
-    SpellMechanics,
-    { readonly family: "ongoing_effect" }
-  >["operations"][number];
-  readonly ordinal: PositiveInteger;
-};
-
 type ScalarBuffBranchProjection =
   | {
       readonly tag: "supported";
@@ -483,25 +480,6 @@ function scalarBuffActivationEffectOccurrences(
   );
 }
 
-function scalarBuffOperationOccurrences(
-  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
-): readonly ScalarBuffOperationOccurrence[] {
-  return mechanics.operations.map((operation, index) => ({
-    operation,
-    ordinal: PositiveInteger(index + 1),
-  }));
-}
-
-function scalarBuffOperationConstraintFacts(
-  operation: ScalarBuffOperationOccurrence["operation"],
-): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
-  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
-  if (operation.predicate !== undefined) facts.push("predicate");
-  if (operation.targetLimit !== undefined) facts.push("targetLimit");
-  if (operation.usageLimit !== undefined) facts.push("usageLimit");
-  return facts;
-}
-
 function scalarBuffTargetCountProjection(
   selection: TargetSelection,
   spellLevel: number,
@@ -524,34 +502,62 @@ function scalarBuffTargetCountProjection(
   };
 }
 
+type ScalarBuffTargetingProjectionResult =
+  | {
+      readonly tag: "supported";
+      readonly targeting: ScalarBuffTargetingProjection;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly rejections: readonly SpellAttachmentRejection[];
+    }
+  | { readonly tag: "unsupported" };
+
 function scalarBuffTargetingProjection(
   attachment: Attachment,
   spellLevel: number,
-): ScalarBuffTargetingProjection | undefined {
-  if (attachment.kind === "self") return { kind: "self" };
+): ScalarBuffTargetingProjectionResult {
+  if (attachment.kind === "self") {
+    return { tag: "supported", targeting: { kind: "self" } };
+  }
   const admitted = admitSpellTargetAttachment(
     attachment,
     SCALAR_BUFF_TARGET_SELECTION_FIELDS,
   );
-  if (admitted.tag === "rejected") return undefined;
+  if (admitted.tag === "rejected") {
+    if (admitted.reason !== "targetAttachmentMissing") {
+      return { tag: "rejected", rejections: [...admitted.rejections] };
+    }
+    const areaAdmission = admitSpellAreaAttachment(
+      attachment,
+      SCALAR_BUFF_AREA_ATTACHMENT_FIELDS,
+    );
+    if (areaAdmission.tag === "rejected") {
+      return { tag: "rejected", rejections: [...areaAdmission.rejections] };
+    }
+    return { tag: "unsupported" };
+  }
   const selection = admitted.attachment.value.selection;
   if (
     selection.targetKinds !== undefined &&
     (selection.targetKinds.length !== 1 ||
       selection.targetKinds[0] !== "creature")
   ) {
-    return undefined;
+    return { tag: "unsupported" };
   }
   const count = scalarBuffTargetCountProjection(selection, spellLevel);
   return count === undefined
-    ? undefined
+    ? { tag: "unsupported" }
     : {
-        kind: "targetList",
-        count,
-        requiredTargetDisposition:
-          "disposition" in selection && selection.disposition === "willing"
-            ? "willing"
-            : "unrestricted",
+        tag: "supported",
+        targeting: {
+          kind: "targetList",
+          count,
+          requiredTargetDisposition:
+            "disposition" in selection && selection.disposition === "willing"
+              ? "willing"
+              : "unrestricted",
+        },
       };
 }
 
@@ -746,57 +752,35 @@ function scalarBuffExpiration(
       };
 }
 
-function scalarBuffAttachmentIssueFacts(
-  attachment: Attachment,
-): readonly ScalarBuffFailedFact[] {
-  const facts: ScalarBuffFailedFact[] = [];
-  const targetAttachment =
-    attachment.kind === "target"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "target"
-        ? attachment.value
-        : undefined;
-  if (targetAttachment !== undefined) {
-    if (targetAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
-    const selection = targetAttachment.selection;
-    for (const fact of [
-      "typeFilter",
-      "stateFilter",
-      "visibility",
-      "creatureSizeFilter",
-      "relativePosition",
-      "objectFilter",
-      "creatureDisposition",
-      "castingRequirement",
-      "repeatsAllowed",
-    ] as const) {
-      if (
-        Reflect.has(selection, fact) &&
-        Reflect.get(selection, fact) !== undefined
-      ) {
-        facts.push(fact);
-      }
-    }
-    return facts.length === 0 ? ["attachment"] : facts;
+function scalarBuffAttachmentFailedFact(
+  rejection: SpellAttachmentRejection,
+): ScalarBuffFailedFact {
+  switch (rejection.failedFact) {
+    case "attachment":
+    case "selection":
+    case "rangeOrigin":
+    case "typeFilter":
+    case "stateFilter":
+    case "visibility":
+    case "creatureSizeFilter":
+    case "relativePosition":
+    case "objectFilter":
+    case "creatureDisposition":
+    case "castingRequirement":
+    case "repeatsAllowed":
+      return rejection.failedFact;
+    case "mode":
+    case "targetKinds":
+    case "objectOrLocationMaxDimensionFeet":
+    case "count":
+    case "disposition":
+    case "shape":
+    case "origin":
+    case "occupantDispositionFilter":
+    case "occupantPerceptionFilter":
+    case "excludedAreas":
+      return "attachment";
   }
-  const areaAttachment =
-    attachment.kind === "area"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "area"
-        ? attachment.value
-        : undefined;
-  if (areaAttachment !== undefined) {
-    if (areaAttachment.selection !== undefined) facts.push("selection");
-    if (areaAttachment.occupantDispositionFilter !== undefined) {
-      facts.push("occupantDispositionFilter");
-    }
-    if (areaAttachment.occupantPerceptionFilter !== undefined) {
-      facts.push("occupantPerceptionFilter");
-    }
-    if (areaAttachment.excludedAreas !== undefined) facts.push("excludedAreas");
-    if (areaAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
-  }
-  return facts.length === 0 ? ["attachment"] : facts;
 }
 
 function scalarBuffIssue(
@@ -911,14 +895,16 @@ function scalarBuffActivationBranchProjection(
   const attachmentPath = spellActivationAttachmentPath(selectedPhaseOrdinal);
   const targeting =
     attachment === undefined
-      ? undefined
+      ? ({ tag: "unsupported" } as const)
       : scalarBuffTargetingProjection(attachment, spellLevel);
   if (attachment === undefined) {
     pushIssue("attachment", attachmentPath);
-  } else if (targeting === undefined) {
-    for (const failedFact of scalarBuffAttachmentIssueFacts(attachment)) {
-      pushIssue(failedFact, attachmentPath);
+  } else if (targeting.tag === "rejected") {
+    for (const rejection of targeting.rejections) {
+      pushIssue(scalarBuffAttachmentFailedFact(rejection), attachmentPath);
     }
+  } else if (targeting.tag === "unsupported") {
+    pushIssue("attachment", attachmentPath);
   }
   if (selectedPhase?.kind !== "direct") {
     pushIssue("phase", spellActivationPhasePath(selectedPhaseOrdinal));
@@ -966,9 +952,13 @@ function scalarBuffActivationBranchProjection(
       ),
     );
   }
-  return targeting === undefined
+  return targeting.tag !== "supported"
     ? { tag: "unsupported" }
-    : scalarBuffSupportedBranch(targeting, duration, effectProjection);
+    : scalarBuffSupportedBranch(
+        targeting.targeting,
+        duration,
+        effectProjection,
+      );
 }
 
 function scalarBuffOngoingBranchProjection(
@@ -986,9 +976,9 @@ function scalarBuffOngoingBranchProjection(
   if (mechanics.authoredConditionalEffects !== undefined) {
     pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
   }
-  const occurrences = scalarBuffOperationOccurrences(mechanics);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
   for (const occurrence of occurrences) {
-    for (const failedFact of scalarBuffOperationConstraintFacts(
+    for (const failedFact of spellOngoingOperationUnsupportedFacts(
       occurrence.operation,
     )) {
       pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
@@ -1011,10 +1001,15 @@ function scalarBuffOngoingBranchProjection(
   }
   const attachment = mechanics.attachment;
   const targeting = scalarBuffTargetingProjection(attachment, spellLevel);
-  if (targeting === undefined) {
-    for (const failedFact of scalarBuffAttachmentIssueFacts(attachment)) {
-      pushIssue(failedFact, spellOngoingAttachmentPath());
+  if (targeting.tag === "rejected") {
+    for (const rejection of targeting.rejections) {
+      pushIssue(
+        scalarBuffAttachmentFailedFact(rejection),
+        spellOngoingAttachmentPath(),
+      );
     }
+  } else if (targeting.tag === "unsupported") {
+    pushIssue("attachment", spellOngoingAttachmentPath());
   }
   const effect = expected?.operation.effect;
   const effectProjection = isScalarBuffEffectKind(effect)
@@ -1029,9 +1024,13 @@ function scalarBuffOngoingBranchProjection(
   } else if (effectProjection === undefined) {
     pushIssue("effect", effectPath);
   }
-  return targeting === undefined
+  return targeting.tag !== "supported"
     ? { tag: "unsupported" }
-    : scalarBuffSupportedBranch(targeting, duration, effectProjection);
+    : scalarBuffSupportedBranch(
+        targeting.targeting,
+        duration,
+        effectProjection,
+      );
 }
 
 function isScalarBuffRepresentation(
@@ -1043,17 +1042,12 @@ function isScalarBuffRepresentation(
   ) {
     return false;
   }
-  return Match.value(mechanics.family).pipe(
-    Match.when("activation", () => {
-      if (mechanics.family !== "activation") return false;
-      const activation = mechanics;
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "activation" }, (activation) => {
       const hasScalarEffectRole = scalarBuffActivationEffectOccurrences(
         activation,
       ).some(({ effect }) => isScalarBuffEffectKind(effect));
       if (!hasScalarEffectRole) return false;
-      const hasDirectPhaseRole = activation.phases.some(
-        ({ kind }) => kind === "direct",
-      );
       const hasSupportedRangeRole =
         scalarBuffSpellRangeFeet(activation.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(
@@ -1062,20 +1056,25 @@ function isScalarBuffRepresentation(
       const hasSupportedCastingRole =
         topLevelSpellCastingTime(activation)?.kind === "action" ||
         topLevelSpellCastingTime(activation)?.kind === "bonus_action";
+      const hasSingleDirectPhase =
+        activation.phases.length === 1 &&
+        activation.phases[0]?.kind === "direct";
+      const hasSupportedAttachmentRole = activation.phases.some(
+        (phase) =>
+          phase.kind === "direct" && phase.attachment.kind !== "object",
+      );
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
-          hasDirectPhaseRole,
-          hasSupportedRangeRole,
-          hasSupportedDurationRole,
-          hasSupportedCastingRole,
-          activation.phases.length > 0,
+          { name: "singleDirectPhase", present: hasSingleDirectPhase },
+          { name: "range", present: hasSupportedRangeRole },
+          { name: "duration", present: hasSupportedDurationRole },
+          { name: "castingTime", present: hasSupportedCastingRole },
+          { name: "attachment", present: hasSupportedAttachmentRole },
         ],
       });
     }),
-    Match.when("ongoing_effect", () => {
-      if (mechanics.family !== "ongoing_effect") return false;
-      const ongoing = mechanics;
+    Match.when({ family: "ongoing_effect" }, (ongoing) => {
       const hasScalarEffectRole = ongoing.operations.some(
         ({ trigger, effect }) =>
           trigger.kind === "passive" && isScalarBuffEffectKind(effect),
@@ -1087,15 +1086,16 @@ function isScalarBuffRepresentation(
       const hasSupportedRangeRole =
         scalarBuffSpellRangeFeet(ongoing.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(ongoing.duration);
-      const hasNonObjectAttachmentRole = ongoing.attachment.kind !== "object";
+      const hasSupportedAttachmentRole = ongoing.attachment.kind !== "object";
+      const hasSingleOperation = ongoing.operations.length === 1;
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
-          hasSupportedCastingRole,
-          hasSupportedRangeRole,
-          hasSupportedDurationRole,
-          hasNonObjectAttachmentRole,
-          ongoing.operations.length > 0,
+          { name: "singleOperation", present: hasSingleOperation },
+          { name: "castingTime", present: hasSupportedCastingRole },
+          { name: "range", present: hasSupportedRangeRole },
+          { name: "duration", present: hasSupportedDurationRole },
+          { name: "attachment", present: hasSupportedAttachmentRole },
         ],
       });
     }),
@@ -1230,578 +1230,6 @@ function scalarBuffMechanicsAdmission(
     },
   };
 }
-
-/* Legacy scalar admission helpers retained while the narrowed parser is
- * checked against the existing resolver contract.
-function legacyIsScalarBuffEffect(
-  effect: unknown,
-): effect is ScalarBuffSurfaceEffect {
-  if (typeof effect !== "object" || effect === null || !("kind" in effect)) {
-    return false;
-  }
-  const kind = effect.kind;
-  return (
-    kind === "grant_temp_hp" ||
-    kind === "grant_speed" ||
-    kind === "modify_speed" ||
-    kind === "modify_ac" ||
-    kind === "modify_ac_set_floor" ||
-    kind === "modify_max_hp"
-  );
-}
-
-type ScalarBuffActivationEffectOccurrence = {
-  readonly phaseIndex: number;
-  readonly effectIndex: number;
-};
-
-type ScalarBuffOngoingOperation = Extract<
-  SpellMechanics,
-  { readonly family: "ongoing_effect" }
->["operations"][number];
-
-function scalarBuffOperationConstraintFacts(
-  operation: ScalarBuffOngoingOperation,
-): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
-  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
-  if (operation.predicate !== undefined) facts.push("predicate");
-  if (operation.targetLimit !== undefined) facts.push("targetLimit");
-  if (operation.usageLimit !== undefined) facts.push("usageLimit");
-  return facts;
-}
-
-function scalarBuffActivationEffectOccurrences(
-  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
-): readonly ScalarBuffActivationEffectOccurrence[] {
-  return mechanics.phases.flatMap((phase, phaseIndex) => {
-    if (phase.kind !== "direct") return [];
-    return (phase.effects ?? []).flatMap((candidate, effectIndex) => {
-      if (!isEffectAtom(candidate) || !isScalarBuffEffect(candidate)) {
-        return [];
-      }
-      return [
-        {
-          phaseIndex,
-          effectIndex,
-        },
-      ];
-    });
-  });
-}
-
-function isScalarBuffRepresentation(
-  mechanics: SpellMechanics,
-): mechanics is ScalarBuffMechanics {
-  const effectWitness =
-    mechanics.family === "activation"
-      ? scalarBuffActivationEffectOccurrences(mechanics).length > 0
-      : mechanics.family === "ongoing_effect"
-        ? mechanics.operations.some(
-            ({ trigger, effect }) =>
-              trigger.kind === "passive" && isScalarBuffEffect(effect),
-          )
-        : false;
-  if (!effectWitness) return false;
-  const castingTime = topLevelSpellCastingTime(mechanics);
-  const hasSupportedCastingTime =
-    castingTime !== null && scalarBuffSpellActionCost(castingTime) !== null;
-  const hasSupportedRange = scalarBuffSpellRangeFeet(mechanics.range) !== null;
-  let hasAttachment = false;
-  if (mechanics.family === "activation") {
-    hasAttachment = mechanics.phases.some(
-      (phase) => "attachment" in phase && phase.attachment.kind !== undefined,
-    );
-  } else if (mechanics.family === "ongoing_effect") {
-    hasAttachment = mechanics.attachment.kind !== undefined;
-  }
-  return spellProcedureHasRedundantSignature({
-    kind: "twoWitnessesMayBeMissing",
-    witnesses: [
-      effectWitness,
-      hasSupportedCastingTime,
-      hasSupportedRange,
-      hasAttachment,
-      mechanics.family === "activation" ||
-        mechanics.family === "ongoing_effect",
-    ],
-  });
-}
-
-function scalarBuffIssue(
-  failedFact: ScalarBuffFailedFact,
-  mechanicsPath: UnitMechanicsPath,
-): ScalarBuffAdmissionIssue {
-  return {
-    tag: "spellProcedureAdmissionIssue",
-    procedure: "scalarBuff",
-    failedFact,
-    mechanicsPath,
-    message: `Unsupported scalarBuff mechanics fact: ${failedFact}.`,
-  };
-}
-
-function scalarBuffDroppedTargetSelectionFacts(
-  selection: TargetSelection,
-): readonly ScalarBuffFailedFact[] {
-  const facts: ScalarBuffFailedFact[] = [];
-  if ("typeFilter" in selection && selection.typeFilter !== undefined) {
-    facts.push("typeFilter");
-  }
-  if ("stateFilter" in selection && selection.stateFilter !== undefined) {
-    facts.push("stateFilter");
-  }
-  if ("visibility" in selection && selection.visibility !== undefined) {
-    facts.push("visibility");
-  }
-  if (
-    "creatureSizeFilter" in selection &&
-    selection.creatureSizeFilter !== undefined
-  ) {
-    facts.push("creatureSizeFilter");
-  }
-  if (
-    "relativePosition" in selection &&
-    selection.relativePosition !== undefined
-  ) {
-    facts.push("relativePosition");
-  }
-  if ("objectFilter" in selection && selection.objectFilter !== undefined) {
-    facts.push("objectFilter");
-  }
-  if (
-    "creatureDisposition" in selection &&
-    selection.creatureDisposition !== undefined
-  ) {
-    facts.push("creatureDisposition");
-  }
-  if (
-    "castingRequirement" in selection &&
-    selection.castingRequirement !== undefined
-  ) {
-    facts.push("castingRequirement");
-  }
-  if ("repeatsAllowed" in selection && selection.repeatsAllowed !== undefined) {
-    facts.push("repeatsAllowed");
-  }
-  return facts;
-}
-
-function scalarBuffDroppedAttachmentFacts(
-  attachment: Attachment,
-): readonly ScalarBuffFailedFact[] {
-  const facts: ScalarBuffFailedFact[] = [];
-  const targetAttachment =
-    attachment.kind === "target"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "target"
-        ? attachment.value
-        : undefined;
-  if (targetAttachment !== undefined) {
-    if (targetAttachment.rangeOrigin !== undefined) {
-      facts.push("rangeOrigin");
-    }
-    facts.push(
-      ...scalarBuffDroppedTargetSelectionFacts(targetAttachment.selection),
-    );
-  }
-  const areaAttachment =
-    attachment.kind === "area"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "area"
-        ? attachment.value
-        : undefined;
-  if (areaAttachment !== undefined) {
-    if (areaAttachment.selection !== undefined) facts.push("selection");
-    if (areaAttachment.occupantDispositionFilter !== undefined) {
-      facts.push("occupantDispositionFilter");
-    }
-    if (areaAttachment.occupantPerceptionFilter !== undefined) {
-      facts.push("occupantPerceptionFilter");
-    }
-    if (areaAttachment.excludedAreas !== undefined) {
-      facts.push("excludedAreas");
-    }
-    if (areaAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
-  }
-  return facts;
-}
-
-function scalarBuffMaxHitPointAmount(
-  amount: DiceAmount,
-  spellLevel: number,
-  slotLevel: number,
-): number | null {
-  const deterministic = (expr: DiceExpr): number | null =>
-    expr.dice === 0 &&
-    expr.dieSize === 1 &&
-    expr.spellcastingMod !== true &&
-    expr.abilityModifier === undefined
-      ? (expr.flat ?? 0)
-      : null;
-  const deterministicDelta = (expr: DiceExprDelta): number | null =>
-    (expr.dice ?? 0) === 0 && (expr.dieSize ?? 1) === 1
-      ? (expr.flat ?? 0)
-      : null;
-  if (amount.kind === "fixed") return deterministic(amount.expr);
-  if (
-    amount.kind !== "linear_per_level" ||
-    amount.axis !== "slot" ||
-    amount.startingAtLevel !== spellLevel
-  ) {
-    return null;
-  }
-  const base = deterministic(amount.base);
-  const perLevel = deterministicDelta(amount.perLevel);
-  return base === null || perLevel === null
-    ? null
-    : base + perLevel * Math.max(0, slotLevel - amount.startingAtLevel);
-}
-
-function scalarBuffEffectSupported(
-  effect: ScalarBuffSurfaceEffect,
-  duration: SpellMechanics["duration"],
-  spellLevel: number,
-): boolean {
-  if (effect.kind === "grant_temp_hp") {
-    return (
-      duration.kind === "instantaneous" &&
-      scalarBuffEffectShapeSupported(effect, spellLevel)
-    );
-  }
-  if (duration.kind !== "timed" && duration.kind !== "concentration") {
-    return false;
-  }
-  return scalarBuffEffectShapeSupported(effect, spellLevel);
-}
-
-function scalarBuffEffectShapeSupported(
-  effect: ScalarBuffSurfaceEffect,
-  spellLevel: number,
-): boolean {
-  if (effect.kind === "grant_temp_hp") {
-    return (
-      supportedTemporaryHitPointsAmountExpr(
-        effect.amount,
-        spellLevel,
-        spellSlotLevel(spellLevel),
-      ) !== null
-    );
-  }
-  if (
-    effect.kind === "grant_speed" &&
-    typeof effect.feet !== "number" &&
-    effect.feet.kind === "walk_speed" &&
-    (effect.speedKind === "climb" || effect.speedKind === "swim") &&
-    effect.hover === undefined
-  ) {
-    return true;
-  }
-  if (
-    effect.kind === "grant_speed" &&
-    typeof effect.feet === "number" &&
-    effect.speedKind === "fly" &&
-    effect.hover === true
-  ) {
-    return true;
-  }
-  if (effect.kind === "modify_speed" && effect.unit === "feet") return true;
-  if (
-    effect.kind === "modify_ac" &&
-    effect.delta.kind === "fixed_dice" &&
-    effect.delta.sign === "+" &&
-    effect.delta.dieSize === 1
-  ) {
-    return true;
-  }
-  if (
-    effect.kind === "modify_ac_set_floor" &&
-    Number.isInteger(effect.const) &&
-    effect.const > 0
-  ) {
-    return true;
-  }
-  return (
-    effect.kind === "modify_max_hp" &&
-    effect.direction === "increase" &&
-    scalarBuffMaxHitPointAmount(effect.delta, spellLevel, spellLevel) !== null
-  );
-}
-
-function scalarBuffMechanicsAdmission(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "scalarBuff",
-  ScalarBuffMechanicsFacts,
-  ScalarBuffInvocation,
-  ScalarBuffAdmissionIssue
-> {
-  if (!isScalarBuffRepresentation(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const issues: Array<{
-    readonly failedFact: ScalarBuffFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: ScalarBuffFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  const castingTime = topLevelSpellCastingTime(mechanics);
-  const actionCost =
-    castingTime === null ? null : scalarBuffSpellActionCost(castingTime);
-  if (actionCost === null) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (scalarBuffSpellRangeFeet(mechanics.range) === null) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.duration.kind !== "instantaneous" &&
-    mechanics.duration.kind !== "timed" &&
-    mechanics.duration.kind !== "concentration"
-  ) {
-    pushIssue("duration", spellDurationValuePath());
-  }
-  for (const path of persistentAreaDurationChildPaths(mechanics.duration)) {
-    const branch = path.nodes.at(-1);
-    pushIssue(
-      branch?.role === "extension" ? "durationExtension" : "durationEnding",
-      path,
-    );
-  }
-  let attachment: Attachment | undefined;
-  let effect: ScalarBuffSurfaceEffect | undefined;
-  let attachmentPath: SpellMechanicsBranchPath =
-    mechanics.family === "activation"
-      ? spellActivationAttachmentPath(PositiveInteger(1))
-      : spellOngoingAttachmentPath();
-  let effectPath: SpellMechanicsBranchPath =
-    mechanics.family === "activation"
-      ? spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1))
-      : spellOngoingOperationEffectPath(PositiveInteger(1));
-  if (mechanics.family === "activation") {
-    for (const [index, candidate] of mechanics.phases.entries()) {
-      if (candidate.kind === "direct" && candidate.mode !== undefined) {
-        pushIssue("mode", spellActivationPhasePath(PositiveInteger(index + 1)));
-      }
-    }
-    const expected = scalarBuffActivationEffectOccurrences(mechanics)[0];
-    const fallbackPhaseIndex = mechanics.phases.findIndex(
-      (phase) => phase.kind === "direct",
-    );
-    const phaseIndex = expected?.phaseIndex ?? fallbackPhaseIndex;
-    const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
-    const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
-    attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
-    const selectedEffectOrdinal = PositiveInteger(
-      expected?.phaseIndex === phaseIndex ? expected.effectIndex + 1 : 1,
-    );
-    effectPath = spellActivationEffectPath(phaseOrdinal, selectedEffectOrdinal);
-    if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
-      for (const [index] of mechanics.phases.entries()) {
-        if (index === phaseIndex) continue;
-        pushIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
-        );
-      }
-      if (mechanics.phases.length === 0) {
-        pushIssue("phase", spellActivationPhasePath(PositiveInteger(1)));
-      }
-    }
-    if (phase?.kind !== "direct") {
-      pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-    } else {
-      attachment = phase.attachment;
-      const effects = phase.effects ?? [];
-      if (effects.length === 0) {
-        pushIssue(
-          "effect",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      } else {
-        const selectedEffectIndex =
-          expected?.phaseIndex === phaseIndex ? expected.effectIndex : 0;
-        for (const [index] of effects.entries()) {
-          if (index === selectedEffectIndex) continue;
-          pushIssue(
-            "effect",
-            spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-          );
-        }
-        const candidate = effects[selectedEffectIndex];
-        if (
-          candidate === undefined ||
-          !isEffectAtom(candidate) ||
-          !isScalarBuffEffect(candidate)
-        ) {
-          pushIssue(
-            "effect",
-            spellActivationEffectPath(
-              phaseOrdinal,
-              PositiveInteger(selectedEffectIndex + 1),
-            ),
-          );
-        } else {
-          effect = candidate;
-        }
-      }
-    }
-  } else {
-    if (mechanics.initialPhase !== undefined) {
-      pushIssue("initialPhase", spellOngoingInitialPhasePath());
-    }
-    if (mechanics.authoredConditionalEffects !== undefined) {
-      pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
-    }
-    attachment = mechanics.attachment;
-    const occurrences = mechanics.operations.map((operation, index) => ({
-      operation,
-      ordinal: PositiveInteger(index + 1),
-    }));
-    for (const occurrence of occurrences) {
-      for (const failedFact of scalarBuffOperationConstraintFacts(
-        occurrence.operation,
-      )) {
-        pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
-      }
-    }
-    const expected = occurrences.find(
-      ({ operation }) =>
-        operation.trigger.kind === "passive" &&
-        isScalarBuffEffect(operation.effect),
-    );
-    effectPath = spellOngoingOperationEffectPath(
-      expected?.ordinal ?? PositiveInteger(1),
-    );
-    const extras = occurrences.filter(
-      ({ ordinal }) => ordinal !== expected?.ordinal,
-    );
-    if (mechanics.operations.length !== 1 && extras.length === 0) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(
-          PositiveInteger(mechanics.operations.length + 1),
-        ),
-      );
-    }
-    for (const occurrence of extras) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(occurrence.ordinal),
-      );
-    }
-    if (
-      expected === undefined ||
-      expected.operation.trigger.kind !== "passive"
-    ) {
-      pushIssue(
-        "operation",
-        spellOngoingOperationEffectPath(
-          expected?.ordinal ?? PositiveInteger(1),
-        ),
-      );
-    } else {
-      effect = isScalarBuffEffect(expected.operation.effect)
-        ? expected.operation.effect
-        : undefined;
-    }
-  }
-  if (attachment !== undefined) {
-    for (const failedFact of scalarBuffDroppedAttachmentFacts(attachment)) {
-      pushIssue(failedFact, attachmentPath);
-    }
-  }
-  if (attachment === undefined) {
-    pushIssue("attachment", attachmentPath);
-  } else if (
-    scalarBuffSpellTargeting(
-      attachment,
-      Number(mechanics.level),
-      spellSlotLevel(Number(mechanics.level)),
-    ) === null
-  ) {
-    pushIssue("attachment", attachmentPath);
-  }
-  if (
-    effect === undefined ||
-    !scalarBuffEffectSupported(
-      effect,
-      mechanics.duration,
-      Number(mechanics.level),
-    )
-  ) {
-    pushIssue("effect", effectPath);
-  }
-  const failures = spellProcedureNonEmpty(issues);
-  if (failures !== undefined) {
-    return {
-      tag: "unsupported",
-      issues: spellProcedureMapNonEmpty(
-        failures,
-        ({ failedFact, mechanicsPath }) =>
-          scalarBuffIssue(failedFact, mechanicsPath),
-      ),
-    };
-  }
-  if (actionCost === null || attachment === undefined || effect === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [scalarBuffIssue("effect", spellMechanicsHeaderPath("family"))],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    actionCost,
-    attachment,
-    effect,
-  } satisfies ScalarBuffMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "scalarBuff",
-      facts,
-      evidence: {
-        consumed: [
-          spellMechanicsHeaderPath("level"),
-          spellMechanicsHeaderPath("school"),
-          spellMechanicsHeaderPath("range"),
-          spellMechanicsHeaderPath("components"),
-          spellMechanicsHeaderPath("duration"),
-          spellMechanicsHeaderPath("castingTime"),
-          spellMechanicsHeaderPath("family"),
-          ...(mechanics.duration.kind === "instantaneous"
-            ? []
-            : [spellDurationValuePath()]),
-          ...(mechanics.family === "activation"
-            ? [
-                spellActivationPhasePath(PositiveInteger(1)),
-                spellActivationAttachmentPath(PositiveInteger(1)),
-                spellActivationEffectPath(
-                  PositiveInteger(1),
-                  PositiveInteger(1),
-                ),
-              ]
-            : [
-                spellOngoingAttachmentPath(),
-                spellOngoingOperationPath(PositiveInteger(1)),
-                spellOngoingOperationEffectPath(PositiveInteger(1)),
-              ]),
-          ...spellConsumedMaterialEvidencePaths(mechanics.components),
-        ],
-        unowned: [],
-      },
-      admit: (executionSource, ctx) =>
-        admitScalarBuff(executionSource, ctx, facts),
-    },
-  };
-}
-
-*/
 
 function scalarBuffTemporaryHitPointExpr(
   amount: ScalarBuffTemporaryHitPointProjection,
@@ -1950,204 +1378,6 @@ function admitScalarBuff(
     },
   );
 }
-
-/* Legacy scalar execution helpers retained while the narrowed projection is
- * checked against the existing resolver contract.
-function legacyScalarBuffExpirationForEffect(
-  actorId: CombatantId,
-  duration: ScalarBuffMechanicsFacts["duration"],
-): Exclude<ReturnType<typeof scalarBuffActiveEffectExpiration>, null> | null {
-  return scalarBuffActiveEffectExpiration(actorId, duration);
-}
-
-function scalarBuffSpecialSpeedGrantExpiration(
-  actorId: CombatantId,
-  duration: ScalarBuffMechanicsFacts["duration"],
-): Exclude<ReturnType<typeof scalarBuffActiveEffectExpiration>, null> | null {
-  if (duration.kind !== "concentration") {
-    return scalarBuffActiveEffectExpiration(actorId, duration);
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        kind: "concentration",
-        combatantId: actorId,
-        durationTicks: durationTicks.success,
-      };
-}
-
-function scalarBuffEffectForCast(
-  actorId: CombatantId,
-  effect: ScalarBuffSurfaceEffect,
-  duration: ScalarBuffMechanicsFacts["duration"],
-  spellLevel: number,
-  slotLevel: number,
-): ScalarBuffInvocation["effect"] | null {
-  if (effect.kind === "grant_temp_hp" && duration.kind === "instantaneous") {
-    const expr = supportedTemporaryHitPointsAmountExpr(
-      effect.amount,
-      spellLevel,
-      spellSlotLevel(slotLevel),
-    );
-    return expr === null
-      ? null
-      : { kind: "temporaryHitPoints", amount: { expr } };
-  }
-  const expiresAt = scalarBuffExpirationForEffect(actorId, duration);
-  if (expiresAt === null) return null;
-  if (
-    effect.kind === "grant_speed" &&
-    typeof effect.feet !== "number" &&
-    effect.feet.kind === "walk_speed" &&
-    (effect.speedKind === "climb" || effect.speedKind === "swim") &&
-    effect.hover === undefined
-  ) {
-    const speedGrantExpiresAt = scalarBuffSpecialSpeedGrantExpiration(
-      actorId,
-      duration,
-    );
-    if (speedGrantExpiresAt === null) return null;
-    return {
-      kind: "activeEffect",
-      activeEffect: {
-        kind: "specialSpeedGrant",
-        sourceCombatantId: actorId,
-        speedKind: effect.speedKind,
-        speed: { kind: "equalToSpeed" },
-        hover: false,
-        expiresAt: speedGrantExpiresAt,
-      },
-    };
-  }
-  if (
-    effect.kind === "grant_speed" &&
-    typeof effect.feet === "number" &&
-    effect.speedKind === "fly" &&
-    effect.hover === true
-  ) {
-    const speedGrantExpiresAt = scalarBuffSpecialSpeedGrantExpiration(
-      actorId,
-      duration,
-    );
-    if (speedGrantExpiresAt === null) return null;
-    return {
-      kind: "activeEffect",
-      activeEffect: {
-        kind: "specialSpeedGrant",
-        sourceCombatantId: actorId,
-        speedKind: "fly",
-        speed: { kind: "fixed", speedFeet: movementFeet(effect.feet) },
-        hover: true,
-        expiresAt: speedGrantExpiresAt,
-      },
-    };
-  }
-  if (effect.kind === "modify_speed" && effect.unit === "feet") {
-    return {
-      kind: "activeEffect",
-      activeEffect: {
-        kind: "speedDelta",
-        sourceCombatantId: actorId,
-        deltaFeet: movementDeltaFeet(effect.delta),
-        expiresAt,
-      },
-    };
-  }
-  if (
-    effect.kind === "modify_ac" &&
-    effect.delta.kind === "fixed_dice" &&
-    effect.delta.sign === "+" &&
-    effect.delta.dieSize === 1
-  ) {
-    return {
-      kind: "activeEffect",
-      activeEffect: {
-        kind: "spellArmorClassBonus",
-        sourceCombatantId: actorId,
-        bonus: effect.delta.dice,
-        negatesRepeatedDamageAllocation: false,
-        expiresAt,
-      },
-    };
-  }
-  if (
-    effect.kind === "modify_ac_set_floor" &&
-    Number.isInteger(effect.const) &&
-    effect.const > 0
-  ) {
-    return {
-      kind: "activeEffect",
-      activeEffect: {
-        kind: "spellArmorClassFloor",
-        sourceCombatantId: actorId,
-        floor: armorClass(effect.const),
-        expiresAt,
-      },
-    };
-  }
-  if (effect.kind === "modify_max_hp" && effect.direction === "increase") {
-    const amount = scalarBuffMaxHitPointAmount(
-      effect.delta,
-      spellLevel,
-      slotLevel,
-    );
-    return amount === null
-      ? null
-      : {
-          kind: "hitPointMaximumIncrease",
-          activeEffect: {
-            kind: "hitPointMaximumIncrease",
-            sourceCombatantId: actorId,
-            amount,
-            expiresAt,
-          },
-        };
-  }
-  return null;
-}
-
-function admitScalarBuff(
-  spell: BattleSpellExecutionSource,
-  ctx: SpellAdmissionContext,
-  facts: ScalarBuffMechanicsFacts,
-): readonly ScalarBuffInvocation[] {
-  const rangeFeet = scalarBuffSpellRangeFeet(facts.range);
-  if (rangeFeet === null) return [];
-  return ctx.spellCastOptions.flatMap(
-    (slot): readonly ScalarBuffInvocation[] => {
-      if (Number(slot.spellLevel) < Number(facts.level)) return [];
-      const targeting = scalarBuffSpellTargeting(
-        facts.attachment,
-        Number(facts.level),
-        slot.spellLevel,
-      );
-      const effect = scalarBuffEffectForCast(
-        ctx.actor.combatantId,
-        facts.effect,
-        facts.duration,
-        Number(facts.level),
-        Number(slot.spellLevel),
-      );
-      return targeting === null || effect === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "scalarBuff",
-              spell,
-              actionCost: facts.actionCost,
-              targeting,
-              effect,
-              rangeFeet,
-            },
-          ];
-    },
-  );
-}
-
-*/
 
 function discoverScalarBuffCastAct(
   state: BattleState,

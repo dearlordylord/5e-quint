@@ -64,11 +64,15 @@ import {
 } from "../codec-building-blocks.ts";
 import {
   admitSpellTargetAttachment,
+  spellOngoingOperationOccurrences,
+  spellOngoingOperationUnsupportedFacts,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
+  type SpellAttachmentRejection,
+  type SpellOngoingOperationOccurrence,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -144,35 +148,11 @@ const DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS = [
   "disposition",
 ] as const;
 
-type DamageReductionOperationOccurrence = {
-  readonly operation: DamageReductionMechanics["operations"][number];
-  readonly ordinal: PositiveInteger;
-};
-
-function damageReductionOperationOccurrences(
-  mechanics: DamageReductionMechanics,
-): readonly DamageReductionOperationOccurrence[] {
-  return mechanics.operations.map((operation, index) => ({
-    operation,
-    ordinal: PositiveInteger(index + 1),
-  }));
-}
-
 function damageReductionOperationEffectPath(
-  occurrence: DamageReductionOperationOccurrence | undefined,
+  occurrence: SpellOngoingOperationOccurrence | undefined,
 ): SpellMechanicsBranchPath {
   const ordinal = occurrence?.ordinal ?? PositiveInteger(1);
   return spellOngoingOperationEffectPath(ordinal);
-}
-
-function damageReductionOperationConstraintFacts(
-  operation: DamageReductionMechanics["operations"][number],
-): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
-  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
-  if (operation.predicate !== undefined) facts.push("predicate");
-  if (operation.targetLimit !== undefined) facts.push("targetLimit");
-  if (operation.usageLimit !== undefined) facts.push("usageLimit");
-  return facts;
 }
 
 type DamageReductionDamageTypeProjection =
@@ -211,37 +191,38 @@ function damageReductionDamageTypeProjection(
     : { tag: "unsupported" };
 }
 
-function damageReductionTargetAttachmentFailedFacts(
-  attachment: DamageReductionMechanics["attachment"],
-): readonly Extract<
+function damageReductionAttachmentFailedFact(
+  rejection: SpellAttachmentRejection,
+): Extract<
   DamageReductionFailedFact,
   "attachment" | "rangeOrigin" | "typeFilter" | "stateFilter" | "visibility"
->[] {
-  const targetAttachment =
-    attachment.kind === "hole" && attachment.value.kind === "target"
-      ? attachment.value
-      : undefined;
-  if (targetAttachment === undefined) return ["attachment"];
-  const failedFacts: Array<
-    Extract<
-      DamageReductionFailedFact,
-      "rangeOrigin" | "typeFilter" | "stateFilter" | "visibility"
-    >
-  > = [];
-  if (targetAttachment.rangeOrigin !== undefined) {
-    failedFacts.push("rangeOrigin");
+> {
+  switch (rejection.failedFact) {
+    case "attachment":
+    case "rangeOrigin":
+    case "typeFilter":
+    case "stateFilter":
+    case "visibility":
+      return rejection.failedFact;
+    case "selection":
+    case "mode":
+    case "targetKinds":
+    case "creatureSizeFilter":
+    case "relativePosition":
+    case "objectFilter":
+    case "creatureDisposition":
+    case "objectOrLocationMaxDimensionFeet":
+    case "count":
+    case "repeatsAllowed":
+    case "castingRequirement":
+    case "disposition":
+    case "shape":
+    case "origin":
+    case "occupantDispositionFilter":
+    case "occupantPerceptionFilter":
+    case "excludedAreas":
+      return "attachment";
   }
-  const selection = targetAttachment.selection;
-  if ("typeFilter" in selection && selection.typeFilter !== undefined) {
-    failedFacts.push("typeFilter");
-  }
-  if ("stateFilter" in selection && selection.stateFilter !== undefined) {
-    failedFacts.push("stateFilter");
-  }
-  if ("visibility" in selection && selection.visibility !== undefined) {
-    failedFacts.push("visibility");
-  }
-  return failedFacts.length === 0 ? ["attachment"] : failedFacts;
 }
 
 function isDamageReductionRepresentation(
@@ -297,7 +278,7 @@ function damageReductionMechanicsAdmission(
     mechanics.duration.kind === "concentration"
       ? mechanics.duration
       : undefined;
-  const occurrences = damageReductionOperationOccurrences(mechanics);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
   const expected = occurrences.find(
     ({ operation }) =>
       operation.trigger.kind === "passive" &&
@@ -346,7 +327,7 @@ function damageReductionMechanicsAdmission(
     pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
   }
   for (const occurrence of occurrences) {
-    for (const failedFact of damageReductionOperationConstraintFacts(
+    for (const failedFact of spellOngoingOperationUnsupportedFacts(
       occurrence.operation,
     )) {
       pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
@@ -357,10 +338,11 @@ function damageReductionMechanicsAdmission(
     DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS,
   );
   if (targetAttachmentAdmission.tag === "rejected") {
-    for (const failedFact of damageReductionTargetAttachmentFailedFacts(
-      mechanics.attachment,
-    )) {
-      pushIssue(failedFact, spellOngoingAttachmentPath());
+    for (const rejection of targetAttachmentAdmission.rejections) {
+      pushIssue(
+        damageReductionAttachmentFailedFact(rejection),
+        spellOngoingAttachmentPath(),
+      );
     }
   } else {
     const targetSelection =

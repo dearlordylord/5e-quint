@@ -178,23 +178,28 @@ function isSeeInvisibleObserverSightRepresentation(
   { readonly family: "activation" }
 > {
   if (mechanics.family !== "activation") return false;
-  const hasDirectPhase = mechanics.phases.some(
-    (phase) => phase.kind === "direct",
-  );
   const hasSightEffect =
     seeInvisibleSightEffectOccurrences(mechanics).length > 0;
   if (!hasSightEffect) return false;
   const hasExpectedDuration =
     mechanics.duration.kind === "timed" &&
     mechanics.duration.value.unit === "hour";
+  const hasSingleDirectPhase =
+    mechanics.phases.length === 1 && mechanics.phases[0]?.kind === "direct";
   return spellProcedureHasRedundantSignature({
     kind: "twoWitnessesMayBeMissing",
     witnesses: [
-      mechanics.level === SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL,
-      mechanics.range.kind === "self",
-      hasExpectedDuration,
-      hasDirectPhase,
-      hasSightEffect,
+      {
+        name: "spellLevel",
+        present: mechanics.level === SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL,
+      },
+      { name: "selfRange", present: mechanics.range.kind === "self" },
+      { name: "hourDuration", present: hasExpectedDuration },
+      {
+        name: "actionCastingTime",
+        present: mechanics.castingTime.kind === "action",
+      },
+      { name: "singleDirectPhase", present: hasSingleDirectPhase },
     ],
   });
 }

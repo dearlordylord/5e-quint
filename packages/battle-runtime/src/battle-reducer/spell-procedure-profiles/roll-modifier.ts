@@ -99,10 +99,7 @@ import {
   rollModifierSkillFilter,
   scalarBuffSpellRangeFeet,
 } from "../spells-profiles-support.ts";
-import {
-  attachmentValueHasOnlyKeys,
-  sameStringSet,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
@@ -142,15 +139,20 @@ import {
   type BattleD20RollModifierKind,
 } from "../domain-constants.ts";
 import {
+  admitSpellAreaAttachment,
   admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
+  spellOngoingOperationOccurrences,
+  spellOngoingOperationUnsupportedFacts,
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  type SpellAttachmentRejection,
   type SpellMechanicsAdmissionSource,
   type SpellCanonicalDurationValue,
+  type SpellOngoingOperationOccurrence,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -358,14 +360,6 @@ type RollModifierActivationPhaseOccurrence = {
   readonly ordinal: PositiveInteger;
 };
 
-type RollModifierOperationOccurrence = {
-  readonly operation: Extract<
-    SpellMechanics,
-    { readonly family: "ongoing_effect" }
-  >["operations"][number];
-  readonly ordinal: PositiveInteger;
-};
-
 type RollModifierSaveGateOccurrence = {
   readonly phase: Extract<
     SpellMechanics,
@@ -378,15 +372,6 @@ type RollModifierRepeatSaveOccurrence = {
   readonly repeatOrdinal: PositiveInteger;
 };
 
-function rollModifierOperationOccurrences(
-  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
-): readonly RollModifierOperationOccurrence[] {
-  return mechanics.operations.map((operation, index) => ({
-    operation,
-    ordinal: PositiveInteger(index + 1),
-  }));
-}
-
 function rollModifierActivationPhaseOccurrences(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): readonly RollModifierActivationPhaseOccurrence[] {
@@ -397,21 +382,11 @@ function rollModifierActivationPhaseOccurrences(
 }
 
 function rollModifierOperationEffectPath(
-  occurrence: RollModifierOperationOccurrence | undefined,
+  occurrence: SpellOngoingOperationOccurrence | undefined,
 ): SpellMechanicsBranchPath {
   return spellOngoingOperationEffectPath(
     occurrence?.ordinal ?? PositiveInteger(1),
   );
-}
-
-function rollModifierOperationConstraintFacts(
-  operation: RollModifierOperationOccurrence["operation"],
-): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
-  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
-  if (operation.predicate !== undefined) facts.push("predicate");
-  if (operation.targetLimit !== undefined) facts.push("targetLimit");
-  if (operation.usageLimit !== undefined) facts.push("usageLimit");
-  return facts;
 }
 
 function rollModifierSaveGateOccurrences(
@@ -559,101 +534,118 @@ type RollModifierAttachmentIssueFact = Extract<
   | "excludedAreas"
 >;
 
-function rollModifierAttachmentIssueFacts(
-  attachment: Attachment,
-): readonly RollModifierAttachmentIssueFact[] {
-  const targetAttachment =
-    attachment.kind === "target"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "target"
-        ? attachment.value
-        : undefined;
-  if (targetAttachment !== undefined) {
-    const facts: RollModifierAttachmentIssueFact[] = [];
-    if (targetAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
-    const selection = targetAttachment.selection;
-    for (const fact of [
-      "typeFilter",
-      "stateFilter",
-      "visibility",
-      "creatureSizeFilter",
-      "relativePosition",
-      "objectFilter",
-      "creatureDisposition",
-      "castingRequirement",
-      "repeatsAllowed",
-    ] as const) {
-      if (
-        Reflect.has(selection, fact) &&
-        Reflect.get(selection, fact) !== undefined
-      ) {
-        facts.push(fact);
-      }
-    }
-    return facts.length === 0 ? ["attachment"] : facts;
+function rollModifierAttachmentFailedFact(
+  rejection: SpellAttachmentRejection,
+): RollModifierAttachmentIssueFact {
+  switch (rejection.failedFact) {
+    case "attachment":
+    case "selection":
+    case "rangeOrigin":
+    case "typeFilter":
+    case "stateFilter":
+    case "visibility":
+    case "creatureSizeFilter":
+    case "relativePosition":
+    case "objectFilter":
+    case "creatureDisposition":
+    case "castingRequirement":
+    case "repeatsAllowed":
+    case "occupantDispositionFilter":
+    case "occupantPerceptionFilter":
+    case "excludedAreas":
+      return rejection.failedFact;
+    case "mode":
+    case "targetKinds":
+    case "objectOrLocationMaxDimensionFeet":
+    case "count":
+    case "disposition":
+    case "shape":
+    case "origin":
+      return "attachment";
   }
-  const areaAttachment =
-    attachment.kind === "area"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "area"
-        ? attachment.value
-        : undefined;
-  if (areaAttachment === undefined) return ["attachment"];
-  const facts: RollModifierAttachmentIssueFact[] = [];
-  if (areaAttachment.selection !== undefined) facts.push("selection");
-  if (areaAttachment.occupantDispositionFilter !== undefined) {
-    facts.push("occupantDispositionFilter");
-  }
-  if (areaAttachment.occupantPerceptionFilter !== undefined) {
-    facts.push("occupantPerceptionFilter");
-  }
-  if (areaAttachment.excludedAreas !== undefined) facts.push("excludedAreas");
-  if (areaAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
-  return facts.length === 0 ? ["attachment"] : facts;
 }
 
 function isRollModifierRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is RollModifierMechanics {
-  return mechanics.family === "ongoing_effect"
-    ? mechanics.operations.some(
+  if (
+    mechanics.family !== "ongoing_effect" &&
+    mechanics.family !== "activation"
+  ) {
+    return false;
+  }
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "ongoing_effect" }, (ongoing) => {
+      const hasRollEffectRole = ongoing.operations.some(
         ({ effect }) =>
           effect.kind === "modify_roll_numeric" ||
           effect.kind === "modify_roll_advantage",
-      ) &&
-        spellProcedureHasRedundantSignature({
-          kind: "twoWitnessesMayBeMissing",
-          witnesses: [
-            mechanics.castingTime.kind === "action",
-            mechanics.range.kind === "self" ||
-              mechanics.range.kind === "point" ||
-              mechanics.range.kind === "touch",
-            mechanics.attachment.kind === "hole" ||
-              mechanics.attachment.kind === "area",
-            mechanics.operations.some(
-              ({ trigger }) => trigger.kind === "passive",
-            ),
-            mechanics.operations.length > 0,
-          ],
-        })
-    : mechanics.family === "activation"
-      ? mechanics.phases.some(({ kind }) => kind === "save_gate") &&
-        spellProcedureHasRedundantSignature({
-          kind: "twoWitnessesMayBeMissing",
-          witnesses: [
-            mechanics.castingTime.kind === "action",
-            mechanics.range.kind === "point" ||
-              mechanics.range.kind === "self" ||
-              mechanics.range.kind === "touch",
-            mechanics.phases.length > 0,
-            mechanics.phases.some(({ kind }) => kind === "save_gate"),
-            mechanics.phases.some(
-              (phase) =>
-                "attachment" in phase && phase.attachment.kind === "hole",
-            ),
-          ],
-        })
-      : false;
+      );
+      if (!hasRollEffectRole) return false;
+      const hasSupportedRangeRole =
+        ongoing.range.kind === "self" ||
+        ongoing.range.kind === "point" ||
+        ongoing.range.kind === "touch";
+      const hasAttachmentRole =
+        ongoing.attachment.kind === "hole" ||
+        ongoing.attachment.kind === "area";
+      const hasPassiveTriggerRole = ongoing.operations.some(
+        ({ trigger }) => trigger.kind === "passive",
+      );
+      return spellProcedureHasRedundantSignature({
+        kind: "twoWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "castingTime",
+            present: ongoing.castingTime.kind === "action",
+          },
+          { name: "range", present: hasSupportedRangeRole },
+          { name: "attachment", present: hasAttachmentRole },
+          { name: "passiveTrigger", present: hasPassiveTriggerRole },
+          {
+            name: "duration",
+            present: isRollModifierDuration(ongoing.duration),
+          },
+        ],
+      });
+    }),
+    Match.when({ family: "activation" }, (activation) => {
+      if (!activation.phases.some(({ kind }) => kind === "save_gate")) {
+        return false;
+      }
+      const hasNumericFailureEffect = activation.phases.some(
+        (phase) =>
+          phase.kind === "save_gate" &&
+          phase.onFail.kind === "modify_roll_numeric",
+      );
+      const hasTargetAttachmentRole = activation.phases.some(
+        (phase) => "attachment" in phase && phase.attachment.kind === "hole",
+      );
+      return spellProcedureHasRedundantSignature({
+        kind: "twoWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "castingTime",
+            present: activation.castingTime.kind === "action",
+          },
+          {
+            name: "range",
+            present:
+              activation.range.kind === "point" ||
+              activation.range.kind === "self" ||
+              activation.range.kind === "touch",
+          },
+          {
+            name: "duration",
+            present: isRollModifierDuration(activation.duration),
+          },
+          { name: "targetAttachment", present: hasTargetAttachmentRole },
+          { name: "numericFailureEffect", present: hasNumericFailureEffect },
+        ],
+      });
+    }),
+    Match.exhaustive,
+  );
 }
 
 function rollModifierIssue(
@@ -769,12 +761,7 @@ function rollModifierAttachmentProjection(
   attachment: Attachment,
   range: SpellMechanics["range"],
   spellLevel: number,
-):
-  | {
-      readonly targeting: RollModifierTargetingProjection;
-      readonly rangeFeet: MovementFeetType | null;
-    }
-  | undefined {
+): RollModifierAttachmentProjection {
   const targetAdmission = admitSpellTargetAttachment(
     attachment,
     ROLL_MODIFIER_TARGET_SELECTION_FIELDS,
@@ -785,37 +772,49 @@ function rollModifierAttachmentProjection(
       spellLevel,
     );
     const rangeFeet = scalarBuffSpellRangeFeet(range);
-    return targeting === undefined ? undefined : { targeting, rangeFeet };
+    return targeting === undefined
+      ? { tag: "unsupported" }
+      : { tag: "supported", targeting, rangeFeet };
   }
-  const areaAttachment =
-    attachment.kind === "area"
-      ? attachment
-      : attachment.kind === "hole" && attachment.value.kind === "area"
-        ? attachment.value
-        : undefined;
-  if (
-    areaAttachment === undefined ||
-    !attachmentValueHasOnlyKeys(
-      attachment,
-      ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS,
-    )
-  ) {
-    return undefined;
+  if (targetAdmission.reason !== "targetAttachmentMissing") {
+    return { tag: "rejected", rejections: [...targetAdmission.rejections] };
   }
-  const targeting = rollModifierTargetingProjection(attachment, spellLevel);
-  if (targeting === undefined) return undefined;
+  const areaAdmission = admitSpellAreaAttachment(
+    attachment,
+    ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS,
+  );
+  if (areaAdmission.tag === "rejected") {
+    return { tag: "rejected", rejections: [...areaAdmission.rejections] };
+  }
+  const areaAttachment = areaAdmission.attachment;
+  const areaValue =
+    areaAttachment.kind === "area" ? areaAttachment : areaAttachment.value;
+  const targeting = rollModifierTargetingProjection(areaValue, spellLevel);
+  if (targeting === undefined) return { tag: "unsupported" };
   const rangeRadiusFeet =
-    areaAttachment.origin.kind === "self" &&
-    areaAttachment.shape.kind === "emanation" &&
-    typeof areaAttachment.shape.radiusFeet === "number"
-      ? movementFeet(areaAttachment.shape.radiusFeet)
+    areaValue.origin.kind === "self" &&
+    areaValue.shape.kind === "emanation" &&
+    typeof areaValue.shape.radiusFeet === "number"
+      ? movementFeet(areaValue.shape.radiusFeet)
       : null;
   const rangeFeet = rangeRadiusFeet ?? scalarBuffSpellRangeFeet(range);
-  return { targeting, rangeFeet };
+  return { tag: "supported", targeting, rangeFeet };
 }
 
 type RollModifierBranchProjection =
   | { readonly tag: "supported"; readonly shape: RollModifierProfileShape }
+  | { readonly tag: "unsupported" };
+
+type RollModifierAttachmentProjection =
+  | {
+      readonly tag: "supported";
+      readonly targeting: RollModifierTargetingProjection;
+      readonly rangeFeet: MovementFeetType | null;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly rejections: readonly SpellAttachmentRejection[];
+    }
   | { readonly tag: "unsupported" };
 
 function rollModifierOngoingBranchProjection(
@@ -828,9 +827,9 @@ function rollModifierOngoingBranchProjection(
   if (mechanics.authoredConditionalEffects !== undefined) {
     pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
   }
-  const occurrences = rollModifierOperationOccurrences(mechanics);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
   for (const occurrence of occurrences) {
-    for (const failedFact of rollModifierOperationConstraintFacts(
+    for (const failedFact of spellOngoingOperationUnsupportedFacts(
       occurrence.operation,
     )) {
       pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
@@ -861,12 +860,15 @@ function rollModifierOngoingBranchProjection(
     mechanics.range,
     Number(mechanics.level),
   );
-  if (attachment === undefined) {
-    for (const failedFact of rollModifierAttachmentIssueFacts(
-      mechanics.attachment,
-    )) {
-      pushIssue(failedFact, spellOngoingAttachmentPath());
+  if (attachment.tag === "rejected") {
+    for (const rejection of attachment.rejections) {
+      pushIssue(
+        rollModifierAttachmentFailedFact(rejection),
+        spellOngoingAttachmentPath(),
+      );
     }
+  } else if (attachment.tag === "unsupported") {
+    pushIssue("attachment", spellOngoingAttachmentPath());
   }
   if (effect === undefined) {
     // The operation/effect issue above carries both missing semantic roles.
@@ -884,7 +886,7 @@ function rollModifierOngoingBranchProjection(
       pushIssue("effect", rollModifierOperationEffectPath(expected));
     }
     if (
-      attachment !== undefined &&
+      attachment.tag === "supported" &&
       attachment.rangeFeet !== null &&
       effectProjection !== undefined
     ) {
@@ -905,7 +907,7 @@ function rollModifierOngoingBranchProjection(
       pushIssue("effect", rollModifierOperationEffectPath(expected));
     }
     if (
-      attachment !== undefined &&
+      attachment.tag === "supported" &&
       attachment.rangeFeet !== null &&
       effectProjection !== undefined
     ) {
@@ -988,12 +990,15 @@ function rollModifierActivationBranchProjection(
     mechanics.range,
     Number(mechanics.level),
   );
-  if (attachment === undefined) {
-    for (const failedFact of rollModifierAttachmentIssueFacts(
-      phase.attachment,
-    )) {
-      pushIssue(failedFact, spellActivationAttachmentPath(expected.ordinal));
+  if (attachment.tag === "rejected") {
+    for (const rejection of attachment.rejections) {
+      pushIssue(
+        rollModifierAttachmentFailedFact(rejection),
+        spellActivationAttachmentPath(expected.ordinal),
+      );
     }
+  } else if (attachment.tag === "unsupported") {
+    pushIssue("attachment", spellActivationAttachmentPath(expected.ordinal));
   }
   if (phase.onSuccess.kind !== "none") {
     pushIssue(
@@ -1030,7 +1035,7 @@ function rollModifierActivationBranchProjection(
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
   if (
-    attachment === undefined ||
+    attachment.tag !== "supported" ||
     attachment.rangeFeet === null ||
     effectProjection === undefined ||
     rangeFeet === null
@@ -1166,353 +1171,6 @@ function rollModifierMechanicsAdmission(
     },
   };
 }
-
-/* Legacy admission body retained temporarily while the narrowed branch parser
- * above is checked against the existing execution contract.
-function legacyRollModifierMechanicsAdmission(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "rollModifier",
-  RollModifierMechanicsFacts,
-  RollModifierInvocation,
-  RollModifierAdmissionIssue
-> {
-  if (!isRollModifierRepresentation(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const issues: Array<{
-    readonly failedFact: RollModifierFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: RollModifierFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  if (mechanics.castingTime.kind !== "action") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (
-    mechanics.duration.kind !== "timed" &&
-    mechanics.duration.kind !== "concentration"
-  ) {
-    pushIssue("duration", spellDurationValuePath());
-  }
-  for (const mechanicsPath of persistentAreaDurationChildPaths(
-    mechanics.duration,
-  )) {
-    const branch = mechanicsPath.nodes.at(-1);
-    pushIssue(
-      branch?.role === "extension" ? "durationExtension" : "durationEnding",
-      mechanicsPath,
-    );
-  }
-
-  let shape: RollModifierProfileShape | undefined;
-  if (mechanics.family === "ongoing_effect") {
-    if (mechanics.initialPhase !== undefined) {
-      pushIssue("initialPhase", spellOngoingInitialPhasePath());
-    }
-    if (mechanics.authoredConditionalEffects !== undefined) {
-      pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
-    }
-    const occurrences = rollModifierOperationOccurrences(mechanics);
-    for (const occurrence of occurrences) {
-      for (const failedFact of rollModifierOperationConstraintFacts(
-        occurrence.operation,
-      )) {
-        pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
-      }
-    }
-    const expected = occurrences.find(
-      ({ operation }) =>
-        operation.trigger.kind === "passive" &&
-        (operation.effect.kind === "modify_roll_numeric" ||
-          operation.effect.kind === "modify_roll_advantage"),
-    );
-    const extras = occurrences.filter(
-      ({ ordinal }) => ordinal !== expected?.ordinal,
-    );
-    if (mechanics.operations.length !== 1 && extras.length === 0) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(
-          PositiveInteger(mechanics.operations.length + 1),
-        ),
-      );
-    }
-    for (const occurrence of extras) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(occurrence.ordinal),
-      );
-    }
-    if (
-      expected === undefined ||
-      expected.operation.trigger.kind !== "passive"
-    ) {
-      pushIssue("operation", rollModifierOperationEffectPath(expected));
-    }
-    const effect =
-      expected?.operation.effect.kind === "modify_roll_numeric" ||
-      expected?.operation.effect.kind === "modify_roll_advantage"
-        ? expected.operation.effect
-        : undefined;
-    if (effect === undefined) {
-      pushIssue("effect", rollModifierOperationEffectPath(expected));
-    } else if (
-      effect.kind === "modify_roll_numeric" &&
-      rollModifierNumericEffectProjection(effect)
-    ) {
-      shape = {
-        kind: "numeric",
-        attachment: mechanics.attachment,
-        effect,
-        saveGate: null,
-        rangeRadiusFeet: rollModifierRangeRadius(
-          mechanics.range,
-          mechanics.attachment,
-        ),
-      };
-    } else if (effect.kind === "modify_roll_numeric") {
-      for (const failedFact of rollModifierNumericEffectConstraintIssues(
-        effect,
-      )) {
-        pushIssue(failedFact, rollModifierOperationEffectPath(expected));
-      }
-      if (!rollModifierNumericEffectShapeProjection(effect)) {
-        pushIssue("effect", rollModifierOperationEffectPath(expected));
-      }
-    } else if (
-      effect.kind === "modify_roll_advantage" &&
-      rollModifierAbilityCheckEffectProjection(effect)
-    ) {
-      shape = {
-        kind: "abilityCheck",
-        attachment: mechanics.attachment,
-        effect,
-        saveGate: null,
-        rangeRadiusFeet: rollModifierRangeRadius(
-          mechanics.range,
-          mechanics.attachment,
-        ),
-      };
-    } else {
-      pushIssue("effect", rollModifierOperationEffectPath(expected));
-    }
-    if (
-      mechanics.attachment.kind !== "hole" &&
-      mechanics.attachment.kind !== "area"
-    ) {
-      pushIssue("attachment", spellOngoingAttachmentPath());
-    }
-    for (const failedFact of rollModifierDroppedAttachmentFacts(
-      mechanics.attachment,
-    )) {
-      pushIssue(failedFact, spellOngoingAttachmentPath());
-    }
-    const rangeRadiusFeet = rollModifierRangeRadius(
-      mechanics.range,
-      mechanics.attachment,
-    );
-    if (
-      rangeRadiusFeet === null &&
-      scalarBuffSpellRangeFeet(mechanics.range) === null
-    ) {
-      pushIssue("range", spellMechanicsHeaderPath("range"));
-    }
-  } else {
-    for (const [index, candidate] of mechanics.phases.entries()) {
-      if (candidate.kind === "direct" && candidate.mode !== undefined) {
-        pushIssue("mode", spellActivationPhasePath(PositiveInteger(index + 1)));
-      }
-      if (candidate.kind !== "save_gate") continue;
-      const phaseOrdinal = PositiveInteger(index + 1);
-      for (const [repeatIndex] of (candidate.repeatSaves ?? []).entries()) {
-        pushIssue(
-          "repeatSaves",
-          spellActivationRepeatPath(
-            phaseOrdinal,
-            PositiveInteger(repeatIndex + 1),
-          ),
-        );
-      }
-      if (candidate.autoSuccessIfCasterSlotGte !== undefined) {
-        pushIssue(
-          "autoSuccessIfCasterSlotGte",
-          spellActivationPhasePath(phaseOrdinal),
-        );
-      }
-      if (candidate.autoSuccessIfTarget !== undefined) {
-        pushIssue(
-          "autoSuccessIfTarget",
-          spellActivationPhasePath(phaseOrdinal),
-        );
-      }
-      if (candidate.saveAppliesIf !== undefined) {
-        pushIssue("saveAppliesIf", spellActivationPhasePath(phaseOrdinal));
-      }
-      if (candidate.usageLimit !== undefined) {
-        pushIssue("usageLimit", spellActivationPhasePath(phaseOrdinal));
-      }
-    }
-    const expected = rollModifierSupportedSaveGateOccurrence(mechanics);
-    const fallbackPhaseIndex = mechanics.phases.findIndex(
-      (phase) => phase.kind === "save_gate",
-    );
-    const phaseIndex = expected
-      ? Number(expected.ordinal) - 1
-      : fallbackPhaseIndex;
-    const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
-    const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
-    if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
-      for (const [index] of mechanics.phases.entries()) {
-        if (index === phaseIndex) continue;
-        pushIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
-        );
-      }
-      if (mechanics.phases.length === 0) {
-        pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-      }
-    }
-    if (phase?.kind !== "save_gate") {
-      pushIssue("saveGate", spellActivationPhasePath(phaseOrdinal));
-    }
-    if (phase?.kind === "save_gate") {
-      if (
-        phase.attachment.kind !== "hole" &&
-        phase.attachment.kind !== "area"
-      ) {
-        pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-      }
-      for (const failedFact of rollModifierDroppedAttachmentFacts(
-        phase.attachment,
-      )) {
-        pushIssue(failedFact, spellActivationAttachmentPath(phaseOrdinal));
-      }
-      if (phase.onSuccess.kind !== "none") {
-        pushIssue(
-          "saveGate",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      }
-      if (phase.onFail.kind !== "modify_roll_numeric") {
-        pushIssue(
-          "effect",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      } else {
-        for (const failedFact of rollModifierNumericEffectConstraintIssues(
-          phase.onFail,
-        )) {
-          pushIssue(
-            failedFact,
-            spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-          );
-        }
-        if (!rollModifierNumericEffectProjection(phase.onFail)) {
-          if (!rollModifierNumericEffectShapeProjection(phase.onFail)) {
-            pushIssue(
-              "effect",
-              spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-            );
-          }
-        } else {
-          shape = {
-            kind: "numeric",
-            attachment: phase.attachment,
-            effect: phase.onFail,
-            saveGate: { ability: phase.ability, dc: phase.dc },
-            rangeRadiusFeet: null,
-          };
-        }
-      }
-    }
-    if (scalarBuffSpellRangeFeet(mechanics.range) === null) {
-      pushIssue("range", spellMechanicsHeaderPath("range"));
-    }
-  }
-  if (
-    shape === undefined &&
-    !issues.some(
-      ({ failedFact }) =>
-        failedFact === "effect" ||
-        failedFact === "weaponFilter" ||
-        failedFact === "abilityFilter" ||
-        failedFact === "count",
-    )
-  ) {
-    pushIssue("effect", spellMechanicsHeaderPath("family"));
-  }
-  const failures = spellProcedureNonEmpty(issues);
-  if (failures !== undefined) {
-    return {
-      tag: "unsupported",
-      issues: spellProcedureMapNonEmpty(
-        failures,
-        ({ failedFact, mechanicsPath }) =>
-          rollModifierIssue(failedFact, mechanicsPath),
-      ),
-    };
-  }
-  if (shape === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [rollModifierIssue("effect", spellMechanicsHeaderPath("family"))],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    ...shape,
-  } satisfies RollModifierMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "rollModifier",
-      facts,
-      evidence: {
-        consumed: [
-          spellMechanicsHeaderPath("level"),
-          spellMechanicsHeaderPath("school"),
-          spellMechanicsHeaderPath("range"),
-          spellMechanicsHeaderPath("components"),
-          spellMechanicsHeaderPath("duration"),
-          spellMechanicsHeaderPath("castingTime"),
-          spellMechanicsHeaderPath("family"),
-          ...(mechanics.duration.kind === "timed" ||
-          mechanics.duration.kind === "concentration"
-            ? [spellDurationValuePath()]
-            : []),
-          ...(mechanics.family === "ongoing_effect"
-            ? [
-                spellOngoingAttachmentPath(),
-                spellOngoingOperationPath(PositiveInteger(1)),
-                spellOngoingOperationEffectPath(PositiveInteger(1)),
-              ]
-            : [
-                spellActivationPhasePath(PositiveInteger(1)),
-                spellActivationAttachmentPath(PositiveInteger(1)),
-                spellActivationEffectPath(
-                  PositiveInteger(1),
-                  PositiveInteger(1),
-                ),
-              ]),
-          ...spellConsumedMaterialEvidencePaths(mechanics.components),
-        ],
-        unowned: [],
-      },
-      admit: (executionSource, ctx) =>
-        admitRollModifier(executionSource, ctx, facts),
-    },
-  };
-}
-
-*/
 
 function rollModifierActiveEffectExpiration(
   actorId: CombatantId,
@@ -1691,199 +1349,6 @@ function admitRollModifier(
   }
   return invocations;
 }
-
-/* Legacy execution projection retained temporarily while the new narrowed
- * admission contract is checked against the existing resolver below.
-function legacyRollModifierNumericActiveEffect(
-  actorId: CombatantId,
-  effect: RollModifierNumericEffect,
-  expiresAt: Exclude<ReturnType<typeof scalarBuffActiveEffectExpiration>, null>,
-): {
-  readonly effect: RollModifierD20Effect;
-  readonly skillChoices: readonly Skill[] | null;
-} | null {
-  const delta = rollModifierDelta(effect.delta);
-  const skillFilter = rollModifierSkillFilter(effect.skillFilter);
-  if (
-    delta === null ||
-    !rollModifierKindsAreSupported(effect.on) ||
-    skillFilter === null
-  ) {
-    return null;
-  }
-  return {
-    effect: {
-      kind: "d20RollModifier",
-      sourceCombatantId: actorId,
-      on: effect.on,
-      delta,
-      skill: skillFilter.kind === "fixed" ? skillFilter.skill : null,
-      expiresAt,
-    },
-    skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
-  };
-}
-
-function rollModifierAbilityCheckActiveEffect(
-  actorId: CombatantId,
-  effect: RollModifierAbilityCheckEffect,
-  expiresAt: Exclude<ReturnType<typeof scalarBuffActiveEffectExpiration>, null>,
-): {
-  readonly effect: RollModifierAbilityCheckModeEffect;
-  readonly abilityChoices: readonly Ability[];
-  readonly abilityChoiceApplication: "single" | "perTarget";
-} {
-  const abilityFilter = rollModifierAbilityChoiceFilter(effect);
-  if (abilityFilter === undefined) {
-    throw new Error("Static admission must validate the ability choice.");
-  }
-  return {
-    effect: {
-      kind: "abilityCheckRollMode",
-      sourceCombatantId: actorId,
-      mode: "advantage",
-      expiresAt,
-    },
-    abilityChoices: abilityFilter.value.options,
-    abilityChoiceApplication:
-      abilityFilter.kind === "per_target_hole" ? "perTarget" : "single",
-  };
-}
-
-function rollModifierRangeFeet(
-  facts: RollModifierMechanicsFacts,
-): MovementFeetType | null {
-  return facts.rangeRadiusFeet ?? scalarBuffSpellRangeFeet(facts.range);
-}
-
-function admitRollModifier(
-  spell: BattleSpellExecutionSource,
-  ctx: SpellAdmissionContext,
-  facts: RollModifierMechanicsFacts,
-): readonly RollModifierInvocation[] {
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    ctx.actor.combatantId,
-    facts.duration,
-  );
-  const rangeFeet = rollModifierRangeFeet(facts);
-  if (expiresAt === null || rangeFeet === null) return [];
-  type RollModifierCast =
-    | {
-        readonly kind: "cantrip";
-        readonly access: CantripSpellAccess;
-        readonly resource: NoSpellInvocationResource;
-        readonly slotLevel: SpellSlotLevel;
-      }
-    | {
-        readonly kind: "prepared";
-        readonly access: PreparedSpellAccess;
-        readonly resource: LeveledSpellInvocationResource;
-        readonly slotLevel: SpellSlotLevel;
-      };
-  const complete = (cast: RollModifierCast): RollModifierInvocation | null => {
-    const targeting = rollModifierSpellTargeting(
-      facts.attachment,
-      Number(facts.level),
-      cast.slotLevel,
-    );
-    if (targeting === null) return null;
-    if (facts.kind === "numeric") {
-      const modifier = rollModifierNumericActiveEffect(
-        ctx.actor.combatantId,
-        facts.effect,
-        expiresAt,
-      );
-      if (modifier === null) return null;
-      if (cast.kind === "cantrip") {
-        return {
-          access: cast.access,
-          resource: cast.resource,
-          procedure: "rollModifier",
-          spell,
-          actionCost: "magicAction",
-          targeting,
-          rangeFeet,
-          saveGate: facts.saveGate,
-          effect: modifier.effect,
-          skillChoices: modifier.skillChoices,
-          abilityChoices: null,
-        };
-      }
-      return {
-        access: cast.access,
-        resource: cast.resource,
-        procedure: "rollModifier",
-        spell,
-        actionCost: "magicAction",
-        targeting,
-        rangeFeet,
-        saveGate: facts.saveGate,
-        effect: modifier.effect,
-        skillChoices: modifier.skillChoices,
-        abilityChoices: null,
-      };
-    }
-    const modifier = rollModifierAbilityCheckActiveEffect(
-      ctx.actor.combatantId,
-      facts.effect,
-      expiresAt,
-    );
-    if (cast.kind === "cantrip") {
-      return {
-        access: cast.access,
-        resource: cast.resource,
-        procedure: "rollModifier",
-        spell,
-        actionCost: "magicAction",
-        targeting,
-        rangeFeet,
-        saveGate: facts.saveGate,
-        effect: modifier.effect,
-        skillChoices: null,
-        abilityChoices: modifier.abilityChoices,
-        abilityChoiceApplication: modifier.abilityChoiceApplication,
-      };
-    }
-    return {
-      access: cast.access,
-      resource: cast.resource,
-      procedure: "rollModifier",
-      spell,
-      actionCost: "magicAction",
-      targeting,
-      rangeFeet,
-      saveGate: facts.saveGate,
-      effect: modifier.effect,
-      skillChoices: null,
-      abilityChoices: modifier.abilityChoices,
-      abilityChoiceApplication: modifier.abilityChoiceApplication,
-    };
-  };
-  const invocations: RollModifierInvocation[] = [];
-  if (Number(facts.level) === 0) {
-    const invocation = complete({
-      kind: "cantrip",
-      access: cantripSpellAccessFor(spell.castingSource),
-      resource: { tag: "none" },
-      slotLevel: spellSlotLevel(0),
-    });
-    if (invocation !== null) invocations.push(invocation);
-  } else {
-    for (const slot of ctx.spellCastOptions) {
-      if (Number(slot.spellLevel) < Number(facts.level)) continue;
-      const invocation = complete({
-        kind: "prepared",
-        access: { tag: "prepared" },
-        resource: spellInvocationResourceForCastOption(slot),
-        slotLevel: slot.spellLevel,
-      });
-      if (invocation !== null) invocations.push(invocation);
-    }
-  }
-  return invocations;
-}
-
-*/
 
 function applyRollModifierEffect(
   state: BattleState,

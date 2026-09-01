@@ -73,11 +73,14 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   isSpellCanonicalDurationValue,
+  spellOngoingOperationOccurrences,
+  spellOngoingOperationUnsupportedFacts,
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  type SpellOngoingOperationOccurrence,
   type SpellMechanicsAdmissionSource,
   type SpellCanonicalDurationValue,
   type SpellProcedureAdmissionIssue,
@@ -106,10 +109,6 @@ type HeldLightMechanics = Extract<
   SpellMechanics,
   { readonly family: "ongoing_effect" }
 >;
-type HeldLightOperationOccurrence = {
-  readonly operation: HeldLightMechanics["operations"][number];
-  readonly ordinal: PositiveInteger;
-};
 type HeldLightDamageAmount =
   | Extract<DiceAmount, { readonly kind: "fixed" }>
   | (Extract<DiceAmount, { readonly kind: "threshold_tiers" }> & {
@@ -169,17 +168,8 @@ type HeldLightAdmissionIssue = SpellProcedureAdmissionIssue<
   UnitMechanicsPath
 >;
 
-function heldLightOperationOccurrences(
-  mechanics: HeldLightMechanics,
-): readonly HeldLightOperationOccurrence[] {
-  return mechanics.operations.map((operation, index) => ({
-    operation,
-    ordinal: PositiveInteger(index + 1),
-  }));
-}
-
 function heldLightLightOperation(
-  operation: HeldLightOperationOccurrence,
+  operation: SpellOngoingOperationOccurrence,
 ): boolean {
   return (
     operation.operation.trigger.kind === "passive" &&
@@ -188,7 +178,7 @@ function heldLightLightOperation(
 }
 
 function heldLightHurlOperation(
-  operation: HeldLightOperationOccurrence,
+  operation: SpellOngoingOperationOccurrence,
 ): boolean {
   const { trigger, effect } = operation.operation;
   return (
@@ -200,21 +190,11 @@ function heldLightHurlOperation(
   );
 }
 
-function heldLightOperationConstraintFacts(
-  operation: HeldLightOperationOccurrence["operation"],
-): readonly ("predicate" | "targetLimit" | "usageLimit")[] {
-  const facts: Array<"predicate" | "targetLimit" | "usageLimit"> = [];
-  if (operation.predicate !== undefined) facts.push("predicate");
-  if (operation.targetLimit !== undefined) facts.push("targetLimit");
-  if (operation.usageLimit !== undefined) facts.push("usageLimit");
-  return facts;
-}
-
 function heldLightRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is HeldLightMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
-  const occurrences = heldLightOperationOccurrences(mechanics);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
   const hasLightOperation = occurrences.some((occurrence) =>
     heldLightLightOperation(occurrence),
   );
@@ -257,7 +237,7 @@ function heldLightIssue(
 }
 
 function heldLightHurlDamageAmount(
-  operation: HeldLightOperationOccurrence,
+  operation: SpellOngoingOperationOccurrence,
 ): DiceAmount | null {
   if (
     operation.operation.effect.kind !== "attack_roll" ||
@@ -317,7 +297,7 @@ function heldLightDamageExpr(
 }
 
 function heldLightHurlOptionalIssues(
-  occurrence: HeldLightOperationOccurrence,
+  occurrence: SpellOngoingOperationOccurrence,
 ): readonly {
   readonly failedFact: "laterTurnsOnly" | "attachment" | "timing";
   readonly mechanicsPath: UnitMechanicsPath;
@@ -370,7 +350,7 @@ function heldLightFactsFromMechanics(
   const durationFacts = isHeldLightDuration(mechanics.duration)
     ? mechanics.duration
     : undefined;
-  const occurrences = heldLightOperationOccurrences(mechanics);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
   const lightOperation = occurrences.find(heldLightLightOperation);
   const hurlOperation = occurrences.find(heldLightHurlOperation);
   const selectedOrdinals = new Set(
@@ -456,7 +436,7 @@ function heldLightFactsFromMechanics(
     pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
   }
   for (const occurrence of occurrences) {
-    for (const failedFact of heldLightOperationConstraintFacts(
+    for (const failedFact of spellOngoingOperationUnsupportedFacts(
       occurrence.operation,
     )) {
       pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
