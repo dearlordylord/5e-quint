@@ -27,6 +27,7 @@ import {
 import type {
   BattleStatBlockRuntimeMultiattackDispatch,
   BattleStatBlockRuntimeProcedure,
+  BattleStatBlockUnsupportedProcedureBinding,
 } from "../stat-block-execution-state.ts";
 import { parseStatBlockPositiveIntegerLiteral } from "../stat-block-execution-state.ts";
 import type { StatBlockProcedureSection } from "../procedure-execution/stat-block-procedure-sections.ts";
@@ -37,10 +38,7 @@ import type {
 import { optionalProperty } from "../optional-property.ts";
 import { mapReadonlyNonEmptyArray } from "../readonly-non-empty-array.ts";
 
-export type BattleStatBlockUnsupportedProcedureBinding = {
-  readonly section: StatBlockProcedureSection;
-  readonly procedureOrdinal: StatBlockProcedureOrdinal;
-};
+export type { BattleStatBlockUnsupportedProcedureBinding } from "../stat-block-execution-state.ts";
 
 export function procedureBindingIssue(
   section: StatBlockProcedureSection,

@@ -44,7 +44,7 @@ import {
   battleExecutionScopeOrdinal,
 } from "../identity.ts";
 import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
-import { battleStatBlockProjectionFailureMessage } from "../stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "../stat-block-execution-state.ts";
 
 import {
   characterUnitProcedureBindings,

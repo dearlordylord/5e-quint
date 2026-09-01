@@ -15,7 +15,7 @@ import type {
   BattleStateInitLeafIssue,
 } from "../battle-state-execution.ts";
 import type { StatBlockResourceGraphAdmissionFailure } from "../stat-block-execution-state.ts";
-import { battleStatBlockProjectionFailureMessage } from "../stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "../stat-block-execution-state.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);

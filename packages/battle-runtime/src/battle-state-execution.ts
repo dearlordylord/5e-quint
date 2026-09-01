@@ -242,13 +242,13 @@ import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {
   BattleStatBlockExecutionSource,
+  BattleStatBlockProjectionFailure,
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
   StatBlockResourceGraphAdmissionFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
-import type { BattleStatBlockProjectionFailure } from "./stat-block-authored-projection.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
