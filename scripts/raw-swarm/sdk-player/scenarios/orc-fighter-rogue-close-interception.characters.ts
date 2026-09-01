@@ -3,12 +3,10 @@ import type {
   CharacterDraft,
   CreationFill,
   CreationHole,
-} from "@dnd/character-creation-runtime";
-import type {
+  FreshCharacterSheet,
   ScenarioCharacterOutcome,
   ScenarioCharacters,
 } from "@dnd/scenario-character-sdk";
-import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
 
 type BuildPlan = {
   readonly draftId: string;

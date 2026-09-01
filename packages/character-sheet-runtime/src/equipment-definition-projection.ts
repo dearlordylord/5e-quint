@@ -1,7 +1,7 @@
 import { Match, Result } from "effect";
 
 import { PositiveInteger } from "@dnd/shared/types";
-import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/catalog-install";
+import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/mechanics-admission";
 import {
   unitMechanicsPath,
   type UnitMechanicsPath,

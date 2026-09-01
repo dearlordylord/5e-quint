@@ -3,9 +3,12 @@ import * as Result from "effect/Result";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
+  CreatureTraitEffect,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
+import type {
   AuthoredExecutableProcedure,
   AuthoredStatBlockReactionTrigger,
-  CreatureTraitEffect,
   StatBlockProcedureEntry,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResource,
@@ -14,8 +17,7 @@ import type {
   StatBlockSpellcastingGroup,
   StatBlockSpellReference,
   StatBlockTextOnlyReason,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
+} from "@dnd/surface/surface/stat-block-types";
 import {
   parseSourceSection,
   sourceSectionMatchesAnchor,

@@ -7,12 +7,17 @@ import {
   SPEED_TYPES,
 } from "@dnd/shared/game-facts";
 import {
+  AbilityScore,
   DAMAGE_TYPES,
   DamageDieSizeSchema,
+  Integer,
+  NonNegativeInteger,
+  PositiveInteger,
   SIZES,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
+import { stripSrdStatBlockMarkdownEmphasis } from "./stat-block-raw-markdown-normalization.ts";
 import {
   AbilitySchema,
   ChallengeRatingSchema,
@@ -65,15 +70,17 @@ import {
   CREATURE_TYPES,
   SKILLS,
   type Ability,
-  type ChallengeRating,
   type Condition,
   type CreatureSkillModifier,
   type DamageType,
-  type SrdStatBlockRecord,
-  type StandaloneStatBlockSpeedEntry,
-  type StatBlockCommunication,
-  type StatBlockProcedureEntry,
 } from "./types.ts";
+import type {
+  ChallengeRating,
+  SrdStatBlockRecord,
+  StandaloneStatBlockSpeedEntry,
+  StatBlockCommunication,
+  StatBlockProcedureEntry,
+} from "./stat-block-types.ts";
 
 /**
  * Identity-free projector for comparing parser-bounded local SRD spans with
@@ -86,9 +93,9 @@ const ATTACK_ABILITY_NAMES = ["str", "dex", "int", "wis", "cha"] as const;
 type AttackAbility = (typeof ATTACK_ABILITY_NAMES)[number];
 type AbilityMatrixFact = {
   readonly ability: Ability;
-  readonly score: number;
-  readonly modifier: number;
-  readonly saveModifier: number;
+  readonly score: AbilityScore;
+  readonly modifier: Integer;
+  readonly saveModifier: Integer;
 };
 
 type AbilityMatrix = readonly [
@@ -334,15 +341,17 @@ const positiveIntegerEvidence = (
   context: ProjectionIssueContext,
   evidence: string,
   field: string,
-): number =>
-  decodeEvidenceValue(
-    context,
-    PositiveIntegerSchema,
-    Number(evidence),
-    evidence,
-    field,
-    "a positive integer",
-    1,
+): PositiveInteger =>
+  PositiveInteger(
+    decodeEvidenceValue(
+      context,
+      PositiveIntegerSchema,
+      Number(evidence),
+      evidence,
+      field,
+      "a positive integer",
+      1,
+    ),
   );
 
 const PositiveIntegerSchema = Schema.Number.pipe(
@@ -352,6 +361,16 @@ const SignedIntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
 const NonEmptyStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
+
+const minimumStandaloneStatBlockValue: SrdStatBlockRecord["statBlock"]["hp"] = {
+  kind: "literal",
+  value: PositiveInteger(1),
+};
+
+const fallbackWalkSpeed: StandaloneStatBlockSpeedEntry = {
+  kind: "walk",
+  feet: minimumStandaloneStatBlockValue,
+};
 const ProcedureSectionSchema = Schema.Literals(PROCEDURE_SECTIONS);
 const AttackAbilitySchema = Schema.Literals(ATTACK_ABILITY_NAMES);
 const DEPENDENCY_FALLBACK_IMMUNITY = Schema.decodeUnknownSync(
@@ -731,15 +750,14 @@ const procedureResourceLimits = (
     ),
   ]);
 
-const signedNumber = (value: string): number =>
-  Number(value.replace("−", "-").replace("+", ""));
+const signedNumber = (value: string): Integer =>
+  Integer(Number(value.replace("−", "-").replace("+", "")));
 
 const normalizedProse = (value: string): string =>
-  value.replaceAll("*", "").replace(/\s+/g, " ").trim();
+  stripSrdStatBlockMarkdownEmphasis(value).replace(/\s+/g, " ").trim();
 
 const normalizedProcedureEvidence = (value: string): string =>
-  value
-    .replaceAll("*", "")
+  stripSrdStatBlockMarkdownEmphasis(value)
     .replace(/\s*\n+\s*/g, " - ")
     .replace(/\s+/g, " ")
     .trim();
@@ -1090,9 +1108,7 @@ const parseMetadata = (
     creatureTypeTags: [] as const,
     alignment: "unaligned" as const,
   };
-  const metadataLine = lines.find(
-    (line) => line.startsWith("*") && !line.startsWith("**"),
-  );
+  const metadataLine = lines.find((line) => /^[*_](?![*_])/.test(line));
   if (metadataLine === undefined) {
     return missingEvidence(
       issueContext,
@@ -1104,8 +1120,8 @@ const parseMetadata = (
   const metadata = assess(issueContext, () =>
     requireMatch(
       issueContext,
-      metadataLine,
-      /^\*(.+?) ([A-Za-z]+)(?: \(([^)]+)\))?, (.+)\*$/,
+      stripSrdStatBlockMarkdownEmphasis(metadataLine),
+      /^(.+?) ([A-Za-z]+)(?: \(([^)]+)\))?, (.+)$/,
       "metadata",
     ),
   );
@@ -1150,7 +1166,7 @@ const parseGmChoiceSpeed = (
     feetEvidence,
     `${field}.feet`,
     "a positive integer Speed distance",
-    { kind: "literal" as const, value: 1 },
+    minimumStandaloneStatBlockValue,
   );
   const alternativeIssueCount = issueContext.issues.length;
   const seenKinds = new Set<(typeof SPEED_TYPES)[number]>();
@@ -1181,7 +1197,7 @@ const parseGmChoiceSpeed = (
       return [{ kind: parsedKind, feet }];
     });
   if (issueContext.issues.length > alternativeIssueCount) {
-    return { kind: "walk", feet: { kind: "literal", value: 1 } };
+    return fallbackWalkSpeed;
   }
   const [first, second, ...rest] = alternatives;
   /* v8 ignore next -- @preserve -- the enclosing regex requires at least two speed-kind alternatives */
@@ -1198,7 +1214,7 @@ const parseGmChoiceSpeed = (
     StandaloneStatBlockSpeedEntrySchema,
     { kind: "gm_choice", alternatives: [first, second, ...rest] },
     `${field}.gmChoice`,
-    { kind: "walk", feet: { kind: "literal", value: 1 } },
+    fallbackWalkSpeed,
   );
 };
 
@@ -1216,7 +1232,7 @@ const parseFixedSpeed = (
     ),
   );
   if (speed === undefined) {
-    return { kind: "walk", feet: { kind: "literal", value: 1 } };
+    return fallbackWalkSpeed;
   }
   const qualifier = speed[3];
   const feetEvidence = matchCapture(speed, 2);
@@ -1227,7 +1243,7 @@ const parseFixedSpeed = (
     feetEvidence,
     `${field}.feet`,
     "a positive integer Speed distance",
-    { kind: "literal" as const, value: 1 },
+    minimumStandaloneStatBlockValue,
   );
   const kind = parsedLiteral(
     issueContext,
@@ -1258,7 +1274,7 @@ const parseFixedSpeed = (
       StandaloneStatBlockSpeedEntrySchema,
       { kind, feet, ...availability },
       field,
-      { kind: "walk", feet: { kind: "literal", value: 1 } },
+      fallbackWalkSpeed,
     );
   return Match.value(kind).pipe(
     Match.when("fly", () =>
@@ -1272,7 +1288,7 @@ const parseFixedSpeed = (
           ...availability,
         },
         field,
-        { kind: "fly", feet: { kind: "literal", value: 1 } },
+        { kind: "fly", feet: minimumStandaloneStatBlockValue },
       ),
     ),
     Match.when("walk", decodeNonFly),
@@ -1306,7 +1322,7 @@ const parseSpeeds = (
     requireLine(issueContext, lines, "**Speed**", "speeds"),
   );
   if (speedLine === undefined) {
-    return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
+    return [fallbackWalkSpeed];
   }
   const speedItemIssueCount = issueContext.issues.length;
   const speeds = speedLine
@@ -1324,11 +1340,11 @@ const parseSpeeds = (
   if (first === undefined) {
     /* v8 ignore next -- @preserve -- losing the item produced by split necessarily records a parsing issue */
     if (issueContext.issues.length > speedItemIssueCount) {
-      return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
+      return [fallbackWalkSpeed];
     }
     /* v8 ignore next -- @preserve -- split yields an item; an unprojectable item records an issue and returns through the branch above */
     return missingEvidence(issueContext, "speeds", `${contextLabel} Speed`, [
-      { kind: "walk", feet: { kind: "literal", value: 1 } },
+      fallbackWalkSpeed,
     ]);
   }
   return [first, ...rest];
@@ -1403,9 +1419,15 @@ const parseAbilityMatrixNumber = (
   value: string,
   pattern: RegExp,
   field: string,
-): number => {
+): Integer => {
   if (!pattern.test(value)) {
-    return malformedEvidence(issueContext, field, value, pattern.source, 0);
+    return malformedEvidence(
+      issueContext,
+      field,
+      value,
+      pattern.source,
+      Integer(0),
+    );
   }
   return signedNumber(value);
 };
@@ -1414,12 +1436,12 @@ const parseAbilityScore = (
   issueContext: ProjectionIssueContext,
   value: string,
   field: string,
-): number => {
+): AbilityScore => {
   const syntacticValue = assess(issueContext, () =>
     parseAbilityMatrixNumber(issueContext, value, /^\d+$/, field),
   );
   return syntacticValue === undefined
-    ? 10
+    ? AbilityScore.make(10)
     : decodeEvidenceValue(
         issueContext,
         StandaloneStatBlockAbilityScoreSchema,
@@ -1427,7 +1449,7 @@ const parseAbilityScore = (
         value,
         field,
         "an integral ability score from 1 through 30",
-        10,
+        AbilityScore.make(10),
       );
 };
 
@@ -1621,28 +1643,60 @@ const parseAbilityMatrix = (
   return facts;
 };
 
+const fallbackAbilityScores: ScopedGeneralFacts["abilityScores"] = {
+  str: AbilityScore.make(10),
+  dex: AbilityScore.make(10),
+  con: AbilityScore.make(10),
+  int: AbilityScore.make(10),
+  wis: AbilityScore.make(10),
+  cha: AbilityScore.make(10),
+};
+
+const decodeAbilityScores = (
+  issueContext: ProjectionIssueContext,
+  candidate: Readonly<Record<Ability, number>>,
+  evidence: string,
+): ScopedGeneralFacts["abilityScores"] =>
+  decodeEvidenceValue(
+    issueContext,
+    StandaloneStatBlockAbilityScoresSchema,
+    candidate,
+    evidence,
+    "abilityScores",
+    "six integral ability scores from 1 through 30",
+    fallbackAbilityScores,
+  );
+
 const parseAbilityScores = (
   issueContext: ProjectionIssueContext,
   lines: readonly string[],
   contextLabel: string,
-): Readonly<Record<Ability, number>> => {
+): ScopedGeneralFacts["abilityScores"] => {
   if (lines.some((line) => line.startsWith("| **Score**"))) {
-    return abilityRecord(
+    return decodeAbilityScores(
       issueContext,
-      parseAbilityRow(issueContext, lines, "Score", contextLabel),
-      "abilityScores",
+      abilityRecord(
+        issueContext,
+        parseAbilityRow(issueContext, lines, "Score", contextLabel),
+        "abilityScores",
+      ),
+      contextLabel,
     );
   }
   const matrixIssueCount = issueContext.issues.length;
   const abilityMatrix = parseAbilityMatrix(issueContext, lines, contextLabel);
   if (issueContext.issues.length > matrixIssueCount) {
-    return { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+    return fallbackAbilityScores;
   }
   if (abilityMatrix !== undefined) {
-    return abilityRecord(
+    return decodeAbilityScores(
       issueContext,
-      abilityMatrix.map(({ score }) => score),
-      "abilityScores",
+      abilityRecord(
+        issueContext,
+        abilityMatrix.map(({ score }) => score),
+        "abilityScores",
+      ),
+      contextLabel,
     );
   }
   const abilityHeaderIndex = lines.findIndex((line) => {
@@ -1676,29 +1730,33 @@ const parseAbilityScores = (
       issueContext,
       "abilityScores",
       `six ${contextLabel} ability scores`,
-      { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      fallbackAbilityScores,
     );
   }
-  return abilityRecord(
+  return decodeAbilityScores(
     issueContext,
-    scoreCells.map((cell, index) => {
-      const score = assess(issueContext, () =>
-        requireMatch(
-          issueContext,
-          cell,
-          /^(\d+) \([+−-]?\d+\)(?: Save .+)?$/,
-          `abilityScores.${index}`,
-        ),
-      );
-      return score === undefined
-        ? 10
-        : parseAbilityScore(
+    abilityRecord(
+      issueContext,
+      scoreCells.map((cell, index) => {
+        const score = assess(issueContext, () =>
+          requireMatch(
             issueContext,
-            matchCapture(score, 1),
+            cell,
+            /^(\d+) \([+−-]?\d+\)(?: Save .+)?$/,
             `abilityScores.${index}`,
-          );
-    }),
-    "abilityScores",
+          ),
+        );
+        return score === undefined
+          ? AbilityScore.make(10)
+          : parseAbilityScore(
+              issueContext,
+              matchCapture(score, 1),
+              `abilityScores.${index}`,
+            );
+      }),
+      "abilityScores",
+    ),
+    contextLabel,
   );
 };
 
@@ -1716,7 +1774,7 @@ const parseSavingThrowModifiers = (
     return sortedAbsentOrNonEmpty(
       ABILITY_NAMES.map((ability) => ({
         ability,
-        modifier: saveValues[ability],
+        modifier: Integer(saveValues[ability]),
       })),
       ({ ability }) => ability,
     );
@@ -1784,7 +1842,7 @@ const parseSavingThrowModifiers = (
     return sortedAbsentOrNonEmpty(
       ABILITY_NAMES.map((ability) => ({
         ability,
-        modifier: saveValues[ability],
+        modifier: Integer(saveValues[ability]),
       })),
       ({ ability }) => ability,
     );
@@ -1921,7 +1979,9 @@ const parseVulnerabilities = (
           "vulnerabilities.damageTypes",
           "acid",
         ),
-        qualifier: matchCapture(qualified, 2),
+        qualifier: stripSrdStatBlockMarkdownEmphasis(
+          matchCapture(qualified, 2),
+        ),
       };
 };
 
@@ -2249,7 +2309,7 @@ const parseSenses = (
     requireLine(issueContext, lines, "**Senses**", "senses"),
   );
   if (senseLine === undefined) {
-    return { senses: [], passivePerception: 1 };
+    return { senses: [], passivePerception: NonNegativeInteger(1) };
   }
   const line = senseLine.replace("**Senses**", "").trim();
   const passiveMarker = "Passive Perception";
@@ -2327,7 +2387,7 @@ const parseSenses = (
     senses: sortedAbsentOrNonEmpty(senses, ({ kind }) => kind),
     passivePerception:
       passive === undefined
-        ? 1
+        ? NonNegativeInteger(1)
         : decodeEvidenceValue(
             issueContext,
             StatBlockPassivePerceptionSchema,
@@ -2335,7 +2395,7 @@ const parseSenses = (
             passive[1] ?? "",
             "passivePerception",
             "a nonnegative integer",
-            0,
+            NonNegativeInteger(0),
           ),
   };
 };
@@ -2364,7 +2424,7 @@ const parseGear = (
       );
       const quantity =
         gear[2] === undefined
-          ? 1
+          ? PositiveInteger(1)
           : positiveIntegerEvidence(
               issueContext,
               gear[2],
@@ -2388,7 +2448,7 @@ const parseGear = (
     .sort((left, right) => left.item.localeCompare(right.item));
   return nonEmptyValues(issueContext, gearEntries, "gear", {
     item: "Gear",
-    quantity: 1,
+    quantity: PositiveInteger(1),
   });
 };
 
@@ -2685,7 +2745,7 @@ const parseRawArmorClass = (
     ),
   );
   if (ac === undefined) {
-    return { value: { kind: "literal", value: 1 } };
+    return { value: minimumStandaloneStatBlockValue };
   }
   const valueEvidence = matchCapture(ac, 1);
   return {
@@ -2696,7 +2756,7 @@ const parseRawArmorClass = (
       valueEvidence,
       "ac.value",
       "a positive integer Armor Class",
-      { kind: "literal" as const, value: 1 },
+      minimumStandaloneStatBlockValue,
     ),
     ...(ac[2] === undefined
       ? {}
@@ -2723,7 +2783,7 @@ const parseRawHitPoints = (
   const hp = assess(issueContext, () =>
     requireLineMatch(issueContext, lines, "**HP**", /\*\*HP\*\* (\d+)/, "hp"),
   );
-  if (hp === undefined) return { kind: "literal", value: 1 };
+  if (hp === undefined) return minimumStandaloneStatBlockValue;
   const evidence = matchCapture(hp, 1);
   return decodeEvidenceValue(
     issueContext,
@@ -2732,7 +2792,7 @@ const parseRawHitPoints = (
     evidence,
     "hp",
     "a canonical positive Hit Point value",
-    { kind: "literal" as const, value: 1 },
+    minimumStandaloneStatBlockValue,
   );
 };
 
@@ -2757,7 +2817,9 @@ const parseRawInitiative = (
           "initiative",
         ),
   );
-  if (initiativeEvidence === undefined) return { modifier: 0, score: 0 };
+  if (initiativeEvidence === undefined) {
+    return { modifier: Integer(0), score: NonNegativeInteger(0) };
+  }
   return decodeEvidenceValue(
     issueContext,
     StatBlockInitiativeSchema,
@@ -2769,7 +2831,7 @@ const parseRawInitiative = (
     initiativeLine === undefined ? "" : initiativeLine,
     "initiative",
     "canonical Initiative modifier and nonnegative score",
-    { modifier: 0, score: 0 },
+    { modifier: Integer(0), score: NonNegativeInteger(0) },
   );
 };
 
@@ -2858,14 +2920,14 @@ const parseRawGeneralFacts = (
   const speeds = assessedProjection(
     issueContext,
     () => parseSpeeds(issueContext, lines, name),
-    [{ kind: "walk", feet: { kind: "literal", value: 1 } }],
+    [fallbackWalkSpeed],
   );
   const parsedAbilityScores = assess(issueContext, () =>
     parseAbilityScores(issueContext, lines, name),
   );
   const abilityScores =
     parsedAbilityScores === undefined
-      ? { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 }
+      ? fallbackAbilityScores
       : parsedAbilityScores;
   const savingThrowModifiers = parseRawSavingThrowModifiers(
     issueContext,
@@ -2896,7 +2958,7 @@ const parseRawGeneralFacts = (
   const senses = assessedProjection(
     issueContext,
     () => parseSenses(issueContext, lines),
-    { senses: [], passivePerception: 1 },
+    { senses: [], passivePerception: NonNegativeInteger(1) },
   );
   const gear = assessedProjection(
     issueContext,
@@ -3032,7 +3094,7 @@ const parseRawEntries = (
       current = startRawEntry(issueContext, entryCounts, section, entry);
       continue;
     }
-    if (current !== undefined && !line.startsWith("*Legendary Action Uses:")) {
+    if (current !== undefined && !isLegendaryActionUsesLine(line)) {
       current.parts.push(line);
     }
   }
@@ -4333,15 +4395,14 @@ const parseLegendaryActionUses = (
   issueContext: ProjectionIssueContext,
   lines: readonly string[],
 ): ScopedGeneralFacts["legendaryActionUses"] => {
-  const line = lines.find((candidate) =>
-    candidate.startsWith("*Legendary Action Uses:"),
-  );
+  const line = lines.find(isLegendaryActionUsesLine);
   if (line === undefined) return undefined;
+  const normalizedLine = stripSrdStatBlockMarkdownEmphasis(line);
   const uses = assess(issueContext, () =>
     requireMatch(
       issueContext,
-      line,
-      /^\*Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./,
+      normalizedLine,
+      /^Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./,
       "legendaryActionUses",
     ),
   );
@@ -4389,6 +4450,9 @@ const parseLegendaryActionUses = (
     additionalUsesInLair: usesInLair - usesOutsideLair,
   };
 };
+
+const isLegendaryActionUsesLine = (line: string): boolean =>
+  stripSrdStatBlockMarkdownEmphasis(line).startsWith("Legendary Action Uses:");
 
 const procedureName = (entry: StatBlockProcedureEntry): string =>
   Match.value(entry).pipe(
@@ -5310,7 +5374,7 @@ const projectAuthoredProcedures = (
               gear: sortedAbsentOrNonEmpty(
                 (record.statBlock.gear ?? []).map((gear) => ({
                   item: gear.item,
-                  quantity: gear.quantity ?? 1,
+                  quantity: gear.quantity ?? PositiveInteger(1),
                 })),
                 ({ item }) => item,
               ),
@@ -5435,7 +5499,7 @@ const projectVulnerabilities = (
         "vulnerabilities.damageTypes",
         "acid",
       ),
-      qualifier: qualified.qualifier,
+      qualifier: stripSrdStatBlockMarkdownEmphasis(qualified.qualifier),
     })),
     Match.when({ kind: "fixed" }, (fixed) => ({
       kind: "fixed" as const,
@@ -5610,7 +5674,8 @@ const projectAuthoredGear = (
   sortedAbsentOrNonEmpty(
     absentArray(record.statBlock.gear).map((gear) => ({
       item: gear.item,
-      quantity: gear.quantity === undefined ? 1 : gear.quantity,
+      quantity:
+        gear.quantity === undefined ? PositiveInteger(1) : gear.quantity,
     })),
     ({ item }) => item,
   );

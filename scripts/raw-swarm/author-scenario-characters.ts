@@ -1,8 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
-  constants,
-  copyFileSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -27,6 +25,12 @@ import {
 } from "./sdk-player/consumer-codex-profile.ts";
 import { buildScenarioCharacterDistribution } from "./sdk-player/consumer-distribution.ts";
 import {
+  authoredSourceIssuesMessage,
+  readAuthoredSource,
+  withAuthoredSourceSnapshot,
+} from "./sdk-player/authored-source-admission.ts";
+import {
+  evaluateAdmittedScenarioCharacters,
   evaluateScenarioCharacters,
   scenarioCharactersWithoutSheetsSource,
 } from "./sdk-player/scenario-character-runtime.ts";
@@ -174,25 +178,52 @@ async function main(args: readonly string[]): Promise<void> {
     if (result.tag === "failed") {
       fail(`Scenario character invocation failed: ${result.cause.reason}`);
     }
-    const typecheck = spawnSync(
-      process.execPath,
-      [resolve(scratch, "tooling/typescript/bin/tsc"), "--noEmit"],
-      { cwd: scratch, encoding: "utf8" },
-    );
-    if (typecheck.error !== undefined) throw typecheck.error;
-    if (typecheck.signal !== null || typecheck.status !== 0) {
-      fail(
-        `Scenario characters did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
-      );
-    }
     const charactersPath = resolve(scratch, "characters.ts");
-    const evaluated = await evaluateScenarioCharacters(charactersPath);
+    const characterSource = readAuthoredSource({
+      role: "scenarioCharacter",
+      sourcePath: charactersPath,
+    });
+    if (characterSource.tag === "rejected") {
+      fail(authoredSourceIssuesMessage(characterSource));
+    }
+    withAuthoredSourceSnapshot(characterSource, (snapshot) => {
+      const typecheckConfigPath = resolve(
+        scratch,
+        `.authored-source-tsconfig-${randomUUID()}.json`,
+      );
+      writeFileSync(
+        typecheckConfigPath,
+        `${JSON.stringify({ extends: "./tsconfig.json", files: [snapshot.sourcePath], include: [] }, null, 2)}\n`,
+        { flag: "wx" },
+      );
+      try {
+        const typecheck = spawnSync(
+          process.execPath,
+          [
+            resolve(scratch, "tooling/typescript/bin/tsc"),
+            "--noEmit",
+            "-p",
+            typecheckConfigPath,
+          ],
+          { cwd: scratch, encoding: "utf8" },
+        );
+        if (typecheck.error !== undefined) throw typecheck.error;
+        if (typecheck.signal !== null || typecheck.status !== 0) {
+          fail(
+            `Scenario characters did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+          );
+        }
+      } finally {
+        rmSync(typecheckConfigPath, { force: true });
+      }
+    });
+    const evaluated = await evaluateAdmittedScenarioCharacters(characterSource);
     if (evaluated.tag === "invalid") fail(evaluated.message);
     const after = currentGitRevision();
     if (after.tag === "dirty" || after.sha !== revision.sha) {
       fail("Git revision changed during scenario character authoring.");
     }
-    copyFileSync(charactersPath, outputPath, constants.COPYFILE_EXCL);
+    writeFileSync(outputPath, characterSource.source, { flag: "wx" });
     console.log(
       Match.value(evaluated).pipe(
         Match.when(

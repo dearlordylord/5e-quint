@@ -1042,16 +1042,11 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const grantedDispatchResources = combatantHasSaveGatedTurnConstraintBundle(
-    input.state,
-    actor,
-  )
-    ? []
-    : statBlockMultiattackDispatchActionResources({
-        actorId: input.subject.actorId,
-        sourceProcedureRef: multiattackBinding.procedureRef,
-        demand: dispatchResourceDemand,
-      });
+  const grantedDispatchResources = statBlockMultiattackDispatchActionResources({
+    actorId: input.subject.actorId,
+    sourceProcedureRef: multiattackBinding.procedureRef,
+    demand: dispatchResourceDemand,
+  });
   const nextStateWithPendingDispatches: BattleState = {
     ...input.state,
     currentTurnResources: {

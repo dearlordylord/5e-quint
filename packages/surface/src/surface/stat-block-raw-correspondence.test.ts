@@ -71,14 +71,14 @@ type EncodedSomeResourceRefs = Extract<
 type EncodedStandaloneStatBlock = Schema.Codec.Encoded<
   typeof StandaloneStatBlockSchema
 >;
-type EncodedStandaloneSpeed = Schema.Schema.Type<
+type EncodedStandaloneSpeed = Schema.Codec.Encoded<
   typeof StandaloneStatBlockSchema
 >["speeds"][number];
 type EncodedStandaloneConcreteSpeed = Exclude<
   EncodedStandaloneSpeed,
   { readonly kind: "gm_choice" }
 >;
-type EncodedStandaloneSense = Schema.Schema.Type<
+type EncodedStandaloneSense = Schema.Codec.Encoded<
   typeof StandaloneCreatureSenseSchema
 >;
 type EncodedCommunication = Schema.Codec.Encoded<

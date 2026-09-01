@@ -2,9 +2,11 @@
 import type {
   CreatureNamedAttackRoll,
   CreatureTrait,
+} from "@dnd/surface/surface/types";
+import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
-} from "@dnd/surface/surface/types";
+} from "@dnd/surface/surface/stat-block-types";
 import { Match } from "effect";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";

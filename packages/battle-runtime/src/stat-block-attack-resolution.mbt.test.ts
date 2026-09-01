@@ -1,7 +1,13 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
-import { movementFeet, PositiveInteger } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  Integer,
+  movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { isDeepStrictEqual } from "node:util";
 
@@ -715,19 +721,24 @@ function statBlockAttackParityBystander(
       size: "medium",
       creatureType: "construct",
       alignment: { order: "neutral", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: targetInitialHp },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(targetInitialHp) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
-        cha: 10,
-        con: 10,
-        dex: 10,
-        int: 10,
-        str: 10,
-        wis: 10,
+        cha: AbilityScore.make(10),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(10),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(10),
+        wis: AbilityScore.make(10),
       },
-      initiative: { modifier: 0, score: 10 },
-      passivePerception: 10,
+      initiative: { modifier: Integer(0), score: NonNegativeInteger(10) },
+      passivePerception: NonNegativeInteger(10),
       communication: { kind: "none" },
       ...Match.value(targetDamageAdjustment).pipe(
         Match.when("none", () => ({})),
@@ -746,9 +757,9 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
   const common = {
     kind: "attack_roll" as const,
     attackAbility: "str" as const,
-    attackBonus: { kind: "literal" as const, value: 4 },
+    attackBonus: { kind: "literal" as const, value: Integer(4) },
     attackType: "melee" as const,
-    reachFeet: 5,
+    reachFeet: PositiveInteger(5),
   };
   return Match.value(family).pipe(
     Match.when(
@@ -760,7 +771,7 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
           {
             kind: "damage" as const,
             damageType: "bludgeoning" as const,
-            amount: { kind: "fixed" as const, static: 3 },
+            amount: { kind: "fixed" as const, static: PositiveInteger(3) },
           },
         ],
       }),
@@ -776,8 +787,12 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
             damageType: "slashing" as const,
             amount: {
               kind: "fixed" as const,
-              expr: { dice: 1, dieSize: 6, flat: 2 },
-              static: 5,
+              expr: {
+                dice: PositiveInteger(1),
+                dieSize: 6,
+                flat: Integer(2),
+              },
+              static: PositiveInteger(5),
             },
           },
         ],
@@ -794,8 +809,12 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
             damageType: "piercing" as const,
             amount: {
               kind: "fixed" as const,
-              expr: { dice: 1, dieSize: 4, flat: 1 },
-              static: 3,
+              expr: {
+                dice: PositiveInteger(1),
+                dieSize: 4,
+                flat: Integer(1),
+              },
+              static: PositiveInteger(3),
             },
           },
           {
@@ -803,8 +822,8 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
             damageType: "poison" as const,
             amount: {
               kind: "fixed" as const,
-              expr: { dice: 1, dieSize: 6 },
-              static: 4,
+              expr: { dice: PositiveInteger(1), dieSize: 6 },
+              static: PositiveInteger(4),
             },
           },
         ],
@@ -819,15 +838,19 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
           {
             kind: "damage" as const,
             damageType: "fire" as const,
-            amount: { kind: "fixed" as const, static: 2 },
+            amount: { kind: "fixed" as const, static: PositiveInteger(2) },
           },
           {
             kind: "damage" as const,
             damageType: "cold" as const,
             amount: {
               kind: "fixed" as const,
-              expr: { dice: 1, dieSize: 8, flat: 1 },
-              static: 5,
+              expr: {
+                dice: PositiveInteger(1),
+                dieSize: 8,
+                flat: Integer(1),
+              },
+              static: PositiveInteger(5),
             },
           },
         ],
@@ -844,8 +867,12 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
             damageType: "slashing" as const,
             amount: {
               kind: "fixed" as const,
-              expr: { dice: 1, dieSize: 6, flat: 2 },
-              static: 5,
+              expr: {
+                dice: PositiveInteger(1),
+                dieSize: 6,
+                flat: Integer(2),
+              },
+              static: PositiveInteger(5),
             },
           },
           {
@@ -854,8 +881,8 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
             damageType: "slashing" as const,
             amount: {
               kind: "fixed" as const,
-              expr: { dice: 1, dieSize: 4 },
-              static: 2,
+              expr: { dice: PositiveInteger(1), dieSize: 4 },
+              static: PositiveInteger(2),
             },
           },
           {

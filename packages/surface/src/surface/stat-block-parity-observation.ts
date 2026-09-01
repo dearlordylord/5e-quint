@@ -1,6 +1,7 @@
 import { Match } from "effect";
 
-import type { StatBlockRecord } from "./types.ts";
+import type { StatBlockRecord } from "./stat-block-types.ts";
+import type { SrdProvenance } from "./srd-provenance.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observation.ts";
 
 export const SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH =
@@ -125,7 +126,7 @@ export type SrdStatBlockParityIssue =
       readonly statBlockId: StatBlockRecord["id"];
       readonly actualKind: Exclude<
         StatBlockRecord["provenance"]["kind"],
-        "srd-5.2.1"
+        SrdProvenance["kind"]
       >;
     }
   | {
@@ -133,7 +134,7 @@ export type SrdStatBlockParityIssue =
       readonly reason: "source-anchor";
       readonly name: string;
       readonly statBlockId: StatBlockRecord["id"];
-      readonly actualKind: "srd-5.2.1";
+      readonly actualKind: SrdProvenance["kind"];
       readonly actualSection: string;
     }
   | {

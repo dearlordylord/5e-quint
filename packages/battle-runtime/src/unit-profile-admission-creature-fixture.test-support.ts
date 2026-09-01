@@ -9,6 +9,7 @@ import {
   DieRollResult,
   Hp,
   movementFeet,
+  PositiveInteger,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -289,7 +290,7 @@ export function legendaryActionStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       legendaryActions: {
-        uses: { kind: "fixed", uses: 1 },
+        uses: { kind: "fixed", uses: PositiveInteger(1) },
         entries: [
           {
             ...scimitar,

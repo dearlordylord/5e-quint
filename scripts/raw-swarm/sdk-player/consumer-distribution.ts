@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   cpSync,
@@ -6,16 +7,21 @@ import {
   lstatSync,
   mkdtempSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative, resolve, sep } from "node:path";
+import { join, posix, relative, resolve, sep } from "node:path";
 import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
+import ts from "typescript";
 
-import { validatedPackageEffectRuntimeEntries } from "#dnd-package-effect-runtime";
+import {
+  validatedPackageEffectCompilerSupportDirectories,
+  validatedPackageEffectRuntimeEntries,
+} from "#dnd-package-effect-runtime";
 import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
 import {
   benchmarkContextForRole,
@@ -88,170 +94,77 @@ function contextText(delivery: ContextDelivery): string {
     : benchmarkContextForRole(delivery.profile, delivery.role);
 }
 
-const DECLARATION_SERIALIZATION_LENGTH_MESSAGE =
-  "The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.";
-const DECLARATION_SERIALIZATION_LENGTH_BASELINE = [
-  {
-    owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-    count: 2,
-  },
-  {
-    owner: "packages/battle-runtime/src/battle-mechanical-frontier.ts",
-    count: 1,
-  },
-  {
-    owner: "packages/battle-runtime/src/battle-snapshot-presentation.ts",
-    count: 1,
-  },
-  {
-    owner:
-      "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
-    count: 1,
-  },
-  { owner: "packages/surface/src/surface/schema-nonspell.ts", count: 53 },
-  { owner: "packages/surface/src/surface/schema-spell.ts", count: 1 },
-  { owner: "packages/surface/src/surface/schema.ts", count: 4 },
-] as const;
-
-const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES = [
-  "TS4023",
-  "TS4058",
-  "TS7056",
-] as const;
-type PublicDeclarationSerializationDiagnosticCode =
-  (typeof PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES)[number];
-export type PublicDeclarationSerializationDiagnosticBaselineEntry = {
-  readonly owner: string;
-  readonly code: PublicDeclarationSerializationDiagnosticCode;
-  readonly message: string;
-  readonly count: number;
-};
-
-function declarationDiagnosticFingerprintFromParts(
-  owner: string,
-  code: PublicDeclarationSerializationDiagnosticCode,
-  message: string,
-): string {
-  return `${owner}: error ${code}: ${message}`;
-}
-
-export const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[] =
-  DECLARATION_SERIALIZATION_LENGTH_BASELINE.map(
-    ({
-      owner,
-      count,
-    }): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
-      owner,
-      code: "TS7056",
-      message: DECLARATION_SERIALIZATION_LENGTH_MESSAGE,
-      count,
-    }),
-  );
-
-function diagnosticCountMap(
-  baseline: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[],
-): ReadonlyMap<string, number> {
-  const counts = new Map<string, number>();
-  for (const { owner, code, message, count } of baseline) {
-    const fingerprint = declarationDiagnosticFingerprintFromParts(
-      owner,
-      code,
-      message,
-    );
-    counts.set(fingerprint, (counts.get(fingerprint) ?? 0) + count);
-  }
-  return counts;
-}
-
-const PINNED_DECLARATION_SERIALIZATION_DIAGNOSTIC_COUNTS = diagnosticCountMap(
-  PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
-);
-
-function publicDeclarationSerializationDiagnosticCode(
-  value: string,
-): PublicDeclarationSerializationDiagnosticCode | null {
-  return (
-    PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES.find(
-      (code) => code === value,
-    ) ?? null
-  );
-}
-
-function declarationDiagnosticFingerprint(diagnostic: string): string | null {
-  const normalizedRepoRoot = repoRoot.replaceAll("\\", "/");
-  const normalizedDiagnostic = diagnostic
-    .replaceAll("\\", "/")
-    .replaceAll(normalizedRepoRoot, "<repo>");
-  const parsed = /^(.*)\(\d+,\d+\): error (TS\d+): (.*)$/.exec(
-    normalizedDiagnostic,
-  );
-  if (parsed === null) return null;
-  const [, ownerWithOptionalRoot, code, message] = parsed;
-  if (
-    ownerWithOptionalRoot === undefined ||
-    code === undefined ||
-    message === undefined
-  ) {
-    return null;
-  }
-  const diagnosticCode = publicDeclarationSerializationDiagnosticCode(code);
-  if (diagnosticCode === null) return null;
-  const owner = ownerWithOptionalRoot.startsWith("<repo>/")
-    ? ownerWithOptionalRoot.slice("<repo>/".length)
-    : ownerWithOptionalRoot;
-  return declarationDiagnosticFingerprintFromParts(
-    owner,
-    diagnosticCode,
-    message,
-  );
-}
-
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
-export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
-  files: 557,
-  bytes: 6_385_070,
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
+  comparisonBaseline: {
+    commit: "993cb0b11152316f8bd7e16693366267bf2ee16d",
+    files: 530,
+    bytes: 4_667_450,
+    pathLedgerSha256:
+      "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
+  },
+  measure: {
+    files: 571,
+    bytes: 10_298_080,
+  },
+  pathLedgerSha256:
+    "4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6",
+  contentLedgerSha256:
+    "e3e70c74576869ac6ad18eca25a6637fa16defd464bdcf9287c57e2af54169f7",
 } as const;
-/**
- * The reviewed declaration graph uses every admitted file. Any graph growth
- * must update the exact measure explicitly.
- */
-export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
-  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
+/** Coarse safety ceiling, independent of the exact reviewed manifest. */
+export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 1_000;
 export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN =
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes;
+export const PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS = [
+  "packages/surface/src/surface/catalog-install.d.ts",
+  "packages/surface/src/surface/generated/srd-stat-block-aggregate.d.ts",
+  "packages/surface/src/surface/portable-surface.d.ts",
+  "packages/surface/src/surface/stat-block-catalog-core.d.ts",
+  "packages/surface/src/surface/stat-block-catalog-data.d.ts",
+  "packages/surface/src/surface/stat-block-catalog.d.ts",
+  "packages/surface/src/surface/stat-block-identity.d.ts",
+] as const;
+
+const PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS = [
+  "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
+  "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
+  "scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
+  "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
+  "scripts/raw-swarm/sdk-player/scenario-session.d.ts",
+  "packages/battle-runtime/src/index.d.ts",
+  "packages/battle-runtime/src/battle-state-execution.d.ts",
+  "packages/battle-runtime/src/battle-session-execution.d.ts",
+  "packages/character-creation-runtime/src/index.d.ts",
+  "packages/character-creation-runtime/src/phase1-manifest.d.ts",
+  "packages/character-sheet-runtime/src/index.d.ts",
+  "packages/shared/src/non-empty-array.d.ts",
+  "packages/tactical-space/src/index.d.ts",
+] as const;
+
+export const EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST = {
+  versions: {
+    effect: "4.0.0-rc.112",
+    "fast-check": "4.9.0",
+    msgpackr: "2.1.0",
+    "pure-rand": "8.4.2",
+  },
+  files: 498,
+  bytes: 10_598_459,
+  pathLedgerSha256:
+    "01e202db91ee798780a0dd9af282f2281895d34f70c87f203b189c44cf7db6ef",
+  contentLedgerSha256:
+    "b1df9fbfcd1513fcb19cbcd37c100a008a906f97ea622c9941c60eabe94b4560",
+} as const;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;
 };
 
-export function publicDeclarationDiagnosticBaselineMismatches(
-  diagnostics: readonly string[],
-): readonly string[] {
-  const remainingExpected = new Map(
-    PINNED_DECLARATION_SERIALIZATION_DIAGNOSTIC_COUNTS,
-  );
-  const unexpected = diagnostics.flatMap((diagnostic) => {
-    const fingerprint = declarationDiagnosticFingerprint(diagnostic);
-    if (fingerprint === null) return [diagnostic];
-    const remainingCount = remainingExpected.get(fingerprint);
-    if (remainingCount === undefined || remainingCount === 0) {
-      return [diagnostic];
-    }
-    remainingExpected.set(fingerprint, remainingCount - 1);
-    return [];
-  });
-  const missing = [...remainingExpected.entries()].flatMap(
-    ([fingerprint, remainingCount]) =>
-      remainingCount === 0
-        ? []
-        : [
-            `Missing pinned public declaration diagnostic (${String(remainingCount)} occurrence${remainingCount === 1 ? "" : "s"}): ${fingerprint}`,
-          ],
-  );
-  return [...unexpected, ...missing];
-}
 const PLAYER_RUN_START_OBSERVATION = {
   kind: "awaitingFirstContinuation",
   tacticalNote: "",
@@ -290,6 +203,276 @@ function declarationFiles(directory: string): readonly string[] {
   return visit(directory);
 }
 
+function declarationPathLedgerSha256(
+  directory: string,
+  files: readonly string[],
+): string {
+  const root = realpathSync(directory);
+  const ledger = files
+    .map((path) => relative(root, path).split(sep).join("/"))
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(`${ledger}\n`).digest("hex");
+}
+
+function declarationContentLedgerSha256(
+  directory: string,
+  files: readonly string[],
+): string {
+  const root = realpathSync(directory);
+  const ledger = files
+    .map((path) => {
+      const relativePath = relative(root, path).split(sep).join("/");
+      const fileSha256 = createHash("sha256")
+        .update(readFileSync(path))
+        .digest("hex");
+      return `${relativePath}\t${fileSha256}`;
+    })
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(`${ledger}\n`).digest("hex");
+}
+
+function declarationTargetCandidates(
+  sourcePath: string,
+  specifier: string,
+): readonly string[] | undefined {
+  const unresolvedTarget = specifier.startsWith(".")
+    ? posix.normalize(posix.join(posix.dirname(sourcePath), specifier))
+    : specifier.startsWith("@dnd/")
+      ? declarationDndPackageTarget(specifier)
+      : undefined;
+  if (unresolvedTarget === undefined) {
+    return specifier.startsWith("@dnd/") || specifier.startsWith("#")
+      ? []
+      : undefined;
+  }
+
+  if (unresolvedTarget.endsWith(".d.ts")) return [unresolvedTarget];
+  if (unresolvedTarget.endsWith(".ts")) {
+    return [`${unresolvedTarget.slice(0, -3)}.d.ts`];
+  }
+  if (unresolvedTarget.endsWith(".js")) {
+    return [`${unresolvedTarget.slice(0, -3)}.d.ts`];
+  }
+  return [
+    `${unresolvedTarget}.d.ts`,
+    posix.join(unresolvedTarget, "index.d.ts"),
+  ];
+}
+
+function declarationDndPackageTarget(specifier: string): string | undefined {
+  const [scope, packageName, ...subpathParts] = specifier.split("/");
+  if (scope !== "@dnd" || packageName === undefined) return undefined;
+  return posix.join(
+    "packages",
+    packageName,
+    "src",
+    subpathParts.length === 0 ? "index" : subpathParts.join("/"),
+  );
+}
+
+/**
+ * Admit the emitted declaration dependency graph before exposing it. Internal
+ * edges are resolved against emitted paths only, so missing compiler support
+ * fails closed instead of making an unreachable declaration look removable.
+ */
+export function removeUnreachableForbiddenDeclarations(
+  directory: string,
+  requiredRoots: readonly string[] = PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS,
+  forbiddenPaths: readonly string[] = PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
+): void {
+  const root = realpathSync(directory);
+  const emittedDeclarations = new Map(
+    declarationFiles(root).map((path) => [
+      relative(root, path).split(sep).join("/"),
+      path,
+    ]),
+  );
+  const reachable = new Set<string>();
+  const pending = [...requiredRoots];
+
+  while (pending.length > 0) {
+    const relativeSourcePath = pending.pop();
+    if (relativeSourcePath === undefined || reachable.has(relativeSourcePath)) {
+      continue;
+    }
+    const sourcePath = emittedDeclarations.get(relativeSourcePath);
+    if (sourcePath === undefined) {
+      throw new Error(
+        `Public declaration graph omitted required declaration ${relativeSourcePath}.`,
+      );
+    }
+    reachable.add(relativeSourcePath);
+    const dependencies = ts.preProcessFile(
+      readFileSync(sourcePath, "utf8"),
+      true,
+      true,
+    );
+    for (const dependency of [
+      ...dependencies.importedFiles,
+      ...dependencies.referencedFiles,
+    ]) {
+      const candidates = declarationTargetCandidates(
+        relativeSourcePath,
+        dependency.fileName,
+      );
+      if (candidates === undefined) continue;
+      const target = candidates.find((candidate) =>
+        emittedDeclarations.has(candidate),
+      );
+      if (target === undefined) {
+        throw new Error(
+          `Public declaration graph has unresolved internal edge ${relativeSourcePath} -> ${dependency.fileName}.`,
+        );
+      }
+      pending.push(target);
+    }
+  }
+
+  for (const forbiddenPath of forbiddenPaths) {
+    if (reachable.has(forbiddenPath)) {
+      throw new Error(
+        `Public declaration graph reaches forbidden runtime/data owner ${forbiddenPath}.`,
+      );
+    }
+  }
+  for (const forbiddenPath of forbiddenPaths) {
+    const forbiddenDeclaration = emittedDeclarations.get(forbiddenPath);
+    if (forbiddenDeclaration !== undefined) rmSync(forbiddenDeclaration);
+  }
+}
+
+function compilerSupportFiles(directory: string): readonly string[] {
+  const root = realpathSync(directory);
+  const visit = (current: string): readonly string[] =>
+    readdirSync(current, { withFileTypes: true }).flatMap((entry) => {
+      const path = resolve(current, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error(
+          `Effect declaration compiler support cannot contain a symbolic link: ${relative(root, path)}.`,
+        );
+      }
+      if (entry.isDirectory()) return visit(path);
+      if (!entry.isFile()) {
+        throw new Error(
+          `Effect declaration compiler support contains an unsupported entry: ${relative(root, path)}.`,
+        );
+      }
+      const relativePath = relative(root, path).split(sep).join("/");
+      const [packageName, ...packageRelativeParts] = relativePath.split("/");
+      const packageRelativePath = packageRelativeParts.join("/");
+      if (
+        packageName === undefined ||
+        !(
+          packageName in EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.versions
+        ) ||
+        (packageRelativePath !== "LICENSE" &&
+          packageRelativePath !== "package.json" &&
+          !packageRelativePath.endsWith(".d.ts") &&
+          !packageRelativePath.endsWith(".d.cts"))
+      ) {
+        throw new Error(
+          `Effect declaration compiler support contains a non-declaration artifact: ${relativePath}.`,
+        );
+      }
+      return [path];
+    });
+  return visit(directory);
+}
+
+export function assertEffectDeclarationCompilerSupport(
+  directory: string,
+): void {
+  const files = compilerSupportFiles(directory);
+  const versions = Object.fromEntries(
+    Object.keys(EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.versions).map(
+      (packageName) => {
+        const packageManifest: unknown = JSON.parse(
+          readFileSync(resolve(directory, packageName, "package.json"), "utf8"),
+        );
+        return [
+          packageName,
+          typeof packageManifest === "object" &&
+          packageManifest !== null &&
+          "version" in packageManifest &&
+          typeof packageManifest.version === "string"
+            ? packageManifest.version
+            : undefined,
+        ];
+      },
+    ),
+  );
+  const bytes = files.reduce((total, path) => total + lstatSync(path).size, 0);
+  const pathLedgerSha256 = declarationPathLedgerSha256(directory, files);
+  const contentLedgerSha256 = declarationContentLedgerSha256(directory, files);
+  if (
+    JSON.stringify(versions) !==
+      JSON.stringify(EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.versions) ||
+    files.length !== EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.files ||
+    bytes !== EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.bytes ||
+    pathLedgerSha256 !==
+      EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.pathLedgerSha256 ||
+    contentLedgerSha256 !==
+      EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.contentLedgerSha256
+  ) {
+    throw new Error(
+      `Effect declaration compiler support differs from the validated package cohort manifest: expected versions ${JSON.stringify(EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.versions)}, ${String(EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.files)} files, ${String(EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.bytes)} bytes, path ledger ${EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.pathLedgerSha256}, and content ledger ${EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.contentLedgerSha256}; received versions ${JSON.stringify(versions)}, ${String(files.length)} files, ${String(bytes)} bytes, path ledger ${pathLedgerSha256}, and content ledger ${contentLedgerSha256}.`,
+    );
+  }
+}
+
+export function copyEffectDeclarationCompilerSupport(
+  destination: string,
+): void {
+  const sources = validatedPackageEffectCompilerSupportDirectories(
+    CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS,
+  );
+  const cohortTarget = resolve(destination, "node_modules");
+  const copyDeclarations = (
+    sourcePackage: string,
+    sourceDirectory: string,
+    targetPackage: string,
+  ): void => {
+    for (const entry of readdirSync(sourceDirectory, { withFileTypes: true })) {
+      const sourcePath = resolve(sourceDirectory, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error(
+          `Validated Effect declaration source cannot contain a symbolic link: ${sourcePath}.`,
+        );
+      }
+      if (entry.isDirectory()) {
+        copyDeclarations(sourcePackage, sourcePath, targetPackage);
+      } else if (
+        entry.isFile() &&
+        (entry.name.endsWith(".d.ts") || entry.name.endsWith(".d.cts"))
+      ) {
+        const targetPath = resolve(
+          targetPackage,
+          relative(sourcePackage, sourcePath),
+        );
+        mkdirSync(resolve(targetPath, ".."), { recursive: true });
+        copyFileSync(sourcePath, targetPath);
+      }
+    }
+  };
+  for (const packageName of [
+    "effect",
+    "fast-check",
+    "msgpackr",
+    "pure-rand",
+  ] as const) {
+    const source = sources[packageName];
+    const target = resolve(cohortTarget, packageName);
+    mkdirSync(target, { recursive: true });
+    for (const fileName of ["LICENSE", "package.json"] as const) {
+      copyFileSync(resolve(source, fileName), resolve(target, fileName));
+    }
+    copyDeclarations(source, source, target);
+  }
+  assertEffectDeclarationCompilerSupport(cohortTarget);
+}
+
 /**
  * Enforce the separate declaration accessibility/size boundary. The model
  * context budget does not constrain files that are reachable by the compiler;
@@ -311,6 +494,28 @@ export function assertPublicDeclarationBundle(
     );
   }
   return { files: files.length, bytes };
+}
+
+function assertReviewedPublicDeclarationBundle(
+  directory: string,
+): PublicDeclarationBundleMeasure {
+  const measure = assertPublicDeclarationBundle(directory);
+  const files = declarationFiles(directory);
+  const pathLedgerSha256 = declarationPathLedgerSha256(directory, files);
+  const contentLedgerSha256 = declarationContentLedgerSha256(directory, files);
+  if (
+    measure.files !== PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files ||
+    measure.bytes !== PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes ||
+    pathLedgerSha256 !==
+      PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256 ||
+    contentLedgerSha256 !==
+      PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256
+  ) {
+    throw new Error(
+      `Public declaration bundle differs from the reviewed manifest: expected ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files)} files, ${String(PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes)} bytes, path ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.pathLedgerSha256}, and content ledger ${PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.contentLedgerSha256}; received ${String(measure.files)} files, ${String(measure.bytes)} bytes, path ledger ${pathLedgerSha256}, and content ledger ${contentLedgerSha256}.`,
+    );
+  }
+  return measure;
 }
 
 export function emitPublicDeclarations(
@@ -339,113 +544,163 @@ export function emitPublicDeclarations(
   if (result.signal !== null) {
     throw new Error(`Public declaration emission stopped by ${result.signal}.`);
   }
-  const diagnostics = `${result.stdout}${result.stderr}`
-    .split("\n")
-    .filter((line) => line.includes("error TS"));
-  const diagnosticBaselineMismatches =
-    publicDeclarationDiagnosticBaselineMismatches(diagnostics);
   if (
-    diagnosticBaselineMismatches.length > 0 ||
-    (result.status !== 0 && diagnostics.length === 0)
+    result.status !== 0 ||
+    result.stdout.length > 0 ||
+    result.stderr.length > 0
   ) {
     throw new Error(
-      `Public declaration emission failed:\n${diagnosticBaselineMismatches.join("\n") || result.stderr}`,
+      `Public declaration emission failed:\n${result.stdout}${result.stderr}`,
     );
   }
-  if (result.status !== 0) {
-    // TypeScript 5.9 reports the explicitly partitioned pre-existing
-    // diagnostics only while serializing the listed giant inferred schemas.
-    // Required-file checks below and the isolated consumer typecheck are the
-    // executable completeness boundary for this narrow SDK. New owners,
-    // including #427 attack-selection schemas, must emit without diagnostics.
-  }
+  copyFileSync(
+    resolve(repoRoot, "packages/shared/src/non-empty-array.d.ts"),
+    resolve(declarationsDirectory, "packages/shared/src/non-empty-array.d.ts"),
+  );
 
-  const requiredDeclarations = [
-    "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
-    "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
-    "scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
-    "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
-    "scripts/raw-swarm/sdk-player/scenario-session.d.ts",
-    "packages/battle-runtime/src/index.d.ts",
-    "packages/battle-runtime/src/battle-state-execution.d.ts",
-    "packages/battle-runtime/src/battle-session-execution.d.ts",
-    "packages/character-creation-runtime/src/index.d.ts",
-    "packages/character-sheet-runtime/src/index.d.ts",
-    "packages/tactical-space/src/index.d.ts",
-  ];
-  for (const relativePath of requiredDeclarations) {
+  for (const relativePath of PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS) {
     if (!existsSync(resolve(declarationsDirectory, relativePath))) {
       throw new Error(`Public declaration emission omitted ${relativePath}.`);
     }
   }
-  return assertPublicDeclarationBundle(declarationsDirectory);
+  removeUnreachableForbiddenDeclarations(declarationsDirectory);
+  const phaseOneWeaponExports = readFileSync(
+    resolve(
+      declarationsDirectory,
+      "packages/character-creation-runtime/src/phase1-manifest.d.ts",
+    ),
+    "utf8",
+  );
+  for (const exportName of [
+    "PHASE1_WEAPON_FLAIL_UNIT_ID",
+    "PHASE1_WEAPON_SPEAR_UNIT_ID",
+  ] as const) {
+    if (
+      !phaseOneWeaponExports.includes(`export declare const ${exportName}:`)
+    ) {
+      throw new Error(
+        `Public declaration emission omitted Character Creation export ${exportName}.`,
+      );
+    }
+  }
+  for (const relativePath of PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS) {
+    if (existsSync(resolve(declarationsDirectory, relativePath))) {
+      throw new Error(
+        `Public declaration emission included forbidden runtime/data owner ${relativePath}.`,
+      );
+    }
+  }
+  return assertReviewedPublicDeclarationBundle(declarationsDirectory);
 }
 
-function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
+const DECLARATION_PACKAGE_PATH_ROOTS = [
+  {
+    specifierPrefix: "@dnd/shared/",
+    declarationRoot: "packages/shared/src",
+  },
+  {
+    specifierPrefix: "@dnd/shared-algebras/",
+    declarationRoot: "packages/shared-algebras/src",
+  },
+  {
+    specifierPrefix: "@dnd/surface/",
+    declarationRoot: "packages/surface/src",
+  },
+] as const;
+
+function compilerDeclarationPackagePaths(
+  baseDirectory: string,
+): Readonly<Record<string, readonly [string]>> {
+  const declarationsDirectory = resolve(baseDirectory, "declarations");
+  const specifiers = new Set<string>();
+  for (const path of declarationFiles(declarationsDirectory)) {
+    for (const match of readFileSync(path, "utf8").matchAll(
+      /["'](@dnd\/(?:shared|shared-algebras|surface)\/[^"']+)["']/g,
+    )) {
+      const specifier = match[1];
+      if (specifier !== undefined) specifiers.add(specifier);
+    }
+  }
+  return Object.fromEntries(
+    [...specifiers].sort().map((specifier) => {
+      const owner = DECLARATION_PACKAGE_PATH_ROOTS.find(({ specifierPrefix }) =>
+        specifier.startsWith(specifierPrefix),
+      );
+      if (owner === undefined) {
+        throw new Error(
+          `Public declaration compiler path has no package owner: ${specifier}.`,
+        );
+      }
+      const sourceSubpath = specifier.slice(owner.specifierPrefix.length);
+      const declarationSubpath = sourceSubpath.endsWith(".d.ts")
+        ? sourceSubpath
+        : `${sourceSubpath.replace(/\.(?:js|ts)$/, "")}.d.ts`;
+      const declarationTarget = resolve(
+        declarationsDirectory,
+        owner.declarationRoot,
+        declarationSubpath,
+      );
+      if (!existsSync(declarationTarget)) {
+        throw new Error(
+          `Public declaration compiler path target does not exist: ${specifier} -> ${declarationSubpath}.`,
+        );
+      }
+      return [
+        specifier,
+        [`./declarations/${owner.declarationRoot}/${declarationSubpath}`],
+      ];
+    }),
+  );
+}
+
+function consumerTsconfig(
+  baseDirectory: string,
+  include: readonly string[],
+): string {
   return `${JSON.stringify(
     {
       compilerOptions: {
         target: "ES2022",
         module: "ESNext",
         moduleResolution: "bundler",
-        lib: ["ES2022"],
+        lib: ["ES2022", "ESNext.Disposable", "DOM", "DOM.Iterable"],
         types: [],
-        baseUrl,
+        baseUrl: ".",
         paths: {
           "@dnd/player-sdk": [
-            resolve(
-              baseUrl,
-              "declarations/scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
-            ),
+            "./declarations/scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
           ],
           "@dnd/scenario-character-sdk": [
-            resolve(
-              baseUrl,
-              "declarations/scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
-            ),
+            "./declarations/scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
           ],
           "@dnd/scenario-setup-sdk": [
-            resolve(
-              baseUrl,
-              "declarations/scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
-            ),
+            "./declarations/scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
           ],
           "@dnd/battle-runtime": [
-            resolve(
-              baseUrl,
-              "declarations/packages/battle-runtime/src/index.d.ts",
-            ),
+            "./declarations/packages/battle-runtime/src/index.d.ts",
+          ],
+          "@dnd/battle-runtime/consumer-protocol": [
+            "./declarations/packages/battle-runtime/src/consumer-protocol.d.ts",
           ],
           "@dnd/character-creation-runtime": [
-            resolve(
-              baseUrl,
-              "declarations/packages/character-creation-runtime/src/index.d.ts",
-            ),
+            "./declarations/packages/character-creation-runtime/src/index.d.ts",
+          ],
+          "@dnd/character-creation-runtime/consumer-protocol": [
+            "./declarations/packages/character-creation-runtime/src/consumer-protocol.d.ts",
           ],
           "@dnd/character-sheet-runtime": [
-            resolve(
-              baseUrl,
-              "declarations/packages/character-sheet-runtime/src/index.d.ts",
-            ),
+            "./declarations/packages/character-sheet-runtime/src/index.d.ts",
           ],
-          "@dnd/shared/*": [
-            resolve(baseUrl, "declarations/packages/shared/src/*"),
+          "@dnd/character-sheet-runtime/consumer-protocol": [
+            "./declarations/packages/character-sheet-runtime/src/consumer-protocol.d.ts",
           ],
-          "@dnd/shared-algebras/*": [
-            resolve(baseUrl, "declarations/packages/shared-algebras/src/*"),
-          ],
+          ...compilerDeclarationPackagePaths(baseDirectory),
           "@dnd/tactical-space": [
-            resolve(
-              baseUrl,
-              "declarations/packages/tactical-space/src/index.d.ts",
-            ),
-          ],
-          "@dnd/surface/*": [
-            resolve(baseUrl, "declarations/packages/surface/src/*"),
+            "./declarations/packages/tactical-space/src/index.d.ts",
           ],
         },
         allowImportingTsExtensions: true,
-        skipLibCheck: true,
+        skipLibCheck: false,
         strict: true,
         exactOptionalPropertyTypes: true,
         noUnusedLocals: true,
@@ -548,6 +803,8 @@ export function buildConsumerDistribution(
       "Trusted declaration bundle differs from the public declaration bundle.",
     );
   }
+  copyEffectDeclarationCompilerSupport(input.destination);
+  copyEffectDeclarationCompilerSupport(input.trustedDestination);
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
   writeFileSync(
     resolve(input.destination, contextFileName(input.contextDelivery)),
@@ -563,7 +820,7 @@ export function buildConsumerDistribution(
   );
   writeFileSync(
     resolve(input.trustedDestination, "tsconfig.json"),
-    consumerTsconfig(input.trustedDestination, ["submissions/*.ts"]),
+    consumerTsconfig(input.trustedDestination, ["attempt.ts"]),
   );
   writeFileSync(
     resolve(input.destination, "attempt.ts"),
@@ -621,6 +878,7 @@ export function buildScenarioSetupDistribution(
 ): void {
   mkdirSync(input.destination, { recursive: true });
   emitPublicDeclarations(input.destination);
+  copyEffectDeclarationCompilerSupport(input.destination);
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
   copyFileSync(
     input.scenarioReviewPath,
@@ -676,6 +934,7 @@ export function buildScenarioCharacterDistribution(
 ): void {
   mkdirSync(input.destination, { recursive: true });
   emitPublicDeclarations(input.destination);
+  copyEffectDeclarationCompilerSupport(input.destination);
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
   copyFileSync(
     input.scenarioReviewPath,

@@ -1,5 +1,11 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { movementFeet } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  Integer,
+  movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
@@ -518,19 +524,24 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
       size: "small",
       creatureType: "fey",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: 10 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(10) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
-        cha: 8,
-        con: 10,
-        dex: 15,
-        int: 10,
-        str: 8,
-        wis: 8,
+        cha: AbilityScore.make(8),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(15),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(8),
+        wis: AbilityScore.make(8),
       },
-      initiative: { modifier: 2, score: 12 },
-      passivePerception: 9,
+      initiative: { modifier: Integer(2), score: NonNegativeInteger(12) },
+      passivePerception: NonNegativeInteger(9),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
@@ -556,19 +567,24 @@ function sizeGatedConditionRiderTargetStatBlock(
       size: targetSizeGate === "larger" ? "large" : "medium",
       creatureType: "fey",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: 20 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(20) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
-        cha: 8,
-        con: 10,
-        dex: 15,
-        int: 10,
-        str: 8,
-        wis: 8,
+        cha: AbilityScore.make(8),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(15),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(8),
+        wis: AbilityScore.make(8),
       },
-      initiative: { modifier: 2, score: 12 },
-      passivePerception: 9,
+      initiative: { modifier: Integer(2), score: NonNegativeInteger(12) },
+      passivePerception: NonNegativeInteger(9),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
@@ -618,15 +634,19 @@ function biteAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "str",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "melee",
     name: biteAttackName,
     onHit: [
       {
         amount: {
           kind: "fixed",
-          expr: { dice: 1, dieSize: 6, flat: 2 },
-          static: 5,
+          expr: {
+            dice: PositiveInteger(1),
+            dieSize: 6,
+            flat: Integer(2),
+          },
+          static: PositiveInteger(5),
         },
         damageType: "piercing",
         kind: "damage",
@@ -637,7 +657,7 @@ function biteAttack(): StatBlockAttack {
         maxCreatureSize: "medium",
       },
     ],
-    reachFeet: 5,
+    reachFeet: PositiveInteger(5),
   };
 }
 

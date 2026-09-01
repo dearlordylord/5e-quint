@@ -382,7 +382,42 @@ function intrinsicSubjectPresentation(
     }
     return undefined;
   }
-  return { kind: "intrinsic" };
+  return statBlockProcedureOrIntrinsicPresentation(state, context, subject);
+}
+
+function statBlockProcedureOrIntrinsicPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: IntrinsicBattleSubject,
+): BattleActPresentation {
+  if (!isStatBlockProcedurePresentationSubject(subject)) {
+    return { kind: "intrinsic" };
+  }
+  const presentations = statBlockProcedurePresentationsForActor(
+    state,
+    context,
+    subject.actorId,
+  );
+  if (presentations === null) {
+    return {
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockAdmissionMissing",
+      },
+    };
+  }
+  if (Result.isSuccess(presentations)) {
+    return { kind: "intrinsic" };
+  }
+  return {
+    kind: "presentationIssue",
+    issue: {
+      tag: "attackPresentationJoinIssue",
+      reason: "statBlockProcedurePresentationJoin",
+      issues: presentations.failure,
+    },
+  };
 }
 
 function intrinsicActPresentationText(

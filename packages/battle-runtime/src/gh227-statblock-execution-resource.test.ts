@@ -1,5 +1,5 @@
 import { statBlockId } from "@dnd/shared/game-facts";
-import { abilityScoreToMod } from "@dnd/shared/types";
+import { AbilityScore, abilityScoreToMod } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { statBlockProficiencyBonusForChallengeRating } from "@dnd/surface/surface/stat-block-proficiency-bonus";
 import { describe, expect, test } from "vitest";
@@ -151,7 +151,7 @@ describe("GH227 Stat Block execution coverage", () => {
           ...base.statBlock,
           abilityScores: {
             ...base.statBlock.abilityScores,
-            str: strengthScore,
+            str: AbilityScore.make(strengthScore),
           },
         },
       };

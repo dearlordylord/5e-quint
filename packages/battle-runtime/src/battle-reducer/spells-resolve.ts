@@ -3592,7 +3592,7 @@ function spendSpellActResolutionResources(
         operation: "createAndAttack",
       },
       (invocation) =>
-        resolveSpatialMeleeSpellAttackProxyCreateAndAttack({
+        spendSpatialMeleeSpellAttackProxyCreateAndAttackResources({
           ...input,
           invocation,
         }),
@@ -3687,7 +3687,7 @@ function spendSpellActResolutionResources(
   );
 }
 
-function resolveSpatialMeleeSpellAttackProxyCreateAndAttack(
+function spendSpatialMeleeSpellAttackProxyCreateAndAttackResources(
   input: SpellActResolutionResourceInput & {
     readonly invocation: Extract<
       BattleExecutableSpellInvocation,

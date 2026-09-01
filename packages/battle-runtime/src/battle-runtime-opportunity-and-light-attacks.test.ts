@@ -2264,11 +2264,6 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           initiative: 20,
           classLevels: [{ className: "bard", level: 3 }],
           resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWordsDamageOnly, [
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [
             {
               unit: cuttingWordsDamageOnly,

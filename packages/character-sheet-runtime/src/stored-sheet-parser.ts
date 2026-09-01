@@ -42,7 +42,7 @@ import {
   type CharacterEquipmentItemSlot,
   type CopperPieceAmount,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   ABILITIES,
   LANGUAGES,

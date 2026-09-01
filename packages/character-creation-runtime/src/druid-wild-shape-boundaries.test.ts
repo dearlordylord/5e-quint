@@ -3,7 +3,11 @@ import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
 } from "@dnd/shared/game-facts";
-import { abilityScore, resourceCount } from "@dnd/shared/types";
+import {
+  abilityScore,
+  PositiveInteger,
+  resourceCount,
+} from "@dnd/shared/types";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { StatBlockGmSpeedChoiceSchema } from "@dnd/surface/surface/schema";
@@ -396,7 +400,7 @@ describe("Druid Wild Shape boundaries", () => {
           ...eligibleRecords[0].statBlock.speeds,
           {
             kind: "fly",
-            feet: { kind: "literal", value: 40 },
+            feet: { kind: "literal", value: PositiveInteger(40) },
             availability: {
               kind: "forms_only",
               forms: ["winged hybrid"],

@@ -1202,13 +1202,14 @@ not run for this issue snapshot.
 
 ## Issue #386 current certification and controlled-red closure
 
-Issue #386 removes the migration exception rather than extending it. The final
-inventory covers all 14 package owners and records zero raw and zero
-deduplicated diagnostics. Its SHA-256 is
+Issue #386 removes the migration exception rather than extending it. On the
+reviewed integration line through `ad053d7de`, the final inventory covers all
+14 package owners and records zero raw and zero deduplicated diagnostics. Its
+SHA-256 is
 `47bcb642a9e7907630022930c73c9d75e9b4926b68e5c4a3814417417f608f72`.
-The retired inventory generator and mutation package scripts are absent;
-`pnpm typecheck` is the current executable owner and any future diagnostic is
-an ordinary blocking failure.
+The retired inventory generator and mutation package scripts are absent.
+`pnpm typecheck` is the executable owner, and any future diagnostic is an
+ordinary blocking failure.
 
 The repository and installed dependency graph select Effect
 `4.0.0-rc.112`, `@effect/platform-node@4.0.0-rc.112`,
@@ -1218,136 +1219,44 @@ The clean-consumer deployment independently verifies the production MCP
 package graph, while the application and script lifecycle evidence exercises
 their exact shipped entrypoints.
 
-The immutable baseline and the complete finite Effect 4 disposition are owned
-by the [final parity report](./final-parity-report.md#immutable-oracle-and-finite-delta).
-That report records the candidate artifact, exact identity set, classification
-totals, collection authorities, and certificate digest in one place. The
-verifier rejects changed baseline or candidate bytes, unreadable artifacts,
-duplicate, unclassified, multiply classified, or stale exact identities, and
-stale aggregate counts or hashes.
-The authored-identity boundary also passes after removing the stale generic
-`runtimeCommandSubject` exemption: 4,735 literals, 795 checked source files,
-552 exercised exact exemptions, and 1,214 reviewed sites / 1,325 occurrences.
+The immutable baseline and exact finite Effect 4 disposition are owned by the
+reviewed
+[`effect4-oracle-delta-certificate.json`](./effect4-oracle-delta-certificate.json).
+Surface publication parity is independently owned by the reviewed
+[`surface-publication-delta-certificate.json`](./surface-publication-delta-certificate.json).
+Those certificates, not this ledger, own their dynamic identities,
+classifications, membership, operation counts, and hashes. Their self-tests and
+pinned verifiers pass on the reviewed integration line.
 
-The subsequent master-reconciliation authored-identity audit passes with
-7,328 literals from 283 decoded Surface spell records, 818 checked source
-files, 762 excluded fixture or artifact files, and the unchanged 9 narrowly
-allowlisted boundary files. It exercises 620 exact exemptions and authenticates
-1,294 reviewed sites / 1,405 occurrences with SHA-256
-`1a6b83fc6597ebcb817af5b723557f9e8e3cc219562c584de14f3e45bc4ecc02`.
-The audit adds 68 exact exemption keys covering 79 reviewed collision sites:
-55 teleportation keys, 4 Fly Speed keys, 6 illumination keys, 2 damage
-Resistance keys, and 1 healing-link key. Seven Haste-named reusable execution
-declarations were structurally renamed instead of exempted. Normalized evidence
-resolves the prior one-site disagreement: one `storedLightEmitters` occurrence in
-`battleSnapshotInvariantsHold` was replaced by two occurrences in extracted
-serialized-reference and environmental-source validation owners, while the
-`heldLightHurl` semantic relocation into a presentation-procedure set remained
-inside the narrow presentation boundary and was not collision-certificate
-evidence. This focused static checkpoint does not claim a new final fixed point
-or completion of the remaining public gates.
-The current integrated source fixed point is `e936c8c1a`, including the
-refreshed generated certification artifacts and reviewed Raw Swarm declaration
-measure. The final controlled-red inventory still covers all 13 package owners
-with zero recorded diagnostics, and its SHA-256 remains
-`347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
-The retired inventory generator and mutation scripts remain absent. This
-stored inventory does not substitute for the pending broad `pnpm typecheck` at
-the integrated fixed point; any observed diagnostic is an ordinary blocker.
+The master reconciliation retained the authored-identity, provenance, PHB+,
+domain, architecture, and connascence boundaries. Standards and Spec/RAW
+re-review converged without remaining findings. The complete current
+disposition is in the [final parity report](./final-parity-report.md).
 
-The immutable Effect 3 oracle remains 12,997,527 bytes with SHA-256
-`dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-The current Effect 4 candidate remains 52,152,897 bytes and has SHA-256
-`06caf573f4a04809c8f8e4ec75e7ca8166aa70b3e050ffca5e76dcabe36dc2bb`.
-The staged v2 certificate records exactly 7,246 reviewed identities, has
-identity SHA-256
-`f580748a45802d4f0d04f621a5fad558abe85021294654e3b2d41e4390ccdc8d`,
-and is 4,656,210 bytes with artifact SHA-256
-`63eade8b0bd7bfa304d7bff83bfade023d70cc9cd1f9435d271b9bc208eed502`.
-Exactly two `scripts/raw-swarm/OPERATIONS.md` identities were replaced under
-the existing Raw Swarm reason; all per-reason counts remain unchanged. The
-strict decoder passed, two self-test invocations passed all 15 tests, and the
-final pinned current verification at approximately 2026-08-30T22:05Z completed
-with exit 0. The candidate byte count and SHA-256 and the 7,246-identity SHA-256
-above remained unchanged. The command reported
-`Effect 4 finite oracle delta verified (7246 reviewed identities).` The
-#381 generated manifest selects 58 obligations and has SHA-256
-`998be34b672077873b47937ae532d781d144e5dfdec6329af38eae16c096e01b`;
-focused coverage accounting is 147 Rules Kernel obligations and 400 Units / 258
-profiles.
+The supplementary selected #381 QNT owner-sweep observation remains relevant
+to the unchanged reconciled source line but is not a `pnpm proof:qnt` receipt.
+Its exact fixed point, recorded owner disposition, elapsed time, tracked log,
+measurement, digest, limitations, and unchanged-range evidence are owned by
+the [final parity report](./final-parity-report.md#qnt-and-runtime-parity).
 
-The proof-lane closure checks passed, but the first `pnpm proof:qnt` attempt did
-not pass. The attempt reported failures for
-`metamagic-options-and-quickened-restoration`, `restoration`, `scalar-buff`,
-`spatial-movement-spell`, and `spellcasting-and-utility-facts`, then was
-manually cancelled with exit 130. No partial proof result is accepted as
-closure evidence.
+The migration exception is closed in source and no waiver remains. Final issue
+closure is nevertheless pending these exact public commands at the final
+committed tip:
 
-Commit `15ba8ebe2` repairs the shared Feather Fall trigger-witness type and the
-Jump landing-fact match exposed by those failures. Under one focused MBT lock,
-all five roots then typechecked and their 29 discovered tests passed with exit 0. QNT inventory remained 806/806, proof closure remained within 60 files and
-12,500 lines, and MBT driver closure passed. The #381 manifest retained 58
-obligations; Rules Kernel coverage retained 147 obligations; Unit Profile
-coverage retained 400 Units / 258 profiles. Independent RAW, domain,
-architecture, connascence, and Quint review reported no findings.
+```sh
+pnpm typecheck
+pnpm test
+pnpm quality:milestone
+```
 
-A later public `pnpm proof:qnt` run passed its inventory and closure gates and
-advanced beyond the repaired `metamagic-options-and-quickened-restoration`
-owner. Its terminal exit was not observed because the attached command session
-was lost. The operator directed that this full lane not be rerun. This records
-an accepted execution risk and does not describe the full proof lane as
-verified.
+They will run serially and directly under their owning repository locks. The
+[final parity report](./final-parity-report.md#terminal-public-receipts) alone
+will own their exact commit, exit status, and result summary; this ledger links
+to that receipt instead of restating it. The report also owns the required
+post-first-gates tracked-document attestation before closure. This ledger does
+not infer terminal passes from the zero-diagnostic inventory, focused checks,
+certificates, or earlier broad runs.
 
-The four originally required SR-00 Battle MBT public scripts and the
-repair-sensitive chained-attack lane have final observed results at
-`595a3ac1c`:
-
-| Public command                                                                            |             Final result |
-| ----------------------------------------------------------------------------------------- | -----------------------: |
-| `pnpm --filter @dnd/battle-runtime run test:mbt:condition-saving-throw-selected-identity` | 2/2 tests passed; exit 0 |
-| `pnpm --filter @dnd/battle-runtime run test:mbt:turn-boundary-effect-lifecycle`           | 8/8 tests passed; exit 0 |
-| `pnpm --filter @dnd/battle-runtime run test:mbt:chained-attack-sequence`                  | 3/3 tests passed; exit 0 |
-| `pnpm --filter @dnd/battle-runtime run test:mbt:insect-plague-area-hazard`                | 4/4 tests passed; exit 0 |
-| `pnpm --filter @dnd/battle-runtime run test:mbt:cloudkill-area-hazard`                    | 6/6 tests passed; exit 0 |
-
-The condition-saving result follows the production Sleep lifecycle-route repair
-and the ordered-frontier fixture repair. One unseeded transient `invalid`
-failure did not reproduce during its diagnostic rerun, so no speculative
-semantic or QNT change was made. The turn-boundary result uses an admitted Sleep
-cast with Wizard at initiative 20 casting on Fighter at 15, Fighter current
-after Wizard's turn ends, and Goblin at 10 next for the boundary cohort; the
-assertion names the canonical
-`stagedConditionRepeatSave` field. These observed MBT passes do not change the
-full `pnpm proof:qnt` record above: its terminal result remains unobserved, the
-operator declined a rerun, and it is not recorded as passed.
-
-Final Standards and independent RAW, domain, QNT/runtime, architecture, and
-connascence reviews converged at `595a3ac1c` with no implementation findings.
-The final repairs make every positive-damage owner, including redirected
-damage, request and resolve the Hideous Laughter damage-triggered repeat save.
-Durable attack continuations validate the exact pending repeat-save hole and
-remain unchanged on invalid input. Canonical occurrence identities distinguish
-ordinary, chained, turn-boundary, and resumed damage, and there are zero
-production `noRepeatSave` callers. This behavior matches the existing
-identity-free QNT semantic core and obligation mapping; no QNT model change was
-required. Focused integration evidence at this fixed point includes an exit-0
-Battle Runtime typecheck, an eight-file suite with 68 passing tests, and a final
-redirect-focused three-file suite with 31 passing tests.
-
-The current public declaration graph is 523 files and 3,969,709 bytes under the
-unchanged 10 MiB cap, leaving 6,516,051 bytes of margin. A milestone attempt
-validated that measure and passed the long deployed MCP, container, Raw Swarm
-consumer, and SIGINT/SIGTERM cases, but stopped on a duplicated old-margin unit
-assertion. Commit `e936c8c1a` derives that assertion from the canonical measure
-and its focused test passed 1/1. The operator declined another complete
-milestone run, so no terminal clean-consumer or quality pass is claimed.
-
-This final-current paragraph does not rewrite the historical issue snapshots
-above. It also does not claim a complete QNT proof pass, broad
-typecheck/test/build/quality gates, or live GitHub closure. The current evidence,
-101-file QNT scope,
-Temporary Hit Point keep/replace disposition, A51 Hypnotic Pattern reachability
-model, Standards convergence, and remaining Spec blockers are owned by
-[`final-parity-report.md`](./final-parity-report.md). Issues #381 and #386 and
-the SR-00 Cleanroom ledger disposition remain pending until those named entries
-are replaced by exact observations.
+The SR-00 post-landing Cleanroom receipt remains unchanged until the #386
+terminal receipts exist. Active SR-04G work is independent and is not modified
+by this migration-ledger refresh.

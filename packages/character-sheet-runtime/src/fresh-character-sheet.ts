@@ -4,7 +4,7 @@ import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import {
   DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES,
   DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import { DRUID_CIRCLE_LAND_CHOICES } from "@dnd/surface/surface/types";
 import { Brand, Result, Schema } from "effect";
 

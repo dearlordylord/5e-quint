@@ -2,7 +2,13 @@ import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
-import { D6_ROLL_RESULTS, NonNegativeInteger } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  D6_ROLL_RESULTS,
+  Integer,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId as parseSharedUnitId,
@@ -53,8 +59,10 @@ import {
   wizardId,
   wizardSpellcasting,
   spellRecord,
+  isNonSpellExecutableProcedureEntryOfKind,
 } from "./battle-runtime.test-support.ts";
 import {
+  BattleActPresentationSchema,
   BattleInterruptDecisionFrontierSchema,
   BattleObjectDamageOutcomeSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -981,14 +989,12 @@ function codecStaticDartStatBlock(): StatBlockRecord {
   const base = monsterMultiattackStatBlock();
   const shortbow = base.statBlock.actions?.find(
     (entry) =>
-      entry.kind === "executable" &&
-      entry.procedure.kind === "attack_roll" &&
+      isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
       entry.procedure.name === "Shortbow",
   );
   if (
     shortbow === undefined ||
-    shortbow.kind !== "executable" ||
-    shortbow.procedure.kind !== "attack_roll"
+    !isNonSpellExecutableProcedureEntryOfKind(shortbow, "attack_roll")
   ) {
     throw new Error("Expected the static codec Shortbow fixture.");
   }
@@ -1005,19 +1011,24 @@ function codecStaticDartStatBlock(): StatBlockRecord {
       size: "small",
       creatureType: "fey",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: 10 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(10) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
-        cha: 8,
-        con: 10,
-        dex: 15,
-        int: 10,
-        str: 8,
-        wis: 8,
+        cha: AbilityScore.make(8),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(15),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(8),
+        wis: AbilityScore.make(8),
       },
-      initiative: { modifier: 2, score: 12 },
-      passivePerception: 9,
+      initiative: { modifier: Integer(2), score: NonNegativeInteger(12) },
+      passivePerception: NonNegativeInteger(9),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
@@ -1034,8 +1045,8 @@ function codecStaticDartStatBlock(): StatBlockRecord {
                 damageType: "piercing",
                 amount: {
                   kind: "fixed",
-                  expr: { dice: 1, dieSize: 4 },
-                  static: 3,
+                  expr: { dice: PositiveInteger(1), dieSize: 4 },
+                  static: PositiveInteger(3),
                 },
               },
             ],
@@ -1540,6 +1551,64 @@ function damageProtocolHoleWithEffectRef(
   }
   throw new Error("Expected an occurrence-bound damage protocol hole.");
 }
+
+describe("battle act presentation codec boundaries", () => {
+  test("round-trips nonempty Stat Block procedure join issues", () => {
+    const encoded = {
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockProcedurePresentationJoin",
+        issues: [
+          {
+            tag: "statBlockProcedurePresentationJoinIssue",
+            reason: "missingPresentation",
+            section: "actions",
+            procedureOrdinal: 1,
+            executionKind: "attack",
+          },
+          {
+            tag: "statBlockProcedurePresentationJoinIssue",
+            reason: "presentationKindMismatch",
+            section: "bonusActions",
+            procedureOrdinal: 2,
+            executionKind: "bonusActionOption",
+            presentationKind: "textOnly",
+          },
+        ],
+      },
+    };
+
+    const decoded = Schema.decodeUnknownSync(BattleActPresentationSchema)(
+      encoded,
+    );
+    expect(Schema.encodeSync(BattleActPresentationSchema)(decoded)).toEqual(
+      encoded,
+    );
+  });
+
+  test("rejects a Stat Block procedure join issue without details", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(BattleActPresentationSchema)({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleActPresentationSchema)({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: [],
+        },
+      }),
+    ).toThrow();
+  });
+});
 
 describe("battle object damage codec boundaries", () => {
   test("round-trips a table-resolved object damage outcome", () => {

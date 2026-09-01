@@ -1,29 +1,35 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
+  admitResourceFeature,
   battleUnitRefWithSupportProfiles,
+  characterBattleResourceForUnit,
+  characterBattleResourceSupportedForUnit,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   type CharacterBattleCreatureInit,
   type BattleUnitRef,
   type BattleUnitSupportProfileSourceFacts,
-} from "@dnd/battle-runtime";
+  type CharacterBattleResourceExecutionFacts,
+  type ResourceFeatureAdmission,
+} from "@dnd/battle-runtime/consumer-protocol";
 import {
   characterBuildUnitRefs,
   classUnitIdToClassName,
   type CharacterBuild,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,
   UnitRecord,
   WeaponRecord,
+  WeaponMasteryName,
 } from "@dnd/surface/surface/types";
 import {
   resolveWeaponMasteryReference,
   type UnitCatalog,
   type WeaponMasteryReferenceResolution,
 } from "@dnd/surface/surface/unit-catalog-core";
-import { Option, Result } from "effect";
+import { Match, Option, Result } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
@@ -37,14 +43,48 @@ type AuthoredBattleUnitRef = Omit<BattleUnitRef, "unit"> & {
   readonly unit: UnitRecord;
 };
 
+const BATTLE_SUPPORTED_WEAPON_MASTERY_UNIT_ID_BY_PROPERTY = {
+  cleave: authoredUnitId("mastery_cleave"),
+  push: authoredUnitId("mastery_push"),
+  sap: authoredUnitId("mastery_sap"),
+  slow: authoredUnitId("mastery_slow"),
+  topple: authoredUnitId("mastery_topple"),
+} as const satisfies Readonly<
+  Partial<Record<WeaponMasteryName, UnitRecord["id"]>>
+>;
+
 const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
-  authoredUnitId("mastery_push"),
-  authoredUnitId("mastery_sap"),
-  authoredUnitId("mastery_slow"),
+  BATTLE_SUPPORTED_WEAPON_MASTERY_UNIT_ID_BY_PROPERTY.push,
+  BATTLE_SUPPORTED_WEAPON_MASTERY_UNIT_ID_BY_PROPERTY.sap,
+  BATTLE_SUPPORTED_WEAPON_MASTERY_UNIT_ID_BY_PROPERTY.slow,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export type CharacterBattleSupportProjection = {
   readonly unitRefs: readonly AuthoredBattleUnitRef[];
+  readonly sourceFacts: BattleUnitSupportProfileSourceFacts | undefined;
+};
+
+type CharacterBattleAdmittedResourceFeature = {
+  readonly tag: "admitted";
+  readonly procedure: Extract<
+    ResourceFeatureAdmission,
+    { readonly tag: "admitted" }
+  >["procedure"];
+};
+
+export type CharacterBattleSupportUnitAdmission = {
+  readonly battleUnitRef: AuthoredBattleUnitRef;
+  readonly battleResourceAdmission:
+    | CharacterBattleAdmittedResourceFeature
+    | {
+        readonly tag: "battleResource";
+        readonly executionFacts: CharacterBattleResourceExecutionFacts;
+      }
+    | { readonly tag: "notBattleOwned" };
+};
+
+export type CharacterBattleSupportAdmission = {
+  readonly unitAdmissions: readonly CharacterBattleSupportUnitAdmission[];
   readonly sourceFacts: BattleUnitSupportProfileSourceFacts | undefined;
 };
 
@@ -55,6 +95,31 @@ export function characterBattleSupportProjection(
   classLevels?: CharacterBattleCreatureInit["classLevels"],
 ): Result.Result<
   CharacterBattleSupportProjection,
+  ReadonlyNonEmptyArray<BattleSupportProfileIssue>
+> {
+  const admission = characterBattleSupportAdmission(
+    build,
+    unitLibrary,
+    weaponMasteries,
+    classLevels,
+  );
+  return Result.isFailure(admission)
+    ? Result.fail(admission.failure)
+    : Result.succeed({
+        unitRefs: admission.success.unitAdmissions.map(
+          ({ battleUnitRef }) => battleUnitRef,
+        ),
+        sourceFacts: admission.success.sourceFacts,
+      });
+}
+
+export function characterBattleSupportAdmission(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[],
+  classLevels?: CharacterBattleCreatureInit["classLevels"],
+): Result.Result<
+  CharacterBattleSupportAdmission,
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
 > {
   const selectedWeaponMasteries =
@@ -88,7 +153,8 @@ export function characterBattleSupportProjection(
   }
 
   const replacementMasteryUnitIds = buildUnitRefs.success.some(
-    battleUnitRefHasTacticalMasterReplacementSupport,
+    ({ battleUnitRef }) =>
+      battleUnitRefHasTacticalMasterReplacementSupport(battleUnitRef),
   )
     ? TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS
     : [];
@@ -117,7 +183,7 @@ export function characterBattleSupportProjection(
   }
 
   return Result.succeed({
-    unitRefs: uniqueBattleUnitRefs([
+    unitAdmissions: uniqueBattleUnitAdmissions([
       ...buildUnitRefs.success,
       ...battleMasteryUnitRefs.success,
     ]),
@@ -210,12 +276,19 @@ function withBattleSupportProfiles(
   unitLibrary: UnitCatalog,
   classLevels: CharacterBattleCreatureInit["classLevels"] | undefined,
   sourceFacts: BattleUnitSupportProfileSourceFacts | undefined,
-): Result.Result<AuthoredBattleUnitRef, BattleSupportProfileIssue> {
+): Result.Result<
+  CharacterBattleSupportUnitAdmission,
+  BattleSupportProfileIssue
+> {
   const unitOption = unitLibrary.getUnit(unitRef.unitId);
   if (Option.isNone(unitOption)) {
     return battleSupportProfileIssue(
       `Unknown Character Build Unit for battle initialization: ${unitRef.unitId}.`,
     );
+  }
+  const resourceAdmission = characterBattleResourceAdmission(unitOption.value);
+  if (Result.isFailure(resourceAdmission)) {
+    return Result.fail(resourceAdmission.failure);
   }
   const battleUnitRef = battleUnitRefWithSupportProfiles({
     unitRef,
@@ -226,9 +299,42 @@ function withBattleSupportProfiles(
   return Result.isFailure(battleUnitRef)
     ? battleSupportProfileIssue(battleUnitRef.failure.message)
     : Result.succeed({
-        ...battleUnitRef.success,
-        unit: unitOption.value,
+        battleUnitRef: {
+          ...battleUnitRef.success,
+          unit: unitOption.value,
+        },
+        battleResourceAdmission: resourceAdmission.success,
       });
+}
+
+function characterBattleResourceAdmission(
+  unit: UnitRecord,
+): Result.Result<
+  CharacterBattleSupportUnitAdmission["battleResourceAdmission"],
+  BattleSupportProfileIssue
+> {
+  return Match.value(admitResourceFeature(unit)).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      rejected: ({ issues }) =>
+        battleSupportProfileIssue(
+          issues.map(({ message }) => message).join(" "),
+        ),
+      admitted: (admission) =>
+        Result.succeed({
+          tag: "admitted" as const,
+          procedure: admission.procedure,
+        }),
+      notBattleOwned: () =>
+        Result.succeed(
+          characterBattleResourceSupportedForUnit(unit)
+            ? {
+                tag: "battleResource" as const,
+                executionFacts: characterBattleResourceForUnit(unit),
+              }
+            : { tag: "notBattleOwned" as const },
+        ),
+    }),
+  );
 }
 
 export function battleSupportProfileSourceFactsForBuild(
@@ -360,35 +466,44 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
   });
   return Result.isFailure(unitIds)
     ? Result.fail(unitIds.failure)
-    : Result.succeed(
-        unitIds.success.filter(
-          (unitId, index) => unitIds.success.indexOf(unitId) === index,
-        ),
-      );
+    : Result.succeed(uniqueUnitIds(unitIds.success));
 }
 
-function uniqueBattleUnitRefs(
-  refs: readonly AuthoredBattleUnitRef[],
-): readonly AuthoredBattleUnitRef[] {
-  return refs.reduce<AuthoredBattleUnitRef[]>((uniqueRefs, ref) => {
-    const existingIndex = uniqueRefs.findIndex(
-      (candidate) => candidate.unit.id === ref.unit.id,
-    );
-    if (existingIndex === -1) {
-      uniqueRefs.push(ref);
-      return uniqueRefs;
-    }
+function uniqueUnitIds(
+  unitIds: readonly UnitRecord["id"][],
+): readonly UnitRecord["id"][] {
+  return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
+}
 
-    const existing = uniqueRefs[existingIndex];
-    uniqueRefs[existingIndex] = {
-      unit: existing.unit,
-      supportProfiles: uniqueBattleSupportProfiles([
-        ...existing.supportProfiles,
-        ...ref.supportProfiles,
-      ]),
-    };
-    return uniqueRefs;
-  }, []);
+function uniqueBattleUnitAdmissions(
+  refs: readonly CharacterBattleSupportUnitAdmission[],
+): readonly CharacterBattleSupportUnitAdmission[] {
+  return refs.reduce<CharacterBattleSupportUnitAdmission[]>(
+    (uniqueRefs, ref) => {
+      const existingIndex = uniqueRefs.findIndex(
+        (candidate) =>
+          candidate.battleUnitRef.unit.id === ref.battleUnitRef.unit.id,
+      );
+      if (existingIndex === -1) {
+        uniqueRefs.push(ref);
+        return uniqueRefs;
+      }
+
+      const existing = uniqueRefs[existingIndex];
+      uniqueRefs[existingIndex] = {
+        ...existing,
+        battleUnitRef: {
+          unit: existing.battleUnitRef.unit,
+          supportProfiles: uniqueBattleSupportProfiles([
+            ...existing.battleUnitRef.supportProfiles,
+            ...ref.battleUnitRef.supportProfiles,
+          ]),
+        },
+      };
+      return uniqueRefs;
+    },
+    [],
+  );
 }
 
 function uniqueWeaponMasterySelections(

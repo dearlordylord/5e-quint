@@ -1,5 +1,5 @@
 {
-  "formatVersion": 4,
+  "formatVersion": 5,
   "baselineCommit": "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
   "artifacts": {
     "aggregate": {
@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2188068,
-        "sha256": "1638d6875de5283f909f65ba2ae4237a513f8b8492e0b32e0d1313d80aa8ae97"
+        "byteLength": 2186122,
+        "sha256": "0aea62ab4531869d274632932c17278161da946bf9a8e3b4ce287239d0dd5e37"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "96ea97858f73e246ca73347b902ea93b9a56a5aeb94cad0feb0b74437253679a",
+        "candidateCanonicalJsonSha256": "f1c4ae718f26c4984f1b17db26f8d7ee88a98caf249a0b82b2d5e49a8b228bd4",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -29,14 +29,14 @@
           },
           "candidate": {
             "recordCounts": {
-              "units": 437,
+              "units": 434,
               "statBlocks": 330,
-              "total": 767
+              "total": 764
             },
             "orderedIdSha256": {
-              "units": "b7a814000ef2dd07f7375868c7b7648826e39477e5d859d0193e45a35382812a",
+              "units": "7fe05e0ce6af4b265b21504b3af6599edced1bf05d60ecb8ec7da9ad8b72cf27",
               "statBlocks": "45ed846dccc5b724a6e80509244db57dd927ed5bcfd901f9e42def8da2451ba4",
-              "all": "650bc5da20a166e17394a293481eec69e7838cd5c46623f945caf71ca455bd5a"
+              "all": "df3546b790c5d64c0273f144fb039741fcb7c91bc1fc1883658d4b3d8d7083d7"
             }
           }
         },
@@ -668,27 +668,6 @@
             "family": "units",
             "id": "word_of_recall",
             "candidateCanonicalJsonSha256": "1a2efa6ff769e8a48077aabf841d4e9d71d6bd58d13ccb6a2773f0fbfda78026",
-            "semanticClass": "authored-catalog-membership"
-          },
-          {
-            "kind": "added",
-            "family": "units",
-            "id": "mastery_graze",
-            "candidateCanonicalJsonSha256": "78eecaeb7d5bd1ff58c0b196fb1fda3ec6dee58806a50efd1daab2d3bf726ca2",
-            "semanticClass": "authored-catalog-membership"
-          },
-          {
-            "kind": "added",
-            "family": "units",
-            "id": "mastery_nick",
-            "candidateCanonicalJsonSha256": "7b8d2c4f11a2d76c35cca38bd97d381ddd340f678ca6a12892df5acb46074b3b",
-            "semanticClass": "authored-catalog-membership"
-          },
-          {
-            "kind": "added",
-            "family": "units",
-            "id": "mastery_vex",
-            "candidateCanonicalJsonSha256": "f72dab0360a96be0fb87a47f87df8edcb1407290d599158facf9bcf943ab270b",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2898,19 +2877,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1591482,
-        "sha256": "499b1a2d13f0b7d93a3ab6d3da19c6647cb9cedfbe436e8867092491b9c4551f"
+        "byteLength": 1592394,
+        "sha256": "f8d5e8909f3df08d9e3fcec730af9b025348a1b99c7aa3ee1a907a2d115acdc2"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "066bb15ea7958b698a35abab45621e85cf1378017f776aba852d725777d6f975",
+        "candidateCanonicalJsonSha256": "c7fcbe24112b43810bac2d0fcefa9d3283ee87954a069b4d466d7d7a9bfa9e02",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1192
+          "candidate": 1228
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7676
+          "candidate": 7672
         },
         "localReferencesComplete": {
           "baseline": true,
@@ -2937,7 +2916,104 @@
             "aggregate": "candidate-aggregate",
             "outcome": "accepted"
           }
-        ]
+        ],
+        "graphDelta": {
+          "comparisonCommit": "63f6f3d93388d6c8bffd45f22f45ee3998a820b0",
+          "comparisonCertificateSha256": "b5462a6d718a36d95002a2900184b250cf661b3736d2dc2a5ac708347a55f162",
+          "comparisonSchema": {
+            "byteLength": 1589880,
+            "sha256": "cdc52f97f4b37894268442390a38efc54193e64726ae9dd52535db45f24f4a34"
+          },
+          "classifiedChanges": {
+            "gmSpeedChoiceMinimum": [
+              {
+                "pointer": "/$defs/SrdRecordUnion1055Encoded/properties/alternatives",
+                "beforeNodeSha256": "30ceb9de35118194b72ff192dd272f87c5d553e933a214d80704f3f995a8ee7d",
+                "afterNodeSha256": "cf51dc1a937bbc05ff597b5b36bba1e7e0d853ee5ff182743401eac87aea471b"
+              }
+            ],
+            "flyOnlyHover": [
+              {
+                "pointer": "/$defs/SrdRecordUnion1045Encoded",
+                "beforeNodeSha256": "a57dae9837cebc1f725e05023490d46a431ba8e22dbd80a62a535da8a4395fdd",
+                "afterNodeSha256": "b2a0949e5fc3e1ae5a37431a3dda6ef98f18730f3b81d843ae9c676a94c7a54d"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1052Encoded",
+                "beforeNodeSha256": "4d4c0bc3684b46c6f0cc177095c2bce3bbd20b356dbe91873fb73a6e14617ac5",
+                "afterNodeSha256": "9f3f41f1849b46a5106417d397b3d448bb1adb7bded6d98e7de2b7e8b826d77b"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1055Encoded/properties/alternatives/prefixItems/0",
+                "beforeNodeSha256": "a57dae9837cebc1f725e05023490d46a431ba8e22dbd80a62a535da8a4395fdd",
+                "afterNodeSha256": "b2a0949e5fc3e1ae5a37431a3dda6ef98f18730f3b81d843ae9c676a94c7a54d"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1055Encoded/properties/alternatives/prefixItems/1",
+                "beforeNodeSha256": "a57dae9837cebc1f725e05023490d46a431ba8e22dbd80a62a535da8a4395fdd",
+                "afterNodeSha256": "b2a0949e5fc3e1ae5a37431a3dda6ef98f18730f3b81d843ae9c676a94c7a54d"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1055Encoded/properties/alternatives/items",
+                "beforeNodeSha256": "a57dae9837cebc1f725e05023490d46a431ba8e22dbd80a62a535da8a4395fdd",
+                "afterNodeSha256": "b2a0949e5fc3e1ae5a37431a3dda6ef98f18730f3b81d843ae9c676a94c7a54d"
+              }
+            ],
+            "unitIdItemId": [
+              {
+                "pointer": "/$defs/SrdRecordUnion79Encoded/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/Union_1/anyOf/36/properties/sourceFilter/properties/weaponFilter/anyOf/3/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/Union_1/anyOf/46/properties/weaponFilter/anyOf/3/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/Union_1/anyOf/49/properties/weaponFilter/anyOf/3/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/Union_1/anyOf/52/properties/weaponFilter/anyOf/3/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/Union_1/anyOf/53/properties/weaponFilter/anyOf/3/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1142Encoded/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              }
+            ],
+            "casterHealLinkRangeFeet": [
+              {
+                "pointer": "/$defs/SrdRecordUnion586Encoded/properties/rangeFeet",
+                "beforeNodeSha256": "2a1379ebe9f4b632fbdf3732d4b86b26e9fbf2aa92cf2449dde7bf4dc122060f",
+                "afterNodeSha256": "2e690dc05b07917530a37e7eb7d2cb83f380834b14ed31664e9d896f2e21620a"
+              }
+            ],
+            "redundantSubsets": [
+              {
+                "pointer": "/$defs/PublishedSrdUnitRecord",
+                "beforeNodeSha256": "e73ea5ba1fa509b59af8e34913264926d67cf74a7ce69160e7e9da6e067e73d1",
+                "afterNodeSha256": "6805c2405608735744dc76b400e46b93db82a7a6f8ef484b43e9bf5ec75b5f24"
+              }
+            ]
+          },
+          "comparisonNormalizedRootSha256": "17cf989825f3139a3f3ba8f9e05c0325e37353527207f74aaf266783cadfc624",
+          "candidateNormalizedRootSha256": "17cf989825f3139a3f3ba8f9e05c0325e37353527207f74aaf266783cadfc624"
+        }
       }
     }
   }

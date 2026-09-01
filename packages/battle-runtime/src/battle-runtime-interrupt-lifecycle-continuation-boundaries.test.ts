@@ -3,10 +3,10 @@
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-  classLevel,
   damageAmount,
   DieRollResult,
   movementFeet,
+  PositiveInteger,
 } from "@dnd/shared/types";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import {
@@ -53,7 +53,6 @@ import {
   battleFrontierInterruptDecisionForState,
   battleId,
   breakBattleConcentration,
-  characterBattleFeatureInitForTest,
   characterSeed,
   cuttingWordsAttackOnlyUnit,
   cuttingWordsDamageOnlyUnit,
@@ -1057,12 +1056,6 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
           resources: [cuttingWordsResource({ unit: modifier })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(modifier, [
-              { className: "wizard", level: classLevel(1) },
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [
             {
               unit: modifier,
@@ -1086,7 +1079,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
             ...targetStatBlock,
             statBlock: {
               ...targetStatBlock.statBlock,
-              hp: { kind: "literal", value: 20 },
+              hp: { kind: "literal", value: PositiveInteger(20) },
             },
           },
           currentHp: 20,
@@ -1280,11 +1273,6 @@ function reactionModifierState(
         classLevels: [{ className: "bard", level: 3 }],
         attack: null,
         resources: [cuttingWordsResource({ unit })],
-        unitFeatures: [
-          characterBattleFeatureInitForTest(unit, [
-            { className: "bard", level: classLevel(3) },
-          ]),
-        ],
         characterUnitRefs: [
           {
             unit,

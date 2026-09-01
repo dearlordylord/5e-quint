@@ -454,28 +454,38 @@ describe("battle tool payload boundaries", () => {
       },
     });
 
-    expect(
-      readToolPayload(
-        handleToolCall(root, "battle_lifecycle", {
-          operation: {
-            kind: "addCombatant",
-            combatant: {
-              kind: "statBlock",
-              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-              statBlockId: "stat_block_skeleton",
-              combatantId: "goblin",
-              initiative: 4,
-              admissionSource: { kind: "encounterParticipant" },
-            },
+    const duplicateCombatantPayload = readToolPayload(
+      handleToolCall(root, "battle_lifecycle", {
+        operation: {
+          kind: "addCombatant",
+          combatant: {
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_skeleton",
+            combatantId: "goblin",
+            initiative: 4,
+            admissionSource: { kind: "encounterParticipant" },
           },
-        }),
-      ),
-    ).toMatchObject({
+        },
+      }),
+    );
+    expect(duplicateCombatantPayload).toEqual({
+      error: "Battle combatant admission failed.",
       details: {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
         combatantId: "goblin",
         ownerPath: ["operation", "combatant"],
-        message: "Duplicate combatant id: goblin",
+        issues: [
+          {
+            kind: "battleInitialization",
+            code: "BATTLE_INITIALIZATION_INVALID",
+            ownerPath: ["operation", "combatant"],
+            issueTag: "battleStateInitIssue",
+            reason: "duplicateCombatantId",
+            combatantId: "goblin",
+            message: "Duplicate combatant id: goblin",
+          },
+        ],
         recovery: {
           tag: "battleAndCharacterSessionsUnchanged",
           guidance:

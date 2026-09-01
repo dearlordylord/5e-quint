@@ -6,7 +6,7 @@ import {
 } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { Result } from "effect";
 import * as Option from "effect/Option";
 export {
@@ -62,10 +62,8 @@ import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlockWithCreatureType,
-} from "./stat-block-authored-projection.ts";
+import { projectAuthoredStatBlockWithCreatureType } from "./stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "./stat-block-projection-failure.ts";
 
 export type SpawnedCompanionReappearanceInput = {
   readonly state: BattleState;

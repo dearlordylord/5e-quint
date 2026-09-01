@@ -8,12 +8,17 @@ import { Match, Result, Schema } from "effect";
 
 import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
-const CERTIFICATE_FORMAT_VERSION = 4;
+const CERTIFICATE_FORMAT_VERSION = 5;
 const EFFECT3_SURFACE_BASELINE_COMMIT =
   "76d9abaf0ec9c8369d5f95f603c5cce88704d26e";
 const SURFACE_AGGREGATE_PATH = "packages/surface/publication/srd-surface.json";
 const SURFACE_SCHEMA_PATH =
   "packages/surface/publication/srd-surface.schema.json";
+const SCHEMA_COMPARISON_COMMIT = "63f6f3d93388d6c8bffd45f22f45ee3998a820b0";
+const SCHEMA_COMPARISON_CERTIFICATE_PATH =
+  "docs/migrations/effect-4/surface-publication-delta-certificate.json";
+const SCHEMA_COMPARISON_CERTIFICATE_SHA256 =
+  "b5462a6d718a36d95002a2900184b250cf661b3736d2dc2a5ac708347a55f162";
 
 const AGGREGATE_RECORD_FAMILIES = ["units", "statBlocks"] as const;
 type AggregateRecordFamily = (typeof AGGREGATE_RECORD_FAMILIES)[number];
@@ -114,6 +119,11 @@ const SchemaCrossValidationExpectationSchema = Schema.Struct({
   aggregate: Schema.Literals(AGGREGATE_LABELS),
   outcome: Schema.Literals(SCHEMA_VALIDATION_OUTCOMES),
 });
+const SchemaNodeClassificationSchema = Schema.Struct({
+  pointer: Schema.String.pipe(Schema.check(Schema.isPattern(/^\//u))),
+  beforeNodeSha256: HashSchema,
+  afterNodeSha256: HashSchema,
+});
 const SchemaCertificateSchema = Schema.Struct({
   baseline: ArtifactDigestSchema,
   candidate: ArtifactDigestSchema,
@@ -133,6 +143,22 @@ const SchemaCertificateSchema = Schema.Struct({
       candidate: Schema.Boolean,
     }),
     crossValidation: Schema.Array(SchemaCrossValidationExpectationSchema),
+    graphDelta: Schema.Struct({
+      comparisonCommit: Schema.Literal(SCHEMA_COMPARISON_COMMIT),
+      comparisonCertificateSha256: Schema.Literal(
+        SCHEMA_COMPARISON_CERTIFICATE_SHA256,
+      ),
+      comparisonSchema: ArtifactDigestSchema,
+      classifiedChanges: Schema.Struct({
+        gmSpeedChoiceMinimum: Schema.Array(SchemaNodeClassificationSchema),
+        flyOnlyHover: Schema.Array(SchemaNodeClassificationSchema),
+        unitIdItemId: Schema.Array(SchemaNodeClassificationSchema),
+        casterHealLinkRangeFeet: Schema.Array(SchemaNodeClassificationSchema),
+        redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
+      }),
+      comparisonNormalizedRootSha256: HashSchema,
+      candidateNormalizedRootSha256: HashSchema,
+    }),
   }),
 });
 const SurfacePublicationDeltaCertificateSchema = Schema.Struct({
@@ -183,6 +209,10 @@ type PublicationDeltaVerificationIssueKind =
   | "schema-evidence-mismatch"
   | "schema-reference-mismatch"
   | "schema-cross-validation-mismatch"
+  | "schema-delta-authority-mismatch"
+  | "schema-delta-evidence-mismatch"
+  | "schema-delta-unclassified"
+  | "schema-delta-graph-invalid"
   | "schema-compile-failed"
   | "schema-validation-failed";
 
@@ -464,6 +494,7 @@ function readBaselineArtifact(
       bytes: execFileSync("git", ["show", `${baselineCommit}:${path}`], {
         cwd: repoRoot,
         encoding: "buffer",
+        maxBuffer: 16 * 1024 * 1024,
         stdio: ["ignore", "pipe", "pipe"],
       }),
     };
@@ -539,6 +570,876 @@ function schemaEvidence(schema: SchemaDocument): SchemaEvidence {
   return {
     ...schemaReferences(schema),
     canonicalJsonSha256: sha256(Buffer.from(canonicalJson(schema), "utf8")),
+  };
+}
+
+type SchemaGraphDeltaEvidence =
+  SurfacePublicationDeltaCertificate["artifacts"]["schema"]["evidence"]["graphDelta"];
+
+function objectAt(value: JsonObject, key: string): JsonObject | undefined {
+  return isJsonObject(value[key]) ? value[key] : undefined;
+}
+
+function stringAt(value: JsonObject, key: string): string | undefined {
+  return typeof value[key] === "string" ? value[key] : undefined;
+}
+
+function jsonObjectWithoutKeys(
+  value: JsonObject,
+  keys: readonly string[],
+): JsonObject {
+  const omitted = new Set(keys);
+  return Object.fromEntries(
+    Object.entries(value).filter(([key]) => !omitted.has(key)),
+  );
+}
+
+function validateSchemaComparisonAuthority(
+  issues: PublicationDeltaVerificationIssue[],
+  repoRoot: string,
+  expected: SurfacePublicationDeltaCertificate,
+  comparisonSchemaBytes: ArtifactBytes,
+): void {
+  const certificateBytes = readBaselineArtifact(
+    repoRoot,
+    SCHEMA_COMPARISON_COMMIT,
+    SCHEMA_COMPARISON_CERTIFICATE_PATH,
+  );
+  if (certificateBytes.tag === "invalid") {
+    issues.push({
+      kind: "schema-delta-authority-mismatch",
+      message: `The reviewed intermediate Surface certificate is unavailable: ${certificateBytes.message}`,
+    });
+    return;
+  }
+  if (sha256(certificateBytes.bytes) !== SCHEMA_COMPARISON_CERTIFICATE_SHA256) {
+    issues.push({
+      kind: "schema-delta-authority-mismatch",
+      message:
+        "The intermediate Surface certificate bytes do not match the reviewed immutable authority.",
+    });
+    return;
+  }
+  const parsed = parseJsonBytes(certificateBytes.bytes);
+  if (parsed.tag === "invalid" || !isJsonObject(parsed.value)) {
+    issues.push({
+      kind: "schema-delta-authority-mismatch",
+      message:
+        "The reviewed intermediate Surface certificate is not valid JSON.",
+    });
+    return;
+  }
+  const artifacts = objectAt(parsed.value, "artifacts");
+  const schema =
+    artifacts === undefined ? undefined : objectAt(artifacts, "schema");
+  const intermediateBaseline =
+    schema === undefined ? undefined : objectAt(schema, "baseline");
+  const intermediateCandidate =
+    schema === undefined ? undefined : objectAt(schema, "candidate");
+  const comparison = expected.artifacts.schema.evidence.graphDelta;
+  const comparisonDigest =
+    comparisonSchemaBytes.tag === "ok"
+      ? {
+          byteLength: comparisonSchemaBytes.bytes.length,
+          sha256: sha256(comparisonSchemaBytes.bytes),
+        }
+      : undefined;
+  const authorityMatches =
+    parsed.value.baselineCommit === expected.baselineCommit &&
+    stringAt(intermediateBaseline ?? {}, "sha256") ===
+      expected.artifacts.schema.baseline.sha256 &&
+    intermediateBaseline?.byteLength ===
+      expected.artifacts.schema.baseline.byteLength &&
+    stringAt(intermediateCandidate ?? {}, "sha256") ===
+      comparison.comparisonSchema.sha256 &&
+    intermediateCandidate?.byteLength ===
+      comparison.comparisonSchema.byteLength &&
+    comparisonDigest?.sha256 === comparison.comparisonSchema.sha256 &&
+    comparisonDigest.byteLength === comparison.comparisonSchema.byteLength;
+  if (!authorityMatches) {
+    issues.push({
+      kind: "schema-delta-authority-mismatch",
+      message:
+        "The intermediate certificate does not bind the Effect 3 baseline and comparison schema used by this certificate.",
+    });
+  }
+}
+
+type SchemaNodeClassification = {
+  readonly pointer: string;
+  readonly beforeNodeSha256: string;
+  readonly afterNodeSha256: string;
+};
+
+type CandidateSchemaClassifications = {
+  readonly gmSpeedChoiceMinimum: readonly SchemaNodeClassification[];
+  readonly flyOnlyHover: readonly SchemaNodeClassification[];
+  readonly unitIdItemId: readonly SchemaNodeClassification[];
+  readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
+};
+
+type ClassifiedSchemaTransform = {
+  readonly value: JsonValue;
+  readonly observed: CandidateSchemaClassifications;
+  readonly unauthorized: readonly SchemaNodeClassification[];
+};
+
+function canonicalNodeSha256(value: JsonValue): string {
+  return sha256(Buffer.from(canonicalJson(value), "utf8"));
+}
+
+function reachableSchemaNodes(schema: SchemaDocument): ReadonlySet<JsonValue> {
+  const reachable = new Set<JsonValue>();
+  const visit = (value: JsonValue): void => {
+    if (reachable.has(value)) return;
+    reachable.add(value);
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (!isJsonObject(value)) return;
+    if (typeof value.$ref === "string" && value.$ref.startsWith("#/$defs/")) {
+      const target = schema.$defs[value.$ref.slice("#/$defs/".length)];
+      if (target !== undefined) visit(target);
+    }
+    for (const [key, child] of Object.entries(value)) {
+      if (key !== "$defs") visit(child);
+    }
+  };
+  visit(schema);
+  return reachable;
+}
+
+function schemaClassificationMatches(
+  expected: readonly SchemaNodeClassification[],
+  observed: SchemaNodeClassification,
+): boolean {
+  return expected.some(
+    (classification) =>
+      classification.pointer === observed.pointer &&
+      classification.beforeNodeSha256 === observed.beforeNodeSha256 &&
+      classification.afterNodeSha256 === observed.afterNodeSha256,
+  );
+}
+
+function resolvePureLocalReference(
+  schema: SchemaDocument,
+  value: JsonValue,
+): JsonValue {
+  let current = value;
+  const visited = new Set<string>();
+  while (isJsonObject(current) && Object.keys(current).length === 1) {
+    if (Array.isArray(current.anyOf) && current.anyOf.length === 1) {
+      current = current.anyOf[0]!;
+      continue;
+    }
+    if (
+      typeof current.$ref !== "string" ||
+      !current.$ref.startsWith("#/$defs/")
+    )
+      return current;
+    const name = current.$ref.slice("#/$defs/".length);
+    if (visited.has(name)) return current;
+    visited.add(name);
+    const target = schema.$defs[name];
+    if (target === undefined) return current;
+    current = target;
+  }
+  return current;
+}
+
+function isSyntacticSchemaSubset(
+  schema: SchemaDocument,
+  leftRaw: JsonValue,
+  rightRaw: JsonValue,
+  memo = new Map<string, boolean | "active">(),
+): boolean {
+  const left = resolvePureLocalReference(schema, leftRaw);
+  const right = resolvePureLocalReference(schema, rightRaw);
+  if (canonicalJson(left) === canonicalJson(right)) return true;
+  const pair = `${sha256(Buffer.from(canonicalJson(left), "utf8"))}:${sha256(Buffer.from(canonicalJson(right), "utf8"))}`;
+  const cached = memo.get(pair);
+  if (cached !== undefined) return cached === "active" ? true : cached;
+  memo.set(pair, "active");
+  const result = syntacticSchemaSubsetResult(schema, left, right, memo);
+  memo.set(pair, result);
+  return result;
+}
+
+function syntacticSchemaSubsetResult(
+  schema: SchemaDocument,
+  left: JsonValue,
+  right: JsonValue,
+  memo: Map<string, boolean | "active">,
+): boolean {
+  if (isJsonObject(right) && Array.isArray(right.anyOf)) {
+    return right.anyOf.some((member) =>
+      isSyntacticSchemaSubset(schema, left, member, memo),
+    );
+  }
+  if (isJsonObject(left) && Array.isArray(left.anyOf)) {
+    return left.anyOf.every((member) =>
+      isSyntacticSchemaSubset(schema, member, right, memo),
+    );
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
+      left.length === right.length &&
+      left.every((child, index) =>
+        isSyntacticSchemaSubset(schema, child, right[index]!, memo),
+      )
+    );
+  }
+  if (!isJsonObject(left) || !isJsonObject(right)) return false;
+  const leftKeys = Object.keys(left)
+    .filter((key) => key !== "$defs")
+    .sort(compareCodePointStrings);
+  const rightKeys = Object.keys(right)
+    .filter((key) => key !== "$defs")
+    .sort(compareCodePointStrings);
+  return (
+    JSON.stringify(leftKeys) === JSON.stringify(rightKeys) &&
+    leftKeys.every((key) =>
+      isSyntacticSchemaSubset(schema, left[key]!, right[key]!, memo),
+    )
+  );
+}
+
+function isBarbarianClassFeatureSchema(
+  schema: SchemaDocument,
+  member: JsonValue,
+): boolean {
+  const resolved = resolvePureLocalReference(schema, member);
+  if (!isJsonObject(resolved)) return false;
+  const properties = objectAt(resolved, "properties");
+  const resolveProperty = (key: string): JsonObject | undefined => {
+    const raw = properties?.[key];
+    if (raw === undefined) return undefined;
+    const value = resolvePureLocalReference(schema, raw);
+    return isJsonObject(value) ? value : undefined;
+  };
+  const kind = resolveProperty("kind");
+  const className = resolveProperty("className");
+  return (
+    kind?.type === "string" &&
+    Array.isArray(kind.enum) &&
+    kind.enum[0] === "class_feature" &&
+    className?.type === "string" &&
+    Array.isArray(className.enum) &&
+    className.enum[0] === "barbarian"
+  );
+}
+
+function classifyComparisonSchema(
+  schema: SchemaDocument,
+  expected: readonly SchemaNodeClassification[],
+): {
+  readonly value: JsonValue;
+  readonly observed: readonly SchemaNodeClassification[];
+  readonly unauthorized: readonly SchemaNodeClassification[];
+} {
+  const reachable = reachableSchemaNodes(schema);
+  const observed: SchemaNodeClassification[] = [];
+  const unauthorized: SchemaNodeClassification[] = [];
+  const transform = (value: JsonValue, pointer: string): JsonValue => {
+    if (Array.isArray(value))
+      return value.map((child, index) =>
+        transform(child, jsonPointerChild(pointer, index)),
+      );
+    if (!isJsonObject(value)) return value;
+    const transformed = Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        transform(child, jsonPointerChild(pointer, key)),
+      ]),
+    );
+    const anyOf = transformed.anyOf;
+    if (Array.isArray(anyOf) && reachable.has(value)) {
+      const retained = anyOf.filter((member, index) => {
+        const redundant =
+          isBarbarianClassFeatureSchema(schema, member) &&
+          anyOf.some(
+            (other, otherIndex) =>
+              otherIndex !== index &&
+              isBarbarianClassFeatureSchema(schema, other) &&
+              isSyntacticSchemaSubset(schema, member, other),
+          );
+        return !redundant;
+      });
+      if (retained.length !== anyOf.length) {
+        const proposed = { ...transformed, anyOf: retained };
+        const classification = {
+          pointer,
+          beforeNodeSha256: canonicalNodeSha256(value),
+          afterNodeSha256: canonicalNodeSha256(proposed),
+        } satisfies SchemaNodeClassification;
+        observed.push(classification);
+        if (schemaClassificationMatches(expected, classification)) {
+          return proposed;
+        }
+        unauthorized.push(classification);
+      }
+    }
+    return transformed;
+  };
+  return { value: transform(schema, ""), observed, unauthorized };
+}
+
+function schemaObjectSignature(
+  schema: SchemaDocument,
+  value: JsonObject,
+  visit: (raw: JsonValue) => string,
+  redundantSubsetCount?: { value: number },
+): string {
+  const entries = Object.entries(value)
+    .filter(([key]) => key !== "$defs")
+    .sort(([left], [right]) => compareCodePointStrings(left, right))
+    .map(([key, child]) => {
+      if (key === "anyOf" && Array.isArray(child)) {
+        const members: JsonValue[] = [];
+        const append = (member: JsonValue): void => {
+          const resolved = resolvePureLocalReference(schema, member);
+          if (
+            isJsonObject(resolved) &&
+            Object.keys(resolved).length === 1 &&
+            Array.isArray(resolved.anyOf)
+          ) {
+            resolved.anyOf.forEach(append);
+          } else members.push(member);
+        };
+        child.forEach(append);
+        const barbarianMembers = members
+          .map((member, index) => ({ member, index }))
+          .filter(({ member }) =>
+            isBarbarianClassFeatureSchema(schema, member),
+          );
+        const nonRedundant = members.filter((member, index) => {
+          const redundant =
+            isBarbarianClassFeatureSchema(schema, member) &&
+            barbarianMembers.some(
+              ({ member: other, index: otherIndex }) =>
+                otherIndex !== index &&
+                isSyntacticSchemaSubset(schema, member, other),
+            );
+          if (redundant)
+            redundantSubsetCount && (redundantSubsetCount.value += 1);
+          return !redundant;
+        });
+        return `${key}:[${[...new Set(nonRedundant.map(visit))].sort(compareCodePointStrings).join(",")}]`;
+      }
+      if (
+        (key === "required" || key === "enum" || key === "type") &&
+        Array.isArray(child)
+      ) {
+        return `${key}:[${[...new Set(child.map(visit))].sort(compareCodePointStrings).join(",")}]`;
+      }
+      return `${key}:${visit(child)}`;
+    });
+  return `object:{${entries.join(",")}}`;
+}
+
+function schemaNodeHash(
+  schema: SchemaDocument,
+  value: JsonValue,
+  redundantSubsetCount?: { value: number },
+): string {
+  const memo = new Map<JsonValue, string>();
+  const active = new Set<JsonValue>();
+  const visit = (raw: JsonValue): string => {
+    const value = resolvePureLocalReference(schema, raw);
+    const cached = memo.get(value);
+    if (cached !== undefined) return cached;
+    if (active.has(value))
+      return sha256(Buffer.from("recursive-schema-node", "utf8"));
+    active.add(value);
+    const signature = Array.isArray(value)
+      ? `array:${value.map(visit).join(",")}`
+      : !isJsonObject(value)
+        ? `scalar:${JSON.stringify(value)}`
+        : schemaObjectSignature(schema, value, visit, redundantSubsetCount);
+    active.delete(value);
+    const hash = sha256(Buffer.from(signature, "utf8"));
+    memo.set(value, hash);
+    return hash;
+  };
+  return visit(value);
+}
+
+function classifyCandidateSchema(
+  schema: SchemaDocument,
+  expected: CandidateSchemaClassifications,
+): ClassifiedSchemaTransform {
+  const reachable = reachableSchemaNodes(schema);
+  const observed: {
+    gmSpeedChoiceMinimum: SchemaNodeClassification[];
+    flyOnlyHover: SchemaNodeClassification[];
+    unitIdItemId: SchemaNodeClassification[];
+    casterHealLinkRangeFeet: SchemaNodeClassification[];
+  } = {
+    gmSpeedChoiceMinimum: [],
+    flyOnlyHover: [],
+    unitIdItemId: [],
+    casterHealLinkRangeFeet: [],
+  };
+  const unauthorized: SchemaNodeClassification[] = [];
+  const authorize = (
+    kind: keyof CandidateSchemaClassifications,
+    pointer: string,
+    before: JsonValue,
+    after: JsonValue,
+  ): boolean => {
+    const classification = {
+      pointer,
+      beforeNodeSha256: canonicalNodeSha256(before),
+      afterNodeSha256: canonicalNodeSha256(after),
+    } satisfies SchemaNodeClassification;
+    observed[kind].push(classification);
+    if (schemaClassificationMatches(expected[kind], classification)) {
+      return true;
+    }
+    unauthorized.push(classification);
+    return false;
+  };
+  type CandidateSchemaClassifier = (
+    value: JsonObject,
+    pointer: string,
+    transformed: JsonObject,
+  ) => JsonObject;
+  const classifyCasterHealLinkRangeFeet: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    const properties = objectAt(transformed, "properties");
+    const kind =
+      properties === undefined ? undefined : objectAt(properties, "kind");
+    const rangeFeet = properties?.rangeFeet;
+    if (
+      !reachable.has(value) ||
+      kind?.type !== "string" ||
+      !Array.isArray(kind.enum) ||
+      kind.enum.length !== 1 ||
+      kind.enum[0] !== "caster_heal_link" ||
+      rangeFeet === undefined ||
+      !isJsonObject(rangeFeet) ||
+      rangeFeet.type !== "integer" ||
+      rangeFeet.minimum !== 1 ||
+      Object.keys(rangeFeet).length !== 2
+    ) {
+      return transformed;
+    }
+    const reviewedAfter = {
+      anyOf: [
+        { type: "number" },
+        { type: "string", enum: ["Infinity", "-Infinity", "NaN"] },
+      ],
+    } satisfies JsonObject;
+    const rangeFeetPointer = jsonPointerChild(
+      jsonPointerChild(pointer, "properties"),
+      "rangeFeet",
+    );
+    return authorize(
+      "casterHealLinkRangeFeet",
+      rangeFeetPointer,
+      rangeFeet,
+      reviewedAfter,
+    )
+      ? {
+          ...transformed,
+          properties: { ...properties, rangeFeet: reviewedAfter },
+        }
+      : transformed;
+  };
+  const classifyGmSpeedChoiceMinimum: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !pointer.endsWith("/alternatives") ||
+      !reachable.has(value) ||
+      transformed.minItems !== 2 ||
+      !Array.isArray(transformed.prefixItems) ||
+      transformed.prefixItems.length !== 2 ||
+      transformed.items === undefined ||
+      !transformed.prefixItems.every(
+        (item) =>
+          schemaNodeHash(schema, item) ===
+          schemaNodeHash(schema, transformed.items!),
+      )
+    ) {
+      return transformed;
+    }
+    const proposed = jsonObjectWithoutKeys(transformed, [
+      "minItems",
+      "prefixItems",
+    ]);
+    const reviewedAfter = jsonObjectWithoutKeys(value, [
+      "minItems",
+      "prefixItems",
+    ]);
+    return authorize("gmSpeedChoiceMinimum", pointer, value, reviewedAfter)
+      ? proposed
+      : transformed;
+  };
+  const classifyUnitIdItemId: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !pointer.endsWith("/itemId") ||
+      !reachable.has(value) ||
+      transformed.type !== "string" ||
+      transformed.minLength !== 1 ||
+      typeof transformed.pattern !== "string"
+    ) {
+      return transformed;
+    }
+    const proposed = jsonObjectWithoutKeys(transformed, [
+      "minLength",
+      "pattern",
+    ]);
+    return authorize("unitIdItemId", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  const classifyFlyOnlyHover: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      !Array.isArray(transformed.anyOf) ||
+      transformed.anyOf.length !== 2
+    ) {
+      return transformed;
+    }
+    const branches = transformed.anyOf.map((branch) =>
+      resolvePureLocalReference(schema, branch),
+    );
+    if (!branches.every(isJsonObject)) return transformed;
+    const [left, right] = branches;
+    const leftProperties = objectAt(left!, "properties");
+    const rightProperties = objectAt(right!, "properties");
+    if (leftProperties === undefined || rightProperties === undefined) {
+      return transformed;
+    }
+    const candidate = [
+      [left!, right!, leftProperties, rightProperties],
+      [right!, left!, rightProperties, leftProperties],
+    ].find(([, , nonFly, fly]) => {
+      const nonFlyKind = objectAt(nonFly, "kind");
+      const flyKind = objectAt(fly, "kind");
+      const nonFlyHover = nonFly.hover;
+      const flyHover = objectAt(fly, "hover");
+      const nonFlyKinds = nonFlyKind?.anyOf;
+      if (
+        !Array.isArray(nonFlyKinds) ||
+        flyKind?.type !== "string" ||
+        !Array.isArray(flyKind.enum) ||
+        flyKind.enum.length !== 1 ||
+        flyKind.enum[0] !== "fly" ||
+        !isJsonObject(nonFlyHover) ||
+        typeof nonFlyHover.$ref !== "string" ||
+        !nonFlyHover.$ref.endsWith("/ForbiddenValue") ||
+        flyHover?.type !== "boolean" ||
+        !Array.isArray(flyHover.enum) ||
+        flyHover.enum[0] !== true
+      ) {
+        return false;
+      }
+      const sharedKeys = Object.keys(nonFly).filter(
+        (key) => key !== "kind" && key !== "hover",
+      );
+      return (
+        sharedKeys.length ===
+          Object.keys(fly).filter((key) => key !== "kind" && key !== "hover")
+            .length &&
+        sharedKeys.every(
+          (key) =>
+            schemaNodeHash(schema, nonFly[key]!) ===
+            schemaNodeHash(schema, fly[key]!),
+        )
+      );
+    });
+    if (candidate === undefined) return transformed;
+    const [nonFlyBranch, flyBranch, nonFly, fly] = candidate;
+    const nonFlyKinds = objectAt(nonFly, "kind")?.anyOf;
+    const flyKind = objectAt(fly, "kind");
+    if (!Array.isArray(nonFlyKinds) || flyKind === undefined) {
+      return transformed;
+    }
+    const widenedKind = { anyOf: [...nonFlyKinds, flyKind] };
+    const proposed = {
+      ...transformed,
+      anyOf: [
+        {
+          ...nonFlyBranch,
+          properties: { ...nonFly, kind: widenedKind },
+        },
+        {
+          ...flyBranch,
+          properties: { ...fly, kind: widenedKind },
+        },
+      ],
+    };
+    return authorize("flyOnlyHover", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  const classifiers = [
+    classifyCasterHealLinkRangeFeet,
+    classifyGmSpeedChoiceMinimum,
+    classifyUnitIdItemId,
+    classifyFlyOnlyHover,
+  ] as const;
+  const transform = (value: JsonValue, pointer: string): JsonValue => {
+    if (Array.isArray(value))
+      return value.map((child, index) =>
+        transform(child, jsonPointerChild(pointer, index)),
+      );
+    if (!isJsonObject(value)) return value;
+    const recursivelyTransformed = Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        transform(child, jsonPointerChild(pointer, key)),
+      ]),
+    );
+    return classifiers.reduce(
+      (transformed, classify) => classify(value, pointer, transformed),
+      recursivelyTransformed,
+    );
+  };
+  return {
+    value: transform(schema, ""),
+    observed,
+    unauthorized,
+  };
+}
+
+function schemaGraphNodeIndexes(
+  indexes: Map<SchemaDocument, Map<JsonValue, number>>,
+  schema: SchemaDocument,
+): Map<JsonValue, number> {
+  const existing = indexes.get(schema);
+  if (existing !== undefined) return existing;
+  const created = new Map<JsonValue, number>();
+  indexes.set(schema, created);
+  return created;
+}
+
+function schemaGraphPairObservation(
+  leftSchema: SchemaDocument,
+  rightSchema: SchemaDocument,
+):
+  | {
+      readonly tag: "ok";
+      readonly leftRoot: string;
+      readonly rightRoot: string;
+      readonly changedPublicationFamilies: readonly string[];
+      readonly firstDifference: string;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  type GraphNode = {
+    readonly schema: SchemaDocument;
+    readonly value: JsonValue;
+  };
+  const nodes: GraphNode[] = [];
+  const indexes = new Map<SchemaDocument, Map<JsonValue, number>>();
+  const add = (schema: SchemaDocument, raw: JsonValue): number => {
+    const value = resolvePureLocalReference(schema, raw);
+    const schemaIndexes = schemaGraphNodeIndexes(indexes, schema);
+    const existing = schemaIndexes.get(value);
+    if (existing !== undefined) return existing;
+    const index = nodes.length;
+    schemaIndexes.set(value, index);
+    nodes.push({ schema, value });
+    if (Array.isArray(value)) value.forEach((child) => add(schema, child));
+    else if (isJsonObject(value)) {
+      Object.entries(value).forEach(([key, child]) => {
+        if (key !== "$defs") add(schema, child);
+      });
+    }
+    return index;
+  };
+  const leftIndex = add(leftSchema, leftSchema);
+  const rightIndex = add(rightSchema, rightSchema);
+  const childColor = (
+    schema: SchemaDocument,
+    value: JsonValue,
+    colors: readonly number[],
+  ): number =>
+    colors[
+      indexes.get(schema)!.get(resolvePureLocalReference(schema, value))!
+    ]!;
+  let colors: number[] = nodes.map(({ value }) =>
+    value === null
+      ? 0
+      : Array.isArray(value)
+        ? 1
+        : typeof value === "object"
+          ? 2
+          : typeof value === "string"
+            ? 3
+            : typeof value === "number"
+              ? 4
+              : 5,
+  );
+  for (let iteration = 0; iteration <= nodes.length; iteration += 1) {
+    const signatures = nodes.map(({ schema, value }) => {
+      if (Array.isArray(value))
+        return `array:${value.map((child) => childColor(schema, child, colors)).join(",")}`;
+      if (!isJsonObject(value)) return `scalar:${JSON.stringify(value)}`;
+      const entries = Object.entries(value)
+        .filter(([key]) => key !== "$defs")
+        .sort(([left], [right]) => compareCodePointStrings(left, right))
+        .map(([key, child]) => {
+          if (key === "anyOf" && Array.isArray(child)) {
+            const members: JsonValue[] = [];
+            const append = (member: JsonValue): void => {
+              const resolved = resolvePureLocalReference(schema, member);
+              if (
+                isJsonObject(resolved) &&
+                Object.keys(resolved).length === 1 &&
+                Array.isArray(resolved.anyOf)
+              )
+                resolved.anyOf.forEach(append);
+              else members.push(member);
+            };
+            child.forEach(append);
+            return `${key}:[${[...new Set(members.map((member) => childColor(schema, member, colors)))].sort((a, b) => a - b).join(",")}]`;
+          }
+          if (
+            (key === "required" || key === "enum" || key === "type") &&
+            Array.isArray(child)
+          ) {
+            return `${key}:[${[...new Set(child.map((member) => childColor(schema, member, colors)))].sort((a, b) => a - b).join(",")}]`;
+          }
+          return `${key}:${childColor(schema, child, colors)}`;
+        });
+      return `object:{${entries.join(",")}}`;
+    });
+    const ordered = [...new Set(signatures)].sort(compareCodePointStrings);
+    const colorBySignature = new Map(
+      ordered.map((signature, index) => [signature, index]),
+    );
+    const next = signatures.map(
+      (signature) => colorBySignature.get(signature)!,
+    );
+    if (next.every((color, index) => color === colors[index])) {
+      const digestFor = (index: number): string =>
+        sha256(
+          Buffer.from(
+            `root-color:${next[index]};classes:${ordered.join("\n")}`,
+            "utf8",
+          ),
+        );
+      const leftProperties = objectAt(leftSchema, "properties");
+      const rightProperties = objectAt(rightSchema, "properties");
+      const changedPublicationFamilies =
+        leftProperties === undefined || rightProperties === undefined
+          ? ["properties"]
+          : [
+              ...new Set([
+                ...Object.keys(leftProperties),
+                ...Object.keys(rightProperties),
+              ]),
+            ].filter((key) => {
+              const left = leftProperties[key];
+              const right = rightProperties[key];
+              return (
+                left === undefined ||
+                right === undefined ||
+                childColor(leftSchema, left, next) !==
+                  childColor(rightSchema, right, next)
+              );
+            });
+      const traceDifference = (
+        leftRaw: JsonValue,
+        rightRaw: JsonValue,
+        path: string,
+        seen: Set<string>,
+      ): string => {
+        const leftValue = resolvePureLocalReference(leftSchema, leftRaw);
+        const rightValue = resolvePureLocalReference(rightSchema, rightRaw);
+        const leftColor = childColor(leftSchema, leftValue, next);
+        const rightColor = childColor(rightSchema, rightValue, next);
+        if (leftColor === rightColor) return path;
+        const pair = `${leftColor}:${rightColor}`;
+        if (seen.has(pair)) return `${path} (recursive class mismatch)`;
+        seen.add(pair);
+        if (Array.isArray(leftValue) && Array.isArray(rightValue)) {
+          const index = leftValue.findIndex(
+            (child, childIndex) =>
+              rightValue[childIndex] === undefined ||
+              childColor(leftSchema, child, next) !==
+                childColor(rightSchema, rightValue[childIndex]!, next),
+          );
+          return index < 0
+            ? `${path} (array shape)`
+            : traceDifference(
+                leftValue[index]!,
+                rightValue[index]!,
+                `${path}/${index}`,
+                seen,
+              );
+        }
+        if (isJsonObject(leftValue) && isJsonObject(rightValue)) {
+          const keys = [
+            ...new Set([...Object.keys(leftValue), ...Object.keys(rightValue)]),
+          ].filter((key) => key !== "$defs");
+          const key = keys.find((candidate) => {
+            const left = leftValue[candidate];
+            const right = rightValue[candidate];
+            return (
+              left === undefined ||
+              right === undefined ||
+              childColor(leftSchema, left, next) !==
+                childColor(rightSchema, right, next)
+            );
+          });
+          if (
+            key !== undefined &&
+            leftValue[key] !== undefined &&
+            rightValue[key] !== undefined
+          )
+            return traceDifference(
+              leftValue[key]!,
+              rightValue[key]!,
+              `${path}/${key}`,
+              seen,
+            );
+          return `${path} (object keys ${key ?? "unknown"})`;
+        }
+        return `${path} (${JSON.stringify(leftValue)} -> ${JSON.stringify(rightValue)})`;
+      };
+      const firstFamily = changedPublicationFamilies[0];
+      const firstDifference =
+        firstFamily !== undefined &&
+        leftProperties?.[firstFamily] !== undefined &&
+        rightProperties?.[firstFamily] !== undefined
+          ? traceDifference(
+              leftProperties[firstFamily]!,
+              rightProperties[firstFamily]!,
+              `/properties/${firstFamily}`,
+              new Set(),
+            )
+          : "/";
+      return {
+        tag: "ok",
+        leftRoot: digestFor(leftIndex),
+        rightRoot: digestFor(rightIndex),
+        changedPublicationFamilies,
+        firstDifference,
+      };
+    }
+    colors = next;
+  }
+  return {
+    tag: "invalid",
+    message: `Schema graph partition did not stabilize for ${nodes.length} reachable nodes.`,
   };
 }
 
@@ -1248,6 +2149,105 @@ function compareSchemaEvidence(
   }
 }
 
+function compareSchemaGraphDelta(
+  issues: PublicationDeltaVerificationIssue[],
+  comparisonSchema: ParsedArtifact,
+  candidateSchema: SchemaDocument,
+  expected: SchemaGraphDeltaEvidence,
+): void {
+  const comparison = parseSchemaArtifact(issues, "baseline", comparisonSchema);
+  if (comparison === undefined) return;
+  try {
+    const classifiedCandidate = classifyCandidateSchema(candidateSchema, {
+      gmSpeedChoiceMinimum: expected.classifiedChanges.gmSpeedChoiceMinimum,
+      flyOnlyHover: expected.classifiedChanges.flyOnlyHover,
+      unitIdItemId: expected.classifiedChanges.unitIdItemId,
+      casterHealLinkRangeFeet:
+        expected.classifiedChanges.casterHealLinkRangeFeet,
+    });
+    const classifiedComparison = classifyComparisonSchema(
+      comparison,
+      expected.classifiedChanges.redundantSubsets,
+    );
+    const observed = {
+      ...classifiedCandidate.observed,
+      redundantSubsets: classifiedComparison.observed,
+    };
+    if (
+      JSON.stringify(observed) !== JSON.stringify(expected.classifiedChanges)
+    ) {
+      issues.push({
+        kind: "schema-delta-evidence-mismatch",
+        message: `Observed reachable schema classifications ${JSON.stringify(observed)} do not match the reviewed pointer and node-hash evidence ${JSON.stringify(expected.classifiedChanges)}.`,
+      });
+    }
+    if (
+      classifiedCandidate.unauthorized.length > 0 ||
+      classifiedComparison.unauthorized.length > 0
+    ) {
+      issues.push({
+        kind: "schema-delta-unclassified",
+        message: `Reachable schema changes matched a classification shape but not an exact certified pointer and before/after node hash: ${JSON.stringify(
+          [
+            ...classifiedCandidate.unauthorized,
+            ...classifiedComparison.unauthorized,
+          ],
+        )}.`,
+      });
+    }
+    const transformedDocument = schemaDocument(classifiedCandidate.value);
+    const transformedComparison = schemaDocument(classifiedComparison.value);
+    if (
+      transformedDocument.tag === "invalid" ||
+      transformedComparison.tag === "invalid"
+    ) {
+      issues.push({
+        kind: "schema-delta-graph-invalid",
+        message:
+          transformedDocument.tag === "invalid"
+            ? transformedDocument.message
+            : transformedComparison.tag === "invalid"
+              ? transformedComparison.message
+              : "Schema graph transformation failed.",
+      });
+      return;
+    }
+    const roots = schemaGraphPairObservation(
+      transformedComparison.value,
+      transformedDocument.value,
+    );
+    if (roots.tag === "invalid") {
+      issues.push({
+        kind: "schema-delta-graph-invalid",
+        message: roots.message,
+      });
+      return;
+    }
+    const comparisonRoot = roots.leftRoot;
+    const candidateRoot = roots.rightRoot;
+    if (
+      comparisonRoot !== expected.comparisonNormalizedRootSha256 ||
+      candidateRoot !== expected.candidateNormalizedRootSha256
+    ) {
+      issues.push({
+        kind: "schema-delta-evidence-mismatch",
+        message: `Normalized schema roots (${comparisonRoot}, ${candidateRoot}) do not match the reviewed finite graph evidence.`,
+      });
+    }
+    if (comparisonRoot !== candidateRoot) {
+      issues.push({
+        kind: "schema-delta-unclassified",
+        message: `The schema graph still differs after the finite reviewed transformations; changed publication families: ${roots.changedPublicationFamilies.join(", ")}; first differing region: ${roots.firstDifference}.`,
+      });
+    }
+  } catch (error) {
+    issues.push({
+      kind: "schema-delta-graph-invalid",
+      message: `Schema graph analysis could not classify the candidate: ${errorMessage(error)}`,
+    });
+  }
+}
+
 type CompiledSchemaValidator = ReturnType<Ajv2020["compile"]>;
 type CompiledSchemaValidators = ReadonlyMap<
   SchemaLabel,
@@ -1354,6 +2354,7 @@ function validateSchemaPair(
   candidateSchema: ParsedArtifact,
   baselineAggregate: ParsedArtifact,
   candidateAggregate: ParsedArtifact,
+  comparisonSchema: ParsedArtifact,
 ): void {
   const schemas = parseSchemaPair(issues, baselineSchema, candidateSchema);
   if (
@@ -1365,6 +2366,12 @@ function validateSchemaPair(
   }
   const expected = certificate.artifacts.schema.evidence;
   compareSchemaEvidence(issues, schemas, expected);
+  compareSchemaGraphDelta(
+    issues,
+    comparisonSchema,
+    schemas.candidate,
+    expected.graphDelta,
+  );
   compareCrossValidationEvidence(issues, expected);
   const validators = compileSchemaPair(issues, schemas);
   validateAggregatePair(
@@ -1448,7 +2455,18 @@ export function verifySurfacePublicationDeltaWithAuthority(
     join(publicationDir, basename(SURFACE_SCHEMA_PATH)),
     "candidate-unreadable",
   );
+  const comparisonSchemaBytes = readBaselineArtifact(
+    options.repoRoot,
+    SCHEMA_COMPARISON_COMMIT,
+    SURFACE_SCHEMA_PATH,
+  );
   const issues: PublicationDeltaVerificationIssue[] = [];
+  validateSchemaComparisonAuthority(
+    issues,
+    options.repoRoot,
+    expected,
+    comparisonSchemaBytes,
+  );
   verifyArtifactBytes(
     issues,
     baselineAggregateBytes,
@@ -1478,6 +2496,7 @@ export function verifySurfacePublicationDeltaWithAuthority(
   const candidateAggregate = parseArtifact(candidateAggregateBytes);
   const baselineSchema = parseArtifact(baselineSchemaBytes);
   const candidateSchema = parseArtifact(candidateSchemaBytes);
+  const comparisonSchema = parseArtifact(comparisonSchemaBytes);
   compareAggregateSnapshots(
     issues,
     baselineAggregate,
@@ -1491,6 +2510,7 @@ export function verifySurfacePublicationDeltaWithAuthority(
     candidateSchema,
     baselineAggregate,
     candidateAggregate,
+    comparisonSchema,
   );
   return issues.length === 0
     ? { tag: "verified", baselineCommit: expected.baselineCommit }

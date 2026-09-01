@@ -1,6 +1,8 @@
 import { Effect, Schema, Tuple } from "effect";
 import {
+  AbilityScore,
   DamageDieSizeSchema,
+  SPELL_SCHOOLS,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -60,6 +62,36 @@ import {
   nonEmpty,
   strictStruct,
 } from "./schema-helpers.ts";
+import {
+  type AuthoredStatBlockReactionTrigger,
+  type AuthoredStatBlockReactionTriggerEncoded,
+  type StandaloneStatBlock,
+  type StandaloneStatBlockEncoded,
+} from "./stat-block-types.ts";
+import {
+  SURFACE_REACTION_FALL_RANGE_FEET as STAT_BLOCK_REACTION_FALL_RANGE_FEET,
+  SURFACE_REACTION_SPELL_COMPONENTS as STAT_BLOCK_REACTION_SPELL_COMPONENTS,
+  SURFACE_REACTION_SPELL_SAVE_OUTCOMES as STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES,
+  SURFACE_REACTION_TRIGGER_ANY_OF as STAT_BLOCK_REACTION_TRIGGER_ANY_OF,
+  SURFACE_REACTION_TRIGGER_CREATURE_CASTS_SPELL as STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL,
+  SURFACE_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL as STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL,
+  SURFACE_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS as STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+  SURFACE_REACTION_TRIGGER_SPELL_SAVE_OUTCOME as STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME,
+  SURFACE_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE as STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+  SURFACE_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL as STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+  SURFACE_SPELL_LEVELS as STAT_BLOCK_REACTION_SPELL_LEVELS,
+  SURFACE_WEAPON_FILTER_CATEGORIES as STAT_BLOCK_REACTION_WEAPON_CATEGORIES,
+  SURFACE_WEAPON_FILTER_SOURCE_ITEM as STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM,
+  SURFACE_WEAPON_FILTER_SPECIFIC_ITEM as STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
+  SURFACE_WEAPON_FILTER_WEAPON_CATEGORY as STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY,
+  SURFACE_WEAPON_FILTER_WEAPON_PROPERTY as STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY,
+  SURFACE_WEAPON_PROPERTIES as STAT_BLOCK_REACTION_WEAPON_PROPERTIES,
+  type SurfaceReactionTrigger,
+} from "./surface-vocabulary.ts";
+import type {
+  SpellMechanics as SpellMechanicsFromMembers,
+  SpellMechanicsEncoded as SpellMechanicsEncodedFromMembers,
+} from "./spell-mechanics-types.ts";
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
@@ -158,10 +190,23 @@ export const SPELL_SLOT_LEVELS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9,
 ] as const satisfies ReadonlyArray<number>;
 
-export const SpellLevelSchema = Schema.Literals([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+export const SpellLevelSchema = Schema.Literals(
+  STAT_BLOCK_REACTION_SPELL_LEVELS,
+);
 export const SpellSlotLevelSchema = Schema.Literals(SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+);
+const BrandedPositiveIntegerSchema = PositiveIntegerSchema.pipe(
+  Schema.brand("PositiveInteger"),
+);
+const BrandedIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.brand("Integer"),
+);
+const BrandedNonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  Schema.brand("NonNegativeInteger"),
 );
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -175,16 +220,7 @@ const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
   "utilize",
 ] as const satisfies ReadonlyArray<StandardActionKind>;
 
-export const SpellSchoolSchema = Schema.Literals([
-  "abjuration",
-  "conjuration",
-  "divination",
-  "enchantment",
-  "evocation",
-  "illusion",
-  "necromancy",
-  "transmutation",
-]);
+export const SpellSchoolSchema = Schema.Literals(SPELL_SCHOOLS);
 
 const DETECTION_PROPERTIES = [
   "magic",
@@ -861,39 +897,8 @@ type ModifyAcSetFloorEffect = Schema.Schema.Type<
   typeof ModifyAcSetFloorEffectSchema
 >;
 type RollKind = Schema.Schema.Type<typeof RollKindSchema>;
-type SpellLevel = Schema.Schema.Type<typeof SpellLevelSchema>;
-type SpellSchool = Schema.Schema.Type<typeof SpellSchoolSchema>;
 
-type ReactionTrigger =
-  | {
-      readonly kind: "hit_by_attack_roll";
-      readonly weaponFilter?: WeaponFilter;
-    }
-  | {
-      readonly kind: "takes_damage_from_creature";
-      readonly requiresVisibleCreature?: true;
-      readonly rangeFeet?: number;
-    }
-  | { readonly kind: "self_or_visible_creature_falls"; readonly rangeFeet: 60 }
-  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
-  | {
-      readonly kind: "creature_casts_spell";
-      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly requiresVisibleCaster?: true;
-    }
-  | {
-      readonly kind: "spell_save_outcome";
-      readonly outcome: "success" | "failure";
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly spellSchool?: SpellSchool;
-      readonly spellTargetsOnlySelf?: true;
-      readonly spellHasNoAreaOfEffect?: true;
-    }
-  | {
-      readonly kind: "any_of";
-      readonly triggers: ReadonlyNonEmptyArray<ReactionTrigger>;
-    };
+type ReactionTrigger = SurfaceReactionTrigger<UnitId>;
 
 type AttackRollAbilityCheckDisadvantageUntilCasterTurnStart = {
   readonly kind: "modify_roll_advantage";
@@ -2107,38 +2112,46 @@ export const ReactionTriggerSchema: Schema.Codec<
   (): Schema.Codec<ReactionTrigger, unknown, never, never> =>
     Schema.Union([
       Schema.Struct({
-        kind: Schema.Literal("hit_by_attack_roll"),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL),
         weaponFilter: optionalExact(WeaponFilterSchema),
       }),
       Schema.Struct({
-        kind: Schema.Literal("takes_damage_from_creature"),
+        kind: Schema.Literal(
+          STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+        ),
         requiresVisibleCreature: optionalExact(Schema.Literal(true)),
         rangeFeet: optionalExact(Schema.Number),
       }),
       Schema.Struct({
-        kind: Schema.Literal("self_or_visible_creature_falls"),
-        rangeFeet: Schema.Literal(60),
+        kind: Schema.Literal(
+          STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+        ),
+        rangeFeet: Schema.Literal(STAT_BLOCK_REACTION_FALL_RANGE_FEET),
       }),
       Schema.Struct({
-        kind: Schema.Literal("targeted_by_named_spell"),
+        kind: Schema.Literal(
+          STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+        ),
         spellId: surfaceReference(Schema.String, "spell-reference"),
       }),
       Schema.Struct({
-        kind: Schema.Literal("creature_casts_spell"),
-        components: nonEmpty(Schema.Literals(["V", "S", "M"])),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL),
+        components: nonEmpty(
+          Schema.Literals(STAT_BLOCK_REACTION_SPELL_COMPONENTS),
+        ),
         spellLevelAtMost: optionalExact(SpellLevelSchema),
         requiresVisibleCaster: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
-        kind: Schema.Literal("spell_save_outcome"),
-        outcome: Schema.Literals(["success", "failure"]),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME),
+        outcome: Schema.Literals(STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES),
         spellLevelAtMost: optionalExact(SpellLevelSchema),
         spellSchool: optionalExact(SpellSchoolSchema),
         spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
         spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
-        kind: Schema.Literal("any_of"),
+        kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_ANY_OF),
         triggers: nonEmpty(ReactionTriggerSchema),
       }),
     ]),
@@ -5356,7 +5369,7 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
   actions: CreatureActionsSchema,
 });
 /** Authored procedure quantities are finite, integral, and strictly positive. */
-const StatBlockProcedurePositiveIntegerSchema = PositiveIntegerSchema;
+const StatBlockProcedurePositiveIntegerSchema = BrandedPositiveIntegerSchema;
 
 export const StatBlockProcedureOrdinalSchema =
   StatBlockProcedurePositiveIntegerSchema.pipe(
@@ -5371,7 +5384,7 @@ const StatBlockProcedurePositiveValueSchema = Schema.Struct({
 const StatBlockProcedureSignedValueSchema = Schema.Struct({
   kind: Schema.Literal("literal"),
   /** Authored procedure modifiers are finite integral values of either sign. */
-  value: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  value: BrandedIntegerSchema,
 });
 
 export const StatBlockProcedureResourceOrdinalSchema =
@@ -5701,6 +5714,19 @@ const StatBlockSpellInvocationEffectTerminationTriggerSchema = Schema.Union([
   }),
 ]);
 
+const StatBlockSpellInvocationDurationValueSchema = strictStruct({
+  unit: Schema.Literals(["round", "minute", "hour", "day"]),
+  amount: BrandedPositiveIntegerSchema,
+  upcastTiers: optionalExact(
+    nonEmpty(
+      strictStruct({
+        atSlot: BrandedPositiveIntegerSchema,
+        amount: BrandedPositiveIntegerSchema,
+      }),
+    ),
+  ),
+});
+
 export const StatBlockSpellInvocationDeltaSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal(
@@ -5757,7 +5783,7 @@ export const StatBlockSpellInvocationDeltaSchema = Schema.Union([
     kind: Schema.Literal(
       STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.durationOverride,
     ),
-    duration: DurationValueSchema,
+    duration: StatBlockSpellInvocationDurationValueSchema,
   }),
   strictStruct({
     kind: Schema.Literal(STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.targetLimit),
@@ -5911,75 +5937,80 @@ type StatBlockProcedureEntry = Schema.Schema.Type<
   typeof StatBlockProcedureEntrySchema
 >;
 
-type AuthoredStatBlockReactionTrigger =
-  | {
-      readonly kind: "hit_by_attack_roll";
-      readonly weaponFilter?: WeaponFilter;
-    }
-  | {
-      readonly kind: "takes_damage_from_creature";
-      readonly requiresVisibleCreature?: true;
-      readonly rangeFeet?: number;
-    }
-  | {
-      readonly kind: "self_or_visible_creature_falls";
-      readonly rangeFeet: 60;
-    }
-  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
-  | {
-      readonly kind: "creature_casts_spell";
-      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly requiresVisibleCaster?: true;
-    }
-  | {
-      readonly kind: "spell_save_outcome";
-      readonly outcome: "success" | "failure";
-      readonly spellLevelAtMost?: SpellLevel;
-      readonly spellSchool?: SpellSchool;
-      readonly spellTargetsOnlySelf?: true;
-      readonly spellHasNoAreaOfEffect?: true;
-    }
-  | {
-      readonly kind: "any_of";
-      readonly triggers: ReadonlyNonEmptyArray<AuthoredStatBlockReactionTrigger>;
-    };
+const AuthoredStatBlockReactionWeaponFilterSchema = Schema.Union([
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_SOURCE_ITEM),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_CATEGORY),
+    category: Schema.Literals(STAT_BLOCK_REACTION_WEAPON_CATEGORIES),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_WEAPON_PROPERTY),
+    property: Schema.Literals(STAT_BLOCK_REACTION_WEAPON_PROPERTIES),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM),
+    itemId: surfaceSchemaRole(UnitId, {
+      category: "reference",
+      relation: "item-reference",
+      targetKind: "unit",
+    }),
+  }),
+]);
 
-function authoredStatBlockReactionTriggerSchema() {
+export const AuthoredStatBlockReactionTriggerNonRecursiveSchema = Schema.Union([
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL),
+    weaponFilter: optionalExact(AuthoredStatBlockReactionWeaponFilterSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
+    ),
+    requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+    rangeFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS,
+    ),
+    rangeFeet: Schema.Literal(STAT_BLOCK_REACTION_FALL_RANGE_FEET),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL),
+    spellId: surfaceReference(NonEmptyTrimmedStringSchema, "spell-reference"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_CREATURE_CASTS_SPELL),
+    components: nonEmpty(Schema.Literals(STAT_BLOCK_REACTION_SPELL_COMPONENTS)),
+    spellLevelAtMost: optionalExact(
+      Schema.Literals(STAT_BLOCK_REACTION_SPELL_LEVELS),
+    ),
+    requiresVisibleCaster: optionalExact(Schema.Literal(true)),
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME),
+    outcome: Schema.Literals(STAT_BLOCK_REACTION_SPELL_SAVE_OUTCOMES),
+    spellLevelAtMost: optionalExact(
+      Schema.Literals(STAT_BLOCK_REACTION_SPELL_LEVELS),
+    ),
+    spellSchool: optionalExact(SpellSchoolSchema),
+    spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
+    spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
+  }),
+]);
+
+function authoredStatBlockReactionTriggerSchema(): Schema.Codec<
+  AuthoredStatBlockReactionTrigger,
+  AuthoredStatBlockReactionTriggerEncoded,
+  never,
+  never
+> {
   return Schema.Union([
+    AuthoredStatBlockReactionTriggerNonRecursiveSchema,
     strictStruct({
-      kind: Schema.Literal("hit_by_attack_roll"),
-      weaponFilter: optionalExact(WeaponFilterSchema),
-    }),
-    strictStruct({
-      kind: Schema.Literal("takes_damage_from_creature"),
-      requiresVisibleCreature: optionalExact(Schema.Literal(true)),
-      rangeFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-    }),
-    strictStruct({
-      kind: Schema.Literal("self_or_visible_creature_falls"),
-      rangeFeet: Schema.Literal(60),
-    }),
-    strictStruct({
-      kind: Schema.Literal("targeted_by_named_spell"),
-      spellId: surfaceReference(NonEmptyTrimmedStringSchema, "spell-reference"),
-    }),
-    strictStruct({
-      kind: Schema.Literal("creature_casts_spell"),
-      components: nonEmpty(Schema.Literals(["V", "S", "M"])),
-      spellLevelAtMost: optionalExact(SpellLevelSchema),
-      requiresVisibleCaster: optionalExact(Schema.Literal(true)),
-    }),
-    strictStruct({
-      kind: Schema.Literal("spell_save_outcome"),
-      outcome: Schema.Literals(["success", "failure"]),
-      spellLevelAtMost: optionalExact(SpellLevelSchema),
-      spellSchool: optionalExact(SpellSchoolSchema),
-      spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
-      spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
-    }),
-    strictStruct({
-      kind: Schema.Literal("any_of"),
+      kind: Schema.Literal(STAT_BLOCK_REACTION_TRIGGER_ANY_OF),
       triggers: nonEmpty(AuthoredStatBlockReactionTriggerSchema),
     }),
   ]);
@@ -5988,12 +6019,17 @@ function authoredStatBlockReactionTriggerSchema() {
 /* v8 ignore next -- @preserve -- full-suite collection initializes this declarative binding before V8 attributes its outer statement; stat-block-procedure-schema.test.ts decodes it directly */
 export const AuthoredStatBlockReactionTriggerSchema: Schema.Codec<
   AuthoredStatBlockReactionTrigger,
-  unknown,
+  AuthoredStatBlockReactionTriggerEncoded,
   never,
   never
-> = Schema.suspend(authoredStatBlockReactionTriggerSchema).pipe(
-  Schema.annotate({ identifier: "AuthoredStatBlockReactionTrigger" }),
-);
+> = Schema.suspend(
+  (): Schema.Codec<
+    AuthoredStatBlockReactionTrigger,
+    AuthoredStatBlockReactionTriggerEncoded,
+    never,
+    never
+  > => authoredStatBlockReactionTriggerSchema(),
+).pipe(Schema.annotate({ identifier: "AuthoredStatBlockReactionTrigger" }));
 
 /* v8 ignore next -- @preserve -- full-suite collection initializes this declarative binding before V8 attributes its outer statement; stat-block-procedure-schema.test.ts decodes it directly */
 const StatBlockReactionProcedureEntrySchema = Schema.Union([
@@ -6124,7 +6160,7 @@ export const CreatureTraitEffectSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("caster_heal_link"),
-    rangeFeet: Schema.Number,
+    rangeFeet: BrandedPositiveIntegerSchema,
   }),
 ]);
 
@@ -6620,7 +6656,7 @@ export const GlyphWardingMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
 
 export const CreatureSavingThrowModifierSchema = Schema.Struct({
   ability: AbilitySchema,
-  modifier: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  modifier: BrandedIntegerSchema,
 });
 
 const MAX_SAVING_THROW_MODIFIERS = 6;
@@ -6646,7 +6682,7 @@ export const CreatureSavingThrowModifiersSchema = nonEmpty(
 
 export const CreatureSkillModifierSchema = Schema.Struct({
   skill: SkillSchema,
-  modifier: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  modifier: BrandedIntegerSchema,
 });
 
 const StatBlockAlignmentPairSchema = Schema.Struct({
@@ -6688,6 +6724,12 @@ const StandalonePositiveStatBlockValueSchema = StatBlockLiteralValueSchema.pipe(
       message: "Standalone Stat Block values must be positive integers.",
     }),
   ),
+  Schema.decodeTo(
+    Schema.Struct({
+      kind: Schema.Literal("literal"),
+      value: BrandedPositiveIntegerSchema,
+    }),
+  ),
 );
 
 /** A standalone SRD value is authored as a positive fixed integer. */
@@ -6701,6 +6743,7 @@ export const StandaloneStatBlockValueSchema =
  */
 export const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 30 })),
+  Schema.decodeTo(AbilityScore),
 );
 
 export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
@@ -6717,7 +6760,7 @@ export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
  * authored boundary strict while leaving CreatureSenseSchema unchanged for
  * reusable runtime projections.
  */
-const StandaloneStatBlockSenseRangeFeetSchema = PositiveIntegerSchema;
+const StandaloneStatBlockSenseRangeFeetSchema = BrandedPositiveIntegerSchema;
 
 export const StandaloneCreatureSenseSchema = Schema.Union([
   Schema.Struct({
@@ -6731,12 +6774,9 @@ export const StandaloneCreatureSenseSchema = Schema.Union([
   }),
 ]);
 
-const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
-);
-
 export const StatBlockInitiativeModifierSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
+  Schema.decodeTo(BrandedIntegerSchema),
 );
 
 /**
@@ -6745,24 +6785,24 @@ export const StatBlockInitiativeModifierSchema = Schema.Number.pipe(
  */
 export const StatBlockInitiativeSchema = Schema.Struct({
   modifier: StatBlockInitiativeModifierSchema,
-  score: NonNegativeIntegerSchema,
+  score: BrandedNonNegativeIntegerSchema,
 });
 
-export const StatBlockPassivePerceptionSchema = NonNegativeIntegerSchema;
+export const StatBlockPassivePerceptionSchema = BrandedNonNegativeIntegerSchema;
 
-const StandaloneNonFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (kind): kind is Exclude<SpeedType, "fly"> => kind !== "fly",
-    ),
-  ),
+const STANDALONE_NON_FLY_SPEED_TYPES = [
+  "walk",
+  "swim",
+  "climb",
+  "burrow",
+] as const satisfies ReadonlyArray<Exclude<SpeedType, "fly">>;
+const STANDALONE_FLY_SPEED_TYPE = "fly" as const satisfies SpeedType;
+
+const StandaloneNonFlyCreatureSpeedKindSchema = Schema.Literals(
+  STANDALONE_NON_FLY_SPEED_TYPES,
 );
-const StandaloneFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (kind): kind is Extract<SpeedType, "fly"> => kind === "fly",
-    ),
-  ),
+const StandaloneFlyCreatureSpeedKindSchema = Schema.Literal(
+  STANDALONE_FLY_SPEED_TYPE,
 );
 
 const StandaloneCreatureSpeedFields = {
@@ -6822,28 +6862,13 @@ export const StandaloneCreatureSpeedSchema = Schema.Union([
 const StatBlockGmSpeedChoiceAlternativeSchema =
   StandaloneUnrestrictedCreatureSpeedSchema;
 
-type StatBlockGmSpeedChoiceAlternative =
-  typeof StatBlockGmSpeedChoiceAlternativeSchema.Type;
-type StatBlockGmSpeedChoiceAlternatives = readonly [
-  StatBlockGmSpeedChoiceAlternative,
-  StatBlockGmSpeedChoiceAlternative,
-  ...StatBlockGmSpeedChoiceAlternative[],
-];
-
-const StatBlockGmSpeedChoiceAlternativesSchema = Schema.Array(
-  StatBlockGmSpeedChoiceAlternativeSchema,
+const StatBlockGmSpeedChoiceAlternativesSchema = Schema.TupleWithRest(
+  Schema.Tuple([
+    StatBlockGmSpeedChoiceAlternativeSchema,
+    StatBlockGmSpeedChoiceAlternativeSchema,
+  ]),
+  [StatBlockGmSpeedChoiceAlternativeSchema],
 ).pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (alternatives): alternatives is StatBlockGmSpeedChoiceAlternatives =>
-        alternatives.length >= 2,
-      {
-        message:
-          "A GM Speed choice must contain at least two authored alternatives.",
-        toJsonSchema: () => ({ minItems: 2 }),
-      },
-    ),
-  ),
   Schema.check(
     Schema.makeFilter(
       (alternatives) =>
@@ -6890,7 +6915,7 @@ export const StatBlockGearItemSchema = surfaceIdentity(
 
 export const StatBlockGearEntrySchema = Schema.Struct({
   item: StatBlockGearItemSchema,
-  quantity: optionalExact(PositiveIntegerSchema),
+  quantity: optionalExact(BrandedPositiveIntegerSchema),
 });
 
 const RESERVED_STAT_BLOCK_LANGUAGE_NAMES = ["all", "none"] as const;
@@ -6926,7 +6951,7 @@ export const StatBlockLanguageSetSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("named_plus_other_languages"),
     languages: nonEmpty(StatBlockLanguageNameSchema),
-    additionalLanguages: PositiveIntegerSchema,
+    additionalLanguages: BrandedPositiveIntegerSchema,
   }),
 ]);
 
@@ -6936,7 +6961,7 @@ const StatBlockSpeechRestrictionSchema = Schema.Struct({
 });
 
 export const StatBlockTelepathySchema = Schema.Struct({
-  rangeFeet: PositiveIntegerSchema,
+  rangeFeet: BrandedPositiveIntegerSchema,
   /** Omitting response means that the receiving creature can respond. */
   response: optionalExact(Schema.Literal("receiving_creature_cannot_respond")),
   requiresLanguageUnderstanding: optionalExact(StatBlockLanguageSetSchema),
@@ -7155,7 +7180,12 @@ const hasKnownResourceRefs = (block: StandaloneStatBlockBase): boolean => {
   });
 };
 
-export const StandaloneStatBlockSchema = StandaloneStatBlockBaseSchema.pipe(
+export const StandaloneStatBlockSchema: Schema.Codec<
+  StandaloneStatBlock,
+  StandaloneStatBlockEncoded,
+  never,
+  never
+> = StandaloneStatBlockBaseSchema.pipe(
   Schema.check(
     Schema.makeFilter(hasKnownResourceRefs, {
       message:
@@ -7462,23 +7492,72 @@ export const MinorMagicEffectMenuMechanicsSchema =
     ),
   );
 
-export const SpellMechanicsSchema = Schema.Union([
-  OngoingEffectMechanicsSchema,
-  ModalOngoingEffectMechanicsSchema,
-  ActivationMechanicsSchema,
-  ModalActivationMechanicsSchema,
-  TriggeredReactionMechanicsSchema,
-  PassiveHitInterceptMechanicsSchema,
-  AnchoredTriggerMechanicsSchema,
-  MagicCircleWardMechanicsSchema,
-  StoneMergeMechanicsSchema,
-  GlyphWardingMechanicsSchema,
-  SpawnedCreatureMechanicsSchema,
-  ReanimatedCreatureMechanicsSchema,
-  TemplatedMultiSpawnMechanicsSchema,
-  ObjectRepairMechanicsSchema,
-  MinorMagicEffectMenuMechanicsSchema,
-]);
+class SpellMechanicsSchemaMembers {
+  readonly ongoingEffect: typeof OngoingEffectMechanicsSchema =
+    OngoingEffectMechanicsSchema;
+  readonly modalOngoingEffect: typeof ModalOngoingEffectMechanicsSchema =
+    ModalOngoingEffectMechanicsSchema;
+  readonly activation: typeof ActivationMechanicsSchema =
+    ActivationMechanicsSchema;
+  readonly modalActivation: typeof ModalActivationMechanicsSchema =
+    ModalActivationMechanicsSchema;
+  readonly triggeredReaction: typeof TriggeredReactionMechanicsSchema =
+    TriggeredReactionMechanicsSchema;
+  readonly passiveHitIntercept: typeof PassiveHitInterceptMechanicsSchema =
+    PassiveHitInterceptMechanicsSchema;
+  readonly anchoredTrigger: typeof AnchoredTriggerMechanicsSchema =
+    AnchoredTriggerMechanicsSchema;
+  readonly magicCircleWard: typeof MagicCircleWardMechanicsSchema =
+    MagicCircleWardMechanicsSchema;
+  readonly stoneMerge: typeof StoneMergeMechanicsSchema =
+    StoneMergeMechanicsSchema;
+  readonly glyphWarding: typeof GlyphWardingMechanicsSchema =
+    GlyphWardingMechanicsSchema;
+  readonly spawnedCreature: typeof SpawnedCreatureMechanicsSchema =
+    SpawnedCreatureMechanicsSchema;
+  readonly reanimatedCreature: typeof ReanimatedCreatureMechanicsSchema =
+    ReanimatedCreatureMechanicsSchema;
+  readonly templatedMultiSpawn: typeof TemplatedMultiSpawnMechanicsSchema =
+    TemplatedMultiSpawnMechanicsSchema;
+  readonly objectRepair: typeof ObjectRepairMechanicsSchema =
+    ObjectRepairMechanicsSchema;
+  readonly minorMagicEffectMenu: typeof MinorMagicEffectMenuMechanicsSchema =
+    MinorMagicEffectMenuMechanicsSchema;
+}
+
+type SpellMechanicsMemberSchema =
+  SpellMechanicsSchemaMembers[keyof SpellMechanicsSchemaMembers];
+
+const spellMechanicsMemberSchemas = (): readonly [
+  SpellMechanicsMemberSchema,
+  ...SpellMechanicsMemberSchema[],
+] => {
+  const [first, ...remaining] = Object.values(
+    new SpellMechanicsSchemaMembers(),
+  );
+  if (first === undefined) {
+    throw new Error("SpellMechanicsSchemaMembers must remain non-empty");
+  }
+  return [first, ...remaining];
+};
+
+const spellMechanicsMembers = spellMechanicsMemberSchemas();
+
+type SpellMechanics = SpellMechanicsFromMembers<typeof spellMechanicsMembers>;
+type SpellMechanicsEncoded = SpellMechanicsEncodedFromMembers<
+  typeof spellMechanicsMembers
+>;
+
+const spellMechanicsSchema = Schema.Union(
+  spellMechanicsMembers,
+) satisfies Schema.Codec<SpellMechanics, SpellMechanicsEncoded, never, never>;
+
+export const SpellMechanicsSchema: Schema.Codec<
+  SpellMechanics,
+  SpellMechanicsEncoded,
+  never,
+  never
+> = spellMechanicsSchema;
 
 const SpellRecordIdSchema = surfaceIdentity(UnitId, "id");
 const SpellRecordNameSchema = surfaceIdentity(Schema.String, "name");

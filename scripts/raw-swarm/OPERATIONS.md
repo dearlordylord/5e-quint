@@ -199,21 +199,43 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
-The Effect 4 public declaration graph is a reviewed deterministic measurement:
-530 declaration files and 4,667,450 bytes. The file gate admits exactly those
-530 files, so any added file requires review. The reviewed byte gate is 10 MiB,
-leaving 5,818,310 bytes of explicit margin. Deterministic verification asserts
-the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
-both limits; raising either bound requires a new measured graph and review. The
-canonical measurement is owned beside the declaration emitter in
+At integration source `b88a923f6`, the
+Effect 4 public declaration graph is a reviewed deterministic measurement: 571
+declaration files and 10,277,269 bytes. The byte gate remains 10 MiB, leaving
+208,491 bytes of explicit margin; the coarse file safety ceiling is 1,000.
+Deterministic verification asserts exact-manifest acceptance plus coarse-cap
+and cap-plus-one boundary tests; changing either bound, any admitted path, or
+any declaration content requires a new measured graph and review. The canonical
+manifest is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
 distribution test. The
-[master-reconciliation declaration certificate](../../docs/migrations/effect-4/final-parity-report.md#master-reconciliation-declaration-certificate)
-records the reviewed ten additions and three removals from the previous
-reconciliation certificate and their owning reachability. That comparison is
-pinned to commit `38e79b814`: 523 files and 3,962,445 bytes, with independently
-reproduced sorted POSIX relative-path ledger SHA-256
-`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
+[declaration-bundle convergence certificate](../../docs/migrations/effect-4/declaration-bundle-convergence.md)
+records the repaired 23 additions and one removal from comparison commit
+`993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
+excluded by the lightweight mechanics-admission owner.
+
+TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
+serialization, submitted-source checking, and authored-source AST parsing. It
+is copied into each distribution for those internal operations; it is not a
+supported external compiler version or compatibility matrix. Declaration
+emission and relocated checks require exit zero with no diagnostics and keep
+`skipLibCheck` disabled. Generated configurations are byte-identical after
+relocation, use `baseUrl: "."`, and contain only POSIX relative declaration
+paths. Compiler resolution is supplied separately from the certified D&D
+declaration graph by an authentic declaration-only cohort:
+Effect 4.0.0-rc.112, fast-check 4.9.0, msgpackr 2.1.0, and pure-rand 8.4.2.
+That cohort contains the packages' original manifests and licenses plus their
+complete required declaration files; exact version, dependency, path, content,
+file-count, and byte ledgers reject drift. It contains no JavaScript, maps, or
+source runtime and is not an authored SDK capability. The authored-source
+admission boundary permits the role's generated static type import from its
+exact public SDK module and rejects the enumerated static and dynamic
+module-edge syntax before typechecking or evaluation. This is a syntax
+admission boundary, not a capability boundary: authored TypeScript is trusted,
+cooperative code and evaluation retains the ambient authority of the Node.js
+process. Using only the context-supplied public SDK is an authoring and evidence
+convention, not an isolation or security guarantee, and the retained evidence
+cannot prove the absence of indirect ambient access.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
@@ -482,6 +504,9 @@ that exact copy, executes it, and records its calls. This is a cooperative
 external-consumer test boundary, not a hostile-code security sandbox: the
 player is instructed to use only the provided files and public SDK, and the
 harness does not attempt to defend against malicious submitted JavaScript.
+Submitted TypeScript executes with the ambient authority of the Node.js
+supervisor process; the public-SDK-only rule is a cooperative authoring and
+evidence convention rather than technical isolation.
 
 Before play, the supervisor always typechecks and evaluates the exact adjacent
 character-composition source. After ready composition it also evaluates setup.

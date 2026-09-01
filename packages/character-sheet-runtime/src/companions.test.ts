@@ -1,14 +1,10 @@
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import type { Hp as HpType } from "@dnd/shared/types";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildStatBlockCatalog,
-  type StatBlockCatalog,
-} from "@dnd/surface/surface/stat-block-catalog";
-import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Option } from "effect";
 
 import {
@@ -1067,67 +1063,6 @@ describe("Character Sheet runtime / companions", () => {
     });
   });
 
-  test("rejects literal-zero companion HP and zero recast HP", () => {
-    const sheet = spellbookRitualSheet({
-      characterIdText: "character:companion-hp-boundaries",
-      spellbook: ["find_familiar"],
-    });
-    const zeroHpCatalog = statBlockCatalogReplacingCatHp({
-      kind: "literal",
-      value: 0,
-    });
-    expect(
-      createRetainedFamiliarLikeCompanion({
-        sheet,
-        unitLibrary,
-        statBlockCatalog: zeroHpCatalog,
-        companionId: retainedCompanionId("companion:zero-hp"),
-        source: {
-          tag: "ritualSpell",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: { tag: "normalNamedForm", formId: "cat" },
-        creatureTypeOverrideChoiceId: "fey",
-      }),
-    ).toMatchObject({
-      _tag: "Failure",
-      failure: { message: "Retained companion current HP must be positive." },
-    });
-
-    const retained = requireSuccess(
-      createRetainedFamiliarLikeCompanion({
-        sheet,
-        unitLibrary,
-        statBlockCatalog,
-        companionId: retainedCompanionId("companion:recast-hp"),
-        source: {
-          tag: "ritualSpell",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: { tag: "normalNamedForm", formId: "cat" },
-        creatureTypeOverrideChoiceId: "fey",
-      }),
-    );
-    for (const [catalog, message] of [
-      [zeroHpCatalog, "Retained companion current HP must be positive."],
-    ] as const) {
-      expect(
-        createRetainedFamiliarLikeCompanion({
-          sheet: retained,
-          unitLibrary,
-          statBlockCatalog: catalog,
-          companionId: retainedCompanionId("companion:recast-hp"),
-          source: {
-            tag: "ritualSpell",
-            spellId: authoredUnitId("find_familiar"),
-          },
-          selectedForm: { tag: "normalNamedForm", formId: "cat" },
-          creatureTypeOverrideChoiceId: "fey",
-        }),
-      ).toMatchObject({ _tag: "Failure", failure: { message } });
-    }
-  });
-
   test("rejects retained embodied companions with zero current HP", () => {
     expect(
       rebuildCharacterSheetFixture({
@@ -1608,29 +1543,4 @@ function druidWildCompanionSheet() {
       statBlockCatalog,
     }),
   );
-}
-
-function statBlockCatalogReplacingCatHp(
-  hp: StatBlockRecord["statBlock"]["hp"],
-): StatBlockCatalog {
-  const cat = assertStatBlockForTest(
-    statBlockCatalog,
-    authoredStatBlockId("stat_block_cat"),
-  );
-  const replacement = {
-    ...cat,
-    statBlock: { ...cat.statBlock, hp },
-  };
-  return {
-    getStatBlock: (id) =>
-      id === "stat_block_cat"
-        ? Option.some(replacement)
-        : statBlockCatalog.getStatBlock(id),
-    listStatBlocks: () =>
-      statBlockCatalog
-        .listStatBlocks()
-        .map((statBlock) =>
-          statBlock.id === "stat_block_cat" ? replacement : statBlock,
-        ),
-  };
 }

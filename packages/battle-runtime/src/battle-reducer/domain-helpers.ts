@@ -10,12 +10,14 @@ import {
 } from "@dnd/shared/types";
 import type {
   BattleInitializationIssue,
+  BattleInitializationIssueFacts,
   BattleCreatureState,
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
 } from "../battle-state-execution.ts";
+import type { CombatantId } from "../identity.ts";
 import type { StatBlockResourceGraphAdmissionFailure } from "../stat-block-execution-state.ts";
-import { battleStatBlockProjectionFailureMessage } from "../stat-block-execution-state.ts";
+import { battleStatBlockProjectionFailureMessage } from "../stat-block-projection-failure.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -33,6 +35,26 @@ export function battleStateInitIssue(
   message: string,
 ): Result.Result<never, BattleStateInitLeafIssue> {
   return Result.fail({ tag: "battleStateInitIssue", message });
+}
+
+export function duplicateCombatantIdIssue(
+  combatantId: CombatantId,
+  ownerPath?: readonly (string | number)[],
+): {
+  readonly tag: "battleStateInitIssue";
+  readonly message: string;
+  readonly ownerPath?: readonly (string | number)[];
+} & Extract<
+  BattleInitializationIssueFacts,
+  { readonly kind: "duplicateCombatantId" }
+> {
+  return {
+    tag: "battleStateInitIssue",
+    kind: "duplicateCombatantId",
+    combatantId,
+    message: `Duplicate combatant id: ${combatantId}`,
+    ...(ownerPath === undefined ? {} : { ownerPath }),
+  };
 }
 
 export function weaponLoadoutMismatchMessage(

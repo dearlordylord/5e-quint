@@ -13,10 +13,12 @@ import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
   Size,
-  StatBlockId,
-  StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
+import type {
+  StatBlockId,
+  StatBlockRecord,
+} from "@dnd/surface/surface/stat-block-types";
 import { Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
@@ -40,12 +42,14 @@ import type {
 } from "./unit-feature-support.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import {
-  battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
   type AuthoredStatBlockProjection,
-  type BattleStatBlockInvalidResourceDeclaration,
-  type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "./stat-block-projection-failure.ts";
+import type {
+  BattleStatBlockInvalidResourceDeclaration,
+  BattleStatBlockProjectionFailure,
+} from "./stat-block-projection-failure.ts";
 import {
   admitStatBlockResourceGraph,
   type StatBlockResourceGraphAdmissionFailure,

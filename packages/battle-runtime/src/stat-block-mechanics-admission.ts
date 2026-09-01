@@ -9,15 +9,15 @@ import type {
   StatBlockMechanicsAdmissionIssueDraft,
   StatBlockMechanicsAdmissionResult,
   SurfaceMechanicsAdmission,
-} from "@dnd/surface/surface/catalog-install";
+} from "@dnd/surface/surface/mechanics-admission";
 import {
   statBlockMechanicsPath,
   type MechanicsGraphPathNode,
   type StatBlockMechanicsPath,
 } from "@dnd/surface/surface/mechanics-graph-path";
+import type { SrdSurface } from "@dnd/surface/surface/types";
 import type {
   SrdStatBlockRecord,
-  SrdSurface,
   StatBlockProcedureEntry,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
@@ -25,7 +25,7 @@ import type {
   StatBlockSpellReference,
   AuthoredStatBlockReactionTrigger,
   StandaloneStatBlock,
-} from "@dnd/surface/surface/types";
+} from "@dnd/surface/surface/stat-block-types";
 
 import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
 import {

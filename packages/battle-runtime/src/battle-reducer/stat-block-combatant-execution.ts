@@ -5,7 +5,7 @@ import {
   insertAtOrderIndex,
 } from "@dnd/shared-algebras/initiative-algebra";
 import { movementFeet, type Hp } from "@dnd/shared/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 
 import {
   battleEffectExecutionOrdinal,
@@ -27,7 +27,10 @@ import type {
   BattleStateInitIssue,
   StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
-import { battleStateInitIssue } from "./domain-helpers.ts";
+import {
+  battleStateInitIssue,
+  duplicateCombatantIdIssue,
+} from "./domain-helpers.ts";
 import {
   ammunitionStockIssues,
   missingRequiredAmmunitionKinds,
@@ -48,7 +51,18 @@ export function addBattleStatBlockCombatant(input: {
 }): Result.Result<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
   const identityIssue = statBlockCombatantIdentityIssue(input);
-  if (identityIssue !== null) return battleStateInitIssue(identityIssue);
+  if (identityIssue !== null) {
+    return Match.value(identityIssue).pipe(
+      Match.when({ tag: "battleStateInitIssue" }, (matched) =>
+        Result.fail(matched),
+      ),
+      Match.when(
+        { tag: "statBlockCombatantAdmissionIdentityMismatch" },
+        ({ message }) => battleStateInitIssue(message),
+      ),
+      Match.exhaustive,
+    );
+  }
   const allocation = input.state.executionScopeCursors.get(
     combatant.combatantId,
   );
@@ -128,22 +142,36 @@ export function addBattleStatBlockCombatant(input: {
   });
 }
 
+type StatBlockCombatantIdentityIssue =
+  | ReturnType<typeof duplicateCombatantIdIssue>
+  | {
+      readonly tag: "statBlockCombatantAdmissionIdentityMismatch";
+      readonly message: string;
+    };
+
 function statBlockCombatantIdentityIssue(input: {
   readonly state: BattleState;
   readonly combatant: {
     readonly combatantId: CombatantId;
     readonly admission: AdmittedBattleStatBlockCombatant;
   };
-}): string | null {
+}): StatBlockCombatantIdentityIssue | null {
   const { combatant } = input;
   if (input.state.combatants.has(combatant.combatantId)) {
-    return `Duplicate combatant id: ${combatant.combatantId}`;
+    return duplicateCombatantIdIssue(combatant.combatantId);
   }
   if (combatant.admission.combatantId !== combatant.combatantId) {
-    return "Stat Block combatant admission belongs to a different combatant.";
+    return {
+      tag: "statBlockCombatantAdmissionIdentityMismatch",
+      message:
+        "Stat Block combatant admission belongs to a different combatant.",
+    };
   }
   if (combatant.admission.battleId !== input.state.battleId) {
-    return "Stat Block combatant admission belongs to a different battle.";
+    return {
+      tag: "statBlockCombatantAdmissionIdentityMismatch",
+      message: "Stat Block combatant admission belongs to a different battle.",
+    };
   }
   if (
     !battleStatBlockExecutionScopeRefBelongsToBattle(
@@ -155,7 +183,11 @@ function statBlockCombatantIdentityIssue(input: {
       combatant.combatantId,
     )
   ) {
-    return "Stat Block combatant admission execution scope belongs to a different destination.";
+    return {
+      tag: "statBlockCombatantAdmissionIdentityMismatch",
+      message:
+        "Stat Block combatant admission execution scope belongs to a different destination.",
+    };
   }
   return null;
 }

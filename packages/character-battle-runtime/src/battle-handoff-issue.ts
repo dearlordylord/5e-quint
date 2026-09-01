@@ -41,6 +41,7 @@ export type CharacterSheetBattleHandoffValidationCheck =
   | "battleSpellSlotLevelMismatch"
   | "battleSpellSlotExpenditureExceedsAvailable"
   | "classFeatureResourceClassLevelMissing"
+  | "battleResourceUnitUnsupported"
   | "spellAccessFreeCastCapShapeInvalid"
   | "spellAccessFreeCastCapacityMismatch"
   | "spellAccessFreeCastRemainingUsesInvalid"

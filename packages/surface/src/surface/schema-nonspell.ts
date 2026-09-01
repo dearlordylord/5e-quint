@@ -1,10 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.fighter-heroic-warrior character-sheet.cleric-divine-intervention-session-invocation
 import { Effect, Schema, SchemaTransformation } from "effect";
-import {
-  UnitId,
-  type ClassName,
-  type UnitId as UnitIdType,
-} from "@dnd/shared/game-facts";
+import { UnitId, type UnitId as UnitIdType } from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
 
 import {
@@ -15,7 +11,6 @@ import {
   BackgroundRecordKindSchema,
   ClassLevelChoiceCountSchema,
   ClassRecordKindSchema,
-  CLASS_NAMES,
   SubclassRecordKindSchema,
   ClassNameSchema,
   ConditionSchema,
@@ -55,6 +50,8 @@ import {
   exactOptional,
   strictStruct,
 } from "./schema-helpers.ts";
+import { MAGIC_INITIATE_SPELL_LISTS } from "./nonspell-vocabulary.ts";
+
 import {
   ActivationPhaseSchema,
   CreatureControlSchema,
@@ -72,6 +69,14 @@ import {
   SpellRecordSchema,
   SpawnedCreatureStatBlockSchema,
 } from "./schema-spell.ts";
+
+const codecMembers = <const Members extends ReadonlyArray<Schema.Top>>(
+  ...members: Members
+): Members => members;
+
+const codecFields = <const Fields extends Schema.Struct.Fields>(
+  fields: Fields,
+): Fields => fields;
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
@@ -186,55 +191,10 @@ const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literals([
   ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
 ]);
 
-type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
-
-const [firstClassName, ...rawClassNameTail] = CLASS_NAMES;
-const classNameTail: ReadonlyArray<ClassName> = rawClassNameTail;
-
-const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
-  "bard",
-  "cleric",
-  "druid",
-  "fighter",
-  "monk",
-  "paladin",
-  "ranger",
-  "rogue",
-  "sorcerer",
-  "wizard",
-  "warlock",
-] as const satisfies ReadonlyArray<ClassName>;
-type ClassFeatureRecordWithSpecificMechanicsClassName =
-  (typeof CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES)[number];
-
-const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = [
-  firstClassName,
-  ...classNameTail.filter(
-    (
-      className,
-    ): className is Exclude<
-      ClassName,
-      ClassFeatureRecordWithSpecificMechanicsClassName
-    > =>
-      // Widen the literal tuple so ReadonlyArray.includes accepts any ClassName.
-      !(
-        CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES as ReadonlyArray<ClassName>
-      ).includes(className),
-  ),
-] as const satisfies NonEmptyReadonlyArray<
-  Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>
->;
-
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
   ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
   ...NON_SPELLCASTING_CLASS_NAMES,
 ] as const;
-
-const MAGIC_INITIATE_SPELL_LISTS = [
-  "cleric",
-  "druid",
-  "wizard",
-] as const satisfies ReadonlyArray<ClassName>;
 
 const numberTierSchema = Schema.Struct({
   atLevel: Schema.Number,
@@ -275,7 +235,7 @@ const FiniteResourceCapSchema = Schema.Union([
   AbilityModifierCapSchema,
 ]);
 
-export const ClassFeatureActivationCostSchema = Schema.Union([
+const classFeatureActivationCostMembers = codecMembers(
   Schema.Struct({ kind: Schema.Literal("free") }),
   Schema.Struct({
     kind: Schema.Literal("standard_action"),
@@ -296,7 +256,12 @@ export const ClassFeatureActivationCostSchema = Schema.Union([
     withinDays: PositiveIntegerSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("replace_attack") }),
-]);
+);
+type ClassFeatureActivationCostCodec = Schema.Union<
+  typeof classFeatureActivationCostMembers
+>;
+export const ClassFeatureActivationCostSchema: ClassFeatureActivationCostCodec =
+  Schema.Union(classFeatureActivationCostMembers);
 
 export const UseCountCapSchema = Schema.Union([
   FiniteResourceCapSchema,
@@ -321,10 +286,14 @@ export const PointPoolResourceSchema = Schema.Struct({
   cap: FiniteResourceCapSchema,
 });
 
-export const ActivationResourceSchema = Schema.Union([
+const activationResourceMembers = codecMembers(
   UseCountResourceSchema,
   ChargePoolResourceSchema,
-]);
+);
+type ActivationResourceCodec = Schema.Union<typeof activationResourceMembers>;
+export const ActivationResourceSchema: ActivationResourceCodec = Schema.Union(
+  activationResourceMembers,
+);
 
 const OngoingFeatureExtensionTriggerSchema = Schema.Literals([
   "attack_roll_against_enemy",
@@ -422,10 +391,13 @@ export const TimeResetCadenceSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("never") }),
 ]);
 
-export const ResetCadenceSchema = Schema.Union([
+const resetCadenceMembers = codecMembers(
   RestResetCadenceSchema,
   TimeResetCadenceSchema,
-]);
+);
+type ResetCadenceCodec = Schema.Union<typeof resetCadenceMembers>;
+export const ResetCadenceSchema: ResetCadenceCodec =
+  Schema.Union(resetCadenceMembers);
 
 export const RiderExpirySchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("target_uses_or_turn_start") }),
@@ -478,122 +450,219 @@ export const PassiveSuppressorSchema = Schema.Struct({
   conditions: Schema.NonEmptyArray(ConditionSchema),
 });
 
-export const PassiveOperationSchema = Schema.Struct({
-  trigger: Schema.Struct({
+class PassiveOperationFields {
+  readonly trigger = Schema.Struct({
     kind: Schema.Literal("elapsed_time"),
     unit: Schema.Literals(["hour", "day"]),
     amount: Schema.Number,
-  }),
-  predicate: exactOptional(
+  });
+  readonly predicate = exactOptional(
     Schema.suspend(() => OngoingPredicateSchema).pipe(
       Schema.annotate({ identifier: "OngoingPredicate" }),
     ),
-  ),
-  effect: EffectAtomSchema,
+  );
+  readonly effect: typeof EffectAtomSchema = EffectAtomSchema;
+}
+const passiveOperationFields = codecFields({
+  ...new PassiveOperationFields(),
 });
+type PassiveOperationCodec = Schema.Struct<typeof passiveOperationFields>;
+export type PassiveOperation = Schema.Schema.Type<PassiveOperationCodec>;
+export const PassiveOperationSchema: PassiveOperationCodec = Schema.Struct(
+  passiveOperationFields,
+);
 
-export const ClassFeatureDurationSchema = Schema.Union([
+const classFeatureDurationMembers = codecMembers(
   DurationSchema,
   Schema.Struct({
     kind: Schema.Literal("timed"),
     value: HalfClassLevelRoundedDownHoursDurationValueSchema,
     earlyEnd: exactOptional(Schema.NonEmptyArray(DurationEndTriggerSchema)),
   }),
-]);
+);
+type ClassFeatureDurationCodec = Schema.Union<
+  typeof classFeatureDurationMembers
+>;
+export const ClassFeatureDurationSchema: ClassFeatureDurationCodec =
+  Schema.Union(classFeatureDurationMembers);
 
-const ActivatedAbilityBaseFields = {
-  condition: exactOptional(EquipmentPredicateSchema),
-  range: exactOptional(RangeSchema),
-  usageLimit: exactOptional(
+class ActivatedAbilityBaseFieldsOwner {
+  readonly condition: Schema.optionalKey<typeof EquipmentPredicateSchema> =
+    exactOptional(EquipmentPredicateSchema);
+  readonly range: Schema.optionalKey<typeof RangeSchema> =
+    exactOptional(RangeSchema);
+  readonly usageLimit = exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
-  ),
-};
+  );
+}
+class ResourceActivatedAbilityFieldsOwner extends ActivatedAbilityBaseFieldsOwner {
+  readonly resource: typeof ActivationResourceSchema = ActivationResourceSchema;
+  readonly resetCadence: typeof ResetCadenceSchema = ResetCadenceSchema;
+  readonly duration: Schema.optionalKey<typeof ClassFeatureDurationSchema> =
+    exactOptional(ClassFeatureDurationSchema);
+}
+class ResourceOngoingFeatureAbilityFieldsOwner extends ActivatedAbilityBaseFieldsOwner {
+  readonly resource: typeof ActivationResourceSchema = ActivationResourceSchema;
+  readonly resetCadence: typeof ResetCadenceSchema = ResetCadenceSchema;
+  readonly duration: Schema.optionalKey<typeof ForbiddenValueSchema> =
+    exactOptional(ForbiddenValueSchema);
+}
+class ResourcelessOngoingFeatureAbilityFieldsOwner extends ActivatedAbilityBaseFieldsOwner {
+  readonly resource: Schema.optionalKey<typeof ForbiddenValueSchema> =
+    exactOptional(ForbiddenValueSchema);
+  readonly resetCadence: Schema.optionalKey<typeof ForbiddenValueSchema> =
+    exactOptional(ForbiddenValueSchema);
+  readonly duration: Schema.optionalKey<typeof ForbiddenValueSchema> =
+    exactOptional(ForbiddenValueSchema);
+}
 const ResourceActivatedAbilityFields = {
-  ...ActivatedAbilityBaseFields,
-  resource: ActivationResourceSchema,
-  resetCadence: ResetCadenceSchema,
-  duration: exactOptional(ClassFeatureDurationSchema),
+  ...new ResourceActivatedAbilityFieldsOwner(),
 };
-const ResourceOngoingFeatureAbilityFields = {
-  ...ActivatedAbilityBaseFields,
-  resource: ActivationResourceSchema,
-  resetCadence: ResetCadenceSchema,
-  duration: exactOptional(ForbiddenValueSchema),
-};
-const ResourcelessOngoingFeatureAbilityFields = {
-  ...ActivatedAbilityBaseFields,
-  resource: exactOptional(ForbiddenValueSchema),
-  resetCadence: exactOptional(ForbiddenValueSchema),
-  duration: exactOptional(ForbiddenValueSchema),
-};
-export const ActivatedAbilityMechanicsSchema = Schema.Union([
-  Schema.Struct({
-    ...ResourceActivatedAbilityFields,
-    activationCost: ClassFeatureActivationCostSchema,
-    ongoingFeature: exactOptional(ForbiddenValueSchema),
-    family: Schema.Literal("activation"),
-    phases: Schema.NonEmptyArray(ActivationPhaseSchema),
-  }),
-  Schema.Struct({
-    ...ResourceOngoingFeatureAbilityFields,
-    activationCost: Schema.Struct({
-      kind: Schema.Literal("bonus_action"),
-      action: exactOptional(StandardActionKindSchema),
-    }),
-    ongoingFeature: ActivationCostOngoingFeatureSupportSchema,
-    family: Schema.Literal("activation"),
-    phases: Schema.NonEmptyArray(ActivationPhaseSchema),
-  }),
-  Schema.Struct({
-    ...ResourcelessOngoingFeatureAbilityFields,
-    activationCost: Schema.Struct({ kind: Schema.Literal("free") }),
-    ongoingFeature: FirstAttackRollOngoingFeatureSupportSchema,
-    family: Schema.Literal("activation"),
-    phases: Schema.NonEmptyArray(ActivationPhaseSchema),
-  }),
-]);
+class ResourceActivatedAbilitySchemaFields extends ResourceActivatedAbilityFieldsOwner {
+  readonly activationCost: typeof ClassFeatureActivationCostSchema =
+    ClassFeatureActivationCostSchema;
+  readonly ongoingFeature: Schema.optionalKey<typeof ForbiddenValueSchema> =
+    exactOptional(ForbiddenValueSchema);
+  readonly family = Schema.Literal("activation");
+  readonly phases: Schema.NonEmptyArray<typeof ActivationPhaseSchema> =
+    Schema.NonEmptyArray(ActivationPhaseSchema);
+}
+const resourceActivatedAbilityFields = codecFields({
+  ...new ResourceActivatedAbilitySchemaFields(),
+});
+const ResourceActivatedAbilitySchema: Schema.Struct<
+  typeof resourceActivatedAbilityFields
+> = Schema.Struct(resourceActivatedAbilityFields);
+class ResourceOngoingFeatureAbilitySchemaFields extends ResourceOngoingFeatureAbilityFieldsOwner {
+  readonly activationCost = Schema.Struct({
+    kind: Schema.Literal("bonus_action"),
+    action: exactOptional(StandardActionKindSchema),
+  });
+  readonly ongoingFeature: typeof ActivationCostOngoingFeatureSupportSchema =
+    ActivationCostOngoingFeatureSupportSchema;
+  readonly family = Schema.Literal("activation");
+  readonly phases: Schema.NonEmptyArray<typeof ActivationPhaseSchema> =
+    Schema.NonEmptyArray(ActivationPhaseSchema);
+}
+const resourceOngoingFeatureAbilityFields = codecFields({
+  ...new ResourceOngoingFeatureAbilitySchemaFields(),
+});
+const ResourceOngoingFeatureAbilitySchema: Schema.Struct<
+  typeof resourceOngoingFeatureAbilityFields
+> = Schema.Struct(resourceOngoingFeatureAbilityFields);
+class ResourcelessOngoingFeatureAbilitySchemaFields extends ResourcelessOngoingFeatureAbilityFieldsOwner {
+  readonly activationCost = Schema.Struct({ kind: Schema.Literal("free") });
+  readonly ongoingFeature: typeof FirstAttackRollOngoingFeatureSupportSchema =
+    FirstAttackRollOngoingFeatureSupportSchema;
+  readonly family = Schema.Literal("activation");
+  readonly phases: Schema.NonEmptyArray<typeof ActivationPhaseSchema> =
+    Schema.NonEmptyArray(ActivationPhaseSchema);
+}
+const resourcelessOngoingFeatureAbilityFields = codecFields({
+  ...new ResourcelessOngoingFeatureAbilitySchemaFields(),
+});
+const ResourcelessOngoingFeatureAbilitySchema: Schema.Struct<
+  typeof resourcelessOngoingFeatureAbilityFields
+> = Schema.Struct(resourcelessOngoingFeatureAbilityFields);
+class ActivatedAbilityMechanicsMembers {
+  readonly resource: typeof ResourceActivatedAbilitySchema =
+    ResourceActivatedAbilitySchema;
+  readonly resourceOngoing: typeof ResourceOngoingFeatureAbilitySchema =
+    ResourceOngoingFeatureAbilitySchema;
+  readonly resourcelessOngoing: typeof ResourcelessOngoingFeatureAbilitySchema =
+    ResourcelessOngoingFeatureAbilitySchema;
+}
+const activatedAbilityMechanicsMembers: ReadonlyArray<
+  ActivatedAbilityMechanicsMembers[keyof ActivatedAbilityMechanicsMembers]
+> = Object.values(new ActivatedAbilityMechanicsMembers());
+type ActivatedAbilityMechanicsCodec = Schema.Union<
+  typeof activatedAbilityMechanicsMembers
+>;
+export type ActivatedAbilityMechanics =
+  Schema.Schema.Type<ActivatedAbilityMechanicsCodec>;
+export const ActivatedAbilityMechanicsSchema: ActivatedAbilityMechanicsCodec =
+  Schema.Union(activatedAbilityMechanicsMembers);
 
-export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
-  condition: exactOptional(EquipmentPredicateSchema),
-  resource: ActivationResourceSchema,
-  resetCadence: ResetCadenceSchema,
-  duration: exactOptional(ClassFeatureDurationSchema),
+class TriggeredReactionAbilityMechanicsFields {
+  readonly condition: Schema.optionalKey<typeof EquipmentPredicateSchema> =
+    exactOptional(EquipmentPredicateSchema);
+  readonly resource: typeof ActivationResourceSchema = ActivationResourceSchema;
+  readonly resetCadence: typeof ResetCadenceSchema = ResetCadenceSchema;
+  readonly duration: Schema.optionalKey<typeof ClassFeatureDurationSchema> =
+    exactOptional(ClassFeatureDurationSchema);
   /* v8 ignore next -- @preserve -- this nested declarative schema initializes during collection; canonical triggered-reaction records are decoded by the catalog tests */
-  usageLimit: exactOptional(
+  readonly usageLimit = exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
-  ),
-  family: Schema.Literal("triggered_reaction"),
-  activationCost: Schema.Struct({
+  );
+  readonly family = Schema.Literal("triggered_reaction");
+  readonly activationCost: Schema.Struct<{
+    readonly kind: Schema.Literal<"reaction">;
+    readonly trigger: Schema.optionalKey<typeof ReactionTriggerSchema>;
+  }> = Schema.Struct({
     kind: Schema.Literal("reaction"),
     trigger: exactOptional(ReactionTriggerSchema),
-  }),
-  range: RangeSchema,
-  interruptsTrigger: Schema.Boolean,
-  phases: Schema.NonEmptyArray(ActivationPhaseSchema),
+  });
+  readonly range: typeof RangeSchema = RangeSchema;
+  readonly interruptsTrigger: typeof Schema.Boolean = Schema.Boolean;
+  readonly phases: Schema.NonEmptyArray<typeof ActivationPhaseSchema> =
+    Schema.NonEmptyArray(ActivationPhaseSchema);
+}
+const triggeredReactionAbilityMechanicsFields = codecFields({
+  ...new TriggeredReactionAbilityMechanicsFields(),
 });
+type TriggeredReactionAbilityMechanicsCodec = Schema.Struct<
+  typeof triggeredReactionAbilityMechanicsFields
+>;
+export type TriggeredReactionAbilityMechanics =
+  Schema.Schema.Type<TriggeredReactionAbilityMechanicsCodec>;
+export const TriggeredReactionAbilityMechanicsSchema: TriggeredReactionAbilityMechanicsCodec =
+  Schema.Struct(triggeredReactionAbilityMechanicsFields);
 
-const MagicItemSpawnedCreaturePayloadSchema = Schema.Struct({
-  creature: SpawnedCreatureStatBlockSchema,
-  mode: exactOptional(CreatureModeSchema),
-  control: CreatureControlSchema,
-  dismissal: CreatureDismissalSchema,
+class MagicItemSpawnedCreaturePayloadFields {
+  readonly creature: typeof SpawnedCreatureStatBlockSchema =
+    SpawnedCreatureStatBlockSchema;
+  readonly mode: Schema.optionalKey<typeof CreatureModeSchema> =
+    exactOptional(CreatureModeSchema);
+  readonly control: typeof CreatureControlSchema = CreatureControlSchema;
+  readonly dismissal: typeof CreatureDismissalSchema = CreatureDismissalSchema;
+}
+const magicItemSpawnedCreaturePayloadFields = codecFields({
+  ...new MagicItemSpawnedCreaturePayloadFields(),
 });
+type MagicItemSpawnedCreaturePayloadCodec = Schema.Struct<
+  typeof magicItemSpawnedCreaturePayloadFields
+>;
+const MagicItemSpawnedCreaturePayloadSchema: MagicItemSpawnedCreaturePayloadCodec =
+  Schema.Struct(magicItemSpawnedCreaturePayloadFields);
 
-export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
+const magicItemSpawnedCreatureMechanicsFields = codecFields({
   ...ResourceActivatedAbilityFields,
   activationCost: ClassFeatureActivationCostSchema,
   ...MagicItemSpawnedCreaturePayloadSchema.fields,
   family: Schema.Literal("spawned_creature"),
   range: RangeSchema,
 });
+type MagicItemSpawnedCreatureMechanicsCodec = Schema.Struct<
+  typeof magicItemSpawnedCreatureMechanicsFields
+>;
+export type MagicItemSpawnedCreatureMechanics =
+  Schema.Schema.Type<MagicItemSpawnedCreatureMechanicsCodec>;
+export const MagicItemSpawnedCreatureMechanicsSchema: MagicItemSpawnedCreatureMechanicsCodec =
+  Schema.Struct(magicItemSpawnedCreatureMechanicsFields);
 
-export const ClassFeatureActivationMechanicsSchema =
+export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
+export const ClassFeatureActivationMechanicsSchema: typeof ActivatedAbilityMechanicsSchema =
   ActivatedAbilityMechanicsSchema;
 
-export const AlternateActionCostMechanicsSchema = Schema.Struct({
+const alternateActionCostMechanicsFields = codecFields({
   family: Schema.Literal("alternate_action_cost"),
   ...AlternateActionCostSchema.fields,
 });
+type AlternateActionCostMechanicsCodec = Schema.Struct<
+  typeof alternateActionCostMechanicsFields
+>;
+export const AlternateActionCostMechanicsSchema: AlternateActionCostMechanicsCodec =
+  Schema.Struct(alternateActionCostMechanicsFields);
 
 const BuildTimeFeatureChoiceChangeSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("never") }),
@@ -614,7 +683,7 @@ const FeatureChoiceSelectionRepeatabilitySchema = Schema.Union([
   }),
 ]);
 
-export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
+const classFeatureAcquisitionChoiceMechanicsFields = codecFields({
   family: Schema.Literal("class_feature_acquisition_choice"),
   choiceKey: surfaceProtocol(NonEmptyStringSchema, "choiceKey"),
   timing: Schema.Literal("class_feature_acquisition"),
@@ -628,6 +697,13 @@ export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
     }),
   ),
 });
+type ClassFeatureAcquisitionChoiceMechanicsCodec = Schema.Struct<
+  typeof classFeatureAcquisitionChoiceMechanicsFields
+>;
+export type ClassFeatureAcquisitionChoiceMechanics =
+  Schema.Schema.Type<ClassFeatureAcquisitionChoiceMechanicsCodec>;
+export const ClassFeatureAcquisitionChoiceMechanicsSchema: ClassFeatureAcquisitionChoiceMechanicsCodec =
+  Schema.Struct(classFeatureAcquisitionChoiceMechanicsFields);
 
 export const ClassFeatureEffectSaveDcSchema = Schema.Union([
   Schema.Struct({
@@ -640,7 +716,7 @@ export const ClassFeatureEffectSaveDcSchema = Schema.Union([
   }),
 ]);
 
-export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
+const classFeatureResourceContainerMechanicsFields = codecFields({
   family: Schema.Literal("resource_container"),
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
@@ -687,6 +763,11 @@ export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
   }),
   effectSaveDc: exactOptional(ClassFeatureEffectSaveDcSchema),
 });
+type ClassFeatureResourceContainerMechanicsCodec = Schema.Struct<
+  typeof classFeatureResourceContainerMechanicsFields
+>;
+export const ClassFeatureResourceContainerMechanicsSchema: ClassFeatureResourceContainerMechanicsCodec =
+  Schema.Struct(classFeatureResourceContainerMechanicsFields);
 
 export const SpellSlotToPointPoolOperationSchema = Schema.Struct({
   kind: Schema.Literal("spell_slot_to_point_pool"),
@@ -734,14 +815,19 @@ export const ResourcePoolOperationSchema = Schema.Union([
   PointPoolToSpellSlotOperationSchema,
 ]);
 
-export const ClassFeatureResourcePoolMechanicsSchema = Schema.Struct({
+const classFeatureResourcePoolMechanicsFields = codecFields({
   family: Schema.Literal("resource_pool"),
   resource: PointPoolResourceSchema,
   resetCadence: RestResetCadenceSchema,
   operations: Schema.NonEmptyArray(ResourcePoolOperationSchema),
 });
+type ClassFeatureResourcePoolMechanicsCodec = Schema.Struct<
+  typeof classFeatureResourcePoolMechanicsFields
+>;
+export const ClassFeatureResourcePoolMechanicsSchema: ClassFeatureResourcePoolMechanicsCodec =
+  Schema.Struct(classFeatureResourcePoolMechanicsFields);
 
-export const FeatureChoiceMechanicsSchema = Schema.Union([
+const featureChoiceMechanicsMembers = codecMembers(
   Schema.Struct({
     family: Schema.Literal("feature_choice"),
     choiceKey: surfaceSchemaRole(Schema.Literal("eldritch_invocations"), {
@@ -766,7 +852,12 @@ export const FeatureChoiceMechanicsSchema = Schema.Union([
       }),
     ),
   }),
-]);
+);
+type FeatureChoiceMechanicsCodec = Schema.Union<
+  typeof featureChoiceMechanicsMembers
+>;
+export const FeatureChoiceMechanicsSchema: FeatureChoiceMechanicsCodec =
+  Schema.Union(featureChoiceMechanicsMembers);
 
 type MetamagicChoiceLevelSchema = Schema.Struct<{
   atLevel: typeof PositiveIntegerSchema;
@@ -971,7 +1062,7 @@ const MetamagicOptionsSchema = Schema.NonEmptyArray(MetamagicOptionSchema).pipe(
   ),
 );
 
-export const SorcererMetamagicMechanicsSchema = Schema.Struct({
+const sorcererMetamagicMechanicsFields = codecFields({
   family: Schema.Literal("metamagic_options"),
   choiceKey: surfaceSchemaRole(
     Schema.Literal(SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY),
@@ -999,12 +1090,22 @@ export const SorcererMetamagicMechanicsSchema = Schema.Struct({
   }),
   options: MetamagicOptionsSchema,
 });
+type SorcererMetamagicMechanicsCodec = Schema.Struct<
+  typeof sorcererMetamagicMechanicsFields
+>;
+export const SorcererMetamagicMechanicsSchema: SorcererMetamagicMechanicsCodec =
+  Schema.Struct(sorcererMetamagicMechanicsFields);
 
-export const ClassSpellcastingProjectionMechanicsSchema = Schema.Struct({
+const classSpellcastingProjectionMechanicsFields = codecFields({
   family: Schema.Literal("class_spellcasting_projection"),
   source: Schema.Literal("class_record_spellcasting"),
   spellcastingKind: Schema.Literal("pact_magic_spellcasting_creation"),
 });
+type ClassSpellcastingProjectionMechanicsCodec = Schema.Struct<
+  typeof classSpellcastingProjectionMechanicsFields
+>;
+export const ClassSpellcastingProjectionMechanicsSchema: ClassSpellcastingProjectionMechanicsCodec =
+  Schema.Struct(classSpellcastingProjectionMechanicsFields);
 
 const DruidWildCompanionSpendOptionSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("spell_slot") }),
@@ -1042,7 +1143,7 @@ const DruidWildCompanionSpendOptionsSchema = Schema.NonEmptyArray(
   ),
 );
 
-export const DruidWildCompanionSpellCastMechanicsSchema = Schema.Struct({
+const druidWildCompanionSpellCastMechanicsFields = codecFields({
   family: Schema.Literal("druid_wild_companion_spell_cast"),
   activationCost: Schema.Struct({
     kind: Schema.Literal("standard_action"),
@@ -1064,8 +1165,13 @@ export const DruidWildCompanionSpellCastMechanicsSchema = Schema.Struct({
     kind: Schema.Literal("caster_finishes_long_rest"),
   }),
 });
+type DruidWildCompanionSpellCastMechanicsCodec = Schema.Struct<
+  typeof druidWildCompanionSpellCastMechanicsFields
+>;
+export const DruidWildCompanionSpellCastMechanicsSchema: DruidWildCompanionSpellCastMechanicsCodec =
+  Schema.Struct(druidWildCompanionSpellCastMechanicsFields);
 
-export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
+const warlockPactSlotRecoveryMechanicsFields = codecFields({
   family: Schema.Literal("pact_slot_recovery"),
   activationCost: Schema.Struct({
     kind: Schema.Literal("one_minute_rite"),
@@ -1080,8 +1186,13 @@ export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
   }),
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
+type WarlockPactSlotRecoveryMechanicsCodec = Schema.Struct<
+  typeof warlockPactSlotRecoveryMechanicsFields
+>;
+export const WarlockPactSlotRecoveryMechanicsSchema: WarlockPactSlotRecoveryMechanicsCodec =
+  Schema.Struct(warlockPactSlotRecoveryMechanicsFields);
 
-export const ClassFeatureComponentMechanicsSchema = Schema.Union([
+const classFeatureComponentMechanicsMembers = codecMembers(
   Schema.suspend(() => PassiveMechanicsSchema).pipe(
     Schema.annotate({ identifier: "PassiveMechanics" }),
   ),
@@ -1096,20 +1207,39 @@ export const ClassFeatureComponentMechanicsSchema = Schema.Union([
   Schema.suspend(() => ReactionRollOrDamageReductionMechanicsSchema).pipe(
     Schema.annotate({ identifier: "ReactionRollOrDamageReductionMechanics" }),
   ),
-]);
+);
+type ClassFeatureComponentMechanicsCodec = Schema.Union<
+  typeof classFeatureComponentMechanicsMembers
+>;
+export type ClassFeatureComponentMechanics =
+  Schema.Schema.Type<ClassFeatureComponentMechanicsCodec>;
+export const ClassFeatureComponentMechanicsSchema: ClassFeatureComponentMechanicsCodec =
+  Schema.Union(classFeatureComponentMechanicsMembers);
 
-export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
+const compositeClassFeatureMechanicsFields = codecFields({
   family: Schema.Literal("composite"),
   parts: Schema.NonEmptyArray(ClassFeatureComponentMechanicsSchema),
 });
+type CompositeClassFeatureMechanicsCodec = Schema.Struct<
+  typeof compositeClassFeatureMechanicsFields
+>;
+export type CompositeClassFeatureMechanics =
+  Schema.Schema.Type<CompositeClassFeatureMechanicsCodec>;
+export const CompositeClassFeatureMechanicsSchema: CompositeClassFeatureMechanicsCodec =
+  Schema.Struct(compositeClassFeatureMechanicsFields);
 
-export const SpellbookRitualAccessMechanicsSchema = Schema.Struct({
+const spellbookRitualAccessMechanicsFields = codecFields({
   family: Schema.Literal("spellbook_ritual_access"),
   source: Schema.Literal("spellbook"),
   preparationRequirement: Schema.Literal("not_prepared"),
 });
+type SpellbookRitualAccessMechanicsCodec = Schema.Struct<
+  typeof spellbookRitualAccessMechanicsFields
+>;
+export const SpellbookRitualAccessMechanicsSchema: SpellbookRitualAccessMechanicsCodec =
+  Schema.Struct(spellbookRitualAccessMechanicsFields);
 
-export const RestSpellSlotRecoveryMechanicsSchema = Schema.Struct({
+const restSpellSlotRecoveryMechanicsFields = codecFields({
   family: Schema.Literal("rest_spell_slot_recovery"),
   recoveryTrigger: Schema.Literal("short_rest"),
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
@@ -1118,8 +1248,13 @@ export const RestSpellSlotRecoveryMechanicsSchema = Schema.Struct({
     maximumSlotLevelExclusive: Schema.Literal(6),
   }),
 });
+type RestSpellSlotRecoveryMechanicsCodec = Schema.Struct<
+  typeof restSpellSlotRecoveryMechanicsFields
+>;
+export const RestSpellSlotRecoveryMechanicsSchema: RestSpellSlotRecoveryMechanicsCodec =
+  Schema.Struct(restSpellSlotRecoveryMechanicsFields);
 
-export const SorcererSorcerousRestorationMechanicsSchema = Schema.Struct({
+const sorcererSorcerousRestorationMechanicsFields = codecFields({
   family: Schema.Literal("sorcery_point_short_rest_recovery"),
   recoveryTrigger: Schema.Literal("short_rest"),
   resource: Schema.Struct({
@@ -1134,13 +1269,18 @@ export const SorcererSorcerousRestorationMechanicsSchema = Schema.Struct({
   }),
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
+type SorcererSorcerousRestorationMechanicsCodec = Schema.Struct<
+  typeof sorcererSorcerousRestorationMechanicsFields
+>;
+export const SorcererSorcerousRestorationMechanicsSchema: SorcererSorcerousRestorationMechanicsCodec =
+  Schema.Struct(sorcererSorcerousRestorationMechanicsFields);
 
 const WizardSpellbookLearningEligibilitySchema = Schema.Struct({
   className: Schema.Literal("wizard"),
   school: SpellSchoolSchema,
 });
 
-export const WizardSpellbookLearningMechanicsSchema = Schema.Struct({
+const wizardSpellbookLearningMechanicsFields = codecFields({
   family: Schema.Literal("wizard_spellbook_learning"),
   spellbookSource: Schema.Struct({
     kind: Schema.Literal("class_spellcasting_spellbook"),
@@ -1174,8 +1314,13 @@ export const WizardSpellbookLearningMechanicsSchema = Schema.Struct({
     ]),
   ),
 });
+type WizardSpellbookLearningMechanicsCodec = Schema.Struct<
+  typeof wizardSpellbookLearningMechanicsFields
+>;
+export const WizardSpellbookLearningMechanicsSchema: WizardSpellbookLearningMechanicsCodec =
+  Schema.Struct(wizardSpellbookLearningMechanicsFields);
 
-export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
+const failedAbilityCheckResourceBoostMechanicsFields = codecFields({
   family: Schema.Literal("failed_ability_check_resource_boost"),
   trigger: Schema.Struct({ kind: Schema.Literal("failed_ability_check") }),
   spends: Schema.Struct({
@@ -1190,6 +1335,11 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
   }),
   refundSpendOnStillFailed: Schema.Literal(true),
 });
+type FailedAbilityCheckResourceBoostMechanicsCodec = Schema.Struct<
+  typeof failedAbilityCheckResourceBoostMechanicsFields
+>;
+export const FailedAbilityCheckResourceBoostMechanicsSchema: FailedAbilityCheckResourceBoostMechanicsCodec =
+  Schema.Struct(failedAbilityCheckResourceBoostMechanicsFields);
 
 const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
   kind: Schema.Literal("monk_martial_arts_die_plus_monk_level"),
@@ -1199,7 +1349,7 @@ const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
   ),
 });
 
-export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
+const monkInitiativeFocusRecoveryMechanicsFields = codecFields({
   family: Schema.Literal("initiative_focus_recovery"),
   trigger: Schema.Struct({ kind: Schema.Literal("roll_initiative") }),
   optional: Schema.Literal(true),
@@ -1217,13 +1367,18 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
   }),
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
+type MonkInitiativeFocusRecoveryMechanicsCodec = Schema.Struct<
+  typeof monkInitiativeFocusRecoveryMechanicsFields
+>;
+export const MonkInitiativeFocusRecoveryMechanicsSchema: MonkInitiativeFocusRecoveryMechanicsCodec =
+  Schema.Struct(monkInitiativeFocusRecoveryMechanicsFields);
 
 const ReferencedResourceSpendSchema = strictStruct({
   resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
   amount: PositiveIntegerSchema,
 });
 
-export const SpellSlotHealingModifierMechanicsSchema = strictStruct({
+const spellSlotHealingModifierMechanicsFields = codecFields({
   family: Schema.Literal("spell_slot_healing_modifier"),
   trigger: strictStruct({
     kind: Schema.Literal("caster_spell_slot_restores_hit_points"),
@@ -1235,8 +1390,13 @@ export const SpellSlotHealingModifierMechanicsSchema = strictStruct({
     flat: Schema.Literal(2),
   }),
 });
+type SpellSlotHealingModifierMechanicsCodec = Schema.Struct<
+  typeof spellSlotHealingModifierMechanicsFields
+>;
+export const SpellSlotHealingModifierMechanicsSchema: SpellSlotHealingModifierMechanicsCodec =
+  strictStruct(spellSlotHealingModifierMechanicsFields);
 
-export const MagicActionHealingPoolMechanicsSchema = strictStruct({
+const magicActionHealingPoolMechanicsFields = codecFields({
   family: Schema.Literal("magic_action_healing_pool"),
   activationCost: strictStruct({
     kind: Schema.Literal("standard_action"),
@@ -1259,8 +1419,13 @@ export const MagicActionHealingPoolMechanicsSchema = strictStruct({
   }),
   perTargetCap: Schema.Literal("half_hit_point_maximum"),
 });
+type MagicActionHealingPoolMechanicsCodec = Schema.Struct<
+  typeof magicActionHealingPoolMechanicsFields
+>;
+export const MagicActionHealingPoolMechanicsSchema: MagicActionHealingPoolMechanicsCodec =
+  strictStruct(magicActionHealingPoolMechanicsFields);
 
-export const MagicActionAreaSaveDamageHealingMechanicsSchema = strictStruct({
+const magicActionAreaSaveDamageHealingMechanicsFields = codecFields({
   family: Schema.Literal("magic_action_area_save_damage_healing"),
   activationCost: strictStruct({
     kind: Schema.Literal("standard_action"),
@@ -1298,8 +1463,13 @@ export const MagicActionAreaSaveDamageHealingMechanicsSchema = strictStruct({
     amount: DiceAmountSchema,
   }),
 });
+type MagicActionAreaSaveDamageHealingMechanicsCodec = Schema.Struct<
+  typeof magicActionAreaSaveDamageHealingMechanicsFields
+>;
+export const MagicActionAreaSaveDamageHealingMechanicsSchema: MagicActionAreaSaveDamageHealingMechanicsCodec =
+  strictStruct(magicActionAreaSaveDamageHealingMechanicsFields);
 
-export const EnemyZeroHitPointTemporaryHitPointsMechanicsSchema = strictStruct({
+const enemyZeroHitPointTemporaryHitPointsMechanicsFields = codecFields({
   family: Schema.Literal("enemy_zero_hit_point_temporary_hit_points"),
   trigger: strictStruct({
     kind: Schema.Literal("enemy_reduced_to_zero_hit_points"),
@@ -1312,8 +1482,13 @@ export const EnemyZeroHitPointTemporaryHitPointsMechanicsSchema = strictStruct({
     minimum: Schema.Literal(1),
   }),
 });
+type EnemyZeroHitPointTemporaryHitPointsMechanicsCodec = Schema.Struct<
+  typeof enemyZeroHitPointTemporaryHitPointsMechanicsFields
+>;
+export const EnemyZeroHitPointTemporaryHitPointsMechanicsSchema: EnemyZeroHitPointTemporaryHitPointsMechanicsCodec =
+  strictStruct(enemyZeroHitPointTemporaryHitPointsMechanicsFields);
 
-export const BonusActionDelegatedStandardActionsMechanicsSchema = strictStruct({
+const bonusActionDelegatedStandardActionsMechanicsFields = codecFields({
   family: Schema.Literal("bonus_action_delegated_standard_actions"),
   activationCost: strictStruct({
     kind: Schema.Literal("bonus_action"),
@@ -1341,8 +1516,13 @@ export const BonusActionDelegatedStandardActionsMechanicsSchema = strictStruct({
     ]),
   }),
 });
+type BonusActionDelegatedStandardActionsMechanicsCodec = Schema.Struct<
+  typeof bonusActionDelegatedStandardActionsMechanicsFields
+>;
+export const BonusActionDelegatedStandardActionsMechanicsSchema: BonusActionDelegatedStandardActionsMechanicsCodec =
+  strictStruct(bonusActionDelegatedStandardActionsMechanicsFields);
 
-export const RemarkableAthleteMechanicsSchema = strictStruct({
+const remarkableAthleteMechanicsFields = codecFields({
   family: Schema.Literal("remarkable_athlete"),
   initiative: strictStruct({
     kind: Schema.Literal("roll_advantage"),
@@ -1364,8 +1544,13 @@ export const RemarkableAthleteMechanicsSchema = strictStruct({
     opportunityAttacks: Schema.Literal("does_not_provoke"),
   }),
 });
+type RemarkableAthleteMechanicsCodec = Schema.Struct<
+  typeof remarkableAthleteMechanicsFields
+>;
+export const RemarkableAthleteMechanicsSchema: RemarkableAthleteMechanicsCodec =
+  strictStruct(remarkableAthleteMechanicsFields);
 
-export const OpenHandTechniqueMechanicsSchema = strictStruct({
+const openHandTechniqueMechanicsFields = codecFields({
   family: Schema.Literal("open_hand_technique"),
   trigger: strictStruct({
     kind: Schema.Literal("hit_with_attack_granted_by"),
@@ -1411,8 +1596,13 @@ export const OpenHandTechniqueMechanicsSchema = strictStruct({
     }),
   ]),
 });
+type OpenHandTechniqueMechanicsCodec = Schema.Struct<
+  typeof openHandTechniqueMechanicsFields
+>;
+export const OpenHandTechniqueMechanicsSchema: OpenHandTechniqueMechanicsCodec =
+  strictStruct(openHandTechniqueMechanicsFields);
 
-export const StunningStrikeMechanicsSchema = strictStruct({
+const stunningStrikeMechanicsFields = codecFields({
   family: Schema.Literal("stunning_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("hit_creature_with_monk_weapon_or_unarmed_strike"),
@@ -1444,6 +1634,11 @@ export const StunningStrikeMechanicsSchema = strictStruct({
     }),
   }),
 });
+type StunningStrikeMechanicsCodec = Schema.Struct<
+  typeof stunningStrikeMechanicsFields
+>;
+export const StunningStrikeMechanicsSchema: StunningStrikeMechanicsCodec =
+  strictStruct(stunningStrikeMechanicsFields);
 
 const CunningStrikeDieCostSchema = strictStruct({
   kind: Schema.Literal("sneak_attack_damage_dice"),
@@ -1461,7 +1656,7 @@ export const CUNNING_STRIKE_OPTION_SELECTION_IDS = [
   CUNNING_STRIKE_WITHDRAW_OPTION_SELECTION_ID,
 ] as const;
 
-export const CunningStrikeMechanicsSchema = strictStruct({
+const cunningStrikeMechanicsFields = codecFields({
   family: Schema.Literal("cunning_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("deal_sneak_attack_damage"),
@@ -1545,8 +1740,13 @@ export const CunningStrikeMechanicsSchema = strictStruct({
     }),
   ]),
 });
+type CunningStrikeMechanicsCodec = Schema.Struct<
+  typeof cunningStrikeMechanicsFields
+>;
+export const CunningStrikeMechanicsSchema: CunningStrikeMechanicsCodec =
+  strictStruct(cunningStrikeMechanicsFields);
 
-export const BrutalStrikeMechanicsSchema = strictStruct({
+const brutalStrikeMechanicsFields = codecFields({
   family: Schema.Literal("brutal_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("reckless_attack_strength_attack_hit"),
@@ -1600,8 +1800,13 @@ export const BrutalStrikeMechanicsSchema = strictStruct({
     }),
   ]),
 });
+type BrutalStrikeMechanicsCodec = Schema.Struct<
+  typeof brutalStrikeMechanicsFields
+>;
+export const BrutalStrikeMechanicsSchema: BrutalStrikeMechanicsCodec =
+  strictStruct(brutalStrikeMechanicsFields);
 
-export const IndomitableMechanicsSchema = strictStruct({
+const indomitableMechanicsFields = codecFields({
   family: Schema.Literal("failed_saving_throw_reroll"),
   trigger: strictStruct({
     kind: Schema.Literal("failed_saving_throw"),
@@ -1629,8 +1834,13 @@ export const IndomitableMechanicsSchema = strictStruct({
     kind: Schema.Literal("long_rest"),
   }),
 });
+type IndomitableMechanicsCodec = Schema.Struct<
+  typeof indomitableMechanicsFields
+>;
+export const IndomitableMechanicsSchema: IndomitableMechanicsCodec =
+  strictStruct(indomitableMechanicsFields);
 
-export const TacticalMasterMechanicsSchema = strictStruct({
+const tacticalMasterMechanicsFields = codecFields({
   family: Schema.Literal("weapon_mastery_property_replacement"),
   trigger: strictStruct({
     kind: Schema.Literal("attack_with_weapon_mastery_property_you_can_use"),
@@ -1644,8 +1854,13 @@ export const TacticalMasterMechanicsSchema = strictStruct({
     ]),
   }),
 });
+type TacticalMasterMechanicsCodec = Schema.Struct<
+  typeof tacticalMasterMechanicsFields
+>;
+export const TacticalMasterMechanicsSchema: TacticalMasterMechanicsCodec =
+  strictStruct(tacticalMasterMechanicsFields);
 
-export const AbjureFoesMechanicsSchema = strictStruct({
+const abjureFoesMechanicsFields = codecFields({
   family: Schema.Literal("abjure_foes"),
   activationCost: strictStruct({
     kind: Schema.Literal("standard_action"),
@@ -1685,9 +1900,13 @@ export const AbjureFoesMechanicsSchema = strictStruct({
     }),
   }),
 });
+type AbjureFoesMechanicsCodec = Schema.Struct<typeof abjureFoesMechanicsFields>;
+export const AbjureFoesMechanicsSchema: AbjureFoesMechanicsCodec = strictStruct(
+  abjureFoesMechanicsFields,
+);
 
 /* v8 ignore start -- @preserve -- declarative mechanics-schema construction initializes before full-suite V8 attribution; the canonical Monk feature is decoded by the catalog tests */
-export const AcrobaticMovementMechanicsSchema = strictStruct({
+const acrobaticMovementMechanicsFields = codecFields({
   family: Schema.Literal("acrobatic_movement"),
   condition: EquipmentPredicateSchema,
   movement: strictStruct({
@@ -1702,9 +1921,14 @@ export const AcrobaticMovementMechanicsSchema = strictStruct({
     }),
   }),
 });
+type AcrobaticMovementMechanicsCodec = Schema.Struct<
+  typeof acrobaticMovementMechanicsFields
+>;
+export const AcrobaticMovementMechanicsSchema: AcrobaticMovementMechanicsCodec =
+  strictStruct(acrobaticMovementMechanicsFields);
 /* v8 ignore stop -- @preserve */
 
-export const SupremeSneakMechanicsSchema = strictStruct({
+const supremeSneakMechanicsFields = codecFields({
   family: Schema.Literal("cunning_strike_option_grant"),
   sourceUnitId: surfaceExactDependency(
     "rogue_cunning_strike",
@@ -1730,8 +1954,13 @@ export const SupremeSneakMechanicsSchema = strictStruct({
     }),
   }),
 });
+type SupremeSneakMechanicsCodec = Schema.Struct<
+  typeof supremeSneakMechanicsFields
+>;
+export const SupremeSneakMechanicsSchema: SupremeSneakMechanicsCodec =
+  strictStruct(supremeSneakMechanicsFields);
 
-export const SacredWeaponMechanicsSchema = strictStruct({
+const sacredWeaponMechanicsFields = codecFields({
   family: Schema.Literal("sacred_weapon"),
   activationCost: strictStruct({
     kind: Schema.Literal("standard_action"),
@@ -1770,9 +1999,14 @@ export const SacredWeaponMechanicsSchema = strictStruct({
     dimAdditionalFeet: Schema.Literal(20),
   }),
 });
+type SacredWeaponMechanicsCodec = Schema.Struct<
+  typeof sacredWeaponMechanicsFields
+>;
+export const SacredWeaponMechanicsSchema: SacredWeaponMechanicsCodec =
+  strictStruct(sacredWeaponMechanicsFields);
 
 /* v8 ignore start -- @preserve -- declarative mechanics-schema construction initializes before V8 attribution; canonical Hunter's Prey records are decoded by the catalog tests */
-export const HuntersPreyMechanicsSchema = strictStruct({
+const huntersPreyMechanicsFields = codecFields({
   family: Schema.Literal("hunters_prey"),
   choice: strictStruct({
     kind: Schema.Literal("choose_one"),
@@ -1813,9 +2047,14 @@ export const HuntersPreyMechanicsSchema = strictStruct({
     }),
   ]),
 });
+type HuntersPreyMechanicsCodec = Schema.Struct<
+  typeof huntersPreyMechanicsFields
+>;
+export const HuntersPreyMechanicsSchema: HuntersPreyMechanicsCodec =
+  strictStruct(huntersPreyMechanicsFields);
 /* v8 ignore stop -- @preserve */
 
-export const SteadyAimMechanicsSchema = strictStruct({
+const steadyAimMechanicsFields = codecFields({
   family: Schema.Literal("steady_aim"),
   activationCost: strictStruct({
     kind: Schema.Literal("bonus_action"),
@@ -1832,8 +2071,12 @@ export const SteadyAimMechanicsSchema = strictStruct({
     until: Schema.Literal("end_of_current_turn"),
   }),
 });
+type SteadyAimMechanicsCodec = Schema.Struct<typeof steadyAimMechanicsFields>;
+export const SteadyAimMechanicsSchema: SteadyAimMechanicsCodec = strictStruct(
+  steadyAimMechanicsFields,
+);
 
-export const PotentCantripMechanicsSchema = strictStruct({
+const potentCantripMechanicsFields = codecFields({
   family: Schema.Literal("potent_cantrip"),
   trigger: strictStruct({
     kind: Schema.Literal("cast_cantrip_at_creature"),
@@ -1848,8 +2091,13 @@ export const PotentCantripMechanicsSchema = strictStruct({
   }),
   additionalEffect: Schema.Literal("none"),
 });
+type PotentCantripMechanicsCodec = Schema.Struct<
+  typeof potentCantripMechanicsFields
+>;
+export const PotentCantripMechanicsSchema: PotentCantripMechanicsCodec =
+  strictStruct(potentCantripMechanicsFields);
 
-export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
+const weaponMasteryChoiceMechanicsFields = codecFields({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: Schema.Union([PositiveIntegerSchema, ClassLevelChoiceCountSchema]),
   eligibleWeapons: Schema.Struct({
@@ -1861,18 +2109,36 @@ export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
     count: PositiveIntegerSchema,
   }),
 });
+type WeaponMasteryChoiceMechanicsCodec = Schema.Struct<
+  typeof weaponMasteryChoiceMechanicsFields
+>;
+export const WeaponMasteryChoiceMechanicsSchema: WeaponMasteryChoiceMechanicsCodec =
+  Schema.Struct(weaponMasteryChoiceMechanicsFields);
 
-export const PassiveMechanicsSchema = Schema.Struct({
-  family: Schema.Literal("passive"),
-  condition: exactOptional(EquipmentPredicateSchema),
-  suppressedBy: exactOptional(Schema.NonEmptyArray(PassiveSuppressorSchema)),
-  grants: Schema.Array(EffectAtomSchema).pipe(
+class PassiveMechanicsFields {
+  readonly family = Schema.Literal("passive");
+  readonly condition = exactOptional(EquipmentPredicateSchema);
+  readonly suppressedBy = exactOptional(
+    Schema.NonEmptyArray(PassiveSuppressorSchema),
+  );
+  readonly grants: Schema.withDecodingDefaultTypeKey<
+    Schema.$Array<typeof EffectAtomSchema>,
+    never
+  > = Schema.Array(EffectAtomSchema).pipe(
     Schema.withDecodingDefaultTypeKey(Effect.sync(() => [])),
-  ),
-  operations: exactOptional(Schema.NonEmptyArray(PassiveOperationSchema)),
-});
+  );
+  readonly operations = exactOptional(
+    Schema.NonEmptyArray(PassiveOperationSchema),
+  );
+}
+const passiveMechanicsFields = codecFields({ ...new PassiveMechanicsFields() });
+type PassiveMechanicsCodec = Schema.Struct<typeof passiveMechanicsFields>;
+export type PassiveMechanics = Schema.Schema.Type<PassiveMechanicsCodec>;
+export const PassiveMechanicsSchema: PassiveMechanicsCodec = Schema.Struct(
+  passiveMechanicsFields,
+);
 
-export const PreparedSpellListExpansionMechanicsSchema = strictStruct({
+const preparedSpellListExpansionMechanicsFields = codecFields({
   family: Schema.Literal("prepared_spell_list_expansion"),
   baseSpellList: Schema.Literal("bard"),
   additionalEligibleSpellLists: Schema.Tuple([
@@ -1881,16 +2147,26 @@ export const PreparedSpellListExpansionMechanicsSchema = strictStruct({
     Schema.Literal("wizard"),
   ]),
 });
+type PreparedSpellListExpansionMechanicsCodec = Schema.Struct<
+  typeof preparedSpellListExpansionMechanicsFields
+>;
+export const PreparedSpellListExpansionMechanicsSchema: PreparedSpellListExpansionMechanicsCodec =
+  strictStruct(preparedSpellListExpansionMechanicsFields);
 
-export const SpellDamageRollAbilityModifierMechanicsSchema = strictStruct({
+const spellDamageRollAbilityModifierMechanicsFields = codecFields({
   family: Schema.Literal("spell_damage_roll_ability_modifier"),
   spellSourceClassName: Schema.Literal("wizard"),
   school: Schema.Literal("evocation"),
   ability: Schema.Literal("int"),
   damageRollCount: Schema.Literal(1),
 });
+type SpellDamageRollAbilityModifierMechanicsCodec = Schema.Struct<
+  typeof spellDamageRollAbilityModifierMechanicsFields
+>;
+export const SpellDamageRollAbilityModifierMechanicsSchema: SpellDamageRollAbilityModifierMechanicsCodec =
+  strictStruct(spellDamageRollAbilityModifierMechanicsFields);
 
-export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
+const combatTurnStartHeroicInspirationMechanicsFields = codecFields({
   family: Schema.Literal("combat_turn_start_heroic_inspiration"),
   trigger: strictStruct({
     kind: Schema.Literal("start_turn"),
@@ -1899,9 +2175,14 @@ export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
   }),
   grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
 });
+type CombatTurnStartHeroicInspirationMechanicsCodec = Schema.Struct<
+  typeof combatTurnStartHeroicInspirationMechanicsFields
+>;
+export const CombatTurnStartHeroicInspirationMechanicsSchema: CombatTurnStartHeroicInspirationMechanicsCodec =
+  strictStruct(combatTurnStartHeroicInspirationMechanicsFields);
 
 /* v8 ignore start -- @preserve -- these union declarations only assemble already-tested mechanics schemas during collection */
-export const ClassFeatureMechanicsSchema = Schema.Union([
+const classFeatureMechanicsMembers = codecMembers(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
@@ -1941,9 +2222,16 @@ export const ClassFeatureMechanicsSchema = Schema.Union([
   PreparedSpellListExpansionMechanicsSchema,
   SpellDamageRollAbilityModifierMechanicsSchema,
   CombatTurnStartHeroicInspirationMechanicsSchema,
-]);
+);
+type ClassFeatureMechanicsCodec = Schema.Union<
+  typeof classFeatureMechanicsMembers
+>;
+export type ClassFeatureMechanics =
+  Schema.Schema.Type<ClassFeatureMechanicsCodec>;
+export const ClassFeatureMechanicsSchema: ClassFeatureMechanicsCodec =
+  Schema.Union(classFeatureMechanicsMembers);
 
-export const ClassGeneralFeatureMechanicsSchema = Schema.Union([
+const classGeneralFeatureMechanicsMembers = codecMembers(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
@@ -1951,87 +2239,178 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union([
   ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   BonusActionDelegatedStandardActionsMechanicsSchema,
-]);
+);
+type ClassGeneralFeatureMechanicsCodec = Schema.Union<
+  typeof classGeneralFeatureMechanicsMembers
+>;
+export type ClassGeneralFeatureMechanics =
+  Schema.Schema.Type<ClassGeneralFeatureMechanicsCodec>;
+export const ClassGeneralFeatureMechanicsSchema: ClassGeneralFeatureMechanicsCodec =
+  Schema.Union(classGeneralFeatureMechanicsMembers);
 
-export const BardClassFeatureMechanicsSchema = Schema.Union([
+const bardClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   PreparedSpellListExpansionMechanicsSchema,
-]);
+);
+type BardClassFeatureMechanicsCodec = Schema.Union<
+  typeof bardClassFeatureMechanicsMembers
+>;
+export type BardClassFeatureMechanics =
+  Schema.Schema.Type<BardClassFeatureMechanicsCodec>;
+export const BardClassFeatureMechanicsSchema: BardClassFeatureMechanicsCodec =
+  Schema.Union(bardClassFeatureMechanicsMembers);
 
-export const ClericClassFeatureMechanicsSchema = Schema.Union([
+const clericClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   SpellSlotHealingModifierMechanicsSchema,
   MagicActionHealingPoolMechanicsSchema,
-]);
+);
+type ClericClassFeatureMechanicsCodec = Schema.Union<
+  typeof clericClassFeatureMechanicsMembers
+>;
+export type ClericClassFeatureMechanics =
+  Schema.Schema.Type<ClericClassFeatureMechanicsCodec>;
+export const ClericClassFeatureMechanicsSchema: ClericClassFeatureMechanicsCodec =
+  Schema.Union(clericClassFeatureMechanicsMembers);
 
-export const DruidClassFeatureMechanicsSchema = Schema.Union([
+const druidClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   DruidWildCompanionSpellCastMechanicsSchema,
   MagicActionAreaSaveDamageHealingMechanicsSchema,
-]);
+);
+type DruidClassFeatureMechanicsCodec = Schema.Union<
+  typeof druidClassFeatureMechanicsMembers
+>;
+export type DruidClassFeatureMechanics =
+  Schema.Schema.Type<DruidClassFeatureMechanicsCodec>;
+export const DruidClassFeatureMechanicsSchema: DruidClassFeatureMechanicsCodec =
+  Schema.Union(druidClassFeatureMechanicsMembers);
 
-export const WizardClassFeatureMechanicsSchema = Schema.Union([
+const wizardClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
   WizardSpellbookLearningMechanicsSchema,
   PotentCantripMechanicsSchema,
   SpellDamageRollAbilityModifierMechanicsSchema,
-]);
+);
+type WizardClassFeatureMechanicsCodec = Schema.Union<
+  typeof wizardClassFeatureMechanicsMembers
+>;
+export type WizardClassFeatureMechanics =
+  Schema.Schema.Type<WizardClassFeatureMechanicsCodec>;
+export const WizardClassFeatureMechanicsSchema: WizardClassFeatureMechanicsCodec =
+  Schema.Union(wizardClassFeatureMechanicsMembers);
 
-export const BarbarianClassFeatureMechanicsSchema = Schema.Union([
+const barbarianClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   BrutalStrikeMechanicsSchema,
-]);
+);
+type BarbarianClassFeatureMechanicsCodec = Schema.Union<
+  typeof barbarianClassFeatureMechanicsMembers
+>;
+export type BarbarianClassFeatureMechanics =
+  Schema.Schema.Type<BarbarianClassFeatureMechanicsCodec>;
+export const BarbarianClassFeatureMechanicsSchema: BarbarianClassFeatureMechanicsCodec =
+  Schema.Union(barbarianClassFeatureMechanicsMembers);
 
-export const FighterClassFeatureMechanicsSchema = Schema.Union([
+const fighterClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   IndomitableMechanicsSchema,
   TacticalMasterMechanicsSchema,
   RemarkableAthleteMechanicsSchema,
   CombatTurnStartHeroicInspirationMechanicsSchema,
-]);
+);
+type FighterClassFeatureMechanicsCodec = Schema.Union<
+  typeof fighterClassFeatureMechanicsMembers
+>;
+export type FighterClassFeatureMechanics =
+  Schema.Schema.Type<FighterClassFeatureMechanicsCodec>;
+export const FighterClassFeatureMechanicsSchema: FighterClassFeatureMechanicsCodec =
+  Schema.Union(fighterClassFeatureMechanicsMembers);
 
-export const MonkClassFeatureMechanicsSchema = Schema.Union([
+const monkClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
   AcrobaticMovementMechanicsSchema,
   OpenHandTechniqueMechanicsSchema,
   StunningStrikeMechanicsSchema,
-]);
+);
+type MonkClassFeatureMechanicsCodec = Schema.Union<
+  typeof monkClassFeatureMechanicsMembers
+>;
+export type MonkClassFeatureMechanics =
+  Schema.Schema.Type<MonkClassFeatureMechanicsCodec>;
+export const MonkClassFeatureMechanicsSchema: MonkClassFeatureMechanicsCodec =
+  Schema.Union(monkClassFeatureMechanicsMembers);
 
-export const PaladinClassFeatureMechanicsSchema = Schema.Union([
+const paladinClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   AbjureFoesMechanicsSchema,
   SacredWeaponMechanicsSchema,
-]);
+);
+type PaladinClassFeatureMechanicsCodec = Schema.Union<
+  typeof paladinClassFeatureMechanicsMembers
+>;
+export type PaladinClassFeatureMechanics =
+  Schema.Schema.Type<PaladinClassFeatureMechanicsCodec>;
+export const PaladinClassFeatureMechanicsSchema: PaladinClassFeatureMechanicsCodec =
+  Schema.Union(paladinClassFeatureMechanicsMembers);
 
-export const RangerClassFeatureMechanicsSchema = Schema.Union([
+const rangerClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   HuntersPreyMechanicsSchema,
-]);
+);
+type RangerClassFeatureMechanicsCodec = Schema.Union<
+  typeof rangerClassFeatureMechanicsMembers
+>;
+export type RangerClassFeatureMechanics =
+  Schema.Schema.Type<RangerClassFeatureMechanicsCodec>;
+export const RangerClassFeatureMechanicsSchema: RangerClassFeatureMechanicsCodec =
+  Schema.Union(rangerClassFeatureMechanicsMembers);
 
-export const RogueClassFeatureMechanicsSchema = Schema.Union([
+const rogueClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   CunningStrikeMechanicsSchema,
   SupremeSneakMechanicsSchema,
   SteadyAimMechanicsSchema,
-]);
+);
+type RogueClassFeatureMechanicsCodec = Schema.Union<
+  typeof rogueClassFeatureMechanicsMembers
+>;
+export type RogueClassFeatureMechanics =
+  Schema.Schema.Type<RogueClassFeatureMechanicsCodec>;
+export const RogueClassFeatureMechanicsSchema: RogueClassFeatureMechanicsCodec =
+  Schema.Union(rogueClassFeatureMechanicsMembers);
 
-export const SorcererClassFeatureMechanicsSchema = Schema.Union([
+const sorcererClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   SorcererMetamagicMechanicsSchema,
   SorcererSorcerousRestorationMechanicsSchema,
-]);
+);
+type SorcererClassFeatureMechanicsCodec = Schema.Union<
+  typeof sorcererClassFeatureMechanicsMembers
+>;
+export type SorcererClassFeatureMechanics =
+  Schema.Schema.Type<SorcererClassFeatureMechanicsCodec>;
+export const SorcererClassFeatureMechanicsSchema: SorcererClassFeatureMechanicsCodec =
+  Schema.Union(sorcererClassFeatureMechanicsMembers);
 
-export const WarlockClassFeatureMechanicsSchema = Schema.Union([
+const warlockClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
   EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
-]);
+);
+type WarlockClassFeatureMechanicsCodec = Schema.Union<
+  typeof warlockClassFeatureMechanicsMembers
+>;
+export type WarlockClassFeatureMechanics =
+  Schema.Schema.Type<WarlockClassFeatureMechanicsCodec>;
+export const WarlockClassFeatureMechanicsSchema: WarlockClassFeatureMechanicsCodec =
+  Schema.Union(warlockClassFeatureMechanicsMembers);
 /* v8 ignore stop -- @preserve */
 
 export const MasteryTriggerSchema = Schema.Union([
@@ -2185,7 +2564,7 @@ export const VexMasteryEffectSchema = strictStruct({
 /* v8 ignore stop -- @preserve */
 
 /* v8 ignore start -- @preserve -- this declarative replacement schema initializes during collection; the canonical feature record is decoded by catalog tests */
-export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
+const saveDamageReplacementMechanicsFields = codecFields({
   family: Schema.Literal("save_damage_replacement"),
   trigger: Schema.Struct({
     kind: Schema.Literal("saving_throw_damage"),
@@ -2203,6 +2582,11 @@ export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
     }),
   ),
 });
+type SaveDamageReplacementMechanicsCodec = Schema.Struct<
+  typeof saveDamageReplacementMechanicsFields
+>;
+export const SaveDamageReplacementMechanicsSchema: SaveDamageReplacementMechanicsCodec =
+  Schema.Struct(saveDamageReplacementMechanicsFields);
 /* v8 ignore stop -- @preserve */
 
 const BardicInspirationDieReductionSchema = strictStruct({
@@ -2327,7 +2711,7 @@ const ReactionRollOrDamageReductionModifiersSchema = Schema.NonEmptyArray(
 /* v8 ignore stop -- @preserve */
 
 /* v8 ignore start -- @preserve -- this declarative reaction schema initializes during collection; canonical reaction-reduction features are decoded by catalog tests */
-export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union([
+const reactionRollOrDamageReductionMechanicsMembers = codecMembers(
   strictStruct({
     family: Schema.Literal("reaction_roll_or_damage_reduction"),
     modifiers: ReactionRollOrDamageReductionModifiersSchema,
@@ -2338,7 +2722,12 @@ export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union([
     resetCadence: ResetCadenceSchema,
     modifiers: ReactionRollOrDamageReductionModifiersSchema,
   }),
-]);
+);
+type ReactionRollOrDamageReductionMechanicsCodec = Schema.Union<
+  typeof reactionRollOrDamageReductionMechanicsMembers
+>;
+export const ReactionRollOrDamageReductionMechanicsSchema: ReactionRollOrDamageReductionMechanicsCodec =
+  Schema.Union(reactionRollOrDamageReductionMechanicsMembers);
 /* v8 ignore stop -- @preserve */
 
 /* v8 ignore start -- @preserve -- this declarative reroll schema initializes during collection; the canonical reroll feature is decoded by catalog tests */
@@ -2423,6 +2812,20 @@ export const CleaveMasteryMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
+const onHitMasteryMechanicsMembers = codecMembers(
+  PushMasteryMechanicsSchema,
+  SapMasteryMechanicsSchema,
+  SlowMasteryMechanicsSchema,
+  ToppleMasteryMechanicsSchema,
+  VexMasteryMechanicsSchema,
+  CleaveMasteryMechanicsSchema,
+);
+type OnHitMasteryMechanicsCodec = Schema.Union<
+  typeof onHitMasteryMechanicsMembers
+>;
+export const OnHitMasteryMechanicsSchema: OnHitMasteryMechanicsCodec =
+  Schema.Union(onHitMasteryMechanicsMembers);
+
 export const GrazeMasteryMechanicsSchema = strictStruct({
   family: Schema.Literal("weapon_attack_miss_damage"),
   optional: Schema.Literal(true),
@@ -2448,20 +2851,15 @@ export const NickMasteryMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
-export const OnHitMasteryMechanicsSchema = Schema.Union([
-  PushMasteryMechanicsSchema,
-  SapMasteryMechanicsSchema,
-  SlowMasteryMechanicsSchema,
-  ToppleMasteryMechanicsSchema,
-  VexMasteryMechanicsSchema,
-  CleaveMasteryMechanicsSchema,
-]);
-
-export const MasteryMechanicsSchema = Schema.Union([
+const masteryMechanicsMembers = codecMembers(
   OnHitMasteryMechanicsSchema,
   GrazeMasteryMechanicsSchema,
   NickMasteryMechanicsSchema,
-]);
+);
+type MasteryMechanicsCodec = Schema.Union<typeof masteryMechanicsMembers>;
+export const MasteryMechanicsSchema: MasteryMechanicsCodec = Schema.Union(
+  masteryMechanicsMembers,
+);
 
 export const AttackDamageRiderMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
@@ -2510,12 +2908,17 @@ export const WeaponAttackDamageDieFloorEffectSchema = strictStruct({
   minimumResult: Schema.Literal(3),
 });
 
-export const WeaponAttackDamageDieFloorMechanicsSchema = strictStruct({
+const weaponAttackDamageDieFloorMechanicsFields = codecFields({
   family: Schema.Literal("damage_die_floor"),
   optional: Schema.Literal(true),
   trigger: WeaponAttackDamageDieFloorTriggerSchema,
   effect: WeaponAttackDamageDieFloorEffectSchema,
 });
+type WeaponAttackDamageDieFloorMechanicsCodec = Schema.Struct<
+  typeof weaponAttackDamageDieFloorMechanicsFields
+>;
+export const WeaponAttackDamageDieFloorMechanicsSchema: WeaponAttackDamageDieFloorMechanicsCodec =
+  strictStruct(weaponAttackDamageDieFloorMechanicsFields);
 
 export const LightExtraAttackDamageAbilityModifierTriggerSchema = strictStruct({
   kind: Schema.Literal("light_property_extra_attack_damage_roll"),
@@ -2530,22 +2933,37 @@ export const LightExtraAttackDamageAbilityModifierEffectSchema = strictStruct({
   appliesWhen: Schema.Literal("not_already_adding_ability_modifier"),
 });
 
-export const LightExtraAttackDamageAbilityModifierMechanicsSchema =
-  strictStruct({
-    family: Schema.Literal("light_extra_attack_damage_ability_modifier"),
-    optional: Schema.Literal(true),
-    trigger: LightExtraAttackDamageAbilityModifierTriggerSchema,
-    effect: LightExtraAttackDamageAbilityModifierEffectSchema,
-  });
+const lightExtraAttackDamageAbilityModifierMechanicsFields = codecFields({
+  family: Schema.Literal("light_extra_attack_damage_ability_modifier"),
+  optional: Schema.Literal(true),
+  trigger: LightExtraAttackDamageAbilityModifierTriggerSchema,
+  effect: LightExtraAttackDamageAbilityModifierEffectSchema,
+});
+type LightExtraAttackDamageAbilityModifierMechanicsCodec = Schema.Struct<
+  typeof lightExtraAttackDamageAbilityModifierMechanicsFields
+>;
+export const LightExtraAttackDamageAbilityModifierMechanicsSchema: LightExtraAttackDamageAbilityModifierMechanicsCodec =
+  strictStruct(lightExtraAttackDamageAbilityModifierMechanicsFields);
 
-export const OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union(
-  [OnHitMasteryMechanicsSchema, WeaponDamageDiceRerollMechanicsSchema],
+const onHitMasteryOrWeaponDamageDiceRerollMechanicsMembers = codecMembers(
+  OnHitMasteryMechanicsSchema,
+  WeaponDamageDiceRerollMechanicsSchema,
 );
+type OnHitMasteryOrWeaponDamageDiceRerollMechanicsCodec = Schema.Union<
+  typeof onHitMasteryOrWeaponDamageDiceRerollMechanicsMembers
+>;
+export const OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema: OnHitMasteryOrWeaponDamageDiceRerollMechanicsCodec =
+  Schema.Union(onHitMasteryOrWeaponDamageDiceRerollMechanicsMembers);
 
-export const OnHitTriggerMechanicsSchema = Schema.Union([
+const onHitTriggerMechanicsMembers = codecMembers(
   OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   AttackDamageRiderMechanicsSchema,
-]);
+);
+type OnHitTriggerMechanicsCodec = Schema.Union<
+  typeof onHitTriggerMechanicsMembers
+>;
+export const OnHitTriggerMechanicsSchema: OnHitTriggerMechanicsCodec =
+  Schema.Union(onHitTriggerMechanicsMembers);
 
 export const HitPointReplacementTriggerSchema = Schema.Struct({
   kind: Schema.Literal("reduced_to_0_hp_not_killed_outright"),
@@ -2583,10 +3001,15 @@ export const AttackRollMissToHitReplacementMechanicsSchema = strictStruct({
 /* v8 ignore stop -- @preserve */
 
 /* v8 ignore start -- @preserve -- this declarative replacement union initializes during collection; both owned variants are decoded by catalog tests */
-export const TriggeredReplacementMechanicsSchema = Schema.Union([
+const triggeredReplacementMechanicsMembers = codecMembers(
   HitPointTriggeredReplacementMechanicsSchema,
   AttackRollMissToHitReplacementMechanicsSchema,
-]);
+);
+type TriggeredReplacementMechanicsCodec = Schema.Union<
+  typeof triggeredReplacementMechanicsMembers
+>;
+export const TriggeredReplacementMechanicsSchema: TriggeredReplacementMechanicsCodec =
+  Schema.Union(triggeredReplacementMechanicsMembers);
 /* v8 ignore stop -- @preserve */
 
 const UnitMetadataSchema = Schema.Struct({
@@ -3466,11 +3889,15 @@ const ClassRecordBaseFields = {
   ),
 };
 
-export const WizardClassRecordSchema = Schema.Struct({
+const wizardClassRecordFields = codecFields({
   ...ClassRecordBaseFields,
   className: Schema.Literal("wizard"),
   spellcasting: WizardSpellcastingCreationSchema,
 });
+type WizardClassRecordCodec = Schema.Struct<typeof wizardClassRecordFields>;
+export const WizardClassRecordSchema: WizardClassRecordCodec = Schema.Struct(
+  wizardClassRecordFields,
+);
 
 export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
@@ -3644,11 +4071,16 @@ export const ClassContainerOnlyRecordSchema = Schema.Struct({
   spellcasting: exactOptional(ForbiddenValueSchema),
 });
 
-export const NonWizardClassRecordSchema = Schema.Union([
+const nonWizardClassRecordMembers = codecMembers(
   ListPreparedSpellcastingClassRecordSchema,
   PactMagicClassRecordSchema,
   ClassContainerOnlyRecordSchema,
-]);
+);
+type NonWizardClassRecordCodec = Schema.Union<
+  typeof nonWizardClassRecordMembers
+>;
+export const NonWizardClassRecordSchema: NonWizardClassRecordCodec =
+  Schema.Union(nonWizardClassRecordMembers);
 
 export const ClassRecordSchema = Schema.Union([
   NonWizardClassRecordSchema,
@@ -3661,86 +4093,164 @@ const ClassFeatureRecordBaseFields = {
   acquiredAtLevel: PositiveIntegerSchema,
 };
 
-export const BardClassFeatureRecordSchema = Schema.Struct({
+const bardClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("bard"),
   mechanics: BardClassFeatureMechanicsSchema,
 });
+type BardClassFeatureRecordCodec = Schema.Struct<
+  typeof bardClassFeatureRecordFields
+>;
+export type BardClassFeatureRecord =
+  Schema.Schema.Type<BardClassFeatureRecordCodec>;
+export const BardClassFeatureRecordSchema: BardClassFeatureRecordCodec =
+  Schema.Struct(bardClassFeatureRecordFields);
 
-export const WizardClassFeatureRecordSchema = Schema.Struct({
+const wizardClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("wizard"),
   mechanics: WizardClassFeatureMechanicsSchema,
 });
+type WizardClassFeatureRecordCodec = Schema.Struct<
+  typeof wizardClassFeatureRecordFields
+>;
+export type WizardClassFeatureRecord =
+  Schema.Schema.Type<WizardClassFeatureRecordCodec>;
+export const WizardClassFeatureRecordSchema: WizardClassFeatureRecordCodec =
+  Schema.Struct(wizardClassFeatureRecordFields);
 
-export const BarbarianClassFeatureRecordSchema = Schema.Struct({
+const barbarianClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("barbarian"),
   mechanics: BarbarianClassFeatureMechanicsSchema,
 });
+type BarbarianClassFeatureRecordCodec = Schema.Struct<
+  typeof barbarianClassFeatureRecordFields
+>;
+export type BarbarianClassFeatureRecord =
+  Schema.Schema.Type<BarbarianClassFeatureRecordCodec>;
+export const BarbarianClassFeatureRecordSchema: BarbarianClassFeatureRecordCodec =
+  Schema.Struct(barbarianClassFeatureRecordFields);
 
-export const FighterClassFeatureRecordSchema = Schema.Struct({
+const fighterClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("fighter"),
   mechanics: FighterClassFeatureMechanicsSchema,
 });
+type FighterClassFeatureRecordCodec = Schema.Struct<
+  typeof fighterClassFeatureRecordFields
+>;
+export type FighterClassFeatureRecord =
+  Schema.Schema.Type<FighterClassFeatureRecordCodec>;
+export const FighterClassFeatureRecordSchema: FighterClassFeatureRecordCodec =
+  Schema.Struct(fighterClassFeatureRecordFields);
 /* v8 ignore stop -- @preserve */
 
-export const ClericClassFeatureRecordSchema = Schema.Struct({
+const clericClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("cleric"),
   mechanics: ClericClassFeatureMechanicsSchema,
 });
+type ClericClassFeatureRecordCodec = Schema.Struct<
+  typeof clericClassFeatureRecordFields
+>;
+export type ClericClassFeatureRecord =
+  Schema.Schema.Type<ClericClassFeatureRecordCodec>;
+export const ClericClassFeatureRecordSchema: ClericClassFeatureRecordCodec =
+  Schema.Struct(clericClassFeatureRecordFields);
 
-export const DruidClassFeatureRecordSchema = Schema.Struct({
+const druidClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("druid"),
   mechanics: DruidClassFeatureMechanicsSchema,
 });
+type DruidClassFeatureRecordCodec = Schema.Struct<
+  typeof druidClassFeatureRecordFields
+>;
+export type DruidClassFeatureRecord =
+  Schema.Schema.Type<DruidClassFeatureRecordCodec>;
+export const DruidClassFeatureRecordSchema: DruidClassFeatureRecordCodec =
+  Schema.Struct(druidClassFeatureRecordFields);
 
-export const MonkClassFeatureRecordSchema = Schema.Struct({
+const monkClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("monk"),
   mechanics: MonkClassFeatureMechanicsSchema,
 });
+type MonkClassFeatureRecordCodec = Schema.Struct<
+  typeof monkClassFeatureRecordFields
+>;
+export type MonkClassFeatureRecord =
+  Schema.Schema.Type<MonkClassFeatureRecordCodec>;
+export const MonkClassFeatureRecordSchema: MonkClassFeatureRecordCodec =
+  Schema.Struct(monkClassFeatureRecordFields);
 
-export const PaladinClassFeatureRecordSchema = Schema.Struct({
+const paladinClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("paladin"),
   mechanics: PaladinClassFeatureMechanicsSchema,
 });
+type PaladinClassFeatureRecordCodec = Schema.Struct<
+  typeof paladinClassFeatureRecordFields
+>;
+export type PaladinClassFeatureRecord =
+  Schema.Schema.Type<PaladinClassFeatureRecordCodec>;
+export const PaladinClassFeatureRecordSchema: PaladinClassFeatureRecordCodec =
+  Schema.Struct(paladinClassFeatureRecordFields);
 
-export const RangerClassFeatureRecordSchema = Schema.Struct({
+const rangerClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("ranger"),
   mechanics: RangerClassFeatureMechanicsSchema,
 });
+type RangerClassFeatureRecordCodec = Schema.Struct<
+  typeof rangerClassFeatureRecordFields
+>;
+export type RangerClassFeatureRecord =
+  Schema.Schema.Type<RangerClassFeatureRecordCodec>;
+export const RangerClassFeatureRecordSchema: RangerClassFeatureRecordCodec =
+  Schema.Struct(rangerClassFeatureRecordFields);
 
-export const RogueClassFeatureRecordSchema = Schema.Struct({
+const rogueClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("rogue"),
   mechanics: RogueClassFeatureMechanicsSchema,
 });
+type RogueClassFeatureRecordCodec = Schema.Struct<
+  typeof rogueClassFeatureRecordFields
+>;
+export type RogueClassFeatureRecord =
+  Schema.Schema.Type<RogueClassFeatureRecordCodec>;
+export const RogueClassFeatureRecordSchema: RogueClassFeatureRecordCodec =
+  Schema.Struct(rogueClassFeatureRecordFields);
 
-export const SorcererClassFeatureRecordSchema = Schema.Struct({
+const sorcererClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("sorcerer"),
   mechanics: SorcererClassFeatureMechanicsSchema,
 });
+type SorcererClassFeatureRecordCodec = Schema.Struct<
+  typeof sorcererClassFeatureRecordFields
+>;
+export type SorcererClassFeatureRecord =
+  Schema.Schema.Type<SorcererClassFeatureRecordCodec>;
+export const SorcererClassFeatureRecordSchema: SorcererClassFeatureRecordCodec =
+  Schema.Struct(sorcererClassFeatureRecordFields);
 
-export const WarlockClassFeatureRecordSchema = Schema.Struct({
+const warlockClassFeatureRecordFields = codecFields({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("warlock"),
   mechanics: WarlockClassFeatureMechanicsSchema,
 });
+type WarlockClassFeatureRecordCodec = Schema.Struct<
+  typeof warlockClassFeatureRecordFields
+>;
+export type WarlockClassFeatureRecord =
+  Schema.Schema.Type<WarlockClassFeatureRecordCodec>;
+export const WarlockClassFeatureRecordSchema: WarlockClassFeatureRecordCodec =
+  Schema.Struct(warlockClassFeatureRecordFields);
 
-export const OtherClassFeatureRecordSchema = Schema.Struct({
-  ...ClassFeatureRecordBaseFields,
-  className: Schema.Literals(GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES),
-  mechanics: ClassGeneralFeatureMechanicsSchema,
-});
-
-export const ClassFeatureRecordSchema = Schema.Union([
+const classFeatureRecordMembers = codecMembers(
   BardClassFeatureRecordSchema,
   WizardClassFeatureRecordSchema,
   BarbarianClassFeatureRecordSchema,
@@ -3753,10 +4263,14 @@ export const ClassFeatureRecordSchema = Schema.Union([
   RogueClassFeatureRecordSchema,
   SorcererClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
-  OtherClassFeatureRecordSchema,
-]);
+);
+type ClassFeatureRecordCodec = Schema.Union<typeof classFeatureRecordMembers>;
+export type ClassFeatureRecord = Schema.Schema.Type<ClassFeatureRecordCodec>;
+export const ClassFeatureRecordSchema: ClassFeatureRecordCodec = Schema.Union(
+  classFeatureRecordMembers,
+);
 
-export const SubclassRecordSchema = Schema.Struct({
+const subclassRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: SubclassRecordKindSchema,
   className: ClassNameSchema,
@@ -3764,14 +4278,20 @@ export const SubclassRecordSchema = Schema.Struct({
     Schema.withDecodingDefaultTypeKey(Effect.sync(() => [])),
   ),
 });
+type SubclassRecordCodec = Schema.Struct<typeof subclassRecordFields>;
+export const SubclassRecordSchema: SubclassRecordCodec =
+  Schema.Struct(subclassRecordFields);
 
-export const MasteryRecordSchema = Schema.Struct({
+const masteryRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("mastery"),
   mechanics: MasteryMechanicsSchema,
 });
+type MasteryRecordCodec = Schema.Struct<typeof masteryRecordFields>;
+export const MasteryRecordSchema: MasteryRecordCodec =
+  Schema.Struct(masteryRecordFields);
 
-export const FeatMechanicsSchema = Schema.Union([
+const featMechanicsMembers = codecMembers(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
@@ -3802,7 +4322,11 @@ export const FeatMechanicsSchema = Schema.Union([
     family: Schema.Literal("magic_initiate"),
     spellList: Schema.Literals(MAGIC_INITIATE_SPELL_LISTS),
   }),
-]);
+);
+type FeatMechanicsCodec = Schema.Union<typeof featMechanicsMembers>;
+export type FeatMechanics = Schema.Schema.Type<FeatMechanicsCodec>;
+export const FeatMechanicsSchema: FeatMechanicsCodec =
+  Schema.Union(featMechanicsMembers);
 
 const FeatAbilityScoreIncreaseAbilityScopeSchema = Schema.Union([
   strictStruct({ kind: Schema.Literal("all_abilities") }),
@@ -3857,7 +4381,7 @@ const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
   ),
 );
 
-export const FeatRecordSchema = Schema.Struct({
+const featRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("feat"),
   category: FeatCategorySchema,
@@ -3866,6 +4390,10 @@ export const FeatRecordSchema = Schema.Struct({
   ),
   mechanics: FeatMechanicsSchema,
 });
+type FeatRecordCodec = Schema.Struct<typeof featRecordFields>;
+export type FeatRecord = Schema.Schema.Type<FeatRecordCodec>;
+export const FeatRecordSchema: FeatRecordCodec =
+  Schema.Struct(featRecordFields);
 
 const GnomishLineageForestMechanicsSchema = strictStruct({
   family: Schema.Literal("passive"),
@@ -3973,7 +4501,7 @@ const GnomishLineageRockOptionSchema = strictStruct({
   clockworkDevice: GnomishLineageRockClockworkDeviceSchema,
 });
 
-export const GnomishLineageMechanicsSchema = strictStruct({
+const gnomishLineageMechanicsFields = codecFields({
   family: Schema.Literal("species_lineage_choice"),
   choiceKey: surfaceSchemaRole(Schema.Literal("gnome_lineage"), {
     category: "protocol",
@@ -3993,8 +4521,13 @@ export const GnomishLineageMechanicsSchema = strictStruct({
     GnomishLineageRockOptionSchema,
   ]),
 });
+type GnomishLineageMechanicsCodec = Schema.Struct<
+  typeof gnomishLineageMechanicsFields
+>;
+export const GnomishLineageMechanicsSchema: GnomishLineageMechanicsCodec =
+  strictStruct(gnomishLineageMechanicsFields);
 
-export const D20TestNaturalOneRerollMechanicsSchema = strictStruct({
+const d20TestNaturalOneRerollMechanicsFields = codecFields({
   family: Schema.Literal("d20_test_natural_one_reroll"),
   trigger: strictStruct({
     kind: Schema.Literal("d20_test_roll_is"),
@@ -4006,8 +4539,13 @@ export const D20TestNaturalOneRerollMechanicsSchema = strictStruct({
   }),
   optional: Schema.Literal(true),
 });
+type D20TestNaturalOneRerollMechanicsCodec = Schema.Struct<
+  typeof d20TestNaturalOneRerollMechanicsFields
+>;
+export const D20TestNaturalOneRerollMechanicsSchema: D20TestNaturalOneRerollMechanicsCodec =
+  strictStruct(d20TestNaturalOneRerollMechanicsFields);
 
-export const CreatureSpaceMovementPermissionMechanicsSchema = strictStruct({
+const creatureSpaceMovementPermissionMechanicsFields = codecFields({
   family: Schema.Literal("creature_space_movement_permission"),
   moveThrough: strictStruct({
     kind: Schema.Literal("occupied_creature_space"),
@@ -4015,8 +4553,13 @@ export const CreatureSpaceMovementPermissionMechanicsSchema = strictStruct({
   }),
   canStopInOccupiedSpace: Schema.Literal(false),
 });
+type CreatureSpaceMovementPermissionMechanicsCodec = Schema.Struct<
+  typeof creatureSpaceMovementPermissionMechanicsFields
+>;
+export const CreatureSpaceMovementPermissionMechanicsSchema: CreatureSpaceMovementPermissionMechanicsCodec =
+  strictStruct(creatureSpaceMovementPermissionMechanicsFields);
 
-export const HideActionObscurementPermissionMechanicsSchema = strictStruct({
+const hideActionObscurementPermissionMechanicsFields = codecFields({
   family: Schema.Literal("hide_action_obscurement_permission"),
   action: Schema.Literal("hide"),
   allowedObscurement: strictStruct({
@@ -4024,8 +4567,13 @@ export const HideActionObscurementPermissionMechanicsSchema = strictStruct({
     creatureSizeRelationToSelf: Schema.Literal("at_least_one_size_larger"),
   }),
 });
+type HideActionObscurementPermissionMechanicsCodec = Schema.Struct<
+  typeof hideActionObscurementPermissionMechanicsFields
+>;
+export const HideActionObscurementPermissionMechanicsSchema: HideActionObscurementPermissionMechanicsCodec =
+  strictStruct(hideActionObscurementPermissionMechanicsFields);
 
-export const RestTriggeredHeroicInspirationMechanicsSchema = strictStruct({
+const restTriggeredHeroicInspirationMechanicsFields = codecFields({
   family: Schema.Literal("rest_triggered_heroic_inspiration"),
   trigger: strictStruct({
     kind: Schema.Literal("finish_rest"),
@@ -4033,8 +4581,13 @@ export const RestTriggeredHeroicInspirationMechanicsSchema = strictStruct({
   }),
   grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
 });
+type RestTriggeredHeroicInspirationMechanicsCodec = Schema.Struct<
+  typeof restTriggeredHeroicInspirationMechanicsFields
+>;
+export const RestTriggeredHeroicInspirationMechanicsSchema: RestTriggeredHeroicInspirationMechanicsCodec =
+  strictStruct(restTriggeredHeroicInspirationMechanicsFields);
 
-export const SpeciesTraitMechanicsSchema = Schema.Union([
+const speciesTraitMechanicsMembers = codecMembers(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
@@ -4043,14 +4596,26 @@ export const SpeciesTraitMechanicsSchema = Schema.Union([
   CreatureSpaceMovementPermissionMechanicsSchema,
   HideActionObscurementPermissionMechanicsSchema,
   RestTriggeredHeroicInspirationMechanicsSchema,
-]);
+);
+type SpeciesTraitMechanicsCodec = Schema.Union<
+  typeof speciesTraitMechanicsMembers
+>;
+export type SpeciesTraitMechanics =
+  Schema.Schema.Type<SpeciesTraitMechanicsCodec>;
+export const SpeciesTraitMechanicsSchema: SpeciesTraitMechanicsCodec =
+  Schema.Union(speciesTraitMechanicsMembers);
 
-export const SpeciesTraitRecordSchema = Schema.Struct({
+const speciesTraitRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("species_trait"),
   species: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
   mechanics: SpeciesTraitMechanicsSchema,
 });
+type SpeciesTraitRecordCodec = Schema.Struct<typeof speciesTraitRecordFields>;
+export type SpeciesTraitRecord = Schema.Schema.Type<SpeciesTraitRecordCodec>;
+export const SpeciesTraitRecordSchema: SpeciesTraitRecordCodec = Schema.Struct(
+  speciesTraitRecordFields,
+);
 
 export const BackgroundToolProficiencySchema = Schema.Union([
   Schema.Struct({
@@ -4064,7 +4629,7 @@ export const BackgroundToolProficiencySchema = Schema.Union([
   }),
 ]);
 
-export const BackgroundRecordSchema = Schema.Struct({
+const backgroundRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: BackgroundRecordKindSchema,
   abilityScoreIncrease: BackgroundAbilityScoreIncreaseSchema,
@@ -4076,6 +4641,10 @@ export const BackgroundRecordSchema = Schema.Struct({
   toolProficiency: BackgroundToolProficiencySchema,
   startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
 });
+type BackgroundRecordCodec = Schema.Struct<typeof backgroundRecordFields>;
+export const BackgroundRecordSchema: BackgroundRecordCodec = Schema.Struct(
+  backgroundRecordFields,
+);
 
 export const OrcSpeciesTraitsSchema = Schema.Struct({
   adrenalineRush: Schema.Literal("orc_adrenaline_rush"),
@@ -4293,7 +4862,7 @@ export const TieflingSpeciesRecordSchema = Schema.Struct({
   traits: TieflingSpeciesTraitsSchema,
 });
 
-export const SpeciesRecordSchema = Schema.Union([
+const speciesRecordMembers = codecMembers(
   DragonbornSpeciesRecordSchema,
   DwarfSpeciesRecordSchema,
   ElfSpeciesRecordSchema,
@@ -4303,35 +4872,62 @@ export const SpeciesRecordSchema = Schema.Union([
   GoliathSpeciesRecordSchema,
   OrcSpeciesRecordSchema,
   TieflingSpeciesRecordSchema,
-]);
+);
+type SpeciesRecordCodec = Schema.Union<typeof speciesRecordMembers>;
+export const SpeciesRecordSchema: SpeciesRecordCodec =
+  Schema.Union(speciesRecordMembers);
 
-export const MagicItemComponentMechanicsSchema = Schema.Union([
+const magicItemComponentMechanicsMembers = codecMembers(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
   OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   MagicItemSpawnedCreatureMechanicsSchema,
-]);
+);
+type MagicItemComponentMechanicsCodec = Schema.Union<
+  typeof magicItemComponentMechanicsMembers
+>;
+export type MagicItemComponentMechanics =
+  Schema.Schema.Type<MagicItemComponentMechanicsCodec>;
+export const MagicItemComponentMechanicsSchema: MagicItemComponentMechanicsCodec =
+  Schema.Union(magicItemComponentMechanicsMembers);
 
-export const CompositeMagicItemMechanicsSchema = Schema.Struct({
+const compositeMagicItemMechanicsFields = codecFields({
   family: Schema.Literal("composite"),
   parts: Schema.NonEmptyArray(MagicItemComponentMechanicsSchema),
 });
+type CompositeMagicItemMechanicsCodec = Schema.Struct<
+  typeof compositeMagicItemMechanicsFields
+>;
+export type CompositeMagicItemMechanics =
+  Schema.Schema.Type<CompositeMagicItemMechanicsCodec>;
+export const CompositeMagicItemMechanicsSchema: CompositeMagicItemMechanicsCodec =
+  Schema.Struct(compositeMagicItemMechanicsFields);
 
-export const MagicItemMechanicsSchema = Schema.Union([
+const magicItemMechanicsMembers = codecMembers(
   MagicItemComponentMechanicsSchema,
   CompositeMagicItemMechanicsSchema,
-]);
+);
+type MagicItemMechanicsCodec = Schema.Union<typeof magicItemMechanicsMembers>;
+export type MagicItemMechanics = Schema.Schema.Type<MagicItemMechanicsCodec>;
+export const MagicItemMechanicsSchema: MagicItemMechanicsCodec = Schema.Union(
+  magicItemMechanicsMembers,
+);
 
-export const MagicItemAttunementRestrictionSchema = Schema.Union([
+const magicItemAttunementRestrictionMembers = codecMembers(
   Schema.Struct({ kind: Schema.Literal("spellcaster") }),
   Schema.Struct({
     kind: Schema.Literal("class_list"),
     classes: Schema.NonEmptyArray(ClassNameSchema),
   }),
-]);
+);
+type MagicItemAttunementRestrictionCodec = Schema.Union<
+  typeof magicItemAttunementRestrictionMembers
+>;
+export const MagicItemAttunementRestrictionSchema: MagicItemAttunementRestrictionCodec =
+  Schema.Union(magicItemAttunementRestrictionMembers);
 
-export const ItemDestructionPolicySchema = Schema.Union([
+const itemDestructionPolicyMembers = codecMembers(
   strictStruct({ kind: Schema.Literal("none") }),
   Schema.Struct({ kind: Schema.Literal("becomes_nonmagical_on_hit") }),
   Schema.Struct({
@@ -4340,17 +4936,26 @@ export const ItemDestructionPolicySchema = Schema.Union([
     destroyOn: Schema.Number,
   }),
   Schema.Struct({ kind: Schema.Literal("permanent_on_empty") }),
-]);
+);
+type ItemDestructionPolicyCodec = Schema.Union<
+  typeof itemDestructionPolicyMembers
+>;
+export const ItemDestructionPolicySchema: ItemDestructionPolicyCodec =
+  Schema.Union(itemDestructionPolicyMembers);
 
-export const MagicItemAttunementSchema = Schema.Union([
+const magicItemAttunementMembers = codecMembers(
   Schema.Struct({ requiresAttunement: Schema.Literal(false) }),
   Schema.Struct({
     requiresAttunement: Schema.Literal(true),
     attunementRestriction: exactOptional(MagicItemAttunementRestrictionSchema),
   }),
-]);
+);
+type MagicItemAttunementCodec = Schema.Union<typeof magicItemAttunementMembers>;
+export const MagicItemAttunementSchema: MagicItemAttunementCodec = Schema.Union(
+  magicItemAttunementMembers,
+);
 
-export const MagicItemVariantSchema = Schema.Struct({
+const magicItemVariantFields = codecFields({
   id: surfaceIdentity(NonEmptyStringSchema, "id"),
   name: surfaceIdentity(NonEmptyStringSchema, "name"),
   description: exactOptional(surfaceProse(Schema.String)),
@@ -4359,46 +4964,71 @@ export const MagicItemVariantSchema = Schema.Struct({
   destruction: ItemDestructionPolicySchema,
   attunementOverride: exactOptional(MagicItemAttunementSchema),
 });
+type MagicItemVariantCodec = Schema.Struct<typeof magicItemVariantFields>;
+export type MagicItemVariant = Schema.Schema.Type<MagicItemVariantCodec>;
+export const MagicItemVariantSchema: MagicItemVariantCodec = Schema.Struct(
+  magicItemVariantFields,
+);
 
-export const MagicItemRecordSchema = Schema.Union([
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("magic_item"),
-    rarity: MagicItemRaritySchema,
-    mechanics: MagicItemMechanicsSchema,
-    destruction: ItemDestructionPolicySchema,
-    requiresAttunement: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("magic_item"),
-    rarity: MagicItemRaritySchema,
-    mechanics: MagicItemMechanicsSchema,
-    destruction: ItemDestructionPolicySchema,
-    requiresAttunement: Schema.Literal(true),
-    attunementRestriction: exactOptional(MagicItemAttunementRestrictionSchema),
-  }),
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("magic_item"),
-    defaultAttunement: MagicItemAttunementSchema,
-    variants: Schema.NonEmptyArray(MagicItemVariantSchema),
-  }),
-]);
+const MagicItemWithoutAttunementRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("magic_item"),
+  rarity: MagicItemRaritySchema,
+  mechanics: MagicItemMechanicsSchema,
+  destruction: ItemDestructionPolicySchema,
+  requiresAttunement: Schema.Literal(false),
+});
+const MagicItemWithAttunementRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("magic_item"),
+  rarity: MagicItemRaritySchema,
+  mechanics: MagicItemMechanicsSchema,
+  destruction: ItemDestructionPolicySchema,
+  requiresAttunement: Schema.Literal(true),
+  attunementRestriction: exactOptional(MagicItemAttunementRestrictionSchema),
+});
+const MagicItemVariantCollectionRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("magic_item"),
+  defaultAttunement: MagicItemAttunementSchema,
+  variants: Schema.NonEmptyArray(MagicItemVariantSchema),
+});
 
-export const MagicEquipmentTraitSchema = Schema.Struct({
+const magicItemRecordMembers = codecMembers(
+  MagicItemWithoutAttunementRecordSchema,
+  MagicItemWithAttunementRecordSchema,
+  MagicItemVariantCollectionRecordSchema,
+);
+type MagicItemRecordCodec = Schema.Union<typeof magicItemRecordMembers>;
+export type MagicItemRecord = Schema.Schema.Type<MagicItemRecordCodec>;
+export const MagicItemRecordSchema: MagicItemRecordCodec = Schema.Union(
+  magicItemRecordMembers,
+);
+
+const magicEquipmentTraitFields = codecFields({
   rarity: MagicItemRaritySchema,
   attunement: MagicItemAttunementSchema,
   mechanics: MagicItemMechanicsSchema,
   destruction: ItemDestructionPolicySchema,
 });
+type MagicEquipmentTraitCodec = Schema.Struct<typeof magicEquipmentTraitFields>;
+export type MagicEquipmentTrait = Schema.Schema.Type<MagicEquipmentTraitCodec>;
+export const MagicEquipmentTraitSchema: MagicEquipmentTraitCodec =
+  Schema.Struct(magicEquipmentTraitFields);
 
-export const MagicEquipmentVariantSchema = Schema.Struct({
+const magicEquipmentVariantFields = codecFields({
   id: surfaceIdentity(NonEmptyStringSchema, "id"),
   name: surfaceIdentity(NonEmptyStringSchema, "name"),
   description: exactOptional(surfaceProse(Schema.String)),
   magic: MagicEquipmentTraitSchema,
 });
+type MagicEquipmentVariantCodec = Schema.Struct<
+  typeof magicEquipmentVariantFields
+>;
+export type MagicEquipmentVariant =
+  Schema.Schema.Type<MagicEquipmentVariantCodec>;
+export const MagicEquipmentVariantSchema: MagicEquipmentVariantCodec =
+  Schema.Struct(magicEquipmentVariantFields);
 
 const armorRecordBaseFields = {
   ...UnitMetadataSchema.fields,
@@ -4413,7 +5043,7 @@ const armorRecordBaseFields = {
   }),
 };
 
-export const ArmorRecordSchema = Schema.Union([
+const armorRecordMembers = codecMembers(
   Schema.Struct({
     ...armorRecordBaseFields,
     category: Schema.Literal("light"),
@@ -4429,9 +5059,12 @@ export const ArmorRecordSchema = Schema.Union([
     category: Schema.Literal("heavy"),
     acFormula: HeavyArmorAcFormulaSchema,
   }),
-]);
+);
+type ArmorRecordCodec = Schema.Union<typeof armorRecordMembers>;
+export const ArmorRecordSchema: ArmorRecordCodec =
+  Schema.Union(armorRecordMembers);
 
-export const ArmorTemplateRecordSchema = Schema.Struct({
+const armorTemplateRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("armor_template"),
   template: Schema.Literal("any_armor_magic"),
@@ -4446,6 +5079,10 @@ export const ArmorTemplateRecordSchema = Schema.Struct({
   }),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
 });
+type ArmorTemplateRecordCodec = Schema.Struct<typeof armorTemplateRecordFields>;
+export type ArmorTemplateRecord = Schema.Schema.Type<ArmorTemplateRecordCodec>;
+export const ArmorTemplateRecordSchema: ArmorTemplateRecordCodec =
+  Schema.Struct(armorTemplateRecordFields);
 
 const shieldRecordBaseFields = {
   ...UnitMetadataSchema.fields,
@@ -4463,11 +5100,12 @@ const shieldRecordBaseFields = {
   }),
 };
 
-export const ShieldRecordSchema = Schema.Union([
-  Schema.Struct(shieldRecordBaseFields),
-]);
+const shieldRecordMembers = codecMembers(Schema.Struct(shieldRecordBaseFields));
+type ShieldRecordCodec = Schema.Union<typeof shieldRecordMembers>;
+export const ShieldRecordSchema: ShieldRecordCodec =
+  Schema.Union(shieldRecordMembers);
 
-export const ShieldTemplateRecordSchema = Schema.Struct({
+const shieldTemplateRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("shield_template"),
   template: Schema.Literal("shield_magic"),
@@ -4484,8 +5122,15 @@ export const ShieldTemplateRecordSchema = Schema.Struct({
   }),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
 });
+type ShieldTemplateRecordCodec = Schema.Struct<
+  typeof shieldTemplateRecordFields
+>;
+export type ShieldTemplateRecord =
+  Schema.Schema.Type<ShieldTemplateRecordCodec>;
+export const ShieldTemplateRecordSchema: ShieldTemplateRecordCodec =
+  Schema.Struct(shieldTemplateRecordFields);
 
-export const WeaponTemplateRecordSchema = Schema.Struct({
+const weaponTemplateRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("weapon_template"),
   template: Schema.Literals(["any_weapon_magic", "ammunition_magic"]),
@@ -4513,8 +5158,15 @@ export const WeaponTemplateRecordSchema = Schema.Struct({
   ]),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
 });
+type WeaponTemplateRecordCodec = Schema.Struct<
+  typeof weaponTemplateRecordFields
+>;
+export type WeaponTemplateRecord =
+  Schema.Schema.Type<WeaponTemplateRecordCodec>;
+export const WeaponTemplateRecordSchema: WeaponTemplateRecordCodec =
+  Schema.Struct(weaponTemplateRecordFields);
 
-export const WeaponRecordSchema = Schema.Struct({
+const weaponRecordFields = codecFields({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("weapon"),
   attachedWeaponAttackOverrideEligibility: exactOptional(
@@ -4528,6 +5180,9 @@ export const WeaponRecordSchema = Schema.Struct({
   weightPounds: exactOptional(Schema.Number),
   costGp: Schema.Number,
 });
+type WeaponRecordCodec = Schema.Struct<typeof weaponRecordFields>;
+export const WeaponRecordSchema: WeaponRecordCodec =
+  Schema.Struct(weaponRecordFields);
 
 // Keep this tuple as the single concrete-member source for UnitRecord and all
 // provenance/publication specializations. Category unions above remain useful
@@ -4538,13 +5193,26 @@ export const UNIT_RECORD_MEMBER_SCHEMAS = [
   ...NonWizardClassRecordSchema.members,
   WizardClassRecordSchema,
   SubclassRecordSchema,
-  ...ClassFeatureRecordSchema.members,
+  BardClassFeatureRecordSchema,
+  WizardClassFeatureRecordSchema,
+  BarbarianClassFeatureRecordSchema,
+  FighterClassFeatureRecordSchema,
+  ClericClassFeatureRecordSchema,
+  DruidClassFeatureRecordSchema,
+  MonkClassFeatureRecordSchema,
+  PaladinClassFeatureRecordSchema,
+  RangerClassFeatureRecordSchema,
+  RogueClassFeatureRecordSchema,
+  SorcererClassFeatureRecordSchema,
+  WarlockClassFeatureRecordSchema,
   BackgroundRecordSchema,
   MasteryRecordSchema,
   FeatRecordSchema,
   ...SpeciesRecordSchema.members,
   SpeciesTraitRecordSchema,
-  ...MagicItemRecordSchema.members,
+  MagicItemWithoutAttunementRecordSchema,
+  MagicItemWithAttunementRecordSchema,
+  MagicItemVariantCollectionRecordSchema,
   ...ArmorRecordSchema.members,
   ArmorTemplateRecordSchema,
   ...ShieldRecordSchema.members,
@@ -4553,6 +5221,9 @@ export const UNIT_RECORD_MEMBER_SCHEMAS = [
   WeaponRecordSchema,
 ] as const;
 
-export const UnitRecordSchema = Schema.Union(UNIT_RECORD_MEMBER_SCHEMAS).pipe(
-  Schema.annotate({ identifier: "UnitRecord" }),
-);
+type UnitRecordCodec = Schema.Union<typeof UNIT_RECORD_MEMBER_SCHEMAS>;
+export type UnitRecord = Schema.Schema.Type<UnitRecordCodec>;
+
+export const UnitRecordSchema: UnitRecordCodec = Schema.Union(
+  UNIT_RECORD_MEMBER_SCHEMAS,
+).pipe(Schema.annotate({ identifier: "UnitRecord" }));

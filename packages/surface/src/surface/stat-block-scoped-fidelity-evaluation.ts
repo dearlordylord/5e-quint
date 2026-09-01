@@ -21,7 +21,7 @@ import {
   type StatBlockScopedProjectionFailure as RawProjectionFailure,
   type StatBlockScopedProjectionIssue as RawProjectionIssue,
 } from "./stat-block-raw-projection.ts";
-import type { SrdStatBlockRecord } from "./types.ts";
+import type { SrdStatBlockRecord } from "./stat-block-types.ts";
 
 type FidelityProjectionProcedure =
   StatBlockScopedFidelityProjection["procedures"][number];

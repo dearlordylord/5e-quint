@@ -6,7 +6,7 @@ import type {
   BattleRuntimeTableD20TestResolutionResult,
   BattleSubject,
   CombatantId,
-} from "@dnd/battle-runtime";
+} from "@dnd/battle-runtime/consumer-protocol";
 import type { ScenarioSession } from "./scenario-session.ts";
 import type { ScenarioAvailableBattleAct } from "./scenario-session.ts";
 import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";

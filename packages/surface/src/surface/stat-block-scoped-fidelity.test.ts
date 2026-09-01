@@ -7,6 +7,7 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
+import { NonNegativeInteger, PositiveInteger } from "@dnd/shared/types";
 
 import {
   deriveSrdStatBlockParity,
@@ -403,7 +404,9 @@ const MUTATION_DESCRIPTORS = [
       ...mechanics,
       generalFacts: {
         ...mechanics.generalFacts,
-        passivePerception: mechanics.generalFacts.passivePerception + 1,
+        passivePerception: NonNegativeInteger(
+          mechanics.generalFacts.passivePerception + 1,
+        ),
       },
     }),
   ),
@@ -690,7 +693,9 @@ function passivePerceptionMismatch(
     ...mechanics,
     generalFacts: {
       ...mechanics.generalFacts,
-      passivePerception: mechanics.generalFacts.passivePerception + 1,
+      passivePerception: NonNegativeInteger(
+        mechanics.generalFacts.passivePerception + 1,
+      ),
     },
   }));
 }
@@ -2195,17 +2200,17 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       }
       const mutatedProcedure: typeof procedure = {
         ...procedure,
-        area: { kind: "sphere", radiusFeet: 20 },
+        area: { kind: "sphere", radiusFeet: PositiveInteger(20) },
         onFail: {
           kind: "conditional_bonus_damage",
           when: { kind: "attack_roll_had_advantage" },
           damageType: "acid",
-          amount: { kind: "fixed", static: 1 },
+          amount: { kind: "fixed", static: PositiveInteger(1) },
         },
         onSuccess: {
           kind: "damage",
           damageType: "acid",
-          amount: { kind: "fixed", static: 1 },
+          amount: { kind: "fixed", static: PositiveInteger(1) },
         },
       };
       return {
@@ -2881,7 +2886,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         (line, index) =>
           index + 1 < occurrence.anchor.lineStart ||
           index + 1 > occurrence.anchor.lineEnd ||
-          !line.startsWith("*Legendary Action Uses:"),
+          !/^[*_]Legendary Action Uses:/.test(line),
       )
       .join("\n");
     const result = projectRawStatBlock(
@@ -3115,7 +3120,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Red Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? line.replace("3 (4 in Lair)", "3 (2 in Lair)")
             : line,
         expected: [
@@ -3129,7 +3134,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Red Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? line.replace("3 (4 in Lair)", "0 (0 in Lair)")
             : line,
         expected: [
@@ -3519,7 +3524,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Gold Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? line.replace("Uses: 3", "Uses: 0")
             : line,
         expectedField: "legendaryActionUses.usesOutsideLair",
@@ -3527,7 +3532,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Gold Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? "*Legendary Action Uses: malformed."
             : line,
         expectedField: "legendaryActionUses",
@@ -4004,7 +4009,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
           {
             kind: "conditional_bonus_damage",
             damageType: "piercing",
-            amount: { kind: "fixed", static: 1 },
+            amount: { kind: "fixed", static: PositiveInteger(1) },
             when: { kind: "target_creature_type", types: ["beast"] },
           },
         ],
@@ -4137,8 +4142,11 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
                   kind: "save",
                   name: "Synthetic Save",
                   ability: "dex",
-                  dc: { kind: "fixed", dc: 10 },
-                  area: { kind: "sphere", radiusFeet: 10 },
+                  dc: { kind: "fixed", dc: PositiveInteger(10) },
+                  area: {
+                    kind: "sphere",
+                    radiusFeet: PositiveInteger(10),
+                  },
                   onFail: { kind: "apply_condition", condition: "prone" },
                   onSuccess: action.procedure.onHit[0],
                 },
@@ -4733,8 +4741,9 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
                 ...mechanics,
                 generalFacts: {
                   ...mechanics.generalFacts,
-                  passivePerception:
+                  passivePerception: NonNegativeInteger(
                     mechanics.generalFacts.passivePerception + 1,
+                  ),
                 },
               }))
             : projection,

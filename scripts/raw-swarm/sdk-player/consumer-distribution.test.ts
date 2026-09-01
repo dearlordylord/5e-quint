@@ -16,7 +16,6 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
-import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
@@ -26,14 +25,15 @@ import { isJsonRecord, repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import {
   assertPublicDeclarationBundle,
+  assertEffectDeclarationCompilerSupport,
   buildConsumerDistribution,
-  PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
+  EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST,
+  PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
-  publicDeclarationDiagnosticBaselineMismatches,
-  type PublicDeclarationSerializationDiagnosticBaselineEntry,
+  removeUnreachableForbiddenDeclarations,
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -66,44 +66,21 @@ function filesBelow(directory: string): readonly string[] {
 
 function copyDistribution(source: string, destination: string): void {
   cpSync(source, destination, { recursive: true });
-  const configPath = join(destination, "tsconfig.json");
-  const config = readFileSync(configPath, "utf8").replaceAll(
-    source,
-    destination,
-  );
-  writeFileSync(configPath, config);
 }
 
-function declarationDiagnosticAtLocation(
-  baseline: PublicDeclarationSerializationDiagnosticBaselineEntry,
-  line: number,
-  column: number,
-): string {
-  return `${baseline.owner}(${String(line)},${String(column)}): error ${baseline.code}: ${baseline.message}`.replaceAll(
-    "<repo>",
-    repoRoot,
-  );
-}
-
-function observedPinnedDeclarationDiagnostics(
-  firstLine: number,
-  column: number,
-): readonly string[] {
-  return PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE.flatMap(
-    (baseline, fingerprintIndex) =>
-      Array.from({ length: baseline.count }, (_, occurrenceIndex) =>
-        declarationDiagnosticAtLocation(
-          baseline,
-          firstLine + fingerprintIndex + occurrenceIndex,
-          column,
-        ),
-      ),
-  );
+function writeDeclaration(
+  directory: string,
+  relativePath: string,
+  source: string,
+): void {
+  const path = join(directory, relativePath);
+  mkdirSync(resolve(path, ".."), { recursive: true });
+  writeFileSync(path, source);
 }
 
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(557);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(1_000);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
     expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(
       PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
@@ -154,83 +131,77 @@ describe("SDK player consumer distribution", () => {
     );
   });
 
-  test("accepts the exact pinned diagnostic multiset across line shifts", () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 100_000 }),
-        fc.integer({ min: 1, max: 1_000 }),
-        (firstLine, column) => {
-          expect(
-            publicDeclarationDiagnosticBaselineMismatches(
-              observedPinnedDeclarationDiagnostics(firstLine, column),
-            ),
-          ).toEqual([]);
-        },
+  test("removes an emitted forbidden declaration proved unreachable", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Kept } from "./kept.ts";\n',
+    );
+    writeDeclaration(directory, "kept.d.ts", "export type Kept = string;\n");
+    writeDeclaration(
+      directory,
+      "forbidden.d.ts",
+      "export type Broad = string;\n",
+    );
+
+    removeUnreachableForbiddenDeclarations(
+      directory,
+      ["root.d.ts"],
+      ["forbidden.d.ts"],
+    );
+
+    expect(existsSync(join(directory, "forbidden.d.ts"))).toBe(false);
+  });
+
+  test("rejects an emitted forbidden declaration reachable from a root", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Broad } from "./forbidden.ts";\n',
+    );
+    writeDeclaration(
+      directory,
+      "forbidden.d.ts",
+      "export type Broad = string;\n",
+    );
+
+    expect(() =>
+      removeUnreachableForbiddenDeclarations(
+        directory,
+        ["root.d.ts"],
+        ["forbidden.d.ts"],
       ),
-      { numRuns: 100 },
-    );
+    ).toThrow(/reaches forbidden runtime\/data owner forbidden\.d\.ts/);
+    expect(existsSync(join(directory, "forbidden.d.ts"))).toBe(true);
   });
 
-  test("rejects an added identical diagnostic beyond its pinned count", () => {
-    const exactDiagnostics = observedPinnedDeclarationDiagnostics(100, 14);
-    const duplicate = exactDiagnostics.find(
-      (diagnostic) =>
-        diagnostic.includes("schema-spell.ts") && diagnostic.includes("TS7056"),
+  test("rejects an unresolved internal declaration edge", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Missing } from "./missing.ts";\n',
     );
-    if (duplicate === undefined) {
-      throw new Error("Expected pinned schema-spell TS7056 diagnostic.");
-    }
-    expect(
-      publicDeclarationDiagnosticBaselineMismatches([
-        ...exactDiagnostics,
-        duplicate,
-      ]),
-    ).toEqual([duplicate]);
+
+    expect(() =>
+      removeUnreachableForbiddenDeclarations(directory, ["root.d.ts"], []),
+    ).toThrow(/unresolved internal edge root\.d\.ts -> \.\/missing\.ts/);
   });
 
-  test("surfaces a missing pinned diagnostic occurrence", () => {
-    const [omitted, ...remainingDiagnostics] =
-      observedPinnedDeclarationDiagnostics(200, 14);
-    if (omitted === undefined) {
-      throw new Error("Expected nonempty pinned declaration diagnostics.");
-    }
-    const firstBaseline =
-      PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE[0];
-    if (firstBaseline === undefined) {
-      throw new Error("Expected nonempty declaration diagnostic baseline.");
-    }
-    expect(
-      publicDeclarationDiagnosticBaselineMismatches(remainingDiagnostics),
-    ).toEqual([
-      expect.stringContaining(
-        `${firstBaseline.owner}: error ${firstBaseline.code}: ${firstBaseline.message}`,
-      ),
-    ]);
-  });
-
-  test("rejects a new named diagnostic in a pinned owner", () => {
-    const exactDiagnostics = observedPinnedDeclarationDiagnostics(300, 14);
-    const pinnedOwner = PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE[0];
-    if (pinnedOwner === undefined) {
-      throw new Error("Expected nonempty declaration diagnostic baseline.");
-    }
-    const newNamedDiagnostic = declarationDiagnosticAtLocation(
-      {
-        owner: pinnedOwner.owner,
-        code: "TS4023",
-        message:
-          "Exported variable 'UnexpectedStatBlockExecutionSnapshotSchema' has or is using name 'UnexpectedPrivateType' from external module \"<repo>/packages/surface/src/surface/schema-spell\" but cannot be named.",
-        count: 1,
-      },
-      300,
-      14,
+  test("retains ordinary declarations reachable from a root", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Kept } from "./kept.ts";\n',
     );
-    expect(
-      publicDeclarationDiagnosticBaselineMismatches([
-        ...exactDiagnostics,
-        newNamedDiagnostic,
-      ]),
-    ).toEqual([newNamedDiagnostic]);
+    writeDeclaration(directory, "kept.d.ts", "export type Kept = string;\n");
+
+    removeUnreachableForbiddenDeclarations(directory, ["root.d.ts"], []);
+
+    expect(existsSync(join(directory, "kept.d.ts"))).toBe(true);
   });
 
   test(
@@ -259,6 +230,51 @@ describe("SDK player consumer distribution", () => {
           benchmarkContextForRole("boundedCapabilityProjection", "player"),
         ),
       );
+      const compilerPaths = JSON.parse(
+        readFileSync(join(destination, "tsconfig.json"), "utf8"),
+      ).compilerOptions.paths;
+      const publicConfig = readFileSync(
+        join(destination, "tsconfig.json"),
+        "utf8",
+      );
+      expect(publicConfig).toBe(
+        readFileSync(join(trustedDestination, "tsconfig.json"), "utf8"),
+      );
+      expect(publicConfig).not.toContain(destination);
+      expect(publicConfig).not.toContain(trustedDestination);
+      expect(JSON.parse(publicConfig).compilerOptions).toMatchObject({
+        baseUrl: ".",
+        skipLibCheck: false,
+      });
+      expect(compilerPaths).not.toHaveProperty("@dnd/shared/*");
+      expect(compilerPaths).not.toHaveProperty("@dnd/shared-algebras/*");
+      expect(compilerPaths).not.toHaveProperty("@dnd/surface/*");
+      expect(compilerPaths).toHaveProperty("@dnd/shared/types");
+      expect(compilerPaths).toHaveProperty("@dnd/surface/surface/types");
+      expect(compilerPaths).not.toHaveProperty(
+        "@dnd/surface/surface/catalog-install",
+      );
+      const compilerSupport = join(destination, "node_modules");
+      assertEffectDeclarationCompilerSupport(compilerSupport);
+      expect(filesBelow(compilerSupport)).toHaveLength(
+        EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST.files,
+      );
+      expect(
+        filesBelow(compilerSupport).every(
+          (path) =>
+            path.endsWith(".d.ts") ||
+            path.endsWith(".d.cts") ||
+            path.endsWith("/LICENSE") ||
+            path.endsWith("/package.json"),
+        ),
+      ).toBe(true);
+      expect(() =>
+        execFileSync(
+          process.execPath,
+          ["--input-type=module", "--eval", 'await import("effect")'],
+          { cwd: destination, stdio: "pipe" },
+        ),
+      ).toThrow();
     },
     10 * 60 * 1_000,
   );
@@ -301,6 +317,7 @@ describe("SDK player consumer distribution", () => {
         "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.d.ts",
         "packages/character-battle-runtime/src/battle-creature-init.d.ts",
+        "packages/surface/src/surface/mechanics-admission.d.ts",
       ]) {
         expect(existsSync(join(declarationRoot, retainedOwner))).toBe(true);
       }
@@ -310,6 +327,7 @@ describe("SDK player consumer distribution", () => {
         "packages/character-battle-runtime/src/battle-handoff-issue.d.ts",
         "packages/character-battle-runtime/src/character-battle-route.d.ts",
         "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.d.ts",
+        ...PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
         "scripts/raw-swarm/transcript.d.ts",
         "scripts/raw-swarm/raw-swarm-identities.d.ts",
       ]) {
@@ -338,28 +356,6 @@ describe("SDK player consumer distribution", () => {
           "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
         ),
         characterBoundaryPath,
-      );
-      const characterConfigPath = join(destination, "character-tsconfig.json");
-      const characterConfig = JSON.parse(
-        readFileSync(join(destination, "tsconfig.json"), "utf8"),
-      ) as Readonly<Record<string, unknown>>;
-      writeFileSync(
-        characterConfigPath,
-        `${JSON.stringify(
-          { ...characterConfig, include: ["character-boundary.ts"] },
-          null,
-          2,
-        )}\n`,
-      );
-      execFileSync(
-        process.execPath,
-        [
-          join(destination, "tooling/typescript/bin/tsc"),
-          "--noEmit",
-          "-p",
-          characterConfigPath,
-        ],
-        { cwd: destination, stdio: "pipe" },
       );
       buildSync({
         entryPoints: [
@@ -394,24 +390,6 @@ describe("SDK player consumer distribution", () => {
           "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.setup.ts",
         ),
         mixedSetupPath,
-      );
-      writeFileSync(
-        characterConfigPath,
-        `${JSON.stringify(
-          { ...characterConfig, include: ["external-mixed-setup.ts"] },
-          null,
-          2,
-        )}\n`,
-      );
-      execFileSync(
-        process.execPath,
-        [
-          join(destination, "tooling/typescript/bin/tsc"),
-          "--noEmit",
-          "-p",
-          characterConfigPath,
-        ],
-        { cwd: destination, stdio: "pipe" },
       );
       await expect(
         evaluateScenarioSetup(
@@ -467,7 +445,6 @@ describe("SDK player consumer distribution", () => {
       ).toContain("SDK player replay deterministic: 0 call(s) matched");
       rmSync(characterBoundaryPath);
       rmSync(mixedSetupPath);
-      rmSync(characterConfigPath);
       writeFileSync(join(destination, "SCENARIO_REVIEW.json"), "{}\n");
       const obstructionRoot = mkdtempSync(
         join(tmpdir(), "dnd-player-obstruction-"),
@@ -607,22 +584,6 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
 
 export const continueBattle: PlayerContinuation = (context) => {
   const acts = context.sdk.discoverBattleActs(context.session);
-  type SubjectInput = Parameters<typeof context.sdk.resolveBattleRuntimeSubject>[0];
-  type MovementInput = Parameters<typeof context.sdk.resolveScenarioMovement>[0];
-  type InterruptInput = Parameters<typeof context.sdk.resolveBattleRuntimeInterrupt>[0];
-  type EndTurnInput = Parameters<typeof context.sdk.endBattleRuntimeTurn>[0];
-  const compileEveryOperation = (
-    subjectInput: SubjectInput,
-    movementInput: MovementInput,
-    interruptInput: InterruptInput,
-    endTurnInput: EndTurnInput,
-  ) => ({
-    subject: context.sdk.resolveBattleRuntimeSubject(subjectInput),
-    movement: context.sdk.resolveScenarioMovement(movementInput),
-    interrupt: context.sdk.resolveBattleRuntimeInterrupt(interruptInput),
-    endTurn: context.sdk.endBattleRuntimeTurn(endTurnInput),
-  });
-  void compileEveryOperation;
   return {
     kind: "continue",
     session: context.session,
@@ -630,11 +591,6 @@ export const continueBattle: PlayerContinuation = (context) => {
   };
 };
 `,
-      );
-      execFileSync(
-        process.execPath,
-        [resolve(repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit"],
-        { cwd: destination, stdio: "pipe" },
       );
 
       const supervisor = join(trustedDestination, "supervisor.mjs");

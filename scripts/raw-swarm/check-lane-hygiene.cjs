@@ -1003,8 +1003,8 @@ function sourcePathsFromConsumerDistributionRuntimeEntries(sourcePath) {
 
 function assertConsumerDistributionGeneratedSubmissionBoundary() {
   // Generated attempt.ts files are not repository-owned static sources. The
-  // generated supervisor is executed under the deterministic guard instead;
-  // this assertion keeps that runtime boundary explicit and fail-closed.
+  // generated supervisor executes only the retained admitted bytes under the
+  // deterministic guard; this assertion keeps that boundary explicit.
   const supervisorSource = readFileSync(
     join(root, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.supervisor),
     "utf8",
@@ -1015,8 +1015,8 @@ function assertConsumerDistributionGeneratedSubmissionBoundary() {
   );
   assert.match(
     supervisorSource,
-    /pathToFileURL\(submissionPath\)/u,
-    "The generated supervisor must keep its runtime-supplied submission boundary explicit.",
+    /authoredSourceModuleUrl\(submissionSource\)/u,
+    "The generated supervisor must execute the retained admitted submission bytes.",
   );
   assert.match(
     capabilityGuardSource,

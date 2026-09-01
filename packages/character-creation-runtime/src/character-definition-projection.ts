@@ -17,7 +17,7 @@ import {
   type UnitReaderResult,
   type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
-import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/catalog-install";
+import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/mechanics-admission";
 import {
   unitMechanicsPath,
   type UnitMechanicsPath,

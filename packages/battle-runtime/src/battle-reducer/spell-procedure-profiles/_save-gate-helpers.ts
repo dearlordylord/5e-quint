@@ -936,7 +936,7 @@ export function sensoryConditionChoiceSaveGateSpell(
       },
     },
     saveRollModeRule: null,
-    rangeFeet: movementFeet(90),
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
 

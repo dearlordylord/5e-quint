@@ -12,15 +12,16 @@ baseline commit can be resolved.
 The aggregate evidence is closed over the symmetric union of authored record
 identities. Each semantic delta is explicitly `changed`, `added`, or `removed`,
 has the hashes applicable to that shape, and has one reviewed semantic class.
-The current candidate has 39 changed records, 347 additions, and no removals.
+Current closure totals and per-classification counts are owned by the executable
+certificate and checked by the verifier; this rationale does not restate them.
 Their changed-record classes are persistent rule facts, companion lifecycle,
 modal ongoing effect, identity-free execution vocabulary, truthful illumination
-emission, and authored Stat Block fidelity. The last class records the 21
-pre-existing Stat Blocks moving from the reduced Effect 3 shape to the canonical
-SRD Stat Block contract, including structured mechanics, resources,
-communication, and ordered procedures. The certificate schema couples those
-six classes to `changed`; `added` and `removed` accept only the
-catalog-membership class.
+emission, authored cross-record references, and authored Stat Block fidelity.
+The last class records pre-existing Stat Blocks moving from the reduced Effect
+3 shape to the canonical SRD Stat Block contract, including structured
+mechanics, resources, communication, and ordered procedures. The certificate
+schema couples the changed-record classes to `changed`; `added` and `removed`
+accept only the catalog-membership class.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -31,30 +32,68 @@ Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
 retains its printed Darkvision, and Stone Giant retains its printed Dexterity
 save. These corrections change the authenticated candidate shapes without
 changing their existing `added` classification or catalog membership.
-It also closes the canonical weapon-reference graph by adding the SRD Graze,
-Nick, and Vex mastery records. These are authenticated catalog additions; their
-typed Surface mechanics do not imply Battle runtime admission.
+The same integration closes the canonical weapon-reference graph with the SRD
+Graze, Nick, and Vex mastery records. These are authenticated catalog
+additions; their typed Surface mechanics do not imply Battle runtime admission.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
 evidence.
 
+After the publication schema was last synchronized at `bef31d34b`, the
+canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
+exposed two constraints that the typed Effect boundary already enforced but
+the previously generated Draft 2020-12 artifact did not: `hover: true` belongs
+only to Fly speeds, and a GM Speed choice has at least two alternatives. The
+regenerated schema closes those two JSON Schema contract overacceptance gaps
+without changing the typed Effect domain or the published aggregate.
+The final publication also projects `specific_item.itemId` through the existing
+`UnitId` boundary. Seven shared schema nodes gain its non-empty, trimmed-string
+constraints (fourteen changed keyword leaves). The remaining graph changes are
+reference extraction/factoring and removal of one structurally subsumed
+Barbarian general-feature branch from `51307f83f`.
+
+The final convergence repair also synchronizes Life Bond's
+`caster_heal_link.rangeFeet` publication contract with its existing decoded
+positive-integer domain. At the one reachable owning schema node, the
+regenerated artifact replaces the unrestricted number branch and Effect's
+three non-finite number string encodings with an integer having minimum 1.
+This is exactly three validation changes: fractional numbers are rejected,
+zero and negative integers are rejected, and `Infinity`, `-Infinity`, and
+`NaN` are rejected. The aggregate bytes are unchanged.
+
 Canonical hashes do not preserve JSON object key order. The certificate
-therefore separately binds the one byte-order-only delta: the `magic_mouth`
-Unit's `/mechanics` object moved from anchored-trigger fields first to shared
-spell fields first. The evidence records both complete key orders and the
+therefore separately binds the byte-order-only `magic_mouth` delta: the Unit's
+`/mechanics` object moved from anchored-trigger fields first to shared spell
+fields first. The evidence records both complete key orders and the
 canonical value hash. The verifier discovers key-order changes only within
 records whose canonical values are equal and rejects unclassified, stale, or
 substituted order evidence. The exact canonical record hashes authenticate the
-semantic content of the 39 record changes, and the whole-artifact byte digests
-authenticate their byte layout; the verifier does not claim any ordering inside
-those semantic changes as an independent order-only delta.
+semantic content of every reviewed record change, and the whole-artifact byte
+digests authenticate their byte layout; the verifier does not claim any
+ordering inside those semantic changes as an independent order-only delta.
 
-The schema evidence authenticates the reviewed regenerated v4 definition graph
-and records local `$ref` closure. Its finite AJV matrix requires each schema to
-accept its corresponding aggregate and reject the aggregate from the other
-contract snapshot. It does not establish schema-language equivalence or
-preservation of a full schema contract.
+The schema evidence authenticates an authority chain. The immutable Effect 3
+baseline reaches the schema at `63f6f3d9` through that commit's reviewed and
+digest-pinned v4 certificate. The v5 verifier authenticates those historical
+certificate bytes, requires their candidate digest to equal the comparison
+schema bytes, and then classifies the complete comparison-to-current rooted
+graph. Substituting either intermediate artifact breaks the chain.
+
+The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
+`UnitId`, and Life Bond range narrowings, proves the removed Barbarian member
+is a structural subset of a retained member, treats local `$ref` extraction
+and associative, set-valued `anyOf` factoring transparently, and applies joint
+partition refinement to both rooted graphs. Each reversal is authorized by an
+exact reachable JSON pointer and the canonical hashes of the node before and
+after that reversal. An equivalent-looking node at another or unreachable
+location does not inherit the classification. Any remaining changed region
+fails closed, and malformed or non-converging graph analysis is reported as
+typed invalid evidence rather than escaping the verifier.
+This is executable evidence about these two finite schema graphs. It is not a
+claim of equivalence for the JSON Schema language in general. The AJV matrix
+still requires each schema to accept its corresponding aggregate and reject
+the aggregate from the other contract snapshot.
 
 The certificate contains only executable evidence. The verifier owns the two
 publication artifact paths, the immutable baseline commit contract, hashing and

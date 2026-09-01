@@ -1,4 +1,4 @@
-import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/types";
+import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/stat-block-types";
 import {
   STAT_BLOCK_PROCEDURE_SECTIONS,
   type StatBlockProcedureSection,

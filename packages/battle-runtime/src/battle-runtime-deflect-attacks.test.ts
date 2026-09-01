@@ -26,7 +26,6 @@ import {
   goblinScimitarHitReactionSetup,
   reactionModifierChoice,
   reactionModifierReductionRollFill,
-  barbarianRageUnit,
   fighterId,
   goblinId,
   skeletonId,
@@ -198,7 +197,6 @@ describe("battle runtime: Deflect Attacks", () => {
 
   test("Deflect Attacks does not redirect when Resistance alone lowers reduced damage to 0", () => {
     const unit = unitLibrary.requireUnit("monk_deflect_attacks");
-    const rage = barbarianRageUnit();
     const session = startBattleSessionRight({
       battleId: battleId("battle-deflect-attacks-redirect-pre-resistance"),
       combatants: [
@@ -214,10 +212,6 @@ describe("battle runtime: Deflect Attacks", () => {
           resources: [monkDeflectAttacksFocusResource(), rageResource()],
           unitFeatures: [
             characterBattleFeatureInitForTest(unit, [
-              { className: "monk", level: classLevel(3) },
-              { className: "barbarian", level: classLevel(1) },
-            ]),
-            characterBattleFeatureInitForTest(rage, [
               { className: "monk", level: classLevel(3) },
               { className: "barbarian", level: classLevel(1) },
             ]),

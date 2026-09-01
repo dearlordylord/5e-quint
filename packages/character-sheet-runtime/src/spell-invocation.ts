@@ -5,7 +5,7 @@ import {
   classLevelForUnit,
   type CharacterBuild,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";

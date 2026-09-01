@@ -123,7 +123,7 @@ describe("P–S vulnerability projection states", () => {
       kind: "qualified",
       damageTypes: ["piercing"],
       qualifier:
-        "from weapons wielded by creatures under the effect of a *Bless* spell",
+        "from weapons wielded by creatures under the effect of a Bless spell",
     });
   });
 });

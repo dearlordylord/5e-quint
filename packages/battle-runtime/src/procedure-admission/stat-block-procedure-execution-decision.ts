@@ -16,7 +16,7 @@ import type {
   StatBlockProcedureResourceOrdinal,
   StatBlockSpellReference,
   StandaloneStatBlock,
-} from "@dnd/surface/surface/types";
+} from "@dnd/surface/surface/stat-block-types";
 
 import { supportedStatBlockTraitAttackRollModes } from "../statblock-action-execution-support.ts";
 import { statBlockAttackMechanicsSupport } from "../statblock-attack-execution-mechanics.ts";
@@ -27,7 +27,6 @@ import {
 import type {
   BattleStatBlockRuntimeMultiattackDispatch,
   BattleStatBlockRuntimeProcedure,
-  BattleStatBlockUnsupportedProcedureBinding,
 } from "../stat-block-execution-state.ts";
 import { parseStatBlockPositiveIntegerLiteral } from "../stat-block-execution-state.ts";
 import type { StatBlockProcedureSection } from "../procedure-execution/stat-block-procedure-sections.ts";
@@ -37,8 +36,7 @@ import type {
 } from "../battle-action-options.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { mapReadonlyNonEmptyArray } from "../readonly-non-empty-array.ts";
-
-export type { BattleStatBlockUnsupportedProcedureBinding } from "../stat-block-execution-state.ts";
+import type { BattleStatBlockUnsupportedProcedureBinding } from "../stat-block-projection-failure.ts";
 
 export function procedureBindingIssue(
   section: StatBlockProcedureSection,

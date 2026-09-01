@@ -32,7 +32,7 @@ import type {
   BattleRuntimeTableD20TestResolutionResult,
   BattleD20TestCircumstanceRequest,
   D20TestResolutionId,
-} from "@dnd/battle-runtime";
+} from "@dnd/battle-runtime/consumer-protocol";
 import {
   GRAPPLE_TARGET_REACH_FEET,
   HELP_ATTACK_TARGET_ADJACENCY_FEET,
@@ -56,7 +56,7 @@ import {
   d20TestResolutionId,
   sameBattleSubject,
   zeroHpLifecycleIsTerminal,
-} from "../../../packages/battle-runtime/src/index.ts";
+} from "@dnd/battle-runtime/consumer-protocol";
 import { statBlockAttackDamageComponentRefKey } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { isIncapacitated } from "../../../packages/shared-algebras/src/conditions-algebra.ts";

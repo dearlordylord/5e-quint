@@ -16,7 +16,7 @@ import type {
   StandaloneCreatureSpeed,
   StandaloneStatBlock,
   StandaloneStatBlockSpeedEntry,
-} from "@dnd/surface/surface/types";
+} from "@dnd/surface/surface/stat-block-types";
 import type {
   BattleStatBlockAuthoredProcedurePresentation,
   BattleStatBlockAuthoredTraitPresentation,
@@ -29,10 +29,6 @@ import {
   type BattleStatBlockRuntimeResource,
   type BattleStatBlockRuntimeSpeed,
   type BattleStatBlockRuntimeSense,
-  type BattleStatBlockInvalidResourceDeclaration,
-  type BattleStatBlockProjectionFailure,
-  type BattleStatBlockProjectionScalarFailureReason,
-  type BattleStatBlockUnsupportedProcedureBinding,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import {
@@ -43,12 +39,12 @@ import {
   type AuthoredExecutableProcedureEntry,
 } from "./procedure-admission/stat-block-procedure-execution-decision.ts";
 import { mapReadonlyNonEmptyArray } from "./readonly-non-empty-array.ts";
-
-export type {
+import type {
   BattleStatBlockInvalidResourceDeclaration,
   BattleStatBlockProjectionFailure,
-} from "./stat-block-execution-state.ts";
-export { battleStatBlockProjectionFailureMessage } from "./stat-block-execution-state.ts";
+  BattleStatBlockProjectionScalarFailureReason,
+  BattleStatBlockUnsupportedProcedureBinding,
+} from "./stat-block-projection-failure.ts";
 
 export type AuthoredStatBlockProjection = {
   readonly runtime: BattleStatBlockExecutionSource;

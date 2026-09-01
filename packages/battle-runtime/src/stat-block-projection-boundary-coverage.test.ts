@@ -1,11 +1,12 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { ClassLevel } from "@dnd/shared/types";
+import { ClassLevel, PositiveInteger } from "@dnd/shared/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
   decodeCreatureImmunityDeclarationSync,
   StatBlockGmSpeedChoiceSchema,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureResourceOrdinalSchema,
+  StatBlockRecordSchema,
   StatBlockReactionSectionSchema,
 } from "@dnd/surface/surface/schema";
 import type {
@@ -34,10 +35,7 @@ import {
   statBlockRecord,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlock,
-} from "./stat-block-authored-projection.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 const decodeProcedure = (input: unknown): StatBlockProcedureEntry =>
   Schema.decodeUnknownSync(StatBlockProcedureEntrySchema)(input);
@@ -127,7 +125,7 @@ describe("Stat Block projection boundary coverage", () => {
               source.statBlock.speeds[0],
               {
                 kind: "fly",
-                feet: { kind: "literal", value: 40 },
+                feet: { kind: "literal", value: PositiveInteger(40) },
                 availability: {
                   kind: "forms_only",
                   forms: ["winged hybrid"],
@@ -167,8 +165,8 @@ describe("Stat Block projection boundary coverage", () => {
             legendaryActions: {
               uses: {
                 kind: "lair_bonus",
-                usesOutsideLair: 3,
-                additionalUsesInLair: 1,
+                usesOutsideLair: PositiveInteger(3),
+                additionalUsesInLair: PositiveInteger(1),
               },
               entries: [firstAction],
             },
@@ -316,48 +314,29 @@ describe("Stat Block projection boundary coverage", () => {
     }
   });
 
-  test("rejects invalid authored daily limits before runtime allocation", () => {
+  test("rejects non-positive encoded daily limits at the Surface boundary", () => {
     const source = monsterResourceStatBlock();
-    const resources = source.statBlock.resources;
+    const encoded = Schema.encodeSync(StatBlockRecordSchema)(source);
+    const resources = encoded.statBlock.resources;
     if (resources === undefined) {
-      throw new Error("Expected the resource-backed Stat Block fixture.");
+      throw new Error("Expected encoded Stat Block resources.");
     }
-    const daily = resources.find((resource) => resource.limit.kind === "daily");
-    if (daily === undefined) {
-      throw new Error("Expected a daily resource fixture.");
-    }
-    const [firstResource, secondResource, ...remainingResources] = resources;
-    if (firstResource === undefined || secondResource === undefined) {
-      throw new Error("Expected both resource declarations.");
-    }
-
-    const malformedDaily: StatBlockRecord = {
-      ...source,
+    const malformedDaily = {
+      ...encoded,
       statBlock: {
-        ...source.statBlock,
-        resources: [
-          firstResource.ordinal === daily.ordinal
-            ? { ...firstResource, limit: { kind: "daily", uses: 0 } }
-            : firstResource,
-          secondResource.ordinal === daily.ordinal
-            ? { ...secondResource, limit: { kind: "daily", uses: 0 } }
-            : secondResource,
-          ...remainingResources,
-        ],
+        ...encoded.statBlock,
+        resources: resources.map((resource) =>
+          resource.limit.kind === "daily"
+            ? { ...resource, limit: { ...resource.limit, uses: 0 } }
+            : resource,
+        ),
       },
     };
-    const projection = projectAuthoredStatBlock(malformedDaily);
-    expect(projection).toEqual(
-      Result.fail({
-        tag: "battleStatBlockProjectionFailure",
-        reason: "invalidResourceLimit",
-        issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
-      }),
-    );
-    if (Result.isSuccess(projection)) return;
-    expect(battleStatBlockProjectionFailureMessage(projection.failure)).toBe(
-      "Stat Block authored projection failed: battle initialization requires valid Stat Block resource limits.",
-    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockRecordSchema)(malformedDaily),
+      ),
+    ).toBe(true);
   });
 
   test("retains save proficiencies and admits a form without actions", () => {
@@ -428,7 +407,7 @@ describe("Stat Block projection boundary coverage", () => {
     );
   });
 
-  test("rejects a non-positive authored Multiattack count before execution", () => {
+  test("rejects a non-positive encoded Multiattack count at the Surface boundary", () => {
     const source = monsterMultiattackStatBlock();
     const multiattack = source.statBlock.actions?.find(
       (entry) =>
@@ -445,62 +424,42 @@ describe("Stat Block projection boundary coverage", () => {
     if (firstDispatch === undefined) {
       throw new Error("Expected the synthetic Multiattack dispatch.");
     }
-    const actions = source.statBlock.actions;
+    const encoded = Schema.encodeSync(StatBlockRecordSchema)(source);
+    const actions = encoded.statBlock.actions;
     if (actions === undefined) {
-      throw new Error("Expected the synthetic Multiattack actions.");
+      throw new Error("Expected encoded synthetic Multiattack actions.");
     }
-    const [firstAction, ...remainingActions] = actions;
-    if (firstAction === undefined) {
-      throw new Error("Expected the first synthetic action.");
-    }
-    const replaceCount = (entry: (typeof actions)[number]) => {
-      if (entry.procedureOrdinal !== multiattack.procedureOrdinal) {
-        return entry;
-      }
-      if (
-        entry.kind !== "executable" ||
-        entry.procedure.kind !== "multiattack"
-      ) {
-        return entry;
-      }
-      const malformedDispatches: typeof entry.procedure.dispatches = [
-        {
-          ...firstDispatch,
-          count: { kind: "literal", value: 0 },
-        },
-        ...entry.procedure.dispatches.slice(1),
-      ];
-      return {
-        ...entry,
-        procedure: {
-          ...entry.procedure,
-          dispatches: malformedDispatches,
-        },
-      };
-    };
-    const malformedActions: NonNullable<
-      StatBlockRecord["statBlock"]["actions"]
-    > = [replaceCount(firstAction), ...remainingActions.map(replaceCount)];
-    const record: StatBlockRecord = {
-      ...source,
+    const record = {
+      ...encoded,
       statBlock: {
-        ...source.statBlock,
-        actions: malformedActions,
+        ...encoded.statBlock,
+        actions: actions.map((entry) =>
+          entry.procedureOrdinal === multiattack.procedureOrdinal &&
+          entry.kind === "executable" &&
+          entry.procedure.kind === "multiattack"
+            ? {
+                ...entry,
+                procedure: {
+                  ...entry.procedure,
+                  dispatches: [
+                    {
+                      ...firstDispatch,
+                      count: { kind: "literal", value: 0 },
+                    },
+                    ...entry.procedure.dispatches.slice(1),
+                  ],
+                },
+              }
+            : entry,
+        ),
       },
     };
 
-    expect(projectAuthoredStatBlock(record)).toEqual(
-      Result.fail({
-        tag: "battleStatBlockProjectionFailure",
-        reason: "unsupportedProcedureBinding",
-        issues: [
-          {
-            section: "actions",
-            procedureOrdinal: multiattack.procedureOrdinal,
-          },
-        ],
-      }),
-    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockRecordSchema)(record),
+      ),
+    ).toBe(true);
   });
 
   test("accumulates unsupported executable procedure locations", () => {
@@ -620,8 +579,8 @@ describe("Stat Block projection boundary coverage", () => {
             legendaryActions: {
               uses: {
                 kind: "lair_bonus",
-                usesOutsideLair: 3,
-                additionalUsesInLair: 1,
+                usesOutsideLair: PositiveInteger(3),
+                additionalUsesInLair: PositiveInteger(1),
               },
               entries: [firstAction],
             },
@@ -640,7 +599,7 @@ describe("Stat Block projection boundary coverage", () => {
               source.statBlock.speeds[0],
               {
                 kind: "climb",
-                feet: { kind: "literal", value: 30 },
+                feet: { kind: "literal", value: PositiveInteger(30) },
                 availability: {
                   kind: "forms_only",
                   forms: ["synthetic climbing form"],
@@ -798,7 +757,10 @@ describe("Stat Block projection boundary coverage", () => {
         ...source.statBlock,
         speeds: [
           ...source.statBlock.speeds,
-          { kind: "fly", feet: { kind: "literal", value: 30 } },
+          {
+            kind: "fly",
+            feet: { kind: "literal", value: PositiveInteger(30) },
+          },
         ],
       },
     };
@@ -900,34 +862,24 @@ describe("Stat Block projection boundary coverage", () => {
     ) {
       throw new Error("Expected synthetic resource-backed form fixture.");
     }
-    const daily = resources.find((resource) => resource.limit.kind === "daily");
-    if (daily === undefined) throw new Error("Expected a daily resource.");
-    const invalidLimitForm: StatBlockRecord = {
+    const duplicateResourceForm: StatBlockRecord = {
       ...source,
-      id: statBlockId("synthetic_wild_shape_invalid_limit_form"),
+      id: statBlockId("synthetic_wild_shape_duplicate_resource_form"),
       statBlock: {
         ...source.statBlock,
         creatureType: "beast",
-        resources: (() => {
-          const mapped = resources.map((resource) =>
-            resource.ordinal === daily.ordinal
-              ? { ...resource, limit: { kind: "daily" as const, uses: 0 } }
-              : resource,
-          );
-          return [mapped[0]!, ...mapped.slice(1)] as const;
-        })(),
+        resources: [resources[0]!, resources[0]!, resources[1]!] as const,
       },
     };
     const missingOrdinal = Schema.decodeUnknownSync(
       StatBlockProcedureResourceOrdinalSchema,
     )(99);
-    const graphFailureForm: StatBlockRecord = {
+    const missingResourceForm: StatBlockRecord = {
       ...source,
-      id: statBlockId("synthetic_wild_shape_graph_failure_form"),
+      id: statBlockId("synthetic_wild_shape_missing_resource_form"),
       statBlock: {
         ...source.statBlock,
         creatureType: "beast",
-        resources: [resources[0]!, resources[0]!, resources[1]!] as const,
         actions: [
           {
             ...firstAction,
@@ -939,7 +891,7 @@ describe("Stat Block projection boundary coverage", () => {
     };
     const result = battleAvailableDruidWildShapeKnownForms({
       profile: druidWildShapeKnownFormProfile(),
-      forms: [invalidLimitForm, graphFailureForm],
+      forms: [duplicateResourceForm, missingResourceForm],
     });
     expect(result).toEqual(
       Result.fail({
@@ -947,19 +899,20 @@ describe("Stat Block projection boundary coverage", () => {
         issues: [
           {
             tag: "battleDruidWildShapeKnownFormIssue",
-            statBlockId: invalidLimitForm.id,
-            reason: "invalidResourceLimit",
-            issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
-          },
-          {
-            tag: "battleDruidWildShapeKnownFormIssue",
-            statBlockId: graphFailureForm.id,
+            statBlockId: duplicateResourceForm.id,
             reason: "resourceGraph",
             issues: [
               {
                 kind: "duplicateResourceOrdinal",
                 ordinal: resources[0]!.ordinal,
               },
+            ],
+          },
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: missingResourceForm.id,
+            reason: "resourceGraph",
+            issues: [
               { kind: "missingResourceDeclaration", ordinal: missingOrdinal },
             ],
           },
@@ -971,7 +924,7 @@ describe("Stat Block projection boundary coverage", () => {
       combatants: [
         {
           combatantId: combatantId("synthetic-resource-graph-issue"),
-          statBlock: graphFailureForm,
+          statBlock: missingResourceForm,
           initiative: initiativeScore(10),
           ammunitionStocks: [],
           conditions: [],
@@ -981,12 +934,12 @@ describe("Stat Block projection boundary coverage", () => {
     expect(Result.isFailure(initialized)).toBe(true);
     if (Result.isFailure(initialized)) {
       expect(battleInitializationIssueMessage(initialized.failure)).toBe(
-        "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.; Battle runtime requires Stat Block procedure resource reference 99 to match a declared resource.",
+        "Battle runtime requires Stat Block procedure resource reference 99 to match a declared resource.",
       );
     }
     if (Result.isFailure(result)) {
       expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
-        "Druid Wild Shape battle forms require valid Stat Block resource limits.; resource declaration ordinal 1 is duplicated, resource reference 99 is missing",
+        "resource declaration ordinal 1 is duplicated; resource reference 99 is missing",
       );
     }
   });

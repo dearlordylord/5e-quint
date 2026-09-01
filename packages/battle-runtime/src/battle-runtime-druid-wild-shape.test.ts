@@ -1,5 +1,4 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { readFileSync } from "node:fs";
 import {
   statBlockId,
   unitId as parseSharedUnitId,
@@ -37,7 +36,9 @@ import {
   ClassLevel,
   D6RollResult,
   Hp,
+  Integer,
   movementFeet,
+  PositiveInteger,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import {
@@ -159,26 +160,6 @@ const ratId = statBlockId("stat_block_rat");
 const ridingHorseId = statBlockId("stat_block_riding_horse");
 const lizardId = statBlockId("stat_block_lizard");
 const catId = statBlockId("stat_block_cat");
-
-test("keeps resource feature projection parse-once across Wild Shape and execution", () => {
-  const source = readFileSync(
-    new URL("./battle-reducer/creature-state.ts", import.meta.url),
-    "utf8",
-  );
-
-  expect([
-    ...source.matchAll(/parseSupportedUnitFeatureProfile\s*\(/g),
-  ]).toHaveLength(0);
-  expect(source).toMatch(
-    /projectCharacterResourceAdmissionInputs\(creatureInit\.resources \?\? \[\]\)/,
-  );
-  expect(source).toMatch(
-    /resourceFeatureProcedures,\s*unitFeatureProcedures: explicitUnitFeatureProcedures/,
-  );
-  expect(source).toMatch(
-    /characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*execution\.success\.execution\.procedureBindings/,
-  );
-});
 
 type DruidWildShapeInputPhase =
   (typeof druidWildShapeInput.mechanics.phases)[number];
@@ -634,7 +615,7 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
         {
           ordinal: testResourceOrdinal(1),
           ownership: "each",
-          limit: { kind: "daily", uses: 1 },
+          limit: { kind: "daily", uses: PositiveInteger(1) },
         },
       ],
     },
@@ -2435,8 +2416,8 @@ test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
     statBlock: {
       ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       skillModifiers: [
-        { modifier: 5, skill: "perception" },
-        { modifier: 4, skill: "stealth" },
+        { modifier: Integer(5), skill: "perception" },
+        { modifier: Integer(4), skill: "stealth" },
       ],
     },
   };
@@ -2482,8 +2463,8 @@ test("projects retained and higher Beast Saving Throw modifiers while in Wild Sh
     statBlock: {
       ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       savingThrowModifiers: [
-        { ability: "dex", modifier: 6 },
-        { ability: "wis", modifier: 1 },
+        { ability: "dex", modifier: Integer(6) },
+        { ability: "wis", modifier: Integer(1) },
       ],
     },
   };
@@ -2824,7 +2805,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
       speeds: [
         {
           kind: "swim" as const,
-          feet: { kind: "literal" as const, value: 30 },
+          feet: { kind: "literal" as const, value: PositiveInteger(30) },
         },
       ] as const,
     },
@@ -3269,7 +3250,7 @@ function syntheticTypedRidersForm(): StatBlockRecord {
                 kind: "conditional_bonus_damage",
                 when: { kind: "attack_roll_had_advantage" },
                 damageType: "bludgeoning",
-                amount: { kind: "fixed", static: 1 },
+                amount: { kind: "fixed", static: PositiveInteger(1) },
               },
             ],
             name: "Synthetic Rider Strike",
@@ -3310,7 +3291,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
             dispatches: [
               {
                 procedureOrdinal: hooves.procedureOrdinal,
-                count: { kind: "literal", value: 1 },
+                count: { kind: "literal", value: PositiveInteger(1) },
               },
             ],
           },
@@ -3323,12 +3304,15 @@ function syntheticActionSectionForm(): StatBlockRecord {
             kind: "save",
             name: "Synthetic Save Pulse",
             ability: "dex",
-            dc: { kind: "fixed", dc: 12 },
-            target: { kind: "one_creature_in_range", rangeFeet: 5 },
+            dc: { kind: "fixed", dc: PositiveInteger(12) },
+            target: {
+              kind: "one_creature_in_range",
+              rangeFeet: PositiveInteger(5),
+            },
             onFail: {
               kind: "damage",
               damageType: "bludgeoning",
-              amount: { kind: "fixed", static: 1 },
+              amount: { kind: "fixed", static: PositiveInteger(1) },
             },
             onSuccess: { kind: "half_damage" },
           },
@@ -3346,7 +3330,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
               damageType: "bludgeoning",
               amount: {
                 kind: "fixed",
-                static: 1,
+                static: PositiveInteger(1),
               },
             },
           },
@@ -3394,7 +3378,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
         },
       ],
       legendaryActions: {
-        uses: { kind: "fixed", uses: 1 },
+        uses: { kind: "fixed", uses: PositiveInteger(1) },
         entries: [
           {
             kind: "textOnly",
@@ -3440,7 +3424,7 @@ function syntheticSupportedNonAttackForm(): StatBlockRecord {
             dispatches: [
               {
                 procedureOrdinal: hooves.procedureOrdinal,
-                count: { kind: "literal", value: 1 },
+                count: { kind: "literal", value: PositiveInteger(1) },
               },
             ],
           },
@@ -3609,6 +3593,7 @@ test("surfaces active Wild Shape non-attack presentation join issues", () => {
           `Expected ${procedureCase.presentationKind} presentation.`,
         );
       }
+      const executionProcedureOrdinal = binding.procedure.procedureOrdinal;
       const orderedProcedures = source.orderedProcedures.map((procedure) => {
         if (procedure !== selectedPresentation) return procedure;
         if (joinMode === "missing") {
@@ -3647,7 +3632,31 @@ test("surfaces active Wild Shape non-attack presentation join issues", () => {
         }),
         subject,
       );
-      expect(presentation).toEqual({ kind: "intrinsic" });
+      const issue =
+        joinMode === "missing"
+          ? {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "missingPresentation" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+            }
+          : {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "presentationKindMismatch" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+              presentationKind: "textOnly" as const,
+            };
+      expect(presentation).toEqual({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: [issue],
+        },
+      });
     }
   }
 });
