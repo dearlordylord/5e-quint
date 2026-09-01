@@ -82,6 +82,7 @@ import type {
 import {
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
+  spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
 } from "./spell-mechanics-admission.ts";
@@ -748,16 +749,30 @@ function isMovablePersistentAreaRepresentation(
     return false;
   }
   const attachment = mechanics.attachment;
-  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
-    return false;
-  }
-  const shape = attachment.value.shape;
-  return (
-    shape.kind === "cylinder" &&
+  const shape =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value.shape
+      : undefined;
+  const geometryMatches =
+    shape?.kind === "cylinder" &&
     shape.radiusFeet === MOVABLE_PERSISTENT_AREA_RADIUS_FEET &&
-    shape.heightFeet === MOVABLE_PERSISTENT_AREA_HEIGHT_FEET &&
+    shape.heightFeet === MOVABLE_PERSISTENT_AREA_HEIGHT_FEET;
+  const rangeMatches =
     mechanics.range.kind === "point" &&
-    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET
+    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET;
+  const repositionOperationMatches = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost.kind === "standard_action" &&
+      operation.trigger.cost.action === "magic" &&
+      operation.trigger.laterTurnsOnly === true &&
+      operation.effect.kind === "reposition_attachment" &&
+      operation.effect.maxMoveFeet ===
+        MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
+  );
+  return spellProcedureHasRedundantSignature(
+    [geometryMatches, rangeMatches, repositionOperationMatches],
+    2,
   );
 }
 
@@ -839,7 +854,17 @@ function movablePersistentAreaMechanicsAdmission(
     return { tag: "notRepresented" };
   }
   const ongoing = ongoingAreaSpellFacts(source.mechanics);
-  if (ongoing === null) return { tag: "notRepresented" };
+  if (ongoing === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        movablePersistentAreaAdmissionIssue({
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        }),
+      ],
+    };
+  }
   const projection = movablePersistentAreaProjection(ongoing);
   if (projection.tag === "unsupported") {
     return {

@@ -77,6 +77,7 @@ import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import {
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
+  spellProcedureHasRedundantSignature,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -236,7 +237,15 @@ function stationaryPersistentAreaMechanicsAdmission(
 
   const ongoing = ongoingAreaSpellFacts(source.mechanics);
   if (ongoing === null) {
-    return { tag: "notRepresented" };
+    return {
+      tag: "unsupported",
+      issues: [
+        stationaryPersistentAreaAdmissionIssue({
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        }),
+      ],
+    };
   }
 
   const failures = stationaryPersistentAreaFailures(ongoing);
@@ -344,29 +353,43 @@ function isStationaryPersistentAreaRepresentation(
     return false;
   }
   const attachment = mechanics.attachment;
-  if (
-    attachment.kind !== "hole" ||
-    attachment.value.kind !== "area" ||
-    attachment.value.shape.kind !== "sphere"
-  ) {
-    return false;
-  }
+  const shape =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value.shape
+      : undefined;
+  const geometryMatches =
+    shape?.kind === "sphere" &&
+    shape.radiusFeet === STATIONARY_PERSISTENT_AREA_RADIUS_FEET;
+  const rangeMatches =
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === STATIONARY_PERSISTENT_AREA_RANGE_FEET;
+  const initialSaveMatches =
+    stationaryPersistentAreaSaveGateDamageAmount(mechanics.initialPhase) !==
+    null;
   const hasEnterTrigger = mechanics.operations.some(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
   const hasEndTurnTrigger = mechanics.operations.some(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
-  const hasCasterTurnStartTrigger = mechanics.operations.some(
-    (operation) => operation.trigger.kind === "on_caster_turn_start",
-  );
-  const hasAreaMovesIntoCreatureSpaceTrigger = mechanics.operations.some(
+  const hasTranslatingAreaLifecycle = mechanics.operations.some(
     (operation) =>
+      operation.trigger.kind === "on_caster_turn_start" ||
       operation.trigger.kind === "on_area_moves_into_creature_space",
   );
-  const hasTranslatingAreaLifecycle =
-    hasCasterTurnStartTrigger && hasAreaMovesIntoCreatureSpaceTrigger;
-  return hasEnterTrigger && hasEndTurnTrigger && !hasTranslatingAreaLifecycle;
+  return (
+    !hasTranslatingAreaLifecycle &&
+    spellProcedureHasRedundantSignature(
+      [
+        geometryMatches,
+        rangeMatches,
+        initialSaveMatches,
+        hasEnterTrigger,
+        hasEndTurnTrigger,
+      ],
+      3,
+    )
+  );
 }
 
 function stationaryPersistentAreaFailures(

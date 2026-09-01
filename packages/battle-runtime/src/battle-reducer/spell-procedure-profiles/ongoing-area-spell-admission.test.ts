@@ -105,6 +105,72 @@ function expectSupported(result: StaticAdmissionResult) {
   return result;
 }
 
+function expectUnsupportedFailure(
+  result: StaticAdmissionResult,
+  failedFact: string,
+  mechanicsPath: unknown,
+) {
+  expect(result.tag).toBe("unsupported");
+  if (result.tag !== "unsupported") return;
+  const issue = result.issues.find(
+    (candidate) => candidate.failedFact === failedFact,
+  );
+  expect(issue).toBeDefined();
+  expect(issue?.mechanicsPath).toEqual(mechanicsPath);
+  expect(result.issues.length).toBeGreaterThan(0);
+}
+
+function malformedAreaAttachment(
+  mechanics: BattleSpellAdmissionSource["mechanics"],
+): BattleSpellAdmissionSource["mechanics"] {
+  if (
+    mechanics.family !== "ongoing_effect" ||
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "area"
+  ) {
+    throw new Error("Expected an ongoing area attachment.");
+  }
+  const attachment = mechanics.attachment;
+  const shape = attachment.value.shape;
+  if (shape.kind === "cube") {
+    return {
+      ...mechanics,
+      attachment: {
+        ...attachment,
+        value: {
+          ...attachment.value,
+          shape: { ...shape, sideFeet: shape.sideFeet + 1 },
+        },
+      },
+    };
+  }
+  if (shape.kind === "cylinder") {
+    return {
+      ...mechanics,
+      attachment: {
+        ...attachment,
+        value: {
+          ...attachment.value,
+          shape: { ...shape, radiusFeet: shape.radiusFeet + 1 },
+        },
+      },
+    };
+  }
+  if (shape.kind === "sphere") {
+    return {
+      ...mechanics,
+      attachment: {
+        ...attachment,
+        value: {
+          ...attachment.value,
+          shape: { ...shape, radiusFeet: shape.radiusFeet + 1 },
+        },
+      },
+    };
+  }
+  throw new Error("Expected a cube, cylinder, or sphere representative.");
+}
+
 function expectedEvidence(
   operationCount: number,
   durationPaths: readonly ReturnType<typeof spellDurationValuePath>[],
@@ -512,6 +578,115 @@ describe("ongoing area spell static admission", () => {
       ]),
     );
   });
+
+  test.each([
+    ["composite", "sleet_storm", persistentAreaSaveCompositeProfile],
+    ["condition escape", "web", persistentAreaSaveConditionEscapeProfile],
+    [
+      "translation",
+      "cloudkill",
+      sourceTurnTranslationPersistentAreaSaveDamageProfile,
+    ],
+    ["directed", "moonbeam", directedRepositionPersistentAreaSaveDamageProfile],
+  ] as const)(
+    "keeps the %s sibling represented with a malformed range witness",
+    (_label, spellId, profile) => {
+      const result = profile.admitMechanics(
+        sourceWith(spellId, (mechanics) => ({
+          ...mechanics,
+          range: { kind: "point" as const, feet: 1 },
+        })),
+      );
+      expectUnsupportedFailure(
+        result,
+        "range",
+        spellMechanicsHeaderPath("range"),
+      );
+    },
+  );
+
+  test.each([
+    ["composite", "sleet_storm", persistentAreaSaveCompositeProfile],
+    ["condition escape", "web", persistentAreaSaveConditionEscapeProfile],
+    [
+      "translation",
+      "cloudkill",
+      sourceTurnTranslationPersistentAreaSaveDamageProfile,
+    ],
+    ["directed", "moonbeam", directedRepositionPersistentAreaSaveDamageProfile],
+  ] as const)(
+    "keeps the %s sibling represented with a malformed attachment witness",
+    (_label, spellId, profile) => {
+      const result = profile.admitMechanics(
+        sourceWith(spellId, malformedAreaAttachment),
+      );
+      expectUnsupportedFailure(
+        result,
+        "attachment",
+        spellOngoingAttachmentPath(),
+      );
+    },
+  );
+
+  test.each([
+    [
+      "composite",
+      "sleet_storm",
+      persistentAreaSaveCompositeProfile,
+      "douse_exposed_flames",
+      "passiveDouseExposedFlamesOperation",
+      2,
+    ],
+    [
+      "condition escape",
+      "web",
+      persistentAreaSaveConditionEscapeProfile,
+      "area_section_burns_away",
+      "passiveBurnAwayOperation",
+      4,
+    ],
+    [
+      "translation",
+      "cloudkill",
+      sourceTurnTranslationPersistentAreaSaveDamageProfile,
+      "move_area",
+      "moveOperation",
+      2,
+    ],
+    [
+      "directed",
+      "moonbeam",
+      directedRepositionPersistentAreaSaveDamageProfile,
+      "reposition_attachment",
+      "repositionOperation",
+      2,
+    ],
+  ] as const)(
+    "keeps the %s sibling represented when its required trigger is malformed",
+    (_label, spellId, profile, effectKind, failedFact, operationOrdinal) => {
+      const result = profile.admitMechanics(
+        sourceWith(spellId, (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          return {
+            ...mechanics,
+            operations: mechanics.operations.map((operation) =>
+              operation.effect.kind === effectKind
+                ? {
+                    ...operation,
+                    trigger: { kind: "on_caster_turn_end" as const },
+                  }
+                : operation,
+            ),
+          };
+        }),
+      );
+      expectUnsupportedFailure(
+        result,
+        failedFact,
+        spellOngoingOperationEffectPath(PositiveInteger(operationOrdinal)),
+      );
+    },
+  );
 
   test("does not represent activation mechanics or a sibling lifecycle", () => {
     expect(

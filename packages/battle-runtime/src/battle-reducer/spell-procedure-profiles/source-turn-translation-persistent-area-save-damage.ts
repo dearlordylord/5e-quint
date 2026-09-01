@@ -86,6 +86,7 @@ import type {
 import {
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
+  spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
 } from "./spell-mechanics-admission.ts";
@@ -732,15 +733,25 @@ function isTranslatingPersistentAreaRepresentation(
 ): mechanics is TranslatingPersistentAreaMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
   const attachment = mechanics.attachment;
-  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
-    return false;
-  }
-  const shape = attachment.value.shape;
-  return (
-    shape.kind === "sphere" &&
-    shape.radiusFeet === TRANSLATING_PERSISTENT_AREA_RADIUS_FEET &&
+  const shape =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value.shape
+      : undefined;
+  const geometryMatches =
+    shape?.kind === "sphere" &&
+    shape.radiusFeet === TRANSLATING_PERSISTENT_AREA_RADIUS_FEET;
+  const rangeMatches =
     mechanics.range.kind === "point" &&
-    mechanics.range.feet === TRANSLATING_PERSISTENT_AREA_RANGE_FEET
+    mechanics.range.feet === TRANSLATING_PERSISTENT_AREA_RANGE_FEET;
+  const moveOperationMatches = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind === "on_caster_turn_start" &&
+      operation.effect.kind === "move_area" &&
+      operation.effect.direction === "away_from_caster",
+  );
+  return spellProcedureHasRedundantSignature(
+    [geometryMatches, rangeMatches, moveOperationMatches],
+    2,
   );
 }
 
@@ -811,7 +822,15 @@ function translatingPersistentAreaMechanicsAdmission(
   }
   const ongoing = ongoingAreaSpellFacts(source.mechanics);
   if (ongoing === null) {
-    return { tag: "notRepresented" };
+    return {
+      tag: "unsupported",
+      issues: [
+        translatingPersistentAreaAdmissionIssue({
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        }),
+      ],
+    };
   }
   const projection = translatingPersistentAreaProjection(ongoing);
   if (projection.tag === "unsupported") {

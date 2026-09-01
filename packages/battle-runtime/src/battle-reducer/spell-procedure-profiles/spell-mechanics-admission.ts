@@ -227,6 +227,23 @@ export function spellProcedureNonEmpty<T>(
   return first === undefined ? undefined : [first, ...rest];
 }
 
+/**
+ * Keep a represented authored family visible when one redundant semantic
+ * witness is malformed. Callers choose the number of matching witnesses that
+ * distinguishes their profile; the admission itself then reports the broken
+ * witness at its canonical mechanics path.
+ */
+export function spellProcedureHasRedundantSignature(
+  witnesses: readonly boolean[],
+  requiredMatches: number,
+): boolean {
+  let matches = 0;
+  for (const witness of witnesses) {
+    if (witness) matches += 1;
+  }
+  return matches >= requiredMatches;
+}
+
 export function spellProcedureMapNonEmpty<T, U>(
   values: ReadonlyNonEmptyArray<T>,
   map: (value: T) => U,

@@ -82,6 +82,7 @@ import type {
 import {
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
+  spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
 } from "./spell-mechanics-admission.ts";
@@ -619,15 +620,24 @@ function isPersistentAreaSaveConditionEscapeRepresentation(
 ): mechanics is Extract<SpellMechanics, { readonly family: "ongoing_effect" }> {
   if (mechanics.family !== "ongoing_effect") return false;
   const attachment = mechanics.attachment;
-  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
-    return false;
-  }
-  const shape = attachment.value.shape;
-  return (
-    shape.kind === "cube" &&
-    shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET &&
+  const shape =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value.shape
+      : undefined;
+  const geometryMatches =
+    shape?.kind === "cube" &&
+    shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET;
+  const rangeMatches =
     mechanics.range.kind === "point" &&
-    mechanics.range.feet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET;
+  const burnAwayOperationMatches = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_section_burns_away",
+  );
+  return spellProcedureHasRedundantSignature(
+    [geometryMatches, rangeMatches, burnAwayOperationMatches],
+    2,
   );
 }
 
@@ -684,7 +694,15 @@ function persistentAreaSaveConditionEscapeMechanicsAdmission(
   }
   const ongoing = ongoingAreaSpellFacts(source.mechanics);
   if (ongoing === null) {
-    return { tag: "notRepresented" };
+    return {
+      tag: "unsupported",
+      issues: [
+        persistentAreaSaveConditionEscapeAdmissionIssue({
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        }),
+      ],
+    };
   }
   const projection = persistentAreaSaveConditionEscapeProjection(ongoing);
   if (projection.tag === "unsupported") {

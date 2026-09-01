@@ -83,6 +83,7 @@ import type {
 import {
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
+  spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
 } from "./spell-mechanics-admission.ts";
@@ -607,16 +608,25 @@ function isPersistentAreaSaveCompositeRepresentation(
 ): mechanics is OngoingMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
   const attachment = mechanics.attachment;
-  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
-    return false;
-  }
-  const shape = attachment.value.shape;
-  return (
-    shape.kind === "cylinder" &&
+  const shape =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value.shape
+      : undefined;
+  const geometryMatches =
+    shape?.kind === "cylinder" &&
     shape.radiusFeet === PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET &&
-    shape.heightFeet === PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET &&
+    shape.heightFeet === PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET;
+  const rangeMatches =
     mechanics.range.kind === "point" &&
-    mechanics.range.feet === PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET;
+  const douseOperationMatches = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "douse_exposed_flames",
+  );
+  return spellProcedureHasRedundantSignature(
+    [geometryMatches, rangeMatches, douseOperationMatches],
+    2,
   );
 }
 
@@ -632,7 +642,15 @@ function persistentAreaSaveCompositeMechanicsAdmission(
   }
   const ongoing = ongoingAreaSpellFacts(source.mechanics);
   if (ongoing === null) {
-    return { tag: "notRepresented" };
+    return {
+      tag: "unsupported",
+      issues: [
+        persistentAreaSaveCompositeAdmissionIssue({
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        }),
+      ],
+    };
   }
   const projection = persistentAreaSaveCompositeProjection(ongoing);
   if (projection.tag === "unsupported") {
