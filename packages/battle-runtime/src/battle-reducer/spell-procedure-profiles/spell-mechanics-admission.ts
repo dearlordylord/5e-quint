@@ -312,6 +312,35 @@ type SpellAreaHoleAttachment = Extract<
   readonly value: SpellAreaAttachmentValue;
 };
 
+type SpellAreaAttachmentValueWithAllowedFields<
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> = SpellAreaAttachmentValue & {
+  readonly [Field in Exclude<
+    SpellAreaAttachmentField,
+    AllowedAreaFields
+  >]?: never;
+};
+
+type AdmittedSpellAreaAttachmentValue<
+  AllowedSelectionFields extends SpellTargetSelectionField,
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> = SpellAreaAttachmentValueWithAllowedFields<AllowedAreaFields> &
+  ("selection" extends AllowedAreaFields
+    ? {
+        readonly selection?: AdmittedSpellTargetSelection<AllowedSelectionFields>;
+      }
+    : { readonly selection?: never });
+
+type AdmittedSpellAreaHoleAttachment<
+  AllowedSelectionFields extends SpellTargetSelectionField,
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> = Omit<SpellAreaHoleAttachment, "value"> & {
+  readonly value: AdmittedSpellAreaAttachmentValue<
+    AllowedSelectionFields,
+    AllowedAreaFields
+  >;
+};
+
 type AdmittedSpellTargetSelection<
   AllowedFields extends SpellTargetSelectionField,
 > = TargetSelection & {
@@ -446,10 +475,21 @@ export function admitSpellTargetAttachment<
   };
 }
 
-export type SpellAreaAttachmentAdmissionResult =
+export type SpellAreaAttachmentAdmissionResult<
+  AllowedSelectionFields extends SpellTargetSelectionField,
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> =
   | {
       readonly tag: "admitted";
-      readonly attachment: SpellAreaAttachmentValue | SpellAreaHoleAttachment;
+      readonly attachment:
+        | AdmittedSpellAreaAttachmentValue<
+            AllowedSelectionFields,
+            AllowedAreaFields
+          >
+        | AdmittedSpellAreaHoleAttachment<
+            AllowedSelectionFields,
+            AllowedAreaFields
+          >;
     }
   | {
       readonly tag: "rejected";
@@ -483,6 +523,44 @@ function isSpellAreaAttachment(
   return attachment.kind === "hole" && attachment.value.kind === "area";
 }
 
+function isSpellAreaAttachmentValueWithAllowedFields<
+  const AllowedAreaFields extends readonly SpellAreaAttachmentField[],
+>(
+  areaValue: SpellAreaAttachmentValue,
+  allowedAreaFields: AllowedAreaFields,
+): areaValue is SpellAreaAttachmentValueWithAllowedFields<
+  AllowedAreaFields[number]
+> {
+  const allowedAreaValueFields = new Set<PropertyKey>([
+    "kind",
+    "shape",
+    "origin",
+    ...allowedAreaFields,
+  ]);
+  return spellHasOnlyNamedFields(areaValue, [...allowedAreaValueFields]);
+}
+
+function isAdmittedSpellAreaAttachmentValue<
+  const AllowedSelectionFields extends readonly SpellTargetSelectionField[],
+  const AllowedAreaFields extends readonly SpellAreaAttachmentField[],
+>(
+  areaValue: SpellAreaAttachmentValueWithAllowedFields<
+    AllowedAreaFields[number]
+  >,
+  allowedSelectionFields: AllowedSelectionFields,
+  allowedAreaFields: AllowedAreaFields,
+): areaValue is AdmittedSpellAreaAttachmentValue<
+  AllowedSelectionFields[number],
+  AllowedAreaFields[number]
+> {
+  const selection = areaValue.selection;
+  return (
+    selection === undefined ||
+    (allowedAreaFields.some((field) => field === "selection") &&
+      isAdmittedSpellTargetSelection(selection, allowedSelectionFields))
+  );
+}
+
 /**
  * Admit the area attachment shape consumed by a save-gate procedure. The
  * caller names every optional area field it projects; unknown or future
@@ -492,28 +570,20 @@ function isSpellAreaAttachment(
  */
 export function admitSpellAreaAttachment<
   const AllowedSelectionFields extends readonly SpellTargetSelectionField[],
-  const AllowedAreaFields extends readonly SpellAreaAttachmentField[] =
-    readonly [],
+  const AllowedAreaFields extends readonly SpellAreaAttachmentField[],
 >(
   attachment: Attachment,
   allowedSelectionFields: AllowedSelectionFields,
-  allowedAreaFields?: AllowedAreaFields,
-): SpellAreaAttachmentAdmissionResult {
+  allowedAreaFields: AllowedAreaFields,
+): SpellAreaAttachmentAdmissionResult<
+  AllowedSelectionFields[number],
+  AllowedAreaFields[number]
+> {
   if (!isSpellAreaAttachment(attachment)) {
     return { tag: "rejected", reason: "areaAttachmentMissing" };
   }
 
   const areaValue = attachment.kind === "area" ? attachment : attachment.value;
-  const namedAreaFields: readonly string[] = allowedAreaFields ?? [];
-  const allowedAreaValueFields = new Set<PropertyKey>([
-    "kind",
-    "shape",
-    "origin",
-    ...namedAreaFields,
-  ]);
-  if (!spellHasOnlyNamedFields(areaValue, [...allowedAreaValueFields])) {
-    return { tag: "rejected", reason: "areaAttachmentConstraint" };
-  }
   if (attachment.kind === "hole") {
     if (
       !spellHasOnlyNamedFields(attachment, SPELL_AREA_HOLE_ATTACHMENT_FIELDS)
@@ -525,20 +595,26 @@ export function admitSpellAreaAttachment<
   ) {
     return { tag: "rejected", reason: "areaAttachmentConstraint" };
   }
-
-  const selection = areaValue.selection;
-  if (selection !== undefined) {
-    if (
-      !namedAreaFields.includes("selection") ||
-      !isAdmittedSpellTargetSelection(selection, allowedSelectionFields)
-    ) {
-      return { tag: "rejected", reason: "areaSelectionConstraint" };
-    }
-  } else if (namedAreaFields.includes("selection")) {
-    // The field is owned by this procedure, but its absent value is a valid
-    // domain state for procedures that intentionally do not select occupants.
+  if (
+    !isSpellAreaAttachmentValueWithAllowedFields(areaValue, allowedAreaFields)
+  ) {
+    return { tag: "rejected", reason: "areaAttachmentConstraint" };
   }
-  return { tag: "admitted", attachment };
+  if (
+    !isAdmittedSpellAreaAttachmentValue(
+      areaValue,
+      allowedSelectionFields,
+      allowedAreaFields,
+    )
+  ) {
+    return { tag: "rejected", reason: "areaSelectionConstraint" };
+  }
+  return attachment.kind === "hole"
+    ? {
+        tag: "admitted",
+        attachment: { ...attachment, value: areaValue },
+      }
+    : { tag: "admitted", attachment: areaValue };
 }
 
 /** Stable issue identity: only the failed fact and its exact source path. */

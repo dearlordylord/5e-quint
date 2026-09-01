@@ -30,7 +30,11 @@ import {
   movementFeet,
   type DamageType,
 } from "@dnd/shared/types";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  DamageTypeRef,
+  DiceAmount,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 import {
@@ -109,6 +113,42 @@ type GrantedAreaSaveDamageActionInvocation = Extract<
 type GrantedAreaSaveDamageActionResolveInput =
   SpellProcedureProfileResolveInput<GrantedAreaSaveDamageActionInvocation>;
 
+const GRANTED_AREA_SAVE_DAMAGE_SCALING = {
+  baseDice: 3,
+  dieSize: 6,
+  perSlotDice: 1,
+  startingAtLevel: 2,
+} as const;
+
+const GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES = [
+  "acid",
+  "cold",
+  "fire",
+  "lightning",
+  "poison",
+] as const satisfies readonly [DamageType, ...DamageType[]];
+
+type GrantedAreaSaveDamageAmount = Extract<
+  DiceAmount,
+  { readonly kind: "linear_per_level" }
+> & {
+  readonly axis: "slot";
+  readonly base: {
+    readonly dice: PositiveInteger &
+      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["baseDice"];
+    readonly dieSize: PositiveInteger &
+      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["dieSize"];
+  };
+  readonly perLevel: {
+    readonly dice: PositiveInteger &
+      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["perSlotDice"];
+    readonly dieSize?: PositiveInteger &
+      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["dieSize"];
+  };
+  readonly startingAtLevel: PositiveInteger &
+    (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["startingAtLevel"];
+};
+
 type GrantedAreaSaveDamageActionMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly ability: "dex";
   readonly dc: GrantedAreaSaveDamageActionInvocation["dc"];
@@ -117,10 +157,10 @@ type GrantedAreaSaveDamageActionMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly coneLengthFeet: MovementFeet;
   readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
   readonly damage: {
-    readonly baseDice: PositiveInteger;
-    readonly dieSize: PositiveInteger;
-    readonly perSlotDice: PositiveInteger;
-    readonly startingAtLevel: PositiveInteger;
+    readonly baseDice: GrantedAreaSaveDamageAmount["base"]["dice"];
+    readonly dieSize: GrantedAreaSaveDamageAmount["base"]["dieSize"];
+    readonly perSlotDice: GrantedAreaSaveDamageAmount["perLevel"]["dice"];
+    readonly startingAtLevel: GrantedAreaSaveDamageAmount["startingAtLevel"];
   };
 };
 
@@ -236,68 +276,32 @@ function dragonDurationIssues(
 }
 
 function dragonDamageTypeChoices(
-  value: unknown,
+  value: DamageTypeRef,
 ): readonly [DamageType, ...DamageType[]] | null {
   if (
     typeof value !== "object" ||
-    value === null ||
-    !("kind" in value) ||
     value.kind !== "hole" ||
-    !("value" in value) ||
     typeof value.value !== "object" ||
-    value.value === null ||
-    !("kind" in value.value) ||
     value.value.kind !== "choice" ||
-    !("options" in value.value) ||
-    !Array.isArray(value.value.options) ||
-    value.value.options.length === 0 ||
     !spellHasOnlyNamedFields(value, ["kind", "holeId", "label", "value"]) ||
     !spellHasOnlyNamedFields(value.value, ["kind", "label", "options"])
   ) {
     return null;
   }
-  const options = value.value.options.filter((option): option is DamageType =>
-    Schema.is(DamageTypeSchema)(option),
-  );
-  if (options.length !== value.value.options.length) return null;
-  const [first, ...rest] = options;
-  return first === undefined ? null : [first, ...rest];
+  return value.value.options;
 }
 
-function dragonDamageAmountSupported(amount: unknown): amount is {
-  readonly kind: "linear_per_level";
-  readonly axis: "slot";
-  readonly base: {
-    readonly dice: PositiveInteger;
-    readonly dieSize: PositiveInteger;
-  };
-  readonly perLevel: {
-    readonly dice: PositiveInteger;
-    readonly dieSize?: PositiveInteger;
-  };
-  readonly startingAtLevel: PositiveInteger;
-} {
+function dragonDamageAmountSupported(
+  amount: DiceAmount,
+): amount is GrantedAreaSaveDamageAmount {
   if (
-    typeof amount !== "object" ||
-    amount === null ||
-    !("kind" in amount) ||
     amount.kind !== "linear_per_level" ||
-    !("axis" in amount) ||
     amount.axis !== "slot" ||
-    !("base" in amount) ||
-    !("perLevel" in amount) ||
-    !("startingAtLevel" in amount) ||
-    typeof amount.base !== "object" ||
-    amount.base === null ||
-    typeof amount.perLevel !== "object" ||
-    amount.perLevel === null ||
-    !("dice" in amount.base) ||
-    !("dieSize" in amount.base) ||
-    !("dice" in amount.perLevel) ||
-    amount.base.dice !== 3 ||
-    amount.base.dieSize !== 6 ||
-    amount.perLevel.dice !== 1 ||
-    amount.startingAtLevel !== 2 ||
+    amount.base.dice !== GRANTED_AREA_SAVE_DAMAGE_SCALING.baseDice ||
+    amount.base.dieSize !== GRANTED_AREA_SAVE_DAMAGE_SCALING.dieSize ||
+    amount.perLevel.dice !== GRANTED_AREA_SAVE_DAMAGE_SCALING.perSlotDice ||
+    amount.startingAtLevel !==
+      GRANTED_AREA_SAVE_DAMAGE_SCALING.startingAtLevel ||
     !spellHasOnlyNamedFields(amount, [
       "kind",
       "axis",
@@ -307,7 +311,8 @@ function dragonDamageAmountSupported(amount: unknown): amount is {
     ]) ||
     !spellHasOnlyNamedFields(amount.base, ["dice", "dieSize"]) ||
     !spellHasOnlyNamedFields(amount.perLevel, ["dice", "dieSize"]) ||
-    ("dieSize" in amount.perLevel && amount.perLevel.dieSize !== 6)
+    (amount.perLevel.dieSize !== undefined &&
+      amount.perLevel.dieSize !== GRANTED_AREA_SAVE_DAMAGE_SCALING.dieSize)
   ) {
     return false;
   }
@@ -594,24 +599,25 @@ function admitGrantedAreaSaveDamageActionMechanics(
     push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
   const damageAmount = failedDamage?.amount;
-  if (!dragonDamageAmountSupported(damageAmount)) {
+  if (
+    damageAmount === undefined ||
+    !dragonDamageAmountSupported(damageAmount)
+  ) {
     push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
-  const damageTypeChoices = dragonDamageTypeChoices(failedDamage?.damageType);
+  const damageTypeChoices =
+    failedDamage === null
+      ? null
+      : dragonDamageTypeChoices(failedDamage.damageType);
   if (damageTypeChoices === null) {
     push("damageType", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
-  const expectedDamageTypes = [
-    "acid",
-    "cold",
-    "fire",
-    "lightning",
-    "poison",
-  ] as const;
   if (
     damageTypeChoices === null ||
-    damageTypeChoices.length !== expectedDamageTypes.length ||
-    expectedDamageTypes.some((type) => !damageTypeChoices.includes(type))
+    damageTypeChoices.length !== GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES.length ||
+    GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES.some(
+      (type) => !damageTypeChoices.includes(type),
+    )
   ) {
     push(
       "damageTypeChoices",
@@ -663,10 +669,10 @@ function admitGrantedAreaSaveDamageActionMechanics(
     coneLengthFeet,
     damageTypeChoices,
     damage: {
-      baseDice: PositiveInteger(damageAmount.base.dice),
-      dieSize: PositiveInteger(damageAmount.base.dieSize),
-      perSlotDice: PositiveInteger(damageAmount.perLevel.dice),
-      startingAtLevel: PositiveInteger(damageAmount.startingAtLevel),
+      baseDice: damageAmount.base.dice,
+      dieSize: damageAmount.base.dieSize,
+      perSlotDice: damageAmount.perLevel.dice,
+      startingAtLevel: damageAmount.startingAtLevel,
     },
   } satisfies GrantedAreaSaveDamageActionMechanicsFacts;
   return {
@@ -802,7 +808,7 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
           durationTicks: ElapsedTimeTicksSchema,
         }),
       }),
-      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
       coneLengthFeet: MovementFeet,
       damageDice: PositiveIntegerSchema,
       damageDieSize: PositiveIntegerSchema,

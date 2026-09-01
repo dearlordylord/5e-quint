@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
-import { PositiveInteger } from "@dnd/shared/types";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import { Schema } from "effect";
 import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
@@ -19,7 +20,15 @@ import {
   spellRecord,
   decodeSpellRecordForTest,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleCreatureState,
+} from "../../battle-state-execution.ts";
+import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
+import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
+import { spellProcedureExecution } from "../../character-execution-admission.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
+import type { SpellAdmissionActor } from "./profile.ts";
 import { grantedAreaSaveDamageActionProfile } from "./granted-area-save-damage.ts";
 import { stagedSaveConditionProfile } from "./hit-point-budget-condition-admission.ts";
 import { saveGatedTurnConstraintBundleProfile } from "./save-gated-turn-constraint-bundle.ts";
@@ -33,6 +42,25 @@ function mechanicsSource(
     mechanics: source.mechanics,
     spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
   };
+}
+
+function spellAdmissionActor(): SpellAdmissionActor {
+  const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+    spellCasterId,
+  );
+  if (!isSpellAdmissionActor(actor)) {
+    throw new Error("Expected a spellcasting character fixture.");
+  }
+  return actor;
+}
+
+function isSpellAdmissionActor(
+  actor: BattleCreatureState | undefined,
+): actor is SpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
 }
 
 const headers = [
@@ -130,6 +158,40 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         startingAtLevel: 2,
       },
     });
+  });
+
+  test("rejects an empty Dragon's Breath damage-type choice set at the execution boundary", () => {
+    const source = spellAdmissionSource(spellRecord("dragons_breath"));
+    const result = grantedAreaSaveDamageActionProfile.admitMechanics({
+      mechanics: source.mechanics,
+      spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+    });
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    const [invocation] = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    if (invocation === undefined) {
+      throw new Error("Expected a second-level Dragon's Breath invocation.");
+    }
+    const execution = spellProcedureExecution(invocation);
+    expect(
+      Schema.is(grantedAreaSaveDamageActionProfile.executionSchema)(execution),
+    ).toBe(true);
+    expect(
+      Schema.is(grantedAreaSaveDamageActionProfile.executionSchema)({
+        ...execution,
+        damageTypeChoices: [],
+      }),
+    ).toBe(false);
   });
 
   test("projects Sleep, Hideous Laughter, and Slow facts into immutable carriers", () => {

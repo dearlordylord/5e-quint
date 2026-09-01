@@ -73,6 +73,7 @@ import {
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
+import { sameStringSet } from "../../same-string-set.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -132,7 +133,7 @@ type SaveGatedTurnConstraintBundleMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly ability: "wis";
   readonly dc: SaveGatedTurnConstraintBundleSpellInvocation["dc"];
   readonly targeting: SaveGatedTurnConstraintBundleSpellInvocation["targeting"];
-  readonly maxTargets: 6;
+  readonly maxTargets: SaveGatedTurnConstraintBundleSpellInvocation["maxTargets"];
   readonly rangeFeet: MovementFeet;
   readonly durationTicks: ElapsedTimeTicks;
   readonly constraints: SaveGatedTurnConstraintFacts;
@@ -171,7 +172,11 @@ const SAVE_GATED_TURN_CONSTRAINT_LEVEL = 3;
 const SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET = 120;
 const SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES = 1;
 const SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET = 40;
-const SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS = 6;
+const SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS: SaveGatedTurnConstraintBundleSpellInvocation["maxTargets"] = 6;
+const SAVE_GATED_TURN_CONSTRAINT_ROLL_KINDS = ["saving_throw"] as const;
+const SAVE_GATED_TURN_CONSTRAINT_ABILITIES = ["dex"] as const;
+const SAVE_GATED_TURN_CONSTRAINT_RESTRICTED_ACTIONS = ["reaction"] as const;
+const SAVE_GATED_TURN_CONSTRAINT_TARGET_KINDS = ["creature"] as const;
 const SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES = [
   "speedRatio",
   "armorClass",
@@ -221,17 +226,6 @@ function saveGatedTurnConstraintBundleIssue(
     mechanicsPath,
     message: SAVE_GATED_TURN_CONSTRAINT_FAILED_FACT_MESSAGES[failedFact],
   };
-}
-
-function sameStringSet(
-  actual: readonly string[] | undefined,
-  expected: readonly string[],
-): boolean {
-  return (
-    actual !== undefined &&
-    actual.length === expected.length &&
-    expected.every((value) => actual.includes(value))
-  );
 }
 
 type SlowFailedEffectRoleEffect =
@@ -288,9 +282,10 @@ function slowFailedEffectRoleEffect(
   if (
     effect.kind === "modify_roll_numeric" &&
     spellHasOnlyNamedFields(effect, ["kind", "on", "delta", "abilityFilter"]) &&
-    sameStringSet(effect.on, ["saving_throw"]) &&
+    effect.on !== undefined &&
+    sameStringSet(effect.on, SAVE_GATED_TURN_CONSTRAINT_ROLL_KINDS) &&
     Array.isArray(effect.abilityFilter) &&
-    sameStringSet(effect.abilityFilter, ["dex"]) &&
+    sameStringSet(effect.abilityFilter, SAVE_GATED_TURN_CONSTRAINT_ABILITIES) &&
     effect.delta.kind === "fixed_number" &&
     effect.delta.sign === "-" &&
     effect.delta.amount ===
@@ -301,7 +296,10 @@ function slowFailedEffectRoleEffect(
   }
   if (
     effect.kind === "restrict_action_usage" &&
-    sameStringSet(effect.actions, ["reaction"]) &&
+    sameStringSet(
+      effect.actions,
+      SAVE_GATED_TURN_CONSTRAINT_RESTRICTED_ACTIONS,
+    ) &&
     spellHasOnlyNamedFields(effect, ["kind", "actions"])
   ) {
     return effect;
@@ -612,7 +610,11 @@ function admitSaveGatedTurnConstraintBundleMechanics(
     selection !== undefined &&
     selection.mode === "choose_up_to" &&
     selection.count === SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS &&
-    sameStringSet(selection.targetKinds, ["creature"]);
+    selection.targetKinds !== undefined &&
+    sameStringSet(
+      selection.targetKinds,
+      SAVE_GATED_TURN_CONSTRAINT_TARGET_KINDS,
+    );
   if (!attachmentSupported) {
     push(
       "attachment",
@@ -765,7 +767,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
       kind: "pointOriginCube" as const,
       sideFeet: movementFeet(areaValue.shape.sideFeet),
     },
-    maxTargets: 6 as const,
+    maxTargets: SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS,
     rangeFeet: movementFeet(mechanics.range.feet),
     durationTicks: spellDurationTicksFromCanonicalValue(
       mechanics.duration.upTo,
@@ -994,7 +996,7 @@ function applyTurnHinderingActivePenaltyEffects(
 function validateTurnConstraintAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
   cubeSideFeet: MovementFeet,
-  maxTargets: number,
+  maxTargets: SaveGatedTurnConstraintBundleSpellInvocation["maxTargets"],
 ): string | null {
   if (!("area" in savingThrowOutcomes)) {
     return "turn-hindering effect requires a point-origin Cube area witness.";
@@ -1053,7 +1055,7 @@ const SaveGatedTurnConstraintBundleInvocationSchema =
         kind: Schema.Literal("pointOriginCube"),
         sideFeet: MovementFeet,
       }),
-      maxTargets: Schema.Literal(6),
+      maxTargets: Schema.Literal(SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS),
       rangeFeet: MovementFeet,
       durationTicks: ElapsedTimeTicksSchema,
       constraints: Schema.Struct({

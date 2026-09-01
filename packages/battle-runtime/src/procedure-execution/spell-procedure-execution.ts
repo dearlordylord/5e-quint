@@ -523,7 +523,7 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
     readonly coneLengthFeet: MovementFeet;
     readonly damageDice: PositiveInteger;
     readonly damageDieSize: PositiveInteger;
-    readonly damageTypeChoices: readonly DamageType[];
+    readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
     readonly procedure: "grantedAreaSaveDamageAction";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
