@@ -219,7 +219,7 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
 export type SpellProcedureAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
-  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Facts extends object = SpellProcedureMechanicsFacts,
   Issue extends SpellProcedureAdmissionIssue<P> =
     SpellProcedureAdmissionIssue<P>,
 > = {
@@ -241,7 +241,7 @@ export type SpellProcedureAdmissionDeclaration<
 export type SpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
-  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Facts extends object = SpellProcedureMechanicsFacts,
   Issue extends SpellProcedureAdmissionIssue<P> =
     SpellProcedureAdmissionIssue<P>,
 > = SpellProcedureAdmissionDeclaration<P, I, Facts, Issue> &

@@ -179,6 +179,20 @@ export type SpellDurationChild =
       readonly ending: SpellDurationEnding;
     };
 
+export type SpellDurationChildFailedFact =
+  | "durationExtension"
+  | "durationEnding";
+
+export function spellDurationChildFailedFact(
+  child: SpellDurationChild,
+): SpellDurationChildFailedFact {
+  return Match.value(child.branch).pipe(
+    Match.when("extension", () => "durationExtension" as const),
+    Match.when("ending", () => "durationEnding" as const),
+    Match.exhaustive,
+  );
+}
+
 export function spellDurationChildCoordinates(
   duration: SpellMechanics["duration"],
 ): readonly SpellDurationChild[] {
@@ -354,10 +368,17 @@ const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
   "selection",
 ] as const satisfies ReadonlyArray<keyof SpellTargetAttachmentValue>;
 
-function hasOnlyNamedFields<Value extends object>(
-  value: Value,
-  allowedFields: readonly (keyof Value)[],
-): boolean {
+/**
+ * Keep authored branch ownership explicit at the static mechanics boundary.
+ * Surface schemas normally reject or strip unknown fields, but admission
+ * tests and future decoders can still present a typed branch with an optional
+ * field that a procedure does not consume. Own-key inspection makes that
+ * omission fail closed instead of silently projecting a partial branch.
+ */
+export function spellMechanicsObjectHasOnlyKeys<
+  Value extends object,
+  const AllowedFields extends readonly (keyof Value)[],
+>(value: Value, allowedFields: AllowedFields): boolean {
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
 }
@@ -374,10 +395,10 @@ function isAdmittedSpellTargetSelection<
   selection: TargetSelection,
   allowedFields: AllowedFields,
 ): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
-  return hasOnlyNamedFields<SpellTargetSelectionFieldShape>(
-    selection,
-    allowedFields,
-  );
+  return spellMechanicsObjectHasOnlyKeys<
+    SpellTargetSelectionFieldShape,
+    AllowedFields
+  >(selection, allowedFields);
 }
 
 /**
@@ -400,8 +421,14 @@ export function admitSpellTargetAttachment<
     };
   }
   if (
-    !hasOnlyNamedFields(attachment, SPELL_TARGET_ATTACHMENT_FIELDS) ||
-    !hasOnlyNamedFields(attachment.value, SPELL_TARGET_ATTACHMENT_VALUE_FIELDS)
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment,
+      SPELL_TARGET_ATTACHMENT_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment.value,
+      SPELL_TARGET_ATTACHMENT_VALUE_FIELDS,
+    )
   ) {
     return {
       tag: "rejected",
@@ -459,6 +486,12 @@ export function spellUniqueMechanicsIssues<
  */
 export type SpellProcedureMechanicsFacts = SpellDefinitionRuleFacts;
 
+type SpellProcedureMechanicsFactsConstraint = object;
+
+type SpellProcedureMechanicsFactsByProcedureConstraint = {
+  readonly [P in BattleSpellProcedureKey]: SpellProcedureMechanicsFactsConstraint;
+};
+
 export type SpellProcedureMechanicsFactsByProcedure = {
   readonly [P in BattleSpellProcedureKey]: SpellProcedureMechanicsFacts;
 };
@@ -487,7 +520,7 @@ export type SpellProcedureAdmissionIssue<
  */
 export type AdmittedSpellProcedureMechanics<
   P extends BattleSpellProcedureKey,
-  Facts extends SpellProcedureMechanicsFacts,
+  Facts extends SpellProcedureMechanicsFactsConstraint,
   Invocation extends SupportedSpellInvocation =
     SpellProcedureMechanicsInvocation<P>,
 > = {
@@ -503,7 +536,8 @@ export type AdmittedSpellProcedureMechanics<
 
 export type SpellProcedureMechanicsInspection<
   P extends BattleSpellProcedureKey,
-  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Facts extends SpellProcedureMechanicsFactsConstraint =
+    SpellProcedureMechanicsFacts,
   Invocation extends SupportedSpellInvocation =
     SpellProcedureMechanicsInvocation<P>,
   Issue extends SpellProcedureAdmissionIssue<P> =
@@ -525,7 +559,8 @@ export type SpellProcedureMechanicsInspection<
  */
 export type SpellProcedureMechanicsAdmissionDeclaration<
   P extends BattleSpellProcedureKey,
-  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Facts extends SpellProcedureMechanicsFactsConstraint =
+    SpellProcedureMechanicsFacts,
   Invocation extends SupportedSpellInvocation =
     SpellProcedureMechanicsInvocation<P>,
   Issue extends SpellProcedureAdmissionIssue<P> =
@@ -543,7 +578,7 @@ export type SpellProcedureMechanicsAdmissionDeclaration<
  * value's discriminator.
  */
 export type AnySpellProcedureMechanicsAdmission<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
     SpellProcedureMechanicsFactsByProcedure,
 > = {
   readonly admitMechanics: (
@@ -552,7 +587,7 @@ export type AnySpellProcedureMechanicsAdmission<
 };
 
 export type AdmittedSpellProcedureMechanicsView<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
     SpellProcedureMechanicsFactsByProcedure,
 > = {
   readonly [P in BattleSpellProcedureKey]: AdmittedSpellProcedureMechanics<
@@ -563,7 +598,7 @@ export type AdmittedSpellProcedureMechanicsView<
 }[BattleSpellProcedureKey];
 
 export type SpellProcedureMechanicsInspectionView<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
     SpellProcedureMechanicsFactsByProcedure,
 > =
   | { readonly tag: "notRepresented" }
@@ -576,7 +611,7 @@ export type SpellProcedureMechanicsInspectionView<
       readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
     };
 export type BattleSpellMechanicsAdmission<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
     SpellProcedureMechanicsFactsByProcedure,
 > =
   | { readonly tag: "notBattleOwned" }
@@ -649,7 +684,7 @@ export function spellProcedureMapNonEmpty<T, U>(
  * the declaration-derived view from admission-registry.ts.
  */
 export function admitBattleSpellMechanicsFrom<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedure =
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
     SpellProcedureMechanicsFactsByProcedure,
 >(
   source: SpellMechanicsAdmissionSource,

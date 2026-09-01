@@ -183,7 +183,6 @@ import {
 import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
-  ClassName,
   DamageType,
   DcSource,
   DiceExpr,
@@ -2542,7 +2541,7 @@ export type PerceptionGatedAttackRollDefenseSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "perceptionGatedAttackRollDefense";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
@@ -3217,7 +3216,7 @@ type SupportedSpellInvocationSource =
       readonly access: CantripSpellAccess;
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "makeStable";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly rangeFeet: MovementFeet;
     }
@@ -3748,7 +3747,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "fallingCreatureMitigationReaction";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "targetList" }
@@ -3768,7 +3767,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "triggeredArmorDefense";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly armorClassBonus: number;
       readonly negatesRepeatedDamageAllocation: true;
     }
@@ -3776,7 +3775,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spellCastInterruptionReaction";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly triggerComponents: readonly SpellComponent[];
       readonly ability: Extract<Ability, "con">;
       readonly dc: DcSource;
@@ -3810,7 +3809,9 @@ export type SupportedSpellInvocation = {
   readonly [Procedure in SupportedSpellProcedure]: SupportedSpellInvocationSource extends infer Invocation
     ? Invocation extends {
         readonly procedure: SupportedSpellProcedure;
-        readonly spell: infer Spell extends BattleSpellAdmissionSource;
+        readonly spell: infer Spell extends
+          | BattleSpellAdmissionSource
+          | BattleSpellExecutionSource;
       }
       ? Procedure extends Invocation["procedure"]
         ? Omit<Invocation, "spell" | "procedure"> & {

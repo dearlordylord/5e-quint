@@ -1,4 +1,4 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
@@ -24,7 +24,7 @@ import {
   spendAction,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import { Result, Match } from "effect";
 import {
   type BattleActDiscoveryCandidate,
@@ -35,6 +35,22 @@ import {
   type BattleTurnResources,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
+import type {
+  ActivationPhase,
+  CastingTime,
+  Components,
+  DcSource,
+  Duration,
+  EffectAtom,
+  FixedDistancePointRange,
+  Range,
+  ReactionTrigger,
+  SaveSuccessOutcome,
+  SpellLevel,
+  SpellMechanics,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
 import {
   snapshotBattle,
   interruptedProcedureSubject,
@@ -62,7 +78,6 @@ import {
   spendSpellCastMetamagicResources,
   type SpellCastResourceSpendResult,
 } from "../spells-resolve-resources.ts";
-import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { Schema } from "effect";
 import {
   MovementFeet,
@@ -70,85 +85,526 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
   type SpellAdmissionContext,
   type SpellProcedureDeclaration,
   type SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import {
+  admitSpellTargetAttachment,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildFailedFact,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationValueEvidencePaths,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 
 type SpellCastInterruptionInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellCastInterruptionReaction" }
 >;
+type SpellCastInterruptionSaveGate = Extract<
+  Extract<
+    SpellMechanics,
+    { readonly family: "triggered_reaction" }
+  >["phases"][number],
+  { readonly kind: "save_gate" }
+>;
 type SpellCastInterruptionResolveInput =
   SpellProcedureProfileResolveInput<SpellCastInterruptionInvocation>;
 
+type SpellCastInterruptionRange = FixedDistancePointRange;
+type SpellCastInterruptionDc = Extract<
+  DcSource,
+  { readonly kind: "caster_spell_save_dc" }
+>;
+type SpellCastInterruptionMechanicsFacts = {
+  readonly level: SpellLevel;
+  readonly range: SpellCastInterruptionRange;
+  readonly triggerComponents: readonly ("V" | "S" | "M")[];
+  readonly ability: "con";
+  readonly dc: SpellCastInterruptionDc;
+};
+
+export const SPELL_CAST_INTERRUPTION_FAILED_FACTS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "trigger",
+  "interruptsTrigger",
+  "phase",
+  "phaseCount",
+  "phaseOrder",
+  "attachment",
+  "saveGate",
+  "saveOutcome",
+  "effects",
+] as const;
+type SpellCastInterruptionFailedFact =
+  (typeof SPELL_CAST_INTERRUPTION_FAILED_FACTS)[number];
+
+type SpellCastInterruptionMechanicsIssue = {
+  readonly failedFact: SpellCastInterruptionFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+type SpellCastInterruptionComponents = Extract<
+  Components,
+  { readonly m: false }
+>;
+type SpellCastInterruptionDuration = Extract<
+  Duration,
+  { readonly kind: "instantaneous" }
+>;
+type SpellCastInterruptionCastingTime = Extract<
+  CastingTime,
+  { readonly kind: "reaction" }
+>;
+type SpellCastInterruptionTrigger = Extract<
+  ReactionTrigger,
+  { readonly kind: "creature_casts_spell" }
+>;
+type SpellCastInterruptionPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+>;
+type SpellCastInterruptionFailure = Extract<
+  EffectAtom,
+  { readonly kind: "negate_triggering_spell" }
+>;
+type SpellCastInterruptionSuccess = Extract<
+  SaveSuccessOutcome,
+  { readonly kind: "none" }
+>;
+type SpellCastInterruptionTargetSelection = Extract<
+  TargetSelection,
+  { readonly mode: "one" }
+>;
+
+const SPELL_CAST_INTERRUPTION_TRIGGER_FIELDS = [
+  "kind",
+  "components",
+  "requiresVisibleCaster",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionTrigger>;
+const SPELL_CAST_INTERRUPTION_PHASE_FIELDS = [
+  "kind",
+  "attachment",
+  "ability",
+  "dc",
+  "onFail",
+  "onSuccess",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionPhase>;
+const SPELL_CAST_INTERRUPTION_FAILURE_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionFailure>;
+const SPELL_CAST_INTERRUPTION_SUCCESS_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionSuccess>;
+const SPELL_CAST_INTERRUPTION_TARGET_SELECTION_FIELDS = [
+  "mode",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionTargetSelection>;
+const SPELL_CAST_INTERRUPTION_RANGE_FIELDS = [
+  "kind",
+  "feet",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionRange>;
+const SPELL_CAST_INTERRUPTION_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionComponents>;
+const SPELL_CAST_INTERRUPTION_DURATION_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionDuration>;
+const SPELL_CAST_INTERRUPTION_CASTING_TIME_FIELDS = [
+  "kind",
+  "trigger",
+] as const satisfies ReadonlyArray<keyof SpellCastInterruptionCastingTime>;
+
 function admitSpellCastInterruption(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: SpellCastInterruptionMechanicsFacts,
 ): readonly SpellCastInterruptionInvocation[] {
-  const projection = spellCastInterruptionReactionSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
-    ...base,
-    procedure: "spellCastInterruptionReaction",
-    ...projection,
-  }));
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly SpellCastInterruptionInvocation[] =>
+      Number(slot.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "spellCastInterruptionReaction",
+              spell,
+              triggerComponents: facts.triggerComponents,
+              ability: facts.ability,
+              dc: facts.dc,
+              targeting: { kind: "singleCombatant" },
+              rangeFeet: movementFeet(facts.range.feet),
+            },
+          ],
+  );
 }
 
-function spellCastInterruptionReactionSpellProjection(
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  SpellCastInterruptionInvocation,
-  "ability" | "dc" | "targeting" | "rangeFeet" | "triggerComponents"
-> | null {
-  if (
-    spell.mechanics.family !== "triggered_reaction" ||
-    spell.mechanics.level !== 3 ||
-    spell.mechanics.castingTime.kind !== "reaction" ||
-    spell.mechanics.castingTime.trigger.kind !== "creature_casts_spell" ||
-    !sameStringSet(spell.mechanics.castingTime.trigger.components ?? [], [
-      "V",
-      "S",
-      "M",
-    ]) ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    !spell.mechanics.components.s ||
-    spell.mechanics.components.v ||
-    spell.mechanics.components.m ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    !spell.mechanics.interruptsTrigger ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    phase?.kind !== "save_gate" ||
-    hasSaveGateRepeatSaves(phase) ||
-    phase.ability !== "con" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    phase.onFail.kind !== "negate_triggering_spell" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.autoSuccessIfCasterSlotGte !== undefined
-  ) {
-    return null;
-  }
+function spellCastInterruptionIssueResult(
+  issue: SpellCastInterruptionMechanicsIssue,
+): {
+  readonly tag: "spellProcedureAdmissionIssue";
+  readonly procedure: "spellCastInterruptionReaction";
+  readonly failedFact: SpellCastInterruptionFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly message: string;
+} {
   return {
-    triggerComponents: ["V", "S", "M"],
-    ability: phase.ability,
-    dc: phase.dc,
-    targeting: { kind: "singleCombatant" },
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "spellCastInterruptionReaction",
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported spellCastInterruptionReaction mechanics fact: ${issue.failedFact}.`,
   };
+}
+
+function isSpellCastInterruptionRange(
+  range: Range,
+): range is SpellCastInterruptionRange {
+  return (
+    isFixedDistancePointRange(range) &&
+    spellMechanicsObjectHasOnlyKeys(
+      range,
+      SPELL_CAST_INTERRUPTION_RANGE_FIELDS,
+    ) &&
+    range.feet === 60
+  );
+}
+
+function spellCastInterruptionSemanticCandidate(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "triggered_reaction" &&
+    ((mechanics.castingTime.kind === "reaction" &&
+      mechanics.castingTime.trigger.kind === "creature_casts_spell") ||
+      mechanics.phases.some(
+        (phase) =>
+          phase.kind === "save_gate" &&
+          spellCastInterruptionSemanticSaveGate(phase),
+      ))
+  );
+}
+
+function spellCastInterruptionSemanticSaveGate(
+  phase: SpellCastInterruptionSaveGate,
+): boolean {
+  return phase.onFail.kind === "negate_triggering_spell";
+}
+
+function spellCastInterruptionDistinctiveHeaderFallback(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "triggered_reaction" &&
+    mechanics.level === 3 &&
+    mechanics.school === "abjuration" &&
+    mechanics.components.v === false &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false &&
+    mechanics.castingTime.kind === "reaction" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === 60 &&
+    mechanics.duration.kind === "instantaneous" &&
+    mechanics.interruptsTrigger === true
+  );
+}
+
+function admitSpellCastInterruptionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "spellCastInterruptionReaction",
+  SpellCastInterruptionMechanicsFacts,
+  SpellCastInterruptionInvocation,
+  ReturnType<typeof spellCastInterruptionIssueResult>
+> {
+  if (
+    !spellCastInterruptionSemanticCandidate(source.mechanics) &&
+    !spellCastInterruptionDistinctiveHeaderFallback(source.mechanics)
+  ) {
+    return { tag: "notRepresented" };
+  }
+  if (source.mechanics.family !== "triggered_reaction") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const semanticSaveGateIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "save_gate" &&
+      spellCastInterruptionSemanticSaveGate(phase),
+  );
+  const saveGateIndex =
+    semanticSaveGateIndex >= 0
+      ? semanticSaveGateIndex
+      : mechanics.phases.findIndex((phase) => phase.kind === "save_gate");
+  const phaseIndexForInspection = saveGateIndex >= 0 ? saveGateIndex : 0;
+  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
+  const inspectedPhase = mechanics.phases[phaseIndexForInspection];
+  const phase =
+    inspectedPhase?.kind === "save_gate" ? inspectedPhase : undefined;
+  const issues: SpellCastInterruptionMechanicsIssue[] = [];
+  const pushIssue = (
+    failedFact: SpellCastInterruptionFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (mechanics.level !== 3) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.school !== "abjuration") {
+    pushIssue("school", spellMechanicsHeaderPath("school"));
+  }
+  if (!isSpellCastInterruptionRange(mechanics.range)) {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    mechanics.components.v !== false ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      SPELL_CAST_INTERRUPTION_COMPONENT_FIELDS,
+    ) ||
+    ("materialCostGp" in mechanics.components &&
+      mechanics.components.materialCostGp !== undefined) ||
+    ("materialConsumed" in mechanics.components &&
+      mechanics.components.materialConsumed === true)
+  ) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+    for (const path of spellConsumedMaterialEvidencePaths(
+      mechanics.components,
+    )) {
+      pushIssue("components", path);
+    }
+  }
+  if (
+    mechanics.duration.kind !== "instantaneous" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.duration,
+      SPELL_CAST_INTERRUPTION_DURATION_FIELDS,
+    )
+  ) {
+    pushIssue("duration", spellMechanicsHeaderPath("duration"));
+    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
+      pushIssue("durationValue", path);
+    }
+    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+      pushIssue(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      );
+    }
+  }
+  const trigger =
+    mechanics.castingTime.kind === "reaction"
+      ? mechanics.castingTime.trigger
+      : undefined;
+  if (
+    trigger?.kind !== "creature_casts_spell" ||
+    mechanics.castingTime.kind !== "reaction" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SPELL_CAST_INTERRUPTION_CASTING_TIME_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      trigger,
+      SPELL_CAST_INTERRUPTION_TRIGGER_FIELDS,
+    ) ||
+    ("requiresVisibleCaster" in trigger &&
+      trigger.requiresVisibleCaster !== true) ||
+    !sameStringSet(trigger.components, ["V", "S", "M"])
+  ) {
+    pushIssue("trigger", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (mechanics.castingTime.kind !== "reaction") {
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (mechanics.interruptsTrigger !== true) {
+    pushIssue("interruptsTrigger", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === saveGateIndex) continue;
+      pushIssue(
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(index + 1)),
+      );
+    }
+    if (mechanics.phases.length === 0) {
+      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+    }
+  }
+  if (saveGateIndex < 0) {
+    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
+  } else if (saveGateIndex !== 0) {
+    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
+  }
+  if (phase === undefined) {
+    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
+  } else {
+    if (
+      !spellMechanicsObjectHasOnlyKeys(
+        phase,
+        SPELL_CAST_INTERRUPTION_PHASE_FIELDS,
+      )
+    ) {
+      pushIssue("saveGate", spellActivationPhasePath(phaseOrdinal));
+    }
+    if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc") {
+      pushIssue("saveGate", spellActivationPhasePath(phaseOrdinal));
+    }
+    const attachmentAdmission = admitSpellTargetAttachment(
+      phase.attachment,
+      SPELL_CAST_INTERRUPTION_TARGET_SELECTION_FIELDS,
+    );
+    const selection =
+      attachmentAdmission.tag === "admitted"
+        ? attachmentAdmission.attachment.value.selection
+        : undefined;
+    if (attachmentAdmission.tag === "rejected" || selection?.mode !== "one") {
+      pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
+    }
+    const failure = phase.onFail;
+    if (
+      failure.kind !== "negate_triggering_spell" ||
+      !spellMechanicsObjectHasOnlyKeys(
+        failure,
+        SPELL_CAST_INTERRUPTION_FAILURE_FIELDS,
+      )
+    ) {
+      pushIssue(
+        "effects",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+      );
+    }
+    const success = phase.onSuccess;
+    if (
+      success.kind !== "none" ||
+      !spellMechanicsObjectHasOnlyKeys(
+        success,
+        SPELL_CAST_INTERRUPTION_SUCCESS_FIELDS,
+      )
+    ) {
+      pushIssue("saveOutcome", spellActivationPhasePath(phaseOrdinal));
+    }
+  }
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues.map(
+      spellCastInterruptionIssueResult,
+    );
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  if (
+    !isSpellCastInterruptionRange(mechanics.range) ||
+    phase === undefined ||
+    phase.onFail.kind !== "negate_triggering_spell"
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        spellCastInterruptionIssueResult({
+          failedFact: phase === undefined ? "phase" : "range",
+          mechanicsPath:
+            phase === undefined
+              ? spellActivationPhasePath(phaseOrdinal)
+              : spellMechanicsHeaderPath("range"),
+        }),
+      ],
+    };
+  }
+  const triggerComponents =
+    mechanics.castingTime.kind === "reaction" &&
+    mechanics.castingTime.trigger.kind === "creature_casts_spell"
+      ? mechanics.castingTime.trigger.components
+      : [];
+  const ability = phase?.ability === "con" ? phase.ability : null;
+  const dc = phase?.dc.kind === "caster_spell_save_dc" ? phase.dc : undefined;
+  if (ability === null || dc === undefined || triggerComponents.length === 0) {
+    return {
+      tag: "unsupported",
+      issues: [
+        spellCastInterruptionIssueResult({
+          failedFact:
+            ability === null || dc === undefined ? "saveGate" : "trigger",
+          mechanicsPath:
+            ability === null || dc === undefined
+              ? spellActivationPhasePath(phaseOrdinal)
+              : spellMechanicsHeaderPath("castingTime"),
+        }),
+      ],
+    };
+  }
+  const facts = {
+    level: mechanics.level,
+    range: mechanics.range,
+    triggerComponents,
+    ability,
+    dc,
+  } satisfies SpellCastInterruptionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "spellCastInterruptionReaction",
+      facts,
+      evidence: spellCastInterruptionMechanicsEvidence(mechanics, phaseOrdinal),
+      admit: (executionSource, ctx) =>
+        admitSpellCastInterruption(executionSource, ctx, facts),
+    },
+  };
+}
+
+function spellCastInterruptionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellActivationPhasePath(phaseOrdinal),
+    spellActivationAttachmentPath(phaseOrdinal),
+    spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
 }
 
 /* v8 ignore start -- @preserve -- Reaction-only profile: SpellCastInterruption candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
@@ -449,10 +905,12 @@ const SpellCastInterruptionInvocationSchema = spellProcedureExecutionSchema(
 export const spellCastInterruptionReactionProfile = {
   procedure: "spellCastInterruptionReaction",
   executionSchema: SpellCastInterruptionInvocationSchema,
-  admit: admitSpellCastInterruption,
+  admitMechanics: admitSpellCastInterruptionMechanics,
   discoverCastAct: discoverSpellCastInterruptionCastAct,
   resolve: resolveSpellCastInterruption,
 } satisfies SpellProcedureDeclaration<
   "spellCastInterruptionReaction",
-  SpellCastInterruptionInvocation
+  SpellCastInterruptionInvocation,
+  SpellCastInterruptionMechanicsFacts,
+  ReturnType<typeof spellCastInterruptionIssueResult>
 >;
