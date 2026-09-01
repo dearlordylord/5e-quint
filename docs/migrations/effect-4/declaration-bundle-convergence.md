@@ -33,9 +33,10 @@ not a supported external compiler version or compatibility matrix.
 
 The recertification explicitly checks that
 `packages/character-creation-runtime/src/phase1-manifest.d.ts` exports both
-`PHASE1_WEAPON_FLAIL_UNIT_ID` and `PHASE1_WEAPON_SPEAR_UNIT_ID` for the bee2
-character-authoring path. The required-owner inventory and all seven forbidden
-Surface runtime/data owners remain fail-closed.
+`PHASE1_WEAPON_FLAIL_UNIT_ID` and `PHASE1_WEAPON_SPEAR_UNIT_ID` for
+scenario-character authoring's Phase 1 weapon-manifest declaration path. The
+required-owner inventory and all seven forbidden Surface runtime/data owners
+remain fail-closed.
 
 The graph includes the canonical 105-byte input declaration
 `packages/shared/src/non-empty-array.d.ts`. TypeScript consumes but does not
