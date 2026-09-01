@@ -1,4 +1,4 @@
-export type SpellMechanicsMember = {
+type SpellMechanicsMember = {
   readonly Type: unknown;
   readonly Encoded: unknown;
 };

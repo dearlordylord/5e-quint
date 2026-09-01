@@ -2,12 +2,12 @@ import type { Schema } from "effect";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitRecordSchema } from "./schema-nonspell.ts";
+import type { SrdProvenance } from "./srd-provenance.ts";
 import type {
   SrdStatBlockRecord,
   SrdStatBlockRecordEncoded,
 } from "./stat-block-types.ts";
 
-export const SRD_PROVENANCE_KIND = "srd-5.2.1" as const;
 export const SRD_SURFACE_KIND = "srd-5.2.1-surface-catalog" as const;
 
 type RulesExcerpt = string;
@@ -20,8 +20,8 @@ type SrdUnitRecordValue<Record extends ProvenanceBearingRecord> =
   Record extends ProvenanceBearingRecord
     ? Omit<Record, "provenance"> & {
         readonly provenance: {
-          readonly kind: typeof SRD_PROVENANCE_KIND;
-          readonly section: Record["provenance"]["section"];
+          readonly kind: SrdProvenance["kind"];
+          readonly section: SrdProvenance["section"];
         };
       }
     : never;
