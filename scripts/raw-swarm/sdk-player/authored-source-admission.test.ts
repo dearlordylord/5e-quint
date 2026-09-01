@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import {
   admitAuthoredSource,
   readAuthoredSource,
+  withAuthoredSourceSnapshot,
   type AuthoredSourceAdmissionResult,
   type AuthoredSourceRole,
 } from "./authored-source-admission.ts";
@@ -107,6 +108,23 @@ describe("authored source module-edge admission", () => {
           source: `import type { ${declaration} } from ${JSON.stringify(sdkSpecifier)};\nvoid import.meta.url;`,
         }),
       ).toMatchObject({ tag: "admitted", role });
+    },
+  );
+
+  test.each(ROLES)(
+    "$role rejects every ImportKeyword meta-property except import.meta",
+    ({ role }) => {
+      for (const metaProperty of ["defer", "source", "future"] as const) {
+        expect(
+          admitSource({
+            role,
+            source: `void import.${metaProperty}(moduleName);`,
+          }),
+        ).toMatchObject({
+          tag: "rejected",
+          issues: [{ tag: "forbiddenModuleEdge", edge: "dynamicImport" }],
+        });
+      }
     },
   );
 
@@ -228,6 +246,33 @@ describe("authored source module-edge admission", () => {
         role: "player",
         sourcePath,
         source,
+      });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
+  test("materializes the admitted bytes independently of later source-path changes", () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "dnd-authored-snapshot-"));
+    const sourcePath = resolve(directory, "attempt.ts");
+    const source =
+      'import type { PlayerContinuation } from "@dnd/player-sdk";\nexport {};\n';
+    writeFileSync(sourcePath, source);
+    try {
+      const admitted = readAuthoredSource({ role: "player", sourcePath });
+      expect(admitted.tag).toBe("admitted");
+      if (admitted.tag !== "admitted") return;
+      writeFileSync(sourcePath, "REPLACED\n");
+      let observed: { source: string; materializedSource: string } | undefined;
+      withAuthoredSourceSnapshot(admitted, (snapshot) => {
+        observed = {
+          source: snapshot.source,
+          materializedSource: readFileSync(snapshot.sourcePath, "utf8"),
+        };
+      });
+      expect(observed).toEqual({
+        source,
+        materializedSource: source,
       });
     } finally {
       rmSync(directory, { recursive: true });

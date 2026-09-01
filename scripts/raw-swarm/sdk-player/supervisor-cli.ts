@@ -44,6 +44,7 @@ import {
   admitAuthoredSource,
   authoredSourceIssuesMessage,
   readAuthoredSource,
+  withAuthoredSourceSnapshot,
   type AdmittedAuthoredSource,
   type AuthoredSourceAdmissionResult,
   type AuthoredSourceRole,
@@ -278,24 +279,11 @@ async function initialize(
       sourcePath: charactersPath,
     }),
   );
-  const setupConfigPath = resolve("evidence/setup-tsconfig.json");
   const setupConfig: unknown = JSON.parse(
     readFileSync(resolve("tsconfig.json"), "utf8"),
   );
   if (!isRecord(setupConfig)) fail("Player tsconfig must be an object.");
-  writeFileSync(
-    setupConfigPath,
-    `${JSON.stringify(
-      { ...setupConfig, include: [charactersPath] },
-      null,
-      2,
-    )}\n`,
-  );
-  try {
-    typecheckSubmission(characterSource, setupConfigPath);
-  } finally {
-    rmSync(setupConfigPath, { force: true });
-  }
+  typecheckSubmission(characterSource, setupConfig);
   const characters = await evaluateAdmittedScenarioCharacters(characterSource);
   if (characters.tag === "invalid") fail(characters.message);
   const headerIdentity = {
@@ -325,15 +313,7 @@ async function initialize(
   const setupSource = admittedSourceOrFail(
     readAuthoredSource({ role: "scenarioSetup", sourcePath: setupPath }),
   );
-  writeFileSync(
-    setupConfigPath,
-    `${JSON.stringify({ ...setupConfig, include: [setupPath] }, null, 2)}\n`,
-  );
-  try {
-    typecheckSubmission(setupSource, setupConfigPath);
-  } finally {
-    rmSync(setupConfigPath, { force: true });
-  }
+  typecheckSubmission(setupSource, setupConfig);
   const setup = await evaluateAdmittedScenarioSetup(
     setupSource,
     characters.characterSheets,
@@ -1030,31 +1010,49 @@ function appendFrozenContinuation(prefix: FrozenPrefix, body: string): number {
 
 function typecheckSubmission(
   submission: AdmittedAuthoredSource<AuthoredSourceRole>,
-  submissionConfigPath: string,
+  submissionConfig: Readonly<Record<string, unknown>>,
 ): void {
-  const compiler = resolve("tooling/typescript/bin/tsc");
-  const result = spawnSync(
-    process.execPath,
-    [
-      "--permission",
-      `--allow-fs-read=${resolve("tooling")}`,
-      `--allow-fs-read=${resolve("declarations")}`,
-      `--allow-fs-read=${dirname(submission.sourcePath)}`,
-      compiler,
-      "--noEmit",
-      "-p",
+  withAuthoredSourceSnapshot(submission, (snapshot) => {
+    const submissionConfigPath = resolve(
+      dirname(snapshot.sourcePath),
+      `.authored-source-tsconfig-${randomUUID()}.json`,
+    );
+    writeFileSync(
       submissionConfigPath,
-    ],
-    {
-      cwd: process.cwd(),
-      encoding: "utf8",
-    },
-  );
-  if (result.error !== undefined) throw result.error;
-  if (result.signal !== null) fail(`TypeScript stopped by ${result.signal}.`);
-  if (result.status !== 0) {
-    fail(`Continuation did not typecheck:\n${result.stdout}${result.stderr}`);
-  }
+      `${JSON.stringify({ ...submissionConfig, files: [snapshot.sourcePath], include: [] }, null, 2)}\n`,
+      { flag: "wx" },
+    );
+    try {
+      const compiler = resolve("tooling/typescript/bin/tsc");
+      const result = spawnSync(
+        process.execPath,
+        [
+          "--permission",
+          `--allow-fs-read=${resolve("tooling")}`,
+          `--allow-fs-read=${resolve("declarations")}`,
+          `--allow-fs-read=${dirname(snapshot.sourcePath)}`,
+          compiler,
+          "--noEmit",
+          "-p",
+          submissionConfigPath,
+        ],
+        {
+          cwd: process.cwd(),
+          encoding: "utf8",
+        },
+      );
+      if (result.error !== undefined) throw result.error;
+      if (result.signal !== null)
+        fail(`TypeScript stopped by ${result.signal}.`);
+      if (result.status !== 0) {
+        fail(
+          `Continuation did not typecheck:\n${result.stdout}${result.stderr}`,
+        );
+      }
+    } finally {
+      rmSync(submissionConfigPath, { force: true });
+    }
+  });
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -1160,7 +1158,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   writeFileSync(submissionPath, submissionSource.source, { flag: "wx" });
   const typecheckStarted = performance.now();
   try {
-    typecheckSubmission(submissionSource, submissionConfigPath);
+    typecheckSubmission(submissionSource, submissionConfig);
   } catch (error) {
     renameSync(submissionDirectory, `${submissionDirectory}.rejected`);
     throw error;

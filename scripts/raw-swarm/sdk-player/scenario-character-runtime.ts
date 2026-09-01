@@ -1,4 +1,3 @@
-import { pathToFileURL } from "node:url";
 import {
   abilityScoreAssignment,
   characterCreationIssueMessage,
@@ -26,6 +25,7 @@ import { Result, Match } from "effect";
 
 import type { JsonValue } from "./continuation-contract.ts";
 import {
+  authoredSourceModuleUrl,
   authoredSourceIssuesMessage,
   readAuthoredSource,
   type AdmittedAuthoredSource,
@@ -184,7 +184,7 @@ export async function evaluateAdmittedScenarioCharacters(
   if (context.tag === "invalid") return context;
   try {
     const imported: unknown = await import(
-      `${pathToFileURL(authoredSource.sourcePath).href}?characters=${String(Date.now())}`
+      authoredSourceModuleUrl(authoredSource)
     );
     if (
       !isRecord(imported) ||

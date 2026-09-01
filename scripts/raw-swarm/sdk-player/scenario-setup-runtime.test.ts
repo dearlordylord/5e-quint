@@ -63,8 +63,12 @@ import {
   srdUnitCollection,
 } from "../../../packages/surface/src/surface/unit-catalog.ts";
 import { repoRoot, sha256Canonical } from "../transcript.ts";
+import { readAuthoredSource } from "./authored-source-admission.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
-import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import {
+  evaluateAdmittedScenarioSetup,
+  evaluateScenarioSetup,
+} from "./scenario-setup-runtime.ts";
 import type { ScenarioSetupSdk } from "./scenario-setup-contract.ts";
 import { jsonValue } from "./json-value.ts";
 import {
@@ -4727,6 +4731,46 @@ export const setupScenario = () => ({
         },
       );
       expect(Reflect.get(globalThis, sentinel)).toBeUndefined();
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
+  test("evaluates and caches the admitted setup source bytes after the source path changes", async () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "dnd-setup-snapshot-"));
+    const sourcePath = resolve(directory, "setup.ts");
+    try {
+      writeFileSync(
+        sourcePath,
+        `export const setupScenario = () => ({
+  kind: "obstructed",
+  obstruction: "ADMITTED",
+  observation: {},
+});
+`,
+      );
+      const admitted = readAuthoredSource({
+        role: "scenarioSetup",
+        sourcePath,
+      });
+      expect(admitted.tag).toBe("admitted");
+      if (admitted.tag !== "admitted") return;
+      writeFileSync(
+        sourcePath,
+        `export const setupScenario = () => ({
+  kind: "obstructed",
+  obstruction: "REPLACED",
+  observation: {},
+});
+`,
+      );
+      const first = await evaluateAdmittedScenarioSetup(admitted, []);
+      const second = await evaluateAdmittedScenarioSetup(admitted, []);
+      expect(first).toMatchObject({
+        tag: "obstructed",
+        obstruction: "ADMITTED",
+      });
+      expect(second).toBe(first);
     } finally {
       rmSync(directory, { recursive: true });
     }

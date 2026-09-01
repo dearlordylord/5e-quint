@@ -1,6 +1,7 @@
-import { existsSync, readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import type * as tsTypes from "typescript";
 
 type TypeScriptApi = typeof tsTypes;
@@ -20,20 +21,22 @@ const ts: TypeScriptApi = requireFromWorkingDirectory(
     : "typescript",
 );
 
-export const AUTHORED_SOURCE_ROLES = [
+const AUTHORED_SOURCE_ROLES = [
   "player",
   "scenarioCharacter",
   "scenarioSetup",
 ] as const;
 export type AuthoredSourceRole = (typeof AUTHORED_SOURCE_ROLES)[number];
+const [PLAYER_ROLE, SCENARIO_CHARACTER_ROLE, SCENARIO_SETUP_ROLE] =
+  AUTHORED_SOURCE_ROLES;
 
 const SDK_SPECIFIER_BY_ROLE = {
-  player: "@dnd/player-sdk",
-  scenarioCharacter: "@dnd/scenario-character-sdk",
-  scenarioSetup: "@dnd/scenario-setup-sdk",
+  [PLAYER_ROLE]: "@dnd/player-sdk",
+  [SCENARIO_CHARACTER_ROLE]: "@dnd/scenario-character-sdk",
+  [SCENARIO_SETUP_ROLE]: "@dnd/scenario-setup-sdk",
 } as const satisfies Readonly<Record<AuthoredSourceRole, string>>;
 
-export const FORBIDDEN_MODULE_EDGE_KINDS = [
+const FORBIDDEN_MODULE_EDGE_KINDS = [
   "valueImport",
   "sideEffectImport",
   "exportFrom",
@@ -42,8 +45,16 @@ export const FORBIDDEN_MODULE_EDGE_KINDS = [
   "dynamicImport",
   "requireCall",
 ] as const;
-export type ForbiddenModuleEdgeKind =
-  (typeof FORBIDDEN_MODULE_EDGE_KINDS)[number];
+type ForbiddenModuleEdgeKind = (typeof FORBIDDEN_MODULE_EDGE_KINDS)[number];
+const [
+  VALUE_IMPORT_EDGE,
+  SIDE_EFFECT_IMPORT_EDGE,
+  EXPORT_FROM_EDGE,
+  IMPORT_EQUALS_EDGE,
+  IMPORT_TYPE_EDGE,
+  DYNAMIC_IMPORT_EDGE,
+  REQUIRE_CALL_EDGE,
+] = FORBIDDEN_MODULE_EDGE_KINDS;
 
 type SourceLocation = {
   readonly line: number;
@@ -169,9 +180,9 @@ function moduleEdgeIssues(
   const visit = (node: tsTypes.Node): void => {
     if (ts.isImportDeclaration(node)) {
       if (node.importClause === undefined) {
-        forbiddenEdge("sideEffectImport", node);
+        forbiddenEdge(SIDE_EFFECT_IMPORT_EDGE, node);
       } else if (!node.importClause.isTypeOnly) {
-        forbiddenEdge("valueImport", node);
+        forbiddenEdge(VALUE_IMPORT_EDGE, node);
       } else if (
         ts.isStringLiteral(node.moduleSpecifier) &&
         node.moduleSpecifier.text !== expectedSpecifier
@@ -190,18 +201,24 @@ function moduleEdgeIssues(
       ts.isExportDeclaration(node) &&
       node.moduleSpecifier !== undefined
     ) {
-      forbiddenEdge("exportFrom", node);
+      forbiddenEdge(EXPORT_FROM_EDGE, node);
     } else if (ts.isImportEqualsDeclaration(node)) {
-      forbiddenEdge("importEquals", node);
+      forbiddenEdge(IMPORT_EQUALS_EDGE, node);
     } else if (ts.isImportTypeNode(node) || ts.isJSDocImportTag(node)) {
-      forbiddenEdge("importType", node);
+      forbiddenEdge(IMPORT_TYPE_EDGE, node);
     } else if (
       ts.isCallExpression(node) &&
       node.expression.kind === ts.SyntaxKind.ImportKeyword
     ) {
-      forbiddenEdge("dynamicImport", node);
+      forbiddenEdge(DYNAMIC_IMPORT_EDGE, node);
+    } else if (
+      ts.isMetaProperty(node) &&
+      node.keywordToken === ts.SyntaxKind.ImportKeyword &&
+      node.name.text !== "meta"
+    ) {
+      forbiddenEdge(DYNAMIC_IMPORT_EDGE, node);
     } else if (isIdentifierRequireCall(node)) {
-      forbiddenEdge("requireCall", node);
+      forbiddenEdge(REQUIRE_CALL_EDGE, node);
     }
     for (const child of node.getChildren(sourceFile)) visit(child);
   };
@@ -337,4 +354,38 @@ export function authoredSourceIssuesMessage(
       return `Authored source uses forbidden ${issue.edge} syntax at ${String(issue.line)}:${String(issue.column)}.`;
     })
     .join(" ");
+}
+
+export function withAuthoredSourceSnapshot<Role extends AuthoredSourceRole>(
+  authoredSource: AdmittedAuthoredSource<Role>,
+  use: (snapshot: AdmittedAuthoredSource<Role>) => void,
+): void {
+  const snapshotPath = resolve(
+    dirname(authoredSource.sourcePath),
+    `.authored-source-${randomUUID()}.ts`,
+  );
+  writeFileSync(snapshotPath, authoredSource.source, {
+    encoding: "utf8",
+    flag: "wx",
+    mode: 0o400,
+  });
+  try {
+    use({ ...authoredSource, sourcePath: snapshotPath });
+  } finally {
+    rmSync(snapshotPath, { force: true });
+  }
+}
+
+export function authoredSourceModuleUrl(
+  authoredSource: AdmittedAuthoredSource<AuthoredSourceRole>,
+): string {
+  const javascript = ts.transpileModule(authoredSource.source, {
+    fileName: authoredSource.sourcePath,
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+      verbatimModuleSyntax: true,
+    },
+  }).outputText;
+  return `data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}#${randomUUID()}`;
 }

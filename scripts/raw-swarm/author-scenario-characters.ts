@@ -29,6 +29,7 @@ import { buildScenarioCharacterDistribution } from "./sdk-player/consumer-distri
 import {
   authoredSourceIssuesMessage,
   readAuthoredSource,
+  withAuthoredSourceSnapshot,
 } from "./sdk-player/authored-source-admission.ts";
 import {
   evaluateAdmittedScenarioCharacters,
@@ -187,17 +188,37 @@ async function main(args: readonly string[]): Promise<void> {
     if (characterSource.tag === "rejected") {
       fail(authoredSourceIssuesMessage(characterSource.issues));
     }
-    const typecheck = spawnSync(
-      process.execPath,
-      [resolve(scratch, "tooling/typescript/bin/tsc"), "--noEmit"],
-      { cwd: scratch, encoding: "utf8" },
-    );
-    if (typecheck.error !== undefined) throw typecheck.error;
-    if (typecheck.signal !== null || typecheck.status !== 0) {
-      fail(
-        `Scenario characters did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+    withAuthoredSourceSnapshot(characterSource, (snapshot) => {
+      const typecheckConfigPath = resolve(
+        scratch,
+        `.authored-source-tsconfig-${randomUUID()}.json`,
       );
-    }
+      writeFileSync(
+        typecheckConfigPath,
+        `${JSON.stringify({ extends: "./tsconfig.json", files: [snapshot.sourcePath], include: [] }, null, 2)}\n`,
+        { flag: "wx" },
+      );
+      try {
+        const typecheck = spawnSync(
+          process.execPath,
+          [
+            resolve(scratch, "tooling/typescript/bin/tsc"),
+            "--noEmit",
+            "-p",
+            typecheckConfigPath,
+          ],
+          { cwd: scratch, encoding: "utf8" },
+        );
+        if (typecheck.error !== undefined) throw typecheck.error;
+        if (typecheck.signal !== null || typecheck.status !== 0) {
+          fail(
+            `Scenario characters did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+          );
+        }
+      } finally {
+        rmSync(typecheckConfigPath, { force: true });
+      }
+    });
     const evaluated = await evaluateAdmittedScenarioCharacters(characterSource);
     if (evaluated.tag === "invalid") fail(evaluated.message);
     const after = currentGitRevision();

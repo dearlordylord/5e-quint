@@ -4,9 +4,11 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
+  evaluateAdmittedScenarioCharacters,
   evaluateScenarioCharacters,
   scenarioCharactersWithoutSheetsSource,
 } from "./scenario-character-runtime.ts";
+import { readAuthoredSource } from "./authored-source-admission.ts";
 
 async function evaluateSource(source: string) {
   const directory = mkdtempSync(resolve(tmpdir(), "dnd-scenario-characters-"));
@@ -99,5 +101,41 @@ export const composeScenarioCharacters = () => ({
       message: expect.stringContaining("forbidden sideEffectImport"),
     });
     expect(Reflect.get(globalThis, sentinel)).toBeUndefined();
+  });
+
+  test("evaluates the admitted character source bytes after the source path changes", async () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "dnd-character-snapshot-"));
+    const sourcePath = resolve(directory, "characters.ts");
+    try {
+      writeFileSync(
+        sourcePath,
+        `export const composeScenarioCharacters = () => ({
+  kind: "obstructed",
+  obstruction: "ADMITTED",
+  observation: {},
+});
+`,
+      );
+      const admitted = readAuthoredSource({
+        role: "scenarioCharacter",
+        sourcePath,
+      });
+      expect(admitted.tag).toBe("admitted");
+      if (admitted.tag !== "admitted") return;
+      writeFileSync(
+        sourcePath,
+        `export const composeScenarioCharacters = () => ({
+  kind: "obstructed",
+  obstruction: "REPLACED",
+  observation: {},
+});
+`,
+      );
+      await expect(
+        evaluateAdmittedScenarioCharacters(admitted),
+      ).resolves.toMatchObject({ tag: "obstructed", obstruction: "ADMITTED" });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
   });
 });

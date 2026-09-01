@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
 import {
   battleAmmunitionStock,
   battleId,
@@ -25,6 +24,7 @@ import { Result, Match } from "effect";
 
 import { canonicalJson } from "../transcript.ts";
 import {
+  authoredSourceModuleUrl,
   authoredSourceIssuesMessage,
   readAuthoredSource,
   type AdmittedAuthoredSource,
@@ -64,17 +64,14 @@ const scenarioSetupEvaluationCache = new Map<
 function scenarioSetupEvaluationIdentity(
   setupSource: AdmittedAuthoredSource<"scenarioSetup">,
   characterSheets: readonly FreshCharacterSheet[],
-): Readonly<{ key: string; sourceSha256: string }> {
+): string {
   const sourceSha256 = createHash("sha256")
     .update(setupSource.source)
     .digest("hex");
   const characterSheetsSha256 = createHash("sha256")
     .update(canonicalJson(jsonValue(characterSheets)))
     .digest("hex");
-  return {
-    key: `${setupSource.sourcePath}\u0000${sourceSha256}\u0000${characterSheetsSha256}`,
-    sourceSha256,
-  };
+  return `${setupSource.sourcePath}\u0000${sourceSha256}\u0000${characterSheetsSha256}`;
 }
 
 function setupContext(
@@ -190,13 +187,12 @@ function validateOutcome(outcome: unknown): ScenarioSessionResult {
 async function evaluateScenarioSetupUncached(
   setupSource: AdmittedAuthoredSource<"scenarioSetup">,
   characterSheets: readonly FreshCharacterSheet[],
-  sourceSha256: string,
 ): Promise<ScenarioSessionResult> {
   const context = setupContext(characterSheets);
   if (context.tag === "invalid") return context;
   try {
     const imported: unknown = await import(
-      `${pathToFileURL(setupSource.sourcePath).href}?setup=${sourceSha256}`
+      authoredSourceModuleUrl(setupSource)
     );
     if (!isRecord(imported) || typeof imported.setupScenario !== "function") {
       return {
@@ -226,16 +222,15 @@ export function evaluateAdmittedScenarioSetup(
       setupSource,
       characterSheets,
     );
-    const cached = scenarioSetupEvaluationCache.get(identity.key);
+    const cached = scenarioSetupEvaluationCache.get(identity);
     if (cached !== undefined) return cached;
     // A supervisor evaluates one frozen setup dependency graph. The direct
     // source and canonical Character Sheets are its complete mutable inputs.
     const evaluation = evaluateScenarioSetupUncached(
       setupSource,
       characterSheets,
-      identity.sourceSha256,
     );
-    scenarioSetupEvaluationCache.set(identity.key, evaluation);
+    scenarioSetupEvaluationCache.set(identity, evaluation);
     return evaluation;
   } catch (error) {
     return Promise.resolve({

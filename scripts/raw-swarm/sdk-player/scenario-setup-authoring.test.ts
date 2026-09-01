@@ -42,7 +42,7 @@ describe("scenario setup two-owner authoring", () => {
     const scratch = authoringScratch();
     const phases: string[] = [];
     try {
-      await authorScenarioSetupThroughOwners({
+      const result = await authorScenarioSetupThroughOwners({
         scratch,
         runAuthor: (role) => {
           if (role === "neutral") {
@@ -57,8 +57,10 @@ describe("scenario setup two-owner authoring", () => {
           );
           writeFileSync(resolve(scratch, "setup.ts"), CONTROLLER_SETUP_SOURCE);
         },
-        typecheck: (phase) => {
+        typecheck: (phase, source) => {
           phases.push(phase);
+          expect(source.sourcePath).not.toBe(resolve(scratch, "setup.ts"));
+          expect(readFileSync(source.sourcePath, "utf8")).toBe(source.source);
           if (phase === "retained") {
             expect(existsSync(resolve(scratch, "NEUTRAL_SETUP.ts"))).toBe(
               false,
@@ -74,6 +76,7 @@ describe("scenario setup two-owner authoring", () => {
           return "evaluated";
         },
       });
+      expect(result).toEqual({ tag: "retained", retained: "evaluated" });
       expect(phases).toEqual(["neutral", "retained", "evaluate"]);
     } finally {
       rmSync(scratch, { recursive: true });
@@ -173,7 +176,11 @@ describe("scenario setup two-owner authoring", () => {
           },
           validateRetained: () => undefined,
         }),
-      ).rejects.toThrow("forbidden sideEffectImport");
+      ).resolves.toMatchObject({
+        tag: "sourceRejected",
+        phase: "retained",
+        issues: [{ tag: "forbiddenModuleEdge", edge: "sideEffectImport" }],
+      });
     } finally {
       rmSync(scratch, { recursive: true });
     }
@@ -194,7 +201,11 @@ describe("scenario setup two-owner authoring", () => {
           },
           validateRetained: () => undefined,
         }),
-      ).rejects.toThrow("forbidden sideEffectImport");
+      ).resolves.toMatchObject({
+        tag: "sourceRejected",
+        phase: "neutral",
+        issues: [{ tag: "forbiddenModuleEdge", edge: "sideEffectImport" }],
+      });
       expect(typecheckReached).toBe(false);
     } finally {
       rmSync(scratch, { recursive: true });

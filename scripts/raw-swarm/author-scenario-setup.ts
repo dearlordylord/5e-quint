@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   mkdirSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -31,7 +32,10 @@ import {
   evaluateAdmittedScenarioSetup,
   scenarioSetupStatBlocks,
 } from "./sdk-player/scenario-setup-runtime.ts";
-import type { AdmittedAuthoredSource } from "./sdk-player/authored-source-admission.ts";
+import {
+  authoredSourceIssuesMessage,
+  type AdmittedAuthoredSource,
+} from "./sdk-player/authored-source-admission.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
@@ -107,19 +111,34 @@ function typecheckSetup(
   phase: "neutral" | "retained",
   source: AdmittedAuthoredSource<"scenarioSetup">,
 ): void {
-  if (source.sourcePath !== resolve(scratch, "setup.ts")) {
-    fail(`Scenario setup ${phase} admission source path diverged.`);
-  }
-  const typecheck = spawnSync(
-    process.execPath,
-    [resolve(scratch, "tooling/typescript/bin/tsc"), "--noEmit"],
-    { cwd: scratch, encoding: "utf8" },
+  const configPath = resolve(
+    scratch,
+    `.authored-source-tsconfig-${phase}-${randomUUID()}.json`,
   );
-  if (typecheck.error !== undefined) throw typecheck.error;
-  if (typecheck.signal !== null || typecheck.status !== 0) {
-    fail(
-      `Scenario setup ${phase} source did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+  writeFileSync(
+    configPath,
+    `${JSON.stringify({ extends: "./tsconfig.json", files: [source.sourcePath], include: [] }, null, 2)}\n`,
+    { flag: "wx" },
+  );
+  try {
+    const typecheck = spawnSync(
+      process.execPath,
+      [
+        resolve(scratch, "tooling/typescript/bin/tsc"),
+        "--noEmit",
+        "-p",
+        configPath,
+      ],
+      { cwd: scratch, encoding: "utf8" },
     );
+    if (typecheck.error !== undefined) throw typecheck.error;
+    if (typecheck.signal !== null || typecheck.status !== 0) {
+      fail(
+        `Scenario setup ${phase} source did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+      );
+    }
+  } finally {
+    rmSync(configPath, { force: true });
   }
 }
 
@@ -213,7 +232,7 @@ async function main(args: readonly string[]): Promise<void> {
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
     const setupPath = resolve(scratch, "setup.ts");
-    const evaluated = await authorScenarioSetupThroughOwners({
+    const authored = await authorScenarioSetupThroughOwners({
       scratch,
       runAuthor: (role) =>
         runSetupAuthor({
@@ -249,6 +268,10 @@ async function main(args: readonly string[]): Promise<void> {
         return result;
       },
     });
+    if (authored.tag === "sourceRejected") {
+      fail(authoredSourceIssuesMessage(authored.issues));
+    }
+    const evaluated = authored.retained;
     const after = currentGitRevision();
     if (after.tag === "dirty" || after.sha !== revision.sha) {
       fail("Git revision changed during scenario setup authoring.");
