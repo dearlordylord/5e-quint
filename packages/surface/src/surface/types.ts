@@ -15,6 +15,7 @@ import * as SurfaceSchema from "./schema.ts";
 import type { StatBlockRecord } from "./stat-block-types.ts";
 
 export type { SrdSurface, SrdUnitRecord } from "./srd-surface-types.ts";
+export type { SrdProvenance } from "./srd-provenance.ts";
 
 export type {
   AuthoredExecutableProcedure,
@@ -1002,9 +1003,6 @@ export type TriggeredReplacementMechanics = Schema.Schema.Type<
 >;
 export type Provenance = Schema.Schema.Type<
   typeof SurfaceSchema.ProvenanceSchema
->;
-export type SrdProvenance = Schema.Schema.Type<
-  typeof SurfaceSchema.SrdProvenanceSchema
 >;
 export type SpellRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpellRecordSchema
