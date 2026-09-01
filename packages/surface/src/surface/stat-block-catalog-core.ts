@@ -13,12 +13,11 @@ import {
   decodeStatBlockRecordResult,
   formatSurfaceDecodeError,
 } from "./schema.ts";
+import type { Provenance, SrdProvenance } from "./types.ts";
 import type {
-  Provenance,
-  SrdProvenance,
   SrdStatBlockRecord,
   StatBlockRecord,
-} from "./types.ts";
+} from "./stat-block-types.ts";
 import type {
   StatBlockCatalog,
   StatBlockId,

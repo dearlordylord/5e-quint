@@ -16,12 +16,14 @@ import type {
 import type { WeaponId } from "@dnd/shared/game-facts";
 import type {
   CreatureTraitEffect,
+  WeaponRecord,
+} from "@dnd/surface/surface/types";
+import type {
   StatBlockCommunication,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
   StatBlockTextOnlyReason,
-  WeaponRecord,
-} from "@dnd/surface/surface/types";
+} from "../../surface/src/surface/stat-block-types.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import { Result } from "effect";
 import type {

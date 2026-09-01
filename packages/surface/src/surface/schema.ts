@@ -1,6 +1,10 @@
 import { JsonSchema, Result, Schema, SchemaIssue, Struct, Tuple } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
 import * as SchemaAST from "effect/SchemaAST";
+import type {
+  StatBlockRecord,
+  StatBlockRecordEncoded,
+} from "./stat-block-types.ts";
 
 export {
   ActionBonusActionChoiceEffectSchema,
@@ -552,7 +556,7 @@ export const SRD_CHALLENGE_RATINGS = [
 
 export const ChallengeRatingSchema = Schema.Literals(SRD_CHALLENGE_RATINGS);
 
-export const StatBlockRecordSchema = Schema.Struct({
+const statBlockRecordSchema = Schema.Struct({
   id: surfaceSchemaRole(StatBlockId, {
     category: "identity",
     kind: "id",
@@ -566,6 +570,13 @@ export const StatBlockRecordSchema = Schema.Struct({
   challengeRating: ChallengeRatingSchema,
   statBlock: StandaloneStatBlockSchema,
 }).pipe(Schema.annotate({ identifier: "StatBlockRecord" }));
+
+export const StatBlockRecordSchema: Schema.Codec<
+  StatBlockRecord,
+  StatBlockRecordEncoded,
+  never,
+  never
+> = statBlockRecordSchema;
 
 export const SrdProvenanceSchema = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1"),
@@ -629,7 +640,7 @@ const specializeStatBlockRecordSchema = <Fields extends Schema.Struct.Fields>(
   fields: Schema.Struct<Fields>,
   identifier: string,
 ) => {
-  const specialized = StatBlockRecordSchema.mapFields(
+  const specialized = statBlockRecordSchema.mapFields(
     (existing) => {
       const { provenance: _provenance, ...withoutProvenance } = existing;
       return { ...withoutProvenance, ...fields.fields };

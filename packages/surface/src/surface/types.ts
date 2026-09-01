@@ -12,6 +12,34 @@ import {
   WEAPON_PROFICIENCY_CATEGORIES as SCHEMA_WEAPON_PROFICIENCY_CATEGORIES,
 } from "./schema-base.ts";
 import * as SurfaceSchema from "./schema.ts";
+import type { StatBlockRecord } from "./stat-block-types.ts";
+
+export type {
+  AuthoredExecutableProcedure,
+  AuthoredStatBlockReactionTrigger,
+  ChallengeRating,
+  SrdStatBlockRecord,
+  StandaloneCreatureSpeed,
+  StandaloneStatBlock,
+  StandaloneStatBlockSpeedEntry,
+  StatBlockCommunication,
+  StatBlockProcedureAreaShape,
+  StatBlockProcedureDcSource,
+  StatBlockProcedureEntry,
+  StatBlockProcedureOrdinal,
+  StatBlockProcedureResource,
+  StatBlockProcedureResourceLimit,
+  StatBlockProcedureResourceOrdinal,
+  StatBlockProcedureResourceRefs,
+  StatBlockProcedureSection,
+  StatBlockReactionSection,
+  StatBlockRecord,
+  StatBlockSpellInvocationDelta,
+  StatBlockSpellInvocationRestriction,
+  StatBlockSpellcastingGroup,
+  StatBlockSpellReference,
+  StatBlockTextOnlyReason,
+} from "./stat-block-types.ts";
 
 // Runtime literal sets kept as values; concrete surface types derive from the Effect schemas.
 export const SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
@@ -618,12 +646,6 @@ export type CreatureSense = Schema.Schema.Type<
 export type StandaloneCreatureSense = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneCreatureSenseSchema
 >;
-export type StandaloneCreatureSpeed = Schema.Schema.Type<
-  typeof SurfaceSchema.StandaloneCreatureSpeedSchema
->;
-export type StandaloneStatBlockSpeedEntry = Schema.Schema.Type<
-  typeof SurfaceSchema.StandaloneStatBlockSpeedEntrySchema
->;
 export type StandaloneStatBlockAbilityScores = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockAbilityScoresSchema
 >;
@@ -675,70 +697,16 @@ export type CreatureStatBlock = Schema.Schema.Type<
 export type StatBlockCreatureProjection = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureStatBlockProjectionSchema
 >;
-export type StandaloneStatBlock = Schema.Schema.Type<
-  typeof SurfaceSchema.StandaloneStatBlockSchema
->;
 export type StandaloneStatBlockSizeAndSwarm = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockSizeAndSwarmSchema
 >;
 export type StandaloneStatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockValueSchema
 >;
-export type AuthoredExecutableProcedure = Schema.Schema.Type<
-  typeof SurfaceSchema.AuthoredExecutableProcedureSchema
->;
-export type AuthoredStatBlockReactionTrigger = Schema.Schema.Type<
-  typeof SurfaceSchema.AuthoredStatBlockReactionTriggerSchema
->;
-export type StatBlockProcedureEntry = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureEntrySchema
->;
-export type StatBlockProcedureOrdinal = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureOrdinalSchema
->;
-export type StatBlockProcedureResourceOrdinal = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureResourceOrdinalSchema
->;
-export type StatBlockProcedureResource = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureResourceSchema
->;
-export type StatBlockCommunication = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockCommunicationSchema
->;
-export type StatBlockProcedureResourceLimit = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureResourceLimitSchema
->;
-export type StatBlockProcedureAreaShape = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureAreaShapeSchema
->;
-export type StatBlockProcedureDcSource = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureDcSourceSchema
->;
-export type StatBlockProcedureSection = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockProcedureSectionSchema
->;
-export type StatBlockReactionSection = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockReactionSectionSchema
->;
-export type StatBlockSpellReference = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockSpellReferenceSchema
->;
 export type StatBlockSpellInvocationDeltaKind =
   (typeof SurfaceSchema.STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS)[number];
-export type StatBlockSpellInvocationDelta = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockSpellInvocationDeltaSchema
->;
 export type StatBlockSpellInvocationDeltas = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockSpellInvocationDeltasSchema
->;
-export type StatBlockSpellInvocationRestriction = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockSpellInvocationRestrictionSchema
->;
-export type StatBlockSpellcastingGroup = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockSpellcastingGroupSchema
->;
-export type StatBlockTextOnlyReason = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockTextOnlyReasonSchema
 >;
 export type StatBlockInitiativeModifier = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockInitiativeModifierSchema
@@ -1038,9 +1006,6 @@ export type SrdProvenance = Schema.Schema.Type<
 >;
 export type SrdUnitRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SrdUnitRecordSchema
->;
-export type SrdStatBlockRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.SrdStatBlockRecordSchema
 >;
 export type SrdSurface = Schema.Schema.Type<
   typeof SurfaceSchema.SrdSurfaceSchema
@@ -1376,14 +1341,10 @@ export type WeaponRecord = Schema.Schema.Type<
 export type UnitRecord =
   | Schema.Schema.Type<typeof SurfaceSchema.UnitRecordSchema>
   | RogueCunningStrikeClassFeatureRecord;
-export type StatBlockRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockRecordSchema
->;
 export type AuthoredSpellSource = SpellRecord;
 export type AuthoredUnitSource = UnitRecord;
 export type DragonbornSpeciesSource = DragonbornSpeciesRecord;
 export type StatBlockId = StatBlockRecord["id"];
-export type ChallengeRating = StatBlockRecord["challengeRating"];
 
 export type SpellFreeCastGrant = Extract<
   EffectAtom,

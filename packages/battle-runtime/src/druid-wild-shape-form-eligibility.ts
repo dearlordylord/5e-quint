@@ -1,4 +1,4 @@
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
 import { statBlockHasPotentialFlySpeed } from "@dnd/surface/surface/stat-block-speed-readers";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 

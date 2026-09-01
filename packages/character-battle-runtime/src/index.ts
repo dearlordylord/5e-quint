@@ -75,7 +75,8 @@ import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { CharacterBuildProjectionIssue } from "@dnd/character-creation-runtime";

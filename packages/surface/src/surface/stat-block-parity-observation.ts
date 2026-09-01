@@ -1,6 +1,6 @@
 import { Match } from "effect";
 
-import type { StatBlockRecord } from "./types.ts";
+import type { StatBlockRecord } from "./stat-block-types.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observation.ts";
 
 export const SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH =

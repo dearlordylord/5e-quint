@@ -16,7 +16,7 @@ import type {
   StatBlockProcedureResourceOrdinal,
   StatBlockSpellReference,
   StandaloneStatBlock,
-} from "@dnd/surface/surface/types";
+} from "../../../surface/src/surface/stat-block-types.ts";
 
 import { supportedStatBlockTraitAttackRollModes } from "../statblock-action-execution-support.ts";
 import { statBlockAttackMechanicsSupport } from "../statblock-attack-execution-mechanics.ts";

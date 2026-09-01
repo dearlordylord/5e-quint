@@ -17,7 +17,7 @@ import type {
   StandaloneCreatureSpeed,
   StandaloneStatBlock,
   StandaloneStatBlockSpeedEntry,
-} from "@dnd/surface/surface/types";
+} from "../../surface/src/surface/stat-block-types.ts";
 import type {
   BattleStatBlockAuthoredProcedurePresentation,
   BattleStatBlockAuthoredTraitPresentation,

@@ -14,7 +14,7 @@ import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/chara
 import type { UnitCatalog } from "../../../packages/character-creation-runtime/src/consumer-protocol.ts";
 import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/consumer-protocol.ts";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Hp, movementFeet } from "@dnd/shared/types";
 

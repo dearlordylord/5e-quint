@@ -15,9 +15,9 @@ import {
   type MechanicsGraphPathNode,
   type StatBlockMechanicsPath,
 } from "@dnd/surface/surface/mechanics-graph-path";
+import type { SrdSurface } from "@dnd/surface/surface/types";
 import type {
   SrdStatBlockRecord,
-  SrdSurface,
   StatBlockProcedureEntry,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
@@ -25,7 +25,7 @@ import type {
   StatBlockSpellReference,
   AuthoredStatBlockReactionTrigger,
   StandaloneStatBlock,
-} from "@dnd/surface/surface/types";
+} from "../../surface/src/surface/stat-block-types.ts";
 
 import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
 import {

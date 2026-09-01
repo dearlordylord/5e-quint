@@ -6,7 +6,7 @@ import {
 } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
 import { Result } from "effect";
 import * as Option from "effect/Option";
 export {

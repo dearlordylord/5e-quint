@@ -38,9 +38,9 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import type {
   ClassFeatureRecord,
-  StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
 import { Result, Option } from "effect";
 
 import {

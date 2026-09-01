@@ -10,7 +10,8 @@ import {
   type SrdStatBlockCollection,
   type StatBlockCatalog,
 } from "./stat-block-catalog.ts";
-import type { SrdStatBlockRecord, SrdUnitRecord } from "./types.ts";
+import type { SrdStatBlockRecord } from "./stat-block-types.ts";
+import type { SrdUnitRecord } from "./types.ts";
 import type {
   StatBlockMechanicsPath as SurfaceStatBlockMechanicsPath,
   UnitMechanicsPath as SurfaceUnitMechanicsPath,

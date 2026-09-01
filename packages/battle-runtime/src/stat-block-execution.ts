@@ -11,7 +11,7 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import { Brand, Match, Result } from "effect";
-import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
+import type { StatBlockProcedureResourceOrdinal } from "../../surface/src/surface/stat-block-types.ts";
 import { type SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";

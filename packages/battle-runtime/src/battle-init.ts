@@ -13,10 +13,12 @@ import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
   Size,
-  StatBlockId,
-  StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
+import type {
+  StatBlockId,
+  StatBlockRecord,
+} from "../../surface/src/surface/stat-block-types.ts";
 import { Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,

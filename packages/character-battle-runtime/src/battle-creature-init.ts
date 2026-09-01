@@ -55,11 +55,8 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
-import type {
-  SpeciesRecord,
-  StatBlockRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";

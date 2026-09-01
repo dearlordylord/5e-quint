@@ -2,7 +2,8 @@ import type {
   StatBlockMechanicsPath as SurfaceStatBlockMechanicsPath,
   UnitMechanicsPath as SurfaceUnitMechanicsPath,
 } from "./mechanics-graph-path.ts";
-import type { SrdStatBlockRecord, SrdSurface, SrdUnitRecord } from "./types.ts";
+import type { SrdStatBlockRecord } from "./stat-block-types.ts";
+import type { SrdSurface, SrdUnitRecord } from "./types.ts";
 
 export const SURFACE_MECHANICS_ADMISSION_REASONS = [
   "unsupported_mechanics",

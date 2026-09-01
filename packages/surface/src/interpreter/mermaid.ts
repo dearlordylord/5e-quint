@@ -1,6 +1,7 @@
 // Render a Trace as a mermaid flowchart. Color-codes nodes by atom category.
 
-import type { StatBlockRecord, UnitRecord } from "../surface/types.ts";
+import type { StatBlockRecord } from "../surface/stat-block-types.ts";
+import type { UnitRecord } from "../surface/types.ts";
 import type { Trace, AtomCategory } from "./tracer.ts";
 
 const CLASS_DEFS = `  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61

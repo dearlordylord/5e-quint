@@ -60,6 +60,10 @@ import {
   nonEmpty,
   strictStruct,
 } from "./schema-helpers.ts";
+import type {
+  StandaloneStatBlock,
+  StandaloneStatBlockEncoded,
+} from "./stat-block-types.ts";
 
 const surfaceIdentity = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
@@ -6750,19 +6754,19 @@ export const StatBlockInitiativeSchema = Schema.Struct({
 
 export const StatBlockPassivePerceptionSchema = NonNegativeIntegerSchema;
 
-const StandaloneNonFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (kind): kind is Exclude<SpeedType, "fly"> => kind !== "fly",
-    ),
-  ),
+const STANDALONE_NON_FLY_SPEED_TYPES = [
+  "walk",
+  "swim",
+  "climb",
+  "burrow",
+] as const satisfies ReadonlyArray<Exclude<SpeedType, "fly">>;
+const STANDALONE_FLY_SPEED_TYPE = "fly" as const satisfies SpeedType;
+
+const StandaloneNonFlyCreatureSpeedKindSchema = Schema.Literals(
+  STANDALONE_NON_FLY_SPEED_TYPES,
 );
-const StandaloneFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (kind): kind is Extract<SpeedType, "fly"> => kind === "fly",
-    ),
-  ),
+const StandaloneFlyCreatureSpeedKindSchema = Schema.Literal(
+  STANDALONE_FLY_SPEED_TYPE,
 );
 
 const StandaloneCreatureSpeedFields = {
@@ -7155,7 +7159,12 @@ const hasKnownResourceRefs = (block: StandaloneStatBlockBase): boolean => {
   });
 };
 
-export const StandaloneStatBlockSchema = StandaloneStatBlockBaseSchema.pipe(
+export const StandaloneStatBlockSchema: Schema.Codec<
+  StandaloneStatBlock,
+  StandaloneStatBlockEncoded,
+  never,
+  never
+> = StandaloneStatBlockBaseSchema.pipe(
   Schema.check(
     Schema.makeFilter(hasKnownResourceRefs, {
       message:

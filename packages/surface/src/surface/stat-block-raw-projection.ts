@@ -65,15 +65,17 @@ import {
   CREATURE_TYPES,
   SKILLS,
   type Ability,
-  type ChallengeRating,
   type Condition,
   type CreatureSkillModifier,
   type DamageType,
-  type SrdStatBlockRecord,
-  type StandaloneStatBlockSpeedEntry,
-  type StatBlockCommunication,
-  type StatBlockProcedureEntry,
 } from "./types.ts";
+import type {
+  ChallengeRating,
+  SrdStatBlockRecord,
+  StandaloneStatBlockSpeedEntry,
+  StatBlockCommunication,
+  StatBlockProcedureEntry,
+} from "./stat-block-types.ts";
 
 /**
  * Identity-free projector for comparing parser-bounded local SRD spans with
