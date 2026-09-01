@@ -122,14 +122,17 @@ convergence or that the pending #386 terminal public gates have run.
 
 ### Current pre-receipt declaration candidate
 
-At immutable implementation source `d83d7e19b`, the current pre-receipt
+At immutable implementation source `d7262c234`, the current pre-receipt
 candidate contains exactly 571 declaration files and the unchanged path ledger
 `4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`. The
-production emitter measured 10,298,129 bytes, leaving 187,631 bytes below the
+production emitter measured 10,298,080 bytes, leaving 187,680 bytes below the
 unchanged 10 MiB cap; its content ledger is
-`c7cc1ebeaeafaceaa53c820228fb456f2a1b0fefd68390a34ec12bd16dea7f29`.
-Relative to clean `cf55434c1`, 42 declaration contents changed, no admitted path
-changed, and the graph is 2,588 bytes smaller. The emitter also proved that its
+`e3e70c74576869ac6ad18eca25a6637fa16defd464bdcf9287c57e2af54169f7`.
+Relative to clean `cf55434c1`, 43 declaration contents changed, no admitted path
+changed, and the graph is 2,637 bytes smaller. The only follow-up declaration
+change from the preceding `d83d7e19b` certificate is a 49-byte reduction in
+`phase1-manifest.d.ts`: its fixed weapon-mastery tuple now omits the unsupported
+internal unit removed by the current source. The emitter also proved that its
 five value-imported Surface catalog/data declarations are unreachable from the
 required declaration roots and removed only those closed forbidden owners
 before measuring the admitted graph. A fresh rerun after the concurrent Surface
