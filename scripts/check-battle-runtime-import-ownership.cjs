@@ -63,7 +63,6 @@ const MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS = new Map([
       "ActionRestrictionSchema",
       "CUNNING_STRIKE_OPTION_SELECTION_IDS",
       "ClassNameSchema",
-      "CreatureTypeSchema",
       "DamageTypeSchema",
       "DcSourceSchema",
       "DiceExprSchema",
@@ -98,7 +97,6 @@ const MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS = new Map([
       "ActionRestrictionAllowedAction",
       "ActivationPhase",
       "ActivationResource",
-      "AreaDirectEffectAtom",
       "ArmorAcFormula",
       "ArmorCategory",
       "ArmorTrainingCategory",
@@ -119,7 +117,6 @@ const MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS = new Map([
       "DcSource",
       "DiceAmount",
       "DiceExpr",
-      "DiceExprDelta",
       "Duration",
       "EffectAtom",
       "GlyphWardingExplosiveRuneBranch",
@@ -127,32 +124,24 @@ const MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS = new Map([
       "GlyphWardingOccurrence",
       "GlyphWardingSpellGlyphBranch",
       "GlyphWardingTrigger",
-      "LinearPerLevel",
-      "OngoingEffect",
       "PointPoolResource",
       "Range",
       "SKILLS",
       "SixAbilityScores",
       "Size",
       "Skill",
-      "SkillFilter",
       "SpellLevel",
       "SpellMechanics",
       "StatBlockLiteralValue",
       "StatBlockValue",
       "TargetSelection",
-      "TopLevelSpellCastingTime",
-      "UsageLimit",
       "WeaponCategory",
       "WeaponDamage",
       "WeaponMasteryName",
       "WeaponProficiency",
       "WeaponPropertyDetail",
       "WeaponUsage",
-      "isEffectAtom",
       "isFixedDistancePointRange",
-      "isThresholdTierPointRange",
-      "topLevelSpellCastingTime",
     ]),
   ],
 ]);
@@ -665,6 +654,105 @@ function importGraph(
   return graph;
 }
 
+function mixedSurfaceNamedSymbolUsage(graph) {
+  const usage = new Map();
+  const addUsage = (specifier, importingFile, importedNames) => {
+    const module = resolvedMixedSurfaceModule(specifier, importingFile);
+    if (module === undefined) return;
+    const names = usage.get(module) ?? new Set();
+    for (const name of importedNames) names.add(name);
+    usage.set(module, names);
+  };
+  for (const file of graph.keys()) {
+    if (isMixedSurfaceFile(file)) continue;
+    const source = fs.readFileSync(file, "utf8");
+    const sourceFile = ts.createSourceFile(
+      file,
+      source,
+      ts.ScriptTarget.Latest,
+      false,
+    );
+    const visit = (node) => {
+      if (
+        ts.isImportTypeNode(node) &&
+        ts.isLiteralTypeNode(node.argument) &&
+        ts.isStringLiteral(node.argument.literal) &&
+        node.qualifier !== undefined
+      ) {
+        addUsage(node.argument.literal.text, file, [
+          node.qualifier.getText(sourceFile),
+        ]);
+      }
+      ts.forEachChild(node, visit);
+    };
+    for (const statement of sourceFile.statements) {
+      if (
+        ts.isImportDeclaration(statement) &&
+        ts.isStringLiteral(statement.moduleSpecifier) &&
+        statement.importClause?.namedBindings !== undefined &&
+        ts.isNamedImports(statement.importClause.namedBindings)
+      ) {
+        addUsage(
+          statement.moduleSpecifier.text,
+          file,
+          statement.importClause.namedBindings.elements.map(
+            (element) => (element.propertyName ?? element.name).text,
+          ),
+        );
+      } else if (
+        ts.isExportDeclaration(statement) &&
+        statement.moduleSpecifier !== undefined &&
+        ts.isStringLiteral(statement.moduleSpecifier) &&
+        statement.exportClause !== undefined &&
+        ts.isNamedExports(statement.exportClause)
+      ) {
+        addUsage(
+          statement.moduleSpecifier.text,
+          file,
+          statement.exportClause.elements.map(
+            (element) => (element.propertyName ?? element.name).text,
+          ),
+        );
+      }
+      visit(statement);
+    }
+  }
+  return usage;
+}
+
+function mixedSurfaceSafeSymbolViolations(
+  graph,
+  safeSymbols = MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS,
+) {
+  const usage = mixedSurfaceNamedSymbolUsage(graph);
+  const unlisted = [];
+  const unused = [];
+  for (const [module, names] of usage) {
+    const allowedNames = safeSymbols.get(module);
+    for (const name of names) {
+      if (allowedNames === undefined || !allowedNames.has(name)) {
+        unlisted.push({ module, name });
+      }
+    }
+  }
+  for (const [module, allowedNames] of safeSymbols) {
+    const usedNames = usage.get(module);
+    for (const name of allowedNames) {
+      if (usedNames === undefined || !usedNames.has(name)) {
+        unused.push({ module, name });
+      }
+    }
+  }
+  const byModuleAndName = (left, right) =>
+    left.module === right.module
+      ? left.name.localeCompare(right.name)
+      : left.module.localeCompare(right.module);
+  return {
+    unlisted: unlisted.sort(byModuleAndName),
+    unused: unused.sort(byModuleAndName),
+  };
+}
+
 function rejectOpaqueModuleLoading(file, source) {
   const sourceFile = ts.createSourceFile(
     file,
@@ -995,6 +1083,31 @@ function runSelfTests() {
       'import type { DiceExpr } from "@dnd/surface/surface/types";\nexport type Fixture = DiceExpr;\n',
       false,
     );
+    const mixedSurfaceUsageGraph = new Map([[fixtureAuthored, []]]);
+    assert.deepEqual(
+      mixedSurfaceSafeSymbolViolations(
+        mixedSurfaceUsageGraph,
+        new Map([[SURFACE_TYPES_MODULE, new Set(["DiceExpr"])]]),
+      ),
+      { unlisted: [], unused: [] },
+    );
+    assert.deepEqual(
+      mixedSurfaceSafeSymbolViolations(
+        mixedSurfaceUsageGraph,
+        new Map([[SURFACE_TYPES_MODULE, new Set(["DiceExpr", "UnusedFact"])]]),
+      ),
+      {
+        unlisted: [],
+        unused: [{ module: SURFACE_TYPES_MODULE, name: "UnusedFact" }],
+      },
+    );
+    assert.deepEqual(
+      mixedSurfaceSafeSymbolViolations(mixedSurfaceUsageGraph, new Map()),
+      {
+        unlisted: [{ module: SURFACE_TYPES_MODULE, name: "DiceExpr" }],
+        unused: [],
+      },
+    );
     assertSurfaceImportRequiresAdmission(
       'import type { StandaloneStatBlock } from "@dnd/surface/surface/types";\nexport type Fixture = StandaloneStatBlock;\n',
       true,
@@ -1257,6 +1370,7 @@ function checkEntryPoints(
     })),
   );
   const spellExecutionViolations = spellExecutionBoundaryViolations(graph);
+  const mixedSurfaceSymbolViolations = mixedSurfaceSafeSymbolViolations(graph);
   const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
   for (const { entryPoint, violation } of violations) {
     console.error(formatViolation(entryPoint, violation));
@@ -1279,6 +1393,16 @@ function checkEntryPoints(
       `${toRepoPath(violation.file)} bypasses the spell execution registry with ${violation.call}.`,
     );
   }
+  for (const { module, name } of mixedSurfaceSymbolViolations.unlisted) {
+    console.error(
+      `${toRepoPath(module)} mixed Surface symbol ${name} is used by execution without an explicit safe permission.`,
+    );
+  }
+  for (const { module, name } of mixedSurfaceSymbolViolations.unused) {
+    console.error(
+      `${toRepoPath(module)} mixed Surface safe symbol ${name} is not used by the execution closure.`,
+    );
+  }
   console.log(
     `Battle-runtime import ownership: ${entryPoints.length} execution entry points, ${graph.size} modules in the reachable import closure, ${elapsedMs.toFixed(1)}ms.`,
   );
@@ -1287,7 +1411,9 @@ function checkEntryPoints(
     (violations.length > 0 ||
       launderingViolations.length > 0 ||
       spellExecutionViolations.compositionPath !== undefined ||
-      spellExecutionViolations.directResolutionViolations.length > 0)
+      spellExecutionViolations.directResolutionViolations.length > 0 ||
+      mixedSurfaceSymbolViolations.unlisted.length > 0 ||
+      mixedSurfaceSymbolViolations.unused.length > 0)
   ) {
     process.exitCode = 1;
   }
