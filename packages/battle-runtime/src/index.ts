@@ -141,11 +141,13 @@ export {
 } from "./stat-block-execution.ts";
 
 export {
-  battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
   type AuthoredStatBlockProjection,
-  type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
+export {
+  battleStatBlockProjectionFailureMessage,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-projection-failure.ts";
 
 export type {
   CharacterZeroHpLifecycleInit,

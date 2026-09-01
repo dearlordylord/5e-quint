@@ -51,6 +51,10 @@ const authoredSurfaceOwnerCache = new Map();
 const SURFACE_SOURCE_ROOT = path.join(ROOT, "packages/surface/src");
 const SURFACE_SCHEMA_ROOT = path.join(SURFACE_SOURCE_ROOT, "surface/schema");
 const SURFACE_TYPES_MODULE = path.join(SURFACE_SOURCE_ROOT, "surface/types");
+const SURFACE_STAT_BLOCK_TYPES_MODULE = path.join(
+  SURFACE_SOURCE_ROOT,
+  "surface/stat-block-types",
+);
 
 function isAuthoredSurfaceSymbol(name) {
   return (
@@ -120,6 +124,7 @@ function withoutSourceExtension(file) {
 function isMixedSurfacePath(file) {
   return (
     file === SURFACE_TYPES_MODULE ||
+    file === SURFACE_STAT_BLOCK_TYPES_MODULE ||
     file === SURFACE_SCHEMA_ROOT ||
     file.startsWith(`${SURFACE_SCHEMA_ROOT}-`)
   );
@@ -129,6 +134,7 @@ function surfaceModuleOwnership(specifier, importingFile) {
   const withoutExtension = specifier.replace(/\.[cm]?[jt]sx?$/, "");
   if (withoutExtension.startsWith("@dnd/surface")) {
     return withoutExtension === "@dnd/surface/surface/types" ||
+      withoutExtension === "@dnd/surface/surface/stat-block-types" ||
       withoutExtension === "@dnd/surface/surface/schema" ||
       withoutExtension.startsWith("@dnd/surface/surface/schema-")
       ? "mixed"
@@ -447,6 +453,10 @@ function importGraph(
   while (pending.length > 0) {
     const file = pending.pop();
     if (graph.has(file)) continue;
+    if (isMixedSurfaceFile(file)) {
+      graph.set(file, []);
+      continue;
+    }
     const source = fs.readFileSync(file, "utf8");
     rejectOpaqueModuleLoading(file, source);
     const preprocessed = ts.preProcessFile(source, true, true);
@@ -743,6 +753,10 @@ function runSelfTests() {
     );
     authoredSurfaceOwnerCache.delete(fixtureAuthored);
     assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    assert.equal(
+      forbiddenOwner(fixtureAuthored, "admission")?.zone,
+      "admission",
+    );
     fs.writeFileSync(
       fixtureAuthored,
       'import type { CreatureAttackRollMechanics } from "@dnd/surface/surface/types";\nexport type Fixture = CreatureAttackRollMechanics;\n',
@@ -767,6 +781,10 @@ function runSelfTests() {
     );
     authoredSurfaceOwnerCache.delete(fixtureAuthored);
     assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    assert.equal(
+      forbiddenOwner(fixtureAuthored, "admission")?.zone,
+      "admission",
+    );
     fs.writeFileSync(
       fixtureAuthored,
       'type Fixture = import("@dnd/surface/surface/types").SpellRecord;\n',
@@ -786,6 +804,10 @@ function runSelfTests() {
     authoredSurfaceOwnerCache.delete(fixtureAuthored);
     assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
     assert.equal(
+      forbiddenOwner(fixtureAuthored, "admission")?.zone,
+      "admission",
+    );
+    assert.equal(
       surfaceModuleOwnership(
         "@dnd/surface/surface/unit-catalog",
         fixtureAuthored,
@@ -804,9 +826,44 @@ function runSelfTests() {
       "mixed",
     );
     assert.equal(
+      surfaceModuleOwnership(
+        "@dnd/surface/surface/stat-block-types",
+        fixtureAuthored,
+      ),
+      "mixed",
+    );
+    const relativeStatBlockTypes = path.relative(
+      path.dirname(fixtureAuthored),
+      `${SURFACE_STAT_BLOCK_TYPES_MODULE}.ts`,
+    );
+    fs.writeFileSync(
+      fixtureAuthored,
+      `import type { StatBlockRecord } from ${JSON.stringify(relativeStatBlockTypes)};\nexport type Fixture = StatBlockRecord;\n`,
+    );
+    authoredSurfaceOwnerCache.delete(fixtureAuthored);
+    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    assert.equal(
       forbiddenOwner(fixtureAuthored, "admission")?.zone,
       "admission",
     );
+    fs.writeFileSync(
+      fixtureAuthored,
+      `import type { StatBlockProcedureOrdinal } from ${JSON.stringify(relativeStatBlockTypes)};\nexport type Fixture = StatBlockProcedureOrdinal;\n`,
+    );
+    authoredSurfaceOwnerCache.delete(fixtureAuthored);
+    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), false);
+    assert.equal(
+      forbiddenOwner(`${SURFACE_STAT_BLOCK_TYPES_MODULE}.ts`),
+      undefined,
+    );
+    for (const mixedOwner of [
+      `${SURFACE_TYPES_MODULE}.ts`,
+      `${SURFACE_SCHEMA_ROOT}.ts`,
+      `${SURFACE_STAT_BLOCK_TYPES_MODULE}.ts`,
+    ]) {
+      assert.deepEqual(importGraph([mixedOwner]).get(mixedOwner), []);
+    }
+    assert.equal(forbiddenOwner(fixtureAuthored, "admission")?.zone, undefined);
     fs.writeFileSync(
       fixtureAuthored,
       'import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";\nvoid decodeSpellRecordSync;\n',

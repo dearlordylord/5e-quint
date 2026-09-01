@@ -34,10 +34,8 @@ import {
   statBlockRecord,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlock,
-} from "./stat-block-authored-projection.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "./stat-block-projection-failure.ts";
 
 const decodeProcedure = (input: unknown): StatBlockProcedureEntry =>
   Schema.decodeUnknownSync(StatBlockProcedureEntrySchema)(input);
