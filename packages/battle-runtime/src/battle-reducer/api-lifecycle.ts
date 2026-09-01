@@ -67,6 +67,7 @@ import {
   battleStateInitIssue,
   battleStateInitIssueMessage,
   battleStateInitIssues,
+  duplicateCombatantIdIssue,
 } from "./domain-helpers.ts";
 
 import { removeBattleCombatants } from "./combatant-removal.ts";
@@ -687,14 +688,7 @@ function appendDuplicateCombatantIssue(
   accumulator.seenCombatantIds.add(combatant.combatantId);
   if (!duplicate) return false;
   accumulator.initializationIssues.push(
-    battleInitializationIssue(
-      {
-        kind: "duplicateCombatantId",
-        combatantId: combatant.combatantId,
-      },
-      `Duplicate combatant id: ${combatant.combatantId}`,
-      ownerPath,
-    ),
+    duplicateCombatantIdIssue(combatant.combatantId, ownerPath),
   );
   return true;
 }
@@ -1399,9 +1393,7 @@ function admitBattleCombatant(
   BattleStateInitIssue
 > {
   if (input.state.combatants.has(input.combatant.combatantId)) {
-    return battleStateInitIssue(
-      `Duplicate combatant id: ${input.combatant.combatantId}`,
-    );
+    return Result.fail(duplicateCombatantIdIssue(input.combatant.combatantId));
   }
   const positiveHpUnconsciousIssue = positiveHpUnconsciousInitIssue(
     input.combatant,
