@@ -1,6 +1,7 @@
 // Render a Trace as a mermaid flowchart. Color-codes nodes by atom category.
 
 import type { StatBlockRecord } from "../surface/stat-block-types.ts";
+import { SRD_PROVENANCE_KIND } from "../surface/srd-provenance.ts";
 import type { UnitRecord } from "../surface/types.ts";
 import type { Trace, AtomCategory } from "./tracer.ts";
 
@@ -147,7 +148,7 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
 
 function get5etoolsSource(unit: UnitRecord): string | null {
   switch (unit.provenance.kind) {
-    case "srd-5.2.1":
+    case SRD_PROVENANCE_KIND:
     case "xphb":
       return "XPHB";
     case "synthetic-test":

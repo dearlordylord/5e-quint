@@ -5,6 +5,7 @@ import {
   type PortableSrdSurfaceIssue,
 } from "./portable-surface.ts";
 import type { PublishedSrdSurface, SrdSurface } from "./schema.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 import {
   buildStatBlockCatalog,
   type SrdStatBlockCollection,
@@ -259,7 +260,7 @@ function statBlockAdmissionIssues<
 function srdUnitCollection(surface: SrdSurface): SrdUnitCollection {
   return {
     kind: "srdUnitCollection",
-    provenance: { kind: "srd-5.2.1" },
+    provenance: { kind: SRD_PROVENANCE_KIND },
     units: surface.units,
   };
 }
@@ -267,7 +268,7 @@ function srdUnitCollection(surface: SrdSurface): SrdUnitCollection {
 function srdStatBlockCollection(surface: SrdSurface): SrdStatBlockCollection {
   return {
     kind: "srdStatBlockCollection",
-    provenance: { kind: "srd-5.2.1" },
+    provenance: { kind: SRD_PROVENANCE_KIND },
     statBlocks: surface.statBlocks,
   };
 }
