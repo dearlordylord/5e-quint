@@ -1,8 +1,9 @@
 # Effect 4 declaration-bundle convergence
 
-This focused certificate owns the declaration distribution repair at source
-`648b3c6b3`. It is not a terminal Effect 4 receipt and does not claim the
-workspace quality milestone.
+This focused certificate owns the declaration distribution repair and strict
+recertification at implementation source
+`fc251944e6ca824e027c710da8c85043451865df`. It is not a terminal Effect 4
+receipt and does not claim the workspace quality milestone.
 
 ## Reproduced measures
 
@@ -16,14 +17,32 @@ path-ledger SHA-256 is
 Relative to the comparison commit, that is 28 additions, one removal, and
 1,721,323 added bytes.
 
-The repaired graph emits 551 files and 4,776,741 bytes. It leaves 5,709,019
-bytes below the unchanged 10 MiB byte cap. Its sorted path-ledger SHA-256 is
-`dc3ea33493cb0ae40c85e6fb3c61b82e6b69cdb41f2dfd828e6961c687c76912`.
+The intermediate repaired graph emitted 551 files and 4,776,741 bytes. The
+strictly recertified graph emits 570 files and 10,276,508 bytes. It leaves
+209,252 bytes below the unchanged 10 MiB byte cap. Its sorted POSIX
+path-ledger SHA-256 is
+`ffb4af1d4d447085b8a1072fae7332e9ac0a48d402cb2879fdaffaaaa174ecac`.
 Its sorted content ledger uses one
 `relative-path<TAB>file-sha256<NEWLINE>` entry per declaration and has SHA-256
-`aed1b2c5d979e1ed3f3766e7de0fe1d1c840410bca32a0aa5f111e6f92dad971`.
+`dcd52abbdee08a4492e85b5efd54a2f39345703cc46ef26ff8c4d7c55dd1a58a`.
 The emitter enforces the exact count, byte measure, path ledger, and content
-ledger.
+ledger. Independent shell and Node implementations reproduced all four values
+from the hermetic Raw Swarm serializer, currently implementation-pinned to
+TypeScript 5.9.3, with exit zero and no diagnostics. That implementation pin is
+not a supported external compiler version or compatibility matrix.
+
+The recertification explicitly checks that
+`packages/character-creation-runtime/src/phase1-manifest.d.ts` exports both
+`PHASE1_WEAPON_FLAIL_UNIT_ID` and `PHASE1_WEAPON_SPEAR_UNIT_ID` for the bee2
+character-authoring path. The required-owner inventory and all seven forbidden
+Surface runtime/data owners remain fail-closed.
+
+The graph includes the canonical 105-byte input declaration
+`packages/shared/src/non-empty-array.d.ts`. TypeScript consumes but does not
+copy `.d.ts` inputs during declaration emission, so the distribution copies
+that exact file byte-for-byte and requires it in the manifest. Compiler path
+entries ending in `.js` or `.ts` resolve to the corresponding emitted `.d.ts`
+file and configuration generation rejects a missing target.
 
 ## Removed transitive leak
 
@@ -93,14 +112,39 @@ references; agent-facing source remains rooted at the player, scenario setup,
 scenario character, and documented package entrypoints. An unreferenced
 Surface or shared subpath is not resolvable from the consumer configuration.
 
-The distribution copies the pinned TypeScript toolchain and the supervisor
-invokes `tooling/typescript/bin/tsc`; it does not invoke a host or repository
-compiler after relocation. The consumer configuration retains
-`skipLibCheck: true` deliberately. A copied-toolchain probe with it disabled
-reports 217 declaration diagnostics: most are unresolved external `effect`
-declaration references, and the reviewed TS7056 emission baseline also omits
-owners whose inferred schemas TypeScript cannot serialize. This distribution
-checks submitted leaf source against the emitted SDK declarations; it is not a
-second declaration-certification pass. Declaration completeness and drift are
-instead governed before relocation by the pinned serialization-diagnostic
-multiset, required and forbidden owners, and the exact path/content manifest.
+TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
+serialization, submitted-source checking, and authored-source AST parsing. The
+distribution copies that implementation and the supervisor invokes
+`tooling/typescript/bin/tsc`; neither operation selects a host or repository
+compiler after relocation. This internal pin does not promise an external
+consumer compiler version or compatibility matrix. Declaration emission and
+every owning, generated, and relocated consumer configuration use
+`skipLibCheck: false`. Emission requires compiler exit zero and empty standard
+output/error; there is no accepted diagnostic baseline. Generated consumer
+configurations are byte-identical across relocated roots, use `baseUrl: "."`,
+and contain only POSIX relative declaration paths.
+
+Effect compiler resolution is a separate compiler-support boundary outside the
+certified D&D declarations. It copies the authentic declaration-only cohort
+resolved from the same validated Effect package directory: Effect
+4.0.0-rc.112, fast-check 4.9.0, msgpackr 2.1.0, and pure-rand 8.4.2. The cohort
+contains 498 files and 10,598,459 bytes. Its sorted POSIX path-ledger SHA-256 is
+`01e202db91ee798780a0dd9af282f2281895d34f70c87f203b189c44cf7db6ef`;
+its sorted content-ledger SHA-256 is
+`b1df9fbfcd1513fcb19cbcd37c100a008a906f97ea622c9941c60eabe94b4560`.
+The projection retains each package's original `package.json` and `LICENSE`
+plus every required `.d.ts` and `.d.cts` file byte-for-byte. Exact versions,
+dependency relationships, inventory, byte count, and ledgers are enforced. No
+JavaScript, maps, source runtime, shim, stub, `any`, or internal invented Effect
+surface is copied.
+
+Compiler support is not an authored SDK capability. One shared TypeScript-AST
+admission operation runs before typechecking and evaluation for player,
+character-authoring, and setup-authoring sources. It permits only a static type
+import from that role's exact public SDK module and rejects value or side-effect
+imports, exports-from, import-equals, import types, dynamic imports, `require`,
+triple-slash references, parse errors, relative imports, and wrong-role module
+specifiers. Thus the compiler can resolve authentic transitive Effect types
+while authored source cannot import Effect as a runtime or SDK capability; a
+runtime `import("effect")` also fails because the projection contains no
+JavaScript.

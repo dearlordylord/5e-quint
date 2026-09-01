@@ -199,9 +199,10 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
-The Effect 4 public declaration graph is a reviewed deterministic measurement:
-551 declaration files and 4,776,741 bytes. The reviewed byte gate is 10 MiB,
-leaving 5,709,019 bytes of explicit margin. Deterministic verification asserts
+At implementation source `fc251944e6ca824e027c710da8c85043451865df`, the
+Effect 4 public declaration graph is a reviewed deterministic measurement: 570
+declaration files and 10,276,508 bytes. The reviewed byte gate is 10 MiB,
+leaving 209,252 bytes of explicit margin. Deterministic verification asserts
 the exact measured graph and path/content-ledger manifest, exact-at-cap
 acceptance, and cap-plus-one rejection for both limits; changing either bound,
 any admitted path, or any declaration content requires a new measured graph and
@@ -212,6 +213,24 @@ distribution test. The
 records the repaired 22 additions and one removal from comparison commit
 `993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
 excluded by the lightweight mechanics-admission owner.
+
+TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
+serialization, submitted-source checking, and authored-source AST parsing. It
+is copied into each distribution for those internal operations; it is not a
+supported external compiler version or compatibility matrix. Declaration
+emission and relocated checks require exit zero with no diagnostics and keep
+`skipLibCheck` disabled. Generated configurations are byte-identical after
+relocation, use `baseUrl: "."`, and contain only POSIX relative declaration
+paths. Compiler resolution is supplied separately from the certified D&D
+declaration graph by an authentic declaration-only cohort:
+Effect 4.0.0-rc.112, fast-check 4.9.0, msgpackr 2.1.0, and pure-rand 8.4.2.
+That cohort contains the packages' original manifests and licenses plus their
+complete required declaration files; exact version, dependency, path, content,
+file-count, and byte ledgers reject drift. It contains no JavaScript, maps, or
+source runtime and is not an authored SDK capability. The authored-source
+admission boundary permits only the role's generated static type import from
+its exact public SDK module and rejects every other module edge before
+typechecking or evaluation.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
