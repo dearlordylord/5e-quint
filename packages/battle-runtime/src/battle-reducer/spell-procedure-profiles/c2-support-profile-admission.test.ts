@@ -32,6 +32,7 @@ import {
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type {
+  Attachment,
   EffectAtom,
   SpellMechanics,
   TargetSelection,
@@ -108,6 +109,7 @@ type NumericRollEffect = Extract<
   EffectAtom,
   { readonly kind: "modify_roll_numeric" }
 >;
+type AreaAttachment = Extract<Attachment, { readonly kind: "area" }>;
 
 function expectedIssue(
   procedure: C2StaticAdmissionIssue["procedure"],
@@ -630,6 +632,232 @@ describe("C2 support profile static admission", () => {
     },
   );
 
+  test.each([
+    ["roll modifier", "bless", rollModifierProfile, "rollModifier"],
+    ["scalar buff", "longstrider", scalarBuffProfile, "scalarBuff"],
+  ] as const)(
+    "rejects dropped target rangeOrigin for %s at the actual attachment path",
+    (_label, spellId, profile, procedure) => {
+      const result = profile.admitMechanics(
+        sourceWith(spellId, (mechanics) => {
+          if (procedure === "scalarBuff") {
+            if (mechanics.family !== "activation") {
+              throw new Error("Expected scalar-buff activation mechanics.");
+            }
+            const phase = mechanics.phases[0];
+            if (
+              phase?.kind !== "direct" ||
+              phase.attachment.kind !== "hole" ||
+              phase.attachment.value.kind !== "target"
+            ) {
+              throw new Error("Expected scalar-buff target attachment.");
+            }
+            return {
+              ...mechanics,
+              phases: [
+                {
+                  ...phase,
+                  attachment: {
+                    ...phase.attachment,
+                    value: {
+                      ...phase.attachment.value,
+                      rangeOrigin: "caster",
+                    },
+                  },
+                },
+              ],
+            };
+          }
+          if (
+            mechanics.family !== "ongoing_effect" ||
+            mechanics.attachment.kind !== "hole" ||
+            mechanics.attachment.value.kind !== "target"
+          ) {
+            throw new Error("Expected ongoing target attachment.");
+          }
+          return {
+            ...mechanics,
+            attachment: {
+              ...mechanics.attachment,
+              value: {
+                ...mechanics.attachment.value,
+                rangeOrigin: "caster",
+              },
+            },
+          };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            procedure,
+            "rangeOrigin",
+            procedure === "scalarBuff"
+              ? spellActivationAttachmentPath(PositiveInteger(1))
+              : spellOngoingAttachmentPath(),
+          ),
+        ],
+      });
+    },
+  );
+
+  test.each([
+    [
+      "typeFilter",
+      (selection: TargetSelection): TargetSelection => ({
+        ...selection,
+        typeFilter: ["aberration"] as const,
+      }),
+    ],
+    [
+      "stateFilter",
+      (selection: TargetSelection): TargetSelection => ({
+        ...selection,
+        stateFilter: ["dead"] as const,
+      }),
+    ],
+    [
+      "visibility",
+      (selection: TargetSelection): TargetSelection => ({
+        ...selection,
+        disposition: "willing",
+        visibility: "caster_can_see",
+      }),
+    ],
+  ] as const)(
+    "rejects dropped target selection %s for roll modifier and scalar buff",
+    (failedFact, update) => {
+      for (const [spellId, profile, procedure] of [
+        ["bless", rollModifierProfile, "rollModifier"],
+        ["longstrider", scalarBuffProfile, "scalarBuff"],
+      ] as const) {
+        const result = profile.admitMechanics(
+          sourceWith(spellId, (mechanics) => {
+            if (procedure === "scalarBuff") {
+              if (mechanics.family !== "activation") {
+                throw new Error("Expected scalar-buff activation mechanics.");
+              }
+              const phase = mechanics.phases[0];
+              if (
+                phase?.kind !== "direct" ||
+                phase.attachment.kind !== "hole" ||
+                phase.attachment.value.kind !== "target"
+              ) {
+                throw new Error("Expected scalar-buff target attachment.");
+              }
+              return {
+                ...mechanics,
+                phases: [
+                  {
+                    ...phase,
+                    attachment: {
+                      ...phase.attachment,
+                      value: {
+                        ...phase.attachment.value,
+                        selection: update(phase.attachment.value.selection),
+                      },
+                    },
+                  },
+                ],
+              };
+            }
+            if (
+              mechanics.family !== "ongoing_effect" ||
+              mechanics.attachment.kind !== "hole" ||
+              mechanics.attachment.value.kind !== "target"
+            ) {
+              throw new Error("Expected ongoing target attachment.");
+            }
+            return {
+              ...mechanics,
+              attachment: {
+                ...mechanics.attachment,
+                value: {
+                  ...mechanics.attachment.value,
+                  selection: update(mechanics.attachment.value.selection),
+                },
+              },
+            };
+          }),
+        );
+        expect(result).toEqual({
+          tag: "unsupported",
+          issues: [
+            expectedIssue(
+              procedure,
+              failedFact,
+              procedure === "scalarBuff"
+                ? spellActivationAttachmentPath(PositiveInteger(1))
+                : spellOngoingAttachmentPath(),
+            ),
+          ],
+        });
+      }
+    },
+  );
+
+  test.each([
+    [
+      "selection",
+      (attachment: AreaAttachment): AreaAttachment => ({
+        ...attachment,
+        selection: { mode: "one", targetKinds: ["creature"] },
+      }),
+    ],
+    [
+      "occupantDispositionFilter",
+      (attachment: AreaAttachment): AreaAttachment => ({
+        ...attachment,
+        occupantDispositionFilter: "friendly_to_source",
+      }),
+    ],
+    [
+      "occupantPerceptionFilter",
+      (attachment: AreaAttachment): AreaAttachment => ({
+        ...attachment,
+        occupantPerceptionFilter: "can_see_area_effect",
+      }),
+    ],
+    [
+      "excludedAreas",
+      (attachment: AreaAttachment): AreaAttachment => ({
+        ...attachment,
+        excludedAreas: { chooser: "caster", count: "one_or_more", size: "any" },
+      }),
+    ],
+    [
+      "rangeOrigin",
+      (attachment: AreaAttachment): AreaAttachment => ({
+        ...attachment,
+        rangeOrigin: "caster",
+      }),
+    ],
+  ] as const)(
+    "rejects dropped roll-modifier area %s semantics at the attachment path",
+    (failedFact, update) => {
+      const result = rollModifierProfile.admitMechanics(
+        sourceWith("pass_without_trace", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          if (mechanics.attachment.kind !== "area") {
+            throw new Error("Expected Pass Without Trace area attachment.");
+          }
+          return { ...mechanics, attachment: update(mechanics.attachment) };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            "rollModifier",
+            failedFact,
+            spellOngoingAttachmentPath(),
+          ),
+        ],
+      });
+    },
+  );
+
   test("selects the semantic roll-modifier save gate and reports a prepended sibling ordinal", () => {
     const result = rollModifierProfile.admitMechanics(
       sourceWith("bane", (mechanics) => {
@@ -705,6 +933,97 @@ describe("C2 support profile static admission", () => {
           "scalarBuff",
           "effect",
           spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("carries selected scalar phase and effect ordinals into downstream issues", () => {
+    const result = scalarBuffProfile.admitMechanics(
+      sourceWith("longstrider", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct") {
+          throw new Error("Expected Longstrider direct phase.");
+        }
+        return {
+          ...mechanics,
+          phases: [
+            { ...phase, effects: [{ kind: "none" }] },
+            {
+              ...phase,
+              attachment: { kind: "object", count: 1 },
+              effects: [
+                {
+                  kind: "modify_ac",
+                  delta: {
+                    kind: "fixed_dice",
+                    dice: 1,
+                    dieSize: 2,
+                    sign: "+",
+                  },
+                },
+              ],
+            },
+          ],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "scalarBuff",
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(1)),
+        ),
+        expectedIssue(
+          "scalarBuff",
+          "attachment",
+          spellActivationAttachmentPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "scalarBuff",
+          "effect",
+          spellActivationEffectPath(PositiveInteger(2), PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("keeps a malformed roll-modifier effect represented for typed rejection", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("bless", (mechanics) => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        const operation = mechanics.operations[0];
+        if (operation?.effect.kind !== "modify_roll_numeric") {
+          throw new Error("Expected Bless numeric roll-modifier effect.");
+        }
+        return {
+          ...mechanics,
+          operations: [
+            {
+              ...operation,
+              effect: {
+                ...operation.effect,
+                delta: {
+                  kind: "ability_modifier",
+                  ability: "str",
+                  sign: "+",
+                },
+              },
+            },
+          ],
+        };
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
         ),
       ],
     });

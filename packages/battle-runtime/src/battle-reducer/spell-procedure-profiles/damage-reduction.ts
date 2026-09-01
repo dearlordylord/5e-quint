@@ -98,6 +98,7 @@ type DamageReductionFailedFact =
   | "range"
   | "duration"
   | "attachment"
+  | "rangeOrigin"
   | "typeFilter"
   | "stateFilter"
   | "visibility"
@@ -237,6 +238,19 @@ function damageReductionMechanicsAdmission(
     targetSelection.disposition !== "willing"
   ) {
     pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+  if (
+    mechanics.attachment.kind === "target" &&
+    mechanics.attachment.rangeOrigin !== undefined
+  ) {
+    pushIssue("rangeOrigin", spellOngoingAttachmentPath());
+  }
+  if (
+    mechanics.attachment.kind === "hole" &&
+    mechanics.attachment.value.kind === "target" &&
+    mechanics.attachment.value.rangeOrigin !== undefined
+  ) {
+    pushIssue("rangeOrigin", spellOngoingAttachmentPath());
   }
   if (targetSelection !== undefined) {
     if (

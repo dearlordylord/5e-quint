@@ -50,6 +50,7 @@ import type {
   EffectAtom,
   OngoingEffect,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import {
   movementDeltaFeet,
@@ -252,7 +253,21 @@ type ScalarBuffFailedFact =
   | "initialPhase"
   | "operation"
   | "operationCount"
-  | "effect";
+  | "effect"
+  | "rangeOrigin"
+  | "selection"
+  | "typeFilter"
+  | "stateFilter"
+  | "visibility"
+  | "creatureSizeFilter"
+  | "relativePosition"
+  | "objectFilter"
+  | "creatureDisposition"
+  | "castingRequirement"
+  | "repeatsAllowed"
+  | "occupantDispositionFilter"
+  | "occupantPerceptionFilter"
+  | "excludedAreas";
 type ScalarBuffAdmissionIssue = SpellProcedureAdmissionIssue<
   "scalarBuff",
   ScalarBuffFailedFact,
@@ -276,38 +291,23 @@ function isScalarBuffEffect(
   );
 }
 
-type ScalarBuffDirectPhase = Extract<
-  Extract<SpellMechanics, { readonly family: "activation" }>["phases"][number],
-  { readonly kind: "direct" }
->;
 type ScalarBuffActivationEffectOccurrence = {
-  readonly phase: ScalarBuffDirectPhase;
   readonly phaseIndex: number;
-  readonly phaseOrdinal: PositiveInteger;
-  readonly effect: ScalarBuffSurfaceEffect;
   readonly effectIndex: number;
 };
 
 function scalarBuffActivationEffectOccurrences(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
-  spellLevel: number,
 ): readonly ScalarBuffActivationEffectOccurrence[] {
   return mechanics.phases.flatMap((phase, phaseIndex) => {
     if (phase.kind !== "direct") return [];
     return (phase.effects ?? []).flatMap((candidate, effectIndex) => {
-      if (
-        !isEffectAtom(candidate) ||
-        !isScalarBuffEffect(candidate) ||
-        !scalarBuffEffectShapeSupported(candidate, spellLevel)
-      ) {
+      if (!isEffectAtom(candidate) || !isScalarBuffEffect(candidate)) {
         return [];
       }
       return [
         {
-          phase,
           phaseIndex,
-          phaseOrdinal: PositiveInteger(phaseIndex + 1),
-          effect: candidate,
           effectIndex,
         },
       ];
@@ -320,10 +320,7 @@ function isScalarBuffRepresentation(
 ): mechanics is ScalarBuffMechanics {
   const effectWitness =
     mechanics.family === "activation"
-      ? scalarBuffActivationEffectOccurrences(
-          mechanics,
-          Number(mechanics.level),
-        ).length > 0
+      ? scalarBuffActivationEffectOccurrences(mechanics).length > 0
       : mechanics.family === "ongoing_effect"
         ? mechanics.operations.some(
             ({ trigger, predicate, targetLimit, usageLimit, effect }) =>
@@ -331,8 +328,7 @@ function isScalarBuffRepresentation(
               predicate === undefined &&
               targetLimit === undefined &&
               usageLimit === undefined &&
-              isScalarBuffEffect(effect) &&
-              scalarBuffEffectShapeSupported(effect, Number(mechanics.level)),
+              isScalarBuffEffect(effect),
           )
         : false;
   if (!effectWitness) return false;
@@ -372,6 +368,92 @@ function scalarBuffIssue(
     mechanicsPath,
     message: `Unsupported scalarBuff mechanics fact: ${failedFact}.`,
   };
+}
+
+function scalarBuffDroppedTargetSelectionFacts(
+  selection: TargetSelection,
+): readonly ScalarBuffFailedFact[] {
+  const facts: ScalarBuffFailedFact[] = [];
+  if ("typeFilter" in selection && selection.typeFilter !== undefined) {
+    facts.push("typeFilter");
+  }
+  if ("stateFilter" in selection && selection.stateFilter !== undefined) {
+    facts.push("stateFilter");
+  }
+  if ("visibility" in selection && selection.visibility !== undefined) {
+    facts.push("visibility");
+  }
+  if (
+    "creatureSizeFilter" in selection &&
+    selection.creatureSizeFilter !== undefined
+  ) {
+    facts.push("creatureSizeFilter");
+  }
+  if (
+    "relativePosition" in selection &&
+    selection.relativePosition !== undefined
+  ) {
+    facts.push("relativePosition");
+  }
+  if ("objectFilter" in selection && selection.objectFilter !== undefined) {
+    facts.push("objectFilter");
+  }
+  if (
+    "creatureDisposition" in selection &&
+    selection.creatureDisposition !== undefined
+  ) {
+    facts.push("creatureDisposition");
+  }
+  if (
+    "castingRequirement" in selection &&
+    selection.castingRequirement !== undefined
+  ) {
+    facts.push("castingRequirement");
+  }
+  if ("repeatsAllowed" in selection && selection.repeatsAllowed !== undefined) {
+    facts.push("repeatsAllowed");
+  }
+  return facts;
+}
+
+function scalarBuffDroppedAttachmentFacts(
+  attachment: Attachment,
+): readonly ScalarBuffFailedFact[] {
+  const facts: ScalarBuffFailedFact[] = [];
+  const targetAttachment =
+    attachment.kind === "target"
+      ? attachment
+      : attachment.kind === "hole" && attachment.value.kind === "target"
+        ? attachment.value
+        : undefined;
+  if (targetAttachment !== undefined) {
+    if (targetAttachment.rangeOrigin !== undefined) {
+      facts.push("rangeOrigin");
+    }
+    facts.push(
+      ...scalarBuffDroppedTargetSelectionFacts(targetAttachment.selection),
+    );
+  }
+  const areaAttachment =
+    attachment.kind === "area"
+      ? attachment
+      : attachment.kind === "hole" && attachment.value.kind === "area"
+        ? attachment.value
+        : undefined;
+  if (areaAttachment !== undefined) {
+    if (areaAttachment.selection !== undefined) facts.push("selection");
+    if (areaAttachment.occupantDispositionFilter !== undefined) {
+      facts.push("occupantDispositionFilter");
+    }
+    if (areaAttachment.occupantPerceptionFilter !== undefined) {
+      facts.push("occupantPerceptionFilter");
+    }
+    if (areaAttachment.excludedAreas !== undefined) {
+      facts.push("excludedAreas");
+    }
+    if (areaAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
+  }
+  return facts;
 }
 
 function scalarBuffMaxHitPointAmount(
@@ -522,17 +604,27 @@ function scalarBuffMechanicsAdmission(
   }
   let attachment: Attachment | undefined;
   let effect: ScalarBuffSurfaceEffect | undefined;
+  let attachmentPath: SpellMechanicsBranchPath =
+    mechanics.family === "activation"
+      ? spellActivationAttachmentPath(PositiveInteger(1))
+      : spellOngoingAttachmentPath();
+  let effectPath: SpellMechanicsBranchPath =
+    mechanics.family === "activation"
+      ? spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1))
+      : spellOngoingOperationEffectPath(PositiveInteger(1));
   if (mechanics.family === "activation") {
-    const expected = scalarBuffActivationEffectOccurrences(
-      mechanics,
-      Number(mechanics.level),
-    )[0];
+    const expected = scalarBuffActivationEffectOccurrences(mechanics)[0];
     const fallbackPhaseIndex = mechanics.phases.findIndex(
       (phase) => phase.kind === "direct",
     );
     const phaseIndex = expected?.phaseIndex ?? fallbackPhaseIndex;
     const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
     const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
+    attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
+    const selectedEffectOrdinal = PositiveInteger(
+      expected?.phaseIndex === phaseIndex ? expected.effectIndex + 1 : 1,
+    );
+    effectPath = spellActivationEffectPath(phaseOrdinal, selectedEffectOrdinal);
     if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
       for (const [index] of mechanics.phases.entries()) {
         if (index === phaseIndex) continue;
@@ -600,6 +692,9 @@ function scalarBuffMechanicsAdmission(
         operation.usageLimit === undefined &&
         isScalarBuffEffect(operation.effect),
     );
+    effectPath = spellOngoingOperationEffectPath(
+      expected?.ordinal ?? PositiveInteger(1),
+    );
     const extras = occurrences.filter(
       ({ ordinal }) => ordinal !== expected?.ordinal,
     );
@@ -633,13 +728,13 @@ function scalarBuffMechanicsAdmission(
         : undefined;
     }
   }
+  if (attachment !== undefined) {
+    for (const failedFact of scalarBuffDroppedAttachmentFacts(attachment)) {
+      pushIssue(failedFact, attachmentPath);
+    }
+  }
   if (attachment === undefined) {
-    pushIssue(
-      "attachment",
-      mechanics.family === "activation"
-        ? spellActivationAttachmentPath(PositiveInteger(1))
-        : spellOngoingAttachmentPath(),
-    );
+    pushIssue("attachment", attachmentPath);
   } else if (
     scalarBuffSpellTargeting(
       attachment,
@@ -647,12 +742,7 @@ function scalarBuffMechanicsAdmission(
       spellSlotLevel(Number(mechanics.level)),
     ) === null
   ) {
-    pushIssue(
-      "attachment",
-      mechanics.family === "activation"
-        ? spellActivationAttachmentPath(PositiveInteger(1))
-        : spellOngoingAttachmentPath(),
-    );
+    pushIssue("attachment", attachmentPath);
   }
   if (
     effect === undefined ||
@@ -662,12 +752,7 @@ function scalarBuffMechanicsAdmission(
       Number(mechanics.level),
     )
   ) {
-    pushIssue(
-      "effect",
-      mechanics.family === "activation"
-        ? spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1))
-        : spellOngoingOperationEffectPath(PositiveInteger(1)),
-    );
+    pushIssue("effect", effectPath);
   }
   const failures = spellProcedureNonEmpty(issues);
   if (failures !== undefined) {

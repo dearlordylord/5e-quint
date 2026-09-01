@@ -55,6 +55,7 @@ import type {
   EffectAtom,
   Skill,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import type {
   CantripSpellAccess,
@@ -250,7 +251,21 @@ type RollModifierFailedFact =
   | "effect"
   | "weaponFilter"
   | "abilityFilter"
-  | "count";
+  | "count"
+  | "rangeOrigin"
+  | "selection"
+  | "typeFilter"
+  | "stateFilter"
+  | "visibility"
+  | "creatureSizeFilter"
+  | "relativePosition"
+  | "objectFilter"
+  | "creatureDisposition"
+  | "castingRequirement"
+  | "repeatsAllowed"
+  | "occupantDispositionFilter"
+  | "occupantPerceptionFilter"
+  | "excludedAreas";
 type RollModifierAdmissionIssue = SpellProcedureAdmissionIssue<
   "rollModifier",
   RollModifierFailedFact,
@@ -311,8 +326,7 @@ function rollModifierSupportedSaveGateOccurrence(
   return rollModifierSaveGateOccurrences(mechanics).find(
     ({ phase }) =>
       phase.usageLimit === undefined &&
-      phase.onFail.kind === "modify_roll_numeric" &&
-      rollModifierNumericEffectShapeProjection(phase.onFail),
+      phase.onFail.kind === "modify_roll_numeric",
   );
 }
 
@@ -342,11 +356,7 @@ function isRollModifierRepresentation(
         targetLimit === undefined &&
         usageLimit === undefined &&
         (effect.kind === "modify_roll_numeric" ||
-          effect.kind === "modify_roll_advantage") &&
-        (effect.kind !== "modify_roll_numeric" ||
-          rollModifierNumericEffectShapeProjection(effect)) &&
-        (effect.kind !== "modify_roll_advantage" ||
-          rollModifierAbilityCheckEffectProjection(effect)),
+          effect.kind === "modify_roll_advantage"),
     );
     if (!hasRollEffect) return false;
     return spellProcedureHasRedundantSignature({
@@ -368,8 +378,7 @@ function isRollModifierRepresentation(
       (phase) =>
         phase.kind === "save_gate" &&
         phase.onFail.kind === "modify_roll_numeric" &&
-        phase.usageLimit === undefined &&
-        rollModifierNumericEffectShapeProjection(phase.onFail),
+        phase.usageLimit === undefined,
     );
     if (!hasRollPhase) return false;
     return spellProcedureHasRedundantSignature({
@@ -432,6 +441,92 @@ function rollModifierNumericEffectConstraintIssues(
   if (effect.abilityFilter !== undefined) issues.push("abilityFilter");
   if (effect.count !== undefined) issues.push("count");
   return issues;
+}
+
+function rollModifierDroppedTargetSelectionFacts(
+  selection: TargetSelection,
+): readonly RollModifierFailedFact[] {
+  const facts: RollModifierFailedFact[] = [];
+  if ("typeFilter" in selection && selection.typeFilter !== undefined) {
+    facts.push("typeFilter");
+  }
+  if ("stateFilter" in selection && selection.stateFilter !== undefined) {
+    facts.push("stateFilter");
+  }
+  if ("visibility" in selection && selection.visibility !== undefined) {
+    facts.push("visibility");
+  }
+  if (
+    "creatureSizeFilter" in selection &&
+    selection.creatureSizeFilter !== undefined
+  ) {
+    facts.push("creatureSizeFilter");
+  }
+  if (
+    "relativePosition" in selection &&
+    selection.relativePosition !== undefined
+  ) {
+    facts.push("relativePosition");
+  }
+  if ("objectFilter" in selection && selection.objectFilter !== undefined) {
+    facts.push("objectFilter");
+  }
+  if (
+    "creatureDisposition" in selection &&
+    selection.creatureDisposition !== undefined
+  ) {
+    facts.push("creatureDisposition");
+  }
+  if (
+    "castingRequirement" in selection &&
+    selection.castingRequirement !== undefined
+  ) {
+    facts.push("castingRequirement");
+  }
+  if ("repeatsAllowed" in selection && selection.repeatsAllowed !== undefined) {
+    facts.push("repeatsAllowed");
+  }
+  return facts;
+}
+
+function rollModifierDroppedAttachmentFacts(
+  attachment: Attachment,
+): readonly RollModifierFailedFact[] {
+  const facts: RollModifierFailedFact[] = [];
+  const targetAttachment =
+    attachment.kind === "target"
+      ? attachment
+      : attachment.kind === "hole" && attachment.value.kind === "target"
+        ? attachment.value
+        : undefined;
+  if (targetAttachment !== undefined) {
+    if (targetAttachment.rangeOrigin !== undefined) {
+      facts.push("rangeOrigin");
+    }
+    facts.push(
+      ...rollModifierDroppedTargetSelectionFacts(targetAttachment.selection),
+    );
+  }
+  const areaAttachment =
+    attachment.kind === "area"
+      ? attachment
+      : attachment.kind === "hole" && attachment.value.kind === "area"
+        ? attachment.value
+        : undefined;
+  if (areaAttachment !== undefined) {
+    if (areaAttachment.selection !== undefined) facts.push("selection");
+    if (areaAttachment.occupantDispositionFilter !== undefined) {
+      facts.push("occupantDispositionFilter");
+    }
+    if (areaAttachment.occupantPerceptionFilter !== undefined) {
+      facts.push("occupantPerceptionFilter");
+    }
+    if (areaAttachment.excludedAreas !== undefined) {
+      facts.push("excludedAreas");
+    }
+    if (areaAttachment.rangeOrigin !== undefined) facts.push("rangeOrigin");
+  }
+  return facts;
 }
 
 function rollModifierAbilityCheckEffectProjection(
@@ -602,6 +697,11 @@ function rollModifierMechanicsAdmission(
     ) {
       pushIssue("attachment", spellOngoingAttachmentPath());
     }
+    for (const failedFact of rollModifierDroppedAttachmentFacts(
+      mechanics.attachment,
+    )) {
+      pushIssue(failedFact, spellOngoingAttachmentPath());
+    }
     const rangeRadiusFeet = rollModifierRangeRadius(
       mechanics.range,
       mechanics.attachment,
@@ -643,6 +743,11 @@ function rollModifierMechanicsAdmission(
         phase.attachment.kind !== "area"
       ) {
         pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
+      }
+      for (const failedFact of rollModifierDroppedAttachmentFacts(
+        phase.attachment,
+      )) {
+        pushIssue(failedFact, spellActivationAttachmentPath(phaseOrdinal));
       }
       if (phase.onSuccess.kind !== "none") {
         pushIssue(
