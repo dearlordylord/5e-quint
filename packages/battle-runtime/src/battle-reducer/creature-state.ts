@@ -596,9 +596,6 @@ export function battleCreatureStateAdmissionFromInit(
     const explicitUnitFeatureProcedures = (creatureInit.unitFeatures ?? []).map(
       boundUnitFeatureProcedureFactsFromProfile,
     );
-    const explicitFeatureUnitIds = new Set(
-      explicitUnitFeatureProcedures.map(({ sourceUnitId }) => sourceUnitId),
-    );
     const execution = characterExecutionFromUnits({
       battleId,
       combatantId: input.combatantId,
@@ -609,9 +606,7 @@ export function battleCreatureStateAdmissionFromInit(
       ),
       resourceFeatureProcedures,
       unitFeatureProcedures: [
-        ...resourceUnitFeatureProcedures.filter(
-          ({ sourceUnitId }) => !explicitFeatureUnitIds.has(sourceUnitId),
-        ),
+        ...resourceUnitFeatureProcedures,
         ...explicitUnitFeatureProcedures,
       ],
       units: characterUnits,
@@ -900,12 +895,43 @@ function characterBattleInitInvariantIssues(
       combatantId,
       creatureInit.unitFeatures ?? [],
     ),
+    ...characterBattleFeatureResourceOverlapIssues(
+      combatantId,
+      creatureInit.resources ?? [],
+      creatureInit.unitFeatures ?? [],
+    ),
     ...duplicateCharacterBattleWeaponMasteryIssues(
       combatantId,
       creatureInit.weaponMasteries,
     ),
     ...characterBattleLoadoutIssues(creatureInit),
   ];
+}
+
+function characterBattleFeatureResourceOverlapIssues(
+  combatantId: CombatantId,
+  resources: readonly CharacterBattleResourceAdmissionInput[],
+  features: readonly CharacterBattleFeatureInit[],
+): BattleStateInitLeafIssue[] {
+  const resourceUnitIds = new Set(
+    resources.map(
+      (resource) =>
+        characterBattleResourceInitFromAdmissionInput(resource).unit.id,
+    ),
+  );
+  return features.flatMap((feature, issueIndex) =>
+    resourceUnitIds.has(feature.unit.id)
+      ? [
+          {
+            tag: "battleStateInitIssue" as const,
+            message: `Character battle feature unit must not also initialize a battle resource: ${feature.unit.id}`,
+            kind: "characterFeatureInvalid" as const,
+            combatantId,
+            issueIndex,
+          },
+        ]
+      : [],
+  );
 }
 
 function duplicateCharacterBattleResourceUnitIssues(

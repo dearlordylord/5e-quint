@@ -1113,14 +1113,14 @@ function characterBattleFeatures(
     if (unit.kind !== "class_feature" && unit.kind !== "species_trait") {
       continue;
     }
-    const isResourceFeature = Match.value(battleResourceAdmission).pipe(
+    const initializesBattleResource = Match.value(battleResourceAdmission).pipe(
       Match.discriminatorsExhaustive("tag")({
         admitted: () => true,
-        battleResource: () => false,
+        battleResource: () => true,
         notBattleOwned: () => false,
       }),
     );
-    if (isResourceFeature) {
+    if (initializesBattleResource) {
       continue;
     }
     const profile = parseSupportedUnitFeatureProfile(

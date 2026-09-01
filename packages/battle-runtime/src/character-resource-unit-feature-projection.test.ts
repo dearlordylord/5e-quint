@@ -16,7 +16,9 @@ import {
   statBlockCatalog,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import { battleId } from "./identity.ts";
+import { battleId, battleExecutionScopeOrdinal } from "./identity.ts";
+import { battleCreatureStateAdmissionFromInit } from "./battle-reducer/creature-state.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 
 describe("character resource Unit feature projection", () => {
@@ -131,31 +133,35 @@ describe("character resource Unit feature projection", () => {
     }
   });
 
-  test("projects one execution procedure when a resource Unit is also explicit", () => {
+  test("rejects a resource Unit supplied again as an explicit feature", () => {
     const rage = rageResource();
     const profile = parseSupportedUnitFeatureProfile(rage.unit, [
       { className: "barbarian", level: classLevel(1) },
     ]);
     if (profile === null) throw new Error("Expected the Rage support profile.");
-    const session = startBattleSessionRight({
-      battleId: battleId("resource-and-explicit-unit-feature-deduplication"),
-      combatants: [
-        characterSeed({
-          initiative: 20,
-          attack: null,
-          classLevels: [{ className: "barbarian", level: 1 }],
-          resources: [rage],
-          unitFeatures: [profile],
-        }),
-      ],
+    const init = characterSeed({
+      initiative: 20,
+      attack: null,
+      classLevels: [{ className: "barbarian", level: 1 }],
+      resources: [rage],
+      unitFeatures: [profile],
     });
+    const admission = battleCreatureStateAdmissionFromInit(
+      battleId("resource-and-explicit-unit-feature-overlap"),
+      init,
+      battleExecutionScopeOrdinal(0),
+    );
 
+    expect(admission.tag).toBe("invalid");
+    if (admission.tag !== "invalid") return;
     expect(
-      session.context.characters
-        .get(fighterId)
-        ?.unitProcedureOwnership.filter(
-          ({ unitId }) => unitId === rage.unit.id,
-        ),
-    ).toHaveLength(1);
+      admission.issues.map((issue) =>
+        issue.tag === "battleUnitSupportProfileIssue"
+          ? issue.message
+          : battleStateInitIssueMessage(issue),
+      ),
+    ).toEqual([
+      "Character battle feature unit must not also initialize a battle resource: barbarian_rage",
+    ]);
   });
 });
