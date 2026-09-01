@@ -50,6 +50,7 @@ import type {
 } from "./profile.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
+  admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
   spellDurationChildCoordinates,
   spellDurationChildPath,
@@ -86,6 +87,11 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+const CONDITION_REMOVAL_PROTECTION_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+] as const;
 
 type ConditionRemovalProtectionMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly range: Extract<
@@ -474,15 +480,19 @@ function admitConditionRemovalProtectionMechanics(
       );
     }
   }
+  const targetAttachmentAdmission = admitSpellTargetAttachment(
+    phase.attachment,
+    CONDITION_REMOVAL_PROTECTION_TARGET_SELECTION_FIELDS,
+  );
   const selection =
-    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
+    targetAttachmentAdmission.tag === "admitted"
+      ? targetAttachmentAdmission.attachment.value.selection
       : undefined;
   const validSelection =
     selection !== undefined &&
     selection.mode === "one" &&
     creatureTargetSelection(selection);
-  if (!validSelection) {
+  if (targetAttachmentAdmission.tag === "rejected" || !validSelection) {
     issues.push(
       conditionRemovalProtectionIssue(
         "attachment",

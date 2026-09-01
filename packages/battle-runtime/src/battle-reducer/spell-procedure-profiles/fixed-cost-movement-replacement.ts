@@ -50,6 +50,7 @@ import type {
 } from "./profile.ts";
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
+  admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
   spellDurationChildCoordinates,
   spellDurationChildPath,
@@ -86,6 +87,13 @@ type FixedCostMovementReplacementInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "fixedCostMovementReplacement" }
 >;
+
+const FIXED_COST_MOVEMENT_REPLACEMENT_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+  "disposition",
+  "count",
+] as const;
 type FixedCostMovementReplacementResolveInput =
   SpellProcedureProfileResolveInput<FixedCostMovementReplacementInvocation>;
 
@@ -289,9 +297,13 @@ function admitFixedCostMovementReplacementMechanics(
       );
     }
   }
+  const targetAttachmentAdmission = admitSpellTargetAttachment(
+    phase.attachment,
+    FIXED_COST_MOVEMENT_REPLACEMENT_TARGET_SELECTION_FIELDS,
+  );
   const selection =
-    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
+    targetAttachmentAdmission.tag === "admitted"
+      ? targetAttachmentAdmission.attachment.value.selection
       : undefined;
   const count =
     selection?.mode === "choose_up_to" &&
@@ -323,7 +335,14 @@ function admitFixedCostMovementReplacementMechanics(
     base === 1 &&
     baseLevel === 1 &&
     perSlotAboveBase === 1;
-  if (!validSelection) {
+  if (targetAttachmentAdmission.tag === "rejected") {
+    issues.push(
+      fixedCostMovementReplacementIssue(
+        "attachment",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    );
+  } else if (!validSelection) {
     issues.push(
       fixedCostMovementReplacementIssue(
         "targetCount",

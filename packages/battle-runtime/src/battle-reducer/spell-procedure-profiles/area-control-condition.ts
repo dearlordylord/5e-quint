@@ -196,7 +196,11 @@ function saveGatedAreaControlTargeting(
     attachment.value.origin.kind !== "point_within_range" ||
     attachment.value.shape.kind !== "cube" ||
     attachment.value.shape.sideFeet !== 30 ||
-    attachment.value.occupantPerceptionFilter !== "can_see_area_effect"
+    attachment.value.occupantPerceptionFilter !== "can_see_area_effect" ||
+    attachment.value.selection !== undefined ||
+    attachment.value.occupantDispositionFilter !== undefined ||
+    attachment.value.excludedAreas !== undefined ||
+    attachment.value.rangeOrigin !== undefined
   ) {
     return undefined;
   }
@@ -232,7 +236,11 @@ function isSaveGatedAreaControlAttachment(
     attachment.value.origin.kind === "point_within_range" &&
     attachment.value.shape.kind === "cube" &&
     attachment.value.shape.sideFeet === 30 &&
-    attachment.value.occupantPerceptionFilter === "can_see_area_effect"
+    attachment.value.occupantPerceptionFilter === "can_see_area_effect" &&
+    attachment.value.selection === undefined &&
+    attachment.value.occupantDispositionFilter === undefined &&
+    attachment.value.excludedAreas === undefined &&
+    attachment.value.rangeOrigin === undefined
   );
 }
 

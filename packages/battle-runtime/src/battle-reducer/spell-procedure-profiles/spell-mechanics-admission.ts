@@ -21,10 +21,12 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type {
+  Attachment,
   Components,
   DurationEndTrigger,
   DurationValue,
   SpellMechanics,
+  TargetSelection,
   TimedPermanentAfter,
 } from "@dnd/surface/surface/types";
 
@@ -290,6 +292,149 @@ export function spellDurationEvidencePaths(
 /** Surface Touch has one canonical movement-distance projection. */
 export function spellTouchRangeFeet(): MovementFeet {
   return movementFeet(5);
+}
+
+/**
+ * Target-selection procedures own only these selection fields. Callers pass the
+ * subset consumed by their procedure-specific cardinality and disposition
+ * witness; every other field is rejected by the target-attachment admission
+ * below.
+ */
+type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
+type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
+type SpellTargetSelectionFieldShape = {
+  readonly [Field in SpellTargetSelectionField]?: unknown;
+};
+
+type AdmittedSpellTargetSelection<
+  AllowedFields extends SpellTargetSelectionField,
+> = TargetSelection & {
+  readonly [Field in Exclude<
+    UnionKeys<TargetSelection>,
+    AllowedFields
+  >]?: never;
+};
+
+type SpellTargetHoleAttachment = Extract<Attachment, { readonly kind: "hole" }>;
+
+type SpellTargetAttachmentValue = Extract<
+  SpellTargetHoleAttachment["value"],
+  { readonly kind: "target" }
+>;
+
+type SpellTargetAttachment = Omit<SpellTargetHoleAttachment, "value"> & {
+  readonly value: SpellTargetAttachmentValue;
+};
+
+type AdmittedSpellTargetAttachment<
+  AllowedFields extends SpellTargetSelectionField,
+> = Omit<SpellTargetAttachment, "value"> & {
+  readonly value: Omit<
+    SpellTargetAttachmentValue,
+    "rangeOrigin" | "selection"
+  > & {
+    readonly selection: AdmittedSpellTargetSelection<AllowedFields>;
+  };
+};
+
+export type SpellTargetAttachmentAdmissionResult<
+  AllowedFields extends SpellTargetSelectionField,
+> =
+  | {
+      readonly tag: "admitted";
+      readonly attachment: AdmittedSpellTargetAttachment<AllowedFields>;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly reason:
+        | "targetAttachmentMissing"
+        | "targetAttachmentConstraint"
+        | "targetSelectionConstraint";
+    };
+
+const SPELL_TARGET_ATTACHMENT_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const satisfies ReadonlyArray<keyof SpellTargetAttachment>;
+const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
+  "kind",
+  "selection",
+] as const satisfies ReadonlyArray<keyof SpellTargetAttachmentValue>;
+
+function hasOnlyNamedFields<Value extends object>(
+  value: Value,
+  allowedFields: readonly (keyof Value)[],
+): boolean {
+  const allowed = new Set<PropertyKey>(allowedFields);
+  return Reflect.ownKeys(value).every((field) => allowed.has(field));
+}
+
+function isSpellTargetAttachment(
+  attachment: Attachment,
+): attachment is SpellTargetAttachment {
+  return attachment.kind === "hole" && attachment.value.kind === "target";
+}
+
+function isAdmittedSpellTargetSelection<
+  const AllowedFields extends readonly SpellTargetSelectionField[],
+>(
+  selection: TargetSelection,
+  allowedFields: AllowedFields,
+): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
+  return hasOnlyNamedFields<SpellTargetSelectionFieldShape>(
+    selection,
+    allowedFields,
+  );
+}
+
+/**
+ * Admit the complete target-hole shape consumed by a target-selection
+ * procedure. The attachment/value key sets deliberately exclude rangeOrigin,
+ * while the caller's selection field list makes procedure ownership explicit.
+ * Own-key inspection keeps a future Surface schema field from being silently
+ * dropped.
+ */
+export function admitSpellTargetAttachment<
+  const AllowedFields extends readonly SpellTargetSelectionField[],
+>(
+  attachment: Attachment,
+  allowedSelectionFields: AllowedFields,
+): SpellTargetAttachmentAdmissionResult<AllowedFields[number]> {
+  if (!isSpellTargetAttachment(attachment)) {
+    return {
+      tag: "rejected",
+      reason: "targetAttachmentMissing",
+    };
+  }
+  if (
+    !hasOnlyNamedFields(attachment, SPELL_TARGET_ATTACHMENT_FIELDS) ||
+    !hasOnlyNamedFields(attachment.value, SPELL_TARGET_ATTACHMENT_VALUE_FIELDS)
+  ) {
+    return {
+      tag: "rejected",
+      reason: "targetAttachmentConstraint",
+    };
+  }
+  const selection = attachment.value.selection;
+  if (!isAdmittedSpellTargetSelection(selection, allowedSelectionFields)) {
+    return {
+      tag: "rejected",
+      reason: "targetSelectionConstraint",
+    };
+  }
+  const admittedAttachment = {
+    ...attachment,
+    value: {
+      ...attachment.value,
+      selection,
+    },
+  } satisfies AdmittedSpellTargetAttachment<AllowedFields[number]>;
+  return {
+    tag: "admitted",
+    attachment: admittedAttachment,
+  };
 }
 
 /** Stable issue identity: only the failed fact and its exact source path. */

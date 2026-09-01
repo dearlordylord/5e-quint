@@ -35,6 +35,7 @@ import { grantedAlternateActionCostProfile } from "./bonus-action-dash.ts";
 import { chosenDamageResistanceProfile } from "./chosen-damage-resistance.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { fixedCostMovementReplacementProfile } from "./fixed-cost-movement-replacement.ts";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 import {
   spellDurationChildCoordinates,
   spellDurationChildPath,
@@ -856,6 +857,485 @@ describe("SR-04G-B static spell procedure admission", () => {
       spellDurationValuePath(),
       spellDurationExtensionPath(PositiveInteger(1)),
     ]);
+  });
+
+  test("projects concentration upcast duration children through C1 evidence", () => {
+    const hypnoticPattern = spellRecord("hypnotic_pattern");
+    if (
+      hypnoticPattern.mechanics.family !== "activation" ||
+      hypnoticPattern.mechanics.duration.kind !== "concentration"
+    ) {
+      throw new Error("Expected Hypnotic Pattern concentration mechanics.");
+    }
+    const duration = decodeSpellRecordForTest({
+      ...hypnoticPattern,
+      mechanics: {
+        ...hypnoticPattern.mechanics,
+        duration: {
+          ...hypnoticPattern.mechanics.duration,
+          upTo: {
+            ...hypnoticPattern.mechanics.duration.upTo,
+            upcastTiers: [{ atSlot: 4, amount: 2 }],
+          },
+          earlyEnd: [{ kind: "target_takes_damage" }],
+        },
+      },
+    }).mechanics.duration;
+    expect(persistentAreaDurationChildPaths(duration)).toEqual([
+      spellDurationExtensionPath(PositiveInteger(1)),
+      spellDurationEndingPath(PositiveInteger(1)),
+    ]);
+  });
+
+  test("rejects unprojected area attachment constraints at the attachment path", () => {
+    const hypnoticPattern = spellRecord("hypnotic_pattern");
+    if (hypnoticPattern.mechanics.family !== "activation") {
+      throw new Error("Expected Hypnotic Pattern activation mechanics.");
+    }
+    const phase = hypnoticPattern.mechanics.phases[0];
+    if (
+      phase?.kind !== "save_gate" ||
+      phase.attachment.kind !== "hole" ||
+      phase.attachment.value.kind !== "area"
+    ) {
+      throw new Error("Expected Hypnotic Pattern area attachment.");
+    }
+    const attachment = phase.attachment;
+    const variants = [
+      { selection: { mode: "one" } },
+      { occupantDispositionFilter: "friendly_to_source" },
+      {
+        excludedAreas: {
+          chooser: "caster",
+          count: "one_or_more",
+          size: "any",
+        },
+      },
+      { rangeOrigin: "caster" },
+    ] as const;
+    for (const variant of variants) {
+      const malformed = decodeSpellRecordForTest({
+        ...hypnoticPattern,
+        mechanics: {
+          ...hypnoticPattern.mechanics,
+          phases: [
+            {
+              ...phase,
+              attachment: {
+                ...attachment,
+                value: { ...attachment.value, ...variant },
+              },
+            },
+          ],
+        },
+      });
+      const result = saveGatedAreaControlProfile.admitMechanics(
+        mechanicsSource(spellAdmissionSource(malformed)),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag === "unsupported") {
+        expect(result.issues).toEqual([
+          expect.objectContaining({
+            failedFact: "attachment",
+            mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+          }),
+        ]);
+      }
+    }
+  });
+
+  test("rejects unprojected target-selection filters at the attachment path", () => {
+    const targetSelectionVariants = [
+      { typeFilter: ["humanoid"] },
+      { stateFilter: ["dead"] },
+      { visibility: "caster_can_see" },
+    ] as const;
+
+    const energy = spellRecord("protection_from_energy");
+    if (
+      energy.mechanics.family !== "activation" ||
+      energy.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Protection from Energy direct mechanics.");
+    }
+    const energyPhase = energy.mechanics.phases[0];
+    if (
+      energyPhase.attachment.kind !== "hole" ||
+      energyPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Protection from Energy target attachment.");
+    }
+    for (const variant of targetSelectionVariants) {
+      const malformed = decodeSpellRecordForTest({
+        ...energy,
+        mechanics: {
+          ...energy.mechanics,
+          phases: [
+            {
+              ...energyPhase,
+              attachment: {
+                ...energyPhase.attachment,
+                value: {
+                  ...energyPhase.attachment.value,
+                  selection: {
+                    ...energyPhase.attachment.value.selection,
+                    ...variant,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+      const result = chosenDamageResistanceProfile.admitMechanics(
+        mechanicsSource(spellAdmissionSource(malformed)),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag === "unsupported") {
+        expect(result.issues).toEqual([
+          expect.objectContaining({
+            failedFact: "attachment",
+            mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+          }),
+        ]);
+      }
+    }
+
+    const protection = spellRecord("protection_from_poison");
+    if (
+      protection.mechanics.family !== "activation" ||
+      protection.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Protection from Poison direct mechanics.");
+    }
+    const protectionPhase = protection.mechanics.phases[0];
+    if (
+      protectionPhase.attachment.kind !== "hole" ||
+      protectionPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Protection from Poison target attachment.");
+    }
+    const conditionSelectionVariants = [
+      { mode: "one", typeFilter: ["humanoid"] },
+      { mode: "one", targetKinds: ["creature"], stateFilter: ["dead"] },
+      {
+        mode: "one",
+        targetKinds: ["creature"],
+        disposition: "willing",
+        visibility: "caster_can_see",
+      },
+      {
+        mode: "one",
+        targetKinds: ["creature"],
+        creatureSizeFilter: { kind: "exact", creatureSize: "medium" },
+      },
+      {
+        mode: "one",
+        targetKinds: ["creature"],
+        relativePosition: {
+          kind: "within_feet_of_attachment",
+          attachmentHoleId: protectionPhase.attachment.holeId,
+          feet: 5,
+        },
+      },
+    ] as const;
+    for (const selection of conditionSelectionVariants) {
+      const malformed = decodeSpellRecordForTest({
+        ...protection,
+        mechanics: {
+          ...protection.mechanics,
+          phases: [
+            {
+              ...protectionPhase,
+              attachment: {
+                ...protectionPhase.attachment,
+                value: {
+                  ...protectionPhase.attachment.value,
+                  selection,
+                },
+              },
+            },
+          ],
+        },
+      });
+      const result = conditionRemovalProtectionProfile.admitMechanics(
+        mechanicsSource(spellAdmissionSource(malformed)),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag === "unsupported") {
+        expect(result.issues).toEqual([
+          expect.objectContaining({
+            failedFact: "attachment",
+            mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+          }),
+        ]);
+      }
+    }
+
+    const jump = spellRecord("jump");
+    if (
+      jump.mechanics.family !== "activation" ||
+      jump.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Jump direct mechanics.");
+    }
+    const jumpPhase = jump.mechanics.phases[0];
+    if (
+      jumpPhase.attachment.kind !== "hole" ||
+      jumpPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Jump target attachment.");
+    }
+    for (const variant of targetSelectionVariants) {
+      const malformed = decodeSpellRecordForTest({
+        ...jump,
+        mechanics: {
+          ...jump.mechanics,
+          phases: [
+            {
+              ...jumpPhase,
+              attachment: {
+                ...jumpPhase.attachment,
+                value: {
+                  ...jumpPhase.attachment.value,
+                  selection: {
+                    ...jumpPhase.attachment.value.selection,
+                    ...variant,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+      const result = fixedCostMovementReplacementProfile.admitMechanics(
+        mechanicsSource(spellAdmissionSource(malformed)),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag === "unsupported") {
+        expect(result.issues).toEqual([
+          expect.objectContaining({
+            failedFact: "attachment",
+            mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+          }),
+        ]);
+      }
+    }
+  });
+
+  test("rejects a target disposition constraint at the canonical attachment path", () => {
+    const protection = spellRecord("protection_from_poison");
+    if (
+      protection.mechanics.family !== "activation" ||
+      protection.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Protection from Poison direct mechanics.");
+    }
+    const protectionPhase = protection.mechanics.phases[0];
+    if (
+      protectionPhase.attachment.kind !== "hole" ||
+      protectionPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Protection from Poison target attachment.");
+    }
+    const malformed = decodeSpellRecordForTest({
+      ...protection,
+      mechanics: {
+        ...protection.mechanics,
+        phases: [
+          {
+            ...protectionPhase,
+            attachment: {
+              ...protectionPhase.attachment,
+              value: {
+                ...protectionPhase.attachment.value,
+                selection: {
+                  mode: "one",
+                  targetKinds: ["creature"],
+                  disposition: "willing",
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+    const result = conditionRemovalProtectionProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(malformed)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        {
+          tag: "spellProcedureAdmissionIssue",
+          procedure: "conditionRemovalProtection",
+          failedFact: "attachment",
+          mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+          message:
+            "Unsupported conditionRemovalProtection mechanics fact: attachment.",
+        },
+      ],
+    });
+  });
+
+  test("rejects target attachment spell-sensor range origins at the canonical path", () => {
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+
+    const energy = spellRecord("protection_from_energy");
+    if (
+      energy.mechanics.family !== "activation" ||
+      energy.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Protection from Energy direct mechanics.");
+    }
+    const energyPhase = energy.mechanics.phases[0];
+    if (
+      energyPhase.attachment.kind !== "hole" ||
+      energyPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Protection from Energy target attachment.");
+    }
+    const energyResult = chosenDamageResistanceProfile.admitMechanics(
+      mechanicsSource(
+        spellAdmissionSource(
+          decodeSpellRecordForTest({
+            ...energy,
+            mechanics: {
+              ...energy.mechanics,
+              phases: [
+                {
+                  ...energyPhase,
+                  attachment: {
+                    ...energyPhase.attachment,
+                    value: {
+                      ...energyPhase.attachment.value,
+                      rangeOrigin: "spell_sensor",
+                    },
+                  },
+                },
+              ],
+            },
+          }),
+        ),
+      ),
+    );
+    expect(energyResult).toEqual({
+      tag: "unsupported",
+      issues: [
+        {
+          tag: "spellProcedureAdmissionIssue",
+          procedure: "chosenDamageResistance",
+          failedFact: "attachment",
+          mechanicsPath: attachmentPath,
+          message:
+            "Unsupported chosenDamageResistance mechanics fact: attachment.",
+        },
+      ],
+    });
+
+    const protection = spellRecord("protection_from_poison");
+    if (
+      protection.mechanics.family !== "activation" ||
+      protection.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Protection from Poison direct mechanics.");
+    }
+    const protectionPhase = protection.mechanics.phases[0];
+    if (
+      protectionPhase.attachment.kind !== "hole" ||
+      protectionPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Protection from Poison target attachment.");
+    }
+    const protectionResult = conditionRemovalProtectionProfile.admitMechanics(
+      mechanicsSource(
+        spellAdmissionSource(
+          decodeSpellRecordForTest({
+            ...protection,
+            mechanics: {
+              ...protection.mechanics,
+              phases: [
+                {
+                  ...protectionPhase,
+                  attachment: {
+                    ...protectionPhase.attachment,
+                    value: {
+                      ...protectionPhase.attachment.value,
+                      rangeOrigin: "spell_sensor",
+                    },
+                  },
+                },
+              ],
+            },
+          }),
+        ),
+      ),
+    );
+    expect(protectionResult).toEqual({
+      tag: "unsupported",
+      issues: [
+        {
+          tag: "spellProcedureAdmissionIssue",
+          procedure: "conditionRemovalProtection",
+          failedFact: "attachment",
+          mechanicsPath: attachmentPath,
+          message:
+            "Unsupported conditionRemovalProtection mechanics fact: attachment.",
+        },
+      ],
+    });
+
+    const jump = spellRecord("jump");
+    if (
+      jump.mechanics.family !== "activation" ||
+      jump.mechanics.phases[0]?.kind !== "direct"
+    ) {
+      throw new Error("Expected Jump direct mechanics.");
+    }
+    const jumpPhase = jump.mechanics.phases[0];
+    if (
+      jumpPhase.attachment.kind !== "hole" ||
+      jumpPhase.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Jump target attachment.");
+    }
+    const jumpResult = fixedCostMovementReplacementProfile.admitMechanics(
+      mechanicsSource(
+        spellAdmissionSource(
+          decodeSpellRecordForTest({
+            ...jump,
+            mechanics: {
+              ...jump.mechanics,
+              phases: [
+                {
+                  ...jumpPhase,
+                  attachment: {
+                    ...jumpPhase.attachment,
+                    value: {
+                      ...jumpPhase.attachment.value,
+                      rangeOrigin: "spell_sensor",
+                    },
+                  },
+                },
+              ],
+            },
+          }),
+        ),
+      ),
+    );
+    expect(jumpResult).toEqual({
+      tag: "unsupported",
+      issues: [
+        {
+          tag: "spellProcedureAdmissionIssue",
+          procedure: "fixedCostMovementReplacement",
+          failedFact: "attachment",
+          mechanicsPath: attachmentPath,
+          message:
+            "Unsupported fixedCostMovementReplacement mechanics fact: attachment.",
+        },
+      ],
+    });
   });
 
   test("retains every duration ending payload as a typed discriminant", () => {

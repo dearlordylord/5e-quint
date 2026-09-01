@@ -45,6 +45,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
+  admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
   spellDurationChildCoordinates,
   spellDurationChildPath,
@@ -77,6 +78,12 @@ const CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES = [
   "lightning",
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
+
+const CHOSEN_DAMAGE_RESISTANCE_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+  "disposition",
+] as const;
 
 type ChosenDamageResistanceSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -259,9 +266,13 @@ function admitChosenDamageResistanceMechanics(
       );
     }
   }
+  const targetAttachmentAdmission = admitSpellTargetAttachment(
+    phase.attachment,
+    CHOSEN_DAMAGE_RESISTANCE_TARGET_SELECTION_FIELDS,
+  );
   const selection =
-    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
+    targetAttachmentAdmission.tag === "admitted"
+      ? targetAttachmentAdmission.attachment.value.selection
       : undefined;
   const validSelection =
     selection !== undefined &&
@@ -271,7 +282,7 @@ function admitChosenDamageResistanceMechanics(
     "targetKinds" in selection &&
     selection.targetKinds !== undefined &&
     sameStringSet(selection.targetKinds, ["creature"]);
-  if (!validSelection) {
+  if (targetAttachmentAdmission.tag === "rejected" || !validSelection) {
     issues.push(
       chosenDamageResistanceIssue(
         "attachment",
