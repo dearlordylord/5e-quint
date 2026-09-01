@@ -1,7 +1,30 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleExecutableSpellInvocation,
+  BattleResolutionResult,
+  BattleSpellAdmissionSource,
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
+import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { PositiveInteger, movementFeet } from "@dnd/shared/types";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  OngoingTrigger,
+  SpellMechanics,
+  UsageLimit,
+} from "@dnd/surface/surface/types";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 //
 // The Moonbeam Spell Procedure Profile: action-time Spell Slot casting creates
@@ -18,22 +41,12 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //     Constitution Saving Throw for Radiant damage or half; failed-save
 //     shape-shift reversion/suppression; appears/moved-into/enters/ends-turn
 //     triggers; once per turn; +1d10 per slot level above 2.
-//   - UBIQUITOUS_LANGUAGE.md: Magic Action, Concentration, Spell Slot, Spell
+//   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration, Spell
 //     Invocation, Area of Effect/Cylinder, Saving Throw, Damage Type, and
 //     shape-shifting.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
 import { Match, Result, Schema } from "effect";
 
-import {
-  type BattleExecutableSpellInvocation,
-  type BattleResolutionResult,
-  type SupportedSpellInvocation,
-} from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
@@ -44,8 +57,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
-  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
@@ -54,6 +67,16 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureMechanicsFacts,
+  SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  persistentAreaDurationChildPaths,
+  persistentAreaMaterialPaths,
+} from "./persistent-area-save-evidence.ts";
+import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 
 type MovablePersistentAreaSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -81,17 +104,17 @@ type MovablePersistentAreaResolveInput = Omit<
   >;
 };
 
-type OngoingOperationEffect = Extract<
+type MovablePersistentAreaMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
->["operations"][number]["effect"];
-type MovablePersistentAreaInitialPhase = Extract<
-  BattleSpellAdmissionSource["mechanics"],
-  { readonly family: "ongoing_effect" }
->["initialPhase"];
+>;
+type OngoingOperationEffect =
+  MovablePersistentAreaMechanics["operations"][number]["effect"];
+type MovablePersistentAreaInitialPhase =
+  MovablePersistentAreaMechanics["initialPhase"];
 type MovablePersistentAreaFailedSaveEffect = Extract<
   Extract<
-    MovablePersistentAreaInitialPhase,
+    NonNullable<MovablePersistentAreaInitialPhase>,
     { readonly kind: "save_gate" }
   >["onFail"],
   { readonly kind: "composite" }
@@ -107,10 +130,69 @@ type MovablePersistentAreaProfileShape = {
   readonly repositionMaxMoveFeet: number;
   readonly damageAmount: MovablePersistentAreaSaveGateDamage["amount"];
 };
-type MovablePersistentAreaMechanics = Extract<
-  BattleSpellAdmissionSource["mechanics"],
-  { readonly family: "ongoing_effect" }
+type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
+type OngoingAreaAttachment = Extract<
+  OngoingAreaFacts["mechanics"]["attachment"],
+  { readonly kind: "hole" }
 >;
+type OngoingArea = Extract<
+  OngoingAreaAttachment["value"],
+  { readonly kind: "area" }
+>;
+type MovablePersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
+  MovablePersistentAreaProfileShape;
+type MovablePersistentAreaAdmissionIssue = Extract<
+  SpellProcedureMechanicsInspection<
+    "persistentAreaSaveDamage",
+    MovablePersistentAreaMechanicsFacts,
+    MovablePersistentAreaSpellInvocation
+  >,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
+export const MOVABLE_PERSISTENT_AREA_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "duration",
+  "durationTicks",
+  "attachment",
+  "initialSaveDamage",
+  "passiveOperation",
+  "repositionOperation",
+  "endTurnOperation",
+  "enterOperation",
+  "movedAreaOperation",
+  "operationCount",
+  "oncePerTurnLimitGroup",
+] as const;
+type MovablePersistentAreaFailedFact =
+  (typeof MOVABLE_PERSISTENT_AREA_FAILED_FACTS)[number];
+
+const MOVABLE_PERSISTENT_AREA_BASE_CONSUMED_PATHS = [
+  spellMechanicsHeaderPath("level"),
+  spellMechanicsHeaderPath("school"),
+  spellMechanicsHeaderPath("range"),
+  spellMechanicsHeaderPath("components"),
+  spellMechanicsHeaderPath("duration"),
+  spellMechanicsHeaderPath("castingTime"),
+  spellMechanicsHeaderPath("family"),
+  spellDurationValuePath(),
+  spellOngoingAttachmentPath(),
+  spellOngoingInitialPhasePath(),
+  spellOngoingOperationPath(PositiveInteger(1)),
+  spellOngoingOperationPath(PositiveInteger(2)),
+  spellOngoingOperationPath(PositiveInteger(3)),
+  spellOngoingOperationPath(PositiveInteger(4)),
+  spellOngoingOperationPath(PositiveInteger(5)),
+  spellOngoingOperationEffectPath(PositiveInteger(1)),
+  spellOngoingOperationEffectPath(PositiveInteger(2)),
+  spellOngoingOperationEffectPath(PositiveInteger(3)),
+  spellOngoingOperationEffectPath(PositiveInteger(4)),
+  spellOngoingOperationEffectPath(PositiveInteger(5)),
+] as const;
+
+const MOVABLE_PERSISTENT_AREA_UNOWNED_PATHS = [] as const;
 
 const MOVABLE_PERSISTENT_AREA_LEVEL = 2;
 const MOVABLE_PERSISTENT_AREA_RANGE_FEET = 120;
@@ -123,130 +205,161 @@ const MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE = 2;
 const MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 10;
 const MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
-function admitMovablePersistentArea(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly MovablePersistentAreaSpellInvocation[] {
-  const movablePersistentArea = movablePersistentAreaSpell(spell);
-  if (movablePersistentArea === null) {
-    return [];
-  }
+type MovablePersistentAreaOperationRole =
+  | "passive"
+  | "reposition"
+  | "endTurn"
+  | "enter"
+  | "movedArea"
+  | null;
+type MovablePersistentAreaOperationOccurrence = {
+  readonly operation: MovablePersistentAreaMechanics["operations"][number];
+  readonly ordinal: PositiveInteger;
+};
+type MovablePersistentAreaOperations = {
+  readonly passive: MovablePersistentAreaOperationOccurrence | undefined;
+  readonly reposition: MovablePersistentAreaOperationOccurrence | undefined;
+  readonly endTurn: MovablePersistentAreaOperationOccurrence | undefined;
+  readonly enter: MovablePersistentAreaOperationOccurrence | undefined;
+  readonly movedArea: MovablePersistentAreaOperationOccurrence | undefined;
+  readonly extraOperations: readonly MovablePersistentAreaOperationOccurrence[];
+};
+type MovablePersistentAreaFailure = {
+  readonly failedFact: MovablePersistentAreaFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
 
-  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
-    const damageExpr = supportedDamageAmountExpr({
-      amount: movablePersistentArea.damageAmount,
-      spellLevel: spell.mechanics.level,
-      slotLevel,
-    });
-    return damageExpr === null
-      ? null
-      : {
-          ...base,
-          procedure: "persistentAreaSaveDamage",
-          lifecycle: {
-            kind: "casterActionReposition",
-            actionCost: "magicAction",
-            movedAreaOperation: "saveDamage",
-            collisionDisposition: "ignoreObstacles",
-          },
-          ability: "con",
-          dc: { kind: "caster_spell_save_dc" },
-          targeting: {
-            kind: "pointOriginCylinder",
-            radiusFeet: movementFeet(movablePersistentArea.radiusFeet),
-            heightFeet: movementFeet(movablePersistentArea.heightFeet),
-          },
-          durationTicks: movablePersistentArea.durationTicks,
-          rangeFeet: movementFeet(MOVABLE_PERSISTENT_AREA_RANGE_FEET),
-          repositionMaxMoveFeet: movementFeet(
-            movablePersistentArea.repositionMaxMoveFeet,
-          ),
-          damage: { expr: damageExpr, damageType: "radiant" },
-        };
-  });
+function movablePersistentAreaOperationRole(
+  trigger: OngoingTrigger,
+): MovablePersistentAreaOperationRole {
+  return Match.value(trigger.kind).pipe(
+    Match.when("passive", () => "passive" as const),
+    Match.when("on_caster_spends_action", () => "reposition" as const),
+    Match.when("on_creature_ends_turn_in_area", () => "endTurn" as const),
+    Match.when("on_creature_enters_area", () => "enter" as const),
+    Match.when("on_area_moves_into_creature_space", () => "movedArea" as const),
+    Match.whenOr(
+      "on_effect_starts",
+      "on_caster_attack_hit",
+      "on_caster_deals_damage_to_attachment",
+      "on_attached_hit_by_attack_roll",
+      "on_attached_turn_start",
+      "on_attached_turn_end",
+      "on_caster_turn_start",
+      "on_caster_turn_end",
+      "on_attached_damaged",
+      "on_attached_targeted",
+      "on_creature_moves",
+      "on_creature_starts_turn_in_area",
+      "on_creature_ends_turn_within_distance_of_area",
+      "on_creature_moves_through_area",
+      "on_creature_moves_within_area",
+      "on_creature_starts_turn_within_area",
+      "on_creature_attempts_magical_escape",
+      "on_object_section_destroyed",
+      "on_spatial_manifestation_moves_within_distance_of_creature",
+      "on_creature_enters_distance_of_spatial_manifestation",
+      "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+      "on_creature_exits_area",
+      "on_caster_moves_on_turn",
+      "on_structure_collapses",
+      "on_attached_spends_action",
+      "on_affected_creature_spends_action",
+      "on_creature_studies",
+      () => null,
+    ),
+    Match.exhaustive,
+  );
 }
 
-function movablePersistentAreaSpell(
-  spell: BattleSpellAdmissionSource,
-): MovablePersistentAreaProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  if (!hasMovablePersistentAreaSpellContract(spell.mechanics)) return null;
-  const durationTicks = movablePersistentAreaDurationTicks(spell.mechanics);
-  if (durationTicks === null) return null;
-  const cylinderHole = movablePersistentAreaCylinderAttachment(
-    spell.mechanics.attachment,
+function movablePersistentAreaOperations(
+  mechanics: MovablePersistentAreaMechanics,
+): MovablePersistentAreaOperations {
+  const occurrences = mechanics.operations.map(
+    (operation, index): MovablePersistentAreaOperationOccurrence => ({
+      operation,
+      ordinal: PositiveInteger(index + 1),
+    }),
   );
-  if (cylinderHole === null) return null;
-  const initialDamage = isMovablePersistentAreaInitialSaveGate(
-    spell.mechanics.initialPhase,
-    cylinderHole.holeId,
+  const selected = new Set<PositiveInteger>();
+  const select = (
+    role: Exclude<MovablePersistentAreaOperationRole, null>,
+    effect: (
+      operation: MovablePersistentAreaMechanics["operations"][number],
+    ) => boolean,
+  ): MovablePersistentAreaOperationOccurrence | undefined => {
+    const matching = occurrences.find(
+      (occurrence) =>
+        !selected.has(occurrence.ordinal) &&
+        movablePersistentAreaOperationRole(occurrence.operation.trigger) ===
+          role &&
+        effect(occurrence.operation),
+    );
+    const occurrence =
+      matching ??
+      occurrences.find(
+        (candidate) =>
+          !selected.has(candidate.ordinal) &&
+          movablePersistentAreaOperationRole(candidate.operation.trigger) ===
+            role,
+      );
+    if (occurrence !== undefined) selected.add(occurrence.ordinal);
+    return occurrence;
+  };
+  const passive = select(
+    "passive",
+    (operation) => operation.effect.kind === "area_emits_dim_light",
   );
-  if (initialDamage === null) return null;
-  const operations = movablePersistentAreaOperations(spell.mechanics);
-  if (operations === null) return null;
-
+  const reposition = select(
+    "reposition",
+    (operation) =>
+      operation.effect.kind === "reposition_attachment" &&
+      operation.effect.maxMoveFeet ===
+        MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
+  );
+  const endTurn = select(
+    "endTurn",
+    (operation) => isMovablePersistentAreaSaveGate(operation.effect) !== null,
+  );
+  const enter = select(
+    "enter",
+    (operation) => isMovablePersistentAreaSaveGate(operation.effect) !== null,
+  );
+  const movedArea = select(
+    "movedArea",
+    (operation) => isMovablePersistentAreaSaveGate(operation.effect) !== null,
+  );
   return {
-    durationTicks,
-    radiusFeet: cylinderHole.radiusFeet,
-    heightFeet: cylinderHole.heightFeet,
-    repositionMaxMoveFeet: operations.repositionMaxMoveFeet,
-    damageAmount: initialDamage.amount,
+    passive,
+    reposition,
+    endTurn,
+    enter,
+    movedArea,
+    extraOperations: occurrences.filter(
+      (occurrence) => !selected.has(occurrence.ordinal),
+    ),
   };
 }
 
-function hasMovablePersistentAreaSpellContract(
-  mechanics: MovablePersistentAreaMechanics,
-): boolean {
-  return (
-    mechanics.level === MOVABLE_PERSISTENT_AREA_LEVEL &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET &&
-    mechanics.duration.kind === "concentration" &&
-    mechanics.duration.upTo.unit === "minute" &&
-    mechanics.duration.upTo.amount ===
-      MOVABLE_PERSISTENT_AREA_DURATION_MINUTES &&
-    mechanics.operations.length === MOVABLE_PERSISTENT_AREA_OPERATION_COUNT
-  );
+function movablePersistentAreaOperationPath(
+  occurrence: MovablePersistentAreaOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationPath(occurrence?.ordinal ?? fallbackOrdinal);
 }
 
-function movablePersistentAreaDurationTicks(
-  mechanics: MovablePersistentAreaMechanics,
-): ElapsedTimeTicks | null {
-  if (mechanics.duration.kind !== "concentration") return null;
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    mechanics.duration.upTo,
+function movablePersistentAreaOperationEffectPath(
+  occurrence: MovablePersistentAreaOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationEffectPath(
+    occurrence?.ordinal ?? fallbackOrdinal,
   );
-  return Result.isFailure(durationTicks) ? null : durationTicks.success;
-}
-
-function movablePersistentAreaCylinderAttachment(
-  attachment: MovablePersistentAreaMechanics["attachment"],
-): {
-  readonly holeId: string;
-  readonly radiusFeet: number;
-  readonly heightFeet: number;
-} | null {
-  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
-    return null;
-  }
-  const dimensions = movablePersistentAreaCylinderDimensions(attachment.value);
-  if (dimensions === null) return null;
-  return {
-    holeId: attachment.holeId,
-    ...dimensions,
-  };
 }
 
 function movablePersistentAreaCylinderDimensions(
-  area: Extract<
-    MovablePersistentAreaMechanics["attachment"],
-    { readonly kind: "hole" }
-  >["value"],
+  area: OngoingArea,
 ): { readonly radiusFeet: number; readonly heightFeet: number } | null {
-  if (area.kind !== "area") return null;
   if (area.origin.kind !== "point_within_range") return null;
   if (area.shape.kind !== "cylinder") return null;
   if (area.shape.radiusFeet !== MOVABLE_PERSISTENT_AREA_RADIUS_FEET) {
@@ -261,132 +374,17 @@ function movablePersistentAreaCylinderDimensions(
   };
 }
 
-function movablePersistentAreaOperations(
-  mechanics: MovablePersistentAreaMechanics,
-): { readonly repositionMaxMoveFeet: number } | null {
-  const repositionOperation = mechanics.operations.find(
-    isMovablePersistentAreaRepositionOperation,
-  );
-  const dimLightOperation = mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "area_emits_dim_light",
-  );
-
-  if (!hasMovablePersistentAreaTriggeredSaveGates(mechanics)) return null;
-  if (repositionOperation?.effect.kind !== "reposition_attachment") return null;
-  if (dimLightOperation?.effect.kind !== "area_emits_dim_light") return null;
-
-  return {
-    repositionMaxMoveFeet: MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
-  };
-}
-
-function isMovablePersistentAreaRepositionOperation(
-  operation: MovablePersistentAreaMechanics["operations"][number],
-): boolean {
-  return (
-    operation.trigger.kind === "on_caster_spends_action" &&
-    operation.trigger.cost.kind === "standard_action" &&
-    operation.trigger.cost.action === "magic" &&
-    operation.trigger.laterTurnsOnly === true &&
-    operation.effect.kind === "reposition_attachment" &&
-    operation.effect.maxMoveFeet ===
-      MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET
-  );
-}
-
-function hasMovablePersistentAreaTriggeredSaveGates(
-  mechanics: MovablePersistentAreaMechanics,
-): boolean {
-  const endTurnEffect = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
-  )?.effect;
-  const enterEffect = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_enters_area",
-  )?.effect;
-  const moveIntoEffect = mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_area_moves_into_creature_space",
-  )?.effect;
-  return (
-    isMovablePersistentAreaSaveGate(endTurnEffect) !== null &&
-    isMovablePersistentAreaSaveGate(enterEffect) !== null &&
-    isMovablePersistentAreaSaveGate(moveIntoEffect) !== null
-  );
-}
-
-function isMovablePersistentAreaInitialSaveGate(
-  effect: MovablePersistentAreaInitialPhase | undefined,
-  areaHoleId: string,
-): MovablePersistentAreaSaveGateDamage | null {
-  if (effect?.kind !== "save_gate") return null;
-  if (effect.attachment?.kind !== "hole") return null;
-  if (effect.attachment.holeId !== areaHoleId) return null;
-  if (
-    movablePersistentAreaCylinderDimensions(effect.attachment.value) === null
-  ) {
-    return null;
-  }
-  return isMovablePersistentAreaSaveGate(effect);
-}
-
-function isMovablePersistentAreaSaveGate(
-  effect:
-    | OngoingOperationEffect
-    | MovablePersistentAreaInitialPhase
-    | undefined,
-): MovablePersistentAreaSaveGateDamage | null {
-  if (effect?.kind !== "save_gate") {
-    return null;
-  }
-  if (effect.onFail.kind !== "composite") {
-    return null;
-  }
-  if (effect.onFail.effects.length !== 3) {
-    return null;
-  }
-  const damage = movablePersistentAreaFailedSaveDamage(effect.onFail.effects);
-  if (damage === null) return null;
-  return hasMovablePersistentAreaSaveRule(effect) ? damage : null;
-}
-
-function hasMovablePersistentAreaSaveRule(
-  effect: Extract<
-    OngoingOperationEffect | MovablePersistentAreaInitialPhase,
-    { readonly kind: "save_gate" }
-  >,
-): boolean {
-  return (
-    effect.ability === "con" &&
-    effect.dc.kind === "caster_spell_save_dc" &&
-    effect.onSuccess.kind === "half_damage"
-  );
-}
-
-function movablePersistentAreaFailedSaveDamage(
-  effects: readonly MovablePersistentAreaFailedSaveEffect[],
-): MovablePersistentAreaSaveGateDamage | null {
-  const damageEffects = effects.flatMap(
-    (effect): readonly MovablePersistentAreaSaveGateDamage[] => {
-      const damage = movablePersistentAreaDamageEffect(effect);
-      return damage === null ? [] : [damage];
-    },
-  );
-  if (damageEffects.length !== 1) return null;
-  if (
-    !effects.some((effect) => effect.kind === "revert_shape_shift_to_true_form")
-  ) {
-    return null;
-  }
-  if (
-    !effects.some(
-      (effect) => effect.kind === "suppress_shape_shifting_while_in_area",
-    )
-  ) {
-    return null;
-  }
-  return damageEffects[0] ?? null;
+function movablePersistentAreaCylinderAttachment(
+  attachment: OngoingAreaAttachment,
+): {
+  readonly holeId: string;
+  readonly radiusFeet: number;
+  readonly heightFeet: number;
+} | null {
+  const dimensions = movablePersistentAreaCylinderDimensions(attachment.value);
+  return dimensions !== null
+    ? { holeId: attachment.holeId, ...dimensions }
+    : null;
 }
 
 function movablePersistentAreaDamageEffect(
@@ -418,6 +416,439 @@ function isMovablePersistentAreaDamageAmount(
     (amount.perLevel.dieSize === undefined ||
       amount.perLevel.dieSize === MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE)
   );
+}
+
+function isMovablePersistentAreaSaveGate(
+  effect:
+    | OngoingOperationEffect
+    | MovablePersistentAreaInitialPhase
+    | undefined,
+): MovablePersistentAreaSaveGateDamage | null {
+  if (effect?.kind !== "save_gate") return null;
+  if (
+    effect.onFail.kind !== "composite" ||
+    effect.onFail.effects.length !== 3
+  ) {
+    return null;
+  }
+  const damageEffects = effect.onFail.effects.flatMap(
+    (candidate): readonly MovablePersistentAreaSaveGateDamage[] => {
+      const damage = movablePersistentAreaDamageEffect(candidate);
+      return damage === null ? [] : [damage];
+    },
+  );
+  if (damageEffects.length !== 1) return null;
+  if (
+    !effect.onFail.effects.some(
+      (candidate) => candidate.kind === "revert_shape_shift_to_true_form",
+    ) ||
+    !effect.onFail.effects.some(
+      (candidate) => candidate.kind === "suppress_shape_shifting_while_in_area",
+    )
+  ) {
+    return null;
+  }
+  if (
+    effect.ability !== "con" ||
+    effect.dc.kind !== "caster_spell_save_dc" ||
+    effect.onSuccess.kind !== "half_damage"
+  ) {
+    return null;
+  }
+  return damageEffects[0] ?? null;
+}
+
+function movablePersistentAreaInitialSaveGate(
+  effect: MovablePersistentAreaInitialPhase,
+  areaHoleId: string,
+): MovablePersistentAreaSaveGateDamage | null {
+  if (effect?.kind !== "save_gate") return null;
+  if (effect.attachment.kind !== "hole") return null;
+  if (effect.attachment.holeId !== areaHoleId) return null;
+  if (effect.attachment.value.kind !== "area") return null;
+  if (
+    movablePersistentAreaCylinderDimensions(effect.attachment.value) === null
+  ) {
+    return null;
+  }
+  return isMovablePersistentAreaSaveGate(effect);
+}
+
+function movablePersistentAreaUsageLimitFailures(
+  mechanics: MovablePersistentAreaMechanics,
+  operations: MovablePersistentAreaOperations,
+): readonly MovablePersistentAreaFailure[] {
+  const entries = [
+    {
+      limit:
+        mechanics.initialPhase?.kind === "save_gate"
+          ? mechanics.initialPhase.usageLimit
+          : undefined,
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    },
+    {
+      limit: operations.endTurn?.operation.usageLimit,
+      mechanicsPath: movablePersistentAreaOperationPath(
+        operations.endTurn,
+        PositiveInteger(3),
+      ),
+    },
+    {
+      limit: operations.enter?.operation.usageLimit,
+      mechanicsPath: movablePersistentAreaOperationPath(
+        operations.enter,
+        PositiveInteger(4),
+      ),
+    },
+    {
+      limit: operations.movedArea?.operation.usageLimit,
+      mechanicsPath: movablePersistentAreaOperationPath(
+        operations.movedArea,
+        PositiveInteger(5),
+      ),
+    },
+  ] satisfies readonly {
+    readonly limit: UsageLimit | undefined;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  }[];
+  const sharedLimitGroup = sharedOncePerTurnLimitGroup(
+    entries.map(({ limit }) => limit),
+  );
+  if (sharedLimitGroup !== null && sharedLimitGroup.length > 0) return [];
+  return entries.map(({ mechanicsPath }) => ({
+    failedFact: "oncePerTurnLimitGroup" as const,
+    mechanicsPath,
+  }));
+}
+
+function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
+  | {
+      readonly tag: "unsupported";
+      readonly failures: readonly MovablePersistentAreaFailure[];
+    }
+  | {
+      readonly tag: "supported";
+      readonly shape: MovablePersistentAreaProfileShape;
+    } {
+  const { mechanics, durationTicks } = ongoing;
+  const cylinder = movablePersistentAreaCylinderAttachment(
+    mechanics.attachment,
+  );
+  const operations = movablePersistentAreaOperations(mechanics);
+  const failures: MovablePersistentAreaFailure[] = [];
+  if (mechanics.level !== MOVABLE_PERSISTENT_AREA_LEVEL) {
+    failures.push({
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    });
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    failures.push({
+      failedFact: "castingTime",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    });
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== MOVABLE_PERSISTENT_AREA_RANGE_FEET
+  ) {
+    failures.push({
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    });
+  }
+  if (
+    mechanics.duration.kind !== "concentration" ||
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.duration.upTo.amount !== MOVABLE_PERSISTENT_AREA_DURATION_MINUTES
+  ) {
+    failures.push({
+      failedFact: "duration",
+      mechanicsPath: spellDurationValuePath(),
+    });
+  }
+  failures.push(
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath) => ({
+        failedFact: "duration" as const,
+        mechanicsPath,
+      }),
+    ),
+  );
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+    failures.push({
+      failedFact: "durationTicks",
+      mechanicsPath: spellDurationValuePath(),
+    });
+  }
+  if (cylinder === null) {
+    failures.push({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+  }
+  const areaHoleId = mechanics.attachment.holeId;
+  const initialSaveDamage = movablePersistentAreaInitialSaveGate(
+    mechanics.initialPhase,
+    areaHoleId,
+  );
+  if (initialSaveDamage === null) {
+    failures.push({
+      failedFact: "initialSaveDamage",
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    });
+  }
+  if (
+    operations.passive === undefined ||
+    operations.passive.operation.trigger.kind !== "passive" ||
+    operations.passive.operation.effect.kind !== "area_emits_dim_light"
+  ) {
+    failures.push({
+      failedFact: "passiveOperation",
+      mechanicsPath: movablePersistentAreaOperationEffectPath(
+        operations.passive,
+        PositiveInteger(1),
+      ),
+    });
+  }
+  if (
+    operations.reposition === undefined ||
+    operations.reposition.operation.trigger.kind !==
+      "on_caster_spends_action" ||
+    operations.reposition.operation.trigger.cost.kind !== "standard_action" ||
+    operations.reposition.operation.trigger.cost.action !== "magic" ||
+    operations.reposition.operation.trigger.laterTurnsOnly !== true ||
+    operations.reposition.operation.effect.kind !== "reposition_attachment" ||
+    typeof operations.reposition.operation.effect.maxMoveFeet !== "number" ||
+    operations.reposition.operation.effect.maxMoveFeet !==
+      MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET
+  ) {
+    failures.push({
+      failedFact: "repositionOperation",
+      mechanicsPath: movablePersistentAreaOperationEffectPath(
+        operations.reposition,
+        PositiveInteger(2),
+      ),
+    });
+  }
+  if (
+    operations.endTurn === undefined ||
+    operations.endTurn.operation.trigger.kind !==
+      "on_creature_ends_turn_in_area" ||
+    isMovablePersistentAreaSaveGate(operations.endTurn.operation.effect) ===
+      null
+  ) {
+    failures.push({
+      failedFact: "endTurnOperation",
+      mechanicsPath: movablePersistentAreaOperationEffectPath(
+        operations.endTurn,
+        PositiveInteger(3),
+      ),
+    });
+  }
+  if (
+    operations.enter === undefined ||
+    operations.enter.operation.trigger.kind !== "on_creature_enters_area" ||
+    isMovablePersistentAreaSaveGate(operations.enter.operation.effect) === null
+  ) {
+    failures.push({
+      failedFact: "enterOperation",
+      mechanicsPath: movablePersistentAreaOperationEffectPath(
+        operations.enter,
+        PositiveInteger(4),
+      ),
+    });
+  }
+  if (
+    operations.movedArea === undefined ||
+    operations.movedArea.operation.trigger.kind !==
+      "on_area_moves_into_creature_space" ||
+    isMovablePersistentAreaSaveGate(operations.movedArea.operation.effect) ===
+      null
+  ) {
+    failures.push({
+      failedFact: "movedAreaOperation",
+      mechanicsPath: movablePersistentAreaOperationEffectPath(
+        operations.movedArea,
+        PositiveInteger(5),
+      ),
+    });
+  }
+  if (
+    mechanics.operations.length !== MOVABLE_PERSISTENT_AREA_OPERATION_COUNT &&
+    operations.extraOperations.length === 0
+  ) {
+    failures.push({
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    });
+  }
+  failures.push(
+    ...operations.extraOperations.map((occurrence) => ({
+      failedFact: "operationCount" as const,
+      mechanicsPath: movablePersistentAreaOperationPath(
+        occurrence,
+        occurrence.ordinal,
+      ),
+    })),
+  );
+  failures.push(
+    ...movablePersistentAreaUsageLimitFailures(mechanics, operations),
+  );
+
+  if (failures.length > 0) return { tag: "unsupported", failures };
+  if (
+    cylinder === null ||
+    initialSaveDamage === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    operations.reposition?.operation.effect.kind !== "reposition_attachment"
+  ) {
+    return {
+      tag: "unsupported",
+      failures: [
+        {
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+      ],
+    };
+  }
+  return {
+    tag: "supported",
+    shape: {
+      durationTicks: durationTicks.success,
+      radiusFeet: cylinder.radiusFeet,
+      heightFeet: cylinder.heightFeet,
+      repositionMaxMoveFeet: MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
+      damageAmount: initialSaveDamage.amount,
+    },
+  };
+}
+
+function isMovablePersistentAreaRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is MovablePersistentAreaMechanics {
+  if (
+    mechanics.family !== "ongoing_effect" ||
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "area" ||
+    mechanics.attachment.value.shape.kind !== "cylinder"
+  ) {
+    return false;
+  }
+  // The stable gate uses the profile's authored Dim Light witness. Required
+  // lifecycle triggers may then be malformed and are reported by projection.
+  return mechanics.operations.some(
+    ({ effect }) => effect.kind === "area_emits_dim_light",
+  );
+}
+
+function movablePersistentAreaAdmissionIssue(
+  failure: MovablePersistentAreaFailure,
+): MovablePersistentAreaAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "persistentAreaSaveDamage",
+    failedFact: failure.failedFact,
+    mechanicsPath: failure.mechanicsPath,
+    message: `Unsupported directed-reposition persistent-area mechanics fact: ${failure.failedFact}.`,
+  };
+}
+
+function admitMovablePersistentArea(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: MovablePersistentAreaMechanicsFacts,
+): readonly MovablePersistentAreaSpellInvocation[] {
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly MovablePersistentAreaSpellInvocation[] => {
+      if (Number(slot.spellLevel) < MOVABLE_PERSISTENT_AREA_LEVEL) {
+        return [];
+      }
+      const damageExpr = supportedDamageAmountExpr({
+        amount: facts.damageAmount,
+        spellLevel: MOVABLE_PERSISTENT_AREA_LEVEL,
+        slotLevel: slot.spellLevel,
+      });
+      return damageExpr === null
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "persistentAreaSaveDamage",
+              lifecycle: {
+                kind: "casterActionReposition",
+                actionCost: "magicAction",
+                movedAreaOperation: "saveDamage",
+                collisionDisposition: "ignoreObstacles",
+              },
+              spell,
+              ability: "con",
+              dc: { kind: "caster_spell_save_dc" },
+              targeting: {
+                kind: "pointOriginCylinder",
+                radiusFeet: movementFeet(facts.radiusFeet),
+                heightFeet: movementFeet(facts.heightFeet),
+              },
+              durationTicks: facts.durationTicks,
+              rangeFeet: movementFeet(MOVABLE_PERSISTENT_AREA_RANGE_FEET),
+              repositionMaxMoveFeet: movementFeet(facts.repositionMaxMoveFeet),
+              damage: { expr: damageExpr, damageType: "radiant" },
+            },
+          ];
+    },
+  );
+}
+
+function movablePersistentAreaMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "persistentAreaSaveDamage",
+  MovablePersistentAreaMechanicsFacts,
+  MovablePersistentAreaSpellInvocation
+> {
+  if (!isMovablePersistentAreaRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const ongoing = ongoingAreaSpellFacts(source.mechanics);
+  if (ongoing === null) return { tag: "notRepresented" };
+  const projection = movablePersistentAreaProjection(ongoing);
+  if (projection.tag === "unsupported") {
+    const [firstFailure, ...remainingFailures] = projection.failures;
+    if (firstFailure === undefined) return { tag: "notRepresented" };
+    return {
+      tag: "unsupported",
+      issues: [
+        movablePersistentAreaAdmissionIssue(firstFailure),
+        ...remainingFailures.map(movablePersistentAreaAdmissionIssue),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ...projection.shape,
+  } satisfies MovablePersistentAreaMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "persistentAreaSaveDamage",
+      facts,
+      evidence: {
+        consumed: [
+          ...MOVABLE_PERSISTENT_AREA_BASE_CONSUMED_PATHS,
+          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
+        ],
+        unowned: MOVABLE_PERSISTENT_AREA_UNOWNED_PATHS,
+      },
+      admit: (executionSource, ctx) =>
+        admitMovablePersistentArea(executionSource, ctx, facts),
+    },
+  };
 }
 
 function resolveNarrowedMovablePersistentArea(
@@ -487,7 +918,7 @@ const MovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
 export const directedRepositionPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: MovablePersistentAreaInvocationSchema,
-  admit: admitMovablePersistentArea,
+  admitMechanics: movablePersistentAreaMechanicsAdmission,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveMovablePersistentArea,
 } satisfies SpellProcedureDeclaration<

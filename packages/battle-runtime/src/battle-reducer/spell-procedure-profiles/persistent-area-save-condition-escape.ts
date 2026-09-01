@@ -30,10 +30,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { PositiveInteger, movementFeet } from "@dnd/shared/types";
 import {
-  spellDurationEndingPath,
-  spellDurationExtensionPath,
   spellDurationValuePath,
-  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -75,6 +72,10 @@ import type {
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
+import {
+  persistentAreaDurationChildPaths,
+  persistentAreaMaterialPaths,
+} from "./persistent-area-save-evidence.ts";
 
 type PersistentAreaSaveConditionEscapeSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -176,72 +177,6 @@ const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET = 60;
 const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS = 1;
 const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT = 7;
 const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET = 20;
-
-function persistentAreaSaveConditionEscapeDurationChildPaths(
-  duration: OngoingEscapeFacts["mechanics"]["duration"],
-): readonly SpellMechanicsBranchPath[] {
-  return Match.value(duration).pipe(
-    Match.when({ kind: "instantaneous" }, () => []),
-    Match.when({ kind: "timed" }, (timed) => [
-      ...(timed.value.upcastTiers ?? []).map((_tier, index) =>
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      ),
-      ...(timed.earlyEnd ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-      ...(timed.permanentAfter === undefined
-        ? []
-        : [
-            spellDurationEndingPath(
-              PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
-            ),
-          ]),
-    ]),
-    Match.when({ kind: "concentration" }, (concentration) => [
-      ...(concentration.earlyEnd ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-      ...(concentration.permanentIfMaintainedFull === true
-        ? [
-            spellDurationEndingPath(
-              PositiveInteger((concentration.earlyEnd?.length ?? 0) + 1),
-            ),
-          ]
-        : []),
-    ]),
-    Match.when({ kind: "permanent" }, (permanent) =>
-      (permanent.endsOn ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-    ),
-    Match.when({ kind: "slot_tiered" }, (slotTiered) => [
-      ...slotTiered.tiers.map((_tier, index) =>
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      ),
-    ]),
-    Match.exhaustive,
-  );
-}
-
-function persistentAreaSaveConditionEscapeMaterialPaths(
-  components: OngoingEscapeFacts["mechanics"]["components"],
-): readonly SpellMechanicsBranchPath[] {
-  if (components.m === false) return [];
-  const paths: SpellMechanicsBranchPath[] = [];
-  if (
-    typeof components.m === "object" ||
-    ("materialCostGp" in components && components.materialCostGp !== undefined)
-  ) {
-    paths.push(spellMaterialComponentPath("cost"));
-  }
-  if (
-    "materialConsumed" in components &&
-    components.materialConsumed === true
-  ) {
-    paths.push(spellMaterialComponentPath("consumption"));
-  }
-  return paths;
-}
 
 type PersistentAreaSaveConditionEscapeOperationRole =
   | "passive"
@@ -421,11 +356,28 @@ type PersistentAreaSaveConditionEscapeFailure = {
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
 
-function persistentAreaSaveConditionEscapeFailures(
+type PersistentAreaSaveConditionEscapeProjection =
+  | {
+      readonly tag: "unsupported";
+      readonly failures: readonly PersistentAreaSaveConditionEscapeFailure[];
+    }
+  | {
+      readonly tag: "supported";
+      readonly profileShape: PersistentAreaSaveConditionEscapeProfileShape;
+    };
+
+function persistentAreaSaveConditionEscapeProjection(
   ongoing: OngoingEscapeFacts,
-): readonly PersistentAreaSaveConditionEscapeFailure[] {
+): PersistentAreaSaveConditionEscapeProjection {
   const { mechanics, durationTicks } = ongoing;
   const operations = persistentAreaSaveConditionEscapeOperations(mechanics);
+  const area = mechanics.attachment.value;
+  const areaShape =
+    area.origin.kind === "point_within_range" &&
+    area.shape.kind === "cube" &&
+    area.shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET
+      ? area.shape
+      : null;
   const failures: PersistentAreaSaveConditionEscapeFailure[] = [];
   if (mechanics.level !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL) {
     failures.push({
@@ -460,12 +412,12 @@ function persistentAreaSaveConditionEscapeFailures(
     });
   }
   failures.push(
-    ...persistentAreaSaveConditionEscapeDurationChildPaths(
-      mechanics.duration,
-    ).map((mechanicsPath) => ({
-      failedFact: "duration" as const,
-      mechanicsPath,
-    })),
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath) => ({
+        failedFact: "duration" as const,
+        mechanicsPath,
+      }),
+    ),
   );
   if (durationTicks === undefined || Result.isFailure(durationTicks)) {
     failures.push({
@@ -473,12 +425,7 @@ function persistentAreaSaveConditionEscapeFailures(
       mechanicsPath: spellDurationValuePath(),
     });
   }
-  const area = mechanics.attachment.value;
-  if (
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "cube" ||
-    area.shape.sideFeet !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET
-  ) {
+  if (areaShape === null) {
     failures.push({
       failedFact: "attachment",
       mechanicsPath: spellOngoingAttachmentPath(),
@@ -613,7 +560,22 @@ function persistentAreaSaveConditionEscapeFailures(
       ),
     })),
   );
-  return failures;
+  if (failures.length > 0) return { tag: "unsupported", failures };
+  if (
+    areaShape === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks)
+  ) {
+    return { tag: "unsupported", failures };
+  }
+  return {
+    tag: "supported",
+    profileShape: {
+      durationTicks: durationTicks.success,
+      rangeFeet: PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET,
+      sideFeet: areaShape.sideFeet,
+    },
+  };
 }
 
 function persistentAreaSaveConditionEscapeAdmissionIssue(
@@ -628,36 +590,6 @@ function persistentAreaSaveConditionEscapeAdmissionIssue(
   };
 }
 
-function persistentAreaSaveConditionEscapeProfileShape(
-  ongoing: OngoingEscapeFacts,
-): PersistentAreaSaveConditionEscapeProfileShape | null {
-  const { mechanics, durationTicks } = ongoing;
-  const area = mechanics.attachment.value;
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "hour" ||
-    mechanics.duration.upTo.amount !==
-      PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS
-  ) {
-    return null;
-  }
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    return null;
-  }
-  if (
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "cube" ||
-    area.shape.sideFeet !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET
-  ) {
-    return null;
-  }
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet: PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET,
-    sideFeet: area.shape.sideFeet,
-  };
-}
-
 function isPersistentAreaSaveConditionEscapeRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is Extract<SpellMechanics, { readonly family: "ongoing_effect" }> {
@@ -669,13 +601,8 @@ function isPersistentAreaSaveConditionEscapeRepresentation(
   ) {
     return false;
   }
-  const roles = mechanics.operations.map((operation) =>
-    persistentAreaSaveConditionEscapeOperationRole(operation.trigger),
-  );
-  return (
-    roles.includes("enter") &&
-    roles.includes("startTurn") &&
-    roles.includes("escape")
+  return mechanics.operations.some(
+    ({ effect }) => effect.kind === "area_section_burns_away",
   );
 }
 
@@ -725,9 +652,10 @@ function persistentAreaSaveConditionEscapeMechanicsAdmission(
   if (ongoing === null) {
     return { tag: "notRepresented" };
   }
-  const failures = persistentAreaSaveConditionEscapeFailures(ongoing);
-  const [firstFailure, ...remainingFailures] = failures;
-  if (firstFailure !== undefined) {
+  const projection = persistentAreaSaveConditionEscapeProjection(ongoing);
+  if (projection.tag === "unsupported") {
+    const [firstFailure, ...remainingFailures] = projection.failures;
+    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
       issues: [
@@ -738,11 +666,9 @@ function persistentAreaSaveConditionEscapeMechanicsAdmission(
       ],
     };
   }
-  const profileShape = persistentAreaSaveConditionEscapeProfileShape(ongoing);
-  if (profileShape === null) return { tag: "notRepresented" };
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    ...profileShape,
+    ...projection.profileShape,
   } satisfies PersistentAreaSaveConditionEscapeMechanicsFacts;
   return {
     tag: "supported",
@@ -753,9 +679,7 @@ function persistentAreaSaveConditionEscapeMechanicsAdmission(
       evidence: {
         consumed: [
           ...PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_BASE_CONSUMED_PATHS,
-          ...persistentAreaSaveConditionEscapeMaterialPaths(
-            ongoing.mechanics.components,
-          ),
+          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
         ],
         unowned: PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_UNOWNED_PATHS,
       },

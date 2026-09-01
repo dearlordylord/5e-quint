@@ -30,10 +30,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { PositiveInteger, movementFeet } from "@dnd/shared/types";
 import {
-  spellDurationEndingPath,
-  spellDurationExtensionPath,
   spellDurationValuePath,
-  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -76,6 +73,10 @@ import type {
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
+import {
+  persistentAreaDurationChildPaths,
+  persistentAreaMaterialPaths,
+} from "./persistent-area-save-evidence.ts";
 
 type PersistentAreaSaveCompositeSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -177,72 +178,6 @@ function persistentAreaSaveCompositeDurationIsSupported(
     duration.upTo.unit === "minute" &&
     duration.upTo.amount === PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES
   );
-}
-
-function persistentAreaSaveCompositeDurationChildPaths(
-  duration: OngoingPersistentAreaSaveCompositeFacts["mechanics"]["duration"],
-): readonly SpellMechanicsBranchPath[] {
-  return Match.value(duration).pipe(
-    Match.when({ kind: "instantaneous" }, () => []),
-    Match.when({ kind: "timed" }, (timed) => [
-      ...(timed.value.upcastTiers ?? []).map((_tier, index) =>
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      ),
-      ...(timed.earlyEnd ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-      ...(timed.permanentAfter === undefined
-        ? []
-        : [
-            spellDurationEndingPath(
-              PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
-            ),
-          ]),
-    ]),
-    Match.when({ kind: "concentration" }, (concentration) => [
-      ...(concentration.earlyEnd ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-      ...(concentration.permanentIfMaintainedFull === true
-        ? [
-            spellDurationEndingPath(
-              PositiveInteger((concentration.earlyEnd?.length ?? 0) + 1),
-            ),
-          ]
-        : []),
-    ]),
-    Match.when({ kind: "permanent" }, (permanent) =>
-      (permanent.endsOn ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-    ),
-    Match.when({ kind: "slot_tiered" }, (slotTiered) => [
-      ...slotTiered.tiers.map((_tier, index) =>
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      ),
-    ]),
-    Match.exhaustive,
-  );
-}
-
-function persistentAreaSaveCompositeMaterialPaths(
-  components: OngoingPersistentAreaSaveCompositeFacts["mechanics"]["components"],
-): readonly SpellMechanicsBranchPath[] {
-  if (components.m === false) return [];
-  const paths: SpellMechanicsBranchPath[] = [];
-  if (
-    typeof components.m === "object" ||
-    ("materialCostGp" in components && components.materialCostGp !== undefined)
-  ) {
-    paths.push(spellMaterialComponentPath("cost"));
-  }
-  if (
-    "materialConsumed" in components &&
-    components.materialConsumed === true
-  ) {
-    paths.push(spellMaterialComponentPath("consumption"));
-  }
-  return paths;
 }
 
 function persistentAreaSaveCompositeCylinderFacts(
@@ -455,10 +390,23 @@ type PersistentAreaSaveCompositeFailure = {
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
 
-function persistentAreaSaveCompositeFailures(
+type PersistentAreaSaveCompositeProjection =
+  | {
+      readonly tag: "unsupported";
+      readonly failures: readonly PersistentAreaSaveCompositeFailure[];
+    }
+  | {
+      readonly tag: "supported";
+      readonly profileShape: PersistentAreaSaveCompositeProfileShape;
+    };
+
+function persistentAreaSaveCompositeProjection(
   ongoing: OngoingPersistentAreaSaveCompositeFacts,
-): readonly PersistentAreaSaveCompositeFailure[] {
+): PersistentAreaSaveCompositeProjection {
   const { mechanics, durationTicks } = ongoing;
+  const cylinder = persistentAreaSaveCompositeCylinderFacts(
+    mechanics.attachment.value,
+  );
   const operations = persistentAreaSaveCompositeOperations(mechanics);
   const failures: PersistentAreaSaveCompositeFailure[] = [];
   if (mechanics.level !== PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL) {
@@ -489,7 +437,7 @@ function persistentAreaSaveCompositeFailures(
     });
   }
   failures.push(
-    ...persistentAreaSaveCompositeDurationChildPaths(mechanics.duration).map(
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
       (mechanicsPath) => ({
         failedFact: "duration" as const,
         mechanicsPath,
@@ -502,10 +450,7 @@ function persistentAreaSaveCompositeFailures(
       mechanicsPath: spellDurationValuePath(),
     });
   }
-  if (
-    persistentAreaSaveCompositeCylinderFacts(mechanics.attachment.value) ===
-    null
-  ) {
+  if (cylinder === null) {
     failures.push({
       failedFact: "attachment",
       mechanicsPath: spellOngoingAttachmentPath(),
@@ -603,7 +548,22 @@ function persistentAreaSaveCompositeFailures(
     })),
   );
   failures.push(...persistentAreaSaveCompositeUsageLimitFailures(operations));
-  return failures;
+  if (failures.length > 0) return { tag: "unsupported", failures };
+  if (
+    cylinder === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks)
+  ) {
+    return { tag: "unsupported", failures };
+  }
+  return {
+    tag: "supported",
+    profileShape: {
+      durationTicks: durationTicks.success,
+      rangeFeet: PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET,
+      ...cylinder,
+    },
+  };
 }
 
 function persistentAreaSaveCompositeAdmissionIssue(
@@ -618,27 +578,6 @@ function persistentAreaSaveCompositeAdmissionIssue(
   };
 }
 
-function persistentAreaSaveCompositeProfileShape(
-  ongoing: OngoingPersistentAreaSaveCompositeFacts,
-): PersistentAreaSaveCompositeProfileShape | null {
-  const { mechanics, durationTicks } = ongoing;
-  const cylinder = persistentAreaSaveCompositeCylinderFacts(
-    mechanics.attachment.value,
-  );
-  if (!persistentAreaSaveCompositeDurationIsSupported(mechanics.duration)) {
-    return null;
-  }
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    return null;
-  }
-  if (cylinder === null) return null;
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet: PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET,
-    ...cylinder,
-  };
-}
-
 function isPersistentAreaSaveCompositeRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is OngoingMechanics {
@@ -650,10 +589,9 @@ function isPersistentAreaSaveCompositeRepresentation(
   ) {
     return false;
   }
-  const roles = mechanics.operations.map((operation) =>
-    persistentAreaSaveCompositeOperationRole(operation.trigger),
+  return mechanics.operations.some(
+    ({ effect }) => effect.kind === "douse_exposed_flames",
   );
-  return roles.includes("enter") && roles.includes("startTurn");
 }
 
 function persistentAreaSaveCompositeMechanicsAdmission(
@@ -670,9 +608,10 @@ function persistentAreaSaveCompositeMechanicsAdmission(
   if (ongoing === null) {
     return { tag: "notRepresented" };
   }
-  const failures = persistentAreaSaveCompositeFailures(ongoing);
-  const [firstFailure, ...remainingFailures] = failures;
-  if (firstFailure !== undefined) {
+  const projection = persistentAreaSaveCompositeProjection(ongoing);
+  if (projection.tag === "unsupported") {
+    const [firstFailure, ...remainingFailures] = projection.failures;
+    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
       issues: [
@@ -681,13 +620,9 @@ function persistentAreaSaveCompositeMechanicsAdmission(
       ],
     };
   }
-  const profileShape = persistentAreaSaveCompositeProfileShape(ongoing);
-  if (profileShape === null) {
-    return { tag: "notRepresented" };
-  }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    ...profileShape,
+    ...projection.profileShape,
   } satisfies PersistentAreaSaveCompositeMechanicsFacts;
   return {
     tag: "supported",
@@ -698,9 +633,7 @@ function persistentAreaSaveCompositeMechanicsAdmission(
       evidence: {
         consumed: [
           ...PERSISTENT_AREA_SAVE_COMPOSITE_BASE_CONSUMED_PATHS,
-          ...persistentAreaSaveCompositeMaterialPaths(
-            ongoing.mechanics.components,
-          ),
+          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
         ],
         unowned: PERSISTENT_AREA_SAVE_COMPOSITE_UNOWNED_PATHS,
       },

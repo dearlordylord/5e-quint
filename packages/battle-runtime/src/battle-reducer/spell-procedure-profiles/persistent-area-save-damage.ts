@@ -17,21 +17,26 @@ function persistentAreaSaveDamageMechanicsAdmission(
 ): SpellProcedureMechanicsInspection<"persistentAreaSaveDamage"> {
   const inspections = [
     sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(source),
+    collisionRepositionPersistentAreaSaveDamageProfile.admitMechanics(source),
     stationaryPersistentAreaSaveDamageProfile.admitMechanics(source),
+    directedRepositionPersistentAreaSaveDamageProfile.admitMechanics(source),
   ];
+  const issues = inspections.flatMap((inspection) =>
+    inspection.tag === "unsupported" ? inspection.issues : [],
+  );
+  if (issues.length > 0) {
+    const [firstIssue, ...remainingIssues] = issues;
+    if (firstIssue !== undefined) {
+      return { tag: "unsupported", issues: [firstIssue, ...remainingIssues] };
+    }
+  }
   const supported = inspections.find(
     (inspection) => inspection.tag === "supported",
   );
   if (supported?.tag === "supported") {
     return supported;
   }
-  const issues = inspections.flatMap((inspection) =>
-    inspection.tag === "unsupported" ? inspection.issues : [],
-  );
-  const [firstIssue, ...remainingIssues] = issues;
-  return firstIssue === undefined
-    ? { tag: "notRepresented" }
-    : { tag: "unsupported", issues: [firstIssue, ...remainingIssues] };
+  return { tag: "notRepresented" };
 }
 
 export const persistentAreaSaveDamageProfile = {

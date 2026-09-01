@@ -25,9 +25,14 @@ import { persistentAreaSaveCompositeProfile } from "./persistent-area-save-compo
 import { persistentAreaSaveConditionEscapeProfile } from "./persistent-area-save-condition-escape.ts";
 import { persistentAreaSaveConditionProfile } from "./persistent-area-save-condition.ts";
 import { persistentAreaSaveDamageProfile } from "./persistent-area-save-damage.ts";
+import { collisionRepositionPersistentAreaSaveDamageProfile } from "./collision-reposition-persistent-area-save-damage.ts";
+import { directedRepositionPersistentAreaSaveDamageProfile } from "./directed-reposition-persistent-area-save-damage.ts";
 import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./source-turn-translation-persistent-area-save-damage.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
+import { spellAdmissionContextFor } from "./admission-context.ts";
+import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
+import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 
 function mechanicsSource(
   source: BattleSpellAdmissionSource,
@@ -52,21 +57,33 @@ function sourceWith(
   };
 }
 
-function contextFor(level: number): SpellAdmissionContext {
-  return {
-    actor: undefined as never,
-    castingSource: undefined as never,
-    battle: undefined,
-    spellCastOptions: [
-      { spellLevel: level as never, payment: { tag: "slot" } },
-    ],
-  };
+function contextFor(
+  castingSource: SpellAdmissionContext["castingSource"],
+): SpellAdmissionContext {
+  const session = spellBattle({
+    spellSlots: [{ spellLevel: 5, count: 1 }],
+  });
+  const actor = session.state.combatants.get(spellCasterId);
+  if (actor === undefined) {
+    throw new Error("Expected the spell-admission caster in the test battle.");
+  }
+  const context = spellAdmissionContextFor(actor, session.state);
+  if (context === null) {
+    throw new Error("Expected a spell-admission context for the test caster.");
+  }
+  return { ...context, castingSource };
 }
 
 type StaticAdmissionResult =
   | ReturnType<typeof persistentAreaSaveCompositeProfile.admitMechanics>
   | ReturnType<typeof persistentAreaSaveConditionEscapeProfile.admitMechanics>
   | ReturnType<typeof persistentAreaSaveConditionProfile.admitMechanics>
+  | ReturnType<
+      typeof collisionRepositionPersistentAreaSaveDamageProfile.admitMechanics
+    >
+  | ReturnType<
+      typeof directedRepositionPersistentAreaSaveDamageProfile.admitMechanics
+    >
   | ReturnType<typeof persistentAreaSaveDamageProfile.admitMechanics>;
 
 function expectSupported(result: StaticAdmissionResult) {
@@ -122,6 +139,16 @@ describe("ongoing area spell static admission", () => {
     ["web", "web", persistentAreaSaveConditionEscapeProfile],
     ["grease", "grease", persistentAreaSaveConditionProfile],
     [
+      "collision reposition",
+      "flaming_sphere",
+      collisionRepositionPersistentAreaSaveDamageProfile,
+    ],
+    [
+      "directed reposition",
+      "moonbeam",
+      directedRepositionPersistentAreaSaveDamageProfile,
+    ],
+    [
       "cloudkill",
       "cloudkill",
       sourceTurnTranslationPersistentAreaSaveDamageProfile,
@@ -159,7 +186,7 @@ describe("ongoing area spell static admission", () => {
     const source = spellAdmissionSource(spellRecord("cloudkill"));
     const [invocation] = admitted.admitted.admit(
       battleSpellExecutionSourceFromAdmission(source),
-      contextFor(5),
+      contextFor(source.castingSource),
     );
 
     expect(invocation).toMatchObject({
@@ -176,6 +203,16 @@ describe("ongoing area spell static admission", () => {
     ["composite", "sleet_storm", persistentAreaSaveCompositeProfile],
     ["condition escape", "web", persistentAreaSaveConditionEscapeProfile],
     ["condition", "grease", persistentAreaSaveConditionProfile],
+    [
+      "collision reposition",
+      "flaming_sphere",
+      collisionRepositionPersistentAreaSaveDamageProfile,
+    ],
+    [
+      "directed reposition",
+      "moonbeam",
+      directedRepositionPersistentAreaSaveDamageProfile,
+    ],
     [
       "translation",
       "cloudkill",
@@ -210,6 +247,16 @@ describe("ongoing area spell static admission", () => {
     ["condition escape", "web", persistentAreaSaveConditionEscapeProfile],
     ["condition", "grease", persistentAreaSaveConditionProfile],
     [
+      "collision reposition",
+      "flaming_sphere",
+      collisionRepositionPersistentAreaSaveDamageProfile,
+    ],
+    [
+      "directed reposition",
+      "moonbeam",
+      directedRepositionPersistentAreaSaveDamageProfile,
+    ],
+    [
       "translation",
       "cloudkill",
       sourceTurnTranslationPersistentAreaSaveDamageProfile,
@@ -236,13 +283,109 @@ describe("ongoing area spell static admission", () => {
     const insectPlague = persistentAreaSaveDamageProfile.admitMechanics(
       mechanicsSource(spellAdmissionSource(spellRecord("insect_plague"))),
     );
+    const flamingSphere = persistentAreaSaveDamageProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(spellRecord("flaming_sphere"))),
+    );
+    const moonbeam = persistentAreaSaveDamageProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(spellRecord("moonbeam"))),
+    );
     const sleetStorm = persistentAreaSaveDamageProfile.admitMechanics(
       mechanicsSource(spellAdmissionSource(spellRecord("sleet_storm"))),
     );
 
     expect(cloudkill.tag).toBe("supported");
     expect(insectPlague.tag).toBe("supported");
+    expect(flamingSphere.tag).toBe("supported");
+    expect(moonbeam.tag).toBe("supported");
     expect(sleetStorm).toEqual({ tag: "notRepresented" });
+  });
+
+  test("keeps the collision sibling represented when a lifecycle trigger changes", () => {
+    const result =
+      collisionRepositionPersistentAreaSaveDamageProfile.admitMechanics(
+        sourceWith("flaming_sphere", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          const [firstOperation, ...remainingOperations] = mechanics.operations;
+          const replaceTrigger = (operation: typeof firstOperation) =>
+            operation.trigger.kind === "on_area_moves_into_creature_space"
+              ? {
+                  ...operation,
+                  trigger: {
+                    kind: "on_creature_moves_through_area" as const,
+                  },
+                }
+              : operation;
+          return {
+            ...mechanics,
+            operations: [
+              replaceTrigger(firstOperation),
+              ...remainingOperations.map(replaceTrigger),
+            ],
+          };
+        }),
+      );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.some(({ failedFact }) => failedFact === "ramOperation"),
+    ).toBe(true);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          failedFact: "operationCount",
+          mechanicsPath: expect.objectContaining({
+            nodes: expect.arrayContaining([
+              { kind: "occurrence", ordinal: 3, role: "procedure" },
+            ]),
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("keeps the directed sibling represented when a lifecycle trigger changes", () => {
+    const result =
+      directedRepositionPersistentAreaSaveDamageProfile.admitMechanics(
+        sourceWith("moonbeam", (mechanics) => {
+          if (mechanics.family !== "ongoing_effect") return mechanics;
+          const [firstOperation, ...remainingOperations] = mechanics.operations;
+          const replaceTrigger = (operation: typeof firstOperation) =>
+            operation.trigger.kind === "on_creature_enters_area"
+              ? {
+                  ...operation,
+                  trigger: {
+                    kind: "on_creature_starts_turn_in_area" as const,
+                  },
+                }
+              : operation;
+          return {
+            ...mechanics,
+            operations: [
+              replaceTrigger(firstOperation),
+              ...remainingOperations.map(replaceTrigger),
+            ],
+          };
+        }),
+      );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.some(({ failedFact }) => failedFact === "enterOperation"),
+    ).toBe(true);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          failedFact: "operationCount",
+          mechanicsPath: expect.objectContaining({
+            nodes: expect.arrayContaining([
+              { kind: "occurrence", ordinal: 4, role: "procedure" },
+            ]),
+          }),
+        }),
+      ]),
+    );
   });
 
   test("does not represent activation mechanics or a sibling lifecycle", () => {
@@ -304,6 +447,56 @@ describe("ongoing area spell static admission", () => {
     expect(consumedAdmission.admitted.evidence).toEqual(
       expectedEvidence(
         3,
+        [spellDurationValuePath()],
+        [spellMaterialComponentPath("consumption")],
+      ),
+    );
+  });
+
+  test("applies material evidence traversal to both reposition siblings", () => {
+    const priced =
+      collisionRepositionPersistentAreaSaveDamageProfile.admitMechanics(
+        sourceWith("flaming_sphere", (mechanics) => {
+          if (
+            mechanics.family !== "ongoing_effect" ||
+            mechanics.components.m === false
+          ) {
+            throw new Error(
+              "Expected generic Flaming Sphere material components.",
+            );
+          }
+          return {
+            ...mechanics,
+            components: { ...mechanics.components, materialCostGp: 25 },
+          };
+        }),
+      );
+    const consumed =
+      directedRepositionPersistentAreaSaveDamageProfile.admitMechanics(
+        sourceWith("moonbeam", (mechanics) => {
+          if (
+            mechanics.family !== "ongoing_effect" ||
+            mechanics.components.m === false
+          ) {
+            throw new Error("Expected generic Moonbeam material components.");
+          }
+          return {
+            ...mechanics,
+            components: { ...mechanics.components, materialConsumed: true },
+          };
+        }),
+      );
+
+    expect(expectSupported(priced).admitted.evidence).toEqual(
+      expectedEvidence(
+        5,
+        [spellDurationValuePath()],
+        [spellMaterialComponentPath("cost")],
+      ),
+    );
+    expect(expectSupported(consumed).admitted.evidence).toEqual(
+      expectedEvidence(
+        5,
         [spellDurationValuePath()],
         [spellMaterialComponentPath("consumption")],
       ),

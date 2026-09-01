@@ -31,9 +31,7 @@ import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra
 import { PositiveInteger, movementFeet } from "@dnd/shared/types";
 import {
   spellDurationEndingPath,
-  spellDurationExtensionPath,
   spellDurationValuePath,
-  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -78,6 +76,10 @@ import type {
   SpellProcedureMechanicsFacts,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
+import {
+  persistentAreaDurationChildPaths,
+  persistentAreaMaterialPaths,
+} from "./persistent-area-save-evidence.ts";
 
 type TranslatingPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -321,18 +323,6 @@ function translatingPersistentAreaOperationRole(
   );
 }
 
-function translatingPersistentAreaDurationIsSupported(
-  duration: OngoingTranslatingPersistentAreaFacts["mechanics"]["duration"],
-): boolean {
-  return (
-    duration.kind === "concentration" &&
-    duration.upTo.unit === "minute" &&
-    duration.upTo.amount === TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES &&
-    duration.earlyEnd?.length === 1 &&
-    duration.earlyEnd[0]?.kind === "area_dispersed_by_strong_wind"
-  );
-}
-
 function translatingPersistentAreaDurationUnsupportedPaths(
   duration: OngoingTranslatingPersistentAreaFacts["mechanics"]["duration"],
 ): readonly SpellMechanicsBranchPath[] {
@@ -354,55 +344,7 @@ function translatingPersistentAreaDurationUnsupportedPaths(
     }
     return paths;
   }
-  return Match.value(duration).pipe(
-    Match.when({ kind: "instantaneous" }, () => []),
-    Match.when({ kind: "timed" }, (timed) => [
-      ...(timed.value.upcastTiers ?? []).map((_tier, index) =>
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      ),
-      ...(timed.earlyEnd ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-      ...(timed.permanentAfter === undefined
-        ? []
-        : [
-            spellDurationEndingPath(
-              PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
-            ),
-          ]),
-    ]),
-    Match.when({ kind: "permanent" }, (permanent) =>
-      (permanent.endsOn ?? []).map((_ending, index) =>
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      ),
-    ),
-    Match.when({ kind: "slot_tiered" }, (slotTiered) => [
-      ...slotTiered.tiers.map((_tier, index) =>
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      ),
-    ]),
-    Match.exhaustive,
-  );
-}
-
-function translatingPersistentAreaMaterialPaths(
-  components: OngoingTranslatingPersistentAreaFacts["mechanics"]["components"],
-): readonly SpellMechanicsBranchPath[] {
-  if (components.m === false) return [];
-  const paths: SpellMechanicsBranchPath[] = [];
-  if (
-    typeof components.m === "object" ||
-    ("materialCostGp" in components && components.materialCostGp !== undefined)
-  ) {
-    paths.push(spellMaterialComponentPath("cost"));
-  }
-  if (
-    "materialConsumed" in components &&
-    components.materialConsumed === true
-  ) {
-    paths.push(spellMaterialComponentPath("consumption"));
-  }
-  return paths;
+  return persistentAreaDurationChildPaths(duration);
 }
 
 function translatingPersistentAreaRadiusFeet(
@@ -480,57 +422,6 @@ function translatingPersistentAreaSaveLimitIsSupported(
   return saveLimitGroup !== null && saveLimitGroup.length > 0;
 }
 
-function translatingPersistentAreaDamageFacts(
-  mechanics: TranslatingPersistentAreaMechanics,
-  operations: TranslatingPersistentAreaOperations,
-): Pick<TranslatingPersistentAreaProfileShape, "damageAmount"> | null {
-  const amounts = translatingPersistentAreaDamageAmounts(mechanics, operations);
-  if (
-    amounts.initial === null ||
-    amounts.movedArea === null ||
-    amounts.enter === null ||
-    amounts.endTurn === null ||
-    !translatingPersistentAreaSaveLimitIsSupported(mechanics, operations)
-  ) {
-    return null;
-  }
-  return { damageAmount: amounts.initial };
-}
-
-function translatingPersistentAreaProfileShape(
-  ongoing: OngoingTranslatingPersistentAreaFacts,
-): TranslatingPersistentAreaProfileShape | null {
-  const { mechanics, durationTicks } = ongoing;
-  const { duration, attachment } = mechanics;
-  const area = attachment.value;
-  const operations = translatingPersistentAreaOperations(mechanics);
-  const radiusFeet = translatingPersistentAreaRadiusFeet(area);
-  const translationDistanceFeet =
-    translatingPersistentAreaTranslationDistanceFeet(operations.move);
-  const damageFacts = translatingPersistentAreaDamageFacts(
-    mechanics,
-    operations,
-  );
-  if (!translatingPersistentAreaDurationIsSupported(duration)) return null;
-  if (durationTicks === undefined || Result.isFailure(durationTicks))
-    return null;
-  if (radiusFeet === null) return null;
-  if (translationDistanceFeet === null) return null;
-  if (
-    !translatingPersistentAreaPassiveOperationIsSupported(operations.passive)
-  ) {
-    return null;
-  }
-  if (damageFacts === null) return null;
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet: TRANSLATING_PERSISTENT_AREA_RANGE_FEET,
-    radiusFeet,
-    translationDistanceFeet,
-    damageAmount: damageFacts.damageAmount,
-  };
-}
-
 function translatingPersistentAreaOperationPath(
   occurrence: TranslatingPersistentAreaOperationOccurrence | undefined,
   fallbackOrdinal: PositiveInteger,
@@ -551,6 +442,16 @@ type TranslatingPersistentAreaFailure = {
   readonly failedFact: TranslatingPersistentAreaFailedFact;
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
+
+type TranslatingPersistentAreaProjection =
+  | {
+      readonly tag: "unsupported";
+      readonly failures: readonly TranslatingPersistentAreaFailure[];
+    }
+  | {
+      readonly tag: "supported";
+      readonly profileShape: TranslatingPersistentAreaProfileShape;
+    };
 
 function translatingPersistentAreaUsageLimitFailures(input: {
   readonly initialPhase: TranslatingPersistentAreaMechanics["initialPhase"];
@@ -599,11 +500,31 @@ function translatingPersistentAreaUsageLimitFailures(input: {
   }));
 }
 
-function translatingPersistentAreaFailures(
+function translatingPersistentAreaProjection(
   ongoing: OngoingTranslatingPersistentAreaFacts,
-): readonly TranslatingPersistentAreaFailure[] {
+): TranslatingPersistentAreaProjection {
   const { mechanics, durationTicks } = ongoing;
+  const area = mechanics.attachment.value;
   const operations = translatingPersistentAreaOperations(mechanics);
+  const radiusFeet = translatingPersistentAreaRadiusFeet(area);
+  const translationDistanceFeet =
+    translatingPersistentAreaTranslationDistanceFeet(operations.move);
+  const damageAmounts = translatingPersistentAreaDamageAmounts(
+    mechanics,
+    operations,
+  );
+  const saveLimitSupported = translatingPersistentAreaSaveLimitIsSupported(
+    mechanics,
+    operations,
+  );
+  const damageFacts =
+    damageAmounts.initial !== null &&
+    damageAmounts.movedArea !== null &&
+    damageAmounts.enter !== null &&
+    damageAmounts.endTurn !== null &&
+    saveLimitSupported
+      ? { damageAmount: damageAmounts.initial }
+      : null;
   const failures: TranslatingPersistentAreaFailure[] = [];
   if (mechanics.level !== TRANSLATING_PERSISTENT_AREA_LEVEL) {
     failures.push({
@@ -651,21 +572,13 @@ function translatingPersistentAreaFailures(
       mechanicsPath: spellDurationValuePath(),
     });
   }
-  const area = mechanics.attachment.value;
-  if (
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== TRANSLATING_PERSISTENT_AREA_RADIUS_FEET
-  ) {
+  if (radiusFeet === null) {
     failures.push({
       failedFact: "attachment",
       mechanicsPath: spellOngoingAttachmentPath(),
     });
   }
-  if (
-    translatingPersistentAreaSaveGateDamageAmount(mechanics.initialPhase) ===
-    null
-  ) {
+  if (damageAmounts.initial === null) {
     failures.push({
       failedFact: "initialSaveDamage",
       mechanicsPath: spellOngoingInitialPhasePath(),
@@ -682,9 +595,7 @@ function translatingPersistentAreaFailures(
       ),
     });
   }
-  if (
-    translatingPersistentAreaTranslationDistanceFeet(operations.move) === null
-  ) {
+  if (translationDistanceFeet === null) {
     failures.push({
       failedFact: "moveOperation",
       mechanicsPath: translatingPersistentAreaOperationEffectPath(
@@ -693,11 +604,7 @@ function translatingPersistentAreaFailures(
       ),
     });
   }
-  if (
-    translatingPersistentAreaSaveGateDamageAmount(
-      operations.movedArea?.operation.effect,
-    ) === null
-  ) {
+  if (damageAmounts.movedArea === null) {
     failures.push({
       failedFact: "movedAreaOperation",
       mechanicsPath: translatingPersistentAreaOperationEffectPath(
@@ -706,11 +613,7 @@ function translatingPersistentAreaFailures(
       ),
     });
   }
-  if (
-    translatingPersistentAreaSaveGateDamageAmount(
-      operations.enter?.operation.effect,
-    ) === null
-  ) {
+  if (damageAmounts.enter === null) {
     failures.push({
       failedFact: "enterOperation",
       mechanicsPath: translatingPersistentAreaOperationEffectPath(
@@ -719,11 +622,7 @@ function translatingPersistentAreaFailures(
       ),
     });
   }
-  if (
-    translatingPersistentAreaSaveGateDamageAmount(
-      operations.endTurn?.operation.effect,
-    ) === null
-  ) {
+  if (damageAmounts.endTurn === null) {
     failures.push({
       failedFact: "endTurnOperation",
       mechanicsPath: translatingPersistentAreaOperationEffectPath(
@@ -759,7 +658,26 @@ function translatingPersistentAreaFailures(
       operations,
     }),
   );
-  return failures;
+  if (failures.length > 0) return { tag: "unsupported", failures };
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    radiusFeet === null ||
+    translationDistanceFeet === null ||
+    damageFacts === null
+  ) {
+    return { tag: "unsupported", failures };
+  }
+  return {
+    tag: "supported",
+    profileShape: {
+      durationTicks: durationTicks.success,
+      rangeFeet: TRANSLATING_PERSISTENT_AREA_RANGE_FEET,
+      radiusFeet,
+      translationDistanceFeet,
+      damageAmount: damageFacts.damageAmount,
+    },
+  };
 }
 
 function translatingPersistentAreaAdmissionIssue(
@@ -785,14 +703,9 @@ function isTranslatingPersistentAreaRepresentation(
   ) {
     return false;
   }
-  const roles = mechanics.operations.map((operation) =>
-    translatingPersistentAreaOperationRole(operation.trigger),
-  );
-  return (
-    roles.includes("move") &&
-    roles.includes("movedArea") &&
-    roles.includes("enter") &&
-    roles.includes("endTurn")
+  return mechanics.operations.some(
+    ({ effect }) =>
+      effect.kind === "move_area" && effect.direction === "away_from_caster",
   );
 }
 
@@ -856,9 +769,10 @@ function translatingPersistentAreaMechanicsAdmission(
   if (ongoing === null) {
     return { tag: "notRepresented" };
   }
-  const failures = translatingPersistentAreaFailures(ongoing);
-  const [firstFailure, ...remainingFailures] = failures;
-  if (firstFailure !== undefined) {
+  const projection = translatingPersistentAreaProjection(ongoing);
+  if (projection.tag === "unsupported") {
+    const [firstFailure, ...remainingFailures] = projection.failures;
+    if (firstFailure === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
       issues: [
@@ -867,11 +781,9 @@ function translatingPersistentAreaMechanicsAdmission(
       ],
     };
   }
-  const profileShape = translatingPersistentAreaProfileShape(ongoing);
-  if (profileShape === null) return { tag: "notRepresented" };
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    ...profileShape,
+    ...projection.profileShape,
   } satisfies TranslatingPersistentAreaMechanicsFacts;
   return {
     tag: "supported",
@@ -882,9 +794,7 @@ function translatingPersistentAreaMechanicsAdmission(
       evidence: {
         consumed: [
           ...TRANSLATING_PERSISTENT_AREA_BASE_CONSUMED_PATHS,
-          ...translatingPersistentAreaMaterialPaths(
-            ongoing.mechanics.components,
-          ),
+          ...persistentAreaMaterialPaths(ongoing.mechanics.components),
         ],
         unowned: TRANSLATING_PERSISTENT_AREA_UNOWNED_PATHS,
       },
