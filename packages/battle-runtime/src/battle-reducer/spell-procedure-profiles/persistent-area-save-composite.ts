@@ -217,7 +217,6 @@ function persistentAreaSaveCompositeDurationChildPaths(
       ),
     ),
     Match.when({ kind: "slot_tiered" }, (slotTiered) => [
-      ...persistentAreaSaveCompositeDurationChildPaths(slotTiered.base),
       ...slotTiered.tiers.map((_tier, index) =>
         spellDurationExtensionPath(PositiveInteger(index + 1)),
       ),

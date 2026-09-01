@@ -198,7 +198,6 @@ function persistentAreaSaveConditionDurationChildPaths(
       ),
     ),
     Match.when({ kind: "slot_tiered" }, (slotTiered) => [
-      ...persistentAreaSaveConditionDurationChildPaths(slotTiered.base),
       ...slotTiered.tiers.map((_tier, index) =>
         spellDurationExtensionPath(PositiveInteger(index + 1)),
       ),

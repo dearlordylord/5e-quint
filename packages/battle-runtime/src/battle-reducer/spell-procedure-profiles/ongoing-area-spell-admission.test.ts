@@ -567,4 +567,49 @@ describe("ongoing area spell static admission", () => {
       result.issues.some(({ failedFact }) => failedFact === "durationTicks"),
     ).toBe(false);
   });
+
+  test("uses top-level slot-tiered duration coordinates without recursing its base", () => {
+    const result = persistentAreaSaveConditionProfile.admitMechanics(
+      sourceWith("grease", (mechanics) => {
+        if (
+          mechanics.family !== "ongoing_effect" ||
+          mechanics.duration.kind !== "timed"
+        ) {
+          throw new Error("Expected timed Grease mechanics.");
+        }
+        return {
+          ...mechanics,
+          duration: {
+            kind: "slot_tiered",
+            base: {
+              ...mechanics.duration,
+              earlyEnd: [{ kind: "target_takes_damage" }],
+            },
+            tiers: [
+              {
+                atSlot: 2,
+                duration: {
+                  kind: "timed",
+                  value: { unit: "minute", amount: 2 },
+                },
+              },
+            ],
+          },
+        };
+      }),
+    );
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues
+        .filter(({ failedFact }) => failedFact === "duration")
+        .map(({ mechanicsPath }) => mechanicsPath),
+    ).toEqual([
+      spellDurationValuePath(),
+      spellDurationExtensionPath(PositiveInteger(1)),
+    ]);
+    expect(
+      result.issues.map(({ mechanicsPath }) => mechanicsPath),
+    ).not.toContainEqual(spellDurationEndingPath(PositiveInteger(1)));
+  });
 });

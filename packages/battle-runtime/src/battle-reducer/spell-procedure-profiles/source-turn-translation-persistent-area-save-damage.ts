@@ -377,7 +377,6 @@ function translatingPersistentAreaDurationUnsupportedPaths(
       ),
     ),
     Match.when({ kind: "slot_tiered" }, (slotTiered) => [
-      ...translatingPersistentAreaDurationUnsupportedPaths(slotTiered.base),
       ...slotTiered.tiers.map((_tier, index) =>
         spellDurationExtensionPath(PositiveInteger(index + 1)),
       ),
