@@ -520,6 +520,7 @@ export function battleCreatureStateAdmissionFromInit(
     const resourceProcedureAdmissions = admitCharacterBattleResourceProcedures(
       creatureInit.resources ?? [],
       classLevels,
+      creatureInit.characterUnitRefs,
     );
     if (Result.isFailure(resourceProcedureAdmissions)) {
       return {

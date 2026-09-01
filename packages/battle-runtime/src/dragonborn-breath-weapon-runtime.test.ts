@@ -59,6 +59,35 @@ const rageUnit = unitLibrary.requireUnit("barbarian_rage");
 const secondTargetId = combatantId("dragonborn-breath-second-target");
 
 describe("Dragonborn Breath Weapon runtime", () => {
+  test("projects selected-ancestry resource facts through one Pool-correlated procedure", () => {
+    const session = breathWeaponBattle();
+    const actor = session.state.combatants.get(spellCasterId);
+    const context = session.context.characters.get(spellCasterId);
+    if (actor?.origin.kind !== "character" || context === undefined) {
+      throw new Error("Expected Dragonborn character execution context.");
+    }
+    const resourcePoolRef = context.resourceOwnership.find(
+      ({ unit }) => unit.id === breathWeaponUnit.id,
+    )?.resourcePoolRef;
+    if (resourcePoolRef === undefined) {
+      throw new Error("Expected Breath Weapon resource ownership.");
+    }
+    const ownership = context.unitProcedureOwnership.filter(
+      ({ unitId }) => unitId === breathWeaponUnit.id,
+    );
+
+    expect(ownership).toHaveLength(1);
+    expect(
+      actor.origin.execution.procedureBindings.find(
+        ({ procedureRef }) => procedureRef === ownership[0]?.procedureRef,
+      )?.procedure,
+    ).toMatchObject({
+      kind: "unitFeature",
+      source: { kind: "resourcePool", resourcePoolRef },
+      execution: { kind: "attackActionAreaSaveDamageReplacement" },
+    });
+  });
+
   test("positive unit-feature damage requests a repeat save and applies its outcome", () => {
     const session = breathWeaponBattle({ includeDamageRepeatSave: true });
     const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
