@@ -373,6 +373,10 @@ type RollModifierSaveGateOccurrence = {
   >["phases"][number] & { readonly kind: "save_gate" };
   readonly ordinal: PositiveInteger;
 };
+type RollModifierRepeatSaveOccurrence = {
+  readonly phaseOrdinal: PositiveInteger;
+  readonly repeatOrdinal: PositiveInteger;
+};
 
 function rollModifierOperationOccurrences(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
@@ -432,6 +436,16 @@ function rollModifierSupportedSaveGateOccurrence(
   return rollModifierSaveGateOccurrences(mechanics).find(
     ({ phase }) => phase.onFail.kind === "modify_roll_numeric",
   );
+}
+
+function rollModifierRepeatSaveOccurrences(
+  phase: RollModifierSaveGateOccurrence["phase"],
+  phaseOrdinal: PositiveInteger,
+): readonly RollModifierRepeatSaveOccurrence[] {
+  return (phase.repeatSaves ?? []).map((_repeat, index) => ({
+    phaseOrdinal,
+    repeatOrdinal: PositiveInteger(index + 1),
+  }));
 }
 
 function isRollModifierDuration(
@@ -831,13 +845,8 @@ function rollModifierOngoingBranchProjection(
   const extras = occurrences.filter(
     ({ ordinal }) => ordinal !== expected?.ordinal,
   );
-  if (mechanics.operations.length !== 1 && extras.length === 0) {
-    pushIssue(
-      "operationCount",
-      spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    );
+  if (mechanics.operations.length === 0) {
+    pushIssue("operationCount", spellOngoingOperationPath(FIRST_ORDINAL));
   }
   for (const occurrence of extras) {
     pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
@@ -930,13 +939,13 @@ function rollModifierActivationBranchProjection(
       pushIssue("mode", spellActivationPhasePath(occurrence.ordinal));
     }
     if (occurrence.phase.kind !== "save_gate") continue;
-    for (const [index] of (occurrence.phase.repeatSaves ?? []).entries()) {
+    for (const repeat of rollModifierRepeatSaveOccurrences(
+      occurrence.phase,
+      occurrence.ordinal,
+    )) {
       pushIssue(
         "repeatSaves",
-        spellActivationRepeatPath(
-          occurrence.ordinal,
-          PositiveInteger(index + 1),
-        ),
+        spellActivationRepeatPath(repeat.phaseOrdinal, repeat.repeatOrdinal),
       );
     }
     if (occurrence.phase.autoSuccessIfCasterSlotGte !== undefined) {

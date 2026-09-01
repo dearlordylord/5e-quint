@@ -130,6 +130,9 @@ import { discoverSubtleSpellMetamagicSelections } from "../metamagic.ts";
 import {
   admitSpellTargetAttachment,
   isSpellCanonicalDurationValue,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
@@ -154,7 +157,6 @@ import {
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
-import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type ScalarBuffInvocation = Extract<
   SupportedSpellInvocation,
@@ -372,6 +374,7 @@ const SCALAR_BUFF_TARGET_SELECTION_FIELDS = [
   "targetKinds",
   "disposition",
 ] as const;
+const FIRST_ORDINAL = PositiveInteger(1);
 
 type ScalarBuffActivationPhaseOccurrence = {
   readonly phase: Extract<
@@ -386,7 +389,7 @@ type ScalarBuffActivationEffectOccurrence = {
     { readonly family: "activation" }
   >["phases"][number] & { readonly kind: "direct" };
   readonly phaseOrdinal: PositiveInteger;
-  readonly effect: ScalarBuffSurfaceEffect;
+  readonly effect: EffectAtom;
   readonly effectOrdinal: PositiveInteger;
 };
 type ScalarBuffOperationOccurrence = {
@@ -465,7 +468,7 @@ function scalarBuffActivationEffectOccurrences(
     ({ phase, ordinal: phaseOrdinal }) => {
       if (phase.kind !== "direct") return [];
       return (phase.effects ?? []).flatMap((candidate, index) =>
-        isEffectAtom(candidate) && isScalarBuffEffectKind(candidate)
+        isEffectAtom(candidate)
           ? [
               {
                 phase,
@@ -880,24 +883,21 @@ function scalarBuffActivationBranchProjection(
     }
   }
   const effects = scalarBuffActivationEffectOccurrences(mechanics);
-  const expected = effects[0];
+  const expected = effects.find(({ effect }) => isScalarBuffEffectKind(effect));
   const selectedPhaseOrdinal =
     expected?.phaseOrdinal ??
     phases.find(({ phase }) => phase.kind === "direct")?.ordinal ??
-    PositiveInteger(1);
+    FIRST_ORDINAL;
   const selectedPhase = phases.find(
     ({ ordinal }) => ordinal === selectedPhaseOrdinal,
   )?.phase;
-  if (
-    mechanics.phases.length !== 1 ||
-    selectedPhaseOrdinal !== PositiveInteger(1)
-  ) {
+  if (mechanics.phases.length !== 1 || selectedPhaseOrdinal !== FIRST_ORDINAL) {
     for (const occurrence of phases) {
       if (occurrence.ordinal === selectedPhaseOrdinal) continue;
       pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
     }
     if (phases.length === 0) {
-      pushIssue("phase", spellActivationPhasePath(PositiveInteger(1)));
+      pushIssue("phase", spellActivationPhasePath(FIRST_ORDINAL));
     }
   }
   const attachment =
@@ -917,24 +917,27 @@ function scalarBuffActivationBranchProjection(
   if (selectedPhase?.kind !== "direct") {
     pushIssue("phase", spellActivationPhasePath(selectedPhaseOrdinal));
   }
-  const selectedEffects =
-    selectedPhase?.kind === "direct" ? (selectedPhase.effects ?? []) : [];
-  if (selectedEffects.length === 0) {
+  const selectedEffectOccurrences = effects.filter(
+    ({ phaseOrdinal }) => phaseOrdinal === selectedPhaseOrdinal,
+  );
+  if (selectedEffectOccurrences.length === 0) {
     pushIssue(
       "effect",
-      spellActivationEffectPath(selectedPhaseOrdinal, PositiveInteger(1)),
+      spellActivationEffectPath(selectedPhaseOrdinal, FIRST_ORDINAL),
     );
   }
   if (
     expected !== undefined &&
     expected.phaseOrdinal === selectedPhaseOrdinal
   ) {
-    for (const [index] of selectedEffects.entries()) {
-      const effectOrdinal = PositiveInteger(index + 1);
-      if (effectOrdinal === expected.effectOrdinal) continue;
+    for (const occurrence of selectedEffectOccurrences) {
+      if (occurrence.effectOrdinal === expected.effectOrdinal) continue;
       pushIssue(
         "effect",
-        spellActivationEffectPath(selectedPhaseOrdinal, effectOrdinal),
+        spellActivationEffectPath(
+          selectedPhaseOrdinal,
+          occurrence.effectOrdinal,
+        ),
       );
     }
   }
@@ -943,7 +946,7 @@ function scalarBuffActivationBranchProjection(
       ? expected.effect
       : undefined;
   const effectProjection =
-    effect === undefined
+    effect === undefined || !isScalarBuffEffectKind(effect)
       ? undefined
       : scalarBuffEffectProjection(effect, duration, spellLevel);
   if (effect === undefined || effectProjection === undefined) {
@@ -953,7 +956,7 @@ function scalarBuffActivationBranchProjection(
         selectedPhaseOrdinal,
         expected?.phaseOrdinal === selectedPhaseOrdinal
           ? expected.effectOrdinal
-          : PositiveInteger(1),
+          : FIRST_ORDINAL,
       ),
     );
   }
@@ -994,13 +997,8 @@ function scalarBuffOngoingBranchProjection(
     expected === undefined
       ? []
       : occurrences.filter(({ ordinal }) => ordinal !== expected.ordinal);
-  if (mechanics.operations.length !== 1 && extras.length === 0) {
-    pushIssue(
-      "operationCount",
-      spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    );
+  if (mechanics.operations.length === 0) {
+    pushIssue("operationCount", spellOngoingOperationPath(FIRST_ORDINAL));
   }
   for (const occurrence of extras) {
     pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
@@ -1043,38 +1041,55 @@ function isScalarBuffRepresentation(
     Match.when("activation", () => {
       if (mechanics.family !== "activation") return false;
       const activation = mechanics;
-      const hasScalarEffectKind =
-        scalarBuffActivationEffectOccurrences(activation).length > 0;
-      if (!hasScalarEffectKind) return false;
+      const hasScalarEffectRole = scalarBuffActivationEffectOccurrences(
+        activation,
+      ).some(({ effect }) => isScalarBuffEffectKind(effect));
+      if (!hasScalarEffectRole) return false;
+      const hasDirectPhaseRole = activation.phases.some(
+        ({ kind }) => kind === "direct",
+      );
+      const hasSupportedRangeRole =
+        scalarBuffSpellRangeFeet(activation.range) !== null;
+      const hasSupportedDurationRole = isScalarBuffDuration(
+        activation.duration,
+      );
+      const hasSupportedCastingRole =
+        topLevelSpellCastingTime(activation)?.kind === "action" ||
+        topLevelSpellCastingTime(activation)?.kind === "bonus_action";
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
-          hasScalarEffectKind,
-          activation.phases.some(({ kind }) => kind === "direct"),
-          scalarBuffSpellRangeFeet(activation.range) !== null,
-          isScalarBuffDuration(activation.duration),
-          topLevelSpellCastingTime(activation)?.kind === "action" ||
-            topLevelSpellCastingTime(activation)?.kind === "bonus_action",
+          hasDirectPhaseRole,
+          hasSupportedRangeRole,
+          hasSupportedDurationRole,
+          hasSupportedCastingRole,
+          activation.phases.length > 0,
         ],
       });
     }),
     Match.when("ongoing_effect", () => {
       if (mechanics.family !== "ongoing_effect") return false;
       const ongoing = mechanics;
-      const hasScalarEffectKind = ongoing.operations.some(
+      const hasScalarEffectRole = ongoing.operations.some(
         ({ trigger, effect }) =>
           trigger.kind === "passive" && isScalarBuffEffectKind(effect),
       );
-      if (!hasScalarEffectKind) return false;
+      if (!hasScalarEffectRole) return false;
+      const hasSupportedCastingRole =
+        ongoing.castingTime.kind === "action" ||
+        ongoing.castingTime.kind === "bonus_action";
+      const hasSupportedRangeRole =
+        scalarBuffSpellRangeFeet(ongoing.range) !== null;
+      const hasSupportedDurationRole = isScalarBuffDuration(ongoing.duration);
+      const hasNonObjectAttachmentRole = ongoing.attachment.kind !== "object";
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
-          hasScalarEffectKind,
-          ongoing.castingTime.kind === "action" ||
-            ongoing.castingTime.kind === "bonus_action",
-          scalarBuffSpellRangeFeet(ongoing.range) !== null,
-          isScalarBuffDuration(ongoing.duration),
-          ongoing.attachment.kind !== "object",
+          hasSupportedCastingRole,
+          hasSupportedRangeRole,
+          hasSupportedDurationRole,
+          hasNonObjectAttachmentRole,
+          ongoing.operations.length > 0,
         ],
       });
     }),
@@ -1120,11 +1135,10 @@ function scalarBuffMechanicsAdmission(
   if (duration === undefined) {
     pushIssue("duration", spellDurationValuePath());
   }
-  for (const path of persistentAreaDurationChildPaths(mechanics.duration)) {
-    const branch = path.nodes.at(-1);
+  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
     pushIssue(
-      branch?.role === "extension" ? "durationExtension" : "durationEnding",
-      path,
+      child.branch === "extension" ? "durationExtension" : "durationEnding",
+      spellDurationChildPath(child),
     );
   }
   const branch = Match.value(mechanics).pipe(
@@ -1189,22 +1203,17 @@ function scalarBuffMechanicsAdmission(
           spellMechanicsHeaderPath("duration"),
           spellMechanicsHeaderPath("castingTime"),
           spellMechanicsHeaderPath("family"),
-          ...(branch.duration.kind === "instantaneous"
-            ? []
-            : [spellDurationValuePath()]),
+          ...spellDurationEvidencePaths(mechanics.duration),
           ...(mechanics.family === "activation"
             ? [
-                spellActivationPhasePath(PositiveInteger(1)),
-                spellActivationAttachmentPath(PositiveInteger(1)),
-                spellActivationEffectPath(
-                  PositiveInteger(1),
-                  PositiveInteger(1),
-                ),
+                spellActivationPhasePath(FIRST_ORDINAL),
+                spellActivationAttachmentPath(FIRST_ORDINAL),
+                spellActivationEffectPath(FIRST_ORDINAL, FIRST_ORDINAL),
               ]
             : [
                 spellOngoingAttachmentPath(),
-                spellOngoingOperationPath(PositiveInteger(1)),
-                spellOngoingOperationEffectPath(PositiveInteger(1)),
+                spellOngoingOperationPath(FIRST_ORDINAL),
+                spellOngoingOperationEffectPath(FIRST_ORDINAL),
               ]),
           ...spellConsumedMaterialEvidencePaths(mechanics.components),
         ],
