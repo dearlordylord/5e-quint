@@ -55,6 +55,7 @@ import {
   spellRecord,
 } from "./battle-runtime.test-support.ts";
 import {
+  BattleActPresentationSchema,
   BattleInterruptDecisionFrontierSchema,
   BattleObjectDamageOutcomeSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -1540,6 +1541,64 @@ function damageProtocolHoleWithEffectRef(
   }
   throw new Error("Expected an occurrence-bound damage protocol hole.");
 }
+
+describe("battle act presentation codec boundaries", () => {
+  test("round-trips nonempty Stat Block procedure join issues", () => {
+    const encoded = {
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockProcedurePresentationJoin",
+        issues: [
+          {
+            tag: "statBlockProcedurePresentationJoinIssue",
+            reason: "missingPresentation",
+            section: "actions",
+            procedureOrdinal: 1,
+            executionKind: "attack",
+          },
+          {
+            tag: "statBlockProcedurePresentationJoinIssue",
+            reason: "presentationKindMismatch",
+            section: "bonusActions",
+            procedureOrdinal: 2,
+            executionKind: "bonusActionOption",
+            presentationKind: "textOnly",
+          },
+        ],
+      },
+    };
+
+    const decoded = Schema.decodeUnknownSync(BattleActPresentationSchema)(
+      encoded,
+    );
+    expect(Schema.encodeSync(BattleActPresentationSchema)(decoded)).toEqual(
+      encoded,
+    );
+  });
+
+  test("rejects a Stat Block procedure join issue without details", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(BattleActPresentationSchema)({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleActPresentationSchema)({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: [],
+        },
+      }),
+    ).toThrow();
+  });
+});
 
 describe("battle object damage codec boundaries", () => {
   test("round-trips a table-resolved object damage outcome", () => {
