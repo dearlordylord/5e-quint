@@ -251,6 +251,14 @@ type RollModifierTargetingProjection =
       readonly count: RollModifierTargetCountProjection;
       readonly requiredTargetDisposition: "unrestricted" | "willing";
     };
+type RollModifierTargetListTargetingProjection = Extract<
+  RollModifierTargetingProjection,
+  { readonly kind: "targetList" }
+>;
+type RollModifierSelfAndChosenLegalTargetsProjection = Extract<
+  RollModifierTargetingProjection,
+  { readonly kind: "selfAndChosenLegalTargets" }
+>;
 type RollModifierNumericEffectProjection = {
   readonly on: readonly BattleD20RollModifierKind[];
   readonly delta: RollModifierNumericDelta;
@@ -475,7 +483,7 @@ function rollModifierTargetCountProjection(
 function rollModifierTargetAttachmentTargetingProjection(
   attachment: RollModifierAdmittedTargetAttachment,
   spellLevel: number,
-): RollModifierTargetingProjection | undefined {
+): RollModifierTargetListTargetingProjection | undefined {
   const selection = attachment.value.selection;
   if (
     selection.targetKinds !== undefined &&
@@ -497,8 +505,8 @@ function rollModifierTargetAttachmentTargetingProjection(
 }
 
 type RollModifierAreaTargetingProjection = {
-  readonly targeting: RollModifierTargetingProjection;
-  readonly rangeRadiusFeet: MovementFeetType | null;
+  readonly targeting: RollModifierSelfAndChosenLegalTargetsProjection;
+  readonly rangeRadiusFeet: MovementFeetType;
 };
 
 function rollModifierAreaAttachmentTargetingProjection(
@@ -816,12 +824,10 @@ function rollModifierAttachmentProjection(
     areaAdmission.attachment,
   );
   if (areaProjection === undefined) return { tag: "unsupported" };
-  const rangeFeet =
-    areaProjection.rangeRadiusFeet ?? scalarBuffSpellRangeFeet(range);
   return {
     tag: "supported",
     targeting: areaProjection.targeting,
-    rangeFeet,
+    rangeFeet: areaProjection.rangeRadiusFeet,
   };
 }
 
