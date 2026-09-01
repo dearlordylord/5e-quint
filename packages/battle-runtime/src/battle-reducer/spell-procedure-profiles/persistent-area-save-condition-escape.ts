@@ -30,7 +30,10 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { PositiveInteger, movementFeet } from "@dnd/shared/types";
 import {
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
   spellDurationValuePath,
+  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -139,7 +142,7 @@ export const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_FAILED_FACTS = [
 type PersistentAreaSaveConditionEscapeFailedFact =
   (typeof PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_FAILED_FACTS)[number];
 
-const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CONSUMED_PATHS = [
+const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_BASE_CONSUMED_PATHS = [
   spellMechanicsHeaderPath("level"),
   spellMechanicsHeaderPath("school"),
   spellMechanicsHeaderPath("range"),
@@ -173,6 +176,73 @@ const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET = 60;
 const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS = 1;
 const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT = 7;
 const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET = 20;
+
+function persistentAreaSaveConditionEscapeDurationChildPaths(
+  duration: OngoingEscapeFacts["mechanics"]["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, (timed) => [
+      ...(timed.value.upcastTiers ?? []).map((_tier, index) =>
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      ),
+      ...(timed.earlyEnd ?? []).map((_ending, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+      ...(timed.permanentAfter === undefined
+        ? []
+        : [
+            spellDurationEndingPath(
+              PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
+            ),
+          ]),
+    ]),
+    Match.when({ kind: "concentration" }, (concentration) => [
+      ...(concentration.earlyEnd ?? []).map((_ending, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+      ...(concentration.permanentIfMaintainedFull === true
+        ? [
+            spellDurationEndingPath(
+              PositiveInteger((concentration.earlyEnd?.length ?? 0) + 1),
+            ),
+          ]
+        : []),
+    ]),
+    Match.when({ kind: "permanent" }, (permanent) =>
+      (permanent.endsOn ?? []).map((_ending, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+    ),
+    Match.when({ kind: "slot_tiered" }, (slotTiered) => [
+      ...persistentAreaSaveConditionEscapeDurationChildPaths(slotTiered.base),
+      ...slotTiered.tiers.map((_tier, index) =>
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      ),
+    ]),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaSaveConditionEscapeMaterialPaths(
+  components: OngoingEscapeFacts["mechanics"]["components"],
+): readonly SpellMechanicsBranchPath[] {
+  if (components.m === false) return [];
+  const paths: SpellMechanicsBranchPath[] = [];
+  if (
+    typeof components.m === "object" ||
+    ("materialCostGp" in components && components.materialCostGp !== undefined)
+  ) {
+    paths.push(spellMaterialComponentPath("cost"));
+  }
+  if (
+    "materialConsumed" in components &&
+    components.materialConsumed === true
+  ) {
+    paths.push(spellMaterialComponentPath("consumption"));
+  }
+  return paths;
+}
 
 type PersistentAreaSaveConditionEscapeOperationRole =
   | "passive"
@@ -390,6 +460,14 @@ function persistentAreaSaveConditionEscapeFailures(
       mechanicsPath: spellDurationValuePath(),
     });
   }
+  failures.push(
+    ...persistentAreaSaveConditionEscapeDurationChildPaths(
+      mechanics.duration,
+    ).map((mechanicsPath) => ({
+      failedFact: "duration" as const,
+      mechanicsPath,
+    })),
+  );
   if (durationTicks === undefined || Result.isFailure(durationTicks)) {
     failures.push({
       failedFact: "durationTicks",
@@ -674,7 +752,12 @@ function persistentAreaSaveConditionEscapeMechanicsAdmission(
       procedure: "persistentAreaSaveConditionEscape",
       facts,
       evidence: {
-        consumed: PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CONSUMED_PATHS,
+        consumed: [
+          ...PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_BASE_CONSUMED_PATHS,
+          ...persistentAreaSaveConditionEscapeMaterialPaths(
+            ongoing.mechanics.components,
+          ),
+        ],
         unowned: PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_UNOWNED_PATHS,
       },
       admit: (executionSource, ctx) =>

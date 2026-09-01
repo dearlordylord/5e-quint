@@ -31,7 +31,9 @@ import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra
 import { PositiveInteger, movementFeet } from "@dnd/shared/types";
 import {
   spellDurationEndingPath,
+  spellDurationExtensionPath,
   spellDurationValuePath,
+  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -147,7 +149,7 @@ export const TRANSLATING_PERSISTENT_AREA_FAILED_FACTS = [
 type TranslatingPersistentAreaFailedFact =
   (typeof TRANSLATING_PERSISTENT_AREA_FAILED_FACTS)[number];
 
-const TRANSLATING_PERSISTENT_AREA_CONSUMED_PATHS = [
+const TRANSLATING_PERSISTENT_AREA_BASE_CONSUMED_PATHS = [
   spellMechanicsHeaderPath("level"),
   spellMechanicsHeaderPath("school"),
   spellMechanicsHeaderPath("range"),
@@ -329,6 +331,79 @@ function translatingPersistentAreaDurationIsSupported(
     duration.earlyEnd?.length === 1 &&
     duration.earlyEnd[0]?.kind === "area_dispersed_by_strong_wind"
   );
+}
+
+function translatingPersistentAreaDurationUnsupportedPaths(
+  duration: OngoingTranslatingPersistentAreaFacts["mechanics"]["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  if (duration.kind === "concentration") {
+    const earlyEnd = duration.earlyEnd ?? [];
+    const paths: SpellMechanicsBranchPath[] = [];
+    const firstEarlyEnd = earlyEnd[0];
+    if (
+      firstEarlyEnd === undefined ||
+      firstEarlyEnd.kind !== "area_dispersed_by_strong_wind"
+    ) {
+      paths.push(spellDurationEndingPath(PositiveInteger(1)));
+    }
+    for (const [index] of earlyEnd.slice(1).entries()) {
+      paths.push(spellDurationEndingPath(PositiveInteger(index + 2)));
+    }
+    if (duration.permanentIfMaintainedFull === true && earlyEnd.length > 0) {
+      paths.push(spellDurationEndingPath(PositiveInteger(earlyEnd.length + 1)));
+    }
+    return paths;
+  }
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, (timed) => [
+      ...(timed.value.upcastTiers ?? []).map((_tier, index) =>
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      ),
+      ...(timed.earlyEnd ?? []).map((_ending, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+      ...(timed.permanentAfter === undefined
+        ? []
+        : [
+            spellDurationEndingPath(
+              PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
+            ),
+          ]),
+    ]),
+    Match.when({ kind: "permanent" }, (permanent) =>
+      (permanent.endsOn ?? []).map((_ending, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+    ),
+    Match.when({ kind: "slot_tiered" }, (slotTiered) => [
+      ...translatingPersistentAreaDurationUnsupportedPaths(slotTiered.base),
+      ...slotTiered.tiers.map((_tier, index) =>
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      ),
+    ]),
+    Match.exhaustive,
+  );
+}
+
+function translatingPersistentAreaMaterialPaths(
+  components: OngoingTranslatingPersistentAreaFacts["mechanics"]["components"],
+): readonly SpellMechanicsBranchPath[] {
+  if (components.m === false) return [];
+  const paths: SpellMechanicsBranchPath[] = [];
+  if (
+    typeof components.m === "object" ||
+    ("materialCostGp" in components && components.materialCostGp !== undefined)
+  ) {
+    paths.push(spellMaterialComponentPath("cost"));
+  }
+  if (
+    "materialConsumed" in components &&
+    components.materialConsumed === true
+  ) {
+    paths.push(spellMaterialComponentPath("consumption"));
+  }
+  return paths;
 }
 
 function translatingPersistentAreaRadiusFeet(
@@ -552,21 +627,25 @@ function translatingPersistentAreaFailures(
       mechanicsPath: spellMechanicsHeaderPath("range"),
     });
   }
-  if (!translatingPersistentAreaDurationIsSupported(mechanics.duration)) {
+  if (
+    mechanics.duration.kind !== "concentration" ||
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.duration.upTo.amount !==
+      TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES
+  ) {
     failures.push({
       failedFact: "duration",
       mechanicsPath: spellDurationValuePath(),
     });
-    if (
-      mechanics.duration.kind === "concentration" &&
-      mechanics.duration.earlyEnd?.length !== 1
-    ) {
-      failures.push({
-        failedFact: "duration",
-        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
-      });
-    }
   }
+  failures.push(
+    ...translatingPersistentAreaDurationUnsupportedPaths(
+      mechanics.duration,
+    ).map((mechanicsPath) => ({
+      failedFact: "duration" as const,
+      mechanicsPath,
+    })),
+  );
   if (durationTicks === undefined || Result.isFailure(durationTicks)) {
     failures.push({
       failedFact: "durationTicks",
@@ -802,7 +881,12 @@ function translatingPersistentAreaMechanicsAdmission(
       procedure: "persistentAreaSaveDamage",
       facts,
       evidence: {
-        consumed: TRANSLATING_PERSISTENT_AREA_CONSUMED_PATHS,
+        consumed: [
+          ...TRANSLATING_PERSISTENT_AREA_BASE_CONSUMED_PATHS,
+          ...translatingPersistentAreaMaterialPaths(
+            ongoing.mechanics.components,
+          ),
+        ],
         unowned: TRANSLATING_PERSISTENT_AREA_UNOWNED_PATHS,
       },
       admit: (executionSource, ctx) =>

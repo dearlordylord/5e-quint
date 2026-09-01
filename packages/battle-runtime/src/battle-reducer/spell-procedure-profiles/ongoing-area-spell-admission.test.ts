@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   battleSpellExecutionSourceFromAdmission,
   type BattleSpellAdmissionSource,
@@ -10,8 +11,15 @@ import {
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
 import {
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
   spellDurationValuePath,
+  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { persistentAreaSaveCompositeProfile } from "./persistent-area-save-composite.ts";
 import { persistentAreaSaveConditionEscapeProfile } from "./persistent-area-save-condition-escape.ts";
@@ -80,6 +88,34 @@ function expectSupported(result: StaticAdmissionResult) {
   return result;
 }
 
+function expectedEvidence(
+  operationCount: number,
+  durationPaths: readonly ReturnType<typeof spellDurationValuePath>[],
+  materialPaths: readonly ReturnType<typeof spellMaterialComponentPath>[] = [],
+) {
+  const operationOrdinals = Array.from({ length: operationCount }, (_, index) =>
+    PositiveInteger(index + 1),
+  );
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      ...durationPaths,
+      spellOngoingAttachmentPath(),
+      spellOngoingInitialPhasePath(),
+      ...operationOrdinals.map(spellOngoingOperationPath),
+      ...operationOrdinals.map(spellOngoingOperationEffectPath),
+      ...materialPaths,
+    ],
+    unowned: [],
+  };
+}
+
 describe("ongoing area spell static admission", () => {
   test.each([
     ["sleet storm", "sleet_storm", persistentAreaSaveCompositeProfile],
@@ -98,18 +134,18 @@ describe("ongoing area spell static admission", () => {
         profile.admitMechanics(mechanicsSource(source)),
       );
 
-      expect(result.admitted.evidence.unowned).toEqual([]);
-      expect(result.admitted.evidence.consumed).toEqual(
-        expect.arrayContaining([
-          spellMechanicsHeaderPath("level"),
-          spellMechanicsHeaderPath("school"),
-          spellMechanicsHeaderPath("range"),
-          spellMechanicsHeaderPath("components"),
-          spellMechanicsHeaderPath("duration"),
-          spellMechanicsHeaderPath("castingTime"),
-          spellMechanicsHeaderPath("family"),
-          spellDurationValuePath(),
-        ]),
+      const durationPaths =
+        spellId === "cloudkill"
+          ? [
+              spellDurationValuePath(),
+              spellDurationEndingPath(PositiveInteger(1)),
+            ]
+          : [spellDurationValuePath()];
+      expect(result.admitted.evidence).toEqual(
+        expectedEvidence(
+          spellId === "web" ? 7 : spellId === "grease" ? 3 : 5,
+          durationPaths,
+        ),
       );
     },
   );
@@ -225,6 +261,188 @@ describe("ongoing area spell static admission", () => {
         mechanicsSource(spellAdmissionSource(spellRecord("web"))),
       ),
     ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("consumes priced and consumed material branches in the definition projection", () => {
+    const priced = persistentAreaSaveConditionProfile.admitMechanics(
+      sourceWith("grease", (mechanics) => {
+        if (
+          mechanics.family !== "ongoing_effect" ||
+          mechanics.components.m === false
+        ) {
+          throw new Error("Expected generic Grease material components.");
+        }
+        return {
+          ...mechanics,
+          components: { ...mechanics.components, materialCostGp: 25 },
+        };
+      }),
+    );
+    const consumed = persistentAreaSaveConditionProfile.admitMechanics(
+      sourceWith("grease", (mechanics) => {
+        if (
+          mechanics.family !== "ongoing_effect" ||
+          mechanics.components.m === false
+        ) {
+          throw new Error("Expected generic Grease material components.");
+        }
+        return {
+          ...mechanics,
+          components: { ...mechanics.components, materialConsumed: true },
+        };
+      }),
+    );
+    const pricedAdmission = expectSupported(priced);
+    const consumedAdmission = expectSupported(consumed);
+    expect(pricedAdmission.admitted.evidence).toEqual(
+      expectedEvidence(
+        3,
+        [spellDurationValuePath()],
+        [spellMaterialComponentPath("cost")],
+      ),
+    );
+    expect(consumedAdmission.admitted.evidence).toEqual(
+      expectedEvidence(
+        3,
+        [spellDurationValuePath()],
+        [spellMaterialComponentPath("consumption")],
+      ),
+    );
+  });
+
+  test("rejects unsupported duration extension and ending children at canonical paths", () => {
+    const extension = persistentAreaSaveConditionProfile.admitMechanics(
+      sourceWith("grease", (mechanics) => {
+        if (
+          mechanics.family !== "ongoing_effect" ||
+          mechanics.duration.kind !== "timed"
+        ) {
+          throw new Error("Expected timed Grease mechanics.");
+        }
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            value: {
+              ...mechanics.duration.value,
+              upcastTiers: [{ atSlot: 2, amount: 2 }],
+            },
+          },
+        };
+      }),
+    );
+    const ending = persistentAreaSaveConditionProfile.admitMechanics(
+      sourceWith("grease", (mechanics) => {
+        if (
+          mechanics.family !== "ongoing_effect" ||
+          mechanics.duration.kind !== "timed"
+        ) {
+          throw new Error("Expected timed Grease mechanics.");
+        }
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            earlyEnd: [{ kind: "target_takes_damage" }],
+          },
+        };
+      }),
+    );
+    for (const [result, path] of [
+      [extension, spellDurationExtensionPath(PositiveInteger(1))],
+      [ending, spellDurationEndingPath(PositiveInteger(1))],
+    ] as const) {
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") continue;
+      expect(result.issues).toEqual([
+        expect.objectContaining({
+          failedFact: "duration",
+          mechanicsPath: path,
+        }),
+      ]);
+    }
+  });
+
+  test("validates Cloudkill duration value and ending branches independently", () => {
+    const baseMismatch = sourceWith("cloudkill", (mechanics) => {
+      if (
+        mechanics.family !== "ongoing_effect" ||
+        mechanics.duration.kind !== "concentration"
+      ) {
+        throw new Error("Expected concentration Cloudkill mechanics.");
+      }
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          upTo: { ...mechanics.duration.upTo, amount: 9 },
+        },
+      };
+    });
+    const endingMismatch = sourceWith("cloudkill", (mechanics) => {
+      if (
+        mechanics.family !== "ongoing_effect" ||
+        mechanics.duration.kind !== "concentration"
+      ) {
+        throw new Error("Expected concentration Cloudkill mechanics.");
+      }
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          earlyEnd: [{ kind: "target_takes_damage" }],
+        },
+      };
+    });
+    const extraEnding = sourceWith("cloudkill", (mechanics) => {
+      if (
+        mechanics.family !== "ongoing_effect" ||
+        mechanics.duration.kind !== "concentration"
+      ) {
+        throw new Error("Expected concentration Cloudkill mechanics.");
+      }
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          earlyEnd: [
+            ...(mechanics.duration.earlyEnd ?? []),
+            { kind: "target_takes_damage" },
+          ],
+        },
+      };
+    });
+
+    const baseResult =
+      sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(
+        baseMismatch,
+      );
+    const endingResult =
+      sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(
+        endingMismatch,
+      );
+    const extraResult =
+      sourceTurnTranslationPersistentAreaSaveDamageProfile.admitMechanics(
+        extraEnding,
+      );
+    expect(baseResult.tag).toBe("unsupported");
+    if (baseResult.tag === "unsupported") {
+      expect(
+        baseResult.issues.map(({ mechanicsPath }) => mechanicsPath),
+      ).toEqual([spellDurationValuePath()]);
+    }
+    expect(endingResult.tag).toBe("unsupported");
+    if (endingResult.tag === "unsupported") {
+      expect(
+        endingResult.issues.map(({ mechanicsPath }) => mechanicsPath),
+      ).toEqual([spellDurationEndingPath(PositiveInteger(1))]);
+    }
+    expect(extraResult.tag).toBe("unsupported");
+    if (extraResult.tag === "unsupported") {
+      expect(
+        extraResult.issues.map(({ mechanicsPath }) => mechanicsPath),
+      ).toEqual([spellDurationEndingPath(PositiveInteger(2))]);
+    }
   });
 
   test("reports reordered duplicate operations at their actual ordinals", () => {
