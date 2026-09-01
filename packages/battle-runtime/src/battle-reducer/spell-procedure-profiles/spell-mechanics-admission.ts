@@ -5,6 +5,7 @@ import {
   elapsedTimeTicks,
   type ElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   PositiveInteger,
   movementFeet,
@@ -34,7 +35,7 @@ import type {
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 
 /**
  * Static admission receives only the already-decoded mechanics graph and the
@@ -45,6 +46,14 @@ export type SpellMechanicsAdmissionSource = {
   readonly mechanics: SpellMechanics;
   readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
 };
+
+/** Derive elapsed ticks from a validated authored duration value. */
+export function spellDurationValueTicks(
+  value: DurationValue,
+): ElapsedTimeTicks | null {
+  const ticks = elapsedTimeTicksFromTimeSpanDuration(value);
+  return Result.isFailure(ticks) ? null : ticks.success;
+}
 
 /**
  * A profile's static projection has to account for at least one owned path.
@@ -279,8 +288,32 @@ export function spellDurationEvidencePaths(
 }
 
 /** Surface Touch has one canonical movement-distance projection. */
-export function spellTouchRangeFeet() {
+export function spellTouchRangeFeet(): MovementFeet {
   return movementFeet(5);
+}
+
+/** Stable issue identity: only the failed fact and its exact source path. */
+export function spellMechanicsIssueKey(issue: {
+  readonly failedFact: string;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+}): string {
+  return JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
+}
+
+/** Dedupe only exact failed-fact/path pairs while preserving discovery order. */
+export function spellUniqueMechanicsIssues<
+  Issue extends {
+    readonly failedFact: string;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  },
+>(issues: readonly Issue[]): readonly Issue[] {
+  const seen = new Set<string>();
+  return issues.filter((issue) => {
+    const key = spellMechanicsIssueKey(issue);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**
@@ -422,12 +455,14 @@ export type BattleSpellMechanicsAdmission<
       readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
     };
 
-export function spellProcedureNonEmpty<T>(
+export function spellNonEmpty<T>(
   values: readonly T[],
 ): ReadonlyNonEmptyArray<T> | undefined {
   const [first, ...rest] = values;
   return first === undefined ? undefined : [first, ...rest];
 }
+
+export const spellProcedureNonEmpty = spellNonEmpty;
 
 /**
  * Named admission policies keep the witness count and tolerated loss coupled.
