@@ -614,13 +614,19 @@ function scalarBuffTemporaryHitPointProjection(
   spellLevel: number,
 ): ScalarBuffTemporaryHitPointProjection | undefined {
   if (amount.kind === "fixed") {
-    return { kind: "fixed", expr: amount.expr };
+    return amount.expr.spellcastingMod === true ||
+      amount.expr.abilityModifier !== undefined
+      ? undefined
+      : { kind: "fixed", expr: amount.expr };
   }
   if (
     amount.kind !== "linear_per_level" ||
     amount.axis !== "slot" ||
     amount.startingAtLevel !== spellLevel + 1 ||
-    amount.base.dieSize === undefined
+    amount.base.dieSize === undefined ||
+    amount.base.spellcastingMod === true ||
+    amount.base.abilityModifier !== undefined ||
+    amount.perLevel.dieSize !== undefined
   ) {
     return undefined;
   }

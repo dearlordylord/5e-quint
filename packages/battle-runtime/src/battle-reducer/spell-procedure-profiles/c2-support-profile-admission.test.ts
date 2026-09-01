@@ -39,6 +39,7 @@ import type {
   Attachment,
   AuthoredConditionalEffect,
   CastTimeEffectModeChoice,
+  DiceAmount,
   EffectAtom,
   OngoingOperation,
   OngoingPredicate,
@@ -117,6 +118,10 @@ type C2ExpectedAdmissionIssue = SpellProcedureAdmissionIssue<
 type NumericRollEffect = Extract<
   EffectAtom,
   { readonly kind: "modify_roll_numeric" }
+>;
+type TemporaryHitPointEffect = Extract<
+  EffectAtom,
+  { readonly kind: "grant_temp_hp" }
 >;
 type AreaAttachment = Extract<Attachment, { readonly kind: "area" }>;
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
@@ -247,6 +252,83 @@ const directPhaseModeUpdate = (
   ...phase,
   mode: directPhaseMode,
 });
+
+const scalarBuffTemporaryHitPointUpdates = [
+  [
+    "linear base spellcastingMod",
+    (effect: TemporaryHitPointEffect): TemporaryHitPointEffect => {
+      if (effect.amount.kind !== "linear_per_level") {
+        throw new Error("Expected False Life linear temporary hit points.");
+      }
+      return {
+        ...effect,
+        amount: {
+          ...effect.amount,
+          base: { ...effect.amount.base, spellcastingMod: true },
+        },
+      };
+    },
+  ],
+  [
+    "linear base abilityModifier",
+    (effect: TemporaryHitPointEffect): TemporaryHitPointEffect => {
+      if (effect.amount.kind !== "linear_per_level") {
+        throw new Error("Expected False Life linear temporary hit points.");
+      }
+      return {
+        ...effect,
+        amount: {
+          ...effect.amount,
+          base: { ...effect.amount.base, abilityModifier: "str" },
+        },
+      };
+    },
+  ],
+  [
+    "linear perLevel dieSize",
+    (effect: TemporaryHitPointEffect): TemporaryHitPointEffect => {
+      if (effect.amount.kind !== "linear_per_level") {
+        throw new Error("Expected False Life linear temporary hit points.");
+      }
+      return {
+        ...effect,
+        amount: {
+          ...effect.amount,
+          perLevel: { ...effect.amount.perLevel, dieSize: 4 },
+        },
+      };
+    },
+  ],
+  [
+    "fixed spellcastingMod",
+    (effect: TemporaryHitPointEffect): TemporaryHitPointEffect => ({
+      ...effect,
+      amount: {
+        kind: "fixed",
+        expr: { dice: 1, dieSize: 4, spellcastingMod: true },
+      },
+    }),
+  ],
+  [
+    "fixed abilityModifier",
+    (effect: TemporaryHitPointEffect): TemporaryHitPointEffect => ({
+      ...effect,
+      amount: {
+        kind: "fixed",
+        expr: { dice: 1, dieSize: 4, abilityModifier: "str" },
+      },
+    }),
+  ],
+] as const;
+
+const heldLightExplodingMaxDieAmount = {
+  kind: "threshold_tiers_exploding_max_die",
+  axis: "character",
+  baseDice: 1,
+  dieSize: 8,
+  tiers: [{ atLevel: 5, dice: 2 }],
+  maxAdditionalDice: "spellcasting_ability_modifier",
+} as const satisfies DiceAmount;
 
 function updateHeldLightHurlOperation(
   mechanics: SpellMechanics,
@@ -1167,6 +1249,74 @@ describe("C2 support profile static admission", () => {
       });
     },
   );
+
+  test.each(scalarBuffTemporaryHitPointUpdates)(
+    "rejects dropped scalar-buff temporary-hit-point %s at its effect path",
+    (_label, update) => {
+      const result = scalarBuffProfile.admitMechanics(
+        sourceWith("false_life", (mechanics) => {
+          if (mechanics.family !== "activation") {
+            throw new Error("Expected False Life activation mechanics.");
+          }
+          const phase = mechanics.phases[0];
+          if (phase?.kind !== "direct") {
+            throw new Error("Expected False Life direct phase.");
+          }
+          const effect = phase.effects?.[0];
+          if (effect?.kind !== "grant_temp_hp") {
+            throw new Error("Expected False Life temporary-hit-point effect.");
+          }
+          return {
+            ...mechanics,
+            phases: [{ ...phase, effects: [update(effect)] }],
+          };
+        }),
+      );
+      expect(result).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            "scalarBuff",
+            "effect",
+            spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ),
+        ],
+      });
+    },
+  );
+
+  test("rejects held-light exploding max-die amount at the selected hurl effect", () => {
+    const result = heldLightProfile.admitMechanics(
+      sourceWith("produce_flame", (mechanics) =>
+        updateHeldLightHurlOperation(mechanics, (operation) => {
+          if (operation.effect.kind !== "attack_roll") {
+            throw new Error("Expected Produce Flame hurl attack effect.");
+          }
+          const hitDamage = operation.effect.onHit[0];
+          if (hitDamage?.kind !== "damage") {
+            throw new Error("Expected Produce Flame hurl damage effect.");
+          }
+          return {
+            ...operation,
+            effect: {
+              ...operation.effect,
+              onHit: [{ ...hitDamage, amount: heldLightExplodingMaxDieAmount }],
+            },
+          };
+        }),
+      ),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "heldLight",
+          "hurl",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+      ],
+    });
+  });
 
   test("rejects direct-phase mode for scalar buffs and sight at the phase path", () => {
     for (const [spellId, profile, procedure] of [

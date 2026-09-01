@@ -114,12 +114,6 @@ type HeldLightDamageAmount =
   | Extract<DiceAmount, { readonly kind: "fixed" }>
   | (Extract<DiceAmount, { readonly kind: "threshold_tiers" }> & {
       readonly axis: "character";
-    })
-  | (Extract<
-      DiceAmount,
-      { readonly kind: "threshold_tiers_exploding_max_die" }
-    > & {
-      readonly axis: "character";
     });
 type HeldLightDuration = Extract<
   SpellProcedureMechanicsFacts["duration"],
@@ -290,13 +284,7 @@ function isHeldLightDamageAmount(
   amount: DiceAmount,
 ): amount is HeldLightDamageAmount {
   if (amount.kind === "fixed") return true;
-  if (amount.kind === "threshold_tiers") {
-    return amount.axis === "character";
-  }
-  return (
-    amount.kind === "threshold_tiers_exploding_max_die" &&
-    amount.axis === "character"
-  );
+  return amount.kind === "threshold_tiers" && amount.axis === "character";
 }
 
 function heldLightDamageAmountProjection(
@@ -322,15 +310,6 @@ function heldLightDamageExpr(
             ? diceExprWithDelta(expr, tier.override)
             : expr,
         threshold.base,
-      ),
-    ),
-    Match.when({ kind: "threshold_tiers_exploding_max_die" }, (threshold) =>
-      threshold.tiers.reduce<DiceExpr>(
-        (expr, tier) =>
-          characterLevel >= tier.atLevel
-            ? diceExprWithDelta(expr, { dice: tier.dice })
-            : expr,
-        { dice: threshold.baseDice, dieSize: threshold.dieSize },
       ),
     ),
     Match.exhaustive,
