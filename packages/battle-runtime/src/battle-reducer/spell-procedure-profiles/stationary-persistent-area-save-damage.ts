@@ -381,11 +381,11 @@ function isStationaryPersistentAreaRepresentation(
     spellProcedureHasRedundantSignature({
       kind: "twoWitnessesMayBeMissing",
       witnesses: [
-        geometryMatches,
-        rangeMatches,
-        initialSaveMatches,
-        hasEnterTrigger,
-        hasEndTurnTrigger,
+        { name: "geometry", present: geometryMatches },
+        { name: "range", present: rangeMatches },
+        { name: "initialSave", present: initialSaveMatches },
+        { name: "enterTrigger", present: hasEnterTrigger },
+        { name: "endTurnTrigger", present: hasEndTurnTrigger },
       ],
     })
   );

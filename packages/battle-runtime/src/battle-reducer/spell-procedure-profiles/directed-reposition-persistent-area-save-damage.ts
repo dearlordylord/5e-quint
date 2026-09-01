@@ -770,7 +770,11 @@ function isMovablePersistentAreaRepresentation(
   );
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
-    witnesses: [geometryMatches, rangeMatches, repositionOperationMatches],
+    witnesses: [
+      { name: "geometry", present: geometryMatches },
+      { name: "range", present: rangeMatches },
+      { name: "repositionOperation", present: repositionOperationMatches },
+    ],
   });
 }
 

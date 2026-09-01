@@ -962,33 +962,27 @@ export type SpellProcedureSignatureWitness = {
 export type SpellProcedureRedundantSignaturePolicy =
   | {
       readonly kind: "oneWitnessMayBeMissing";
-      readonly witnesses:
-        | readonly [
-            SpellProcedureSignatureWitness,
-            SpellProcedureSignatureWitness,
-            SpellProcedureSignatureWitness,
-          ]
-        | readonly [boolean, boolean, boolean];
+      readonly witnesses: readonly [
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+      ];
     }
   | {
       readonly kind: "twoWitnessesMayBeMissing";
-      readonly witnesses:
-        | readonly [
-            SpellProcedureSignatureWitness,
-            SpellProcedureSignatureWitness,
-            SpellProcedureSignatureWitness,
-            SpellProcedureSignatureWitness,
-            SpellProcedureSignatureWitness,
-          ]
-        | readonly [boolean, boolean, boolean, boolean, boolean];
+      readonly witnesses: readonly [
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+      ];
     };
 
 export function spellProcedureHasRedundantSignature(
   policy: SpellProcedureRedundantSignaturePolicy,
 ): boolean {
-  const witnessNames = policy.witnesses.flatMap((witness) =>
-    typeof witness === "boolean" ? [] : [witness.name],
-  );
+  const witnessNames = policy.witnesses.map(({ name }) => name);
   if (
     witnessNames.some((name) => name.length === 0) ||
     witnessNames.length !== new Set(witnessNames).size
@@ -996,15 +990,7 @@ export function spellProcedureHasRedundantSignature(
     return false;
   }
   const matches = policy.witnesses.reduce(
-    (total, witness) =>
-      total +
-      (typeof witness === "boolean"
-        ? witness
-          ? 1
-          : 0
-        : witness.present
-          ? 1
-          : 0),
+    (total, { present }) => total + (present ? 1 : 0),
     0,
   );
   return Match.value(policy.kind).pipe(

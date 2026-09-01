@@ -636,7 +636,11 @@ function isPersistentAreaSaveConditionEscapeRepresentation(
   );
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
-    witnesses: [geometryMatches, rangeMatches, burnAwayOperationMatches],
+    witnesses: [
+      { name: "geometry", present: geometryMatches },
+      { name: "range", present: rangeMatches },
+      { name: "burnAwayOperation", present: burnAwayOperationMatches },
+    ],
   });
 }
 

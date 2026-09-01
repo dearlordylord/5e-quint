@@ -239,9 +239,9 @@ function isDamageReductionRepresentation(
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
-      hasTargetAttachment,
-      hasDamageReductionEffect,
-      mechanics.range.kind === "touch",
+      { name: "targetAttachment", present: hasTargetAttachment },
+      { name: "damageReductionEffect", present: hasDamageReductionEffect },
+      { name: "touchRange", present: mechanics.range.kind === "touch" },
     ],
   });
 }

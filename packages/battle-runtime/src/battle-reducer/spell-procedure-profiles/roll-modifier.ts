@@ -150,12 +150,14 @@ import {
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   type SpellAttachmentRejection,
+  type SpellAreaAttachmentAdmissionResult,
   type SpellMechanicsAdmissionSource,
   type SpellCanonicalDurationValue,
   type SpellOngoingOperationOccurrence,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
+  type SpellTargetAttachmentAdmissionResult,
 } from "./spell-mechanics-admission.ts";
 import {
   spellActivationAttachmentPath,
@@ -352,6 +354,19 @@ const ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS = [
 ] as const;
 const FIRST_ORDINAL = PositiveInteger(1);
 
+type RollModifierAdmittedTargetAttachment = Extract<
+  SpellTargetAttachmentAdmissionResult<
+    (typeof ROLL_MODIFIER_TARGET_SELECTION_FIELDS)[number]
+  >,
+  { readonly tag: "admitted" }
+>["attachment"];
+type RollModifierAdmittedAreaAttachment = Extract<
+  SpellAreaAttachmentAdmissionResult<
+    (typeof ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS)[number]
+  >,
+  { readonly tag: "admitted" }
+>["attachment"];
+
 type RollModifierActivationPhaseOccurrence = {
   readonly phase: Extract<
     SpellMechanics,
@@ -457,21 +472,10 @@ function rollModifierTargetCountProjection(
   };
 }
 
-function rollModifierTargetingProjection(
-  attachment: Attachment,
+function rollModifierTargetAttachmentTargetingProjection(
+  attachment: RollModifierAdmittedTargetAttachment,
   spellLevel: number,
 ): RollModifierTargetingProjection | undefined {
-  if (
-    attachment.kind === "area" &&
-    attachment.origin.kind === "self" &&
-    attachment.shape.kind === "emanation" &&
-    typeof attachment.shape.radiusFeet === "number"
-  ) {
-    return { kind: "selfAndChosenLegalTargets" };
-  }
-  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
-    return undefined;
-  }
   const selection = attachment.value.selection;
   if (
     selection.targetKinds !== undefined &&
@@ -490,6 +494,28 @@ function rollModifierTargetingProjection(
             ? "willing"
             : "unrestricted",
       };
+}
+
+type RollModifierAreaTargetingProjection = {
+  readonly targeting: RollModifierTargetingProjection;
+  readonly rangeRadiusFeet: MovementFeetType | null;
+};
+
+function rollModifierAreaAttachmentTargetingProjection(
+  attachment: RollModifierAdmittedAreaAttachment,
+): RollModifierAreaTargetingProjection | undefined {
+  const areaValue = attachment.kind === "area" ? attachment : attachment.value;
+  if (
+    areaValue.origin.kind !== "self" ||
+    areaValue.shape.kind !== "emanation" ||
+    typeof areaValue.shape.radiusFeet !== "number"
+  ) {
+    return undefined;
+  }
+  return {
+    targeting: { kind: "selfAndChosenLegalTargets" },
+    rangeRadiusFeet: movementFeet(areaValue.shape.radiusFeet),
+  };
 }
 
 function rollModifierTargetingForSlot(
@@ -767,7 +793,7 @@ function rollModifierAttachmentProjection(
     ROLL_MODIFIER_TARGET_SELECTION_FIELDS,
   );
   if (targetAdmission.tag === "admitted") {
-    const targeting = rollModifierTargetingProjection(
+    const targeting = rollModifierTargetAttachmentTargetingProjection(
       targetAdmission.attachment,
       spellLevel,
     );
@@ -786,19 +812,17 @@ function rollModifierAttachmentProjection(
   if (areaAdmission.tag === "rejected") {
     return { tag: "rejected", rejections: [...areaAdmission.rejections] };
   }
-  const areaAttachment = areaAdmission.attachment;
-  const areaValue =
-    areaAttachment.kind === "area" ? areaAttachment : areaAttachment.value;
-  const targeting = rollModifierTargetingProjection(areaValue, spellLevel);
-  if (targeting === undefined) return { tag: "unsupported" };
-  const rangeRadiusFeet =
-    areaValue.origin.kind === "self" &&
-    areaValue.shape.kind === "emanation" &&
-    typeof areaValue.shape.radiusFeet === "number"
-      ? movementFeet(areaValue.shape.radiusFeet)
-      : null;
-  const rangeFeet = rangeRadiusFeet ?? scalarBuffSpellRangeFeet(range);
-  return { tag: "supported", targeting, rangeFeet };
+  const areaProjection = rollModifierAreaAttachmentTargetingProjection(
+    areaAdmission.attachment,
+  );
+  if (areaProjection === undefined) return { tag: "unsupported" };
+  const rangeFeet =
+    areaProjection.rangeRadiusFeet ?? scalarBuffSpellRangeFeet(range);
+  return {
+    tag: "supported",
+    targeting: areaProjection.targeting,
+    rangeFeet,
+  };
 }
 
 type RollModifierBranchProjection =
@@ -850,11 +874,6 @@ function rollModifierOngoingBranchProjection(
   for (const occurrence of extras) {
     pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
   }
-  if (expected === undefined) {
-    pushIssue("operation", rollModifierOperationEffectPath(expected));
-    pushIssue("effect", rollModifierOperationEffectPath(expected));
-  }
-  const effect = expected?.operation.effect;
   const attachment = rollModifierAttachmentProjection(
     mechanics.attachment,
     mechanics.range,
@@ -870,9 +889,13 @@ function rollModifierOngoingBranchProjection(
   } else if (attachment.tag === "unsupported") {
     pushIssue("attachment", spellOngoingAttachmentPath());
   }
-  if (effect === undefined) {
-    // The operation/effect issue above carries both missing semantic roles.
-  } else if (effect.kind === "modify_roll_numeric") {
+  if (expected === undefined) {
+    pushIssue("operation", rollModifierOperationEffectPath(expected));
+    pushIssue("effect", rollModifierOperationEffectPath(expected));
+    return { tag: "unsupported" };
+  }
+  const effect = expected.operation.effect;
+  if (effect.kind === "modify_roll_numeric") {
     const effectProjection = rollModifierNumericEffectProjection(effect);
     for (const failedFact of rollModifierNumericEffectConstraintIssues(
       effect,

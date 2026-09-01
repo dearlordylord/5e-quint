@@ -624,7 +624,11 @@ function isPersistentAreaSaveCompositeRepresentation(
   );
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
-    witnesses: [geometryMatches, rangeMatches, douseOperationMatches],
+    witnesses: [
+      { name: "geometry", present: geometryMatches },
+      { name: "range", present: rangeMatches },
+      { name: "douseOperation", present: douseOperationMatches },
+    ],
   });
 }
 

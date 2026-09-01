@@ -213,11 +213,14 @@ function heldLightRepresentation(
     spellProcedureHasRedundantSignature({
       kind: "twoWitnessesMayBeMissing",
       witnesses: [
-        hasLightOperation,
-        hasHurlOperation,
-        hasBonusAction,
-        hasTenMinuteDuration,
-        hasSelfAttachment || hasSelfRange,
+        { name: "lightOperation", present: hasLightOperation },
+        { name: "hurlOperation", present: hasHurlOperation },
+        { name: "bonusAction", present: hasBonusAction },
+        { name: "tenMinuteDuration", present: hasTenMinuteDuration },
+        {
+          name: "selfAttachmentOrRange",
+          present: hasSelfAttachment || hasSelfRange,
+        },
       ],
     })
   );
