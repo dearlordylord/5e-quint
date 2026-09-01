@@ -81,4 +81,23 @@ describe("scenario character composition boundary", () => {
       message: "Scenario character evaluation failed: controller failed",
     });
   });
+
+  test("rejects a forbidden module edge before character source evaluation", async () => {
+    const sentinel = "__dnd_character_admission_evaluation_sentinel__";
+    Reflect.deleteProperty(globalThis, sentinel);
+    await expect(
+      evaluateSource(`import "node:fs";
+Reflect.set(globalThis, ${JSON.stringify(sentinel)}, true);
+export const composeScenarioCharacters = () => ({
+  kind: "obstructed",
+  obstruction: "This source must never evaluate.",
+  observation: {},
+});
+`),
+    ).resolves.toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("forbidden sideEffectImport"),
+    });
+    expect(Reflect.get(globalThis, sentinel)).toBeUndefined();
+  });
 });

@@ -519,6 +519,7 @@ describe("scenario setup public-SDK boundary", () => {
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001.setup.ts",
     );
+    const watchfireSetupSource = readFileSync(watchfireSetupPath, "utf8");
     const writeCatalogVariant = (
       filename: string,
       includes: string,
@@ -526,14 +527,14 @@ describe("scenario setup public-SDK boundary", () => {
       const setupPath = resolve(directory, filename);
       writeFileSync(
         setupPath,
-        `import { setupScenario as watchfireSetup } from ${JSON.stringify(watchfireSetupPath)};
-
-export const setupScenario = (context) =>
-  watchfireSetup({
-    ...context,
-    statBlocks: context.statBlocks.filter(({ id }) => ${includes}),
-  });
-`,
+        watchfireSetupSource.replace(
+          "export const setupScenario: ScenarioSetup = (context) => {",
+          `export const setupScenario: ScenarioSetup = (contextInput) => {
+  const context: ScenarioSetupContext = {
+    ...contextInput,
+    statBlocks: contextInput.statBlocks.filter(({ id }) => ${includes}),
+  };`,
+        ),
       );
       return setupPath;
     };
@@ -4695,8 +4696,37 @@ export const setupScenario = (context) =>
         evaluateScenarioSetup(resolve(directory, "missing.ts"), []),
       ).resolves.toMatchObject({
         tag: "invalid",
-        message: expect.stringContaining("Scenario setup evaluation failed"),
+        message: expect.stringContaining("Authored source is unreadable"),
       });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
+  test("rejects a forbidden module edge before setup source evaluation", async () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "dnd-setup-admission-"));
+    const sentinel = "__dnd_setup_admission_evaluation_sentinel__";
+    Reflect.deleteProperty(globalThis, sentinel);
+    try {
+      const setupPath = resolve(directory, "setup.ts");
+      writeFileSync(
+        setupPath,
+        `const dependency = require("node:fs");
+Reflect.set(globalThis, ${JSON.stringify(sentinel)}, dependency !== undefined);
+export const setupScenario = () => ({
+  kind: "obstructed",
+  obstruction: "This source must never evaluate.",
+  observation: {},
+});
+`,
+      );
+      await expect(evaluateScenarioSetup(setupPath, [])).resolves.toMatchObject(
+        {
+          tag: "invalid",
+          message: expect.stringContaining("forbidden requireCall"),
+        },
+      );
+      expect(Reflect.get(globalThis, sentinel)).toBeUndefined();
     } finally {
       rmSync(directory, { recursive: true });
     }

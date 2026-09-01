@@ -40,8 +40,16 @@ import type {
   ScenarioTableD20TestResolutionResult,
 } from "./continuation-contract.ts";
 import { authoredAttemptBody } from "./attempt-source.ts";
-import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
-import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import {
+  admitAuthoredSource,
+  authoredSourceIssuesMessage,
+  readAuthoredSource,
+  type AdmittedAuthoredSource,
+  type AuthoredSourceAdmissionResult,
+  type AuthoredSourceRole,
+} from "./authored-source-admission.ts";
+import { evaluateAdmittedScenarioCharacters } from "./scenario-character-runtime.ts";
+import { evaluateAdmittedScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
   continueScenarioMovement,
   planScenarioMovement,
@@ -152,6 +160,14 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+function admittedSourceOrFail<Role extends AuthoredSourceRole>(
+  result: AuthoredSourceAdmissionResult<Role>,
+): AdmittedAuthoredSource<Role> {
+  return result.tag === "admitted"
+    ? result
+    : fail(authoredSourceIssuesMessage(result.issues));
+}
+
 function atomicJson(path: string, value: unknown): void {
   const temporaryPath = `${path}.next`;
   writeFileSync(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -256,6 +272,12 @@ async function initialize(
   mkdirSync(resolve("evidence"), { recursive: true });
   if (!existsSync(charactersPath))
     fail("Scenario character source is missing.");
+  const characterSource = admittedSourceOrFail(
+    readAuthoredSource({
+      role: "scenarioCharacter",
+      sourcePath: charactersPath,
+    }),
+  );
   const setupConfigPath = resolve("evidence/setup-tsconfig.json");
   const setupConfig: unknown = JSON.parse(
     readFileSync(resolve("tsconfig.json"), "utf8"),
@@ -270,11 +292,11 @@ async function initialize(
     )}\n`,
   );
   try {
-    typecheckSubmission(charactersPath, setupConfigPath);
+    typecheckSubmission(characterSource, setupConfigPath);
   } finally {
     rmSync(setupConfigPath, { force: true });
   }
-  const characters = await evaluateScenarioCharacters(charactersPath);
+  const characters = await evaluateAdmittedScenarioCharacters(characterSource);
   if (characters.tag === "invalid") fail(characters.message);
   const headerIdentity = {
     type: "sdk-player-header",
@@ -283,7 +305,7 @@ async function initialize(
     startedAt,
     consumerIsolation,
     replaySupervisorSha256,
-    charactersSha256: sha256Text(readFileSync(charactersPath, "utf8")),
+    charactersSha256: sha256Text(characterSource.source),
     characterObservation: characters.observation,
     scenarioSha256,
     scenarioReviewSha256,
@@ -300,22 +322,25 @@ async function initialize(
     return;
   }
   if (!existsSync(setupPath)) fail("Scenario setup source is missing.");
+  const setupSource = admittedSourceOrFail(
+    readAuthoredSource({ role: "scenarioSetup", sourcePath: setupPath }),
+  );
   writeFileSync(
     setupConfigPath,
     `${JSON.stringify({ ...setupConfig, include: [setupPath] }, null, 2)}\n`,
   );
   try {
-    typecheckSubmission(setupPath, setupConfigPath);
+    typecheckSubmission(setupSource, setupConfigPath);
   } finally {
     rmSync(setupConfigPath, { force: true });
   }
-  const setup = await evaluateScenarioSetup(
-    setupPath,
+  const setup = await evaluateAdmittedScenarioSetup(
+    setupSource,
     characters.characterSheets,
   );
   if (setup.tag === "invalid") fail(setup.message);
   const characterSheets = jsonValue(characters.characterSheets);
-  const setupSha256 = sha256Text(readFileSync(setupPath, "utf8"));
+  const setupSha256 = sha256Text(setupSource.source);
   const headerCommon = {
     ...headerIdentity,
     characterOutcome: "ready",
@@ -817,13 +842,18 @@ type ReplayResult =
 async function replay(): Promise<ReplayResult> {
   const parsed = parseSdkTranscript(transcriptRecords());
   if (parsed.tag === "invalid") fail(parsed.message);
+  const characterSource = admittedSourceOrFail(
+    readAuthoredSource({
+      role: "scenarioCharacter",
+      sourcePath: charactersPath,
+    }),
+  );
   if (
-    sha256Text(readFileSync(charactersPath, "utf8")) !==
-    parsed.value.header.charactersSha256
+    sha256Text(characterSource.source) !== parsed.value.header.charactersSha256
   ) {
     fail("Scenario character source hash diverged during replay.");
   }
-  const characters = await evaluateScenarioCharacters(charactersPath);
+  const characters = await evaluateAdmittedScenarioCharacters(characterSource);
   if (characters.tag === "invalid") fail(characters.message);
   if (parsed.value.header.characterOutcome === "obstructed") {
     if (
@@ -855,14 +885,14 @@ async function replay(): Promise<ReplayResult> {
   ) {
     fail("Scenario character composition diverged during replay.");
   }
-  if (
-    sha256Text(readFileSync(setupPath, "utf8")) !==
-    parsed.value.header.setupSha256
-  ) {
+  const setupSource = admittedSourceOrFail(
+    readAuthoredSource({ role: "scenarioSetup", sourcePath: setupPath }),
+  );
+  if (sha256Text(setupSource.source) !== parsed.value.header.setupSha256) {
     fail("Scenario setup source hash diverged during replay.");
   }
-  const initial = await evaluateScenarioSetup(
-    setupPath,
+  const initial = await evaluateAdmittedScenarioSetup(
+    setupSource,
     characters.characterSheets,
   );
   if (initial.tag === "invalid") fail(initial.message);
@@ -999,7 +1029,7 @@ function appendFrozenContinuation(prefix: FrozenPrefix, body: string): number {
 }
 
 function typecheckSubmission(
-  submissionPathForTypecheck: string,
+  submission: AdmittedAuthoredSource<AuthoredSourceRole>,
   submissionConfigPath: string,
 ): void {
   const compiler = resolve("tooling/typescript/bin/tsc");
@@ -1009,7 +1039,7 @@ function typecheckSubmission(
       "--permission",
       `--allow-fs-read=${resolve("tooling")}`,
       `--allow-fs-read=${resolve("declarations")}`,
-      `--allow-fs-read=${dirname(submissionPathForTypecheck)}`,
+      `--allow-fs-read=${dirname(submission.sourcePath)}`,
       compiler,
       "--noEmit",
       "-p",
@@ -1106,8 +1136,6 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     } satisfies FrozenPrefix);
     fail(obstruction.message);
   }
-  const authored = authoredAttemptBody(source);
-  if (authored.tag === "invalid") fail(authored.message);
   mkdirSync(submissionsPath, { recursive: true });
   const submissionDirectory = resolve(
     submissionsPath,
@@ -1116,6 +1144,11 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   mkdirSync(submissionDirectory);
   const submissionPath = resolve(submissionDirectory, "attempt.ts");
   const submissionConfigPath = resolve(submissionDirectory, "tsconfig.json");
+  const submissionSource = admittedSourceOrFail(
+    admitAuthoredSource({ role: "player", sourcePath: submissionPath, source }),
+  );
+  const authored = authoredAttemptBody(submissionSource.source);
+  if (authored.tag === "invalid") fail(authored.message);
   const submissionConfig: unknown = JSON.parse(
     readFileSync(resolve("tsconfig.json"), "utf8"),
   );
@@ -1124,10 +1157,10 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     submissionConfigPath,
     `${JSON.stringify({ ...submissionConfig, include: ["attempt.ts"] }, null, 2)}\n`,
   );
-  writeFileSync(submissionPath, source, { flag: "wx" });
+  writeFileSync(submissionPath, submissionSource.source, { flag: "wx" });
   const typecheckStarted = performance.now();
   try {
-    typecheckSubmission(submissionPath, submissionConfigPath);
+    typecheckSubmission(submissionSource, submissionConfigPath);
   } catch (error) {
     renameSync(submissionDirectory, `${submissionDirectory}.rejected`);
     throw error;

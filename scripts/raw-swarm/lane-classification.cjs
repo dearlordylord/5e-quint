@@ -89,7 +89,10 @@ const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/scenario-campaign.test.ts",
   "scripts/raw-swarm/scenario-catalogue.test.ts",
   "scripts/raw-swarm/scenario-stage-plan.test.ts",
+  "scripts/raw-swarm/sdk-player/attempt-source.test.ts",
+  "scripts/raw-swarm/sdk-player/authored-source-admission.test.ts",
   "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+  "scripts/raw-swarm/sdk-player/consumer-protocol-boundaries.test.ts",
   "scripts/raw-swarm/sdk-player/player-turn-projection.test.ts",
   "scripts/raw-swarm/sdk-player/scenario-character-runtime.test.ts",
   "scripts/raw-swarm/sdk-player/scenario-setup-authoring.test.ts",
@@ -99,6 +102,7 @@ const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/sdk-player/sdk-replay-input.test.ts",
   "scripts/raw-swarm/sdk-player/sdk-review-packet.test.ts",
   "scripts/raw-swarm/sdk-player/sdk-transcript.property.test.ts",
+  "scripts/raw-swarm/sdk-player/supervisor-authored-source-admission.test.ts",
   "scripts/raw-swarm/stage-plan-authority.test.ts",
 ].sort();
 
@@ -114,6 +118,7 @@ const DETERMINISTIC_TRUSTED_BOUNDARY_TESTS = Object.freeze(
     "scripts/raw-swarm/run-sdk-player.test.ts",
     "scripts/raw-swarm/runner-boundaries.test.ts",
     "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+    "scripts/raw-swarm/sdk-player/supervisor-authored-source-admission.test.ts",
   ].sort(),
 );
 const GUARDED_DETERMINISTIC_RAW_SWARM_TESTS = Object.freeze(

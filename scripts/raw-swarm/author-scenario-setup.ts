@@ -28,9 +28,10 @@ import {
 } from "./sdk-player/scenario-setup-authoring.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
 import {
-  evaluateScenarioSetup,
+  evaluateAdmittedScenarioSetup,
   scenarioSetupStatBlocks,
 } from "./sdk-player/scenario-setup-runtime.ts";
+import type { AdmittedAuthoredSource } from "./sdk-player/authored-source-admission.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
@@ -101,7 +102,14 @@ async function runSetupAuthor(input: {
   }
 }
 
-function typecheckSetup(scratch: string, phase: "neutral" | "retained"): void {
+function typecheckSetup(
+  scratch: string,
+  phase: "neutral" | "retained",
+  source: AdmittedAuthoredSource<"scenarioSetup">,
+): void {
+  if (source.sourcePath !== resolve(scratch, "setup.ts")) {
+    fail(`Scenario setup ${phase} admission source path diverged.`);
+  }
   const typecheck = spawnSync(
     process.execPath,
     [resolve(scratch, "tooling/typescript/bin/tsc"), "--noEmit"],
@@ -231,10 +239,10 @@ async function main(args: readonly string[]): Promise<void> {
                   "Do not inspect paths outside this scratch consumer.",
                 ].join(" "),
         }),
-      typecheck: (phase) => typecheckSetup(scratch, phase),
-      validateRetained: async () => {
-        const result = await evaluateScenarioSetup(
-          setupPath,
+      typecheck: (phase, source) => typecheckSetup(scratch, phase, source),
+      validateRetained: async (source) => {
+        const result = await evaluateAdmittedScenarioSetup(
+          source,
           characters.characterSheets,
         );
         if (result.tag === "invalid") fail(result.message);

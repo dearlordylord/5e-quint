@@ -27,6 +27,11 @@ import {
 } from "./sdk-player/consumer-codex-profile.ts";
 import { buildScenarioCharacterDistribution } from "./sdk-player/consumer-distribution.ts";
 import {
+  authoredSourceIssuesMessage,
+  readAuthoredSource,
+} from "./sdk-player/authored-source-admission.ts";
+import {
+  evaluateAdmittedScenarioCharacters,
   evaluateScenarioCharacters,
   scenarioCharactersWithoutSheetsSource,
 } from "./sdk-player/scenario-character-runtime.ts";
@@ -174,6 +179,14 @@ async function main(args: readonly string[]): Promise<void> {
     if (result.tag === "failed") {
       fail(`Scenario character invocation failed: ${result.cause.reason}`);
     }
+    const charactersPath = resolve(scratch, "characters.ts");
+    const characterSource = readAuthoredSource({
+      role: "scenarioCharacter",
+      sourcePath: charactersPath,
+    });
+    if (characterSource.tag === "rejected") {
+      fail(authoredSourceIssuesMessage(characterSource.issues));
+    }
     const typecheck = spawnSync(
       process.execPath,
       [resolve(scratch, "tooling/typescript/bin/tsc"), "--noEmit"],
@@ -185,8 +198,7 @@ async function main(args: readonly string[]): Promise<void> {
         `Scenario characters did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
       );
     }
-    const charactersPath = resolve(scratch, "characters.ts");
-    const evaluated = await evaluateScenarioCharacters(charactersPath);
+    const evaluated = await evaluateAdmittedScenarioCharacters(characterSource);
     if (evaluated.tag === "invalid") fail(evaluated.message);
     const after = currentGitRevision();
     if (after.tag === "dirty" || after.sha !== revision.sha) {

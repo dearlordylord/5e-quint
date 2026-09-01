@@ -1,6 +1,12 @@
 import { constants, copyFileSync, readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 
+import {
+  authoredSourceIssuesMessage,
+  readAuthoredSource,
+  type AdmittedAuthoredSource,
+} from "./authored-source-admission.ts";
+
 export const scenarioSetupAuthorProtectedInputFiles = [
   "SCENARIO.md",
   "SCENARIO_REVIEW.json",
@@ -37,8 +43,13 @@ function assertProtectedInputsUnchanged(input: {
 export async function authorScenarioSetupThroughOwners<Retained>(input: {
   readonly scratch: string;
   readonly runAuthor: (role: ScenarioSetupAuthorRole) => void | Promise<void>;
-  readonly typecheck: (phase: "neutral" | "retained") => void;
-  readonly validateRetained: () => Retained | Promise<Retained>;
+  readonly typecheck: (
+    phase: "neutral" | "retained",
+    source: AdmittedAuthoredSource<"scenarioSetup">,
+  ) => void;
+  readonly validateRetained: (
+    source: AdmittedAuthoredSource<"scenarioSetup">,
+  ) => Retained | Promise<Retained>;
 }): Promise<Retained> {
   const protectedInputs = protectedInputSources(input.scratch);
   const setupPath = resolve(input.scratch, "setup.ts");
@@ -50,7 +61,14 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     expected: protectedInputs,
     role: "neutral",
   });
-  input.typecheck("neutral");
+  const neutralSource = readAuthoredSource({
+    role: "scenarioSetup",
+    sourcePath: setupPath,
+  });
+  if (neutralSource.tag === "rejected") {
+    throw new Error(authoredSourceIssuesMessage(neutralSource.issues));
+  }
+  input.typecheck("neutral", neutralSource);
 
   copyFileSync(setupPath, neutralSetupPath, constants.COPYFILE_EXCL);
   const neutralSetupSource = readFileSync(neutralSetupPath, "utf8");
@@ -70,6 +88,13 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     rmSync(neutralSetupPath, { force: true });
   }
 
-  input.typecheck("retained");
-  return input.validateRetained();
+  const retainedSource = readAuthoredSource({
+    role: "scenarioSetup",
+    sourcePath: setupPath,
+  });
+  if (retainedSource.tag === "rejected") {
+    throw new Error(authoredSourceIssuesMessage(retainedSource.issues));
+  }
+  input.typecheck("retained", retainedSource);
+  return input.validateRetained(retainedSource);
 }

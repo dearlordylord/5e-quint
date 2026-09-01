@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import {
   battleAmmunitionStock,
@@ -25,6 +24,11 @@ import {
 import { Result, Match } from "effect";
 
 import { canonicalJson } from "../transcript.ts";
+import {
+  authoredSourceIssuesMessage,
+  readAuthoredSource,
+  type AdmittedAuthoredSource,
+} from "./authored-source-admission.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 import type { ScenarioSetupContext } from "./scenario-setup-contract.ts";
 import { isJsonValue, jsonValue } from "./json-value.ts";
@@ -58,17 +62,17 @@ const scenarioSetupEvaluationCache = new Map<
 >();
 
 function scenarioSetupEvaluationIdentity(
-  setupPath: string,
+  setupSource: AdmittedAuthoredSource<"scenarioSetup">,
   characterSheets: readonly FreshCharacterSheet[],
 ): Readonly<{ key: string; sourceSha256: string }> {
   const sourceSha256 = createHash("sha256")
-    .update(readFileSync(setupPath))
+    .update(setupSource.source)
     .digest("hex");
   const characterSheetsSha256 = createHash("sha256")
     .update(canonicalJson(jsonValue(characterSheets)))
     .digest("hex");
   return {
-    key: `${setupPath}\u0000${sourceSha256}\u0000${characterSheetsSha256}`,
+    key: `${setupSource.sourcePath}\u0000${sourceSha256}\u0000${characterSheetsSha256}`,
     sourceSha256,
   };
 }
@@ -184,7 +188,7 @@ function validateOutcome(outcome: unknown): ScenarioSessionResult {
 }
 
 async function evaluateScenarioSetupUncached(
-  setupPath: string,
+  setupSource: AdmittedAuthoredSource<"scenarioSetup">,
   characterSheets: readonly FreshCharacterSheet[],
   sourceSha256: string,
 ): Promise<ScenarioSessionResult> {
@@ -192,7 +196,7 @@ async function evaluateScenarioSetupUncached(
   if (context.tag === "invalid") return context;
   try {
     const imported: unknown = await import(
-      `${pathToFileURL(setupPath).href}?setup=${sourceSha256}`
+      `${pathToFileURL(setupSource.sourcePath).href}?setup=${sourceSha256}`
     );
     if (!isRecord(imported) || typeof imported.setupScenario !== "function") {
       return {
@@ -213,13 +217,13 @@ async function evaluateScenarioSetupUncached(
   }
 }
 
-export function evaluateScenarioSetup(
-  setupPath: string,
+export function evaluateAdmittedScenarioSetup(
+  setupSource: AdmittedAuthoredSource<"scenarioSetup">,
   characterSheets: readonly FreshCharacterSheet[],
 ): Promise<ScenarioSessionResult> {
   try {
     const identity = scenarioSetupEvaluationIdentity(
-      setupPath,
+      setupSource,
       characterSheets,
     );
     const cached = scenarioSetupEvaluationCache.get(identity.key);
@@ -227,7 +231,7 @@ export function evaluateScenarioSetup(
     // A supervisor evaluates one frozen setup dependency graph. The direct
     // source and canonical Character Sheets are its complete mutable inputs.
     const evaluation = evaluateScenarioSetupUncached(
-      setupPath,
+      setupSource,
       characterSheets,
       identity.sourceSha256,
     );
@@ -241,4 +245,20 @@ export function evaluateScenarioSetup(
       }`,
     });
   }
+}
+
+export function evaluateScenarioSetup(
+  setupPath: string,
+  characterSheets: readonly FreshCharacterSheet[],
+): Promise<ScenarioSessionResult> {
+  const setupSource = readAuthoredSource({
+    role: "scenarioSetup",
+    sourcePath: setupPath,
+  });
+  return setupSource.tag === "rejected"
+    ? Promise.resolve({
+        tag: "invalid",
+        message: authoredSourceIssuesMessage(setupSource.issues),
+      })
+    : evaluateAdmittedScenarioSetup(setupSource, characterSheets);
 }
