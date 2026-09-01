@@ -443,9 +443,6 @@ function abjureFoesBattle(
           characterBattleFeatureInitForTest(abjureFoesUnit, [
             { className: "paladin", level: paladinLevel },
           ]),
-          ...(input.includeRage === true
-            ? [characterBattleFeatureInitForTest(rageUnit, [rageClassLevel])]
-            : []),
         ],
         resources: [
           {
