@@ -245,10 +245,6 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
               { className: "rogue", level: classLevel(5) },
               { className: "bard", level: classLevel(3) },
             ]),
-            characterBattleFeatureInitForTest(cuttingWordsDamageOnly, [
-              { className: "rogue", level: classLevel(5) },
-              { className: "bard", level: classLevel(3) },
-            ]),
           ],
           characterUnitRefs: [
             reactionModifierUnitRef("rogue_uncanny_dodge"),

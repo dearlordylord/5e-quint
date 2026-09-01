@@ -5233,14 +5233,19 @@ export function goblinAttacksReactionModifierCharacter(input: {
         ...(input.resources === undefined
           ? {}
           : { resources: input.resources }),
-        unitFeatures: [
-          characterBattleFeatureInitForTest(
-            input.unit,
-            parseCharacterBattleClassLevelsRight([
-              { className: input.className, level: input.level },
-            ]),
-          ),
-        ],
+        ...(input.resources?.some(({ unit }) => unit.id === input.unit.id) ===
+        true
+          ? {}
+          : {
+              unitFeatures: [
+                characterBattleFeatureInitForTest(
+                  input.unit,
+                  parseCharacterBattleClassLevelsRight([
+                    { className: input.className, level: input.level },
+                  ]),
+                ),
+              ],
+            }),
         characterUnitRefs: [
           {
             unit: input.unit,

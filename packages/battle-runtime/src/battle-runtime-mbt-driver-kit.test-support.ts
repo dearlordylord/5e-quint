@@ -17161,11 +17161,6 @@ function adrenalineRushCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       resources: [{ unit, usesRemaining: 3 }],
-      unitFeatures: [
-        characterBattleFeatureInitForTest(unit, [
-          { className: "fighter", level: classLevel(5) },
-        ]),
-      ],
     },
   };
 }
@@ -17205,9 +17200,6 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       resources: [{ unit: featureUnit }],
-      unitFeatures: [
-        characterBattleFeatureInitForTest(featureUnit, classLevels),
-      ],
       spellcasting: {
         spellcastingSource: {
           tag: "classSpellcasting",
