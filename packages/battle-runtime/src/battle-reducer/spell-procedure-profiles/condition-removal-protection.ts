@@ -1,6 +1,5 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-removal-protection
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 //
@@ -8,16 +7,25 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // spell that removes Poisoned from one touched creature, then grants Poisoned
 // Saving Throw Advantage and Poison damage Resistance.
 
-import { movementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  type Condition,
+  type DamageType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { SpellMechanics, EffectAtom } from "@dnd/surface/surface/types";
 
 import {
+  type BattleSpellExecutionSource,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type ConditionRemovalProtectionSpellInvocation,
+  type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { allocateBattleEffectOccurrencesForCreature } from "../../effect-execution-ref.ts";
@@ -28,10 +36,7 @@ import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { battleCreatureAfterConditionRemoval } from "../spell-condition-effects-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import {
-  creatureTargetSelection,
-  scalarBuffActiveEffectExpiration,
-} from "../spells-profiles-support.ts";
+import { creatureTargetSelection } from "../spells-profiles-support.ts";
 import { spellTargetHole } from "../spells-holes-fills.ts";
 import {
   spellSingleTargetSelection,
@@ -43,8 +48,34 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { preparedSpellSlotInvocations } from "./profile.ts";
-import { Schema } from "effect";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import {
+  isSpellCanonicalDurationValue,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationTicksFromCanonicalValue,
+  spellProcedureNonEmpty,
+  spellTouchRangeFeet,
+  spellConsumedMaterialEvidencePaths,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+
+type ConditionRemovalProtectionSpellInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "conditionRemovalProtection" }
+>;
+import { Match, Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -56,114 +87,555 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-function admitConditionRemovalProtection(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly ConditionRemovalProtectionSpellInvocation[] {
-  const projection = conditionRemovalProtectionSpellProjection(
-    ctx.actor.combatantId,
-    spell,
-  );
-  if (projection === null) {
-    return [];
-  }
-  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
-    ...base,
-    procedure: "conditionRemovalProtection",
-    actionCost: "magicAction",
-    ...projection,
-  }));
+type ConditionRemovalProtectionMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly range: Extract<
+    SpellDefinitionRuleFacts["range"],
+    {
+      readonly kind: "touch";
+    }
+  >;
+  readonly duration: Extract<
+    SpellDefinitionRuleFacts["duration"],
+    { readonly kind: "timed" }
+  > & { readonly value: SpellCanonicalDurationValue };
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly protection: {
+    readonly condition: Condition;
+    readonly damageType: DamageType;
+  };
+};
+
+export const CONDITION_REMOVAL_PROTECTION_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "duration",
+  "durationExtension",
+  "durationEnding",
+  "phaseCount",
+  "attachment",
+  "effects",
+  "conditionRemoval",
+  "conditionSaveRollMode",
+  "damageResistance",
+] as const;
+type ConditionRemovalProtectionFailedFact =
+  (typeof CONDITION_REMOVAL_PROTECTION_FAILED_FACTS)[number];
+
+type ConditionRemovalProtectionIssue = {
+  readonly failedFact: ConditionRemovalProtectionFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+type ConditionRemovalProtectionInspection = SpellProcedureMechanicsInspection<
+  "conditionRemovalProtection",
+  ConditionRemovalProtectionMechanicsFacts,
+  ConditionRemovalProtectionSpellInvocation,
+  ReturnType<typeof conditionRemovalProtectionIssueResult>
+>;
+
+function conditionRemovalProtectionIssue(
+  failedFact: ConditionRemovalProtectionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): ConditionRemovalProtectionIssue {
+  return { failedFact, mechanicsPath };
 }
 
-function conditionRemovalProtectionSpellProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  ConditionRemovalProtectionSpellInvocation,
-  "protection" | "rangeFeet" | "targeting"
-> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "hour" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const composite =
-    phase?.kind === "direct" && phase.effects?.[0]?.kind === "composite"
-      ? phase.effects[0]
-      : null;
-  const effects = composite?.effects ?? [];
-  const conditionRemoval = effects.find(
-    (effect) => effect.kind === "remove_condition",
-  );
-  const conditionSaveRollMode = effects.find(
-    (effect) => effect.kind === "modify_roll_advantage",
-  );
-  const damageResistance = effects.find(
-    (effect) => effect.kind === "grant_resistance",
-  );
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
-  );
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    !creatureTargetSelection(phase.attachment.value.selection) ||
-    composite === null ||
-    effects.length !== 3 ||
-    conditionRemoval?.kind !== "remove_condition" ||
-    conditionRemoval.condition !== "poisoned" ||
-    conditionSaveRollMode?.kind !== "modify_roll_advantage" ||
-    (conditionSaveRollMode.affects ?? "self_roll") !== "self_roll" ||
-    conditionSaveRollMode.mode !== "advantage" ||
-    !sameStringSet(conditionSaveRollMode.on, ["saving_throw"]) ||
-    conditionSaveRollMode.conditionFilter === undefined ||
-    !sameStringSet(conditionSaveRollMode.conditionFilter, ["poisoned"]) ||
-    conditionSaveRollMode.skillFilter !== undefined ||
-    conditionSaveRollMode.abilityFilter !== undefined ||
-    conditionSaveRollMode.saveAbilityFilter !== undefined ||
-    conditionSaveRollMode.saveSourceFilter !== undefined ||
-    conditionSaveRollMode.contextRangeFeet !== undefined ||
-    conditionSaveRollMode.spellSourceFilter !== undefined ||
-    conditionSaveRollMode.attackerTypeFilter !== undefined ||
-    conditionSaveRollMode.count !== undefined ||
-    conditionSaveRollMode.expiresOn !== undefined ||
-    damageResistance?.kind !== "grant_resistance" ||
-    damageResistance.damageType !== "poison" ||
-    damageResistance.sourceFilter !== undefined ||
-    expiresAt === null
-  ) {
-    return null;
-  }
+function conditionRemovalProtectionIssueResult(
+  issue: ConditionRemovalProtectionIssue,
+) {
   return {
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-    protection: {
-      conditionSaveRollMode: {
-        kind: "conditionSavingThrowRollMode",
-        sourceCombatantId: actorId,
-        condition: "poisoned",
-        mode: "advantage",
-        expiresAt,
-      },
-      damageResistance: {
-        kind: "damageResistance",
-        sourceCombatantId: actorId,
-        damageType: "poison",
-        expiresAt,
-      },
-    },
-    rangeFeet: movementFeet(5),
+    tag: "spellProcedureAdmissionIssue" as const,
+    procedure: "conditionRemovalProtection" as const,
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported conditionRemovalProtection mechanics fact: ${issue.failedFact}.`,
   };
+}
+
+function conditionRemovalProtectionDurationIssues(
+  duration: Extract<SpellMechanics["duration"], { readonly kind: "timed" }>,
+): readonly ConditionRemovalProtectionIssue[] {
+  const issues: ConditionRemovalProtectionIssue[] = [];
+  for (const child of spellDurationChildCoordinates(duration)) {
+    issues.push(
+      conditionRemovalProtectionIssue(
+        child.branch === "extension" ? "durationExtension" : "durationEnding",
+        spellDurationChildPath(child),
+      ),
+    );
+  }
+  return issues;
+}
+
+type ConditionRemovalProtectionDuration =
+  ConditionRemovalProtectionMechanicsFacts["duration"];
+
+function isConditionRemovalProtectionDuration(
+  duration: SpellDefinitionRuleFacts["duration"],
+): duration is ConditionRemovalProtectionDuration {
+  return (
+    duration.kind === "timed" &&
+    duration.value.unit === "hour" &&
+    duration.value.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.value)
+  );
+}
+
+type ConditionRemovalProtectionRange =
+  ConditionRemovalProtectionMechanicsFacts["range"];
+
+function isConditionRemovalProtectionRange(
+  range: SpellDefinitionRuleFacts["range"],
+): range is ConditionRemovalProtectionRange {
+  return range.kind === "touch";
+}
+
+const CONDITION_REMOVAL_PROTECTION_EFFECT_ROLES = [
+  "conditionRemoval",
+  "conditionSaveRollMode",
+  "damageResistance",
+] as const;
+type ConditionRemovalProtectionEffectRole =
+  (typeof CONDITION_REMOVAL_PROTECTION_EFFECT_ROLES)[number];
+
+type ConditionRemovalProtectionRoleEffect =
+  | Extract<EffectAtom, { readonly kind: "remove_condition" }>
+  | Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>
+  | Extract<EffectAtom, { readonly kind: "grant_resistance" }>;
+
+function conditionRemovalProtectionRoleEffect(
+  effect: EffectAtom,
+): ConditionRemovalProtectionRoleEffect | undefined {
+  return effect.kind === "remove_condition" ||
+    effect.kind === "modify_roll_advantage" ||
+    effect.kind === "grant_resistance"
+    ? effect
+    : undefined;
+}
+
+function conditionRemovalProtectionEffectRole(
+  effect: ConditionRemovalProtectionRoleEffect,
+): ConditionRemovalProtectionEffectRole {
+  return Match.value(effect).pipe(
+    Match.when({ kind: "remove_condition" }, () => "conditionRemoval" as const),
+    Match.when(
+      { kind: "modify_roll_advantage" },
+      () => "conditionSaveRollMode" as const,
+    ),
+    Match.when({ kind: "grant_resistance" }, () => "damageResistance" as const),
+    Match.exhaustive,
+  );
+}
+
+function conditionRemovalProtectionConditionValue(
+  effect: EffectAtom,
+): Condition | undefined {
+  if (
+    effect.kind !== "remove_condition" ||
+    typeof effect.condition !== "string" ||
+    effect.condition !== "poisoned"
+  ) {
+    return undefined;
+  }
+  return effect.condition;
+}
+
+function conditionRemovalProtectionSaveRollConditionValue(
+  effect: EffectAtom,
+): Condition | undefined {
+  if (
+    effect.kind !== "modify_roll_advantage" ||
+    (effect.affects ?? "self_roll") !== "self_roll" ||
+    effect.mode !== "advantage" ||
+    !sameStringSet(effect.on, ["saving_throw"]) ||
+    effect.conditionFilter === undefined ||
+    !sameStringSet(effect.conditionFilter, ["poisoned"]) ||
+    effect.skillFilter !== undefined ||
+    effect.abilityFilter !== undefined ||
+    effect.saveAbilityFilter !== undefined ||
+    effect.saveSourceFilter !== undefined ||
+    effect.contextRangeFeet !== undefined ||
+    effect.spellSourceFilter !== undefined ||
+    effect.attackerTypeFilter !== undefined ||
+    effect.count !== undefined ||
+    effect.expiresOn !== undefined
+  ) {
+    return undefined;
+  }
+  const [condition] = effect.conditionFilter;
+  return condition === "poisoned" ? condition : undefined;
+}
+
+function conditionRemovalProtectionDamageTypeValue(
+  effect: EffectAtom,
+): DamageType | undefined {
+  if (
+    effect.kind !== "grant_resistance" ||
+    typeof effect.damageType !== "string" ||
+    effect.damageType !== "poison" ||
+    effect.sourceFilter !== undefined
+  ) {
+    return undefined;
+  }
+  return effect.damageType;
+}
+
+type ConditionRemovalProtectionRoleProjection =
+  | {
+      readonly tag: "valid";
+      readonly condition: Condition;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly issues: ReadonlyNonEmptyArray<ConditionRemovalProtectionIssue>;
+    };
+
+function conditionRemovalProtectionRoleProjection(
+  effects: readonly EffectAtom[],
+): ConditionRemovalProtectionRoleProjection {
+  const issues: ConditionRemovalProtectionIssue[] = [];
+  const seen = new Set<ConditionRemovalProtectionEffectRole>();
+  let condition: Condition | undefined;
+  let damageType: DamageType | undefined;
+  for (const [index, effect] of effects.entries()) {
+    const ordinal = PositiveInteger(index + 1);
+    const roleEffect = conditionRemovalProtectionRoleEffect(effect);
+    if (roleEffect === undefined) {
+      issues.push(
+        conditionRemovalProtectionIssue(
+          "effects",
+          spellActivationEffectPath(PositiveInteger(1), ordinal),
+        ),
+      );
+      continue;
+    }
+    const role = conditionRemovalProtectionEffectRole(roleEffect);
+    if (seen.has(role)) {
+      issues.push(
+        conditionRemovalProtectionIssue(
+          role,
+          spellActivationEffectPath(PositiveInteger(1), ordinal),
+        ),
+      );
+      continue;
+    }
+    seen.add(role);
+    if (role === "conditionRemoval") {
+      condition = conditionRemovalProtectionConditionValue(effect);
+      if (condition === undefined) {
+        issues.push(
+          conditionRemovalProtectionIssue(
+            "conditionRemoval",
+            spellActivationEffectPath(PositiveInteger(1), ordinal),
+          ),
+        );
+      }
+    } else if (role === "conditionSaveRollMode") {
+      const saveCondition =
+        conditionRemovalProtectionSaveRollConditionValue(effect);
+      if (saveCondition === undefined) {
+        issues.push(
+          conditionRemovalProtectionIssue(
+            "conditionSaveRollMode",
+            spellActivationEffectPath(PositiveInteger(1), ordinal),
+          ),
+        );
+      } else {
+        condition = saveCondition;
+      }
+    } else {
+      damageType = conditionRemovalProtectionDamageTypeValue(effect);
+      if (damageType === undefined) {
+        issues.push(
+          conditionRemovalProtectionIssue(
+            "damageResistance",
+            spellActivationEffectPath(PositiveInteger(1), ordinal),
+          ),
+        );
+      }
+    }
+  }
+  const missingRoles = CONDITION_REMOVAL_PROTECTION_EFFECT_ROLES.filter(
+    (role) => !seen.has(role),
+  );
+  for (const [index, role] of missingRoles.entries()) {
+    issues.push(
+      conditionRemovalProtectionIssue(
+        role,
+        spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(effects.length + index + 1),
+        ),
+      ),
+    );
+  }
+  const nonEmpty = spellProcedureNonEmpty(issues);
+  if (nonEmpty !== undefined) {
+    return { tag: "invalid", issues: nonEmpty };
+  }
+  if (condition !== undefined && damageType !== undefined) {
+    return { tag: "valid", condition, damageType };
+  }
+  // Every missing projection contributes an issue above. This branch keeps
+  // the return type honest if the role vocabulary changes without a matching
+  // projection update.
+  return {
+    tag: "invalid",
+    issues: [
+      conditionRemovalProtectionIssue(
+        "effects",
+        spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(effects.length + 1),
+        ),
+      ),
+    ],
+  };
+}
+
+function isConditionRemovalProtectionRootShape(
+  mechanics: SpellMechanics,
+): mechanics is Extract<SpellMechanics, { readonly family: "activation" }> {
+  if (mechanics.family !== "activation") return false;
+  const phase = mechanics.phases[0];
+  const outerEffect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  if (outerEffect?.kind !== "composite") return false;
+  return outerEffect.effects.some(
+    (effect) =>
+      effect.kind === "remove_condition" ||
+      effect.kind === "modify_roll_advantage" ||
+      effect.kind === "grant_resistance",
+  );
+}
+
+function admitConditionRemovalProtectionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): ConditionRemovalProtectionInspection {
+  if (!isConditionRemovalProtectionRootShape(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "direct") return { tag: "notRepresented" };
+  const outerEffect = phase.effects?.[0];
+  if (outerEffect?.kind !== "composite") return { tag: "notRepresented" };
+  const effects = outerEffect.effects;
+  const issues: ConditionRemovalProtectionIssue[] = [];
+  const rangeFacts = isConditionRemovalProtectionRange(mechanics.range)
+    ? mechanics.range
+    : undefined;
+  const durationFacts = isConditionRemovalProtectionDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  if (mechanics.level !== 2) {
+    issues.push(
+      conditionRemovalProtectionIssue(
+        "level",
+        spellMechanicsHeaderPath("level"),
+      ),
+    );
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    issues.push(
+      conditionRemovalProtectionIssue(
+        "castingTime",
+        spellMechanicsHeaderPath("castingTime"),
+      ),
+    );
+  }
+  if (!isConditionRemovalProtectionRange(mechanics.range)) {
+    issues.push(
+      conditionRemovalProtectionIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    );
+  }
+  if (!isConditionRemovalProtectionDuration(mechanics.duration)) {
+    issues.push(
+      conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
+    );
+  }
+  if (mechanics.duration.kind === "timed") {
+    issues.push(
+      ...conditionRemovalProtectionDurationIssues(mechanics.duration),
+    );
+  }
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === 0) continue;
+      issues.push(
+        conditionRemovalProtectionIssue(
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(index + 1)),
+        ),
+      );
+    }
+  }
+  const selection =
+    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : undefined;
+  const validSelection =
+    selection !== undefined &&
+    selection.mode === "one" &&
+    creatureTargetSelection(selection);
+  if (!validSelection) {
+    issues.push(
+      conditionRemovalProtectionIssue(
+        "attachment",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    );
+  }
+  const roleProjection = conditionRemovalProtectionRoleProjection(effects);
+  if (roleProjection.tag === "invalid") {
+    const [firstRoleIssue, ...remainingRoleIssues] = roleProjection.issues;
+    const otherIssues = spellProcedureNonEmpty(issues);
+    if (otherIssues === undefined) {
+      return {
+        tag: "unsupported",
+        issues: [
+          conditionRemovalProtectionIssueResult(firstRoleIssue),
+          ...remainingRoleIssues.map(conditionRemovalProtectionIssueResult),
+        ],
+      };
+    }
+    const [firstIssue, ...remainingIssues] = otherIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        conditionRemovalProtectionIssueResult(firstIssue),
+        ...remainingIssues.map(conditionRemovalProtectionIssueResult),
+        conditionRemovalProtectionIssueResult(firstRoleIssue),
+        ...remainingRoleIssues.map(conditionRemovalProtectionIssueResult),
+      ],
+    };
+  }
+  const nonEmpty = spellProcedureNonEmpty(issues);
+  if (nonEmpty !== undefined) {
+    const [firstIssue, ...remainingIssues] = nonEmpty;
+    return {
+      tag: "unsupported",
+      issues: [
+        conditionRemovalProtectionIssueResult(firstIssue),
+        ...remainingIssues.map(conditionRemovalProtectionIssueResult),
+      ],
+    };
+  }
+  if (rangeFacts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        conditionRemovalProtectionIssueResult(
+          conditionRemovalProtectionIssue(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ),
+      ],
+    };
+  }
+  if (durationFacts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        conditionRemovalProtectionIssueResult(
+          conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    range: rangeFacts,
+    duration: durationFacts,
+    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.value),
+    protection: {
+      condition: roleProjection.condition,
+      damageType: roleProjection.damageType,
+    },
+  } satisfies ConditionRemovalProtectionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "conditionRemovalProtection",
+      facts,
+      evidence: conditionRemovalProtectionMechanicsEvidence(mechanics),
+      admit: (executionSource, ctx) =>
+        admitConditionRemovalProtection(executionSource, ctx, facts),
+    },
+  };
+}
+
+function conditionRemovalProtectionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    spellDurationValuePath(),
+    ...spellDurationChildCoordinates(mechanics.duration).map(
+      spellDurationChildPath,
+    ),
+    spellActivationPhasePath(PositiveInteger(1)),
+    spellActivationAttachmentPath(PositiveInteger(1)),
+    spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    spellActivationEffectPath(PositiveInteger(1), PositiveInteger(2)),
+    spellActivationEffectPath(PositiveInteger(1), PositiveInteger(3)),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitConditionRemovalProtection(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: ConditionRemovalProtectionMechanicsFacts,
+): readonly ConditionRemovalProtectionSpellInvocation[] {
+  const expiresAt = {
+    kind: "duration" as const,
+    durationTicks: facts.durationTicks,
+  };
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly ConditionRemovalProtectionSpellInvocation[] =>
+      Number(slot.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "conditionRemovalProtection",
+              spell,
+              actionCost: "magicAction",
+              targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+              protection: {
+                conditionSaveRollMode: {
+                  kind: "conditionSavingThrowRollMode",
+                  sourceCombatantId: ctx.actor.combatantId,
+                  condition: facts.protection.condition,
+                  mode: "advantage",
+                  expiresAt,
+                },
+                damageResistance: {
+                  kind: "damageResistance",
+                  sourceCombatantId: ctx.actor.combatantId,
+                  damageType: facts.protection.damageType,
+                  expiresAt,
+                },
+              },
+              rangeFeet: spellTouchRangeFeet(),
+            },
+          ],
+  );
 }
 
 function discoverConditionRemovalProtectionCastAct(
@@ -327,7 +799,7 @@ export const conditionRemovalProtectionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "conditionRemovalProtection",
   executionSchema: ConditionRemovalProtectionInvocationSchema,
-  admit: admitConditionRemovalProtection,
+  admitMechanics: admitConditionRemovalProtectionMechanics,
   discoverCastAct: discoverConditionRemovalProtectionCastAct,
   resolve: resolveConditionRemovalProtection,
 };

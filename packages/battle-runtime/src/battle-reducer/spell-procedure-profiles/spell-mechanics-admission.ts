@@ -1,14 +1,31 @@
 import {
+  ELAPSED_TIME_TICKS_PER_DAY,
+  ELAPSED_TIME_TICKS_PER_HOUR,
+  ELAPSED_TIME_TICKS_PER_MINUTE,
+  elapsedTimeTicks,
+  type ElapsedTimeTicks,
+} from "@dnd/shared/elapsed-time";
+import {
+  PositiveInteger,
   movementFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
   spellMaterialComponentPath,
+  spellDurationValuePath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  Components,
+  DurationEndTrigger,
+  DurationValue,
+  SpellMechanics,
+  TimedPermanentAfter,
+} from "@dnd/surface/surface/types";
 
 import type {
   BattleSpellExecutionSource,
@@ -82,6 +99,188 @@ export function spellDefinitionPointRangeFeet(
   return range.kind === "point" && typeof range.feet === "number"
     ? movementFeet(range.feet)
     : undefined;
+}
+
+/**
+ * A parsed DurationValue has positive integral units at the Surface boundary.
+ * Carrying that proof lets execution derive elapsed time without reparsing or
+ * falling back to an empty invocation list.
+ */
+export type SpellCanonicalDurationValue = Omit<DurationValue, "amount"> & {
+  readonly amount: PositiveInteger;
+};
+
+export function isSpellCanonicalDurationValue(
+  value: DurationValue,
+): value is SpellCanonicalDurationValue {
+  return Number.isInteger(value.amount) && value.amount > 0;
+}
+
+export function spellDurationTicksFromCanonicalValue(
+  value: SpellCanonicalDurationValue,
+): ElapsedTimeTicks {
+  return elapsedTimeTicks(
+    Match.value(value.unit).pipe(
+      Match.when("round", () => Number(value.amount)),
+      Match.when(
+        "minute",
+        () => Number(value.amount) * ELAPSED_TIME_TICKS_PER_MINUTE,
+      ),
+      Match.when(
+        "hour",
+        () => Number(value.amount) * ELAPSED_TIME_TICKS_PER_HOUR,
+      ),
+      Match.when(
+        "day",
+        () => Number(value.amount) * ELAPSED_TIME_TICKS_PER_DAY,
+      ),
+      Match.exhaustive,
+    ),
+  );
+}
+
+/**
+ * Duration child coordinates are traversed once for every profile. Values
+ * are retained for ending discrimination while coordinates retain authored
+ * ordinals, including concentration upcast tiers.
+ */
+export type SpellDurationEnding =
+  | {
+      readonly kind: "earlyEnd";
+      readonly trigger: DurationEndTrigger;
+    }
+  | {
+      readonly kind: "permanentAfter";
+      readonly transition: TimedPermanentAfter;
+    }
+  | {
+      readonly kind: "permanentIfMaintainedFull";
+    }
+  | {
+      readonly kind: "endsOn";
+      readonly trigger: NonNullable<
+        Extract<
+          SpellMechanics["duration"],
+          { readonly kind: "permanent" }
+        >["endsOn"]
+      >[number];
+    };
+
+export type SpellDurationChild =
+  | {
+      readonly branch: "extension";
+      readonly ordinal: PositiveInteger;
+    }
+  | {
+      readonly branch: "ending";
+      readonly ordinal: PositiveInteger;
+      readonly ending: SpellDurationEnding;
+    };
+
+export function spellDurationChildCoordinates(
+  duration: SpellMechanics["duration"],
+): readonly SpellDurationChild[] {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, (timed) => [
+      ...(timed.value.upcastTiers ?? []).map((_tier, index) => ({
+        branch: "extension" as const,
+        ordinal: PositiveInteger(index + 1),
+      })),
+      ...(timed.earlyEnd ?? []).map((ending, index) => ({
+        branch: "ending" as const,
+        ordinal: PositiveInteger(index + 1),
+        ending: { kind: "earlyEnd" as const, trigger: ending },
+      })),
+      ...(timed.permanentAfter === undefined
+        ? []
+        : [
+            {
+              branch: "ending" as const,
+              ordinal: PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
+              ending: {
+                kind: "permanentAfter" as const,
+                transition: timed.permanentAfter,
+              },
+            },
+          ]),
+    ]),
+    Match.when({ kind: "concentration" }, (concentration) => [
+      ...(concentration.upTo.upcastTiers ?? []).map((_tier, index) => ({
+        branch: "extension" as const,
+        ordinal: PositiveInteger(index + 1),
+      })),
+      ...(concentration.earlyEnd ?? []).map((ending, index) => ({
+        branch: "ending" as const,
+        ordinal: PositiveInteger(index + 1),
+        ending: { kind: "earlyEnd" as const, trigger: ending },
+      })),
+      ...(concentration.permanentIfMaintainedFull === true
+        ? [
+            {
+              branch: "ending" as const,
+              ordinal: PositiveInteger(
+                (concentration.earlyEnd?.length ?? 0) + 1,
+              ),
+              ending: {
+                kind: "permanentIfMaintainedFull" as const,
+              },
+            },
+          ]
+        : []),
+    ]),
+    Match.when({ kind: "permanent" }, (permanent) =>
+      (permanent.endsOn ?? []).map((trigger, index) => ({
+        branch: "ending" as const,
+        ordinal: PositiveInteger(index + 1),
+        ending: { kind: "endsOn" as const, trigger },
+      })),
+    ),
+    Match.when({ kind: "slot_tiered" }, (slotTiered) =>
+      slotTiered.tiers.map((_tier, index) => ({
+        branch: "extension" as const,
+        ordinal: PositiveInteger(index + 1),
+      })),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function spellDurationChildPath(
+  child: SpellDurationChild,
+): SpellMechanicsBranchPath {
+  return child.branch === "extension"
+    ? spellDurationExtensionPath(child.ordinal)
+    : spellDurationEndingPath(child.ordinal);
+}
+
+/** The duration value branch exists for timed, concentration, and tiered forms. */
+export function spellDurationValueEvidencePaths(
+  duration: SpellMechanics["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, () => [spellDurationValuePath()]),
+    Match.when({ kind: "concentration" }, () => [spellDurationValuePath()]),
+    Match.when({ kind: "permanent" }, () => []),
+    Match.when({ kind: "slot_tiered" }, () => [spellDurationValuePath()]),
+    Match.exhaustive,
+  );
+}
+
+/** Project the complete canonical duration evidence shape in one place. */
+export function spellDurationEvidencePaths(
+  duration: SpellMechanics["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  return [
+    ...spellDurationValueEvidencePaths(duration),
+    ...spellDurationChildCoordinates(duration).map(spellDurationChildPath),
+  ];
+}
+
+/** Surface Touch has one canonical movement-distance projection. */
+export function spellTouchRangeFeet() {
+  return movementFeet(5);
 }
 
 /**

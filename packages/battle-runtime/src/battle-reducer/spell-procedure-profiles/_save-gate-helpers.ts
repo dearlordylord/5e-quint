@@ -42,7 +42,6 @@ import {
   spellActivationPhasePath,
   spellActivationRepeatPath,
   spellDurationEndingPath,
-  spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
@@ -80,7 +79,13 @@ import type {
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationValueEvidencePaths,
+  spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
+  type SpellDurationChild,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
@@ -1137,90 +1142,23 @@ function saveGateRepeatFailuresForCount(
     : [];
 }
 
-type SaveGateDurationChild =
-  | { readonly branch: "extension"; readonly ordinal: PositiveInteger }
-  | { readonly branch: "ending"; readonly ordinal: PositiveInteger };
-
 type SaveGateDurationChildFailure = {
   readonly failedFact: "durationExtension" | "durationEnding";
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
 
-function saveGateDurationChildren(
-  duration: SaveGateDuration,
-): readonly SaveGateDurationChild[] {
-  return Match.value(duration).pipe(
-    Match.when({ kind: "instantaneous" }, () => []),
-    Match.when({ kind: "timed" }, (timed) => [
-      ...(timed.value.upcastTiers ?? []).map((_, index) => ({
-        branch: "extension" as const,
-        ordinal: PositiveInteger(index + 1),
-      })),
-      ...(timed.earlyEnd ?? []).map((_, index) => ({
-        branch: "ending" as const,
-        ordinal: PositiveInteger(index + 1),
-      })),
-      ...(timed.permanentAfter === undefined
-        ? []
-        : [
-            {
-              branch: "ending" as const,
-              ordinal: PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
-            },
-          ]),
-    ]),
-    Match.when({ kind: "concentration" }, (concentration) => [
-      ...(concentration.upTo.upcastTiers ?? []).map((_, index) => ({
-        branch: "extension" as const,
-        ordinal: PositiveInteger(index + 1),
-      })),
-      ...(concentration.earlyEnd ?? []).map((_, index) => ({
-        branch: "ending" as const,
-        ordinal: PositiveInteger(index + 1),
-      })),
-      ...(concentration.permanentIfMaintainedFull === true
-        ? [
-            {
-              branch: "ending" as const,
-              ordinal: PositiveInteger(
-                (concentration.earlyEnd?.length ?? 0) + 1,
-              ),
-            },
-          ]
-        : []),
-    ]),
-    Match.when({ kind: "permanent" }, (permanent) =>
-      (permanent.endsOn ?? []).map((_, index) => ({
-        branch: "ending" as const,
-        ordinal: PositiveInteger(index + 1),
-      })),
-    ),
-    Match.when({ kind: "slot_tiered" }, (slotTiered) =>
-      slotTiered.tiers.map((_, index) => ({
-        branch: "extension" as const,
-        ordinal: PositiveInteger(index + 1),
-      })),
-    ),
-    Match.exhaustive,
-  );
-}
-
 function saveGateDurationChildFailure(
-  child: SaveGateDurationChild,
+  child: SpellDurationChild,
 ): SaveGateDurationChildFailure {
-  return child.branch === "extension"
-    ? {
-        failedFact: "durationExtension",
-        mechanicsPath: spellDurationExtensionPath(child.ordinal),
-      }
-    : {
-        failedFact: "durationEnding",
-        mechanicsPath: spellDurationEndingPath(child.ordinal),
-      };
+  return {
+    failedFact:
+      child.branch === "extension" ? "durationExtension" : "durationEnding",
+    mechanicsPath: spellDurationChildPath(child),
+  };
 }
 
 function saveGateDurationChildFailures(
-  children: readonly SaveGateDurationChild[],
+  children: readonly SpellDurationChild[],
   supportedEndingOrdinals: readonly PositiveInteger[] = [],
 ): readonly SaveGateDurationChildFailure[] {
   return children
@@ -1237,11 +1175,11 @@ function saveGateSupportedDurationPaths(
   supportedEndingOrdinals: readonly PositiveInteger[] = [],
 ): readonly SpellMechanicsBranchPath[] {
   return [
-    spellDurationValuePath(),
-    ...saveGateDurationChildren(duration).flatMap((child) =>
+    ...spellDurationValueEvidencePaths(duration),
+    ...spellDurationChildCoordinates(duration).flatMap((child) =>
       child.branch === "ending" &&
       supportedEndingOrdinals.some((ordinal) => ordinal === child.ordinal)
-        ? [spellDurationEndingPath(child.ordinal)]
+        ? [spellDurationChildPath(child)]
         : [],
     ),
   ];
@@ -1564,7 +1502,7 @@ function saveGateFailureSequence<T>(
   after: readonly T[],
 ): ReadonlyNonEmptyArray<T> {
   const [middleFirst, ...middleRest] = middle;
-  const beforeNonEmpty = saveGateNonEmpty(before);
+  const beforeNonEmpty = spellProcedureNonEmpty(before);
   if (beforeNonEmpty === undefined) {
     return [middleFirst, ...middleRest, ...after];
   }
@@ -1591,7 +1529,7 @@ function saveGateNarrowedParseWithFailures<Value, Failure>(
       failures: saveGateFailureSequence(before, parsed.failures, after),
     };
   }
-  const failures = saveGateNonEmpty([...before, ...after]);
+  const failures = spellProcedureNonEmpty([...before, ...after]);
   return failures === undefined ? parsed : { tag: "unsupported", failures };
 }
 
@@ -1633,7 +1571,7 @@ function saveGateCombineNarrowedParses<First, Second, Value, Failure>(
       ),
     };
   }
-  const failures = saveGateNonEmpty([...before, ...between, ...after]);
+  const failures = spellProcedureNonEmpty([...before, ...between, ...after]);
   return failures === undefined
     ? { tag: "supported", value: combine(first.value, second.value) }
     : { tag: "unsupported", failures };
@@ -2144,9 +2082,14 @@ function saveGatedConditionSupportedDurationEndingOrdinals(
   if (variant !== "charm" || duration.kind !== "timed") {
     return [];
   }
-  const endings = duration.earlyEnd ?? [];
-  return endings.length === 1 &&
-    endings[0]?.kind === "target_damaged_by_caster_or_ally"
+  const earlyEndChildren = spellDurationChildCoordinates(duration).filter(
+    (child) => child.branch === "ending" && child.ending.kind === "earlyEnd",
+  );
+  return earlyEndChildren.length === 1 &&
+    earlyEndChildren[0]?.branch === "ending" &&
+    earlyEndChildren[0].ending.kind === "earlyEnd" &&
+    earlyEndChildren[0].ending.trigger.kind ===
+      "target_damaged_by_caster_or_ally"
     ? [PositiveInteger(1)]
     : [];
 }
@@ -2156,7 +2099,7 @@ function saveGatedConditionDurationFailures(
   variant: SaveGatedConditionVariant,
 ): readonly SaveGatedConditionFailure[] {
   const duration = spell.mechanics.duration;
-  const durationChildren = saveGateDurationChildren(duration);
+  const durationChildren = spellDurationChildCoordinates(duration);
   const supportedEndingOrdinals =
     saveGatedConditionSupportedDurationEndingOrdinals(variant, duration);
   const failures: SaveGatedConditionFailure[] = [];
@@ -2614,7 +2557,7 @@ function saveGatedConditionImmunityMechanicsFailures(
   }
   failuresBeforeAttachment.push(
     ...saveGateDurationChildFailures(
-      saveGateDurationChildren(spell.mechanics.duration),
+      spellDurationChildCoordinates(spell.mechanics.duration),
     ),
   );
   failuresBeforeAttachment.push(
@@ -3178,7 +3121,7 @@ function abilityD20TestRollModeSaveGateMechanicsFailures(
   }
   failures.push(
     ...saveGateDurationChildFailures(
-      saveGateDurationChildren(spell.mechanics.duration),
+      spellDurationChildCoordinates(spell.mechanics.duration),
     ),
   );
   failures.push(
@@ -3236,7 +3179,7 @@ function abilityD20TestRollModeSaveGateMechanicsFailures(
     });
   }
   failures.push(...saveGateRepeatFailuresForCount(phase, 1));
-  const nonEmptyFailures = saveGateNonEmpty(failures);
+  const nonEmptyFailures = spellProcedureNonEmpty(failures);
   if (nonEmptyFailures !== undefined) {
     return { tag: "unsupported", failures: nonEmptyFailures };
   }
@@ -3749,7 +3692,7 @@ function saveGatedAttackRollAdvantageMechanicsFailures(
   }
   failuresBeforeAttachment.push(
     ...saveGateDurationChildFailures(
-      saveGateDurationChildren(spell.mechanics.duration),
+      spellDurationChildCoordinates(spell.mechanics.duration),
     ),
   );
   failuresBeforeAttachment.push(
@@ -4339,10 +4282,15 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     phase.attachment.value.kind === "target"
       ? phase.attachment.value.selection
       : null;
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
+  const earlyEnd = spellDurationChildCoordinates(spell.mechanics.duration)
+    .filter(
+      (child) => child.branch === "ending" && child.ending.kind === "earlyEnd",
+    )
+    .flatMap((child) =>
+      child.branch === "ending" && child.ending.kind === "earlyEnd"
+        ? [child.ending.trigger]
+        : [],
+    );
   if (
     spell.mechanics.level !== 1 ||
     !spellHasActionCastingTime(spell) ||
@@ -4640,7 +4588,7 @@ export function saveGatedDamageMechanicsFacts(
       ),
     );
   }
-  const nonEmptyIssues = saveGateNonEmpty(issues);
+  const nonEmptyIssues = spellProcedureNonEmpty(issues);
   if (nonEmptyIssues !== undefined) {
     return { tag: "unsupported", issues: nonEmptyIssues };
   }
@@ -4729,13 +4677,6 @@ function saveGateMechanicsIssue(
   };
 }
 
-function saveGateNonEmpty<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> | undefined {
-  const [first, ...rest] = values;
-  return first === undefined ? undefined : [first, ...rest];
-}
-
 function saveGatedDamageFailedSaveEffects(
   effects: SaveGateFailedSaveEffects,
 ): SaveGatedDamageFailedSaveEffects | null {
@@ -4784,7 +4725,7 @@ function saveGatedDamageMechanicsEvidence(
     spellMechanicsHeaderPath("duration"),
     spellMechanicsHeaderPath("castingTime"),
     spellMechanicsHeaderPath("family"),
-    ...saveGateDurationPaths(spell.mechanics.duration),
+    ...spellDurationEvidencePaths(spell.mechanics.duration),
     spellActivationPhasePath(PositiveInteger(1)),
     spellActivationAttachmentPath(PositiveInteger(1)),
     spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
@@ -4809,25 +4750,6 @@ function saveGatedDamageMechanicsEvidence(
     ...spellConsumedMaterialEvidencePaths(spell.mechanics.components),
   );
   return { consumed, unowned: [] };
-}
-
-function saveGateDurationPaths(
-  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
-): readonly SpellMechanicsBranchPath[] {
-  const valuePath =
-    duration.kind === "timed" ||
-    duration.kind === "concentration" ||
-    duration.kind === "slot_tiered"
-      ? [spellDurationValuePath()]
-      : [];
-  return [
-    ...valuePath,
-    ...saveGateDurationChildren(duration).map((child) =>
-      child.branch === "extension"
-        ? spellDurationExtensionPath(child.ordinal)
-        : spellDurationEndingPath(child.ordinal),
-    ),
-  ];
 }
 
 export function saveGatedDamageInvocationsFromFacts(

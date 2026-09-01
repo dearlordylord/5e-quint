@@ -1,7 +1,6 @@
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type { BattleSourcedEffectOccurrenceTemplate } from "../../effect-execution-ref.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
@@ -13,18 +12,20 @@ import { CombatantId } from "../../identity.ts";
 // type from the authored spell choices, and records a Concentration-owned
 // target-side damage Resistance active effect.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import type { DamageType } from "@dnd/surface/surface/types";
-import { Result, Schema } from "effect";
+import { PositiveInteger, type DamageType } from "@dnd/shared/types";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
+import { Schema } from "effect";
 
 import {
+  type BattleSpellExecutionSource,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
-  type ChosenDamageResistanceSpellInvocation,
+  type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { selectSingleSpellTargetAndDamageType } from "../single-spell-target.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
@@ -44,6 +45,27 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
+  isSpellCanonicalDurationValue,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationTicksFromCanonicalValue,
+  spellProcedureNonEmpty,
+  spellTouchRangeFeet,
+  spellConsumedMaterialEvidencePaths,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -56,23 +78,358 @@ const CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES = [
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
 
+type ChosenDamageResistanceSpellInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "chosenDamageResistance" }
+>;
+
 type ChosenDamageResistanceResolveInput =
   SpellProcedureProfileResolveInput<ChosenDamageResistanceSpellInvocation>;
 
-function admitChosenDamageResistance(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly ChosenDamageResistanceSpellInvocation[] {
-  const projection = chosenDamageResistanceSpellProjection(
-    ctx.actor.combatantId,
-    spell,
-  );
-  if (projection === null) {
-    return [];
+type ChosenDamageResistanceMechanicsFacts = Omit<
+  SpellDefinitionRuleFacts,
+  "range" | "duration"
+> & {
+  readonly range: Extract<
+    SpellDefinitionRuleFacts["range"],
+    {
+      readonly kind: "touch";
+    }
+  >;
+  readonly duration: Extract<
+    SpellDefinitionRuleFacts["duration"],
+    { readonly kind: "concentration" }
+  > & { readonly upTo: SpellCanonicalDurationValue };
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly damageTypeChoices: readonly DamageType[];
+};
+
+export const CHOSEN_DAMAGE_RESISTANCE_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "duration",
+  "durationExtension",
+  "durationEnding",
+  "phaseCount",
+  "attachment",
+  "effects",
+  "damageTypeEffect",
+  "damageTypeChoice",
+  "damageTypeOptions",
+] as const;
+type ChosenDamageResistanceFailedFact =
+  (typeof CHOSEN_DAMAGE_RESISTANCE_FAILED_FACTS)[number];
+
+type ChosenDamageResistanceIssue = {
+  readonly failedFact: ChosenDamageResistanceFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+type ChosenDamageResistanceInspection = SpellProcedureMechanicsInspection<
+  "chosenDamageResistance",
+  ChosenDamageResistanceMechanicsFacts,
+  ChosenDamageResistanceSpellInvocation,
+  ReturnType<typeof chosenDamageResistanceIssueResult>
+>;
+
+function chosenDamageResistanceIssue(
+  failedFact: ChosenDamageResistanceFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): ChosenDamageResistanceIssue {
+  return { failedFact, mechanicsPath };
+}
+
+function chosenDamageResistanceIssueResult(issue: ChosenDamageResistanceIssue) {
+  return {
+    tag: "spellProcedureAdmissionIssue" as const,
+    procedure: "chosenDamageResistance" as const,
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported chosenDamageResistance mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function chosenDamageResistanceDurationIssues(
+  duration: Extract<
+    SpellMechanics["duration"],
+    { readonly kind: "concentration" }
+  >,
+): readonly ChosenDamageResistanceIssue[] {
+  const issues: ChosenDamageResistanceIssue[] = [];
+  for (const child of spellDurationChildCoordinates(duration)) {
+    issues.push(
+      chosenDamageResistanceIssue(
+        child.branch === "extension" ? "durationExtension" : "durationEnding",
+        spellDurationChildPath(child),
+      ),
+    );
   }
+  return issues;
+}
+
+type ChosenDamageResistanceDuration =
+  ChosenDamageResistanceMechanicsFacts["duration"];
+
+type ChosenDamageResistanceRange =
+  ChosenDamageResistanceMechanicsFacts["range"];
+
+function isChosenDamageResistanceRange(
+  range: SpellDefinitionRuleFacts["range"],
+): range is ChosenDamageResistanceRange {
+  return range.kind === "touch";
+}
+
+function isChosenDamageResistanceDuration(
+  duration: SpellDefinitionRuleFacts["duration"],
+): duration is ChosenDamageResistanceDuration {
+  return (
+    duration.kind === "concentration" &&
+    duration.upTo.unit === "hour" &&
+    duration.upTo.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.upTo)
+  );
+}
+
+function isChosenDamageResistanceRootShape(
+  mechanics: SpellMechanics,
+): mechanics is Extract<SpellMechanics, { readonly family: "activation" }> {
+  if (mechanics.family !== "activation") return false;
+  const phase = mechanics.phases[0];
+  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  return effect?.kind === "grant_resistance";
+}
+
+function admitChosenDamageResistanceMechanics(
+  source: SpellMechanicsAdmissionSource,
+): ChosenDamageResistanceInspection {
+  if (!isChosenDamageResistanceRootShape(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "direct") {
+    return { tag: "notRepresented" };
+  }
+  const effect = phase.effects?.[0];
+  if (effect?.kind !== "grant_resistance") {
+    return { tag: "notRepresented" };
+  }
+  const issues: ChosenDamageResistanceIssue[] = [];
+  const rangeFacts = isChosenDamageResistanceRange(mechanics.range)
+    ? mechanics.range
+    : undefined;
+  const durationFacts = isChosenDamageResistanceDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  if (mechanics.level !== 3) {
+    issues.push(
+      chosenDamageResistanceIssue("level", spellMechanicsHeaderPath("level")),
+    );
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    issues.push(
+      chosenDamageResistanceIssue(
+        "castingTime",
+        spellMechanicsHeaderPath("castingTime"),
+      ),
+    );
+  }
+  if (!isChosenDamageResistanceRange(mechanics.range)) {
+    issues.push(
+      chosenDamageResistanceIssue("range", spellMechanicsHeaderPath("range")),
+    );
+  }
+  if (!isChosenDamageResistanceDuration(mechanics.duration)) {
+    issues.push(
+      chosenDamageResistanceIssue("duration", spellDurationValuePath()),
+    );
+  }
+  if (mechanics.duration.kind === "concentration") {
+    issues.push(...chosenDamageResistanceDurationIssues(mechanics.duration));
+  }
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === 0) continue;
+      issues.push(
+        chosenDamageResistanceIssue(
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(index + 1)),
+        ),
+      );
+    }
+  }
+  const selection =
+    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : undefined;
+  const validSelection =
+    selection !== undefined &&
+    selection.mode === "one" &&
+    "disposition" in selection &&
+    selection.disposition === "willing" &&
+    "targetKinds" in selection &&
+    selection.targetKinds !== undefined &&
+    sameStringSet(selection.targetKinds, ["creature"]);
+  if (!validSelection) {
+    issues.push(
+      chosenDamageResistanceIssue(
+        "attachment",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    );
+  }
+  const effects = phase.effects ?? [];
+  if (effects.length !== 1) {
+    for (const [index] of effects.entries()) {
+      if (index === 0) continue;
+      issues.push(
+        chosenDamageResistanceIssue(
+          "effects",
+          spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(index + 1),
+          ),
+        ),
+      );
+    }
+    if (effects.length === 0) {
+      issues.push(
+        chosenDamageResistanceIssue(
+          "effects",
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+        ),
+      );
+    }
+  }
+  if (effect.sourceFilter !== undefined) {
+    issues.push(
+      chosenDamageResistanceIssue(
+        "damageTypeEffect",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  }
+  const choice =
+    typeof effect.damageType === "object" &&
+    effect.damageType !== null &&
+    effect.damageType.kind === "hole" &&
+    typeof effect.damageType.value === "object" &&
+    effect.damageType.value !== null &&
+    effect.damageType.value.kind === "choice"
+      ? effect.damageType.value
+      : undefined;
+  if (choice === undefined) {
+    issues.push(
+      chosenDamageResistanceIssue(
+        "damageTypeChoice",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  }
+  const choices: readonly DamageType[] =
+    choice === undefined
+      ? []
+      : choice.options.filter((option): option is DamageType =>
+          Schema.is(DamageTypeSchema)(option),
+        );
+  if (
+    choice === undefined ||
+    choices.length !== choice.options.length ||
+    !sameStringSet(choices, CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES)
+  ) {
+    issues.push(
+      chosenDamageResistanceIssue(
+        "damageTypeOptions",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  }
+  const nonEmpty = spellProcedureNonEmpty(issues);
+  if (nonEmpty !== undefined) {
+    const [firstIssue, ...remainingIssues] = nonEmpty;
+    return {
+      tag: "unsupported",
+      issues: [
+        chosenDamageResistanceIssueResult(firstIssue),
+        ...remainingIssues.map(chosenDamageResistanceIssueResult),
+      ],
+    };
+  }
+  if (rangeFacts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        chosenDamageResistanceIssueResult(
+          chosenDamageResistanceIssue(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ),
+      ],
+    };
+  }
+  if (durationFacts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        chosenDamageResistanceIssueResult(
+          chosenDamageResistanceIssue("duration", spellDurationValuePath()),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    range: rangeFacts,
+    duration: durationFacts,
+    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.upTo),
+    damageTypeChoices: choices,
+  } satisfies ChosenDamageResistanceMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "chosenDamageResistance",
+      facts,
+      evidence: chosenDamageResistanceMechanicsEvidence(mechanics),
+      admit: (executionSource, ctx) =>
+        admitChosenDamageResistance(executionSource, ctx, facts),
+    },
+  };
+}
+
+function chosenDamageResistanceMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    spellDurationValuePath(),
+    ...spellDurationChildCoordinates(mechanics.duration).map(
+      spellDurationChildPath,
+    ),
+    spellActivationPhasePath(PositiveInteger(1)),
+    spellActivationAttachmentPath(PositiveInteger(1)),
+    spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitChosenDamageResistance(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: ChosenDamageResistanceMechanicsFacts,
+): readonly ChosenDamageResistanceSpellInvocation[] {
   return ctx.spellCastOptions.flatMap(
     (slot): readonly ChosenDamageResistanceSpellInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
+      Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
@@ -81,95 +438,22 @@ function admitChosenDamageResistance(
               procedure: "chosenDamageResistance",
               spell,
               actionCost: "magicAction",
-              ...projection,
+              targeting: {
+                kind: "targetList",
+                minTargets: 1,
+                maxTargets: 1,
+                requiredTargetDisposition: "willing",
+              },
+              damageTypeChoices: facts.damageTypeChoices,
+              expiresAt: {
+                kind: "concentration",
+                combatantId: ctx.actor.combatantId,
+                durationTicks: facts.durationTicks,
+              },
+              rangeFeet: spellTouchRangeFeet(),
             },
           ],
   );
-}
-
-function chosenDamageResistanceSpellProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  ChosenDamageResistanceSpellInvocation,
-  "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"
-> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 3 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  if (Result.isFailure(durationTicks)) {
-    return null;
-  }
-
-  const phase = spell.mechanics.phases[0];
-  const selection =
-    phase?.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : null;
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const effect = effects[0];
-  const damageType =
-    effect?.kind === "grant_resistance" ? effect.damageType : null;
-  const choice =
-    typeof damageType === "object" &&
-    damageType !== null &&
-    damageType.kind === "hole" &&
-    typeof damageType.value === "object" &&
-    damageType.value.kind === "choice"
-      ? damageType.value
-      : null;
-  const choices =
-    choice?.options.filter((option): option is DamageType =>
-      Schema.is(DamageTypeSchema)(option),
-    ) ?? [];
-  if (
-    phase?.kind !== "direct" ||
-    selection === null ||
-    selection.mode !== "one" ||
-    !("disposition" in selection) ||
-    selection.disposition !== "willing" ||
-    !("targetKinds" in selection) ||
-    selection.targetKinds === undefined ||
-    !sameStringSet(selection.targetKinds, ["creature"]) ||
-    effects.length !== 1 ||
-    effect?.kind !== "grant_resistance" ||
-    effect.sourceFilter !== undefined ||
-    choice === null ||
-    choices.length !== choice.options.length ||
-    !sameStringSet(choices, CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES)
-  ) {
-    return null;
-  }
-
-  return {
-    targeting: {
-      kind: "targetList",
-      minTargets: 1,
-      maxTargets: 1,
-      requiredTargetDisposition: "willing",
-    },
-    damageTypeChoices: choices,
-    expiresAt: {
-      kind: "concentration",
-      combatantId: actorId,
-      durationTicks: durationTicks.success,
-    },
-    rangeFeet: movementFeet(5),
-  };
 }
 
 function discoverChosenDamageResistanceCastAct(
@@ -291,7 +575,7 @@ export const chosenDamageResistanceProfile: SpellProcedureDeclaration<
 > = {
   procedure: "chosenDamageResistance",
   executionSchema: ChosenDamageResistanceInvocationSchema,
-  admit: admitChosenDamageResistance,
+  admitMechanics: admitChosenDamageResistanceMechanics,
   discoverCastAct: discoverChosenDamageResistanceCastAct,
   resolve: resolveChosenDamageResistance,
 };
