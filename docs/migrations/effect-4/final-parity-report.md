@@ -95,14 +95,13 @@ bytes. Its sorted POSIX path-ledger SHA-256 is
 `fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e`.
 These values describe the comparison baseline, not the current candidate.
 
-The canonical declaration evidence recorded at repository commit `63f6f3d9`
-identifies `b88a923f6` as the current candidate implementation source. That
-candidate contains exactly 571 declaration files and 10,277,269 bytes. Its
+The current Round-1 declaration candidate follows repository commit
+`966b2fe62` and contains exactly 571 declaration files and 10,299,610 bytes. Its
 sorted POSIX path-ledger SHA-256 is
 `4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`.
 Its sorted content-ledger SHA-256 is
-`526516c516d516386d180db6f003c61616112de1ddc1e31db42dcc0d0e1b1dc7`.
-The unchanged 10 MiB byte cap leaves 208,491 bytes of margin. The 1,000-file
+`159c1666a4f2d99b4ee37e54f56034f0722ad6b9432875e3647cd3d8a61d1927`.
+The unchanged 10 MiB byte cap leaves 186,150 bytes of margin. The 1,000-file
 cap is a coarse safety ceiling; production emission separately fails closed on
 the exact 571-file candidate manifest, byte measure, path ledger, and content
 ledger.

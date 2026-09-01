@@ -196,6 +196,13 @@ export const SpellSlotLevelSchema = Schema.Literals(SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
+const BrandedPositiveIntegerSchema = PositiveIntegerSchema.pipe(
+  Schema.brand("PositiveInteger"),
+);
+const BrandedIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.brand("Integer"),
+);
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
@@ -5357,7 +5364,7 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
   actions: CreatureActionsSchema,
 });
 /** Authored procedure quantities are finite, integral, and strictly positive. */
-const StatBlockProcedurePositiveIntegerSchema = PositiveIntegerSchema;
+const StatBlockProcedurePositiveIntegerSchema = BrandedPositiveIntegerSchema;
 
 export const StatBlockProcedureOrdinalSchema =
   StatBlockProcedurePositiveIntegerSchema.pipe(
@@ -5372,7 +5379,7 @@ const StatBlockProcedurePositiveValueSchema = Schema.Struct({
 const StatBlockProcedureSignedValueSchema = Schema.Struct({
   kind: Schema.Literal("literal"),
   /** Authored procedure modifiers are finite integral values of either sign. */
-  value: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  value: BrandedIntegerSchema,
 });
 
 export const StatBlockProcedureResourceOrdinalSchema =
@@ -5926,7 +5933,7 @@ const AuthoredStatBlockReactionWeaponFilterSchema = Schema.Union([
   }),
   strictStruct({
     kind: Schema.Literal(STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM),
-    itemId: surfaceSchemaRole(Schema.String, {
+    itemId: surfaceSchemaRole(UnitId, {
       category: "reference",
       relation: "item-reference",
       targetKind: "unit",

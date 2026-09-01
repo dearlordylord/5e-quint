@@ -228,9 +228,14 @@ That cohort contains the packages' original manifests and licenses plus their
 complete required declaration files; exact version, dependency, path, content,
 file-count, and byte ledgers reject drift. It contains no JavaScript, maps, or
 source runtime and is not an authored SDK capability. The authored-source
-admission boundary permits only the role's generated static type import from
-its exact public SDK module and rejects every other module edge before
-typechecking or evaluation.
+admission boundary permits the role's generated static type import from its
+exact public SDK module and rejects the enumerated static and dynamic
+module-edge syntax before typechecking or evaluation. This is a syntax
+admission boundary, not a capability boundary: authored TypeScript is trusted,
+cooperative code and evaluation retains the ambient authority of the Node.js
+process. Using only the context-supplied public SDK is an authoring and evidence
+convention, not an isolation or security guarantee, and the retained evidence
+cannot prove the absence of indirect ambient access.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
@@ -499,6 +504,9 @@ that exact copy, executes it, and records its calls. This is a cooperative
 external-consumer test boundary, not a hostile-code security sandbox: the
 player is instructed to use only the provided files and public SDK, and the
 harness does not attempt to defend against malicious submitted JavaScript.
+Submitted TypeScript executes with the ambient authority of the Node.js
+supervisor process; the public-SDK-only rule is a cooperative authoring and
+evidence convention rather than technical isolation.
 
 Before play, the supervisor always typechecks and evaluates the exact adjacent
 character-composition source. After ready composition it also evaluates setup.

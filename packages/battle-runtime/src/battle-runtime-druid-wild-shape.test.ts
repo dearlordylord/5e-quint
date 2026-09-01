@@ -37,6 +37,7 @@ import {
   D6RollResult,
   Hp,
   movementFeet,
+  PositiveInteger,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import {
@@ -613,7 +614,7 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
         {
           ordinal: testResourceOrdinal(1),
           ownership: "each",
-          limit: { kind: "daily", uses: 1 },
+          limit: { kind: "daily", uses: PositiveInteger(1) },
         },
       ],
     },
@@ -3248,7 +3249,7 @@ function syntheticTypedRidersForm(): StatBlockRecord {
                 kind: "conditional_bonus_damage",
                 when: { kind: "attack_roll_had_advantage" },
                 damageType: "bludgeoning",
-                amount: { kind: "fixed", static: 1 },
+                amount: { kind: "fixed", static: PositiveInteger(1) },
               },
             ],
             name: "Synthetic Rider Strike",
@@ -3289,7 +3290,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
             dispatches: [
               {
                 procedureOrdinal: hooves.procedureOrdinal,
-                count: { kind: "literal", value: 1 },
+                count: { kind: "literal", value: PositiveInteger(1) },
               },
             ],
           },
@@ -3302,12 +3303,15 @@ function syntheticActionSectionForm(): StatBlockRecord {
             kind: "save",
             name: "Synthetic Save Pulse",
             ability: "dex",
-            dc: { kind: "fixed", dc: 12 },
-            target: { kind: "one_creature_in_range", rangeFeet: 5 },
+            dc: { kind: "fixed", dc: PositiveInteger(12) },
+            target: {
+              kind: "one_creature_in_range",
+              rangeFeet: PositiveInteger(5),
+            },
             onFail: {
               kind: "damage",
               damageType: "bludgeoning",
-              amount: { kind: "fixed", static: 1 },
+              amount: { kind: "fixed", static: PositiveInteger(1) },
             },
             onSuccess: { kind: "half_damage" },
           },
@@ -3325,7 +3329,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
               damageType: "bludgeoning",
               amount: {
                 kind: "fixed",
-                static: 1,
+                static: PositiveInteger(1),
               },
             },
           },
@@ -3373,7 +3377,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
         },
       ],
       legendaryActions: {
-        uses: { kind: "fixed", uses: 1 },
+        uses: { kind: "fixed", uses: PositiveInteger(1) },
         entries: [
           {
             kind: "textOnly",
@@ -3419,7 +3423,7 @@ function syntheticSupportedNonAttackForm(): StatBlockRecord {
             dispatches: [
               {
                 procedureOrdinal: hooves.procedureOrdinal,
-                count: { kind: "literal", value: 1 },
+                count: { kind: "literal", value: PositiveInteger(1) },
               },
             ],
           },

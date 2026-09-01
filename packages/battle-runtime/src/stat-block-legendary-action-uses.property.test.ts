@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
+import { PositiveInteger } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
@@ -32,10 +33,12 @@ const malformedLegendaryActionUses = fc.oneof(
     .map(([whole, fraction]) => whole + fraction),
 );
 
-const fixedLegendaryActionUses = fc.integer({ min: 1, max: 10_000 });
+const fixedLegendaryActionUses = fc
+  .integer({ min: 1, max: 10_000 })
+  .map(PositiveInteger);
 const lairBonusLegendaryActionUses = fc.record({
-  usesOutsideLair: fc.integer({ min: 1, max: 5_000 }),
-  additionalUsesInLair: fc.integer({ min: 1, max: 5_000 }),
+  usesOutsideLair: fc.integer({ min: 1, max: 5_000 }).map(PositiveInteger),
+  additionalUsesInLair: fc.integer({ min: 1, max: 5_000 }).map(PositiveInteger),
 });
 
 type AuthoredLegendaryActionUses = NonNullable<

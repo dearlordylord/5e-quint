@@ -4468,11 +4468,11 @@ export function monsterResourceStatBlock(): StatBlockRecord {
         {
           ordinal: testStatBlockResourceOrdinal(2),
           ownership: "each",
-          limit: { kind: "daily", uses: 1 },
+          limit: { kind: "daily", uses: PositiveInteger(1) },
         },
       ],
       legendaryActions: {
-        uses: { kind: "fixed", uses: 2 },
+        uses: { kind: "fixed", uses: PositiveInteger(2) },
         entries: [
           renamedAttackProcedureEntry({
             entry: scimitar,
@@ -4606,14 +4606,14 @@ export function monsterMultiattackStatBlock(input?: {
                 procedureOrdinal: scimitar.procedureOrdinal,
                 count: {
                   kind: "literal",
-                  value: input?.scimitarCount ?? 2,
+                  value: PositiveInteger(input?.scimitarCount ?? 2),
                 },
               },
               {
                 procedureOrdinal: shortbow.procedureOrdinal,
                 count: {
                   kind: "literal",
-                  value: input?.shortbowCount ?? 1,
+                  value: PositiveInteger(input?.shortbowCount ?? 1),
                 },
               },
             ],

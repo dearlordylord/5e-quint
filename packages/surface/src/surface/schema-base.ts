@@ -8,7 +8,9 @@ import {
   STANDARD_ACTION_KINDS,
   SURFACE_CONDITIONS,
   SURFACE_SKILLS,
+  UnitId,
   type ClassName,
+  type UnitId as UnitIdType,
 } from "@dnd/shared/game-facts";
 import { DAMAGE_TYPES } from "@dnd/shared/types";
 
@@ -423,8 +425,8 @@ export const RollKindSchema = Schema.Literals([
 export const WeaponPropertySchema = Schema.Literals(SURFACE_WEAPON_PROPERTIES);
 
 export const WeaponFilterSchema: Schema.Codec<
-  SurfaceWeaponFilter,
-  SurfaceWeaponFilter,
+  SurfaceWeaponFilter<UnitIdType>,
+  SurfaceWeaponFilter<string>,
   never,
   never
 > = Schema.Union([
@@ -441,7 +443,7 @@ export const WeaponFilterSchema: Schema.Codec<
   }),
   Schema.Struct({
     kind: Schema.Literal(SURFACE_WEAPON_FILTER_SPECIFIC_ITEM),
-    itemId: surfaceSchemaRole(Schema.String, {
+    itemId: surfaceSchemaRole(UnitId, {
       category: "reference",
       relation: "item-reference",
       targetKind: "unit",

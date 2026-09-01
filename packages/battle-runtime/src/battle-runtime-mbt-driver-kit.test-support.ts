@@ -36,6 +36,7 @@ import {
   classLevel,
   difficultyClass,
   movementFeet,
+  PositiveInteger,
   proficiencyBonus,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -17895,7 +17896,7 @@ function skeletonMultiattackStatBlock(): StatBlockRecord {
           dispatches: [
             {
               procedureOrdinal: shortsword.procedureOrdinal,
-              count: { kind: "literal", value: 2 },
+              count: { kind: "literal", value: PositiveInteger(2) },
             },
           ],
         }),

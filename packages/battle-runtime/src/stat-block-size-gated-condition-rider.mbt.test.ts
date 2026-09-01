@@ -1,5 +1,5 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { movementFeet } from "@dnd/shared/types";
+import { Integer, movementFeet, PositiveInteger } from "@dnd/shared/types";
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
@@ -618,15 +618,19 @@ function biteAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "str",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "melee",
     name: biteAttackName,
     onHit: [
       {
         amount: {
           kind: "fixed",
-          expr: { dice: 1, dieSize: 6, flat: 2 },
-          static: 5,
+          expr: {
+            dice: PositiveInteger(1),
+            dieSize: 6,
+            flat: Integer(2),
+          },
+          static: PositiveInteger(5),
         },
         damageType: "piercing",
         kind: "damage",
@@ -637,7 +641,7 @@ function biteAttack(): StatBlockAttack {
         maxCreatureSize: "medium",
       },
     ],
-    reachFeet: 5,
+    reachFeet: PositiveInteger(5),
   };
 }
 

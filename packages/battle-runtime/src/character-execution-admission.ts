@@ -457,27 +457,30 @@ export function characterExecutionFromUnits(input: {
       resourcePoolRefsByUnitId,
       classLevels: input.classLevels,
     });
-    if (binding.tag === "rejected") {
-      supportProfileIssues.push(
-        ...binding.messages.map((message) => ({
-          tag: "battleUnitSupportProfileIssue" as const,
-          message,
-        })),
-      );
-      return [];
-    }
-    return binding.tag === "notAvailable"
-      ? []
-      : [
+    return Match.value(binding).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        bound: ({ candidate }) => [
           {
-            ...binding.candidate,
+            ...candidate,
             source: characterUnitProcedureSourceForAdmission(
               scopeRef,
               resourceUnits,
-              binding.candidate.unitId,
+              candidate.unitId,
             ),
           },
-        ];
+        ],
+        notAvailable: () => [],
+        rejected: ({ messages }) => {
+          supportProfileIssues.push(
+            ...messages.map((message) => ({
+              tag: "battleUnitSupportProfileIssue" as const,
+              message,
+            })),
+          );
+          return [];
+        },
+      }),
+    );
   });
   const boundProfileUnitProcedures = unitFeatureProcedures.flatMap(
     (procedure) => {
@@ -486,27 +489,30 @@ export function characterExecutionFromUnits(input: {
         classLevels: input.classLevels,
         executionContext: unitFeatureExecutionContext,
       });
-      if (binding.tag === "rejected") {
-        supportProfileIssues.push(
-          ...binding.messages.map((message) => ({
-            tag: "battleUnitSupportProfileIssue" as const,
-            message,
-          })),
-        );
-        return [];
-      }
-      return binding.tag === "notAvailable"
-        ? []
-        : [
+      return Match.value(binding).pipe(
+        Match.discriminatorsExhaustive("tag")({
+          bound: ({ candidate }) => [
             {
-              ...binding.candidate,
+              ...candidate,
               source: characterUnitProcedureSourceForAdmission(
                 scopeRef,
                 resourceUnits,
                 procedure.sourceUnitId,
               ),
             },
-          ];
+          ],
+          notAvailable: () => [],
+          rejected: ({ messages }) => {
+            supportProfileIssues.push(
+              ...messages.map((message) => ({
+                tag: "battleUnitSupportProfileIssue" as const,
+                message,
+              })),
+            );
+            return [];
+          },
+        }),
+      );
     },
   );
   const unitProcedures = [

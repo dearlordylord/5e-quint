@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import armorChainMailInput from "../../surface/content/armor_chain_mail.json";
@@ -351,34 +351,31 @@ describe("complete Stat Block mechanics admission", () => {
       unsupported_mechanics: 10,
     });
 
-    if (decodedResource.limit.kind !== "daily") {
-      throw new Error("Expected a daily resource fixture.");
+    const encodedRecord = Schema.encodeSync(SrdStatBlockRecordSchema)(
+      decodedRecord,
+    );
+    const encodedResources = encodedRecord.statBlock.resources;
+    if (encodedResources === undefined) {
+      throw new Error("Expected encoded Stat Block resources.");
     }
-    const invalidResourceRecord: SrdStatBlockRecord = {
-      ...decodedRecord,
-      id: statBlockId("stat_block_synthetic_invalid_resource"),
+    const invalidResourceInput = {
+      ...encodedRecord,
+      id: "stat_block_synthetic_invalid_resource",
       name: "Synthetic Invalid Resource",
       statBlock: {
-        ...decodedRecord.statBlock,
-        resources: [
-          {
-            ...decodedResource,
-            limit: { ...decodedResource.limit, uses: 0 },
-          },
-        ],
+        ...encodedRecord.statBlock,
+        resources: encodedResources.map((resource) =>
+          resource.limit.kind === "daily"
+            ? { ...resource, limit: { ...resource.limit, uses: 0 } }
+            : resource,
+        ),
       },
     };
-    const invalidResourceAdmission = admitCompleteStatBlockMechanicsGraph({
-      statBlock: invalidResourceRecord,
-      surface: surfaceWithStatBlock(invalidResourceRecord),
-    });
-    expect(invalidResourceAdmission.tag).toBe("rejected");
-    if (invalidResourceAdmission.tag !== "rejected") return;
     expect(
-      invalidResourceAdmission.issues.some(
-        ({ message }) =>
-          message ===
-          "The Stat Block resource limit has no executable interpretation.",
+      Result.isFailure(
+        Schema.decodeUnknownResult(SrdStatBlockRecordSchema)(
+          invalidResourceInput,
+        ),
       ),
     ).toBe(true);
 

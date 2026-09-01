@@ -6,8 +6,10 @@ import * as Result from "effect/Result";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   StatBlockProcedureOrdinalSchema,
+  StatBlockRecordSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
 import type {
@@ -303,7 +305,7 @@ describe("generic Stat Block projection", () => {
               dispatches: [
                 {
                   procedureOrdinal: authoredOrdinal(2),
-                  count: { kind: "literal", value: 1 },
+                  count: { kind: "literal", value: PositiveInteger(1) },
                 },
               ],
             },
@@ -336,7 +338,10 @@ describe("generic Stat Block projection", () => {
       ...attack,
       procedure: {
         ...attack.procedure,
-        multiattackCount: { kind: "literal" as const, value: 2 },
+        multiattackCount: {
+          kind: "literal" as const,
+          value: PositiveInteger(2),
+        },
       },
     };
     const multiattack = nonSpellExecutableProcedureEntry(3, {
@@ -345,7 +350,7 @@ describe("generic Stat Block projection", () => {
       dispatches: [
         {
           procedureOrdinal: attack.procedureOrdinal,
-          count: { kind: "literal", value: 1 },
+          count: { kind: "literal", value: PositiveInteger(1) },
         },
       ],
     });
@@ -372,23 +377,40 @@ describe("generic Stat Block projection", () => {
     });
   });
 
-  test("rejects an authored Multiattack with a non-positive dispatch count", () => {
-    const projected = projectAuthoredStatBlock(
-      monsterMultiattackStatBlock({ scimitarCount: 0 }),
+  test("rejects an encoded Multiattack with a non-positive dispatch count", () => {
+    const encoded = Schema.encodeSync(StatBlockRecordSchema)(
+      monsterMultiattackStatBlock(),
     );
+    const actions = encoded.statBlock.actions;
+    if (actions === undefined) {
+      throw new Error("Expected encoded synthetic Multiattack actions.");
+    }
+    const malformed = {
+      ...encoded,
+      statBlock: {
+        ...encoded.statBlock,
+        actions: actions.map((entry) =>
+          entry.kind === "executable" && entry.procedure.kind === "multiattack"
+            ? {
+                ...entry,
+                procedure: {
+                  ...entry.procedure,
+                  dispatches: entry.procedure.dispatches.map((dispatch) => ({
+                    ...dispatch,
+                    count: { kind: "literal" as const, value: 0 },
+                  })),
+                },
+              }
+            : entry,
+        ),
+      },
+    };
 
-    expect(projected).toEqual(
-      Result.fail({
-        tag: "battleStatBlockProjectionFailure",
-        reason: "unsupportedProcedureBinding",
-        issues: [
-          {
-            section: "actions",
-            procedureOrdinal: authoredOrdinal(3),
-          },
-        ],
-      }),
-    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockRecordSchema)(malformed),
+      ),
+    ).toBe(true);
   });
 
   test("renamed equivalent mechanics project to the same creature facts and Acts", () => {
@@ -555,7 +577,7 @@ describe("generic Stat Block projection", () => {
           {
             ordinal: authoredResourceOrdinal(1),
             ownership: "each",
-            limit: { kind: "daily", uses: 2 },
+            limit: { kind: "daily", uses: PositiveInteger(2) },
           },
         ],
       },
@@ -614,7 +636,7 @@ describe("generic Stat Block projection", () => {
             {
               ordinal: authoredResourceOrdinal(1),
               ownership: "each",
-              limit: { kind: "daily", uses: 2 },
+              limit: { kind: "daily", uses: PositiveInteger(2) },
             },
           ],
         },

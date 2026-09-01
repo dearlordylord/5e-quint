@@ -1,4 +1,10 @@
-import { movementFeet } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  Integer,
+  movementFeet,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
@@ -11,7 +17,6 @@ import { isDeepStrictEqual } from "node:util";
 import { Result } from "effect";
 import { describe, it } from "vitest";
 
-import { DieRollResult, Hp } from "@dnd/shared/types";
 import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
@@ -518,26 +523,34 @@ function venomDartAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "dex",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "ranged",
     name: multiDamageAttackName,
     onHit: [
       {
         amount: {
           kind: "fixed",
-          expr: { dice: 1, dieSize: 4, flat: 1 },
-          static: 3,
+          expr: {
+            dice: PositiveInteger(1),
+            dieSize: 4,
+            flat: Integer(1),
+          },
+          static: PositiveInteger(3),
         },
         damageType: "piercing",
         kind: "damage",
       },
       {
-        amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 }, static: 3 },
+        amount: {
+          kind: "fixed",
+          expr: { dice: PositiveInteger(1), dieSize: 6 },
+          static: PositiveInteger(3),
+        },
         damageType: "poison",
         kind: "damage",
       },
     ],
-    rangeFeet: { normal: 30, long: 120 },
+    rangeFeet: { normal: PositiveInteger(30), long: PositiveInteger(120) },
   };
 }
 

@@ -53,6 +53,7 @@ import {
   wizardId,
   wizardSpellcasting,
   spellRecord,
+  isNonSpellExecutableProcedureEntryOfKind,
 } from "./battle-runtime.test-support.ts";
 import {
   BattleActPresentationSchema,
@@ -982,14 +983,12 @@ function codecStaticDartStatBlock(): StatBlockRecord {
   const base = monsterMultiattackStatBlock();
   const shortbow = base.statBlock.actions?.find(
     (entry) =>
-      entry.kind === "executable" &&
-      entry.procedure.kind === "attack_roll" &&
+      isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
       entry.procedure.name === "Shortbow",
   );
   if (
     shortbow === undefined ||
-    shortbow.kind !== "executable" ||
-    shortbow.procedure.kind !== "attack_roll"
+    !isNonSpellExecutableProcedureEntryOfKind(shortbow, "attack_roll")
   ) {
     throw new Error("Expected the static codec Shortbow fixture.");
   }

@@ -42,10 +42,13 @@ canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
 exposed two constraints that the typed Effect boundary already enforced but
 the previously generated Draft 2020-12 artifact did not: `hover: true` belongs
 only to Fly speeds, and a GM Speed choice has at least two alternatives. The
-regenerated schema closes those two language-neutral overacceptance gaps
-without changing the typed Effect domain or the published aggregate. The
-remaining graph delta is equivalent reference factoring, including the
-redundant Barbarian general-feature branch removed in `51307f83f`.
+regenerated schema closes those two JSON Schema contract overacceptance gaps
+without changing the typed Effect domain or the published aggregate.
+The final publication also projects `specific_item.itemId` through the existing
+`UnitId` boundary. Seven shared schema nodes gain its non-empty, trimmed-string
+constraints (fourteen changed keyword leaves). The remaining graph changes are
+reference extraction/factoring and removal of one structurally subsumed
+Barbarian general-feature branch from `51307f83f`.
 
 Canonical hashes do not preserve JSON object key order. The certificate
 therefore separately binds the byte-order-only `magic_mouth` delta: the Unit's
@@ -58,11 +61,27 @@ semantic content of every reviewed record change, and the whole-artifact byte
 digests authenticate their byte layout; the verifier does not claim any
 ordering inside those semantic changes as an independent order-only delta.
 
-The schema evidence authenticates the reviewed regenerated v4 definition graph
-and records local `$ref` closure. Its finite AJV matrix requires each schema to
-accept its corresponding aggregate and reject the aggregate from the other
-contract snapshot. It does not establish schema-language equivalence or
-preservation of a full schema contract.
+The schema evidence authenticates an authority chain. The immutable Effect 3
+baseline reaches the schema at `63f6f3d9` through that commit's reviewed and
+digest-pinned v4 certificate. The v5 verifier authenticates those historical
+certificate bytes, requires their candidate digest to equal the comparison
+schema bytes, and then classifies the complete comparison-to-current rooted
+graph. Substituting either intermediate artifact breaks the chain.
+
+The finite graph procedure reverses only the reviewed GM Speed, Fly-hover, and
+`UnitId` narrowings, proves the removed Barbarian member is a structural subset
+of a retained member, treats local `$ref` extraction and associative,
+set-valued `anyOf` factoring transparently, and applies joint partition
+refinement to both rooted graphs. Each reversal is authorized by an exact
+reachable JSON pointer and the canonical hashes of the node before and after
+that reversal. An equivalent-looking node at another or unreachable location
+does not inherit the classification. Any remaining changed region fails
+closed, and malformed or non-converging graph analysis is reported as typed
+invalid evidence rather than escaping the verifier.
+This is executable evidence about these two finite schema graphs. It is not a
+claim of equivalence for the JSON Schema language in general. The AJV matrix
+still requires each schema to accept its corresponding aggregate and reject
+the aggregate from the other contract snapshot.
 
 The certificate contains only executable evidence. The verifier owns the two
 publication artifact paths, the immutable baseline commit contract, hashing and

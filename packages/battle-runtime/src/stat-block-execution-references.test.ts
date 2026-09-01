@@ -11,8 +11,10 @@ import {
 } from "./battle-action-options.ts";
 import { Result, Schema } from "effect";
 import {
+  Integer,
   NonNegativeInteger,
   movementFeet,
+  PositiveInteger,
   resourceCount,
 } from "@dnd/shared/types";
 import {
@@ -1054,7 +1056,7 @@ describe("Stat Block execution references", () => {
         dispatches: [
           {
             procedureOrdinal: procedureOrdinal(1),
-            count: { kind: "literal" as const, value: 1 },
+            count: { kind: "literal" as const, value: PositiveInteger(1) },
           },
         ] as const,
       },
@@ -1166,7 +1168,7 @@ describe("Stat Block execution references", () => {
         dispatches: [
           {
             procedureOrdinal: procedureOrdinal(1),
-            count: { kind: "literal" as const, value: 1 },
+            count: { kind: "literal" as const, value: PositiveInteger(1) },
           },
         ] as const,
       },
@@ -1239,7 +1241,7 @@ describe("Stat Block execution references", () => {
         dispatches: [
           {
             procedureOrdinal: procedureOrdinal(1),
-            count: { kind: "literal" as const, value: 1 },
+            count: { kind: "literal" as const, value: PositiveInteger(1) },
           },
         ] as const,
       },
@@ -1257,7 +1259,7 @@ describe("Stat Block execution references", () => {
         actions: [actionAttack, secondAction, multiattackEntry],
         legendaryActions: {
           ...base.statBlock.legendaryActions,
-          uses: { kind: "fixed", uses: 2 },
+          uses: { kind: "fixed", uses: PositiveInteger(2) },
           entries: [tailSwipe, wingSweep],
         },
       },
@@ -1355,7 +1357,7 @@ describe("Stat Block execution references", () => {
         ...statBlock.statBlock,
         legendaryActions: {
           ...statBlock.statBlock.legendaryActions,
-          uses: { kind: "fixed", uses: 2 },
+          uses: { kind: "fixed", uses: PositiveInteger(2) },
           entries: [
             {
               kind: "textOnly",
@@ -1552,7 +1554,7 @@ describe("Stat Block execution references", () => {
           ...base.statBlock.legendaryActions,
           uses: base.statBlock.legendaryActions?.uses ?? {
             kind: "fixed",
-            uses: 2,
+            uses: PositiveInteger(2),
           },
           entries: [limitedLegendaryAttack],
         },
@@ -2604,8 +2606,8 @@ describe("Stat Block execution references", () => {
                     kind: "literal" as const,
                     value:
                       entry.procedure.attackBonus.kind === "literal"
-                        ? entry.procedure.attackBonus.value + 1
-                        : 1,
+                        ? Integer(entry.procedure.attackBonus.value + 1)
+                        : Integer(1),
                   },
                 },
               }
@@ -2980,7 +2982,7 @@ describe("Stat Block execution references", () => {
           {
             ordinal: resourceOrdinal(1),
             ownership: "each" as const,
-            limit: { kind: "daily" as const, uses: 1 },
+            limit: { kind: "daily" as const, uses: PositiveInteger(1) },
           },
         ],
       },

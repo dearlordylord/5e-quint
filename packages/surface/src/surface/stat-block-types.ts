@@ -16,6 +16,8 @@ import type {
 import type {
   DamageDieSize,
   DamageType,
+  Integer,
+  PositiveInteger,
   ReadonlyNonEmptyArray,
   Size,
 } from "@dnd/shared/types";
@@ -58,21 +60,21 @@ export type ChallengeRating = (typeof SRD_CHALLENGE_RATINGS)[number];
 
 export type AuthoredStatBlockReactionTriggerKind = SurfaceReactionTriggerKind;
 
-export type StatBlockProcedureOrdinal = number &
+export type StatBlockProcedureOrdinal = PositiveInteger &
   Brand.Brand<"StatBlockProcedureOrdinal">;
-export type StatBlockProcedureResourceOrdinal = number &
+export type StatBlockProcedureResourceOrdinal = PositiveInteger &
   Brand.Brand<"StatBlockProcedureResourceOrdinal">;
 
-type StatBlockLiteralValue = {
+type StatBlockLiteralValue<Value = number> = {
   readonly kind: "literal";
-  readonly value: number;
+  readonly value: Value;
 };
 
-type StatBlockProcedurePositiveValue = StatBlockLiteralValue;
-type StatBlockProcedureSignedValue = StatBlockLiteralValue;
+type StatBlockProcedurePositiveValue = StatBlockLiteralValue<PositiveInteger>;
+type StatBlockProcedureSignedValue = StatBlockLiteralValue<Integer>;
 
 export type StatBlockProcedureResourceLimit =
-  | { readonly kind: "daily"; readonly uses: number }
+  | { readonly kind: "daily"; readonly uses: PositiveInteger }
   | {
       readonly kind: "recharge";
       readonly minimumRoll: 2 | 3 | 4 | 5 | 6;
@@ -97,13 +99,13 @@ export type StatBlockProcedureResourceRefs =
 
 export type StatBlockProcedureDcSource = {
   readonly kind: "fixed";
-  readonly dc: number;
+  readonly dc: PositiveInteger;
 };
 
 type StatBlockProcedureDiceExpr = {
-  readonly dice: number;
+  readonly dice: PositiveInteger;
   readonly dieSize: DamageDieSize;
-  readonly flat?: number;
+  readonly flat?: Integer;
   readonly spellcastingMod?: true;
   readonly abilityModifier?: Ability;
 };
@@ -112,9 +114,9 @@ type StatBlockProcedureDamageAmount =
   | {
       readonly kind: "fixed";
       readonly expr: StatBlockProcedureDiceExpr;
-      readonly static?: number;
+      readonly static?: PositiveInteger;
     }
-  | { readonly kind: "fixed"; readonly static: number };
+  | { readonly kind: "fixed"; readonly static: PositiveInteger };
 
 type StatBlockConditionExpiration =
   | { readonly kind: "source_next_turn_end" }
@@ -172,38 +174,38 @@ type StatBlockSaveSuccessOutcome =
   | StatBlockProcedureEffect;
 
 export type StatBlockProcedureAreaShape =
-  | { readonly kind: "sphere"; readonly radiusFeet: number }
-  | { readonly kind: "circle"; readonly radiusFeet: number }
+  | { readonly kind: "sphere"; readonly radiusFeet: PositiveInteger }
+  | { readonly kind: "circle"; readonly radiusFeet: PositiveInteger }
   | {
       readonly kind: "sphere_cluster";
-      readonly count: number;
-      readonly radiusFeet: number;
+      readonly count: PositiveInteger;
+      readonly radiusFeet: PositiveInteger;
       readonly overlapResolution: "affect_once";
     }
-  | { readonly kind: "cone"; readonly lengthFeet: number }
-  | { readonly kind: "cube"; readonly sideFeet: number }
+  | { readonly kind: "cone"; readonly lengthFeet: PositiveInteger }
+  | { readonly kind: "cube"; readonly sideFeet: PositiveInteger }
   | {
       readonly kind: "cube_cluster";
-      readonly maxCubes: number;
-      readonly sideFeet: number;
+      readonly maxCubes: PositiveInteger;
+      readonly sideFeet: PositiveInteger;
       readonly contiguous?: true;
     }
   | {
       readonly kind: "cylinder";
-      readonly radiusFeet: number;
-      readonly heightFeet: number;
+      readonly radiusFeet: PositiveInteger;
+      readonly heightFeet: PositiveInteger;
     }
-  | { readonly kind: "emanation"; readonly radiusFeet: number }
+  | { readonly kind: "emanation"; readonly radiusFeet: PositiveInteger }
   | {
       readonly kind: "line";
-      readonly lengthFeet: number;
-      readonly widthFeet: number;
+      readonly lengthFeet: PositiveInteger;
+      readonly widthFeet: PositiveInteger;
     }
   | {
       readonly kind: "wall_volume";
-      readonly maxLengthFeet: number;
-      readonly maxHeightFeet: number;
-      readonly thicknessFeet: number;
+      readonly maxLengthFeet: PositiveInteger;
+      readonly maxHeightFeet: PositiveInteger;
+      readonly thicknessFeet: PositiveInteger;
     };
 
 type AuthoredMultiattackProcedure = {
@@ -221,7 +223,7 @@ type AuthoredMeleeAttackRollProcedure = {
   readonly attackType: "melee";
   readonly attackAbility: Ability;
   readonly attackBonus: StatBlockProcedureSignedValue;
-  readonly reachFeet: number;
+  readonly reachFeet: PositiveInteger;
   readonly onHit: ReadonlyNonEmptyArray<StatBlockProcedureEffect>;
   readonly multiattackCount?: StatBlockProcedurePositiveValue;
 };
@@ -232,7 +234,10 @@ type AuthoredRangedAttackRollProcedure = {
   readonly attackType: "ranged";
   readonly attackAbility: Ability;
   readonly attackBonus: StatBlockProcedureSignedValue;
-  readonly rangeFeet: { readonly normal: number; readonly long: number };
+  readonly rangeFeet: {
+    readonly normal: PositiveInteger;
+    readonly long: PositiveInteger;
+  };
   readonly onHit: ReadonlyNonEmptyArray<StatBlockProcedureEffect>;
   readonly multiattackCount?: StatBlockProcedurePositiveValue;
   readonly ammunition?: AmmunitionKind;
@@ -255,7 +260,7 @@ type AuthoredSaveGateProcedure =
   | (AuthoredSaveGateProcedureFields & {
       readonly target: {
         readonly kind: "one_creature_in_range";
-        readonly rangeFeet: number;
+        readonly rangeFeet: PositiveInteger;
       };
     });
 
@@ -263,7 +268,7 @@ type AuthoredSupportProcedure = {
   readonly kind: "support";
   readonly name: string;
   readonly target: "self" | "ally_in_range";
-  readonly rangeFeet?: number;
+  readonly rangeFeet?: PositiveInteger;
   readonly effect: StatBlockProcedureEffect;
   readonly multiattackCount?: StatBlockProcedurePositiveValue;
 };
@@ -340,7 +345,7 @@ export type StatBlockSpellInvocationRestriction = {
 
 export type StatBlockSpellReference = {
   readonly spellId: UnitId;
-  readonly count?: number;
+  readonly count?: PositiveInteger;
   readonly castAtLevel?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   readonly restriction?: StatBlockSpellInvocationRestriction;
 };
@@ -422,15 +427,20 @@ export type StatBlockProcedureEntry =
   | StatBlockTextOnlyProcedureEntry;
 
 export type AuthoredStatBlockReactionTriggerNonRecursive =
-  SurfaceReactionTriggerMember<UnitId>;
+  SurfaceReactionTriggerMember<UnitId, PositiveInteger>;
 
 export type AuthoredStatBlockReactionTriggerNonRecursiveEncoded =
-  SurfaceReactionTriggerMember<string>;
+  SurfaceReactionTriggerMember<string, number>;
 
-export type AuthoredStatBlockReactionTrigger = SurfaceReactionTrigger<UnitId>;
+export type AuthoredStatBlockReactionTrigger = SurfaceReactionTrigger<
+  UnitId,
+  PositiveInteger
+>;
 
-export type AuthoredStatBlockReactionTriggerEncoded =
-  SurfaceReactionTrigger<string>;
+export type AuthoredStatBlockReactionTriggerEncoded = SurfaceReactionTrigger<
+  string,
+  number
+>;
 
 type StatBlockReactionProcedureEntry =
   | (StatBlockNonSpellcastingExecutableProcedureEntry & {
@@ -447,11 +457,11 @@ export type StatBlockReactionSection =
   ReadonlyNonEmptyArray<StatBlockReactionProcedureEntry>;
 
 type StatBlockLegendaryActionUses =
-  | { readonly kind: "fixed"; readonly uses: number }
+  | { readonly kind: "fixed"; readonly uses: PositiveInteger }
   | {
       readonly kind: "lair_bonus";
-      readonly usesOutsideLair: number;
-      readonly additionalUsesInLair: number;
+      readonly usesOutsideLair: PositiveInteger;
+      readonly additionalUsesInLair: PositiveInteger;
     };
 
 export type StatBlockLegendaryActionSection = {
@@ -729,33 +739,37 @@ type StatBlockWireValue<A> = A extends StatBlockProcedureOrdinal
   ? number
   : A extends StatBlockProcedureResourceOrdinal
     ? number
-    : A extends UnitId
-      ? string
-      : A extends StatBlockId
-        ? string
-        : A extends StatBlockGmSpeedChoice
-          ? {
-              readonly kind: "gm_choice";
-              readonly alternatives: StatBlockGmSpeedChoiceAlternativesEncoded;
-            }
-          : A extends CreatureImmunityList
-            ? StatBlockWireValue<CreatureImmunityDeclaration>
-            : A extends readonly [infer First, ...infer Rest]
-              ? readonly [
-                  StatBlockWireValue<First>,
-                  ...StatBlockWireValue<Rest>,
-                ]
-              : A extends ReadonlyArray<infer Item>
-                ? ReadonlyArray<StatBlockWireValue<Item>>
-                : A extends object
-                  ? {
-                      readonly [Key in keyof A]: Key extends "trigger"
-                        ? A[Key] extends AuthoredStatBlockReactionTrigger
-                          ? AuthoredStatBlockReactionTriggerEncoded
-                          : StatBlockWireValue<A[Key]>
-                        : StatBlockWireValue<A[Key]>;
-                    }
-                  : A;
+    : A extends PositiveInteger
+      ? number
+      : A extends Integer
+        ? number
+        : A extends UnitId
+          ? string
+          : A extends StatBlockId
+            ? string
+            : A extends StatBlockGmSpeedChoice
+              ? {
+                  readonly kind: "gm_choice";
+                  readonly alternatives: StatBlockGmSpeedChoiceAlternativesEncoded;
+                }
+              : A extends CreatureImmunityList
+                ? StatBlockWireValue<CreatureImmunityDeclaration>
+                : A extends readonly [infer First, ...infer Rest]
+                  ? readonly [
+                      StatBlockWireValue<First>,
+                      ...StatBlockWireValue<Rest>,
+                    ]
+                  : A extends ReadonlyArray<infer Item>
+                    ? ReadonlyArray<StatBlockWireValue<Item>>
+                    : A extends object
+                      ? {
+                          readonly [Key in keyof A]: Key extends "trigger"
+                            ? A[Key] extends AuthoredStatBlockReactionTrigger
+                              ? AuthoredStatBlockReactionTriggerEncoded
+                              : StatBlockWireValue<A[Key]>
+                            : StatBlockWireValue<A[Key]>;
+                        }
+                      : A;
 
 export type StandaloneStatBlockEncoded =
   StatBlockWireValue<StandaloneStatBlock>;

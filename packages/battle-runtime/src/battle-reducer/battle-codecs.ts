@@ -6280,76 +6280,63 @@ type StatBlockProcedureBindingSnapshotMemberCodec<
   readonly resourcePoolRefs: ResourcePoolRefs;
 }>;
 
-class StatBlockProcedureBindingSnapshotMemberOwner {
-  readonly attack: StatBlockProcedureBindingSnapshotMemberCodec<
-    typeof StatBlockAttackProcedureSchema,
-    Schema.$Array<typeof BattleResourcePoolExecutionRef>
-  > = Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    procedure: StatBlockAttackProcedureSchema,
-    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  });
-  readonly unarmedStrike: StatBlockProcedureBindingSnapshotMemberCodec<
-    typeof StatBlockUnarmedStrikeProcedureSchema,
-    Schema.$Array<typeof BattleResourcePoolExecutionRef>
-  > = Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    procedure: StatBlockUnarmedStrikeProcedureSchema,
-    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  });
-  readonly multiattack: StatBlockProcedureBindingSnapshotMemberCodec<
-    typeof StatBlockMultiattackProcedureSchema,
-    Schema.$Array<typeof BattleResourcePoolExecutionRef>
-  > = Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    procedure: StatBlockMultiattackProcedureSchema,
-    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  });
-  readonly bonusActionOption: StatBlockProcedureBindingSnapshotMemberCodec<
-    typeof StatBlockBonusActionOptionProcedureSchema,
-    Schema.$Array<typeof BattleResourcePoolExecutionRef>
-  > = Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    procedure: StatBlockBonusActionOptionProcedureSchema,
-    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  });
-  readonly spellcasting: StatBlockProcedureBindingSnapshotMemberCodec<
-    typeof StatBlockSpellcastingProcedureSchema,
-    Schema.Tuple<[]>
-  > = Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    procedure: StatBlockSpellcastingProcedureSchema,
-    resourcePoolRefs: Schema.Tuple([]),
-  });
-  readonly effectOccurrenceSource: StatBlockProcedureBindingSnapshotMemberCodec<
-    typeof EffectOccurrenceSourceProcedureSchema,
-    Schema.Tuple<[]>
-  > = Schema.Struct({
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    procedure: EffectOccurrenceSourceProcedureSchema,
-    resourcePoolRefs: Schema.Tuple([]),
-  });
-}
+const StatBlockAttackProcedureBindingSnapshotMember: StatBlockProcedureBindingSnapshotMemberCodec<
+  typeof StatBlockAttackProcedureSchema,
+  Schema.$Array<typeof BattleResourcePoolExecutionRef>
+> = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  procedure: StatBlockAttackProcedureSchema,
+  resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+});
+const StatBlockUnarmedStrikeProcedureBindingSnapshotMember: StatBlockProcedureBindingSnapshotMemberCodec<
+  typeof StatBlockUnarmedStrikeProcedureSchema,
+  Schema.$Array<typeof BattleResourcePoolExecutionRef>
+> = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  procedure: StatBlockUnarmedStrikeProcedureSchema,
+  resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+});
+const StatBlockMultiattackProcedureBindingSnapshotMember: StatBlockProcedureBindingSnapshotMemberCodec<
+  typeof StatBlockMultiattackProcedureSchema,
+  Schema.$Array<typeof BattleResourcePoolExecutionRef>
+> = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  procedure: StatBlockMultiattackProcedureSchema,
+  resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+});
+const StatBlockBonusActionOptionProcedureBindingSnapshotMember: StatBlockProcedureBindingSnapshotMemberCodec<
+  typeof StatBlockBonusActionOptionProcedureSchema,
+  Schema.$Array<typeof BattleResourcePoolExecutionRef>
+> = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  procedure: StatBlockBonusActionOptionProcedureSchema,
+  resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+});
+const StatBlockSpellcastingProcedureBindingSnapshotMember: StatBlockProcedureBindingSnapshotMemberCodec<
+  typeof StatBlockSpellcastingProcedureSchema,
+  Schema.Tuple<[]>
+> = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  procedure: StatBlockSpellcastingProcedureSchema,
+  resourcePoolRefs: Schema.Tuple([]),
+});
+const StatBlockEffectOccurrenceSourceProcedureBindingSnapshotMember: StatBlockProcedureBindingSnapshotMemberCodec<
+  typeof EffectOccurrenceSourceProcedureSchema,
+  Schema.Tuple<[]>
+> = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  procedure: EffectOccurrenceSourceProcedureSchema,
+  resourcePoolRefs: Schema.Tuple([]),
+});
 
-type StatBlockProcedureBindingSnapshotMember =
-  StatBlockProcedureBindingSnapshotMemberOwner[keyof StatBlockProcedureBindingSnapshotMemberOwner];
-const statBlockProcedureBindingSnapshotMembers = (): readonly [
-  StatBlockProcedureBindingSnapshotMember,
-  ...StatBlockProcedureBindingSnapshotMember[],
-] => {
-  const [first, ...remaining] = Object.values(
-    new StatBlockProcedureBindingSnapshotMemberOwner(),
-  );
-  if (first === undefined) {
-    throw new Error(
-      "StatBlockProcedureBindingSnapshotMemberOwner must remain non-empty",
-    );
-  }
-  return [first, ...remaining];
-};
-
-const StatBlockProcedureBindingSnapshotMembers =
-  statBlockProcedureBindingSnapshotMembers();
+const StatBlockProcedureBindingSnapshotMembers = [
+  StatBlockAttackProcedureBindingSnapshotMember,
+  StatBlockUnarmedStrikeProcedureBindingSnapshotMember,
+  StatBlockMultiattackProcedureBindingSnapshotMember,
+  StatBlockBonusActionOptionProcedureBindingSnapshotMember,
+  StatBlockSpellcastingProcedureBindingSnapshotMember,
+  StatBlockEffectOccurrenceSourceProcedureBindingSnapshotMember,
+] as const;
 type StatBlockProcedureBindingSnapshotCodec = Schema.Union<
   typeof StatBlockProcedureBindingSnapshotMembers
 >;
@@ -6754,62 +6741,47 @@ type CharacterProcedureBindingSnapshotMemberCodec<
   readonly procedure: Procedure;
 }>;
 
-class CharacterProcedureBindingSnapshotMemberOwner {
-  readonly unit: CharacterProcedureBindingSnapshotMemberCodec<
-    typeof CharacterUnitProcedureSnapshotSchema
-  > = Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    procedure: CharacterUnitProcedureSnapshotSchema,
-  });
-  readonly spellInvocation: CharacterProcedureBindingSnapshotMemberCodec<
-    Schema.Struct<{
-      readonly kind: Schema.Literal<"spellInvocation">;
-      readonly executionFacts: typeof SpellExecutionFactsSchema;
-    }>
-  > = Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    procedure: Schema.Struct({
-      kind: Schema.Literal("spellInvocation"),
-      executionFacts: SpellExecutionFactsSchema,
-    }),
-  });
-  readonly unavailableSpellInvocation: CharacterProcedureBindingSnapshotMemberCodec<
-    Schema.Struct<{
-      readonly kind: Schema.Literal<"unavailableSpellInvocation">;
-    }>
-  > = Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    procedure: Schema.Struct({
-      kind: Schema.Literal("unavailableSpellInvocation"),
-    }),
-  });
-  readonly effectOccurrenceSource: CharacterProcedureBindingSnapshotMemberCodec<
-    typeof EffectOccurrenceSourceProcedureSchema
-  > = Schema.Struct({
-    procedureRef: BattleProcedureExecutionRef,
-    procedure: EffectOccurrenceSourceProcedureSchema,
-  });
-}
+const CharacterUnitProcedureBindingSnapshotMember: CharacterProcedureBindingSnapshotMemberCodec<
+  typeof CharacterUnitProcedureSnapshotSchema
+> = Schema.Struct({
+  procedureRef: BattleProcedureExecutionRef,
+  procedure: CharacterUnitProcedureSnapshotSchema,
+});
+const CharacterSpellInvocationProcedureBindingSnapshotMember: CharacterProcedureBindingSnapshotMemberCodec<
+  Schema.Struct<{
+    readonly kind: Schema.Literal<"spellInvocation">;
+    readonly executionFacts: typeof SpellExecutionFactsSchema;
+  }>
+> = Schema.Struct({
+  procedureRef: BattleProcedureExecutionRef,
+  procedure: Schema.Struct({
+    kind: Schema.Literal("spellInvocation"),
+    executionFacts: SpellExecutionFactsSchema,
+  }),
+});
+const CharacterUnavailableSpellInvocationProcedureBindingSnapshotMember: CharacterProcedureBindingSnapshotMemberCodec<
+  Schema.Struct<{
+    readonly kind: Schema.Literal<"unavailableSpellInvocation">;
+  }>
+> = Schema.Struct({
+  procedureRef: BattleProcedureExecutionRef,
+  procedure: Schema.Struct({
+    kind: Schema.Literal("unavailableSpellInvocation"),
+  }),
+});
+const CharacterEffectOccurrenceSourceProcedureBindingSnapshotMember: CharacterProcedureBindingSnapshotMemberCodec<
+  typeof EffectOccurrenceSourceProcedureSchema
+> = Schema.Struct({
+  procedureRef: BattleProcedureExecutionRef,
+  procedure: EffectOccurrenceSourceProcedureSchema,
+});
 
-type CharacterProcedureBindingSnapshotMember =
-  CharacterProcedureBindingSnapshotMemberOwner[keyof CharacterProcedureBindingSnapshotMemberOwner];
-const characterProcedureBindingSnapshotMembers = (): readonly [
-  CharacterProcedureBindingSnapshotMember,
-  ...CharacterProcedureBindingSnapshotMember[],
-] => {
-  const [first, ...remaining] = Object.values(
-    new CharacterProcedureBindingSnapshotMemberOwner(),
-  );
-  if (first === undefined) {
-    throw new Error(
-      "CharacterProcedureBindingSnapshotMemberOwner must remain non-empty",
-    );
-  }
-  return [first, ...remaining];
-};
-
-const CharacterProcedureBindingSnapshotMembers =
-  characterProcedureBindingSnapshotMembers();
+const CharacterProcedureBindingSnapshotMembers = [
+  CharacterUnitProcedureBindingSnapshotMember,
+  CharacterSpellInvocationProcedureBindingSnapshotMember,
+  CharacterUnavailableSpellInvocationProcedureBindingSnapshotMember,
+  CharacterEffectOccurrenceSourceProcedureBindingSnapshotMember,
+] as const;
 type CharacterProcedureBindingSnapshotCodec = Schema.Union<
   typeof CharacterProcedureBindingSnapshotMembers
 >;

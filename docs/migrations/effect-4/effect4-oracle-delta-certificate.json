@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50677668,
-    "sha256": "bbce92fd532bc0f50d7b01c43da6689bec04cdff2783c97018fbe0dad0502f3f"
+    "sha256": "919271ba777e2ca30e5fc5375f018456279c42d3bb75b1746efbd99d21112d3f"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -291,7 +291,7 @@
       {
         "delta": {
           "baselineSha256": "02c4732c8a1aa03f6e8727f459f03b9abc2c843202caabdd3b827c41494c50a9",
-          "candidateSha256": "27d375fd382841afef20d22751e8593354cf628ce793fb16257d9a3ca4e484ba",
+          "candidateSha256": "d898304cd1bfe28fc1be299115501645bad70fadae222d2d164b0fe0a759bf23",
           "operation": "changed",
           "segments": [
             "surface",
@@ -89211,7 +89211,7 @@
       {
         "delta": {
           "baselineSha256": "b37a110a5614989e3179f3947b5947b47f99620575a77bcd07d0c0b42780205a",
-          "candidateSha256": "6bfe3f36427e6965390b9af0a739de250c7a024c130137e09f1c34746a12e6b4",
+          "candidateSha256": "0d72007ad006246c21ae17c215f7a689f332dd398740386a05e9ea9981406239",
           "operation": "changed",
           "segments": [
             "surface",
@@ -97464,7 +97464,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "8127242963139aebc4f8a348654b5c89c038b37cdf0ae6a3e3ad16f1f472f94a",
+          "candidateSha256": "af768e7e026c0f9312e8a115a8fc45c920f4988aff27e2c4f07abc7f49b14a19",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -120791,7 +120791,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "bab40db462376fe54bd92e45d0707c4290428366bd3c3d3d30c282af04c8f1f0",
+          "candidateSha256": "34fc6c5bcce93a86c4115cbb7375719c52825f2f1da01aae89051cbe7f90a194",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -197253,7 +197253,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "979af5c7733f14a3dc82223bf20d9fa4179ce24ac5f3f4c11260bfcd914e1706",
+    "identitySha256": "e5891bfdbb102320fe139304a5bfe15af16b00867647699b844cd271d281b318",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -197306,7 +197306,7 @@
       {
         "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
         "deltaCount": 65,
-        "deltaIdentitySha256": "23c90f96c080a7374532cdbf60ab15f4e6845a8aeb931510f1aae06f371ec88f",
+        "deltaIdentitySha256": "a8e40423b52496048f02f736f78b5211e2befaf4eedab995198c8db6593456d1",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
           "added": 43,
@@ -197318,7 +197318,7 @@
       {
         "changedCollectionAuthorityIds": [],
         "deltaCount": 4,
-        "deltaIdentitySha256": "d2f36e6749ee7a92a25bb367b068ed0558d79695fadbd3e992bba5eb314d468b",
+        "deltaIdentitySha256": "4ac5c8197dc7c0b25b018f9c0e02b3d0702278a9256b16c669357cd0c7dba4a4",
         "id": "surface-publication-contract-convergence",
         "operations": {
           "added": 0,

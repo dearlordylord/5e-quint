@@ -35,7 +35,12 @@ import {
 } from "./rule-core-component-route.test-support.ts";
 import { describe, it } from "vitest";
 
-import { DieRollResult, movementFeet } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Integer,
+  movementFeet,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
@@ -735,11 +740,11 @@ function multiattackStatBlock(): StatBlockRecord {
           dispatches: [
             {
               procedureOrdinal: authoredProcedureOrdinal(1),
-              count: { kind: "literal", value: 2 },
+              count: { kind: "literal", value: PositiveInteger(2) },
             },
             {
               procedureOrdinal: authoredProcedureOrdinal(2),
-              count: { kind: "literal", value: 1 },
+              count: { kind: "literal", value: PositiveInteger(1) },
             },
           ],
         }),
@@ -806,17 +811,20 @@ function primaryAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "str",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "melee",
     name: primaryAttackName,
     onHit: [
       {
-        amount: { kind: "fixed", expr: { dice: 1, dieSize: 4, flat: 2 } },
+        amount: {
+          kind: "fixed",
+          expr: { dice: PositiveInteger(1), dieSize: 4, flat: Integer(2) },
+        },
         damageType: "slashing",
         kind: "damage",
       },
     ],
-    reachFeet: 5,
+    reachFeet: PositiveInteger(5),
   };
 }
 
@@ -824,16 +832,19 @@ function secondaryAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "dex",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "ranged",
     name: secondaryAttackName,
     onHit: [
       {
-        amount: { kind: "fixed", expr: { dice: 1, dieSize: 4, flat: 2 } },
+        amount: {
+          kind: "fixed",
+          expr: { dice: PositiveInteger(1), dieSize: 4, flat: Integer(2) },
+        },
         damageType: "piercing",
         kind: "damage",
       },
     ],
-    rangeFeet: { normal: 30, long: 120 },
+    rangeFeet: { normal: PositiveInteger(30), long: PositiveInteger(120) },
   };
 }

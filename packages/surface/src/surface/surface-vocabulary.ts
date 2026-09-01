@@ -27,7 +27,7 @@ export const SURFACE_WEAPON_PROPERTIES = [
   SURFACE_WEAPON_PROPERTY_VERSATILE,
 ] as const;
 
-export type SurfaceWeaponFilter<ItemReference = string> =
+export type SurfaceWeaponFilter<ItemReference> =
   | { readonly kind: typeof SURFACE_WEAPON_FILTER_SOURCE_ITEM }
   | {
       readonly kind: typeof SURFACE_WEAPON_FILTER_WEAPON_CATEGORY;
@@ -81,15 +81,15 @@ export const SURFACE_REACTION_TRIGGER_KINDS = [
 export type SurfaceReactionTriggerKind =
   (typeof SURFACE_REACTION_TRIGGER_KINDS)[number];
 
-export type SurfaceReactionTriggerMember<SpellReference> =
+export type SurfaceReactionTriggerMember<Reference, RangeFeet = number> =
   | {
       readonly kind: typeof SURFACE_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL;
-      readonly weaponFilter?: SurfaceWeaponFilter;
+      readonly weaponFilter?: SurfaceWeaponFilter<Reference>;
     }
   | {
       readonly kind: typeof SURFACE_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE;
       readonly requiresVisibleCreature?: true;
-      readonly rangeFeet?: number;
+      readonly rangeFeet?: RangeFeet;
     }
   | {
       readonly kind: typeof SURFACE_REACTION_TRIGGER_SELF_OR_VISIBLE_CREATURE_FALLS;
@@ -97,7 +97,7 @@ export type SurfaceReactionTriggerMember<SpellReference> =
     }
   | {
       readonly kind: typeof SURFACE_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL;
-      readonly spellId: SpellReference;
+      readonly spellId: Reference;
     }
   | {
       readonly kind: typeof SURFACE_REACTION_TRIGGER_CREATURE_CASTS_SPELL;
@@ -116,11 +116,11 @@ export type SurfaceReactionTriggerMember<SpellReference> =
       readonly spellHasNoAreaOfEffect?: true;
     };
 
-export type SurfaceReactionTrigger<SpellReference> =
-  | SurfaceReactionTriggerMember<SpellReference>
+export type SurfaceReactionTrigger<Reference, RangeFeet = number> =
+  | SurfaceReactionTriggerMember<Reference, RangeFeet>
   | {
       readonly kind: typeof SURFACE_REACTION_TRIGGER_ANY_OF;
       readonly triggers: ReadonlyNonEmptyArray<
-        SurfaceReactionTrigger<SpellReference>
+        SurfaceReactionTrigger<Reference, RangeFeet>
       >;
     };

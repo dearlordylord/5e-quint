@@ -159,6 +159,44 @@ function fixtureAggregateCandidateDigest(
   );
 }
 
+function certifyCandidateSchemaSnapshot(paths: FixturePaths): void {
+  const schemaPath = join(paths.publicationDir, "srd-surface.schema.json");
+  const bytes = readFileSync(schemaPath);
+  const schema = fixtureObject(JSON.parse(bytes.toString("utf8")), "schema");
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+    "certificate",
+  );
+  const schemaArtifact = fixtureObjectField(
+    fixtureObjectField(certificate, "artifacts"),
+    "schema",
+  );
+  const candidate = fixtureObjectField(schemaArtifact, "candidate");
+  candidate.byteLength = bytes.byteLength;
+  candidate.sha256 = sha256(bytes);
+  const evidence = fixtureObjectField(schemaArtifact, "evidence");
+  evidence.candidateCanonicalJsonSha256 = canonicalFixtureSha256(schema);
+  const definitions = fixtureObjectField(evidence, "definitions");
+  definitions.candidate = Object.keys(
+    fixtureObjectField(schema, "$defs"),
+  ).length;
+  let references = 0;
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) return value.forEach(visit);
+    if (!isFixtureObject(value)) return;
+    for (const [key, child] of Object.entries(value)) {
+      if (key === "$ref") references += 1;
+      visit(child);
+    }
+  };
+  visit(schema);
+  fixtureObjectField(evidence, "references").candidate = references;
+  writeFileSync(
+    paths.certificatePath,
+    `${JSON.stringify(certificate, null, 2)}\n`,
+  );
+}
+
 function canonicalizeFixture(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalizeFixture);
   if (!isFixtureObject(value)) return value;
@@ -731,5 +769,147 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("candidate-hash-mismatch");
     expect(issueKinds(result)).toContain("schema-evidence-mismatch");
     expect(issueKinds(result)).not.toContain("schema-compile-failed");
+  }, 180_000);
+
+  test("rejects an ordinary-recertified but unclassified schema graph change", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        schema.description = "unclassified reachable graph fixture";
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
+  test("rejects substitution of the authenticated intermediate schema", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const graphDelta = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(certificate, "artifacts"),
+              "schema",
+            ),
+            "evidence",
+          ),
+          "graphDelta",
+        );
+        fixtureObjectField(graphDelta, "comparisonSchema").sha256 = "0".repeat(
+          64,
+        );
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-authority-mismatch");
+  }, 180_000);
+
+  test("rejects tampering with a finite schema classification pointer", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const classifiedChanges = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(
+                fixtureObjectField(certificate, "artifacts"),
+                "schema",
+              ),
+              "evidence",
+            ),
+            "graphDelta",
+          ),
+          "classifiedChanges",
+        );
+        const flyOnlyHover = fixtureArrayField(
+          classifiedChanges,
+          "flyOnlyHover",
+        );
+        const first = fixtureObject(flyOnlyHover[0], "flyOnlyHover[0]");
+        first.pointer = "/$defs/SrdRecordUnion1052Encoded";
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+  }, 180_000);
+
+  test("rejects moving a live classified constraint to an unreachable lookalike", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        const definitions = fixtureObjectField(schema, "$defs");
+        const itemId = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(definitions, "SrdRecordUnion79Encoded"),
+            "properties",
+          ),
+          "itemId",
+        );
+        definitions.UnreachableUnitIdLookalike = { ...itemId };
+        Reflect.deleteProperty(itemId, "minLength");
+        Reflect.deleteProperty(itemId, "pattern");
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+  }, 180_000);
+
+  test("returns typed invalid evidence for a cyclic future schema graph", () => {
+    let result: ReturnType<typeof verifySurfacePublicationDelta> | undefined;
+    expect(() => {
+      result = withFixture(
+        (paths) => {
+          const path = join(paths.publicationDir, "srd-surface.schema.json");
+          const schema = fixtureObject(
+            JSON.parse(readFileSync(path, "utf8")),
+            "schema",
+          );
+          const definitions = fixtureObjectField(schema, "$defs");
+          definitions.FutureRecursiveNode = {
+            $ref: "#/$defs/FutureRecursiveNode",
+          };
+          fixtureObjectField(schema, "properties").units = {
+            $ref: "#/$defs/FutureRecursiveNode",
+          };
+          writeFileSync(path, JSON.stringify(schema));
+          certifyCandidateSchemaSnapshot(paths);
+        },
+        { reviewMutatedCertificate: true },
+      );
+    }).not.toThrow();
+
+    expect(result?.tag).toBe("invalid");
+    expect(issueKinds(result!)).toContain("schema-delta-unclassified");
   }, 180_000);
 });

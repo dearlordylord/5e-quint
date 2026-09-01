@@ -4,6 +4,7 @@ import {
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
 import type { StatBlockProcedureEntry } from "@dnd/surface/surface/types";
+import { Integer, PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 
 const authoredOrdinal = (value: number) =>
@@ -33,8 +34,8 @@ export function syntheticSpellcastingProcedureEntry(
       kind: "spellcasting",
       name: input.name ?? "Synthetic Spellcasting",
       ability: "int",
-      spellSaveDc: { kind: "fixed", dc: 13 },
-      spellAttackBonus: { kind: "literal", value: 5 },
+      spellSaveDc: { kind: "fixed", dc: PositiveInteger(13) },
+      spellAttackBonus: { kind: "literal", value: Integer(5) },
       components: { v: true, s: true, m: false },
       groups: [
         {

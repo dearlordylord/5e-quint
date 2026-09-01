@@ -138,6 +138,37 @@ The 1,000-file coarse safety ceiling is unchanged. Production emission still
 fails closed on this exact count, byte measure, path ledger, and content
 ledger.
 
+## Round-1 Surface and Battle recertification (2026-09-01)
+
+At the Round-1 integration revision after `966b2fe62`, the declaration path set
+remains exactly 571 files. The source fixes strengthen authored Stat Block
+quantities and references, make the affected Surface generic arguments
+explicit, and replace two runtime schema-owner classes with closed tuples. The
+recertified graph contains 10,299,610 bytes, leaving 186,150 bytes below the
+unchanged 10 MiB byte cap. Its sorted POSIX path-ledger SHA-256 remains
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`;
+its sorted content-ledger SHA-256 is
+`159c1666a4f2d99b4ee37e54f56034f0722ad6b9432875e3647cd3d8a61d1927`.
+
+Independent TypeScript 5.9.3 emissions of clean `966b2fe62` and the Round-1
+source produced no path additions or removals. Seven declarations changed:
+
+- `packages/battle-runtime/src/battle-reducer/battle-codecs.d.ts` (-960 bytes)
+- `packages/character-sheet-runtime/src/spell-profile-shape.d.ts` (+16 bytes)
+- `packages/surface/src/surface/schema-base.d.ts` (+104 bytes)
+- `packages/surface/src/surface/schema-nonspell.d.ts` (+16 bytes)
+- `packages/surface/src/surface/schema-spell.d.ts` (+22,651 bytes)
+- `packages/surface/src/surface/stat-block-types.d.ts` (+472 bytes)
+- `packages/surface/src/surface/surface-vocabulary.d.ts` (+42 bytes)
+
+The net increase is 22,341 bytes. The large `schema-spell.d.ts` delta is the
+TypeScript serializer's repeated structural projection of the new
+`PositiveInteger`, `Integer`, and branded-reference schemas, not a new owner or
+runtime/data dependency. The Battle declaration becomes smaller because the
+closed tuple emits its member codecs directly instead of emitting two owner
+classes. The 1,000-file coarse safety ceiling remains unchanged; production
+emission fails closed on the new exact measure and content ledger.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted
@@ -176,11 +207,15 @@ surface is copied.
 
 Compiler support is not an authored SDK capability. One shared TypeScript-AST
 admission operation runs before typechecking and evaluation for player,
-character-authoring, and setup-authoring sources. It permits only a static type
-import from that role's exact public SDK module and rejects value or side-effect
-imports, exports-from, import-equals, import types, dynamic imports, `require`,
-triple-slash references, parse errors, relative imports, and wrong-role module
-specifiers. Thus the compiler can resolve authentic transitive Effect types
-while authored source cannot import Effect as a runtime or SDK capability; a
-runtime `import("effect")` also fails because the projection contains no
-JavaScript.
+character-authoring, and setup-authoring sources. It permits a static type
+import from that role's exact public SDK module and rejects the enumerated
+module-edge syntax: value or side-effect imports, exports-from, import-equals,
+import types, dynamic imports, identifier `require` calls, triple-slash
+references, parse errors, relative imports, and wrong-role module specifiers.
+The declaration projection contains no JavaScript, so a direct runtime
+`import("effect")` cannot resolve from that projection. This AST check is a
+syntax admission boundary, not a capability boundary. Authored TypeScript is
+trusted, cooperative code evaluated with the ambient authority of the Node.js
+process. Public-SDK-only behavior is an authoring and evidence convention, not
+an isolation or security guarantee; retained evidence cannot prove the absence
+of indirect ambient access.

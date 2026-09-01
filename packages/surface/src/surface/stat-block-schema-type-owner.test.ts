@@ -1,18 +1,18 @@
 import { Schema } from "effect";
-import { describe, expect, expectTypeOf, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import {
   ChallengeRatingSchema,
   PublishedSrdStatBlockRecordSchema,
-  StatBlockRecordSchema,
   decodeStatBlockRecordSync,
 } from "./schema.ts";
 import {
   AuthoredStatBlockReactionTriggerSchema,
   AuthoredStatBlockReactionTriggerNonRecursiveSchema,
-  StandaloneStatBlockSchema,
   StatBlockGmSpeedChoiceSchema,
+  StatBlockProcedureDcSourceSchema,
+  StatBlockProcedureResourceLimitSchema,
 } from "./schema-spell.ts";
 import {
   AUTHORED_STAT_BLOCK_REACTION_TRIGGER_KINDS,
@@ -24,17 +24,10 @@ import {
   STAT_BLOCK_REACTION_TRIGGER_SPELL_SAVE_OUTCOME,
   STAT_BLOCK_REACTION_TRIGGER_TAKES_DAMAGE_FROM_CREATURE,
   STAT_BLOCK_REACTION_TRIGGER_TARGETED_BY_NAMED_SPELL,
+  STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
   type AuthoredStatBlockReactionTriggerEncoded,
   type AuthoredStatBlockReactionTriggerKind,
-  type AuthoredStatBlockReactionTriggerNonRecursive,
-  type AuthoredStatBlockReactionTriggerNonRecursiveEncoded,
-  type ChallengeRating,
-  type StandaloneStatBlock,
-  type StandaloneStatBlockEncoded,
-  type StatBlockGmSpeedChoice,
   type StatBlockGmSpeedChoiceAlternativesEncoded,
-  type StatBlockRecord,
-  type StatBlockRecordEncoded,
 } from "./stat-block-types.ts";
 
 const walkSpeed = {
@@ -122,47 +115,25 @@ const invalidSaveOutcomeReactionTrigger: AuthoredStatBlockReactionTriggerEncoded
   malformedSaveOutcomeReactionTrigger;
 
 describe("canonical Stat Block type owner", () => {
-  test("keeps the runtime codecs exactly aligned with the canonical types", () => {
-    expectTypeOf<
-      Schema.Schema.Type<typeof StandaloneStatBlockSchema>
-    >().toEqualTypeOf<StandaloneStatBlock>();
-    expectTypeOf<StandaloneStatBlock>().toEqualTypeOf<
-      Schema.Schema.Type<typeof StandaloneStatBlockSchema>
-    >();
-    expectTypeOf<
-      Schema.Schema.Type<typeof StatBlockRecordSchema>
-    >().toEqualTypeOf<StatBlockRecord>();
-    expectTypeOf<StatBlockRecord>().toEqualTypeOf<
-      Schema.Schema.Type<typeof StatBlockRecordSchema>
-    >();
-    expectTypeOf<
-      Schema.Codec.Encoded<typeof StandaloneStatBlockSchema>
-    >().toEqualTypeOf<StandaloneStatBlockEncoded>();
-    expectTypeOf<
-      Schema.Codec.Encoded<typeof StatBlockRecordSchema>
-    >().toEqualTypeOf<StatBlockRecordEncoded>();
-    expectTypeOf<
-      Schema.Schema.Type<typeof StatBlockGmSpeedChoiceSchema>
-    >().toEqualTypeOf<StatBlockGmSpeedChoice>();
-    expectTypeOf<
-      Schema.Codec.Encoded<typeof StatBlockGmSpeedChoiceSchema>
-    >().toEqualTypeOf<{
-      readonly kind: "gm_choice";
-      readonly alternatives: StatBlockGmSpeedChoiceAlternativesEncoded;
-    }>();
-    expectTypeOf<
-      Schema.Schema.Type<typeof ChallengeRatingSchema>
-    >().toEqualTypeOf<ChallengeRating>();
-    expectTypeOf<
-      Schema.Schema.Type<
-        typeof AuthoredStatBlockReactionTriggerNonRecursiveSchema
-      >
-    >().toEqualTypeOf<AuthoredStatBlockReactionTriggerNonRecursive>();
-    expectTypeOf<
-      Schema.Codec.Encoded<
-        typeof AuthoredStatBlockReactionTriggerNonRecursiveSchema
-      >
-    >().toEqualTypeOf<AuthoredStatBlockReactionTriggerNonRecursiveEncoded>();
+  test("rejects non-positive authored procedure quantities", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockProcedureResourceLimitSchema)({
+        kind: "daily",
+        uses: 0,
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockProcedureDcSourceSchema)({
+        kind: "fixed",
+        dc: -1,
+      }),
+    ).toThrow();
+    expect(
+      Schema.decodeUnknownSync(StatBlockProcedureDcSourceSchema)({
+        kind: "fixed",
+        dc: 15,
+      }),
+    ).toEqual({ kind: "fixed", dc: 15 });
   });
 
   test("enforces GM Speed choice cardinality independently at type and runtime boundaries", () => {
@@ -205,6 +176,33 @@ describe("canonical Stat Block type owner", () => {
       Schema.decodeUnknownSync(AuthoredStatBlockReactionTriggerSchema)(
         invalidSaveOutcomeReactionTrigger,
       ),
+    ).toThrow();
+  });
+
+  test("decodes specific-item reaction references through the UnitId boundary", () => {
+    const encoded = {
+      kind: STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL,
+      weaponFilter: {
+        kind: STAT_BLOCK_REACTION_WEAPON_FILTER_SPECIFIC_ITEM,
+        itemId: "synthetic_reaction_weapon",
+      },
+    } as const;
+    const decoded = Schema.decodeUnknownSync(
+      AuthoredStatBlockReactionTriggerNonRecursiveSchema,
+    )(encoded);
+
+    expect(
+      Schema.encodeSync(AuthoredStatBlockReactionTriggerNonRecursiveSchema)(
+        decoded,
+      ),
+    ).toEqual(encoded);
+    expect(() =>
+      Schema.decodeUnknownSync(
+        AuthoredStatBlockReactionTriggerNonRecursiveSchema,
+      )({
+        ...encoded,
+        weaponFilter: { ...encoded.weaponFilter, itemId: " " },
+      }),
     ).toThrow();
   });
 

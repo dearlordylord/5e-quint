@@ -2,7 +2,9 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   D6RollResult,
+  Integer,
   NonNegativeInteger,
+  PositiveInteger,
   resourceCount,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -416,8 +418,12 @@ function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
             {
               amount: {
                 kind: "fixed",
-                expr: { dice: 1, dieSize: 6, flat: 2 },
-                static: 5,
+                expr: {
+                  dice: PositiveInteger(1),
+                  dieSize: 6,
+                  flat: Integer(2),
+                },
+                static: PositiveInteger(5),
               },
               damageType: "piercing",
               kind: "damage",
@@ -428,7 +434,7 @@ function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
               maxCreatureSize: "medium",
             },
           ],
-          reachFeet: 5,
+          reachFeet: PositiveInteger(5),
         }),
       ],
     },
@@ -615,8 +621,12 @@ function monsterMultiDamageStatBlock(): StatBlockRecord {
               damageType: "piercing",
               amount: {
                 kind: "fixed",
-                expr: { dice: 1, dieSize: 4, flat: 1 },
-                static: 3,
+                expr: {
+                  dice: PositiveInteger(1),
+                  dieSize: 4,
+                  flat: Integer(1),
+                },
+                static: PositiveInteger(3),
               },
             },
             {
@@ -624,8 +634,8 @@ function monsterMultiDamageStatBlock(): StatBlockRecord {
               damageType: "poison",
               amount: {
                 kind: "fixed",
-                expr: { dice: 1, dieSize: 6 },
-                static: 3,
+                expr: { dice: PositiveInteger(1), dieSize: 6 },
+                static: PositiveInteger(3),
               },
             },
           ],
@@ -1423,7 +1433,7 @@ describe("battle runtime: Stat Block actions", () => {
           {
             ordinal: resourceOrdinal(1),
             ownership: "each",
-            limit: { kind: "daily", uses: 1 },
+            limit: { kind: "daily", uses: PositiveInteger(1) },
           },
         ],
       },
@@ -1841,7 +1851,7 @@ describe("battle runtime: Stat Block actions", () => {
           {
             ordinal: resourceOrdinal(1),
             ownership: "each",
-            limit: { kind: "daily", uses: 1 },
+            limit: { kind: "daily", uses: PositiveInteger(1) },
           },
         ],
       },
@@ -1927,7 +1937,7 @@ describe("battle runtime: Stat Block actions", () => {
           {
             ordinal: resourceOrdinal(1),
             ownership: "each",
-            limit: { kind: "daily", uses: 1 },
+            limit: { kind: "daily", uses: PositiveInteger(1) },
           },
         ],
       },
@@ -2008,7 +2018,7 @@ describe("battle runtime: Stat Block actions", () => {
               dispatches: [
                 {
                   procedureOrdinal: authoredProcedureOrdinal(1),
-                  count: { kind: "literal", value: 1 },
+                  count: { kind: "literal", value: PositiveInteger(1) },
                 },
               ],
             }),
@@ -2022,7 +2032,7 @@ describe("battle runtime: Stat Block actions", () => {
           {
             ...firstResource,
             ownership: "shared",
-            limit: { kind: "daily", uses: 2 },
+            limit: { kind: "daily", uses: PositiveInteger(2) },
           },
           ...remainingResources,
         ],
@@ -2151,11 +2161,11 @@ describe("battle runtime: Stat Block actions", () => {
               dispatches: [
                 {
                   procedureOrdinal: authoredProcedureOrdinal(1),
-                  count: { kind: "literal", value: 1 },
+                  count: { kind: "literal", value: PositiveInteger(1) },
                 },
                 {
                   procedureOrdinal: authoredProcedureOrdinal(2),
-                  count: { kind: "literal", value: 1 },
+                  count: { kind: "literal", value: PositiveInteger(1) },
                 },
               ],
             }),
@@ -2169,7 +2179,7 @@ describe("battle runtime: Stat Block actions", () => {
           {
             ...firstResource,
             ownership: "shared",
-            limit: { kind: "daily", uses: 2 },
+            limit: { kind: "daily", uses: PositiveInteger(2) },
           },
           ...remainingResources,
         ],
@@ -2439,23 +2449,8 @@ describe("battle runtime: Stat Block actions", () => {
     );
   });
 
-  test("Stat Block Multiattack projection rejects a dispatch without a positive literal count", () => {
-    const projected = projectAuthoredStatBlock(
-      monsterMultiattackStatBlock({ scimitarCount: 0 }),
-    );
-
-    expect(projected).toEqual(
-      Result.fail({
-        tag: "battleStatBlockProjectionFailure",
-        reason: "unsupportedProcedureBinding",
-        issues: [
-          {
-            section: "actions",
-            procedureOrdinal: authoredProcedureOrdinal(3),
-          },
-        ],
-      }),
-    );
+  test("Stat Block Multiattack construction rejects a dispatch without a positive literal count", () => {
+    expect(() => monsterMultiattackStatBlock({ scimitarCount: 0 })).toThrow();
   });
 
   test("Stat Block action bindings preserve shared resource identity by ordinal", () => {
@@ -2519,11 +2514,11 @@ describe("battle runtime: Stat Block actions", () => {
               dispatches: [
                 {
                   procedureOrdinal: authoredProcedureOrdinal(1),
-                  count: { kind: "literal", value: 1 },
+                  count: { kind: "literal", value: PositiveInteger(1) },
                 },
                 {
                   procedureOrdinal: authoredProcedureOrdinal(2),
-                  count: { kind: "literal", value: 1 },
+                  count: { kind: "literal", value: PositiveInteger(1) },
                 },
               ],
             }),
@@ -2593,7 +2588,7 @@ describe("battle runtime: Stat Block actions", () => {
             dispatches: [
               {
                 procedureOrdinal: authoredProcedureOrdinal(1),
-                count: { kind: "literal", value: 2 },
+                count: { kind: "literal", value: PositiveInteger(2) },
               },
             ],
           }),
