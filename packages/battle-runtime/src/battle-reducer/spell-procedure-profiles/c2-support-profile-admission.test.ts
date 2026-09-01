@@ -485,6 +485,57 @@ function appendActivationPhase(mechanics: SpellMechanics): SpellMechanics {
   return { ...mechanics, phases: [...mechanics.phases, firstPhase] };
 }
 
+function removeOngoingCharacteristicEffect(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") return mechanics;
+  const malformed = { ...mechanics };
+  // This mutation intentionally violates the Surface non-empty tuple to
+  // exercise the runtime admission boundary.
+  Object.defineProperty(malformed, "operations", {
+    configurable: true,
+    enumerable: true,
+    value: [],
+    writable: true,
+  });
+  return malformed;
+}
+
+function removeActivationCharacteristicEffect(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "activation") return mechanics;
+  const malformed = { ...mechanics };
+  const phases = mechanics.phases.map((phase) => {
+    const malformedPhase = { ...phase };
+    if (phase.kind === "direct") {
+      Object.defineProperty(malformedPhase, "effects", {
+        configurable: true,
+        enumerable: true,
+        value: [],
+        writable: true,
+      });
+    } else {
+      Object.defineProperty(malformedPhase, "onFail", {
+        configurable: true,
+        enumerable: true,
+        value: { kind: "none" },
+        writable: true,
+      });
+    }
+    return malformedPhase;
+  });
+  // These mutations intentionally violate the Surface phase/effect shape;
+  // the parser receives the malformed graph at this test boundary.
+  Object.defineProperty(malformed, "phases", {
+    configurable: true,
+    enumerable: true,
+    value: phases,
+    writable: true,
+  });
+  return malformed;
+}
+
 describe("C2 support profile static admission", () => {
   test.each([
     ["damage reduction", "barkskin", damageReductionProfile],
@@ -500,6 +551,73 @@ describe("C2 support profile static admission", () => {
           mechanicsSource(spellAdmissionSource(spellRecord(spellId))),
         ),
       ).toEqual({ tag: "notRepresented" });
+    },
+  );
+
+  test.each([
+    [
+      "damage reduction operation deletion",
+      "resistance",
+      damageReductionProfile,
+      removeOngoingCharacteristicEffect,
+      "damageReduction",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "roll modifier ongoing effect deletion",
+      "bless",
+      rollModifierProfile,
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "roll modifier activation effect deletion",
+      "bane",
+      rollModifierProfile,
+      removeActivationCharacteristicEffect,
+      "rollModifier",
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    ],
+    [
+      "scalar buff activation effect deletion",
+      "longstrider",
+      scalarBuffProfile,
+      removeActivationCharacteristicEffect,
+      "scalarBuff",
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    ],
+    [
+      "scalar buff ongoing effect deletion",
+      "barkskin",
+      scalarBuffProfile,
+      removeOngoingCharacteristicEffect,
+      "scalarBuff",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "see invisible effect deletion",
+      "see_invisibility",
+      seeInvisibleObserverSightProfile,
+      removeActivationCharacteristicEffect,
+      "seeInvisibleObserverSight",
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    ],
+  ] as const)(
+    "keeps a deleted characteristic effect represented at its exact path",
+    (_label, spellId, profile, update, procedure, mechanicsPath) => {
+      const result = profile.admitMechanics(sourceWith(spellId, update));
+      expect(result.tag, _label).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toEqual(
+        expect.arrayContaining([
+          expectedIssue(
+            procedure,
+            procedure === "damageReduction" ? "damage" : "effect",
+            mechanicsPath,
+          ),
+        ]),
+      );
     },
   );
 
@@ -1697,6 +1815,64 @@ describe("C2 support profile static admission", () => {
           ({ procedure: admittedProcedure }) => admittedProcedure,
         ),
       ).toEqual([procedure]);
+    },
+  );
+
+  test.each([
+    [
+      "resistance operation deletion",
+      "resistance",
+      removeOngoingCharacteristicEffect,
+      "damageReduction",
+    ],
+    [
+      "bless operation deletion",
+      "bless",
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+    ],
+    [
+      "bane effect deletion",
+      "bane",
+      removeActivationCharacteristicEffect,
+      "rollModifier",
+    ],
+    [
+      "longstrider effect deletion",
+      "longstrider",
+      removeActivationCharacteristicEffect,
+      "scalarBuff",
+    ],
+    [
+      "barkskin operation deletion",
+      "barkskin",
+      removeOngoingCharacteristicEffect,
+      "scalarBuff",
+    ],
+    [
+      "see invisibility effect deletion",
+      "see_invisibility",
+      removeActivationCharacteristicEffect,
+      "seeInvisibleObserverSight",
+    ],
+  ] as const)(
+    "does not collide after %s",
+    (_label, spellId, update, procedure) => {
+      const source = sourceWith(spellId, update);
+      const profiles = [
+        ["damageReduction", damageReductionProfile],
+        ["rollModifier", rollModifierProfile],
+        ["scalarBuff", scalarBuffProfile],
+        ["seeInvisibleObserverSight", seeInvisibleObserverSightProfile],
+        ["heldLight", heldLightProfile],
+      ] as const;
+      const representedProcedures = profiles.flatMap(
+        ([candidateProcedure, profile]) =>
+          profile.admitMechanics(source).tag === "notRepresented"
+            ? []
+            : [candidateProcedure],
+      );
+      expect(representedProcedures).toEqual([procedure]);
     },
   );
 });

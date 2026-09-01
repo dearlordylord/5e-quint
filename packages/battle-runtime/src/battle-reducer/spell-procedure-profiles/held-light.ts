@@ -75,6 +75,8 @@ import {
   isSpellCanonicalDurationValue,
   spellOngoingOperationOccurrences,
   spellOngoingOperationUnsupportedFacts,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
@@ -89,7 +91,6 @@ import {
 } from "./spell-mechanics-admission.ts";
 import {
   spellDurationEndingPath,
-  spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
@@ -99,6 +100,8 @@ import {
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+
+const FIRST_ORDINAL = PositiveInteger(1);
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,
@@ -388,43 +391,35 @@ function heldLightFactsFromMechanics(
     ) {
       pushIssue("duration", spellDurationValuePath());
     }
-    for (const [index] of (
-      mechanics.duration.value.upcastTiers ?? []
-    ).entries()) {
-      pushIssue(
-        "durationExtension",
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      );
-    }
-    const endings = mechanics.duration.earlyEnd ?? [];
-    const firstEnding = endings[0];
+    const durationChildren = spellDurationChildCoordinates(mechanics.duration);
+    const firstEnding = durationChildren.find(
+      (child) => child.branch === "ending" && child.ordinal === FIRST_ORDINAL,
+    );
     if (
-      firstEnding === undefined ||
-      firstEnding.kind !== "caster_recasts_spell"
+      firstEnding?.branch !== "ending" ||
+      firstEnding.ending.kind !== "earlyEnd" ||
+      firstEnding.ending.trigger.kind !== "caster_recasts_spell"
     ) {
-      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
-    }
-    for (const [index] of endings.entries()) {
-      if (index > 0) {
-        pushIssue(
-          "durationEnding",
-          spellDurationEndingPath(PositiveInteger(index + 1)),
-        );
-      }
-    }
-    if (mechanics.duration.permanentAfter !== undefined) {
       pushIssue(
         "durationEnding",
-        spellDurationEndingPath(PositiveInteger(endings.length + 1)),
+        firstEnding === undefined
+          ? spellDurationEndingPath(FIRST_ORDINAL)
+          : spellDurationChildPath(firstEnding),
       );
+    }
+    for (const child of durationChildren) {
+      if (child.branch === "extension") {
+        pushIssue("durationExtension", spellDurationChildPath(child));
+      } else if (child.ordinal !== FIRST_ORDINAL) {
+        pushIssue("durationEnding", spellDurationChildPath(child));
+      }
     }
   } else if (mechanics.duration.kind === "slot_tiered") {
     pushIssue("duration", spellDurationValuePath());
-    for (const [index] of mechanics.duration.tiers.entries()) {
-      pushIssue(
-        "durationExtension",
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      );
+    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+      if (child.branch === "extension") {
+        pushIssue("durationExtension", spellDurationChildPath(child));
+      }
     }
   } else {
     pushIssue("duration", spellDurationValuePath());

@@ -7,43 +7,10 @@ import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
-//
-// The rollModifier Spell Procedure Profile: SRD spells (Bless, Bane, Guidance,
-// Resistance, Shield of Faith and similar) that grant a persistent d20-roll
-// modifier or a roll-mode rider on one or more targets, with either cantrip
-// access (Guidance, Resistance) or prepared+slot access (Bless, Bane).
-//
-// What lives here (the public face of the profile):
-//   - admit()           — combines cantrip and prepared admission. Was
-//                         supportedCantripRollModifierSpellProfile and
-//                         supportedPreparedRollModifierSpellProfile in
-//                         spells-profiles-support.ts.
-//   - resolve()         — was resolveRollModifierSpellAct in
-//                         spells-resolve-support-effects.ts.
-//   - applyEffect       — both same-effect-for-targets and per-target
-//                         variants. Were applyRollModifierSpellEffect and
-//                         applyRollModifierSpellEffectsByTarget in
-//                         spells-active-effects.ts.
-//   - discoverCastAct() — was the rollModifier branch in
-//                         spells-discovery.ts:discoverBattleActs.
-//   - castSummary()     — was the rollModifier branch in
-//                         spellInvocationCastSummary.
-//
-// What stays in shared infrastructure files (imported back here):
-//   - rollModifierSpellProjection + projection sub-helpers
-//     (rollModifierActiveEffect, rollModifierAbilityCheckRollModeEffect,
-//     rollModifierSpellTargeting, rollModifierSkillFilter) — entangled with
-//     scalarBuff and temporaryAbilityCheckRollMode; full extraction is a separate
-//     sweep.
-//   - rollModifierSpellTargetSelection / EffectSelection / AffectedTargets —
-//     ~400 lines in spells-resolve-target-selection.ts. Moveable later.
-//   - Hole builders (spellRollModifierSkillChoiceHole etc.) in
-//     spells-damage-fills.ts — moveable later when the hole subsystem migrates.
-//   - The metamagic table entry — same migration story as damageReduction.
-
 import {
   movementFeet,
   PositiveInteger,
+  type PositiveInteger as PositiveIntegerType,
   spellSlotLevel,
   type MovementFeet as MovementFeetType,
   type SpellSlotLevel,
@@ -97,6 +64,7 @@ import {
   rollModifierDelta,
   rollModifierKindsAreSupported,
   rollModifierSkillFilter,
+  type RollModifierSkillProjection,
   scalarBuffSpellRangeFeet,
 } from "../spells-profiles-support.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
@@ -147,8 +115,11 @@ import {
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
+  spellProcedureHasCompleteSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  spellPositiveIntegerFromSurface,
+  spellSlotLevelFromSurface,
   type SpellAttachmentRejection,
   type SpellAreaAttachmentAdmissionResult,
   type SpellMechanicsAdmissionSource,
@@ -237,12 +208,12 @@ type RollModifierNumericDelta = Exclude<
 >;
 type RollModifierTargetCountProjection =
   | { readonly kind: "allLegalTargets" }
-  | { readonly kind: "fixed"; readonly count: number }
+  | { readonly kind: "fixed"; readonly count: PositiveIntegerType }
   | {
       readonly kind: "linear";
-      readonly base: number;
-      readonly baseLevel: number;
-      readonly perSlotAboveBase: number;
+      readonly base: PositiveIntegerType;
+      readonly baseLevel: SpellSlotLevel;
+      readonly perSlotAboveBase: PositiveIntegerType;
     };
 type RollModifierTargetingProjection =
   | { readonly kind: "selfAndChosenLegalTargets" }
@@ -262,8 +233,7 @@ type RollModifierSelfAndChosenLegalTargetsProjection = Extract<
 type RollModifierNumericEffectProjection = {
   readonly on: readonly BattleD20RollModifierKind[];
   readonly delta: RollModifierNumericDelta;
-  readonly skill: Skill | null;
-  readonly skillChoices: readonly Skill[] | null;
+  readonly skill: RollModifierSkillProjection;
 };
 type RollModifierAbilityCheckEffectProjection = {
   readonly abilityChoices: readonly Ability[];
@@ -359,6 +329,11 @@ const ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS = [
   "kind",
   "shape",
   "origin",
+] as const;
+const ROLL_MODIFIER_SCHOOLS = [
+  "divination",
+  "enchantment",
+  "transmutation",
 ] as const;
 const FIRST_ORDINAL = PositiveInteger(1);
 
@@ -462,21 +437,36 @@ function rollModifierTargetCountProjection(
   spellLevel: number,
 ): RollModifierTargetCountProjection | undefined {
   if (selection.mode === "one") {
-    return { kind: "fixed", count: 1 };
+    return { kind: "fixed", count: PositiveInteger(1) };
   }
   if (selection.mode === "any_number") {
     return { kind: "allLegalTargets" };
   }
   const count = selection.count;
   if (typeof count === "number") {
-    return { kind: "fixed", count };
+    const fixedCount = spellPositiveIntegerFromSurface(count);
+    return fixedCount === undefined
+      ? undefined
+      : { kind: "fixed", count: fixedCount };
   }
   if (count.kind !== "linear") return undefined;
+  const base = spellPositiveIntegerFromSurface(count.base);
+  const perSlotAboveBase = spellPositiveIntegerFromSurface(
+    count.perSlotAboveBase,
+  );
+  const baseLevel = spellSlotLevelFromSurface(count.baseLevel ?? spellLevel);
+  if (
+    base === undefined ||
+    perSlotAboveBase === undefined ||
+    baseLevel === undefined
+  ) {
+    return undefined;
+  }
   return {
     kind: "linear",
-    base: count.base,
-    baseLevel: count.baseLevel ?? spellLevel,
-    perSlotAboveBase: count.perSlotAboveBase,
+    base,
+    baseLevel,
+    perSlotAboveBase,
   };
 }
 
@@ -571,32 +561,37 @@ type RollModifierAttachmentIssueFact = Extract<
 function rollModifierAttachmentFailedFact(
   rejection: SpellAttachmentRejection,
 ): RollModifierAttachmentIssueFact {
-  switch (rejection.failedFact) {
-    case "attachment":
-    case "selection":
-    case "rangeOrigin":
-    case "typeFilter":
-    case "stateFilter":
-    case "visibility":
-    case "creatureSizeFilter":
-    case "relativePosition":
-    case "objectFilter":
-    case "creatureDisposition":
-    case "castingRequirement":
-    case "repeatsAllowed":
-    case "occupantDispositionFilter":
-    case "occupantPerceptionFilter":
-    case "excludedAreas":
-      return rejection.failedFact;
-    case "mode":
-    case "targetKinds":
-    case "objectOrLocationMaxDimensionFeet":
-    case "count":
-    case "disposition":
-    case "shape":
-    case "origin":
-      return "attachment";
-  }
+  return Match.value(rejection.failedFact).pipe(
+    Match.whenOr(
+      "attachment",
+      "selection",
+      "rangeOrigin",
+      "typeFilter",
+      "stateFilter",
+      "visibility",
+      "creatureSizeFilter",
+      "relativePosition",
+      "objectFilter",
+      "creatureDisposition",
+      "castingRequirement",
+      "repeatsAllowed",
+      "occupantDispositionFilter",
+      "occupantPerceptionFilter",
+      "excludedAreas",
+      (fact) => fact,
+    ),
+    Match.whenOr(
+      "mode",
+      "targetKinds",
+      "objectOrLocationMaxDimensionFeet",
+      "count",
+      "disposition",
+      "shape",
+      "origin",
+      () => "attachment" as const,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function isRollModifierRepresentation(
@@ -610,12 +605,6 @@ function isRollModifierRepresentation(
   }
   return Match.value(mechanics).pipe(
     Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const hasRollEffectRole = ongoing.operations.some(
-        ({ effect }) =>
-          effect.kind === "modify_roll_numeric" ||
-          effect.kind === "modify_roll_advantage",
-      );
-      if (!hasRollEffectRole) return false;
       const hasSupportedRangeRole =
         ongoing.range.kind === "self" ||
         ongoing.range.kind === "point" ||
@@ -626,6 +615,29 @@ function isRollModifierRepresentation(
       const hasPassiveTriggerRole = ongoing.operations.some(
         ({ trigger }) => trigger.kind === "passive",
       );
+      const hasRollEffectRole = ongoing.operations.some(
+        ({ effect }) =>
+          effect.kind === "modify_roll_numeric" ||
+          effect.kind === "modify_roll_advantage",
+      );
+      const hasRollModifierSchool = ROLL_MODIFIER_SCHOOLS.some(
+        (school) => school === ongoing.school,
+      );
+      if (!hasRollEffectRole) {
+        return spellProcedureHasCompleteSignature([
+          {
+            name: "castingTime",
+            present: ongoing.castingTime.kind === "action",
+          },
+          { name: "range", present: hasSupportedRangeRole },
+          { name: "attachment", present: hasAttachmentRole },
+          {
+            name: "duration",
+            present: isRollModifierDuration(ongoing.duration),
+          },
+          { name: "rollModifierSchool", present: hasRollModifierSchool },
+        ]);
+      }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
@@ -644,9 +656,6 @@ function isRollModifierRepresentation(
       });
     }),
     Match.when({ family: "activation" }, (activation) => {
-      if (!activation.phases.some(({ kind }) => kind === "save_gate")) {
-        return false;
-      }
       const hasNumericFailureEffect = activation.phases.some(
         (phase) =>
           phase.kind === "save_gate" &&
@@ -655,6 +664,33 @@ function isRollModifierRepresentation(
       const hasTargetAttachmentRole = activation.phases.some(
         (phase) => "attachment" in phase && phase.attachment.kind === "hole",
       );
+      const hasSaveGatePhaseRole = activation.phases.some(
+        ({ kind }) => kind === "save_gate",
+      );
+      const hasConcentrationDurationRole =
+        activation.duration.kind === "concentration" &&
+        isSpellCanonicalDurationValue(activation.duration.upTo);
+      if (!hasNumericFailureEffect) {
+        return spellProcedureHasCompleteSignature([
+          {
+            name: "castingTime",
+            present: activation.castingTime.kind === "action",
+          },
+          {
+            name: "range",
+            present:
+              activation.range.kind === "point" ||
+              activation.range.kind === "self" ||
+              activation.range.kind === "touch",
+          },
+          {
+            name: "concentrationDuration",
+            present: hasConcentrationDurationRole,
+          },
+          { name: "targetAttachment", present: hasTargetAttachmentRole },
+          { name: "saveGatePhase", present: hasSaveGatePhaseRole },
+        ]);
+      }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
@@ -713,8 +749,7 @@ function rollModifierNumericEffectProjection(
   return {
     on: effect.on,
     delta,
-    skill: skillFilter.kind === "fixed" ? skillFilter.skill : null,
-    skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
+    skill: skillFilter,
   };
 }
 
@@ -998,8 +1033,9 @@ function rollModifierActivationBranchProjection(
       pushIssue("usageLimit", spellActivationPhasePath(occurrence.ordinal));
     }
   }
+  const saveGateOccurrences = rollModifierSaveGateOccurrences(mechanics);
   const expected = rollModifierSupportedSaveGateOccurrence(mechanics);
-  const selectedOrdinal = expected?.ordinal;
+  const selectedOrdinal = expected?.ordinal ?? saveGateOccurrences[0]?.ordinal;
   if (mechanics.phases.length !== 1 || selectedOrdinal !== FIRST_ORDINAL) {
     for (const occurrence of phases) {
       if (occurrence.ordinal === selectedOrdinal) continue;
@@ -1010,7 +1046,17 @@ function rollModifierActivationBranchProjection(
     }
   }
   if (expected === undefined) {
-    pushIssue("saveGate", spellActivationPhasePath(FIRST_ORDINAL));
+    const candidate = saveGateOccurrences[0];
+    if (candidate === undefined) {
+      pushIssue("saveGate", spellActivationPhasePath(FIRST_ORDINAL));
+    } else if (candidate.phase.onFail.kind !== "modify_roll_numeric") {
+      pushIssue(
+        "effect",
+        spellActivationEffectPath(candidate.ordinal, FIRST_ORDINAL),
+      );
+    } else {
+      pushIssue("saveGate", spellActivationPhasePath(candidate.ordinal));
+    }
     return { tag: "unsupported" };
   }
   const phase = expected.phase;
@@ -1221,16 +1267,28 @@ function rollModifierNumericActiveEffect(
   readonly effect: RollModifierD20Effect;
   readonly skillChoices: readonly Skill[] | null;
 } {
+  const skill = Match.value(effect.skill).pipe(
+    Match.when({ kind: "none" }, () => ({ skill: null, skillChoices: null })),
+    Match.when({ kind: "fixed" }, ({ skill }) => ({
+      skill,
+      skillChoices: null,
+    })),
+    Match.when({ kind: "choice" }, ({ options }) => ({
+      skill: null,
+      skillChoices: options,
+    })),
+    Match.exhaustive,
+  );
   return {
     effect: {
       kind: "d20RollModifier",
       sourceCombatantId: actorId,
       on: effect.on,
       delta: effect.delta,
-      skill: effect.skill,
+      skill: skill.skill,
       expiresAt,
     },
-    skillChoices: effect.skillChoices,
+    skillChoices: skill.skillChoices,
   };
 }
 

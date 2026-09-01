@@ -61,6 +61,7 @@ import {
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
+  spellProcedureHasCompleteSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
@@ -180,27 +181,28 @@ function isSeeInvisibleObserverSightRepresentation(
   if (mechanics.family !== "activation") return false;
   const hasSightEffect =
     seeInvisibleSightEffectOccurrences(mechanics).length > 0;
-  if (!hasSightEffect) return false;
   const hasExpectedDuration =
     mechanics.duration.kind === "timed" &&
     mechanics.duration.value.unit === "hour";
   const hasSingleDirectPhase =
     mechanics.phases.length === 1 && mechanics.phases[0]?.kind === "direct";
+  const witnesses = [
+    {
+      name: "spellLevel",
+      present: mechanics.level === SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL,
+    },
+    { name: "selfRange", present: mechanics.range.kind === "self" },
+    { name: "hourDuration", present: hasExpectedDuration },
+    {
+      name: "actionCastingTime",
+      present: mechanics.castingTime.kind === "action",
+    },
+    { name: "singleDirectPhase", present: hasSingleDirectPhase },
+  ] as const;
+  if (!hasSightEffect) return spellProcedureHasCompleteSignature(witnesses);
   return spellProcedureHasRedundantSignature({
     kind: "twoWitnessesMayBeMissing",
-    witnesses: [
-      {
-        name: "spellLevel",
-        present: mechanics.level === SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL,
-      },
-      { name: "selfRange", present: mechanics.range.kind === "self" },
-      { name: "hourDuration", present: hasExpectedDuration },
-      {
-        name: "actionCastingTime",
-        present: mechanics.castingTime.kind === "action",
-      },
-      { name: "singleDirectPhase", present: hasSingleDirectPhase },
-    ],
+    witnesses,
   });
 }
 
@@ -316,7 +318,10 @@ function seeInvisibleObserverSightMechanicsAdmission(
   const selectedEffect = effects.find(
     (_effect, index) => PositiveInteger(index + 1) === selectedEffectOrdinal,
   );
-  if (selectedEffect?.kind !== "see_invisible_and_ethereal") {
+  if (
+    effects.length > 0 &&
+    selectedEffect?.kind !== "see_invisible_and_ethereal"
+  ) {
     pushIssue(
       "effect",
       spellActivationEffectPath(phaseOrdinal, selectedEffectOrdinal),

@@ -10,33 +10,6 @@ import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
-//
-// The scalarBuff Spell Procedure Profile: prepared spells that grant a scalar
-// creature buff such as Temporary Hit Points, Hit Point Maximum increase, Armor
-// Class floor/bonus, Speed increase, or special Speed grant, with self or
-// target-list targeting and Magic Action or Bonus Action casting.
-//
-// What lives here:
-//   - admit()           - was supportedPreparedScalarBuffSpellProfile in
-//                         spells-profiles-support.ts
-//   - discoverCastAct() - was the scalarBuff branch in
-//                         spells-discovery.ts
-//   - castSummary()     - was the scalarBuff branch in
-//                         spellInvocationCastSummary
-//   - resolve()         - was resolveScalarBuffSpellAct in
-//                         spells-resolve-support-effects.ts
-//   - applyEffect()     - was applyScalarBuffSpellEffect in
-//                         spells-active-effects.ts
-//
-// What stays in shared infrastructure:
-//   - scalarBuffSpellActionCost / RangeFeet / Targeting / Effect stay in
-//     spells-profiles-support.ts because later bonus-action/movement profiles
-//     still share those projection helpers.
-//   - scalarBuffSpellTargetSelection stays in spells-resolve-target-selection.ts
-//     while fill and targeting families remain shared.
-//   - spellScalarBuffRollHole and fill validation stay with hole/fill helpers.
-//   - The metamagic table entry remains for the Wave 9 cross-cutting cleanup.
-
 import {
   isEffectAtom,
   topLevelSpellCastingTime,
@@ -54,7 +27,13 @@ import type {
 import {
   movementDeltaFeet,
   movementFeet,
+  NonNegativeInteger,
   PositiveInteger,
+  HP,
+  type NonNegativeInteger as NonNegativeIntegerType,
+  type PositiveInteger as PositiveIntegerType,
+  type SpellSlotLevel,
+  type HP as HPType,
 } from "@dnd/shared/types";
 import { BATTLE_SPECIAL_SPEED_KINDS } from "../../battle-subjects.ts";
 import {
@@ -139,8 +118,11 @@ import {
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
+  spellProcedureHasCompleteSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  spellPositiveIntegerFromSurface,
+  spellSlotLevelFromSurface,
   type SpellAttachmentRejection,
   type SpellMechanicsAdmissionSource,
   type SpellCanonicalDurationValue,
@@ -252,12 +234,12 @@ type ScalarBuffDuration =
       { readonly kind: "concentration" }
     > & { readonly upTo: SpellCanonicalDurationValue });
 type ScalarBuffTargetCountProjection =
-  | { readonly kind: "fixed"; readonly count: number }
+  | { readonly kind: "fixed"; readonly count: PositiveIntegerType }
   | {
       readonly kind: "linear";
-      readonly base: number;
-      readonly baseLevel: number;
-      readonly perSlotAboveBase: number;
+      readonly base: PositiveIntegerType;
+      readonly baseLevel: SpellSlotLevel;
+      readonly perSlotAboveBase: PositiveIntegerType;
     };
 type ScalarBuffTargetingProjection =
   | { readonly kind: "self" }
@@ -267,20 +249,25 @@ type ScalarBuffTargetingProjection =
       readonly requiredTargetDisposition: "unrestricted" | "willing";
     };
 type ScalarBuffMaxHitPointProjection = {
-  readonly base: number;
-  readonly perLevel: number;
-  readonly startingAtLevel: number;
+  readonly base: HPType;
+  readonly perLevel: HPType;
+  readonly startingAtLevel: PositiveIntegerType;
+};
+type ScalarBuffDiceExprProjection = {
+  readonly dice: NonNegativeIntegerType;
+  readonly dieSize: PositiveIntegerType;
+  readonly flat: HPType;
 };
 type ScalarBuffTemporaryHitPointProjection =
-  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | { readonly kind: "fixed"; readonly expr: ScalarBuffDiceExprProjection }
   | {
       readonly kind: "linear";
-      readonly baseDice: number;
-      readonly baseDieSize: number;
-      readonly baseFlat: number;
-      readonly perLevelDice: number;
-      readonly perLevelFlat: number;
-      readonly startingAtLevel: number;
+      readonly baseDice: NonNegativeIntegerType;
+      readonly baseDieSize: PositiveIntegerType;
+      readonly baseFlat: HPType;
+      readonly perLevelDice: NonNegativeIntegerType;
+      readonly perLevelFlat: HPType;
+      readonly startingAtLevel: PositiveIntegerType;
     };
 type ScalarBuffEffectProjection =
   | {
@@ -422,11 +409,8 @@ type ScalarBuffSupportedBranch = Extract<
 >;
 
 function isScalarBuffEffectKind(
-  effect: unknown,
+  effect: EffectAtom | OngoingEffect,
 ): effect is ScalarBuffSurfaceEffect {
-  if (typeof effect !== "object" || effect === null || !("kind" in effect)) {
-    return false;
-  }
   return (
     effect.kind === "grant_temp_hp" ||
     effect.kind === "grant_speed" ||
@@ -480,25 +464,52 @@ function scalarBuffActivationEffectOccurrences(
   );
 }
 
+function nonNegativeIntegerFromSurface(
+  value: number,
+): NonNegativeInteger | undefined {
+  return Number.isInteger(value) && value >= 0
+    ? NonNegativeInteger(value)
+    : undefined;
+}
+
+function hitPointAmountFromSurface(value: number): HP | undefined {
+  return Number.isInteger(value) && value >= 0 ? HP.make(value) : undefined;
+}
+
 function scalarBuffTargetCountProjection(
   selection: TargetSelection,
   spellLevel: number,
 ): ScalarBuffTargetCountProjection | undefined {
   if (selection.mode === "one") {
-    return { kind: "fixed", count: 1 };
+    return { kind: "fixed", count: PositiveInteger(1) };
   }
   if (selection.mode !== "choose_up_to" || selection.count === undefined) {
     return undefined;
   }
   if (typeof selection.count === "number") {
-    return { kind: "fixed", count: selection.count };
+    const count = spellPositiveIntegerFromSurface(selection.count);
+    return count === undefined ? undefined : { kind: "fixed", count };
   }
   if (selection.count.kind !== "linear") return undefined;
+  const base = spellPositiveIntegerFromSurface(selection.count.base);
+  const perSlotAboveBase = spellPositiveIntegerFromSurface(
+    selection.count.perSlotAboveBase,
+  );
+  const baseLevel = spellSlotLevelFromSurface(
+    selection.count.baseLevel ?? spellLevel,
+  );
+  if (
+    base === undefined ||
+    perSlotAboveBase === undefined ||
+    baseLevel === undefined
+  ) {
+    return undefined;
+  }
   return {
     kind: "linear",
-    base: selection.count.base,
-    baseLevel: selection.count.baseLevel ?? spellLevel,
-    perSlotAboveBase: selection.count.perSlotAboveBase,
+    base,
+    baseLevel,
+    perSlotAboveBase,
   };
 }
 
@@ -584,22 +595,24 @@ function scalarBuffMaxHitPointProjection(
   amount: DiceAmount,
   spellLevel: number,
 ): ScalarBuffMaxHitPointProjection | undefined {
-  const deterministic = (expr: DiceExpr): number | undefined =>
+  const deterministic = (expr: DiceExpr): HP | undefined =>
     expr.dice === 0 &&
     expr.dieSize === 1 &&
     expr.spellcastingMod !== true &&
     expr.abilityModifier === undefined
-      ? (expr.flat ?? 0)
+      ? hitPointAmountFromSurface(expr.flat ?? 0)
       : undefined;
-  const deterministicDelta = (expr: DiceExprDelta): number | undefined =>
+  const deterministicDelta = (expr: DiceExprDelta): HP | undefined =>
     (expr.dice ?? 0) === 0 && (expr.dieSize ?? 1) === 1
-      ? (expr.flat ?? 0)
+      ? hitPointAmountFromSurface(expr.flat ?? 0)
       : undefined;
+  const startingAtLevel = spellPositiveIntegerFromSurface(spellLevel);
+  if (startingAtLevel === undefined) return undefined;
   if (amount.kind === "fixed") {
     const base = deterministic(amount.expr);
     return base === undefined
       ? undefined
-      : { base, perLevel: 0, startingAtLevel: spellLevel };
+      : { base, perLevel: HP.make(0), startingAtLevel };
   }
   if (
     amount.kind !== "linear_per_level" ||
@@ -610,9 +623,28 @@ function scalarBuffMaxHitPointProjection(
   }
   const base = deterministic(amount.base);
   const perLevel = deterministicDelta(amount.perLevel);
+  const amountStartingAtLevel = spellPositiveIntegerFromSurface(
+    amount.startingAtLevel,
+  );
   return base === undefined || perLevel === undefined
     ? undefined
-    : { base, perLevel, startingAtLevel: amount.startingAtLevel };
+    : amountStartingAtLevel === undefined
+      ? undefined
+      : { base, perLevel, startingAtLevel: amountStartingAtLevel };
+}
+
+function scalarBuffDiceExprProjection(
+  expr: DiceExpr,
+): ScalarBuffDiceExprProjection | undefined {
+  if (expr.spellcastingMod === true || expr.abilityModifier !== undefined) {
+    return undefined;
+  }
+  const dice = nonNegativeIntegerFromSurface(expr.dice);
+  const dieSize = spellPositiveIntegerFromSurface(expr.dieSize);
+  const flat = hitPointAmountFromSurface(expr.flat ?? 0);
+  return dice === undefined || dieSize === undefined || flat === undefined
+    ? undefined
+    : { dice, dieSize, flat };
 }
 
 function scalarBuffTemporaryHitPointProjection(
@@ -620,10 +652,8 @@ function scalarBuffTemporaryHitPointProjection(
   spellLevel: number,
 ): ScalarBuffTemporaryHitPointProjection | undefined {
   if (amount.kind === "fixed") {
-    return amount.expr.spellcastingMod === true ||
-      amount.expr.abilityModifier !== undefined
-      ? undefined
-      : { kind: "fixed", expr: amount.expr };
+    const expr = scalarBuffDiceExprProjection(amount.expr);
+    return expr === undefined ? undefined : { kind: "fixed", expr };
   }
   if (
     amount.kind !== "linear_per_level" ||
@@ -636,14 +666,34 @@ function scalarBuffTemporaryHitPointProjection(
   ) {
     return undefined;
   }
+  const baseDice = nonNegativeIntegerFromSurface(amount.base.dice);
+  const baseDieSize = spellPositiveIntegerFromSurface(amount.base.dieSize);
+  const baseFlat = hitPointAmountFromSurface(amount.base.flat ?? 0);
+  const perLevelDice = nonNegativeIntegerFromSurface(
+    amount.perLevel?.dice ?? 0,
+  );
+  const perLevelFlat = hitPointAmountFromSurface(amount.perLevel?.flat ?? 0);
+  const startingAtLevel = spellPositiveIntegerFromSurface(
+    amount.startingAtLevel,
+  );
+  if (
+    baseDice === undefined ||
+    baseDieSize === undefined ||
+    baseFlat === undefined ||
+    perLevelDice === undefined ||
+    perLevelFlat === undefined ||
+    startingAtLevel === undefined
+  ) {
+    return undefined;
+  }
   return {
     kind: "linear",
-    baseDice: amount.base.dice,
-    baseDieSize: amount.base.dieSize,
-    baseFlat: amount.base.flat ?? 0,
-    perLevelDice: amount.perLevel?.dice ?? 0,
-    perLevelFlat: amount.perLevel?.flat ?? 0,
-    startingAtLevel: amount.startingAtLevel,
+    baseDice,
+    baseDieSize,
+    baseFlat,
+    perLevelDice,
+    perLevelFlat,
+    startingAtLevel,
   };
 }
 
@@ -755,32 +805,37 @@ function scalarBuffExpiration(
 function scalarBuffAttachmentFailedFact(
   rejection: SpellAttachmentRejection,
 ): ScalarBuffFailedFact {
-  switch (rejection.failedFact) {
-    case "attachment":
-    case "selection":
-    case "rangeOrigin":
-    case "typeFilter":
-    case "stateFilter":
-    case "visibility":
-    case "creatureSizeFilter":
-    case "relativePosition":
-    case "objectFilter":
-    case "creatureDisposition":
-    case "castingRequirement":
-    case "repeatsAllowed":
-      return rejection.failedFact;
-    case "mode":
-    case "targetKinds":
-    case "objectOrLocationMaxDimensionFeet":
-    case "count":
-    case "disposition":
-    case "shape":
-    case "origin":
-    case "occupantDispositionFilter":
-    case "occupantPerceptionFilter":
-    case "excludedAreas":
-      return "attachment";
-  }
+  return Match.value(rejection.failedFact).pipe(
+    Match.whenOr(
+      "attachment",
+      "selection",
+      "rangeOrigin",
+      "typeFilter",
+      "stateFilter",
+      "visibility",
+      "creatureSizeFilter",
+      "relativePosition",
+      "objectFilter",
+      "creatureDisposition",
+      "castingRequirement",
+      "repeatsAllowed",
+      (fact) => fact,
+    ),
+    Match.whenOr(
+      "mode",
+      "targetKinds",
+      "objectOrLocationMaxDimensionFeet",
+      "count",
+      "disposition",
+      "shape",
+      "origin",
+      "occupantDispositionFilter",
+      "occupantPerceptionFilter",
+      "excludedAreas",
+      () => "attachment" as const,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function scalarBuffIssue(
@@ -912,12 +967,6 @@ function scalarBuffActivationBranchProjection(
   const selectedEffectOccurrences = effects.filter(
     ({ phaseOrdinal }) => phaseOrdinal === selectedPhaseOrdinal,
   );
-  if (selectedEffectOccurrences.length === 0) {
-    pushIssue(
-      "effect",
-      spellActivationEffectPath(selectedPhaseOrdinal, FIRST_ORDINAL),
-    );
-  }
   if (
     expected !== undefined &&
     expected.phaseOrdinal === selectedPhaseOrdinal
@@ -933,22 +982,31 @@ function scalarBuffActivationBranchProjection(
       );
     }
   }
-  const effect =
-    expected?.phaseOrdinal === selectedPhaseOrdinal
-      ? expected.effect
+  const selectedEffect =
+    expected !== undefined && expected.phaseOrdinal === selectedPhaseOrdinal
+      ? expected
       : undefined;
   const effectProjection =
-    effect === undefined || !isScalarBuffEffectKind(effect)
+    selectedEffect === undefined
       ? undefined
-      : scalarBuffEffectProjection(effect, duration, spellLevel);
-  if (effect === undefined || effectProjection === undefined) {
+      : isScalarBuffEffectKind(selectedEffect.effect)
+        ? scalarBuffEffectProjection(
+            selectedEffect.effect,
+            duration,
+            spellLevel,
+          )
+        : undefined;
+  if (selectedEffect === undefined) {
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(selectedPhaseOrdinal, FIRST_ORDINAL),
+    );
+  } else if (effectProjection === undefined) {
     pushIssue(
       "effect",
       spellActivationEffectPath(
         selectedPhaseOrdinal,
-        expected?.phaseOrdinal === selectedPhaseOrdinal
-          ? expected.effectOrdinal
-          : FIRST_ORDINAL,
+        selectedEffect.effectOrdinal,
       ),
     );
   }
@@ -1011,10 +1069,16 @@ function scalarBuffOngoingBranchProjection(
   } else if (targeting.tag === "unsupported") {
     pushIssue("attachment", spellOngoingAttachmentPath());
   }
-  const effect = expected?.operation.effect;
-  const effectProjection = isScalarBuffEffectKind(effect)
-    ? scalarBuffEffectProjection(effect, duration, spellLevel)
-    : undefined;
+  const effectProjection =
+    expected === undefined
+      ? undefined
+      : isScalarBuffEffectKind(expected.operation.effect)
+        ? scalarBuffEffectProjection(
+            expected.operation.effect,
+            duration,
+            spellLevel,
+          )
+        : undefined;
   const effectPath = spellOngoingOperationEffectPath(
     expected?.ordinal ?? PositiveInteger(1),
   );
@@ -1044,10 +1108,6 @@ function isScalarBuffRepresentation(
   }
   return Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) => {
-      const hasScalarEffectRole = scalarBuffActivationEffectOccurrences(
-        activation,
-      ).some(({ effect }) => isScalarBuffEffectKind(effect));
-      if (!hasScalarEffectRole) return false;
       const hasSupportedRangeRole =
         scalarBuffSpellRangeFeet(activation.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(
@@ -1063,6 +1123,28 @@ function isScalarBuffRepresentation(
         (phase) =>
           phase.kind === "direct" && phase.attachment.kind !== "object",
       );
+      const hasScalarEffectRole = scalarBuffActivationEffectOccurrences(
+        activation,
+      ).some(({ effect }) => isScalarBuffEffectKind(effect));
+      const hasScalarAttachmentShape = activation.phases.some(
+        (phase) =>
+          phase.kind === "direct" &&
+          (phase.attachment.kind === "hole" ||
+            (phase.attachment.kind === "self" &&
+              activation.duration.kind === "instantaneous")),
+      );
+      if (!hasScalarEffectRole) {
+        return spellProcedureHasCompleteSignature([
+          { name: "singleDirectPhase", present: hasSingleDirectPhase },
+          { name: "range", present: hasSupportedRangeRole },
+          { name: "duration", present: hasSupportedDurationRole },
+          { name: "castingTime", present: hasSupportedCastingRole },
+          {
+            name: "scalarAttachmentShape",
+            present: hasScalarAttachmentShape,
+          },
+        ]);
+      }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
@@ -1075,11 +1157,6 @@ function isScalarBuffRepresentation(
       });
     }),
     Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const hasScalarEffectRole = ongoing.operations.some(
-        ({ trigger, effect }) =>
-          trigger.kind === "passive" && isScalarBuffEffectKind(effect),
-      );
-      if (!hasScalarEffectRole) return false;
       const hasSupportedCastingRole =
         ongoing.castingTime.kind === "action" ||
         ongoing.castingTime.kind === "bonus_action";
@@ -1087,7 +1164,26 @@ function isScalarBuffRepresentation(
         scalarBuffSpellRangeFeet(ongoing.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(ongoing.duration);
       const hasSupportedAttachmentRole = ongoing.attachment.kind !== "object";
-      const hasSingleOperation = ongoing.operations.length === 1;
+      const hasSingleOperation = ongoing.operations.length <= 1;
+      const hasScalarEffectRole = ongoing.operations.some(({ effect }) =>
+        isScalarBuffEffectKind(effect),
+      );
+      const hasScalarOngoingShape =
+        ongoing.duration.kind === "timed" &&
+        (ongoing.attachment.kind === "self" ||
+          (ongoing.attachment.kind === "hole" &&
+            ongoing.attachment.value.kind === "target" &&
+            ongoing.attachment.value.selection.mode === "one"));
+      if (!hasScalarEffectRole) {
+        return spellProcedureHasCompleteSignature([
+          { name: "singleOperation", present: hasSingleOperation },
+          { name: "castingTime", present: hasSupportedCastingRole },
+          { name: "range", present: hasSupportedRangeRole },
+          { name: "duration", present: hasSupportedDurationRole },
+          { name: "attachment", present: hasSupportedAttachmentRole },
+          { name: "scalarOngoingShape", present: hasScalarOngoingShape },
+        ]);
+      }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [

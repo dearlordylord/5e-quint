@@ -835,13 +835,14 @@ export function rollModifierKindsAreSupported(
   );
 }
 
-export function rollModifierSkillFilter(
-  skillFilter: SkillFilter | undefined,
-):
+export type RollModifierSkillProjection =
   | { readonly kind: "none" }
   | { readonly kind: "fixed"; readonly skill: Skill }
-  | { readonly kind: "choice"; readonly options: readonly Skill[] }
-  | null {
+  | { readonly kind: "choice"; readonly options: readonly Skill[] };
+
+export function rollModifierSkillFilter(
+  skillFilter: SkillFilter | undefined,
+): RollModifierSkillProjection | null {
   if (skillFilter === undefined) {
     return { kind: "none" };
   }

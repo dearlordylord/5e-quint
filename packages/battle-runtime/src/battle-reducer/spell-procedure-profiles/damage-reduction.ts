@@ -68,6 +68,7 @@ import {
   spellOngoingOperationUnsupportedFacts,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
+  spellProcedureHasCompleteSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
@@ -77,6 +78,7 @@ import {
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
+import { Match } from "effect";
 import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
@@ -197,32 +199,37 @@ function damageReductionAttachmentFailedFact(
   DamageReductionFailedFact,
   "attachment" | "rangeOrigin" | "typeFilter" | "stateFilter" | "visibility"
 > {
-  switch (rejection.failedFact) {
-    case "attachment":
-    case "rangeOrigin":
-    case "typeFilter":
-    case "stateFilter":
-    case "visibility":
-      return rejection.failedFact;
-    case "selection":
-    case "mode":
-    case "targetKinds":
-    case "creatureSizeFilter":
-    case "relativePosition":
-    case "objectFilter":
-    case "creatureDisposition":
-    case "objectOrLocationMaxDimensionFeet":
-    case "count":
-    case "repeatsAllowed":
-    case "castingRequirement":
-    case "disposition":
-    case "shape":
-    case "origin":
-    case "occupantDispositionFilter":
-    case "occupantPerceptionFilter":
-    case "excludedAreas":
-      return "attachment";
-  }
+  return Match.value(rejection.failedFact).pipe(
+    Match.whenOr(
+      "attachment",
+      "rangeOrigin",
+      "typeFilter",
+      "stateFilter",
+      "visibility",
+      (fact) => fact,
+    ),
+    Match.whenOr(
+      "selection",
+      "mode",
+      "targetKinds",
+      "creatureSizeFilter",
+      "relativePosition",
+      "objectFilter",
+      "creatureDisposition",
+      "objectOrLocationMaxDimensionFeet",
+      "count",
+      "repeatsAllowed",
+      "castingRequirement",
+      "disposition",
+      "shape",
+      "origin",
+      "occupantDispositionFilter",
+      "occupantPerceptionFilter",
+      "excludedAreas",
+      () => "attachment" as const,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function isDamageReductionRepresentation(
@@ -235,15 +242,25 @@ function isDamageReductionRepresentation(
   const hasDamageReductionEffect = mechanics.operations.some(
     ({ effect }) => effect.kind === "reduce_damage_taken",
   );
-  if (!hasDamageReductionEffect) return false;
-  return spellProcedureHasRedundantSignature({
-    kind: "oneWitnessMayBeMissing",
-    witnesses: [
-      { name: "targetAttachment", present: hasTargetAttachment },
-      { name: "damageReductionEffect", present: hasDamageReductionEffect },
-      { name: "touchRange", present: mechanics.range.kind === "touch" },
-    ],
-  });
+  if (hasDamageReductionEffect) {
+    return spellProcedureHasRedundantSignature({
+      kind: "oneWitnessMayBeMissing",
+      witnesses: [
+        { name: "targetAttachment", present: hasTargetAttachment },
+        { name: "damageReductionEffect", present: hasDamageReductionEffect },
+        { name: "touchRange", present: mechanics.range.kind === "touch" },
+      ],
+    });
+  }
+  return spellProcedureHasCompleteSignature([
+    { name: "targetAttachment", present: hasTargetAttachment },
+    { name: "touchRange", present: mechanics.range.kind === "touch" },
+    {
+      name: "concentrationDuration",
+      present: mechanics.duration.kind === "concentration",
+    },
+    { name: "cantripLevel", present: mechanics.level === 0 },
+  ]);
 }
 
 function damageReductionIssue(
