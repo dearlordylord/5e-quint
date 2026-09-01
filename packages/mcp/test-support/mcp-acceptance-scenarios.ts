@@ -133,6 +133,10 @@ const levelSixRogueExpertiseSkills = [
   "perception",
   "stealth",
 ] as const satisfies ReadonlyArray<Skill>;
+const levelSixRogueWeaponMasteries = [
+  "weapon_spear",
+  "weapon_quarterstaff",
+] as const;
 const levelNineRangerExpertiseDraftId =
   "draft:stdio-level-nine-orc-soldier-ranger-expertise";
 const levelNineRangerExpertiseBattleId =
@@ -189,10 +193,10 @@ export const LEVEL_TEN_FIGHTER_CHARACTER_CREATION_SUPPORT_PROFILE = {
 } satisfies CharacterCreationSupportProfile;
 const levelTenFighterWeaponMasteries = [
   "weapon_longsword",
-  "weapon_dagger",
-  "weapon_shortsword",
   "weapon_spear",
   "weapon_flail",
+  "weapon_greataxe",
+  "weapon_quarterstaff",
 ] as const;
 
 const agentConversationScenarios = [
@@ -2188,10 +2192,7 @@ export async function verifyLevelSixRogueExpertiseSheetScenario(
     wis: 10,
     cha: 13,
   });
-  assertLevelSixRogueExpertiseBuild(
-    finalizedRogue,
-    "finalization.build.proficiencyChoices",
-  );
+  assertLevelSixRogueExpertiseBuild(finalizedRogue, "finalization.build");
 
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   const rogue = characterRow(
@@ -2202,7 +2203,7 @@ export async function verifyLevelSixRogueExpertiseSheetScenario(
   assert.equal(get(rogue, "displayName"), "Orc Soldier Rogue 6");
   assert.equal(get(rogue, "hitPoints.current"), 45);
   assert.equal(get(rogue, "hitPoints.maximum"), 45);
-  assertLevelSixRogueExpertiseBuild(rogue, "build.proficiencyChoices");
+  assertLevelSixRogueExpertiseBuild(rogue, "build");
 }
 
 export async function verifyLevelSixRogueSteadyAimBattleHandoff(
@@ -2241,7 +2242,7 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   const rogueSheet = characterRow(listedBeforeBattle, characterId);
   assert.equal(get(rogueSheet, "status"), "available");
-  assertLevelSixRogueExpertiseBuild(rogueSheet, "build.proficiencyChoices");
+  assertLevelSixRogueExpertiseBuild(rogueSheet, "build");
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -3173,8 +3174,7 @@ async function createAndFinalizeOrcRogueSixWithExpertise(
       choiceFillFromReturnedHole(
         classChoices,
         unitHoleId("rogue_weapon_mastery", "weapon_mastery_options"),
-        "weapon_dagger",
-        "weapon_shortsword",
+        ...levelSixRogueWeaponMasteries,
       ),
       choiceFillFromReturnedHole(
         classChoices,
@@ -4483,9 +4483,21 @@ function unitSummaries(payload: JsonObject, kind: string) {
   return get(payload, `unitsByKind.${kind}`) as Array<{ readonly id: string }>;
 }
 
-function assertLevelSixRogueExpertiseBuild(payload: JsonObject, path: string) {
-  const skillProficiencies = proficiencyChoiceSkills(payload, path, "skill");
-  const expertise = proficiencyChoiceSkills(payload, path, "skill_expertise");
+function assertLevelSixRogueExpertiseBuild(
+  payload: JsonObject,
+  buildPath: string,
+) {
+  const proficiencyChoicesPath = `${buildPath}.proficiencyChoices`;
+  const skillProficiencies = proficiencyChoiceSkills(
+    payload,
+    proficiencyChoicesPath,
+    "skill",
+  );
+  const expertise = proficiencyChoiceSkills(
+    payload,
+    proficiencyChoicesPath,
+    "skill_expertise",
+  );
   assert.deepEqual(
     [...expertise].sort(),
     [...levelSixRogueExpertiseSkills].sort(),
@@ -4497,6 +4509,18 @@ function assertLevelSixRogueExpertiseBuild(payload: JsonObject, path: string) {
       `${skill} Expertise must be over an owned skill proficiency`,
     );
   }
+  const weaponMasteryChoices = jsonObjectArrayAt(
+    payload,
+    `${buildPath}.features`,
+  ).filter(
+    (feature) =>
+      feature.kind === "selectedClassChoice" &&
+      feature.selectedFromUnitId === "rogue_weapon_mastery",
+  );
+  assert.deepEqual(
+    weaponMasteryChoices.map((feature) => feature.unitId).sort(),
+    [...levelSixRogueWeaponMasteries].sort(),
+  );
 }
 
 function assertLevelNineRangerExpertiseBuild(
