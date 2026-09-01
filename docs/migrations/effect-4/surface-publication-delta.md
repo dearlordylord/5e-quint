@@ -12,7 +12,7 @@ baseline commit can be resolved.
 The aggregate evidence is closed over the symmetric union of authored record
 identities. Each semantic delta is explicitly `changed`, `added`, or `removed`,
 has the hashes applicable to that shape, and has one reviewed semantic class.
-The current candidate has 39 changed records, 344 additions, and no removals.
+The current candidate has 39 changed records, 347 additions, and no removals.
 Their changed-record classes are persistent rule facts, companion lifecycle,
 modal ongoing effect, identity-free execution vocabulary, truthful illumination
 emission, and authored Stat Block fidelity. The last class records the 21
@@ -31,6 +31,9 @@ Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
 retains its printed Darkvision, and Stone Giant retains its printed Dexterity
 save. These corrections change the authenticated candidate shapes without
 changing their existing `added` classification or catalog membership.
+It also closes the canonical weapon-reference graph by adding the SRD Graze,
+Nick, and Vex mastery records. These are authenticated catalog additions; their
+typed Surface mechanics do not imply Battle runtime admission.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record

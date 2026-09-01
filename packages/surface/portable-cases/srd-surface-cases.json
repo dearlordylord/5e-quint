@@ -12179,6 +12179,57 @@
             "rulesExcerpt": "# Equipment\n## Weapons\n### Mastery Properties\n#### Cleave\n\nIf you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn."
           },
           {
+            "id": "mastery_graze",
+            "name": "Graze",
+            "kind": "mastery",
+            "mechanics": {
+              "family": "weapon_attack_miss_damage",
+              "optional": true,
+              "trigger": {
+                "kind": "weapon_attack_miss"
+              },
+              "effect": {
+                "kind": "deal_weapon_damage",
+                "amount": {
+                  "kind": "attack_ability_modifier"
+                },
+                "damageType": {
+                  "kind": "weapon_damage_type"
+                },
+                "increaseLimit": "attack_ability_modifier_only"
+              }
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Equipment#Graze"
+            },
+            "rulesExcerpt": "# Equipment\n## Weapons\n### Mastery Properties\n#### Graze\n\nIf your attack roll with this weapon misses a creature, you can deal damage to that creature equal to the ability modifier you used to make the attack roll. This damage is the same type dealt by the weapon, and the damage can be increased only by increasing the ability modifier."
+          },
+          {
+            "id": "mastery_nick",
+            "name": "Nick",
+            "kind": "mastery",
+            "mechanics": {
+              "family": "light_property_extra_attack_timing",
+              "optional": true,
+              "trigger": {
+                "kind": "light_property_extra_attack"
+              },
+              "replacement": {
+                "from": "bonus_action",
+                "to": "attack_action"
+              },
+              "usageLimit": {
+                "kind": "once_per_turn"
+              }
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Equipment#Nick"
+            },
+            "rulesExcerpt": "# Equipment\n## Weapons\n### Mastery Properties\n#### Nick\n\nWhen you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn."
+          },
+          {
             "id": "mastery_push",
             "name": "Push",
             "kind": "mastery",
@@ -12285,6 +12336,34 @@
               "section": "Equipment#Topple"
             },
             "rulesExcerpt": "# Equipment\n## Weapons\n### Mastery Properties\n#### Topple\n\nIf you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition."
+          },
+          {
+            "id": "mastery_vex",
+            "name": "Vex",
+            "kind": "mastery",
+            "mechanics": {
+              "family": "on_hit_trigger",
+              "optional": false,
+              "trigger": {
+                "kind": "weapon_hit_with_damage"
+              },
+              "effect": {
+                "kind": "modify_roll_advantage",
+                "mode": "advantage",
+                "on": [
+                  "attack_roll"
+                ],
+                "count": 1,
+                "expiresOn": {
+                  "kind": "end_of_next_turn"
+                }
+              }
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Equipment#Vex"
+            },
+            "rulesExcerpt": "# Equipment\n## Weapons\n### Mastery Properties\n#### Vex\n\nIf you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn."
           },
           {
             "id": "orc_adrenaline_rush",

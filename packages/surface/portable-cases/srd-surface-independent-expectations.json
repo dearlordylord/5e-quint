@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "schemaSha256": "9d7c9050b4c65dd60ba1aa432db8957b50ca43f0b7a3ea5d07fae753c390ce47",
+  "schemaSha256": "29db5157b79e95e50b0e8602e59b221a83876930d2430d2af245b6129dc14d32",
   "dependencyContractSha256": "b21fc4b75faefb3be6b374bc738b7ebcef55bd630f0323ae516e4dd26c354e58",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "b3b575717bacefe0545dd131915717f878273467123fb9df05b546fc5b3facf4",
+      "inputSha256": "5b37d5fc605c34150d4c9a3201c4e0809b3a6da5b3674f446e3a6f8bef16b26a",
       "expected": {
         "tag": "accepted"
       }

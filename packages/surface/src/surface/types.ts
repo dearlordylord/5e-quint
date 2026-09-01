@@ -1018,11 +1018,20 @@ export type VexMasteryMechanics = Schema.Schema.Type<
 export type CleaveMasteryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CleaveMasteryMechanicsSchema
 >;
+export type GrazeMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.GrazeMasteryMechanicsSchema
+>;
+export type NickMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.NickMasteryMechanicsSchema
+>;
 export type OnHitTriggerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.OnHitTriggerMechanicsSchema
 >;
-export type MasteryOrWeaponDamageDiceRerollMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.MasteryOrWeaponDamageDiceRerollMechanicsSchema
+export type OnHitMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.OnHitMasteryMechanicsSchema
+>;
+export type OnHitMasteryOrWeaponDamageDiceRerollMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema
 >;
 export type MasteryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryMechanicsSchema

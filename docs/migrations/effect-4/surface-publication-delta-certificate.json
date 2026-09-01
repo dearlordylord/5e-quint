@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2186122,
-        "sha256": "0aea62ab4531869d274632932c17278161da946bf9a8e3b4ce287239d0dd5e37"
+        "byteLength": 2188068,
+        "sha256": "1638d6875de5283f909f65ba2ae4237a513f8b8492e0b32e0d1313d80aa8ae97"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "f1c4ae718f26c4984f1b17db26f8d7ee88a98caf249a0b82b2d5e49a8b228bd4",
+        "candidateCanonicalJsonSha256": "96ea97858f73e246ca73347b902ea93b9a56a5aeb94cad0feb0b74437253679a",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -29,14 +29,14 @@
           },
           "candidate": {
             "recordCounts": {
-              "units": 434,
+              "units": 437,
               "statBlocks": 330,
-              "total": 764
+              "total": 767
             },
             "orderedIdSha256": {
-              "units": "7fe05e0ce6af4b265b21504b3af6599edced1bf05d60ecb8ec7da9ad8b72cf27",
+              "units": "b7a814000ef2dd07f7375868c7b7648826e39477e5d859d0193e45a35382812a",
               "statBlocks": "45ed846dccc5b724a6e80509244db57dd927ed5bcfd901f9e42def8da2451ba4",
-              "all": "df3546b790c5d64c0273f144fb039741fcb7c91bc1fc1883658d4b3d8d7083d7"
+              "all": "650bc5da20a166e17394a293481eec69e7838cd5c46623f945caf71ca455bd5a"
             }
           }
         },
@@ -668,6 +668,27 @@
             "family": "units",
             "id": "word_of_recall",
             "candidateCanonicalJsonSha256": "1a2efa6ff769e8a48077aabf841d4e9d71d6bd58d13ccb6a2773f0fbfda78026",
+            "semanticClass": "authored-catalog-membership"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "mastery_graze",
+            "candidateCanonicalJsonSha256": "78eecaeb7d5bd1ff58c0b196fb1fda3ec6dee58806a50efd1daab2d3bf726ca2",
+            "semanticClass": "authored-catalog-membership"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "mastery_nick",
+            "candidateCanonicalJsonSha256": "7b8d2c4f11a2d76c35cca38bd97d381ddd340f678ca6a12892df5acb46074b3b",
+            "semanticClass": "authored-catalog-membership"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "mastery_vex",
+            "candidateCanonicalJsonSha256": "f72dab0360a96be0fb87a47f87df8edcb1407290d599158facf9bcf943ab270b",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2877,19 +2898,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1589880,
-        "sha256": "cdc52f97f4b37894268442390a38efc54193e64726ae9dd52535db45f24f4a34"
+        "byteLength": 1591482,
+        "sha256": "499b1a2d13f0b7d93a3ab6d3da19c6647cb9cedfbe436e8867092491b9c4551f"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "7f93c3a661b4bc307858b72328621de08f3c1bd61bc95f1f24b8c3f0db97ff8e",
+        "candidateCanonicalJsonSha256": "066bb15ea7958b698a35abab45621e85cf1378017f776aba852d725777d6f975",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1190
+          "candidate": 1192
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7679
+          "candidate": 7676
         },
         "localReferencesComplete": {
           "baseline": true,

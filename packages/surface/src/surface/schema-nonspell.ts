@@ -2423,13 +2423,44 @@ export const CleaveMasteryMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
-export const MasteryMechanicsSchema = Schema.Union([
+export const GrazeMasteryMechanicsSchema = strictStruct({
+  family: Schema.Literal("weapon_attack_miss_damage"),
+  optional: Schema.Literal(true),
+  trigger: strictStruct({ kind: Schema.Literal("weapon_attack_miss") }),
+  effect: strictStruct({
+    kind: Schema.Literal("deal_weapon_damage"),
+    amount: strictStruct({ kind: Schema.Literal("attack_ability_modifier") }),
+    damageType: strictStruct({ kind: Schema.Literal("weapon_damage_type") }),
+    increaseLimit: Schema.Literal("attack_ability_modifier_only"),
+  }),
+});
+
+export const NickMasteryMechanicsSchema = strictStruct({
+  family: Schema.Literal("light_property_extra_attack_timing"),
+  optional: Schema.Literal(true),
+  trigger: strictStruct({
+    kind: Schema.Literal("light_property_extra_attack"),
+  }),
+  replacement: strictStruct({
+    from: Schema.Literal("bonus_action"),
+    to: Schema.Literal("attack_action"),
+  }),
+  usageLimit: OncePerTurnUsageLimitSchema,
+});
+
+export const OnHitMasteryMechanicsSchema = Schema.Union([
   PushMasteryMechanicsSchema,
   SapMasteryMechanicsSchema,
   SlowMasteryMechanicsSchema,
   ToppleMasteryMechanicsSchema,
   VexMasteryMechanicsSchema,
   CleaveMasteryMechanicsSchema,
+]);
+
+export const MasteryMechanicsSchema = Schema.Union([
+  OnHitMasteryMechanicsSchema,
+  GrazeMasteryMechanicsSchema,
+  NickMasteryMechanicsSchema,
 ]);
 
 export const AttackDamageRiderMechanicsSchema = strictStruct({
@@ -2507,13 +2538,12 @@ export const LightExtraAttackDamageAbilityModifierMechanicsSchema =
     effect: LightExtraAttackDamageAbilityModifierEffectSchema,
   });
 
-export const MasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union([
-  MasteryMechanicsSchema,
-  WeaponDamageDiceRerollMechanicsSchema,
-]);
+export const OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union(
+  [OnHitMasteryMechanicsSchema, WeaponDamageDiceRerollMechanicsSchema],
+);
 
 export const OnHitTriggerMechanicsSchema = Schema.Union([
-  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   AttackDamageRiderMechanicsSchema,
 ]);
 
@@ -3744,7 +3774,7 @@ export const MasteryRecordSchema = Schema.Struct({
 export const FeatMechanicsSchema = Schema.Union([
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
-  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   WeaponAttackDamageDieFloorMechanicsSchema,
   LightExtraAttackDamageAbilityModifierMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
@@ -4279,7 +4309,7 @@ export const MagicItemComponentMechanicsSchema = Schema.Union([
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
-  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   MagicItemSpawnedCreatureMechanicsSchema,
 ]);
 
