@@ -20,6 +20,10 @@ import * as Option from "effect/Option";
 import { Match } from "effect";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  BattleStartInput,
+  StartBattle,
+} from "../battle-start-protocol.ts";
 import {
   projectAuthoredStatBlockBattleInit,
   type AuthoredStatBlockBattleInitInput,
@@ -80,7 +84,6 @@ import type {
   BattleInitializationIssueFacts,
   BattleInitializationLeafIssue,
   BattleExecutionScopeAllocation,
-  BattleHidePrerequisite,
   BattleState,
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
@@ -593,15 +596,7 @@ export function battleInitializationIssueFactFields(
 
 export type InitialInitiativeSetup = InitialInitiativeSetupWorkflow;
 
-export type BattleStartInput = {
-  readonly battleId: BattleId;
-  readonly combatants: readonly BattleCreatureInit[];
-  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
-  readonly ownerPathForCombatant?: (
-    combatant: BattleCreatureInit,
-    index: number,
-  ) => readonly (string | number)[];
-};
+export type { BattleStartInput } from "../battle-start-protocol.ts";
 
 export function startBattleWithInitialInitiativeSetup(
   input: BattleStartInput,
@@ -1064,9 +1059,7 @@ function initializeCharacterBattleExecutions(input: {
   return combatantsWithCharacterExecutions;
 }
 
-export function startBattle(
-  input: BattleStartInput,
-): Result.Result<BattleRuntimeSession, BattleInitializationIssue> {
+export const startBattle: StartBattle = (input) => {
   if (input.combatants.length === 0) {
     return Result.fail(
       battleInitializationIssue(
@@ -1104,7 +1097,7 @@ export function startBattle(
       ),
     ),
   );
-}
+};
 
 function ownerPathForAdmittedCombatant(
   input: BattleStartInput,

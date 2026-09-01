@@ -24,7 +24,7 @@ import {
   type CharacterBuild,
   type CharacterBuildResource,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import {
   Hp,

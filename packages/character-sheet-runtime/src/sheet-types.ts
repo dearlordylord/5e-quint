@@ -13,7 +13,7 @@ import {
   type CharacterBuildResource,
   type MagicInitiateSpellcastingAbility,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import {
   CONDITIONS,
   type Ability,

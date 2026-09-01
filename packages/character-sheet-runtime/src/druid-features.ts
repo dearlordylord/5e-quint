@@ -9,7 +9,7 @@ import {
   type DruidWildShapeKnownFormIssue,
   type CharacterBuild,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import {

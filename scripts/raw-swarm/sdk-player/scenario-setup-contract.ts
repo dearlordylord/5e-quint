@@ -2,23 +2,24 @@ import type {
   battleAmmunitionStock,
   battleId,
   battleObjectId,
-  battleInitializationIssueMessage,
   combatantId,
   initiativeScore,
-  startBattle,
   AuthoredStatBlockBattleInitInput,
-} from "@dnd/battle-runtime";
+  BattleCreatureInit,
+  BattleInitializationIssueMessage,
+  StartBattle,
+} from "../../../packages/battle-runtime/src/consumer-protocol.ts";
 import type { CharacterSheetBattleInit } from "../../../packages/character-battle-runtime/src/battle-creature-init.ts";
 import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/character-battle-runtime/src/battle-character-build-projection.ts";
-import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
+import type { UnitCatalog } from "../../../packages/character-creation-runtime/src/consumer-protocol.ts";
+import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/consumer-protocol.ts";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import type { Result } from "effect";
 import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Hp, movementFeet } from "@dnd/shared/types";
 
 import type { JsonValue } from "./continuation-contract.ts";
+import type { ResultFailureRefinement } from "./result-failure-refinement.ts";
 import type {
   createScenarioSession,
   scenarioDistanceFeet,
@@ -61,6 +62,7 @@ export type {
   ScenarioSessionIssue,
   ScenarioSessionUpdateIssue,
 } from "./scenario-session.ts";
+export type { BattleCreatureInit };
 
 /**
  * Scenario setup consumes authored catalog records at the public SDK boundary.
@@ -72,12 +74,12 @@ export type ScenarioSetupSdk = {
   readonly battleAmmunitionStock: typeof battleAmmunitionStock;
   readonly battleId: typeof battleId;
   readonly battleObjectId: typeof battleObjectId;
-  readonly battleInitializationIssueMessage: typeof battleInitializationIssueMessage;
+  readonly battleInitializationIssueMessage: BattleInitializationIssueMessage;
   readonly characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage;
   readonly characterSheetBattleInit: CharacterSheetBattleInit;
   readonly combatantId: typeof combatantId;
   readonly initiativeScore: typeof initiativeScore;
-  readonly startBattle: typeof startBattle;
+  readonly startBattle: StartBattle;
   readonly armorClass: typeof armorClass;
   readonly hp: typeof Hp;
   readonly movementFeet: typeof movementFeet;
@@ -87,7 +89,7 @@ export type ScenarioSetupSdk = {
   readonly scenarioSessionIssueMessage: typeof scenarioSessionIssueMessage;
   readonly tableAuthoredSpatialDecision: typeof tableAuthoredSpatialDecision;
   readonly scenarioSessionWithTableD20TestCircumstance: typeof scenarioSessionWithTableD20TestCircumstance;
-  readonly isFailure: typeof Result.isFailure;
+  readonly isFailure: ResultFailureRefinement;
 };
 
 export type ScenarioSetupContext = {

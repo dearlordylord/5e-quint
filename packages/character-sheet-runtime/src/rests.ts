@@ -20,7 +20,7 @@ import {
   type CharacterBuild,
   type CharacterBuildFeature,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import {
   Hp,
   resourceCount,

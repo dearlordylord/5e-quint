@@ -9,7 +9,7 @@ import {
   type CharacterBuild,
   type CharacterBuildPactMagicSlotPool,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import {
   resourceCount,
   spellSlotLevel,

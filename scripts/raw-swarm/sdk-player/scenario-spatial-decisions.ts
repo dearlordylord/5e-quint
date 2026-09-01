@@ -8,7 +8,7 @@ import type {
   BattleProcedureExecutionRef,
   BattleTablePositionId,
   CombatantId,
-} from "@dnd/battle-runtime";
+} from "../../../packages/battle-runtime/src/consumer-protocol.ts";
 import {
   battleObjectId,
   battleTablePositionId,
@@ -16,7 +16,7 @@ import {
   isBattleAttackProcedureExecutionRef,
   isBattleProcedureExecutionRef,
   isBattleStatBlockProcedureExecutionRef,
-} from "../../../packages/battle-runtime/src/index.ts";
+} from "../../../packages/battle-runtime/src/consumer-protocol.ts";
 import { StatBlockAttackDamageSelection } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import {
   ABILITIES,

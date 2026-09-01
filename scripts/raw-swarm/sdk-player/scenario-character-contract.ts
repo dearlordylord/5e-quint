@@ -8,18 +8,30 @@ import type {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  CharacterBuild,
+  CharacterDraft,
+  CreationFill,
+  CreationHole,
   UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "../../../packages/character-creation-runtime/src/consumer-protocol.ts";
 import type {
   characterSheetConstructionIssuesSummary,
   characterSheetId,
   createFreshCharacterSheet,
   FreshCharacterSheet,
-} from "@dnd/character-sheet-runtime";
+} from "../../../packages/character-sheet-runtime/src/consumer-protocol.ts";
 import type { Hp } from "@dnd/shared/types";
-import type { Result } from "effect";
 
 import type { JsonValue } from "./continuation-contract.ts";
+import type { ResultFailureRefinement } from "./result-failure-refinement.ts";
+
+export type {
+  CharacterBuild,
+  CharacterDraft,
+  CreationFill,
+  CreationHole,
+  FreshCharacterSheet,
+};
 
 export type ScenarioCharacterSdk = {
   readonly abilityScoreAssignment: typeof abilityScoreAssignment;
@@ -35,7 +47,7 @@ export type ScenarioCharacterSdk = {
   readonly fillCreationHoles: typeof fillCreationHoles;
   readonly finalizeCharacterDraft: typeof finalizeCharacterDraft;
   readonly hp: typeof Hp;
-  readonly isFailure: typeof Result.isFailure;
+  readonly isFailure: ResultFailureRefinement;
 };
 
 export type ScenarioCharacterContext = {

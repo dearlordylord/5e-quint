@@ -24,7 +24,7 @@ import {
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
   type CharacterBattleResourceExecutionFacts,
-} from "@dnd/battle-runtime";
+} from "../../battle-runtime/src/consumer-protocol.ts";
 import {
   characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
@@ -37,13 +37,13 @@ import {
   progressionClassLevels,
   type CharacterBuild,
   type CharacterBuildDruidWildShapeFacts,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import {
   characterSheetSpellAccessesForBuild,
   type CharacterSheet,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "@dnd/character-sheet-runtime";
+} from "../../character-sheet-runtime/src/consumer-protocol.ts";
 import {
   Hp,
   abilityModifier,

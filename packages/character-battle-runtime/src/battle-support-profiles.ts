@@ -10,12 +10,12 @@ import {
   type BattleUnitSupportProfileSourceFacts,
   type CharacterBattleResourceExecutionFacts,
   type ResourceFeatureAdmission,
-} from "@dnd/battle-runtime";
+} from "../../battle-runtime/src/consumer-protocol.ts";
 import {
   characterBuildUnitRefs,
   classUnitIdToClassName,
   type CharacterBuild,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {

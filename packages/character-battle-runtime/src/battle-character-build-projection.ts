@@ -28,7 +28,7 @@ import {
   admitResolvedCharacterWeaponExecutionWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
-} from "@dnd/battle-runtime";
+} from "../../battle-runtime/src/consumer-protocol.ts";
 
 import {
   characterBuildArmorTraining,
@@ -48,7 +48,7 @@ import {
   type CharacterEquipmentItemId,
   type CharacterBuildSpellcastingSource,
   type NonEmptyReadonlyArray,
-} from "@dnd/character-creation-runtime";
+} from "../../character-creation-runtime/src/consumer-protocol.ts";
 import {
   characterSheetArmorClassState,
   characterSheetUnarmoredArmorClassBase,
@@ -56,7 +56,7 @@ import {
   characterSheetSpellAccessesForBuild,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "@dnd/character-sheet-runtime";
+} from "../../character-sheet-runtime/src/consumer-protocol.ts";
 import {
   armorClassDelta,
   type ArmorClassBaseSource,
