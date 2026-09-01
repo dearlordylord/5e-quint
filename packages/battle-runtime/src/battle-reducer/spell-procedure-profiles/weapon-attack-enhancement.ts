@@ -1,5 +1,8 @@
 import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellAdmissionSource,
+  BattleSpellExecutionSource,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -7,15 +10,16 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // attaches a timed magic-weapon enhancement to an exact holder-plus-item weapon
 // identity supplied by the table-owned fill boundary.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { SpellSlotLevel } from "@dnd/shared/types";
-import type { Attachment, EffectAtom } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { PositiveInteger, type SpellSlotLevel } from "@dnd/shared/types";
+import type {
+  Attachment,
+  EffectAtom,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 
 import {
   WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES,
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffectExpiration,
   type BattleWeaponEnhancementTargetItemFact,
   type BattleResolutionResult,
   type BattleState,
@@ -48,26 +52,49 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationValueEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
+  isSpellCanonicalDurationValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 
 type WeaponAttackDamageEnhancementInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "weaponAttackDamageEnhancement" }
 >;
 
-type WeaponAttackDamageEnhancementProjection = {
-  readonly durationTicks: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "duration" }
-  >["durationTicks"];
-  readonly bonus: Extract<
-    EffectAtom,
-    { readonly kind: "grant_weapon_attack_enhancement" }
-  >["bonus"];
-};
+type WeaponAttackDamageEnhancementBonusSource = Extract<
+  EffectAtom,
+  { readonly kind: "grant_weapon_attack_enhancement" }
+>["bonus"];
+type OngoingEffectMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
 type WeaponAttackDamageEnhancementMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -78,38 +105,440 @@ type WeaponAttackDamageEnhancementMechanics = Extract<
   >;
 };
 
-function weaponAttackDamageEnhancementMechanicsAreSupported(
-  mechanics: Extract<
-    BattleSpellAdmissionSource["mechanics"],
-    { readonly family: "ongoing_effect" }
-  >,
-): mechanics is WeaponAttackDamageEnhancementMechanics {
+type WeaponAttackDamageEnhancementMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly durationValue: SpellCanonicalDurationValue;
+  readonly bonus: WeaponAttackDamageEnhancementBonusSource;
+};
+
+export const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_FAILED_FACTS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationEnding",
+  "durationExtension",
+  "castingTime",
+  "attachment",
+  "operationCount",
+  "operations",
+  "operation",
+  "enhancementEffect",
+  "enhancementBonus",
+] as const;
+type WeaponAttackDamageEnhancementFailedFact =
+  (typeof WEAPON_ATTACK_DAMAGE_ENHANCEMENT_FAILED_FACTS)[number];
+
+type WeaponAttackDamageEnhancementMechanicsIssue = {
+  readonly failedFact: WeaponAttackDamageEnhancementFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+const WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const;
+const WEAPON_ENHANCEMENT_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "operations",
+] as const;
+const WEAPON_ENHANCEMENT_OBJECT_FIELDS = ["kind", "count", "filter"] as const;
+const WEAPON_ENHANCEMENT_FILTER_FIELDS = ["objectKind", "magicality"] as const;
+const WEAPON_ENHANCEMENT_DURATION_FIELDS = [
+  "kind",
+  "value",
+  "earlyEnd",
+  "permanentAfter",
+] as const;
+const WEAPON_ENHANCEMENT_DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const;
+const WEAPON_ENHANCEMENT_DURATION_END_FIELDS = ["kind"] as const;
+const WEAPON_ENHANCEMENT_OPERATION_FIELDS = [
+  "trigger",
+  "predicate",
+  "targetLimit",
+  "effect",
+  "usageLimit",
+] as const;
+const WEAPON_ENHANCEMENT_TRIGGER_FIELDS = ["kind"] as const;
+const WEAPON_ENHANCEMENT_CASTING_TIME_FIELDS = ["kind"] as const;
+const WEAPON_ENHANCEMENT_EFFECT_FIELDS = ["kind", "bonus"] as const;
+const WEAPON_ENHANCEMENT_BONUS_FIELDS = [
+  "kind",
+  "axis",
+  "base",
+  "tiers",
+  "sign",
+] as const;
+
+function weaponAttackDamageEnhancementIssueResult(
+  issue: WeaponAttackDamageEnhancementMechanicsIssue,
+) {
+  return {
+    tag: "spellProcedureAdmissionIssue" as const,
+    procedure: "weaponAttackDamageEnhancement" as const,
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported weaponAttackDamageEnhancement mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function weaponAttackEnhancementSemanticCandidate(
+  mechanics: SpellMechanics,
+): boolean {
   return (
+    mechanics.family === "ongoing_effect" &&
+    mechanics.operations.some(
+      (operation) =>
+        operation.effect.kind === "grant_weapon_attack_enhancement",
+    )
+  );
+}
+
+function weaponAttackEnhancementDistinctiveHeaderFallback(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "ongoing_effect" &&
     mechanics.level === 2 &&
     mechanics.castingTime.kind === "bonus_action" &&
     mechanics.range.kind === "touch" &&
     mechanics.duration.kind === "timed" &&
-    weaponAttackEnhancementAttachmentIsSupported(mechanics.attachment) &&
-    weaponAttackEnhancementDurationEarlyEndIsSupported(mechanics.duration) &&
-    mechanics.operations.length === 1
+    mechanics.attachment.kind === "hole" &&
+    mechanics.attachment.value.kind === "object"
   );
 }
 
-function admitWeaponAttackDamageEnhancement(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly WeaponAttackDamageEnhancementInvocation[] {
-  const projection = weaponAttackDamageEnhancementProjection(spell);
-  if (projection === null) {
-    return [];
+function weaponAttackEnhancementAttachmentIsSupported(
+  attachment: Attachment,
+): boolean {
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "object" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment,
+      WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment.value,
+      WEAPON_ENHANCEMENT_OBJECT_FIELDS,
+    ) ||
+    attachment.value.count !== 1 ||
+    attachment.value.filter === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment.value.filter,
+      WEAPON_ENHANCEMENT_FILTER_FIELDS,
+    )
+  ) {
+    return false;
   }
+  return (
+    attachment.value.filter.objectKind === "weapon" &&
+    attachment.value.filter.magicality === "nonmagical"
+  );
+}
+
+function weaponAttackEnhancementDurationIsSupported(
+  duration: SpellMechanics["duration"],
+): duration is WeaponAttackDamageEnhancementMechanics["duration"] & {
+  readonly value: SpellCanonicalDurationValue;
+} {
+  if (
+    duration.kind !== "timed" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      duration,
+      WEAPON_ENHANCEMENT_DURATION_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      duration.value,
+      WEAPON_ENHANCEMENT_DURATION_VALUE_FIELDS,
+    ) ||
+    duration.value.unit !== "hour" ||
+    duration.value.amount !== 1 ||
+    !isSpellCanonicalDurationValue(duration.value) ||
+    duration.value.upcastTiers !== undefined ||
+    duration.permanentAfter !== undefined
+  ) {
+    return false;
+  }
+  const earlyEnd = duration.earlyEnd;
+  return (
+    earlyEnd !== undefined &&
+    earlyEnd.length === 1 &&
+    earlyEnd[0]?.kind === "caster_recasts_spell" &&
+    spellMechanicsObjectHasOnlyKeys(
+      earlyEnd[0],
+      WEAPON_ENHANCEMENT_DURATION_END_FIELDS,
+    )
+  );
+}
+
+function weaponAttackEnhancementBonusIsSupported(
+  bonus: WeaponAttackDamageEnhancementBonusSource,
+): boolean {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(bonus, WEAPON_ENHANCEMENT_BONUS_FIELDS) ||
+    bonus.kind !== "threshold_tiers" ||
+    bonus.axis !== "slot" ||
+    bonus.base !== 1 ||
+    bonus.sign !== "+" ||
+    bonus.tiers.length !== 2
+  ) {
+    return false;
+  }
+  const tierFieldsValid = bonus.tiers.every(
+    (tier) =>
+      spellMechanicsObjectHasOnlyKeys(tier, ["atLevel", "value"]) &&
+      ((tier.atLevel === 3 && tier.value === 2) ||
+        (tier.atLevel === 6 && tier.value === 3)),
+  );
+  return (
+    tierFieldsValid &&
+    bonus.tiers.some((tier) => tier.atLevel === 3 && tier.value === 2) &&
+    bonus.tiers.some((tier) => tier.atLevel === 6 && tier.value === 3)
+  );
+}
+
+function weaponAttackEnhancementOperationIsSupported(
+  operation:
+    | WeaponAttackDamageEnhancementMechanics["operations"][number]
+    | undefined,
+): operation is WeaponAttackDamageEnhancementMechanics["operations"][number] & {
+  readonly effect: Extract<
+    EffectAtom,
+    { readonly kind: "grant_weapon_attack_enhancement" }
+  >;
+} {
+  return (
+    operation !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation,
+      WEAPON_ENHANCEMENT_OPERATION_FIELDS,
+    ) &&
+    operation.trigger.kind === "passive" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.trigger,
+      WEAPON_ENHANCEMENT_TRIGGER_FIELDS,
+    ) &&
+    operation.predicate === undefined &&
+    operation.targetLimit === undefined &&
+    operation.usageLimit === undefined &&
+    operation.effect.kind === "grant_weapon_attack_enhancement" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.effect,
+      WEAPON_ENHANCEMENT_EFFECT_FIELDS,
+    ) &&
+    weaponAttackEnhancementBonusIsSupported(operation.effect.bonus)
+  );
+}
+
+function weaponAttackDamageEnhancementMechanicsEvidence(
+  mechanics: OngoingEffectMechanics,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellOngoingAttachmentPath(),
+    ...mechanics.operations.flatMap((_operation, index) => [
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+      spellOngoingOperationEffectPath(PositiveInteger(index + 1)),
+    ]),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitWeaponAttackDamageEnhancementMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "weaponAttackDamageEnhancement",
+  WeaponAttackDamageEnhancementMechanicsFacts,
+  WeaponAttackDamageEnhancementInvocation,
+  ReturnType<typeof weaponAttackDamageEnhancementIssueResult>
+> {
+  if (
+    !weaponAttackEnhancementSemanticCandidate(source.mechanics) &&
+    !weaponAttackEnhancementDistinctiveHeaderFallback(source.mechanics)
+  ) {
+    return { tag: "notRepresented" };
+  }
+  if (source.mechanics.family !== "ongoing_effect") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const operationIndex = mechanics.operations.findIndex(
+    weaponAttackEnhancementOperationIsSupported,
+  );
+  const operation =
+    operationIndex < 0 ? undefined : mechanics.operations[operationIndex];
+  const issues: WeaponAttackDamageEnhancementMechanicsIssue[] = [];
+  const push = (
+    failedFact: WeaponAttackDamageEnhancementFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ) => issues.push({ failedFact, mechanicsPath });
+
+  if (mechanics.level !== 2) push("level", spellMechanicsHeaderPath("level"));
+  if (
+    !spellMechanicsObjectHasOnlyKeys(mechanics, WEAPON_ENHANCEMENT_ROOT_FIELDS)
+  ) {
+    push("operations", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.school !== "transmutation") {
+    push("school", spellMechanicsHeaderPath("school"));
+  }
+  if (
+    mechanics.range.kind !== "touch" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind"])
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"])
+  ) {
+    push("components", spellMechanicsHeaderPath("components"));
+  }
+  if (!weaponAttackEnhancementDurationIsSupported(mechanics.duration)) {
+    push("duration", spellMechanicsHeaderPath("duration"));
+    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
+      push("durationValue", path);
+    }
+    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+      push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+    }
+  }
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    mechanics.castingTime.trigger !== undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      WEAPON_ENHANCEMENT_CASTING_TIME_FIELDS,
+    )
+  ) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (!weaponAttackEnhancementAttachmentIsSupported(mechanics.attachment)) {
+    push("attachment", spellOngoingAttachmentPath());
+  }
+  if (mechanics.operations.length !== 1) {
+    for (const [index] of mechanics.operations.entries()) {
+      if (index === operationIndex) continue;
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+    if (mechanics.operations.length === 0) {
+      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+    }
+  }
+  if (operationIndex < 0) {
+    push("operation", spellOngoingOperationPath(PositiveInteger(1)));
+    push(
+      "enhancementEffect",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    );
+  } else if (
+    operation === undefined ||
+    !weaponAttackEnhancementOperationIsSupported(operation)
+  ) {
+    push(
+      "enhancementEffect",
+      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+    );
+  }
+  const uniqueIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (uniqueIssues !== undefined) {
+    const [first, ...rest] = uniqueIssues.map(
+      weaponAttackDamageEnhancementIssueResult,
+    );
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  if (
+    operation === undefined ||
+    !weaponAttackEnhancementOperationIsSupported(operation) ||
+    !weaponAttackEnhancementDurationIsSupported(mechanics.duration)
+  ) {
+    const issue = {
+      failedFact: "enhancementEffect" as const,
+      mechanicsPath: spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    };
+    return {
+      tag: "unsupported",
+      issues: [weaponAttackDamageEnhancementIssueResult(issue)],
+    };
+  }
+  const durationValue =
+    mechanics.duration.kind === "timed" &&
+    isSpellCanonicalDurationValue(mechanics.duration.value)
+      ? mechanics.duration.value
+      : undefined;
+  if (durationValue === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        weaponAttackDamageEnhancementIssueResult({
+          failedFact: "durationValue",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
+        }),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    durationValue,
+    bonus: operation.effect.bonus,
+  } satisfies WeaponAttackDamageEnhancementMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "weaponAttackDamageEnhancement",
+      facts,
+      evidence: weaponAttackDamageEnhancementMechanicsEvidence(mechanics),
+      admit: (executionSource, ctx) =>
+        admitWeaponAttackDamageEnhancement(executionSource, ctx, facts),
+    },
+  };
+}
+
+function admitWeaponAttackDamageEnhancement(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: WeaponAttackDamageEnhancementMechanicsFacts,
+): readonly WeaponAttackDamageEnhancementInvocation[] {
+  const durationTicks = spellDurationTicksFromCanonicalValue(
+    facts.durationValue,
+  );
   return ctx.spellCastOptions.flatMap(
     (slot): readonly WeaponAttackDamageEnhancementInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
+      if (Number(slot.spellLevel) < facts.level) return [];
       const bonus = weaponAttackDamageEnhancementBonusForSlot(
-        projection.bonus,
+        facts.bonus,
         slot.spellLevel,
       );
       return bonus === null
@@ -122,63 +551,15 @@ function admitWeaponAttackDamageEnhancement(
               spell,
               actionCost: "bonusAction",
               bonus,
-              durationTicks: projection.durationTicks,
+              durationTicks,
             },
           ];
     },
   );
 }
 
-function weaponAttackDamageEnhancementProjection(
-  spell: BattleSpellAdmissionSource,
-): WeaponAttackDamageEnhancementProjection | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  if (!weaponAttackDamageEnhancementMechanicsAreSupported(spell.mechanics)) {
-    return null;
-  }
-  const operation = spell.mechanics.operations[0];
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  if (
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "grant_weapon_attack_enhancement" ||
-    Result.isFailure(durationTicks)
-  ) {
-    return null;
-  }
-  return {
-    durationTicks: durationTicks.success,
-    bonus: operation.effect.bonus,
-  };
-}
-
-function weaponAttackEnhancementAttachmentIsSupported(
-  attachment: Attachment,
-): boolean {
-  return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "object" &&
-    attachment.value.count === 1 &&
-    attachment.value.filter?.objectKind === "weapon" &&
-    attachment.value.filter.magicality === "nonmagical"
-  );
-}
-
-function weaponAttackEnhancementDurationEarlyEndIsSupported(
-  duration: Extract<
-    BattleSpellAdmissionSource["mechanics"]["duration"],
-    { readonly kind: "timed" }
-  >,
-): boolean {
-  const earlyEnd = duration.earlyEnd ?? [];
-  return earlyEnd.length === 1 && earlyEnd[0]?.kind === "caster_recasts_spell";
-}
-
 function weaponAttackDamageEnhancementBonusForSlot(
-  bonus: WeaponAttackDamageEnhancementProjection["bonus"],
+  bonus: WeaponAttackDamageEnhancementBonusSource,
   slotLevel: SpellSlotLevel,
 ): WeaponAttackDamageEnhancementBonus | null {
   if (
@@ -192,18 +573,20 @@ function weaponAttackDamageEnhancementBonusForSlot(
   if (base === null) {
     return null;
   }
-  return bonus.tiers.reduce<WeaponAttackDamageEnhancementBonus | null>(
-    (current, tier) => {
-      if (current === null) {
-        return null;
-      }
-      if (Number(slotLevel) < tier.atLevel) {
-        return current;
-      }
-      return weaponAttackDamageEnhancementBonusFromNumber(tier.value);
-    },
-    base,
-  );
+  const applicableTier = bonus.tiers.reduce<
+    (typeof bonus.tiers)[number] | undefined
+  >((current, tier) => {
+    if (
+      Number(slotLevel) < tier.atLevel ||
+      (current !== undefined && current.atLevel >= tier.atLevel)
+    ) {
+      return current;
+    }
+    return tier;
+  }, undefined);
+  return applicableTier === undefined
+    ? base
+    : weaponAttackDamageEnhancementBonusFromNumber(applicableTier.value);
 }
 
 function weaponAttackDamageEnhancementBonusFromNumber(
@@ -375,8 +758,7 @@ export const weaponAttackDamageEnhancementProfile: SpellProcedureDeclaration<
 > = {
   procedure: "weaponAttackDamageEnhancement",
   executionSchema: WeaponAttackDamageEnhancementInvocationSchema,
-  admit: admitWeaponAttackDamageEnhancement,
+  admitMechanics: admitWeaponAttackDamageEnhancementMechanics,
   discoverCastAct: discoverWeaponAttackDamageEnhancementCastAct,
   resolve: resolveWeaponAttackDamageEnhancement,
 };
-import { spellInvocationResourceForCastOption } from "./profile.ts";

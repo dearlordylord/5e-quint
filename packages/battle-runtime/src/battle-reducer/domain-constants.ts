@@ -221,10 +221,6 @@ export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
   "paralyzed",
   "poisoned",
 ] as const satisfies ReadonlyArray<Condition>;
-export const MARKED_TARGET_FINDING_SKILLS = [
-  "perception",
-  "survival",
-] as const satisfies ReadonlyArray<Skill>;
 export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS =
   elapsedTimeTicks(10);
 export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL =

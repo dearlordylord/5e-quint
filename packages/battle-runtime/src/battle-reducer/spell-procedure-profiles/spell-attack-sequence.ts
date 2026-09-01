@@ -1,4 +1,4 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -23,11 +23,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
-import {
-  supportedCantripSpellAttackSequenceProfile,
-  supportedPreparedSpellAttackSequenceProfile,
-  type SpellAttackSequenceInvocation,
-} from "../spells-profiles-attack-damage.ts";
+import type { SpellAttackSequenceInvocation } from "../spells-profiles-attack-damage.ts";
 import { resolveSpellAttackSequenceAct } from "../spells-resolve-attack-sequence.ts";
 import {
   spellAttackSequencePartObjectTargetHole,
@@ -38,7 +34,6 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
 import {
   AttackBonus,
   CantripSpellAttackSequenceTargetingSchema,
@@ -51,33 +46,656 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
+  multiRaySpellAttackRayCount,
+  type MultiBeamSpellAttackBeamCount,
+  type MultiRaySpellAttackRayCount,
+} from "../domain-constants.ts";
+import {
+  cantripSpellAccessFor,
   spellAdmissionCharacterLevel,
+  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
   spellProcedureResolutionContext,
 } from "./profile.ts";
+import {
+  sameStringSet,
+  supportedDamageAmountExpr,
+} from "../spells-execution-facts.ts";
+import type {
+  Attachment,
+  DamageType,
+  DiceAmount,
+  SpellMechanics,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
+import {
+  admitSpellTargetAttachment,
+  spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import { PositiveInteger, attackBonus } from "@dnd/shared/types";
+import { Schema } from "effect";
 
 type SpellAttackSequenceResolveInput =
   SpellProcedureProfileResolveInput<SpellAttackSequenceInvocation>;
 
-function admitSpellAttackSequence(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly SpellAttackSequenceInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
-  if (spell.mechanics.level === 0) {
-    return supportedCantripSpellAttackSequenceProfile(
-      spell,
-      ctx.castingSource.abilityModifier,
-      spellcasting.proficiencyBonus,
-      spellAdmissionCharacterLevel(ctx),
+type SpellAttackSequenceCountFacts =
+  | {
+      readonly kind: "character";
+      readonly base: 1;
+      readonly tiers: readonly [
+        { readonly atLevel: 5; readonly value: 2 },
+        { readonly atLevel: 11; readonly value: 3 },
+        { readonly atLevel: 17; readonly value: 4 },
+      ];
+    }
+  | {
+      readonly kind: "slot";
+      readonly base: 3;
+      readonly baseLevel: 2;
+      readonly perSlotAboveBase: 1;
+    };
+type SpellAttackSequenceMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly rangeFeet: import("@dnd/shared/types").MovementFeet;
+  readonly attackKind: "ranged_spell_attack";
+  readonly damageAmount: DiceAmount;
+  readonly damageType: DamageType;
+  readonly count: SpellAttackSequenceCountFacts;
+};
+
+export const SPELL_ATTACK_SEQUENCE_FAILED_FACTS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "phase",
+  "phaseCount",
+  "phaseOrder",
+  "attachment",
+  "targeting",
+  "attackKind",
+  "hitDamage",
+  "damageAmount",
+  "damageType",
+  "missEffect",
+] as const;
+type SpellAttackSequenceFailedFact =
+  (typeof SPELL_ATTACK_SEQUENCE_FAILED_FACTS)[number];
+type SpellAttackSequenceMechanicsIssue = {
+  readonly failedFact: SpellAttackSequenceFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+const SPELL_ATTACK_SEQUENCE_PHASE_FIELDS = [
+  "kind",
+  "attachment",
+  "attackKind",
+  "onHit",
+  "onMiss",
+  "continue",
+] as const;
+const SPELL_ATTACK_SEQUENCE_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const;
+const SPELL_ATTACK_SEQUENCE_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "count",
+  "repeatsAllowed",
+  "targetKinds",
+] as const;
+const SPELL_ATTACK_SEQUENCE_CHARACTER_COUNT_FIELDS = [
+  "kind",
+  "axis",
+  "base",
+  "tiers",
+] as const;
+const SPELL_ATTACK_SEQUENCE_SLOT_COUNT_FIELDS = [
+  "kind",
+  "base",
+  "perSlotAboveBase",
+  "baseLevel",
+] as const;
+const SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS = ["atLevel", "value"] as const;
+const SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS = ["kind"] as const;
+const SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS = [
+  "kind",
+  "damageType",
+  "amount",
+  "timing",
+] as const;
+const SPELL_ATTACK_SEQUENCE_DAMAGE_AMOUNT_FIELDS = ["kind", "expr"] as const;
+const SPELL_ATTACK_SEQUENCE_DICE_EXPR_FIELDS = [
+  "dice",
+  "dieSize",
+  "flat",
+  "spellcastingMod",
+  "abilityModifier",
+] as const;
+
+type SpellAttackSequenceActivationPhase = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>["phases"][number];
+
+function spellAttackSequenceCandidatePhase(
+  phase: SpellAttackSequenceActivationPhase,
+): boolean {
+  if (
+    phase.kind !== "attack_roll" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    return false;
+  }
+  const selection = phase.attachment.value.selection;
+  return selection.mode === "choose_up_to" && selection.repeatsAllowed === true;
+}
+
+function spellAttackSequenceIssueResult(
+  issue: SpellAttackSequenceMechanicsIssue,
+) {
+  return {
+    tag: "spellProcedureAdmissionIssue" as const,
+    procedure: "spellAttackSequence" as const,
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported spellAttackSequence mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function spellAttackSequenceSemanticCandidate(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "activation" &&
+    mechanics.phases.some((phase) => {
+      if (!spellAttackSequenceCandidatePhase(phase)) return false;
+      if (
+        phase.kind !== "attack_roll" ||
+        phase.attachment.kind !== "hole" ||
+        phase.attachment.value.kind !== "target"
+      ) {
+        return false;
+      }
+      const selection = phase.attachment.value.selection;
+      return (
+        selection.mode === "choose_up_to" && typeof selection.count === "object"
+      );
+    })
+  );
+}
+
+function spellAttackSequenceDistinctiveHeaderFallback(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "activation" &&
+    (mechanics.level === 0 || mechanics.level === 2) &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === 120 &&
+    mechanics.duration.kind === "instantaneous" &&
+    mechanics.phases.some(spellAttackSequenceCandidatePhase)
+  );
+}
+
+function spellAttackSequenceTargetSelection(
+  attachment: Attachment,
+): TargetSelection | undefined {
+  if (attachment.kind !== "hole") {
+    return undefined;
+  }
+  const admitted = admitSpellTargetAttachment(
+    attachment,
+    SPELL_ATTACK_SEQUENCE_TARGET_SELECTION_FIELDS,
+  );
+  if (admitted.tag !== "admitted") return undefined;
+  const selection = admitted.attachment.value.selection;
+  return selection.targetKinds !== undefined &&
+    sameStringSet(selection.targetKinds, ["creature", "object"])
+    ? selection
+    : undefined;
+}
+
+function spellAttackSequenceCountFacts(
+  selection: TargetSelection,
+  level: number,
+): SpellAttackSequenceCountFacts | undefined {
+  if (
+    selection.mode !== "choose_up_to" ||
+    selection.repeatsAllowed !== true ||
+    selection.count === undefined
+  ) {
+    return undefined;
+  }
+  const count = selection.count;
+  if (
+    level === 0 &&
+    count !== null &&
+    typeof count === "object" &&
+    spellMechanicsObjectHasOnlyKeys(
+      count,
+      SPELL_ATTACK_SEQUENCE_CHARACTER_COUNT_FIELDS,
+    ) &&
+    count.kind === "threshold_tiers" &&
+    count.axis === "character" &&
+    count.base === 1 &&
+    count.tiers.length === 3 &&
+    count.tiers.every(
+      (tier) =>
+        spellMechanicsObjectHasOnlyKeys(
+          tier,
+          SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS,
+        ) &&
+        ((tier.atLevel === 5 && tier.value === 2) ||
+          (tier.atLevel === 11 && tier.value === 3) ||
+          (tier.atLevel === 17 && tier.value === 4)),
+    ) &&
+    count.tiers.some((tier) => tier.atLevel === 5 && tier.value === 2) &&
+    count.tiers.some((tier) => tier.atLevel === 11 && tier.value === 3) &&
+    count.tiers.some((tier) => tier.atLevel === 17 && tier.value === 4)
+  ) {
+    return {
+      kind: "character",
+      base: 1,
+      tiers: [
+        { atLevel: 5, value: 2 },
+        { atLevel: 11, value: 3 },
+        { atLevel: 17, value: 4 },
+      ],
+    };
+  }
+  if (
+    level === 2 &&
+    count !== null &&
+    typeof count === "object" &&
+    spellMechanicsObjectHasOnlyKeys(
+      count,
+      SPELL_ATTACK_SEQUENCE_SLOT_COUNT_FIELDS,
+    ) &&
+    count.kind === "linear" &&
+    count.base === 3 &&
+    count.baseLevel === 2 &&
+    count.perSlotAboveBase === 1
+  ) {
+    return {
+      kind: "slot",
+      base: 3,
+      baseLevel: 2,
+      perSlotAboveBase: 1,
+    };
+  }
+  return undefined;
+}
+
+function spellAttackSequenceDamageAmountIsSupported(
+  amount: DiceAmount,
+  level: number,
+): boolean {
+  if (
+    amount.kind !== "fixed" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      amount,
+      SPELL_ATTACK_SEQUENCE_DAMAGE_AMOUNT_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      amount.expr,
+      SPELL_ATTACK_SEQUENCE_DICE_EXPR_FIELDS,
+    ) ||
+    amount.expr.flat !== undefined ||
+    amount.expr.spellcastingMod !== undefined ||
+    amount.expr.abilityModifier !== undefined
+  ) {
+    return false;
+  }
+  return level === 0
+    ? amount.expr.dice === 1 && amount.expr.dieSize === 10
+    : amount.expr.dice === 2 && amount.expr.dieSize === 6;
+}
+
+function spellAttackSequenceMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phaseIndex: number,
+  effectIndex: number,
+): SpellProcedureMechanicsEvidence {
+  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    spellActivationPhasePath(phaseOrdinal),
+    spellActivationAttachmentPath(phaseOrdinal),
+    spellActivationEffectPath(phaseOrdinal, PositiveInteger(effectIndex + 1)),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitSpellAttackSequenceMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "spellAttackSequence",
+  SpellAttackSequenceMechanicsFacts,
+  SpellAttackSequenceInvocation,
+  ReturnType<typeof spellAttackSequenceIssueResult>
+> {
+  if (
+    !spellAttackSequenceSemanticCandidate(source.mechanics) &&
+    !spellAttackSequenceDistinctiveHeaderFallback(source.mechanics)
+  ) {
+    return { tag: "notRepresented" };
+  }
+  if (source.mechanics.family !== "activation") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const phaseIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "attack_roll",
+  );
+  const inspectedPhaseIndex = phaseIndex >= 0 ? phaseIndex : 0;
+  const phase = mechanics.phases[inspectedPhaseIndex];
+  const attackPhase = phase?.kind === "attack_roll" ? phase : undefined;
+  const hitEffectIndex =
+    attackPhase?.onHit.findIndex((effect) => effect.kind === "damage") ?? -1;
+  const hitEffect =
+    hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
+  const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
+  const selection =
+    attackPhase === undefined
+      ? undefined
+      : spellAttackSequenceTargetSelection(attackPhase.attachment);
+  const count =
+    selection === undefined
+      ? undefined
+      : spellAttackSequenceCountFacts(selection, mechanics.level);
+  const issues: SpellAttackSequenceMechanicsIssue[] = [];
+  const push = (
+    failedFact: SpellAttackSequenceFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ) => issues.push({ failedFact, mechanicsPath });
+  if (mechanics.level !== 0 && mechanics.level !== 2) {
+    push("level", spellMechanicsHeaderPath("level"));
+  }
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      SPELL_ATTACK_SEQUENCE_ROOT_FIELDS,
+    )
+  ) {
+    push("phase", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.school !== "evocation") {
+    push("school", spellMechanicsHeaderPath("school"));
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 120 ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind", "feet"])
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"])
+  ) {
+    push("components", spellMechanicsHeaderPath("components"));
+  }
+  if (
+    mechanics.duration.kind !== "instantaneous" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.duration, ["kind"])
+  ) {
+    push("duration", spellMechanicsHeaderPath("duration"));
+  }
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.castingTime.ritual !== undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS,
+    )
+  ) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === phaseIndex) continue;
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
+    }
+    if (mechanics.phases.length === 0) {
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+    }
+  }
+  const phaseOrdinal = PositiveInteger(inspectedPhaseIndex + 1);
+  if (phaseIndex < 0) {
+    push("phase", spellActivationPhasePath(phaseOrdinal));
+  } else if (phaseIndex !== 0) {
+    push("phaseOrder", spellActivationPhasePath(phaseOrdinal));
+  }
+  if (
+    attackPhase === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      attackPhase,
+      SPELL_ATTACK_SEQUENCE_PHASE_FIELDS,
+    ) ||
+    attackPhase.continue !== undefined ||
+    attackPhase.attackKind !== "ranged_spell_attack"
+  ) {
+    push("attackKind", spellActivationPhasePath(phaseOrdinal));
+  }
+  if (selection === undefined || count === undefined) {
+    push("targeting", spellActivationAttachmentPath(phaseOrdinal));
+  }
+  if (damageEffect === undefined || hitEffectIndex < 0) {
+    push(
+      "hitDamage",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    );
+  } else if (
+    !spellMechanicsObjectHasOnlyKeys(
+      damageEffect,
+      SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS,
+    ) ||
+    damageEffect.timing !== undefined ||
+    !spellAttackSequenceDamageAmountIsSupported(
+      damageEffect.amount,
+      mechanics.level,
+    )
+  ) {
+    push(
+      "damageAmount",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(hitEffectIndex + 1),
+      ),
     );
   }
-  return supportedPreparedSpellAttackSequenceProfile(
-    spell,
-    spellcasting.spellSlots,
-    ctx.castingSource.abilityModifier,
-    spellcasting.proficiencyBonus,
+  if (
+    attackPhase === undefined ||
+    attackPhase.onHit.length !== 1 ||
+    attackPhase.onMiss.length !== 1 ||
+    attackPhase.onMiss[0]?.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(attackPhase.onMiss[0] ?? {}, ["kind"])
+  ) {
+    push("missEffect", spellActivationPhasePath(phaseOrdinal));
+  }
+  const expectedDamageType: DamageType =
+    mechanics.level === 0 ? "force" : "fire";
+  const damageType: DamageType | undefined =
+    damageEffect?.damageType === expectedDamageType
+      ? expectedDamageType
+      : undefined;
+  if (damageType === undefined) {
+    push(
+      "damageType",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(Math.max(1, hitEffectIndex + 1)),
+      ),
+    );
+  }
+  const rangeFeet = spellDefinitionPointRangeFeet(
+    source.spellDefinitionRuleFacts.range,
+  );
+  if (rangeFeet === undefined) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  const uniqueIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (uniqueIssues !== undefined) {
+    const [first, ...rest] = uniqueIssues.map(spellAttackSequenceIssueResult);
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  if (
+    attackPhase === undefined ||
+    selection === undefined ||
+    count === undefined ||
+    damageEffect === undefined ||
+    !spellAttackSequenceDamageAmountIsSupported(
+      damageEffect.amount,
+      mechanics.level,
+    ) ||
+    rangeFeet === undefined ||
+    damageType === undefined
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        spellAttackSequenceIssueResult({
+          failedFact: "targeting",
+          mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
+        }),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    rangeFeet,
+    attackKind: "ranged_spell_attack" as const,
+    damageAmount: damageEffect.amount,
+    damageType,
+    count,
+  } satisfies SpellAttackSequenceMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "spellAttackSequence",
+      facts,
+      evidence: spellAttackSequenceMechanicsEvidence(
+        mechanics,
+        inspectedPhaseIndex,
+        hitEffectIndex,
+      ),
+      admit: (executionSource, ctx) =>
+        admitSpellAttackSequence(executionSource, ctx, facts),
+    },
+  };
+}
+
+function admitSpellAttackSequence(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: SpellAttackSequenceMechanicsFacts,
+): readonly SpellAttackSequenceInvocation[] {
+  const spellcasting = ctx.actor.origin.spellcasting;
+  const attackBonusValue = attackBonus(
+    Number(ctx.castingSource.abilityModifier) +
+      Number(spellcasting.proficiencyBonus),
+  );
+  if (facts.count.kind === "character") {
+    const characterLevel = spellAdmissionCharacterLevel(ctx);
+    let attackCount: MultiBeamSpellAttackBeamCount = facts.count.base;
+    for (const tier of facts.count.tiers) {
+      if (characterLevel >= tier.atLevel) attackCount = tier.value;
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: facts.damageAmount,
+      spellLevel: facts.level,
+      characterLevel,
+    });
+    if (damageExpr === null) return [];
+    return [
+      {
+        access: cantripSpellAccessFor(spell.castingSource),
+        resource: { tag: "none" },
+        procedure: "spellAttackSequence",
+        spell,
+        targeting: {
+          kind: "spellAttackSequenceCreatureOrObject",
+          countSource: "characterLevel",
+          attackCount: attackCount as MultiBeamSpellAttackBeamCount,
+        },
+        damage: { expr: damageExpr, damageType: facts.damageType },
+        rangeFeet: facts.rangeFeet,
+        attackKind: facts.attackKind,
+        attackBonus: attackBonusValue,
+      },
+    ];
+  }
+  const slotCount = facts.count;
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly SpellAttackSequenceInvocation[] => {
+      if (Number(slot.spellLevel) < facts.level) return [];
+      const attackCount = multiRaySpellAttackRayCount(
+        slotCount.base +
+          (Number(slot.spellLevel) - slotCount.baseLevel) *
+            slotCount.perSlotAboveBase,
+      );
+      const damageExpr = supportedDamageAmountExpr({
+        amount: facts.damageAmount,
+        spellLevel: facts.level,
+        slotLevel: slot.spellLevel,
+      });
+      if (attackCount === null || damageExpr === null) return [];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "spellAttackSequence",
+          spell,
+          targeting: {
+            kind: "spellAttackSequenceCreatureOrObject",
+            countSource: "spellSlotLevel",
+            attackCount: attackCount as MultiRaySpellAttackRayCount,
+          },
+          damage: { expr: damageExpr, damageType: facts.damageType },
+          rangeFeet: facts.rangeFeet,
+          attackKind: facts.attackKind,
+          attackBonus: attackBonusValue,
+        },
+      ];
+    },
   );
 }
 
@@ -148,7 +766,7 @@ export const spellAttackSequenceProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellAttackSequence",
   executionSchema: SpellAttackSequenceInvocationSchema,
-  admit: admitSpellAttackSequence,
+  admitMechanics: admitSpellAttackSequenceMechanics,
   discoverCastAct: discoverSpellAttackSequenceCastAct,
   resolve: resolveSpellAttackSequence,
 };

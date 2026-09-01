@@ -10,11 +10,55 @@
 --     at slot 3-4, 24 hours at slot 5+. First unit with slot-scaled
 --     duration; coalescing earlier gap.)
 --
--- DEFERRED. "You also have Advantage on any Wisdom (Perception or
--- Survival) check you make to find it" — requires both an
--- OngoingOperation array (the `operation` field is currently
--- singular) and a skill-scoped roll-advantage shape. Two widenings
--- for one rider is more than one tick can justify; deferred.
+-- The finding rider is represented as a passive operation with the canonical
+-- Wisdom/Perception-or-Survival scope.
+
+let DiceAmount : Type =
+      { kind : Text, expr : Optional { dice : Natural, dieSize : Natural } }
+
+let SkillFilter : Type =
+      { kind : Text, skills : List Text }
+
+let Effect : Type =
+      { kind : Text
+      , damageType : Optional Text
+      , amount : Optional DiceAmount
+      , mode : Optional Text
+      , affects : Optional Text
+      , on : Optional (List Text)
+      , abilityFilter : Optional (List Text)
+      , skillFilter : Optional SkillFilter
+      }
+
+let damageEffect : Effect =
+      { kind = "damage"
+      , damageType = Some "force"
+      , amount =
+          Some
+            { kind = "fixed"
+            , expr = Some { dice = 1, dieSize = 6 }
+            }
+      , mode = None Text
+      , affects = None Text
+      , on = None (List Text)
+      , abilityFilter = None (List Text)
+      , skillFilter = None SkillFilter
+      }
+
+let findingEffect : Effect =
+      { kind = "modify_roll_advantage"
+      , damageType = None Text
+      , amount = None DiceAmount
+      , mode = Some "advantage"
+      , affects = Some "self_roll"
+      , on = Some [ "ability_check" ]
+      , abilityFilter = Some [ "wis" ]
+      , skillFilter =
+          Some
+            { kind = "fixed"
+            , skills = [ "perception", "survival" ]
+            }
+      }
 
 let huntersMark =
       { kind = "spell"
@@ -49,7 +93,7 @@ let huntersMark =
               , label = "mark target"
               , value =
                   { kind = "mark"
-                  , selection = { mode = "one" }
+                  , selection = { mode = "one", targetKinds = [ "creature" ] }
                   , transfer =
                       Some
                         { onEvent = { kind = "target_drops_to_0_hp" }
@@ -60,14 +104,10 @@ let huntersMark =
               }
           , operations =
               [ { trigger = { kind = "on_caster_attack_hit" }
-                , effect =
-                    { kind = "damage"
-                    , damageType = "force"
-                    , amount =
-                        { kind = "fixed"
-                        , expr = { dice = 1, dieSize = 6 }
-                        }
-                    }
+                , effect = damageEffect
+                }
+              , { trigger = { kind = "passive" }
+                , effect = findingEffect
                 }
               ]
           }
