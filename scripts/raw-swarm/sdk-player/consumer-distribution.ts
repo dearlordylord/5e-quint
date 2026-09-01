@@ -113,7 +113,7 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
-/** Coarse safety ceiling; the reviewed manifest below remains exact. */
+/** Coarse safety ceiling, independent of the exact reviewed manifest. */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 1_000;
 export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN =
