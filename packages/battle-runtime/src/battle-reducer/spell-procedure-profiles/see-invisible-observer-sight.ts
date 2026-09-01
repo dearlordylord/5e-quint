@@ -27,16 +27,15 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //     query helpers and active-effect readers.
 //   - Duration expiry stays in the shared active-effect lifecycle.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { PositiveInteger } from "@dnd/shared/types";
-import { Result } from "effect";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 
-import {
-  type BattleActDiscoveryCandidate,
-  type BattleExecutableSpellInvocation,
-  type BattleResolutionResult,
-  type BattleState,
-  type SupportedSpellInvocation,
+import type {
+  BattleActDiscoveryCandidate,
+  BattleExecutableSpellInvocation,
+  BattleResolutionResult,
+  BattleState,
+  SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
@@ -58,11 +57,14 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
+  isSpellCanonicalDurationValue,
+  spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
+  type SpellCanonicalDurationValue,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -91,7 +93,21 @@ type SeeInvisibleObserverSightFailedFact =
   | "attachment"
   | "effect"
   | "mode";
-type SeeInvisibleObserverSightMechanicsFacts = SpellProcedureMechanicsFacts;
+type SeeInvisibleObserverSightDuration = Extract<
+  SpellProcedureMechanicsFacts["duration"],
+  { readonly kind: "timed" }
+> & { readonly value: SpellCanonicalDurationValue };
+type SeeInvisibleObserverSightMechanicsFacts = Omit<
+  SpellProcedureMechanicsFacts,
+  "range" | "duration"
+> & {
+  readonly range: Extract<
+    SpellProcedureMechanicsFacts["range"],
+    { readonly kind: "self" }
+  >;
+  readonly duration: SeeInvisibleObserverSightDuration;
+  readonly durationTicks: ElapsedTimeTicks;
+};
 type SeeInvisibleObserverSightAdmissionIssue = SpellProcedureAdmissionIssue<
   "seeInvisibleObserverSight",
   SeeInvisibleObserverSightFailedFact,
@@ -104,23 +120,55 @@ type SeeInvisibleDirectPhase = Extract<
   Extract<SpellMechanics, { readonly family: "activation" }>["phases"][number],
   { readonly kind: "direct" }
 >;
+type SeeInvisiblePhaseOccurrence = {
+  readonly phase: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >["phases"][number];
+  readonly ordinal: PositiveInteger;
+};
 type SeeInvisibleSightEffectOccurrence = {
   readonly phase: SeeInvisibleDirectPhase;
-  readonly phaseIndex: number;
-  readonly effectIndex: number;
+  readonly phaseOrdinal: PositiveInteger;
+  readonly effectOrdinal: PositiveInteger;
 };
+
+function isSeeInvisibleObserverSightDuration(
+  duration: SpellProcedureMechanicsFacts["duration"],
+): duration is SeeInvisibleObserverSightDuration {
+  return (
+    duration.kind === "timed" && isSpellCanonicalDurationValue(duration.value)
+  );
+}
+
+function seeInvisiblePhaseOccurrences(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): readonly SeeInvisiblePhaseOccurrence[] {
+  return mechanics.phases.map((phase, index) => ({
+    phase,
+    ordinal: PositiveInteger(index + 1),
+  }));
+}
 
 function seeInvisibleSightEffectOccurrences(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): readonly SeeInvisibleSightEffectOccurrence[] {
-  return mechanics.phases.flatMap((phase, phaseIndex) => {
-    if (phase.kind !== "direct") return [];
-    return (phase.effects ?? []).flatMap((effect, effectIndex) =>
-      effect.kind === "see_invisible_and_ethereal"
-        ? [{ phase, phaseIndex, effectIndex }]
-        : [],
-    );
-  });
+  return seeInvisiblePhaseOccurrences(mechanics).flatMap(
+    ({ phase, ordinal: phaseOrdinal }) => {
+      if (phase.kind !== "direct") return [];
+      return (phase.effects ?? []).flatMap((effect, effectIndex) =>
+        effect.kind === "see_invisible_and_ethereal"
+          ? [
+              {
+                phase,
+                phaseOrdinal,
+                effectOrdinal: PositiveInteger(effectIndex + 1),
+              },
+            ]
+          : [],
+      );
+    },
+  );
 }
 
 function isSeeInvisibleObserverSightRepresentation(
@@ -176,13 +224,19 @@ function seeInvisibleObserverSightMechanicsAdmission(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
+  const rangeFacts =
+    mechanics.range.kind === "self" ? mechanics.range : undefined;
+  const durationFacts = isSeeInvisibleObserverSightDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
   const expected = seeInvisibleSightEffectOccurrences(mechanics)[0];
-  const fallbackPhaseIndex = mechanics.phases.findIndex(
-    (phase) => phase.kind === "direct",
+  const phaseOccurrences = seeInvisiblePhaseOccurrences(mechanics);
+  const fallbackPhase = phaseOccurrences.find(
+    ({ phase }) => phase.kind === "direct",
   );
-  const phaseIndex = expected?.phaseIndex ?? fallbackPhaseIndex;
-  const phaseOrdinal = PositiveInteger(phaseIndex < 0 ? 1 : phaseIndex + 1);
-  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
+  const selectedPhaseOrdinal = expected?.phaseOrdinal ?? fallbackPhase?.ordinal;
+  const phase = expected?.phase ?? fallbackPhase?.phase;
+  const phaseOrdinal = selectedPhaseOrdinal ?? PositiveInteger(1);
   const issues: Array<{
     readonly failedFact: SeeInvisibleObserverSightFailedFact;
     readonly mechanicsPath: UnitMechanicsPath;
@@ -203,9 +257,9 @@ function seeInvisibleObserverSightMechanicsAdmission(
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
   if (
-    mechanics.duration.kind !== "timed" ||
-    mechanics.duration.value.unit !== "hour" ||
-    mechanics.duration.value.amount !== 1
+    durationFacts === undefined ||
+    durationFacts.value.unit !== "hour" ||
+    durationFacts.value.amount !== 1
   ) {
     pushIssue("duration", spellDurationValuePath());
   }
@@ -214,18 +268,21 @@ function seeInvisibleObserverSightMechanicsAdmission(
   )) {
     pushIssue("duration", mechanicsPath);
   }
-  for (const [index, candidate] of mechanics.phases.entries()) {
-    if (candidate.kind === "direct" && candidate.mode !== undefined) {
-      pushIssue("mode", spellActivationPhasePath(PositiveInteger(index + 1)));
+  for (const occurrence of phaseOccurrences) {
+    if (
+      occurrence.phase.kind === "direct" &&
+      occurrence.phase.mode !== undefined
+    ) {
+      pushIssue("mode", spellActivationPhasePath(occurrence.ordinal));
     }
   }
-  if (mechanics.phases.length !== 1 || phaseIndex !== 0) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
+  if (
+    mechanics.phases.length !== 1 ||
+    selectedPhaseOrdinal !== PositiveInteger(1)
+  ) {
+    for (const occurrence of phaseOccurrences) {
+      if (occurrence.ordinal === selectedPhaseOrdinal) continue;
+      pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
     }
     if (mechanics.phases.length === 0) {
       pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
@@ -235,8 +292,7 @@ function seeInvisibleObserverSightMechanicsAdmission(
     pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
   }
   const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const selectedEffectIndex =
-    expected?.phaseIndex === phaseIndex ? expected.effectIndex : 0;
+  const selectedEffectOrdinal = expected?.effectOrdinal ?? PositiveInteger(1);
   if (effects.length === 0) {
     pushIssue(
       "effect",
@@ -244,20 +300,21 @@ function seeInvisibleObserverSightMechanicsAdmission(
     );
   } else {
     for (const [index] of effects.entries()) {
-      if (index === selectedEffectIndex) continue;
+      const effectOrdinal = PositiveInteger(index + 1);
+      if (effectOrdinal === selectedEffectOrdinal) continue;
       pushIssue(
         "phaseCount",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+        spellActivationEffectPath(phaseOrdinal, effectOrdinal),
       );
     }
   }
-  if (effects[selectedEffectIndex]?.kind !== "see_invisible_and_ethereal") {
+  const selectedEffect = effects.find(
+    (_effect, index) => PositiveInteger(index + 1) === selectedEffectOrdinal,
+  );
+  if (selectedEffect?.kind !== "see_invisible_and_ethereal") {
     pushIssue(
       "effect",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(selectedEffectIndex + 1),
-      ),
+      spellActivationEffectPath(phaseOrdinal, selectedEffectOrdinal),
     );
   }
   const failures = spellProcedureNonEmpty(issues);
@@ -271,8 +328,24 @@ function seeInvisibleObserverSightMechanicsAdmission(
       ),
     };
   }
+  if (rangeFacts === undefined || durationFacts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        seeInvisibleObserverSightIssue(
+          rangeFacts === undefined ? "range" : "duration",
+          rangeFacts === undefined
+            ? spellMechanicsHeaderPath("range")
+            : spellDurationValuePath(),
+        ),
+      ],
+    };
+  }
   const facts = {
     ...source.spellDefinitionRuleFacts,
+    range: rangeFacts,
+    duration: durationFacts,
+    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.value),
   } satisfies SeeInvisibleObserverSightMechanicsFacts;
   return {
     tag: "supported",
@@ -315,13 +388,6 @@ function admitSeeInvisibleObserverSight(
   ctx: SpellAdmissionContext,
   facts: SeeInvisibleObserverSightMechanicsFacts,
 ): readonly SeeInvisibleObserverSightSpellInvocation[] {
-  if (facts.duration.kind !== "timed") {
-    return [];
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    facts.duration.value,
-  );
-  if (Result.isFailure(durationTicks)) return [];
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SeeInvisibleObserverSightSpellInvocation[] =>
       Number(slot.spellLevel) < Number(facts.level)
@@ -338,7 +404,7 @@ function admitSeeInvisibleObserverSight(
                 sourceCombatantId: ctx.actor.combatantId,
                 expiresAt: {
                   kind: "duration",
-                  durationTicks: durationTicks.success,
+                  durationTicks: facts.durationTicks,
                 },
               },
             },

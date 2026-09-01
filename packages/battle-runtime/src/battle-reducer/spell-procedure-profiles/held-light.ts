@@ -1,8 +1,5 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
-import type {
-  BattleSpellAdmissionSource,
-  BattleSpellExecutionSource,
-} from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 //
@@ -13,8 +10,6 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - admit()                         - was
 //                                       supportedCantripHeldLightSpellProfile
 //                                       in spells-profiles.ts
-//   - isHeldFlameAttackOngoingEffectSpell - shared shape parser for the paired
-//                                       heldLightHurl profile
 //   - discoverCastAct()               - was the heldLight branch in
 //                                       spells-discovery.ts:discoverBattleActs
 //   - castSummary()                   - was the heldLight branch in
@@ -29,9 +24,9 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - heldLightHurl has its own paired profile; the shared attack/damage
 //     resolver still owns the hurl damage lifecycle.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet, PositiveInteger } from "@dnd/shared/types";
-import { Result, Schema } from "effect";
+import type { MovementFeet as MovementFeetType } from "@dnd/shared/types";
+import { Match, Schema } from "effect";
 import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
@@ -65,17 +60,26 @@ import {
   SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import type { HeldLightHurlMechanicalFacts } from "../../battle-state-execution.ts";
+import {
+  diceExprWithDelta,
+  supportedDamageAmountExpr,
+} from "../spells-execution-facts.ts";
 import { characterExecutionWithHeldLightHurl } from "../../character-execution-queries.ts";
 import type { HeldLightHurlSpellProcedureExecution } from "../../character-execution.ts";
-import type { DiceAmount, SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  DiceAmount,
+  DiceExpr,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import {
+  isSpellCanonicalDurationValue,
+  spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
+  type SpellCanonicalDurationValue,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -106,13 +110,44 @@ type HeldLightOperationOccurrence = {
   readonly operation: HeldLightMechanics["operations"][number];
   readonly ordinal: PositiveInteger;
 };
-type HeldLightMechanicsFacts = SpellProcedureMechanicsFacts & {
+type HeldLightDamageAmount =
+  | Extract<DiceAmount, { readonly kind: "fixed" }>
+  | (Extract<DiceAmount, { readonly kind: "threshold_tiers" }> & {
+      readonly axis: "character";
+    })
+  | (Extract<
+      DiceAmount,
+      { readonly kind: "threshold_tiers_exploding_max_die" }
+    > & {
+      readonly axis: "character";
+    });
+type HeldLightDuration = Extract<
+  SpellProcedureMechanicsFacts["duration"],
+  { readonly kind: "timed" }
+> & { readonly value: SpellCanonicalDurationValue };
+
+function isHeldLightDuration(
+  duration: SpellProcedureMechanicsFacts["duration"],
+): duration is HeldLightDuration {
+  return (
+    duration.kind === "timed" && isSpellCanonicalDurationValue(duration.value)
+  );
+}
+type HeldLightMechanicsFacts = Omit<
+  SpellProcedureMechanicsFacts,
+  "range" | "duration"
+> & {
+  readonly range: Extract<
+    SpellProcedureMechanicsFacts["range"],
+    { readonly kind: "self" }
+  >;
+  readonly duration: HeldLightDuration;
   readonly light: {
-    readonly brightRadiusFeet: number;
-    readonly dimAdditionalFeet: number;
+    readonly brightRadiusFeet: MovementFeetType;
+    readonly dimAdditionalFeet: MovementFeetType;
   };
   readonly hurl: {
-    readonly damageAmount: DiceAmount;
+    readonly damageAmount: HeldLightDamageAmount;
   };
 };
 type HeldLightFailedFact =
@@ -214,17 +249,6 @@ function heldLightRepresentation(
   );
 }
 
-export function isHeldFlameAttackOngoingEffectSpell(
-  spell: BattleSpellAdmissionSource,
-): spell is BattleSpellAdmissionSource & {
-  readonly mechanics: Extract<
-    BattleSpellAdmissionSource["mechanics"],
-    { family: "ongoing_effect" }
-  >;
-} {
-  return heldLightRepresentation(spell.mechanics);
-}
-
 function heldLightIssue(
   failedFact: HeldLightFailedFact,
   mechanicsPath: UnitMechanicsPath,
@@ -256,6 +280,61 @@ function heldLightHurlDamageAmount(
     damageEffect.damageType === "fire"
     ? damageEffect.amount
     : null;
+}
+
+type HeldLightDamageAmountProjection =
+  | { readonly tag: "supported"; readonly amount: HeldLightDamageAmount }
+  | { readonly tag: "unsupported" };
+
+function isHeldLightDamageAmount(
+  amount: DiceAmount,
+): amount is HeldLightDamageAmount {
+  if (amount.kind === "fixed") return true;
+  if (amount.kind === "threshold_tiers") {
+    return amount.axis === "character";
+  }
+  return (
+    amount.kind === "threshold_tiers_exploding_max_die" &&
+    amount.axis === "character"
+  );
+}
+
+function heldLightDamageAmountProjection(
+  amount: DiceAmount | null,
+): HeldLightDamageAmountProjection {
+  return amount !== null &&
+    isHeldLightDamageAmount(amount) &&
+    supportedDamageAmountExpr({ amount, characterLevel: 1 }) !== null
+    ? { tag: "supported", amount }
+    : { tag: "unsupported" };
+}
+
+function heldLightDamageExpr(
+  amount: HeldLightDamageAmount,
+  characterLevel: number,
+): DiceExpr {
+  return Match.value(amount).pipe(
+    Match.when({ kind: "fixed" }, ({ expr }) => expr),
+    Match.when({ kind: "threshold_tiers" }, (threshold) =>
+      threshold.tiers.reduce(
+        (expr, tier) =>
+          characterLevel >= tier.atLevel
+            ? diceExprWithDelta(expr, tier.override)
+            : expr,
+        threshold.base,
+      ),
+    ),
+    Match.when({ kind: "threshold_tiers_exploding_max_die" }, (threshold) =>
+      threshold.tiers.reduce<DiceExpr>(
+        (expr, tier) =>
+          characterLevel >= tier.atLevel
+            ? diceExprWithDelta(expr, { dice: tier.dice })
+            : expr,
+        { dice: threshold.baseDice, dieSize: threshold.dieSize },
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function heldLightHurlOptionalIssues(
@@ -307,6 +386,11 @@ function heldLightFactsFromMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
+  const rangeFacts =
+    mechanics.range.kind === "self" ? mechanics.range : undefined;
+  const durationFacts = isHeldLightDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
   const occurrences = heldLightOperationOccurrences(mechanics);
   const lightOperation = occurrences.find(heldLightLightOperation);
   const hurlOperation = occurrences.find(heldLightHurlOperation);
@@ -420,25 +504,38 @@ function heldLightFactsFromMechanics(
     }
   }
 
-  let light: HeldLightMechanicsFacts["light"] | undefined;
+  const lightProjection =
+    lightOperation === undefined
+      ? ({ tag: "unsupported" } as const)
+      : lightOperation.operation.effect.kind ===
+            "emit_bright_and_dim_illumination" &&
+          lightOperation.operation.effect.brightRadiusFeet === 20 &&
+          lightOperation.operation.effect.dimAdditionalFeet === 20
+        ? {
+            tag: "supported" as const,
+            light: {
+              brightRadiusFeet: movementFeet(
+                lightOperation.operation.effect.brightRadiusFeet,
+              ),
+              dimAdditionalFeet: movementFeet(
+                lightOperation.operation.effect.dimAdditionalFeet,
+              ),
+            },
+          }
+        : ({ tag: "unsupported" } as const);
   if (lightOperation === undefined) {
     pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
     pushIssue("light", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  } else if (
-    lightOperation.operation.effect.kind !==
-      "emit_bright_and_dim_illumination" ||
-    lightOperation.operation.effect.brightRadiusFeet !== 20 ||
-    lightOperation.operation.effect.dimAdditionalFeet !== 20
-  ) {
+  } else if (lightProjection.tag === "unsupported") {
     pushIssue("light", spellOngoingOperationEffectPath(lightOperation.ordinal));
-  } else {
-    light = {
-      brightRadiusFeet: lightOperation.operation.effect.brightRadiusFeet,
-      dimAdditionalFeet: lightOperation.operation.effect.dimAdditionalFeet,
-    };
   }
 
-  let damageAmount: DiceAmount | undefined;
+  const hurlProjection =
+    hurlOperation === undefined
+      ? ({ tag: "unsupported" } as const)
+      : heldLightDamageAmountProjection(
+          heldLightHurlDamageAmount(hurlOperation),
+        );
   if (hurlOperation === undefined) {
     pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
     pushIssue("hurl", spellOngoingOperationEffectPath(PositiveInteger(1)));
@@ -448,15 +545,8 @@ function heldLightFactsFromMechanics(
     )) {
       pushIssue(failedFact, mechanicsPath);
     }
-    const candidate = heldLightHurlDamageAmount(hurlOperation);
-    if (
-      candidate === null ||
-      supportedDamageAmountExpr({ amount: candidate, characterLevel: 1 }) ===
-        null
-    ) {
+    if (hurlProjection.tag === "unsupported") {
       pushIssue("hurl", spellOngoingOperationEffectPath(hurlOperation.ordinal));
-    } else {
-      damageAmount = candidate;
     }
   }
 
@@ -471,22 +561,39 @@ function heldLightFactsFromMechanics(
       ),
     };
   }
-  if (light === undefined || damageAmount === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        heldLightIssue(
-          "operation",
-          spellOngoingOperationPath(PositiveInteger(1)),
-        ),
-      ],
-    };
+  if (
+    rangeFacts === undefined ||
+    durationFacts === undefined ||
+    lightProjection.tag !== "supported" ||
+    hurlProjection.tag !== "supported"
+  ) {
+    const fallbackIssue =
+      rangeFacts === undefined
+        ? heldLightIssue("range", spellMechanicsHeaderPath("range"))
+        : durationFacts === undefined
+          ? heldLightIssue("duration", spellDurationValuePath())
+          : lightProjection.tag !== "supported"
+            ? heldLightIssue(
+                "light",
+                spellOngoingOperationEffectPath(
+                  lightOperation?.ordinal ?? PositiveInteger(1),
+                ),
+              )
+            : heldLightIssue(
+                "hurl",
+                spellOngoingOperationEffectPath(
+                  hurlOperation?.ordinal ?? PositiveInteger(1),
+                ),
+              );
+    return { tag: "unsupported", issues: [fallbackIssue] };
   }
 
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    light,
-    hurl: { damageAmount },
+    range: rangeFacts,
+    duration: durationFacts,
+    light: lightProjection.light,
+    hurl: { damageAmount: hurlProjection.amount },
   } satisfies HeldLightMechanicsFacts;
   return {
     tag: "supported",
@@ -522,18 +629,24 @@ function heldLightFactsFromMechanics(
   };
 }
 
-function heldLightHurlFromFacts(
-  facts: HeldLightMechanicsFacts,
+function admitHeldLight(
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
-): HeldLightHurlMechanicalFacts | null {
-  const damageExpr = supportedDamageAmountExpr({
-    amount: facts.hurl.damageAmount,
-    spellLevel: Number(facts.level),
-    characterLevel: spellAdmissionCharacterLevel(ctx),
-  });
-  return damageExpr === null
-    ? null
-    : {
+  facts: HeldLightMechanicsFacts,
+): readonly HeldLightInvocation[] {
+  const damageExpr = heldLightDamageExpr(
+    facts.hurl.damageAmount,
+    spellAdmissionCharacterLevel(ctx),
+  );
+  return [
+    {
+      access: cantripSpellAccessFor(ctx.castingSource),
+      resource: { tag: "none" },
+      procedure: "heldLight",
+      spell,
+      actionCost: "bonusAction",
+      light: facts.light,
+      hurl: {
         targeting: { kind: "singleCreatureOrObject" },
         damage: { expr: damageExpr, damageType: "fire" },
         rangeFeet: movementFeet(60),
@@ -542,59 +655,15 @@ function heldLightHurlFromFacts(
           Number(ctx.castingSource.abilityModifier) +
             Number(ctx.actor.origin.spellcasting.proficiencyBonus),
         ),
-      };
-}
-
-function admitHeldLight(
-  spell: BattleSpellExecutionSource,
-  ctx: SpellAdmissionContext,
-  facts: HeldLightMechanicsFacts,
-): readonly HeldLightInvocation[] {
-  if (facts.duration.kind !== "timed") return [];
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    facts.duration.value,
-  );
-  const hurl = heldLightHurlFromFacts(facts, ctx);
-  return Result.isFailure(durationTicks) || hurl === null
-    ? []
-    : [
-        {
-          access: cantripSpellAccessFor(ctx.castingSource),
-          resource: { tag: "none" },
-          procedure: "heldLight",
-          spell,
-          actionCost: "bonusAction",
-          light: {
-            brightRadiusFeet: movementFeet(facts.light.brightRadiusFeet),
-            dimAdditionalFeet: movementFeet(facts.light.dimAdditionalFeet),
-          },
-          hurl,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
-        },
-      ];
-}
-
-export function heldLightHurlMechanicalFacts(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): HeldLightHurlMechanicalFacts | null {
-  if (!heldLightRepresentation(spell.mechanics)) return null;
-  const occurrences = heldLightOperationOccurrences(spell.mechanics);
-  const hurlOperation = occurrences.find(heldLightHurlOperation);
-  const amount =
-    hurlOperation === undefined
-      ? null
-      : heldLightHurlDamageAmount(hurlOperation);
-  return amount === null
-    ? null
-    : heldLightHurlFromFacts(
-        {
-          ...spell.spellDefinitionRuleFacts,
-          light: { brightRadiusFeet: 20, dimAdditionalFeet: 20 },
-          hurl: { damageAmount: amount },
-        },
-        ctx,
-      );
+      },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: spellDurationTicksFromCanonicalValue(
+          facts.duration.value,
+        ),
+      },
+    },
+  ];
 }
 
 function discoverHeldLightCastAct(
