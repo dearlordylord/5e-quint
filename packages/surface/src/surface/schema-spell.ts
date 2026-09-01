@@ -7463,51 +7463,64 @@ export const MinorMagicEffectMenuMechanicsSchema =
     ),
   );
 
-type SpellMechanicsMemberSchemas = readonly [
-  typeof OngoingEffectMechanicsSchema,
-  typeof ModalOngoingEffectMechanicsSchema,
-  typeof ActivationMechanicsSchema,
-  typeof ModalActivationMechanicsSchema,
-  typeof TriggeredReactionMechanicsSchema,
-  typeof PassiveHitInterceptMechanicsSchema,
-  typeof AnchoredTriggerMechanicsSchema,
-  typeof MagicCircleWardMechanicsSchema,
-  typeof StoneMergeMechanicsSchema,
-  typeof GlyphWardingMechanicsSchema,
-  typeof SpawnedCreatureMechanicsSchema,
-  typeof ReanimatedCreatureMechanicsSchema,
-  typeof TemplatedMultiSpawnMechanicsSchema,
-  typeof ObjectRepairMechanicsSchema,
-  typeof MinorMagicEffectMenuMechanicsSchema,
-];
+class SpellMechanicsSchemaMembers {
+  readonly ongoingEffect: typeof OngoingEffectMechanicsSchema =
+    OngoingEffectMechanicsSchema;
+  readonly modalOngoingEffect: typeof ModalOngoingEffectMechanicsSchema =
+    ModalOngoingEffectMechanicsSchema;
+  readonly activation: typeof ActivationMechanicsSchema =
+    ActivationMechanicsSchema;
+  readonly modalActivation: typeof ModalActivationMechanicsSchema =
+    ModalActivationMechanicsSchema;
+  readonly triggeredReaction: typeof TriggeredReactionMechanicsSchema =
+    TriggeredReactionMechanicsSchema;
+  readonly passiveHitIntercept: typeof PassiveHitInterceptMechanicsSchema =
+    PassiveHitInterceptMechanicsSchema;
+  readonly anchoredTrigger: typeof AnchoredTriggerMechanicsSchema =
+    AnchoredTriggerMechanicsSchema;
+  readonly magicCircleWard: typeof MagicCircleWardMechanicsSchema =
+    MagicCircleWardMechanicsSchema;
+  readonly stoneMerge: typeof StoneMergeMechanicsSchema =
+    StoneMergeMechanicsSchema;
+  readonly glyphWarding: typeof GlyphWardingMechanicsSchema =
+    GlyphWardingMechanicsSchema;
+  readonly spawnedCreature: typeof SpawnedCreatureMechanicsSchema =
+    SpawnedCreatureMechanicsSchema;
+  readonly reanimatedCreature: typeof ReanimatedCreatureMechanicsSchema =
+    ReanimatedCreatureMechanicsSchema;
+  readonly templatedMultiSpawn: typeof TemplatedMultiSpawnMechanicsSchema =
+    TemplatedMultiSpawnMechanicsSchema;
+  readonly objectRepair: typeof ObjectRepairMechanicsSchema =
+    ObjectRepairMechanicsSchema;
+  readonly minorMagicEffectMenu: typeof MinorMagicEffectMenuMechanicsSchema =
+    MinorMagicEffectMenuMechanicsSchema;
+}
 
-const spellMechanicsMemberSchemas: SpellMechanicsMemberSchemas = [
-  OngoingEffectMechanicsSchema,
-  ModalOngoingEffectMechanicsSchema,
-  ActivationMechanicsSchema,
-  ModalActivationMechanicsSchema,
-  TriggeredReactionMechanicsSchema,
-  PassiveHitInterceptMechanicsSchema,
-  AnchoredTriggerMechanicsSchema,
-  MagicCircleWardMechanicsSchema,
-  StoneMergeMechanicsSchema,
-  GlyphWardingMechanicsSchema,
-  SpawnedCreatureMechanicsSchema,
-  ReanimatedCreatureMechanicsSchema,
-  TemplatedMultiSpawnMechanicsSchema,
-  ObjectRepairMechanicsSchema,
-  MinorMagicEffectMenuMechanicsSchema,
-];
+type SpellMechanicsMemberSchema =
+  SpellMechanicsSchemaMembers[keyof SpellMechanicsSchemaMembers];
 
-type SpellMechanics = SpellMechanicsFromMembers<
-  typeof spellMechanicsMemberSchemas
->;
+const spellMechanicsMemberSchemas = (): readonly [
+  SpellMechanicsMemberSchema,
+  ...SpellMechanicsMemberSchema[],
+] => {
+  const [first, ...remaining] = Object.values(
+    new SpellMechanicsSchemaMembers(),
+  );
+  if (first === undefined) {
+    throw new Error("SpellMechanicsSchemaMembers must remain non-empty");
+  }
+  return [first, ...remaining];
+};
+
+const spellMechanicsMembers = spellMechanicsMemberSchemas();
+
+type SpellMechanics = SpellMechanicsFromMembers<typeof spellMechanicsMembers>;
 type SpellMechanicsEncoded = SpellMechanicsEncodedFromMembers<
-  typeof spellMechanicsMemberSchemas
+  typeof spellMechanicsMembers
 >;
 
 const spellMechanicsSchema = Schema.Union(
-  spellMechanicsMemberSchemas,
+  spellMechanicsMembers,
 ) satisfies Schema.Codec<SpellMechanics, SpellMechanicsEncoded, never, never>;
 
 export const SpellMechanicsSchema: Schema.Codec<

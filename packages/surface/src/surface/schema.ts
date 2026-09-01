@@ -6,8 +6,8 @@ import {
   type StatBlockRecord,
   type StatBlockRecordEncoded,
 } from "./stat-block-types.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 import {
-  SRD_PROVENANCE_KIND,
   SRD_SURFACE_KIND,
   type PublishedSrdSurface,
   type PublishedSrdSurfaceEncoded,

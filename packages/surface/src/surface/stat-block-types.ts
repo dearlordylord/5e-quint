@@ -24,6 +24,7 @@ import {
   type SurfaceReactionTriggerKind,
   type SurfaceReactionTriggerMember,
 } from "./surface-vocabulary.ts";
+import type { SrdProvenance } from "./srd-provenance.ts";
 
 export type { StatBlockId } from "@dnd/shared/game-facts";
 
@@ -717,7 +718,7 @@ export type StatBlockRecord = {
   readonly kind: "statBlock";
   readonly name: string;
   readonly provenance: {
-    readonly kind: "srd-5.2.1" | "xphb" | "synthetic-test";
+    readonly kind: SrdProvenance["kind"] | "xphb" | "synthetic-test";
     readonly section: string;
   };
   readonly challengeRating: ChallengeRating;
@@ -761,9 +762,6 @@ export type StandaloneStatBlockEncoded =
 export type StatBlockRecordEncoded = StatBlockWireValue<StatBlockRecord>;
 
 export type SrdStatBlockRecord = Omit<StatBlockRecord, "provenance"> & {
-  readonly provenance: {
-    readonly kind: "srd-5.2.1";
-    readonly section: string;
-  };
+  readonly provenance: SrdProvenance;
 };
 export type SrdStatBlockRecordEncoded = StatBlockWireValue<SrdStatBlockRecord>;
