@@ -324,6 +324,7 @@ describe("character execution profile projection", () => {
     const resourceAdmissions = admitCharacterBattleResourceProcedures(
       [{ unit }],
       fighterLevels,
+      [],
     );
     if (Result.isFailure(resourceAdmissions)) {
       throw new Error("Expected canonical Indomitable resource admission.");

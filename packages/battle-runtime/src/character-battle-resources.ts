@@ -47,8 +47,12 @@ import {
   requireCharacterClassLevel,
   parseSupportedUnitFeatureProfile,
   unitHasAttackActionAreaSaveDamageReplacementResourceShape,
+  type BattleUnitSupportProfile,
+  type BattleUnitSupportProfileSourceFacts,
   type BattleUnitSupportProfileIssue,
+  type BattleUnitSupportSource,
   type SupportedUnitFeatureFacts,
+  type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import {
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
@@ -222,12 +226,16 @@ export type CharacterBattleResourceProcedureAdmission =
   | {
       readonly tag: "unitFeatureProcedure";
       readonly resource: CharacterBattleResourceInit;
-      readonly profile: CharacterBattleFeatureInit;
+      readonly facts: SupportedUnitFeatureFacts;
     };
 
 export function admitCharacterBattleResourceProcedures(
   resources: readonly CharacterBattleResourceInit[],
   classLevels: CharacterBattleClassLevels,
+  unitRefs: readonly {
+    readonly unit: BattleUnitSupportSource;
+    readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  }[],
 ): Result.Result<
   readonly CharacterBattleResourceProcedureAdmission[],
   ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>
@@ -245,11 +253,16 @@ export function admitCharacterBattleResourceProcedures(
           const profile = parseSupportedUnitFeatureProfile(
             resource.unit,
             classLevels,
+            selectedResourceProcedureSourceFacts(resource, unitRefs),
           );
           admissions.push(
             profile === null
               ? { tag: "resourceWithoutProcedure", resource }
-              : { tag: "unitFeatureProcedure", resource, profile },
+              : {
+                  tag: "unitFeatureProcedure",
+                  resource,
+                  facts: supportedUnitFeatureFacts(profile),
+                },
           );
         },
         admitted: (feature) => {
@@ -286,6 +299,34 @@ export function admitCharacterBattleResourceProcedures(
   return firstIssue === undefined
     ? Result.succeed(admissions)
     : Result.fail([firstIssue, ...remainingIssues]);
+}
+
+function supportedUnitFeatureFacts(
+  profile: SupportedUnitFeatureProfile,
+): SupportedUnitFeatureFacts {
+  const { unit: _unit, ...facts } = profile;
+  return facts;
+}
+
+function selectedResourceProcedureSourceFacts(
+  resource: CharacterBattleResourceInit,
+  unitRefs: readonly {
+    readonly unit: BattleUnitSupportSource;
+    readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  }[],
+): BattleUnitSupportProfileSourceFacts | undefined {
+  const resourceUnitRef = unitRefs.find(
+    ({ unit }) => unit.id === resource.unit.id,
+  );
+  const selectedProfile = resourceUnitRef?.supportProfiles.find(
+    (profile) =>
+      typeof profile === "object" &&
+      profile.kind === "attackActionAreaSaveDamageReplacement",
+  );
+  const damageType = selectedProfile?.breath.damage.damageType;
+  return damageType?.kind === "draconicAncestry"
+    ? { draconicAncestryDamageType: damageType.value }
+    : undefined;
 }
 
 type SorcererMetamagicMechanics = Extract<

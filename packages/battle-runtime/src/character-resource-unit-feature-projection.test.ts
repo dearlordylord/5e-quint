@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { classLevel } from "@dnd/shared/types";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { Result } from "effect";
 
 import {
   actionSurgeResource,
@@ -21,8 +22,37 @@ import { battleCreatureStateAdmissionFromInit } from "./battle-reducer/creature-
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 import { unitMechanicsVariant } from "./unit-profile-admission-catalog.test-support.ts";
+import { admitCharacterBattleResourceProcedures } from "./character-battle-resources.ts";
+import { parseCharacterBattleClassLevels } from "./character-class-level.ts";
 
 describe("character resource Unit feature projection", () => {
+  test("keeps the resource Unit as the sole identity beside parsed procedure facts", () => {
+    const rage = rageResource();
+    const classLevels = parseCharacterBattleClassLevels([
+      { className: "barbarian", level: 1 },
+    ]);
+    if (Result.isFailure(classLevels)) {
+      throw new Error("Expected valid Barbarian class levels.");
+    }
+    const admission = admitCharacterBattleResourceProcedures(
+      [rage],
+      classLevels.success,
+      [],
+    );
+    if (Result.isFailure(admission)) {
+      throw new Error("Expected Rage resource procedure admission.");
+    }
+
+    expect(admission.success).toHaveLength(1);
+    expect(admission.success[0]).toMatchObject({
+      tag: "unitFeatureProcedure",
+      resource: rage,
+      facts: { kind: "ongoingFeature" },
+    });
+    if (admission.success[0]?.tag !== "unitFeatureProcedure") return;
+    expect(admission.success[0].facts).not.toHaveProperty("unit");
+  });
+
   test("projects ordinary resource-backed Unit features into character execution", () => {
     const bardicInspiration = unitLibrary.requireUnit(
       "bard_bardic_inspiration",
@@ -213,7 +243,13 @@ describe("character resource Unit feature projection", () => {
       "battleUnitSupportProfileIssue",
       "battleUnitSupportProfileIssue",
     ]);
-    expect(admission.issues.map(({ message }) => message)).toEqual([
+    expect(
+      admission.issues.map((issue) =>
+        issue.tag === "battleUnitSupportProfileIssue"
+          ? issue.message
+          : battleStateInitIssueMessage(issue),
+      ),
+    ).toEqual([
       "The represented atomic failed Saving Throw reroll root is not completely supported by Battle.",
       "The represented atomic failed Saving Throw reroll root is not completely supported by Battle.",
     ]);

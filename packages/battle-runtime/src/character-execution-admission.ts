@@ -344,29 +344,6 @@ function bindResourceFeatureProcedure(
   );
 }
 
-function resourceSelectedAreaDamageReplacementProcedures(input: {
-  readonly resourceUnits: readonly AuthoredUnitSource[];
-  readonly unitRefs: readonly {
-    readonly unit: BattleUnitSupportSource;
-    readonly supportProfiles: readonly BattleUnitSupportProfile[];
-  }[];
-}): readonly BoundUnitFeatureProcedureFacts[] {
-  const resourceUnitsById = new Map(
-    input.resourceUnits.map((unit) => [unit.id, unit]),
-  );
-  return input.unitRefs.flatMap((unitRef) => {
-    const resourceUnit = resourceUnitsById.get(unitRef.unit.id);
-    if (resourceUnit === undefined) return [];
-    return unitRef.supportProfiles.flatMap(
-      (profile): readonly BoundUnitFeatureProcedureFacts[] =>
-        typeof profile === "object" &&
-        profile.kind === "attackActionAreaSaveDamageReplacement"
-          ? [{ sourceUnitId: resourceUnit.id, facts: profile }]
-          : [],
-    );
-  });
-}
-
 function resourceUnitFeatureProcedures(
   admissions: readonly CharacterBattleResourceProcedureAdmission[],
 ): readonly BoundUnitFeatureProcedureFacts[] {
@@ -375,8 +352,8 @@ function resourceUnitFeatureProcedures(
       Match.discriminatorsExhaustive("tag")({
         resourceWithoutProcedure: () => [],
         resourceFeatureProcedure: () => [],
-        unitFeatureProcedure: ({ profile }) => [
-          boundUnitFeatureProcedureFactsFromProfile(profile),
+        unitFeatureProcedure: ({ resource, facts }) => [
+          { sourceUnitId: resource.unit.id, facts },
         ],
       }),
     ),
@@ -466,25 +443,12 @@ export function characterExecutionFromUnits(input: {
   const unitFeatureExecutionContext: UnitFeatureProcedureExecutionContext = {
     resourcePoolRefsByUnitId,
   };
-  const resourceSelectedProcedures =
-    resourceSelectedAreaDamageReplacementProcedures({
-      resourceUnits,
-      unitRefs: input.unitRefs,
-    });
   const resourceProfileProcedures = resourceUnitFeatureProcedures(
     input.resourceAdmissions,
   );
   const unitFeatureProcedures = [
     ...resourceProfileProcedures,
     ...input.unitFeatureProcedures,
-    ...resourceSelectedProcedures.filter(
-      (selected) =>
-        !input.unitFeatureProcedures.some(
-          (procedure) =>
-            procedure.sourceUnitId === selected.sourceUnitId &&
-            procedure.facts.kind === selected.facts.kind,
-        ),
-    ),
   ];
   const resourceFeatureUnitProcedures = admittedResourceFeatures(
     input.resourceAdmissions,
