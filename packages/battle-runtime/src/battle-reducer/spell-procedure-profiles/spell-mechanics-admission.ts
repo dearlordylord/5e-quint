@@ -1,10 +1,14 @@
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  movementFeet,
+  type MovementFeet,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   spellMaterialComponentPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
 
 import type {
   BattleSpellExecutionSource,
@@ -13,6 +17,7 @@ import type {
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
+import { Match } from "effect";
 
 /**
  * Static admission receives only the already-decoded mechanics graph and the
@@ -23,32 +28,6 @@ export type SpellMechanicsAdmissionSource = {
   readonly mechanics: SpellMechanics;
   readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
 };
-
-/**
- * Return canonical evidence paths for authored material cost and consumption
- * branches. Material evidence is shared by every mechanics admission owner;
- * it is not specific to any one execution profile.
- */
-export function spellConsumedMaterialEvidencePaths(
-  components: SpellMechanics["components"],
-): readonly SpellMechanicsBranchPath[] {
-  if (components.m === false) {
-    return [];
-  }
-  const paths: SpellMechanicsBranchPath[] = [];
-  const hasCost =
-    typeof components.m === "object" ||
-    ("materialCostGp" in components && components.materialCostGp !== undefined);
-  const hasConsumption =
-    "materialConsumed" in components && components.materialConsumed === true;
-  if (hasCost) {
-    paths.push(spellMaterialComponentPath("cost"));
-  }
-  if (hasConsumption) {
-    paths.push(spellMaterialComponentPath("consumption"));
-  }
-  return paths;
-}
 
 /**
  * A profile's static projection has to account for at least one owned path.
@@ -70,6 +49,42 @@ export type SpellProcedureMechanicsEvidence =
   | PartialSpellProcedureMechanicsEvidence;
 
 /**
+ * Material children are part of the canonical spell-mechanics admission
+ * boundary. Generic priced material is a cost branch; explicit consumption is
+ * a separate branch. Structured material components carry cost semantics but
+ * do not imply consumption.
+ */
+export function spellConsumedMaterialEvidencePaths(
+  components: Components,
+): readonly SpellMechanicsBranchPath[] {
+  if (components.m === false) return [];
+
+  const paths: SpellMechanicsBranchPath[] = [];
+  if (
+    typeof components.m === "object" ||
+    ("materialCostGp" in components && components.materialCostGp !== undefined)
+  ) {
+    paths.push(spellMaterialComponentPath("cost"));
+  }
+  if (
+    "materialConsumed" in components &&
+    components.materialConsumed === true
+  ) {
+    paths.push(spellMaterialComponentPath("consumption"));
+  }
+  return paths;
+}
+
+/** Project a fixed point range into the branded execution distance. */
+export function spellDefinitionPointRangeFeet(
+  range: SpellDefinitionRuleFacts["range"],
+): MovementFeet | undefined {
+  return range.kind === "point" && typeof range.feet === "number"
+    ? movementFeet(range.feet)
+    : undefined;
+}
+
+/**
  * Facts are the source-free Definition projection carried by a static
  * profile. Profile owners may refine this type with additional static facts;
  * the registry keeps the procedure-discriminated admitted union intact.
@@ -86,11 +101,13 @@ export type SpellProcedureMechanicsInvocation<
 
 export type SpellProcedureAdmissionIssue<
   P extends BattleSpellProcedureKey = BattleSpellProcedureKey,
+  FailedFact extends string = string,
+  MechanicsPath extends UnitMechanicsPath = UnitMechanicsPath,
 > = {
   readonly tag: "spellProcedureAdmissionIssue";
   readonly procedure: P;
-  readonly failedFact: string;
-  readonly mechanicsPath: UnitMechanicsPath;
+  readonly failedFact: FailedFact;
+  readonly mechanicsPath: MechanicsPath;
   readonly message: string;
 };
 
@@ -206,11 +223,55 @@ export type BattleSpellMechanicsAdmission<
       readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
     };
 
-function nonEmpty<T>(
+export function spellProcedureNonEmpty<T>(
   values: readonly T[],
 ): ReadonlyNonEmptyArray<T> | undefined {
   const [first, ...rest] = values;
   return first === undefined ? undefined : [first, ...rest];
+}
+
+/**
+ * Named admission policies keep the witness count and tolerated loss coupled.
+ * The three-witness policy tolerates exactly one missing witness; the
+ * five-witness policy tolerates exactly two. A caller cannot provide a
+ * threshold that disagrees with its witness tuple.
+ */
+export type SpellProcedureRedundantSignaturePolicy =
+  | {
+      readonly kind: "oneWitnessMayBeMissing";
+      readonly witnesses: readonly [boolean, boolean, boolean];
+    }
+  | {
+      readonly kind: "twoWitnessesMayBeMissing";
+      readonly witnesses: readonly [
+        boolean,
+        boolean,
+        boolean,
+        boolean,
+        boolean,
+      ];
+    };
+
+export function spellProcedureHasRedundantSignature(
+  policy: SpellProcedureRedundantSignaturePolicy,
+): boolean {
+  let matches = 0;
+  for (const witness of policy.witnesses) {
+    if (witness) matches += 1;
+  }
+  return Match.value(policy.kind).pipe(
+    Match.when("oneWitnessMayBeMissing", () => matches >= 2),
+    Match.when("twoWitnessesMayBeMissing", () => matches >= 3),
+    Match.exhaustive,
+  );
+}
+
+export function spellProcedureMapNonEmpty<T, U>(
+  values: ReadonlyNonEmptyArray<T>,
+  map: (value: T) => U,
+): ReadonlyNonEmptyArray<U> {
+  const [first, ...rest] = values;
+  return [map(first), ...rest.map(map)];
 }
 
 /**
@@ -236,12 +297,12 @@ export function admitBattleSpellMechanicsFrom<
     inspection.tag === "unsupported" ? inspection.issues : [],
   );
 
-  const unsupportedIssues = nonEmpty(issues);
+  const unsupportedIssues = spellProcedureNonEmpty(issues);
   if (unsupportedIssues !== undefined) {
     return { tag: "rejected", issues: unsupportedIssues };
   }
 
-  const admittedProcedures = nonEmpty(supported);
+  const admittedProcedures = spellProcedureNonEmpty(supported);
   return admittedProcedures === undefined
     ? { tag: "notBattleOwned" }
     : { tag: "admitted", procedures: admittedProcedures };

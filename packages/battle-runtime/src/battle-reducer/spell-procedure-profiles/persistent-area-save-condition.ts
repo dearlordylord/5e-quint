@@ -1,5 +1,9 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
+import {
+  ongoingAreaSpellDurationTicks,
+  ongoingAreaSpellFacts,
+} from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -16,12 +20,27 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //     Prone, Magic Action, and Spell Invocation.
 
 import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, MovementFeet } from "@dnd/shared/types";
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet as MovementFeetType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  OngoingTrigger,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import {
   type BattleSpellAdmissionSource,
+  type BattleSpellExecutionSource,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -37,14 +56,29 @@ import type {
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
   DcSourceSchema,
+  MovementFeet,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
+  SpellProcedureMechanicsFacts,
+  SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellDefinitionPointRangeFeet,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+} from "./spell-mechanics-admission.ts";
+import { persistentAreaDurationChildPaths } from "./persistent-area-save-evidence.ts";
 
 type PersistentAreaSaveConditionSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -72,6 +106,58 @@ type PersistentAreaSaveConditionPhase = Extract<
     };
   };
 };
+type PersistentAreaSaveConditionProfileShape = {
+  readonly ability: PersistentAreaSaveConditionPhase["ability"];
+  readonly dc: PersistentAreaSaveConditionPhase["dc"];
+  readonly sideFeet: MovementFeetType;
+};
+type OngoingPersistentAreaSaveConditionFacts = NonNullable<
+  ReturnType<typeof ongoingAreaSpellFacts>
+>;
+type PersistentAreaSaveConditionMechanicsFacts = SpellProcedureMechanicsFacts &
+  PersistentAreaSaveConditionProfileShape;
+type PersistentAreaSaveConditionAdmissionIssue = SpellProcedureAdmissionIssue<
+  "persistentAreaSaveCondition",
+  PersistentAreaSaveConditionFailedFact,
+  SpellMechanicsBranchPath
+>;
+
+export const PERSISTENT_AREA_SAVE_CONDITION_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "duration",
+  "durationTicks",
+  "attachment",
+  "initialPhase",
+  "passiveOperation",
+  "enterOperation",
+  "endTurnOperation",
+  "operationCount",
+] as const;
+type PersistentAreaSaveConditionFailedFact =
+  (typeof PERSISTENT_AREA_SAVE_CONDITION_FAILED_FACTS)[number];
+
+const PERSISTENT_AREA_SAVE_CONDITION_BASE_CONSUMED_PATHS = [
+  spellMechanicsHeaderPath("level"),
+  spellMechanicsHeaderPath("school"),
+  spellMechanicsHeaderPath("range"),
+  spellMechanicsHeaderPath("components"),
+  spellMechanicsHeaderPath("duration"),
+  spellMechanicsHeaderPath("castingTime"),
+  spellMechanicsHeaderPath("family"),
+  spellDurationValuePath(),
+  spellOngoingAttachmentPath(),
+  spellOngoingInitialPhasePath(),
+  spellOngoingOperationPath(PositiveInteger(1)),
+  spellOngoingOperationPath(PositiveInteger(2)),
+  spellOngoingOperationPath(PositiveInteger(3)),
+  spellOngoingOperationEffectPath(PositiveInteger(1)),
+  spellOngoingOperationEffectPath(PositiveInteger(2)),
+  spellOngoingOperationEffectPath(PositiveInteger(3)),
+] as const;
+
+const PERSISTENT_AREA_SAVE_CONDITION_UNOWNED_PATHS = [] as const;
 
 type PersistentAreaSaveConditionResolveInput =
   SpellProcedureProfileResolveInput<PersistentAreaSaveConditionSpellInvocation>;
@@ -82,28 +168,368 @@ const PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES = 1;
 const PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT = 3;
 const PERSISTENT_AREA_SAVE_CONDITION_SIDE_FEET = 10;
 
-function admitPersistentAreaSaveCondition(
-  spell: PersistentAreaSaveConditionSpellInvocation["spell"],
-  ctx: SpellAdmissionContext,
-): readonly PersistentAreaSaveConditionSpellInvocation[] {
-  return supportedPreparedPersistentAreaSaveConditionProfile(
-    spell,
-    ctx.spellCastOptions,
+type PersistentAreaSaveConditionOperationRole =
+  | "passive"
+  | "enter"
+  | "endTurn"
+  | null;
+
+type PersistentAreaSaveConditionOperationOccurrence = {
+  readonly operation: PersistentAreaSaveConditionMechanics["operations"][number];
+  readonly ordinal: PositiveInteger;
+};
+
+type PersistentAreaSaveConditionOperations = {
+  readonly passive: PersistentAreaSaveConditionOperationOccurrence | undefined;
+  readonly enter: PersistentAreaSaveConditionOperationOccurrence | undefined;
+  readonly endTurn: PersistentAreaSaveConditionOperationOccurrence | undefined;
+  readonly extraOperations: readonly PersistentAreaSaveConditionOperationOccurrence[];
+};
+
+function persistentAreaSaveConditionOperationRole(
+  trigger: OngoingTrigger,
+): PersistentAreaSaveConditionOperationRole {
+  return Match.value(trigger.kind).pipe(
+    Match.when("passive", () => "passive" as const),
+    Match.when("on_creature_enters_area", () => "enter" as const),
+    Match.when("on_creature_ends_turn_in_area", () => "endTurn" as const),
+    Match.whenOr(
+      "on_effect_starts",
+      "on_caster_attack_hit",
+      "on_caster_deals_damage_to_attachment",
+      "on_attached_hit_by_attack_roll",
+      "on_attached_turn_start",
+      "on_attached_turn_end",
+      "on_caster_turn_start",
+      "on_caster_turn_end",
+      "on_attached_damaged",
+      "on_attached_targeted",
+      "on_creature_moves",
+      "on_creature_starts_turn_in_area",
+      "on_creature_ends_turn_within_distance_of_area",
+      "on_creature_moves_through_area",
+      "on_creature_moves_within_area",
+      "on_creature_starts_turn_within_area",
+      "on_creature_attempts_magical_escape",
+      "on_object_section_destroyed",
+      "on_area_moves_into_creature_space",
+      "on_spatial_manifestation_moves_within_distance_of_creature",
+      "on_creature_enters_distance_of_spatial_manifestation",
+      "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+      "on_creature_exits_area",
+      "on_caster_moves_on_turn",
+      "on_structure_collapses",
+      "on_caster_spends_action",
+      "on_attached_spends_action",
+      "on_affected_creature_spends_action",
+      "on_creature_studies",
+      () => null,
+    ),
+    Match.exhaustive,
   );
 }
 
-export function supportedPreparedPersistentAreaSaveConditionProfile(
-  spell: PersistentAreaSaveConditionSpellInvocation["spell"],
-  castOptions: SpellAdmissionContext["spellCastOptions"],
+function persistentAreaSaveConditionOperations(
+  mechanics: PersistentAreaSaveConditionMechanics,
+): PersistentAreaSaveConditionOperations {
+  const occurrences = mechanics.operations.map(
+    (operation, index): PersistentAreaSaveConditionOperationOccurrence => ({
+      operation,
+      ordinal: PositiveInteger(index + 1),
+    }),
+  );
+  const selected = new Set<PositiveInteger>();
+  const select = (
+    role: Exclude<PersistentAreaSaveConditionOperationRole, null>,
+    effect: (
+      operation: PersistentAreaSaveConditionMechanics["operations"][number],
+    ) => boolean,
+  ): PersistentAreaSaveConditionOperationOccurrence | undefined => {
+    const expected = occurrences.find(
+      (occurrence) =>
+        !selected.has(occurrence.ordinal) &&
+        persistentAreaSaveConditionOperationRole(
+          occurrence.operation.trigger,
+        ) === role &&
+        effect(occurrence.operation),
+    );
+    const occurrence =
+      expected ??
+      occurrences.find(
+        (candidate) =>
+          !selected.has(candidate.ordinal) &&
+          persistentAreaSaveConditionOperationRole(
+            candidate.operation.trigger,
+          ) === role,
+      );
+    if (occurrence !== undefined) selected.add(occurrence.ordinal);
+    return occurrence;
+  };
+  const passive = select(
+    "passive",
+    (operation) => operation.effect.kind === "area_is_difficult_terrain",
+  );
+  const enter = select("enter", (operation) =>
+    isPersistentAreaSaveConditionEffect(operation.effect),
+  );
+  const endTurn = select("endTurn", (operation) =>
+    isPersistentAreaSaveConditionEffect(operation.effect),
+  );
+  return {
+    passive,
+    enter,
+    endTurn,
+    extraOperations: occurrences.filter(
+      (occurrence) => !selected.has(occurrence.ordinal),
+    ),
+  };
+}
+
+function persistentAreaSaveConditionOperationPath(
+  occurrence: PersistentAreaSaveConditionOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationPath(occurrence?.ordinal ?? fallbackOrdinal);
+}
+
+function persistentAreaSaveConditionOperationEffectPath(
+  occurrence: PersistentAreaSaveConditionOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationEffectPath(
+    occurrence?.ordinal ?? fallbackOrdinal,
+  );
+}
+
+type PersistentAreaSaveConditionFailure = {
+  readonly failedFact: PersistentAreaSaveConditionFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+type PersistentAreaSaveConditionProjection =
+  | {
+      readonly tag: "unsupported";
+      readonly failures: ReadonlyNonEmptyArray<PersistentAreaSaveConditionFailure>;
+    }
+  | {
+      readonly tag: "supported";
+      readonly profileShape: PersistentAreaSaveConditionProfileShape;
+    };
+
+function persistentAreaSaveConditionProjection(
+  ongoing: OngoingPersistentAreaSaveConditionFacts,
+): PersistentAreaSaveConditionProjection {
+  const { mechanics, durationTicks } = ongoing;
+  const operations = persistentAreaSaveConditionOperations(mechanics);
+  const phase = isPersistentAreaSaveConditionPhase(mechanics.initialPhase)
+    ? mechanics.initialPhase
+    : null;
+  const area = mechanics.attachment.value;
+  const areaShape =
+    area.origin.kind === "point_within_range" &&
+    area.shape.kind === "ground_square" &&
+    area.shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_SIDE_FEET
+      ? area.shape
+      : null;
+  const failures: PersistentAreaSaveConditionFailure[] = [];
+  if (mechanics.level !== PERSISTENT_AREA_SAVE_CONDITION_LEVEL) {
+    failures.push({
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    });
+  }
+  if (mechanics.castingTime.kind !== "action") {
+    failures.push({
+      failedFact: "castingTime",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    });
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET
+  ) {
+    failures.push({
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    });
+  }
+  if (
+    mechanics.duration.kind !== "timed" ||
+    mechanics.duration.value.unit !== "minute" ||
+    mechanics.duration.value.amount !==
+      PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES
+  ) {
+    failures.push({
+      failedFact: "duration",
+      mechanicsPath: spellDurationValuePath(),
+    });
+  }
+  failures.push(
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath) => ({
+        failedFact: "duration" as const,
+        mechanicsPath,
+      }),
+    ),
+  );
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+    failures.push({
+      failedFact: "durationTicks",
+      mechanicsPath: spellDurationValuePath(),
+    });
+  }
+  if (areaShape === null) {
+    failures.push({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+  }
+  if (phase === null) {
+    failures.push({
+      failedFact: "initialPhase",
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    });
+  }
+  if (
+    operations.passive === undefined ||
+    operations.passive.operation.effect.kind !== "area_is_difficult_terrain"
+  ) {
+    failures.push({
+      failedFact: "passiveOperation",
+      mechanicsPath: persistentAreaSaveConditionOperationEffectPath(
+        operations.passive,
+        PositiveInteger(1),
+      ),
+    });
+  }
+  if (
+    operations.enter === undefined ||
+    !isPersistentAreaSaveConditionEffect(operations.enter.operation.effect)
+  ) {
+    failures.push({
+      failedFact: "enterOperation",
+      mechanicsPath: persistentAreaSaveConditionOperationEffectPath(
+        operations.enter,
+        PositiveInteger(2),
+      ),
+    });
+  }
+  if (
+    operations.endTurn === undefined ||
+    !isPersistentAreaSaveConditionEffect(operations.endTurn.operation.effect)
+  ) {
+    failures.push({
+      failedFact: "endTurnOperation",
+      mechanicsPath: persistentAreaSaveConditionOperationEffectPath(
+        operations.endTurn,
+        PositiveInteger(3),
+      ),
+    });
+  }
+  if (
+    mechanics.operations.length !==
+      PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT &&
+    operations.extraOperations.length === 0
+  ) {
+    failures.push({
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    });
+  }
+  failures.push(
+    ...operations.extraOperations.map((occurrence) => ({
+      failedFact: "operationCount" as const,
+      mechanicsPath: persistentAreaSaveConditionOperationPath(
+        occurrence,
+        occurrence.ordinal,
+      ),
+    })),
+  );
+  const unsupportedFailures = spellProcedureNonEmpty(failures);
+  if (unsupportedFailures !== undefined) {
+    return { tag: "unsupported", failures: unsupportedFailures };
+  }
+  if (
+    phase === null ||
+    areaShape === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks)
+  ) {
+    return {
+      tag: "unsupported",
+      failures: [
+        phase === null
+          ? {
+              failedFact: "initialPhase",
+              mechanicsPath: spellOngoingInitialPhasePath(),
+            }
+          : areaShape === null
+            ? {
+                failedFact: "attachment",
+                mechanicsPath: spellOngoingAttachmentPath(),
+              }
+            : {
+                failedFact: "durationTicks",
+                mechanicsPath: spellDurationValuePath(),
+              },
+      ],
+    };
+  }
+  return {
+    tag: "supported",
+    profileShape: {
+      ability: phase.ability,
+      dc: phase.dc,
+      sideFeet: movementFeet(areaShape.sideFeet),
+    },
+  };
+}
+
+function persistentAreaSaveConditionAdmissionIssue(
+  failure: PersistentAreaSaveConditionFailure,
+): PersistentAreaSaveConditionAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "persistentAreaSaveCondition",
+    failedFact: failure.failedFact,
+    mechanicsPath: failure.mechanicsPath,
+    message: `Unsupported persistent-area save condition mechanics fact: ${failure.failedFact}.`,
+  };
+}
+
+function isPersistentAreaSaveConditionRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is PersistentAreaSaveConditionMechanics {
+  if (mechanics.family !== "ongoing_effect") return false;
+  if (
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "area" ||
+    mechanics.attachment.value.shape.kind !== "ground_square"
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function admitPersistentAreaSaveCondition(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: PersistentAreaSaveConditionMechanicsFacts,
 ): readonly PersistentAreaSaveConditionSpellInvocation[] {
-  const profileShape = persistentAreaSaveConditionSpell(spell);
-  if (profileShape === null) {
+  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
+  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    rangeFeet === undefined
+  ) {
     return [];
   }
-
-  return castOptions.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly PersistentAreaSaveConditionSpellInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
+      if (Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_CONDITION_LEVEL) {
         return [];
       }
       return [
@@ -112,97 +538,66 @@ export function supportedPreparedPersistentAreaSaveConditionProfile(
           resource: spellInvocationResourceForCastOption(slot),
           procedure: "persistentAreaSaveCondition",
           spell,
-          ability: profileShape.phase.ability,
-          dc: profileShape.phase.dc,
-          targeting: profileShape.targeting,
-          durationTicks: profileShape.durationTicks,
-          rangeFeet: profileShape.rangeFeet,
+          ability: facts.ability,
+          dc: facts.dc,
+          targeting: {
+            kind: "pointOriginGroundSquare",
+            sideFeet: facts.sideFeet,
+          },
+          durationTicks: durationTicks.success,
+          rangeFeet,
         },
       ];
     },
   );
 }
 
-function persistentAreaSaveConditionSpell(
-  spell: PersistentAreaSaveConditionSpellInvocation["spell"],
-): {
-  readonly phase: PersistentAreaSaveConditionPhase;
-  readonly targeting: {
-    readonly kind: "pointOriginGroundSquare";
-    readonly sideFeet: MovementFeet;
-  };
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly rangeFeet: MovementFeet;
-} | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
+function persistentAreaSaveConditionMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "persistentAreaSaveCondition",
+  PersistentAreaSaveConditionMechanicsFacts,
+  PersistentAreaSaveConditionSpellInvocation,
+  PersistentAreaSaveConditionAdmissionIssue
+> {
+  if (!isPersistentAreaSaveConditionRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
   }
-  if (!hasPersistentAreaSaveConditionSpellContract(spell.mechanics)) {
-    return null;
+  const ongoing = ongoingAreaSpellFacts(source.mechanics);
+  if (ongoing === null) {
+    return { tag: "notRepresented" };
   }
-  const phase = spell.mechanics.initialPhase;
-  if (!isPersistentAreaSaveConditionPhase(phase)) return null;
-  if (!hasPersistentAreaSaveConditionOperations(spell.mechanics)) return null;
-  const durationTicks = persistentAreaSaveConditionDurationTicks(
-    spell.mechanics,
-  );
-  if (durationTicks === null) return null;
-
+  const projection = persistentAreaSaveConditionProjection(ongoing);
+  if (projection.tag === "unsupported") {
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        projection.failures,
+        persistentAreaSaveConditionAdmissionIssue,
+      ),
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ...projection.profileShape,
+  } satisfies PersistentAreaSaveConditionMechanicsFacts;
   return {
-    phase,
-    targeting: {
-      kind: "pointOriginGroundSquare",
-      sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "persistentAreaSaveCondition",
+      facts,
+      evidence: {
+        consumed: [
+          ...PERSISTENT_AREA_SAVE_CONDITION_BASE_CONSUMED_PATHS,
+          ...spellConsumedMaterialEvidencePaths(ongoing.mechanics.components),
+        ],
+        unowned: PERSISTENT_AREA_SAVE_CONDITION_UNOWNED_PATHS,
+      },
+      admit: (executionSource, ctx) =>
+        admitPersistentAreaSaveCondition(executionSource, ctx, facts),
     },
-    durationTicks,
-    rangeFeet: movementFeet(PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET),
   };
-}
-
-function hasPersistentAreaSaveConditionSpellContract(
-  mechanics: PersistentAreaSaveConditionMechanics,
-): boolean {
-  return (
-    mechanics.level === PERSISTENT_AREA_SAVE_CONDITION_LEVEL &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET &&
-    mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "minute" &&
-    mechanics.duration.value.amount ===
-      PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES &&
-    mechanics.operations.length ===
-      PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT
-  );
-}
-
-function hasPersistentAreaSaveConditionOperations(
-  mechanics: PersistentAreaSaveConditionMechanics,
-): boolean {
-  const passiveOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "passive",
-  );
-  const enterOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_enters_area",
-  );
-  const endTurnOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
-  );
-  return (
-    passiveOperation?.effect.kind === "area_is_difficult_terrain" &&
-    isPersistentAreaSaveConditionEffect(enterOperation?.effect) &&
-    isPersistentAreaSaveConditionEffect(endTurnOperation?.effect)
-  );
-}
-
-function persistentAreaSaveConditionDurationTicks(
-  mechanics: PersistentAreaSaveConditionMechanics,
-): ElapsedTimeTicks | null {
-  if (mechanics.duration.kind !== "timed") return null;
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    mechanics.duration.value,
-  );
-  return Result.isFailure(durationTicks) ? null : durationTicks.success;
 }
 
 function isPersistentAreaSaveConditionPhase(
@@ -291,11 +686,12 @@ const PersistentAreaSaveConditionInvocationSchema =
 export const persistentAreaSaveConditionProfile = {
   procedure: "persistentAreaSaveCondition",
   executionSchema: PersistentAreaSaveConditionInvocationSchema,
-  admit: admitPersistentAreaSaveCondition,
+  admitMechanics: persistentAreaSaveConditionMechanicsAdmission,
   discoverCastAct: discoverPersistentAreaSaveConditionCastAct,
   resolve: resolvePersistentAreaSaveCondition,
 } satisfies SpellProcedureDeclaration<
   "persistentAreaSaveCondition",
-  PersistentAreaSaveConditionSpellInvocation
+  PersistentAreaSaveConditionSpellInvocation,
+  PersistentAreaSaveConditionMechanicsFacts,
+  PersistentAreaSaveConditionAdmissionIssue
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";

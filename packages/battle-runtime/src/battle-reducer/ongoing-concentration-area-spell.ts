@@ -18,9 +18,27 @@ type OngoingArea = Extract<
 type OngoingAreaAttachmentWithArea = Omit<OngoingAreaAttachment, "value"> & {
   readonly value: OngoingArea;
 };
-type DurationTicksProjection = ReturnType<
-  typeof elapsedTimeTicksFromTimeSpanDuration
->;
+type DurationTicksProjection =
+  | ReturnType<typeof elapsedTimeTicksFromTimeSpanDuration>
+  | undefined;
+
+/** Project a canonical spell-definition duration into execution ticks. */
+export function ongoingAreaSpellDurationTicks(
+  duration: Duration,
+): DurationTicksProjection {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => undefined),
+    Match.when({ kind: "concentration" }, (concentration) =>
+      elapsedTimeTicksFromTimeSpanDuration(concentration.upTo),
+    ),
+    Match.when({ kind: "timed" }, (timed) =>
+      elapsedTimeTicksFromTimeSpanDuration(timed.value),
+    ),
+    Match.when({ kind: "permanent" }, () => undefined),
+    Match.when({ kind: "slot_tiered" }, () => undefined),
+    Match.exhaustive,
+  );
+}
 
 type OngoingAreaSpellMechanicsForDuration<DurationBranch extends Duration> =
   Omit<OngoingAreaSpellMechanics, "duration" | "attachment"> & {
@@ -89,11 +107,11 @@ export function ongoingAreaSpellFacts(
     })),
     Match.when({ kind: "concentration" }, (duration) => ({
       mechanics: { ...mechanics, duration, attachment: areaAttachment },
-      durationTicks: elapsedTimeTicksFromTimeSpanDuration(duration.upTo),
+      durationTicks: ongoingAreaSpellDurationTicks(duration),
     })),
     Match.when({ kind: "timed" }, (duration) => ({
       mechanics: { ...mechanics, duration, attachment: areaAttachment },
-      durationTicks: elapsedTimeTicksFromTimeSpanDuration(duration.value),
+      durationTicks: ongoingAreaSpellDurationTicks(duration),
     })),
     Match.when({ kind: "permanent" }, (duration) => ({
       mechanics: { ...mechanics, duration, attachment: areaAttachment },
