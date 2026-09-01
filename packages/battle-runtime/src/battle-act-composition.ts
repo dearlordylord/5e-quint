@@ -398,7 +398,16 @@ function statBlockProcedureOrIntrinsicPresentation(
     context,
     subject.actorId,
   );
-  if (presentations === null || Result.isSuccess(presentations)) {
+  if (presentations === null) {
+    return {
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockAdmissionMissing",
+      },
+    };
+  }
+  if (Result.isSuccess(presentations)) {
     return { kind: "intrinsic" };
   }
   return {
