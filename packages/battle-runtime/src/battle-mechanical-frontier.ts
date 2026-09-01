@@ -6,6 +6,7 @@ import {
   BattleMechanicalHoleSchema as BattleMechanicalHoleCodecSchema,
   BattleMechanicalInterruptProcedureChoiceSchema,
   BattleMechanicalOrdinaryHoleSchema as BattleMechanicalOrdinaryHoleCodecSchema,
+  portableCodec,
 } from "./battle-reducer/battle-codecs.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
@@ -17,15 +18,15 @@ import type {
 import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
-export const BattleMechanicalHoleSchema =
+export const BattleMechanicalHoleSchema: typeof BattleMechanicalHoleCodecSchema =
   BattleMechanicalHoleCodecSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
-export const BattleMechanicalOrdinaryHoleSchema =
+export const BattleMechanicalOrdinaryHoleSchema: typeof BattleMechanicalOrdinaryHoleCodecSchema =
   BattleMechanicalOrdinaryHoleCodecSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
-export const BattleMechanicalInterruptDecisionHoleSchema =
+export const BattleMechanicalInterruptDecisionHoleSchema: typeof BattleMechanicalInterruptDecisionHoleCodecSchema =
   BattleMechanicalInterruptDecisionHoleCodecSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
@@ -73,27 +74,61 @@ export type BattleMechanicalFrontierIssue =
   | { readonly tag: "emptyHoleFrontier" }
   | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
 
-export const BattleMechanicalInterruptChoiceSchema =
+export const BattleMechanicalInterruptChoiceSchema: typeof BattleMechanicalInterruptProcedureChoiceSchema =
   BattleMechanicalInterruptProcedureChoiceSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 
-export const BattleMechanicalFrontierSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("ordinaryHoles"),
-    subject: BattleSubjectSchema,
-    holes: Schema.NonEmptyArray(BattleMechanicalOrdinaryHoleSchema),
-    acceptedFills: Schema.Array(BattleFillSchema),
+type BattleMechanicalOrdinaryFrontierCodec = Schema.Struct<{
+  readonly kind: Schema.Literal<"ordinaryHoles">;
+  readonly subject: typeof BattleSubjectSchema;
+  readonly holes: Schema.NonEmptyArray<
+    typeof BattleMechanicalOrdinaryHoleSchema
+  >;
+  readonly acceptedFills: Schema.$Array<typeof BattleFillSchema>;
+}>;
+
+type BattleMechanicalInterruptFrontierCodec = Schema.Struct<{
+  readonly kind: Schema.Literal<"interruptDecision">;
+  readonly decisionHole: typeof BattleMechanicalInterruptDecisionHoleSchema;
+  readonly choices: Schema.NonEmptyArray<
+    typeof BattleMechanicalInterruptChoiceSchema
+  >;
+}>;
+
+type BattleMechanicalFrontierCodec = Schema.Union<
+  readonly [
+    BattleMechanicalOrdinaryFrontierCodec,
+    BattleMechanicalInterruptFrontierCodec,
+  ]
+>;
+
+export const BattleMechanicalFrontierSchema: Schema.Codec<
+  BattleMechanicalFrontier,
+  Schema.Codec.Encoded<BattleMechanicalFrontierCodec>,
+  never,
+  never
+> = portableCodec<
+  BattleMechanicalFrontier,
+  Schema.Codec.Encoded<BattleMechanicalFrontierCodec>
+>()(
+  Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("ordinaryHoles"),
+      subject: BattleSubjectSchema,
+      holes: Schema.NonEmptyArray(BattleMechanicalOrdinaryHoleSchema),
+      acceptedFills: Schema.Array(BattleFillSchema),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("interruptDecision"),
+      decisionHole: BattleMechanicalInterruptDecisionHoleSchema,
+      choices: Schema.NonEmptyArray(BattleMechanicalInterruptChoiceSchema),
+    }),
+  ]).annotate({
+    identifier: "BattleMechanicalFrontier",
+    parseOptions: { onExcessProperty: "error" },
   }),
-  Schema.Struct({
-    kind: Schema.Literal("interruptDecision"),
-    decisionHole: BattleMechanicalInterruptDecisionHoleSchema,
-    choices: Schema.NonEmptyArray(BattleMechanicalInterruptChoiceSchema),
-  }),
-]).annotate({
-  identifier: "BattleMechanicalFrontier",
-  parseOptions: { onExcessProperty: "error" },
-});
+);
 
 export function battleMechanicalFrontier(input: {
   readonly result: BattleMechanicalFrontierResult;

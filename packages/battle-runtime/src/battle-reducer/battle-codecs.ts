@@ -84,6 +84,7 @@ import {
   grantedAreaSaveDamageActionHoleKey,
 } from "./selected-effect-hole-key.ts";
 import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
+import type { SupportedCreatureAttackRollMechanics } from "../battle-action-options.ts";
 import {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -195,6 +196,7 @@ import type {
   BattleSnapshot,
   BattleTurnSnapshot,
 } from "../battle-state-execution.ts";
+import type { StatBlockExecutionSnapshot } from "../stat-block-execution-state.ts";
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
@@ -3282,8 +3284,13 @@ const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
   (hole) => hole,
 );
 
-export const BattleHoleSchema = BattleHolePayloadSchema.pipe(
-  Schema.annotate({ identifier: "BattleHole" }),
+export const BattleHoleSchema: Schema.Codec<
+  BattleHole,
+  SnapshotEncoded<BattleHole>,
+  never,
+  never
+> = exactCodec<BattleHole, SnapshotEncoded<BattleHole>>()(
+  BattleHolePayloadSchema.pipe(Schema.annotate({ identifier: "BattleHole" })),
 );
 
 const [
@@ -3293,22 +3300,33 @@ const [
   FirstBattleHolePayloadMember,
   ...RemainingBattleHolePayloadMembers,
 ] as const;
-export const BattleMechanicalOrdinaryHoleSchema = Schema.Union([
+const BattleMechanicalOrdinaryHoleCodecSchema = Schema.Union([
   FirstBattleMechanicalOrdinaryHoleMember.mechanical,
   ...RemainingBattleMechanicalOrdinaryHoleMembers.map(
     ({ mechanical }) => mechanical,
   ),
   ...GenericSavingThrowMechanicalHolePayloadMembers,
   ...AdditionalStructuralMechanicalHolePayloadMembers,
-]).annotate({ identifier: "BattleMechanicalOrdinaryHole" });
-export const BattleMechanicalInterruptDecisionHoleSchema =
+]);
+export const BattleMechanicalOrdinaryHoleSchema: typeof BattleMechanicalOrdinaryHoleCodecSchema =
+  BattleMechanicalOrdinaryHoleCodecSchema.annotate({
+    identifier: "BattleMechanicalOrdinaryHole",
+  });
+export const BattleMechanicalInterruptDecisionHoleSchema: typeof BattleInterruptDecisionHolePayloadMemberFromTuple.mechanical =
   BattleInterruptDecisionHolePayloadMemberFromTuple.mechanical.annotate({
     identifier: "BattleMechanicalInterruptDecisionHole",
   });
-export const BattleMechanicalHoleSchema = Schema.Union([
-  BattleMechanicalInterruptDecisionHoleSchema,
-  BattleMechanicalOrdinaryHoleSchema,
-]).annotate({ identifier: "BattleMechanicalHole" });
+type BattleMechanicalHoleCodec = Schema.Union<
+  readonly [
+    typeof BattleMechanicalInterruptDecisionHoleSchema,
+    typeof BattleMechanicalOrdinaryHoleSchema,
+  ]
+>;
+export const BattleMechanicalHoleSchema: BattleMechanicalHoleCodec =
+  Schema.Union([
+    BattleMechanicalInterruptDecisionHoleSchema,
+    BattleMechanicalOrdinaryHoleSchema,
+  ]).annotate({ identifier: "BattleMechanicalHole" });
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
@@ -5904,7 +5922,7 @@ const BattleActionRestrictionSchema = Schema.Union([
 ]);
 
 type SnapshotEncoded<T> =
-  T extends Brand.Brand<infer _BrandKey>
+  T extends Brand.Brand<string>
     ? SnapshotEncoded<Brand.Brand.Unbranded<T>>
     : T extends readonly unknown[]
       ? { readonly [K in keyof T]: SnapshotEncoded<T[K]> }
@@ -5918,7 +5936,15 @@ type SameKeys<Left, Right> = [Exclude<keyof Left, keyof Right>] extends [never]
     : never
   : never;
 
-function portableCodec<Type, Encoded>() {
+function exactCodec<Type, Encoded>() {
+  return <ActualType extends Type, ActualEncoded extends Encoded>(
+    schema: Schema.Codec<ActualType, ActualEncoded, never, never> &
+      ([Type] extends [ActualType] ? unknown : never) &
+      ([Encoded] extends [ActualEncoded] ? unknown : never),
+  ): Schema.Codec<Type, Encoded, never, never> => schema;
+}
+
+export function portableCodec<Type, Encoded>() {
   return <ActualType extends Type, ActualEncoded extends Encoded>(
     schema: Schema.Codec<ActualType, ActualEncoded, never, never> &
       ([Type] extends [ActualType] ? unknown : never) &
@@ -6116,34 +6142,62 @@ const StatBlockResourcePoolStateSchema = Schema.Union([
   }),
 ]);
 
-const StatBlockAttackProcedureSchema = Schema.Struct({
-  kind: Schema.Literal("attack"),
-  section: Schema.Literals(["actions", "legendaryActions"]),
-  procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  attack: CreatureAttackRollMechanicsSchema.pipe(
-    Schema.refine(creatureAttackRollMechanicsAreSupported, {
-      message: "Unsupported Stat Block attack procedure mechanics.",
-    }),
-  ),
-  traitAttackRollModes: Schema.optionalKey(
-    Schema.NonEmptyArray(
-      Schema.Struct({
-        mode: Schema.Literal("advantage"),
-        predicate: Schema.Literal("nonIncapacitatedAllyWithin5FeetOfTarget"),
-      }),
-    ),
-  ),
+const SupportedStatBlockAttackRollMechanicsSchema: Schema.refine<
+  SupportedCreatureAttackRollMechanics,
+  typeof CreatureAttackRollMechanicsSchema
+> = CreatureAttackRollMechanicsSchema.pipe(
+  Schema.refine(creatureAttackRollMechanicsAreSupported, {
+    message: "Unsupported Stat Block attack procedure mechanics.",
+  }),
+);
+
+const SupportedStatBlockUnarmedStrikeRollMechanicsSchema: Schema.refine<
+  SupportedCreatureAttackRollMechanics,
+  typeof CreatureAttackRollMechanicsSchema
+> = CreatureAttackRollMechanicsSchema.pipe(
+  Schema.refine(creatureAttackRollMechanicsAreSupported, {
+    message: "Unsupported Stat Block Unarmed Strike mechanics.",
+  }),
+);
+
+const StatBlockTraitAttackRollModeSchema = Schema.Struct({
+  mode: Schema.Literal("advantage"),
+  predicate: Schema.Literal("nonIncapacitatedAllyWithin5FeetOfTarget"),
 });
 
-const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
-  kind: Schema.Literal("unarmedStrike"),
-  section: Schema.Literal("actions"),
-  attack: CreatureAttackRollMechanicsSchema.pipe(
-    Schema.refine(creatureAttackRollMechanicsAreSupported, {
-      message: "Unsupported Stat Block Unarmed Strike mechanics.",
-    }),
-  ),
-});
+type StatBlockAttackProcedureCodec = Schema.Struct<{
+  readonly kind: Schema.Literal<"attack">;
+  readonly section: Schema.Literals<readonly ["actions", "legendaryActions"]>;
+  readonly procedureOrdinal: typeof StatBlockProcedureOrdinalSchema;
+  readonly attack: typeof SupportedStatBlockAttackRollMechanicsSchema;
+  readonly traitAttackRollModes: Schema.optionalKey<
+    Schema.NonEmptyArray<typeof StatBlockTraitAttackRollModeSchema>
+  >;
+}>;
+
+const StatBlockAttackProcedureSchema: StatBlockAttackProcedureCodec =
+  Schema.Struct({
+    kind: Schema.Literal("attack"),
+    section: Schema.Literals(["actions", "legendaryActions"]),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    attack: SupportedStatBlockAttackRollMechanicsSchema,
+    traitAttackRollModes: Schema.optionalKey(
+      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
+    ),
+  });
+
+type StatBlockUnarmedStrikeProcedureCodec = Schema.Struct<{
+  readonly kind: Schema.Literal<"unarmedStrike">;
+  readonly section: Schema.Literal<"actions">;
+  readonly attack: typeof SupportedStatBlockUnarmedStrikeRollMechanicsSchema;
+}>;
+
+const StatBlockUnarmedStrikeProcedureSchema: StatBlockUnarmedStrikeProcedureCodec =
+  Schema.Struct({
+    kind: Schema.Literal("unarmedStrike"),
+    section: Schema.Literal("actions"),
+    attack: SupportedStatBlockUnarmedStrikeRollMechanicsSchema,
+  });
 
 const StatBlockSpellcastingInvocationOutcomeSchema = Schema.Struct({
   kind: Schema.Literals(["unrestricted", "restricted"]),
@@ -6217,46 +6271,117 @@ const StatBlockBonusActionOptionProcedureSchema = Schema.Struct({
   ),
 });
 
-const StatBlockProcedureBindingSnapshotSchema = Schema.Union([
-  Schema.Struct({
+type StatBlockProcedureBindingSnapshotMemberCodec<
+  Procedure extends Schema.Top,
+  ResourcePoolRefs extends Schema.Top,
+> = Schema.Struct<{
+  readonly procedureRef: typeof BattleStatBlockProcedureExecutionRef;
+  readonly procedure: Procedure;
+  readonly resourcePoolRefs: ResourcePoolRefs;
+}>;
+
+class StatBlockProcedureBindingSnapshotMemberOwner {
+  readonly attack: StatBlockProcedureBindingSnapshotMemberCodec<
+    typeof StatBlockAttackProcedureSchema,
+    Schema.$Array<typeof BattleResourcePoolExecutionRef>
+  > = Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: StatBlockAttackProcedureSchema,
     resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  }),
-  Schema.Struct({
+  });
+  readonly unarmedStrike: StatBlockProcedureBindingSnapshotMemberCodec<
+    typeof StatBlockUnarmedStrikeProcedureSchema,
+    Schema.$Array<typeof BattleResourcePoolExecutionRef>
+  > = Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: StatBlockUnarmedStrikeProcedureSchema,
     resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  }),
-  Schema.Struct({
+  });
+  readonly multiattack: StatBlockProcedureBindingSnapshotMemberCodec<
+    typeof StatBlockMultiattackProcedureSchema,
+    Schema.$Array<typeof BattleResourcePoolExecutionRef>
+  > = Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: StatBlockMultiattackProcedureSchema,
     resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  }),
-  Schema.Struct({
+  });
+  readonly bonusActionOption: StatBlockProcedureBindingSnapshotMemberCodec<
+    typeof StatBlockBonusActionOptionProcedureSchema,
+    Schema.$Array<typeof BattleResourcePoolExecutionRef>
+  > = Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: StatBlockBonusActionOptionProcedureSchema,
     resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-  }),
-  Schema.Struct({
+  });
+  readonly spellcasting: StatBlockProcedureBindingSnapshotMemberCodec<
+    typeof StatBlockSpellcastingProcedureSchema,
+    Schema.Tuple<[]>
+  > = Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: StatBlockSpellcastingProcedureSchema,
     resourcePoolRefs: Schema.Tuple([]),
-  }),
-  Schema.Struct({
+  });
+  readonly effectOccurrenceSource: StatBlockProcedureBindingSnapshotMemberCodec<
+    typeof EffectOccurrenceSourceProcedureSchema,
+    Schema.Tuple<[]>
+  > = Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: EffectOccurrenceSourceProcedureSchema,
     resourcePoolRefs: Schema.Tuple([]),
-  }),
-]);
+  });
+}
 
-const StatBlockExecutionSnapshotShapeSchema = Schema.Struct({
-  scopeRef: BattleStatBlockExecutionScopeRef,
-  procedureBindings: Schema.Array(StatBlockProcedureBindingSnapshotSchema),
-  resourcePools: Schema.Array(StatBlockResourcePoolStateSchema),
-});
+type StatBlockProcedureBindingSnapshotMember =
+  StatBlockProcedureBindingSnapshotMemberOwner[keyof StatBlockProcedureBindingSnapshotMemberOwner];
+const statBlockProcedureBindingSnapshotMembers = (): readonly [
+  StatBlockProcedureBindingSnapshotMember,
+  ...StatBlockProcedureBindingSnapshotMember[],
+] => {
+  const [first, ...remaining] = Object.values(
+    new StatBlockProcedureBindingSnapshotMemberOwner(),
+  );
+  if (first === undefined) {
+    throw new Error(
+      "StatBlockProcedureBindingSnapshotMemberOwner must remain non-empty",
+    );
+  }
+  return [first, ...remaining];
+};
 
-export const StatBlockExecutionSnapshotSchema =
+const StatBlockProcedureBindingSnapshotMembers =
+  statBlockProcedureBindingSnapshotMembers();
+type StatBlockProcedureBindingSnapshotCodec = Schema.Union<
+  typeof StatBlockProcedureBindingSnapshotMembers
+>;
+const StatBlockProcedureBindingSnapshotSchema: StatBlockProcedureBindingSnapshotCodec =
+  Schema.Union(StatBlockProcedureBindingSnapshotMembers);
+
+type StatBlockExecutionSnapshotShapeCodec = Schema.Struct<{
+  readonly scopeRef: typeof BattleStatBlockExecutionScopeRef;
+  readonly procedureBindings: Schema.$Array<
+    typeof StatBlockProcedureBindingSnapshotSchema
+  >;
+  readonly resourcePools: Schema.$Array<
+    typeof StatBlockResourcePoolStateSchema
+  >;
+}>;
+
+const StatBlockExecutionSnapshotShapeSchema: StatBlockExecutionSnapshotShapeCodec =
+  Schema.Struct({
+    scopeRef: BattleStatBlockExecutionScopeRef,
+    procedureBindings: Schema.Array(StatBlockProcedureBindingSnapshotSchema),
+    resourcePools: Schema.Array(StatBlockResourcePoolStateSchema),
+  });
+
+export const StatBlockExecutionSnapshotSchema: Schema.Codec<
+  StatBlockExecutionSnapshot,
+  Schema.Codec.Encoded<StatBlockExecutionSnapshotShapeCodec>,
+  never,
+  never
+> = portableCodec<
+  StatBlockExecutionSnapshot,
+  Schema.Codec.Encoded<StatBlockExecutionSnapshotShapeCodec>
+>()(
   StatBlockExecutionSnapshotShapeSchema.pipe(
     Schema.check(
       Schema.makeFilter(statBlockExecutionSnapshotGraphIsValid, {
@@ -6264,7 +6389,8 @@ export const StatBlockExecutionSnapshotSchema =
           "Stat Block execution snapshot has an invalid reference graph.",
       }),
     ),
-  );
+  ),
+);
 
 type StatBlockExecutionSnapshotInvariantInput = Schema.Schema.Type<
   typeof StatBlockExecutionSnapshotShapeSchema
@@ -6599,40 +6725,96 @@ const CharacterUnitProcedureSourceSchema = Schema.Union([
   }),
 ]);
 
-const CharacterProcedureBindingSnapshotSchema = Schema.Union([
-  Schema.Struct({
+const CharacterUnitFeatureProcedureSnapshotSchema = Schema.Struct({
+  kind: Schema.Literal("unitFeature"),
+  source: CharacterUnitProcedureSourceSchema,
+  execution: UnitFeatureProcedureExecutionSchema,
+});
+const CharacterUnitSupportProcedureSnapshotSchema = Schema.Struct({
+  kind: Schema.Literal("unitSupportProfile"),
+  source: CharacterUnitProcedureSourceSchema,
+  execution: UnitSupportProcedureExecutionSchema,
+});
+type CharacterUnitProcedureSnapshotCodec = Schema.Union<
+  readonly [
+    typeof CharacterUnitFeatureProcedureSnapshotSchema,
+    typeof CharacterUnitSupportProcedureSnapshotSchema,
+  ]
+>;
+const CharacterUnitProcedureSnapshotSchema: CharacterUnitProcedureSnapshotCodec =
+  Schema.Union([
+    CharacterUnitFeatureProcedureSnapshotSchema,
+    CharacterUnitSupportProcedureSnapshotSchema,
+  ]);
+
+type CharacterProcedureBindingSnapshotMemberCodec<
+  Procedure extends Schema.Top,
+> = Schema.Struct<{
+  readonly procedureRef: typeof BattleProcedureExecutionRef;
+  readonly procedure: Procedure;
+}>;
+
+class CharacterProcedureBindingSnapshotMemberOwner {
+  readonly unit: CharacterProcedureBindingSnapshotMemberCodec<
+    typeof CharacterUnitProcedureSnapshotSchema
+  > = Schema.Struct({
     procedureRef: BattleProcedureExecutionRef,
-    procedure: Schema.Union([
-      Schema.Struct({
-        kind: Schema.Literal("unitFeature"),
-        source: CharacterUnitProcedureSourceSchema,
-        execution: UnitFeatureProcedureExecutionSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("unitSupportProfile"),
-        source: CharacterUnitProcedureSourceSchema,
-        execution: UnitSupportProcedureExecutionSchema,
-      }),
-    ]),
-  }),
-  Schema.Struct({
+    procedure: CharacterUnitProcedureSnapshotSchema,
+  });
+  readonly spellInvocation: CharacterProcedureBindingSnapshotMemberCodec<
+    Schema.Struct<{
+      readonly kind: Schema.Literal<"spellInvocation">;
+      readonly executionFacts: typeof SpellExecutionFactsSchema;
+    }>
+  > = Schema.Struct({
     procedureRef: BattleProcedureExecutionRef,
     procedure: Schema.Struct({
       kind: Schema.Literal("spellInvocation"),
       executionFacts: SpellExecutionFactsSchema,
     }),
-  }),
-  Schema.Struct({
+  });
+  readonly unavailableSpellInvocation: CharacterProcedureBindingSnapshotMemberCodec<
+    Schema.Struct<{
+      readonly kind: Schema.Literal<"unavailableSpellInvocation">;
+    }>
+  > = Schema.Struct({
     procedureRef: BattleProcedureExecutionRef,
     procedure: Schema.Struct({
       kind: Schema.Literal("unavailableSpellInvocation"),
     }),
-  }),
-  Schema.Struct({
+  });
+  readonly effectOccurrenceSource: CharacterProcedureBindingSnapshotMemberCodec<
+    typeof EffectOccurrenceSourceProcedureSchema
+  > = Schema.Struct({
     procedureRef: BattleProcedureExecutionRef,
     procedure: EffectOccurrenceSourceProcedureSchema,
-  }),
-]);
+  });
+}
+
+type CharacterProcedureBindingSnapshotMember =
+  CharacterProcedureBindingSnapshotMemberOwner[keyof CharacterProcedureBindingSnapshotMemberOwner];
+const characterProcedureBindingSnapshotMembers = (): readonly [
+  CharacterProcedureBindingSnapshotMember,
+  ...CharacterProcedureBindingSnapshotMember[],
+] => {
+  const [first, ...remaining] = Object.values(
+    new CharacterProcedureBindingSnapshotMemberOwner(),
+  );
+  if (first === undefined) {
+    throw new Error(
+      "CharacterProcedureBindingSnapshotMemberOwner must remain non-empty",
+    );
+  }
+  return [first, ...remaining];
+};
+
+const CharacterProcedureBindingSnapshotMembers =
+  characterProcedureBindingSnapshotMembers();
+type CharacterProcedureBindingSnapshotCodec = Schema.Union<
+  typeof CharacterProcedureBindingSnapshotMembers
+>;
+const CharacterProcedureBindingSnapshotSchema: CharacterProcedureBindingSnapshotCodec =
+  Schema.Union(CharacterProcedureBindingSnapshotMembers);
 
 const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   kind: Schema.Literal("character"),
@@ -6976,25 +7158,36 @@ const BattlePresentedCreatureSnapshotSchema =
     ),
   );
 
-export const BattleUnitSupportSourceSchema = Schema.Union([
-  UnitRecordSchema,
-  Schema.Struct({
-    id: Schema.String,
-    syntheticLabel: Schema.String,
-    provenance: Schema.Struct({
-      kind: Schema.Literal("classic-2024-mechanics-source-lane"),
-    }),
-    kind: Schema.Literal("class_feature"),
-    mechanics: Schema.Struct({
-      family: Schema.Literal("alternate_action_cost"),
-      from: Schema.Struct({
-        kind: Schema.Literal("standard_action"),
-        actions: Schema.Array(Schema.Literals(STANDARD_ACTION_KINDS)),
-      }),
-      to: Schema.Struct({ kind: Schema.Literal("bonus_action") }),
-    }),
+const ClassicNonSrdMechanicsUnitSchema = Schema.Struct({
+  id: Schema.String,
+  syntheticLabel: Schema.String,
+  provenance: Schema.Struct({
+    kind: Schema.Literal("classic-2024-mechanics-source-lane"),
   }),
-]);
+  kind: Schema.Literal("class_feature"),
+  mechanics: Schema.Struct({
+    family: Schema.Literal("alternate_action_cost"),
+    from: Schema.Struct({
+      kind: Schema.Literal("standard_action"),
+      actions: Schema.Array(Schema.Literals(STANDARD_ACTION_KINDS)),
+    }),
+    to: Schema.Struct({ kind: Schema.Literal("bonus_action") }),
+  }),
+});
+
+type BattleUnitSupportSourceCodec = Schema.Union<
+  readonly [typeof UnitRecordSchema, typeof ClassicNonSrdMechanicsUnitSchema]
+>;
+
+export const BattleUnitSupportSourceSchema: Schema.Codec<
+  Schema.Schema.Type<BattleUnitSupportSourceCodec>,
+  Schema.Codec.Encoded<BattleUnitSupportSourceCodec>,
+  never,
+  never
+> = portableCodec<
+  Schema.Schema.Type<BattleUnitSupportSourceCodec>,
+  Schema.Codec.Encoded<BattleUnitSupportSourceCodec>
+>()(Schema.Union([UnitRecordSchema, ClassicNonSrdMechanicsUnitSchema]));
 
 export const BattleSpellPresentationSchema = Schema.Struct({
   kind: Schema.Literal("spell"),
@@ -7150,9 +7343,22 @@ type BattleInterruptProcedureChoiceFields = Schema.Struct.Fields & {
   readonly initialHoles?: never;
 };
 
+type PairedBattleInterruptProcedureChoiceMember<
+  Fields extends BattleInterruptProcedureChoiceFields,
+> = {
+  readonly labeled: Schema.Struct<
+    Fields & { readonly initialHoles: Schema.$Array<typeof BattleHoleSchema> }
+  >;
+  readonly mechanical: Schema.Struct<
+    Fields & {
+      readonly initialHoles: Schema.$Array<typeof BattleMechanicalHoleSchema>;
+    }
+  >;
+};
+
 function pairedBattleInterruptProcedureChoiceMember<
   const Fields extends BattleInterruptProcedureChoiceFields,
->(fields: Fields) {
+>(fields: Fields): PairedBattleInterruptProcedureChoiceMember<Fields> {
   return {
     labeled: Schema.Struct({
       ...fields,
@@ -7176,40 +7382,48 @@ const BattleInterruptProcedureChoiceMembers = [
     modifier: BattleReactionModifierChoiceSchema,
   }),
 ] as const;
-const [
-  FirstBattleInterruptProcedureChoiceMember,
-  ...RemainingBattleInterruptProcedureChoiceMembers
-] = BattleInterruptProcedureChoiceMembers;
-const BattleInterruptProcedureChoiceUnfilteredSchema = Schema.Union([
-  FirstBattleInterruptProcedureChoiceMember.labeled,
-  ...RemainingBattleInterruptProcedureChoiceMembers.map(
-    ({ labeled }) => labeled,
-  ),
-]);
+const FirstBattleInterruptProcedureChoiceMember =
+  BattleInterruptProcedureChoiceMembers[0];
+const BattleInterruptProcedureModifierChoiceMember =
+  BattleInterruptProcedureChoiceMembers[1];
+type BattleInterruptProcedureChoiceCodec = Schema.Union<
+  readonly [
+    (typeof BattleInterruptProcedureChoiceMembers)[0]["labeled"],
+    (typeof BattleInterruptProcedureChoiceMembers)[1]["labeled"],
+  ]
+>;
+const BattleInterruptProcedureChoiceUnfilteredSchema: BattleInterruptProcedureChoiceCodec =
+  Schema.Union([
+    FirstBattleInterruptProcedureChoiceMember.labeled,
+    BattleInterruptProcedureModifierChoiceMember.labeled,
+  ]);
 
-const MechanicalBattleInterruptChoiceMembers =
-  RemainingBattleInterruptProcedureChoiceMembers.map(
-    ({ mechanical }) => mechanical,
-  );
-const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema = Schema.Union([
-  FirstBattleInterruptProcedureChoiceMember.mechanical,
-  ...MechanicalBattleInterruptChoiceMembers,
-]);
-export const BattleInterruptProcedureChoiceSchema =
+type BattleMechanicalInterruptProcedureChoiceCodec = Schema.Union<
+  readonly [
+    (typeof BattleInterruptProcedureChoiceMembers)[0]["mechanical"],
+    (typeof BattleInterruptProcedureChoiceMembers)[1]["mechanical"],
+  ]
+>;
+const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema: BattleMechanicalInterruptProcedureChoiceCodec =
+  Schema.Union([
+    FirstBattleInterruptProcedureChoiceMember.mechanical,
+    BattleInterruptProcedureModifierChoiceMember.mechanical,
+  ]);
+export const BattleInterruptProcedureChoiceSchema: typeof BattleInterruptProcedureChoiceUnfilteredSchema =
   BattleInterruptProcedureChoiceUnfilteredSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
-export const BattleMechanicalInterruptProcedureChoiceSchema =
+export const BattleMechanicalInterruptProcedureChoiceSchema: typeof BattleMechanicalInterruptProcedureChoiceUnfilteredSchema =
   BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 
-export const BattleInterruptProcedureChoiceWithSubjectSchema =
+export const BattleInterruptProcedureChoiceWithSubjectSchema: typeof FirstBattleInterruptProcedureChoiceMember.labeled =
   FirstBattleInterruptProcedureChoiceMember.labeled.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
-export const BattleInterruptProcedureModifierChoiceSchema =
-  RemainingBattleInterruptProcedureChoiceMembers[0].labeled.annotate({
+export const BattleInterruptProcedureModifierChoiceSchema: typeof BattleInterruptProcedureModifierChoiceMember.labeled =
+  BattleInterruptProcedureModifierChoiceMember.labeled.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 
@@ -9911,10 +10125,15 @@ export const BattleSnapshotSchema: Schema.Codec<
   Schema.annotate({ identifier: "BattleSnapshot" }),
 );
 
-export const BattleActDiscoveryCandidateSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  initialHoles: Schema.Array(BattleHoleSchema),
-});
+type BattleActDiscoveryCandidateCodec = Schema.Struct<{
+  readonly subject: typeof BattleSubjectSchema;
+  readonly initialHoles: Schema.$Array<typeof BattleHoleSchema>;
+}>;
+export const BattleActDiscoveryCandidateSchema: BattleActDiscoveryCandidateCodec =
+  Schema.Struct({
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+  });
 
 function battleActExecutionCandidateInvariantHolds(
   act: EncodedBattleActDiscoveryCandidate,
@@ -9945,23 +10164,41 @@ const BattleInterruptDecisionHoleSchema = Schema.Struct({
   eligibleResponders: Schema.Array(CombatantId),
 });
 
-export const BattleInterruptDecisionFrontierSchema = Schema.Struct({
-  kind: Schema.Literal("interruptDecision"),
-  trigger: Schema.Literals(BATTLE_INTERRUPT_TRIGGERS),
-  decisionHole: BattleInterruptDecisionHoleSchema,
-  choices: Schema.NonEmptyArray(BattleInterruptProcedureChoiceSchema),
-  stackDepth: BattleReplayStackDepth,
-});
+type BattleInterruptDecisionFrontierCodec = Schema.Struct<{
+  readonly kind: Schema.Literal<"interruptDecision">;
+  readonly trigger: Schema.Literals<typeof BATTLE_INTERRUPT_TRIGGERS>;
+  readonly decisionHole: typeof BattleInterruptDecisionHoleSchema;
+  readonly choices: Schema.NonEmptyArray<
+    typeof BattleInterruptProcedureChoiceSchema
+  >;
+  readonly stackDepth: typeof BattleReplayStackDepth;
+}>;
+export const BattleInterruptDecisionFrontierSchema: BattleInterruptDecisionFrontierCodec =
+  Schema.Struct({
+    kind: Schema.Literal("interruptDecision"),
+    trigger: Schema.Literals(BATTLE_INTERRUPT_TRIGGERS),
+    decisionHole: BattleInterruptDecisionHoleSchema,
+    choices: Schema.NonEmptyArray(BattleInterruptProcedureChoiceSchema),
+    stackDepth: BattleReplayStackDepth,
+  });
 
-export const BattleCheckpointFrontierHolesSchema = Schema.Struct({
-  kind: Schema.Literal("holes"),
-  subject: BattleSubjectSchema,
-  holes: Schema.NonEmptyArray(BattleHoleSchema),
-  continuation: Schema.Union([
-    Schema.Struct({ kind: Schema.Literal("ordinaryReplay") }),
-    Schema.Struct({ kind: Schema.Literal("runtimeOwnedInterrupt") }),
-  ]),
-});
+const BattleCheckpointFrontierContinuationSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("ordinaryReplay") }),
+  Schema.Struct({ kind: Schema.Literal("runtimeOwnedInterrupt") }),
+]);
+type BattleCheckpointFrontierHolesCodec = Schema.Struct<{
+  readonly kind: Schema.Literal<"holes">;
+  readonly subject: typeof BattleSubjectSchema;
+  readonly holes: Schema.NonEmptyArray<typeof BattleHoleSchema>;
+  readonly continuation: typeof BattleCheckpointFrontierContinuationSchema;
+}>;
+export const BattleCheckpointFrontierHolesSchema: BattleCheckpointFrontierHolesCodec =
+  Schema.Struct({
+    kind: Schema.Literal("holes"),
+    subject: BattleSubjectSchema,
+    holes: Schema.NonEmptyArray(BattleHoleSchema),
+    continuation: BattleCheckpointFrontierContinuationSchema,
+  });
 
 const BattleCheckpointFrontierActsSchema = Schema.Struct({
   kind: Schema.Literal("acts"),
