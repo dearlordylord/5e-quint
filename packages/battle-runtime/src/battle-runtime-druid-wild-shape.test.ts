@@ -2805,7 +2805,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
       speeds: [
         {
           kind: "swim" as const,
-          feet: { kind: "literal" as const, value: 30 },
+          feet: { kind: "literal" as const, value: PositiveInteger(30) },
         },
       ] as const,
     },

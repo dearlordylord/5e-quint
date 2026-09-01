@@ -2,7 +2,12 @@
 
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { damageAmount, DieRollResult, movementFeet } from "@dnd/shared/types";
+import {
+  damageAmount,
+  DieRollResult,
+  movementFeet,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import {
   maybeOpenInterruptWindow,
@@ -1074,7 +1079,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
             ...targetStatBlock,
             statBlock: {
               ...targetStatBlock.statBlock,
-              hp: { kind: "literal", value: 20 },
+              hp: { kind: "literal", value: PositiveInteger(20) },
             },
           },
           currentHp: 20,

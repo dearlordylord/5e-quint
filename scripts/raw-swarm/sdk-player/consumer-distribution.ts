@@ -14,8 +14,9 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative, resolve, sep } from "node:path";
+import { join, posix, relative, resolve, sep } from "node:path";
 import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
+import ts from "typescript";
 
 import {
   validatedPackageEffectCompilerSupportDirectories,
@@ -129,6 +130,22 @@ export const PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS = [
   "packages/surface/src/surface/stat-block-identity.d.ts",
 ] as const;
 
+const PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS = [
+  "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
+  "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
+  "scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
+  "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
+  "scripts/raw-swarm/sdk-player/scenario-session.d.ts",
+  "packages/battle-runtime/src/index.d.ts",
+  "packages/battle-runtime/src/battle-state-execution.d.ts",
+  "packages/battle-runtime/src/battle-session-execution.d.ts",
+  "packages/character-creation-runtime/src/index.d.ts",
+  "packages/character-creation-runtime/src/phase1-manifest.d.ts",
+  "packages/character-sheet-runtime/src/index.d.ts",
+  "packages/shared/src/non-empty-array.d.ts",
+  "packages/tactical-space/src/index.d.ts",
+] as const;
+
 export const EFFECT_DECLARATION_COMPILER_SUPPORT_MANIFEST = {
   versions: {
     effect: "4.0.0-rc.112",
@@ -214,6 +231,114 @@ function declarationContentLedgerSha256(
     .sort()
     .join("\n");
   return createHash("sha256").update(`${ledger}\n`).digest("hex");
+}
+
+function declarationTargetCandidates(
+  sourcePath: string,
+  specifier: string,
+): readonly string[] | undefined {
+  let unresolvedTarget: string;
+  if (specifier.startsWith(".")) {
+    unresolvedTarget = posix.normalize(
+      posix.join(posix.dirname(sourcePath), specifier),
+    );
+  } else if (specifier.startsWith("@dnd/")) {
+    const [scope, packageName, ...subpathParts] = specifier.split("/");
+    if (scope !== "@dnd" || packageName === undefined) return [];
+    unresolvedTarget = posix.join(
+      "packages",
+      packageName,
+      "src",
+      subpathParts.length === 0 ? "index" : subpathParts.join("/"),
+    );
+  } else if (specifier.startsWith("#")) {
+    return [];
+  } else {
+    return undefined;
+  }
+
+  if (unresolvedTarget.endsWith(".d.ts")) return [unresolvedTarget];
+  if (unresolvedTarget.endsWith(".ts")) {
+    return [`${unresolvedTarget.slice(0, -3)}.d.ts`];
+  }
+  if (unresolvedTarget.endsWith(".js")) {
+    return [`${unresolvedTarget.slice(0, -3)}.d.ts`];
+  }
+  return [
+    `${unresolvedTarget}.d.ts`,
+    posix.join(unresolvedTarget, "index.d.ts"),
+  ];
+}
+
+/**
+ * Admit the emitted declaration dependency graph before exposing it. Internal
+ * edges are resolved against emitted paths only, so missing compiler support
+ * fails closed instead of making an unreachable declaration look removable.
+ */
+export function removeUnreachableForbiddenDeclarations(
+  directory: string,
+  requiredRoots: readonly string[] = PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS,
+  forbiddenPaths: readonly string[] = PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
+): void {
+  const root = realpathSync(directory);
+  const emittedDeclarations = new Map(
+    declarationFiles(root).map((path) => [
+      relative(root, path).split(sep).join("/"),
+      path,
+    ]),
+  );
+  const reachable = new Set<string>();
+  const pending = [...requiredRoots];
+
+  while (pending.length > 0) {
+    const relativeSourcePath = pending.pop();
+    if (relativeSourcePath === undefined || reachable.has(relativeSourcePath)) {
+      continue;
+    }
+    const sourcePath = emittedDeclarations.get(relativeSourcePath);
+    if (sourcePath === undefined) {
+      throw new Error(
+        `Public declaration graph omitted required declaration ${relativeSourcePath}.`,
+      );
+    }
+    reachable.add(relativeSourcePath);
+    const dependencies = ts.preProcessFile(
+      readFileSync(sourcePath, "utf8"),
+      true,
+      true,
+    );
+    for (const dependency of [
+      ...dependencies.importedFiles,
+      ...dependencies.referencedFiles,
+    ]) {
+      const candidates = declarationTargetCandidates(
+        relativeSourcePath,
+        dependency.fileName,
+      );
+      if (candidates === undefined) continue;
+      const target = candidates.find((candidate) =>
+        emittedDeclarations.has(candidate),
+      );
+      if (target === undefined) {
+        throw new Error(
+          `Public declaration graph has unresolved internal edge ${relativeSourcePath} -> ${dependency.fileName}.`,
+        );
+      }
+      pending.push(target);
+    }
+  }
+
+  for (const forbiddenPath of forbiddenPaths) {
+    if (reachable.has(forbiddenPath)) {
+      throw new Error(
+        `Public declaration graph reaches forbidden runtime/data owner ${forbiddenPath}.`,
+      );
+    }
+  }
+  for (const forbiddenPath of forbiddenPaths) {
+    const forbiddenDeclaration = emittedDeclarations.get(forbiddenPath);
+    if (forbiddenDeclaration !== undefined) rmSync(forbiddenDeclaration);
+  }
 }
 
 function compilerSupportFiles(directory: string): readonly string[] {
@@ -431,26 +556,12 @@ export function emitPublicDeclarations(
     resolve(declarationsDirectory, "packages/shared/src/non-empty-array.d.ts"),
   );
 
-  const requiredDeclarations = [
-    "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
-    "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
-    "scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
-    "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
-    "scripts/raw-swarm/sdk-player/scenario-session.d.ts",
-    "packages/battle-runtime/src/index.d.ts",
-    "packages/battle-runtime/src/battle-state-execution.d.ts",
-    "packages/battle-runtime/src/battle-session-execution.d.ts",
-    "packages/character-creation-runtime/src/index.d.ts",
-    "packages/character-creation-runtime/src/phase1-manifest.d.ts",
-    "packages/character-sheet-runtime/src/index.d.ts",
-    "packages/shared/src/non-empty-array.d.ts",
-    "packages/tactical-space/src/index.d.ts",
-  ];
-  for (const relativePath of requiredDeclarations) {
+  for (const relativePath of PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS) {
     if (!existsSync(resolve(declarationsDirectory, relativePath))) {
       throw new Error(`Public declaration emission omitted ${relativePath}.`);
     }
   }
+  removeUnreachableForbiddenDeclarations(declarationsDirectory);
   const phaseOneWeaponExports = readFileSync(
     resolve(
       declarationsDirectory,

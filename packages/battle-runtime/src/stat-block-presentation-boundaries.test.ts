@@ -6,6 +6,7 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus,
+  PositiveInteger,
 } from "@dnd/shared/types";
 
 import {
@@ -86,7 +87,7 @@ describe("battle presentation joins", () => {
       description: "The creature shares a restorative effect.",
       effect: {
         kind: "caster_heal_link" as const,
-        rangeFeet: 30,
+        rangeFeet: PositiveInteger(30),
       },
     };
     const supportedTrait = {

@@ -33,6 +33,7 @@ import {
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
+  removeUnreachableForbiddenDeclarations,
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -65,6 +66,16 @@ function filesBelow(directory: string): readonly string[] {
 
 function copyDistribution(source: string, destination: string): void {
   cpSync(source, destination, { recursive: true });
+}
+
+function writeDeclaration(
+  directory: string,
+  relativePath: string,
+  source: string,
+): void {
+  const path = join(directory, relativePath);
+  mkdirSync(resolve(path, ".."), { recursive: true });
+  writeFileSync(path, source);
 }
 
 describe("SDK player consumer distribution", () => {
@@ -118,6 +129,79 @@ describe("SDK player consumer distribution", () => {
         `Public declaration bundle has ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES + 1)} files; maximum is ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES)}`,
       ),
     );
+  });
+
+  test("removes an emitted forbidden declaration proved unreachable", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Kept } from "./kept.ts";\n',
+    );
+    writeDeclaration(directory, "kept.d.ts", "export type Kept = string;\n");
+    writeDeclaration(
+      directory,
+      "forbidden.d.ts",
+      "export type Broad = string;\n",
+    );
+
+    removeUnreachableForbiddenDeclarations(
+      directory,
+      ["root.d.ts"],
+      ["forbidden.d.ts"],
+    );
+
+    expect(existsSync(join(directory, "forbidden.d.ts"))).toBe(false);
+  });
+
+  test("rejects an emitted forbidden declaration reachable from a root", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Broad } from "./forbidden.ts";\n',
+    );
+    writeDeclaration(
+      directory,
+      "forbidden.d.ts",
+      "export type Broad = string;\n",
+    );
+
+    expect(() =>
+      removeUnreachableForbiddenDeclarations(
+        directory,
+        ["root.d.ts"],
+        ["forbidden.d.ts"],
+      ),
+    ).toThrow(/reaches forbidden runtime\/data owner forbidden\.d\.ts/);
+    expect(existsSync(join(directory, "forbidden.d.ts"))).toBe(true);
+  });
+
+  test("rejects an unresolved internal declaration edge", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Missing } from "./missing.ts";\n',
+    );
+
+    expect(() =>
+      removeUnreachableForbiddenDeclarations(directory, ["root.d.ts"], []),
+    ).toThrow(/unresolved internal edge root\.d\.ts -> \.\/missing\.ts/);
+  });
+
+  test("retains ordinary declarations reachable from a root", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
+    writeDeclaration(
+      directory,
+      "root.d.ts",
+      'export type { Kept } from "./kept.ts";\n',
+    );
+    writeDeclaration(directory, "kept.d.ts", "export type Kept = string;\n");
+
+    removeUnreachableForbiddenDeclarations(directory, ["root.d.ts"], []);
+
+    expect(existsSync(join(directory, "kept.d.ts"))).toBe(true);
   });
 
   test(

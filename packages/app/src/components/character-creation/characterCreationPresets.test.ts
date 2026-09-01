@@ -1,5 +1,9 @@
-import { PHASE1_WEAPON_MASTERY_UNIT_IDS } from "@dnd/character-creation-runtime"
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts"
+import {
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_MASTERY_UNIT_IDS,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID
+} from "@dnd/character-creation-runtime"
 import { describe, expect, it } from "vitest"
 
 import { FIGHTER_EXAMPLE_DRAFT } from "./characterCreationPresets.ts"
@@ -17,9 +21,9 @@ describe("character creation presets", () => {
     )
 
     expect(selectedWeaponMasteryUnitIds).toEqual([
-      authoredUnitId("weapon_longsword"),
-      authoredUnitId("weapon_dagger"),
-      authoredUnitId("weapon_shortsword")
+      PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      PHASE1_WEAPON_DAGGER_UNIT_ID,
+      PHASE1_WEAPON_SHORTSWORD_UNIT_ID
     ])
   })
 })

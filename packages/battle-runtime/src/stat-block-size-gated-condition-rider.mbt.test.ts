@@ -524,9 +524,14 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
       size: "small",
       creatureType: "fey",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: 10 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(10) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
         cha: AbilityScore.make(8),
         con: AbilityScore.make(10),
@@ -562,9 +567,14 @@ function sizeGatedConditionRiderTargetStatBlock(
       size: targetSizeGate === "larger" ? "large" : "medium",
       creatureType: "fey",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: 20 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(20) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
         cha: AbilityScore.make(8),
         con: AbilityScore.make(10),

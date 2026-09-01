@@ -71,7 +71,7 @@ type EncodedSomeResourceRefs = Extract<
 type EncodedStandaloneStatBlock = Schema.Codec.Encoded<
   typeof StandaloneStatBlockSchema
 >;
-type EncodedStandaloneSpeed = Schema.Schema.Type<
+type EncodedStandaloneSpeed = Schema.Codec.Encoded<
   typeof StandaloneStatBlockSchema
 >["speeds"][number];
 type EncodedStandaloneConcreteSpeed = Exclude<

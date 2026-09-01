@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import skeletonInput from "../../content/stat_block_skeleton.json";
@@ -10,6 +11,8 @@ import {
 import {
   AuthoredStatBlockReactionTriggerSchema,
   AuthoredStatBlockReactionTriggerNonRecursiveSchema,
+  CreatureTraitEffectSchema,
+  StandaloneStatBlockValueSchema,
   StatBlockGmSpeedChoiceSchema,
   StatBlockProcedureDcSourceSchema,
   StatBlockProcedureResourceLimitSchema,
@@ -48,6 +51,53 @@ const validGmSpeedChoiceAlternatives = [
 // @ts-expect-error A GM Speed choice requires at least two alternatives.
 const invalidGmSpeedChoiceAlternatives: StatBlockGmSpeedChoiceAlternativesEncoded =
   [walkSpeed];
+
+test("round-trips positive authored Stat Block values and Life Bond ranges", () => {
+  fc.assert(
+    fc.property(fc.integer({ min: 1, max: 1_000_000 }), (value) => {
+      const encodedLiteral: Schema.Codec.Encoded<
+        typeof StandaloneStatBlockValueSchema
+      > = { kind: "literal", value };
+      const decodedLiteral = Schema.decodeUnknownSync(
+        StandaloneStatBlockValueSchema,
+      )(encodedLiteral);
+      expect(
+        Schema.encodeSync(StandaloneStatBlockValueSchema)(decodedLiteral),
+      ).toEqual(encodedLiteral);
+
+      const encodedTrait: Schema.Codec.Encoded<
+        typeof CreatureTraitEffectSchema
+      > = {
+        kind: "caster_heal_link",
+        rangeFeet: value,
+      };
+      const decodedTrait = Schema.decodeUnknownSync(CreatureTraitEffectSchema)(
+        encodedTrait,
+      );
+      expect(
+        Schema.encodeSync(CreatureTraitEffectSchema)(decodedTrait),
+      ).toEqual(encodedTrait);
+    }),
+  );
+});
+
+test.each([0, -1, 1.5])(
+  "rejects invalid authored Stat Block numeric value %s",
+  (value) => {
+    expect(
+      Schema.decodeUnknownResult(StandaloneStatBlockValueSchema)({
+        kind: "literal",
+        value,
+      })._tag,
+    ).toBe("Failure");
+    expect(
+      Schema.decodeUnknownResult(CreatureTraitEffectSchema)({
+        kind: "caster_heal_link",
+        rangeFeet: value,
+      })._tag,
+    ).toBe("Failure");
+  },
+);
 
 const encodedReactionTriggers = {
   [STAT_BLOCK_REACTION_TRIGGER_HIT_BY_ATTACK_ROLL]: {

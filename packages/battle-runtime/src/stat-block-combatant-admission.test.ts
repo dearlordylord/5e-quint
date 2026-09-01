@@ -108,30 +108,6 @@ describe("Stat Block combatant admission capability", () => {
     );
   });
 
-  test("rejects fractional maximum HP as a typed issue before branding", () => {
-    const source = statBlockRecord();
-    const admission = admitBattleStatBlockCombatant({
-      battleId: battleId("fractional-stat-block-hp"),
-      combatantId: admittedCombatantId,
-      statBlock: projectedStatBlockRuntimeSource({
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          hp: { kind: "literal", value: 1.5 },
-        },
-      }),
-      startingScopeOrdinal: battleExecutionScopeOrdinal(0),
-    });
-
-    expect(
-      Result.isFailure(admission)
-        ? battleStateInitIssueMessage(admission.failure)
-        : "admitted",
-    ).toBe(
-      "Battle runtime requires Stat Block maximum HP to be a positive integer.",
-    );
-  });
-
   test("retains the projected empty Stat Block resource collection", () => {
     const source = projectedStatBlockRuntimeSource(statBlockRecord());
     expect(source.resources).toEqual([]);

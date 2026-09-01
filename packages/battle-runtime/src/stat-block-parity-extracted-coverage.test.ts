@@ -96,8 +96,15 @@ describe("extracted Stat Block parity branches", () => {
       statBlock: {
         ...source.statBlock,
         speeds: [
-          { kind: "walk", feet: { kind: "literal", value: 30 } },
-          { kind: "fly", feet: { kind: "literal", value: 60 }, hover: true },
+          {
+            kind: "walk",
+            feet: { kind: "literal", value: PositiveInteger(30) },
+          },
+          {
+            kind: "fly",
+            feet: { kind: "literal", value: PositiveInteger(60) },
+            hover: true,
+          },
         ],
         senses: [
           {

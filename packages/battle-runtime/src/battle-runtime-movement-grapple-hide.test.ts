@@ -10,7 +10,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
-import { abilityModifier, Hp } from "@dnd/shared/types";
+import { abilityModifier, Hp, PositiveInteger } from "@dnd/shared/types";
 import { Result } from "effect";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import {
@@ -2824,8 +2824,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
             statBlock: {
               ...base.statBlock,
               speeds: [
-                { kind: "walk", feet: { kind: "literal", value: 30 } },
-                { kind: "climb", feet: { kind: "literal", value: 40 } },
+                {
+                  kind: "walk",
+                  feet: { kind: "literal", value: PositiveInteger(30) },
+                },
+                {
+                  kind: "climb",
+                  feet: { kind: "literal", value: PositiveInteger(40) },
+                },
               ],
             },
           },

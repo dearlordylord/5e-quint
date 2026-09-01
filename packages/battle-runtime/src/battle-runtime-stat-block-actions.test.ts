@@ -538,7 +538,7 @@ function largeTargetStatBlock(): StatBlockRecord {
     name: "Large Condition Rider Target",
     statBlock: {
       ...base.statBlock,
-      hp: { kind: "literal", value: 20 },
+      hp: { kind: "literal", value: PositiveInteger(20) },
       size: "large",
     },
   };
@@ -554,7 +554,7 @@ function proneImmuneTargetStatBlock(): StatBlockRecord {
     name: "Prone-Immune Condition Rider Target",
     statBlock: {
       ...base.statBlock,
-      hp: { kind: "literal", value: 20 },
+      hp: { kind: "literal", value: PositiveInteger(20) },
       immunities: decodeCreatureImmunityDeclarationSync({
         ...(base.statBlock.immunities ?? {}),
         conditions: ["prone"],

@@ -360,6 +360,16 @@ const SignedIntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
 const NonEmptyStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
+
+const minimumStandaloneStatBlockValue: SrdStatBlockRecord["statBlock"]["hp"] = {
+  kind: "literal",
+  value: PositiveInteger(1),
+};
+
+const fallbackWalkSpeed: StandaloneStatBlockSpeedEntry = {
+  kind: "walk",
+  feet: minimumStandaloneStatBlockValue,
+};
 const ProcedureSectionSchema = Schema.Literals(PROCEDURE_SECTIONS);
 const AttackAbilitySchema = Schema.Literals(ATTACK_ABILITY_NAMES);
 const DEPENDENCY_FALLBACK_IMMUNITY = Schema.decodeUnknownSync(
@@ -1148,7 +1158,7 @@ const parseGmChoiceSpeed = (
     feetEvidence,
     `${field}.feet`,
     "a positive integer Speed distance",
-    { kind: "literal" as const, value: 1 },
+    minimumStandaloneStatBlockValue,
   );
   const alternativeIssueCount = issueContext.issues.length;
   const seenKinds = new Set<(typeof SPEED_TYPES)[number]>();
@@ -1179,7 +1189,7 @@ const parseGmChoiceSpeed = (
       return [{ kind: parsedKind, feet }];
     });
   if (issueContext.issues.length > alternativeIssueCount) {
-    return { kind: "walk", feet: { kind: "literal", value: 1 } };
+    return fallbackWalkSpeed;
   }
   const [first, second, ...rest] = alternatives;
   /* v8 ignore next -- @preserve -- the enclosing regex requires at least two speed-kind alternatives */
@@ -1196,7 +1206,7 @@ const parseGmChoiceSpeed = (
     StandaloneStatBlockSpeedEntrySchema,
     { kind: "gm_choice", alternatives: [first, second, ...rest] },
     `${field}.gmChoice`,
-    { kind: "walk", feet: { kind: "literal", value: 1 } },
+    fallbackWalkSpeed,
   );
 };
 
@@ -1214,7 +1224,7 @@ const parseFixedSpeed = (
     ),
   );
   if (speed === undefined) {
-    return { kind: "walk", feet: { kind: "literal", value: 1 } };
+    return fallbackWalkSpeed;
   }
   const qualifier = speed[3];
   const feetEvidence = matchCapture(speed, 2);
@@ -1225,7 +1235,7 @@ const parseFixedSpeed = (
     feetEvidence,
     `${field}.feet`,
     "a positive integer Speed distance",
-    { kind: "literal" as const, value: 1 },
+    minimumStandaloneStatBlockValue,
   );
   const kind = parsedLiteral(
     issueContext,
@@ -1256,7 +1266,7 @@ const parseFixedSpeed = (
       StandaloneStatBlockSpeedEntrySchema,
       { kind, feet, ...availability },
       field,
-      { kind: "walk", feet: { kind: "literal", value: 1 } },
+      fallbackWalkSpeed,
     );
   return Match.value(kind).pipe(
     Match.when("fly", () =>
@@ -1270,7 +1280,7 @@ const parseFixedSpeed = (
           ...availability,
         },
         field,
-        { kind: "fly", feet: { kind: "literal", value: 1 } },
+        { kind: "fly", feet: minimumStandaloneStatBlockValue },
       ),
     ),
     Match.when("walk", decodeNonFly),
@@ -1304,7 +1314,7 @@ const parseSpeeds = (
     requireLine(issueContext, lines, "**Speed**", "speeds"),
   );
   if (speedLine === undefined) {
-    return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
+    return [fallbackWalkSpeed];
   }
   const speedItemIssueCount = issueContext.issues.length;
   const speeds = speedLine
@@ -1322,11 +1332,11 @@ const parseSpeeds = (
   if (first === undefined) {
     /* v8 ignore next -- @preserve -- losing the item produced by split necessarily records a parsing issue */
     if (issueContext.issues.length > speedItemIssueCount) {
-      return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
+      return [fallbackWalkSpeed];
     }
     /* v8 ignore next -- @preserve -- split yields an item; an unprojectable item records an issue and returns through the branch above */
     return missingEvidence(issueContext, "speeds", `${contextLabel} Speed`, [
-      { kind: "walk", feet: { kind: "literal", value: 1 } },
+      fallbackWalkSpeed,
     ]);
   }
   return [first, ...rest];
@@ -2718,7 +2728,7 @@ const parseRawArmorClass = (
     ),
   );
   if (ac === undefined) {
-    return { value: { kind: "literal", value: 1 } };
+    return { value: minimumStandaloneStatBlockValue };
   }
   const valueEvidence = matchCapture(ac, 1);
   return {
@@ -2729,7 +2739,7 @@ const parseRawArmorClass = (
       valueEvidence,
       "ac.value",
       "a positive integer Armor Class",
-      { kind: "literal" as const, value: 1 },
+      minimumStandaloneStatBlockValue,
     ),
     ...(ac[2] === undefined
       ? {}
@@ -2756,7 +2766,7 @@ const parseRawHitPoints = (
   const hp = assess(issueContext, () =>
     requireLineMatch(issueContext, lines, "**HP**", /\*\*HP\*\* (\d+)/, "hp"),
   );
-  if (hp === undefined) return { kind: "literal", value: 1 };
+  if (hp === undefined) return minimumStandaloneStatBlockValue;
   const evidence = matchCapture(hp, 1);
   return decodeEvidenceValue(
     issueContext,
@@ -2765,7 +2775,7 @@ const parseRawHitPoints = (
     evidence,
     "hp",
     "a canonical positive Hit Point value",
-    { kind: "literal" as const, value: 1 },
+    minimumStandaloneStatBlockValue,
   );
 };
 
@@ -2893,7 +2903,7 @@ const parseRawGeneralFacts = (
   const speeds = assessedProjection(
     issueContext,
     () => parseSpeeds(issueContext, lines, name),
-    [{ kind: "walk", feet: { kind: "literal", value: 1 } }],
+    [fallbackWalkSpeed],
   );
   const parsedAbilityScores = assess(issueContext, () =>
     parseAbilityScores(issueContext, lines, name),

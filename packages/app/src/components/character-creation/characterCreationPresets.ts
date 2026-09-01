@@ -30,14 +30,15 @@ import {
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
   progressionOptionId,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_LANGUAGE_OPTION_IDS,
   type UnitChoiceKey,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY
 } from "@dnd/character-creation-runtime"
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts"
 import type { UnitRecord } from "@dnd/surface/surface/types"
 import { Result } from "effect"
 
@@ -56,8 +57,8 @@ type CharacterCreationPreset = {
 
 const FIGHTER_PRESET_WEAPON_MASTERY_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
-  creationChoiceOptionId(authoredUnitId("weapon_dagger")),
-  creationChoiceOptionId(authoredUnitId("weapon_shortsword"))
+  creationChoiceOptionId(PHASE1_WEAPON_DAGGER_UNIT_ID),
+  creationChoiceOptionId(PHASE1_WEAPON_SHORTSWORD_UNIT_ID)
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>
 
 function presetChoiceFill(

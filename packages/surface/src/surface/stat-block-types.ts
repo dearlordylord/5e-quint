@@ -67,7 +67,7 @@ export type StatBlockProcedureOrdinal = PositiveInteger &
 export type StatBlockProcedureResourceOrdinal = PositiveInteger &
   Brand.Brand<"StatBlockProcedureResourceOrdinal">;
 
-type StatBlockLiteralValue<Value = number> = {
+type StatBlockLiteralValue<Value = PositiveInteger> = {
   readonly kind: "literal";
   readonly value: Value;
 };
@@ -530,6 +530,15 @@ type StatBlockGmSpeedChoiceAlternative = Extract<
   { readonly availability?: never }
 >;
 
+type StatBlockGmSpeedChoiceAlternativeEncoded<
+  Alternative extends StatBlockGmSpeedChoiceAlternative =
+    StatBlockGmSpeedChoiceAlternative,
+> = Alternative extends StatBlockGmSpeedChoiceAlternative
+  ? Omit<Alternative, "feet"> & {
+      readonly feet: StatBlockLiteralValue<number>;
+    }
+  : never;
+
 export type StatBlockGmSpeedChoiceAlternatives = readonly [
   StatBlockGmSpeedChoiceAlternative,
   StatBlockGmSpeedChoiceAlternative,
@@ -538,9 +547,9 @@ export type StatBlockGmSpeedChoiceAlternatives = readonly [
   Brand.Brand<"StatBlockGmSpeedChoiceAlternatives">;
 
 export type StatBlockGmSpeedChoiceAlternativesEncoded = readonly [
-  StatBlockGmSpeedChoiceAlternative,
-  StatBlockGmSpeedChoiceAlternative,
-  ...StatBlockGmSpeedChoiceAlternative[],
+  StatBlockGmSpeedChoiceAlternativeEncoded,
+  StatBlockGmSpeedChoiceAlternativeEncoded,
+  ...StatBlockGmSpeedChoiceAlternativeEncoded[],
 ];
 
 export type StatBlockGmSpeedChoice = {
@@ -668,7 +677,7 @@ type CreatureTrait = {
       }
     | {
         readonly kind: "caster_heal_link";
-        readonly rangeFeet: number;
+        readonly rangeFeet: PositiveInteger;
       };
 };
 

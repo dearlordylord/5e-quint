@@ -721,9 +721,14 @@ function statBlockAttackParityBystander(
       size: "medium",
       creatureType: "construct",
       alignment: { order: "neutral", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 15 } },
-      hp: { kind: "literal", value: targetInitialHp },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(15) } },
+      hp: { kind: "literal", value: PositiveInteger(targetInitialHp) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
         cha: AbilityScore.make(10),
         con: AbilityScore.make(10),

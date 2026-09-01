@@ -7,7 +7,7 @@ import {
   interruptChoiceResponderId,
   type BattleInterruptProcedureSelection,
 } from "./index.ts";
-import { classLevel, movementFeet } from "@dnd/shared/types";
+import { classLevel, movementFeet, PositiveInteger } from "@dnd/shared/types";
 import {
   attackExecutionSelectionForSubjectForTest,
   attackDamageDispositionFill,
@@ -752,7 +752,10 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
             ...markedTargetStatBlock,
             statBlock: {
               ...markedTargetStatBlock.statBlock,
-              hp: { kind: "literal" as const, value: 20 },
+              hp: {
+                kind: "literal" as const,
+                value: PositiveInteger(20),
+              },
             },
           },
         }),
@@ -813,7 +816,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
         immunities: decodeCreatureImmunityDeclarationSync({
           conditions: ["incapacitated"],
         }),
-        hp: { kind: "literal" as const, value: 20 },
+        hp: { kind: "literal" as const, value: PositiveInteger(20) },
       },
     };
     const session = startBattleSessionRight({

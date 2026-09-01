@@ -125,7 +125,7 @@ describe("Stat Block projection boundary coverage", () => {
               source.statBlock.speeds[0],
               {
                 kind: "fly",
-                feet: { kind: "literal", value: 40 },
+                feet: { kind: "literal", value: PositiveInteger(40) },
                 availability: {
                   kind: "forms_only",
                   forms: ["winged hybrid"],
@@ -599,7 +599,7 @@ describe("Stat Block projection boundary coverage", () => {
               source.statBlock.speeds[0],
               {
                 kind: "climb",
-                feet: { kind: "literal", value: 30 },
+                feet: { kind: "literal", value: PositiveInteger(30) },
                 availability: {
                   kind: "forms_only",
                   forms: ["synthetic climbing form"],
@@ -757,7 +757,10 @@ describe("Stat Block projection boundary coverage", () => {
         ...source.statBlock,
         speeds: [
           ...source.statBlock.speeds,
-          { kind: "fly", feet: { kind: "literal", value: 30 } },
+          {
+            kind: "fly",
+            feet: { kind: "literal", value: PositiveInteger(30) },
+          },
         ],
       },
     };

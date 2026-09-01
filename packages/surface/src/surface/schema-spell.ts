@@ -6160,7 +6160,7 @@ export const CreatureTraitEffectSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("caster_heal_link"),
-    rangeFeet: Schema.Number,
+    rangeFeet: BrandedPositiveIntegerSchema,
   }),
 ]);
 
@@ -6722,6 +6722,12 @@ const StandalonePositiveStatBlockValueSchema = StatBlockLiteralValueSchema.pipe(
   Schema.check(
     Schema.makeFilter(({ value }) => Number.isInteger(value) && value >= 1, {
       message: "Standalone Stat Block values must be positive integers.",
+    }),
+  ),
+  Schema.decodeTo(
+    Schema.Struct({
+      kind: Schema.Literal("literal"),
+      value: BrandedPositiveIntegerSchema,
     }),
   ),
 );

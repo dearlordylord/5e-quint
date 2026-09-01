@@ -500,9 +500,14 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
       size: "medium",
       creatureType: "humanoid",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 12 } },
-      hp: { kind: "literal", value: 12 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(12) } },
+      hp: { kind: "literal", value: PositiveInteger(12) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
         cha: AbilityScore.make(10),
         con: AbilityScore.make(10),
