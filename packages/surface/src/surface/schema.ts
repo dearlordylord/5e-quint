@@ -5,7 +5,7 @@ import type {
   StatBlockRecord,
   StatBlockRecordEncoded,
 } from "./stat-block-types.ts";
-import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
+import { SRD_PROVENANCE_KIND, type SrdProvenance } from "./srd-provenance.ts";
 import {
   SRD_SURFACE_KIND,
   type PublishedSrdSurface,
@@ -19,6 +19,7 @@ import {
 } from "./srd-surface-types.ts";
 
 export type { PublishedSrdSurface, SrdSurface } from "./srd-surface-types.ts";
+export type { SrdProvenance } from "./srd-provenance.ts";
 
 export {
   ActionBonusActionChoiceEffectSchema,
@@ -592,12 +593,14 @@ export const StatBlockRecordSchema: Schema.Codec<
   never
 > = statBlockRecordSchema;
 
-export const SrdProvenanceSchema = Schema.Struct({
+const srdProvenanceSchema = Schema.Struct({
   kind: Schema.Literal(SRD_PROVENANCE_KIND),
   section: ProvenanceSchema.fields.section,
-}).pipe(Schema.annotate({ identifier: "SrdProvenance" }));
+}).pipe(
+  Schema.annotate({ identifier: "SrdProvenance" }),
+) satisfies Schema.Codec<SrdProvenance, SrdProvenance, never, never>;
 
-export type SrdProvenance = Schema.Schema.Type<typeof SrdProvenanceSchema>;
+export const SrdProvenanceSchema = srdProvenanceSchema;
 
 export const RulesExcerptSchema = surfaceSchemaRole(
   Schema.Trimmed.check(Schema.isNonEmpty()),
