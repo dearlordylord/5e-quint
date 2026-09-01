@@ -176,17 +176,18 @@ describe("SR-04G-B3 static spell procedure admission", () => {
           rangeFeet: 120,
           durationTicks: 10,
           maxTargets: 6,
-          constraints: {
-            speedRatio: { numerator: 1, denominator: 2 },
-            armorClassDelta: -2,
-            dexteritySavingThrowDelta: -2,
-            restrictsReactions: true,
-            actionOrBonusActionChoice: true,
-            maxAttacks: 1,
-            somaticFailurePercent: 25,
-          },
         },
       },
+    });
+    if (slow.tag !== "supported") {
+      throw new Error("Expected Slow mechanics to be admitted.");
+    }
+    expect(slow.admitted.facts.constraints).toEqual({
+      speedRatio: { numerator: 1, denominator: 2 },
+      armorClassDelta: -2,
+      dexteritySavingThrowDelta: -2,
+      maxAttacks: 1,
+      somaticFailurePercent: 25,
     });
   });
 

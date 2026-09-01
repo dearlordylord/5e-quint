@@ -9,6 +9,7 @@ import {
   enableActionOrBonusActionExclusion,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
+import { Match } from "effect";
 import type {
   ActionSpellBattleResolutionInput,
   BattleCreatureState,
@@ -54,6 +55,18 @@ export function combatantHasSaveGatedTurnConstraintBundle(
   combatant: BattleCreatureState | undefined,
 ): boolean {
   return saveGatedTurnConstraintBundleEffects(state, combatant).length > 0;
+}
+
+export function combatantHasSaveGatedTurnConstraintAttackCap(
+  state: BattleState,
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return saveGatedTurnConstraintBundleEffects(state, combatant).some((effect) =>
+    Match.value(effect.constraints.maxAttacks).pipe(
+      Match.when(1, () => true),
+      Match.exhaustive,
+    ),
+  );
 }
 
 export function saveGatedTurnConstraintActionOrBonusActionTurnResources(

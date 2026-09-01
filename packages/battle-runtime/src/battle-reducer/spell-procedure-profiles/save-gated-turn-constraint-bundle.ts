@@ -243,8 +243,25 @@ type SlowFailedEffectRoleEffect =
       EffectAtom,
       { readonly kind: "choose_action_or_bonus_action_each_turn" }
     >
-  | Extract<EffectAtom, { readonly kind: "cap_attack_action_attacks" }>
+  | (Extract<EffectAtom, { readonly kind: "cap_attack_action_attacks" }> & {
+      readonly maxAttacks: 1;
+    })
   | Extract<EffectAtom, { readonly kind: "somatic_spell_failure_chance" }>;
+
+type SlowAttackCapEffect = Extract<
+  SlowFailedEffectRoleEffect,
+  { readonly kind: "cap_attack_action_attacks" }
+>;
+
+function isSlowAttackCapEffect(
+  effect: EffectAtom,
+): effect is SlowAttackCapEffect {
+  return (
+    effect.kind === "cap_attack_action_attacks" &&
+    effect.maxAttacks === 1 &&
+    spellHasOnlyNamedFields(effect, ["kind", "maxAttacks"])
+  );
+}
 
 function slowFailedEffectRoleEffect(
   effect: EffectAtom,
@@ -295,11 +312,7 @@ function slowFailedEffectRoleEffect(
   ) {
     return effect;
   }
-  if (
-    effect.kind === "cap_attack_action_attacks" &&
-    effect.maxAttacks === 1 &&
-    spellHasOnlyNamedFields(effect, ["kind", "maxAttacks"])
-  ) {
+  if (isSlowAttackCapEffect(effect)) {
     return effect;
   }
   if (
@@ -316,7 +329,14 @@ function slowFailedEffectRole(
   effect: EffectAtom,
 ): SaveGatedTurnConstraintFailedEffectRole | null {
   const roleEffect = slowFailedEffectRoleEffect(effect);
-  if (roleEffect === undefined) return null;
+  return roleEffect === undefined
+    ? null
+    : slowFailedEffectRoleForEffect(roleEffect);
+}
+
+function slowFailedEffectRoleForEffect(
+  roleEffect: SlowFailedEffectRoleEffect,
+): SaveGatedTurnConstraintFailedEffectRole {
   return Match.value(roleEffect).pipe(
     Match.when({ kind: "set_speed_ratio" }, () => "speedRatio" as const),
     Match.when({ kind: "modify_ac" }, () => "armorClass" as const),
@@ -401,10 +421,15 @@ function slowDurationIssues(
 function slowFactsFromEffects(
   effects: readonly EffectAtom[],
 ): SaveGatedTurnConstraintFacts | undefined {
-  const byRole = new Map<SaveGatedTurnConstraintFailedEffectRole, EffectAtom>();
+  const byRole = new Map<
+    SaveGatedTurnConstraintFailedEffectRole,
+    SlowFailedEffectRoleEffect
+  >();
   for (const effect of effects) {
-    const role = slowFailedEffectRole(effect);
-    if (role !== null && !byRole.has(role)) byRole.set(role, effect);
+    const roleEffect = slowFailedEffectRoleEffect(effect);
+    if (roleEffect === undefined) continue;
+    const role = slowFailedEffectRoleForEffect(roleEffect);
+    if (!byRole.has(role)) byRole.set(role, roleEffect);
   }
   const speedRatio = byRole.get("speedRatio");
   const armorClass = byRole.get("armorClass");
@@ -429,9 +454,7 @@ function slowFactsFromEffects(
     },
     armorClassDelta: Integer(-armorClass.delta.amount),
     dexteritySavingThrowDelta: Integer(-dexterity.delta.amount),
-    restrictsReactions: true,
-    actionOrBonusActionChoice: true,
-    maxAttacks: PositiveInteger(attackCap.maxAttacks),
+    maxAttacks: attackCap.maxAttacks,
     somaticFailurePercent: PositiveInteger(somaticFailure.percent),
   };
 }
@@ -1040,9 +1063,7 @@ const SaveGatedTurnConstraintBundleInvocationSchema =
         }),
         armorClassDelta: IntegerSchema,
         dexteritySavingThrowDelta: IntegerSchema,
-        restrictsReactions: Schema.Literal(true),
-        actionOrBonusActionChoice: Schema.Literal(true),
-        maxAttacks: PositiveIntegerSchema,
+        maxAttacks: Schema.Literal(1),
         somaticFailurePercent: PositiveIntegerSchema,
       }),
     }),

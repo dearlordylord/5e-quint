@@ -712,7 +712,7 @@ export type SaveGatedConditionWithRepeatSpellProcedureExecution =
     };
   };
 
-/** Immutable rule facts projected from Slow's seven failed-save effects. */
+/** Immutable numeric rule facts projected from Slow's failed-save effects. */
 export type SaveGatedTurnConstraintFacts = {
   readonly speedRatio: {
     readonly numerator: PositiveInteger;
@@ -720,9 +720,7 @@ export type SaveGatedTurnConstraintFacts = {
   };
   readonly armorClassDelta: Integer;
   readonly dexteritySavingThrowDelta: Integer;
-  readonly restrictsReactions: true;
-  readonly actionOrBonusActionChoice: true;
-  readonly maxAttacks: PositiveInteger;
+  readonly maxAttacks: 1;
   readonly somaticFailurePercent: PositiveInteger;
 };
 

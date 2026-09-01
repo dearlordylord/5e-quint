@@ -144,7 +144,7 @@ import {
 import { discoverBattleActCandidatesWithoutReady } from "./battle-discovery.ts";
 import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
-import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-runtime.ts";
+import { combatantHasSaveGatedTurnConstraintAttackCap } from "./save-gated-turn-constraint-runtime.ts";
 
 import {
   saveGatedAreaControlShakeAwakeTargetChoices,
@@ -1042,7 +1042,7 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const grantedDispatchResources = combatantHasSaveGatedTurnConstraintBundle(
+  const grantedDispatchResources = combatantHasSaveGatedTurnConstraintAttackCap(
     input.state,
     actor,
   )
@@ -2431,7 +2431,7 @@ export function openClassFeatureExtraAttackResource(input: {
     input.spentResource.source === "classFeatureExtraAttack" ||
     !actionResourceAllowsAdditionalAttacks(input.spentResource) ||
     actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId) ||
-    combatantHasSaveGatedTurnConstraintBundle(
+    combatantHasSaveGatedTurnConstraintAttackCap(
       input.state,
       input.state.combatants.get(input.actorId),
     )
