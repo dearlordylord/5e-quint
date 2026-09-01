@@ -6,16 +6,25 @@ export const SURFACE_WEAPON_FILTER_WEAPON_PROPERTY = "weapon_property" as const;
 export const SURFACE_WEAPON_FILTER_SPECIFIC_ITEM = "specific_item" as const;
 
 export const SURFACE_WEAPON_FILTER_CATEGORIES = ["melee", "ranged"] as const;
+export const SURFACE_WEAPON_PROPERTY_AMMUNITION = "ammunition" as const;
+export const SURFACE_WEAPON_PROPERTY_FINESSE = "finesse" as const;
+export const SURFACE_WEAPON_PROPERTY_HEAVY = "heavy" as const;
+export const SURFACE_WEAPON_PROPERTY_LIGHT = "light" as const;
+export const SURFACE_WEAPON_PROPERTY_LOADING = "loading" as const;
+export const SURFACE_WEAPON_PROPERTY_REACH = "reach" as const;
+export const SURFACE_WEAPON_PROPERTY_THROWN = "thrown" as const;
+export const SURFACE_WEAPON_PROPERTY_TWO_HANDED = "two_handed" as const;
+export const SURFACE_WEAPON_PROPERTY_VERSATILE = "versatile" as const;
 export const SURFACE_WEAPON_PROPERTIES = [
-  "ammunition",
-  "finesse",
-  "heavy",
-  "light",
-  "loading",
-  "reach",
-  "thrown",
-  "two_handed",
-  "versatile",
+  SURFACE_WEAPON_PROPERTY_AMMUNITION,
+  SURFACE_WEAPON_PROPERTY_FINESSE,
+  SURFACE_WEAPON_PROPERTY_HEAVY,
+  SURFACE_WEAPON_PROPERTY_LIGHT,
+  SURFACE_WEAPON_PROPERTY_LOADING,
+  SURFACE_WEAPON_PROPERTY_REACH,
+  SURFACE_WEAPON_PROPERTY_THROWN,
+  SURFACE_WEAPON_PROPERTY_TWO_HANDED,
+  SURFACE_WEAPON_PROPERTY_VERSATILE,
 ] as const;
 
 export type SurfaceWeaponFilter<ItemReference = string> =
