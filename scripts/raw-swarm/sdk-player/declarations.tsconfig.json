@@ -16,11 +16,20 @@
     "baseUrl": "../../..",
     "paths": {
       "@dnd/battle-runtime": ["packages/battle-runtime/src/index.ts"],
+      "@dnd/battle-runtime/consumer-protocol": [
+        "packages/battle-runtime/src/consumer-protocol.ts"
+      ],
       "@dnd/character-creation-runtime": [
         "packages/character-creation-runtime/src/index.ts"
       ],
+      "@dnd/character-creation-runtime/consumer-protocol": [
+        "packages/character-creation-runtime/src/consumer-protocol.ts"
+      ],
       "@dnd/character-sheet-runtime": [
         "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "@dnd/character-sheet-runtime/consumer-protocol": [
+        "packages/character-sheet-runtime/src/consumer-protocol.ts"
       ],
       "@dnd/scenario-character-sdk": [
         "scripts/raw-swarm/sdk-player/scenario-character-contract.ts"

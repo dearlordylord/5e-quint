@@ -38,6 +38,11 @@ Stat Block, and not in-play Character Sheet state.
 battle execution. Battle initialization from a `CharacterBuild` belongs to the
 composition layer and battle runtime boundary.
 
+The package root is the complete application-facing API. The
+`@dnd/character-creation-runtime/consumer-protocol` subpath is the narrower
+composition and external-consumer contract; the root derives those same
+exports from that single protocol owner.
+
 `character-definition-projection.ts` owns the context-independent Character
 Definition boundary for class, subclass, background, and species roots. It
 projects the already-decoded structural facts once, strips authored root

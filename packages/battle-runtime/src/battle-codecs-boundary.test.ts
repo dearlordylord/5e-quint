@@ -3,7 +3,9 @@ import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
 import {
+  AbilityScore,
   D6_ROLL_RESULTS,
+  Integer,
   NonNegativeInteger,
   PositiveInteger,
 } from "@dnd/shared/types";
@@ -1013,15 +1015,15 @@ function codecStaticDartStatBlock(): StatBlockRecord {
       hp: { kind: "literal", value: 10 },
       speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
-        cha: 8,
-        con: 10,
-        dex: 15,
-        int: 10,
-        str: 8,
-        wis: 8,
+        cha: AbilityScore.make(8),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(15),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(8),
+        wis: AbilityScore.make(8),
       },
-      initiative: { modifier: 2, score: 12 },
-      passivePerception: 9,
+      initiative: { modifier: Integer(2), score: NonNegativeInteger(12) },
+      passivePerception: NonNegativeInteger(9),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },

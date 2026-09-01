@@ -6,7 +6,7 @@ import type {
 import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
-} from "../../surface/src/surface/stat-block-types.ts";
+} from "@dnd/surface/surface/stat-block-types";
 import { Match } from "effect";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";

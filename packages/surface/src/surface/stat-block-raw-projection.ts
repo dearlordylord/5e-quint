@@ -7,8 +7,12 @@ import {
   SPEED_TYPES,
 } from "@dnd/shared/game-facts";
 import {
+  AbilityScore,
   DAMAGE_TYPES,
   DamageDieSizeSchema,
+  Integer,
+  NonNegativeInteger,
+  PositiveInteger,
   SIZES,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -88,9 +92,9 @@ const ATTACK_ABILITY_NAMES = ["str", "dex", "int", "wis", "cha"] as const;
 type AttackAbility = (typeof ATTACK_ABILITY_NAMES)[number];
 type AbilityMatrixFact = {
   readonly ability: Ability;
-  readonly score: number;
-  readonly modifier: number;
-  readonly saveModifier: number;
+  readonly score: AbilityScore;
+  readonly modifier: Integer;
+  readonly saveModifier: Integer;
 };
 
 type AbilityMatrix = readonly [
@@ -336,15 +340,17 @@ const positiveIntegerEvidence = (
   context: ProjectionIssueContext,
   evidence: string,
   field: string,
-): number =>
-  decodeEvidenceValue(
-    context,
-    PositiveIntegerSchema,
-    Number(evidence),
-    evidence,
-    field,
-    "a positive integer",
-    1,
+): PositiveInteger =>
+  PositiveInteger(
+    decodeEvidenceValue(
+      context,
+      PositiveIntegerSchema,
+      Number(evidence),
+      evidence,
+      field,
+      "a positive integer",
+      1,
+    ),
   );
 
 const PositiveIntegerSchema = Schema.Number.pipe(
@@ -726,8 +732,8 @@ const procedureResourceLimits = (
     ),
   ]);
 
-const signedNumber = (value: string): number =>
-  Number(value.replace("−", "-").replace("+", ""));
+const signedNumber = (value: string): Integer =>
+  Integer(Number(value.replace("−", "-").replace("+", "")));
 
 const normalizedProse = (value: string): string =>
   stripSrdStatBlockMarkdownEmphasis(value).replace(/\s+/g, " ").trim();
@@ -1395,9 +1401,15 @@ const parseAbilityMatrixNumber = (
   value: string,
   pattern: RegExp,
   field: string,
-): number => {
+): Integer => {
   if (!pattern.test(value)) {
-    return malformedEvidence(issueContext, field, value, pattern.source, 0);
+    return malformedEvidence(
+      issueContext,
+      field,
+      value,
+      pattern.source,
+      Integer(0),
+    );
   }
   return signedNumber(value);
 };
@@ -1406,12 +1418,12 @@ const parseAbilityScore = (
   issueContext: ProjectionIssueContext,
   value: string,
   field: string,
-): number => {
+): AbilityScore => {
   const syntacticValue = assess(issueContext, () =>
     parseAbilityMatrixNumber(issueContext, value, /^\d+$/, field),
   );
   return syntacticValue === undefined
-    ? 10
+    ? AbilityScore.make(10)
     : decodeEvidenceValue(
         issueContext,
         StandaloneStatBlockAbilityScoreSchema,
@@ -1419,7 +1431,7 @@ const parseAbilityScore = (
         value,
         field,
         "an integral ability score from 1 through 30",
-        10,
+        AbilityScore.make(10),
       );
 };
 
@@ -1613,28 +1625,60 @@ const parseAbilityMatrix = (
   return facts;
 };
 
+const fallbackAbilityScores: ScopedGeneralFacts["abilityScores"] = {
+  str: AbilityScore.make(10),
+  dex: AbilityScore.make(10),
+  con: AbilityScore.make(10),
+  int: AbilityScore.make(10),
+  wis: AbilityScore.make(10),
+  cha: AbilityScore.make(10),
+};
+
+const decodeAbilityScores = (
+  issueContext: ProjectionIssueContext,
+  candidate: Readonly<Record<Ability, number>>,
+  evidence: string,
+): ScopedGeneralFacts["abilityScores"] =>
+  decodeEvidenceValue(
+    issueContext,
+    StandaloneStatBlockAbilityScoresSchema,
+    candidate,
+    evidence,
+    "abilityScores",
+    "six integral ability scores from 1 through 30",
+    fallbackAbilityScores,
+  );
+
 const parseAbilityScores = (
   issueContext: ProjectionIssueContext,
   lines: readonly string[],
   contextLabel: string,
-): Readonly<Record<Ability, number>> => {
+): ScopedGeneralFacts["abilityScores"] => {
   if (lines.some((line) => line.startsWith("| **Score**"))) {
-    return abilityRecord(
+    return decodeAbilityScores(
       issueContext,
-      parseAbilityRow(issueContext, lines, "Score", contextLabel),
-      "abilityScores",
+      abilityRecord(
+        issueContext,
+        parseAbilityRow(issueContext, lines, "Score", contextLabel),
+        "abilityScores",
+      ),
+      contextLabel,
     );
   }
   const matrixIssueCount = issueContext.issues.length;
   const abilityMatrix = parseAbilityMatrix(issueContext, lines, contextLabel);
   if (issueContext.issues.length > matrixIssueCount) {
-    return { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+    return fallbackAbilityScores;
   }
   if (abilityMatrix !== undefined) {
-    return abilityRecord(
+    return decodeAbilityScores(
       issueContext,
-      abilityMatrix.map(({ score }) => score),
-      "abilityScores",
+      abilityRecord(
+        issueContext,
+        abilityMatrix.map(({ score }) => score),
+        "abilityScores",
+      ),
+      contextLabel,
     );
   }
   const abilityHeaderIndex = lines.findIndex((line) => {
@@ -1668,29 +1712,33 @@ const parseAbilityScores = (
       issueContext,
       "abilityScores",
       `six ${contextLabel} ability scores`,
-      { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      fallbackAbilityScores,
     );
   }
-  return abilityRecord(
+  return decodeAbilityScores(
     issueContext,
-    scoreCells.map((cell, index) => {
-      const score = assess(issueContext, () =>
-        requireMatch(
-          issueContext,
-          cell,
-          /^(\d+) \([+−-]?\d+\)(?: Save .+)?$/,
-          `abilityScores.${index}`,
-        ),
-      );
-      return score === undefined
-        ? 10
-        : parseAbilityScore(
+    abilityRecord(
+      issueContext,
+      scoreCells.map((cell, index) => {
+        const score = assess(issueContext, () =>
+          requireMatch(
             issueContext,
-            matchCapture(score, 1),
+            cell,
+            /^(\d+) \([+−-]?\d+\)(?: Save .+)?$/,
             `abilityScores.${index}`,
-          );
-    }),
-    "abilityScores",
+          ),
+        );
+        return score === undefined
+          ? AbilityScore.make(10)
+          : parseAbilityScore(
+              issueContext,
+              matchCapture(score, 1),
+              `abilityScores.${index}`,
+            );
+      }),
+      "abilityScores",
+    ),
+    contextLabel,
   );
 };
 
@@ -1708,7 +1756,7 @@ const parseSavingThrowModifiers = (
     return sortedAbsentOrNonEmpty(
       ABILITY_NAMES.map((ability) => ({
         ability,
-        modifier: saveValues[ability],
+        modifier: Integer(saveValues[ability]),
       })),
       ({ ability }) => ability,
     );
@@ -1776,7 +1824,7 @@ const parseSavingThrowModifiers = (
     return sortedAbsentOrNonEmpty(
       ABILITY_NAMES.map((ability) => ({
         ability,
-        modifier: saveValues[ability],
+        modifier: Integer(saveValues[ability]),
       })),
       ({ ability }) => ability,
     );
@@ -2243,7 +2291,7 @@ const parseSenses = (
     requireLine(issueContext, lines, "**Senses**", "senses"),
   );
   if (senseLine === undefined) {
-    return { senses: [], passivePerception: 1 };
+    return { senses: [], passivePerception: NonNegativeInteger(1) };
   }
   const line = senseLine.replace("**Senses**", "").trim();
   const passiveMarker = "Passive Perception";
@@ -2321,7 +2369,7 @@ const parseSenses = (
     senses: sortedAbsentOrNonEmpty(senses, ({ kind }) => kind),
     passivePerception:
       passive === undefined
-        ? 1
+        ? NonNegativeInteger(1)
         : decodeEvidenceValue(
             issueContext,
             StatBlockPassivePerceptionSchema,
@@ -2329,7 +2377,7 @@ const parseSenses = (
             passive[1] ?? "",
             "passivePerception",
             "a nonnegative integer",
-            0,
+            NonNegativeInteger(0),
           ),
   };
 };
@@ -2358,7 +2406,7 @@ const parseGear = (
       );
       const quantity =
         gear[2] === undefined
-          ? 1
+          ? PositiveInteger(1)
           : positiveIntegerEvidence(
               issueContext,
               gear[2],
@@ -2382,7 +2430,7 @@ const parseGear = (
     .sort((left, right) => left.item.localeCompare(right.item));
   return nonEmptyValues(issueContext, gearEntries, "gear", {
     item: "Gear",
-    quantity: 1,
+    quantity: PositiveInteger(1),
   });
 };
 
@@ -2742,7 +2790,9 @@ const parseRawInitiative = (
           "initiative",
         ),
   );
-  if (initiativeEvidence === undefined) return { modifier: 0, score: 0 };
+  if (initiativeEvidence === undefined) {
+    return { modifier: Integer(0), score: NonNegativeInteger(0) };
+  }
   return decodeEvidenceValue(
     issueContext,
     StatBlockInitiativeSchema,
@@ -2754,7 +2804,7 @@ const parseRawInitiative = (
     initiativeLine === undefined ? "" : initiativeLine,
     "initiative",
     "canonical Initiative modifier and nonnegative score",
-    { modifier: 0, score: 0 },
+    { modifier: Integer(0), score: NonNegativeInteger(0) },
   );
 };
 
@@ -2850,7 +2900,7 @@ const parseRawGeneralFacts = (
   );
   const abilityScores =
     parsedAbilityScores === undefined
-      ? { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 }
+      ? fallbackAbilityScores
       : parsedAbilityScores;
   const savingThrowModifiers = parseRawSavingThrowModifiers(
     issueContext,
@@ -2881,7 +2931,7 @@ const parseRawGeneralFacts = (
   const senses = assessedProjection(
     issueContext,
     () => parseSenses(issueContext, lines),
-    { senses: [], passivePerception: 1 },
+    { senses: [], passivePerception: NonNegativeInteger(1) },
   );
   const gear = assessedProjection(
     issueContext,
@@ -5291,7 +5341,7 @@ const projectAuthoredProcedures = (
               gear: sortedAbsentOrNonEmpty(
                 (record.statBlock.gear ?? []).map((gear) => ({
                   item: gear.item,
-                  quantity: gear.quantity ?? 1,
+                  quantity: gear.quantity ?? PositiveInteger(1),
                 })),
                 ({ item }) => item,
               ),
@@ -5591,7 +5641,8 @@ const projectAuthoredGear = (
   sortedAbsentOrNonEmpty(
     absentArray(record.statBlock.gear).map((gear) => ({
       item: gear.item,
-      quantity: gear.quantity === undefined ? 1 : gear.quantity,
+      quantity:
+        gear.quantity === undefined ? PositiveInteger(1) : gear.quantity,
     })),
     ({ item }) => item,
   );

@@ -11,7 +11,7 @@ import {
   computeTotalLevel,
   type CharacterBuild,
   type UnitCatalog,
-} from "../../character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   characterLevel,
   proficiencyBonusForCharacterLevel,

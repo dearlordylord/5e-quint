@@ -14,9 +14,11 @@ import type {
   UnitId,
 } from "@dnd/shared/game-facts";
 import type {
+  AbilityScore,
   DamageDieSize,
   DamageType,
   Integer,
+  NonNegativeInteger,
   PositiveInteger,
   ReadonlyNonEmptyArray,
   Size,
@@ -483,12 +485,12 @@ export type StandaloneStatBlockSize =
 type StandaloneCreatureSense =
   | {
       readonly kind: "darkvision";
-      readonly rangeFeet: number;
+      readonly rangeFeet: PositiveInteger;
       readonly qualifier?: "unimpeded_by_magical_darkness";
     }
   | {
       readonly kind: "blindsight" | "tremorsense" | "truesight";
-      readonly rangeFeet: number;
+      readonly rangeFeet: PositiveInteger;
     };
 
 export type StandaloneCreatureSpeed =
@@ -552,12 +554,12 @@ export type StandaloneStatBlockSpeedEntry =
 
 type CreatureSavingThrowModifier = {
   readonly ability: Ability;
-  readonly modifier: number;
+  readonly modifier: Integer;
 };
 
 type CreatureSkillModifier = {
   readonly skill: SurfaceSkill;
-  readonly modifier: number;
+  readonly modifier: Integer;
 };
 
 type CreatureResistanceList =
@@ -622,11 +624,11 @@ export type StatBlockCommunicationLanguageSet =
   | {
       readonly kind: "named_plus_other_languages";
       readonly languages: ReadonlyNonEmptyArray<string>;
-      readonly additionalLanguages: number;
+      readonly additionalLanguages: PositiveInteger;
     };
 
 type StatBlockTelepathy = {
-  readonly rangeFeet: number;
+  readonly rangeFeet: PositiveInteger;
   readonly response?: "receiving_creature_cannot_respond";
   readonly requiresLanguageUnderstanding?: StatBlockCommunicationLanguageSet;
 };
@@ -681,14 +683,17 @@ type StandaloneStatBlockFacts = {
   readonly hp: StatBlockLiteralValue;
   readonly speeds: ReadonlyNonEmptyArray<StandaloneStatBlockSpeedEntry>;
   readonly abilityScores: {
-    readonly str: number;
-    readonly dex: number;
-    readonly con: number;
-    readonly int: number;
-    readonly wis: number;
-    readonly cha: number;
+    readonly str: AbilityScore;
+    readonly dex: AbilityScore;
+    readonly con: AbilityScore;
+    readonly int: AbilityScore;
+    readonly wis: AbilityScore;
+    readonly cha: AbilityScore;
   };
-  readonly initiative: { readonly modifier: number; readonly score: number };
+  readonly initiative: {
+    readonly modifier: Integer;
+    readonly score: NonNegativeInteger;
+  };
   readonly savingThrowModifiers?: ReadonlyNonEmptyArray<CreatureSavingThrowModifier>;
   readonly skillModifiers?: ReadonlyNonEmptyArray<CreatureSkillModifier>;
   readonly saveProficiencies?: ReadonlyNonEmptyArray<Ability>;
@@ -696,10 +701,10 @@ type StandaloneStatBlockFacts = {
   readonly resistances?: CreatureResistanceList;
   readonly immunities?: CreatureImmunityList;
   readonly senses?: ReadonlyNonEmptyArray<StandaloneCreatureSense>;
-  readonly passivePerception: number;
+  readonly passivePerception: NonNegativeInteger;
   readonly gear?: ReadonlyNonEmptyArray<{
     readonly item: string;
-    readonly quantity?: number;
+    readonly quantity?: PositiveInteger;
   }>;
   readonly communication: StatBlockCommunication;
   readonly resources?: ReadonlyNonEmptyArray<StatBlockProcedureResource>;
@@ -739,37 +744,41 @@ type StatBlockWireValue<A> = A extends StatBlockProcedureOrdinal
   ? number
   : A extends StatBlockProcedureResourceOrdinal
     ? number
-    : A extends PositiveInteger
+    : A extends AbilityScore
       ? number
-      : A extends Integer
+      : A extends NonNegativeInteger
         ? number
-        : A extends UnitId
-          ? string
-          : A extends StatBlockId
-            ? string
-            : A extends StatBlockGmSpeedChoice
-              ? {
-                  readonly kind: "gm_choice";
-                  readonly alternatives: StatBlockGmSpeedChoiceAlternativesEncoded;
-                }
-              : A extends CreatureImmunityList
-                ? StatBlockWireValue<CreatureImmunityDeclaration>
-                : A extends readonly [infer First, ...infer Rest]
-                  ? readonly [
-                      StatBlockWireValue<First>,
-                      ...StatBlockWireValue<Rest>,
-                    ]
-                  : A extends ReadonlyArray<infer Item>
-                    ? ReadonlyArray<StatBlockWireValue<Item>>
-                    : A extends object
-                      ? {
-                          readonly [Key in keyof A]: Key extends "trigger"
-                            ? A[Key] extends AuthoredStatBlockReactionTrigger
-                              ? AuthoredStatBlockReactionTriggerEncoded
-                              : StatBlockWireValue<A[Key]>
-                            : StatBlockWireValue<A[Key]>;
-                        }
-                      : A;
+        : A extends PositiveInteger
+          ? number
+          : A extends Integer
+            ? number
+            : A extends UnitId
+              ? string
+              : A extends StatBlockId
+                ? string
+                : A extends StatBlockGmSpeedChoice
+                  ? {
+                      readonly kind: "gm_choice";
+                      readonly alternatives: StatBlockGmSpeedChoiceAlternativesEncoded;
+                    }
+                  : A extends CreatureImmunityList
+                    ? StatBlockWireValue<CreatureImmunityDeclaration>
+                    : A extends readonly [infer First, ...infer Rest]
+                      ? readonly [
+                          StatBlockWireValue<First>,
+                          ...StatBlockWireValue<Rest>,
+                        ]
+                      : A extends ReadonlyArray<infer Item>
+                        ? ReadonlyArray<StatBlockWireValue<Item>>
+                        : A extends object
+                          ? {
+                              readonly [Key in keyof A]: Key extends "trigger"
+                                ? A[Key] extends AuthoredStatBlockReactionTrigger
+                                  ? AuthoredStatBlockReactionTriggerEncoded
+                                  : StatBlockWireValue<A[Key]>
+                                : StatBlockWireValue<A[Key]>;
+                            }
+                          : A;
 
 export type StandaloneStatBlockEncoded =
   StatBlockWireValue<StandaloneStatBlock>;

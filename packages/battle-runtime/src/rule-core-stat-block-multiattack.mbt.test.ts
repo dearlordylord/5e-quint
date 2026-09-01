@@ -36,9 +36,11 @@ import {
 import { describe, it } from "vitest";
 
 import {
+  AbilityScore,
   DieRollResult,
   Integer,
   movementFeet,
+  NonNegativeInteger,
   PositiveInteger,
 } from "@dnd/shared/types";
 import type {
@@ -790,15 +792,15 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
       hp: { kind: "literal", value: 12 },
       speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
-        cha: 10,
-        con: 10,
-        dex: 10,
-        int: 10,
-        str: 10,
-        wis: 10,
+        cha: AbilityScore.make(10),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(10),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(10),
+        wis: AbilityScore.make(10),
       },
-      initiative: { modifier: 0, score: 10 },
-      passivePerception: 10,
+      initiative: { modifier: Integer(0), score: NonNegativeInteger(10) },
+      passivePerception: NonNegativeInteger(10),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },

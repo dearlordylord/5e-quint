@@ -2,7 +2,7 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
-} from "../../surface/src/surface/stat-block-types.ts";
+} from "@dnd/surface/surface/stat-block-types";
 import { Match } from "effect";
 
 import type { StatBlockProcedureSection } from "./procedure-execution/stat-block-procedure-sections.ts";

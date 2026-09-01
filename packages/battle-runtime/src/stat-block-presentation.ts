@@ -16,7 +16,7 @@ import type { CombatantId } from "./identity.ts";
 import { Match, Result } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { StatBlockProcedureOrdinal } from "../../surface/src/surface/stat-block-types.ts";
+import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/stat-block-types";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import { supportedStatBlockTraitAttackRollModes } from "./statblock-action-execution-support.ts";

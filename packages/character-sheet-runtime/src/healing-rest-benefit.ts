@@ -14,7 +14,7 @@ import {
   type CharacterBuild,
   type CharacterBuildHitDiePool,
   type UnitCatalog,
-} from "../../character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import {
   Hp,

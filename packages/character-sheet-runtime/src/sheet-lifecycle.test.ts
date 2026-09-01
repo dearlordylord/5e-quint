@@ -15,6 +15,7 @@ import {
   armorClassBuild,
   build,
   characterBuildSorcererMetamagicFacts,
+  characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
   characterSheetNormalHitPointMaximum,
   characterSheetId,
@@ -48,8 +49,8 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
   sorcererMetamagicKnownOptionsGateTestName;
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
-  test("preserves the missing required Wild Shape Stat Block catalog through rebuild", () => {
-    expect(
+  test("uses the canonical Stat Block catalog when rebuilding Wild Shape state", () => {
+    const rebuilt = requireSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId(
           "character:druid-rebuild-missing-catalog",
@@ -71,14 +72,18 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           authoredStatBlockId("stat_block_frog"),
         ],
       }),
-    ).toEqual(
-      Result.fail({
-        tag: "characterSheetIssue",
-        code: "wildShapeStatBlockCatalogRequired",
-        message:
-          "Wild Shape known forms require a valid SRD Stat Block catalog.",
-      }),
     );
+
+    expect(
+      characterSheetDruidWildShapeKnownForms(rebuilt)?.statBlockIds,
+    ).toEqual([
+      authoredStatBlockId("stat_block_rat"),
+      authoredStatBlockId("stat_block_riding_horse"),
+      authoredStatBlockId("stat_block_spider"),
+      authoredStatBlockId("stat_block_wolf"),
+      authoredStatBlockId("stat_block_cat"),
+      authoredStatBlockId("stat_block_frog"),
+    ]);
   });
 
   test("projects Knocked Out HP and treats zero healing as an identity operation", () => {

@@ -1,5 +1,6 @@
 import { Effect, Schema, Tuple } from "effect";
 import {
+  AbilityScore,
   DamageDieSizeSchema,
   SPELL_SCHOOLS,
   type ReadonlyNonEmptyArray,
@@ -202,6 +203,10 @@ const BrandedPositiveIntegerSchema = PositiveIntegerSchema.pipe(
 const BrandedIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
   Schema.brand("Integer"),
+);
+const BrandedNonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  Schema.brand("NonNegativeInteger"),
 );
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -6651,7 +6656,7 @@ export const GlyphWardingMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
 
 export const CreatureSavingThrowModifierSchema = Schema.Struct({
   ability: AbilitySchema,
-  modifier: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  modifier: BrandedIntegerSchema,
 });
 
 const MAX_SAVING_THROW_MODIFIERS = 6;
@@ -6677,7 +6682,7 @@ export const CreatureSavingThrowModifiersSchema = nonEmpty(
 
 export const CreatureSkillModifierSchema = Schema.Struct({
   skill: SkillSchema,
-  modifier: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  modifier: BrandedIntegerSchema,
 });
 
 const StatBlockAlignmentPairSchema = Schema.Struct({
@@ -6732,6 +6737,7 @@ export const StandaloneStatBlockValueSchema =
  */
 export const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 30 })),
+  Schema.decodeTo(AbilityScore),
 );
 
 export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
@@ -6748,7 +6754,7 @@ export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
  * authored boundary strict while leaving CreatureSenseSchema unchanged for
  * reusable runtime projections.
  */
-const StandaloneStatBlockSenseRangeFeetSchema = PositiveIntegerSchema;
+const StandaloneStatBlockSenseRangeFeetSchema = BrandedPositiveIntegerSchema;
 
 export const StandaloneCreatureSenseSchema = Schema.Union([
   Schema.Struct({
@@ -6762,12 +6768,9 @@ export const StandaloneCreatureSenseSchema = Schema.Union([
   }),
 ]);
 
-const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
-);
-
 export const StatBlockInitiativeModifierSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
+  Schema.decodeTo(BrandedIntegerSchema),
 );
 
 /**
@@ -6776,10 +6779,10 @@ export const StatBlockInitiativeModifierSchema = Schema.Number.pipe(
  */
 export const StatBlockInitiativeSchema = Schema.Struct({
   modifier: StatBlockInitiativeModifierSchema,
-  score: NonNegativeIntegerSchema,
+  score: BrandedNonNegativeIntegerSchema,
 });
 
-export const StatBlockPassivePerceptionSchema = NonNegativeIntegerSchema;
+export const StatBlockPassivePerceptionSchema = BrandedNonNegativeIntegerSchema;
 
 const STANDALONE_NON_FLY_SPEED_TYPES = [
   "walk",
@@ -6906,7 +6909,7 @@ export const StatBlockGearItemSchema = surfaceIdentity(
 
 export const StatBlockGearEntrySchema = Schema.Struct({
   item: StatBlockGearItemSchema,
-  quantity: optionalExact(PositiveIntegerSchema),
+  quantity: optionalExact(BrandedPositiveIntegerSchema),
 });
 
 const RESERVED_STAT_BLOCK_LANGUAGE_NAMES = ["all", "none"] as const;
@@ -6942,7 +6945,7 @@ export const StatBlockLanguageSetSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("named_plus_other_languages"),
     languages: nonEmpty(StatBlockLanguageNameSchema),
-    additionalLanguages: PositiveIntegerSchema,
+    additionalLanguages: BrandedPositiveIntegerSchema,
   }),
 ]);
 
@@ -6952,7 +6955,7 @@ const StatBlockSpeechRestrictionSchema = Schema.Struct({
 });
 
 export const StatBlockTelepathySchema = Schema.Struct({
-  rangeFeet: PositiveIntegerSchema,
+  rangeFeet: BrandedPositiveIntegerSchema,
   /** Omitting response means that the receiving creature can respond. */
   response: optionalExact(Schema.Literal("receiving_creature_cannot_respond")),
   requiresLanguageUnderstanding: optionalExact(StatBlockLanguageSetSchema),

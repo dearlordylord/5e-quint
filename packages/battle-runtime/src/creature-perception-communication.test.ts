@@ -1,5 +1,10 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
+import {
+  Integer,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 import { expect, test } from "vitest";
@@ -42,8 +47,8 @@ test("projects Stat Block senses and authored communication text", () => {
     ...base,
     statBlock: {
       ...base.statBlock,
-      senses: [{ kind: "darkvision", rangeFeet: 60 }],
-      passivePerception: 14,
+      senses: [{ kind: "darkvision", rangeFeet: PositiveInteger(60) }],
+      passivePerception: NonNegativeInteger(14),
       communication: {
         kind: "spoken_and_understood",
         languages: {
@@ -51,7 +56,7 @@ test("projects Stat Block senses and authored communication text", () => {
           languages: ["Common", "Synthetic Signal Code"],
         },
       },
-      skillModifiers: [{ skill: "perception", modifier: 4 }],
+      skillModifiers: [{ skill: "perception", modifier: Integer(4) }],
     },
   } satisfies StatBlockRecord;
   const session = statBlockSession(statBlock);
@@ -157,8 +162,8 @@ test("projects Wild Shape form senses while retaining character communication", 
         statBlockCatalog,
         statBlockId("stat_block_riding_horse"),
       ).statBlock,
-      senses: [{ kind: "blindsight", rangeFeet: 10 }],
-      passivePerception: 15,
+      senses: [{ kind: "blindsight", rangeFeet: PositiveInteger(10) }],
+      passivePerception: NonNegativeInteger(15),
       communication: {
         kind: "spoken_and_understood",
         languages: {
@@ -166,7 +171,7 @@ test("projects Wild Shape form senses while retaining character communication", 
           languages: ["Synthetic Beast Vocalization"],
         },
       },
-      skillModifiers: [{ skill: "perception", modifier: 5 }],
+      skillModifiers: [{ skill: "perception", modifier: Integer(5) }],
     },
   } satisfies StatBlockRecord;
   const initial = wildShapeBattle({

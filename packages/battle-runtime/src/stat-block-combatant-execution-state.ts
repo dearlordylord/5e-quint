@@ -6,7 +6,7 @@ import type {
   CreatureSavingThrowModifier,
   CreatureSkillModifier,
 } from "@dnd/surface/surface/types";
-import type { StatBlockId } from "../../surface/src/surface/stat-block-types.ts";
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-types";
 import type { SurfaceCondition } from "@dnd/shared/game-facts";
 import type { Brand } from "effect";
 

@@ -13,7 +13,7 @@ import {
   type CharacterBuildResource,
   type MagicInitiateSpellcastingAbility,
   type UnitCatalog,
-} from "../../character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   CONDITIONS,
   type Ability,
@@ -761,7 +761,6 @@ export const CHARACTER_SHEET_CONSTRUCTION_ISSUE_NO_DETAIL_CODES = [
   "bookOfShadowsPresenceInvalid",
   "wildShapeKnownFormsUnexpected",
   "wildShapeKnownFormsRequired",
-  "wildShapeStatBlockCatalogRequired",
   "wildShapeKnownFormsInvalid",
   "druidCircleLandInvalid",
   "fiendishResilienceInvalid",
@@ -1410,52 +1409,18 @@ export type CharacterSheetHitPointMaximumProjection = {
   readonly qRoute: CharacterSheetHitPointMaximumProjectionRoute;
 };
 
-const WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE =
-  "Wild Shape known forms require a valid SRD Stat Block catalog.";
-
-const CharacterSheetMessageIssueSchema = Schema.Struct({
+export const CharacterSheetIssueSchema = Schema.Struct({
   tag: Schema.Literal("characterSheetIssue"),
-  code: Schema.optionalKey(Schema.Never),
   message: Schema.String,
 });
-const CharacterSheetWildShapeStatBlockCatalogRequiredIssueSchema =
-  Schema.Struct({
-    tag: Schema.Literal("characterSheetIssue"),
-    code: Schema.Literal("wildShapeStatBlockCatalogRequired"),
-    message: Schema.Literal(WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE),
-  });
-
-export const CharacterSheetIssueSchema = Schema.Union([
-  CharacterSheetMessageIssueSchema,
-  CharacterSheetWildShapeStatBlockCatalogRequiredIssueSchema,
-]);
-
-type CharacterSheetMessageIssue = Schema.Schema.Type<
-  typeof CharacterSheetMessageIssueSchema
->;
-export type CharacterSheetWildShapeStatBlockCatalogRequiredIssue =
-  Schema.Schema.Type<
-    typeof CharacterSheetWildShapeStatBlockCatalogRequiredIssueSchema
-  >;
 export type CharacterSheetIssue = Schema.Schema.Type<
   typeof CharacterSheetIssueSchema
 >;
 
 export function characterSheetIssue(
   message: string,
-): Result.Result<never, CharacterSheetMessageIssue> {
+): Result.Result<never, CharacterSheetIssue> {
   return Result.fail({ tag: "characterSheetIssue", message });
-}
-
-export function wildShapeStatBlockCatalogRequiredIssue(): Result.Result<
-  never,
-  CharacterSheetWildShapeStatBlockCatalogRequiredIssue
-> {
-  return Result.fail({
-    tag: "characterSheetIssue",
-    code: "wildShapeStatBlockCatalogRequired",
-    message: WILD_SHAPE_STAT_BLOCK_CATALOG_REQUIRED_MESSAGE,
-  });
 }
 
 export function getRequiredUnit(

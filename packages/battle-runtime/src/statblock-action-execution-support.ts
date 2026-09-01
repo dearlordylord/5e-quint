@@ -6,7 +6,7 @@ import type {
   CreatureTraitEffect,
   CreatureStatBlock,
 } from "@dnd/surface/surface/types";
-import type { StandaloneStatBlock } from "../../surface/src/surface/stat-block-types.ts";
+import type { StandaloneStatBlock } from "@dnd/surface/surface/stat-block-types";
 import { Match } from "effect";
 import type {
   StatBlockTraitAttackRollMode,

@@ -566,11 +566,20 @@ function consumerTsconfig(
           "@dnd/battle-runtime": [
             "./declarations/packages/battle-runtime/src/index.d.ts",
           ],
+          "@dnd/battle-runtime/consumer-protocol": [
+            "./declarations/packages/battle-runtime/src/consumer-protocol.d.ts",
+          ],
           "@dnd/character-creation-runtime": [
             "./declarations/packages/character-creation-runtime/src/index.d.ts",
           ],
+          "@dnd/character-creation-runtime/consumer-protocol": [
+            "./declarations/packages/character-creation-runtime/src/consumer-protocol.d.ts",
+          ],
           "@dnd/character-sheet-runtime": [
             "./declarations/packages/character-sheet-runtime/src/index.d.ts",
+          ],
+          "@dnd/character-sheet-runtime/consumer-protocol": [
+            "./declarations/packages/character-sheet-runtime/src/consumer-protocol.d.ts",
           ],
           ...compilerDeclarationPackagePaths(baseDirectory),
           "@dnd/tactical-space": [

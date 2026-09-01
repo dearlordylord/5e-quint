@@ -25,7 +25,7 @@ import type {
   StatBlockSpellReference,
   AuthoredStatBlockReactionTrigger,
   StandaloneStatBlock,
-} from "../../surface/src/surface/stat-block-types.ts";
+} from "@dnd/surface/surface/stat-block-types";
 
 import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
 import {

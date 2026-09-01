@@ -55,6 +55,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   Hp,
+  PositiveInteger,
   movementDeltaFeet,
   movementFeet,
   resourceCount,
@@ -3688,8 +3689,8 @@ function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
                 damageType,
                 amount: {
                   kind: "fixed",
-                  static: 8,
-                  expr: { dice: 1, dieSize: 8 },
+                  static: PositiveInteger(8),
+                  expr: { dice: PositiveInteger(1), dieSize: 8 },
                 },
               },
             ],

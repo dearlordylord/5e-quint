@@ -35,7 +35,7 @@ import type {
   StatBlockProcedureResource,
   StatBlockProcedureResourceOrdinal,
   StatBlockTextOnlyReason,
-} from "../../surface/src/surface/stat-block-types.ts";
+} from "@dnd/surface/surface/stat-block-types";
 import type { Size } from "@dnd/shared/types";
 import type {
   StatBlockAttackActionOption,

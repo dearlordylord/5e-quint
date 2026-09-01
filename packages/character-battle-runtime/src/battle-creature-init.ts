@@ -24,7 +24,7 @@ import {
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
   type CharacterBattleResourceExecutionFacts,
-} from "../../battle-runtime/src/consumer-protocol.ts";
+} from "@dnd/battle-runtime/consumer-protocol";
 import {
   characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
@@ -37,13 +37,13 @@ import {
   progressionClassLevels,
   type CharacterBuild,
   type CharacterBuildDruidWildShapeFacts,
-} from "../../character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   characterSheetSpellAccessesForBuild,
   type CharacterSheet,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "../../character-sheet-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-sheet-runtime/consumer-protocol";
 import {
   Hp,
   abilityModifier,
@@ -56,7 +56,7 @@ import {
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
 import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
-import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";

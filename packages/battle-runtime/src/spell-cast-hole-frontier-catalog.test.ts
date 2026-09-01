@@ -3,6 +3,7 @@ import {
   PositiveInteger,
   proficiencyBonusForCharacterLevel,
 } from "@dnd/shared/types";
+import { unitId, type UnitId } from "@dnd/shared/game-facts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { classSpellListForClassName } from "@dnd/surface/surface/unit-catalog";
 import { Result } from "effect";
@@ -55,19 +56,19 @@ const secondTargetId = combatantId("spell-hole-frontier-target-two");
 const WIZARD_LEVEL = characterLevel(9);
 const WIZARD_CANTRIP_CAPACITY = PositiveInteger(4);
 const WIZARD_PREPARED_SPELL_CAPACITY = PositiveInteger(14);
-const WIZARD_RUNTIME_DETACHED_CANTRIP_IDS = ["message"] as const;
+const WIZARD_RUNTIME_DETACHED_CANTRIP_IDS = [unitId("message")] as const;
 const WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS = [
-  "alarm",
-  "comprehend_languages",
-  "floating_disk",
-  "illusory_script",
-  "silent_image",
-  "unseen_servant",
-  "arcane_lock",
-  "gentle_repose",
-  "phantom_steed",
-  "stinking_cloud",
-  "vampiric_touch",
+  unitId("alarm"),
+  unitId("comprehend_languages"),
+  unitId("floating_disk"),
+  unitId("illusory_script"),
+  unitId("silent_image"),
+  unitId("unseen_servant"),
+  unitId("arcane_lock"),
+  unitId("gentle_repose"),
+  unitId("phantom_steed"),
+  unitId("stinking_cloud"),
+  unitId("vampiric_touch"),
 ] as const;
 const CATALOG_REPLAY_FRONTIER_LIMIT = PositiveInteger(20);
 const WIZARD_SPELL_SLOTS = [
@@ -102,17 +103,17 @@ function exactCapacityLoadouts<T>(
 }
 
 function spellsInClassListOrder(
-  spellIds: readonly string[],
-  spellsById: ReadonlyMap<string, SpellRecord>,
+  spellIds: readonly UnitId[],
+  spellsById: ReadonlyMap<UnitId, SpellRecord>,
 ): Result.Result<
   readonly SpellRecord[],
   {
     readonly tag: "classSpellListCatalogJoinIssue";
-    readonly missingSpellIds: readonly [string, ...string[]];
+    readonly missingSpellIds: readonly [UnitId, ...UnitId[]];
   }
 > {
   const spells: SpellRecord[] = [];
-  const missingSpellIds: string[] = [];
+  const missingSpellIds: UnitId[] = [];
   for (const spellId of spellIds) {
     const spell = spellsById.get(spellId);
     if (spell === undefined) {
@@ -399,8 +400,11 @@ describe("spell cast hole frontier catalog", () => {
   test("reports every class-list spell missing from the Unit catalog", () => {
     expect(
       spellsInClassListOrder(
-        ["synthetic_missing_spell_a", "synthetic_missing_spell_b"],
-        new Map<string, SpellRecord>(),
+        [
+          unitId("synthetic_missing_spell_a"),
+          unitId("synthetic_missing_spell_b"),
+        ],
+        new Map<UnitId, SpellRecord>(),
       ),
     ).toEqual(
       Result.fail({
@@ -438,7 +442,7 @@ describe("spell cast hole frontier catalog", () => {
         missingSpellIds: WIZARD_RUNTIME_DETACHED_CANTRIP_IDS,
       }),
     );
-    const runtimeDetachedCantripIds = new Set<string>(
+    const runtimeDetachedCantripIds = new Set<UnitId>(
       WIZARD_RUNTIME_DETACHED_CANTRIP_IDS,
     );
     const cantripSpellJoin = spellsInClassListOrder(
@@ -459,7 +463,7 @@ describe("spell cast hole frontier catalog", () => {
         missingSpellIds: WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS,
       }),
     );
-    const runtimeDetachedPreparedSpellIds = new Set<string>(
+    const runtimeDetachedPreparedSpellIds = new Set<UnitId>(
       WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS,
     );
     const preparedSpellJoin = spellsInClassListOrder(

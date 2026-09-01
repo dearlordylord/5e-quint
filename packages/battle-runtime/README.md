@@ -27,6 +27,11 @@ Do not conflate a Character Build, Stat Block, Unit, initialization input, and
 durable battle state. The package must not import character-creation runtimes or
 monster catalogs to reconstruct facts composition already owns.
 
+The package root is the complete application-facing API. The
+`@dnd/battle-runtime/consumer-protocol` subpath is the narrower composition and
+external-consumer contract; the root derives those same exports from that
+single protocol owner.
+
 Spell component text and cost/consumption flags are authored Spell facts.
 Battle may spend a Spell Slot and apply admitted battle-visible effects, but
 equipment access, focus/pouch substitution, hand legality, and consumed

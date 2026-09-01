@@ -13,13 +13,13 @@ import type {
   CreationFill,
   CreationHole,
   UnitCatalog,
-} from "../../../packages/character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import type {
   characterSheetConstructionIssuesSummary,
   characterSheetId,
   createFreshCharacterSheet,
   FreshCharacterSheet,
-} from "../../../packages/character-sheet-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-sheet-runtime/consumer-protocol";
 import type { Hp } from "@dnd/shared/types";
 
 import type { JsonValue } from "./continuation-contract.ts";

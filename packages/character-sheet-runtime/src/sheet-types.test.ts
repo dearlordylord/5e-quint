@@ -33,7 +33,7 @@ describe("Character Sheet issue boundary", () => {
     onExcessProperty: "error",
   });
 
-  it("accepts generic and exact coded issues and rejects invalid coded issues", () => {
+  it("accepts generic issues and rejects unowned issue codes", () => {
     expect(
       Result.isSuccess(
         decodeIssue({
@@ -43,30 +43,11 @@ describe("Character Sheet issue boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Result.isSuccess(
-        decodeIssue({
-          tag: "characterSheetIssue",
-          code: "wildShapeStatBlockCatalogRequired",
-          message:
-            "Wild Shape known forms require a valid SRD Stat Block catalog.",
-        }),
-      ),
-    ).toBe(true);
-    expect(
       Result.isFailure(
         decodeIssue({
           tag: "characterSheetIssue",
           code: "unknownCharacterSheetIssue",
           message: "Unknown Character Sheet issue.",
-        }),
-      ),
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeIssue({
-          tag: "characterSheetIssue",
-          code: "wildShapeStatBlockCatalogRequired",
-          message: "Wrong fixed message.",
         }),
       ),
     ).toBe(true);

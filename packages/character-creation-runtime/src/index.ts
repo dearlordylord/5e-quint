@@ -1,3 +1,5 @@
+export * from "./consumer-protocol.ts";
+
 export {
   classSpellcastingCreationAtLevel,
   isListPreparedSpellcastingCreation,
@@ -42,15 +44,10 @@ export {
 
 export {
   characterBuildSpeciesOriginFeatUnitIds,
-  parseCharacterBuildMagicInitiateSpellAccesses,
   type MagicInitiateAbility,
-  type CharacterBuildMagicInitiateSpellAccessIssue,
 } from "./magic-initiate-spell-access.ts";
 
 export {
-  ALIGNMENT_MORALITIES,
-  ALIGNMENT_ORDERS,
-  CHARACTER_CLASS_LEVELS,
   ABILITY_SCORE_GENERATION_DRAFT_PATH,
   CHARACTER_DRAFT_CHOICE_PATHS,
   CHARACTER_DRAFT_PATHS,
@@ -58,42 +55,27 @@ export {
   CREATION_FILL_ISSUE_CODES,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
-  STANDARD_LANGUAGES,
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
-  abilityScoreAssignment,
-  characterDraftId,
-  characterDraconicAncestrySelection,
   characterClassLevel,
   characterBuildCatalogEquipmentItem,
-  characterEquipmentItemId,
-  characterEquipmentItemSourceFromId,
   characterEquipmentItemUnitId,
   characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
   choiceCardinalityMax,
-  creationChoiceOptionId,
   creationFillIndex,
-  creationHoleId,
   creationSessionId,
   draftRevision,
-  eldritchInvocationId,
   exactChoiceCardinality,
-  copperPieceAmount,
   hitDieSize,
   hitDieTotal,
-  isCharacterBuildToolProficiencyId,
-  isCopperPieceAmount,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   loadoutSourceKey,
-  parseCharacterEquipmentItemId,
   parseCreationHoleId,
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
-  sorcererMetamagicOptionId,
-  toolProficiencyId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceKey,
@@ -101,39 +83,20 @@ export {
   type AbilityScoreAssignment,
   type AbilityScoreGenerationSource,
   type AbilityScoreGenerationSelection,
-  type AlignmentMorality,
-  type AlignmentOrder,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterAlignment,
-  type CharacterBuild,
   type CharacterBuildAbilityScores,
-  type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildClassFeatureLanguage,
   type CharacterBuildDraconicAncestryFact,
-  type CharacterBuildEquipment,
-  type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildEldritchInvocationSelection,
-  type CharacterBuildFeature,
   type CharacterBuildGnomishLineageFact,
   type CharacterBuildGnomishLineageId,
   type CharacterBuildGnomishLineageSpellcastingAbility,
-  type CharacterBuildHitDiePool,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
-  type CharacterBuildMagicInitiateSpellAccess,
-  type MagicInitiateSpellcastingAbility,
   type CharacterBuildOwnedEquipmentItem,
-  type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencies,
-  type CharacterBuildProficiencyChoiceSubject,
-  type CharacterBuildProjectionCause,
-  type CharacterBuildProjectionIssue,
-  type CharacterBuildResource,
-  type CharacterBuildSpeciesChoiceFacts,
-  type CharacterBuildSpellcasting,
-  type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSlotPool,
-  type CharacterBuildSpellcastingSource,
   type CharacterBuildSpellLevel,
   type CharacterBuildSpellSlotCapacity,
   type CharacterBuildSpellSlotCount,
@@ -141,16 +104,13 @@ export {
   type CharacterChoiceSelection,
   type CharacterClassLevel,
   type CharacterCreationAbilityScoreAssignment,
-  type CharacterDraft,
   type CharacterDraftChoicePath,
   type CharacterDraftId,
   type CharacterDraftPath,
   type CharacterDraconicAncestrySelection,
   type CharacterDraftSelections,
-  type CharacterEquipmentItemId,
   type CharacterEquipmentItemIdIssue,
   type CharacterEquipmentItemIdText,
-  type CharacterEquipmentItemSlot,
   type CharacterEquipmentItemSource,
   type CharacterEquipmentItemUnitId,
   type CharacterEquipmentItemUnitIdIssue,
@@ -168,7 +128,6 @@ export {
   type CreationBatchIssueCode,
   type CreationChoiceOption,
   type CreationChoiceOptionId,
-  type CreationFill,
   type CreationFillIssue,
   type CreationFillIssueCode,
   type CreationChoiceOptionDecodeCause,
@@ -178,7 +137,6 @@ export {
   type CreationFinalizationReadableUnitRole,
   type CreationFinalizationUnsupportedCause,
   type CreationFinalizationResult,
-  type CreationHole,
   type CreationHoleId,
   type CreationHoleIdText,
   type CreationHoleSource,
@@ -191,7 +149,6 @@ export {
   type FillIndex,
   type HitDieSize,
   type HitDieTotal,
-  type CopperPieceAmount,
   type LoadoutEquipmentUnitId,
   type LoadoutEquipmentUnitIdIssue,
   type LoadoutSlot,
@@ -199,7 +156,6 @@ export {
   type LoadoutSourceKey,
   type LoadoutSourceKeyIssue,
   type LoadoutSourceKeyText,
-  type NonEmptyReadonlyArray,
   type SelectableStandardLanguage,
   type SorcererMetamagicOptionId,
   type SorcererMetamagicOptionIdIssue,
@@ -215,7 +171,6 @@ export {
   type UnitChoiceSource,
   type UnitChoiceSourceUnitId,
   type UnitChoiceSourceUnitIdIssue,
-  type UnitCatalog,
   type UnitRef,
   type UnitRefSelectedOption,
 } from "./types.ts";
@@ -252,10 +207,7 @@ export {
   type CreationFrontierFact,
   type CreationHoleFact,
 } from "./oracle-facts.ts";
-export {
-  languageFromSurfaceLanguageId,
-  type SurfaceLanguageIdIssue,
-} from "./language-codecs.ts";
+export { type SurfaceLanguageIdIssue } from "./language-codecs.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-choice
@@ -269,31 +221,13 @@ export {
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
   SRD_ELDRITCH_INVOCATION_OPTIONS,
-  eldritchInvocationOptionForInvocationId,
-  eldritchInvocationRepeatableChoiceSatisfiesRule,
   knownWarlockCantripSatisfiesEldritchInvocationRule,
   levelOneEldritchInvocationChoiceOptions,
   type EldritchInvocationOption,
   type EldritchInvocationPrerequisite,
 } from "./eldritch-invocations.ts";
-export {
-  createCharacterDraft,
-  parseCharacterDraft,
-  type CharacterDraftParseIssue,
-} from "./draft.ts";
-export { discoverCreationHoles } from "./discovery.ts";
-export { fillCreationHoles } from "./fill-reducer.ts";
-export {
-  finalizeCharacterDraft,
-  characterCreationIssueMessage,
-  characterBuildArmorTraining,
-  characterBuildFeatureUnitIds,
-  characterBuildHitPoints,
-  characterBuildProficiencies,
-  characterBuildResources,
-  characterBuildSpellcastingSlotCapacity,
-  characterBuildUnitRefs,
-} from "./finalization.ts";
+export { parseCharacterDraft, type CharacterDraftParseIssue } from "./draft.ts";
+
 export {
   characterBuildProjectionWithRoute,
   characterBuildClassFeatureFactsProjectionWithRoute,
@@ -325,62 +259,34 @@ export {
 } from "./gnomish-lineage.ts";
 export {
   isWeaponMasteryChoiceFeature,
-  weaponMasteryChoiceProfileForFeature,
-  weaponMasteryChoiceProfileForProgression,
   type WeaponMasteryChoiceFeature,
   type WeaponMasteryChoiceProfile,
 } from "./weapon-mastery.ts";
 export {
-  DRUID_WILD_SHAPE_UNIT_ID,
-  DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES,
   DRUID_WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES,
-  DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES,
-  DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES,
-  characterBuildDruidWildShapeFacts,
-  replaceDruidWildShapeKnownForm,
-  messageForDruidWildShapeKnownFormIssue,
   validateDruidWildShapeKnownForms,
-  validateDruidWildShapeKnownFormIssues,
   validateDruidWildShapeKnownFormRecords,
-  type CharacterBuildDruidWildShapeFacts,
   type CharacterBuildDruidWildShapeFactsIssue,
-  type CharacterBuildDruidWildShapeKnownFormReplacement,
-  type DruidWildShapeKnownFormIssue,
 } from "./druid-wild-shape.ts";
 export {
-  MONK_MONKS_FOCUS_UNIT_ID,
-  characterBuildMonksFocusFacts,
   type CharacterBuildMonksFocusFacts,
   type CharacterBuildMonksFocusFactsIssue,
 } from "./monk-focus.ts";
 export {
   MONK_MARTIAL_ARTS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
-  characterBuildMonkUncannyMetabolismFacts,
-  type CharacterBuildMonkUncannyMetabolismFacts,
   type CharacterBuildMonkUncannyMetabolismFactsIssue,
 } from "./monk-uncanny-metabolism.ts";
-export {
-  SORCERER_FONT_OF_MAGIC_UNIT_ID,
-  characterBuildSorcererFontOfMagicFacts,
-  fontOfMagicSpellSlotCreationOption,
-  type CharacterBuildSorcererFontOfMagicFacts,
-  type CharacterBuildSorcererFontOfMagicFactsIssue,
-} from "./sorcerer-font-of-magic.ts";
+export { type CharacterBuildSorcererFontOfMagicFactsIssue } from "./sorcerer-font-of-magic.ts";
 export {
   SORCERER_METAMAGIC_UNIT_ID,
-  characterBuildSorcererMetamagicFacts,
   parseSorcererMetamagicOptionId,
   type CharacterBuildSorcererMetamagicFacts,
   type CharacterBuildSorcererMetamagicFactsIssue,
   type CharacterBuildSorcererMetamagicOptionFact,
 } from "./sorcerer-metamagic.ts";
 export {
-  classLevelLinearValueAtClassLevel,
   classLevelChoiceCountAtLevel,
-  isClassLevelLinearPerLevel,
-  isClassLevelThresholdTiers,
-  thresholdTierValueAtClassLevel,
   type ClassLevelLinearPerLevel,
   type ClassLevelThresholdTiers,
 } from "./class-level-scaling.ts";
@@ -388,22 +294,16 @@ export {
   classNameFromClassUnit,
   classUnitIdFromClassUnit,
   classUnitIdFromUnitId,
-  classUnitIdToClassName,
   type CharacterProgression,
   type CharacterProgressionIssue,
   type ClassUnitNameIssue,
 } from "./character-progression-algebra.ts";
 export {
-  classLevelForUnit,
-  classUnitId,
-  computeTotalLevel,
   characterProgressionWithClassLevelGain,
   characterTotalLevelHitPointRule,
   hitPointRuleLabel,
   hitPointRuleOptionSuffix,
   hitPointsAfterLevelOneMultiplier,
-  progressionClassLevels,
-  progressionClassUnitIds,
   startingClassUnitId,
   type CharacterProgressionClassLevel,
   type CharacterProgressionEntry,

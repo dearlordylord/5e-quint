@@ -2,7 +2,7 @@ import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.
 import { statBlockId } from "@dnd/shared/game-facts";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
-import { ClassLevel } from "@dnd/shared/types";
+import { ClassLevel, PositiveInteger } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -102,7 +102,7 @@ describe("extracted Stat Block parity branches", () => {
         senses: [
           {
             kind: "darkvision",
-            rangeFeet: 120,
+            rangeFeet: PositiveInteger(120),
             qualifier: "unimpeded_by_magical_darkness",
           },
         ],

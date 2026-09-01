@@ -16,7 +16,7 @@ import {
   type DruidWildShapeKnownFormsRoster,
 } from "@dnd/surface/surface/druid-wild-shape-readers";
 import { statBlockHasPotentialFlySpeed } from "@dnd/surface/surface/stat-block-speed-readers";
-import type { StatBlockRecord } from "../../surface/src/surface/stat-block-types.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "./types.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";

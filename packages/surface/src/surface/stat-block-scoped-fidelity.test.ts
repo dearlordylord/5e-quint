@@ -7,7 +7,7 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
-import { PositiveInteger } from "@dnd/shared/types";
+import { NonNegativeInteger, PositiveInteger } from "@dnd/shared/types";
 
 import {
   deriveSrdStatBlockParity,
@@ -404,7 +404,9 @@ const MUTATION_DESCRIPTORS = [
       ...mechanics,
       generalFacts: {
         ...mechanics.generalFacts,
-        passivePerception: mechanics.generalFacts.passivePerception + 1,
+        passivePerception: NonNegativeInteger(
+          mechanics.generalFacts.passivePerception + 1,
+        ),
       },
     }),
   ),
@@ -691,7 +693,9 @@ function passivePerceptionMismatch(
     ...mechanics,
     generalFacts: {
       ...mechanics.generalFacts,
-      passivePerception: mechanics.generalFacts.passivePerception + 1,
+      passivePerception: NonNegativeInteger(
+        mechanics.generalFacts.passivePerception + 1,
+      ),
     },
   }));
 }
@@ -4737,8 +4741,9 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
                 ...mechanics,
                 generalFacts: {
                   ...mechanics.generalFacts,
-                  passivePerception:
+                  passivePerception: NonNegativeInteger(
                     mechanics.generalFacts.passivePerception + 1,
+                  ),
                 },
               }))
             : projection,

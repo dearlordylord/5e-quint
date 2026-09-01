@@ -36,6 +36,7 @@ import {
   ClassLevel,
   D6RollResult,
   Hp,
+  Integer,
   movementFeet,
   PositiveInteger,
 } from "@dnd/shared/types";
@@ -2415,8 +2416,8 @@ test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
     statBlock: {
       ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       skillModifiers: [
-        { modifier: 5, skill: "perception" },
-        { modifier: 4, skill: "stealth" },
+        { modifier: Integer(5), skill: "perception" },
+        { modifier: Integer(4), skill: "stealth" },
       ],
     },
   };
@@ -2462,8 +2463,8 @@ test("projects retained and higher Beast Saving Throw modifiers while in Wild Sh
     statBlock: {
       ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       savingThrowModifiers: [
-        { ability: "dex", modifier: 6 },
-        { ability: "wis", modifier: 1 },
+        { ability: "dex", modifier: Integer(6) },
+        { ability: "wis", modifier: Integer(1) },
       ],
     },
   };

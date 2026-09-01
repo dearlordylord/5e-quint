@@ -78,7 +78,7 @@ type EncodedStandaloneConcreteSpeed = Exclude<
   EncodedStandaloneSpeed,
   { readonly kind: "gm_choice" }
 >;
-type EncodedStandaloneSense = Schema.Schema.Type<
+type EncodedStandaloneSense = Schema.Codec.Encoded<
   typeof StandaloneCreatureSenseSchema
 >;
 type EncodedCommunication = Schema.Codec.Encoded<

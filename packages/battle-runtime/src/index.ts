@@ -1,3 +1,5 @@
+export * from "./consumer-protocol.ts";
+
 export {
   BattleMechanicalFrontierSchema,
   BattleMechanicalHoleSchema,
@@ -20,16 +22,10 @@ export {
   BattleCharacterExecutionScopeRef,
   BattleCompanionFormId,
   BattleMovableLightId,
-  BattleId,
   BattleLineDirectionId,
-  BattleObjectId,
-  BattleProcedureExecutionRef,
-  BattleStatBlockProcedureExecutionRef,
   BattleReplayStackDepth,
   BattleResourcePoolExecutionRef,
   BattleSpellAccessExecutionRef,
-  BattleTablePositionId,
-  CombatantId,
   SpellId,
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
@@ -43,23 +39,13 @@ export {
   battleResourcePoolExecutionRef,
   battleSpellAccessExecutionRef,
   battleMovableLightId,
-  battleId,
   battleLineDirectionId,
-  battleObjectId,
   battleReplayStackDepth,
   battleSpellEffectOccurrenceId,
-  battleTablePositionId,
   characterId,
-  combatantId,
-  initiativeScore,
-  isBattleAttackProcedureExecutionRef,
-  isBattleProcedureExecutionRef,
-  isBattleStatBlockProcedureExecutionRef,
   spellId,
   type BattleAreaId,
   type BattleSpellEffectOccurrenceId,
-  type CharacterId,
-  type InitiativeScore,
 } from "./identity.ts";
 
 export {
@@ -80,12 +66,9 @@ export type {
 } from "./character-execution-admission.ts";
 
 export {
-  battleRuntimeSessionFollows,
   battleRuntimeSessionDescendsFrom,
   emptyBattleRuntimeContext,
-  isBattleRuntimeSession,
   type BattleRuntimeContext,
-  type BattleRuntimeSession,
   type CharacterBattleRuntimeContext,
   type CharacterSpellPresentationSource,
   type RetainedCompanionBattleSelection,
@@ -95,26 +78,18 @@ export {
   D20_TEST_KINDS,
   D20_TEST_ROLL_MODES,
   TABLE_D20_TEST_CIRCUMSTANCE_SOURCES,
-  admitTableD20TestCircumstanceDecisions,
-  battleD20TestCircumstanceRequests,
-  battleHolesWithTableD20TestCircumstances,
   combineD20TestRollMode,
   mechanicalD20TestRollModeSources,
   mechanicalD20TestRollMode,
   proneAttackRollModeSources,
   effectiveD20TestRollMode,
-  d20TestResolutionId,
-  type BattleD20TestCircumstanceRequest,
   type BattleD20TestRequestRef,
   type D20TestKind,
   type D20TestRollMode,
   type D20TestRollModeSources,
   type D20TestOrdinal,
-  type D20TestResolutionId,
-  type TableD20TestCircumstanceDecision,
   type TableD20TestCircumstanceDecisionAdmissionIssue,
   type TableD20TestCircumstanceDecisionIssue,
-  type TableD20TestCircumstanceSource,
 } from "./d20-test-circumstance.ts";
 
 export {
@@ -149,10 +124,7 @@ export {
   type BattleStatBlockProjectionFailure,
 } from "./stat-block-projection-failure.ts";
 
-export type {
-  CharacterZeroHpLifecycleInit,
-  ZeroHpLifecycle,
-} from "./zero-hp-lifecycle.ts";
+export type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 
 export {
   BATTLE_TRACE_HOLE_KINDS,
@@ -191,7 +163,6 @@ export {
   battleAdmittedSpellPresentations,
   battleSelectedSpellInvocationForProcedure,
   battleSubjectPresentation,
-  discoverBattleActs,
   discoverBattleActsWithStatBlockProjectionIssues,
   presentBattleActs,
 } from "./battle-act-composition.ts";
@@ -237,73 +208,47 @@ export {
 
 export type {
   CharacterBattleClassLevel,
-  CharacterBattleClassLevelInit,
   CharacterBattleClassLevelInits,
-  CharacterBattleClassLevels,
 } from "./character-class-level.ts";
 
 export {
   CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-  characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
-  characterBattleResourceForUnit,
   characterBattleResourceMaxUses,
-  characterBattleResourceMaxUsesForExecutionFacts,
   characterBattleResourceMaxPoints,
-  characterBattleResourceMaxPointsForExecutionFacts,
   characterBattleResourceIsPointPool,
   characterBattleResourceIsUseCount,
   classFeatureSpellFreeCastProfileForResource,
-  parseCharacterBattleClassLevels,
   characterResourceIsSpellAccessFreeCastForSpell,
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
   spendCharacterPointPoolResource,
-  unitIsSupportedClassFeatureSpellFreeCastResource,
-  type CharacterBattleBookOfShadowsSpellAccessInit,
   type CharacterBattleClassLevelsIssue,
-  type CharacterBattleBookOfShadowsPresence,
-  type CharacterBattleFeaturePreparedSpellInit,
-  type CharacterBattleFeatureInit,
-  type CharacterBattleInvocationSpellAccessInit,
   type CharacterBattleInvocationSpellAccessState,
   type CharacterBattleMetamagicEffectKind,
-  type CharacterBattleMetamagicInit,
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattleMetamagicState,
   type CharacterBattlePointPoolResourceState,
   type CharacterBattlePointPoolSpendIssue,
-  type CharacterBattleResourceInit,
-  type CharacterBattleResourceExecutionFacts,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleUseCountResourceState,
   type CharacterBattleSpellSlotInit,
   type CharacterBattleSpellSlotExpenditureInit,
-  type CharacterBattleSpellSlotState,
-  type CharacterBattleSpellbookRitualSpellAccessInit,
   type CharacterBattleSpellcastingInit,
-  type CharacterBattleSpellAccessInit,
-  type CharacterBattleSpellListFact,
   type CharacterBattleSpellcastingExecutionState,
   type CharacterBattleSpellcastingState,
   type CompanionReactionInvocationMode,
 } from "./character-battle-resources.ts";
 
 export {
-  admitResourceFeature,
-  resourceFeatureExecutionFacts,
   type AdmittedResourceFeature,
-  type ResourceFeatureAdmission,
   type ResourceFeatureAdmissionIssue,
   type UnboundResourceFeatureProcedure,
 } from "./procedure-admission/resource-feature-admission.ts";
 
-export {
-  projectDruidWildShapeAtClassLevels,
-  type DruidWildShapeClassLevelProjection,
-} from "./procedure-admission/druid-wild-shape.ts";
+export { type DruidWildShapeClassLevelProjection } from "./procedure-admission/druid-wild-shape.ts";
 
 export {
   admitCompanionToBattle,
@@ -405,14 +350,10 @@ export {
   spellAccessFreeCastSpellInvocationRef,
   isCharacterProcedureBattleSubject,
   battleSubjectProcedureRefsBelongToOwners,
-  sameBattleSubject,
   spellSlotInvocationRef,
   isBattleReadyTriggerReportSubject,
   type BattleRuntimeCommand,
-  type BattleMovementSpeedKind,
   type BattleInterruptSubject,
-  type BattleReadyResponse,
-  type BattleSubject,
   type BattleReadyTriggerReportSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,
@@ -427,36 +368,21 @@ export {
 export type {
   BattleWeaponDamage,
   CharacterAttackActionOption,
-  CharacterUnarmedStrikeActionOption,
-  CharacterWeaponAttackActionOption,
-  CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
   SupportedAttackActionOption,
   UnarmedStrikeDamageEffect,
   UnarmedStrikeDamageProfile,
 } from "./battle-action-options.ts";
 
-export type {
-  StatBlockAttackDamageComponentRef,
-  StatBlockAttackDamageSelection,
-  StatBlockDamageComponentNotation,
-} from "./stat-block-attack-damage-selection.ts";
+export type { StatBlockAttackDamageComponentRef } from "./stat-block-attack-damage-selection.ts";
 
 export type {
-  AuthoredStatBlockBattleInitInput,
-  BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
   BattleDruidWildShapeKnownFormsIssue,
-  BattleCreatureInit,
   CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
-  BattleUnitRef,
   BattleWalkSpeed,
-  CharacterBattleCreatureInit,
-  CharacterBattleCreatureInitWeaponAttack,
   CharacterBattleD20Statistics,
-  CharacterBattleInvocationFeature,
-  CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleInitIssue,
   StatBlockInitialCondition,
@@ -479,11 +405,8 @@ export type {
 export { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
 
 export {
-  wildShapeKnownFormsIssueMessage,
   KNOCKED_OUT_UNCONSCIOUS,
   STAT_BLOCK_INITIAL_CONDITIONS,
-  battleAvailableDruidWildShapeKnownForms,
-  characterBattleCreatureInitWeaponAttack,
 } from "./battle-init.ts";
 
 export {
@@ -502,7 +425,6 @@ export {
   type AttackDamageRider,
   type AttackDamageRiderUsage,
   type AttackRollFeatureActivation,
-  type AvailableBattleAct,
   type BattleActDiscoveryCandidate,
   type BattleActPresentation,
   type BattleAbilityCheckHole,
@@ -528,7 +450,6 @@ export {
   type BattleFailedAbilityCheckFacts,
   type BattleFallDamageLandingResult,
   type BattleFallingCreatureMitigationLandingResult,
-  type BattleFill,
   type BattleGrappleLink,
   type BattleGrappleOutcomeHole,
   type BattleHand,
@@ -537,14 +458,12 @@ export {
   type BattleHidePrerequisite,
   type BattleHitPointHealingPoolAllocation,
   type BattleHitPointHealingPoolDistributionHole,
-  type BattleHole,
   type BattleHoleId,
   type BattleHoleInstanceKey,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleInterruptFrame,
   type BattleInterruptedProcedure,
   type BattleInvalidReasonCode,
-  type BattleIllumination,
   type BattleIlluminationEmissionFacts,
   type BrightAndDimIlluminationEmissionFacts,
   type BrightIlluminationEmissionFacts,
@@ -569,11 +488,7 @@ export {
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
-  type BattleOpportunityAttackThreat,
-  type BattleResolvedMovement,
   type BattleObjectDamageComponent,
-  type BattleObjectDamageDisposition,
-  type BattleObjectDamageOutcome,
   type BattleObjectIgnitionDisposition,
   type BattleObjectIgnitionOutcome,
   type BattleObjectOutline,
@@ -627,14 +542,9 @@ export {
   type BattleInitializationIssueFacts,
   type BattleInitializationLeafIssue,
   type BattleStatBlockInitializationIssue,
-  type BattleStateInitIssue,
   type BattleStateInitLeafIssue,
   type BattleSuccessfulAbilityCheckFacts,
-  type BattleTargetChoiceHole,
   type BattleFallingCreatureMitigationTriggerFact,
-  type BattleTargetSpatialFact,
-  type AttackTargetConstraint,
-  type BattleCreatureSpaceTraversalMovementFact,
   type BattleAttackExecutionSelection,
   type BattleSelectedSpellInvocation,
   type BattleTemporaryAbilityCheckRollModeActiveEffectCountHole,
@@ -689,7 +599,6 @@ export {
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,
-  type BattleStartInput,
   type InitialInitiativeSetup,
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
@@ -719,7 +628,7 @@ export type {
   BattleReducerRouteOwnerGroup,
   BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route-protocol.ts";
-export { battleAmmunitionStock } from "./battle-ammunition.ts";
+
 export type {
   BattleAmmunitionKind,
   BattleAmmunitionStock,
@@ -734,7 +643,6 @@ export {
   battleStateInitIssueLeaves,
   battleStateInitIssueMessage,
   concentrationSavingThrowDc,
-  scoreModifier,
 } from "./battle-reducer/domain-helpers.ts";
 export { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 export { openBattleInterruptWindow } from "./battle-reducer/dispatcher.ts";
@@ -759,13 +667,8 @@ export {
   resolveBardicInspirationFailedD20Test,
 } from "./battle-reducer/unit-features.ts";
 export {
-  GRAPPLE_TARGET_REACH_FEET,
-  HELP_ATTACK_TARGET_ADJACENCY_FEET,
   PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET,
-  RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
   SHOVE_PUSH_DISTANCE_FEET,
-  SHOVE_TARGET_REACH_FEET,
-  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET,
   STANDARD_CREATURE_MELEE_REACH_FEET,
   SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
   SELF_TRANSFORMATION_MODE_KINDS,
@@ -800,11 +703,8 @@ export {
 } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 
 export {
-  endBattleRuntimeTurn,
   endBattleRuntimeTurnWithTableD20TestCircumstances,
   openCreatureFallsRuntimeInterruptWindow,
-  resolveBattleRuntimeInterrupt,
-  resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
   battleCheckpointFrontierEnvelope,
   battleFrontierHoles,
@@ -815,8 +715,6 @@ export {
   type BattleResolvedCheckpointFrontierEnvelope,
   resolveBattleSubject,
   type BattleRuntimeResolutionInput,
-  type BattleRuntimeResolutionResult,
-  type BattleRuntimeTableD20TestResolutionResult,
 } from "./battle-session-execution.ts";
 
 export {
@@ -851,9 +749,7 @@ export {
 } from "./battle-reducer/failed-saving-throw-reroll.ts";
 
 export {
-  deriveOrdinaryMovementTableRouteFacts,
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
-  type BattleOrdinaryMovementRouteOccupant,
   type BattleOrdinaryMovementTableRouteResult,
   type BattleCreatureSpaceOccupantFootprintFact,
   type BattleCreatureSpaceSizeRelationToMover,
@@ -864,18 +760,7 @@ export {
   type BattleRouteDerivedCreatureSpaceTraversalMovementFact,
 } from "./battle-reducer/creature-space-table-route.ts";
 
-export {
-  opportunityAttackExecutionCandidates,
-  opportunityAttackLeavesReach,
-  type BattleOpportunityAttackExecutionCandidate,
-} from "./battle-reducer/movement-speed.ts";
-
-export {
-  opportunityAttackThreatIdentityEqual,
-  opportunityAttackThreatEqual,
-} from "./battle-reducer/opportunity-attack-equality.ts";
-
-export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
+export { type BattleOpportunityAttackExecutionCandidate } from "./battle-reducer/movement-speed.ts";
 
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -928,8 +813,6 @@ export {
   battleHideActionObscurementPermissionSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleSaveDamageReplacementSupportForUnit,
-  parseSupportedUnitFeatureProfile,
-  battleUnitRefWithSupportProfiles,
   battleUnitSupportProfilesForUnit,
   battleAttackDamageDieFloorSupportForUnit,
   failedSavingThrowRerollProfileForUnit,
@@ -949,22 +832,18 @@ export {
   battleZeroHitPointReplacementSupportForUnit,
   attackActionAttackCountScalingProfileForUnit,
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
-  INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   STUNNING_STRIKE_SUPPORT_PROFILE,
   TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
-  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   initiativeProficiencyAndSwapProfileForUnit,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
-  passiveArmorClassBonusProfileForUnit,
   passiveAbilityCheckRollModeProfileForUnit,
   creatureSpaceMovementPermissionProfileForUnit,
   hideActionObscurementPermissionProfileForUnit,
   passiveDamageResistanceProfileForUnit,
   attackDamageDieFloorProfileForUnit,
   lightExtraAttackDamageAbilityModifierProfileForUnit,
-  martialArtsAttackProjectionProfileForUnit,
   passiveRangedAttackRollBonusProfileForUnit,
   passiveSavingThrowRollModeProfileForUnit,
   passiveSpeedBonusProfileForUnit,
@@ -1011,7 +890,6 @@ export {
   type BattleSaveDamageReplacementSupport,
   type BattleUnitSupportProfile,
   type BattleUnitSupportProfileIssue,
-  type BattleUnitSupportProfileSourceFacts,
   type BattleWeaponOrUnarmedCriticalRange19Support,
   type BattleWeaponDamageDiceRollChoiceSupport,
   type BattleWeaponMasteryCleaveSupport,
@@ -1043,7 +921,6 @@ export {
   combatantD20AbilityScore,
   combatantD20ProficiencyBonus,
   combatantDruidWildShapeArmorClassState,
-  combatantEffectiveSize,
   combatantHasActiveDruidWildShape,
   combatantSavingThrowModifier,
   combatantSkillModifier,
@@ -1072,7 +949,5 @@ export {
 
 export {
   admitCharacterWeaponAttackExecutionWeapon,
-  admitCharacterWeaponExecutionWeapon,
   admitResolvedCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";

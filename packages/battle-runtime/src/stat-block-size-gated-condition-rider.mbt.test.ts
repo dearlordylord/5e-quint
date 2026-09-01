@@ -1,5 +1,11 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { Integer, movementFeet, PositiveInteger } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  Integer,
+  movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
@@ -522,15 +528,15 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
       hp: { kind: "literal", value: 10 },
       speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
-        cha: 8,
-        con: 10,
-        dex: 15,
-        int: 10,
-        str: 8,
-        wis: 8,
+        cha: AbilityScore.make(8),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(15),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(8),
+        wis: AbilityScore.make(8),
       },
-      initiative: { modifier: 2, score: 12 },
-      passivePerception: 9,
+      initiative: { modifier: Integer(2), score: NonNegativeInteger(12) },
+      passivePerception: NonNegativeInteger(9),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
@@ -560,15 +566,15 @@ function sizeGatedConditionRiderTargetStatBlock(
       hp: { kind: "literal", value: 20 },
       speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
-        cha: 8,
-        con: 10,
-        dex: 15,
-        int: 10,
-        str: 8,
-        wis: 8,
+        cha: AbilityScore.make(8),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(15),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(8),
+        wis: AbilityScore.make(8),
       },
-      initiative: { modifier: 2, score: 12 },
-      passivePerception: 9,
+      initiative: { modifier: Integer(2), score: NonNegativeInteger(12) },
+      passivePerception: NonNegativeInteger(9),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },

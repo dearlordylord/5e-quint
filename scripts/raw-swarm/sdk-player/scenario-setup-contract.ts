@@ -8,11 +8,11 @@ import type {
   BattleCreatureInit,
   BattleInitializationIssueMessage,
   StartBattle,
-} from "../../../packages/battle-runtime/src/consumer-protocol.ts";
+} from "@dnd/battle-runtime/consumer-protocol";
 import type { CharacterSheetBattleInit } from "../../../packages/character-battle-runtime/src/battle-creature-init.ts";
 import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/character-battle-runtime/src/battle-character-build-projection.ts";
-import type { UnitCatalog } from "../../../packages/character-creation-runtime/src/consumer-protocol.ts";
-import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/consumer-protocol.ts";
+import type { UnitCatalog } from "@dnd/character-creation-runtime/consumer-protocol";
+import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime/consumer-protocol";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";

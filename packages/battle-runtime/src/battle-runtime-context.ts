@@ -23,7 +23,7 @@ import type {
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
   StatBlockTextOnlyReason,
-} from "../../surface/src/surface/stat-block-types.ts";
+} from "@dnd/surface/surface/stat-block-types";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import { Result } from "effect";
 import type {

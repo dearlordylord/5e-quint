@@ -8,7 +8,7 @@ import {
   type CharacterBuild,
   type CharacterEquipmentItemId,
   type UnitCatalog,
-} from "../../character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   abilityModifier,
   armorClass,

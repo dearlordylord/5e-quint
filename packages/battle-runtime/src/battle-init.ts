@@ -18,7 +18,7 @@ import type {
 import type {
   StatBlockId,
   StatBlockRecord,
-} from "../../surface/src/surface/stat-block-types.ts";
+} from "@dnd/surface/surface/stat-block-types";
 import { Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,

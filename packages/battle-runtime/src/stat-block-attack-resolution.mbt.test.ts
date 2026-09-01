@@ -1,7 +1,13 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
-import { Integer, movementFeet, PositiveInteger } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  Integer,
+  movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { isDeepStrictEqual } from "node:util";
 
@@ -719,15 +725,15 @@ function statBlockAttackParityBystander(
       hp: { kind: "literal", value: targetInitialHp },
       speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
-        cha: 10,
-        con: 10,
-        dex: 10,
-        int: 10,
-        str: 10,
-        wis: 10,
+        cha: AbilityScore.make(10),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(10),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(10),
+        wis: AbilityScore.make(10),
       },
-      initiative: { modifier: 0, score: 10 },
-      passivePerception: 10,
+      initiative: { modifier: Integer(0), score: NonNegativeInteger(10) },
+      passivePerception: NonNegativeInteger(10),
       communication: { kind: "none" },
       ...Match.value(targetDamageAdjustment).pipe(
         Match.when("none", () => ({})),

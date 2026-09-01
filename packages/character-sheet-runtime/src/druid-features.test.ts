@@ -4,6 +4,7 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { druidWildShapeStatBlockCatalogFromInput } from "./druid-features.ts";
 import {
   completeLongRest as completeLongRestWithoutFixtureCatalog,
@@ -40,18 +41,13 @@ import {
 } from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / druid features", () => {
-  test("requires callers to supply the Stat Block catalog", () => {
-    expect(druidWildShapeStatBlockCatalogFromInput(undefined)).toEqual(
-      Result.fail({
-        tag: "characterSheetIssue",
-        code: "wildShapeStatBlockCatalogRequired",
-        message:
-          "Wild Shape known forms require a valid SRD Stat Block catalog.",
-      }),
+  test("uses the canonical installed Stat Block catalog by default", () => {
+    expect(druidWildShapeStatBlockCatalogFromInput(undefined)).toBe(
+      srdStatBlockCatalog,
     );
   });
 
-  test("preserves the missing Wild Shape Stat Block catalog issue through replacement at Long Rest", () => {
+  test("uses the canonical Stat Block catalog for replacement at Long Rest", () => {
     const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-missing-rest-catalog"),
@@ -71,23 +67,24 @@ describe("Character Sheet runtime / druid features", () => {
       finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
     );
 
-    expect(
+    const completed = requireSuccess(
       completeLongRestWithoutFixtureCatalog({
         completion,
         unitLibrary,
+        druidCircleLandChoice: "temperate",
         druidWildShapeKnownFormReplacement: {
           replaceStatBlockId: authoredStatBlockId("stat_block_rat"),
-          selectedStatBlockId: authoredStatBlockId("stat_block_cat"),
+          selectedStatBlockId: authoredStatBlockId("stat_block_badger"),
         },
       }),
-    ).toEqual(
-      Result.fail({
-        tag: "characterSheetIssue",
-        code: "wildShapeStatBlockCatalogRequired",
-        message:
-          "Wild Shape known forms require a valid SRD Stat Block catalog.",
-      }),
     );
+
+    expect(
+      characterSheetDruidWildShapeKnownForms(completed)?.statBlockIds,
+    ).toContain(authoredStatBlockId("stat_block_badger"));
+    expect(
+      characterSheetDruidWildShapeKnownForms(completed)?.statBlockIds,
+    ).not.toContain(authoredStatBlockId("stat_block_rat"));
   });
 
   test(druidCircleLandSpellAccessProjectionTestName, () => {

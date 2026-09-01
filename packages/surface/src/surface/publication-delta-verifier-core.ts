@@ -749,38 +749,48 @@ function isSyntacticSchemaSubset(
   const cached = memo.get(pair);
   if (cached !== undefined) return cached === "active" ? true : cached;
   memo.set(pair, "active");
-  let result: boolean;
+  const result = syntacticSchemaSubsetResult(schema, left, right, memo);
+  memo.set(pair, result);
+  return result;
+}
+
+function syntacticSchemaSubsetResult(
+  schema: SchemaDocument,
+  left: JsonValue,
+  right: JsonValue,
+  memo: Map<string, boolean | "active">,
+): boolean {
   if (isJsonObject(right) && Array.isArray(right.anyOf)) {
-    result = right.anyOf.some((member) =>
+    return right.anyOf.some((member) =>
       isSyntacticSchemaSubset(schema, left, member, memo),
     );
-  } else if (isJsonObject(left) && Array.isArray(left.anyOf)) {
-    result = left.anyOf.every((member) =>
+  }
+  if (isJsonObject(left) && Array.isArray(left.anyOf)) {
+    return left.anyOf.every((member) =>
       isSyntacticSchemaSubset(schema, member, right, memo),
     );
-  } else if (Array.isArray(left) && Array.isArray(right)) {
-    result =
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
       left.length === right.length &&
       left.every((child, index) =>
         isSyntacticSchemaSubset(schema, child, right[index]!, memo),
-      );
-  } else if (!isJsonObject(left) || !isJsonObject(right)) {
-    result = false;
-  } else {
-    const leftKeys = Object.keys(left)
-      .filter((key) => key !== "$defs")
-      .sort(compareCodePointStrings);
-    const rightKeys = Object.keys(right)
-      .filter((key) => key !== "$defs")
-      .sort(compareCodePointStrings);
-    result =
-      JSON.stringify(leftKeys) === JSON.stringify(rightKeys) &&
-      leftKeys.every((key) =>
-        isSyntacticSchemaSubset(schema, left[key]!, right[key]!, memo),
-      );
+      )
+    );
   }
-  memo.set(pair, result);
-  return result;
+  if (!isJsonObject(left) || !isJsonObject(right)) return false;
+  const leftKeys = Object.keys(left)
+    .filter((key) => key !== "$defs")
+    .sort(compareCodePointStrings);
+  const rightKeys = Object.keys(right)
+    .filter((key) => key !== "$defs")
+    .sort(compareCodePointStrings);
+  return (
+    JSON.stringify(leftKeys) === JSON.stringify(rightKeys) &&
+    leftKeys.every((key) =>
+      isSyntacticSchemaSubset(schema, left[key]!, right[key]!, memo),
+    )
+  );
 }
 
 function isBarbarianClassFeatureSchema(
@@ -863,6 +873,59 @@ function classifyComparisonSchema(
   return { value: transform(schema, ""), observed, unauthorized };
 }
 
+function schemaObjectSignature(
+  schema: SchemaDocument,
+  value: JsonObject,
+  visit: (raw: JsonValue) => string,
+  redundantSubsetCount?: { value: number },
+): string {
+  const entries = Object.entries(value)
+    .filter(([key]) => key !== "$defs")
+    .sort(([left], [right]) => compareCodePointStrings(left, right))
+    .map(([key, child]) => {
+      if (key === "anyOf" && Array.isArray(child)) {
+        const members: JsonValue[] = [];
+        const append = (member: JsonValue): void => {
+          const resolved = resolvePureLocalReference(schema, member);
+          if (
+            isJsonObject(resolved) &&
+            Object.keys(resolved).length === 1 &&
+            Array.isArray(resolved.anyOf)
+          ) {
+            resolved.anyOf.forEach(append);
+          } else members.push(member);
+        };
+        child.forEach(append);
+        const barbarianMembers = members
+          .map((member, index) => ({ member, index }))
+          .filter(({ member }) =>
+            isBarbarianClassFeatureSchema(schema, member),
+          );
+        const nonRedundant = members.filter((member, index) => {
+          const redundant =
+            isBarbarianClassFeatureSchema(schema, member) &&
+            barbarianMembers.some(
+              ({ member: other, index: otherIndex }) =>
+                otherIndex !== index &&
+                isSyntacticSchemaSubset(schema, member, other),
+            );
+          if (redundant)
+            redundantSubsetCount && (redundantSubsetCount.value += 1);
+          return !redundant;
+        });
+        return `${key}:[${[...new Set(nonRedundant.map(visit))].sort(compareCodePointStrings).join(",")}]`;
+      }
+      if (
+        (key === "required" || key === "enum" || key === "type") &&
+        Array.isArray(child)
+      ) {
+        return `${key}:[${[...new Set(child.map(visit))].sort(compareCodePointStrings).join(",")}]`;
+      }
+      return `${key}:${visit(child)}`;
+    });
+  return `object:{${entries.join(",")}}`;
+}
+
 function schemaNodeHash(
   schema: SchemaDocument,
   value: JsonValue,
@@ -877,58 +940,11 @@ function schemaNodeHash(
     if (active.has(value))
       return sha256(Buffer.from("recursive-schema-node", "utf8"));
     active.add(value);
-    let signature: string;
-    if (Array.isArray(value)) {
-      signature = `array:${value.map(visit).join(",")}`;
-    } else if (!isJsonObject(value)) {
-      signature = `scalar:${JSON.stringify(value)}`;
-    } else {
-      const entries = Object.entries(value)
-        .filter(([key]) => key !== "$defs")
-        .sort(([left], [right]) => compareCodePointStrings(left, right))
-        .map(([key, child]) => {
-          if (key === "anyOf" && Array.isArray(child)) {
-            const members: JsonValue[] = [];
-            const append = (member: JsonValue): void => {
-              const resolved = resolvePureLocalReference(schema, member);
-              if (
-                isJsonObject(resolved) &&
-                Object.keys(resolved).length === 1 &&
-                Array.isArray(resolved.anyOf)
-              ) {
-                resolved.anyOf.forEach(append);
-              } else members.push(member);
-            };
-            child.forEach(append);
-            const barbarianMembers = members
-              .map((member, index) => ({ member, index }))
-              .filter(({ member }) =>
-                isBarbarianClassFeatureSchema(schema, member),
-              );
-            const nonRedundant = members.filter((member, index) => {
-              const redundant =
-                isBarbarianClassFeatureSchema(schema, member) &&
-                barbarianMembers.some(
-                  ({ member: other, index: otherIndex }) =>
-                    otherIndex !== index &&
-                    isSyntacticSchemaSubset(schema, member, other),
-                );
-              if (redundant)
-                redundantSubsetCount && (redundantSubsetCount.value += 1);
-              return !redundant;
-            });
-            return `${key}:[${[...new Set(nonRedundant.map(visit))].sort(compareCodePointStrings).join(",")}]`;
-          }
-          if (
-            (key === "required" || key === "enum" || key === "type") &&
-            Array.isArray(child)
-          ) {
-            return `${key}:[${[...new Set(child.map(visit))].sort(compareCodePointStrings).join(",")}]`;
-          }
-          return `${key}:${visit(child)}`;
-        });
-      signature = `object:{${entries.join(",")}}`;
-    }
+    const signature = Array.isArray(value)
+      ? `array:${value.map(visit).join(",")}`
+      : !isJsonObject(value)
+        ? `scalar:${JSON.stringify(value)}`
+        : schemaObjectSignature(schema, value, visit, redundantSubsetCount);
     active.delete(value);
     const hash = sha256(Buffer.from(signature, "utf8"));
     memo.set(value, hash);

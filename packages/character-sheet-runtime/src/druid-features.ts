@@ -9,8 +9,9 @@ import {
   type DruidWildShapeKnownFormIssue,
   type CharacterBuild,
   type UnitCatalog,
-} from "../../character-creation-runtime/src/consumer-protocol.ts";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import {
   DRUID_CIRCLE_LAND_CHOICES,
@@ -23,7 +24,6 @@ import { Result, Match, Option } from "effect";
 import { projectCharacterSheetClassFeature } from "./character-feature-projection.ts";
 import {
   characterSheetIssue,
-  wildShapeStatBlockCatalogRequiredIssue,
   type CharacterSheet,
   type CharacterSheetDruidCircleLand,
   type CharacterSheetDruidCircleLandPreparedSpellAccess,
@@ -31,7 +31,6 @@ import {
   type CharacterSheetInput,
   type CharacterSheetIssue,
   type CharacterSheetLongRestInput,
-  type CharacterSheetWildShapeStatBlockCatalogRequiredIssue,
 } from "./sheet-types.ts";
 
 type DruidWildShapeKnownFormsConstructionIssue =
@@ -39,7 +38,6 @@ type DruidWildShapeKnownFormsConstructionIssue =
       readonly code:
         | "wildShapeKnownFormsUnexpected"
         | "wildShapeKnownFormsRequired"
-        | "wildShapeStatBlockCatalogRequired"
         | "wildShapeKnownFormsInvalid";
     }
   | DruidWildShapeKnownFormIssue;
@@ -94,9 +92,6 @@ export function druidWildShapeKnownFormsFromInput(
         "Wild Shape known forms require selected Beast Stat Block identities.",
       ),
     ),
-    Match.when("wildShapeStatBlockCatalogRequired", () =>
-      wildShapeStatBlockCatalogRequiredIssue(),
-    ),
     Match.when("wildShapeKnownFormsInvalid", () =>
       characterSheetIssue("Wild Shape known form state is invalid."),
     ),
@@ -144,13 +139,10 @@ export function druidWildShapeKnownFormsConstruction(
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.statBlockCatalog,
   );
-  if (Result.isFailure(statBlockCatalog)) {
-    return Result.fail([{ code: statBlockCatalog.failure.code }]);
-  }
   const knownFormIssues = validateDruidWildShapeKnownFormIssues({
     facts: facts.success,
     knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
-    statBlockCatalog: statBlockCatalog.success,
+    statBlockCatalog,
   });
   if (knownFormIssues !== undefined) return Result.fail(knownFormIssues);
   return Result.succeed({
@@ -210,12 +202,8 @@ export function isDruidCircleLandChoice(
 
 export function druidWildShapeStatBlockCatalogFromInput(
   statBlockCatalog: StatBlockCatalog | undefined,
-): Result.Result<
-  StatBlockCatalog,
-  CharacterSheetWildShapeStatBlockCatalogRequiredIssue
-> {
-  if (statBlockCatalog !== undefined) return Result.succeed(statBlockCatalog);
-  return wildShapeStatBlockCatalogRequiredIssue();
+): StatBlockCatalog {
+  return statBlockCatalog ?? srdStatBlockCatalog;
 }
 
 export function druidWildShapeKnownFormsAfterLongRest(input: {
@@ -253,13 +241,11 @@ export function druidWildShapeKnownFormsAfterLongRest(input: {
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.input.statBlockCatalog,
   );
-  if (Result.isFailure(statBlockCatalog))
-    return Result.fail(statBlockCatalog.failure);
   const replaced = replaceDruidWildShapeKnownForm({
     facts: facts.success,
     currentKnownFormStatBlockIds: sheet.druidWildShapeKnownForms.statBlockIds,
     replacement: input.input.druidWildShapeKnownFormReplacement,
-    statBlockCatalog: statBlockCatalog.success,
+    statBlockCatalog,
   });
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: replacement forms must satisfy the retained Wild Shape profile and known-form roster. */
   if (Result.isFailure(replaced))
