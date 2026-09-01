@@ -6,6 +6,7 @@ export function sharedOncePerTurnLimitGroup(
   const [first, ...remaining] = limits;
   return first?.kind === "once_per_turn" &&
     first.limitGroup !== undefined &&
+    first.limitGroup.length > 0 &&
     remaining.every(
       (limit) =>
         limit?.kind === "once_per_turn" &&
