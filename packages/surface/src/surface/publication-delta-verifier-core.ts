@@ -153,6 +153,7 @@ const SchemaCertificateSchema = Schema.Struct({
         gmSpeedChoiceMinimum: Schema.Array(SchemaNodeClassificationSchema),
         flyOnlyHover: Schema.Array(SchemaNodeClassificationSchema),
         unitIdItemId: Schema.Array(SchemaNodeClassificationSchema),
+        casterHealLinkRangeFeet: Schema.Array(SchemaNodeClassificationSchema),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
       comparisonNormalizedRootSha256: HashSchema,
@@ -664,6 +665,7 @@ type CandidateSchemaClassifications = {
   readonly gmSpeedChoiceMinimum: readonly SchemaNodeClassification[];
   readonly flyOnlyHover: readonly SchemaNodeClassification[];
   readonly unitIdItemId: readonly SchemaNodeClassification[];
+  readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
 };
 
 type ClassifiedSchemaTransform = {
@@ -962,10 +964,12 @@ function classifyCandidateSchema(
     gmSpeedChoiceMinimum: SchemaNodeClassification[];
     flyOnlyHover: SchemaNodeClassification[];
     unitIdItemId: SchemaNodeClassification[];
+    casterHealLinkRangeFeet: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
     unitIdItemId: [],
+    casterHealLinkRangeFeet: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
   const authorize = (
@@ -998,6 +1002,46 @@ function classifyCandidateSchema(
         transform(child, jsonPointerChild(pointer, key)),
       ]),
     );
+    const properties = objectAt(transformed, "properties");
+    const kind =
+      properties === undefined ? undefined : objectAt(properties, "kind");
+    const rangeFeet = properties?.rangeFeet;
+    if (
+      reachable.has(value) &&
+      kind?.type === "string" &&
+      Array.isArray(kind.enum) &&
+      kind.enum.length === 1 &&
+      kind.enum[0] === "caster_heal_link" &&
+      rangeFeet !== undefined &&
+      isJsonObject(rangeFeet) &&
+      rangeFeet.type === "integer" &&
+      rangeFeet.minimum === 1 &&
+      Object.keys(rangeFeet).length === 2
+    ) {
+      const reviewedAfter = {
+        anyOf: [
+          { type: "number" },
+          { type: "string", enum: ["Infinity", "-Infinity", "NaN"] },
+        ],
+      } satisfies JsonObject;
+      const rangeFeetPointer = jsonPointerChild(
+        jsonPointerChild(pointer, "properties"),
+        "rangeFeet",
+      );
+      if (
+        authorize(
+          "casterHealLinkRangeFeet",
+          rangeFeetPointer,
+          rangeFeet,
+          reviewedAfter,
+        )
+      ) {
+        transformed = {
+          ...transformed,
+          properties: { ...properties, rangeFeet: reviewedAfter },
+        };
+      }
+    }
     if (
       pointer.endsWith("/alternatives") &&
       reachable.has(value) &&
@@ -2054,6 +2098,8 @@ function compareSchemaGraphDelta(
       gmSpeedChoiceMinimum: expected.classifiedChanges.gmSpeedChoiceMinimum,
       flyOnlyHover: expected.classifiedChanges.flyOnlyHover,
       unitIdItemId: expected.classifiedChanges.unitIdItemId,
+      casterHealLinkRangeFeet:
+        expected.classifiedChanges.casterHealLinkRangeFeet,
     });
     const classifiedComparison = classifyComparisonSchema(
       comparison,

@@ -195,6 +195,57 @@ public declaration. The 1,000-file coarse safety ceiling remains unchanged;
 production emission continues to fail closed on the exact reviewed measure,
 path ledger, and content ledger.
 
+## Final current-tip recertification (2026-09-01)
+
+At immutable implementation source `d83d7e19b`, the admitted declaration graph
+retains exactly 571 paths and the unchanged sorted POSIX path-ledger SHA-256
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`.
+The TypeScript 5.9.3 production emitter measured 10,298,129 bytes, leaving
+187,631 bytes below the unchanged 10 MiB byte cap. Its sorted content-ledger
+SHA-256 is
+`c7cc1ebeaeafaceaa53c820228fb456f2a1b0fefd68390a34ec12bd16dea7f29`.
+
+Compared with clean `cf55434c1`, no admitted path was added or removed and 42
+declarations changed. The package-group byte deltas are:
+
+- `packages/battle-runtime`: 15 declarations, -3,998 bytes
+- `packages/character-battle-runtime`: 3 declarations, -72 bytes
+- `packages/character-creation-runtime`: 2 declarations, -2,956 bytes
+- `packages/character-sheet-runtime`: 15 declarations, -1,997 bytes
+- `packages/surface`: 2 declarations, +6,615 bytes
+- `scripts/raw-swarm`: 5 declarations, -180 bytes
+
+The 2,588-byte net reduction combines the explicit consumer-protocol import
+paths and narrower package indexes with the expanded decoded Stat Block domain
+types. The two Surface declarations account for the positive delta:
+`schema-spell.d.ts` grows 6,074 bytes and `stat-block-types.d.ts` grows 541
+bytes. The Battle, Character Creation, Character Sheet, Character Battle, and
+Raw Swarm changes are the corresponding consumer-protocol and issue-shape
+projections.
+
+The compiler initially emits five closed forbidden owners because the root
+Character Sheet package retains its canonical optional Stat Block catalog
+default. The admitted declaration graph does not reach any of them after value
+imports are elided. The pinned TypeScript dependency walk proves that fact,
+fails on any unresolved internal edge or reachable forbidden owner, and removes
+only those five already-forbidden files before manifest measurement:
+
+- `packages/surface/src/surface/generated/srd-stat-block-aggregate.d.ts`
+- `packages/surface/src/surface/stat-block-catalog-core.d.ts`
+- `packages/surface/src/surface/stat-block-catalog-data.d.ts`
+- `packages/surface/src/surface/stat-block-catalog.d.ts`
+- `packages/surface/src/surface/stat-block-identity.d.ts`
+
+The 1,000-file coarse safety ceiling remains unchanged. Production emission
+continues to fail closed on the required roots, exact admitted measure, path
+ledger, content ledger, and forbidden-owner reachability.
+
+A fresh production rerun after the concurrent Surface publication
+certificate, verifier, and portable-case updates and the clean-checkout root
+workspace-dependency adaptation reproduced the same 571 files, 10,298,129
+bytes, and both ledgers exactly. Those downstream evidence and package-resolution
+changes therefore do not alter the admitted declaration graph.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

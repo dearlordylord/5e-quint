@@ -79,5 +79,10 @@ describe("SDK consumer protocol boundaries", () => {
     expectCanonicalProtocolRoot("battle-runtime");
     expectCanonicalProtocolRoot("character-creation-runtime");
     expectCanonicalProtocolRoot("character-sheet-runtime");
+    expect(
+      JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8")),
+    ).toMatchObject({
+      devDependencies: { "@dnd/battle-runtime": "workspace:*" },
+    });
   });
 });

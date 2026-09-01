@@ -106,6 +106,7 @@
     "write:opaque-oracle-corpus": "pnpm --filter @dnd/opaque-oracle write:corpus"
   },
   "devDependencies": {
+    "@dnd/battle-runtime": "workspace:*",
     "@effect/platform-node": "4.0.0-rc.112",
     "@effect/vitest": "4.0.0-rc.112",
     "@eslint/js": "^9.39.4",

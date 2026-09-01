@@ -19,6 +19,9 @@ importers:
 
   .:
     devDependencies:
+      '@dnd/battle-runtime':
+        specifier: workspace:*
+        version: link:packages/battle-runtime
       '@effect/platform-node':
         specifier: 4.0.0-rc.112
         version: 4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1)

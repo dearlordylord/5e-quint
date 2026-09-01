@@ -50,6 +50,15 @@ constraints (fourteen changed keyword leaves). The remaining graph changes are
 reference extraction/factoring and removal of one structurally subsumed
 Barbarian general-feature branch from `51307f83f`.
 
+The final convergence repair also synchronizes Life Bond's
+`caster_heal_link.rangeFeet` publication contract with its existing decoded
+positive-integer domain. At the one reachable owning schema node, the
+regenerated artifact replaces the unrestricted number branch and Effect's
+three non-finite number string encodings with an integer having minimum 1.
+This is exactly three validation changes: fractional numbers are rejected,
+zero and negative integers are rejected, and `Infinity`, `-Infinity`, and
+`NaN` are rejected. The aggregate bytes are unchanged.
+
 Canonical hashes do not preserve JSON object key order. The certificate
 therefore separately binds the byte-order-only `magic_mouth` delta: the Unit's
 `/mechanics` object moved from anchored-trigger fields first to shared spell
@@ -68,16 +77,16 @@ certificate bytes, requires their candidate digest to equal the comparison
 schema bytes, and then classifies the complete comparison-to-current rooted
 graph. Substituting either intermediate artifact breaks the chain.
 
-The finite graph procedure reverses only the reviewed GM Speed, Fly-hover, and
-`UnitId` narrowings, proves the removed Barbarian member is a structural subset
-of a retained member, treats local `$ref` extraction and associative,
-set-valued `anyOf` factoring transparently, and applies joint partition
-refinement to both rooted graphs. Each reversal is authorized by an exact
-reachable JSON pointer and the canonical hashes of the node before and after
-that reversal. An equivalent-looking node at another or unreachable location
-does not inherit the classification. Any remaining changed region fails
-closed, and malformed or non-converging graph analysis is reported as typed
-invalid evidence rather than escaping the verifier.
+The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
+`UnitId`, and Life Bond range narrowings, proves the removed Barbarian member
+is a structural subset of a retained member, treats local `$ref` extraction
+and associative, set-valued `anyOf` factoring transparently, and applies joint
+partition refinement to both rooted graphs. Each reversal is authorized by an
+exact reachable JSON pointer and the canonical hashes of the node before and
+after that reversal. An equivalent-looking node at another or unreachable
+location does not inherit the classification. Any remaining changed region
+fails closed, and malformed or non-converging graph analysis is reported as
+typed invalid evidence rather than escaping the verifier.
 This is executable evidence about these two finite schema graphs. It is not a
 claim of equivalence for the JSON Schema language in general. The AJV matrix
 still requires each schema to accept its corresponding aggregate and reject

@@ -60,6 +60,12 @@ and its [review rationale](./surface-publication-delta.md). Those artifacts own
 their dynamic membership, record-delta, schema, and digest evidence; this
 report deliberately does not restate those values.
 
+The 2026-09-01 final convergence recertification retains the aggregate bytes
+and narrows the published Life Bond `caster_heal_link.rangeFeet` contract to
+the canonical positive-integer domain. Its exact reachable pointer, node
+hashes, and finite graph proof remain owned by the executable Surface
+certificate rather than this report.
+
 The focused certificate self-tests and pinned verifiers passed on the reviewed
 integration line. The terminal quality receipt is still required because it
 re-executes these checks together with the remaining public quality owners at
@@ -116,17 +122,22 @@ convergence or that the pending #386 terminal public gates have run.
 
 ### Current pre-receipt declaration candidate
 
-After the 2026-09-01 Round-1 standards fixes, the Round-1 standards candidate still
-contains exactly 571 declaration files and the unchanged path ledger
+At immutable implementation source `d83d7e19b`, the current pre-receipt
+candidate contains exactly 571 declaration files and the unchanged path ledger
 `4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`. The
-production emitter measured 10,300,717 bytes, leaving 185,043 bytes below the
+production emitter measured 10,298,129 bytes, leaving 187,631 bytes below the
 unchanged 10 MiB cap; its content ledger is
-`b2e1e35ccda77cd149c468428bcc017196ad6e37a1d2b9d876c2205da24e69d3`. Only
-`packages/surface/src/surface/schema-spell.d.ts` (+1,080 bytes) and
-`packages/surface/src/surface/stat-block-types.d.ts` (+27 bytes) changed from
-the reviewed 10,299,610-byte graph. This is a pre-receipt measurement; it
-does not claim terminal current-tip review convergence or completion of the
-pending #386 public gates.
+`c7cc1ebeaeafaceaa53c820228fb456f2a1b0fefd68390a34ec12bd16dea7f29`.
+Relative to clean `cf55434c1`, 42 declaration contents changed, no admitted path
+changed, and the graph is 2,588 bytes smaller. The emitter also proved that its
+five value-imported Surface catalog/data declarations are unreachable from the
+required declaration roots and removed only those closed forbidden owners
+before measuring the admitted graph. A fresh rerun after the concurrent Surface
+publication evidence and clean-checkout workspace-resolution updates reproduced
+the same measure and ledgers exactly; those downstream changes do not alter the
+admitted declaration graph. This is a pre-receipt measurement; it does not claim
+terminal current-tip review convergence or completion of the pending #386
+public gates.
 
 ## Shipped boundaries and review convergence
 

@@ -855,6 +855,77 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
   }, 180_000);
 
+  test("rejects tampering with the Life Bond range classification pointer", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const classifiedChanges = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(
+                fixtureObjectField(certificate, "artifacts"),
+                "schema",
+              ),
+              "evidence",
+            ),
+            "graphDelta",
+          ),
+          "classifiedChanges",
+        );
+        const rangeClassifications = fixtureArrayField(
+          classifiedChanges,
+          "casterHealLinkRangeFeet",
+        );
+        const first = fixtureObject(
+          rangeClassifications[0],
+          "casterHealLinkRangeFeet[0]",
+        );
+        first.pointer = "/$defs/UnreviewedLifeBond/properties/rangeFeet";
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
+  test("rejects a reachable Life Bond range lookalike outside the certified pointer", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        const definitions = fixtureObjectField(schema, "$defs");
+        definitions.UnreviewedLifeBond = {
+          type: "object",
+          properties: {
+            kind: { type: "string", enum: ["caster_heal_link"] },
+            rangeFeet: { type: "integer", minimum: 1 },
+          },
+          required: ["kind", "rangeFeet"],
+          additionalProperties: false,
+        };
+        fixtureObjectField(schema, "properties").unreviewedLifeBond = {
+          $ref: "#/$defs/UnreviewedLifeBond",
+        };
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
   test("rejects moving a live classified constraint to an unreachable lookalike", () => {
     const result = withFixture(
       (paths) => {
