@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const crypto = require("node:crypto");
+const childProcess = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -49,14 +50,6 @@ const evidenceMetricVerificationOwnerKinds = new Map([
 const trackerCoverageMetrics = new Set([
   "missing-qnt-owner",
   "missing-runtime-owner",
-]);
-const skippedClaimScanDirs = new Set([
-  ".git",
-  ".turbo",
-  "coverage",
-  "dist",
-  "node_modules",
-  "test-results",
 ]);
 const nonRulesCorpusFiles = new Set(["ATTRIBUTION.md"]);
 
@@ -275,22 +268,28 @@ function toRepoPath(filePath, scanRoot = root) {
   return path.relative(scanRoot, filePath).split(path.sep).join("/");
 }
 
-function walkClaimCandidateFiles(dirPath, scanRoot = root, files = []) {
-  if (!fs.existsSync(dirPath)) return files;
-  for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      if (!skippedClaimScanDirs.has(entry.name)) {
-        walkClaimCandidateFiles(
-          path.join(dirPath, entry.name),
-          scanRoot,
-          files,
-        );
-      }
-      continue;
-    }
-    if (entry.isFile()) files.push(path.join(dirPath, entry.name));
-  }
-  return files;
+function claimCandidateFiles(scanRoot = root) {
+  return childProcess
+    .execFileSync(
+      "git",
+      [
+        "ls-files",
+        "-z",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+        "--",
+        "packages",
+        "plans",
+      ],
+      { cwd: scanRoot, encoding: "utf8" },
+    )
+    .split("\0")
+    .filter((repoPath) => repoPath.length > 0)
+    .map((repoPath) => path.join(scanRoot, repoPath))
+    .filter(
+      (filePath) => fs.existsSync(filePath) && fs.lstatSync(filePath).isFile(),
+    );
 }
 
 function parseRawCoverageClaimsFromText(text, ownerPath) {
@@ -316,18 +315,10 @@ function parseRawCoverageClaimsFromText(text, ownerPath) {
 }
 
 function scanRawCoverageClaims(scanRoot = root) {
-  const sourceDirs = ["packages", "plans"].map((name) =>
-    path.join(scanRoot, name),
-  );
-  return sourceDirs.flatMap((sourceDir) =>
-    walkClaimCandidateFiles(sourceDir, scanRoot).flatMap((filePath) => {
-      const text = fs.readFileSync(filePath, "utf8");
-      return parseRawCoverageClaimsFromText(
-        text,
-        toRepoPath(filePath, scanRoot),
-      );
-    }),
-  );
+  return claimCandidateFiles(scanRoot).flatMap((filePath) => {
+    const text = fs.readFileSync(filePath, "utf8");
+    return parseRawCoverageClaimsFromText(text, toRepoPath(filePath, scanRoot));
+  });
 }
 
 function claimKey(ownerPath, kind, requirementId) {
@@ -958,6 +949,9 @@ function withFixtureRoot(fn) {
     path.join(root, ".raw-coverage-check-fixture-"),
   );
   try {
+    childProcess.execFileSync("git", ["init", "--quiet"], {
+      cwd: fixtureRoot,
+    });
     fs.mkdirSync(path.join(fixtureRoot, "packages/proofs"), {
       recursive: true,
     });
@@ -1016,6 +1010,17 @@ function runSelfTests() {
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
     writeFixtureVerificationClaims(fixtureRoot);
+    fs.writeFileSync(path.join(fixtureRoot, ".gitignore"), "coverage_tmp*/\n");
+    fs.mkdirSync(
+      path.join(fixtureRoot, "packages/runtime/coverage_tmp_current"),
+    );
+    fs.writeFileSync(
+      path.join(
+        fixtureRoot,
+        "packages/runtime/coverage_tmp_current/owner.ts.html",
+      ),
+      "// RAW-COVERAGE: runtime-owner RAW-IGNORED-GENERATED-001\n",
+    );
     validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
   });
 
