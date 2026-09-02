@@ -1681,9 +1681,12 @@ function traceSchemaGraphDifference(
     rightValue,
     context.colors,
   );
-  if (leftColor === rightColor) return path;
   const pair = `${leftColor}:${rightColor}`;
-  if (seen.has(pair)) return `${path} (recursive class mismatch)`;
+  if (leftColor === rightColor || seen.has(pair)) {
+    return leftColor === rightColor
+      ? path
+      : `${path} (recursive class mismatch)`;
+  }
   seen.add(pair);
   if (Array.isArray(leftValue) && Array.isArray(rightValue)) {
     return traceSchemaGraphArrayDifference(
