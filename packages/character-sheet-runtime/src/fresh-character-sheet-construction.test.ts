@@ -14,6 +14,7 @@ import {
   druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
   resourceCount,
   requireSuccess,
+  statBlockCatalog,
   unitLibrary,
   wizardBuild,
 } from "./test-support.test-support.ts";
@@ -27,23 +28,32 @@ import {
   parseFreshCharacterSheet,
 } from "./index.ts";
 import { freshCharacterSheetFromParsedState } from "./fresh-character-sheet.ts";
+import { createFreshCharacterSheetWithStatBlockCatalog } from "./source-free-construction.ts";
 
 describe("fresh Character Sheet construction", () => {
   test("uses the canonical Stat Block catalog for fresh Wild Shape state", () => {
+    const input = {
+      characterId: characterSheetId("character:fresh-druid-missing-catalog"),
+      build: druidCircleLandBuild({ druidLevel: 5 }),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+      druidCircleLand: { land: "temperate" as const },
+      druidWildShapeKnownFormStatBlockIds:
+        druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+    };
     const sheet = requireSuccess(
-      createFreshCharacterSheetWithoutFixtureCatalog({
-        characterId: characterSheetId("character:fresh-druid-missing-catalog"),
-        build: druidCircleLandBuild({ druidLevel: 5 }),
-        tempHp: Hp(0),
-        hitPointMaximumReduction: Hp(0),
-        conditions: [],
-        unitLibrary,
-        druidCircleLand: { land: "temperate" },
-        druidWildShapeKnownFormStatBlockIds:
-          druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+      createFreshCharacterSheetWithoutFixtureCatalog(input),
+    );
+    const injectedSheet = requireSuccess(
+      createFreshCharacterSheetWithStatBlockCatalog({
+        ...input,
+        statBlockCatalog,
       }),
     );
 
+    expect(injectedSheet).toEqual(sheet);
     expect(characterSheetDruidWildShapeKnownForms(sheet)?.statBlockIds).toEqual(
       druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
     );

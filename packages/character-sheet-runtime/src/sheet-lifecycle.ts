@@ -16,6 +16,7 @@ import {
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Result } from "effect";
 
 import {
@@ -39,7 +40,6 @@ import {
 } from "./spell-slots.ts";
 import {
   druidCircleLandFromInput,
-  druidWildShapeKnownFormsConstruction,
   druidWildShapeKnownFormsFromInput,
   storedBookOfShadowsDruidCircleLandSelectionIssue,
 } from "./druid-features.ts";
@@ -60,7 +60,6 @@ import {
   SPELL_RECIPIENT_REST_LOCKOUT_TAG,
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
-  CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES,
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   CHARACTER_SHEET_EXHAUSTION_LEVELS,
   characterSheetId,
@@ -73,18 +72,16 @@ import {
   type CharacterSheetHeroicInspiration,
   type CharacterSheetInput,
   type CharacterSheetRebuildInput,
-  type CharacterSheetHitPoints,
   type CharacterSheetIssue,
   type CharacterSheetRestFeatureUse,
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetSpentHitDiePool,
 } from "./sheet-types.ts";
 import {
-  FRESH_CHARACTER_SHEET_ZERO_HP,
-  freshCharacterSheet,
   freshCharacterSheetFromParsedState,
   type FreshCharacterSheet,
 } from "./fresh-character-sheet.ts";
+import { createFreshCharacterSheetWithStatBlockCatalog } from "./fresh-character-sheet-construction-core.ts";
 import {
   characterBuildHasBookOfShadows,
   isNonSpellcastingBuild,
@@ -108,248 +105,10 @@ export function createFreshCharacterSheet(
   FreshCharacterSheet,
   ReadonlyNonEmptyArray<CharacterSheetConstructionIssue>
 > {
-  const issues: CharacterSheetConstructionIssue[] = [];
-  const hitPoints = freshCharacterSheetHitPoints(input);
-  if (Result.isFailure(hitPoints)) {
-    issues.push({ code: "hitPointStateInvalid" });
-  }
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: in-play HP, condition, rest, or resource state must be empty at construction. */
-  if (input.tempHp !== 0) {
-    issues.push({ code: "temporaryHitPointsNotZero" });
-  }
-  if (input.hitPointMaximumReduction !== 0) {
-    issues.push({ code: "hitPointMaximumReductionNotZero" });
-  }
-  if ((input.exhaustionLevel ?? 0) !== 0) {
-    issues.push({ code: "exhaustionNotZero" });
-  }
-  if (input.conditions.length !== 0) {
-    issues.push({ code: "conditionsNotEmpty" });
-  }
-  if ((input.spentHitDice?.length ?? 0) !== 0) {
-    issues.push({ code: "spentHitDiceNotEmpty" });
-  }
-  if ((input.restFeatureUses?.length ?? 0) !== 0) {
-    issues.push({ code: "restFeatureUsesNotEmpty" });
-  }
-  if ((input.resourceExpenditures?.length ?? 0) !== 0) {
-    issues.push({ code: "resourceExpendituresNotEmpty" });
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Heroic Inspiration must begin in the explicit none state. */
-  if (
-    input.heroicInspiration !== undefined &&
-    input.heroicInspiration.tag !== "none"
-  ) {
-    issues.push({ code: "heroicInspirationNotEmpty" });
-  }
-  /* v8 ignore stop -- @preserve */
-  const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Book of Shadows presence disagrees with the selected build. */
-  if (Result.isFailure(bookOfShadowsPresence)) {
-    issues.push({ code: "bookOfShadowsPresenceInvalid" });
-  }
-  /* v8 ignore stop -- @preserve */
-  const druidWildShapeKnownForms = druidWildShapeKnownFormsConstruction(input);
-  if (Result.isFailure(druidWildShapeKnownForms)) {
-    issues.push(...druidWildShapeKnownForms.failure);
-  }
-  const druidCircleLand = druidCircleLandFromInput(input);
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Circle of the Land state is unreadable or disagrees with the selected build and Book of Shadows state. */
-  if (Result.isFailure(druidCircleLand)) {
-    issues.push({ code: "druidCircleLandInvalid" });
-  } else if (
-    Result.isFailure(
-      storedBookOfShadowsDruidCircleLandSelectionIssue({
-        build: input.build,
-        unitLibrary: input.unitLibrary,
-        circleLand: druidCircleLand.success,
-      }),
-    )
-  ) {
-    issues.push({ code: "druidCircleLandInvalid" });
-  }
-  /* v8 ignore stop -- @preserve */
-  const fiendishResilience = fiendishResilienceFromInput(input);
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Fiendish Resilience state disagrees with the selected build. */
-  if (Result.isFailure(fiendishResilience)) {
-    issues.push({ code: "fiendishResilienceInvalid" });
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const spellSlotState = isSpellcastingBuild(input.build)
-    ? spellSlotStateFromInput({
-        build: input.build,
-        unitLibrary: input.unitLibrary,
-        ...(input.spellSlotExpenditures === undefined
-          ? {}
-          : { spellSlotExpenditures: input.spellSlotExpenditures }),
-      })
-    : Result.succeed(undefined);
-  if (isNonSpellcastingBuild(input.build)) {
-    if (input.spellSlotExpenditures !== undefined) {
-      issues.push({ code: "spellSlotStateUnexpected" });
-    }
-    if (input.pactSlots !== undefined) {
-      issues.push({ code: "pactSlotStateUnexpected" });
-    }
-  } else {
-    /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: a spellcaster cannot begin with an invalid or expended ordinary Spell Slot projection. */
-    if (
-      Result.isFailure(spellSlotState) ||
-      input.spellSlotExpenditures?.some(
-        (expenditure) => expenditure.expended !== 0,
-      ) === true
-    ) {
-      issues.push({ code: "spellSlotStateInvalid" });
-    }
-    /* v8 ignore stop -- @preserve */
-  }
-  const pactSlotExpenditure = isSpellcastingBuild(input.build)
-    ? pactSlotExpenditureFromInput({
-        build: input.build,
-        ...(input.pactSlots === undefined
-          ? {}
-          : { pactSlots: input.pactSlots }),
-      })
-    : Result.succeed(undefined);
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: a spellcaster cannot begin with invalid or expended Pact Slots. */
-  if (
-    isSpellcastingBuild(input.build) &&
-    (Result.isFailure(pactSlotExpenditure) ||
-      (input.pactSlots?.expended ?? 0) !== 0)
-  ) {
-    issues.push({ code: "pactSlotStateInvalid" });
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const firstIssue = issues[0];
-  if (firstIssue !== undefined) {
-    const orderedIssues = [...issues].sort(compareConstructionIssues);
-    const firstOrderedIssue = orderedIssues[0];
-    /* v8 ignore start -- @preserve -- A nonempty accumulated issue list necessarily remains nonempty after sorting. */
-    if (firstOrderedIssue === undefined) {
-      throw new Error("Character Sheet construction issue ordering failed.");
-    }
-    /* v8 ignore stop -- @preserve */
-    return Result.fail([firstOrderedIssue, ...orderedIssues.slice(1)]);
-  }
-
-  const validHitPoints = requireFreshConstructionFact(hitPoints);
-  const knownForms = requireFreshConstructionFact(druidWildShapeKnownForms);
-  const circleLand = requireFreshConstructionFact(druidCircleLand);
-  const resilience = requireFreshConstructionFact(fiendishResilience);
-  const common = {
-    tag: "available" as const,
-    characterId: input.characterId,
-    hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
-    exhaustionLevel: 0 as const,
-    hitPoints: validHitPoints,
-    conditions: [] as const,
-    spentHitDice: [] as const,
-    restFeatureUses: [] as const,
-    resourceExpenditures: [] as const,
-    heroicInspiration: { tag: "none" as const },
-    companion: { tag: "none" as const },
-    ...(knownForms === undefined
-      ? {}
-      : { druidWildShapeKnownForms: knownForms }),
-    ...(circleLand === undefined ? {} : { druidCircleLand: circleLand }),
-    ...(resilience === undefined ? {} : { fiendishResilience: resilience }),
-  };
-  if (isNonSpellcastingBuild(input.build)) {
-    return Result.succeed(
-      freshCharacterSheet({ ...common, build: input.build }),
-    );
-  }
-  /* v8 ignore start -- @preserve -- The parsed CharacterBuild union is exhaustive between spellcasting and non-spellcasting variants. */
-  if (!isSpellcastingBuild(input.build)) {
-    return Result.fail([{ code: "spellSlotStateInvalid" }]);
-  }
-  /* v8 ignore stop -- @preserve */
-  return Result.succeed(
-    freshCharacterSheet({
-      ...common,
-      build: input.build,
-      bookOfShadowsPresence: requireFreshConstructionFact(
-        bookOfShadowsPresence,
-      ),
-      spellSlotExpenditures: [],
-      createdSpellSlots: [],
-      pactSlotExpenditure: undefined,
-    }),
-  );
-}
-
-type FreshCharacterSheetHitPoints = Extract<
-  CharacterSheetHitPoints,
-  { readonly tag: "positive" }
-> & { readonly tempHp: Hp & 0 };
-
-function freshCharacterSheetHitPoints(
-  input: CharacterSheetInput,
-): Result.Result<FreshCharacterSheetHitPoints, CharacterSheetIssue> {
-  const capacity = characterSheetHitPointCapacity(input);
-  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: current HP must equal the build-derived effective maximum. */
-  if (
-    Result.isFailure(capacity) ||
-    capacity.success.currentHp !== capacity.success.hitPointMaximum
-  ) {
-    return characterSheetIssue(
-      "Fresh Character Sheet requires full current Hit Points.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const hitPoints = characterSheetHitPoints({
+  return createFreshCharacterSheetWithStatBlockCatalog({
     ...input,
-    currentHp: capacity.success.currentHp,
-    tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+    statBlockCatalog: input.statBlockCatalog ?? srdStatBlockCatalog,
   });
-  /* v8 ignore start -- @preserve -- Internal invariant: full positive build capacity above constructs a conscious positive-HP fresh state. */
-  if (Result.isFailure(hitPoints) || hitPoints.success.tag !== "positive") {
-    return characterSheetIssue(
-      "Fresh Character Sheet requires positive conscious Hit Point state.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  return Result.succeed({
-    ...hitPoints.success,
-    tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
-  });
-}
-
-function compareConstructionIssues(
-  left: CharacterSheetConstructionIssue,
-  right: CharacterSheetConstructionIssue,
-): number {
-  /* v8 ignore start -- @preserve -- This ordering is exercised only for batches of malformed fresh-sheet inputs, including multiple Stat Block-specific issues. */
-  if ("statBlockId" in left && "statBlockId" in right) {
-    const identityOrder =
-      left.statBlockId < right.statBlockId
-        ? -1
-        : left.statBlockId > right.statBlockId
-          ? 1
-          : 0;
-    return identityOrder !== 0
-      ? identityOrder
-      : CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(left.code) -
-          CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(right.code);
-  }
-  return (
-    CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(left.code) -
-    CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(right.code)
-  );
-  /* v8 ignore stop -- @preserve */
-}
-
-function requireFreshConstructionFact<Value, Error>(
-  result: Result.Result<Value, Error>,
-): Value {
-  /* v8 ignore next -- @preserve -- Internal invariant: createFreshCharacterSheet calls this only after accumulating no issue from the same parsed fact. */
-  if (Result.isSuccess(result)) return result.success;
-  /* v8 ignore start -- @preserve -- Internal invariant: the failure branch is unreachable after the immediately preceding no-issues gate. */
-  throw new Error("Fresh Character Sheet facts were already accumulated.");
-  /* v8 ignore stop -- @preserve */
 }
 
 export function rebuildCharacterSheet(

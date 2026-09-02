@@ -37,7 +37,7 @@ import {
   type CharacterSheetShortRestInput,
   type CharacterSheetLongRestInput,
 } from "./sheet-types.ts";
-import { isRecord, recordHasExactKeys } from "./stored-sheet-parser.ts";
+import { isRecord, recordHasExactKeys } from "./record-shape.ts";
 
 const FIENDISH_RESILIENCE_UNIT_ID = authoredUnitId(
   "warlock_fiendish_resilience",

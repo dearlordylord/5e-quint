@@ -3,7 +3,15 @@
 The package root is the complete application-facing API. The
 `@dnd/character-sheet-runtime/consumer-protocol` subpath is the narrower
 composition and external-consumer contract; the root derives those same
-exports from that single protocol owner.
+exports from that single protocol owner. The
+`@dnd/character-sheet-runtime/fresh-character-sheet-schema` subpath is the
+narrow structural schema contract for consumers that publish fresh-sheet
+projections and construction issues without loading the application API.
+The `@dnd/character-sheet-runtime/source-free-construction` subpath requires an
+installed Stat Block catalog and shares the canonical fresh-sheet construction
+algorithm without importing the root package's bundled SRD catalog default.
+The `@dnd/character-sheet-runtime/battle-init-protocol` subpath is the narrow
+Character Sheet projection contract used to initialize Battle combatants.
 
 Local Character Sheet runtime for player-character in-play state.
 
