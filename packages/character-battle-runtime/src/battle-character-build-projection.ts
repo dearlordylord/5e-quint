@@ -504,74 +504,62 @@ function armorDefenseBonus(
       ];
 }
 
-export function characterAttackActionOption(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-  classLevels: readonly CharacterBattleClassLevelInit[] = [],
-  pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
-  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[] = [],
-): Result.Result<
-  CharacterBattleCreatureInitWeaponAttack | null,
-  BattleCreatureInitIssue
-> {
-  const loadoutWeapon = build.equipment.loadout.weapon;
-  if (loadoutWeapon === undefined) {
-    return Result.succeed(null);
-  }
-  const selectedWeapon = characterEquipmentItemSourceFromId(
-    loadoutWeapon.itemId,
-  ).unitId;
-  const selectedWeaponItemId = loadoutWeapon.itemId;
+export type CharacterWeaponAttackActionOptions = {
+  readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
+  readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
+};
 
-  return characterWeaponAttackActionOption(
-    selectedWeapon,
-    selectedWeaponItemId,
-    build,
-    unitLibrary,
-    classLevels,
-    pactBladeBondedWeaponItemId,
-    weaponMasteries,
-  );
-}
-
-export function characterOffHandAttackActionOption(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-  classLevels: readonly CharacterBattleClassLevelInit[] = [],
-  pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
-  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[] = [],
-): Result.Result<
-  CharacterBattleCreatureInitWeaponAttack | undefined,
-  BattleCreatureInitIssue
-> {
-  const loadoutWeapon = build.equipment.loadout.offHandWeapon;
-  if (loadoutWeapon === undefined) {
-    return Result.succeed(undefined);
+export function characterWeaponAttackActionOptions(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+  readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
+}): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
+  const loadoutWeapon = input.build.equipment.loadout.weapon;
+  const attack =
+    loadoutWeapon === undefined
+      ? Result.succeed(null)
+      : characterWeaponAttackActionOption({
+          unitId: characterEquipmentItemSourceFromId(loadoutWeapon.itemId)
+            .unitId,
+          itemId: loadoutWeapon.itemId,
+          build: input.build,
+          unitLibrary: input.unitLibrary,
+          weaponMasteries: input.weaponMasteries,
+          classLevels: input.classLevels,
+          pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
+        });
+  if (Result.isFailure(attack)) {
+    return Result.fail(attack.failure);
   }
-  const selectedWeapon = characterEquipmentItemSourceFromId(
-    loadoutWeapon.itemId,
-  ).unitId;
-  const selectedWeaponItemId = loadoutWeapon.itemId;
 
-  const option = characterWeaponAttackActionOption(
-    selectedWeapon,
-    selectedWeaponItemId,
-    build,
-    unitLibrary,
-    classLevels,
-    pactBladeBondedWeaponItemId,
-    weaponMasteries,
-  );
-  if (Result.isFailure(option)) {
-    return battleCreatureInitIssue(
-      battleCreatureInitIssueMessage(option.failure),
-    );
+  const offHandLoadoutWeapon = input.build.equipment.loadout.offHandWeapon;
+  if (offHandLoadoutWeapon === undefined) {
+    return Result.succeed({ attack: attack.success, offHandAttack: undefined });
   }
-  return option.success === null
+
+  const offHandAttack = characterWeaponAttackActionOption({
+    unitId: characterEquipmentItemSourceFromId(offHandLoadoutWeapon.itemId)
+      .unitId,
+    itemId: offHandLoadoutWeapon.itemId,
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    weaponMasteries: input.weaponMasteries,
+    classLevels: input.classLevels,
+    pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
+  });
+  if (Result.isFailure(offHandAttack)) {
+    return Result.fail(offHandAttack.failure);
+  }
+  return offHandAttack.success === null
     ? battleCreatureInitIssue(
         "Off-hand weapon loadout must reference a Weapon Unit.",
       )
-    : Result.succeed(option.success);
+    : Result.succeed({
+        attack: attack.success,
+        offHandAttack: offHandAttack.success,
+      });
 }
 
 export function characterBattleLoadoutFromBuild(
@@ -708,19 +696,19 @@ export function characterPactBladeBondedWeaponItemId(input: {
   return Result.succeed(input.itemId);
 }
 
-function characterWeaponAttackActionOption(
-  unitId: UnitRecord["id"],
-  itemId: CharacterEquipmentItemId,
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-  classLevels: readonly CharacterBattleClassLevelInit[],
-  pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
-  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): Result.Result<
+function characterWeaponAttackActionOption(input: {
+  readonly unitId: UnitRecord["id"];
+  readonly itemId: CharacterEquipmentItemId;
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+}): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
 > {
-  const unit = getRequiredUnit(unitLibrary, unitId);
+  const unit = getRequiredUnit(input.unitLibrary, input.unitId);
   if (Result.isFailure(unit)) {
     return battleCreatureInitIssue(
       battleCreatureInitIssueMessage(unit.failure),
@@ -732,8 +720,8 @@ function characterWeaponAttackActionOption(
 
   const executionWeapon = characterExecutionWeapon(
     unit.success,
-    unitLibrary,
-    weaponMasteries,
+    input.unitLibrary,
+    input.weaponMasteries,
   );
   if (Result.isFailure(executionWeapon)) {
     return battleCreatureInitIssue(executionWeapon.failure.message);
@@ -745,15 +733,15 @@ function characterWeaponAttackActionOption(
       weapon: executionWeapon.success,
       ability: "str",
       abilityModifier: battleAbilityModifier(
-        scoreModifier(build.abilityScores.str),
+        scoreModifier(input.build.abilityScores.str),
       ),
     }),
     ability: "str",
   } as const satisfies PhysicalAbilityWeaponAttack;
   const martialArts = martialArtsAttackProjectionForBuild({
-    build,
-    unitLibrary,
-    classLevels,
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    classLevels: input.classLevels,
   });
   if (Result.isFailure(martialArts)) {
     return battleCreatureInitIssue(
@@ -763,15 +751,15 @@ function characterWeaponAttackActionOption(
   const projectedAttack = characterMartialArtsWeaponAttack(
     baseAttack,
     unit.success,
-    build,
+    input.build,
     martialArts.success,
   );
   return Result.succeed(
     pactBladeWeaponAttack(
       projectedAttack,
-      build,
-      itemId,
-      pactBladeBondedWeaponItemId,
+      input.build,
+      input.itemId,
+      input.pactBladeBondedWeaponItemId,
     ),
   );
 }
