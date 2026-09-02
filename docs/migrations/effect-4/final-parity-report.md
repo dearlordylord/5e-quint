@@ -286,13 +286,13 @@ is intentionally unchanged by this report.
 
 ## Closure status
 
-| #386 acceptance area                                   | Current disposition                                                                       |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Effect 3 removal and controlled-red exception closure  | Complete in source; zero-diagnostic inventory retained as historical closure evidence     |
-| Exact installed and shipped Effect cohort              | Complete and verifier-owned                                                               |
-| Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                            |
-| Packaged/containerized lifecycle boundaries            | Complete in focused evidence and terminal clean-consumer check                            |
-| Vite large-chunk advisory                              | Reconfirmed as a non-failing terminal build advisory                                      |
-| RAW/domain/QNT/runtime/architecture review convergence | Complete; final tooling repairs reached zero-finding Standards and Spec re-review         |
-| Public `typecheck`, `test`, and `quality:milestone`    | Complete at the certified implementation revision                                         |
-| Live #386 and SR-00 receipt closure                    | Terminal evidence and receipt-only diff attestation complete; ledger/issue updates follow |
+| #386 acceptance area                                   | Current disposition                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Effect 3 removal and controlled-red exception closure  | Complete in source; zero-diagnostic inventory retained as historical closure evidence                                                      |
+| Exact installed and shipped Effect cohort              | Complete and verifier-owned                                                                                                                |
+| Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                                                                             |
+| Packaged/containerized lifecycle boundaries            | Complete in focused evidence and terminal clean-consumer check                                                                             |
+| Vite large-chunk advisory                              | Reconfirmed as a non-failing terminal build advisory                                                                                       |
+| RAW/domain/QNT/runtime/architecture review convergence | Complete; two fresh complete rounds converged with zero findings after one report repair                                                   |
+| Public `typecheck`, `test`, and `quality:milestone`    | Complete at the certified implementation revision                                                                                          |
+| Live #386 and SR-00 receipt closure                    | Complete; [terminal #386 receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5515847382) published and issue closed |
