@@ -343,20 +343,12 @@ export function battleCreatureInitFromCharacterBuild(
         }),
       );
     }
-    const pactBladeBondedWeaponItemId =
-      yield* characterPactBladeBondedWeaponItemId({
-        build: input.build,
-        unitLibrary: input.unitLibrary,
-        itemId: input.pactBladeBondedWeaponItemId,
-      });
-    const weaponAttackOptions = yield* characterWeaponAttackActionOptions({
+    const weaponAttackOptions = yield* characterBattleWeaponAttackOptions({
       build: input.build,
       unitLibrary: input.unitLibrary,
       weaponMasteries: weaponMasteries.success,
       classLevels,
-      ...(pactBladeBondedWeaponItemId === undefined
-        ? {}
-        : { pactBladeBondedWeaponItemId }),
+      pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
     });
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
     const unitFeatures = yield* characterBattleFeatures(
@@ -488,6 +480,32 @@ export function battleCreatureInitFromCharacterBuild(
           : { druidWildShapeAvailableForms }),
       },
     };
+  });
+}
+
+function characterBattleWeaponAttackOptions(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"];
+  readonly classLevels: CharacterBattleCreatureInit["classLevels"];
+  readonly pactBladeBondedWeaponItemId: CharacterBuildCreatureInput["pactBladeBondedWeaponItemId"];
+}) {
+  return Result.gen(function* () {
+    const pactBladeBondedWeaponItemId =
+      yield* characterPactBladeBondedWeaponItemId({
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        itemId: input.pactBladeBondedWeaponItemId,
+      });
+    return yield* characterWeaponAttackActionOptions({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      weaponMasteries: input.weaponMasteries,
+      classLevels: input.classLevels,
+      ...(pactBladeBondedWeaponItemId === undefined
+        ? {}
+        : { pactBladeBondedWeaponItemId }),
+    });
   });
 }
 
