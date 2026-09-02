@@ -314,6 +314,15 @@ mappings restore both emission-time internal-edge validation and relocated
 consumer typechecking. The coarse file ceiling and the seven forbidden Surface
 runtime/data owners remain unchanged.
 
+The subsequent finite-oracle recertification at integration source
+`849c12109` retains the candidate's 50,667,014 serialized bytes and all 8,965
+reviewed operation-and-segment identities. Only the existing `byteLength` and
+`sha256` metadata leaves for
+`scripts/raw-swarm/sdk-player/declarations.tsconfig.json` change, under their
+existing `raw-swarm-effect-runtime-artifacts` classification. The Effect oracle
+certificate owns the resulting candidate and identity digests; no delta site,
+classification, collection authority, or runtime behavior is added.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted
