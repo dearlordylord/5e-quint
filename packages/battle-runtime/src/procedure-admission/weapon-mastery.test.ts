@@ -20,6 +20,12 @@ const canonicalMasteries = [
   ["mastery_topple", "weaponMasteryTopple"],
 ] as const;
 
+const canonicalUnsupportedMasteries = [
+  "mastery_graze",
+  "mastery_nick",
+  "mastery_vex",
+] as const;
+
 describe("atomic Weapon Mastery procedure admission", () => {
   test.each(canonicalMasteries)(
     "%s projects source-free ready facts with exact whole-root evidence",
@@ -41,6 +47,22 @@ describe("atomic Weapon Mastery procedure admission", () => {
             unowned: [],
           },
         },
+      });
+    },
+  );
+
+  test.each(canonicalUnsupportedMasteries)(
+    "%s remains represented but unsupported by Battle admission",
+    (unitId) => {
+      const unit = unitLibrary.requireUnit(unitId);
+
+      expect(admitWeaponMasteryProcedure(unit)).toMatchObject({
+        tag: "rejected",
+        issues: [
+          {
+            procedure: "unrecognizedWeaponMastery",
+          },
+        ],
       });
     },
   );
@@ -70,7 +92,10 @@ describe("atomic Weapon Mastery procedure admission", () => {
     "%s rejects malformed atomic mechanics",
     (unitId, effectPatch) => {
       const unit = unitLibrary.requireUnit(unitId);
-      if (unit.kind !== "mastery") {
+      if (
+        unit.kind !== "mastery" ||
+        unit.mechanics.family !== "on_hit_trigger"
+      ) {
         throw new Error("Expected a mastery record.");
       }
       const malformed = unitMechanicsVariant(unit, {
@@ -99,7 +124,12 @@ describe("atomic Weapon Mastery procedure admission", () => {
   test("rejects malformed Topple and Cleave nested effects", () => {
     const topple = unitLibrary.requireUnit("mastery_topple");
     const cleave = unitLibrary.requireUnit("mastery_cleave");
-    if (topple.kind !== "mastery" || cleave.kind !== "mastery") {
+    if (
+      topple.kind !== "mastery" ||
+      topple.mechanics.family !== "on_hit_trigger" ||
+      cleave.kind !== "mastery" ||
+      cleave.mechanics.family !== "on_hit_trigger"
+    ) {
       throw new Error("Expected mastery records.");
     }
     const malformedTopple = unitMechanicsVariant(topple, {
@@ -132,7 +162,9 @@ describe("atomic Weapon Mastery procedure admission", () => {
 
   test("rejects a represented mastery outside the admitted atomic five", () => {
     const sap = unitLibrary.requireUnit("mastery_sap");
-    if (sap.kind !== "mastery") throw new Error("Expected Sap mastery.");
+    if (sap.kind !== "mastery" || sap.mechanics.family !== "on_hit_trigger") {
+      throw new Error("Expected Sap mastery.");
+    }
     const vexStyle = unitMechanicsVariant(sap, {
       id: "synthetic_vex_style_mastery",
       mechanics: {
