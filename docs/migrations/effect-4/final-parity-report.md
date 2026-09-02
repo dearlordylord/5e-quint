@@ -163,14 +163,18 @@ The application build passed in the terminal milestone while retaining Vite's
 existing large-chunk advisory. The advisory was non-failing and does not alter
 the certified result.
 
-Reviewer loops covered RAW traceability, ubiquitous language and domain shape,
-QNT/runtime parity, architecture and connascence, and repository Standards and
-Spec compliance. Reasonable findings were repaired and reached zero-finding
-re-review. The final collector and reconciliation-evidence repairs then reached
-zero-finding Standards and Spec re-review. A fresh RAW citation review was not
-applicable to those final tooling-only changes: they alter evidence discovery,
-Git-fixture isolation, and a coverage threshold, not a rule, runtime semantic,
-QNT model, or authored record.
+Two fresh, independent complete review rounds examined certified implementation
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea` and its report-only receipts through
+`6eb32fcb665f023a3ae6f371a605a9f02b28c82a`. Each round covered local RAW
+traceability and PHB+ safety, ubiquitous language and domain shape, QNT/runtime
+parity, architecture and connascence, repository Standards, and issue #386
+Spec compliance. Round A reported zero findings. Round B found one stale oracle
+certificate chronology in this report; `6eb32fcb6` corrected it from the old
+8,965-identity statement to the terminal 8,993-identity certificate and its
+17-site removal/28-site addition sequence. Independent post-fix re-review by
+both rounds reported zero remaining findings across every axis. The correction
+changed no executable source, rule, QNT model, authored record, certificate, or
+generated artifact.
 
 The final coverage trade-off is explicit. Surface function coverage measured
 1,721 covered functions out of 1,776, or 96.90%; its floor was recalibrated from
