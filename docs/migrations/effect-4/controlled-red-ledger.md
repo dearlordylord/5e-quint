@@ -16,23 +16,23 @@ exception.
 
 ## Scope and ownership
 
-This issue owns the workspace dependency cutover, lockfile regeneration, the
-cohort verifier and root quality gate, the selected Node/tool policy, and this
-ledger. The #374 shared-algebra source, test, connector, and bridge migration
-is complete in this refresh. The remaining source and test API migration is
-downstream work owned by #375 and later issues. No D&D rule behavior, Quint
-model behavior, authored identity, or Effect 3 behavioral-oracle output was
-changed here.
+At the #371/#374 checkpoint, this issue owned the workspace dependency cutover,
+lockfile regeneration, the cohort verifier and root quality gate, the selected
+Node/tool policy, and this ledger. The #374 shared-algebra source, test,
+connector, and bridge migration completed in that refresh. Source and test API
+migration was then downstream work owned by #375 and later issues. That
+checkpoint changed no D&D rule behavior, Quint model behavior, authored
+identity, or Effect 3 behavioral-oracle output.
 
 The baseline oracle remains the authority for migration parity:
 [`baseline-certification.md`](./baseline-certification.md) and
 [`effect3-behavioral-oracle.json`](./effect3-behavioral-oracle.json).
 
-The remaining `effect/Either` imports and v3-shaped schemas are intentionally
-not changed by this cutover or #374. They are the downstream source/test
-migration owned by #375 and later issues; this ledger makes their red state
-explicit so the dependency gate can be activated without a compatibility
-facade, cast, or waiver.
+At that checkpoint, the remaining `effect/Either` imports and v3-shaped schemas
+were intentionally not changed by the cutover or #374. They were the downstream
+source/test migration owned by #375 and later issues; this ledger recorded that
+historical red state so the dependency gate could be activated without a
+compatibility facade, cast, or waiver.
 
 ## Selected cohort and invariants
 
