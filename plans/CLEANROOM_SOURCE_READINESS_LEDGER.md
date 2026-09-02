@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`
 - Next action: converge the canonical static-admission foundation and
   parse-once execution carrier, then divide compiler-enforced profile-owner
-  migrations and exact 98-complete/23-partial/74-no-owner observation coverage
+  migrations and exact 99-complete/22-partial/74-no-owner observation coverage
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded

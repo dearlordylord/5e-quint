@@ -11,7 +11,6 @@ import type {
   DcSource,
   DiceExpr,
   Size,
-  Skill,
 } from "@dnd/surface/surface/types";
 import type {
   BattleEffectExecutionRef,
@@ -82,8 +81,6 @@ import type {
 } from "./spell-invocation-vocabulary.ts";
 import type { WeaponAttackOverrideSpellProcedureExecution } from "./weapon-attack-override.ts";
 import { Schema } from "effect";
-
-type SurfaceSkill = Skill;
 
 export type SpellRuleExecutionFactsOwner = {
   readonly spellRuleFacts: SpellRuleExecutionFacts;
@@ -988,7 +985,6 @@ export type RollModifierWithoutAbilityChoiceApplicationSpellProcedureExecution =
       | LeveledSpellInvocationResource
       | NoSpellInvocationResource;
     readonly saveGate: RollModifierSpellSaveGate | null;
-    readonly skillChoices: readonly SurfaceSkill[] | null;
     readonly targeting: RollModifierSpellTargeting;
   };
 
@@ -1005,7 +1001,6 @@ export type RollModifierWithAbilityChoiceApplicationSpellProcedureExecution =
       | LeveledSpellInvocationResource
       | NoSpellInvocationResource;
     readonly saveGate: RollModifierSpellSaveGate | null;
-    readonly skillChoices: null;
     readonly targeting: RollModifierSpellTargeting;
   };
 

@@ -14,10 +14,18 @@ export function armorClass(value: number): ArmorClass {
 }
 
 export type ArmorClassDelta = Integer & Brand.Brand<"ArmorClassDelta">;
-const ArmorClassDelta = Brand.all(Integer, Brand.nominal<ArmorClassDelta>());
+const ArmorClassDeltaBrand = Brand.all(
+  Integer,
+  Brand.nominal<ArmorClassDelta>(),
+);
+export const ArmorClassDeltaSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.brand("Integer"),
+  Schema.brand("ArmorClassDelta"),
+);
 
 export function armorClassDelta(value: number): ArmorClassDelta {
-  return ArmorClassDelta(Math.floor(value));
+  return ArmorClassDeltaBrand(Math.floor(value));
 }
 
 export type AbilityModifier = Integer & Brand.Brand<"AbilityModifier">;

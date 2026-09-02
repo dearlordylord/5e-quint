@@ -22,6 +22,8 @@ The last class records pre-existing Stat Blocks moving from the reduced Effect
 mechanics, resources, communication, and ordered procedures. The certificate
 schema couples the changed-record classes to `changed`; `added` and `removed`
 accept only the catalog-membership class.
+Persistent rule facts include Pass without Trace's typed movement-trace
+suppression alongside its existing Stealth modifier.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -78,15 +80,16 @@ schema bytes, and then classifies the complete comparison-to-current rooted
 graph. Substituting either intermediate artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
-`UnitId`, and Life Bond range narrowings, proves the removed Barbarian member
-is a structural subset of a retained member, treats local `$ref` extraction
-and associative, set-valued `anyOf` factoring transparently, and applies joint
-partition refinement to both rooted graphs. Each reversal is authorized by an
-exact reachable JSON pointer and the canonical hashes of the node before and
-after that reversal. An equivalent-looking node at another or unreachable
-location does not inherit the classification. Any remaining changed region
-fails closed, and malformed or non-converging graph analysis is reported as
-typed invalid evidence rather than escaping the verifier.
+`UnitId`, Life Bond range, and movement-trace effect narrowings, proves the
+removed Barbarian member is a structural subset of a retained member, treats
+local `$ref` extraction and associative, set-valued `anyOf` factoring
+transparently, and applies joint partition refinement to both rooted graphs.
+Each reversal is authorized by an exact reachable JSON pointer and the
+canonical hashes of the node before and after that reversal. An equivalent-
+looking node at another or unreachable location does not inherit the
+classification. Any remaining changed region fails closed, and malformed or
+non-converging graph analysis is reported as typed invalid evidence rather
+than escaping the verifier.
 This is executable evidence about these two finite schema graphs. It is not a
 claim of equivalence for the JSON Schema language in general. The AJV matrix
 still requires each schema to accept its corresponding aggregate and reject

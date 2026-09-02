@@ -4248,6 +4248,49 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Pass without Trace with its Stealth bonus and movement-trace suppression", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const passWithoutTrace = result.catalog.requireUnit("pass_without_trace");
+
+    expect(passWithoutTrace.kind).toBe("spell");
+    if (
+      passWithoutTrace.kind !== "spell" ||
+      passWithoutTrace.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected Pass without Trace ongoing-effect mechanics.");
+    }
+    expect(passWithoutTrace.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Pass without Trace",
+    });
+    expect(passWithoutTrace.mechanics.attachment).toEqual({
+      kind: "area",
+      shape: { kind: "emanation", radiusFeet: 30 },
+      origin: { kind: "self" },
+    });
+    expect(passWithoutTrace.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "modify_roll_numeric",
+          on: ["ability_check"],
+          delta: { kind: "fixed_dice", dice: 10, dieSize: 1, sign: "+" },
+          skillFilter: { kind: "fixed", skills: ["stealth"] },
+        },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "suppress_movement_trace" },
+      },
+    ]);
+    expect(publishedRulesExcerpt(passWithoutTrace.id)).toContain(
+      "leave no tracks",
+    );
+  });
+
   test("decodes Warding Bond as a linked caster-target bond with range-gated benefits and damage sharing", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

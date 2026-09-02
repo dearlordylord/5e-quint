@@ -2429,7 +2429,6 @@ export function spellProcedureExecution(
               rangeFeet: value.rangeFeet,
               resource: value.resource,
               saveGate: value.saveGate,
-              skillChoices: value.skillChoices,
               targeting: value.targeting,
             }
           : {
@@ -2442,7 +2441,6 @@ export function spellProcedureExecution(
               rangeFeet: value.rangeFeet,
               resource: value.resource,
               saveGate: value.saveGate,
-              skillChoices: value.skillChoices,
               targeting: value.targeting,
             },
       targetingSaveInterdiction: (value) => ({

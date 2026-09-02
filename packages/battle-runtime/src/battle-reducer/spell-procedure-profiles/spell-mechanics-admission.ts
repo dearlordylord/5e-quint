@@ -7,9 +7,11 @@ import {
 } from "@dnd/shared/elapsed-time";
 import {
   PositiveInteger,
+  spellSlotLevel,
   movementFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
+  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
@@ -100,6 +102,24 @@ export function spellDefinitionPointRangeFeet(
 ): MovementFeet | undefined {
   return range.kind === "point" && typeof range.feet === "number"
     ? movementFeet(range.feet)
+    : undefined;
+}
+
+/** Preserve positive Surface scalar facts as branded admission facts. */
+export function spellPositiveIntegerFromSurface(
+  value: number,
+): PositiveInteger | undefined {
+  return Number.isInteger(value) && value > 0
+    ? PositiveInteger(value)
+    : undefined;
+}
+
+/** Spell-slot progressions are restricted to the existing 1–9 slot domain. */
+export function spellSlotLevelFromSurface(
+  value: number,
+): SpellSlotLevel | undefined {
+  return Number.isInteger(value) && value >= 1 && value <= 9
+    ? spellSlotLevel(value)
     : undefined;
 }
 
@@ -299,6 +319,46 @@ export function spellTouchRangeFeet(): MovementFeet {
   return movementFeet(5);
 }
 
+export type SpellOngoingMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+export type SpellOngoingOperationOccurrence = {
+  readonly operation: SpellOngoingMechanics["operations"][number];
+  readonly ordinal: PositiveInteger;
+};
+
+/** Preserve the authored operation ordinal alongside its narrowed operation. */
+export function spellOngoingOperationOccurrences(
+  mechanics: SpellOngoingMechanics,
+): readonly SpellOngoingOperationOccurrence[] {
+  return mechanics.operations.map((operation, index) => ({
+    operation,
+    ordinal: PositiveInteger(index + 1),
+  }));
+}
+
+export const SPELL_ONGOING_OPERATION_UNSUPPORTED_FACTS = [
+  "predicate",
+  "targetLimit",
+  "usageLimit",
+] as const;
+
+export type SpellOngoingOperationUnsupportedFact =
+  (typeof SPELL_ONGOING_OPERATION_UNSUPPORTED_FACTS)[number];
+
+/** Project every operation constraint that the runtime profiles do not own. */
+export function spellOngoingOperationUnsupportedFacts(
+  operation: SpellOngoingOperationOccurrence["operation"],
+): readonly SpellOngoingOperationUnsupportedFact[] {
+  const facts: SpellOngoingOperationUnsupportedFact[] = [];
+  if (operation.predicate !== undefined) facts.push("predicate");
+  if (operation.targetLimit !== undefined) facts.push("targetLimit");
+  if (operation.usageLimit !== undefined) facts.push("usageLimit");
+  return facts;
+}
+
 /**
  * Target-selection procedures own only these selection fields. Callers pass the
  * subset consumed by their procedure-specific cardinality and disposition
@@ -307,9 +367,6 @@ export function spellTouchRangeFeet(): MovementFeet {
  */
 type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
 type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
-type SpellTargetSelectionFieldShape = {
-  readonly [Field in SpellTargetSelectionField]?: unknown;
-};
 
 type AdmittedSpellTargetSelection<
   AllowedFields extends SpellTargetSelectionField,
@@ -329,6 +386,61 @@ type SpellTargetAttachmentValue = Extract<
 
 type SpellTargetAttachment = Omit<SpellTargetHoleAttachment, "value"> & {
   readonly value: SpellTargetAttachmentValue;
+};
+type SpellDirectTargetAttachment = Extract<
+  Attachment,
+  { readonly kind: "target" }
+>;
+
+type SpellAreaAttachmentValue = Extract<
+  SpellTargetHoleAttachment["value"],
+  { readonly kind: "area" }
+>;
+type SpellAreaAttachment =
+  | SpellAreaAttachmentValue
+  | (Omit<SpellTargetHoleAttachment, "value"> & {
+      readonly value: SpellAreaAttachmentValue;
+    });
+
+const SPELL_ATTACHMENT_WRAPPER_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const;
+const SPELL_ATTACHMENT_VALUE_FIELDS = [
+  "kind",
+  "selection",
+  "rangeOrigin",
+  "shape",
+  "origin",
+  "occupantDispositionFilter",
+  "occupantPerceptionFilter",
+  "excludedAreas",
+] as const;
+type SpellAttachmentValueField = (typeof SPELL_ATTACHMENT_VALUE_FIELDS)[number];
+export type SpellAttachmentRejectionFact =
+  | "attachment"
+  | "selection"
+  | "rangeOrigin"
+  | SpellTargetSelectionField
+  | Exclude<SpellAttachmentValueField, "kind">;
+export type SpellAttachmentRejectionCoordinate =
+  | {
+      readonly kind: "wrapper";
+      readonly field: PropertyKey;
+    }
+  | {
+      readonly kind: "value";
+      readonly field: PropertyKey;
+    }
+  | {
+      readonly kind: "selection";
+      readonly field: PropertyKey;
+    };
+export type SpellAttachmentRejection = {
+  readonly failedFact: SpellAttachmentRejectionFact;
+  readonly coordinate: SpellAttachmentRejectionCoordinate;
 };
 
 type AdmittedSpellTargetAttachment<
@@ -355,14 +467,36 @@ export type SpellTargetAttachmentAdmissionResult<
         | "targetAttachmentMissing"
         | "targetAttachmentConstraint"
         | "targetSelectionConstraint";
+      readonly rejections: ReadonlyNonEmptyArray<SpellAttachmentRejection>;
     };
 
-const SPELL_TARGET_ATTACHMENT_FIELDS = [
-  "kind",
-  "holeId",
-  "label",
-  "value",
-] as const satisfies ReadonlyArray<keyof SpellTargetAttachment>;
+type AdmittedSpellAreaAttachmentValue<
+  AllowedFields extends SpellAttachmentValueField,
+> = SpellAreaAttachmentValue & {
+  readonly [Field in Exclude<SpellAttachmentValueField, AllowedFields>]?: never;
+};
+
+type AdmittedSpellAreaAttachment<
+  AllowedFields extends SpellAttachmentValueField,
+> =
+  | AdmittedSpellAreaAttachmentValue<AllowedFields>
+  | (Omit<SpellTargetHoleAttachment, "value"> & {
+      readonly value: AdmittedSpellAreaAttachmentValue<AllowedFields>;
+    });
+
+export type SpellAreaAttachmentAdmissionResult<
+  AllowedFields extends SpellAttachmentValueField,
+> =
+  | {
+      readonly tag: "admitted";
+      readonly attachment: AdmittedSpellAreaAttachment<AllowedFields>;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly reason: "areaAttachmentMissing" | "areaAttachmentConstraint";
+      readonly rejections: ReadonlyNonEmptyArray<SpellAttachmentRejection>;
+    };
+
 const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
   "kind",
   "selection",
@@ -383,22 +517,100 @@ export function spellMechanicsObjectHasOnlyKeys<
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
 }
 
+function spellAttachmentRejections(
+  values: ReadonlyNonEmptyArray<SpellAttachmentRejection>,
+): ReadonlyNonEmptyArray<SpellAttachmentRejection> {
+  return values;
+}
+
+function spellAttachmentWrapperRejections(
+  value: object,
+): readonly SpellAttachmentRejection[] {
+  const allowedFields = new Set<PropertyKey>(SPELL_ATTACHMENT_WRAPPER_FIELDS);
+  return Reflect.ownKeys(value)
+    .filter((field) => !allowedFields.has(field))
+    .map((field) => ({
+      failedFact: "attachment" as const,
+      coordinate: { kind: "wrapper" as const, field },
+    }));
+}
+
+function spellAttachmentValueRejections(
+  value: object,
+  allowedFields: readonly SpellAttachmentValueField[],
+): readonly SpellAttachmentRejection[] {
+  const allowed = new Set<PropertyKey>(allowedFields);
+  return Reflect.ownKeys(value)
+    .filter((field) => !allowed.has(field))
+    .map((field) => {
+      const knownField = isSpellAttachmentValueField(field) ? field : undefined;
+      return {
+        failedFact:
+          knownField === undefined || knownField === "kind"
+            ? "attachment"
+            : knownField,
+        coordinate: { kind: "value" as const, field },
+      };
+    });
+}
+
+function isSpellAttachmentValueField(
+  field: PropertyKey,
+): field is SpellAttachmentValueField {
+  return (
+    typeof field === "string" &&
+    SPELL_ATTACHMENT_VALUE_FIELDS.some((allowedField) => allowedField === field)
+  );
+}
+
+function spellTargetSelectionRejections(
+  selection: object,
+  allowedFields: readonly SpellTargetSelectionField[],
+): readonly SpellAttachmentRejection[] {
+  const allowed = new Set<PropertyKey>(allowedFields);
+  return Reflect.ownKeys(selection)
+    .filter((field) => !allowed.has(field))
+    .map((field) => {
+      const knownField = isSpellTargetSelectionField(field) ? field : undefined;
+      return {
+        failedFact: knownField === undefined ? "selection" : knownField,
+        coordinate: { kind: "selection" as const, field },
+      };
+    });
+}
+
+function isSpellTargetSelectionField(
+  field: PropertyKey,
+): field is SpellTargetSelectionField {
+  return (
+    typeof field === "string" &&
+    (field === "mode" ||
+      field === "targetKinds" ||
+      field === "typeFilter" ||
+      field === "creatureSizeFilter" ||
+      field === "visibility" ||
+      field === "relativePosition" ||
+      field === "objectFilter" ||
+      field === "creatureDisposition" ||
+      field === "objectOrLocationMaxDimensionFeet" ||
+      field === "count" ||
+      field === "repeatsAllowed" ||
+      field === "castingRequirement" ||
+      field === "stateFilter" ||
+      field === "disposition")
+  );
+}
+
 function isSpellTargetAttachment(
   attachment: Attachment,
 ): attachment is SpellTargetAttachment {
   return attachment.kind === "hole" && attachment.value.kind === "target";
 }
 
-function isAdmittedSpellTargetSelection<
-  const AllowedFields extends readonly SpellTargetSelectionField[],
->(
-  selection: TargetSelection,
-  allowedFields: AllowedFields,
-): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
-  return spellMechanicsObjectHasOnlyKeys<
-    SpellTargetSelectionFieldShape,
-    AllowedFields
-  >(selection, allowedFields);
+function isSpellDirectTargetAttachment(
+  attachment: Attachment,
+): attachment is SpellDirectTargetAttachment {
+  return attachment.kind === "target";
 }
 
 /**
@@ -415,44 +627,172 @@ export function admitSpellTargetAttachment<
   allowedSelectionFields: AllowedFields,
 ): SpellTargetAttachmentAdmissionResult<AllowedFields[number]> {
   if (!isSpellTargetAttachment(attachment)) {
+    if (isSpellDirectTargetAttachment(attachment)) {
+      const directTargetRejections = spellAttachmentValueRejections(
+        attachment,
+        SPELL_TARGET_ATTACHMENT_VALUE_FIELDS,
+      );
+      const selectionRejections = spellTargetSelectionRejections(
+        attachment.selection,
+        allowedSelectionFields,
+      );
+      const nonEmptyDirectTargetRejections = spellProcedureNonEmpty(
+        directTargetRejections,
+      );
+      if (nonEmptyDirectTargetRejections !== undefined) {
+        return {
+          tag: "rejected",
+          reason: "targetAttachmentConstraint",
+          rejections: spellAttachmentRejections([
+            nonEmptyDirectTargetRejections[0],
+            ...nonEmptyDirectTargetRejections.slice(1),
+            ...selectionRejections,
+          ]),
+        };
+      }
+      const nonEmptySelectionRejections =
+        spellProcedureNonEmpty(selectionRejections);
+      if (nonEmptySelectionRejections !== undefined) {
+        return {
+          tag: "rejected",
+          reason: "targetSelectionConstraint",
+          rejections: spellAttachmentRejections(nonEmptySelectionRejections),
+        };
+      }
+    }
     return {
       tag: "rejected",
       reason: "targetAttachmentMissing",
+      rejections: spellAttachmentRejections([
+        {
+          failedFact: "attachment",
+          coordinate: { kind: "wrapper", field: "kind" },
+        },
+      ]),
     };
   }
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment,
-      SPELL_TARGET_ATTACHMENT_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
+  const attachmentRejections = [
+    ...spellAttachmentWrapperRejections(attachment),
+    ...spellAttachmentValueRejections(
       attachment.value,
       SPELL_TARGET_ATTACHMENT_VALUE_FIELDS,
-    )
-  ) {
+    ),
+  ];
+  const selection = attachment.value.selection;
+  const selectionRejections = spellTargetSelectionRejections(
+    selection,
+    allowedSelectionFields,
+  );
+  const nonEmptyAttachmentRejections =
+    spellProcedureNonEmpty(attachmentRejections);
+  if (nonEmptyAttachmentRejections !== undefined) {
     return {
       tag: "rejected",
       reason: "targetAttachmentConstraint",
+      rejections: spellAttachmentRejections([
+        nonEmptyAttachmentRejections[0],
+        ...nonEmptyAttachmentRejections.slice(1),
+        ...selectionRejections,
+      ]),
     };
   }
-  const selection = attachment.value.selection;
-  if (!isAdmittedSpellTargetSelection(selection, allowedSelectionFields)) {
+  const nonEmptySelectionRejections =
+    spellProcedureNonEmpty(selectionRejections);
+  if (nonEmptySelectionRejections !== undefined) {
     return {
       tag: "rejected",
       reason: "targetSelectionConstraint",
+      rejections: spellAttachmentRejections(nonEmptySelectionRejections),
     };
   }
+  // The own-key parser above has proved that every selection field is within
+  // the procedure's allow-list; carry that proof into the admitted type.
+  const admittedSelection = selection as AdmittedSpellTargetSelection<
+    AllowedFields[number]
+  >;
   const admittedAttachment = {
     ...attachment,
     value: {
       ...attachment.value,
-      selection,
+      selection: admittedSelection,
     },
   } satisfies AdmittedSpellTargetAttachment<AllowedFields[number]>;
   return {
     tag: "admitted",
     attachment: admittedAttachment,
   };
+}
+
+function isSpellAreaAttachment(
+  attachment: Attachment,
+): attachment is SpellAreaAttachment {
+  return (
+    attachment.kind === "area" ||
+    (attachment.kind === "hole" && attachment.value.kind === "area")
+  );
+}
+
+/**
+ * Admit an area attachment while retaining only the fields a procedure owns.
+ * Both direct and target-hole area forms use this one fail-closed boundary.
+ */
+export function admitSpellAreaAttachment<
+  const AllowedFields extends readonly SpellAttachmentValueField[],
+>(
+  attachment: Attachment,
+  allowedFields: AllowedFields,
+): SpellAreaAttachmentAdmissionResult<AllowedFields[number]> {
+  if (!isSpellAreaAttachment(attachment)) {
+    return {
+      tag: "rejected",
+      reason: "areaAttachmentMissing",
+      rejections: spellAttachmentRejections([
+        {
+          failedFact: "attachment",
+          coordinate: { kind: "wrapper", field: "kind" },
+        },
+      ]),
+    };
+  }
+  const areaValue = attachment.kind === "area" ? attachment : attachment.value;
+  const wrapperRejections =
+    attachment.kind === "hole"
+      ? spellAttachmentWrapperRejections(attachment)
+      : [];
+  const areaValueRejections = spellAttachmentValueRejections(
+    areaValue,
+    allowedFields,
+  );
+  const nonEmptyWrapperRejections = spellProcedureNonEmpty(wrapperRejections);
+  const nonEmptyAreaValueRejections =
+    spellProcedureNonEmpty(areaValueRejections);
+  if (nonEmptyWrapperRejections !== undefined) {
+    return {
+      tag: "rejected",
+      reason: "areaAttachmentConstraint",
+      rejections: spellAttachmentRejections([
+        nonEmptyWrapperRejections[0],
+        ...nonEmptyWrapperRejections.slice(1),
+        ...areaValueRejections,
+      ]),
+    };
+  }
+  if (nonEmptyAreaValueRejections !== undefined) {
+    return {
+      tag: "rejected",
+      reason: "areaAttachmentConstraint",
+      rejections: spellAttachmentRejections([
+        nonEmptyAreaValueRejections[0],
+        ...nonEmptyAreaValueRejections.slice(1),
+      ]),
+    };
+  }
+  // Both own-key parsers returned empty, so this area attachment satisfies the
+  // procedure's admitted field projection.
+  const admittedAttachment = attachment as AdmittedSpellAreaAttachment<
+    AllowedFields[number]
+  >;
+  return { tag: "admitted", attachment: admittedAttachment };
 }
 
 /** Stable issue identity: only the failed fact and its exact source path. */
@@ -637,35 +977,68 @@ export function spellProcedureNonEmpty<T>(
  * Named admission policies keep the witness count and tolerated loss coupled.
  * The three-witness policy tolerates exactly one missing witness; the
  * five-witness policy tolerates exactly two. A caller cannot provide a
- * threshold that disagrees with its witness tuple.
+ * threshold that disagrees with its witness tuple. Named witnesses are the
+ * preferred form: duplicate names are rejected so one domain fact cannot be
+ * counted twice under different labels.
  */
+export type SpellProcedureSignatureWitness = {
+  readonly name: string;
+  readonly present: boolean;
+};
+
 export type SpellProcedureRedundantSignaturePolicy =
   | {
       readonly kind: "oneWitnessMayBeMissing";
-      readonly witnesses: readonly [boolean, boolean, boolean];
+      readonly witnesses: readonly [
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+      ];
     }
   | {
       readonly kind: "twoWitnessesMayBeMissing";
       readonly witnesses: readonly [
-        boolean,
-        boolean,
-        boolean,
-        boolean,
-        boolean,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
       ];
     };
 
 export function spellProcedureHasRedundantSignature(
   policy: SpellProcedureRedundantSignaturePolicy,
 ): boolean {
-  let matches = 0;
-  for (const witness of policy.witnesses) {
-    if (witness) matches += 1;
+  const witnessNames = policy.witnesses.map(({ name }) => name);
+  if (
+    witnessNames.some((name) => name.length === 0) ||
+    witnessNames.length !== new Set(witnessNames).size
+  ) {
+    return false;
   }
+  const matches = policy.witnesses.reduce(
+    (total, { present }) => total + (present ? 1 : 0),
+    0,
+  );
   return Match.value(policy.kind).pipe(
     Match.when("oneWitnessMayBeMissing", () => matches >= 2),
     Match.when("twoWitnessesMayBeMissing", () => matches >= 3),
     Match.exhaustive,
+  );
+}
+
+/** Require every independent structural witness when the characteristic
+ * effect is absent, so an empty/mutated branch remains owned without creating
+ * a broad collision candidate for another profile. */
+export function spellProcedureHasCompleteSignature(
+  witnesses: readonly SpellProcedureSignatureWitness[],
+): boolean {
+  const witnessNames = witnesses.map(({ name }) => name);
+  return (
+    witnessNames.length > 0 &&
+    witnessNames.every((name) => name.length > 0) &&
+    witnessNames.length === new Set(witnessNames).size &&
+    witnesses.every(({ present }) => present)
   );
 }
 

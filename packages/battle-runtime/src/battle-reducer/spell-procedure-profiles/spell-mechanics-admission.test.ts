@@ -18,7 +18,9 @@ import {
 } from "../../unit-profile-admission-spell-record.test-support.ts";
 import {
   admitBattleSpellMechanicsFrom,
+  admitSpellAreaAttachment,
   admitSpellTargetAttachment,
+  spellProcedureHasRedundantSignature,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsAdmissionDeclaration,
@@ -267,6 +269,12 @@ describe("battle spell static mechanics admission", () => {
     ).toEqual({
       tag: "rejected",
       reason: "targetAttachmentConstraint",
+      rejections: [
+        {
+          failedFact: "rangeOrigin",
+          coordinate: { kind: "value", field: "rangeOrigin" },
+        },
+      ],
     });
 
     const withTypeFilter = decodeSpellRecordForTest({
@@ -304,6 +312,66 @@ describe("battle spell static mechanics admission", () => {
     ).toEqual({
       tag: "rejected",
       reason: "targetSelectionConstraint",
+      rejections: [
+        {
+          failedFact: "typeFilter",
+          coordinate: { kind: "selection", field: "typeFilter" },
+        },
+      ],
     });
+  });
+
+  test("owns area attachment constraints and preserves their coordinates", () => {
+    const mechanics = spellRecord("pass_without_trace").mechanics;
+    if (
+      mechanics.family !== "ongoing_effect" ||
+      mechanics.attachment.kind !== "area"
+    ) {
+      throw new Error("Expected direct area attachment mechanics.");
+    }
+
+    expect(
+      admitSpellAreaAttachment(mechanics.attachment, [
+        "kind",
+        "shape",
+        "origin",
+      ] as const),
+    ).toEqual({ tag: "admitted", attachment: mechanics.attachment });
+
+    const withSelection = {
+      ...mechanics.attachment,
+      selection: { mode: "one", targetKinds: ["creature"] },
+    } as const;
+    expect(
+      admitSpellAreaAttachment(withSelection, [
+        "kind",
+        "shape",
+        "origin",
+      ] as const),
+    ).toEqual({
+      tag: "rejected",
+      reason: "areaAttachmentConstraint",
+      rejections: [
+        {
+          failedFact: "selection",
+          coordinate: { kind: "value", field: "selection" },
+        },
+      ],
+    });
+  });
+
+  test("rejects colliding named witnesses instead of counting one fact twice", () => {
+    expect(
+      spellProcedureHasRedundantSignature({
+        kind: "twoWitnessesMayBeMissing",
+        witnesses: [
+          { name: "range", present: true },
+          { name: "range", present: true },
+          { name: "duration", present: true },
+          { name: "attachment", present: false },
+          { name: "effect", present: false },
+        ],
+      }),
+    ).toBe(false);
   });
 });

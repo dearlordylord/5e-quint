@@ -1,5 +1,5 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 //
@@ -10,8 +10,6 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - admit()                         - was
 //                                       supportedCantripHeldLightSpellProfile
 //                                       in spells-profiles.ts
-//   - isHeldFlameAttackOngoingEffectSpell - shared shape parser for the paired
-//                                       heldLightHurl profile
 //   - discoverCastAct()               - was the heldLight branch in
 //                                       spells-discovery.ts:discoverBattleActs
 //   - castSummary()                   - was the heldLight branch in
@@ -26,9 +24,12 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - heldLightHurl has its own paired profile; the shared attack/damage
 //     resolver still owns the hurl damage lifecycle.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { attackBonus, movementFeet } from "@dnd/shared/types";
-import { Result } from "effect";
+import { attackBonus, movementFeet, PositiveInteger } from "@dnd/shared/types";
+import type {
+  CharacterLevel,
+  MovementFeet as MovementFeetType,
+} from "@dnd/shared/types";
+import { Match, Schema } from "effect";
 import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
@@ -48,7 +49,6 @@ import type {
 } from "./profile.ts";
 import { spellAdmissionCharacterLevel } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
-import { Schema } from "effect";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -63,138 +63,567 @@ import {
   SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import type { HeldLightHurlMechanicalFacts } from "../../battle-state-execution.ts";
+import {
+  diceExprWithDelta,
+  supportedDamageAmountExpr,
+} from "../spells-execution-facts.ts";
 import { characterExecutionWithHeldLightHurl } from "../../character-execution-queries.ts";
 import type { HeldLightHurlSpellProcedureExecution } from "../../character-execution.ts";
+import type {
+  DiceAmount,
+  DiceExpr,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
+import {
+  isSpellCanonicalDurationValue,
+  spellOngoingOperationOccurrences,
+  spellOngoingOperationUnsupportedFacts,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationTicksFromCanonicalValue,
+  spellConsumedMaterialEvidencePaths,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  type SpellOngoingOperationOccurrence,
+  type SpellMechanicsAdmissionSource,
+  type SpellCanonicalDurationValue,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+
+const FIRST_ORDINAL = PositiveInteger(1);
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "heldLight" }
 >;
 
-export function isHeldFlameAttackOngoingEffectSpell(
-  spell: BattleSpellAdmissionSource,
-): spell is BattleSpellAdmissionSource & {
-  readonly mechanics: Extract<
-    BattleSpellAdmissionSource["mechanics"],
-    { family: "ongoing_effect" }
-  >;
-} {
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
+type HeldLightMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+type HeldLightDamageAmount =
+  | Extract<DiceAmount, { readonly kind: "fixed" }>
+  | (Extract<DiceAmount, { readonly kind: "threshold_tiers" }> & {
+      readonly axis: "character";
+    });
+type HeldLightDuration = Extract<
+  SpellProcedureMechanicsFacts["duration"],
+  { readonly kind: "timed" }
+> & { readonly value: SpellCanonicalDurationValue };
+
+function isHeldLightDuration(
+  duration: SpellProcedureMechanicsFacts["duration"],
+): duration is HeldLightDuration {
   return (
-    spell.mechanics.family === "ongoing_effect" &&
-    spell.mechanics.level === 0 &&
-    spell.mechanics.castingTime.kind === "bonus_action" &&
-    spell.mechanics.range.kind === "self" &&
-    spell.mechanics.attachment.kind === "self" &&
-    spell.mechanics.duration.kind === "timed" &&
-    spell.mechanics.duration.value.unit === "minute" &&
-    spell.mechanics.duration.value.amount === 10 &&
-    earlyEnd.length === 1 &&
-    earlyEnd[0]?.kind === "caster_recasts_spell"
+    duration.kind === "timed" && isSpellCanonicalDurationValue(duration.value)
   );
+}
+type HeldLightMechanicsFacts = Omit<
+  SpellProcedureMechanicsFacts,
+  "range" | "duration"
+> & {
+  readonly range: Extract<
+    SpellProcedureMechanicsFacts["range"],
+    { readonly kind: "self" }
+  >;
+  readonly duration: HeldLightDuration;
+  readonly light: {
+    readonly brightRadiusFeet: MovementFeetType;
+    readonly dimAdditionalFeet: MovementFeetType;
+  };
+  readonly hurl: {
+    readonly damageAmount: HeldLightDamageAmount;
+  };
+};
+type HeldLightFailedFact =
+  | "level"
+  | "castingTime"
+  | "range"
+  | "duration"
+  | "durationExtension"
+  | "durationEnding"
+  | "initialPhase"
+  | "authoredConditionalEffects"
+  | "attachment"
+  | "predicate"
+  | "targetLimit"
+  | "usageLimit"
+  | "laterTurnsOnly"
+  | "timing"
+  | "operation"
+  | "operationCount"
+  | "light"
+  | "hurl";
+type HeldLightAdmissionIssue = SpellProcedureAdmissionIssue<
+  "heldLight",
+  HeldLightFailedFact,
+  UnitMechanicsPath
+>;
+
+function heldLightLightOperation(
+  operation: SpellOngoingOperationOccurrence,
+): boolean {
+  return (
+    operation.operation.trigger.kind === "passive" &&
+    operation.operation.effect.kind === "emit_bright_and_dim_illumination"
+  );
+}
+
+function heldLightHurlOperation(
+  operation: SpellOngoingOperationOccurrence,
+): boolean {
+  const { trigger, effect } = operation.operation;
+  return (
+    trigger.kind === "on_caster_spends_action" &&
+    trigger.cost?.kind === "standard_action" &&
+    trigger.cost.action === "magic" &&
+    effect.kind === "attack_roll" &&
+    effect.attackKind === "ranged_spell_attack"
+  );
+}
+
+function heldLightRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is HeldLightMechanics {
+  if (mechanics.family !== "ongoing_effect") return false;
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
+  const hasLightOperation = occurrences.some((occurrence) =>
+    heldLightLightOperation(occurrence),
+  );
+  const hasHurlOperation = occurrences.some((occurrence) =>
+    heldLightHurlOperation(occurrence),
+  );
+  const hasBonusAction = mechanics.castingTime.kind === "bonus_action";
+  const hasTenMinuteDuration =
+    mechanics.duration.kind === "timed" &&
+    mechanics.duration.value.unit === "minute" &&
+    mechanics.duration.value.amount === 10;
+  const hasSelfAttachment = mechanics.attachment.kind === "self";
+  const hasSelfRange = mechanics.range.kind === "self";
+  return (
+    (hasLightOperation || hasHurlOperation) &&
+    spellProcedureHasRedundantSignature({
+      kind: "twoWitnessesMayBeMissing",
+      witnesses: [
+        { name: "lightOperation", present: hasLightOperation },
+        { name: "hurlOperation", present: hasHurlOperation },
+        { name: "bonusAction", present: hasBonusAction },
+        { name: "tenMinuteDuration", present: hasTenMinuteDuration },
+        {
+          name: "selfAttachmentOrRange",
+          present: hasSelfAttachment || hasSelfRange,
+        },
+      ],
+    })
+  );
+}
+
+function heldLightIssue(
+  failedFact: HeldLightFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): HeldLightAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "heldLight",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported heldLight mechanics fact: ${failedFact}.`,
+  };
+}
+
+function heldLightHurlDamageAmount(
+  operation: SpellOngoingOperationOccurrence,
+): DiceAmount | null {
+  if (
+    operation.operation.effect.kind !== "attack_roll" ||
+    operation.operation.effect.attackKind !== "ranged_spell_attack" ||
+    operation.operation.effect.onHit.length !== 1 ||
+    operation.operation.effect.onMiss.length !== 1 ||
+    operation.operation.effect.onMiss[0]?.kind !== "none"
+  ) {
+    return null;
+  }
+  const damageEffect = operation.operation.effect.onHit[0];
+  return damageEffect?.kind === "damage" &&
+    Schema.is(DamageTypeSchema)(damageEffect.damageType) &&
+    damageEffect.damageType === "fire"
+    ? damageEffect.amount
+    : null;
+}
+
+type HeldLightDamageAmountProjection =
+  | { readonly tag: "supported"; readonly amount: HeldLightDamageAmount }
+  | { readonly tag: "unsupported" };
+
+function isHeldLightDamageAmount(
+  amount: DiceAmount,
+): amount is HeldLightDamageAmount {
+  if (amount.kind === "fixed") return true;
+  return amount.kind === "threshold_tiers" && amount.axis === "character";
+}
+
+function heldLightDamageAmountProjection(
+  amount: DiceAmount | null,
+): HeldLightDamageAmountProjection {
+  return amount !== null &&
+    isHeldLightDamageAmount(amount) &&
+    supportedDamageAmountExpr({ amount, characterLevel: 1 }) !== null
+    ? { tag: "supported", amount }
+    : { tag: "unsupported" };
+}
+
+function heldLightDamageExpr(
+  amount: HeldLightDamageAmount,
+  characterLevel: CharacterLevel,
+): DiceExpr {
+  return Match.value(amount).pipe(
+    Match.when({ kind: "fixed" }, ({ expr }) => expr),
+    Match.when({ kind: "threshold_tiers" }, (threshold) =>
+      threshold.tiers.reduce(
+        (expr, tier) =>
+          characterLevel >= tier.atLevel
+            ? diceExprWithDelta(expr, tier.override)
+            : expr,
+        threshold.base,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function heldLightHurlOptionalIssues(
+  occurrence: SpellOngoingOperationOccurrence,
+): readonly {
+  readonly failedFact: "laterTurnsOnly" | "attachment" | "timing";
+  readonly mechanicsPath: UnitMechanicsPath;
+}[] {
+  const issues: Array<{
+    readonly failedFact: "laterTurnsOnly" | "attachment" | "timing";
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const { operation } = occurrence;
+  if (
+    operation.trigger.kind === "on_caster_spends_action" &&
+    operation.trigger.laterTurnsOnly !== undefined
+  ) {
+    issues.push({
+      failedFact: "laterTurnsOnly",
+      mechanicsPath: spellOngoingOperationPath(occurrence.ordinal),
+    });
+  }
+  if (operation.effect.kind !== "attack_roll") return issues;
+  if (operation.effect.attachment !== undefined) {
+    issues.push({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingOperationEffectPath(occurrence.ordinal),
+    });
+  }
+  const hitDamage = operation.effect.onHit[0];
+  if (hitDamage?.kind === "damage" && hitDamage.timing !== undefined) {
+    issues.push({
+      failedFact: "timing",
+      mechanicsPath: spellOngoingOperationEffectPath(occurrence.ordinal),
+    });
+  }
+  return issues;
+}
+
+function heldLightFactsFromMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "heldLight",
+  HeldLightMechanicsFacts,
+  HeldLightInvocation,
+  HeldLightAdmissionIssue
+> {
+  if (!heldLightRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const rangeFacts =
+    mechanics.range.kind === "self" ? mechanics.range : undefined;
+  const durationFacts = isHeldLightDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
+  const lightOperation = occurrences.find(heldLightLightOperation);
+  const hurlOperation = occurrences.find(heldLightHurlOperation);
+  const selectedOrdinals = new Set(
+    [lightOperation?.ordinal, hurlOperation?.ordinal].filter(
+      (ordinal): ordinal is PositiveInteger => ordinal !== undefined,
+    ),
+  );
+  const issues: Array<{
+    readonly failedFact: HeldLightFailedFact;
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const pushIssue = (
+    failedFact: HeldLightFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (mechanics.level !== 0) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.castingTime.kind !== "bonus_action") {
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (mechanics.range.kind !== "self") {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  if (mechanics.duration.kind === "timed") {
+    if (
+      mechanics.duration.value.unit !== "minute" ||
+      mechanics.duration.value.amount !== 10
+    ) {
+      pushIssue("duration", spellDurationValuePath());
+    }
+    const durationChildren = spellDurationChildCoordinates(mechanics.duration);
+    const firstEnding = durationChildren.find(
+      (child) => child.branch === "ending" && child.ordinal === FIRST_ORDINAL,
+    );
+    if (
+      firstEnding?.branch !== "ending" ||
+      firstEnding.ending.kind !== "earlyEnd" ||
+      firstEnding.ending.trigger.kind !== "caster_recasts_spell"
+    ) {
+      pushIssue(
+        "durationEnding",
+        firstEnding === undefined
+          ? spellDurationEndingPath(FIRST_ORDINAL)
+          : spellDurationChildPath(firstEnding),
+      );
+    }
+    for (const child of durationChildren) {
+      if (child.branch === "extension") {
+        pushIssue("durationExtension", spellDurationChildPath(child));
+      } else if (child.ordinal !== FIRST_ORDINAL) {
+        pushIssue("durationEnding", spellDurationChildPath(child));
+      }
+    }
+  } else if (mechanics.duration.kind === "slot_tiered") {
+    pushIssue("duration", spellDurationValuePath());
+    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+      if (child.branch === "extension") {
+        pushIssue("durationExtension", spellDurationChildPath(child));
+      }
+    }
+  } else {
+    pushIssue("duration", spellDurationValuePath());
+  }
+  if (mechanics.attachment.kind !== "self") {
+    pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+  if (mechanics.initialPhase !== undefined) {
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.authoredConditionalEffects !== undefined) {
+    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  }
+  for (const occurrence of occurrences) {
+    for (const failedFact of spellOngoingOperationUnsupportedFacts(
+      occurrence.operation,
+    )) {
+      pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
+    }
+  }
+
+  if (
+    mechanics.operations.length !== 2 &&
+    selectedOrdinals.size === mechanics.operations.length
+  ) {
+    pushIssue(
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    );
+  }
+  for (const occurrence of occurrences) {
+    if (!selectedOrdinals.has(occurrence.ordinal)) {
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(occurrence.ordinal),
+      );
+    }
+  }
+
+  const lightProjection =
+    lightOperation === undefined
+      ? ({ tag: "unsupported" } as const)
+      : lightOperation.operation.effect.kind ===
+            "emit_bright_and_dim_illumination" &&
+          lightOperation.operation.effect.brightRadiusFeet === 20 &&
+          lightOperation.operation.effect.dimAdditionalFeet === 20
+        ? {
+            tag: "supported" as const,
+            light: {
+              brightRadiusFeet: movementFeet(
+                lightOperation.operation.effect.brightRadiusFeet,
+              ),
+              dimAdditionalFeet: movementFeet(
+                lightOperation.operation.effect.dimAdditionalFeet,
+              ),
+            },
+          }
+        : ({ tag: "unsupported" } as const);
+  if (lightOperation === undefined) {
+    pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
+    pushIssue("light", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  } else if (lightProjection.tag === "unsupported") {
+    pushIssue("light", spellOngoingOperationEffectPath(lightOperation.ordinal));
+  }
+
+  const hurlProjection =
+    hurlOperation === undefined
+      ? ({ tag: "unsupported" } as const)
+      : heldLightDamageAmountProjection(
+          heldLightHurlDamageAmount(hurlOperation),
+        );
+  if (hurlOperation === undefined) {
+    pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
+    pushIssue("hurl", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  } else {
+    for (const { failedFact, mechanicsPath } of heldLightHurlOptionalIssues(
+      hurlOperation,
+    )) {
+      pushIssue(failedFact, mechanicsPath);
+    }
+    if (hurlProjection.tag === "unsupported") {
+      pushIssue("hurl", spellOngoingOperationEffectPath(hurlOperation.ordinal));
+    }
+  }
+
+  const failures = spellProcedureNonEmpty(issues);
+  if (failures !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        failures,
+        ({ failedFact, mechanicsPath }) =>
+          heldLightIssue(failedFact, mechanicsPath),
+      ),
+    };
+  }
+  if (
+    rangeFacts === undefined ||
+    durationFacts === undefined ||
+    lightProjection.tag !== "supported" ||
+    hurlProjection.tag !== "supported"
+  ) {
+    const fallbackIssue =
+      rangeFacts === undefined
+        ? heldLightIssue("range", spellMechanicsHeaderPath("range"))
+        : durationFacts === undefined
+          ? heldLightIssue("duration", spellDurationValuePath())
+          : lightProjection.tag !== "supported"
+            ? heldLightIssue(
+                "light",
+                spellOngoingOperationEffectPath(
+                  lightOperation?.ordinal ?? PositiveInteger(1),
+                ),
+              )
+            : heldLightIssue(
+                "hurl",
+                spellOngoingOperationEffectPath(
+                  hurlOperation?.ordinal ?? PositiveInteger(1),
+                ),
+              );
+    return { tag: "unsupported", issues: [fallbackIssue] };
+  }
+
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    range: rangeFacts,
+    duration: durationFacts,
+    light: lightProjection.light,
+    hurl: { damageAmount: hurlProjection.amount },
+  } satisfies HeldLightMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "heldLight",
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          spellDurationEndingPath(PositiveInteger(1)),
+          spellOngoingAttachmentPath(),
+          ...occurrences
+            .filter(({ ordinal }) => selectedOrdinals.has(ordinal))
+            .flatMap(({ ordinal }) => [
+              spellOngoingOperationPath(ordinal),
+              spellOngoingOperationEffectPath(ordinal),
+            ]),
+          ...spellConsumedMaterialEvidencePaths(mechanics.components),
+        ],
+        unowned: [],
+      },
+      admit: (executionSource, ctx) =>
+        admitHeldLight(executionSource, ctx, facts),
+    },
+  };
 }
 
 function admitHeldLight(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: HeldLightMechanicsFacts,
 ): readonly HeldLightInvocation[] {
-  if (!isHeldFlameAttackOngoingEffectSpell(spell)) {
-    return [];
-  }
-  const lightOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_bright_and_dim_illumination",
+  const damageExpr = heldLightDamageExpr(
+    facts.hurl.damageAmount,
+    spellAdmissionCharacterLevel(ctx),
   );
-  if (
-    lightOperation === undefined ||
-    lightOperation.effect.kind !== "emit_bright_and_dim_illumination" ||
-    lightOperation.effect.brightRadiusFeet !== 20 ||
-    lightOperation.effect.dimAdditionalFeet !== 20
-  ) {
-    return [];
-  }
-  const duration = spell.mechanics.duration;
-  if (duration.kind !== "timed") {
-    return [];
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  const hurl = heldLightHurlMechanicalFacts(spell, ctx);
-  return Result.isFailure(durationTicks) || hurl === null
-    ? []
-    : [
-        {
-          access: cantripSpellAccessFor(spell.castingSource),
-          resource: { tag: "none" },
-          procedure: "heldLight",
-          spell,
-          actionCost: "bonusAction",
-          light: {
-            brightRadiusFeet: movementFeet(
-              lightOperation.effect.brightRadiusFeet,
-            ),
-            dimAdditionalFeet: movementFeet(
-              lightOperation.effect.dimAdditionalFeet,
-            ),
-          },
-          hurl,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
-        },
-      ];
-}
-
-export function heldLightHurlMechanicalFacts(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): HeldLightHurlMechanicalFacts | null {
-  if (!isHeldFlameAttackOngoingEffectSpell(spell)) return null;
-  const hurlOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_caster_spends_action" &&
-      operation.trigger.cost?.kind === "standard_action" &&
-      operation.trigger.cost.action === "magic" &&
-      operation.effect.kind === "attack_roll",
-  );
-  if (
-    hurlOperation === undefined ||
-    hurlOperation.effect.kind !== "attack_roll" ||
-    hurlOperation.effect.attackKind !== "ranged_spell_attack" ||
-    hurlOperation.effect.onHit.length !== 1 ||
-    hurlOperation.effect.onMiss.length !== 1 ||
-    hurlOperation.effect.onMiss[0]?.kind !== "none"
-  ) {
-    return null;
-  }
-  const damageEffect = hurlOperation.effect.onHit[0];
-  if (
-    damageEffect?.kind !== "damage" ||
-    !Schema.is(DamageTypeSchema)(damageEffect.damageType) ||
-    damageEffect.damageType !== "fire" ||
-    damageEffect.amount === undefined
-  ) {
-    return null;
-  }
-  const damageExpr = supportedDamageAmountExpr({
-    amount: damageEffect.amount,
-    spellLevel: spell.mechanics.level,
-    characterLevel: spellAdmissionCharacterLevel(ctx),
-  });
-  if (damageExpr === null) return null;
-  return {
-    targeting: { kind: "singleCreatureOrObject" },
-    damage: { expr: damageExpr, damageType: damageEffect.damageType },
-    rangeFeet: movementFeet(60),
-    attackKind: hurlOperation.effect.attackKind,
-    attackBonus: attackBonus(
-      Number(ctx.castingSource.abilityModifier) +
-        Number(ctx.actor.origin.spellcasting.proficiencyBonus),
-    ),
-  };
+  return [
+    {
+      access: cantripSpellAccessFor(ctx.castingSource),
+      resource: { tag: "none" },
+      procedure: "heldLight",
+      spell,
+      actionCost: "bonusAction",
+      light: facts.light,
+      hurl: {
+        targeting: { kind: "singleCreatureOrObject" },
+        damage: { expr: damageExpr, damageType: "fire" },
+        rangeFeet: movementFeet(60),
+        attackKind: "ranged_spell_attack",
+        attackBonus: attackBonus(
+          Number(ctx.castingSource.abilityModifier) +
+            Number(ctx.actor.origin.spellcasting.proficiencyBonus),
+        ),
+      },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: spellDurationTicksFromCanonicalValue(
+          facts.duration.value,
+        ),
+      },
+    },
+  ];
 }
 
 function discoverHeldLightCastAct(
@@ -321,11 +750,13 @@ const HeldLightInvocationSchema = spellProcedureExecutionSchema(
 );
 export const heldLightProfile: SpellProcedureDeclaration<
   "heldLight",
-  HeldLightInvocation
+  HeldLightInvocation,
+  HeldLightMechanicsFacts,
+  HeldLightAdmissionIssue
 > = {
   procedure: "heldLight",
   executionSchema: HeldLightInvocationSchema,
-  admit: admitHeldLight,
+  admitMechanics: heldLightFactsFromMechanics,
   discoverCastAct: discoverHeldLightCastAct,
   resolve: resolveHeldLight,
 };

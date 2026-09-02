@@ -341,6 +341,7 @@ export {
   type BattleMagicSuppressionOngoingSpellEffectRef,
   type BattleCompelledBehaviorOption,
   type BattleD20RollModifierDelta,
+  type BattleD20RollModifierSkillFilter,
   type BattleMovableLight,
   type BattleMovableLightList,
   type BattleOngoingSpellEffectRef,
@@ -2485,12 +2486,10 @@ export type RollModifierSpellInvocation = (
   (
     | {
         readonly effect: D20RollModifierSpellEffect;
-        readonly skillChoices: readonly Skill[] | null;
         readonly abilityChoices: null;
       }
     | {
         readonly effect: AbilityCheckRollModeSpellEffect;
-        readonly skillChoices: null;
         readonly abilityChoices: readonly Ability[];
         readonly abilityChoiceApplication: "single" | "perTarget";
       }

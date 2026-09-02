@@ -24417,6 +24417,14 @@
                       ]
                     }
                   }
+                },
+                {
+                  "trigger": {
+                    "kind": "passive"
+                  },
+                  "effect": {
+                    "kind": "suppress_movement_trace"
+                  }
                 }
               ]
             },

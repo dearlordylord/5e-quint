@@ -31,6 +31,7 @@ import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
+import { Match } from "effect";
 
 export type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
@@ -271,47 +272,58 @@ export function rollModifierSpellEffectSelection(input: {
       };
     }
     /* v8 ignore stop -- @preserve */
-    if (input.invocation.skillChoices === null) {
-      return input.fillSet.skillChoice === undefined
-        ? {
-            tag: "ok",
-            selection: {
-              kind: "sameForTargets",
-              effect: {
-                ...input.invocation.effect,
-                sourceCombatantId: input.actorId,
-                skill: input.invocation.effect.skill,
+    return Match.value(input.invocation.effect.skillFilter).pipe(
+      Match.whenOr({ kind: "none" }, { kind: "fixed" }, (skillFilter) =>
+        input.fillSet.skillChoice === undefined
+          ? {
+              tag: "ok" as const,
+              selection: {
+                kind: "sameForTargets" as const,
+                effect: {
+                  ...input.invocation.effect,
+                  sourceCombatantId: input.actorId,
+                  skillFilter,
+                },
               },
+            }
+          : {
+              tag: "invalid" as const,
+              message: "This roll modifier spell does not choose a skill.",
             },
-          }
-        : {
-            tag: "invalid",
-            message: "This roll modifier spell does not choose a skill.",
+      ),
+      Match.when({ kind: "choice" }, (skillFilter) => {
+        if (input.fillSet.skillChoice === undefined) {
+          return {
+            tag: "needsHoles" as const,
+            hole: spellRollModifierSkillChoiceHole(
+              input.invocation,
+              skillFilter,
+            ),
           };
-    }
-    if (input.fillSet.skillChoice === undefined) {
-      return {
-        tag: "needsHoles",
-        hole: spellRollModifierSkillChoiceHole(input.invocation),
-      };
-    }
-    return input.invocation.skillChoices.includes(input.fillSet.skillChoice)
-      ? {
-          tag: "ok",
-          selection: {
-            kind: "sameForTargets",
-            effect: {
-              ...input.invocation.effect,
-              sourceCombatantId: input.actorId,
-              skill: input.fillSet.skillChoice,
-            },
-          },
         }
-      : {
-          tag: "invalid",
-          message:
-            "Roll modifier spell skill choice is not legal for this spell.",
-        };
+        return skillFilter.options.includes(input.fillSet.skillChoice)
+          ? {
+              tag: "ok" as const,
+              selection: {
+                kind: "sameForTargets" as const,
+                effect: {
+                  ...input.invocation.effect,
+                  sourceCombatantId: input.actorId,
+                  skillFilter: {
+                    kind: "fixed" as const,
+                    skill: input.fillSet.skillChoice,
+                  },
+                },
+              },
+            }
+          : {
+              tag: "invalid" as const,
+              message:
+                "Roll modifier spell skill choice is not legal for this spell.",
+            };
+      }),
+      Match.exhaustive,
+    );
   }
 
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */

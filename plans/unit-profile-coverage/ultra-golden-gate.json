@@ -2837,15 +2837,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 170,
-            "numerator": 170
+            "denominator": 171,
+            "numerator": 171
           },
           "joinedEvidenceRows": {
-            "denominator": 170,
-            "numerator": 170
+            "denominator": 171,
+            "numerator": 171
           },
           "missingJoinRows": {
-            "denominator": 170,
+            "denominator": 171,
             "numerator": 0
           }
         },
@@ -2856,15 +2856,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 171,
-            "numerator": 171
+            "denominator": 172,
+            "numerator": 172
           },
           "joinedEvidenceRows": {
-            "denominator": 171,
-            "numerator": 171
+            "denominator": 172,
+            "numerator": 172
           },
           "missingJoinRows": {
-            "denominator": 171,
+            "denominator": 172,
             "numerator": 0
           }
         },
@@ -2875,15 +2875,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 173,
-            "numerator": 173
+            "denominator": 174,
+            "numerator": 174
           },
           "joinedEvidenceRows": {
-            "denominator": 173,
-            "numerator": 173
+            "denominator": 174,
+            "numerator": 174
           },
           "missingJoinRows": {
-            "denominator": 173,
+            "denominator": 174,
             "numerator": 0
           }
         },
@@ -2894,15 +2894,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 174,
-            "numerator": 174
+            "denominator": 175,
+            "numerator": 175
           },
           "joinedEvidenceRows": {
-            "denominator": 174,
-            "numerator": 174
+            "denominator": 175,
+            "numerator": 175
           },
           "missingJoinRows": {
-            "denominator": 174,
+            "denominator": 175,
             "numerator": 0
           }
         },
@@ -2913,15 +2913,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 181,
-            "numerator": 181
+            "denominator": 182,
+            "numerator": 182
           },
           "joinedEvidenceRows": {
-            "denominator": 181,
-            "numerator": 181
+            "denominator": 182,
+            "numerator": 182
           },
           "missingJoinRows": {
-            "denominator": 181,
+            "denominator": 182,
             "numerator": 0
           }
         },
@@ -2932,15 +2932,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 186,
-            "numerator": 186
+            "denominator": 187,
+            "numerator": 187
           },
           "joinedEvidenceRows": {
-            "denominator": 186,
-            "numerator": 186
+            "denominator": 187,
+            "numerator": 187
           },
           "missingJoinRows": {
-            "denominator": 186,
+            "denominator": 187,
             "numerator": 0
           }
         },

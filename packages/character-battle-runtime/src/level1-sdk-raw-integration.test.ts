@@ -4190,7 +4190,7 @@ function expectedLevelOneBlessEffectFacts(
     sourceCombatantId: casterId,
     on: ["attack_roll", "saving_throw"],
     delta: { sign: "+", dice: 1, dieSize: 4 },
-    skill: null,
+    skillFilter: { kind: "none" },
     expiresAt: {
       kind: "concentration",
       combatantId: casterId,

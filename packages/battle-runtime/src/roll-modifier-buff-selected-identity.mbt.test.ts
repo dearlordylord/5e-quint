@@ -7,7 +7,7 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-suppor
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import { describe, expect, it } from "vitest";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
@@ -803,6 +803,17 @@ function projectRollModifierBuffSelectedIdentityState(
   );
   const d20Modifier = firstTrackedD20Modifier(state);
   const damageReduction = firstTrackedDamageReduction(state);
+  const d20ModifierSkill =
+    d20Modifier === undefined
+      ? "none"
+      : Match.value(d20Modifier.skillFilter).pipe(
+          Match.when({ kind: "none" }, () => "none" as const),
+          Match.when({ kind: "choice" }, () => "none" as const),
+          Match.when({ kind: "fixed" }, ({ skill }) =>
+            skill === "stealth" ? ("stealth" as const) : ("none" as const),
+          ),
+          Match.exhaustive,
+        );
   return {
     casterConcentrating: caster.concentrating,
     casterHp: caster.hp,
@@ -815,7 +826,7 @@ function projectRollModifierBuffSelectedIdentityState(
     d20ModifierAttackRoll: d20Modifier?.on.includes("attack_roll") ?? false,
     d20ModifierSavingThrow: d20Modifier?.on.includes("saving_throw") ?? false,
     d20ModifierAbilityCheck: d20Modifier?.on.includes("ability_check") ?? false,
-    d20ModifierSkill: d20Modifier?.skill === "stealth" ? "stealth" : "none",
+    d20ModifierSkill,
     invalidTargetRejected,
     damageReductionType:
       damageReduction?.damageType === "bludgeoning" ? "bludgeoning" : "none",

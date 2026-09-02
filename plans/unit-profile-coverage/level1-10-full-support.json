@@ -4566,78 +4566,6 @@
       "unitId": "fire_shield"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-replay evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/fly.json",
-      "sourceRows": [
-        {
-          "battleReadinessStatus": "accepted",
-          "catalogAdmissionState": "installed",
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Fly",
-          "finalDisposition": "catalog-installed-owner-evidence-present",
-          "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fly",
-          "levelBand": "spell-level-3",
-          "nextAction": "Owner-specific operational evidence is classified and present.",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 307,
-            "lineStart": 307,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          },
-          "unitProfileDisposition": "profile-subset-supported"
-        },
-        {
-          "battleReadinessStatus": "accepted",
-          "catalogAdmissionState": "installed",
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Fly",
-          "finalDisposition": "catalog-installed-owner-evidence-present",
-          "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fly",
-          "levelBand": "spell-level-3",
-          "nextAction": "Owner-specific operational evidence is classified and present.",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 383,
-            "lineStart": 383,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          },
-          "unitProfileDisposition": "profile-subset-supported"
-        },
-        {
-          "battleReadinessStatus": "accepted",
-          "catalogAdmissionState": "installed",
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Fly",
-          "finalDisposition": "catalog-installed-owner-evidence-present",
-          "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fly",
-          "levelBand": "spell-level-3",
-          "nextAction": "Owner-specific operational evidence is classified and present.",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 245,
-            "lineStart": 245,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          },
-          "unitProfileDisposition": "profile-subset-supported"
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "fly"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -10502,7 +10430,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 191,
+      "count": 192,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -10578,6 +10506,7 @@
         "flame_blade",
         "flame_strike",
         "flaming_sphere",
+        "fly",
         "fog_cloud",
         "grease",
         "guidance",
@@ -10700,7 +10629,7 @@
       ]
     },
     {
-      "count": 84,
+      "count": 83,
       "description": "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -10738,7 +10667,6 @@
         "enthrall",
         "fabricate",
         "find_traps",
-        "fly",
         "geas",
         "gentle_repose",
         "gust_of_wind",
@@ -10926,9 +10854,9 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 180,
-      "numerator": 151,
-      "percent": "83.9%"
+      "denominator": 181,
+      "numerator": 152,
+      "percent": "84%"
     },
     "strictFinalSupport": {
       "denominator": 411,
@@ -10937,8 +10865,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 354,
-      "numerator": 191,
-      "percent": "54%"
+      "numerator": 192,
+      "percent": "54.2%"
     },
     "strictTargetClosure": {
       "denominator": 354,
@@ -18460,9 +18388,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 180,
-        "numerator": 151,
-        "percent": "83.9%"
+        "denominator": 181,
+        "numerator": 152,
+        "percent": "84%"
       }
     },
     "units": [
@@ -20406,6 +20334,28 @@
           }
         ],
         "unitId": "flaming_sphere"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+            ]
+          }
+        ],
+        "unitId": "fly"
       },
       {
         "joinStatus": "covered",
@@ -25034,8 +24984,8 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 424,
     "groupsByClaimTag": {
-      "profile-subset-supported": 62,
-      "supported-profile": 191,
+      "profile-subset-supported": 61,
+      "supported-profile": 192,
       "unsupported-profile": 101
     },
     "groupsByStatus": {
@@ -25043,11 +24993,11 @@
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 7,
       "closed-outside-battle-runtime-boundary": 46,
-      "closed-runtime-detached-table-adjudication": 84,
+      "closed-runtime-detached-table-adjudication": 83,
       "closed-selection-grant-container": 12,
-      "supported-profile": 191
+      "supported-profile": 192
     },
-    "nonSupportedFrontier": 163,
+    "nonSupportedFrontier": 162,
     "strictDenominator": 354
   }
 }

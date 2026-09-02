@@ -1,4 +1,5 @@
 import type { AreaDirectEffectAtom, UsageLimit } from "../surface/types.ts";
+import { Match } from "effect";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
@@ -6,6 +7,8 @@ import { traceActionRestriction } from "./tracer-action-restrictions.ts";
 
 import { traceDiceAmountScaling } from "./tracer-scaling.ts";
 import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
+
+const byKind = Match.discriminator("kind");
 
 // Emit scaling nodes for effect atoms that carry a DiceAmount.
 export function traceEffectAtomScaling(
@@ -17,254 +20,376 @@ export function traceEffectAtomScaling(
   ids: IdGen,
 ): void {
   if (isIlluminationEffectAtom(e)) return;
-  switch (e.kind) {
-    case "object_contact_damage":
-      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
-      return;
-    case "damage":
-    case "conditional_bonus_damage":
-    case "retaliatory_damage":
-      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
-      return;
-    case "share_damage_to_caster":
-      return;
-    case "heal_hp":
-    case "grant_temp_hp":
-      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
-      return;
-    case "grant_rest_benefit":
-    case "spell_recipient_rest_lockout":
-    case "deliver_mental_message":
-    case "prevent_hit_point_regain":
-    case "heal_to_max_hp":
-      return;
-    case "modify_max_hp":
-      traceDiceAmountScaling(e.delta, effectId, slotId, nodes, edges, ids);
-      return;
-    case "reduce_damage_taken":
-      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
-      return;
-    case "conditional_by_current_hp":
-      traceEffectAtomScaling(e.onMatch, effectId, slotId, nodes, edges, ids);
-      if (e.otherwise !== undefined) {
-        traceEffectAtomScaling(
-          e.otherwise,
-          effectId,
-          slotId,
-          nodes,
-          edges,
-          ids,
-        );
-      }
-      return;
-    case "grant_extra_action":
-      traceActionRestriction(e.restriction, effectId, nodes, edges, ids);
-      return;
-    case "make_weapon_attack":
-      if (e.bonusDamage !== undefined) {
-        traceDiceAmountScaling(
-          e.bonusDamage.amount,
-          effectId,
-          slotId,
-          nodes,
-          edges,
-          ids,
-        );
-      }
-      return;
-    case "override_attached_weapon_attack":
-      traceDiceAmountScaling(e.damageDie, effectId, slotId, nodes, edges, ids);
-      return;
-    case "none":
-    case "half_initial_damage_only":
-    case "modify_ac":
-    case "modify_ac_set_base":
-    case "modify_save_dc":
-    case "apply_condition":
-    case "apply_condition_while_in_area_or_until_escape":
-    case "suppress_condition_self_end":
-    case "target_effect_escape_action":
-    case "restrict_action_usage":
-    case "choose_action_or_bonus_action_each_turn":
-    case "compelled_target_next_turn":
-    case "forced_reaction_movement":
-    case "jump_movement_replacement":
-    case "feather_fall_mitigation":
-    case "audible":
-    case "push_unsecured_objects":
-    case "remove_condition":
-    case "grant_resistance":
-    case "kill_target":
-    case "end_current_effect":
-    case "effect_end_target_state":
-    case "repeat_save_for_condition":
-    case "condition_persists_after_full_duration":
-    case "take_standard_action":
-    case "grant_alternate_action_cost":
-    case "modify_roll_numeric":
-    case "initiative_swap":
-    case "jack_of_all_trades_ability_check_bonus":
-    case "modify_damage_numeric":
-    case "modify_size_category":
-    case "modify_roll_advantage":
-    case "suppress_roll_disadvantage":
-    case "remove_equipment_requirement":
-    case "modify_crit_range":
-    case "transfer_weapon_bonus_to_ac":
-    case "suppress_incoming_critical_hit":
-    case "scale_attack_count":
-    case "cap_attack_action_attacks":
-    case "somatic_spell_failure_chance":
-    case "modify_speed":
-    case "force_move":
-    case "suspend_target":
-    case "fall_at_end_of_next_turn_unless_reapplied":
-    case "force_fall":
-    case "levitate_target":
-    case "grab_fixed_object":
-    case "suspend_in_area":
-    case "fall_when_effect_ends":
-    case "move_area":
-    case "end_current_effect_at_area_height_zero":
-    case "ability_check_to_move_in_area":
-    case "fall_to_ground":
-    case "block_targeting":
-    case "choose_new_target_or_lose":
-    case "block_travel":
-    case "end_if_created_in_occupied_space":
-    case "allow_designated_creatures_safe_passage":
-    case "object_immune_to_all_damage":
-    case "object_destroyed_by_spell":
-    case "cannot_be_dispelled_by_spell":
-    case "block_ethereal_travel":
-    case "replace_destroyed_object_section_with_area":
-    case "block_projectiles":
-    case "block_gases_and_gaseous_creatures":
-    case "block_flying_movement":
-    case "negate_named_effect":
-    case "see_invisible_and_ethereal":
-    case "grant_sense":
-    case "modify_sense_range":
-    case "grant_language_understanding":
-    case "grant_creature_communication":
-    case "deny_opportunity_attack":
-    case "grant_feat":
-    case "grant_proficiency":
-    case "grant_expertise":
-    case "grant_language":
-    case "grant_hidden_language_messages":
-    case "grant_language_choice":
-    case "grant_spell_access":
-    case "grant_spell_access_choice":
-    case "grant_class_level_prepared_spell_access":
-    case "grant_land_choice_prepared_spell_access":
-    case "grant_spell_free_casts":
-    case "grant_die_token":
-    case "grant_bonus_action_attack":
-    case "replace_damage_die":
-    case "substitute_ability_for_rolls":
-    case "offer_ability_substitution_for_ability_checks":
-    case "offer_ability_substitution_for_jump_distance":
-    case "grant_weapon_attack_enhancement":
-    case "grant_condition_immunity":
-    case "suppress_condition_benefit":
-    case "prevent_drop_to_0_hp":
-    case "negate_instant_death":
-    case "make_stable":
-    case "revive_dead_creature":
-    case "grant_damage_immunity":
-    case "block_max_hp_reduction":
-    case "set_speed_ratio":
-    case "set_ability_score":
-    case "modify_ability_score":
-    case "modify_proficiency_bonus":
-    case "teleport":
-    case "transport_exile":
-    case "ethereal_phase":
-    case "container_storage":
-    case "create_extradimensional_space":
-    case "create_sensor":
-    case "remote_perception":
-    case "grant_speed":
-    case "grant_liquid_surface_traversal":
-    case "ignore_web_restrictions":
-    case "alter_item_kind":
-    case "detect":
-    case "locate_kind":
-    case "object_location_sense":
-    case "block_divination_targeting_and_scrying_perception":
-    case "divination_omen":
-    case "assign_courier_task":
-    case "magical_identity_mask":
-    case "set_speed":
-    case "negate_triggering_spell":
-    case "reflect_triggering_spell":
-    case "waste_triggering_spell_or_effect":
-    case "end_ongoing_spells":
-    case "maximize_healing_received":
-    case "transform_target":
-    case "natural_weapons":
-    case "water_breathing":
-    case "spell_created_held_object":
-    case "block_reanimation":
-    case "ignite_objects":
-    case "create_object":
-    case "create_illusion":
-    case "create_phantasmal_illusion":
-    case "force_drop_item":
-    case "move_object":
-    case "pull_object_away":
-    case "manipulate_object":
-    case "break_concentration":
-    case "collapse_structure":
-    case "bury_in_rubble":
-    case "bond_objects":
-    case "lock_object":
-    case "release_object_access":
-    case "suppress_arcane_lock":
-    case "reposition_attachment":
-    case "area_is_difficult_terrain":
-    case "area_emits_dim_light":
-    case "area_is_lightly_obscured":
-    case "area_is_heavily_obscured":
-    case "douse_exposed_flames":
-    case "area_is_magical_darkness":
-    case "area_of_silence":
-    case "truthfulness_constraint":
-    case "reveal_save_outcome_to_caster":
-    case "end_overlapping_spell_created_bright_or_dim_light":
-    case "area_anchor_or_layering_requirement":
-    case "area_has_strong_wind":
-    case "prevent_ranged_weapon_attacks":
-    case "area_movement_cost_multiplier":
-    case "plant_enrichment":
-    case "grant_cover":
-    case "block_line_of_sight":
-    case "prevent_creature_passage":
-    case "prevent_spellcasting_and_magic_actions":
-    case "prevent_magical_ranged_attacks":
-    case "block_magical_targeting_and_aoe":
-    case "block_teleport_and_planar_travel":
-    case "suppress_magic_items":
-    case "suppress_ongoing_magic_effects":
-    case "allow_reaction_stand_up":
-    case "revert_shape_shift_to_true_form":
-    case "suppress_shape_shifting_while_in_area":
-      return;
-    case "ordered_barrier_layers":
-      for (const layer of e.layers) {
-        if (layer.save !== undefined) {
+  return Match.value(e)
+    .pipe(
+      byKind("object_contact_damage", (e) => {
+        traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+        return;
+      }),
+      byKind(
+        "damage",
+        "conditional_bonus_damage",
+        "retaliatory_damage",
+        (e) => {
+          traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+          return;
+        },
+      ),
+      byKind("share_damage_to_caster", () => {
+        return;
+      }),
+      byKind("heal_hp", "grant_temp_hp", (e) => {
+        traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+        return;
+      }),
+      byKind(
+        "grant_rest_benefit",
+        "spell_recipient_rest_lockout",
+        "deliver_mental_message",
+        "prevent_hit_point_regain",
+        "heal_to_max_hp",
+        () => {
+          return;
+        },
+      ),
+      byKind("modify_max_hp", (e) => {
+        traceDiceAmountScaling(e.delta, effectId, slotId, nodes, edges, ids);
+        return;
+      }),
+      byKind("reduce_damage_taken", (e) => {
+        traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+        return;
+      }),
+      byKind("conditional_by_current_hp", (e) => {
+        traceEffectAtomScaling(e.onMatch, effectId, slotId, nodes, edges, ids);
+        if (e.otherwise !== undefined) {
           traceEffectAtomScaling(
-            layer.save.onFail,
+            e.otherwise,
             effectId,
             slotId,
             nodes,
             edges,
             ids,
           );
-          if (layer.save.onSuccess.kind !== "half_damage") {
+        }
+        return;
+      }),
+      byKind("grant_extra_action", (e) => {
+        traceActionRestriction(e.restriction, effectId, nodes, edges, ids);
+        return;
+      }),
+      byKind("make_weapon_attack", (e) => {
+        if (e.bonusDamage !== undefined) {
+          traceDiceAmountScaling(
+            e.bonusDamage.amount,
+            effectId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
+        }
+        return;
+      }),
+      byKind("override_attached_weapon_attack", (e) => {
+        traceDiceAmountScaling(
+          e.damageDie,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+        return;
+      }),
+    )
+    .pipe(
+      byKind(
+        "none",
+        "half_initial_damage_only",
+        "modify_ac",
+        "modify_ac_set_base",
+        "modify_save_dc",
+        "apply_condition",
+        "apply_condition_while_in_area_or_until_escape",
+        "suppress_condition_self_end",
+        "target_effect_escape_action",
+        "restrict_action_usage",
+        "choose_action_or_bonus_action_each_turn",
+        "compelled_target_next_turn",
+        "forced_reaction_movement",
+        "jump_movement_replacement",
+        "feather_fall_mitigation",
+        "audible",
+        "push_unsecured_objects",
+        "remove_condition",
+        "grant_resistance",
+        "kill_target",
+        "end_current_effect",
+        "effect_end_target_state",
+        "repeat_save_for_condition",
+        "condition_persists_after_full_duration",
+        "take_standard_action",
+        "grant_alternate_action_cost",
+        "modify_roll_numeric",
+        "suppress_movement_trace",
+        "initiative_swap",
+        "jack_of_all_trades_ability_check_bonus",
+        "modify_damage_numeric",
+        "modify_size_category",
+        "modify_roll_advantage",
+        "suppress_roll_disadvantage",
+        "remove_equipment_requirement",
+        "modify_crit_range",
+        "transfer_weapon_bonus_to_ac",
+        "suppress_incoming_critical_hit",
+        "scale_attack_count",
+        "cap_attack_action_attacks",
+        "somatic_spell_failure_chance",
+        "modify_speed",
+        "force_move",
+        "suspend_target",
+        "fall_at_end_of_next_turn_unless_reapplied",
+        "force_fall",
+        "levitate_target",
+        "grab_fixed_object",
+        "suspend_in_area",
+        "fall_when_effect_ends",
+        "move_area",
+        "end_current_effect_at_area_height_zero",
+        "ability_check_to_move_in_area",
+        "fall_to_ground",
+        "block_targeting",
+        "choose_new_target_or_lose",
+        "block_travel",
+        "end_if_created_in_occupied_space",
+        "allow_designated_creatures_safe_passage",
+        "object_immune_to_all_damage",
+        "object_destroyed_by_spell",
+        "cannot_be_dispelled_by_spell",
+        "block_ethereal_travel",
+        "replace_destroyed_object_section_with_area",
+        "block_projectiles",
+        "block_gases_and_gaseous_creatures",
+        "block_flying_movement",
+        "negate_named_effect",
+        "see_invisible_and_ethereal",
+        "grant_sense",
+        "modify_sense_range",
+        "grant_language_understanding",
+        "grant_creature_communication",
+        "deny_opportunity_attack",
+        "grant_feat",
+        "grant_proficiency",
+        "grant_expertise",
+        "grant_language",
+        "grant_hidden_language_messages",
+        "grant_language_choice",
+        "grant_spell_access",
+        "grant_spell_access_choice",
+        "grant_class_level_prepared_spell_access",
+        "grant_land_choice_prepared_spell_access",
+        "grant_spell_free_casts",
+        "grant_die_token",
+        "grant_bonus_action_attack",
+        "replace_damage_die",
+        "substitute_ability_for_rolls",
+        "offer_ability_substitution_for_ability_checks",
+        "offer_ability_substitution_for_jump_distance",
+        "grant_weapon_attack_enhancement",
+        "grant_condition_immunity",
+        "suppress_condition_benefit",
+        "prevent_drop_to_0_hp",
+        "negate_instant_death",
+        "make_stable",
+        "revive_dead_creature",
+        "grant_damage_immunity",
+        "block_max_hp_reduction",
+        "set_speed_ratio",
+        "set_ability_score",
+        "modify_ability_score",
+        "modify_proficiency_bonus",
+        "teleport",
+        "transport_exile",
+        "ethereal_phase",
+        "container_storage",
+        "create_extradimensional_space",
+        "create_sensor",
+        "remote_perception",
+        "grant_speed",
+        "grant_liquid_surface_traversal",
+        "ignore_web_restrictions",
+        "alter_item_kind",
+        "detect",
+        "locate_kind",
+        "object_location_sense",
+        "block_divination_targeting_and_scrying_perception",
+        "divination_omen",
+        "assign_courier_task",
+        "magical_identity_mask",
+        "set_speed",
+        "negate_triggering_spell",
+        "reflect_triggering_spell",
+        "waste_triggering_spell_or_effect",
+        "end_ongoing_spells",
+        "maximize_healing_received",
+        "transform_target",
+        "natural_weapons",
+        "water_breathing",
+        "spell_created_held_object",
+        "block_reanimation",
+        "ignite_objects",
+        "create_object",
+        "create_illusion",
+        "create_phantasmal_illusion",
+        "force_drop_item",
+        "move_object",
+        "pull_object_away",
+        "manipulate_object",
+        "break_concentration",
+        "collapse_structure",
+        "bury_in_rubble",
+        "bond_objects",
+        "lock_object",
+        "release_object_access",
+        "suppress_arcane_lock",
+        "reposition_attachment",
+        "area_is_difficult_terrain",
+        "area_emits_dim_light",
+        "area_is_lightly_obscured",
+        "area_is_heavily_obscured",
+        "douse_exposed_flames",
+        "area_is_magical_darkness",
+        "area_of_silence",
+        "truthfulness_constraint",
+        "reveal_save_outcome_to_caster",
+        "end_overlapping_spell_created_bright_or_dim_light",
+        "area_anchor_or_layering_requirement",
+        "area_has_strong_wind",
+        "prevent_ranged_weapon_attacks",
+        "area_movement_cost_multiplier",
+        "plant_enrichment",
+        "grant_cover",
+        "block_line_of_sight",
+        "prevent_creature_passage",
+        "prevent_spellcasting_and_magic_actions",
+        "prevent_magical_ranged_attacks",
+        "block_magical_targeting_and_aoe",
+        "block_teleport_and_planar_travel",
+        "suppress_magic_items",
+        "suppress_ongoing_magic_effects",
+        "allow_reaction_stand_up",
+        "revert_shape_shift_to_true_form",
+        "suppress_shape_shifting_while_in_area",
+        () => {
+          return;
+        },
+      ),
+      byKind("ordered_barrier_layers", (e) => {
+        for (const layer of e.layers) {
+          if (layer.save !== undefined) {
             traceEffectAtomScaling(
-              layer.save.onSuccess,
+              layer.save.onFail,
+              effectId,
+              slotId,
+              nodes,
+              edges,
+              ids,
+            );
+            if (layer.save.onSuccess.kind !== "half_damage") {
+              traceEffectAtomScaling(
+                layer.save.onSuccess,
+                effectId,
+                slotId,
+                nodes,
+                edges,
+                ids,
+              );
+            }
+          }
+          if (layer.passiveEffects !== undefined) {
+            for (const passive of layer.passiveEffects) {
+              traceEffectAtomScaling(
+                passive,
+                effectId,
+                slotId,
+                nodes,
+                edges,
+                ids,
+              );
+            }
+          }
+        }
+        return;
+      }),
+      byKind("delayed_save", (e) => {
+        traceEffectAtomScaling(
+          e.onSuccess,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+        traceEffectAtomScaling(
+          e.onFailure,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+        return;
+      }),
+      byKind("repeat_save_counter", (e) => {
+        traceEffectAtomScaling(
+          e.onSuccessCount,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+        traceEffectAtomScaling(
+          e.onFailureCount,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+        return;
+      }),
+      byKind("reduce_area_height", (e) => {
+        traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+        return;
+      }),
+      byKind("damage_structure", (e) => {
+        traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+        return;
+      }),
+      byKind("area_section_burns_away", (e) => {
+        traceDiceAmountScaling(
+          e.creatureStartsTurnInFireDamage.amount,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+        return;
+      }),
+      byKind("composite", (e) => {
+        for (const child of e.effects) {
+          traceEffectAtomScaling(child, effectId, slotId, nodes, edges, ids);
+        }
+        return;
+      }),
+      byKind("choose_effect_mode", (e) => {
+        for (const option of e.options) {
+          for (const effect of option.effects) {
+            traceOngoingChoiceEffectScaling(
+              effect,
               effectId,
               slotId,
               nodes,
@@ -273,10 +398,13 @@ export function traceEffectAtomScaling(
             );
           }
         }
-        if (layer.passiveEffects !== undefined) {
-          for (const passive of layer.passiveEffects) {
-            traceEffectAtomScaling(
-              passive,
+        return;
+      }),
+      byKind("curse_occurrence", (e) => {
+        for (const option of e.options) {
+          for (const operation of option.operations) {
+            traceOngoingChoiceEffectScaling(
+              operation.effect,
               effectId,
               slotId,
               nodes,
@@ -285,88 +413,13 @@ export function traceEffectAtomScaling(
             );
           }
         }
-      }
-      return;
-    case "delayed_save":
-      traceEffectAtomScaling(e.onSuccess, effectId, slotId, nodes, edges, ids);
-      traceEffectAtomScaling(e.onFailure, effectId, slotId, nodes, edges, ids);
-      return;
-    case "repeat_save_counter":
-      traceEffectAtomScaling(
-        e.onSuccessCount,
-        effectId,
-        slotId,
-        nodes,
-        edges,
-        ids,
-      );
-      traceEffectAtomScaling(
-        e.onFailureCount,
-        effectId,
-        slotId,
-        nodes,
-        edges,
-        ids,
-      );
-      return;
-    case "reduce_area_height":
-      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
-      return;
-    case "damage_structure":
-      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
-      return;
-    case "area_section_burns_away":
-      traceDiceAmountScaling(
-        e.creatureStartsTurnInFireDamage.amount,
-        effectId,
-        slotId,
-        nodes,
-        edges,
-        ids,
-      );
-      return;
-    case "composite":
-      for (const child of e.effects) {
-        traceEffectAtomScaling(child, effectId, slotId, nodes, edges, ids);
-      }
-      return;
-    case "choose_effect_mode":
-      for (const option of e.options) {
-        for (const effect of option.effects) {
-          traceOngoingChoiceEffectScaling(
-            effect,
-            effectId,
-            slotId,
-            nodes,
-            edges,
-            ids,
-          );
-        }
-      }
-      return;
-    case "curse_occurrence":
-      for (const option of e.options) {
-        for (const operation of option.operations) {
-          traceOngoingChoiceEffectScaling(
-            operation.effect,
-            effectId,
-            slotId,
-            nodes,
-            edges,
-            ids,
-          );
-        }
-      }
-      return;
-    case "planar_entity_answers":
-      return;
-    /* v8 ignore start -- @preserve -- AreaDirectEffectAtom is decoder-narrowed to the effect tags handled above */
-    default: {
-      const _exhaustive: never = e;
-      throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+        return;
+      }),
+      byKind("planar_entity_answers", () => {
+        return;
+      }),
+      Match.exhaustive,
+    );
 }
 
 export function traceUsageLimit(

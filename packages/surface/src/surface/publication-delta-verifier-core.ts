@@ -154,6 +154,9 @@ const SchemaCertificateSchema = Schema.Struct({
         flyOnlyHover: Schema.Array(SchemaNodeClassificationSchema),
         unitIdItemId: Schema.Array(SchemaNodeClassificationSchema),
         casterHealLinkRangeFeet: Schema.Array(SchemaNodeClassificationSchema),
+        suppressMovementTraceEffect: Schema.Array(
+          SchemaNodeClassificationSchema,
+        ),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
       comparisonNormalizedRootSha256: HashSchema,
@@ -676,6 +679,7 @@ type CandidateSchemaClassifications = {
   readonly flyOnlyHover: readonly SchemaNodeClassification[];
   readonly unitIdItemId: readonly SchemaNodeClassification[];
   readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
+  readonly suppressMovementTraceEffect: readonly SchemaNodeClassification[];
 };
 
 type ClassifiedSchemaTransform = {
@@ -921,8 +925,9 @@ function schemaObjectSignature(
                 otherIndex !== index &&
                 isSyntacticSchemaSubset(schema, member, other),
             );
-          if (redundant)
-            redundantSubsetCount && (redundantSubsetCount.value += 1);
+          if (redundant && redundantSubsetCount !== undefined) {
+            redundantSubsetCount.value += 1;
+          }
           return !redundant;
         });
         return `${key}:[${[...new Set(nonRedundant.map(visit))].sort(compareCodePointStrings).join(",")}]`;
@@ -975,11 +980,13 @@ function classifyCandidateSchema(
     flyOnlyHover: SchemaNodeClassification[];
     unitIdItemId: SchemaNodeClassification[];
     casterHealLinkRangeFeet: SchemaNodeClassification[];
+    suppressMovementTraceEffect: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
     unitIdItemId: [],
     casterHealLinkRangeFeet: [],
+    suppressMovementTraceEffect: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
   const authorize = (
@@ -1189,11 +1196,44 @@ function classifyCandidateSchema(
       ? proposed
       : transformed;
   };
+  const classifySuppressMovementTraceEffect: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (!reachable.has(value) || !Array.isArray(transformed.anyOf)) {
+      return transformed;
+    }
+    const matchingBranches = transformed.anyOf.filter((branch) => {
+      const resolvedBranch = resolvePureLocalReference(schema, branch);
+      if (!isJsonObject(resolvedBranch)) return false;
+      const properties = objectAt(resolvedBranch, "properties");
+      const kind =
+        properties === undefined ? undefined : objectAt(properties, "kind");
+      return (
+        kind?.type === "string" &&
+        Array.isArray(kind.enum) &&
+        kind.enum.length === 1 &&
+        kind.enum[0] === "suppress_movement_trace"
+      );
+    });
+    if (matchingBranches.length !== 1) return transformed;
+    const proposed = {
+      ...transformed,
+      anyOf: transformed.anyOf.filter(
+        (branch) => branch !== matchingBranches[0],
+      ),
+    };
+    return authorize("suppressMovementTraceEffect", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
   const classifiers = [
     classifyCasterHealLinkRangeFeet,
     classifyGmSpeedChoiceMinimum,
     classifyUnitIdItemId,
     classifyFlyOnlyHover,
+    classifySuppressMovementTraceEffect,
   ] as const;
   const transform = (value: JsonValue, pointer: string): JsonValue => {
     if (Array.isArray(value))
@@ -2164,6 +2204,8 @@ function compareSchemaGraphDelta(
       unitIdItemId: expected.classifiedChanges.unitIdItemId,
       casterHealLinkRangeFeet:
         expected.classifiedChanges.casterHealLinkRangeFeet,
+      suppressMovementTraceEffect:
+        expected.classifiedChanges.suppressMovementTraceEffect,
     });
     const classifiedComparison = classifyComparisonSchema(
       comparison,
