@@ -950,5 +950,3 @@ export {
   admitCharacterWeaponAttackExecutionWeapon,
   admitResolvedCharacterWeaponAttackExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";
-
-export { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
