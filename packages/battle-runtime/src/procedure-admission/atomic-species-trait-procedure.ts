@@ -22,14 +22,14 @@ const ATOMIC_SPECIES_TRAIT_ROOT_MECHANICS_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
 ]);
 
-const CREATURE_SPACE_MOVEMENT_FAILED_FACTS = [
+export const CREATURE_SPACE_MOVEMENT_FAILED_FACTS = [
   "movementTarget",
   "occupiedSpaceStopping",
 ] as const;
 type CreatureSpaceMovementFailedFact =
   (typeof CREATURE_SPACE_MOVEMENT_FAILED_FACTS)[number];
 
-const NATURAL_ONE_REROLL_FAILED_FACTS = [
+export const NATURAL_ONE_REROLL_FAILED_FACTS = [
   "rerollOptionality",
   "rerollTrigger",
   "rerollUse",
@@ -37,7 +37,7 @@ const NATURAL_ONE_REROLL_FAILED_FACTS = [
 type NaturalOneRerollFailedFact =
   (typeof NATURAL_ONE_REROLL_FAILED_FACTS)[number];
 
-const HIDE_OBSCUREMENT_FAILED_FACTS = [
+export const HIDE_OBSCUREMENT_FAILED_FACTS = [
   "hideAction",
   "hideObscurement",
 ] as const;

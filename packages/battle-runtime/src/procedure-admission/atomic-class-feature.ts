@@ -20,7 +20,7 @@ const ATOMIC_CLASS_FEATURE_ROOT_MECHANICS_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
 ]);
 
-const DELEGATED_STANDARD_ACTIONS_FAILED_FACTS = [
+export const DELEGATED_STANDARD_ACTIONS_FAILED_FACTS = [
   "unsupportedActivationCost",
   "unsupportedSleightOfHandAbilityCheck",
   "unsupportedSleightOfHandOperations",
@@ -29,7 +29,7 @@ const DELEGATED_STANDARD_ACTIONS_FAILED_FACTS = [
 export type DelegatedStandardActionsFailedFact =
   (typeof DELEGATED_STANDARD_ACTIONS_FAILED_FACTS)[number];
 
-const ACROBATIC_MOVEMENT_FAILED_FACTS = [
+export const ACROBATIC_MOVEMENT_FAILED_FACTS = [
   "unsupportedEquipmentCondition",
   "unsupportedMovementTiming",
   "unsupportedVerticalSurfaceTraversal",
