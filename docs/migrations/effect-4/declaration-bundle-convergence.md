@@ -410,6 +410,24 @@ public Unit id constants where available and construct the private Greataxe id
 at the synthetic fixture boundary. They add no declaration path, Battle
 execution support, forbidden owner, or coarse-limit change.
 
+The save-gated turn-constraint dependency correction at source revision
+`6d9c19290` adds
+`packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-turn-resources.d.ts`
+as internal compiler support. The reviewed graph therefore contains 578 files
+and 10,299,988 bytes, leaving 185,772 bytes below the unchanged 10 MiB cap. Its
+sorted POSIX path-ledger SHA-256 is
+`5d4a083dc3efcfeef6d90b4dcf34629336ba374b4ce2d28f877f98069ece77e4`,
+and its content-ledger SHA-256 is
+`9ba819c738ac4da4d30b3f1e31e754b283f3fc6838092943ebaee74695cba838`.
+Exactly four declarations change relative to the preceding certificate: the
+new 910-byte turn-resource owner and the re-export reshaping in
+`save-gated-turn-constraint-facts.d.ts`,
+`save-gated-turn-constraint-runtime.d.ts`, and
+`turn-boundary-lifecycle.d.ts`. The new leaf centralizes the existing bound
+effect query and turn-resource reconciliation while preserving the established
+exports. It adds no authored or runtime capability and does not widen the
+forbidden-owner set or either coarse limit.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted
