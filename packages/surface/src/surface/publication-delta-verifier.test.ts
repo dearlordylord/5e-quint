@@ -791,6 +791,38 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("schema-delta-unclassified");
   }, 180_000);
 
+  test("reports a reachable schema array-shape difference", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        const units = fixtureObjectField(
+          fixtureObjectField(schema, "properties"),
+          "units",
+        );
+        const prefixItems = fixtureArrayField(units, "prefixItems");
+        prefixItems.push(prefixItems[0]);
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    const unclassifiedIssue =
+      result.tag === "invalid"
+        ? result.issues.find(
+            (issue) => issue.kind === "schema-delta-unclassified",
+          )
+        : undefined;
+    expect(unclassifiedIssue?.message).toContain(
+      "first differing region: /properties/units/prefixItems (array shape)",
+    );
+  }, 180_000);
+
   test("rejects substitution of the authenticated intermediate schema", () => {
     const result = withFixture(
       ({ certificatePath: fixturePath }) => {
@@ -933,6 +965,64 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
     expect(issueKinds(result)).toContain("schema-delta-unclassified");
   }, 180_000);
+
+  test.each([
+    {
+      name: "GM-speed minimum",
+      mutate: (schema: Record<string, unknown>): void => {
+        const alternatives = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(schema, "$defs"),
+              "SrdRecordUnion1057Encoded",
+            ),
+            "properties",
+          ),
+          "alternatives",
+        );
+        alternatives.minItems = 3;
+      },
+    },
+    {
+      name: "fly-hover branch",
+      mutate: (schema: Record<string, unknown>): void => {
+        const hover = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(schema, "$defs"),
+              "SrdRecordUnion1053Encoded",
+            ),
+            "properties",
+          ),
+          "hover",
+        );
+        hover.enum = [false];
+      },
+    },
+  ])(
+    "rejects a reachable near-miss $name classification",
+    ({ mutate }) => {
+      const result = withFixture(
+        (paths) => {
+          const path = join(paths.publicationDir, "srd-surface.schema.json");
+          const schema = fixtureObject(
+            JSON.parse(readFileSync(path, "utf8")),
+            "schema",
+          );
+          mutate(schema);
+          writeFileSync(path, JSON.stringify(schema));
+          certifyCandidateSchemaSnapshot(paths);
+        },
+        { reviewMutatedCertificate: true },
+      );
+
+      expect(result.tag).toBe("invalid");
+      expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
+      expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+      expect(issueKinds(result)).toContain("schema-delta-unclassified");
+    },
+    180_000,
+  );
 
   test("rejects tampering with the Life Bond range classification pointer", () => {
     const result = withFixture(
