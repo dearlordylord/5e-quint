@@ -910,6 +910,11 @@ describe("Opaque Oracle source-free distribution", () => {
           input.endsWith("/stat-block-catalog-data.ts"),
         ),
       ).toBe(false);
+      expect(
+        firstBuild.bundledInputs.some((input) =>
+          input.endsWith("/surface-catalog.ts"),
+        ),
+      ).toBe(false);
       const executableText = readFileSync(
         join(firstDirectory, ORACLE_DISTRIBUTION_FILE_NAMES.executable),
         "utf8",
@@ -2111,7 +2116,7 @@ describe("Opaque Oracle source-free distribution", () => {
     }
   }, 30_000);
 
-  test("rejects a test entrypoint that imports eager catalog data", () => {
+  test("rejects an executable dependency graph containing canonical catalog inputs", () => {
     const temporaryRoot = mkdtempSync(
       join(tmpdir(), "opaque-oracle-eager-catalog-entrypoint-"),
     );
@@ -2128,6 +2133,9 @@ describe("Opaque Oracle source-free distribution", () => {
               packageRoot,
               "../surface/src/surface/stat-block-catalog-data.ts",
             ),
+          )};`,
+          `import ${JSON.stringify(
+            resolve(packageRoot, "../surface/src/surface/surface-catalog.ts"),
           )};`,
           "",
         ].join("\n"),
