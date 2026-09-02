@@ -20,7 +20,6 @@ import type {
   Attachment,
   DcSource,
   EffectAtom,
-  Skill,
   SpellMechanics,
   TargetSelection,
 } from "@dnd/surface/surface/types";
@@ -36,6 +35,7 @@ import { allocateBattleEffectOccurrenceForCreature } from "../../effect-executio
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   type BattleActDiscoveryCandidate,
+  type BattleD20RollModifierSkillFilter,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
@@ -64,7 +64,6 @@ import {
   rollModifierDelta,
   rollModifierKindsAreSupported,
   rollModifierSkillFilter,
-  type RollModifierSkillProjection,
   scalarBuffSpellRangeFeet,
 } from "../spells-profiles-support.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
@@ -165,7 +164,17 @@ const D20RollModifierEffectSchema = Schema.Struct({
       sign: Schema.Literals(["+", "-"]),
     }),
   ]),
-  skill: Schema.NullOr(Schema.Literals(BATTLE_SURFACE_SKILLS)),
+  skillFilter: Schema.Union([
+    Schema.Struct({ kind: Schema.Literal("none") }),
+    Schema.Struct({
+      kind: Schema.Literal("fixed"),
+      skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("choice"),
+      options: Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
+    }),
+  ]),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
 
@@ -238,7 +247,7 @@ type RollModifierSelfAndChosenLegalTargetsProjection = Extract<
 type RollModifierNumericEffectProjection = {
   readonly on: readonly BattleD20RollModifierKind[];
   readonly delta: RollModifierNumericDelta;
-  readonly skill: RollModifierSkillProjection;
+  readonly skillFilter: BattleD20RollModifierSkillFilter;
 };
 type RollModifierAbilityCheckEffectProjection = {
   readonly abilityChoices: readonly Ability[];
@@ -754,7 +763,7 @@ function rollModifierNumericEffectProjection(
   return {
     on: effect.on,
     delta,
-    skill: skillFilter,
+    skillFilter,
   };
 }
 
@@ -1349,32 +1358,14 @@ function rollModifierNumericActiveEffect(
   actorId: CombatantId,
   effect: RollModifierNumericEffectProjection,
   expiresAt: BattleActiveEffectExpiration,
-): {
-  readonly effect: RollModifierD20Effect;
-  readonly skillChoices: readonly Skill[] | null;
-} {
-  const skill = Match.value(effect.skill).pipe(
-    Match.when({ kind: "none" }, () => ({ skill: null, skillChoices: null })),
-    Match.when({ kind: "fixed" }, ({ skill }) => ({
-      skill,
-      skillChoices: null,
-    })),
-    Match.when({ kind: "choice" }, ({ options }) => ({
-      skill: null,
-      skillChoices: options,
-    })),
-    Match.exhaustive,
-  );
+): RollModifierD20Effect {
   return {
-    effect: {
-      kind: "d20RollModifier",
-      sourceCombatantId: actorId,
-      on: effect.on,
-      delta: effect.delta,
-      skill: skill.skill,
-      expiresAt,
-    },
-    skillChoices: skill.skillChoices,
+    kind: "d20RollModifier",
+    sourceCombatantId: actorId,
+    on: effect.on,
+    delta: effect.delta,
+    skillFilter: effect.skillFilter,
+    expiresAt,
   };
 }
 
@@ -1442,8 +1433,7 @@ function admitRollModifier(
           targeting,
           rangeFeet: facts.rangeFeet,
           saveGate: facts.saveGate,
-          effect: modifier.effect,
-          skillChoices: modifier.skillChoices,
+          effect: modifier,
           abilityChoices: null,
         };
       }
@@ -1456,8 +1446,7 @@ function admitRollModifier(
         targeting,
         rangeFeet: facts.rangeFeet,
         saveGate: facts.saveGate,
-        effect: modifier.effect,
-        skillChoices: modifier.skillChoices,
+        effect: modifier,
         abilityChoices: null,
       };
     }
@@ -1477,7 +1466,6 @@ function admitRollModifier(
         rangeFeet: facts.rangeFeet,
         saveGate: facts.saveGate,
         effect: modifier.effect,
-        skillChoices: null,
         abilityChoices: modifier.abilityChoices,
         abilityChoiceApplication: modifier.abilityChoiceApplication,
       };
@@ -1492,7 +1480,6 @@ function admitRollModifier(
       rangeFeet: facts.rangeFeet,
       saveGate: facts.saveGate,
       effect: modifier.effect,
-      skillChoices: null,
       abilityChoices: modifier.abilityChoices,
       abilityChoiceApplication: modifier.abilityChoiceApplication,
     };
@@ -1582,14 +1569,23 @@ function discoverRollModifierCastAct(
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
     : spellTargetHole(state, actorId, invocation);
+  const skillChoiceHoles =
+    invocation.effect.kind === "d20RollModifier"
+      ? Match.value(invocation.effect.skillFilter).pipe(
+          Match.when({ kind: "none" }, () => []),
+          Match.when({ kind: "fixed" }, () => []),
+          Match.when({ kind: "choice" }, (skillFilter) => [
+            spellRollModifierSkillChoiceHole(invocation, skillFilter),
+          ]),
+          Match.exhaustive,
+        )
+      : [];
   const initialHoles =
     targetHole.choices.length === 0
       ? []
       : [
           targetHole,
-          ...(invocation.skillChoices === null
-            ? []
-            : [spellRollModifierSkillChoiceHole(invocation)]),
+          ...skillChoiceHoles,
           ...(invocation.abilityChoices === null
             ? []
             : rollModifierUsesTargetAbilityChoices(invocation)
@@ -1714,16 +1710,12 @@ const RollModifierInvocationSchema = spellProcedureExecutionSchema(
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: D20RollModifierEffectSchema,
-      skillChoices: Schema.NullOr(
-        Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
-      ),
       abilityChoices: Schema.Null,
       abilityChoiceApplication: Schema.optionalKey(Schema.Never),
     }),
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: AbilityCheckRollModeEffectSchema,
-      skillChoices: Schema.Null,
       abilityChoices: Schema.Array(Schema.Literals(BATTLE_SURFACE_ABILITIES)),
       abilityChoiceApplication: Schema.Literals(["single", "perTarget"]),
     }),

@@ -53,6 +53,7 @@ import type {
   BattleMagicSuppressionOngoingSpellEffectRef,
   BattleCompelledBehaviorOption,
   BattleD20RollModifierDelta,
+  BattleD20RollModifierSkillFilter,
   BattleMovableLight,
   BattleMovableLightList,
   BattleSpecialSpeedKind,
@@ -811,7 +812,7 @@ export type BattleActiveEffect = (
       readonly kind: "d20RollModifier";
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;
-      readonly skill: Skill | null;
+      readonly skillFilter: BattleD20RollModifierSkillFilter;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {

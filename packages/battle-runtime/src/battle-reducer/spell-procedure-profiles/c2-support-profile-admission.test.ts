@@ -14,7 +14,10 @@ import type {
   SpellMechanicsAdmissionSource,
   SpellProcedureAdmissionIssue,
 } from "./spell-mechanics-admission.ts";
-import { admitBattleSpellMechanicsFrom } from "./spell-mechanics-admission.ts";
+import {
+  admitBattleSpellMechanicsFrom,
+  spellTouchRangeFeet,
+} from "./spell-mechanics-admission.ts";
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
@@ -650,6 +653,67 @@ describe("C2 support profile static admission", () => {
     }
     expect(result.admitted.evidence.unowned).toEqual([]);
   });
+
+  test("threads the admitted damage-reduction amount, targeting, and range into execution", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    const result = damageReductionProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+    expect(result).toMatchObject({ tag: "supported" });
+    if (result.tag !== "supported") return;
+
+    expect(result.admitted.facts).toMatchObject({
+      amount: { dice: 1, dieSize: 4 },
+      targeting: {
+        kind: "targetList",
+        minTargets: 1,
+        maxTargets: 1,
+        requiredTargetDisposition: "willing",
+      },
+      rangeFeet: spellTouchRangeFeet(),
+    });
+    const [invocation] = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      contextFor(source.castingSource),
+    );
+    expect(invocation).toBeDefined();
+    if (invocation === undefined) return;
+    expect(invocation.amount).toBe(result.admitted.facts.amount);
+    expect(invocation.targeting).toBe(result.admitted.facts.targeting);
+    expect(invocation.rangeFeet).toBe(result.admitted.facts.rangeFeet);
+  });
+
+  test.each([
+    ["bless", { kind: "none" }],
+    ["guidance", { kind: "choice" }],
+    ["pass_without_trace", { kind: "fixed", skill: "stealth" }],
+  ] as const)(
+    "carries the %s skill filter as one discriminated invocation fact",
+    (spellId, expectedSkillFilter) => {
+      const source = spellAdmissionSource(spellRecord(spellId));
+      const result = rollModifierProfile.admitMechanics(
+        mechanicsSource(source),
+      );
+      expect(result).toMatchObject({ tag: "supported" });
+      if (result.tag !== "supported") return;
+      const [invocation] = result.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(source),
+        contextFor(source.castingSource),
+      );
+      expect(invocation).toBeDefined();
+      if (
+        invocation === undefined ||
+        invocation.effect.kind !== "d20RollModifier"
+      ) {
+        return;
+      }
+      expect(invocation.effect.skillFilter).toMatchObject(expectedSkillFilter);
+      expect(invocation).not.toHaveProperty("skillChoices");
+      if (invocation.effect.skillFilter.kind === "choice") {
+        expect(invocation.effect.skillFilter.options.length).toBeGreaterThan(0);
+      }
+    },
+  );
 
   test.each([
     [

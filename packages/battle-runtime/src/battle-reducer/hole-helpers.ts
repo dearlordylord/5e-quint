@@ -544,10 +544,22 @@ function activeFixedAbilityCheckModifierDelta(
   const actor = state.combatants.get(actorId);
   return (
     actor?.activeEffects.reduce((total, effect) => {
+      const skillMatches =
+        effect.kind === "d20RollModifier"
+          ? Match.value(effect.skillFilter).pipe(
+              Match.when({ kind: "none" }, () => true),
+              Match.when(
+                { kind: "fixed" },
+                ({ skill }) => skill === context.skill,
+              ),
+              Match.when({ kind: "choice" }, () => false),
+              Match.exhaustive,
+            )
+          : false;
       if (
         effect.kind !== "d20RollModifier" ||
         !effect.on.includes("ability_check") ||
-        (effect.skill !== null && effect.skill !== context.skill)
+        !skillMatches
       ) {
         return total;
       }

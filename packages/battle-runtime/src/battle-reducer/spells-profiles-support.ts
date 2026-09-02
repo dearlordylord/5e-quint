@@ -19,7 +19,6 @@ import type {
   DiceExpr,
   EffectAtom,
   OngoingEffect,
-  Skill,
   SkillFilter,
   TopLevelSpellCastingTime,
   DiceAmount as SurfaceDiceAmount,
@@ -35,6 +34,7 @@ import {
 import {
   type BattleActiveEffectExpiration,
   type BattleD20RollModifierDelta,
+  type BattleD20RollModifierSkillFilter,
   type AbilityCheckRollModeSpellEffect,
   type D20RollModifierSpellEffect,
   type HealingSpellActionCost,
@@ -65,7 +65,6 @@ type D20RollModifierSpellProjection = {
     readonly ability: Ability;
     readonly dc: DcSource;
   } | null;
-  readonly skillChoices: readonly Skill[] | null;
   readonly abilityChoices: null;
   readonly targeting: RollModifierSpellTargeting;
 };
@@ -73,7 +72,6 @@ type AbilityCheckRollModeSpellProjection = {
   readonly effect: AbilityCheckRollModeSpellEffect;
   readonly rangeFeet: MovementFeet;
   readonly saveGate: null;
-  readonly skillChoices: null;
   readonly abilityChoices: readonly Ability[];
   readonly abilityChoiceApplication: "single" | "perTarget";
   readonly targeting: RollModifierSpellTargeting;
@@ -555,10 +553,9 @@ export function rollModifierSpellProjection(
         ? null
         : {
             targeting,
-            effect: modifier.effect,
+            effect: modifier,
             rangeFeet,
             saveGate: null,
-            skillChoices: modifier.skillChoices,
             abilityChoices: null,
           };
     }
@@ -581,7 +578,6 @@ export function rollModifierSpellProjection(
             effect: modifier.effect,
             rangeFeet,
             saveGate: null,
-            skillChoices: null,
             abilityChoices: modifier.abilityChoices,
             abilityChoiceApplication: modifier.abilityChoiceApplication,
           };
@@ -618,10 +614,9 @@ export function rollModifierSpellProjection(
     ? null
     : {
         targeting,
-        effect: modifier.effect,
+        effect: modifier,
         rangeFeet,
         saveGate: { ability: phase.ability, dc: phase.dc },
-        skillChoices: modifier.skillChoices,
         abilityChoices: null,
       };
 }
@@ -687,10 +682,7 @@ export function rollModifierActiveEffect(
   _spell: BattleSpellAdmissionSource,
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>,
   expiresAt: BattleActiveEffectExpiration,
-): {
-  readonly effect: D20RollModifierSpellEffect;
-  readonly skillChoices: readonly Skill[] | null;
-} | null {
+): D20RollModifierSpellEffect | null {
   const delta = rollModifierDelta(effect.delta);
   if (delta === null || !rollModifierKindsAreSupported(effect.on)) {
     return null;
@@ -700,15 +692,12 @@ export function rollModifierActiveEffect(
     return null;
   }
   return {
-    effect: {
-      kind: "d20RollModifier",
-      sourceCombatantId: actorId,
-      on: effect.on,
-      delta,
-      skill: skillFilter.kind === "fixed" ? skillFilter.skill : null,
-      expiresAt,
-    },
-    skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
+    kind: "d20RollModifier",
+    sourceCombatantId: actorId,
+    on: effect.on,
+    delta,
+    skillFilter,
+    expiresAt,
   };
 }
 
@@ -835,14 +824,9 @@ export function rollModifierKindsAreSupported(
   );
 }
 
-export type RollModifierSkillProjection =
-  | { readonly kind: "none" }
-  | { readonly kind: "fixed"; readonly skill: Skill }
-  | { readonly kind: "choice"; readonly options: readonly Skill[] };
-
 export function rollModifierSkillFilter(
   skillFilter: SkillFilter | undefined,
-): RollModifierSkillProjection | null {
+): BattleD20RollModifierSkillFilter | null {
   if (skillFilter === undefined) {
     return { kind: "none" };
   }

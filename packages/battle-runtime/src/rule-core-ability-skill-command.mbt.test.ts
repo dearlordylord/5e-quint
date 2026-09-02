@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 import { describe, expect, it } from "vitest";
+import { Match } from "effect";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -921,11 +922,16 @@ function d20ModifierSkill(
   const effect = effects.find(
     (candidate) => candidate.kind === "d20RollModifier",
   );
-  if (effect?.kind !== "d20RollModifier" || effect.skill === null) {
-    return "none";
-  }
-  if (isReplaySkill(effect.skill)) return effect.skill;
-  throw new Error(`Unexpected d20 modifier skill ${effect.skill}.`);
+  if (effect?.kind !== "d20RollModifier") return "none";
+  return Match.value(effect.skillFilter).pipe(
+    Match.when({ kind: "none" }, () => "none" as const),
+    Match.when({ kind: "choice" }, () => "none" as const),
+    Match.when({ kind: "fixed" }, ({ skill }) => {
+      if (isReplaySkill(skill)) return skill;
+      throw new Error(`Unexpected d20 modifier skill ${skill}.`);
+    }),
+    Match.exhaustive,
+  );
 }
 
 function abilityCheckModeAbility(

@@ -253,7 +253,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceCombatantId: spellCasterId,
         on: ["attack_roll", "saving_throw"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
-        skill: null,
+        skillFilter: { kind: "none" },
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
@@ -274,7 +274,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       on: ["attack_roll", "saving_throw"] as const,
       delta: { dice: 1, dieSize: 4, sign: "+" } as const,
-      skill: null,
+      skillFilter: { kind: "none" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
     const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
@@ -516,7 +516,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceProcedureRef: act.subject.procedureRef,
         on: ["ability_check"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
-        skill: "perception",
+        skillFilter: { kind: "fixed", skill: "perception" },
       }),
     );
     expect(passivePerceptionModifierDelta(resolved.state, spellCasterId)).toBe(
@@ -753,7 +753,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceCombatantId: spellCasterId,
         on: ["ability_check"],
         delta: { dice: 10, dieSize: 1, sign: "+" },
-        skill: "stealth",
+        skillFilter: { kind: "fixed", skill: "stealth" },
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
@@ -763,7 +763,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       expect.objectContaining({
         kind: "d20RollModifier",
         sourceProcedureRef: act.subject.procedureRef,
-        skill: "stealth",
+        skillFilter: { kind: "fixed", skill: "stealth" },
       }),
     );
     expect(
@@ -979,7 +979,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       on: ["ability_check"] as const,
       delta: { kind: "fixedNumber" as const, amount: 10, sign: "-" as const },
-      skill: "perception" as const,
+      skillFilter: { kind: "fixed" as const, skill: "perception" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
     expect(
@@ -1970,7 +1970,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             sourceCombatantId: spellCasterId,
             on: ["ability_check"],
             delta: { dice: 1, dieSize: 4, sign: "+" },
-            skill: "stealth",
+            skillFilter: { kind: "fixed", skill: "stealth" },
             expiresAt: {
               kind: "concentration",
               combatantId: spellCasterId,
@@ -1986,7 +1986,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             sourceCombatantId: spellCasterId,
             on: ["ability_check"],
             delta: { dice: 1, dieSize: 4, sign: "+" },
-            skill: "perception",
+            skillFilter: { kind: "fixed", skill: "perception" },
             expiresAt: {
               kind: "duration",
               durationTicks: elapsedTimeTicks(10),
@@ -2033,11 +2033,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           sourceProcedureRef: unrelatedSource,
-          skill: "perception",
+          skillFilter: { kind: "fixed", skill: "perception" },
         }),
         expect.objectContaining({
           sourceProcedureRef: act.subject.procedureRef,
-          skill: "perception",
+          skillFilter: { kind: "fixed", skill: "perception" },
         }),
       ]),
     );

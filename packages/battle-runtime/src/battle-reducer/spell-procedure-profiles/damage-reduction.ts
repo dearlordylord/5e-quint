@@ -24,11 +24,7 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 //                            spells-active-effects.ts (kept as a file-local
 //                            helper; not exported from the profile)
 //
-import {
-  movementFeet,
-  PositiveInteger,
-  type ReadonlyNonEmptyArray,
-} from "@dnd/shared/types";
+import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType, SpellMechanics } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
@@ -71,6 +67,7 @@ import {
   spellProcedureHasCompleteSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  spellTouchRangeFeet,
   type SpellMechanicsAdmissionSource,
   type SpellAttachmentRejection,
   type SpellOngoingOperationOccurrence,
@@ -102,6 +99,9 @@ type DamageReductionMechanics = Extract<
 >;
 type DamageReductionProfileShape = {
   readonly damageTypeChoices: ReadonlyNonEmptyArray<DamageType>;
+  readonly amount: DamageReductionAmount;
+  readonly targeting: DamageReductionTargetingProjection;
+  readonly rangeFeet: ReturnType<typeof spellTouchRangeFeet>;
   readonly range: Extract<
     SpellProcedureMechanicsFacts["range"],
     { readonly kind: "touch" }
@@ -144,11 +144,25 @@ type DamageReductionAdmissionIssue = SpellProcedureAdmissionIssue<
 
 const DAMAGE_REDUCTION_LEVEL = 0;
 const DAMAGE_REDUCTION_OPERATION_COUNT = 1;
+const DAMAGE_REDUCTION_DICE_COUNT = 1;
+const DAMAGE_REDUCTION_DIE_SIZE = 4;
+const DAMAGE_REDUCTION_TARGET_COUNT = 1;
 const DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS = [
   "mode",
   "targetKinds",
   "disposition",
 ] as const;
+
+type DamageReductionAmount = {
+  readonly dice: typeof DAMAGE_REDUCTION_DICE_COUNT;
+  readonly dieSize: typeof DAMAGE_REDUCTION_DIE_SIZE;
+};
+type DamageReductionTargetingProjection = {
+  readonly kind: "targetList";
+  readonly minTargets: typeof DAMAGE_REDUCTION_TARGET_COUNT;
+  readonly maxTargets: typeof DAMAGE_REDUCTION_TARGET_COUNT;
+  readonly requiredTargetDisposition: "willing";
+};
 
 function damageReductionOperationEffectPath(
   occurrence: SpellOngoingOperationOccurrence | undefined,
@@ -291,6 +305,8 @@ function damageReductionMechanicsAdmission(
   const mechanics = source.mechanics;
   const rangeFacts =
     mechanics.range.kind === "touch" ? mechanics.range : undefined;
+  const rangeFeet =
+    rangeFacts === undefined ? undefined : spellTouchRangeFeet();
   const durationFacts =
     mechanics.duration.kind === "concentration"
       ? mechanics.duration
@@ -354,6 +370,7 @@ function damageReductionMechanicsAdmission(
     mechanics.attachment,
     DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS,
   );
+  let targeting: DamageReductionTargetingProjection | undefined;
   if (targetAttachmentAdmission.tag === "rejected") {
     for (const rejection of targetAttachmentAdmission.rejections) {
       pushIssue(
@@ -366,10 +383,20 @@ function damageReductionMechanicsAdmission(
       targetAttachmentAdmission.attachment.value.selection;
     if (
       targetSelection.mode !== "one" ||
+      targetSelection.targetKinds === undefined ||
+      targetSelection.targetKinds.length !== 1 ||
+      targetSelection.targetKinds[0] !== "creature" ||
       !("disposition" in targetSelection) ||
       targetSelection.disposition !== "willing"
     ) {
       pushIssue("attachment", spellOngoingAttachmentPath());
+    } else {
+      targeting = {
+        kind: "targetList",
+        minTargets: DAMAGE_REDUCTION_TARGET_COUNT,
+        maxTargets: DAMAGE_REDUCTION_TARGET_COUNT,
+        requiredTargetDisposition: targetSelection.disposition,
+      };
     }
   }
   if (expected === undefined || expected.operation.trigger.kind !== "passive") {
@@ -384,11 +411,16 @@ function damageReductionMechanicsAdmission(
       : undefined;
   const damageTypeProjection =
     damageReductionDamageTypeProjection(damageEffect);
+  let amount: DamageReductionAmount | undefined;
   if (damageEffect === undefined || damageEffect.amount.kind !== "fixed") {
     pushIssue("damage", damageReductionOperationEffectPath(expected));
   } else {
     const expr = damageEffect.amount.expr;
-    if (expr.dice !== 1 || expr.dieSize !== 4 || (expr.flat ?? 0) !== 0) {
+    const fixedDiceSupported =
+      expr.dice === DAMAGE_REDUCTION_DICE_COUNT &&
+      expr.dieSize === DAMAGE_REDUCTION_DIE_SIZE &&
+      (expr.flat ?? 0) === 0;
+    if (!fixedDiceSupported) {
       pushIssue("damage", damageReductionOperationEffectPath(expected));
     }
     if (expr.spellcastingMod === true) {
@@ -402,6 +434,13 @@ function damageReductionMechanicsAdmission(
         "abilityModifier",
         damageReductionOperationEffectPath(expected),
       );
+    }
+    if (
+      fixedDiceSupported &&
+      expr.spellcastingMod !== true &&
+      expr.abilityModifier === undefined
+    ) {
+      amount = { dice: expr.dice, dieSize: expr.dieSize };
     }
   }
   if (damageTypeProjection.tag === "unsupported") {
@@ -435,14 +474,20 @@ function damageReductionMechanicsAdmission(
   }
 
   return damageTypeProjection.tag === "supported" &&
+    amount !== undefined &&
+    targeting !== undefined &&
     rangeFacts !== undefined &&
+    rangeFeet !== undefined &&
     durationFacts !== undefined
     ? (() => {
         const facts = {
           ...source.spellDefinitionRuleFacts,
           range: rangeFacts,
+          rangeFeet,
           duration: durationFacts,
           damageTypeChoices: damageTypeProjection.choices,
+          amount,
+          targeting,
         } satisfies DamageReductionMechanicsFacts;
         return {
           tag: "supported" as const,
@@ -480,14 +525,22 @@ function damageReductionMechanicsAdmission(
           damageReductionIssue(
             damageTypeProjection.tag === "unsupported"
               ? "damage"
-              : rangeFacts === undefined
-                ? "range"
-                : "duration",
+              : amount === undefined
+                ? "damage"
+                : targeting === undefined
+                  ? "attachment"
+                  : rangeFacts === undefined
+                    ? "range"
+                    : "duration",
             damageTypeProjection.tag === "unsupported"
               ? damageReductionOperationEffectPath(expected)
-              : rangeFacts === undefined
-                ? spellMechanicsHeaderPath("range")
-                : spellDurationValuePath(),
+              : amount === undefined
+                ? damageReductionOperationEffectPath(expected)
+                : targeting === undefined
+                  ? spellOngoingAttachmentPath()
+                  : rangeFacts === undefined
+                    ? spellMechanicsHeaderPath("range")
+                    : spellDurationValuePath(),
           ),
         ],
       };
@@ -531,19 +584,14 @@ function admitDamageReduction(
       procedure: "damageReduction",
       spell,
       actionCost: "magicAction",
-      targeting: {
-        kind: "targetList",
-        minTargets: 1,
-        maxTargets: 1,
-        requiredTargetDisposition: "willing",
-      },
+      targeting: facts.targeting,
       damageTypeChoices: facts.damageTypeChoices,
-      amount: { dice: 1, dieSize: 4 },
+      amount: facts.amount,
       expiresAt: {
         kind: "concentration",
         combatantId: ctx.actor.combatantId,
       },
-      rangeFeet: movementFeet(5),
+      rangeFeet: facts.rangeFeet,
     },
   ];
 }

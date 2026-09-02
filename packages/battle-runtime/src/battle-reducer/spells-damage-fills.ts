@@ -76,6 +76,7 @@ import {
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
   type BattleDamageRelationshipDecisions,
+  type BattleD20RollModifierSkillFilter,
   type BattleFill,
   type BattleHoleId,
   type BattleSpellTargetListRelationshipFact,
@@ -924,6 +925,10 @@ export function spellRollModifierSkillChoiceHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<RuntimeSpellProcedure, { readonly procedure: "rollModifier" }>
   >,
+  skillFilter: Extract<
+    BattleD20RollModifierSkillFilter,
+    { readonly kind: "choice" }
+  >,
 ): BattleSpellSkillChoiceHole {
   return {
     kind: "skillChoice",
@@ -933,7 +938,7 @@ export function spellRollModifierSkillChoiceHole(
     ),
     label: `Spell skill`,
     sourceProcedureRef: invocation.sourceProcedureRef,
-    choices: invocation.skillChoices ?? [],
+    choices: skillFilter.options,
   };
 }
 
