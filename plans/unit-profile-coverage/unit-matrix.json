@@ -32231,6 +32231,7 @@
           "owner": "future weapon-attack miss-damage mastery owner",
           "reason": "A future owner must gate Graze on an unlocked mastery for the attacking weapon, offer damage after a miss, derive the attack ability modifier and weapon damage type from the attack, and enforce that only an increase to that ability modifier can increase the damage without authored-identity dispatch."
         },
+        "futureProfileOwner": "future weapon-attack miss-damage mastery owner",
         "reason": "Graze is authored and installed, but Battle admission rejects its weapon-attack-miss damage mechanics because no promoted runtime profile owns optional miss damage equal to the attack ability modifier in the weapon's damage type.",
         "tag": "unsupported-profile"
       },
@@ -32254,6 +32255,7 @@
           "owner": "future Light-property extra-attack timing mastery owner",
           "reason": "A future owner must gate Nick on an unlocked mastery for the attacking weapon, integrate the Light property's extra attack with Attack action and Bonus Action resources, and enforce the once-per-turn limit without authored-identity dispatch."
         },
+        "futureProfileOwner": "future Light-property extra-attack timing mastery owner",
         "reason": "Nick is authored and installed, but Battle admission rejects its Light-property extra-attack timing replacement because no promoted runtime profile owns moving that extra attack from a Bonus Action into the Attack action once per turn.",
         "tag": "unsupported-profile"
       },
@@ -32570,6 +32572,7 @@
           "owner": "future target-bound next-attack Advantage mastery owner",
           "reason": "A future owner must gate Vex on an unlocked mastery for a weapon hit that deals damage, grant Advantage only on the wielder's next attack roll against that same creature, consume it on that attack, and expire it at the end of the wielder's next turn without authored-identity dispatch."
         },
+        "futureProfileOwner": "future target-bound next-attack Advantage mastery owner",
         "reason": "Vex is authored and installed, but Battle admission rejects its target-bound next-attack Advantage mechanics because no promoted runtime profile owns their creation, consumption, and expiration.",
         "tag": "unsupported-profile"
       },
