@@ -855,6 +855,85 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
   }, 180_000);
 
+  test("rejects tampering with the canonical Mastery classification pointer", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const classifiedChanges = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(
+                fixtureObjectField(certificate, "artifacts"),
+                "schema",
+              ),
+              "evidence",
+            ),
+            "graphDelta",
+          ),
+          "classifiedChanges",
+        );
+        const masteryClassifications = fixtureArrayField(
+          classifiedChanges,
+          "canonicalMasteryVariants",
+        );
+        const first = fixtureObject(
+          masteryClassifications[0],
+          "canonicalMasteryVariants[0]",
+        );
+        first.pointer = "/$defs/UnreviewedMastery/properties/mechanics";
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
+  test("rejects a near-miss canonical Mastery schema variant", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        const definitions = fixtureObjectField(schema, "$defs");
+        const graze = Object.values(definitions)
+          .map((definition) => fixtureObject(definition, "definition"))
+          .find((definition) => {
+            const properties = definition.properties;
+            if (!isFixtureObject(properties)) return false;
+            const family = properties.family;
+            return (
+              isFixtureObject(family) &&
+              Array.isArray(family.enum) &&
+              family.enum[0] === "weapon_attack_miss_damage"
+            );
+          });
+        if (graze === undefined) {
+          throw new Error("Expected canonical Graze schema definition");
+        }
+        const family = fixtureObjectField(
+          fixtureObjectField(graze, "properties"),
+          "family",
+        );
+        family.enum = ["synthetic_weapon_attack_miss_damage"];
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
   test("rejects tampering with the Life Bond range classification pointer", () => {
     const result = withFixture(
       ({ certificatePath: fixturePath }) => {

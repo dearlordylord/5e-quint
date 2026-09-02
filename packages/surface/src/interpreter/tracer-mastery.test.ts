@@ -15,6 +15,10 @@ describe("Surface Weapon Mastery trace projections", () => {
         "attack_roll\nweapon attack miss\noptional true",
         "damage\nattack_ability_modifier\nweapon_damage_type\nattack_ability_modifier_only",
       ],
+      edges: [
+        ["attack_roll", "damage", "grants"],
+        ["mastery_root", "attack_roll", "roots"],
+      ],
     },
     {
       input: nickInput,
@@ -28,6 +32,15 @@ describe("Surface Weapon Mastery trace projections", () => {
         "light_property_extra_attack\noptional true",
         "action_timing_replacement\nbonus_action -> attack_action",
         "use_count\nonce per turn",
+      ],
+      edges: [
+        [
+          "light_property_extra_attack",
+          "action_timing_replacement",
+          "replaces_with",
+        ],
+        ["action_timing_replacement", "use_count", "consumes"],
+        ["mastery_root", "light_property_extra_attack", "roots"],
       ],
     },
     {
@@ -45,11 +58,22 @@ describe("Surface Weapon Mastery trace projections", () => {
         "modify_roll_advantage\nadvantage on attack_roll ×1",
         "turn_end_window\n(attacker's next turn)",
       ],
+      edges: [
+        ["attack_roll", "on_hit_window", "opens_window"],
+        ["attack_roll", "target", "attaches_to"],
+        ["on_hit_window", "modify_roll_advantage", "grants"],
+        ["modify_roll_advantage", "target", "attaches_to"],
+        ["modify_roll_advantage", "turn_end_window", "persists_until"],
+        ["mastery_root", "attack_roll", "roots"],
+      ],
     },
   ])(
     "projects $input.id without losing its rule facts",
-    ({ input, atomKinds, labels }) => {
+    ({ input, atomKinds, labels, edges }) => {
       const trace = traceUnit(decodeUnitRecordSync(input));
+      const atomKindByNodeId = new Map(
+        trace.nodes.map(({ id, atomKind }) => [id, atomKind]),
+      );
 
       expect(trace.unitId).toBe(input.id);
       expect(trace.atomKinds).toEqual(atomKinds);
@@ -57,12 +81,12 @@ describe("Surface Weapon Mastery trace projections", () => {
         expect.arrayContaining(labels),
       );
       expect(
-        trace.edges.every(
-          ({ from, to }) =>
-            trace.nodes.some(({ id }) => id === from) &&
-            trace.nodes.some(({ id }) => id === to),
-        ),
-      ).toBe(true);
+        trace.edges.map(({ from, to, relation }) => [
+          atomKindByNodeId.get(from),
+          atomKindByNodeId.get(to),
+          relation,
+        ]),
+      ).toEqual(edges);
     },
   );
 });

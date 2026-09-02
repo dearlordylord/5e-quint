@@ -155,6 +155,7 @@ const SchemaCertificateSchema = Schema.Struct({
         unitIdItemId: Schema.Array(SchemaNodeClassificationSchema),
         unitIdLinkedSpellEnd: Schema.Array(SchemaNodeClassificationSchema),
         casterHealLinkRangeFeet: Schema.Array(SchemaNodeClassificationSchema),
+        canonicalMasteryVariants: Schema.Array(SchemaNodeClassificationSchema),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
       comparisonNormalizedRootSha256: HashSchema,
@@ -678,6 +679,7 @@ type CandidateSchemaClassifications = {
   readonly unitIdItemId: readonly SchemaNodeClassification[];
   readonly unitIdLinkedSpellEnd: readonly SchemaNodeClassification[];
   readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
+  readonly canonicalMasteryVariants: readonly SchemaNodeClassification[];
 };
 
 type ClassifiedSchemaTransform = {
@@ -978,12 +980,14 @@ function classifyCandidateSchema(
     unitIdItemId: SchemaNodeClassification[];
     unitIdLinkedSpellEnd: SchemaNodeClassification[];
     casterHealLinkRangeFeet: SchemaNodeClassification[];
+    canonicalMasteryVariants: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
     unitIdItemId: [],
     unitIdLinkedSpellEnd: [],
     casterHealLinkRangeFeet: [],
+    canonicalMasteryVariants: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
   const authorize = (
@@ -1211,12 +1215,47 @@ function classifyCandidateSchema(
       ? proposed
       : transformed;
   };
+  const canonicalMasteryMechanicsNodeSha256 = new Set([
+    "2f3283296edf0ccf3e6842ecd0b97d01b7e869bae39b5e6522b749a9aa25c9cd",
+    "b655d4c8d02f6c63429de3c25dfceea3bdc670ffdf6b73ceadbfd20ac6c2f722",
+  ]);
+  const classifyCanonicalMasteryVariants: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !pointer.endsWith("/properties/mechanics") ||
+      !reachable.has(value) ||
+      !Array.isArray(transformed.anyOf) ||
+      transformed.anyOf.length !== 3
+    ) {
+      return transformed;
+    }
+    const masteryVariants = transformed.anyOf.filter((member) =>
+      canonicalMasteryMechanicsNodeSha256.has(
+        canonicalNodeSha256(resolvePureLocalReference(schema, member)),
+      ),
+    );
+    if (masteryVariants.length !== canonicalMasteryMechanicsNodeSha256.size) {
+      return transformed;
+    }
+    const retained = transformed.anyOf.filter(
+      (member) => !masteryVariants.includes(member),
+    );
+    if (retained.length !== 1) return transformed;
+    const proposed = { ...transformed, anyOf: retained };
+    return authorize("canonicalMasteryVariants", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
   const classifiers = [
     classifyCasterHealLinkRangeFeet,
     classifyGmSpeedChoiceMinimum,
     classifyUnitIdItemId,
     classifyUnitIdLinkedSpellEnd,
     classifyFlyOnlyHover,
+    classifyCanonicalMasteryVariants,
   ] as const;
   const transform = (value: JsonValue, pointer: string): JsonValue => {
     if (Array.isArray(value))
@@ -2188,6 +2227,8 @@ function compareSchemaGraphDelta(
       unitIdLinkedSpellEnd: expected.classifiedChanges.unitIdLinkedSpellEnd,
       casterHealLinkRangeFeet:
         expected.classifiedChanges.casterHealLinkRangeFeet,
+      canonicalMasteryVariants:
+        expected.classifiedChanges.canonicalMasteryVariants,
     });
     const classifiedComparison = classifyComparisonSchema(
       comparison,
