@@ -6,8 +6,13 @@ import {
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
-import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  ArmorClassDeltaSchema,
+  ArmorClassSchema,
+  armorClass,
+  armorClassDelta,
+  type ArmorClassDelta,
+} from "@dnd/shared-algebras/armor-class-algebra";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import {
@@ -21,6 +26,7 @@ import type {
   DiceExprDelta,
   EffectAtom,
   OngoingEffect,
+  SpellLevel,
   SpellMechanics,
   TargetSelection,
 } from "@dnd/surface/surface/types";
@@ -184,7 +190,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("spellArmorClassBonus"),
-    bonus: Schema.Number,
+    bonus: ArmorClassDeltaSchema,
     negatesRepeatedDamageAllocation: Schema.Boolean,
     expiresAt: BattleActiveEffectExpirationSchema,
     ...BattleEffectOccurrenceTemplateSchemaFields,
@@ -283,7 +289,7 @@ type ScalarBuffEffectProjection =
       readonly speedFeet: MovementFeet;
     }
   | { readonly kind: "speedDelta"; readonly deltaFeet: MovementDeltaFeet }
-  | { readonly kind: "armorClassBonus"; readonly bonus: number }
+  | { readonly kind: "armorClassBonus"; readonly bonus: ArmorClassDelta }
   | {
       readonly kind: "armorClassFloor";
       readonly floor: ReturnType<typeof armorClass>;
@@ -478,7 +484,7 @@ function hitPointAmountFromSurface(value: number): HP | undefined {
 
 function scalarBuffTargetCountProjection(
   selection: TargetSelection,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ScalarBuffTargetCountProjection | undefined {
   if (selection.mode === "one") {
     return { kind: "fixed", count: PositiveInteger(1) };
@@ -526,7 +532,7 @@ type ScalarBuffTargetingProjectionResult =
 
 function scalarBuffTargetingProjection(
   attachment: Attachment,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ScalarBuffTargetingProjectionResult {
   if (attachment.kind === "self") {
     return { tag: "supported", targeting: { kind: "self" } };
@@ -574,7 +580,7 @@ function scalarBuffTargetingProjection(
 
 function scalarBuffTargetingForSlot(
   targeting: ScalarBuffTargetingProjection,
-  slotLevel: number,
+  slotLevel: SpellSlotLevel,
 ): ScalarBuffInvocation["targeting"] {
   if (targeting.kind === "self") return { kind: "self" };
   const maxTargets =
@@ -593,7 +599,7 @@ function scalarBuffTargetingForSlot(
 
 function scalarBuffMaxHitPointProjection(
   amount: DiceAmount,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ScalarBuffMaxHitPointProjection | undefined {
   const deterministic = (expr: DiceExpr): HP | undefined =>
     expr.dice === 0 &&
@@ -649,7 +655,7 @@ function scalarBuffDiceExprProjection(
 
 function scalarBuffTemporaryHitPointProjection(
   amount: DiceAmount,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ScalarBuffTemporaryHitPointProjection | undefined {
   if (amount.kind === "fixed") {
     const expr = scalarBuffDiceExprProjection(amount.expr);
@@ -700,7 +706,7 @@ function scalarBuffTemporaryHitPointProjection(
 function scalarBuffEffectProjection(
   effect: ScalarBuffSurfaceEffect,
   duration: ScalarBuffDuration | undefined,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ScalarBuffEffectProjection | undefined {
   return Match.value(effect).pipe(
     Match.when({ kind: "grant_temp_hp" }, (candidate) => {
@@ -750,8 +756,12 @@ function scalarBuffEffectProjection(
     Match.when({ kind: "modify_ac" }, (candidate) =>
       candidate.delta.kind === "fixed_dice" &&
       candidate.delta.sign === "+" &&
-      candidate.delta.dieSize === 1
-        ? { kind: "armorClassBonus" as const, bonus: candidate.delta.dice }
+      candidate.delta.dieSize === 1 &&
+      Number.isInteger(candidate.delta.dice)
+        ? {
+            kind: "armorClassBonus" as const,
+            bonus: armorClassDelta(candidate.delta.dice),
+          }
         : undefined,
     ),
     Match.when({ kind: "modify_ac_set_floor" }, (candidate) =>
@@ -912,7 +922,7 @@ function scalarBuffFactsFromBranch(
 function scalarBuffActivationBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   duration: ScalarBuffDuration | undefined,
-  spellLevel: number,
+  spellLevel: SpellLevel,
   pushIssue: (
     failedFact: ScalarBuffFailedFact,
     mechanicsPath: UnitMechanicsPath,
@@ -1022,7 +1032,7 @@ function scalarBuffActivationBranchProjection(
 function scalarBuffOngoingBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   duration: ScalarBuffDuration | undefined,
-  spellLevel: number,
+  spellLevel: SpellLevel,
   pushIssue: (
     failedFact: ScalarBuffFailedFact,
     mechanicsPath: UnitMechanicsPath,
@@ -1248,7 +1258,7 @@ function scalarBuffMechanicsAdmission(
       scalarBuffActivationBranchProjection(
         activation,
         duration,
-        Number(mechanics.level),
+        mechanics.level,
         pushIssue,
       ),
     ),
@@ -1256,7 +1266,7 @@ function scalarBuffMechanicsAdmission(
       scalarBuffOngoingBranchProjection(
         ongoing,
         duration,
-        Number(mechanics.level),
+        mechanics.level,
         pushIssue,
       ),
     ),
@@ -1329,7 +1339,7 @@ function scalarBuffMechanicsAdmission(
 
 function scalarBuffTemporaryHitPointExpr(
   amount: ScalarBuffTemporaryHitPointProjection,
-  slotLevel: number,
+  slotLevel: SpellSlotLevel,
 ): DiceExpr {
   return Match.value(amount).pipe(
     Match.when({ kind: "fixed" }, ({ expr }) => expr),
@@ -1356,7 +1366,7 @@ function scalarBuffExpirationForEffect(
 function scalarBuffEffectForCast(
   actorId: CombatantId,
   facts: ScalarBuffMechanicsFacts,
-  slotLevel: number,
+  slotLevel: SpellSlotLevel,
 ): ScalarBuffInvocation["effect"] {
   return Match.value(facts).pipe(
     Match.when({ branchKind: "instantaneous" }, ({ effect }) => ({
@@ -1376,7 +1386,7 @@ function scalarBuffNonInstantEffectForCast(
   actorId: CombatantId,
   effect: ScalarBuffNonTemporaryEffect,
   duration: ScalarBuffNonInstantDuration,
-  slotLevel: number,
+  slotLevel: SpellSlotLevel,
 ): ScalarBuffInvocation["effect"] {
   return Match.value(effect).pipe(
     Match.when({ kind: "specialSpeedEqualTo" }, ({ speedKind }) => ({
@@ -1451,7 +1461,7 @@ function admitScalarBuff(
 ): readonly ScalarBuffInvocation[] {
   return ctx.spellCastOptions.flatMap(
     (slot): readonly ScalarBuffInvocation[] => {
-      if (Number(slot.spellLevel) < Number(facts.level)) return [];
+      if (slot.spellLevel < facts.level) return [];
       return [
         {
           access: { tag: "prepared" },
@@ -1461,12 +1471,12 @@ function admitScalarBuff(
           actionCost: facts.actionCost,
           targeting: scalarBuffTargetingForSlot(
             facts.targeting,
-            Number(slot.spellLevel),
+            slot.spellLevel,
           ),
           effect: scalarBuffEffectForCast(
             ctx.actor.combatantId,
             facts,
-            Number(slot.spellLevel),
+            slot.spellLevel,
           ),
           rangeFeet: facts.rangeFeet,
         },

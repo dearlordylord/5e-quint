@@ -18,6 +18,7 @@ import {
   type ArmorClassDelta,
 } from "./armor-class-values.ts";
 export {
+  ArmorClassDeltaSchema,
   ArmorClassSchema,
   abilityModifier,
   armorClass,

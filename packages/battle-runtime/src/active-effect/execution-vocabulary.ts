@@ -4,6 +4,7 @@ import type {
   DcSource,
   Skill,
 } from "@dnd/surface/surface/types";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   BattleEffectExecutionRef,
   BattleAreaId,
@@ -51,7 +52,10 @@ export type BattleD20RollModifierDelta = {
 export type BattleD20RollModifierSkillFilter =
   | { readonly kind: "none" }
   | { readonly kind: "fixed"; readonly skill: Skill }
-  | { readonly kind: "choice"; readonly options: readonly Skill[] };
+  | {
+      readonly kind: "choice";
+      readonly options: ReadonlyNonEmptyArray<Skill>;
+    };
 
 export type BattleCompelledBehaviorOption =
   (typeof COMPELLED_BEHAVIOR_OPTIONS)[number];

@@ -26,7 +26,11 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 //
 import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { DamageType, SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  DamageType,
+  SpellMechanics,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 import type { CombatantId } from "../../identity.ts";
@@ -163,6 +167,24 @@ type DamageReductionTargetingProjection = {
   readonly maxTargets: typeof DAMAGE_REDUCTION_TARGET_COUNT;
   readonly requiredTargetDisposition: "willing";
 };
+
+function damageReductionTargetingProjection(
+  targetSelection: TargetSelection,
+): DamageReductionTargetingProjection | undefined {
+  return targetSelection.mode === "one" &&
+    targetSelection.targetKinds !== undefined &&
+    targetSelection.targetKinds.length === 1 &&
+    targetSelection.targetKinds[0] === "creature" &&
+    "disposition" in targetSelection &&
+    targetSelection.disposition === "willing"
+    ? {
+        kind: "targetList",
+        minTargets: DAMAGE_REDUCTION_TARGET_COUNT,
+        maxTargets: DAMAGE_REDUCTION_TARGET_COUNT,
+        requiredTargetDisposition: "willing",
+      }
+    : undefined;
+}
 
 function damageReductionOperationEffectPath(
   occurrence: SpellOngoingOperationOccurrence | undefined,
@@ -370,7 +392,12 @@ function damageReductionMechanicsAdmission(
     mechanics.attachment,
     DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS,
   );
-  let targeting: DamageReductionTargetingProjection | undefined;
+  const targeting =
+    targetAttachmentAdmission.tag === "admitted"
+      ? damageReductionTargetingProjection(
+          targetAttachmentAdmission.attachment.value.selection,
+        )
+      : undefined;
   if (targetAttachmentAdmission.tag === "rejected") {
     for (const rejection of targetAttachmentAdmission.rejections) {
       pushIssue(
@@ -378,26 +405,8 @@ function damageReductionMechanicsAdmission(
         spellOngoingAttachmentPath(),
       );
     }
-  } else {
-    const targetSelection =
-      targetAttachmentAdmission.attachment.value.selection;
-    if (
-      targetSelection.mode !== "one" ||
-      targetSelection.targetKinds === undefined ||
-      targetSelection.targetKinds.length !== 1 ||
-      targetSelection.targetKinds[0] !== "creature" ||
-      !("disposition" in targetSelection) ||
-      targetSelection.disposition !== "willing"
-    ) {
-      pushIssue("attachment", spellOngoingAttachmentPath());
-    } else {
-      targeting = {
-        kind: "targetList",
-        minTargets: DAMAGE_REDUCTION_TARGET_COUNT,
-        maxTargets: DAMAGE_REDUCTION_TARGET_COUNT,
-        requiredTargetDisposition: targetSelection.disposition,
-      };
-    }
+  } else if (targeting === undefined) {
+    pushIssue("attachment", spellOngoingAttachmentPath());
   }
   if (expected === undefined || expected.operation.trigger.kind !== "passive") {
     pushIssue("passiveOperation", damageReductionOperationEffectPath(expected));
@@ -411,36 +420,41 @@ function damageReductionMechanicsAdmission(
       : undefined;
   const damageTypeProjection =
     damageReductionDamageTypeProjection(damageEffect);
-  let amount: DamageReductionAmount | undefined;
-  if (damageEffect === undefined || damageEffect.amount.kind !== "fixed") {
+  const damageExpr =
+    damageEffect?.amount.kind === "fixed"
+      ? damageEffect.amount.expr
+      : undefined;
+  const fixedDiceSupported =
+    damageExpr !== undefined &&
+    damageExpr.dice === DAMAGE_REDUCTION_DICE_COUNT &&
+    damageExpr.dieSize === DAMAGE_REDUCTION_DIE_SIZE &&
+    (damageExpr.flat ?? 0) === 0;
+  const amount: DamageReductionAmount | undefined =
+    fixedDiceSupported &&
+    damageExpr.spellcastingMod !== true &&
+    damageExpr.abilityModifier === undefined
+      ? {
+          dice: DAMAGE_REDUCTION_DICE_COUNT,
+          dieSize: DAMAGE_REDUCTION_DIE_SIZE,
+        }
+      : undefined;
+  if (damageExpr === undefined) {
     pushIssue("damage", damageReductionOperationEffectPath(expected));
   } else {
-    const expr = damageEffect.amount.expr;
-    const fixedDiceSupported =
-      expr.dice === DAMAGE_REDUCTION_DICE_COUNT &&
-      expr.dieSize === DAMAGE_REDUCTION_DIE_SIZE &&
-      (expr.flat ?? 0) === 0;
     if (!fixedDiceSupported) {
       pushIssue("damage", damageReductionOperationEffectPath(expected));
     }
-    if (expr.spellcastingMod === true) {
+    if (damageExpr.spellcastingMod === true) {
       pushIssue(
         "spellcastingMod",
         damageReductionOperationEffectPath(expected),
       );
     }
-    if (expr.abilityModifier !== undefined) {
+    if (damageExpr.abilityModifier !== undefined) {
       pushIssue(
         "abilityModifier",
         damageReductionOperationEffectPath(expected),
       );
-    }
-    if (
-      fixedDiceSupported &&
-      expr.spellcastingMod !== true &&
-      expr.abilityModifier === undefined
-    ) {
-      amount = { dice: expr.dice, dieSize: expr.dieSize };
     }
   }
   if (damageTypeProjection.tag === "unsupported") {

@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
+import { Result, Schema } from "effect";
 import { PositiveInteger } from "@dnd/shared/types";
 import { unitId } from "@dnd/shared/game-facts";
 import {
   battleSpellExecutionSourceFromAdmission,
   type BattleSpellAdmissionSource,
 } from "../../battle-state-execution.ts";
+import { spellProcedureExecution } from "../../character-execution-admission.ts";
 import {
   spellAdmissionSource,
   spellRecord,
@@ -556,6 +558,37 @@ describe("C2 support profile static admission", () => {
       ).toEqual({ tag: "notRepresented" });
     },
   );
+
+  test("rejects an empty roll-modifier skill choice at the execution codec boundary", () => {
+    const source = spellAdmissionSource(spellRecord("guidance"));
+    const result = rollModifierProfile.admitMechanics(mechanicsSource(source));
+    expect(result).toMatchObject({ tag: "supported" });
+    if (result.tag !== "supported") return;
+    const [invocation] = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      contextFor(source.castingSource),
+    );
+    expect(invocation).toBeDefined();
+    if (
+      invocation === undefined ||
+      invocation.effect.kind !== "d20RollModifier"
+    ) {
+      return;
+    }
+    const decodeInvocation = Schema.decodeUnknownResult(
+      rollModifierProfile.executionSchema,
+    );
+    const execution = spellProcedureExecution(invocation);
+    expect(Result.isSuccess(decodeInvocation(execution))).toBe(true);
+    const malformedInvocation = {
+      ...execution,
+      effect: {
+        ...execution.effect,
+        skillFilter: { kind: "choice", options: [] },
+      },
+    };
+    expect(Result.isFailure(decodeInvocation(malformedInvocation))).toBe(true);
+  });
 
   test.each([
     [

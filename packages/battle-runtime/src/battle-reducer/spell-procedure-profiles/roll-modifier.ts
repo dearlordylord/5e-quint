@@ -21,6 +21,7 @@ import type {
   DcSource,
   EffectAtom,
   SpellMechanics,
+  SpellLevel,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import type {
@@ -172,7 +173,7 @@ const D20RollModifierEffectSchema = Schema.Struct({
     }),
     Schema.Struct({
       kind: Schema.Literal("choice"),
-      options: Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
+      options: Schema.NonEmptyArray(Schema.Literals(BATTLE_SURFACE_SKILLS)),
     }),
   ]),
   expiresAt: BattleActiveEffectExpirationSchema,
@@ -448,7 +449,7 @@ function isRollModifierDuration(
 
 function rollModifierTargetCountProjection(
   selection: TargetSelection,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): RollModifierTargetCountProjection | undefined {
   if (selection.mode === "one") {
     return { kind: "fixed", count: PositiveInteger(1) };
@@ -486,7 +487,7 @@ function rollModifierTargetCountProjection(
 
 function rollModifierTargetAttachmentTargetingProjection(
   attachment: RollModifierAdmittedTargetAttachment,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): RollModifierTargetListTargetingProjection | undefined {
   const selection = attachment.value.selection;
   if (
@@ -843,7 +844,7 @@ type RollModifierIssuePush = (
 function rollModifierAttachmentProjection(
   attachment: Attachment,
   range: SpellMechanics["range"],
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): RollModifierAttachmentProjection {
   const targetAdmission = admitSpellTargetAttachment(
     attachment,
@@ -975,7 +976,7 @@ function rollModifierOngoingBranchProjection(
   const attachment = rollModifierAttachmentProjection(
     mechanics.attachment,
     mechanics.range,
-    Number(mechanics.level),
+    mechanics.level,
   );
   if (attachment.tag === "rejected") {
     for (const rejection of attachment.rejections) {
@@ -1152,7 +1153,7 @@ function rollModifierActivationBranchProjection(
   const attachment = rollModifierAttachmentProjection(
     phase.attachment,
     mechanics.range,
-    Number(mechanics.level),
+    mechanics.level,
   );
   if (attachment.tag === "rejected") {
     for (const rejection of attachment.rejections) {
@@ -1485,7 +1486,7 @@ function admitRollModifier(
     };
   };
   const invocations: RollModifierInvocation[] = [];
-  if (Number(facts.level) === 0) {
+  if (facts.level === 0) {
     invocations.push(
       complete({
         kind: "cantrip",
@@ -1496,7 +1497,7 @@ function admitRollModifier(
     );
   } else {
     for (const slot of ctx.spellCastOptions) {
-      if (Number(slot.spellLevel) < Number(facts.level)) continue;
+      if (slot.spellLevel < facts.level) continue;
       invocations.push(
         complete({
           kind: "prepared",

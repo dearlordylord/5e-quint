@@ -25,7 +25,10 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //     resolver still owns the hurl damage lifecycle.
 
 import { attackBonus, movementFeet, PositiveInteger } from "@dnd/shared/types";
-import type { MovementFeet as MovementFeetType } from "@dnd/shared/types";
+import type {
+  CharacterLevel,
+  MovementFeet as MovementFeetType,
+} from "@dnd/shared/types";
 import { Match, Schema } from "effect";
 import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
@@ -285,7 +288,7 @@ function heldLightDamageAmountProjection(
 
 function heldLightDamageExpr(
   amount: HeldLightDamageAmount,
-  characterLevel: number,
+  characterLevel: CharacterLevel,
 ): DiceExpr {
   return Match.value(amount).pipe(
     Match.when({ kind: "fixed" }, ({ expr }) => expr),
