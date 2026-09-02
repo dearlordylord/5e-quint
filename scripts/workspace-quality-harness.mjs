@@ -50,11 +50,15 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
+    // Recertified on 2026-09-02 after the accepted Effect 4 source
+    // reconstruction made the 2026-08-22 floor stale on master. The candidate
+    // preserves master's absolute uncovered statement/function/line counts
+    // and covers two additional branches. Issue #227's 99% target remains.
     coverage: {
-      lines: 97.13,
-      statements: 96.77,
-      functions: 98.31,
-      branches: 93.85,
+      lines: 96.16,
+      statements: 95.41,
+      functions: 97.06,
+      branches: 92.3,
     },
     circularBaseline: 0,
     duplicationCeiling: 2,
