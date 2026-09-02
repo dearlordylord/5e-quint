@@ -350,23 +350,6 @@ canonical Mastery Units and the Graze/Nick schema variants through existing
 Surface owners. They add no declaration path, runtime admission, forbidden
 owner, or coarse-limit change.
 
-The mastery-aware Character Battle projection at source revision `00e1d19a9`
-preserves the same 577 paths and path ledger while increasing the bundle by
-413 bytes to 10,299,630 bytes. The unchanged 10 MiB cap therefore leaves
-186,130 bytes of margin, and the content-ledger SHA-256 becomes
-`84deba25e0bb7cd7f178651102754908355f5b3883c855b75ecce9889727752b`.
-Exactly four declarations change: `battle-runtime`'s
-`consumer-protocol.d.ts` grows by 131 bytes, its `index.d.ts` shrinks by 39
-bytes, `battle-character-build-projection.d.ts` grows by 72 bytes, and
-`battle-support-profiles.d.ts` grows by 249 bytes. These declarations expose
-the existing selected-Mastery fact and predicate through the narrow Battle
-consumer protocol and make that protocol their single public re-export owner,
-replace the separate positional attack projections with one named-input
-operation that requires the selected Mastery facts for both hands, and own
-selected Mastery reference resolution at the Character Battle support
-boundary. They add no declaration path, Battle execution support, forbidden
-owner, or coarse-limit change.
-
 The downstream finite-oracle recertification at declaration revision
 `d0b43f8ae` records a 50,669,363-byte candidate with SHA-256
 `4cea44ff11131702655ad12bda69f8336c60c08f3044a1f0b8e8065aef6032ad`.
@@ -383,6 +366,35 @@ from 1,866 to 1,872 entries with candidate membership and order SHA-256
 `1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9`.
 All array-comparison authority counts and hashes remain unchanged; no reason,
 classifier, limit, or baseline authority changes.
+
+The mastery-aware Character Battle projection at source revision `00e1d19a9`
+preserves the same 577 paths and path ledger while increasing the bundle by
+452 bytes to 10,299,669 bytes. The unchanged 10 MiB cap therefore leaves
+186,091 bytes of margin, and the candidate content-ledger SHA-256 is
+`02263ddf03483a28f5dee307001e3ee7de86d430d9dab242657296bec77bfc3f`.
+Exactly three declarations change: `battle-runtime`'s
+`consumer-protocol.d.ts` grows by 131 bytes,
+`battle-character-build-projection.d.ts` grows by 72 bytes, and
+`battle-support-profiles.d.ts` grows by 249 bytes. These declarations expose
+the existing selected-Mastery fact and predicate through the narrow Battle
+consumer protocol, replace the separate positional attack projections with
+one named-input operation that requires the selected Mastery facts for both
+hands, and own selected Mastery reference resolution at the Character Battle
+support boundary.
+
+The canonical-export correction and declaration recertification at revision
+`5bdf8e3b4` removes the duplicate explicit
+`CharacterBattleWeaponMasterySelection` export from `battle-runtime`'s
+`index.d.ts`; the ordinary root retains that API through its existing
+`export *` from `consumer-protocol`. Relative to the `00e1d19a9` candidate,
+only `index.d.ts` changes, shrinking by 39 bytes. The final bundle therefore
+retains all 577 paths at 10,299,630 bytes, leaves 186,130 bytes below the cap,
+and has content-ledger SHA-256
+`84deba25e0bb7cd7f178651102754908355f5b3883c855b75ecce9889727752b`.
+Relative to the preceding reviewed declaration certificate, the final four
+path deltas are the three `00e1d19a9` declarations plus `index.d.ts`. No step
+adds a declaration path, Battle execution support, forbidden owner, or
+coarse-limit change.
 
 ## Consumer compiler boundary
 
