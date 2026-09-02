@@ -350,6 +350,23 @@ canonical Mastery Units and the Graze/Nick schema variants through existing
 Surface owners. They add no declaration path, runtime admission, forbidden
 owner, or coarse-limit change.
 
+The downstream finite-oracle recertification at declaration revision
+`d0b43f8ae` records a 50,669,363-byte candidate with SHA-256
+`4cea44ff11131702655ad12bda69f8336c60c08f3044a1f0b8e8065aef6032ad`.
+Its 8,993 operation-and-segment identities have SHA-256
+`750696ab01591429687fc99fa85e893e5c5c8e2e3d6d7f2027b230c16d0bf1af`.
+Relative to the preceding certificate, 28 sites are added and none are
+removed: 22 `listCatalogUnits` response sites retain the existing
+`mcp-protocol-contract-migration` classification, and the six canonical
+Mastery Dhall/JSON artifacts use the existing
+`surface-authored-contract-convergence` classification. Four existing Surface
+publication metadata leaves and three existing MCP response-digest/text sites
+change under their prior classifications. The Surface content authority grows
+from 1,866 to 1,872 entries with candidate membership and order SHA-256
+`1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9`.
+All array-comparison authority counts and hashes remain unchanged; no reason,
+classifier, limit, or baseline authority changes.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

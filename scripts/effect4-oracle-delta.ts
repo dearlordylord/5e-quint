@@ -20,7 +20,7 @@ export const EFFECT4_ORACLE_DELTA_CERTIFICATE_PATH =
 const CERTIFICATE_FORMAT_VERSION = 2;
 const DELTA_ALGORITHM = "canonical-keyed-collection-delta-v2";
 const CERTIFICATE_SHA256 =
-  "0a1350fecc93f7741a4f1fc8f3e4fa2f611175b69c13c6f40af08fe552b196d3";
+  "03020b650de9a214315a3628457b10b53c79ed92a8dead5eec9ca7835202863e";
 
 const HashSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
