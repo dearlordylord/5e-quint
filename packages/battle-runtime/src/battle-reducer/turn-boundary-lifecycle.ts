@@ -171,8 +171,11 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 import {
   battleStateWithReconciledCurrentActorTurnConstraint,
+  saveGatedTurnConstraintBundleEffects,
   saveGatedTurnConstraintActionOrBonusActionTurnResources,
+  type SaveGatedTurnConstraintBundleEffect,
 } from "./save-gated-turn-constraint-turn-resources.ts";
+export type { SaveGatedTurnConstraintBundleEffect } from "./save-gated-turn-constraint-turn-resources.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
@@ -208,9 +211,7 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import type { SaveGatedConditionWithRepeatEffect } from "./staged-condition-repeat-save.ts";
 import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
 import {
-  boundSaveGatedTurnConstraintBundleEffect,
   boundStagedSaveConditionPendingRepeatEffect,
-  type BoundSaveGatedTurnConstraintBundleEffect,
   type BoundStagedSaveConditionPendingRepeatEffect,
 } from "./spell-modifier-binding.ts";
 import { resetBattleTurnResources } from "./turn-resource-reset.ts";
@@ -1898,9 +1899,6 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
 
-export type SaveGatedTurnConstraintBundleEffect =
-  BoundSaveGatedTurnConstraintBundleEffect;
-
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
@@ -2263,24 +2261,6 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   hole: BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
-}
-
-function saveGatedTurnConstraintBundleEffects(
-  state: BattleState,
-  combatant: BattleCreatureState | undefined,
-): readonly SaveGatedTurnConstraintBundleEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.flatMap((effect) => {
-        if (effect.kind !== "saveGatedTurnConstraintBundle") {
-          return [];
-        }
-        const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
-          state,
-          effect,
-        );
-        return boundEffect === undefined ? [] : [boundEffect];
-      });
 }
 
 function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(

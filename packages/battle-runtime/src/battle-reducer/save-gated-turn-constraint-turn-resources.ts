@@ -19,10 +19,13 @@ import {
   type BoundSaveGatedTurnConstraintBundleEffect,
 } from "./spell-modifier-binding.ts";
 
+export type SaveGatedTurnConstraintBundleEffect =
+  BoundSaveGatedTurnConstraintBundleEffect;
+
 export function saveGatedTurnConstraintBundleEffects(
   state: BattleState,
   combatant: BattleCreatureState | undefined,
-): readonly BoundSaveGatedTurnConstraintBundleEffect[] {
+): readonly SaveGatedTurnConstraintBundleEffect[] {
   return combatant === undefined
     ? []
     : combatant.activeEffects.flatMap((effect) => {
