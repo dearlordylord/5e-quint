@@ -857,63 +857,64 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
-  test("omits selected weapon masteries outside the canonical Battle slice", () => {
-    const unsupportedWeaponUnitIds = [
-      authoredUnitId("weapon_dagger"),
-      authoredUnitId("weapon_shortsword"),
-    ] as const;
-    const supportedMastery = unitLibrary.requireUnit(
-      authoredUnitId("mastery_sap"),
-    );
-    if (supportedMastery.kind !== "mastery") {
-      throw new Error("Expected the supported mastery fixture.");
-    }
-    const typedUnsupportedMasteries = unsupportedWeaponUnitIds.map(
-      (weaponUnitId) => {
-        const weapon = unitLibrary.requireUnit(weaponUnitId);
-        if (weapon.kind !== "weapon") {
-          throw new Error("Expected the unsupported-mastery weapon fixture.");
-        }
-        return {
-          ...supportedMastery,
-          id: weapon.masteryUnitId,
-          name: "Synthetic Unsupported Mastery Catalog Fixture",
-          provenance: {
-            kind: "synthetic-test" as const,
-            section: weapon.id,
-          },
-        };
-      },
-    );
-    const typedUnsupportedMasteryCatalog: UnitCatalog = {
-      getUnit: (id) => {
-        const mastery = typedUnsupportedMasteries.find(
-          (candidate) => candidate.id === id,
-        );
-        return mastery === undefined
-          ? unitLibrary.getUnit(id)
-          : Option.some(mastery);
-      },
-      listUnits: () => [
-        ...unitLibrary.listUnits(),
-        ...typedUnsupportedMasteries,
+  test("passes Dagger's installed mastery reference to downstream support admission", () => {
+    const dagger = characterBattleSupportProjection(build, unitLibrary, [
+      { weaponUnitId: authoredUnitId("weapon_dagger") },
+    ]);
+
+    expect(dagger).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          tag: "battleSupportProfileIssue",
+          message: "Unsupported battle Weapon Mastery Unit hook: mastery_nick.",
+        },
       ],
-      requireUnit: (id) =>
-        typedUnsupportedMasteries.find((candidate) => candidate.id === id) ??
-        unitLibrary.requireUnit(id),
-    };
-    const refs = characterBattleSupportProjection(
-      build,
-      typedUnsupportedMasteryCatalog,
-      unsupportedWeaponUnitIds.map((weaponUnitId) => ({ weaponUnitId })),
+    });
+  });
+
+  test("initializes an equipped Dagger without admitting its unselected mastery", () => {
+    const daggerBuild = monkBuild({
+      weaponUnitId: "weapon_dagger",
+      offHandWeaponUnitId: "weapon_dagger",
+      str: 12,
+      dex: 16,
+    });
+    const projection = characterBattleSupportProjection(
+      daggerBuild,
+      unitLibrary,
     );
 
-    expect(Result.isSuccess(refs)).toBe(true);
-    if (Result.isFailure(refs)) return;
-    expect(refs.success.unitRefs.map(({ unit }) => unit.id)).not.toEqual(
-      expect.arrayContaining(
-        typedUnsupportedMasteries.map((mastery) => mastery.id),
-      ),
+    expect(projection).toMatchObject({ _tag: "Success" });
+    if (Result.isFailure(projection)) return;
+    expect(projection.success.unitRefs.map(({ unit }) => unit.id)).toEqual(
+      expect.arrayContaining(["weapon_dagger"]),
+    );
+    expect(
+      projection.success.unitRefs.map(({ unit }) => unit.id),
+    ).not.toContain("mastery_nick");
+
+    const init = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("ordinary-dagger-without-mastery"),
+      characterId: characterId("character:ordinary-dagger-without-mastery"),
+      displayName: "Ordinary Dagger Character",
+      build: daggerBuild,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      unitLibrary,
+    });
+    expect(init).toMatchObject({ _tag: "Success" });
+    if (
+      Result.isFailure(init) ||
+      init.success.creatureInit.kind !== "character"
+    ) {
+      return;
+    }
+    expect(init.success.creatureInit.attack?.weapon).not.toHaveProperty(
+      "masteryProperty",
+    );
+    expect(init.success.creatureInit.offHandAttack?.weapon).not.toHaveProperty(
+      "masteryProperty",
     );
   });
 

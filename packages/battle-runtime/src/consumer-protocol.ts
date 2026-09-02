@@ -126,7 +126,9 @@ export {
 export type {
   CharacterBattleInvocationFeature,
   CharacterBattleLoadoutRef,
+  CharacterBattleWeaponMasterySelection,
 } from "./character-creature-execution-facts.ts";
+export { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
 export type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,

@@ -355,12 +355,14 @@ export function battleCreatureInitFromCharacterBuild(
       input.unitLibrary,
       classLevels,
       pactBladeBondedWeaponItemId,
+      weaponMasteries.success,
     );
     const offHandAttack = yield* characterOffHandAttackActionOption(
       input.build,
       input.unitLibrary,
       classLevels,
       pactBladeBondedWeaponItemId,
+      weaponMasteries.success,
     );
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
     const unitFeatures = yield* characterBattleFeatures(

@@ -10,6 +10,7 @@ import {
   type CharacterBattleSpellbookRitualSpellAccessInit,
   type CharacterBattleInvocationFeature,
   type CharacterBattleClassLevelInit,
+  type CharacterBattleWeaponMasterySelection,
   type CharacterBattleFeaturePreparedSpellInit,
   type CharacterBattleBookOfShadowsSpellAccessInit,
   type CharacterBattleBookOfShadowsPresence,
@@ -26,6 +27,7 @@ import {
   unitIsSupportedClassFeatureSpellFreeCastResource,
   admitCharacterWeaponExecutionWeapon,
   admitResolvedCharacterWeaponExecutionWeapon,
+  weaponMasteryIsSelectedForWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
@@ -87,7 +89,6 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
   classSpellListForSpellcastingClassRecord,
   spellcastingClassRecordForClassName,
-  resolveWeaponMasteryReference,
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import { Result, Match, Option } from "effect";
@@ -97,6 +98,7 @@ import {
   omitRuntimeDetachedClassSpellChoices,
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
+import { resolveSelectedWeaponMasteryReferenceForBattle } from "./battle-support-profiles.ts";
 
 export type CharacterBattleRuntimeIssueMessage = (
   issue: BattleCreatureInitIssue | BattleStateInitIssue,
@@ -507,6 +509,7 @@ export function characterAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[] = [],
 ): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
@@ -527,6 +530,7 @@ export function characterAttackActionOption(
     unitLibrary,
     classLevels,
     pactBladeBondedWeaponItemId,
+    weaponMasteries,
   );
 }
 
@@ -535,6 +539,7 @@ export function characterOffHandAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[] = [],
 ): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | undefined,
   BattleCreatureInitIssue
@@ -555,6 +560,7 @@ export function characterOffHandAttackActionOption(
     unitLibrary,
     classLevels,
     pactBladeBondedWeaponItemId,
+    weaponMasteries,
   );
   if (Result.isFailure(option)) {
     return battleCreatureInitIssue(
@@ -709,6 +715,7 @@ function characterWeaponAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[],
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
@@ -723,7 +730,11 @@ function characterWeaponAttackActionOption(
     return Result.succeed(null);
   }
 
-  const executionWeapon = characterExecutionWeapon(unit.success, unitLibrary);
+  const executionWeapon = characterExecutionWeapon(
+    unit.success,
+    unitLibrary,
+    weaponMasteries,
+  );
   if (Result.isFailure(executionWeapon)) {
     return battleCreatureInitIssue(executionWeapon.failure.message);
   }
@@ -779,11 +790,24 @@ function characterExecutionWeapon(
     readonly damage: { readonly kind: "dice" };
   },
   unitLibrary: UnitCatalog,
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ) {
-  const masteryReference = resolveWeaponMasteryReference(weapon, unitLibrary);
-  return Result.isFailure(masteryReference)
-    ? Result.succeed(admitCharacterWeaponExecutionWeapon(weapon))
-    : admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success);
+  if (!weaponMasteryIsSelectedForWeapon(weapon.id, weaponMasteries)) {
+    return Result.succeed(admitCharacterWeaponExecutionWeapon(weapon));
+  }
+  const masteryReference = resolveSelectedWeaponMasteryReferenceForBattle(
+    weapon,
+    unitLibrary,
+  );
+  if (Result.isFailure(masteryReference)) {
+    return battleCreatureInitIssue(masteryReference.failure.message);
+  }
+  const admitted = admitResolvedCharacterWeaponExecutionWeapon(
+    masteryReference.success,
+  );
+  return Result.isFailure(admitted)
+    ? battleCreatureInitIssue(admitted.failure.message)
+    : Result.succeed(admitted.success);
 }
 
 function characterMartialArtsWeaponAttack(
