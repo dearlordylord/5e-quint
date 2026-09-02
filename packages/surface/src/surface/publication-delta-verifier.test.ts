@@ -823,6 +823,64 @@ describe("Surface publication delta verifier", () => {
     );
   }, 180_000);
 
+  test("reports a reachable schema object-key difference", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        const units = fixtureObjectField(
+          fixtureObjectField(schema, "properties"),
+          "units",
+        );
+        units.description = "unclassified unit-list fixture";
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    const unclassifiedIssue =
+      result.tag === "invalid"
+        ? result.issues.find(
+            (issue) => issue.kind === "schema-delta-unclassified",
+          )
+        : undefined;
+    expect(unclassifiedIssue?.message).toContain(
+      "first differing region: /properties/units (object keys description)",
+    );
+  }, 180_000);
+
+  test("reports a schema root without publication-family properties", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        Reflect.deleteProperty(schema, "properties");
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    const unclassifiedIssue =
+      result.tag === "invalid"
+        ? result.issues.find(
+            (issue) => issue.kind === "schema-delta-unclassified",
+          )
+        : undefined;
+    expect(unclassifiedIssue?.message).toContain(
+      "changed publication families: properties; first differing region: /",
+    );
+  }, 180_000);
+
   test("rejects substitution of the authenticated intermediate schema", () => {
     const result = withFixture(
       ({ certificatePath: fixturePath }) => {
@@ -981,6 +1039,23 @@ describe("Surface publication delta verifier", () => {
           "alternatives",
         );
         alternatives.minItems = 3;
+      },
+    },
+    {
+      name: "GM-speed repeated alternative",
+      mutate: (schema: Record<string, unknown>): void => {
+        const alternatives = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(schema, "$defs"),
+              "SrdRecordUnion1057Encoded",
+            ),
+            "properties",
+          ),
+          "alternatives",
+        );
+        fixtureObjectField(alternatives, "items").description =
+          "non-repeated alternative fixture";
       },
     },
     {
