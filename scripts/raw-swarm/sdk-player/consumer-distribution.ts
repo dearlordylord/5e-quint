@@ -105,12 +105,12 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
   },
   measure: {
     files: 577,
-    bytes: 10_299_630,
+    bytes: 10_299_715,
   },
   pathLedgerSha256:
     "cea3e96c590aad8da19aa6b15d802dffe6f3d237dc0e2f7ef7c2ab1c534f4b7c",
   contentLedgerSha256:
-    "84deba25e0bb7cd7f178651102754908355f5b3883c855b75ecce9889727752b",
+    "8e77921796c9c837238f25d50ecaa15fcdf5338d81e4c4a636a458306f46e134",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;

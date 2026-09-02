@@ -396,6 +396,20 @@ path deltas are the three `00e1d19a9` declarations plus `index.d.ts`. No step
 adds a declaration path, Battle execution support, forbidden owner, or
 coarse-limit change.
 
+The battle-safe MCP Mastery fixture restoration at source revision
+`1fc6dd9fa` keeps the same 577 declaration paths and path-ledger SHA-256 while
+increasing the bundle by 85 bytes to 10,299,715 bytes. The unchanged 10 MiB
+cap leaves 186,045 bytes of margin, and the content-ledger SHA-256 becomes
+`8e77921796c9c837238f25d50ecaa15fcdf5338d81e4c4a636a458306f46e134`.
+Exactly two Character Creation declarations change relative to the `5bdf8e3b4`
+certificate: `index.d.ts` grows by 36 bytes to expose the existing canonical
+Quarterstaff Unit id through the package root, and `phase1-manifest.d.ts` grows
+by 49 bytes because the Phase 1 Weapon Mastery tuple gains that seventh
+Battle-admitted option. The MCP fixtures use the Character Creation package's
+public Unit id constants where available and construct the private Greataxe id
+at the synthetic fixture boundary. They add no declaration path, Battle
+execution support, forbidden owner, or coarse-limit change.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted
