@@ -1059,6 +1059,51 @@ describe("Surface publication delta verifier", () => {
       },
     },
     {
+      name: "GM-speed tuple without prefix items",
+      mutate: (schema: Record<string, unknown>): void => {
+        const alternatives = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(schema, "$defs"),
+              "SrdRecordUnion1057Encoded",
+            ),
+            "properties",
+          ),
+          "alternatives",
+        );
+        Reflect.deleteProperty(alternatives, "prefixItems");
+      },
+    },
+    {
+      name: "GM-speed tuple without repeated items",
+      mutate: (schema: Record<string, unknown>): void => {
+        const alternatives = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(schema, "$defs"),
+              "SrdRecordUnion1057Encoded",
+            ),
+            "properties",
+          ),
+          "alternatives",
+        );
+        Reflect.deleteProperty(alternatives, "items");
+      },
+    },
+    {
+      name: "caster-heal range boolean schema",
+      mutate: (schema: Record<string, unknown>): void => {
+        const properties = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(schema, "$defs"),
+            "SrdRecordUnion586Encoded",
+          ),
+          "properties",
+        );
+        properties.rangeFeet = true;
+      },
+    },
+    {
       name: "fly-hover branch",
       mutate: (schema: Record<string, unknown>): void => {
         const hover = fixtureObjectField(
@@ -1072,6 +1117,19 @@ describe("Surface publication delta verifier", () => {
           "hover",
         );
         hover.enum = [false];
+      },
+    },
+    {
+      name: "fly-hover union with a boolean branch",
+      mutate: (schema: Record<string, unknown>): void => {
+        const anyOf = fixtureArrayField(
+          fixtureObjectField(
+            fixtureObjectField(schema, "$defs"),
+            "SrdRecordUnion1047Encoded",
+          ),
+          "anyOf",
+        );
+        anyOf[0] = false;
       },
     },
   ])(
