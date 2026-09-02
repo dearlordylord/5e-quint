@@ -925,8 +925,8 @@ function schemaObjectSignature(
                 otherIndex !== index &&
                 isSyntacticSchemaSubset(schema, member, other),
             );
-          if (redundant)
-            redundantSubsetCount && (redundantSubsetCount.value += 1);
+          if (redundant && redundantSubsetCount !== undefined)
+            redundantSubsetCount.value += 1;
           return !redundant;
         });
         return `${key}:[${[...new Set(nonRedundant.map(visit))].sort(compareCodePointStrings).join(",")}]`;
