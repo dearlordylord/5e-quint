@@ -96,7 +96,6 @@ import { characterSheetSpellHasRitualTag } from "./spell-profile-shape.ts";
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
 import {
   characterBuildHasBookOfShadows,
-  isNonSpellcastingBuild,
   isSpellcastingBuild,
 } from "./character-build-shape.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
@@ -132,8 +131,6 @@ import {
   type StoredClassFeatureLanguageFact,
   type StoredClassFeatureLanguageProjection,
 } from "./sheet-types.ts";
-
-export { characterBuildHasBookOfShadows };
 
 type ParsedStoredHitPoints = {
   readonly currentHp: HpType;
@@ -2370,10 +2367,3 @@ function isStringArray(value: unknown): value is readonly string[] {
 function isDeathSaveCount(value: unknown): value is DeathSaveCount {
   return value === 0 || value === 1 || value === 2 || value === 3;
 }
-
-export {
-  isNonSpellcastingBuild,
-  isRecord,
-  isSpellcastingBuild,
-  recordHasExactKeys,
-};

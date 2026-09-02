@@ -20,6 +20,11 @@ import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Result } from "effect";
 
 import {
+  characterBuildHasBookOfShadows,
+  isNonSpellcastingBuild,
+  isSpellcastingBuild,
+} from "./character-build-shape.ts";
+import {
   characterSheetHitPointCapacity,
   characterSheetHitPoints,
   parseHp,
@@ -82,11 +87,8 @@ import {
   type FreshCharacterSheet,
 } from "./fresh-character-sheet.ts";
 import { createFreshCharacterSheetWithStatBlockCatalog } from "./fresh-character-sheet-construction-core.ts";
+import { isRecord, recordHasExactKeys } from "./record-shape.ts";
 import {
-  characterBuildHasBookOfShadows,
-  isNonSpellcastingBuild,
-  isRecord,
-  isSpellcastingBuild,
   parseCharacterBuild,
   parseResourceCount,
   parseStoredCharacterSheetBookOfShadowsPresence,
@@ -96,7 +98,6 @@ import {
   parseStoredPactSlots,
   parseStoredResourceExpenditures,
   parseStoredSpellSlots,
-  recordHasExactKeys,
 } from "./stored-sheet-parser.ts";
 
 export function createFreshCharacterSheet(
