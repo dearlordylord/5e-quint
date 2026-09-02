@@ -148,9 +148,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   surface: {
-    // Terminal collector run on 2026-09-02 measured 55 uncovered functions
-    // (1,721/1,776 covered; 96.90%). This temporary floor matches that
-    // measured baseline. Issue #227's 99% target remains.
+    // Non-regression floor; issue #227 owns the 99% target.
     coverage: {
       lines: 96.95,
       statements: 96.75,

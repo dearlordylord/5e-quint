@@ -277,7 +277,7 @@ function claimCandidateFiles(scanRoot = root) {
         "-z",
         "--cached",
         "--others",
-        "--exclude-standard",
+        "--exclude-per-directory=.gitignore",
         "--",
         "packages",
         "plans",
@@ -964,6 +964,26 @@ function withFixtureRoot(fn) {
   }
 }
 
+function runFixtureGit(fixtureRoot, gitArguments) {
+  return childProcess.execFileSync("git", gitArguments, {
+    cwd: fixtureRoot,
+    encoding: "utf8",
+  });
+}
+
+function assertClaimDiscovered(claims, expected, label) {
+  if (
+    !claims.some(
+      (claim) =>
+        claim.ownerPath === expected.ownerPath &&
+        claim.kind === expected.kind &&
+        claim.requirementId === expected.requirementId,
+    )
+  ) {
+    fail(`${label} was not discovered.`);
+  }
+}
+
 function writeFixtureVerificationClaims(fixtureRoot) {
   fs.writeFileSync(
     path.join(fixtureRoot, "packages/proofs/owner-proof.qnt"),
@@ -1021,7 +1041,116 @@ function runSelfTests() {
       ),
       "// RAW-COVERAGE: runtime-owner RAW-IGNORED-GENERATED-001\n",
     );
+    runFixtureGit(fixtureRoot, ["add", ".gitignore", "packages"]);
     validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
+  });
+
+  withFixtureRoot((fixtureRoot) => {
+    const infoExcludedOwnerPath = "packages/runtime/src/info-excluded-owner.ts";
+    const globalExcludedOwnerPath =
+      "packages/runtime/src/global-excluded-owner.ts";
+    fs.writeFileSync(
+      path.join(fixtureRoot, ".git/info/exclude"),
+      "info-excluded-owner.ts\n",
+    );
+    const globalExcludesPath = path.join(
+      fixtureRoot,
+      "controlled-global-excludes",
+    );
+    fs.writeFileSync(globalExcludesPath, "global-excluded-owner.ts\n");
+    runFixtureGit(fixtureRoot, [
+      "config",
+      "core.excludesFile",
+      globalExcludesPath,
+    ]);
+    fs.writeFileSync(
+      path.join(fixtureRoot, infoExcludedOwnerPath),
+      "// RAW-COVERAGE: runtime-owner RAW-INFO-EXCLUDED-001\n",
+    );
+    fs.writeFileSync(
+      path.join(fixtureRoot, globalExcludedOwnerPath),
+      "// RAW-COVERAGE: runtime-owner RAW-GLOBAL-EXCLUDED-001\n",
+    );
+    const claims = scanRawCoverageClaims(fixtureRoot);
+    assertClaimDiscovered(
+      claims,
+      {
+        ownerPath: infoExcludedOwnerPath,
+        kind: "runtime-owner",
+        requirementId: "RAW-INFO-EXCLUDED-001",
+      },
+      "Claim hidden by .git/info/exclude",
+    );
+    assertClaimDiscovered(
+      claims,
+      {
+        ownerPath: globalExcludedOwnerPath,
+        kind: "runtime-owner",
+        requirementId: "RAW-GLOBAL-EXCLUDED-001",
+      },
+      "Claim hidden by core.excludesFile",
+    );
+  });
+
+  withFixtureRoot((fixtureRoot) => {
+    const trackedOwnerPath = "packages/runtime/src/tracked-owner.ts";
+    const untrackedOwnerPath = "packages/runtime/src/untracked-owner.ts";
+    fs.writeFileSync(
+      path.join(fixtureRoot, trackedOwnerPath),
+      "// RAW-COVERAGE: runtime-owner RAW-LINKED-TRACKED-001\n",
+    );
+    runFixtureGit(fixtureRoot, ["add", trackedOwnerPath]);
+    runFixtureGit(fixtureRoot, [
+      "-c",
+      "user.name=RAW Coverage Self-Test",
+      "-c",
+      "user.email=raw-coverage-self-test@example.invalid",
+      "commit",
+      "--quiet",
+      "-m",
+      "fixture",
+    ]);
+    const linkedWorktreeRoot = path.join(fixtureRoot, "linked-worktree");
+    runFixtureGit(fixtureRoot, [
+      "worktree",
+      "add",
+      "--quiet",
+      "--detach",
+      linkedWorktreeRoot,
+      "HEAD",
+    ]);
+    try {
+      fs.writeFileSync(
+        path.join(linkedWorktreeRoot, untrackedOwnerPath),
+        "// RAW-COVERAGE: runtime-owner RAW-LINKED-UNTRACKED-001\n",
+      );
+      const claims = scanRawCoverageClaims(linkedWorktreeRoot);
+      assertClaimDiscovered(
+        claims,
+        {
+          ownerPath: trackedOwnerPath,
+          kind: "runtime-owner",
+          requirementId: "RAW-LINKED-TRACKED-001",
+        },
+        "Tracked claim in linked worktree",
+      );
+      assertClaimDiscovered(
+        claims,
+        {
+          ownerPath: untrackedOwnerPath,
+          kind: "runtime-owner",
+          requirementId: "RAW-LINKED-UNTRACKED-001",
+        },
+        "Untracked claim in linked worktree",
+      );
+    } finally {
+      runFixtureGit(fixtureRoot, [
+        "worktree",
+        "remove",
+        "--force",
+        linkedWorktreeRoot,
+      ]);
+    }
   });
 
   withFixtureRoot((fixtureRoot) => {
