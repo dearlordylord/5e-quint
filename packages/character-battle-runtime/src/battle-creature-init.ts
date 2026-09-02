@@ -43,7 +43,7 @@ import {
   type CharacterSheet,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "@dnd/character-sheet-runtime/consumer-protocol";
+} from "@dnd/character-sheet-runtime/battle-init-protocol";
 import {
   Hp,
   abilityModifier,
@@ -58,7 +58,7 @@ import type { Language } from "@dnd/shared/game-facts";
 import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import { Match, Option, Result } from "effect";
 import {

@@ -1,8 +1,8 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
-import { type CharacterBuild } from "@dnd/character-creation-runtime";
+import type { CharacterBuild } from "@dnd/character-creation-runtime/consumer-protocol";
 import { readBackgroundCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import { Option, Result } from "effect";
 
 import {

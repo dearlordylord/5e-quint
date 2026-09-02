@@ -56,7 +56,7 @@ import {
   characterSheetSpellAccessesForBuild,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "@dnd/character-sheet-runtime/consumer-protocol";
+} from "@dnd/character-sheet-runtime/battle-init-protocol";
 import {
   armorClassDelta,
   type ArmorClassBaseSource,
@@ -89,7 +89,7 @@ import {
   spellcastingClassRecordForClassName,
   resolveWeaponMasteryReference,
 } from "@dnd/surface/surface/unit-catalog-core";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import { Result, Match, Option } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
