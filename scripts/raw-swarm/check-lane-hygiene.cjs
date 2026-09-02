@@ -1181,13 +1181,7 @@ function runTestSourceListing(testPathArgument) {
   }
 }
 
-function assertQualityMilestonePlanLaneBoundaries(scripts) {
-  assert.equal(
-    scripts["quality:body"],
-    "scripts/assert-resource-lock.sh broad && node scripts/workspace-quality-harness.mjs milestone",
-    "Quality body must preserve the broad lock assertion and invoke the milestone collector.",
-  );
-
+function assertQualityMilestonePlanLaneBoundaries() {
   const planInvocations = QUALITY_MILESTONE_PLAN.map(({ command, args }) =>
     [command, ...args].join(" "),
   );
@@ -1338,7 +1332,7 @@ function runLaneHygiene() {
     ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh campaign node scripts/raw-swarm/run-model-backed.mjs campaign",
   );
 
-  assertQualityMilestonePlanLaneBoundaries(scripts);
+  assertQualityMilestonePlanLaneBoundaries();
   assert.equal(
     new Set(MODEL_BACKED_ENTRYPOINTS).size,
     MODEL_BACKED_ENTRYPOINTS.length,

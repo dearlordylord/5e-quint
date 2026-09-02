@@ -319,6 +319,14 @@ function outcomeLine(outcome) {
   return `BLOCKED ${duration} ${outcome.id} (blocked by ${outcome.blockedBy.join(", ")})`;
 }
 
+function executeQualityMilestoneCheck(check, execute) {
+  try {
+    return execute(check);
+  } catch (error) {
+    return { status: null, signal: null, error };
+  }
+}
+
 function executeQualityMilestone(
   plan,
   {
@@ -336,6 +344,11 @@ function executeQualityMilestone(
   const outcomes = [];
   const outcomesById = new Map();
   let emergencyCheckId;
+  const recordOutcome = (outcome) => {
+    outcomes.push(outcome);
+    outcomesById.set(outcome.id, outcome);
+    write(`${outcomeLine(outcome)}\n`);
+  };
 
   for (const check of plan) {
     const blockedBy =
@@ -351,20 +364,13 @@ function executeQualityMilestone(
         durationMilliseconds: 0,
         blockedBy,
       };
-      outcomes.push(outcome);
-      outcomesById.set(check.id, outcome);
-      write(`${outcomeLine(outcome)}\n`);
+      recordOutcome(outcome);
       continue;
     }
 
     write(`RUN ${check.id}: ${check.command} ${check.args.join(" ")}\n`);
     const startedAt = now();
-    let result;
-    try {
-      result = execute(check);
-    } catch (error) {
-      result = { status: null, signal: null, error };
-    }
+    const result = executeQualityMilestoneCheck(check, execute);
     const durationMilliseconds = elapsedMilliseconds(startedAt, now());
     const outcome =
       result.error === undefined && result.status === 0
@@ -375,9 +381,7 @@ function executeQualityMilestone(
             durationMilliseconds,
             failure: failureDescription(result),
           };
-    outcomes.push(outcome);
-    outcomesById.set(check.id, outcome);
-    write(`${outcomeLine(outcome)}\n`);
+    recordOutcome(outcome);
     if (result.status === 137 || result.signal === "SIGKILL") {
       emergencyCheckId = check.id;
     }
@@ -688,6 +692,63 @@ function selfTest() {
     49,
     "The quality milestone plan must retain every existing check.",
   );
+  assert.deepEqual(
+    QUALITY_MILESTONE_PLAN.map(({ command, args }) =>
+      [command, ...args].join(" "),
+    ),
+    [
+      "pnpm check:effect4-cohort:self-test",
+      "pnpm check:effect4-cohort",
+      "pnpm check:effect4-certification-typecheck",
+      "pnpm check:effect4-oracle-delta:self-test",
+      "pnpm check:effect4-oracle-delta",
+      "pnpm smoke:effect4-clean-consumer",
+      "pnpm run build:turbo",
+      "pnpm check:workspace-quality-inventory",
+      "pnpm check:authored-id-dispatch",
+      "pnpm check:battle-runtime-import-ownership",
+      "pnpm check:battle-runtime-test-support-boundary",
+      "pnpm check:character-sheet-runtime-split",
+      "pnpm check:surface-publication-typecheck",
+      "pnpm run check:surface-publication-self-test:body",
+      "pnpm check:surface-content-publication",
+      "pnpm check:srd-stat-block-catalog",
+      "pnpm check:stat-block-procedure-pressure:self-test",
+      "pnpm check:stat-block-procedure-pressure",
+      "pnpm check:stat-block-restricted-invocation-deltas:self-test",
+      "pnpm check:stat-block-restricted-invocation-deltas",
+      "pnpm check:stat-block-execution-reconciliation:self-test",
+      "pnpm check:stat-block-execution-reconciliation",
+      "pnpm check:opaque-oracle-schema-sync",
+      "pnpm check:opaque-oracle-corpus",
+      "pnpm check:opaque-oracle-distribution",
+      "pnpm check:cleanroom-provenance",
+      "pnpm check:markdown-links",
+      "pnpm check:mbt-driver-closure",
+      "pnpm check:qnt-proof-closure",
+      "pnpm check:qnt-proof-harness",
+      "pnpm check:qnt-proof-timing-report",
+      "pnpm check:test-lane-hygiene",
+      "pnpm check:mbt-script-inventory",
+      "pnpm check:qnt-inventory",
+      "pnpm check:qnt-run-block-separation",
+      "pnpm check:resource-lock",
+      "pnpm check:raw-swarm-lane-hygiene",
+      "pnpm rules-kernel-coverage:check",
+      "pnpm unit-profile-coverage:check",
+      "pnpm gh381-registry-path-manifest:check",
+      "pnpm sdk-raw-integration-inventory:check",
+      "pnpm lint",
+      "pnpm check:complexity:self-test",
+      "pnpm check:complexity",
+      "pnpm duplication",
+      "pnpm circular",
+      "pnpm run typecheck:turbo",
+      "pnpm run test:turbo",
+      "pnpm run coverage:body",
+    ],
+    "The quality milestone collector invocations must retain their certified order.",
+  );
   assert(
     QUALITY_MILESTONE_PLAN.every(
       (check) =>
@@ -849,6 +910,30 @@ function selfTest() {
     ["FAIL", "BLOCKED", "BLOCKED"],
   );
   assert.equal(emergencyResult.exitCode, 137);
+
+  const signalEmergencyCalls = [];
+  const signalEmergencyResult = executeQualityMilestone(
+    [
+      fixtureCheck("signal-emergency"),
+      fixtureCheck("independent-after-signal-emergency"),
+      fixtureCheck("another-independent-after-signal-emergency"),
+    ],
+    {
+      execute: (check) => {
+        signalEmergencyCalls.push(check.id);
+        return { status: null, signal: "SIGKILL" };
+      },
+      now: () => 0n,
+      write: () => {},
+    },
+  );
+  assert.deepEqual(signalEmergencyCalls, ["signal-emergency"]);
+  assert.deepEqual(
+    signalEmergencyResult.outcomes.map((outcome) => outcome.status),
+    ["FAIL", "BLOCKED", "BLOCKED"],
+  );
+  assert.equal(signalEmergencyResult.outcomes[0].failure, "signal SIGKILL");
+  assert.equal(signalEmergencyResult.exitCode, 137);
   assert.throws(
     () =>
       validateQualityMilestonePlan([
