@@ -249,6 +249,185 @@ changes therefore do not alter the admitted declaration graph.
 The subsequent Character Battle admission correction at `d7262c234` also left
 the admitted graph byte-identical.
 
+## Linked-spell identity recertification (2026-09-01)
+
+At immutable implementation source `7f5da6475`, the granted-spell duration
+link is decoded as the existing `UnitId` domain rather than an unrestricted
+string. The admitted declaration graph retains exactly 571 paths and the
+unchanged sorted POSIX path-ledger SHA-256
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`.
+The production emitter measured 10,298,121 bytes, leaving 187,639 bytes below
+the unchanged 10 MiB cap. Its sorted content-ledger SHA-256 is
+`4d3ded53627e74be2ac9ecfb507d8691d591c19e14cd314d6fe7e597de63319d`.
+
+Relative to the preceding reviewed graph, exactly one declaration changes:
+`packages/surface/src/surface/schema-base.d.ts` grows by 41 bytes. Its
+`endsWhenGrantedSpellEnds` decoded type narrows from `string` to the branded
+`UnitId` string while its encoded type remains `string`; no declaration path,
+runtime/data owner, or other declaration content changes. The coarse safety
+ceiling and forbidden-owner set remain unchanged, and production emission
+continues to fail closed on the exact reviewed manifest.
+
+## Source-free Character Sheet boundary recertification (2026-09-01)
+
+At immutable implementation source `0e3ca1e35`, the Opaque executable uses
+package-owned Character Sheet and Character Battle subpaths whose dependency
+graphs do not eagerly install the canonical Stat Block catalog. The ordinary
+Character Sheet root remains the canonical default-catalog wrapper; the
+injected construction path supplies the caller's already parsed
+`StatBlockCatalog` to the same implementation.
+
+The admitted declaration graph contains exactly 577 files and 10,302,398
+bytes, leaving 183,362 bytes below the unchanged 10 MiB cap. Its sorted POSIX
+path-ledger SHA-256 is
+`cea3e96c590aad8da19aa6b15d802dffe6f3d237dc0e2f7ef7c2ab1c534f4b7c`;
+its sorted content-ledger SHA-256 is
+`439d51ef3c7641394fc6ffa664c8b25c7c8686cef4c1374548ff23ad5078266e`.
+
+Relative to the preceding 571-file graph, these six declarations are added:
+
+- `packages/character-sheet-runtime/src/battle-init-protocol.d.ts`
+- `packages/character-sheet-runtime/src/character-build-shape.d.ts`
+- `packages/character-sheet-runtime/src/druid-features-core.d.ts`
+- `packages/character-sheet-runtime/src/fresh-character-sheet-construction-core.d.ts`
+- `packages/character-sheet-runtime/src/fresh-character-sheet-schema.d.ts`
+- `packages/character-sheet-runtime/src/record-shape.d.ts`
+
+`battle-init-protocol` is the narrow Character Sheet contract consumed by
+Character Battle roster projection. `fresh-character-sheet-construction-core`
+and `druid-features-core` own the single catalog-injected construction
+algorithm, while `fresh-character-sheet-schema` owns its canonical issue and
+projection schemas. `character-build-shape` and `record-shape` are shared leaf
+contracts used by that core and the existing parsers, avoiding duplicate
+validation logic. These owners make the source-free graph explicit without
+moving catalog data into the distribution or weakening the forbidden-owner
+walk.
+
+The declaration compiler configuration maps all new package-owned boundary
+subpaths explicitly: Character Sheet battle initialization, fresh-sheet
+schemas, and source-free construction, plus Character Battle source-free
+construction. The generated relocated-consumer configuration separately maps
+the reachable Character Sheet battle-initialization protocol to its admitted
+declaration. The first unrecertified emission failed closed at the unresolved
+`@dnd/character-sheet-runtime/battle-init-protocol` edge; these explicit
+mappings restore both emission-time internal-edge validation and relocated
+consumer typechecking. The coarse file ceiling and the seven forbidden Surface
+runtime/data owners remain unchanged.
+
+The subsequent finite-oracle recertification at integration source
+`849c12109` retains the candidate's 50,667,014 serialized bytes and all 8,965
+reviewed operation-and-segment identities. Only the existing `byteLength` and
+`sha256` metadata leaves for
+`scripts/raw-swarm/sdk-player/declarations.tsconfig.json` change, under their
+existing `raw-swarm-effect-runtime-artifacts` classification. The Effect oracle
+certificate owns the resulting candidate and identity digests; no delta site,
+classification, collection authority, or runtime behavior is added.
+
+At final declaration revision `3d1fe6fec`, the reviewed Character Sheet API
+repairs preserve all 577 paths while reducing the bundle by 298 bytes to
+10,302,100 bytes, leaving 183,660 bytes below the cap. The path ledger remains
+unchanged, while the content-ledger SHA-256 becomes
+`8ef64aaf89c63a2af994bf3fea70243bc8a1147ecd8573af22b22707ba8dbe1c`.
+Exactly three declarations change: `druid-features-core.d.ts` shrinks by 161
+bytes, `druid-features.d.ts` grows by 170 bytes, and
+`stored-sheet-parser.d.ts` shrinks by 307 bytes. These changes keep
+catalog-independent Druid construction in the source-free core, keep the
+ordinary public wrapper responsible for the default catalog, and narrow the
+stored-sheet parser's projected contract without adding another algorithm or
+runtime/data owner. The coarse ceilings and forbidden-owner set remain
+unchanged.
+
+The canonical Weapon Mastery closure at source revision `a027913d4` preserves
+the same 577 paths and path ledger while reducing the bundle by another 2,883
+bytes to 10,299,217 bytes. The unchanged 10 MiB cap therefore leaves 186,543
+bytes of margin, and the content-ledger SHA-256 becomes
+`a11849ad76fef09bf7a9f3ba7c0b9c5e23c186416c6bb43a08a34d7df5b5a0f2`.
+Exactly four Surface declarations change:
+`generated/srd-unit-aggregate.d.ts` grows by 1,355 bytes,
+`schema-nonspell.d.ts` shrinks by 4,655 bytes, `schema.d.ts` grows by 91
+bytes, and `types.d.ts` grows by 326 bytes. These changes project the three
+canonical Mastery Units and the Graze/Nick schema variants through existing
+Surface owners. They add no declaration path, runtime admission, forbidden
+owner, or coarse-limit change.
+
+The downstream finite-oracle recertification at declaration revision
+`d0b43f8ae` records a 50,669,363-byte candidate with SHA-256
+`4cea44ff11131702655ad12bda69f8336c60c08f3044a1f0b8e8065aef6032ad`.
+Its 8,993 operation-and-segment identities have SHA-256
+`750696ab01591429687fc99fa85e893e5c5c8e2e3d6d7f2027b230c16d0bf1af`.
+Relative to the preceding certificate, 28 sites are added and none are
+removed: 22 `listCatalogUnits` response sites retain the existing
+`mcp-protocol-contract-migration` classification, and the six canonical
+Mastery Dhall/JSON artifacts use the existing
+`surface-authored-contract-convergence` classification. Four existing Surface
+publication metadata leaves and three existing MCP response-digest/text sites
+change under their prior classifications. The Surface content authority grows
+from 1,866 to 1,872 entries with candidate membership and order SHA-256
+`1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9`.
+All array-comparison authority counts and hashes remain unchanged; no reason,
+classifier, limit, or baseline authority changes.
+
+The mastery-aware Character Battle projection at source revision `00e1d19a9`
+preserves the same 577 paths and path ledger while increasing the bundle by
+452 bytes to 10,299,669 bytes. The unchanged 10 MiB cap therefore leaves
+186,091 bytes of margin, and the candidate content-ledger SHA-256 is
+`02263ddf03483a28f5dee307001e3ee7de86d430d9dab242657296bec77bfc3f`.
+Exactly three declarations change: `battle-runtime`'s
+`consumer-protocol.d.ts` grows by 131 bytes,
+`battle-character-build-projection.d.ts` grows by 72 bytes, and
+`battle-support-profiles.d.ts` grows by 249 bytes. These declarations expose
+the existing selected-Mastery fact and predicate through the narrow Battle
+consumer protocol, replace the separate positional attack projections with
+one named-input operation that requires the selected Mastery facts for both
+hands, and own selected Mastery reference resolution at the Character Battle
+support boundary.
+
+The canonical-export correction and declaration recertification at revision
+`5bdf8e3b4` removes the duplicate explicit
+`CharacterBattleWeaponMasterySelection` export from `battle-runtime`'s
+`index.d.ts`; the ordinary root retains that API through its existing
+`export *` from `consumer-protocol`. Relative to the `00e1d19a9` candidate,
+only `index.d.ts` changes, shrinking by 39 bytes. The `5bdf8e3b4` candidate
+therefore retains all 577 paths at 10,299,630 bytes, leaves 186,130 bytes below
+the cap, and has content-ledger SHA-256
+`84deba25e0bb7cd7f178651102754908355f5b3883c855b75ecce9889727752b`.
+Relative to the preceding reviewed declaration certificate, the four path
+deltas at revision `5bdf8e3b4` are the three `00e1d19a9` declarations plus
+`index.d.ts`. No step adds a declaration path, Battle execution support,
+forbidden owner, or coarse-limit change.
+
+The battle-safe MCP Mastery fixture restoration at source revision
+`1fc6dd9fa` keeps the same 577 declaration paths and path-ledger SHA-256 while
+increasing the bundle by 85 bytes to 10,299,715 bytes. The unchanged 10 MiB
+cap leaves 186,045 bytes of margin, and the content-ledger SHA-256 becomes
+`8e77921796c9c837238f25d50ecaa15fcdf5338d81e4c4a636a458306f46e134`.
+Exactly two Character Creation declarations change relative to the `5bdf8e3b4`
+certificate: `index.d.ts` grows by 36 bytes to expose the existing canonical
+Quarterstaff Unit id through the package root, and `phase1-manifest.d.ts` grows
+by 49 bytes because the Phase 1 Weapon Mastery tuple gains that seventh
+Battle-admitted option. The MCP fixtures use the Character Creation package's
+public Unit id constants where available and construct the private Greataxe id
+at the synthetic fixture boundary. They add no declaration path, Battle
+execution support, forbidden owner, or coarse-limit change.
+
+The save-gated turn-constraint dependency correction at source revision
+`6d9c19290` adds
+`packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-turn-resources.d.ts`
+as internal compiler support. The reviewed graph therefore contains 578 files
+and 10,299,988 bytes, leaving 185,772 bytes below the unchanged 10 MiB cap. Its
+sorted POSIX path-ledger SHA-256 is
+`5d4a083dc3efcfeef6d90b4dcf34629336ba374b4ce2d28f877f98069ece77e4`,
+and its content-ledger SHA-256 is
+`9ba819c738ac4da4d30b3f1e31e754b283f3fc6838092943ebaee74695cba838`.
+Exactly four declarations change relative to the preceding certificate: the
+new 910-byte turn-resource owner and the re-export reshaping in
+`save-gated-turn-constraint-facts.d.ts`,
+`save-gated-turn-constraint-runtime.d.ts`, and
+`turn-boundary-lifecycle.d.ts`. The new leaf centralizes the existing bound
+effect query and turn-resource reconciliation while preserving the established
+exports. It adds no authored or runtime capability and does not widen the
+forbidden-owner set or either coarse limit.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

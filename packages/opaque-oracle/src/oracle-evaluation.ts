@@ -15,7 +15,7 @@ import {
   type BattleRosterComposition,
   type BattleRosterEntry,
   type BattleRosterIssue,
-} from "@dnd/character-battle-runtime";
+} from "@dnd/character-battle-runtime/source-free-construction";
 import {
   battleId,
   battleInitializationIssueLeaves,
@@ -31,10 +31,10 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
-  createFreshCharacterSheet,
+  createFreshCharacterSheetWithStatBlockCatalog,
   freshCharacterSheetProjection,
   type CharacterSheetId,
-} from "@dnd/character-sheet-runtime";
+} from "@dnd/character-sheet-runtime/source-free-construction";
 import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
@@ -217,19 +217,19 @@ function appendFreshSheetAndBattle(
   unitLibrary: UnitCatalog,
   statBlockCatalog: StatBlockCatalog,
 ): OracleSheetOutcome {
-  const freshSheet = createFreshCharacterSheet({
+  const freshSheet = createFreshCharacterSheetWithStatBlockCatalog({
     characterId: ORACLE_CHARACTER_SHEET_ID,
     build,
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary,
+    statBlockCatalog,
     ...(sheetInput.tag === "wildShapeKnownForms"
       ? {
           druidWildShapeKnownFormStatBlockIds: canonicalizeStringSet(
             sheetInput.statBlockIds,
           ),
-          statBlockCatalog,
         }
       : {}),
   });

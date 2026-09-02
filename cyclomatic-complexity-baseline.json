@@ -964,6 +964,9 @@
     "packages/character-sheet-runtime/src/dream.ts": {
       "module/binding:dreamInvocationFromSpell": 15
     },
+    "packages/character-sheet-runtime/src/fresh-character-sheet-construction-core.ts": {
+      "module/binding:createFreshCharacterSheetWithStatBlockCatalog": 45
+    },
     "packages/character-sheet-runtime/src/geas.ts": {
       "module/binding:geasInvocationFromSpell": 16
     },
@@ -1021,7 +1024,6 @@
       "module/binding:seemingTargetIssue": 11
     },
     "packages/character-sheet-runtime/src/sheet-lifecycle.ts": {
-      "module/binding:createFreshCharacterSheet": 45,
       "module/binding:parseCharacterSheet": 29,
       "module/binding:parseStoredRestFeatureUses": 19,
       "module/binding:rebuildCharacterSheet": 24,

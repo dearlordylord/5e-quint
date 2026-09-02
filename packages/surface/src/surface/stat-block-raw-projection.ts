@@ -2514,14 +2514,14 @@ const parseLanguageSet = (
   return {
     kind: "named_plus_other_languages",
     languages,
-    additionalLanguages: additionalLanguage[1],
+    additionalLanguages: PositiveInteger(additionalLanguage[1]),
   };
 };
 
 const trailingTelepathy = (
   issueContext: ProjectionIssueContext,
   telepathyText: RegExpMatchArray | null,
-): { readonly telepathy?: { readonly rangeFeet: number } } => {
+): { readonly telepathy?: { readonly rangeFeet: PositiveInteger } } => {
   if (telepathyText === null) return {};
   return {
     telepathy: {

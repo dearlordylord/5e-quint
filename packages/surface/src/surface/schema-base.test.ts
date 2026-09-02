@@ -1,8 +1,10 @@
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import { UnitId } from "@dnd/shared/game-facts";
 
 import {
   ClassLevelChoiceCountSchema,
+  GrantedSpellDurationOverrideSchema,
   isSurfaceSchemaRole,
   ProficiencyGrantSchema,
   ProficiencyGrantSubjectSchema,
@@ -17,6 +19,30 @@ const decode = <A>(schema: Schema.ConstraintDecoder<A>, input: unknown): A =>
   Schema.decodeUnknownSync(schema)(input);
 
 describe("Surface base schemas", () => {
+  test("decodes granted-spell duration links through the UnitId boundary", () => {
+    const encoded = {
+      removeConcentration: true,
+      endsWhenGrantedSpellEnds: "synthetic_linked_spell",
+    } as const;
+    const decoded = decode(GrantedSpellDurationOverrideSchema, encoded);
+
+    expect(decoded).toEqual({
+      removeConcentration: true,
+      endsWhenGrantedSpellEnds: UnitId.make("synthetic_linked_spell"),
+    });
+    expect(
+      Schema.encodeSync(GrantedSpellDurationOverrideSchema)(decoded),
+    ).toEqual(encoded);
+
+    for (const endsWhenGrantedSpellEnds of ["", " synthetic_linked_spell "]) {
+      expect(() =>
+        decode(GrantedSpellDurationOverrideSchema, {
+          endsWhenGrantedSpellEnds,
+        }),
+      ).toThrow();
+    }
+  });
+
   test("reads every proficiency-grant subject shape", () => {
     const subjects = [
       { kind: "skill", skill: "arcana" },

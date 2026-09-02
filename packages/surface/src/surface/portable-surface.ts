@@ -576,7 +576,7 @@ const NON_LITERAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
 ]);
 
 function structuralAst(ast: SchemaAST.AST): SchemaAST.AST {
-  let current = ast;
+  const current = ast;
   if (current._tag === "Suspend") return structuralAst(current.thunk());
   return SUPPORTED_STRUCTURAL_AST_TAGS.has(current._tag)
     ? current

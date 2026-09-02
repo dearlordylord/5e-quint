@@ -311,10 +311,10 @@
       "profile": "Character Sheet selected-land prepared Spell Access runtime",
       "summary": "Druid Circle of the Land Spells is retained from the selected subclass feature grants in CharacterBuild, stores the current Long Rest land choice as Character Sheet state, and derives prepared Spell Access from the installed Surface land-choice table for the character's Druid level and lower. The runtime preserves the selected land before deriving spell ids, changes that state only through explicit Long Rest choice input, stores no duplicate prepared-spell list, and rejects Book of Shadows selections that duplicate the current land-derived Spell Access.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/druid-features.ts:characterSheetDruidCircleLandPreparedSpellAccess",
-        "packages/character-sheet-runtime/src/druid-features.ts:druidCircleLandAfterLongRest",
-        "packages/character-sheet-runtime/src/druid-features.ts:druidCircleLandPreparedSpellAccessForBuild",
-        "packages/character-sheet-runtime/src/druid-features.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
+        "packages/character-sheet-runtime/src/druid-features-core.ts:characterSheetDruidCircleLandPreparedSpellAccess",
+        "packages/character-sheet-runtime/src/druid-features-core.ts:druidCircleLandAfterLongRest",
+        "packages/character-sheet-runtime/src/druid-features-core.ts:druidCircleLandPreparedSpellAccessForBuild",
+        "packages/character-sheet-runtime/src/druid-features-core.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
       ],
       "tests": [
         "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessProjectionTestName",

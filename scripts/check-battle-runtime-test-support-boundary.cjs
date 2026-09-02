@@ -32,7 +32,8 @@ function isAllowedOwner(relativePath) {
 function isTestSupportSpecifier(specifier) {
   return (
     specifier === "@dnd/battle-runtime/test-support" ||
-    specifier.endsWith("battle-runtime-session.test-support.ts")
+    specifier.endsWith("battle-runtime-session.test-support.ts") ||
+    specifier.endsWith("battle-effect-occurrence-allocation.test-support.ts")
   );
 }
 
@@ -103,6 +104,13 @@ function runSelfTest() {
   );
   assert.match(
     violationFor("packages/mcp/src/server.ts", packageImport) ?? "",
+    /test-support constructors/,
+  );
+  assert.match(
+    violationFor(
+      "packages/battle-runtime/src/battle-reducer/effect-runtime.ts",
+      'import { allocateEffectOccurrenceIdForTest } from "../battle-effect-occurrence-allocation.test-support.ts";',
+    ) ?? "",
     /test-support constructors/,
   );
   assert.match(

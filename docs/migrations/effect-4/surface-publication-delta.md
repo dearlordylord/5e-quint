@@ -40,6 +40,21 @@ changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
 evidence.
 
+The canonical Weapon Mastery closure in `a027913d4` adds the Graze, Nick, and
+Vex authored Units referenced by the published weapon records. The candidate
+aggregate now contains 437 Units and 330 Stat Blocks. Its byte digest is
+`1638d6875de5283f909f65ba2ae4237a513f8b8492e0b32e0d1313d80aa8ae97`,
+and its canonical JSON digest is
+`96ea97858f73e246ca73347b902ea93b9a56a5aeb94cad0feb0b74437253679a`.
+Each new Unit is an exact reviewed `authored-catalog-membership` addition. This
+publication evidence does not change the separate runtime support profile:
+Battle admission of these Mastery mechanics remains unsupported.
+The corresponding generated schema contains 1,230 definitions and 7,669 local
+references. Its byte digest is
+`3b1e260ece57a7a04e3884ede3482485ef3d6f0bc81ef3cab197a41372fe8dab`,
+and its canonical JSON digest is
+`79d284acb884bf7cfc4b79cf8f39d9014502191ff34ba2b9a9b003ef5f792ef8`.
+
 After the publication schema was last synchronized at `bef31d34b`, the
 canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
 exposed two constraints that the typed Effect boundary already enforced but
@@ -52,6 +67,14 @@ The final publication also projects `specific_item.itemId` through the existing
 constraints (fourteen changed keyword leaves). The remaining graph changes are
 reference extraction/factoring and removal of one structurally subsumed
 Barbarian general-feature branch from `51307f83f`.
+
+The linked-spell duration dependency
+`durationOverride.endsWhenGrantedSpellEnds` now projects through the same
+decoded `UnitId` boundary. Its two reachable schema occurrences each gain the
+non-empty, trimmed-string constraints. The graph certificate records these four
+keyword leaves under a separate `unitIdLinkedSpellEnd` classification, so an
+`itemId` constraint cannot substitute for a linked-spell dependency constraint
+or inherit its reviewed pointer authority.
 
 The final convergence repair also synchronizes Life Bond's
 `caster_heal_link.rangeFeet` publication contract with its existing decoded
@@ -81,15 +104,19 @@ schema bytes, and then classifies the complete comparison-to-current rooted
 graph. Substituting either intermediate artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
-`UnitId`, and Life Bond range narrowings, proves the removed Barbarian member
-is a structural subset of a retained member, treats local `$ref` extraction
-and associative, set-valued `anyOf` factoring transparently, and applies joint
-partition refinement to both rooted graphs. Each reversal is authorized by an
-exact reachable JSON pointer and the canonical hashes of the node before and
-after that reversal. An equivalent-looking node at another or unreachable
-location does not inherit the classification. Any remaining changed region
-fails closed, and malformed or non-converging graph analysis is reported as
-typed invalid evidence rather than escaping the verifier.
+specific-item `UnitId`, linked-spell `UnitId`, and Life Bond range narrowings,
+canonical Mastery variants, proves the removed Barbarian member is a structural
+subset of a retained member, treats local `$ref` extraction and associative,
+set-valued `anyOf` factoring transparently, and applies joint partition
+refinement to both rooted graphs. The Mastery reversal is limited to the one
+reachable `mechanics` union that contains exactly the two canonical Graze and
+Nick schema-node hashes plus the retained on-hit branch used by Vex. Each
+reversal is authorized by an exact reachable JSON pointer and the canonical
+hashes of the node before and after that reversal. A changed Mastery shape, an
+equivalent-looking node at another pointer, or an unreachable lookalike does
+not inherit the classification. Any remaining changed region fails closed, and
+malformed or non-converging graph analysis is reported as typed invalid
+evidence rather than escaping the verifier.
 This is executable evidence about these two finite schema graphs. It is not a
 claim of equivalence for the JSON Schema language in general. The AJV matrix
 still requires each schema to accept its corresponding aggregate and reject

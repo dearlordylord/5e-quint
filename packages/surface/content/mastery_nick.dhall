@@ -11,10 +11,7 @@ let masteryNick =
           { family = "light_property_extra_attack_timing"
           , optional = True
           , trigger = { kind = "light_property_extra_attack" }
-          , replacement =
-              { from = "bonus_action"
-              , to = "attack_action"
-              }
+          , replacement = { from = "bonus_action", to = "attack_action" }
           , usageLimit = { kind = "once_per_turn" }
           }
       }

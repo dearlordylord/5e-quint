@@ -94,8 +94,13 @@ import {
 } from "./character-spell-projection.ts";
 import { characterSheetSpellHasRitualTag } from "./spell-profile-shape.ts";
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
+import {
+  characterBuildHasBookOfShadows,
+  isSpellcastingBuild,
+} from "./character-build-shape.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
 import { parseHp } from "./hit-points.ts";
+import { isRecord, recordHasExactKeys } from "./record-shape.ts";
 import {
   characterBuildPactSlotCapacity,
   validateSpellSlotSourceState,
@@ -122,20 +127,10 @@ import {
   type CharacterSheetStableRecovery,
   type CharacterSheetZeroHpLifecycleInput,
   type CharacterSpellSlotExpenditure,
-  type NonSpellcastingCharacterBuild,
-  type SpellcastingCharacterBuild,
   type StoredClassFeatureLanguage,
   type StoredClassFeatureLanguageFact,
   type StoredClassFeatureLanguageProjection,
 } from "./sheet-types.ts";
-
-export function characterBuildHasBookOfShadows(build: CharacterBuild): boolean {
-  return (
-    build.spellcasting?.sources.some(
-      (source) => source.bookOfShadows !== undefined,
-    ) ?? false
-  );
-}
 
 type ParsedStoredHitPoints = {
   readonly currentHp: HpType;
@@ -2371,33 +2366,4 @@ function isStringArray(value: unknown): value is readonly string[] {
 
 function isDeathSaveCount(value: unknown): value is DeathSaveCount {
   return value === 0 || value === 1 || value === 2 || value === 3;
-}
-
-export function isRecord(
-  value: unknown,
-): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null;
-}
-
-export function recordHasExactKeys(
-  value: Readonly<Record<string, unknown>>,
-  keys: readonly string[],
-): boolean {
-  const allowed = new Set(keys);
-  const actual = Object.keys(value);
-  return (
-    actual.length === keys.length && actual.every((key) => allowed.has(key))
-  );
-}
-
-export function isSpellcastingBuild(
-  build: CharacterBuild,
-): build is SpellcastingCharacterBuild {
-  return build.spellcasting !== undefined;
-}
-
-export function isNonSpellcastingBuild(
-  build: CharacterBuild,
-): build is NonSpellcastingCharacterBuild {
-  return build.spellcasting === undefined;
 }

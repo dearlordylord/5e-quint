@@ -58,7 +58,7 @@ import {
   characterSheetSpellAccessesForBuild,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "@dnd/character-sheet-runtime/consumer-protocol";
+} from "@dnd/character-sheet-runtime/battle-init-protocol";
 import {
   armorClassDelta,
   type ArmorClassBaseSource,
@@ -90,7 +90,7 @@ import {
   classSpellListForSpellcastingClassRecord,
   spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog-core";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import { Result, Match, Option } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
@@ -701,9 +701,9 @@ function characterWeaponAttackActionOption(input: {
   readonly itemId: CharacterEquipmentItemId;
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
 }): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue

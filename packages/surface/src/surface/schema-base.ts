@@ -1085,7 +1085,7 @@ export const GrantedSpellTargetRestrictionSchema = Schema.Union([
 export const GrantedSpellDurationOverrideSchema = Schema.Struct({
   removeConcentration: exactOptional(Schema.Literal(true)),
   endsWhenGrantedSpellEnds: exactOptional(
-    surfaceSchemaRole(Schema.String, {
+    surfaceSchemaRole(UnitId, {
       category: "dependency",
       relation: "linked-spell-reference",
       targetKind: "unit",

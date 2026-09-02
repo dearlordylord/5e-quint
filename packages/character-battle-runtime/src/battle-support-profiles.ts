@@ -265,9 +265,14 @@ export function resolveSelectedWeaponMasteryReferenceForBattle(
   if (Result.isSuccess(resolution)) return Result.succeed(resolution.success);
   const issue = resolution.failure;
   return battleSupportProfileIssue(
-    issue.tag === "missing"
-      ? `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`
-      : `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,
+    Match.value(issue).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        missing: (missing) =>
+          `Selected weapon ${missing.root.id} references unknown mastery Unit ${missing.masteryUnitId} through ${missing.fieldPath}.`,
+        wrongKind: (wrongKind) =>
+          `Selected weapon ${wrongKind.root.id} references ${wrongKind.masteryUnitId} through ${wrongKind.fieldPath}, but that Unit has kind ${wrongKind.actualKind} instead of mastery.`,
+      }),
+    ),
   );
 }
 

@@ -383,7 +383,6 @@ export type {
   BattlePositiveHpUnconscious,
   BattleWalkSpeed,
   CharacterBattleD20Statistics,
-  CharacterBattleWeaponMasterySelection,
   StatBlockBattleInitIssue,
   StatBlockInitialCondition,
 } from "./battle-init.ts";

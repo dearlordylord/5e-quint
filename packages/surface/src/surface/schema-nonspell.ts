@@ -2812,20 +2812,6 @@ export const CleaveMasteryMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
-const onHitMasteryMechanicsMembers = codecMembers(
-  PushMasteryMechanicsSchema,
-  SapMasteryMechanicsSchema,
-  SlowMasteryMechanicsSchema,
-  ToppleMasteryMechanicsSchema,
-  VexMasteryMechanicsSchema,
-  CleaveMasteryMechanicsSchema,
-);
-type OnHitMasteryMechanicsCodec = Schema.Union<
-  typeof onHitMasteryMechanicsMembers
->;
-export const OnHitMasteryMechanicsSchema: OnHitMasteryMechanicsCodec =
-  Schema.Union(onHitMasteryMechanicsMembers);
-
 export const GrazeMasteryMechanicsSchema = strictStruct({
   family: Schema.Literal("weapon_attack_miss_damage"),
   optional: Schema.Literal(true),
@@ -2850,6 +2836,20 @@ export const NickMasteryMechanicsSchema = strictStruct({
   }),
   usageLimit: OncePerTurnUsageLimitSchema,
 });
+
+const onHitMasteryMechanicsMembers = codecMembers(
+  PushMasteryMechanicsSchema,
+  SapMasteryMechanicsSchema,
+  SlowMasteryMechanicsSchema,
+  ToppleMasteryMechanicsSchema,
+  VexMasteryMechanicsSchema,
+  CleaveMasteryMechanicsSchema,
+);
+type OnHitMasteryMechanicsCodec = Schema.Union<
+  typeof onHitMasteryMechanicsMembers
+>;
+export const OnHitMasteryMechanicsSchema: OnHitMasteryMechanicsCodec =
+  Schema.Union(onHitMasteryMechanicsMembers);
 
 const masteryMechanicsMembers = codecMembers(
   OnHitMasteryMechanicsSchema,

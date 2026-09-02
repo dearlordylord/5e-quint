@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 530,
-      "numerator": 384,
-      "percent": "72.5%"
+      "denominator": 533,
+      "numerator": 387,
+      "percent": "72.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 618,
-      "numerator": 434,
-      "percent": "70.2%"
+      "denominator": 621,
+      "numerator": 437,
+      "percent": "70.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 435
+      "value": 438
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 219,
@@ -67,8 +67,8 @@
       "percent": "96.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 435,
-      "numerator": 435,
+      "denominator": 438,
+      "numerator": 438,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 385,
+      "denominator": 388,
       "numerator": 219,
-      "percent": "56.9%"
+      "percent": "56.4%"
     }
   },
   "metricSemantics": [
@@ -326,9 +326,8 @@
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-facts.ts",
         "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
@@ -5305,7 +5304,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/druid-features.ts"
+        "packages/character-sheet-runtime/src/druid-features-core.ts"
       ],
       "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
       "taskRefs": [
@@ -24955,7 +24954,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/druid-features.ts"
+            "packages/character-sheet-runtime/src/druid-features-core.ts"
           ],
           "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
           "taskRefs": [
@@ -32228,6 +32227,54 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future weapon-attack miss-damage mastery owner",
+          "reason": "A future owner must gate Graze on an unlocked mastery for the attacking weapon, offer damage after a miss, derive the attack ability modifier and weapon damage type from the attack, and enforce that only an increase to that ability modifier can increase the damage without authored-identity dispatch."
+        },
+        "futureProfileOwner": "future weapon-attack miss-damage mastery owner",
+        "reason": "Graze is authored and installed, but Battle admission rejects its weapon-attack-miss damage mechanics because no promoted runtime profile owns optional miss damage equal to the attack ability modifier in the weapon's damage type.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mastery_graze.json",
+      "unitId": "mastery_graze"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future Light-property extra-attack timing mastery owner",
+          "reason": "A future owner must gate Nick on an unlocked mastery for the attacking weapon, integrate the Light property's extra attack with Attack action and Bonus Action resources, and enforce the once-per-turn limit without authored-identity dispatch."
+        },
+        "futureProfileOwner": "future Light-property extra-attack timing mastery owner",
+        "reason": "Nick is authored and installed, but Battle admission rejects its Light-property extra-attack timing replacement because no promoted runtime profile owns moving that extra attack from a Bonus Action into the Attack action once per turn.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mastery_nick.json",
+      "unitId": "mastery_nick"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "battle-runtime weapon mastery Push owner plus table/spatial forced-movement owner",
           "reason": "The promoted runtime owns selected weapon mastery admission, hit-gated Push execution, Tactical Master replacement integration, and outcome recording. Spatial destination derivation remains table-owned."
@@ -32512,6 +32559,30 @@
       ],
       "sourceRecordPath": "packages/surface/content/mastery_topple.json",
       "unitId": "mastery_topple"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-bound next-attack Advantage mastery owner",
+          "reason": "A future owner must gate Vex on an unlocked mastery for a weapon hit that deals damage, grant Advantage only on the wielder's next attack roll against that same creature, consume it on that attack, and expire it at the end of the wielder's next turn without authored-identity dispatch."
+        },
+        "futureProfileOwner": "future target-bound next-attack Advantage mastery owner",
+        "reason": "Vex is authored and installed, but Battle admission rejects its target-bound next-attack Advantage mechanics because no promoted runtime profile owns their creation, consumption, and expiration.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mastery_vex.json",
+      "unitId": "mastery_vex"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -48033,9 +48104,8 @@
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-facts.ts",
             "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
-            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
             "packages/battle-runtime/src/battle-reducer/statblock.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
             "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
