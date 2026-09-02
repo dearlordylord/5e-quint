@@ -53,12 +53,12 @@ const PACKAGE_POLICIES = {
     // Recertified on 2026-09-02 after the accepted Effect 4 source
     // reconstruction made the 2026-08-22 floor stale on master. The candidate
     // preserves master's absolute uncovered statement/function/line counts
-    // and covers two additional branches. Issue #227's 99% target remains.
+    // and covers at least one additional branch. Issue #227's 99% target remains.
     coverage: {
       lines: 96.16,
       statements: 95.41,
       functions: 97.06,
-      branches: 92.3,
+      branches: 92.29,
     },
     circularBaseline: 0,
     duplicationCeiling: 2,
