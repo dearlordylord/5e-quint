@@ -2877,12 +2877,12 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1592394,
-        "sha256": "f8d5e8909f3df08d9e3fcec730af9b025348a1b99c7aa3ee1a907a2d115acdc2"
+        "byteLength": 1592500,
+        "sha256": "8951a417e37156635e76e1b118e36f9bb78214aee3107776953ccb25d996e0ac"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "c7fcbe24112b43810bac2d0fcefa9d3283ee87954a069b4d466d7d7a9bfa9e02",
+        "candidateCanonicalJsonSha256": "3d616e584b1f0a4faeb74af154e66fee469462b3256f8102a267642a07cb5a2c",
         "definitions": {
           "baseline": 1305,
           "candidate": 1228
@@ -2992,6 +2992,18 @@
               },
               {
                 "pointer": "/$defs/SrdRecordUnion1142Encoded/properties/itemId",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              }
+            ],
+            "unitIdLinkedSpellEnd": [
+              {
+                "pointer": "/$defs/Union_1/anyOf/112/properties/durationOverride/properties/endsWhenGrantedSpellEnds",
+                "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
+                "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion352Encoded/properties/durationOverride/properties/endsWhenGrantedSpellEnds",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               }

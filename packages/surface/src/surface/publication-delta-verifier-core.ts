@@ -153,6 +153,7 @@ const SchemaCertificateSchema = Schema.Struct({
         gmSpeedChoiceMinimum: Schema.Array(SchemaNodeClassificationSchema),
         flyOnlyHover: Schema.Array(SchemaNodeClassificationSchema),
         unitIdItemId: Schema.Array(SchemaNodeClassificationSchema),
+        unitIdLinkedSpellEnd: Schema.Array(SchemaNodeClassificationSchema),
         casterHealLinkRangeFeet: Schema.Array(SchemaNodeClassificationSchema),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
@@ -675,6 +676,7 @@ type CandidateSchemaClassifications = {
   readonly gmSpeedChoiceMinimum: readonly SchemaNodeClassification[];
   readonly flyOnlyHover: readonly SchemaNodeClassification[];
   readonly unitIdItemId: readonly SchemaNodeClassification[];
+  readonly unitIdLinkedSpellEnd: readonly SchemaNodeClassification[];
   readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
 };
 
@@ -974,11 +976,13 @@ function classifyCandidateSchema(
     gmSpeedChoiceMinimum: SchemaNodeClassification[];
     flyOnlyHover: SchemaNodeClassification[];
     unitIdItemId: SchemaNodeClassification[];
+    unitIdLinkedSpellEnd: SchemaNodeClassification[];
     casterHealLinkRangeFeet: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
     unitIdItemId: [],
+    unitIdLinkedSpellEnd: [],
     casterHealLinkRangeFeet: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
@@ -1104,6 +1108,28 @@ function classifyCandidateSchema(
       ? proposed
       : transformed;
   };
+  const classifyUnitIdLinkedSpellEnd: CandidateSchemaClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !pointer.endsWith("/endsWhenGrantedSpellEnds") ||
+      !reachable.has(value) ||
+      transformed.type !== "string" ||
+      transformed.minLength !== 1 ||
+      typeof transformed.pattern !== "string"
+    ) {
+      return transformed;
+    }
+    const proposed = jsonObjectWithoutKeys(transformed, [
+      "minLength",
+      "pattern",
+    ]);
+    return authorize("unitIdLinkedSpellEnd", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
   const classifyFlyOnlyHover: CandidateSchemaClassifier = (
     value,
     pointer,
@@ -1193,6 +1219,7 @@ function classifyCandidateSchema(
     classifyCasterHealLinkRangeFeet,
     classifyGmSpeedChoiceMinimum,
     classifyUnitIdItemId,
+    classifyUnitIdLinkedSpellEnd,
     classifyFlyOnlyHover,
   ] as const;
   const transform = (value: JsonValue, pointer: string): JsonValue => {
@@ -2162,6 +2189,7 @@ function compareSchemaGraphDelta(
       gmSpeedChoiceMinimum: expected.classifiedChanges.gmSpeedChoiceMinimum,
       flyOnlyHover: expected.classifiedChanges.flyOnlyHover,
       unitIdItemId: expected.classifiedChanges.unitIdItemId,
+      unitIdLinkedSpellEnd: expected.classifiedChanges.unitIdLinkedSpellEnd,
       casterHealLinkRangeFeet:
         expected.classifiedChanges.casterHealLinkRangeFeet,
     });
