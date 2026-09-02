@@ -135,6 +135,6 @@ pnpm check:surface-publication-delta
 ```
 
 The regular `pnpm check:surface-content-publication` gate regenerates the
-aggregate and schema deterministically from the canonical Dhall/JSON sources
-and requires byte equality with the checked-in artifacts. Run it together with
-the delta verifier above when recertifying publication evidence.
+aggregate and schema deterministically from the canonical Dhall/JSON sources,
+requires byte equality with the checked-in artifacts, and then invokes the same
+delta verifier.
