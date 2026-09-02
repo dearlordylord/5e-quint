@@ -2,7 +2,7 @@
 import fc from "fast-check";
 import { Match, Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
-import { resourceCount } from "@dnd/shared/types";
+import { PositiveInteger, resourceCount } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { decodeStatBlockRecordResult } from "@dnd/surface/surface/schema";
@@ -2347,10 +2347,8 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-execution"),
         combatantId: combatantId("boundary-character-execution"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        resourceFeatureProcedures: [],
+        resourceAdmissions: [],
         unitFeatureProcedures: [],
-        resourceUnits: [],
-        units: [],
         unitRefs: [],
         classLevels: fighterLevels,
       }),
@@ -2372,12 +2370,10 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-missing-resource"),
         combatantId: combatantId("boundary-character-missing-resource"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
-        resourceFeatureProcedures: [],
+        resourceAdmissions: [],
         unitFeatureProcedures: [
           boundUnitFeatureProcedureFactsFromProfile(tacticalProfile),
         ],
-        resourceUnits: [],
-        units: [tacticalMind],
         unitRefs: [],
         classLevels: fighterLevels,
       }),
@@ -3387,7 +3383,7 @@ describe("battle boundary admission owners", () => {
           dispatches: [
             {
               procedureOrdinal: dreadGaze.procedureOrdinal,
-              count: { kind: "literal", value: 1 },
+              count: { kind: "literal", value: PositiveInteger(1) },
             },
           ],
         },

@@ -117,7 +117,7 @@ describe("creature-state admission boundaries", () => {
       ),
     ).toEqual([
       "Unit feature profile failedAbilityCheckResourceBoost references an unavailable mechanical execution resource.",
-      "Unit feature profile failedSavingThrowReroll references an unavailable mechanical execution resource.",
+      "Failed Saving Throw reroll binding requires its same-source use-count resource.",
     ]);
   });
 

@@ -234,19 +234,13 @@ function inspectD20TestNaturalOneReroll(
   }
   const mechanics = unit.mechanics;
   const issues: AtomicSpeciesTraitProcedureAdmissionIssue[] = [];
-  if (mechanics.optional !== true) {
+  if (!naturalOneRerollOptionalityIsSupported(mechanics)) {
     issues.push(naturalOneRerollIssue("rerollOptionality"));
   }
-  if (
-    mechanics.trigger.kind !== "d20_test_roll_is" ||
-    mechanics.trigger.dieFace !== 1
-  ) {
+  if (!naturalOneRerollTriggerIsSupported(mechanics)) {
     issues.push(naturalOneRerollIssue("rerollTrigger"));
   }
-  if (
-    mechanics.reroll.kind !== "reroll_triggering_d20" ||
-    mechanics.reroll.use !== "new_roll"
-  ) {
+  if (!naturalOneRerollUseIsSupported(mechanics)) {
     issues.push(naturalOneRerollIssue("rerollUse"));
   }
   const [firstIssue, ...remainingIssues] = issues;
@@ -266,6 +260,35 @@ function inspectD20TestNaturalOneReroll(
         tag: "unsupported",
         issues: [firstIssue, ...remainingIssues],
       };
+}
+
+type NaturalOneRerollMechanics = Extract<
+  Extract<AuthoredUnitSource, { readonly kind: "species_trait" }>["mechanics"],
+  { readonly family: "d20_test_natural_one_reroll" }
+>;
+
+function naturalOneRerollOptionalityIsSupported(
+  mechanics: NaturalOneRerollMechanics,
+): boolean {
+  return mechanics.optional === true;
+}
+
+function naturalOneRerollTriggerIsSupported(
+  mechanics: NaturalOneRerollMechanics,
+): boolean {
+  return (
+    mechanics.trigger.kind === "d20_test_roll_is" &&
+    mechanics.trigger.dieFace === 1
+  );
+}
+
+function naturalOneRerollUseIsSupported(
+  mechanics: NaturalOneRerollMechanics,
+): boolean {
+  return (
+    mechanics.reroll.kind === "reroll_triggering_d20" &&
+    mechanics.reroll.use === "new_roll"
+  );
 }
 
 function inspectHideActionObscurementPermission(

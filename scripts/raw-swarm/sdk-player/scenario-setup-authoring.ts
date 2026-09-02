@@ -1,5 +1,12 @@
-import { constants, copyFileSync, readFileSync, rmSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import {
+  readAuthoredSource,
+  withAuthoredSourceSnapshot,
+  type AdmittedAuthoredSource,
+  type RejectedAuthoredSource,
+} from "./authored-source-admission.ts";
 
 export const scenarioSetupAuthorProtectedInputFiles = [
   "SCENARIO.md",
@@ -12,6 +19,17 @@ export const scenarioSetupAuthorProtectedInputFiles = [
 ] as const;
 
 export type ScenarioSetupAuthorRole = "neutral" | "controller";
+
+export type ScenarioSetupAuthoringResult<Retained> =
+  | {
+      readonly tag: "retained";
+      readonly source: AdmittedAuthoredSource<"scenarioSetup">;
+      readonly retained: Retained;
+    }
+  | (Omit<RejectedAuthoredSource<"scenarioSetup">, "tag"> & {
+      readonly tag: "sourceRejected";
+      readonly phase: "neutral" | "retained";
+    });
 
 function protectedInputSources(scratch: string): readonly string[] {
   return scenarioSetupAuthorProtectedInputFiles.map((file) =>
@@ -37,9 +55,14 @@ function assertProtectedInputsUnchanged(input: {
 export async function authorScenarioSetupThroughOwners<Retained>(input: {
   readonly scratch: string;
   readonly runAuthor: (role: ScenarioSetupAuthorRole) => void | Promise<void>;
-  readonly typecheck: (phase: "neutral" | "retained") => void;
-  readonly validateRetained: () => Retained | Promise<Retained>;
-}): Promise<Retained> {
+  readonly typecheck: (
+    phase: "neutral" | "retained",
+    source: AdmittedAuthoredSource<"scenarioSetup">,
+  ) => void;
+  readonly validateRetained: (
+    source: AdmittedAuthoredSource<"scenarioSetup">,
+  ) => Retained | Promise<Retained>;
+}): Promise<ScenarioSetupAuthoringResult<Retained>> {
   const protectedInputs = protectedInputSources(input.scratch);
   const setupPath = resolve(input.scratch, "setup.ts");
   const neutralSetupPath = resolve(input.scratch, "NEUTRAL_SETUP.ts");
@@ -50,10 +73,26 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     expected: protectedInputs,
     role: "neutral",
   });
-  input.typecheck("neutral");
+  const neutralSource = readAuthoredSource({
+    role: "scenarioSetup",
+    sourcePath: setupPath,
+  });
+  if (neutralSource.tag === "rejected") {
+    return {
+      tag: "sourceRejected",
+      phase: "neutral",
+      role: neutralSource.role,
+      sourcePath: neutralSource.sourcePath,
+      issues: neutralSource.issues,
+    };
+  }
+  withAuthoredSourceSnapshot(neutralSource, (snapshot) =>
+    input.typecheck("neutral", snapshot),
+  );
 
-  copyFileSync(setupPath, neutralSetupPath, constants.COPYFILE_EXCL);
-  const neutralSetupSource = readFileSync(neutralSetupPath, "utf8");
+  writeFileSync(setupPath, neutralSource.source);
+  writeFileSync(neutralSetupPath, neutralSource.source, { flag: "wx" });
+  const neutralSetupSource = neutralSource.source;
   try {
     await input.runAuthor("controller");
     assertProtectedInputsUnchanged({
@@ -70,6 +109,25 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
     rmSync(neutralSetupPath, { force: true });
   }
 
-  input.typecheck("retained");
-  return input.validateRetained();
+  const retainedSource = readAuthoredSource({
+    role: "scenarioSetup",
+    sourcePath: setupPath,
+  });
+  if (retainedSource.tag === "rejected") {
+    return {
+      tag: "sourceRejected",
+      phase: "retained",
+      role: retainedSource.role,
+      sourcePath: retainedSource.sourcePath,
+      issues: retainedSource.issues,
+    };
+  }
+  withAuthoredSourceSnapshot(retainedSource, (snapshot) =>
+    input.typecheck("retained", snapshot),
+  );
+  return {
+    tag: "retained",
+    source: retainedSource,
+    retained: await input.validateRetained(retainedSource),
+  };
 }

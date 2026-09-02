@@ -4,7 +4,11 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
-import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeStatBlockRecordSync,
+  StatBlockRecordSchema,
+} from "@dnd/surface/surface/schema";
+import { Result, Schema } from "effect";
 import {
   resolveAuthoredUnitReference,
   srdUnitCollection,
@@ -106,8 +110,8 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
 
     expect(report.dispositionCounts).toEqual({
-      executable: 1142,
-      textOnly: 912,
+      executable: 1150,
+      textOnly: 904,
       tableOwned: 54,
       missingOwner: 494,
       malformed: 0,
@@ -677,58 +681,29 @@ describe("complete-catalog Stat Block procedure pressure", () => {
       ),
     ).toBe(true);
 
-    if (decodedResource.limit.kind !== "daily") {
-      throw new Error("Expected a daily resource fixture.");
+    const encodedSynthetic = Schema.encodeSync(StatBlockRecordSchema)(
+      decodedSynthetic,
+    );
+    const encodedResources = encodedSynthetic.statBlock.resources;
+    if (encodedResources === undefined) {
+      throw new Error("Expected encoded Stat Block resources.");
     }
-    const invalidResourceSynthetic: StatBlockRecord = {
-      ...decodedSynthetic,
+    const invalidResourceInput = {
+      ...encodedSynthetic,
       statBlock: {
-        ...decodedSynthetic.statBlock,
-        resources: [
-          {
-            ...decodedResource,
-            limit: { ...decodedResource.limit, uses: 0 },
-          },
-        ],
+        ...encodedSynthetic.statBlock,
+        resources: encodedResources.map((resource) =>
+          resource.limit.kind === "daily"
+            ? { ...resource, limit: { ...resource.limit, uses: 0 } }
+            : resource,
+        ),
       },
     };
-    const invalidResourceReport = analyzeStatBlockProcedurePressure(
-      [invalidResourceSynthetic],
-      {
-        identities: [
-          { ...sourceIdentity, name: invalidResourceSynthetic.name },
-        ],
-      },
-    );
     expect(
-      invalidResourceReport.occurrences
-        .filter(
-          ({ kind }) =>
-            kind === "resourceDeclaration" || kind === "resourceReference",
-        )
-        .map(({ disposition }) => disposition),
-    ).toEqual([
-      {
-        kind: "malformed",
-        stage: "resourceDeclaration",
-        issues: [
-          {
-            kind: "invalidResourceDeclaration",
-            reason: "invalidDailyUses",
-          },
-        ],
-      },
-      {
-        kind: "malformed",
-        stage: "resourceReference",
-        issues: [
-          {
-            kind: "invalidResourceDeclaration",
-            reason: "invalidDailyUses",
-          },
-        ],
-      },
-    ]);
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockRecordSchema)(invalidResourceInput),
+      ),
+    ).toBe(true);
   });
 
   it("keeps generated planning evidence out of production package imports", () => {

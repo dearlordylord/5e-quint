@@ -1,4 +1,7 @@
-import { CharacterSheetIdSchema } from "@dnd/character-sheet-runtime";
+import {
+  CharacterSheetIdSchema,
+  CharacterSheetIssueSchema,
+} from "@dnd/character-sheet-runtime";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 import { HAND_USES, MovementFeet, ResourceCount } from "@dnd/shared/types";
@@ -244,10 +247,6 @@ const CharacterSheetSpellbookRitualInvocationSchema = Schema.Struct({
   requiredSpellAccess: Schema.Literal("spellbook"),
   additionalCastingTimeMinutes: PositiveIntegerSchema,
   requiresReadingSpellbook: Schema.Literal(true),
-});
-const CharacterSheetIssueSchema = Schema.Struct({
-  tag: Schema.Literal("characterSheetIssue"),
-  message: Schema.String,
 });
 const CharacterSheetSpellbookRitualInvocationRetainRouteSchema = Schema.Struct({
   kind: Schema.Literal("retainCharacterSheetSelectedReferences"),

@@ -80,6 +80,29 @@ describe("battle start failure projection", () => {
     ]);
   });
 
+  test("retains a duplicate combatant diagnostic as a structured issue", () => {
+    const duplicateCombatantId = combatantId("combatant:synthetic-duplicate");
+    const issue = {
+      tag: "battleStateInitIssue",
+      kind: "duplicateCombatantId",
+      combatantId: duplicateCombatantId,
+      ownerPath: ["operation", "combatant"],
+      message: `Duplicate combatant id: ${duplicateCombatantId}`,
+    } as const satisfies BattleInitializationIssue;
+
+    expect(battleRuntimeIssuePayload(issue)).toEqual([
+      {
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: ["operation", "combatant"],
+        issueTag: "battleStateInitIssue",
+        reason: "duplicateCombatantId",
+        combatantId: duplicateCombatantId,
+        message: `Duplicate combatant id: ${duplicateCombatantId}`,
+      },
+    ]);
+  });
+
   test("retains structured Stat Block resource graph issues", () => {
     const resourceOrdinal = Schema.decodeUnknownSync(
       StatBlockProcedureResourceOrdinalSchema,

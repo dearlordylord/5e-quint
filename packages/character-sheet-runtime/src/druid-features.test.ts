@@ -4,6 +4,13 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import { druidWildShapeStatBlockCatalogFromInput } from "./druid-features.ts";
+import {
+  completeLongRest as completeLongRestWithoutFixtureCatalog,
+  finishLongRest,
+  startLongRest,
+} from "./index.ts";
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
   Result,
@@ -34,6 +41,52 @@ import {
 } from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / druid features", () => {
+  test("uses the canonical installed Stat Block catalog by default", () => {
+    expect(druidWildShapeStatBlockCatalogFromInput(undefined)).toBe(
+      srdStatBlockCatalog,
+    );
+  });
+
+  test("uses the canonical Stat Block catalog for replacement at Long Rest", () => {
+    const sheet = requireSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:druid-missing-rest-catalog"),
+        build: druidCircleLandBuild({ druidLevel: 5 }),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        druidCircleLand: { land: "temperate" },
+        druidWildShapeKnownFormStatBlockIds:
+          druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+      }),
+    );
+    const rest = requireSuccess(
+      startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
+    );
+    const completion = requireSuccess(
+      finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
+    );
+
+    const completed = requireSuccess(
+      completeLongRestWithoutFixtureCatalog({
+        completion,
+        unitLibrary,
+        druidCircleLandChoice: "temperate",
+        druidWildShapeKnownFormReplacement: {
+          replaceStatBlockId: authoredStatBlockId("stat_block_rat"),
+          selectedStatBlockId: authoredStatBlockId("stat_block_badger"),
+        },
+      }),
+    );
+
+    expect(
+      characterSheetDruidWildShapeKnownForms(completed)?.statBlockIds,
+    ).toContain(authoredStatBlockId("stat_block_badger"));
+    expect(
+      characterSheetDruidWildShapeKnownForms(completed)?.statBlockIds,
+    ).not.toContain(authoredStatBlockId("stat_block_rat"));
+  });
+
   test(druidCircleLandSpellAccessProjectionTestName, () => {
     const sheet = requireSuccess(
       rebuildCharacterSheetFixture({

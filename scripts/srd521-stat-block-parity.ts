@@ -1,186 +1,37 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { Match } from "effect";
+
 import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
 import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
+import { stripSrdStatBlockMarkdownEmphasis } from "../packages/surface/src/surface/stat-block-raw-markdown-normalization.ts";
+import {
+  SRD_STAT_BLOCK_SCOPE,
+  SRD_STAT_BLOCK_SOURCE_PATHS,
+  type ReadSrdStatBlockParityOptions,
+  type SrdStatBlockParityInput,
+  type SrdStatBlockParityInstalledRecord,
+  type SrdStatBlockParityIssue,
+  type SrdStatBlockParityReport,
+  type SrdStatBlockSourceAnchor,
+  type SrdStatBlockSourceCoverage,
+  type SrdStatBlockSourceDiscovery,
+  type SrdStatBlockSourceFile,
+  type SrdStatBlockSourceIdentity,
+  type SrdStatBlockSourceIssue,
+  type SrdStatBlockSourceNormalization,
+  type SrdStatBlockSourceOccurrence,
+  type SrdStatBlockSourcePath,
+  type SrdStatBlockSourceReadIssue,
+} from "../packages/surface/src/surface/stat-block-parity-observation.ts";
 import {
   parseSourceSection,
   sourcePathMatches,
   sourceSectionMatchesAnchor,
   type ParsedSourceSection,
 } from "../packages/surface/src/surface/source-section-anchor.ts";
-import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
-
-export const SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH =
-  ".references/srd-5.2.1/Animals.md" as const;
-
-export const SRD_STAT_BLOCK_SOURCE_PATHS = [
-  SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
-  ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
-  ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
-  ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
-  ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
-  ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
-  ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-  ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
-] as const;
-
-export const SRD_STAT_BLOCK_SCOPE = {
-  kind: "standalone-srd-stat-blocks",
-  includes: SRD_STAT_BLOCK_SOURCE_PATHS,
-  excludes: [
-    "inline-spell-stat-blocks",
-    "inline-magic-item-stat-blocks",
-  ] as const,
-} as const;
-
-export type SrdStatBlockSourcePath =
-  (typeof SRD_STAT_BLOCK_SOURCE_PATHS)[number];
-
-export type SrdStatBlockSourceFile = {
-  readonly sourcePath: string;
-  readonly contents: string;
-};
-
-export type SrdStatBlockSourceReadIssue = {
-  readonly sourcePath: SrdStatBlockSourcePath;
-  readonly message: string;
-};
-
-export type SrdStatBlockSourceAnchor = {
-  readonly sourcePath: string;
-  readonly heading: string;
-  readonly lineStart: number;
-  /** The final line owned by the stat-block body, excluding its separator. */
-  readonly lineEnd: number;
-  /** The final line available to the source span before the next entity heading. */
-  readonly spanEnd: number;
-  readonly section: string;
-};
-
-export type SrdStatBlockSourceOccurrence = {
-  readonly name: string;
-  readonly anchor: SrdStatBlockSourceAnchor;
-  readonly normalization: SrdStatBlockSourceNormalization;
-};
-
-export type SrdStatBlockSourceNormalization =
-  | { readonly tag: "ok"; readonly value: string }
-  | { readonly tag: "malformed"; readonly message: string };
-
-export type SrdStatBlockSourceIssue =
-  | {
-      readonly kind: "malformed-source";
-      readonly sourcePath: string;
-      readonly heading: string;
-      readonly message: string;
-    }
-  | {
-      readonly kind: "incomplete-source";
-      readonly sourcePath: string;
-      readonly message: string;
-    };
-
-export type SrdStatBlockSourceIdentity = {
-  readonly name: string;
-  readonly occurrences: readonly SrdStatBlockSourceOccurrence[];
-};
-
-export type SrdStatBlockSourceDiscovery = {
-  readonly occurrences: readonly SrdStatBlockSourceOccurrence[];
-  readonly identities: readonly SrdStatBlockSourceIdentity[];
-  readonly issues: readonly SrdStatBlockSourceIssue[];
-};
-
-export type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
-
-export type SrdStatBlockParityIssue =
-  | {
-      readonly kind: "missing";
-      readonly name: string;
-    }
-  | {
-      readonly kind: "extra";
-      readonly name: string;
-      readonly statBlockId: StatBlockRecord["id"];
-    }
-  | {
-      readonly kind: "duplicate-id";
-      readonly statBlockId: StatBlockRecord["id"];
-    }
-  | {
-      readonly kind: "duplicate-identity";
-      readonly name: string;
-      readonly normalizedIdentity: string;
-      readonly statBlockIds: readonly StatBlockRecord["id"][];
-    }
-  | {
-      readonly kind: "cardinality";
-      readonly expectedIdentityCount: number;
-      readonly actualInstalledCount: number;
-    }
-  | {
-      readonly kind: "divergent-source";
-      readonly name: string;
-      readonly anchors: readonly SrdStatBlockSourceAnchor[];
-      readonly normalizedSources: readonly string[];
-    }
-  | SrdStatBlockSourceIssue
-  | {
-      readonly kind: "provenance";
-      readonly reason: "kind";
-      readonly name: string;
-      readonly statBlockId: StatBlockRecord["id"];
-      readonly actualKind: Exclude<
-        StatBlockRecord["provenance"]["kind"],
-        "srd-5.2.1"
-      >;
-    }
-  | {
-      readonly kind: "provenance";
-      readonly reason: "source-anchor";
-      readonly name: string;
-      readonly statBlockId: StatBlockRecord["id"];
-      readonly actualKind: "srd-5.2.1";
-      readonly actualSection: string;
-    }
-  | {
-      readonly kind: "unreadable-source";
-      readonly sourcePath: string;
-      readonly message: string;
-    }
-  | {
-      readonly kind: "missing-source";
-      readonly sourcePath: string;
-      readonly message: string;
-    }
-  | {
-      readonly kind: "publication-peer";
-      readonly evidence: Exclude<
-        SrdStatBlockPeerObservation,
-        { readonly tag: "present" }
-      >;
-    };
-
-export type SrdStatBlockParityReport = {
-  readonly scope: typeof SRD_STAT_BLOCK_SCOPE;
-  readonly sourceCoverage: SrdStatBlockSourceCoverage;
-  readonly discovery: SrdStatBlockSourceDiscovery;
-  readonly issues: readonly SrdStatBlockParityIssue[];
-};
-
-export type SrdStatBlockSourceCoverage =
-  | {
-      readonly tag: "complete";
-      readonly paths: typeof SRD_STAT_BLOCK_SOURCE_PATHS;
-    }
-  | {
-      readonly tag: "incomplete";
-      readonly availablePaths: readonly SrdStatBlockSourcePath[];
-      readonly missingPaths: readonly SrdStatBlockSourcePath[];
-      readonly unreadablePaths: readonly SrdStatBlockSourcePath[];
-      readonly incompletePaths: readonly SrdStatBlockSourcePath[];
-    };
+export * from "../packages/surface/src/surface/stat-block-parity-observation.ts";
 
 export function srdStatBlockSourceOccurrenceCount(
   discovery: SrdStatBlockSourceDiscovery,
@@ -194,28 +45,8 @@ export function srdStatBlockSourceIdentityCount(
   return discovery.identities.length;
 }
 
-export type SrdStatBlockParityInstalledRecord = Pick<
-  StatBlockRecord,
-  "id" | "name" | "provenance"
->;
-
-export type SrdStatBlockParityInput = {
-  readonly sourceFiles: readonly SrdStatBlockSourceFile[];
-  readonly installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[];
-  readonly sourceReadIssues: readonly SrdStatBlockSourceReadIssue[];
-  readonly peerObservations: readonly SrdStatBlockPeerObservation[];
-};
-
-export type ReadSrdStatBlockParityOptions = {
-  readonly repoRoot: string;
-  readonly installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[];
-  readonly readSource?: (absolutePath: string) => string;
-  readonly peerObservations: readonly SrdStatBlockPeerObservation[];
-};
-
 const ABILITY_NAMES = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
 const abilityNameSet = new Set<string>(ABILITY_NAMES);
-const sourcePathSet = new Set<string>(SRD_STAT_BLOCK_SOURCE_PATHS);
 const STAT_BLOCK_SECTION_NAMES = [
   "Traits",
   "Actions",
@@ -236,18 +67,69 @@ type ParsedSourceFile = {
   readonly issues: readonly SrdStatBlockSourceIssue[];
 };
 
+type SrdStatBlockScopedSourceFile = SrdStatBlockSourceFile & {
+  readonly sourcePath: SrdStatBlockSourcePath;
+};
+type NonEmptySrdStatBlockScopedSourceFiles = [
+  SrdStatBlockScopedSourceFile,
+  ...SrdStatBlockScopedSourceFile[],
+];
+
+function isSrdStatBlockScopedSourceFile(
+  sourceFile: SrdStatBlockSourceFile,
+): sourceFile is SrdStatBlockScopedSourceFile {
+  return SRD_STAT_BLOCK_SOURCE_PATHS.some(
+    (sourcePath) => sourcePath === sourceFile.sourcePath,
+  );
+}
+
 export function discoverSrdStatBlocks(
   sourceFiles: readonly SrdStatBlockSourceFile[],
 ): SrdStatBlockSourceDiscovery {
-  const parsedFiles = sourceFiles
-    .filter((sourceFile) => sourcePathSet.has(sourceFile.sourcePath))
-    .map(parseSourceFile);
+  const sourcesByPath = new Map<
+    SrdStatBlockSourcePath,
+    NonEmptySrdStatBlockScopedSourceFiles
+  >();
+  for (const sourceFile of sourceFiles.filter(isSrdStatBlockScopedSourceFile)) {
+    const sources = sourcesByPath.get(sourceFile.sourcePath);
+    if (sources === undefined) {
+      sourcesByPath.set(sourceFile.sourcePath, [sourceFile]);
+    } else {
+      sources.push(sourceFile);
+    }
+  }
+  const sourcesToParse: SrdStatBlockScopedSourceFile[] = [];
+  const duplicateSourceIssues: SrdStatBlockSourceIssue[] = [];
+  for (const sourcePath of SRD_STAT_BLOCK_SOURCE_PATHS) {
+    const sources = sourcesByPath.get(sourcePath);
+    if (sources === undefined) continue;
+    const uniqueContents = new Set(sources.map(({ contents }) => contents));
+    if (uniqueContents.size === 1) {
+      const [source] = sources;
+      sourcesToParse.push(source);
+      if (sources.length > 1) {
+        duplicateSourceIssues.push({
+          kind: "duplicate-source",
+          sourcePath,
+          reason: "identical",
+        });
+      }
+    } else {
+      duplicateSourceIssues.push({
+        kind: "duplicate-source",
+        sourcePath,
+        reason: "conflicting",
+      });
+    }
+  }
+  const parsedFiles = sourcesToParse.map(parseSourceFile);
   const occurrences = parsedFiles.flatMap(
     (parsedSourceFile) => parsedSourceFile.occurrences,
   );
-  const issues = parsedFiles.flatMap(
-    (parsedSourceFile) => parsedSourceFile.issues,
-  );
+  const issues = [
+    ...parsedFiles.flatMap((parsedSourceFile) => parsedSourceFile.issues),
+    ...duplicateSourceIssues,
+  ];
   const identityMap = new Map<string, SrdStatBlockSourceOccurrence[]>();
 
   for (const occurrence of occurrences) {
@@ -314,7 +196,13 @@ export function deriveSrdStatBlockParity(
       .map((evidence) => ({ kind: "publication-peer" as const, evidence })),
   ];
 
-  return { scope: SRD_STAT_BLOCK_SCOPE, sourceCoverage, discovery, issues };
+  return {
+    scope: SRD_STAT_BLOCK_SCOPE,
+    sourceCoverage,
+    discovery,
+    installedRecords: input.installedStatBlocks,
+    issues,
+  };
 }
 
 function deriveSourceCoverage(
@@ -340,7 +228,22 @@ function deriveSourceCoverage(
     unreadablePathSet.has(sourcePath),
   );
   const incompletePathSet = new Set(
-    discovery.issues.map((issue) => issue.sourcePath),
+    discovery.issues.flatMap((issue) =>
+      Match.value(issue).pipe(
+        Match.when({ kind: "duplicate-source", reason: "identical" }, () => []),
+        Match.when(
+          { kind: "duplicate-source", reason: "conflicting" },
+          ({ sourcePath }) => [sourcePath],
+        ),
+        Match.when({ kind: "malformed-source" }, ({ sourcePath }) => [
+          sourcePath,
+        ]),
+        Match.when({ kind: "incomplete-source" }, ({ sourcePath }) => [
+          sourcePath,
+        ]),
+        Match.exhaustive,
+      ),
+    ),
   );
   const incompletePaths = SRD_STAT_BLOCK_SOURCE_PATHS.filter(
     (sourcePath) =>
@@ -445,7 +348,6 @@ function deriveInstalledCatalogIssues(
     issues.push({
       kind: "duplicate-identity",
       name: identityRecord.name,
-      normalizedIdentity: normalizeStatBlockIdentity(identityRecord.name),
       statBlockIds: identityRecord.statBlockIds,
     });
   }
@@ -597,7 +499,9 @@ export function readSrdStatBlockParity(
   });
 }
 
-function parseSourceFile(sourceFile: SrdStatBlockSourceFile): ParsedSourceFile {
+function parseSourceFile(
+  sourceFile: SrdStatBlockScopedSourceFile,
+): ParsedSourceFile {
   const lines = sourceFile.contents.split(/\r?\n/);
   const headings = lines.flatMap(parseHeading);
   const parsedStatBlocks = headings.flatMap((heading) =>
@@ -658,7 +562,7 @@ function parseHeading(line: string, lineIndex: number): readonly Heading[] {
 }
 
 function parseStatBlockHeading(
-  sourceFile: SrdStatBlockSourceFile,
+  sourceFile: SrdStatBlockScopedSourceFile,
   lines: readonly string[],
   headings: readonly Heading[],
   heading: Heading,
@@ -866,11 +770,7 @@ function normalizeSourceBlock(
 }
 
 function normalizePlainLine(line: string): string {
-  return line
-    .replace(/^[-*]\s+/, "")
-    .replace(/\*+/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return normalizeInlineMarkdown(line.replace(/^[-*]\s+/, ""));
 }
 
 function parseTableRow(line: string): string[] {
@@ -879,7 +779,11 @@ function parseTableRow(line: string): string[] {
 }
 
 function normalizeTableCell(cell: string): string {
-  return cell.replace(/\*+/g, "").replace(/\s+/g, " ").trim();
+  return normalizeInlineMarkdown(cell);
+}
+
+function normalizeInlineMarkdown(value: string): string {
+  return stripSrdStatBlockMarkdownEmphasis(value).replace(/\s+/g, " ").trim();
 }
 
 function normalizeTable(

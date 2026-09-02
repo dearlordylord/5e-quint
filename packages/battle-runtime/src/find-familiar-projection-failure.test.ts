@@ -1,6 +1,7 @@
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
+import { PositiveInteger } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -83,7 +84,10 @@ function unsupportedFamiliarStatBlock(): StatBlockRecord {
     ...attack,
     procedure: {
       ...attack.procedure,
-      multiattackCount: { kind: "literal" as const, value: 2 },
+      multiattackCount: {
+        kind: "literal" as const,
+        value: PositiveInteger(2),
+      },
     },
   };
   const multiattack = nonSpellExecutableProcedureEntry(3, {
@@ -92,7 +96,7 @@ function unsupportedFamiliarStatBlock(): StatBlockRecord {
     dispatches: [
       {
         procedureOrdinal: attack.procedureOrdinal,
-        count: { kind: "literal", value: 1 },
+        count: { kind: "literal", value: PositiveInteger(1) },
       },
     ],
   });

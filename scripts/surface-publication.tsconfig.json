@@ -2,9 +2,10 @@
   "include": [
     "check-surface-content-json-sync.ts",
     "check-surface-content-json-sync.test.ts",
+    "check-srd-stat-block-catalog.ts",
+    "check-srd-stat-block-catalog.test.ts",
+    "check-srd-stat-block-aggregate.test.ts",
     "verify-surface-publication-delta.ts",
-    "check-surface-stat-block-parity-final.ts",
-    "check-surface-stat-block-parity-final.test.ts",
     "generate-surface-publication.ts",
     "generate-srd-unit-aggregate.ts",
     "check-srd-unit-aggregate.ts",

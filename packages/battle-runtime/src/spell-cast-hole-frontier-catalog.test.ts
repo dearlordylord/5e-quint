@@ -3,8 +3,10 @@ import {
   PositiveInteger,
   proficiencyBonusForCharacterLevel,
 } from "@dnd/shared/types";
+import { unitId, type UnitId } from "@dnd/shared/game-facts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { classSpellListForClassName } from "@dnd/surface/surface/unit-catalog";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
@@ -54,6 +56,20 @@ const secondTargetId = combatantId("spell-hole-frontier-target-two");
 const WIZARD_LEVEL = characterLevel(9);
 const WIZARD_CANTRIP_CAPACITY = PositiveInteger(4);
 const WIZARD_PREPARED_SPELL_CAPACITY = PositiveInteger(14);
+const WIZARD_RUNTIME_DETACHED_CANTRIP_IDS = [unitId("message")] as const;
+const WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS = [
+  unitId("alarm"),
+  unitId("comprehend_languages"),
+  unitId("floating_disk"),
+  unitId("illusory_script"),
+  unitId("silent_image"),
+  unitId("unseen_servant"),
+  unitId("arcane_lock"),
+  unitId("gentle_repose"),
+  unitId("phantom_steed"),
+  unitId("stinking_cloud"),
+  unitId("vampiric_touch"),
+] as const;
 const CATALOG_REPLAY_FRONTIER_LIMIT = PositiveInteger(20);
 const WIZARD_SPELL_SLOTS = [
   { spellLevel: 1, count: 4 },
@@ -84,6 +100,35 @@ function exactCapacityLoadouts<T>(
         : [...loadout, ...values.slice(0, capacity - loadout.length)];
     },
   );
+}
+
+function spellsInClassListOrder(
+  spellIds: readonly UnitId[],
+  spellsById: ReadonlyMap<UnitId, SpellRecord>,
+): Result.Result<
+  readonly SpellRecord[],
+  {
+    readonly tag: "classSpellListCatalogJoinIssue";
+    readonly missingSpellIds: readonly [UnitId, ...UnitId[]];
+  }
+> {
+  const spells: SpellRecord[] = [];
+  const missingSpellIds: UnitId[] = [];
+  for (const spellId of spellIds) {
+    const spell = spellsById.get(spellId);
+    if (spell === undefined) {
+      missingSpellIds.push(spellId);
+    } else {
+      spells.push(spell);
+    }
+  }
+  const firstMissingSpellId = missingSpellIds[0];
+  return firstMissingSpellId === undefined
+    ? Result.succeed(spells)
+    : Result.fail({
+        tag: "classSpellListCatalogJoinIssue",
+        missingSpellIds: [firstMissingSpellId, ...missingSpellIds.slice(1)],
+      });
 }
 
 type CatalogSpellPresentation = NonNullable<
@@ -352,7 +397,27 @@ function renderCatalogReplay(result: CatalogReplayResult): string {
 }
 
 describe("spell cast hole frontier catalog", () => {
-  test("catalogs exact first frontiers and canonical replay outcomes across legal level 0-5 Wizard SRD loadouts", () => {
+  test("reports every class-list spell missing from the Unit catalog", () => {
+    expect(
+      spellsInClassListOrder(
+        [
+          unitId("synthetic_missing_spell_a"),
+          unitId("synthetic_missing_spell_b"),
+        ],
+        new Map<UnitId, SpellRecord>(),
+      ),
+    ).toEqual(
+      Result.fail({
+        tag: "classSpellListCatalogJoinIssue",
+        missingSpellIds: [
+          "synthetic_missing_spell_a",
+          "synthetic_missing_spell_b",
+        ],
+      }),
+    );
+  });
+
+  test("catalogs exact first frontiers and canonical replay outcomes across runtime-attached level 0-5 Wizard SRD loadouts", () => {
     const wizardSpellList = classSpellListForClassName({
       unitLibrary,
       className: "wizard",
@@ -361,21 +426,69 @@ describe("spell cast hole frontier catalog", () => {
     if (wizardSpellList === undefined) {
       throw new Error("Expected the SRD Wizard spell list.");
     }
-    const wizardCantripIds = new Set(wizardSpellList.cantrips);
-    const wizardPreparedSpellIds = new Set(
-      wizardSpellList.leveled
-        .filter(({ spellLevel }) => spellLevel <= 5)
-        .map(({ spellId }) => spellId),
-    );
     const wizardSpells = unitLibrary
       .listUnits()
       .filter((unit): unit is SpellRecord => unit.kind === "spell");
+    const wizardSpellsById = new Map(
+      wizardSpells.map((spell) => [spell.id, spell]),
+    );
+    const completeCantripSpellJoin = spellsInClassListOrder(
+      wizardSpellList.cantrips,
+      wizardSpellsById,
+    );
+    expect(completeCantripSpellJoin).toEqual(
+      Result.fail({
+        tag: "classSpellListCatalogJoinIssue",
+        missingSpellIds: WIZARD_RUNTIME_DETACHED_CANTRIP_IDS,
+      }),
+    );
+    const runtimeDetachedCantripIds = new Set<UnitId>(
+      WIZARD_RUNTIME_DETACHED_CANTRIP_IDS,
+    );
+    const cantripSpellJoin = spellsInClassListOrder(
+      wizardSpellList.cantrips.filter(
+        (spellId) => !runtimeDetachedCantripIds.has(spellId),
+      ),
+      wizardSpellsById,
+    );
+    const completePreparedSpellJoin = spellsInClassListOrder(
+      wizardSpellList.leveled
+        .filter(({ spellLevel }) => spellLevel <= 5)
+        .map(({ spellId }) => spellId),
+      wizardSpellsById,
+    );
+    expect(completePreparedSpellJoin).toEqual(
+      Result.fail({
+        tag: "classSpellListCatalogJoinIssue",
+        missingSpellIds: WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS,
+      }),
+    );
+    const runtimeDetachedPreparedSpellIds = new Set<UnitId>(
+      WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS,
+    );
+    const preparedSpellJoin = spellsInClassListOrder(
+      wizardSpellList.leveled
+        .filter(({ spellLevel }) => spellLevel <= 5)
+        .map(({ spellId }) => spellId)
+        .filter((spellId) => !runtimeDetachedPreparedSpellIds.has(spellId)),
+      wizardSpellsById,
+    );
+    if (Result.isFailure(cantripSpellJoin)) {
+      throw new Error(
+        `Wizard cantrip catalog join failed: ${cantripSpellJoin.failure.missingSpellIds.join(", ")}.`,
+      );
+    }
+    if (Result.isFailure(preparedSpellJoin)) {
+      throw new Error(
+        `Wizard prepared-spell catalog join failed: ${preparedSpellJoin.failure.missingSpellIds.join(", ")}.`,
+      );
+    }
     const cantripLoadouts = exactCapacityLoadouts(
-      wizardSpells.filter((spell) => wizardCantripIds.has(spell.id)),
+      cantripSpellJoin.success,
       WIZARD_CANTRIP_CAPACITY,
     );
     const preparedSpellLoadouts = exactCapacityLoadouts(
-      wizardSpells.filter((spell) => wizardPreparedSpellIds.has(spell.id)),
+      preparedSpellJoin.success,
       WIZARD_PREPARED_SPELL_CAPACITY,
     );
     const loadoutCount = Math.max(
@@ -607,7 +720,7 @@ describe("spell cast hole frontier catalog", () => {
         "scalarBuff: [targetChoice] => [targetChoice] -> resolved",
         "selfTeleport: [teleportDestination] => [teleportDestination] -> resolved",
         "selfTransformationMode: [selfTransformationModeChoice] => [selfTransformationModeChoice] -> resolved",
-        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",

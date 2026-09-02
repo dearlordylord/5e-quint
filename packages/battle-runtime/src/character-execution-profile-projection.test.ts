@@ -18,6 +18,7 @@ import {
   type CharacterBattleClassLevel,
   type CharacterBattleClassLevels,
 } from "./character-class-level.ts";
+import { admitCharacterBattleResourceProcedures } from "./character-battle-resources.ts";
 import {
   battleUnitSupportProfilesForUnit,
   parseSupportedUnitFeatureProfile,
@@ -294,12 +295,10 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-feature-resource"),
       combatantId: combatantId("missing-feature-resource-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      resourceFeatureProcedures: [],
+      resourceAdmissions: [],
       unitFeatureProcedures: [
         boundUnitFeatureProcedureFactsFromProfile(profile),
       ],
-      resourceUnits: [],
-      units: [unit],
       unitRefs: [],
       classLevels: FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
     });
@@ -322,16 +321,20 @@ describe("character execution profile projection", () => {
     if (profile?.kind !== "failedSavingThrowReroll") {
       throw new Error("Expected failed Saving Throw reroll profile.");
     }
+    const resourceAdmissions = admitCharacterBattleResourceProcedures(
+      [{ unit }],
+      fighterLevels,
+      [],
+    );
+    if (Result.isFailure(resourceAdmissions)) {
+      throw new Error("Expected canonical Indomitable resource admission.");
+    }
     const admission = characterExecutionFromUnits({
       battleId: battleId("bound-failed-save-reroll"),
       combatantId: combatantId("bound-failed-save-reroll-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      resourceFeatureProcedures: [],
-      unitFeatureProcedures: [
-        boundUnitFeatureProcedureFactsFromProfile(profile),
-      ],
-      resourceUnits: [unit],
-      units: [unit],
+      resourceAdmissions: resourceAdmissions.success,
+      unitFeatureProcedures: [],
       unitRefs: [],
       classLevels: fighterLevels,
     });
@@ -378,10 +381,8 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-primary-support-resource"),
       combatantId: combatantId("missing-primary-support-resource-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      resourceFeatureProcedures: [],
+      resourceAdmissions: [],
       unitFeatureProcedures: [],
-      resourceUnits: [],
-      units: [unit],
       unitRefs: [{ unit, supportProfiles: [profile] }],
       classLevels: FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
     });
@@ -409,10 +410,8 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-option-grant-procedure"),
       combatantId: combatantId("missing-option-grant-procedure-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
-      resourceFeatureProcedures: [],
+      resourceAdmissions: [],
       unitFeatureProcedures: [],
-      resourceUnits: [],
-      units: [unit],
       unitRefs: [{ unit, supportProfiles: [profile] }],
       classLevels: ROGUE_SUPREME_SNEAK_CLASS_LEVELS,
     });

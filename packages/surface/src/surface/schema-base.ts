@@ -8,11 +8,32 @@ import {
   STANDARD_ACTION_KINDS,
   SURFACE_CONDITIONS,
   SURFACE_SKILLS,
+  UnitId,
   type ClassName,
+  type UnitId as UnitIdType,
 } from "@dnd/shared/game-facts";
 import { DAMAGE_TYPES } from "@dnd/shared/types";
 
 import { exactOptional } from "./schema-helpers.ts";
+import {
+  SURFACE_WEAPON_FILTER_CATEGORIES,
+  SURFACE_WEAPON_FILTER_SOURCE_ITEM,
+  SURFACE_WEAPON_FILTER_SPECIFIC_ITEM,
+  SURFACE_WEAPON_FILTER_WEAPON_CATEGORY,
+  SURFACE_WEAPON_FILTER_WEAPON_PROPERTY,
+  SURFACE_WEAPON_PROPERTIES,
+  SURFACE_WEAPON_PROPERTY_AMMUNITION,
+  SURFACE_WEAPON_PROPERTY_FINESSE,
+  SURFACE_WEAPON_PROPERTY_HEAVY,
+  SURFACE_WEAPON_PROPERTY_LIGHT,
+  SURFACE_WEAPON_PROPERTY_LOADING,
+  SURFACE_WEAPON_PROPERTY_REACH,
+  SURFACE_WEAPON_PROPERTY_THROWN,
+  SURFACE_WEAPON_PROPERTY_TWO_HANDED,
+  SURFACE_WEAPON_PROPERTY_VERSATILE,
+  type SurfaceWeaponFilter,
+} from "./surface-vocabulary.ts";
+import { SRD_PROVENANCE_KIND } from "./srd-provenance.ts";
 
 export const SURFACE_SCHEMA_ROLE_ANNOTATION =
   "dnd.surface.schema-role" as const;
@@ -401,33 +422,28 @@ export const RollKindSchema = Schema.Literals([
   "death_saving_throw",
 ]);
 
-export const WeaponPropertySchema = Schema.Literals([
-  "ammunition",
-  "finesse",
-  "heavy",
-  "light",
-  "loading",
-  "reach",
-  "thrown",
-  "two_handed",
-  "versatile",
-]);
+export const WeaponPropertySchema = Schema.Literals(SURFACE_WEAPON_PROPERTIES);
 
-export const WeaponFilterSchema = Schema.Union([
+export const WeaponFilterSchema: Schema.Codec<
+  SurfaceWeaponFilter<UnitIdType>,
+  SurfaceWeaponFilter<string>,
+  never,
+  never
+> = Schema.Union([
   Schema.Struct({
-    kind: Schema.Literal("source_item"),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_SOURCE_ITEM),
   }),
   Schema.Struct({
-    kind: Schema.Literal("weapon_category"),
-    category: Schema.Literals(["melee", "ranged"]),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_WEAPON_CATEGORY),
+    category: Schema.Literals(SURFACE_WEAPON_FILTER_CATEGORIES),
   }),
   Schema.Struct({
-    kind: Schema.Literal("weapon_property"),
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_WEAPON_PROPERTY),
     property: WeaponPropertySchema,
   }),
   Schema.Struct({
-    kind: Schema.Literal("specific_item"),
-    itemId: surfaceSchemaRole(Schema.String, {
+    kind: Schema.Literal(SURFACE_WEAPON_FILTER_SPECIFIC_ITEM),
+    itemId: surfaceSchemaRole(UnitId, {
       category: "reference",
       relation: "item-reference",
       targetKind: "unit",
@@ -735,7 +751,9 @@ export const WeaponProficiencySchema = Schema.Union([
   }),
 ]);
 
-export const WeaponUsageSchema = Schema.Literals(["melee", "ranged"]);
+export const WeaponUsageSchema = Schema.Literals(
+  SURFACE_WEAPON_FILTER_CATEGORIES,
+);
 
 export const WeaponDamageSchema = Schema.Union([
   Schema.Struct({
@@ -760,22 +778,25 @@ export { AmmunitionKindSchema };
 
 export const WeaponPropertyDetailSchema = Schema.Union([
   Schema.Struct({
-    kind: Schema.Literal("ammunition"),
+    kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_AMMUNITION),
     range: WeaponRangeSchema,
     ammunition: AmmunitionKindSchema,
   }),
-  Schema.Struct({ kind: Schema.Literal("finesse") }),
-  Schema.Struct({ kind: Schema.Literal("heavy") }),
-  Schema.Struct({ kind: Schema.Literal("light") }),
-  Schema.Struct({ kind: Schema.Literal("loading") }),
-  Schema.Struct({ kind: Schema.Literal("reach") }),
-  Schema.Struct({ kind: Schema.Literal("thrown"), range: WeaponRangeSchema }),
+  Schema.Struct({ kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_FINESSE) }),
+  Schema.Struct({ kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_HEAVY) }),
+  Schema.Struct({ kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_LIGHT) }),
+  Schema.Struct({ kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_LOADING) }),
+  Schema.Struct({ kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_REACH) }),
   Schema.Struct({
-    kind: Schema.Literal("two_handed"),
+    kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_THROWN),
+    range: WeaponRangeSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_TWO_HANDED),
     unless: exactOptional(Schema.Literal("mounted")),
   }),
   Schema.Struct({
-    kind: Schema.Literal("versatile"),
+    kind: Schema.Literal(SURFACE_WEAPON_PROPERTY_VERSATILE),
     damage: WeaponDamageSchema,
   }),
 ]);
@@ -1073,7 +1094,7 @@ export const GrantedSpellDurationOverrideSchema = Schema.Struct({
 });
 
 export const ProvenanceSchema = Schema.Struct({
-  kind: Schema.Literals(["srd-5.2.1", "xphb", "synthetic-test"]),
+  kind: Schema.Literals([SRD_PROVENANCE_KIND, "xphb", "synthetic-test"]),
   section: surfaceSchemaRole(Schema.String, { category: "provenance" }),
 });
 

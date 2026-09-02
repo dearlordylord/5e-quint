@@ -9,8 +9,9 @@ import {
   resourceCount,
   spellSlotLevel,
   type ProficiencyBonus,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import { Brand } from "effect";
+import { Brand, Match, Result } from "effect";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -44,8 +45,14 @@ import {
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
+  parseSupportedUnitFeatureProfile,
   unitHasAttackActionAreaSaveDamageReplacementResourceShape,
+  type BattleUnitSupportProfile,
+  type BattleUnitSupportProfileSourceFacts,
+  type BattleUnitSupportProfileIssue,
+  type BattleUnitSupportSource,
   type SupportedUnitFeatureFacts,
+  type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import {
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
@@ -207,6 +214,148 @@ export function characterBattleResourceExecutionFacts(
 export type CharacterBattleFeatureInit = SupportedUnitFeatureFacts & {
   readonly unit: UnitRecord;
 };
+
+export type CharacterBattleResourceProcedureAdmission =
+  | {
+      readonly tag: "resourceWithoutProcedure";
+      readonly resource: CharacterBattleResourceInit;
+    }
+  | {
+      readonly tag: "resourceFeatureProcedure";
+      readonly resource: ProjectedCharacterBattleResourceInit;
+    }
+  | {
+      readonly tag: "unitFeatureProcedure";
+      readonly resource: CharacterBattleResourceInit;
+      readonly facts: SupportedUnitFeatureFacts;
+    };
+
+export function admitCharacterBattleResourceProcedures(
+  resources: readonly CharacterBattleResourceInit[],
+  classLevels: CharacterBattleClassLevels,
+  unitRefs: readonly {
+    readonly unit: BattleUnitSupportSource;
+    readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  }[],
+): Result.Result<
+  readonly CharacterBattleResourceProcedureAdmission[],
+  ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>
+> {
+  const admissions: CharacterBattleResourceProcedureAdmission[] = [];
+  const issues: BattleUnitSupportProfileIssue[] = [];
+  for (const resource of resources) {
+    if (resource.spellAccessFreeCast !== undefined) {
+      admissions.push({ tag: "resourceWithoutProcedure", resource });
+      continue;
+    }
+    Match.value(admitResourceFeature(resource.unit)).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        notBattleOwned: () => {
+          const selectedSourceFacts = selectedResourceProcedureSourceFacts(
+            resource,
+            unitRefs,
+          );
+          if (Result.isFailure(selectedSourceFacts)) {
+            issues.push(selectedSourceFacts.failure);
+            return;
+          }
+          const profile = parseSupportedUnitFeatureProfile(
+            resource.unit,
+            classLevels,
+            selectedSourceFacts.success,
+          );
+          admissions.push(
+            profile === null
+              ? { tag: "resourceWithoutProcedure", resource }
+              : {
+                  tag: "unitFeatureProcedure",
+                  resource,
+                  facts: supportedUnitFeatureFacts(profile),
+                },
+          );
+        },
+        admitted: (feature) => {
+          const projection = projectCharacterBattleResourceFeature(
+            resource,
+            feature,
+          );
+          Match.value(projection).pipe(
+            Match.discriminatorsExhaustive("tag")({
+              projected: ({ input }) =>
+                admissions.push({
+                  tag: "resourceFeatureProcedure",
+                  resource: input,
+                }),
+              sourceMismatch: ({ message }) =>
+                issues.push({
+                  tag: "battleUnitSupportProfileIssue",
+                  message,
+                }),
+            }),
+          );
+        },
+        rejected: ({ issues: admissionIssues }) =>
+          issues.push(
+            ...admissionIssues.map(({ message }) => ({
+              tag: "battleUnitSupportProfileIssue" as const,
+              message,
+            })),
+          ),
+      }),
+    );
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? Result.succeed(admissions)
+    : Result.fail([firstIssue, ...remainingIssues]);
+}
+
+function supportedUnitFeatureFacts(
+  profile: SupportedUnitFeatureProfile,
+): SupportedUnitFeatureFacts {
+  const { unit: _unit, ...facts } = profile;
+  return facts;
+}
+
+function selectedResourceProcedureSourceFacts(
+  resource: CharacterBattleResourceInit,
+  unitRefs: readonly {
+    readonly unit: BattleUnitSupportSource;
+    readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  }[],
+): Result.Result<
+  BattleUnitSupportProfileSourceFacts | undefined,
+  BattleUnitSupportProfileIssue
+> {
+  const selectedDamageTypes = [
+    ...new Set(
+      unitRefs.flatMap((unitRef) =>
+        unitRef.unit.id === resource.unit.id
+          ? unitRef.supportProfiles.flatMap((profile) => {
+              if (
+                typeof profile !== "object" ||
+                profile.kind !== "attackActionAreaSaveDamageReplacement"
+              ) {
+                return [];
+              }
+              const damageType = profile.breath.damage.damageType;
+              return damageType.kind === "draconicAncestry"
+                ? [damageType.value]
+                : [];
+            })
+          : [],
+      ),
+    ),
+  ].sort();
+  const [selectedDamageType, conflictingDamageType] = selectedDamageTypes;
+  if (selectedDamageType === undefined) return Result.succeed(undefined);
+  return conflictingDamageType === undefined
+    ? Result.succeed({ draconicAncestryDamageType: selectedDamageType })
+    : Result.fail({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Resource Unit ${resource.unit.id} has conflicting selected Draconic Ancestry damage types: ${selectedDamageTypes.join(", ")}.`,
+      });
+}
 
 type SorcererMetamagicMechanics = Extract<
   ClassFeatureRecord["mechanics"],
@@ -999,33 +1148,47 @@ function characterBattleResourceForUnitOrNull(
   if (zeroHitPointReplacement !== null) {
     return zeroHitPointReplacement.resource;
   }
-  if (
-    unit.kind === "species_trait" &&
-    unit.mechanics.family === "activation" &&
-    (bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null ||
-      unitHasAttackActionAreaSaveDamageReplacementResourceShape(unit))
-  ) {
-    const resource = unit.mechanics.resource;
-    if (resource !== undefined) {
-      if (!activationResourceIsSupportedByBattleForUnit(unit, resource)) {
-        /* v8 ignore start -- @preserve -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
-        return null;
-        /* v8 ignore stop -- @preserve */
-      }
-      return resource;
-    }
+  const speciesTraitResource = speciesTraitBattleResourceForUnit(unit);
+  if (speciesTraitResource !== null) return speciesTraitResource;
+  return classFeatureBattleResourceForUnit(unit);
+}
+
+function speciesTraitBattleResourceForUnit(
+  unit: UnitRecord,
+): CharacterBattleResourceExecutionFacts | null {
+  if (unit.kind !== "species_trait") return null;
+  if (unit.mechanics.family !== "activation") return null;
+  if (!speciesTraitHasBattleResourceProfile(unit)) return null;
+  const resource = unit.mechanics.resource;
+  if (resource === undefined) return null;
+  if (!activationResourceIsSupportedByBattleForUnit(unit, resource)) {
+    /* v8 ignore start -- @preserve -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
+    return null;
+    /* v8 ignore stop -- @preserve */
   }
+  return resource;
+}
+
+function speciesTraitHasBattleResourceProfile(
+  unit: Extract<UnitRecord, { readonly kind: "species_trait" }>,
+): boolean {
+  return (
+    bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null ||
+    unitHasAttackActionAreaSaveDamageReplacementResourceShape(unit)
+  );
+}
+
+function classFeatureBattleResourceForUnit(
+  unit: UnitRecord,
+): CharacterBattleResourceExecutionFacts | null {
+  if (unit.kind !== "class_feature") return null;
   if (
-    unit.kind === "class_feature" &&
     unit.mechanics.family === "resource_pool" &&
     pointPoolResourceIsSupportedByBattle(unit.mechanics.resource)
   ) {
     return unit.mechanics.resource;
   }
-  if (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "resource_container"
-  ) {
+  if (unit.mechanics.family === "resource_container") {
     return activationResourceIsSupportedByBattleForUnit(
       unit,
       unit.mechanics.resource,
@@ -1033,15 +1196,20 @@ function characterBattleResourceForUnitOrNull(
       ? unit.mechanics.resource
       : null;
   }
+  return classFeatureActivationResourceForUnit(unit);
+}
+
+function classFeatureActivationResourceForUnit(
+  unit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
+): CharacterBattleResourceExecutionFacts | null {
   if (
-    unit.kind !== "class_feature" ||
-    (unit.mechanics.family !== "activation" &&
-      unit.mechanics.family !== "reaction_roll_or_damage_reduction") ||
-    !("resource" in unit.mechanics) ||
-    unit.mechanics.resource === undefined
+    unit.mechanics.family !== "activation" &&
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction"
   ) {
     return null;
   }
+  if (!("resource" in unit.mechanics)) return null;
+  if (unit.mechanics.resource === undefined) return null;
   return activationResourceIsSupportedByBattleForUnit(
     unit,
     unit.mechanics.resource,

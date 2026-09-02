@@ -7,7 +7,7 @@ import {
   characterBuildMonkUncannyMetabolismFacts,
   type CharacterBuild,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   Hp,
   resourceCount,

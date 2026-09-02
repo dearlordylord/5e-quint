@@ -1,5 +1,8 @@
-import type { BattleCreatureInit } from "@dnd/battle-runtime";
-import type { ScenarioPlacement, ScenarioSetup } from "@dnd/scenario-setup-sdk";
+import type {
+  BattleCreatureInit,
+  ScenarioPlacement,
+  ScenarioSetup,
+} from "@dnd/scenario-setup-sdk";
 
 export const setupScenario: ScenarioSetup = ({
   sdk,

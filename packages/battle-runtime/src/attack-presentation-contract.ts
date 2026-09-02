@@ -1,8 +1,12 @@
-export const ATTACK_PRESENTATION_JOIN_ISSUE_REASONS = [
+export const ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS = [
   "characterContextMissing",
   "weaponPresentationMissing",
   "statBlockAdmissionMissing",
   "statBlockPresentationMissing",
+] as const;
+
+export const ATTACK_PRESENTATION_JOIN_ISSUE_REASONS = [
+  ...ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS,
   "statBlockProcedurePresentationJoin",
 ] as const;
 
@@ -12,10 +16,7 @@ export type AttackPresentationJoinIssueReason =
 export type AttackPresentationJoinIssue =
   | {
       readonly tag: "attackPresentationJoinIssue";
-      readonly reason: Exclude<
-        AttackPresentationJoinIssueReason,
-        "statBlockProcedurePresentationJoin"
-      >;
+      readonly reason: (typeof ATTACK_PRESENTATION_SIMPLE_JOIN_ISSUE_REASONS)[number];
     }
   | {
       readonly tag: "attackPresentationJoinIssue";

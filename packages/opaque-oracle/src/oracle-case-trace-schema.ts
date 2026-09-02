@@ -120,7 +120,7 @@ const OracleStatBlockRosterEntrySchema = Schema.Struct({
   initiative: IntegerSchema,
   ammunitionStocks: OracleAmmunitionStocksSchema,
   conditions: OracleBattleConditionsSchema,
-  currentHp: Schema.optional(NonNegativeIntegerSchema),
+  currentHp: Schema.optionalKey(NonNegativeIntegerSchema),
   tempHp: NonNegativeIntegerSchema,
 });
 

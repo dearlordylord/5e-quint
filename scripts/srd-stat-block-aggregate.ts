@@ -10,7 +10,10 @@ import {
   decodeStatBlockRecordSync,
   decodeUnitRecordSync,
 } from "../packages/surface/src/surface/schema.ts";
-import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
+import {
+  normalizeStatBlockIdentity,
+  type NormalizedStatBlockIdentity,
+} from "../packages/surface/src/surface/stat-block-identity.ts";
 import {
   discoverSrdStatBlocks,
   SRD_STAT_BLOCK_SOURCE_PATHS,
@@ -91,11 +94,11 @@ function assertCompleteSourceDiscovery(
 
 function readSrdStatBlockPeers(
   contentDirectory: string,
-): ReadonlyMap<string, StatBlockPeer> {
+): ReadonlyMap<NormalizedStatBlockIdentity, StatBlockPeer> {
   const peerNames = discoverCanonicalSurfaceContentPeers(contentDirectory).map(
     ({ peerName }) => peerName,
   );
-  const peers = new Map<string, StatBlockPeer>();
+  const peers = new Map<NormalizedStatBlockIdentity, StatBlockPeer>();
 
   for (const peerName of peerNames) {
     const peerPath = join(contentDirectory, peerName);

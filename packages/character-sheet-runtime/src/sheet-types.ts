@@ -13,7 +13,7 @@ import {
   type CharacterBuildResource,
   type MagicInitiateSpellcastingAbility,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   CONDITIONS,
   type Ability,
@@ -1409,10 +1409,13 @@ export type CharacterSheetHitPointMaximumProjection = {
   readonly qRoute: CharacterSheetHitPointMaximumProjectionRoute;
 };
 
-export type CharacterSheetIssue = {
-  readonly tag: "characterSheetIssue";
-  readonly message: string;
-};
+export const CharacterSheetIssueSchema = Schema.Struct({
+  tag: Schema.Literal("characterSheetIssue"),
+  message: Schema.String,
+});
+export type CharacterSheetIssue = Schema.Schema.Type<
+  typeof CharacterSheetIssueSchema
+>;
 
 export function characterSheetIssue(
   message: string,

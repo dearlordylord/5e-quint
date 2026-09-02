@@ -7,11 +7,13 @@ import { describe, expect, test } from "vitest";
 import {
   Hp,
   build,
+  characterSheetDruidWildShapeKnownForms,
   characterSheetId,
   createFreshCharacterSheet,
   druidCircleLandBuild,
   druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
   resourceCount,
+  requireSuccess,
   unitLibrary,
   wizardBuild,
 } from "./test-support.test-support.ts";
@@ -19,6 +21,7 @@ import {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssuesSchema,
   characterSheetConstructionIssuesSummary,
+  createFreshCharacterSheet as createFreshCharacterSheetWithoutFixtureCatalog,
   freshCharacterSheetProjection,
   isFreshSpellcastingCharacterSheet,
   parseFreshCharacterSheet,
@@ -26,6 +29,26 @@ import {
 import { freshCharacterSheetFromParsedState } from "./fresh-character-sheet.ts";
 
 describe("fresh Character Sheet construction", () => {
+  test("uses the canonical Stat Block catalog for fresh Wild Shape state", () => {
+    const sheet = requireSuccess(
+      createFreshCharacterSheetWithoutFixtureCatalog({
+        characterId: characterSheetId("character:fresh-druid-missing-catalog"),
+        build: druidCircleLandBuild({ druidLevel: 5 }),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        unitLibrary,
+        druidCircleLand: { land: "temperate" },
+        druidWildShapeKnownFormStatBlockIds:
+          druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+      }),
+    );
+
+    expect(characterSheetDruidWildShapeKnownForms(sheet)?.statBlockIds).toEqual(
+      druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+    );
+  });
+
   test("returns freshness-narrowed facts with one spelling for empty state", () => {
     const result = createFreshCharacterSheet({
       characterId: characterSheetId("character:fresh"),

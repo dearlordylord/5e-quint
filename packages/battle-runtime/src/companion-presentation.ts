@@ -26,10 +26,8 @@ import {
 import { resolveSpawnedCompanionForm } from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlockWithCreatureType,
-} from "./stat-block-authored-projection.ts";
+import { projectAuthoredStatBlockWithCreatureType } from "./stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "./stat-block-projection-failure.ts";
 
 type WithoutBattleState<Input> = Input extends unknown
   ? Omit<Input, "state">

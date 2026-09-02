@@ -176,6 +176,52 @@ console.log(decoded.success.value);`,
     }
   });
 
+  it.each([
+    {
+      request: '["surface", "forged-owner"]',
+      message: "Unknown package Effect runtime owner: forged-owner.",
+    },
+    {
+      request: "[]",
+      message: "Package Effect runtime owners must be a non-empty array.",
+    },
+  ])(
+    "rejects an invalid relocated bundle owner request: $request",
+    ({ request, message }) => {
+      const directory = mkdtempSync(
+        join(tmpdir(), "dnd-package-effect-invalid-owner-"),
+      );
+      const output = join(directory, "consumer.mjs");
+      try {
+        buildConsumerDistributionBundle({
+          stdin: {
+            contents: `import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
+effectRuntimeForPackageOwners(${request});
+console.log("invalid owner accepted");`,
+            resolveDir: process.cwd(),
+            sourcefile: "invalid-package-effect-owner-consumer.ts",
+            loader: "ts",
+          },
+          outfile: output,
+          bundle: true,
+          platform: "node",
+          format: "esm",
+          target: "node24",
+          logLevel: "silent",
+        });
+
+        const execution = spawnSync(process.execPath, [output], {
+          encoding: "utf8",
+        });
+        expect(execution.status).not.toBe(0);
+        expect(execution.stderr).toContain(message);
+        expect(execution.stdout).not.toContain("invalid owner accepted");
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
+
   it("does not accept a forged bundle-validation define", () => {
     const directory = mkdtempSync(join(tmpdir(), "dnd-package-effect-forged-"));
     const output = join(directory, "consumer.mjs");

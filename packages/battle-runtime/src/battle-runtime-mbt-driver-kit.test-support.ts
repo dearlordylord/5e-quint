@@ -36,13 +36,12 @@ import {
   classLevel,
   difficultyClass,
   movementFeet,
+  PositiveInteger,
   proficiencyBonus,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   DamageType,
   SpellRecord,
@@ -17163,11 +17162,6 @@ function adrenalineRushCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       resources: [{ unit, usesRemaining: 3 }],
-      unitFeatures: [
-        characterBattleFeatureInitForTest(unit, [
-          { className: "fighter", level: classLevel(5) },
-        ]),
-      ],
     },
   };
 }
@@ -17207,9 +17201,6 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       resources: [{ unit: featureUnit }],
-      unitFeatures: [
-        characterBattleFeatureInitForTest(featureUnit, classLevels),
-      ],
       spellcasting: {
         spellcastingSource: {
           tag: "classSpellcasting",
@@ -17905,7 +17896,7 @@ function skeletonMultiattackStatBlock(): StatBlockRecord {
           dispatches: [
             {
               procedureOrdinal: shortsword.procedureOrdinal,
-              count: { kind: "literal", value: 2 },
+              count: { kind: "literal", value: PositiveInteger(2) },
             },
           ],
         }),

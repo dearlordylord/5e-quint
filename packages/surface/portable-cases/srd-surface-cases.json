@@ -39800,6 +39800,10 @@
                 {
                   "kind": "blindsight",
                   "rangeFeet": 10
+                },
+                {
+                  "kind": "darkvision",
+                  "rangeFeet": 60
                 }
               ],
               "passivePerception": 13,
@@ -69019,7 +69023,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -69700,7 +69707,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -71761,7 +71771,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 },
                 {
                   "name": "Sunlight Sensitivity",
@@ -86736,7 +86749,7 @@
                 },
                 {
                   "ability": "dex",
-                  "modifier": 2
+                  "modifier": 5
                 },
                 {
                   "ability": "int",
@@ -86897,7 +86910,7 @@
               "kind": "srd-5.2.1",
               "section": "Monsters/Monsters-P-S.md:1567-1594"
             },
-            "rulesExcerpt": "## Stone Giant\n\n*Huge Giant, Neutral*\n\n**AC** 17 | **Initiative** +5 (15)\n**HP** 126 (11d12 + 55)\n**Speed** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| 23 (+6) Save +6 | 15 (+2) Save +2 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |\n\n**Skills** Athletics +12, Perception +4, Stealth +5\n**Senses** Darkvision 60 ft.; Passive Perception 14\n**Languages** Giant\n**CR** 7 (XP 2,900; PB +3)\n\n### Actions\n\n**Multiattack.** The giant makes two attacks, using Stone Club or Boulder in any combination.\n\n**Stone Club.** *Melee Attack Roll:* +9, reach 15 ft. *Hit:* 22 (3d10 + 6) Bludgeoning damage.\n\n**Boulder.** *Ranged Attack Roll:* +9, range 60/240 ft. *Hit:* 15 (2d8 + 6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n### Reactions\n\n**Deflect Missile (Recharge 5–6).** *Trigger:* The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. *Response:* The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. *Dexterity Saving Throw:* DC 17, one creature the giant can see within 60 feet. *Failure:* 11 (1d10 + 6) Force damage."
+            "rulesExcerpt": "## Stone Giant\n\n*Huge Giant, Neutral*\n\n**AC** 17 | **Initiative** +5 (15)\n**HP** 126 (11d12 + 55)\n**Speed** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| 23 (+6) Save +6 | 15 (+2) Save +5 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |\n\n**Skills** Athletics +12, Perception +4, Stealth +5\n**Senses** Darkvision 60 ft.; Passive Perception 14\n**Languages** Giant\n**CR** 7 (XP 2,900; PB +3)\n\n### Actions\n\n**Multiattack.** The giant makes two attacks, using Stone Club or Boulder in any combination.\n\n**Stone Club.** *Melee Attack Roll:* +9, reach 15 ft. *Hit:* 22 (3d10 + 6) Bludgeoning damage.\n\n**Boulder.** *Ranged Attack Roll:* +9, range 60/240 ft. *Hit:* 15 (2d8 + 6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n### Reactions\n\n**Deflect Missile (Recharge 5–6).** *Trigger:* The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. *Response:* The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. *Dexterity Saving Throw:* DC 17, one creature the giant can see within 60 feet. *Failure:* 11 (1d10 + 6) Force damage."
           },
           {
             "id": "stat_block_stone_golem",
@@ -88095,7 +88108,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -88267,7 +88283,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -90032,7 +90051,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -91556,7 +91578,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -93237,7 +93262,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -118796,6 +118824,10 @@
                 {
                   "kind": "blindsight",
                   "rangeFeet": 10
+                },
+                {
+                  "kind": "darkvision",
+                  "rangeFeet": 60
                 }
               ],
               "passivePerception": 13,
@@ -146928,7 +146960,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -147609,7 +147644,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -149670,7 +149708,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 },
                 {
                   "name": "Sunlight Sensitivity",
@@ -164645,7 +164686,7 @@
                 },
                 {
                   "ability": "dex",
-                  "modifier": 2
+                  "modifier": 5
                 },
                 {
                   "ability": "int",
@@ -164806,7 +164847,7 @@
               "kind": "srd-5.2.1",
               "section": "Monsters/Monsters-P-S.md:1567-1594"
             },
-            "rulesExcerpt": "## Stone Giant\n\n*Huge Giant, Neutral*\n\n**AC** 17 | **Initiative** +5 (15)\n**HP** 126 (11d12 + 55)\n**Speed** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| 23 (+6) Save +6 | 15 (+2) Save +2 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |\n\n**Skills** Athletics +12, Perception +4, Stealth +5\n**Senses** Darkvision 60 ft.; Passive Perception 14\n**Languages** Giant\n**CR** 7 (XP 2,900; PB +3)\n\n### Actions\n\n**Multiattack.** The giant makes two attacks, using Stone Club or Boulder in any combination.\n\n**Stone Club.** *Melee Attack Roll:* +9, reach 15 ft. *Hit:* 22 (3d10 + 6) Bludgeoning damage.\n\n**Boulder.** *Ranged Attack Roll:* +9, range 60/240 ft. *Hit:* 15 (2d8 + 6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n### Reactions\n\n**Deflect Missile (Recharge 5–6).** *Trigger:* The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. *Response:* The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. *Dexterity Saving Throw:* DC 17, one creature the giant can see within 60 feet. *Failure:* 11 (1d10 + 6) Force damage."
+            "rulesExcerpt": "## Stone Giant\n\n*Huge Giant, Neutral*\n\n**AC** 17 | **Initiative** +5 (15)\n**HP** 126 (11d12 + 55)\n**Speed** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| 23 (+6) Save +6 | 15 (+2) Save +5 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |\n\n**Skills** Athletics +12, Perception +4, Stealth +5\n**Senses** Darkvision 60 ft.; Passive Perception 14\n**Languages** Giant\n**CR** 7 (XP 2,900; PB +3)\n\n### Actions\n\n**Multiattack.** The giant makes two attacks, using Stone Club or Boulder in any combination.\n\n**Stone Club.** *Melee Attack Roll:* +9, reach 15 ft. *Hit:* 22 (3d10 + 6) Bludgeoning damage.\n\n**Boulder.** *Ranged Attack Roll:* +9, range 60/240 ft. *Hit:* 15 (2d8 + 6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n### Reactions\n\n**Deflect Missile (Recharge 5–6).** *Trigger:* The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. *Response:* The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. *Dexterity Saving Throw:* DC 17, one creature the giant can see within 60 feet. *Failure:* 11 (1d10 + 6) Force damage."
           },
           {
             "id": "stat_block_stone_golem",
@@ -166004,7 +166045,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -166176,7 +166220,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -167941,7 +167988,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -169465,7 +169515,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -171146,7 +171199,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -179895,6 +179951,10 @@
                 {
                   "kind": "blindsight",
                   "rangeFeet": 10
+                },
+                {
+                  "kind": "darkvision",
+                  "rangeFeet": 60
                 }
               ],
               "passivePerception": 13,
@@ -209114,7 +209174,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -209795,7 +209858,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -211856,7 +211922,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 },
                 {
                   "name": "Sunlight Sensitivity",
@@ -226643,7 +226712,7 @@
                 },
                 {
                   "ability": "dex",
-                  "modifier": 2
+                  "modifier": 5
                 },
                 {
                   "ability": "int",
@@ -226804,7 +226873,7 @@
               "kind": "srd-5.2.1",
               "section": "Monsters/Monsters-P-S.md:1567-1594"
             },
-            "rulesExcerpt": "## Stone Giant\n\n*Huge Giant, Neutral*\n\n**AC** 17 | **Initiative** +5 (15)\n**HP** 126 (11d12 + 55)\n**Speed** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| 23 (+6) Save +6 | 15 (+2) Save +2 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |\n\n**Skills** Athletics +12, Perception +4, Stealth +5\n**Senses** Darkvision 60 ft.; Passive Perception 14\n**Languages** Giant\n**CR** 7 (XP 2,900; PB +3)\n\n### Actions\n\n**Multiattack.** The giant makes two attacks, using Stone Club or Boulder in any combination.\n\n**Stone Club.** *Melee Attack Roll:* +9, reach 15 ft. *Hit:* 22 (3d10 + 6) Bludgeoning damage.\n\n**Boulder.** *Ranged Attack Roll:* +9, range 60/240 ft. *Hit:* 15 (2d8 + 6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n### Reactions\n\n**Deflect Missile (Recharge 5–6).** *Trigger:* The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. *Response:* The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. *Dexterity Saving Throw:* DC 17, one creature the giant can see within 60 feet. *Failure:* 11 (1d10 + 6) Force damage."
+            "rulesExcerpt": "## Stone Giant\n\n*Huge Giant, Neutral*\n\n**AC** 17 | **Initiative** +5 (15)\n**HP** 126 (11d12 + 55)\n**Speed** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| 23 (+6) Save +6 | 15 (+2) Save +5 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |\n\n**Skills** Athletics +12, Perception +4, Stealth +5\n**Senses** Darkvision 60 ft.; Passive Perception 14\n**Languages** Giant\n**CR** 7 (XP 2,900; PB +3)\n\n### Actions\n\n**Multiattack.** The giant makes two attacks, using Stone Club or Boulder in any combination.\n\n**Stone Club.** *Melee Attack Roll:* +9, reach 15 ft. *Hit:* 22 (3d10 + 6) Bludgeoning damage.\n\n**Boulder.** *Ranged Attack Roll:* +9, range 60/240 ft. *Hit:* 15 (2d8 + 6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n### Reactions\n\n**Deflect Missile (Recharge 5–6).** *Trigger:* The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. *Response:* The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. *Dexterity Saving Throw:* DC 17, one creature the giant can see within 60 feet. *Failure:* 11 (1d10 + 6) Force damage."
           },
           {
             "id": "stat_block_stone_golem",
@@ -228002,7 +228071,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -228174,7 +228246,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -229939,7 +230014,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -231463,7 +231541,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },
@@ -233144,7 +233225,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ]
             },

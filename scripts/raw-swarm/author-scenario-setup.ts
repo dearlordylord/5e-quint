@@ -1,12 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
-  constants,
-  copyFileSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -28,9 +27,13 @@ import {
 } from "./sdk-player/scenario-setup-authoring.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
 import {
-  evaluateScenarioSetup,
+  evaluateAdmittedScenarioSetup,
   scenarioSetupStatBlocks,
 } from "./sdk-player/scenario-setup-runtime.ts";
+import {
+  authoredSourceIssuesMessage,
+  type AdmittedAuthoredSource,
+} from "./sdk-player/authored-source-admission.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
@@ -101,17 +104,39 @@ async function runSetupAuthor(input: {
   }
 }
 
-function typecheckSetup(scratch: string, phase: "neutral" | "retained"): void {
-  const typecheck = spawnSync(
-    process.execPath,
-    [resolve(scratch, "tooling/typescript/bin/tsc"), "--noEmit"],
-    { cwd: scratch, encoding: "utf8" },
+function typecheckSetup(
+  scratch: string,
+  phase: "neutral" | "retained",
+  source: AdmittedAuthoredSource<"scenarioSetup">,
+): void {
+  const configPath = resolve(
+    scratch,
+    `.authored-source-tsconfig-${phase}-${randomUUID()}.json`,
   );
-  if (typecheck.error !== undefined) throw typecheck.error;
-  if (typecheck.signal !== null || typecheck.status !== 0) {
-    fail(
-      `Scenario setup ${phase} source did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+  writeFileSync(
+    configPath,
+    `${JSON.stringify({ extends: "./tsconfig.json", files: [source.sourcePath], include: [] }, null, 2)}\n`,
+    { flag: "wx" },
+  );
+  try {
+    const typecheck = spawnSync(
+      process.execPath,
+      [
+        resolve(scratch, "tooling/typescript/bin/tsc"),
+        "--noEmit",
+        "-p",
+        configPath,
+      ],
+      { cwd: scratch, encoding: "utf8" },
     );
+    if (typecheck.error !== undefined) throw typecheck.error;
+    if (typecheck.signal !== null || typecheck.status !== 0) {
+      fail(
+        `Scenario setup ${phase} source did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+      );
+    }
+  } finally {
+    rmSync(configPath, { force: true });
   }
 }
 
@@ -204,8 +229,7 @@ async function main(args: readonly string[]): Promise<void> {
     const permissionArgs = profileAvailable
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
-    const setupPath = resolve(scratch, "setup.ts");
-    const evaluated = await authorScenarioSetupThroughOwners({
+    const authored = await authorScenarioSetupThroughOwners({
       scratch,
       runAuthor: (role) =>
         runSetupAuthor({
@@ -231,21 +255,25 @@ async function main(args: readonly string[]): Promise<void> {
                   "Do not inspect paths outside this scratch consumer.",
                 ].join(" "),
         }),
-      typecheck: (phase) => typecheckSetup(scratch, phase),
-      validateRetained: async () => {
-        const result = await evaluateScenarioSetup(
-          setupPath,
+      typecheck: (phase, source) => typecheckSetup(scratch, phase, source),
+      validateRetained: async (source) => {
+        const result = await evaluateAdmittedScenarioSetup(
+          source,
           characters.characterSheets,
         );
         if (result.tag === "invalid") fail(result.message);
         return result;
       },
     });
+    if (authored.tag === "sourceRejected") {
+      fail(authoredSourceIssuesMessage(authored));
+    }
+    const evaluated = authored.retained;
     const after = currentGitRevision();
     if (after.tag === "dirty" || after.sha !== revision.sha) {
       fail("Git revision changed during scenario setup authoring.");
     }
-    copyFileSync(setupPath, outputPath, constants.COPYFILE_EXCL);
+    writeFileSync(outputPath, authored.source.source, { flag: "wx" });
     console.log(
       evaluated.tag === "ready"
         ? `Authored ready scenario setup: ${outputPath}`

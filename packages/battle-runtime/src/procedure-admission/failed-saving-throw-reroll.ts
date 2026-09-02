@@ -85,6 +85,15 @@ type FailedSavingThrowRerollInspection =
   | { readonly tag: "supported" }
   | { readonly tag: "unsupported" };
 
+type FailedSavingThrowRerollMechanics = Extract<
+  Extract<AuthoredUnitSource, { readonly kind: "class_feature" }>["mechanics"],
+  { readonly family: "failed_saving_throw_reroll" }
+>;
+type FailedSavingThrowResourceThresholdTier = Extract<
+  FailedSavingThrowRerollMechanics["resource"]["cap"],
+  { readonly kind: "threshold_tiers" }
+>["tiers"][number];
+
 export function admitFailedSavingThrowRerollProcedure(
   unit: AuthoredUnitSource,
 ): FailedSavingThrowRerollProcedureAdmission {
@@ -111,26 +120,69 @@ function inspectFailedSavingThrowRerollRoot(
     return { tag: "notRepresented" };
   }
   const mechanics = unit.mechanics;
-  const [levelThirteen, levelSeventeen, ...additionalTiers] =
-    mechanics.resource.cap.kind === "threshold_tiers"
-      ? mechanics.resource.cap.tiers
-      : [];
-  return mechanics.trigger.kind === "failed_saving_throw" &&
-    mechanics.reroll.mustUseNewRoll === true &&
-    mechanics.reroll.bonus.kind === "class_level" &&
-    mechanics.reroll.bonus.className === "fighter" &&
-    mechanics.resource.kind === "use_count" &&
-    mechanics.resource.cap.kind === "threshold_tiers" &&
-    mechanics.resource.cap.axis === "class" &&
-    mechanics.resource.cap.base === 1 &&
-    levelThirteen?.atLevel === 13 &&
-    levelThirteen.value === 2 &&
-    levelSeventeen?.atLevel === 17 &&
-    levelSeventeen.value === 3 &&
-    additionalTiers.length === 0 &&
-    mechanics.resetCadence.kind === "long_rest"
+  return failedSavingThrowRerollRootIsSupported(mechanics)
     ? { tag: "supported" }
     : { tag: "unsupported" };
+}
+
+function failedSavingThrowRerollRootIsSupported(
+  mechanics: FailedSavingThrowRerollMechanics,
+): boolean {
+  return (
+    failedSavingThrowTriggerIsSupported(mechanics) &&
+    failedSavingThrowRerollIsSupported(mechanics) &&
+    failedSavingThrowResourceIsSupported(mechanics) &&
+    mechanics.resetCadence.kind === "long_rest"
+  );
+}
+
+function failedSavingThrowTriggerIsSupported(
+  mechanics: FailedSavingThrowRerollMechanics,
+): boolean {
+  return mechanics.trigger.kind === "failed_saving_throw";
+}
+
+function failedSavingThrowRerollIsSupported(
+  mechanics: FailedSavingThrowRerollMechanics,
+): boolean {
+  return (
+    mechanics.reroll.mustUseNewRoll === true &&
+    mechanics.reroll.bonus.kind === "class_level" &&
+    mechanics.reroll.bonus.className === "fighter"
+  );
+}
+
+function failedSavingThrowResourceIsSupported(
+  mechanics: FailedSavingThrowRerollMechanics,
+): boolean {
+  if (mechanics.resource.kind !== "use_count") return false;
+  return failedSavingThrowResourceCapIsSupported(mechanics.resource.cap);
+}
+
+function failedSavingThrowResourceCapIsSupported(
+  cap: FailedSavingThrowRerollMechanics["resource"]["cap"],
+): boolean {
+  if (cap.kind !== "threshold_tiers") return false;
+  const [levelThirteen, levelSeventeen, ...additionalTiers] = cap.tiers;
+  return (
+    cap.axis === "class" &&
+    cap.base === 1 &&
+    failedSavingThrowLevelThirteenTierIsSupported(levelThirteen) &&
+    failedSavingThrowLevelSeventeenTierIsSupported(levelSeventeen) &&
+    additionalTiers.length === 0
+  );
+}
+
+function failedSavingThrowLevelThirteenTierIsSupported(
+  tier: FailedSavingThrowResourceThresholdTier | undefined,
+): boolean {
+  return tier?.atLevel === 13 && tier.value === 2;
+}
+
+function failedSavingThrowLevelSeventeenTierIsSupported(
+  tier: FailedSavingThrowResourceThresholdTier | undefined,
+): boolean {
+  return tier?.atLevel === 17 && tier.value === 3;
 }
 
 function admittedFailedSavingThrowRerollProcedure(): AdmittedFailedSavingThrowRerollProcedure {

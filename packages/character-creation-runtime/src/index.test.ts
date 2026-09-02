@@ -19,10 +19,8 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   readClassCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
@@ -1315,7 +1313,17 @@ describe("character creation hole discovery", () => {
         "weapon_longsword",
         "weapon_spear",
         "weapon_flail",
+        "weapon_greataxe",
       ]),
+    );
+    if (weaponMasteryHole === undefined) {
+      throw new Error("Expected the Fighter Weapon Mastery choice hole.");
+    }
+    expect(supportedHoleOptionIds(weaponMasteryHole)).toEqual(
+      expect.arrayContaining(["weapon_greataxe"]),
+    );
+    expect(supportedHoleOptionIds(weaponMasteryHole)).not.toContain(
+      "weapon_quarterstaff",
     );
     expect(
       holeById(

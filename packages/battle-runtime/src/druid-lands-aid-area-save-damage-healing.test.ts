@@ -495,13 +495,6 @@ function landsAidBattle(
           characterBattleFeatureInitForTest(landsAidUnit, [
             { className: "druid", level: classLevel(druidLevel) },
           ]),
-          ...(input.includeRage === true
-            ? [
-                characterBattleFeatureInitForTest(rageUnit, [
-                  { className: "barbarian", level: classLevel(1) },
-                ]),
-              ]
-            : []),
         ],
         resources: [
           {

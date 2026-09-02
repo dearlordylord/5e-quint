@@ -35,7 +35,14 @@ import {
 } from "./rule-core-component-route.test-support.ts";
 import { describe, it } from "vitest";
 
-import { DieRollResult, movementFeet } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  DieRollResult,
+  Integer,
+  movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
@@ -735,11 +742,11 @@ function multiattackStatBlock(): StatBlockRecord {
           dispatches: [
             {
               procedureOrdinal: authoredProcedureOrdinal(1),
-              count: { kind: "literal", value: 2 },
+              count: { kind: "literal", value: PositiveInteger(2) },
             },
             {
               procedureOrdinal: authoredProcedureOrdinal(2),
-              count: { kind: "literal", value: 1 },
+              count: { kind: "literal", value: PositiveInteger(1) },
             },
           ],
         }),
@@ -781,19 +788,24 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
       size: "medium",
       creatureType: "humanoid",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 12 } },
-      hp: { kind: "literal", value: 12 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(12) } },
+      hp: { kind: "literal", value: PositiveInteger(12) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
-        cha: 10,
-        con: 10,
-        dex: 10,
-        int: 10,
-        str: 10,
-        wis: 10,
+        cha: AbilityScore.make(10),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(10),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(10),
+        wis: AbilityScore.make(10),
       },
-      initiative: { modifier: 0, score: 10 },
-      passivePerception: 10,
+      initiative: { modifier: Integer(0), score: NonNegativeInteger(10) },
+      passivePerception: NonNegativeInteger(10),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
@@ -806,17 +818,20 @@ function primaryAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "str",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "melee",
     name: primaryAttackName,
     onHit: [
       {
-        amount: { kind: "fixed", expr: { dice: 1, dieSize: 4, flat: 2 } },
+        amount: {
+          kind: "fixed",
+          expr: { dice: PositiveInteger(1), dieSize: 4, flat: Integer(2) },
+        },
         damageType: "slashing",
         kind: "damage",
       },
     ],
-    reachFeet: 5,
+    reachFeet: PositiveInteger(5),
   };
 }
 
@@ -824,16 +839,19 @@ function secondaryAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "dex",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "ranged",
     name: secondaryAttackName,
     onHit: [
       {
-        amount: { kind: "fixed", expr: { dice: 1, dieSize: 4, flat: 2 } },
+        amount: {
+          kind: "fixed",
+          expr: { dice: PositiveInteger(1), dieSize: 4, flat: Integer(2) },
+        },
         damageType: "piercing",
         kind: "damage",
       },
     ],
-    rangeFeet: { normal: 30, long: 120 },
+    rangeFeet: { normal: PositiveInteger(30), long: PositiveInteger(120) },
   };
 }

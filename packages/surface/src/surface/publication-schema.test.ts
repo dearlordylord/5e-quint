@@ -85,7 +85,7 @@ describe("committed SRD Surface publication", () => {
     );
     const inputs = canonicalVariantInputs(aggregate);
 
-    expect(UNIT_RECORD_MEMBER_SCHEMAS).toHaveLength(43);
+    expect(UNIT_RECORD_MEMBER_SCHEMAS).toHaveLength(42);
     for (const [index, memberSchema] of UNIT_RECORD_MEMBER_SCHEMAS.entries()) {
       const input = inputs.find((candidate) =>
         Schema.is(memberSchema)(candidate),
@@ -96,10 +96,8 @@ describe("committed SRD Surface publication", () => {
       ).toBeDefined();
       if (input === undefined) continue;
 
-      expect(() =>
-        Schema.decodeUnknownSync(UnitRecordSchema)(input),
-      ).not.toThrow();
-      if (index !== 34) {
+      const record = Schema.decodeUnknownSync(UnitRecordSchema)(input);
+      if (record.provenance.kind === "srd-5.2.1") {
         expect(() =>
           Schema.decodeUnknownSync(SrdUnitRecordSchema)(input),
         ).not.toThrow();

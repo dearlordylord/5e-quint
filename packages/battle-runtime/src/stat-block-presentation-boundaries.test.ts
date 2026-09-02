@@ -6,6 +6,7 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus,
+  PositiveInteger,
 } from "@dnd/shared/types";
 
 import {
@@ -86,7 +87,7 @@ describe("battle presentation joins", () => {
       description: "The creature shares a restorative effect.",
       effect: {
         kind: "caster_heal_link" as const,
-        rangeFeet: 30,
+        rangeFeet: PositiveInteger(30),
       },
     };
     const supportedTrait = {
@@ -774,6 +775,47 @@ describe("battle presentation joins", () => {
             presentationKind: "textOnly",
           },
         ],
+      },
+    });
+  });
+
+  test("surfaces missing Stat Block admission for a non-attack subject", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("stat-block-presentation-multiattack-missing"),
+      combatants: [
+        statBlockCreatureInit({
+          statBlock: monsterMultiattackStatBlock(),
+          initiative: 10,
+        }),
+      ],
+    });
+    const actor = session.state.combatants.get(goblinId);
+    if (actor?.origin.kind !== "statBlock") {
+      throw new Error("Expected Multiattack Stat Block actor.");
+    }
+    const multiattackBinding = actor.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "multiattack",
+    );
+    if (multiattackBinding?.procedure.kind !== "multiattack") {
+      throw new Error("Expected admitted Multiattack procedure.");
+    }
+    const sessionWithoutPresentationAdmission = battleRuntimeSessionForTest({
+      state: session.state,
+      context: emptyBattleRuntimeContext(),
+    });
+
+    expect(
+      battleSubjectPresentation(sessionWithoutPresentationAdmission, {
+        tag: "action",
+        actorId: goblinId,
+        action: "multiattack",
+        procedureRef: multiattackBinding.procedureRef,
+      }),
+    ).toEqual({
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockAdmissionMissing",
       },
     });
   });

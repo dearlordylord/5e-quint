@@ -1,4 +1,12 @@
-import { movementFeet } from "@dnd/shared/types";
+import {
+  AbilityScore,
+  DieRollResult,
+  Hp,
+  Integer,
+  movementFeet,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
@@ -11,7 +19,6 @@ import { isDeepStrictEqual } from "node:util";
 import { Result } from "effect";
 import { describe, it } from "vitest";
 
-import { DieRollResult, Hp } from "@dnd/shared/types";
 import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
@@ -493,19 +500,24 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
       size: "medium",
       creatureType: "humanoid",
       alignment: { order: "chaotic", morality: "neutral" },
-      ac: { value: { kind: "literal", value: 12 } },
-      hp: { kind: "literal", value: 12 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      ac: { value: { kind: "literal", value: PositiveInteger(12) } },
+      hp: { kind: "literal", value: PositiveInteger(12) },
+      speeds: [
+        {
+          kind: "walk",
+          feet: { kind: "literal", value: PositiveInteger(30) },
+        },
+      ],
       abilityScores: {
-        cha: 10,
-        con: 10,
-        dex: 10,
-        int: 10,
-        str: 10,
-        wis: 10,
+        cha: AbilityScore.make(10),
+        con: AbilityScore.make(10),
+        dex: AbilityScore.make(10),
+        int: AbilityScore.make(10),
+        str: AbilityScore.make(10),
+        wis: AbilityScore.make(10),
       },
-      initiative: { modifier: 0, score: 10 },
-      passivePerception: 10,
+      initiative: { modifier: Integer(0), score: NonNegativeInteger(10) },
+      passivePerception: NonNegativeInteger(10),
       communication: {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
@@ -518,26 +530,34 @@ function venomDartAttack(): StatBlockAttack {
   return {
     kind: "attack_roll",
     attackAbility: "dex",
-    attackBonus: { kind: "literal", value: 4 },
+    attackBonus: { kind: "literal", value: Integer(4) },
     attackType: "ranged",
     name: multiDamageAttackName,
     onHit: [
       {
         amount: {
           kind: "fixed",
-          expr: { dice: 1, dieSize: 4, flat: 1 },
-          static: 3,
+          expr: {
+            dice: PositiveInteger(1),
+            dieSize: 4,
+            flat: Integer(1),
+          },
+          static: PositiveInteger(3),
         },
         damageType: "piercing",
         kind: "damage",
       },
       {
-        amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 }, static: 3 },
+        amount: {
+          kind: "fixed",
+          expr: { dice: PositiveInteger(1), dieSize: 6 },
+          static: PositiveInteger(3),
+        },
         damageType: "poison",
         kind: "damage",
       },
     ],
-    rangeFeet: { normal: 30, long: 120 },
+    rangeFeet: { normal: PositiveInteger(30), long: PositiveInteger(120) },
   };
 }
 

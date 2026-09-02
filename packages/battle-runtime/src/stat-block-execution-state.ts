@@ -17,7 +17,6 @@ import { Brand } from "effect";
 import * as Result from "effect/Result";
 import * as Match from "effect/Match";
 import type {
-  ChallengeRating,
   CreatureLimitedUse,
   CreatureRechargeMinimumRoll,
   CreatureSense,
@@ -26,14 +25,17 @@ import type {
   CreatureSkillModifier,
   SixAbilityScores,
   StatBlockLiteralValue,
-  StatBlockTextOnlyReason,
   CreatureResistanceList,
   CreatureVulnerabilityList,
+} from "@dnd/surface/surface/types";
+import type {
+  ChallengeRating,
   StatBlockId,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResource,
   StatBlockProcedureResourceOrdinal,
-} from "@dnd/surface/surface/types";
+  StatBlockTextOnlyReason,
+} from "@dnd/surface/surface/stat-block-types";
 import type { Size } from "@dnd/shared/types";
 import type {
   StatBlockAttackActionOption,

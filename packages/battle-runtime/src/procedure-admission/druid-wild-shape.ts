@@ -244,73 +244,116 @@ function isRepresentedDruidWildShapeRoot(
   ) {
     return false;
   }
-  const mechanics = unit.mechanics;
+  return hasRepresentedDruidWildShapeMechanics(unit.mechanics);
+}
+
+function hasRepresentedDruidWildShapeMechanics(
+  mechanics: DruidWildShapeMechanics,
+): boolean {
   return (
     mechanics.resetCadence?.kind === "partial_short_full_long" ||
-    (mechanics.duration?.kind === "timed" &&
-      "kind" in mechanics.duration.value &&
-      mechanics.duration.value.kind ===
-        "half_class_level_rounded_down_hours") ||
-    mechanics.phases.some(
-      (phase) =>
-        phase.kind === "direct" &&
-        phase.effects?.some(
-          (effect) =>
-            effect.kind === "transform_target" &&
-            effect.newForm.kind === "known_forms_roster",
-        ) === true,
-    )
+    hasSupportedDruidWildShapeDuration(mechanics) ||
+    mechanics.phases.some(hasKnownFormsRosterTransform)
+  );
+}
+
+function hasKnownFormsRosterTransform(
+  phase: DruidWildShapeMechanics["phases"][number],
+): boolean {
+  return (
+    phase.kind === "direct" &&
+    phase.effects?.some(
+      (effect) =>
+        effect.kind === "transform_target" &&
+        effect.newForm.kind === "known_forms_roster",
+    ) === true
   );
 }
 
 function druidWildShapeAdmissionIssues(
   mechanics: DruidWildShapeMechanics,
 ): readonly DruidWildShapeProcedureAdmissionIssue[] {
-  const failedFacts: DruidWildShapeFailedFact[] = [];
-  if (!hasSupportedUseCountResource(mechanics)) {
-    failedFacts.push("useCountResource");
-  }
-  if (
-    mechanics.resetCadence?.kind !== "partial_short_full_long" ||
-    mechanics.resetCadence.shortRestRefill !== 1
-  ) {
-    failedFacts.push("resetCadence");
-  }
-  if (mechanics.activationCost.kind !== "bonus_action") {
-    failedFacts.push("activationCost");
-  }
-  if (
-    mechanics.duration?.kind !== "timed" ||
-    !("kind" in mechanics.duration.value) ||
-    mechanics.duration.value.kind !== "half_class_level_rounded_down_hours"
-  ) {
-    failedFacts.push("duration");
-  }
-
   const phase = mechanics.phases[0];
   const directPhase = phase?.kind === "direct" ? phase : undefined;
-  if (
-    mechanics.phases.length !== 1 ||
-    directPhase === undefined ||
-    directPhase.attachment.kind !== "self" ||
-    directPhase.effects?.length !== 2
-  ) {
-    failedFacts.push("activationPhase");
-  }
   const transform = directPhase?.effects?.[0];
-  if (!hasSupportedTransformation(transform)) {
-    failedFacts.push("transformation");
-  }
-  if (!hasSupportedKnownFormRoster(transform)) {
-    failedFacts.push("knownFormRoster");
-  }
-  if (!hasSupportedReversion(transform)) {
-    failedFacts.push("reversion");
-  }
-  if (!hasSupportedTemporaryHitPoints(directPhase?.effects?.[1])) {
-    failedFacts.push("temporaryHitPoints");
-  }
-  return failedFacts.map(druidWildShapeAdmissionIssue);
+  const supportChecks: readonly {
+    readonly failedFact: DruidWildShapeFailedFact;
+    readonly supported: boolean;
+  }[] = [
+    {
+      failedFact: "useCountResource",
+      supported: hasSupportedUseCountResource(mechanics),
+    },
+    {
+      failedFact: "resetCadence",
+      supported: hasSupportedResetCadence(mechanics),
+    },
+    {
+      failedFact: "activationCost",
+      supported: mechanics.activationCost.kind === "bonus_action",
+    },
+    {
+      failedFact: "duration",
+      supported: hasSupportedDruidWildShapeDuration(mechanics),
+    },
+    {
+      failedFact: "activationPhase",
+      supported: hasSupportedActivationPhase(mechanics, directPhase),
+    },
+    {
+      failedFact: "transformation",
+      supported: hasSupportedTransformation(transform),
+    },
+    {
+      failedFact: "knownFormRoster",
+      supported: hasSupportedKnownFormRoster(transform),
+    },
+    {
+      failedFact: "reversion",
+      supported: hasSupportedReversion(transform),
+    },
+    {
+      failedFact: "temporaryHitPoints",
+      supported: hasSupportedTemporaryHitPoints(directPhase?.effects?.[1]),
+    },
+  ];
+  return supportChecks
+    .filter(({ supported }) => !supported)
+    .map(({ failedFact }) => druidWildShapeAdmissionIssue(failedFact));
+}
+
+function hasSupportedResetCadence(mechanics: DruidWildShapeMechanics): boolean {
+  return (
+    mechanics.resetCadence?.kind === "partial_short_full_long" &&
+    mechanics.resetCadence.shortRestRefill === 1
+  );
+}
+
+function hasSupportedDruidWildShapeDuration(
+  mechanics: DruidWildShapeMechanics,
+): boolean {
+  const duration = mechanics.duration;
+  return (
+    duration?.kind === "timed" &&
+    "kind" in duration.value &&
+    duration.value.kind === "half_class_level_rounded_down_hours"
+  );
+}
+
+function hasSupportedActivationPhase(
+  mechanics: DruidWildShapeMechanics,
+  phase:
+    | Extract<
+        DruidWildShapeMechanics["phases"][number],
+        { readonly kind: "direct" }
+      >
+    | undefined,
+): boolean {
+  return (
+    mechanics.phases.length === 1 &&
+    phase?.attachment.kind === "self" &&
+    phase.effects?.length === 2
+  );
 }
 
 function hasSupportedUseCountResource(
@@ -319,13 +362,28 @@ function hasSupportedUseCountResource(
   const resource = mechanics.resource;
   if (
     resource?.kind !== "use_count" ||
-    resource.cap.kind !== "threshold_tiers" ||
-    resource.cap.axis !== "class" ||
-    resource.cap.base !== 2
+    !hasSupportedUseCountCap(resource.cap)
   ) {
     return false;
   }
-  const [levelSix, levelSeventeen, ...additionalTiers] = resource.cap.tiers;
+  return hasSupportedUseCountTiers(resource.cap.tiers);
+}
+
+function hasSupportedUseCountCap(
+  cap: NonNullable<DruidWildShapeMechanics["resource"]>["cap"],
+): cap is Extract<typeof cap, { readonly kind: "threshold_tiers" }> {
+  return (
+    cap.kind === "threshold_tiers" && cap.axis === "class" && cap.base === 2
+  );
+}
+
+function hasSupportedUseCountTiers(
+  tiers: Extract<
+    NonNullable<DruidWildShapeMechanics["resource"]>["cap"],
+    { readonly kind: "threshold_tiers" }
+  >["tiers"],
+): boolean {
+  const [levelSix, levelSeventeen, ...additionalTiers] = tiers;
   return (
     levelSix?.atLevel === 6 &&
     levelSix.value === 3 &&
@@ -389,35 +447,92 @@ function hasSupportedKnownFormRoster(
   ) {
     return false;
   }
-  const roster = transform.newForm;
-  const [levelTwo, levelFour, levelEight, ...additionalChoiceLevels] =
-    roster.knownForms.kind === "class_level_total_choices"
-      ? roster.knownForms.levels
-      : [];
-  const [challengeLevelFour, challengeLevelEight, ...additionalChallengeTiers] =
-    roster.maxChallengeRating.kind === "threshold_tiers"
-      ? roster.maxChallengeRating.tiers
-      : [];
+  return hasSupportedKnownFormRosterShape(transform.newForm);
+}
+
+type KnownFormsRoster = Extract<
+  StatBlockTransformTargetEffect["newForm"],
+  { readonly kind: "known_forms_roster" }
+>;
+
+function hasSupportedKnownFormRosterShape(roster: KnownFormsRoster): boolean {
   return (
     roster.creatureType === "beast" &&
+    hasSupportedKnownFormFlySpeed(roster) &&
+    hasSupportedKnownFormChoices(roster) &&
+    hasSupportedKnownFormChallengeRating(roster) &&
+    hasSupportedKnownFormChange(roster)
+  );
+}
+
+function hasSupportedKnownFormFlySpeed(roster: KnownFormsRoster): boolean {
+  return (
     roster.flySpeed.kind === "allowed_at_class_level" &&
-    roster.flySpeed.atLevel === 8 &&
-    roster.knownForms.kind === "class_level_total_choices" &&
-    levelTwo?.atLevel === 2 &&
-    levelTwo.total === 4 &&
-    levelFour?.atLevel === 4 &&
-    levelFour.total === 6 &&
-    levelEight?.atLevel === 8 &&
-    levelEight.total === 8 &&
-    additionalChoiceLevels.length === 0 &&
-    roster.maxChallengeRating.kind === "threshold_tiers" &&
-    roster.maxChallengeRating.axis === "class" &&
-    roster.maxChallengeRating.base === 0.25 &&
-    challengeLevelFour?.atLevel === 4 &&
-    challengeLevelFour.value === 0.5 &&
-    challengeLevelEight?.atLevel === 8 &&
-    challengeLevelEight.value === 1 &&
-    additionalChallengeTiers.length === 0 &&
+    roster.flySpeed.atLevel === 8
+  );
+}
+
+function hasSupportedKnownFormChoices(roster: KnownFormsRoster): boolean {
+  if (roster.knownForms.kind !== "class_level_total_choices") return false;
+  const levels = roster.knownForms.levels;
+  return (
+    levels.length === 3 &&
+    hasLevelTwoKnownFormChoice(levels[0]) &&
+    hasLevelFourKnownFormChoice(levels[1]) &&
+    hasLevelEightKnownFormChoice(levels[2])
+  );
+}
+
+type KnownFormChoiceLevel =
+  | Extract<
+      KnownFormsRoster["knownForms"],
+      { readonly kind: "class_level_total_choices" }
+    >["levels"][number]
+  | undefined;
+
+function hasLevelTwoKnownFormChoice(level: KnownFormChoiceLevel): boolean {
+  return level?.atLevel === 2 && level.total === 4;
+}
+
+function hasLevelFourKnownFormChoice(level: KnownFormChoiceLevel): boolean {
+  return level?.atLevel === 4 && level.total === 6;
+}
+
+function hasLevelEightKnownFormChoice(level: KnownFormChoiceLevel): boolean {
+  return level?.atLevel === 8 && level.total === 8;
+}
+
+function hasSupportedKnownFormChallengeRating(
+  roster: KnownFormsRoster,
+): boolean {
+  const challengeRating = roster.maxChallengeRating;
+  if (challengeRating.kind !== "threshold_tiers") return false;
+  return (
+    challengeRating.axis === "class" &&
+    challengeRating.base === 0.25 &&
+    challengeRating.tiers.length === 2 &&
+    hasLevelFourChallengeRatingTier(challengeRating.tiers[0]) &&
+    hasLevelEightChallengeRatingTier(challengeRating.tiers[1])
+  );
+}
+
+type ChallengeRatingTier =
+  | Extract<
+      KnownFormsRoster["maxChallengeRating"],
+      { readonly kind: "threshold_tiers" }
+    >["tiers"][number]
+  | undefined;
+
+function hasLevelFourChallengeRatingTier(tier: ChallengeRatingTier): boolean {
+  return tier?.atLevel === 4 && tier.value === 0.5;
+}
+
+function hasLevelEightChallengeRatingTier(tier: ChallengeRatingTier): boolean {
+  return tier?.atLevel === 8 && tier.value === 1;
+}
+
+function hasSupportedKnownFormChange(roster: KnownFormsRoster): boolean {
+  return (
     roster.knownFormChange.kind === "long_rest" &&
     roster.knownFormChange.replacementCount === 1
   );
@@ -459,17 +574,38 @@ function hasSupportedTemporaryHitPoints(
   return (
     amount.kind === "linear_per_level" &&
     amount.axis === "class" &&
-    amount.base.dice === 0 &&
-    amount.base.dieSize === 1 &&
-    amount.base.flat === 1 &&
-    amount.base.spellcastingMod === undefined &&
-    amount.base.abilityModifier === undefined &&
-    amount.perLevel.dice === undefined &&
-    amount.perLevel.dieSize === undefined &&
-    amount.perLevel.flat === 1 &&
+    hasSupportedTemporaryHitPointBase(amount.base) &&
+    hasSupportedTemporaryHitPointsPerLevel(amount.perLevel) &&
     amount.startingAtLevel === 1
   );
 }
+
+function hasSupportedTemporaryHitPointBase(
+  base: LinearPerLevelTemporaryHitPointAmount["base"],
+): boolean {
+  return (
+    base.dice === 0 &&
+    base.dieSize === 1 &&
+    base.flat === 1 &&
+    base.spellcastingMod === undefined &&
+    base.abilityModifier === undefined
+  );
+}
+
+function hasSupportedTemporaryHitPointsPerLevel(
+  perLevel: LinearPerLevelTemporaryHitPointAmount["perLevel"],
+): boolean {
+  return (
+    perLevel.dice === undefined &&
+    perLevel.dieSize === undefined &&
+    perLevel.flat === 1
+  );
+}
+
+type LinearPerLevelTemporaryHitPointAmount = Extract<
+  Extract<DruidWildShapeEffect, { readonly kind: "grant_temp_hp" }>["amount"],
+  { readonly kind: "linear_per_level" }
+>;
 
 function druidWildShapeAdmissionIssue(
   failedFact: DruidWildShapeFailedFact,

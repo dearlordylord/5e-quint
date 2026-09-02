@@ -20,6 +20,10 @@ import * as Option from "effect/Option";
 import { Match } from "effect";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  BattleStartInput,
+  StartBattle,
+} from "../battle-start-protocol.ts";
 import {
   projectAuthoredStatBlockBattleInit,
   type AuthoredStatBlockBattleInitInput,
@@ -44,7 +48,7 @@ import {
   battleExecutionScopeOrdinal,
 } from "../identity.ts";
 import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
-import { battleStatBlockProjectionFailureMessage } from "../stat-block-authored-projection.ts";
+import { battleStatBlockProjectionFailureMessage } from "../stat-block-projection-failure.ts";
 
 import {
   characterUnitProcedureBindings,
@@ -67,6 +71,7 @@ import {
   battleStateInitIssue,
   battleStateInitIssueMessage,
   battleStateInitIssues,
+  duplicateCombatantIdIssue,
 } from "./domain-helpers.ts";
 
 import { removeBattleCombatants } from "./combatant-removal.ts";
@@ -79,7 +84,6 @@ import type {
   BattleInitializationIssueFacts,
   BattleInitializationLeafIssue,
   BattleExecutionScopeAllocation,
-  BattleHidePrerequisite,
   BattleState,
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
@@ -592,15 +596,7 @@ export function battleInitializationIssueFactFields(
 
 export type InitialInitiativeSetup = InitialInitiativeSetupWorkflow;
 
-export type BattleStartInput = {
-  readonly battleId: BattleId;
-  readonly combatants: readonly BattleCreatureInit[];
-  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
-  readonly ownerPathForCombatant?: (
-    combatant: BattleCreatureInit,
-    index: number,
-  ) => readonly (string | number)[];
-};
+export type { BattleStartInput } from "../battle-start-protocol.ts";
 
 export function startBattleWithInitialInitiativeSetup(
   input: BattleStartInput,
@@ -687,14 +683,7 @@ function appendDuplicateCombatantIssue(
   accumulator.seenCombatantIds.add(combatant.combatantId);
   if (!duplicate) return false;
   accumulator.initializationIssues.push(
-    battleInitializationIssue(
-      {
-        kind: "duplicateCombatantId",
-        combatantId: combatant.combatantId,
-      },
-      `Duplicate combatant id: ${combatant.combatantId}`,
-      ownerPath,
-    ),
+    duplicateCombatantIdIssue(combatant.combatantId, ownerPath),
   );
   return true;
 }
@@ -1070,9 +1059,7 @@ function initializeCharacterBattleExecutions(input: {
   return combatantsWithCharacterExecutions;
 }
 
-export function startBattle(
-  input: BattleStartInput,
-): Result.Result<BattleRuntimeSession, BattleInitializationIssue> {
+export const startBattle: StartBattle = (input) => {
   if (input.combatants.length === 0) {
     return Result.fail(
       battleInitializationIssue(
@@ -1110,7 +1097,7 @@ export function startBattle(
       ),
     ),
   );
-}
+};
 
 function ownerPathForAdmittedCombatant(
   input: BattleStartInput,
@@ -1399,9 +1386,7 @@ function admitBattleCombatant(
   BattleStateInitIssue
 > {
   if (input.state.combatants.has(input.combatant.combatantId)) {
-    return battleStateInitIssue(
-      `Duplicate combatant id: ${input.combatant.combatantId}`,
-    );
+    return Result.fail(duplicateCombatantIdIssue(input.combatant.combatantId));
   }
   const positiveHpUnconsciousIssue = positiveHpUnconsciousInitIssue(
     input.combatant,

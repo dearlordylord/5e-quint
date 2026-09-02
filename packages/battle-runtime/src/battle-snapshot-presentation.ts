@@ -36,42 +36,100 @@ import {
   BattleInterruptProcedureChoiceWithSubjectSchema,
   BattleInterruptProcedureModifierChoiceSchema,
   BattlePresentedSnapshotSchema,
+  portableCodec,
 } from "./battle-reducer/battle-codecs.ts";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
 
-const BattleAvailableActSchema = Schema.Struct({
+type BattleAvailableActCodec = Schema.Struct<
+  typeof BattleActDiscoveryCandidateSchema.fields & {
+    readonly label: typeof NonEmptyTrimmedStringSchema;
+    readonly summary: typeof NonEmptyTrimmedStringSchema;
+    readonly presentation: typeof BattleActPresentationSchema;
+  }
+>;
+
+const BattleAvailableActSchema: BattleAvailableActCodec = Schema.Struct({
   ...BattleActDiscoveryCandidateSchema.fields,
   label: NonEmptyTrimmedStringSchema,
   summary: NonEmptyTrimmedStringSchema,
   presentation: BattleActPresentationSchema,
 });
 
-const BattlePresentedInterruptChoiceSchema = Schema.Union([
-  Schema.Struct({ choice: BattleInterruptProcedureModifierChoiceSchema }),
-  Schema.Struct({
-    choice: BattleInterruptProcedureChoiceWithSubjectSchema,
-    presentation: BattleActPresentationSchema,
-  }),
-]);
+type BattlePresentedInterruptModifierChoiceCodec = Schema.Struct<{
+  readonly choice: typeof BattleInterruptProcedureModifierChoiceSchema;
+}>;
+type BattlePresentedInterruptProcedureChoiceCodec = Schema.Struct<{
+  readonly choice: typeof BattleInterruptProcedureChoiceWithSubjectSchema;
+  readonly presentation: typeof BattleActPresentationSchema;
+}>;
+type BattlePresentedInterruptChoiceCodec = Schema.Union<
+  readonly [
+    BattlePresentedInterruptModifierChoiceCodec,
+    BattlePresentedInterruptProcedureChoiceCodec,
+  ]
+>;
 
-export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
-  checkpoint: BattlePresentedSnapshotSchema,
-  frontier: Schema.Union([
+const BattlePresentedInterruptChoiceSchema: BattlePresentedInterruptChoiceCodec =
+  Schema.Union([
+    Schema.Struct({ choice: BattleInterruptProcedureModifierChoiceSchema }),
     Schema.Struct({
-      kind: Schema.Literal("acts"),
-      acts: Schema.Array(BattleAvailableActSchema),
+      choice: BattleInterruptProcedureChoiceWithSubjectSchema,
+      presentation: BattleActPresentationSchema,
     }),
-    BattleCheckpointFrontierHolesSchema,
-    Schema.Struct({
-      ...BattleInterruptDecisionFrontierSchema.fields,
-      choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
+  ]);
+
+type BattlePresentedCheckpointFrontierCodec = Schema.Union<
+  readonly [
+    Schema.Struct<{
+      readonly kind: Schema.Literal<"acts">;
+      readonly acts: Schema.$Array<typeof BattleAvailableActSchema>;
+    }>,
+    typeof BattleCheckpointFrontierHolesSchema,
+    Schema.Struct<
+      Omit<typeof BattleInterruptDecisionFrontierSchema.fields, "choices"> & {
+        readonly choices: Schema.NonEmptyArray<
+          typeof BattlePresentedInterruptChoiceSchema
+        >;
+      }
+    >,
+  ]
+>;
+
+type BattlePresentedCheckpointFrontierEnvelopeCodec = Schema.Struct<{
+  readonly checkpoint: typeof BattlePresentedSnapshotSchema;
+  readonly frontier: BattlePresentedCheckpointFrontierCodec;
+}>;
+
+export const BattlePresentedCheckpointFrontierEnvelopeSchema: Schema.Codec<
+  BattlePresentedCheckpointFrontierEnvelope,
+  Schema.Codec.Encoded<BattlePresentedCheckpointFrontierEnvelopeCodec>,
+  never,
+  never
+> = portableCodec<
+  BattlePresentedCheckpointFrontierEnvelope,
+  Schema.Codec.Encoded<BattlePresentedCheckpointFrontierEnvelopeCodec>
+>()(
+  Schema.Struct({
+    checkpoint: BattlePresentedSnapshotSchema,
+    frontier: Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("acts"),
+        acts: Schema.Array(BattleAvailableActSchema),
+      }),
+      BattleCheckpointFrontierHolesSchema,
+      Schema.Struct({
+        ...BattleInterruptDecisionFrontierSchema.fields,
+        choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
+      }),
+    ]),
+  }).pipe(
+    Schema.annotate({
+      identifier: "BattlePresentedCheckpointFrontierEnvelope",
     }),
-  ]),
-}).pipe(
-  Schema.annotate({ identifier: "BattlePresentedCheckpointFrontierEnvelope" }),
+  ),
 );
 
 export type BattlePresentedInterruptChoice =

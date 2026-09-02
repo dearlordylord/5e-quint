@@ -1,8 +1,5 @@
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-  type SrdStatBlockCatalog,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { SrdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -72,24 +69,12 @@ export function createMcpApplicationServices(
     );
   }
 
-  const statBlockCatalog = buildStatBlockCatalog({
-    collections: [srdStatBlockCollection],
-  });
-  if (statBlockCatalog.tag === "invalid") {
-    throw new Error(
-      `Invalid SRD Stat Block catalog for MCP application services: ${JSON.stringify(
-        statBlockCatalog.issues,
-      )}`,
-    );
-  }
-
   const adminMirror = adminMirrorConfigurationFromEnv();
   return {
     unitLibrary: unitCatalog.catalog,
-    statBlockCatalog: statBlockCatalog.catalog,
-    battleStatBlockExecutionCatalog: battleStatBlockExecutionCatalog(
-      statBlockCatalog.catalog,
-    ),
+    statBlockCatalog: srdStatBlockCatalog,
+    battleStatBlockExecutionCatalog:
+      battleStatBlockExecutionCatalog(srdStatBlockCatalog),
     createAdminMirrorPublication: adminMirror.create,
     configuredAdminMirrorSessionId: adminMirror.sessionId,
     characterCreationSupportProfile:

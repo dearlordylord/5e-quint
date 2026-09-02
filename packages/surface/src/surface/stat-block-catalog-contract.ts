@@ -1,6 +1,6 @@
 import type * as Option from "effect/Option";
 
-import type { StatBlockRecord } from "./types.ts";
+import type { StatBlockRecord } from "./stat-block-types.ts";
 
 export type StatBlockId = StatBlockRecord["id"];
 

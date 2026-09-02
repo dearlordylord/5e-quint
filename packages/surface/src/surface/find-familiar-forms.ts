@@ -7,7 +7,8 @@ import {
   StatBlockId,
 } from "@dnd/shared/game-facts";
 import type { StatBlockCatalog } from "./stat-block-catalog-contract.ts";
-import type { SpellRecord, StatBlockRecord } from "./types.ts";
+import type { StatBlockRecord } from "./stat-block-types.ts";
+import type { SpellRecord } from "./types.ts";
 
 export {
   SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,

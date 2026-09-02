@@ -426,7 +426,7 @@ function translatingPersistentAreaSaveLimitIsSupported(
     operations.enter?.operation.usageLimit,
     operations.endTurn?.operation.usageLimit,
   ]);
-  return saveLimitGroup !== null && saveLimitGroup.length > 0;
+  return saveLimitGroup !== null;
 }
 
 function translatingPersistentAreaOperationPath(

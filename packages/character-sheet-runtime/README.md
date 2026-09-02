@@ -1,5 +1,10 @@
 # @dnd/character-sheet-runtime
 
+The package root is the complete application-facing API. The
+`@dnd/character-sheet-runtime/consumer-protocol` subpath is the narrower
+composition and external-consumer contract; the root derives those same
+exports from that single protocol owner.
+
 Local Character Sheet runtime for player-character in-play state.
 
 `CharacterBuild` remains the durable build/progression boundary owned by

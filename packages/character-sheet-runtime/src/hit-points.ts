@@ -5,7 +5,7 @@ import {
   type CharacterBuild,
   type CharacterBuildProjectionIssue,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   STABLE_RECOVERY_ROLL_DICE_EXPR,
   advanceStableRecovery,

@@ -1,14 +1,13 @@
-/**
- * The publication checker observes every canonical Surface record family.
- * Stat-block parity is a projection of this observation, not the owner of the
- * publication relationship.
- */
-
-export const SURFACE_PUBLICATION_RECORD_KINDS = [
+const SURFACE_PUBLICATION_RECORD_KINDS = [
   "statBlock",
   "other",
   "unknown",
 ] as const;
+const [
+  STAT_BLOCK_PUBLICATION_RECORD_KIND,
+  OTHER_PUBLICATION_RECORD_KIND,
+  UNKNOWN_PUBLICATION_RECORD_KIND,
+] = SURFACE_PUBLICATION_RECORD_KINDS;
 
 export type SurfacePublicationRecordKind =
   (typeof SURFACE_PUBLICATION_RECORD_KINDS)[number];
@@ -96,5 +95,17 @@ export type SrdStatBlockPeerObservation =
 export function projectSrdStatBlockPeerObservation(
   observation: SurfacePublicationPeerObservation,
 ): SrdStatBlockPeerObservation | undefined {
-  return observation.recordKind === "statBlock" ? observation : undefined;
+  return Match.value(observation).pipe(
+    Match.when(
+      { recordKind: STAT_BLOCK_PUBLICATION_RECORD_KIND },
+      (statBlock) => statBlock,
+    ),
+    Match.when({ recordKind: OTHER_PUBLICATION_RECORD_KIND }, () => undefined),
+    Match.when(
+      { recordKind: UNKNOWN_PUBLICATION_RECORD_KIND },
+      () => undefined,
+    ),
+    Match.exhaustive,
+  );
 }
+import { Match } from "effect";

@@ -67,10 +67,8 @@ import {
   PositiveInteger,
   movementFeet,
 } from "@dnd/shared/types";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -709,7 +707,7 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
       authoredUnitId("weapon_longsword"),
       authoredUnitId("weapon_spear"),
       authoredUnitId("weapon_flail"),
-      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_greataxe"),
     ];
   }
 

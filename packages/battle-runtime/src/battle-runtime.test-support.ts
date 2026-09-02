@@ -93,10 +93,8 @@ import {
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   AreaDirectEffectAtom,
   AuthoredExecutableProcedure,
@@ -207,8 +205,13 @@ import {
 import {
   admitCharacterWeaponAttackExecutionWeapon,
   admitResolvedCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";
-import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
+import { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
+import {
+  characterBattleCreatureInitWeaponAttack,
+  type CharacterBattleCreatureInitWeaponAttack,
+} from "./battle-init.ts";
 import {
   attackExecutionSelectionForOption,
   type CharacterAttackExecutionSelection,
@@ -3654,6 +3657,43 @@ export function rolledDiceGroup(
   };
 }
 
+function admitSelectedWeaponMasteryForCharacterSeed(
+  attack: CharacterBattleCreatureInitWeaponAttack,
+  weaponMasteries: Extract<
+    CharacterBattleCombatantInit["creatureInit"],
+    { readonly kind: "character" }
+  >["weaponMasteries"],
+): CharacterBattleCreatureInitWeaponAttack {
+  if (
+    "masteryProperty" in attack.weapon ||
+    !weaponMasteryIsSelectedForWeapon(
+      attack.weapon.weaponUnitId,
+      weaponMasteries,
+    )
+  ) {
+    return attack;
+  }
+  const weapon = unitLibrary.requireUnit(attack.weapon.weaponUnitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(
+      `Expected selected weapon Unit ${attack.weapon.weaponUnitId}.`,
+    );
+  }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(weapon, unitLibrary),
+  );
+  const weaponExecution = Result.getOrThrow(
+    admitResolvedCharacterWeaponExecutionWeapon(resolution),
+  );
+  return {
+    ...attack,
+    weapon: {
+      ...attack.weapon,
+      masteryProperty: weaponExecution.masteryProperty,
+    },
+  };
+}
+
 export function characterSeed(input: {
   readonly combatantId?: CombatantId;
   readonly displayName?: string;
@@ -3769,8 +3809,22 @@ export function characterSeed(input: {
           : testCharacterWeaponAttackForUnit(selectedLoadout.weapon.unitId)
         : testLongswordAttack()
       : input.attack;
+  const weaponMasteries = input.weaponMasteries ?? [];
+  const admittedAttack =
+    attack === null
+      ? null
+      : admitSelectedWeaponMasteryForCharacterSeed(attack, weaponMasteries);
   const initAttack =
-    attack === null ? null : characterBattleCreatureInitWeaponAttack(attack);
+    admittedAttack === null
+      ? null
+      : characterBattleCreatureInitWeaponAttack(admittedAttack);
+  const admittedOffHandAttack =
+    input.offHandAttack === undefined
+      ? undefined
+      : admitSelectedWeaponMasteryForCharacterSeed(
+          input.offHandAttack,
+          weaponMasteries,
+        );
   const classLevels = input.classLevels ?? [
     {
       className:
@@ -3894,14 +3948,14 @@ export function characterSeed(input: {
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
-      weaponMasteries: input.weaponMasteries ?? [],
+      weaponMasteries,
       attack: initAttack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
-      ...(input.offHandAttack === undefined
+      ...(admittedOffHandAttack === undefined
         ? {}
         : {
             offHandAttack: characterBattleCreatureInitWeaponAttack(
-              input.offHandAttack,
+              admittedOffHandAttack,
             ),
           }),
       ...(input.unitFeatures === undefined
@@ -4414,11 +4468,11 @@ export function monsterResourceStatBlock(): StatBlockRecord {
         {
           ordinal: testStatBlockResourceOrdinal(2),
           ownership: "each",
-          limit: { kind: "daily", uses: 1 },
+          limit: { kind: "daily", uses: PositiveInteger(1) },
         },
       ],
       legendaryActions: {
-        uses: { kind: "fixed", uses: 2 },
+        uses: { kind: "fixed", uses: PositiveInteger(2) },
         entries: [
           renamedAttackProcedureEntry({
             entry: scimitar,
@@ -4552,14 +4606,14 @@ export function monsterMultiattackStatBlock(input?: {
                 procedureOrdinal: scimitar.procedureOrdinal,
                 count: {
                   kind: "literal",
-                  value: input?.scimitarCount ?? 2,
+                  value: PositiveInteger(input?.scimitarCount ?? 2),
                 },
               },
               {
                 procedureOrdinal: shortbow.procedureOrdinal,
                 count: {
                   kind: "literal",
-                  value: input?.shortbowCount ?? 1,
+                  value: PositiveInteger(input?.shortbowCount ?? 1),
                 },
               },
             ],
@@ -5179,14 +5233,19 @@ export function goblinAttacksReactionModifierCharacter(input: {
         ...(input.resources === undefined
           ? {}
           : { resources: input.resources }),
-        unitFeatures: [
-          characterBattleFeatureInitForTest(
-            input.unit,
-            parseCharacterBattleClassLevelsRight([
-              { className: input.className, level: input.level },
-            ]),
-          ),
-        ],
+        ...(input.resources?.some(({ unit }) => unit.id === input.unit.id) ===
+        true
+          ? {}
+          : {
+              unitFeatures: [
+                characterBattleFeatureInitForTest(
+                  input.unit,
+                  parseCharacterBattleClassLevelsRight([
+                    { className: input.className, level: input.level },
+                  ]),
+                ),
+              ],
+            }),
         characterUnitRefs: [
           {
             unit: input.unit,

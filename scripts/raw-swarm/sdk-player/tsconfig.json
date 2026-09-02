@@ -13,7 +13,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "ESNext.Disposable", "DOM", "DOM.Iterable"],
     "types": ["node"],
     "paths": {
       "@dnd/player-sdk": ["./consumer-entry.ts"],
@@ -38,7 +38,7 @@
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUnusedLocals": true,

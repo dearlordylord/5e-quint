@@ -5,10 +5,8 @@ import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";

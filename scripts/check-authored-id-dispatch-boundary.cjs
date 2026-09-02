@@ -1508,17 +1508,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
   ...exactCollisionsAt(
     "fly",
-    "packages/battle-runtime/src/druid-wild-shape-form-eligibility.ts",
-    [
-      {
-        identifier: "statBlockHasPotentialFlySpeed",
-        roles: ["declaration-identifier"],
-      },
-    ],
-    "fly names the generic creature movement mode",
-  ),
-  ...exactCollisionsAt(
-    "fly",
     "packages/battle-runtime/src/stat-block-authored-projection.ts",
     [{ identifier: "fly", roles: ["discriminant-literal"] }],
     "fly names the authored Stat Block movement mode at projection",
@@ -1667,9 +1656,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "b41864844453571868ca9e4da4caa933df08b086afa8f3e482e06ff943d8788d",
-  siteCount: 1308,
-  violationCount: 1418,
+  sha256: "4287360ffe74985d9814f6df3a0d1856e224d013331d9e372507d813e07398df",
+  siteCount: 1315,
+  violationCount: 1425,
 };
 
 function escapeForRegExp(text) {

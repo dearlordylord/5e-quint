@@ -42,6 +42,8 @@
     [ { description =
           "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
       , name = "Pack Tactics"
+      , effect.kind =
+          "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
       }
     ]
   }

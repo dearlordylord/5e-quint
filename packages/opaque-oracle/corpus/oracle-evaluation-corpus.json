@@ -89,7 +89,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -296,7 +296,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -477,7 +477,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -664,7 +664,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -848,7 +848,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -1049,7 +1049,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -1259,7 +1259,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -1470,7 +1470,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -1588,6 +1588,15 @@
                     "provokedOpportunityAttacks": [
                       {
                         "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                        "statBlockDamageSelection": [
+                          {
+                            "componentRef": {
+                              "kind": "baseDamageComponent",
+                              "ordinal": 1
+                            },
+                            "notation": "rolled"
+                          }
+                        ],
                         "reactorId": "corpus:stat-block-b",
                         "distanceFeet": 5
                       }
@@ -1698,7 +1707,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -1924,7 +1933,7 @@
                 "kind": "choice",
                 "holeId": "cc:unit-source:u:24:barbarian_weapon_mastery:c:weapon_mastery_options",
                 "optionIds": [
-                  "weapon_dagger",
+                  "weapon_greataxe",
                   "weapon_longsword"
                 ]
               }
@@ -7399,7 +7408,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -7516,21 +7525,46 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "attack",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "rolled"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
@@ -13577,7 +13611,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -13694,21 +13728,46 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "attack",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "rolled"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-combatant\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
@@ -19139,7 +19198,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -19314,14 +19373,6 @@
                   {
                     "tag": "actionSpell",
                     "actorId": "corpus:character",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":4}",
-                    "mode": {
-                      "tag": "cast"
-                    }
-                  },
-                  {
-                    "tag": "actionSpell",
-                    "actorId": "corpus:character",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":5}",
                     "mode": {
                       "tag": "cast"
@@ -19331,6 +19382,14 @@
                     "tag": "actionSpell",
                     "actorId": "corpus:character",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":6}",
+                    "mode": {
+                      "tag": "cast"
+                    }
+                  },
+                  {
+                    "tag": "actionSpell",
+                    "actorId": "corpus:character",
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":7}",
                     "mode": {
                       "tag": "cast"
                     }
@@ -24753,7 +24812,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -30220,7 +30279,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -30352,21 +30411,46 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "rolled"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
@@ -35880,7 +35964,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -36012,21 +36096,46 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "rolled"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
@@ -41542,7 +41651,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -41674,21 +41783,46 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "rolled"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
@@ -41781,21 +41915,46 @@
                           "tag": "action",
                           "actorId": "corpus:stat-block-a",
                           "action": "attack",
-                          "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                          "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                          "statBlockDamageSelection": [
+                            {
+                              "componentRef": {
+                                "kind": "baseDamageComponent",
+                                "ordinal": 1
+                              },
+                              "notation": "rolled"
+                            }
+                          ]
                         },
                         {
                           "tag": "action",
                           "actorId": "corpus:stat-block-a",
                           "action": "attack",
                           "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                          "statBlockDamageNotation": "static"
+                          "statBlockDamageSelection": [
+                            {
+                              "componentRef": {
+                                "kind": "baseDamageComponent",
+                                "ordinal": 1
+                              },
+                              "notation": "static"
+                            }
+                          ]
                         },
                         {
                           "tag": "action",
                           "actorId": "corpus:stat-block-a",
                           "action": "attack",
                           "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                          "statBlockDamageNotation": "static"
+                          "statBlockDamageSelection": [
+                            {
+                              "componentRef": {
+                                "kind": "baseDamageComponent",
+                                "ordinal": 1
+                              },
+                              "notation": "static"
+                            }
+                          ]
                         },
                         {
                           "tag": "action",
@@ -47244,7 +47403,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -47376,21 +47535,46 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
-                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "rolled"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
                     "actorId": "corpus:stat-block-a",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                    "statBlockDamageNotation": "static"
+                    "statBlockDamageSelection": [
+                      {
+                        "componentRef": {
+                          "kind": "baseDamageComponent",
+                          "ordinal": 1
+                        },
+                        "notation": "static"
+                      }
+                    ]
                   },
                   {
                     "tag": "action",
@@ -47492,6 +47676,15 @@
                           "kind": "nestedProcedure",
                           "subject": {
                             "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                            "statBlockDamageSelection": [
+                              {
+                                "componentRef": {
+                                  "kind": "baseDamageComponent",
+                                  "ordinal": 1
+                                },
+                                "notation": "rolled"
+                              }
+                            ],
                             "tag": "runtimeCommand",
                             "actorId": "corpus:stat-block-a",
                             "command": "opportunityAttack",
@@ -47551,21 +47744,46 @@
                                 "tag": "action",
                                 "actorId": "corpus:stat-block-a",
                                 "action": "attack",
-                                "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                                "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                                "statBlockDamageSelection": [
+                                  {
+                                    "componentRef": {
+                                      "kind": "baseDamageComponent",
+                                      "ordinal": 1
+                                    },
+                                    "notation": "rolled"
+                                  }
+                                ]
                               },
                               {
                                 "tag": "action",
                                 "actorId": "corpus:stat-block-a",
                                 "action": "attack",
                                 "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
-                                "statBlockDamageNotation": "static"
+                                "statBlockDamageSelection": [
+                                  {
+                                    "componentRef": {
+                                      "kind": "baseDamageComponent",
+                                      "ordinal": 1
+                                    },
+                                    "notation": "static"
+                                  }
+                                ]
                               },
                               {
                                 "tag": "action",
                                 "actorId": "corpus:stat-block-a",
                                 "action": "attack",
                                 "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-a\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":2}",
-                                "statBlockDamageNotation": "static"
+                                "statBlockDamageSelection": [
+                                  {
+                                    "componentRef": {
+                                      "kind": "baseDamageComponent",
+                                      "ordinal": 1
+                                    },
+                                    "notation": "static"
+                                  }
+                                ]
                               },
                               {
                                 "tag": "action",
@@ -53017,7 +53235,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",
@@ -59101,7 +59319,7 @@
               {
                 "kind": "selectedClassChoice",
                 "selectedFromUnitId": "barbarian_weapon_mastery",
-                "unitId": "weapon_dagger"
+                "unitId": "weapon_greataxe"
               },
               {
                 "kind": "selectedClassChoice",

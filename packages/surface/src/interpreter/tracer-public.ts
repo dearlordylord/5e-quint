@@ -1,8 +1,8 @@
+import type { UnitRecord } from "../surface/types.ts";
 import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
-  UnitRecord,
-} from "../surface/types.ts";
+} from "../surface/stat-block-types.ts";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import { Match } from "effect";
 

@@ -1,5 +1,6 @@
+export * from "./consumer-protocol.ts";
+
 export {
-  createFreshCharacterSheet,
   parseFreshCharacterSheet,
   parseCharacterSheet,
   rebuildCharacterSheet,
@@ -8,7 +9,6 @@ export {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssueSchema,
   CharacterSheetConstructionIssuesSchema,
-  characterSheetConstructionIssuesSummary,
   freshCharacterSheetProjection,
   isFreshSpellcastingCharacterSheet,
 } from "./fresh-character-sheet.ts";
@@ -24,9 +24,9 @@ export {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
   CharacterSheetIdSchema,
+  CharacterSheetIssueSchema,
   CharacterSheetRetainedCompanionId,
   characterSheetIssue,
-  characterSheetId,
   parseCharacterSheetRetainedCompanionId,
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
@@ -43,8 +43,6 @@ export {
 export {
   characterSheetArmorClass,
   characterSheetArmorClassProjection,
-  characterSheetArmorClassState,
-  characterSheetUnarmoredArmorClassBase,
 } from "./armor-class.ts";
 export { projectCharacterSheetEquipmentDefinition } from "./equipment-definition-projection.ts";
 export type {
@@ -94,7 +92,6 @@ export {
 export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetClassFeatureSelectedReferenceProjection,
-  characterSheetSpellAccessesForBuild,
 } from "./class-feature-spells.ts";
 export {
   characterSheetDruidCircleLandPreparedSpellAccess,
@@ -150,7 +147,6 @@ export {
   characterBuildHasSpellbookSpell,
   characterSheetSpellInvocation,
   characterSheetSpellbookRitualAccess,
-  characterSheetSpellbookRitualAccessesForBuild,
   characterSheetSpellbookRitualInvocationProjection,
 } from "./spell-invocation.ts";
 export {
@@ -166,7 +162,6 @@ export { timePassed } from "./time-passage.ts";
 export type {
   CharacterPactSlotExpenditure,
   CharacterSheetConstructionIssue,
-  CharacterSheet,
   CharacterSheetAbilityCheckAbility,
   CharacterSheetAbilityCheckAbilityInput,
   CharacterSheetAbilityCheckAbilitySubstitution,
@@ -175,7 +170,6 @@ export type {
   CharacterSheetAbilityCheckProficiencyBonusInput,
   CharacterSheetArcaneRecoverySlotRefund,
   CharacterSheetArcaneRecoveryRestRouteResult,
-  CharacterSheetArmorClassBaseChoice,
   CharacterSheetArmorClassProjection,
   CharacterSheetArmorClassProjectionRoute,
   CharacterSheetArmorClassStateInput,
@@ -246,7 +240,6 @@ export type {
   CharacterSheetRetainedCompanionProtocolTag,
   CharacterSheetRetainedCompanionResolvedFormProof,
   CharacterSheetRetainedCompanionState,
-  CharacterSheetResourceExpenditure,
   CharacterSheetResourceState,
   CharacterSheetSpellAccess,
   CharacterSheetSpellAccessFreeCastExpenditure,
@@ -297,7 +290,6 @@ export type {
   CharacterSpellSlotExpenditure,
 } from "./sheet-types.ts";
 export type {
-  FreshCharacterSheet,
   FreshNonSpellcastingCharacterSheet,
   FreshCharacterSheetProjection,
   FreshSpellcastingCharacterSheet,

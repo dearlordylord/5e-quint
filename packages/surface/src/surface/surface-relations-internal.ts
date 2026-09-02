@@ -10,7 +10,8 @@ import {
   type SurfaceSchemaFieldRole,
 } from "./schema-base.ts";
 import { StatBlockRecordSchema, UnitRecordSchema } from "./schema.ts";
-import type { SrdSurface, StatBlockRecord, UnitRecord } from "./types.ts";
+import type { StatBlockRecord } from "./stat-block-types.ts";
+import type { SrdSurface, UnitRecord } from "./types.ts";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 
 /** Family-specific ids prevent a Unit id from being supplied as a Stat Block root. */

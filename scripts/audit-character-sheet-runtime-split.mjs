@@ -108,6 +108,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetId",
   "CharacterSheetInput",
   "CharacterSheetIssue",
+  "CharacterSheetIssueSchema",
   "CharacterSheetJumpDistanceAbility",
   "CharacterSheetJumpDistanceAbilityInput",
   "CharacterSheetJumpDistanceAbilitySubstitution",
@@ -460,6 +461,11 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetIdSchema",
     reason:
       "Character Sheet owns the durable Character Session identity boundary; exporting its parser keeps MCP session identifiers on the canonical sheet brand rather than the battle identity surface.",
+  },
+  {
+    name: "CharacterSheetIssueSchema",
+    reason:
+      "Character Sheet owns its structured failure boundary; exporting the canonical schema lets MCP validate the issue union without duplicating discriminants or fixed-message invariants.",
   },
   {
     name: "FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES",
@@ -825,7 +831,20 @@ function implementationsByName(implementations) {
   return groups;
 }
 
-function inspectBarrel(source, file) {
+function inspectBarrel(source, file, visited = new Set()) {
+  if (visited.has(file)) {
+    return {
+      invalidStatements: [
+        {
+          line: 1,
+          kind: "CircularBarrelExport",
+          file: path.relative(repoRoot, file),
+        },
+      ],
+      reexports: [],
+    };
+  }
+  const nextVisited = new Set(visited).add(file);
   const sourceFile = sourceFileFor(source, file);
   const invalidStatements = [];
   const reexports = [];
@@ -843,8 +862,39 @@ function inspectBarrel(source, file) {
           exported: specifier.name.text,
           imported: specifier.propertyName?.text ?? specifier.name.text,
           module: statement.moduleSpecifier.text,
+          ownerFile: file,
         });
       }
+      continue;
+    }
+
+    if (
+      ts.isExportDeclaration(statement) &&
+      statement.exportClause === undefined &&
+      statement.moduleSpecifier !== undefined &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      statement.moduleSpecifier.text.startsWith("./")
+    ) {
+      const moduleFile = resolveRelativeModule(
+        statement.moduleSpecifier.text,
+        file,
+      );
+      if (moduleFile === null || !existsSync(moduleFile)) {
+        invalidStatements.push({
+          line:
+            sourceFile.getLineAndCharacterOfPosition(statement.getStart())
+              .line + 1,
+          kind: "UnresolvedBarrelExport",
+        });
+        continue;
+      }
+      const nested = inspectBarrel(
+        readFileSync(moduleFile, "utf8"),
+        moduleFile,
+        nextVisited,
+      );
+      invalidStatements.push(...nested.invalidStatements);
+      reexports.push(...nested.reexports);
       continue;
     }
 
@@ -894,11 +944,11 @@ function readBaseIndex(ref) {
   });
 }
 
-function resolveRelativeModule(moduleSpecifier) {
+function resolveRelativeModule(moduleSpecifier, ownerFile = indexFile) {
   if (!moduleSpecifier.startsWith("./")) {
     return null;
   }
-  const resolved = path.resolve(path.dirname(indexFile), moduleSpecifier);
+  const resolved = path.resolve(path.dirname(ownerFile), moduleSpecifier);
   return resolved.endsWith(".ts") ? resolved : `${resolved}.ts`;
 }
 
@@ -935,7 +985,7 @@ const moduleExportCache = new Map();
 const reexportedModuleFiles = new Set();
 
 for (const reexport of currentBarrel.reexports) {
-  const moduleFile = resolveRelativeModule(reexport.module);
+  const moduleFile = resolveRelativeModule(reexport.module, reexport.ownerFile);
   if (moduleFile === null || !existsSync(moduleFile)) {
     unresolvedModules.push(reexport);
     continue;

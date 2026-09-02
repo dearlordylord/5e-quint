@@ -8,7 +8,7 @@ import {
   eldritchInvocationId,
   type CharacterBuild,
   type UnitCatalog,
-} from "@dnd/character-creation-runtime";
+} from "@dnd/character-creation-runtime/consumer-protocol";
 import {
   Hp,
   resourceCount,
@@ -38,9 +38,9 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import type {
   ClassFeatureRecord,
-  StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { Result, Option } from "effect";
 
 import {

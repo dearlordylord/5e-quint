@@ -612,6 +612,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(single.failure).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
+        ownerPath: ["combatant"],
       });
     }
 
@@ -624,8 +625,16 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(aggregate.failure).toEqual({
         tag: "battleStateInitIssues",
         issues: [
-          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
-          { tag: "weaponLoadoutMismatch", slot: "off-hand" },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "main-hand",
+            ownerPath: ["combatant"],
+          },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "off-hand",
+            ownerPath: ["combatant"],
+          },
         ],
       });
     }
@@ -864,16 +873,19 @@ describe("battle lifecycle admission issue aggregation", () => {
       failure: { message: "Initial Initiative setup is already complete." },
     });
 
-    expect(
-      addBattleRuntimeCombatant({
-        session: finished,
-        combatant: baseCombatant,
-      }),
-    ).toMatchObject({
-      _tag: "Failure",
-      failure: {
-        message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
-      },
+    const duplicateCombatant = addBattleRuntimeCombatant({
+      session: finished,
+      combatant: baseCombatant,
     });
+    expect(Result.isFailure(duplicateCombatant)).toBe(true);
+    if (Result.isFailure(duplicateCombatant)) {
+      expect(duplicateCombatant.failure).toEqual({
+        tag: "battleStateInitIssue",
+        kind: "duplicateCombatantId",
+        combatantId: baseCombatant.combatantId,
+        ownerPath: ["combatant"],
+        message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
+      });
+    }
   });
 });

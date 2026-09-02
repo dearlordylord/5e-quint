@@ -87,6 +87,14 @@ type AtomicClassFeatureMechanics = Extract<
       | "bonus_action_delegated_standard_actions";
   }
 >;
+type DelegatedStandardActionsMechanics = Extract<
+  AtomicClassFeatureMechanics,
+  { readonly family: "bonus_action_delegated_standard_actions" }
+>;
+type DelegatedStandardActionOperation =
+  DelegatedStandardActionsMechanics["sleightOfHand"]["operations"][number];
+type DelegatedObjectUseAction =
+  DelegatedStandardActionsMechanics["objectUse"]["actions"][number];
 
 export function admitAtomicClassFeatureProcedure(
   unit: AuthoredUnitSource,
@@ -190,10 +198,7 @@ function atomicClassFeatureProcedureFacts(
 }
 
 function delegatedStandardActionsAdmissionIssues(
-  mechanics: Extract<
-    AtomicClassFeatureMechanics,
-    { readonly family: "bonus_action_delegated_standard_actions" }
-  >,
+  mechanics: DelegatedStandardActionsMechanics,
 ): readonly AtomicClassFeatureProcedureAdmissionIssue[] {
   const [firstOperation, secondOperation, thirdOperation, ...extraOperations] =
     mechanics.sleightOfHand.operations;
@@ -202,31 +207,73 @@ function delegatedStandardActionsAdmissionIssues(
   if (mechanics.activationCost.kind !== "bonus_action") {
     failedFacts.push("unsupportedActivationCost");
   }
-  if (
-    mechanics.sleightOfHand.abilityCheck.ability !== "dex" ||
-    mechanics.sleightOfHand.abilityCheck.skill !== "sleight_of_hand"
-  ) {
+  if (!delegatedSleightOfHandAbilityCheckIsSupported(mechanics)) {
     failedFacts.push("unsupportedSleightOfHandAbilityCheck");
   }
   if (
-    firstOperation !== "pick_lock_with_thieves_tools" ||
-    secondOperation !== "disarm_trap_with_thieves_tools" ||
-    thirdOperation !== "pick_pocket" ||
-    extraOperations.length > 0
+    !delegatedSleightOfHandOperationsAreSupported({
+      firstOperation,
+      secondOperation,
+      thirdOperation,
+      extraOperations,
+    })
   ) {
     failedFacts.push("unsupportedSleightOfHandOperations");
   }
-  if (
-    utilize?.action !== "utilize" ||
-    utilize === undefined ||
-    "restrictedTo" in utilize ||
-    magic?.action !== "magic" ||
-    magic.restrictedTo !== "magic_item_requires_magic_action" ||
-    extraActions.length > 0
-  ) {
+  if (!delegatedObjectUseActionsAreSupported(utilize, magic, extraActions)) {
     failedFacts.push("unsupportedObjectUseActions");
   }
   return failedFacts.map(delegatedStandardActionsAdmissionIssue);
+}
+
+function delegatedSleightOfHandAbilityCheckIsSupported(
+  mechanics: DelegatedStandardActionsMechanics,
+): boolean {
+  return (
+    mechanics.sleightOfHand.abilityCheck.ability === "dex" &&
+    mechanics.sleightOfHand.abilityCheck.skill === "sleight_of_hand"
+  );
+}
+
+function delegatedSleightOfHandOperationsAreSupported(input: {
+  readonly firstOperation: DelegatedStandardActionOperation | undefined;
+  readonly secondOperation: DelegatedStandardActionOperation | undefined;
+  readonly thirdOperation: DelegatedStandardActionOperation | undefined;
+  readonly extraOperations: readonly DelegatedStandardActionOperation[];
+}): boolean {
+  return (
+    input.firstOperation === "pick_lock_with_thieves_tools" &&
+    input.secondOperation === "disarm_trap_with_thieves_tools" &&
+    input.thirdOperation === "pick_pocket" &&
+    input.extraOperations.length === 0
+  );
+}
+
+function delegatedObjectUseActionsAreSupported(
+  utilize: DelegatedObjectUseAction | undefined,
+  magic: DelegatedObjectUseAction | undefined,
+  extraActions: readonly DelegatedObjectUseAction[],
+): boolean {
+  return (
+    delegatedUtilizeActionIsSupported(utilize) &&
+    delegatedMagicActionIsSupported(magic) &&
+    extraActions.length === 0
+  );
+}
+
+function delegatedUtilizeActionIsSupported(
+  action: DelegatedObjectUseAction | undefined,
+): boolean {
+  return action?.action === "utilize" && !("restrictedTo" in action);
+}
+
+function delegatedMagicActionIsSupported(
+  action: DelegatedObjectUseAction | undefined,
+): boolean {
+  return (
+    action?.action === "magic" &&
+    action.restrictedTo === "magic_item_requires_magic_action"
+  );
 }
 
 function delegatedStandardActionsAdmissionIssue(
@@ -248,40 +295,64 @@ function acrobaticMovementAdmissionIssues(
   >,
 ): readonly AtomicClassFeatureProcedureAdmissionIssue[] {
   const failedFacts: AcrobaticMovementFailedFact[] = [];
-  const predicates =
-    mechanics.condition.kind === "all_of" &&
-    mechanics.condition.predicates.length === 2
-      ? mechanics.condition.predicates
-      : null;
-  const unarmored = predicates?.find(
-    (predicate) => predicate.kind === "not_wearing_armor",
-  );
-  const unshielded = predicates?.find(
-    (predicate) => predicate.kind === "not_wielding_shield",
-  );
-  if (
-    unarmored?.kind !== "not_wearing_armor" ||
-    !sameStringSet(unarmored.categories, ["light", "medium", "heavy"]) ||
-    unshielded?.kind !== "not_wielding_shield"
-  ) {
+  if (!acrobaticEquipmentConditionIsSupported(mechanics)) {
     failedFacts.push("unsupportedEquipmentCondition");
   }
   if (mechanics.movement.timing !== "on_your_turn") {
     failedFacts.push("unsupportedMovementTiming");
   }
-  if (
-    mechanics.movement.verticalSurfaces.path !== "along_vertical_surfaces" ||
-    mechanics.movement.verticalSurfaces.withoutFallingDuringMovement !== true
-  ) {
+  if (!acrobaticVerticalSurfaceTraversalIsSupported(mechanics)) {
     failedFacts.push("unsupportedVerticalSurfaceTraversal");
   }
-  if (
-    mechanics.movement.liquids.path !== "across_liquids" ||
-    mechanics.movement.liquids.withoutFallingDuringMovement !== true
-  ) {
+  if (!acrobaticLiquidTraversalIsSupported(mechanics)) {
     failedFacts.push("unsupportedLiquidTraversal");
   }
   return failedFacts.map(acrobaticMovementAdmissionIssue);
+}
+
+function acrobaticEquipmentConditionIsSupported(
+  mechanics: Extract<
+    AtomicClassFeatureMechanics,
+    { readonly family: "acrobatic_movement" }
+  >,
+): boolean {
+  if (mechanics.condition.kind !== "all_of") return false;
+  if (mechanics.condition.predicates.length !== 2) return false;
+  const unarmored = mechanics.condition.predicates.find(
+    (predicate) => predicate.kind === "not_wearing_armor",
+  );
+  const unshielded = mechanics.condition.predicates.find(
+    (predicate) => predicate.kind === "not_wielding_shield",
+  );
+  return (
+    unarmored?.kind === "not_wearing_armor" &&
+    sameStringSet(unarmored.categories, ["light", "medium", "heavy"]) &&
+    unshielded?.kind === "not_wielding_shield"
+  );
+}
+
+function acrobaticVerticalSurfaceTraversalIsSupported(
+  mechanics: Extract<
+    AtomicClassFeatureMechanics,
+    { readonly family: "acrobatic_movement" }
+  >,
+): boolean {
+  return (
+    mechanics.movement.verticalSurfaces.path === "along_vertical_surfaces" &&
+    mechanics.movement.verticalSurfaces.withoutFallingDuringMovement === true
+  );
+}
+
+function acrobaticLiquidTraversalIsSupported(
+  mechanics: Extract<
+    AtomicClassFeatureMechanics,
+    { readonly family: "acrobatic_movement" }
+  >,
+): boolean {
+  return (
+    mechanics.movement.liquids.path === "across_liquids" &&
+    mechanics.movement.liquids.withoutFallingDuringMovement === true
+  );
 }
 
 function acrobaticMovementAdmissionIssue(

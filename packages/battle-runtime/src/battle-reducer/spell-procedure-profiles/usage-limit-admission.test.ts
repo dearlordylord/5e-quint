@@ -30,12 +30,12 @@ describe("shared once-per-turn limit-group admission", () => {
     ).toBeNull();
   });
 
-  test("preserves an explicitly authored empty shared group for profile-specific admission", () => {
+  test("rejects an empty shared group", () => {
     expect(
       sharedOncePerTurnLimitGroup([
         { kind: "once_per_turn", limitGroup: "" },
         { kind: "once_per_turn", limitGroup: "" },
       ]),
-    ).toBe("");
+    ).toBeNull();
   });
 });

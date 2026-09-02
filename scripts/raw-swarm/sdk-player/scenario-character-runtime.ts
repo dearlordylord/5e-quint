@@ -1,4 +1,3 @@
-import { pathToFileURL } from "node:url";
 import {
   abilityScoreAssignment,
   characterCreationIssueMessage,
@@ -25,6 +24,12 @@ import {
 import { Result, Match } from "effect";
 
 import type { JsonValue } from "./continuation-contract.ts";
+import {
+  authoredSourceModuleUrl,
+  authoredSourceIssuesMessage,
+  readAuthoredSource,
+  type AdmittedAuthoredSource,
+} from "./authored-source-admission.ts";
 import { isJsonValue } from "./json-value.ts";
 import type { ScenarioCharacterContext } from "./scenario-character-contract.ts";
 
@@ -172,14 +177,14 @@ function validateOutcome(
   );
 }
 
-export async function evaluateScenarioCharacters(
-  charactersPath: string,
+export async function evaluateAdmittedScenarioCharacters(
+  authoredSource: AdmittedAuthoredSource<"scenarioCharacter">,
 ): Promise<ScenarioCharacterResult> {
   const context = characterContext();
   if (context.tag === "invalid") return context;
   try {
     const imported: unknown = await import(
-      `${pathToFileURL(charactersPath).href}?characters=${String(Date.now())}`
+      authoredSourceModuleUrl(authoredSource)
     );
     if (
       !isRecord(imported) ||
@@ -204,4 +209,19 @@ export async function evaluateScenarioCharacters(
       }`,
     };
   }
+}
+
+export function evaluateScenarioCharacters(
+  charactersPath: string,
+): Promise<ScenarioCharacterResult> {
+  const authoredSource = readAuthoredSource({
+    role: "scenarioCharacter",
+    sourcePath: charactersPath,
+  });
+  return authoredSource.tag === "rejected"
+    ? Promise.resolve({
+        tag: "invalid",
+        message: authoredSourceIssuesMessage(authoredSource),
+      })
+    : evaluateAdmittedScenarioCharacters(authoredSource);
 }

@@ -27,6 +27,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleSubject,
   type BattleRuntimeSession,
@@ -66,7 +67,12 @@ import {
   elapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
-import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import {
+  Hp,
+  PositiveInteger,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -127,8 +133,11 @@ function handleToolCall(
 ) {
   return handleWireToolCall(root, name, battleToolWireArgs(name, args));
 }
-import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  SrdStatBlockRecord,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import {
   assertSrd521StatBlock,
   buildStatBlockCatalog,
@@ -138,6 +147,8 @@ import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.
 import {
   decodeUnitRecordSync,
   StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+  SrdStatBlockRecordSchema,
 } from "@dnd/surface/surface/schema";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
@@ -147,6 +158,23 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import { adminProjection } from "./admin-mirror.ts";
+
+function expectRejectedEncodedStatBlockWithInvalidHp(
+  statBlock: SrdStatBlockRecord,
+): void {
+  const encoded = Schema.encodeSync(SrdStatBlockRecordSchema)(statBlock);
+  expect(
+    Result.isFailure(
+      Schema.decodeUnknownResult(SrdStatBlockRecordSchema)({
+        ...encoded,
+        statBlock: {
+          ...encoded.statBlock,
+          hp: { kind: "literal", value: -1 },
+        },
+      }),
+    ),
+  ).toBe(true);
+}
 
 function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
@@ -4221,13 +4249,24 @@ describe("MCP server route", () => {
         statBlockId("stat_block_skeleton"),
       ),
     );
+    expectRejectedEncodedStatBlockWithInvalidHp(baseStatBlock);
+    const invalidResource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(1),
+      ownership: "shared" as const,
+      limit: {
+        kind: "recharge_after_rest" as const,
+        rest: "short_or_long" as const,
+      },
+    };
     const unsupportedStatBlock = {
       ...baseStatBlock,
       id: statBlockId("stat_block_mcp_runtime_owner_invalid"),
       name: "Synthetic MCP Runtime Owner Invalid Stat Block",
       statBlock: {
         ...baseStatBlock.statBlock,
-        hp: { kind: "literal", value: -1 },
+        resources: [invalidResource, invalidResource],
       },
     } satisfies StatBlockRecord;
     const incompleteUnitLibrary = {
@@ -4238,13 +4277,22 @@ describe("MCP server route", () => {
       listUnits: () => root.unitLibrary.listUnits(),
       requireUnit: root.unitLibrary.requireUnit,
     };
+    const invalidCatalog = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({
+          statBlocks: [unsupportedStatBlock],
+        }),
+      ],
+    });
+    if (invalidCatalog.tag !== "ok") {
+      throw new Error(
+        "Expected the runtime owner Stat Block catalog to build.",
+      );
+    }
     const invalidRoot = {
       ...root,
       unitLibrary: incompleteUnitLibrary,
-      statBlockCatalog: {
-        ...root.statBlockCatalog,
-        getStatBlock: () => Option.some(unsupportedStatBlock),
-      },
+      statBlockCatalog: invalidCatalog.catalog,
     };
 
     const rejected = readPayload(
@@ -4299,7 +4347,14 @@ describe("MCP server route", () => {
             kind: "battleInitialization",
             code: "BATTLE_INITIALIZATION_INVALID",
             ownerPath: ["initialCombatants", 1],
-            statBlockId: unsupportedStatBlock.id,
+            issueTag: "statBlockResourceGraphIssue",
+            combatantId: "invalid-stat-block",
+            issues: [
+              {
+                kind: "duplicateResourceOrdinal",
+                ordinal: invalidResource.ordinal,
+              },
+            ],
           }),
         ],
       },
@@ -4809,22 +4864,42 @@ describe("MCP server route", () => {
         statBlockId("stat_block_skeleton"),
       ),
     );
+    const goblinWarrior = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
+      ),
+    );
+    expectRejectedEncodedStatBlockWithInvalidHp(skeleton);
+    const malformedResource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(1),
+      ownership: "shared" as const,
+      limit: {
+        kind: "recharge_after_rest" as const,
+        rest: "short_or_long" as const,
+      },
+    };
     const malformedStatBlock = {
       ...skeleton,
       id: statBlockId("synthetic_invalid_battle_roster_stat_block"),
       name: "Synthetic Invalid Battle Roster Stat Block",
       statBlock: {
         ...skeleton.statBlock,
-        hp: { kind: "literal", value: -1 },
+        resources: [malformedResource, malformedResource],
       },
     } satisfies StatBlockRecord;
-    const malformedCatalog: typeof root.statBlockCatalog = {
-      ...root.statBlockCatalog,
-      getStatBlock: (requestedId) =>
-        requestedId === malformedStatBlock.id
-          ? Option.some(malformedStatBlock)
-          : root.statBlockCatalog.getStatBlock(requestedId),
-    };
+    const malformedCatalog = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({
+          statBlocks: [goblinWarrior, skeleton, malformedStatBlock],
+        }),
+      ],
+    });
+    if (malformedCatalog.tag !== "ok") {
+      throw new Error("Expected the malformed Stat Block catalog to build.");
+    }
     const unitCatalog = buildUnitCatalog({
       collections: [
         defineSrdUnitCollection({
@@ -4842,7 +4917,7 @@ describe("MCP server route", () => {
     const startRoot = {
       ...root,
       unitLibrary: unitCatalog.catalog,
-      statBlockCatalog: malformedCatalog,
+      statBlockCatalog: malformedCatalog.catalog,
     };
 
     const rejected = readPayload(
@@ -4933,10 +5008,14 @@ describe("MCP server route", () => {
           {
             kind: "battleInitialization",
             ownerPath: ["initialCombatants", 4],
-            issueTag: "battleStateInitIssue",
-            reason: "statBlockSourceInvalid",
-            statBlockId: malformedStatBlock.id,
-            constraint: "positiveMaximumHitPointsRequired",
+            issueTag: "statBlockResourceGraphIssue",
+            combatantId: "mixed-invalid-stat-block",
+            issues: [
+              {
+                kind: "duplicateResourceOrdinal",
+                ordinal: malformedResource.ordinal,
+              },
+            ],
           },
         ],
       },
@@ -5456,21 +5535,41 @@ describe("MCP server route", () => {
         statBlockId("stat_block_goblin_warrior"),
       ),
     );
+    expectRejectedEncodedStatBlockWithInvalidHp(base);
+    const invalidMechanicsResource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(1),
+      ownership: "shared" as const,
+      limit: {
+        kind: "recharge_after_rest" as const,
+        rest: "short_or_long" as const,
+      },
+    };
     const invalidMechanicsRecord = {
       ...base,
       id: statBlockId("stat_block_synthetic_invalid_mechanics"),
       name: "Synthetic Invalid Mechanics",
       statBlock: {
         ...base.statBlock,
-        hp: { kind: "literal", value: -1 },
+        resources: [invalidMechanicsResource, invalidMechanicsResource],
       },
     } satisfies StatBlockRecord;
+    const invalidMechanicsCatalog = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({
+          statBlocks: [invalidMechanicsRecord],
+        }),
+      ],
+    });
+    if (invalidMechanicsCatalog.tag !== "ok") {
+      throw new Error(
+        "Expected the invalid mechanics Stat Block catalog to build.",
+      );
+    }
     const invalidMechanicsRoot = {
       ...createMcpPlaySessionRoot(),
-      statBlockCatalog: {
-        ...invalidHpRoot.statBlockCatalog,
-        getStatBlock: () => Option.some(invalidMechanicsRecord),
-      },
+      statBlockCatalog: invalidMechanicsCatalog.catalog,
     };
     expect(
       readPayload(
@@ -5582,17 +5681,9 @@ describe("MCP server route", () => {
     const deliveryActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     ).envelope.frontier.acts.filter(
-      (act: {
-        readonly subject: {
-          readonly tag: string;
-          readonly procedureRef?: string;
-        };
-        readonly presentation: {
-          readonly kind: string;
-        };
-      }) =>
+      (act: AvailableBattleAct) =>
         act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
-        act.presentation.kind === "spell",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
     expect(deliveryActs).toHaveLength(1);
     const deliveryAct = deliveryActs[0];
@@ -10334,11 +10425,11 @@ function goblinWarriorMultiattackStatBlock(
             dispatches: [
               {
                 procedureOrdinal: scimitar.procedureOrdinal,
-                count: { kind: "literal", value: 1 },
+                count: { kind: "literal", value: PositiveInteger(1) },
               },
               {
                 procedureOrdinal: shortbow.procedureOrdinal,
-                count: { kind: "literal", value: 1 },
+                count: { kind: "literal", value: PositiveInteger(1) },
               },
             ],
           },

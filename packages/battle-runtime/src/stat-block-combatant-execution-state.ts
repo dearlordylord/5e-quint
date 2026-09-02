@@ -2,11 +2,11 @@ import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { Hp, type Size } from "@dnd/shared/types";
 import type {
   DamageType,
-  StatBlockId,
   SixAbilityScores,
   CreatureSavingThrowModifier,
   CreatureSkillModifier,
 } from "@dnd/surface/surface/types";
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-types";
 import type { SurfaceCondition } from "@dnd/shared/game-facts";
 import type { Brand } from "effect";
 

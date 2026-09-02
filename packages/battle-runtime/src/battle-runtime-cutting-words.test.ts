@@ -1,5 +1,4 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
-import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
 import { combatantId } from "./identity.ts";
@@ -10,7 +9,6 @@ import {
   attackRollHoleAfterTarget,
   battleId,
   battleReactionRollOrDamageReductionSupportForUnit,
-  characterBattleFeatureInitForTest,
   characterSeed,
   cuttingWordsAttackOnlyUnit,
   cuttingWordsDamageOnlyUnit,
@@ -70,11 +68,6 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWordsAttackOnly })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWordsAttackOnly, [
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [
             {
               unit: cuttingWordsAttackOnly,
@@ -360,11 +353,6 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWords })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWords, [
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
@@ -427,11 +415,6 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWords })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWords, [
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
@@ -494,11 +477,6 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWords })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWords, [
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
@@ -611,11 +589,6 @@ describe("battle runtime: Cutting Words", () => {
           classLevels: [{ className: "bard", level: 3 }],
           attack: null,
           resources: [cuttingWordsResource({ usesRemaining: 0 })],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWords, [
-              { className: "bard", level: classLevel(3) },
-            ]),
-          ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),
       ],
@@ -657,11 +630,6 @@ describe("battle runtime: Cutting Words", () => {
           attack: null,
           resources: [
             cuttingWordsResource({ unit: cuttingWords, usesRemaining: 0 }),
-          ],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(cuttingWords, [
-              { className: "bard", level: classLevel(3) },
-            ]),
           ],
           characterUnitRefs: [reactionModifierUnitRef(cuttingWords.id)],
         }),

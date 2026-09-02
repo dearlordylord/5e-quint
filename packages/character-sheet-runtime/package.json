@@ -5,7 +5,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./consumer-protocol": "./src/consumer-protocol.ts"
   },
   "imports": {
     "#/*": "./src/*"

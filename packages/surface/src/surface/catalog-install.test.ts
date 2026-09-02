@@ -7,11 +7,8 @@ import armorChainMailInput from "../../content/armor_chain_mail.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { PositiveInteger } from "@dnd/shared/types";
-import {
-  installSrdSurface,
-  installSrdSurfaceText,
-  type SurfaceMechanicsAdmission,
-} from "./catalog-install.ts";
+import { installSrdSurface, installSrdSurfaceText } from "./catalog-install.ts";
+import type { SurfaceMechanicsAdmission } from "./mechanics-admission.ts";
 import {
   statBlockMechanicsPath,
   unitMechanicsPath,
