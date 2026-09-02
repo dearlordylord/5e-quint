@@ -889,8 +889,7 @@ function syntacticSchemaSubsetResult(
   if (Array.isArray(left) && Array.isArray(right)) {
     return syntacticSchemaArraySubset(schema, left, right, memo);
   }
-  if (!isJsonObject(left)) return false;
-  if (!isJsonObject(right)) return false;
+  if (!isJsonObject(left) || !isJsonObject(right)) return false;
   return syntacticSchemaObjectSubset(schema, left, right, memo);
 }
 
@@ -1199,8 +1198,9 @@ function hasRepeatedSchemaPrefixItems(
   schema: SchemaDocument,
   value: JsonObject,
 ): boolean {
-  if (!Array.isArray(value.prefixItems)) return false;
-  if (value.prefixItems.length !== 2) return false;
+  if (!Array.isArray(value.prefixItems) || value.prefixItems.length !== 2) {
+    return false;
+  }
   const item = value.items;
   if (item === undefined) return false;
   const itemHash = schemaNodeHash(schema, item);
@@ -1215,10 +1215,12 @@ function classifyGmSpeedChoiceMinimum(
   pointer: string,
   transformed: JsonObject,
 ): JsonObject {
-  if (!pointer.endsWith("/alternatives")) return transformed;
-  if (!context.reachable.has(value)) return transformed;
-  if (transformed.minItems !== 2) return transformed;
-  if (!hasRepeatedSchemaPrefixItems(context.schema, transformed)) {
+  if (
+    !pointer.endsWith("/alternatives") ||
+    !context.reachable.has(value) ||
+    transformed.minItems !== 2 ||
+    !hasRepeatedSchemaPrefixItems(context.schema, transformed)
+  ) {
     return transformed;
   }
   const omittedKeys = ["minItems", "prefixItems"];
@@ -1234,14 +1236,32 @@ function classifyGmSpeedChoiceMinimum(
     : transformed;
 }
 
-type FlyOnlyHoverCandidate = {
+type NonFlyHoverProperties = JsonObject & {
+  readonly kind: JsonObject & { readonly anyOf: readonly JsonValue[] };
+};
+
+type FlyHoverProperties = JsonObject & {
+  readonly kind: JsonObject;
+};
+
+type FlyOnlyHoverCandidateInput = {
   readonly nonFlyBranch: JsonObject;
   readonly flyBranch: JsonObject;
   readonly nonFlyProperties: JsonObject;
   readonly flyProperties: JsonObject;
 };
 
-function isNonFlyHoverProperties(properties: JsonObject): boolean {
+type FlyOnlyHoverCandidate = Omit<
+  FlyOnlyHoverCandidateInput,
+  "nonFlyProperties" | "flyProperties"
+> & {
+  readonly nonFlyProperties: NonFlyHoverProperties;
+  readonly flyProperties: FlyHoverProperties;
+};
+
+function isNonFlyHoverProperties(
+  properties: JsonObject,
+): properties is NonFlyHoverProperties {
   const kind = objectAt(properties, "kind");
   const hover = properties.hover;
   return (
@@ -1252,7 +1272,9 @@ function isNonFlyHoverProperties(properties: JsonObject): boolean {
   );
 }
 
-function isFlyHoverProperties(properties: JsonObject): boolean {
+function isFlyHoverProperties(
+  properties: JsonObject,
+): properties is FlyHoverProperties {
   const kind = objectAt(properties, "kind");
   const hover = objectAt(properties, "hover");
   return (
@@ -1285,8 +1307,9 @@ function flyOnlyHoverCandidate(
   schema: SchemaDocument,
   transformed: JsonObject,
 ): FlyOnlyHoverCandidate | undefined {
-  if (!Array.isArray(transformed.anyOf)) return undefined;
-  if (transformed.anyOf.length !== 2) return undefined;
+  if (!Array.isArray(transformed.anyOf) || transformed.anyOf.length !== 2) {
+    return undefined;
+  }
   const branches = transformed.anyOf.map((branch) =>
     resolvePureLocalReference(schema, branch),
   );
@@ -1294,10 +1317,11 @@ function flyOnlyHoverCandidate(
   const [left, right] = branches;
   const leftProperties = objectAt(left!, "properties");
   const rightProperties = objectAt(right!, "properties");
-  if (leftProperties === undefined) return undefined;
-  if (rightProperties === undefined) return undefined;
+  if (leftProperties === undefined || rightProperties === undefined) {
+    return undefined;
+  }
   const excluded = new Set(["kind", "hover"]);
-  return [
+  const candidates: readonly FlyOnlyHoverCandidateInput[] = [
     {
       nonFlyBranch: left!,
       flyBranch: right!,
@@ -1310,14 +1334,15 @@ function flyOnlyHoverCandidate(
       nonFlyProperties: rightProperties,
       flyProperties: leftProperties,
     },
-  ].find(
-    ({ nonFlyProperties, flyProperties }) =>
-      isNonFlyHoverProperties(nonFlyProperties) &&
-      isFlyHoverProperties(flyProperties) &&
+  ];
+  return candidates.find(
+    (candidate): candidate is FlyOnlyHoverCandidate =>
+      isNonFlyHoverProperties(candidate.nonFlyProperties) &&
+      isFlyHoverProperties(candidate.flyProperties) &&
       schemaObjectsMatchExceptKeys(
         schema,
-        nonFlyProperties,
-        flyProperties,
+        candidate.nonFlyProperties,
+        candidate.flyProperties,
         excluded,
       ),
   );
@@ -1332,11 +1357,12 @@ function classifyFlyOnlyHover(
   if (!context.reachable.has(value)) return transformed;
   const candidate = flyOnlyHoverCandidate(context.schema, transformed);
   if (candidate === undefined) return transformed;
-  const nonFlyKinds = objectAt(candidate.nonFlyProperties, "kind")?.anyOf;
-  const flyKind = objectAt(candidate.flyProperties, "kind");
-  if (!Array.isArray(nonFlyKinds)) return transformed;
-  if (flyKind === undefined) return transformed;
-  const widenedKind = { anyOf: [...nonFlyKinds, flyKind] };
+  const widenedKind = {
+    anyOf: [
+      ...candidate.nonFlyProperties.kind.anyOf,
+      candidate.flyProperties.kind,
+    ],
+  };
   const proposed = {
     ...transformed,
     anyOf: [
@@ -1666,8 +1692,9 @@ function changedSchemaPublicationFamilies(
 ): readonly string[] {
   const leftProperties = objectAt(leftSchema, "properties");
   const rightProperties = objectAt(rightSchema, "properties");
-  if (leftProperties === undefined) return ["properties"];
-  if (rightProperties === undefined) return ["properties"];
+  if (leftProperties === undefined || rightProperties === undefined) {
+    return ["properties"];
+  }
   return [
     ...new Set([
       ...Object.keys(leftProperties),
@@ -2648,18 +2675,16 @@ function parsedClassifiedSchemaDocuments(
   | { readonly candidate: SchemaDocument; readonly comparison: SchemaDocument }
   | undefined {
   const candidate = schemaDocument(classified.candidate.value);
-  if (candidate.tag === "invalid") {
-    issues.push({
-      kind: "schema-delta-graph-invalid",
-      message: candidate.message,
-    });
-    return undefined;
-  }
   const comparison = schemaDocument(classified.comparison.value);
-  if (comparison.tag === "invalid") {
+  if (candidate.tag === "invalid" || comparison.tag === "invalid") {
     issues.push({
       kind: "schema-delta-graph-invalid",
-      message: comparison.message,
+      message:
+        candidate.tag === "invalid"
+          ? candidate.message
+          : comparison.tag === "invalid"
+            ? comparison.message
+            : "unreachable invalid schema",
     });
     return undefined;
   }
