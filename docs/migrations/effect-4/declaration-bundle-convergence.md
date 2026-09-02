@@ -277,12 +277,12 @@ Character Sheet root remains the canonical default-catalog wrapper; the
 injected construction path supplies the caller's already parsed
 `StatBlockCatalog` to the same implementation.
 
-The admitted declaration graph contains exactly 577 files and 10,302,398
-bytes, leaving 183,362 bytes below the unchanged 10 MiB cap. Its sorted POSIX
+The admitted declaration graph contains exactly 577 files and 10,302,100
+bytes, leaving 183,660 bytes below the unchanged 10 MiB cap. Its sorted POSIX
 path-ledger SHA-256 is
 `cea3e96c590aad8da19aa6b15d802dffe6f3d237dc0e2f7ef7c2ab1c534f4b7c`;
 its sorted content-ledger SHA-256 is
-`439d51ef3c7641394fc6ffa664c8b25c7c8686cef4c1374548ff23ad5078266e`.
+`8ef64aaf89c63a2af994bf3fea70243bc8a1147ecd8573af22b22707ba8dbe1c`.
 
 Relative to the preceding 571-file graph, these six declarations are added:
 
@@ -322,6 +322,16 @@ reviewed operation-and-segment identities. Only the existing `byteLength` and
 existing `raw-swarm-effect-runtime-artifacts` classification. The Effect oracle
 certificate owns the resulting candidate and identity digests; no delta site,
 classification, collection authority, or runtime behavior is added.
+
+The reviewed Character Sheet API repairs subsequently preserve all 577 paths
+while reducing the bundle by 298 bytes. Exactly three declarations change:
+`druid-features-core.d.ts` shrinks by 161 bytes, `druid-features.d.ts` grows by
+170 bytes, and `stored-sheet-parser.d.ts` shrinks by 307 bytes. These changes
+keep catalog-independent Druid construction in the source-free core, keep the
+ordinary public wrapper responsible for the default catalog, and narrow the
+stored-sheet parser's projected contract without adding another algorithm or
+runtime/data owner. The path ledger, coarse ceilings, and forbidden-owner set
+remain unchanged.
 
 ## Consumer compiler boundary
 
