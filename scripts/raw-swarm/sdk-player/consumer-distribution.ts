@@ -104,13 +104,13 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
       "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
   },
   measure: {
-    files: 571,
-    bytes: 10_298_121,
+    files: 577,
+    bytes: 10_302_398,
   },
   pathLedgerSha256:
-    "4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6",
+    "cea3e96c590aad8da19aa6b15d802dffe6f3d237dc0e2f7ef7c2ab1c534f4b7c",
   contentLedgerSha256:
-    "4d3ded53627e74be2ac9ecfb507d8691d591c19e14cd314d6fe7e597de63319d",
+    "439d51ef3c7641394fc6ffa664c8b25c7c8686cef4c1374548ff23ad5078266e",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
@@ -693,6 +693,9 @@ function consumerTsconfig(
           ],
           "@dnd/character-sheet-runtime/consumer-protocol": [
             "./declarations/packages/character-sheet-runtime/src/consumer-protocol.d.ts",
+          ],
+          "@dnd/character-sheet-runtime/battle-init-protocol": [
+            "./declarations/packages/character-sheet-runtime/src/battle-init-protocol.d.ts",
           ],
           ...compilerDeclarationPackagePaths(baseDirectory),
           "@dnd/tactical-space": [

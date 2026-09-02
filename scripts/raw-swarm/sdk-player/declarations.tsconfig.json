@@ -31,6 +31,18 @@
       "@dnd/character-sheet-runtime/consumer-protocol": [
         "packages/character-sheet-runtime/src/consumer-protocol.ts"
       ],
+      "@dnd/character-sheet-runtime/battle-init-protocol": [
+        "packages/character-sheet-runtime/src/battle-init-protocol.ts"
+      ],
+      "@dnd/character-sheet-runtime/fresh-character-sheet-schema": [
+        "packages/character-sheet-runtime/src/fresh-character-sheet-schema.ts"
+      ],
+      "@dnd/character-sheet-runtime/source-free-construction": [
+        "packages/character-sheet-runtime/src/source-free-construction.ts"
+      ],
+      "@dnd/character-battle-runtime/source-free-construction": [
+        "packages/character-battle-runtime/src/source-free-construction.ts"
+      ],
       "@dnd/scenario-character-sdk": [
         "scripts/raw-swarm/sdk-player/scenario-character-contract.ts"
       ],

@@ -254,6 +254,12 @@ describe("SDK player consumer distribution", () => {
       expect(compilerPaths).not.toHaveProperty(
         "@dnd/surface/surface/catalog-install",
       );
+      expect(compilerPaths).toHaveProperty(
+        "@dnd/character-sheet-runtime/battle-init-protocol",
+        [
+          "./declarations/packages/character-sheet-runtime/src/battle-init-protocol.d.ts",
+        ],
+      );
       const compilerSupport = join(destination, "node_modules");
       assertEffectDeclarationCompilerSupport(compilerSupport);
       expect(filesBelow(compilerSupport)).toHaveLength(
@@ -317,6 +323,12 @@ describe("SDK player consumer distribution", () => {
         "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.d.ts",
         "packages/character-battle-runtime/src/battle-creature-init.d.ts",
+        "packages/character-sheet-runtime/src/battle-init-protocol.d.ts",
+        "packages/character-sheet-runtime/src/character-build-shape.d.ts",
+        "packages/character-sheet-runtime/src/druid-features-core.d.ts",
+        "packages/character-sheet-runtime/src/fresh-character-sheet-construction-core.d.ts",
+        "packages/character-sheet-runtime/src/fresh-character-sheet-schema.d.ts",
+        "packages/character-sheet-runtime/src/record-shape.d.ts",
         "packages/surface/src/surface/mechanics-admission.d.ts",
       ]) {
         expect(existsSync(join(declarationRoot, retainedOwner))).toBe(true);

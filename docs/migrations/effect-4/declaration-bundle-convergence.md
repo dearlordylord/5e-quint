@@ -268,6 +268,52 @@ runtime/data owner, or other declaration content changes. The coarse safety
 ceiling and forbidden-owner set remain unchanged, and production emission
 continues to fail closed on the exact reviewed manifest.
 
+## Source-free Character Sheet boundary recertification (2026-09-01)
+
+At immutable implementation source `0e3ca1e35`, the Opaque executable uses
+package-owned Character Sheet and Character Battle subpaths whose dependency
+graphs do not eagerly install the canonical Stat Block catalog. The ordinary
+Character Sheet root remains the canonical default-catalog wrapper; the
+injected construction path supplies the caller's already parsed
+`StatBlockCatalog` to the same implementation.
+
+The admitted declaration graph contains exactly 577 files and 10,302,398
+bytes, leaving 183,362 bytes below the unchanged 10 MiB cap. Its sorted POSIX
+path-ledger SHA-256 is
+`cea3e96c590aad8da19aa6b15d802dffe6f3d237dc0e2f7ef7c2ab1c534f4b7c`;
+its sorted content-ledger SHA-256 is
+`439d51ef3c7641394fc6ffa664c8b25c7c8686cef4c1374548ff23ad5078266e`.
+
+Relative to the preceding 571-file graph, these six declarations are added:
+
+- `packages/character-sheet-runtime/src/battle-init-protocol.d.ts`
+- `packages/character-sheet-runtime/src/character-build-shape.d.ts`
+- `packages/character-sheet-runtime/src/druid-features-core.d.ts`
+- `packages/character-sheet-runtime/src/fresh-character-sheet-construction-core.d.ts`
+- `packages/character-sheet-runtime/src/fresh-character-sheet-schema.d.ts`
+- `packages/character-sheet-runtime/src/record-shape.d.ts`
+
+`battle-init-protocol` is the narrow Character Sheet contract consumed by
+Character Battle roster projection. `fresh-character-sheet-construction-core`
+and `druid-features-core` own the single catalog-injected construction
+algorithm, while `fresh-character-sheet-schema` owns its canonical issue and
+projection schemas. `character-build-shape` and `record-shape` are shared leaf
+contracts used by that core and the existing parsers, avoiding duplicate
+validation logic. These owners make the source-free graph explicit without
+moving catalog data into the distribution or weakening the forbidden-owner
+walk.
+
+The declaration compiler configuration maps all new package-owned boundary
+subpaths explicitly: Character Sheet battle initialization, fresh-sheet
+schemas, and source-free construction, plus Character Battle source-free
+construction. The generated relocated-consumer configuration separately maps
+the reachable Character Sheet battle-initialization protocol to its admitted
+declaration. The first unrecertified emission failed closed at the unresolved
+`@dnd/character-sheet-runtime/battle-init-protocol` edge; these explicit
+mappings restore both emission-time internal-edge validation and relocated
+consumer typechecking. The coarse file ceiling and the seven forbidden Surface
+runtime/data owners remain unchanged.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted
