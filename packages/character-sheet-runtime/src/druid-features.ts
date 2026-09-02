@@ -4,7 +4,6 @@ import {
   druidWildShapeKnownFormsAfterLongRestWithStatBlockCatalog,
   druidWildShapeKnownFormsConstructionWithStatBlockCatalog,
   druidWildShapeKnownFormsFromInputWithStatBlockCatalog,
-  druidWildShapeStatBlockCatalogFromInput as druidWildShapeStatBlockCatalogFromExplicitInput,
 } from "./druid-features-core.ts";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import type {
@@ -24,25 +23,42 @@ export {
 export function druidWildShapeStatBlockCatalogFromInput(
   statBlockCatalog: StatBlockCatalog | undefined,
 ): StatBlockCatalog {
-  return druidWildShapeStatBlockCatalogFromExplicitInput(
-    statBlockCatalog ?? srdStatBlockCatalog,
+  return statBlockCatalog ?? srdStatBlockCatalog;
+}
+
+type DruidWildShapeKnownFormsInput = Pick<
+  CharacterSheetInput,
+  | "build"
+  | "unitLibrary"
+  | "druidWildShapeKnownFormStatBlockIds"
+  | "statBlockCatalog"
+>;
+
+function druidWildShapeKnownFormsInputWithStatBlockCatalog(
+  input: DruidWildShapeKnownFormsInput,
+) {
+  return {
+    ...input,
+    statBlockCatalog: druidWildShapeStatBlockCatalogFromInput(
+      input.statBlockCatalog,
+    ),
+  };
+}
+
+export function druidWildShapeKnownFormsFromInput(
+  input: DruidWildShapeKnownFormsInput,
+) {
+  return druidWildShapeKnownFormsFromInputWithStatBlockCatalog(
+    druidWildShapeKnownFormsInputWithStatBlockCatalog(input),
   );
 }
 
-export function druidWildShapeKnownFormsFromInput(input: CharacterSheetInput) {
-  return druidWildShapeKnownFormsFromInputWithStatBlockCatalog({
-    ...input,
-    statBlockCatalog: input.statBlockCatalog ?? srdStatBlockCatalog,
-  });
-}
-
 export function druidWildShapeKnownFormsConstruction(
-  input: CharacterSheetInput,
+  input: DruidWildShapeKnownFormsInput,
 ) {
-  return druidWildShapeKnownFormsConstructionWithStatBlockCatalog({
-    ...input,
-    statBlockCatalog: input.statBlockCatalog ?? srdStatBlockCatalog,
-  });
+  return druidWildShapeKnownFormsConstructionWithStatBlockCatalog(
+    druidWildShapeKnownFormsInputWithStatBlockCatalog(input),
+  );
 }
 
 export function druidWildShapeKnownFormsAfterLongRest(input: {
@@ -53,7 +69,9 @@ export function druidWildShapeKnownFormsAfterLongRest(input: {
     ...input,
     input: {
       ...input.input,
-      statBlockCatalog: input.input.statBlockCatalog ?? srdStatBlockCatalog,
+      statBlockCatalog: druidWildShapeStatBlockCatalogFromInput(
+        input.input.statBlockCatalog,
+      ),
     },
   });
 }

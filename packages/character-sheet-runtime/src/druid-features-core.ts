@@ -64,10 +64,7 @@ export function characterSheetDruidCircleLandPreparedSpellAccess(input: {
 export function druidWildShapeKnownFormsFromInputWithStatBlockCatalog(
   input: Pick<
     CharacterSheetInput,
-    | "build"
-    | "unitLibrary"
-    | "druidWildShapeKnownFormStatBlockIds"
-    | "statBlockCatalog"
+    "build" | "unitLibrary" | "druidWildShapeKnownFormStatBlockIds"
   > & { readonly statBlockCatalog: StatBlockCatalog },
 ): Result.Result<
   CharacterSheetDruidWildShapeKnownForms | undefined,
@@ -110,10 +107,7 @@ export function druidWildShapeKnownFormsFromInputWithStatBlockCatalog(
 export function druidWildShapeKnownFormsConstructionWithStatBlockCatalog(
   input: Pick<
     CharacterSheetInput,
-    | "build"
-    | "unitLibrary"
-    | "druidWildShapeKnownFormStatBlockIds"
-    | "statBlockCatalog"
+    "build" | "unitLibrary" | "druidWildShapeKnownFormStatBlockIds"
   > & { readonly statBlockCatalog: StatBlockCatalog },
 ): Result.Result<
   CharacterSheetDruidWildShapeKnownForms | undefined,
@@ -136,13 +130,10 @@ export function druidWildShapeKnownFormsConstructionWithStatBlockCatalog(
   if (input.druidWildShapeKnownFormStatBlockIds === undefined) {
     return Result.fail([{ code: "wildShapeKnownFormsRequired" }]);
   }
-  const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
-    input.statBlockCatalog,
-  );
   const knownFormIssues = validateDruidWildShapeKnownFormIssues({
     facts: facts.success,
     knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
-    statBlockCatalog,
+    statBlockCatalog: input.statBlockCatalog,
   });
   if (knownFormIssues !== undefined) return Result.fail(knownFormIssues);
   return Result.succeed({
@@ -200,12 +191,6 @@ export function isDruidCircleLandChoice(
   );
 }
 
-export function druidWildShapeStatBlockCatalogFromInput(
-  statBlockCatalog: StatBlockCatalog,
-): StatBlockCatalog {
-  return statBlockCatalog;
-}
-
 export function druidWildShapeKnownFormsAfterLongRestWithStatBlockCatalog(input: {
   readonly input: CharacterSheetLongRestInput & {
     readonly statBlockCatalog: StatBlockCatalog;
@@ -240,14 +225,11 @@ export function druidWildShapeKnownFormsAfterLongRestWithStatBlockCatalog(input:
     );
   }
   /* v8 ignore stop -- @preserve */
-  const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
-    input.input.statBlockCatalog,
-  );
   const replaced = replaceDruidWildShapeKnownForm({
     facts: facts.success,
     currentKnownFormStatBlockIds: sheet.druidWildShapeKnownForms.statBlockIds,
     replacement: input.input.druidWildShapeKnownFormReplacement,
-    statBlockCatalog,
+    statBlockCatalog: input.input.statBlockCatalog,
   });
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: replacement forms must satisfy the retained Wild Shape profile and known-form roster. */
   if (Result.isFailure(replaced))
