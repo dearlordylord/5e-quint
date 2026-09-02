@@ -20,7 +20,7 @@ const ATOMIC_CLASS_FEATURE_ROOT_MECHANICS_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
 ]);
 
-export const DELEGATED_STANDARD_ACTIONS_FAILED_FACTS = [
+const DELEGATED_STANDARD_ACTIONS_FAILED_FACTS = [
   "unsupportedActivationCost",
   "unsupportedSleightOfHandAbilityCheck",
   "unsupportedSleightOfHandOperations",
@@ -29,7 +29,7 @@ export const DELEGATED_STANDARD_ACTIONS_FAILED_FACTS = [
 export type DelegatedStandardActionsFailedFact =
   (typeof DELEGATED_STANDARD_ACTIONS_FAILED_FACTS)[number];
 
-export const ACROBATIC_MOVEMENT_FAILED_FACTS = [
+const ACROBATIC_MOVEMENT_FAILED_FACTS = [
   "unsupportedEquipmentCondition",
   "unsupportedMovementTiming",
   "unsupportedVerticalSurfaceTraversal",
@@ -203,27 +203,26 @@ function delegatedStandardActionsAdmissionIssues(
   const [firstOperation, secondOperation, thirdOperation, ...extraOperations] =
     mechanics.sleightOfHand.operations;
   const [utilize, magic, ...extraActions] = mechanics.objectUse.actions;
-  const failedFacts: DelegatedStandardActionsFailedFact[] = [];
-  if (mechanics.activationCost.kind !== "bonus_action") {
-    failedFacts.push("unsupportedActivationCost");
-  }
-  if (!delegatedSleightOfHandAbilityCheckIsSupported(mechanics)) {
-    failedFacts.push("unsupportedSleightOfHandAbilityCheck");
-  }
-  if (
-    !delegatedSleightOfHandOperationsAreSupported({
-      firstOperation,
-      secondOperation,
-      thirdOperation,
-      extraOperations,
-    })
-  ) {
-    failedFacts.push("unsupportedSleightOfHandOperations");
-  }
-  if (!delegatedObjectUseActionsAreSupported(utilize, magic, extraActions)) {
-    failedFacts.push("unsupportedObjectUseActions");
-  }
-  return failedFacts.map(delegatedStandardActionsAdmissionIssue);
+  const supportByFailedFact = {
+    unsupportedActivationCost: mechanics.activationCost.kind === "bonus_action",
+    unsupportedSleightOfHandAbilityCheck:
+      delegatedSleightOfHandAbilityCheckIsSupported(mechanics),
+    unsupportedSleightOfHandOperations:
+      delegatedSleightOfHandOperationsAreSupported({
+        firstOperation,
+        secondOperation,
+        thirdOperation,
+        extraOperations,
+      }),
+    unsupportedObjectUseActions: delegatedObjectUseActionsAreSupported(
+      utilize,
+      magic,
+      extraActions,
+    ),
+  } satisfies Record<DelegatedStandardActionsFailedFact, boolean>;
+  return DELEGATED_STANDARD_ACTIONS_FAILED_FACTS.filter(
+    (failedFact) => !supportByFailedFact[failedFact],
+  ).map(delegatedStandardActionsAdmissionIssue);
 }
 
 function delegatedSleightOfHandAbilityCheckIsSupported(
@@ -294,20 +293,17 @@ function acrobaticMovementAdmissionIssues(
     { readonly family: "acrobatic_movement" }
   >,
 ): readonly AtomicClassFeatureProcedureAdmissionIssue[] {
-  const failedFacts: AcrobaticMovementFailedFact[] = [];
-  if (!acrobaticEquipmentConditionIsSupported(mechanics)) {
-    failedFacts.push("unsupportedEquipmentCondition");
-  }
-  if (mechanics.movement.timing !== "on_your_turn") {
-    failedFacts.push("unsupportedMovementTiming");
-  }
-  if (!acrobaticVerticalSurfaceTraversalIsSupported(mechanics)) {
-    failedFacts.push("unsupportedVerticalSurfaceTraversal");
-  }
-  if (!acrobaticLiquidTraversalIsSupported(mechanics)) {
-    failedFacts.push("unsupportedLiquidTraversal");
-  }
-  return failedFacts.map(acrobaticMovementAdmissionIssue);
+  const supportByFailedFact = {
+    unsupportedEquipmentCondition:
+      acrobaticEquipmentConditionIsSupported(mechanics),
+    unsupportedMovementTiming: mechanics.movement.timing === "on_your_turn",
+    unsupportedVerticalSurfaceTraversal:
+      acrobaticVerticalSurfaceTraversalIsSupported(mechanics),
+    unsupportedLiquidTraversal: acrobaticLiquidTraversalIsSupported(mechanics),
+  } satisfies Record<AcrobaticMovementFailedFact, boolean>;
+  return ACROBATIC_MOVEMENT_FAILED_FACTS.filter(
+    (failedFact) => !supportByFailedFact[failedFact],
+  ).map(acrobaticMovementAdmissionIssue);
 }
 
 function acrobaticEquipmentConditionIsSupported(
