@@ -350,6 +350,23 @@ canonical Mastery Units and the Graze/Nick schema variants through existing
 Surface owners. They add no declaration path, runtime admission, forbidden
 owner, or coarse-limit change.
 
+The mastery-aware Character Battle projection at source revision `00e1d19a9`
+preserves the same 577 paths and path ledger while increasing the bundle by
+413 bytes to 10,299,630 bytes. The unchanged 10 MiB cap therefore leaves
+186,130 bytes of margin, and the content-ledger SHA-256 becomes
+`84deba25e0bb7cd7f178651102754908355f5b3883c855b75ecce9889727752b`.
+Exactly four declarations change: `battle-runtime`'s
+`consumer-protocol.d.ts` grows by 131 bytes, its `index.d.ts` shrinks by 39
+bytes, `battle-character-build-projection.d.ts` grows by 72 bytes, and
+`battle-support-profiles.d.ts` grows by 249 bytes. These declarations expose
+the existing selected-Mastery fact and predicate through the narrow Battle
+consumer protocol and make that protocol their single public re-export owner,
+replace the separate positional attack projections with one named-input
+operation that requires the selected Mastery facts for both hands, and own
+selected Mastery reference resolution at the Character Battle support
+boundary. They add no declaration path, Battle execution support, forbidden
+owner, or coarse-limit change.
+
 The downstream finite-oracle recertification at declaration revision
 `d0b43f8ae` records a 50,669,363-byte candidate with SHA-256
 `4cea44ff11131702655ad12bda69f8336c60c08f3044a1f0b8e8065aef6032ad`.
