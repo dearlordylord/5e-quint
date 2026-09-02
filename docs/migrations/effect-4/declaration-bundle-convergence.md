@@ -337,6 +337,19 @@ stored-sheet parser's projected contract without adding another algorithm or
 runtime/data owner. The coarse ceilings and forbidden-owner set remain
 unchanged.
 
+The canonical Weapon Mastery closure at source revision `a027913d4` preserves
+the same 577 paths and path ledger while reducing the bundle by another 2,883
+bytes to 10,299,217 bytes. The unchanged 10 MiB cap therefore leaves 186,543
+bytes of margin, and the content-ledger SHA-256 becomes
+`a11849ad76fef09bf7a9f3ba7c0b9c5e23c186416c6bb43a08a34d7df5b5a0f2`.
+Exactly four Surface declarations change:
+`generated/srd-unit-aggregate.d.ts` grows by 1,355 bytes,
+`schema-nonspell.d.ts` shrinks by 4,655 bytes, `schema.d.ts` grows by 91
+bytes, and `types.d.ts` grows by 326 bytes. These changes project the three
+canonical Mastery Units and the Graze/Nick schema variants through existing
+Surface owners. They add no declaration path, runtime admission, forbidden
+owner, or coarse-limit change.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted
