@@ -737,7 +737,7 @@ type CandidateSchemaClassifications = {
 };
 
 type ClassifiedSchemaTransform = {
-  readonly value: JsonValue;
+  readonly value: SchemaDocument;
   readonly observed: CandidateSchemaClassifications;
   readonly unauthorized: readonly SchemaNodeClassification[];
 };
@@ -755,11 +755,51 @@ type CandidateSchemaClassifierContext = {
   readonly authorize: CandidateSchemaAuthorize;
 };
 
-type CandidateSchemaClassifier = (
+type SchemaObjectClassifier = (
   value: JsonObject,
   pointer: string,
   transformed: JsonObject,
 ) => JsonObject;
+
+function transformSchemaDocument(
+  schema: SchemaDocument,
+  classify: SchemaObjectClassifier,
+): SchemaDocument {
+  const transformValue = (value: JsonValue, pointer: string): JsonValue => {
+    if (Array.isArray(value)) {
+      return value.map((child, index) =>
+        transformValue(child, jsonPointerChild(pointer, index)),
+      );
+    }
+    return isJsonObject(value) ? transformObject(value, pointer) : value;
+  };
+  const transformObject = (value: JsonObject, pointer: string): JsonObject => {
+    const transformed = Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        transformValue(child, jsonPointerChild(pointer, key)),
+      ]),
+    );
+    return classify(value, pointer, transformed);
+  };
+  const definitionsPointer = jsonPointerChild("", "$defs");
+  const transformedDefinitions = transformObject(
+    schema.$defs,
+    definitionsPointer,
+  );
+  const transformedRoot = Object.fromEntries(
+    Object.entries(schema).map(([key, child]) => [
+      key,
+      key === "$defs"
+        ? transformedDefinitions
+        : transformValue(child, jsonPointerChild("", key)),
+    ]),
+  );
+  return {
+    ...classify(schema, "", transformedRoot),
+    $defs: transformedDefinitions,
+  };
+}
 
 function canonicalNodeSha256(value: JsonValue): string {
   return sha256(Buffer.from(canonicalJson(value), "utf8"));
@@ -998,25 +1038,14 @@ function classifyComparisonSchema(
   schema: SchemaDocument,
   expected: readonly SchemaNodeClassification[],
 ): {
-  readonly value: JsonValue;
+  readonly value: SchemaDocument;
   readonly observed: readonly SchemaNodeClassification[];
   readonly unauthorized: readonly SchemaNodeClassification[];
 } {
   const reachable = reachableSchemaNodes(schema);
   const observed: SchemaNodeClassification[] = [];
   const unauthorized: SchemaNodeClassification[] = [];
-  const transform = (value: JsonValue, pointer: string): JsonValue => {
-    if (Array.isArray(value))
-      return value.map((child, index) =>
-        transform(child, jsonPointerChild(pointer, index)),
-      );
-    if (!isJsonObject(value)) return value;
-    const transformed = Object.fromEntries(
-      Object.entries(value).map(([key, child]) => [
-        key,
-        transform(child, jsonPointerChild(pointer, key)),
-      ]),
-    );
+  const classify: SchemaObjectClassifier = (value, pointer, transformed) => {
     const anyOf = transformed.anyOf;
     if (Array.isArray(anyOf) && reachable.has(value)) {
       const retained = anyOf.filter((member, index) => {
@@ -1046,7 +1075,11 @@ function classifyComparisonSchema(
     }
     return transformed;
   };
-  return { value: transform(schema, ""), observed, unauthorized };
+  return {
+    value: transformSchemaDocument(schema, classify),
+    observed,
+    unauthorized,
+  };
 }
 
 function schemaObjectSignature(
@@ -1424,15 +1457,18 @@ function classifyCandidateSchema(
     return false;
   };
   const classifierContext = { schema, reachable, authorize } as const;
-  const classifyCasterHealLinkRangeFeetForCandidate: CandidateSchemaClassifier =
-    (value, pointer, transformed) =>
-      classifyCasterHealLinkRangeFeet(
-        classifierContext,
-        value,
-        pointer,
-        transformed,
-      );
-  const classifyGmSpeedChoiceMinimumForCandidate: CandidateSchemaClassifier = (
+  const classifyCasterHealLinkRangeFeetForCandidate: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) =>
+    classifyCasterHealLinkRangeFeet(
+      classifierContext,
+      value,
+      pointer,
+      transformed,
+    );
+  const classifyGmSpeedChoiceMinimumForCandidate: SchemaObjectClassifier = (
     value,
     pointer,
     transformed,
@@ -1456,7 +1492,7 @@ function classifyCandidateSchema(
     ({
       pointerSuffix,
       classificationKind,
-    }: UnitIdSchemaReversalSpec): CandidateSchemaClassifier =>
+    }: UnitIdSchemaReversalSpec): SchemaObjectClassifier =>
     (value, pointer, transformed) => {
       if (
         !pointer.endsWith(pointerSuffix) ||
@@ -1483,7 +1519,7 @@ function classifyCandidateSchema(
     pointerSuffix: "/endsWhenGrantedSpellEnds",
     classificationKind: "unitIdLinkedSpellEnd",
   });
-  const classifyFlyOnlyHoverForCandidate: CandidateSchemaClassifier = (
+  const classifyFlyOnlyHoverForCandidate: SchemaObjectClassifier = (
     value,
     pointer,
     transformed,
@@ -1492,7 +1528,7 @@ function classifyCandidateSchema(
     "2f3283296edf0ccf3e6842ecd0b97d01b7e869bae39b5e6522b749a9aa25c9cd",
     "b655d4c8d02f6c63429de3c25dfceea3bdc670ffdf6b73ceadbfd20ac6c2f722",
   ]);
-  const classifyCanonicalMasteryVariants: CandidateSchemaClassifier = (
+  const classifyCanonicalMasteryVariants: SchemaObjectClassifier = (
     value,
     pointer,
     transformed,
@@ -1530,25 +1566,13 @@ function classifyCandidateSchema(
     classifyFlyOnlyHoverForCandidate,
     classifyCanonicalMasteryVariants,
   ] as const;
-  const transform = (value: JsonValue, pointer: string): JsonValue => {
-    if (Array.isArray(value))
-      return value.map((child, index) =>
-        transform(child, jsonPointerChild(pointer, index)),
-      );
-    if (!isJsonObject(value)) return value;
-    const recursivelyTransformed = Object.fromEntries(
-      Object.entries(value).map(([key, child]) => [
-        key,
-        transform(child, jsonPointerChild(pointer, key)),
-      ]),
-    );
-    return classifiers.reduce(
+  const classify: SchemaObjectClassifier = (value, pointer, transformed) =>
+    classifiers.reduce(
       (transformed, classify) => classify(value, pointer, transformed),
-      recursivelyTransformed,
+      transformed,
     );
-  };
   return {
-    value: transform(schema, ""),
+    value: transformSchemaDocument(schema, classify),
     observed,
     unauthorized,
   };
@@ -2610,11 +2634,9 @@ function compareSchemaGraphDeltaAnalysis(
     candidateSchema,
     expected,
   );
-  const transformed = parsedClassifiedSchemaDocuments(issues, classified);
-  if (transformed === undefined) return;
   const roots = schemaGraphPairObservation(
-    transformed.comparison,
-    transformed.candidate,
+    classified.comparison.value,
+    classified.candidate.value,
   );
   if (roots.tag === "invalid") {
     issues.push({ kind: "schema-delta-graph-invalid", message: roots.message });
@@ -2663,32 +2685,6 @@ function classifySchemaGraphDelta(
     });
   }
   return { candidate, comparison };
-}
-
-function parsedClassifiedSchemaDocuments(
-  issues: PublicationDeltaVerificationIssue[],
-  classified: {
-    readonly candidate: ClassifiedSchemaTransform;
-    readonly comparison: ReturnType<typeof classifyComparisonSchema>;
-  },
-):
-  | { readonly candidate: SchemaDocument; readonly comparison: SchemaDocument }
-  | undefined {
-  const candidate = schemaDocument(classified.candidate.value);
-  const comparison = schemaDocument(classified.comparison.value);
-  if (candidate.tag === "invalid" || comparison.tag === "invalid") {
-    issues.push({
-      kind: "schema-delta-graph-invalid",
-      message:
-        candidate.tag === "invalid"
-          ? candidate.message
-          : comparison.tag === "invalid"
-            ? comparison.message
-            : "unreachable invalid schema",
-    });
-    return undefined;
-  }
-  return { candidate: candidate.value, comparison: comparison.value };
 }
 
 function appendSchemaGraphRootEvidenceIssues(
