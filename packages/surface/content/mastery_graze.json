@@ -1,0 +1,26 @@
+{
+  "id": "mastery_graze",
+  "kind": "mastery",
+  "mechanics": {
+    "effect": {
+      "amount": {
+        "kind": "attack_ability_modifier"
+      },
+      "damageType": {
+        "kind": "weapon_damage_type"
+      },
+      "increaseLimit": "attack_ability_modifier_only",
+      "kind": "deal_weapon_damage"
+    },
+    "family": "weapon_attack_miss_damage",
+    "optional": true,
+    "trigger": {
+      "kind": "weapon_attack_miss"
+    }
+  },
+  "name": "Graze",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Graze"
+  }
+}

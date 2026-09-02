@@ -1,0 +1,23 @@
+{
+  "id": "mastery_nick",
+  "kind": "mastery",
+  "mechanics": {
+    "family": "light_property_extra_attack_timing",
+    "optional": true,
+    "replacement": {
+      "from": "bonus_action",
+      "to": "attack_action"
+    },
+    "trigger": {
+      "kind": "light_property_extra_attack"
+    },
+    "usageLimit": {
+      "kind": "once_per_turn"
+    }
+  },
+  "name": "Nick",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Nick"
+  }
+}

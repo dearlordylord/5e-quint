@@ -2812,14 +2812,54 @@ export const CleaveMasteryMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
-export const MasteryMechanicsSchema = Schema.Union([
+export const GrazeMasteryMechanicsSchema = strictStruct({
+  family: Schema.Literal("weapon_attack_miss_damage"),
+  optional: Schema.Literal(true),
+  trigger: strictStruct({ kind: Schema.Literal("weapon_attack_miss") }),
+  effect: strictStruct({
+    kind: Schema.Literal("deal_weapon_damage"),
+    amount: strictStruct({ kind: Schema.Literal("attack_ability_modifier") }),
+    damageType: strictStruct({ kind: Schema.Literal("weapon_damage_type") }),
+    increaseLimit: Schema.Literal("attack_ability_modifier_only"),
+  }),
+});
+
+export const NickMasteryMechanicsSchema = strictStruct({
+  family: Schema.Literal("light_property_extra_attack_timing"),
+  optional: Schema.Literal(true),
+  trigger: strictStruct({
+    kind: Schema.Literal("light_property_extra_attack"),
+  }),
+  replacement: strictStruct({
+    from: Schema.Literal("bonus_action"),
+    to: Schema.Literal("attack_action"),
+  }),
+  usageLimit: OncePerTurnUsageLimitSchema,
+});
+
+const onHitMasteryMechanicsMembers = codecMembers(
   PushMasteryMechanicsSchema,
   SapMasteryMechanicsSchema,
   SlowMasteryMechanicsSchema,
   ToppleMasteryMechanicsSchema,
   VexMasteryMechanicsSchema,
   CleaveMasteryMechanicsSchema,
-]);
+);
+type OnHitMasteryMechanicsCodec = Schema.Union<
+  typeof onHitMasteryMechanicsMembers
+>;
+export const OnHitMasteryMechanicsSchema: OnHitMasteryMechanicsCodec =
+  Schema.Union(onHitMasteryMechanicsMembers);
+
+const masteryMechanicsMembers = codecMembers(
+  OnHitMasteryMechanicsSchema,
+  GrazeMasteryMechanicsSchema,
+  NickMasteryMechanicsSchema,
+);
+type MasteryMechanicsCodec = Schema.Union<typeof masteryMechanicsMembers>;
+export const MasteryMechanicsSchema: MasteryMechanicsCodec = Schema.Union(
+  masteryMechanicsMembers,
+);
 
 export const AttackDamageRiderMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
@@ -2905,18 +2945,18 @@ type LightExtraAttackDamageAbilityModifierMechanicsCodec = Schema.Struct<
 export const LightExtraAttackDamageAbilityModifierMechanicsSchema: LightExtraAttackDamageAbilityModifierMechanicsCodec =
   strictStruct(lightExtraAttackDamageAbilityModifierMechanicsFields);
 
-const masteryOrWeaponDamageDiceRerollMechanicsMembers = codecMembers(
-  MasteryMechanicsSchema,
+const onHitMasteryOrWeaponDamageDiceRerollMechanicsMembers = codecMembers(
+  OnHitMasteryMechanicsSchema,
   WeaponDamageDiceRerollMechanicsSchema,
 );
-type MasteryOrWeaponDamageDiceRerollMechanicsCodec = Schema.Union<
-  typeof masteryOrWeaponDamageDiceRerollMechanicsMembers
+type OnHitMasteryOrWeaponDamageDiceRerollMechanicsCodec = Schema.Union<
+  typeof onHitMasteryOrWeaponDamageDiceRerollMechanicsMembers
 >;
-export const MasteryOrWeaponDamageDiceRerollMechanicsSchema: MasteryOrWeaponDamageDiceRerollMechanicsCodec =
-  Schema.Union(masteryOrWeaponDamageDiceRerollMechanicsMembers);
+export const OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema: OnHitMasteryOrWeaponDamageDiceRerollMechanicsCodec =
+  Schema.Union(onHitMasteryOrWeaponDamageDiceRerollMechanicsMembers);
 
 const onHitTriggerMechanicsMembers = codecMembers(
-  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   AttackDamageRiderMechanicsSchema,
 );
 type OnHitTriggerMechanicsCodec = Schema.Union<
@@ -4254,7 +4294,7 @@ export const MasteryRecordSchema: MasteryRecordCodec =
 const featMechanicsMembers = codecMembers(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
-  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   WeaponAttackDamageDieFloorMechanicsSchema,
   LightExtraAttackDamageAbilityModifierMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
@@ -4841,7 +4881,7 @@ const magicItemComponentMechanicsMembers = codecMembers(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
-  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  OnHitMasteryOrWeaponDamageDiceRerollMechanicsSchema,
   MagicItemSpawnedCreatureMechanicsSchema,
 );
 type MagicItemComponentMechanicsCodec = Schema.Union<
