@@ -387,14 +387,14 @@ The canonical-export correction and declaration recertification at revision
 `CharacterBattleWeaponMasterySelection` export from `battle-runtime`'s
 `index.d.ts`; the ordinary root retains that API through its existing
 `export *` from `consumer-protocol`. Relative to the `00e1d19a9` candidate,
-only `index.d.ts` changes, shrinking by 39 bytes. The final bundle therefore
-retains all 577 paths at 10,299,630 bytes, leaves 186,130 bytes below the cap,
-and has content-ledger SHA-256
+only `index.d.ts` changes, shrinking by 39 bytes. The `5bdf8e3b4` candidate
+therefore retains all 577 paths at 10,299,630 bytes, leaves 186,130 bytes below
+the cap, and has content-ledger SHA-256
 `84deba25e0bb7cd7f178651102754908355f5b3883c855b75ecce9889727752b`.
-Relative to the preceding reviewed declaration certificate, the final four
-path deltas are the three `00e1d19a9` declarations plus `index.d.ts`. No step
-adds a declaration path, Battle execution support, forbidden owner, or
-coarse-limit change.
+Relative to the preceding reviewed declaration certificate, the four path
+deltas at revision `5bdf8e3b4` are the three `00e1d19a9` declarations plus
+`index.d.ts`. No step adds a declaration path, Battle execution support,
+forbidden owner, or coarse-limit change.
 
 The battle-safe MCP Mastery fixture restoration at source revision
 `1fc6dd9fa` keeps the same 577 declaration paths and path-ledger SHA-256 while
