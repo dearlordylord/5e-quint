@@ -665,9 +665,9 @@ function readSchemaComparisonCertificateAuthority(
       message:
         "The reviewed intermediate Surface certificate is not valid JSON.",
     });
-    return undefined;
+  } else {
+    return parsed.value;
   }
-  return parsed.value;
 }
 
 function artifactDigest(bytes: ArtifactBytes):
@@ -926,11 +926,16 @@ function syntacticSchemaSubsetResult(
     memo,
   );
   if (unionSubset !== undefined) return unionSubset;
-  if (Array.isArray(left) && Array.isArray(right)) {
-    return syntacticSchemaArraySubset(schema, left, right, memo);
-  }
-  if (!isJsonObject(left) || !isJsonObject(right)) return false;
-  return syntacticSchemaObjectSubset(schema, left, right, memo);
+  return (
+    ((Array.isArray(left) && Array.isArray(right)) ||
+      (isJsonObject(left) && isJsonObject(right))) &&
+    syntacticSchemaCollectionSubset(
+      schema,
+      left as JsonObject | readonly JsonValue[],
+      right as JsonObject | readonly JsonValue[],
+      memo,
+    )
+  );
 }
 
 function syntacticSchemaUnionSubsetResult(
@@ -952,24 +957,10 @@ function syntacticSchemaUnionSubsetResult(
   return undefined;
 }
 
-function syntacticSchemaArraySubset(
+function syntacticSchemaCollectionSubset(
   schema: SchemaDocument,
-  left: readonly JsonValue[],
-  right: readonly JsonValue[],
-  memo: Map<string, boolean | "active">,
-): boolean {
-  return (
-    left.length === right.length &&
-    left.every((child, index) =>
-      isSyntacticSchemaSubset(schema, child, right[index]!, memo),
-    )
-  );
-}
-
-function syntacticSchemaObjectSubset(
-  schema: SchemaDocument,
-  left: JsonObject,
-  right: JsonObject,
+  left: JsonObject | readonly JsonValue[],
+  right: JsonObject | readonly JsonValue[],
   memo: Map<string, boolean | "active">,
 ): boolean {
   const leftKeys = Object.keys(left)
@@ -981,7 +972,12 @@ function syntacticSchemaObjectSubset(
   return (
     JSON.stringify(leftKeys) === JSON.stringify(rightKeys) &&
     leftKeys.every((key) =>
-      isSyntacticSchemaSubset(schema, left[key]!, right[key]!, memo),
+      isSyntacticSchemaSubset(
+        schema,
+        Reflect.get(left, key) as JsonValue,
+        Reflect.get(right, key) as JsonValue,
+        memo,
+      ),
     )
   );
 }
@@ -1177,19 +1173,20 @@ function casterHealLinkRangeFeetNode(
 ):
   | { readonly properties: JsonObject; readonly rangeFeet: JsonObject }
   | undefined {
-  if (!reachable.has(value)) return undefined;
   const properties = objectAt(transformed, "properties");
-  if (properties === undefined) return undefined;
+  const rangeFeet = properties?.rangeFeet;
   if (
-    singleStringEnumValue(objectAt(properties, "kind")) !== "caster_heal_link"
+    !reachable.has(value) ||
+    properties === undefined ||
+    singleStringEnumValue(objectAt(properties, "kind")) !==
+      "caster_heal_link" ||
+    rangeFeet === undefined ||
+    !isJsonObject(rangeFeet) ||
+    !isCasterHealLinkRangeFeetSchema(rangeFeet)
   ) {
     return undefined;
   }
-  const rangeFeet = properties.rangeFeet;
-  if (!isJsonObject(rangeFeet)) return undefined;
-  return isCasterHealLinkRangeFeetSchema(rangeFeet)
-    ? { properties, rangeFeet }
-    : undefined;
+  return { properties, rangeFeet };
 }
 
 function classifyCasterHealLinkRangeFeet(
@@ -1231,14 +1228,14 @@ function hasRepeatedSchemaPrefixItems(
   schema: SchemaDocument,
   value: JsonObject,
 ): boolean {
-  if (!Array.isArray(value.prefixItems) || value.prefixItems.length !== 2) {
-    return false;
-  }
   const item = value.items;
-  if (item === undefined) return false;
-  const itemHash = schemaNodeHash(schema, item);
-  return value.prefixItems.every(
-    (prefixItem) => schemaNodeHash(schema, prefixItem) === itemHash,
+  return (
+    Array.isArray(value.prefixItems) &&
+    value.prefixItems.length === 2 &&
+    item !== undefined &&
+    new Set(
+      [item, ...value.prefixItems].map((node) => schemaNodeHash(schema, node)),
+    ).size === 1
   );
 }
 
@@ -1340,13 +1337,13 @@ function flyOnlyHoverCandidate(
   schema: SchemaDocument,
   transformed: JsonObject,
 ): FlyOnlyHoverCandidate | undefined {
-  if (!Array.isArray(transformed.anyOf) || transformed.anyOf.length !== 2) {
+  if (!Array.isArray(transformed.anyOf)) {
     return undefined;
   }
   const branches = transformed.anyOf.map((branch) =>
     resolvePureLocalReference(schema, branch),
   );
-  if (!branches.every(isJsonObject)) return undefined;
+  if (branches.length !== 2 || !branches.every(isJsonObject)) return undefined;
   const [left, right] = branches;
   const leftProperties = objectAt(left!, "properties");
   const rightProperties = objectAt(right!, "properties");
@@ -1650,18 +1647,19 @@ function traceSchemaGraphObjectDifference(
         context.childColor(context.rightSchema, rightChild, context.colors)
     );
   });
-  if (key === undefined) return `${path} (object keys unknown)`;
-  const leftChild = left[key];
-  const rightChild = right[key];
-  return leftChild === undefined || rightChild === undefined
-    ? `${path} (object keys ${key})`
-    : traceSchemaGraphDifference(
-        context,
-        leftChild,
-        rightChild,
-        `${path}/${key}`,
-        seen,
-      );
+  const leftChild = key === undefined ? undefined : left[key];
+  const rightChild = key === undefined ? undefined : right[key];
+  return key === undefined
+    ? `${path} (object keys unknown)`
+    : leftChild === undefined || rightChild === undefined
+      ? `${path} (object keys ${key})`
+      : traceSchemaGraphDifference(
+          context,
+          leftChild,
+          rightChild,
+          `${path}/${key}`,
+          seen,
+        );
 }
 
 function traceSchemaGraphDifference(
@@ -2640,9 +2638,9 @@ function compareSchemaGraphDeltaAnalysis(
   );
   if (roots.tag === "invalid") {
     issues.push({ kind: "schema-delta-graph-invalid", message: roots.message });
-    return;
+  } else {
+    appendSchemaGraphRootEvidenceIssues(issues, roots, expected);
   }
-  appendSchemaGraphRootEvidenceIssues(issues, roots, expected);
 }
 
 function classifySchemaGraphDelta(
