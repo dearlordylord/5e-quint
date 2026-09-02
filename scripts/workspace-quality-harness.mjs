@@ -24,6 +24,9 @@ import {
   sourceGlobsUnder,
 } from "./workspace-source-policy.mjs";
 import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "./shared-host-test-policy.mjs";
+import qualityMilestonePlan from "./quality-milestone-plan.cjs";
+
+const { QUALITY_MILESTONE_PLAN } = qualityMilestonePlan;
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PACKAGE_ROOT = join(ROOT, "packages");
@@ -236,6 +239,164 @@ function run(command, args, options = {}) {
   });
   if (result.error !== undefined) throw result.error;
   return result;
+}
+
+function validateQualityMilestonePlan(plan) {
+  assert(Array.isArray(plan), "The quality milestone plan must be an array.");
+  assert(plan.length > 0, "The quality milestone plan must not be empty.");
+  const priorIds = new Set();
+  for (const check of plan) {
+    assert.equal(
+      typeof check.id,
+      "string",
+      "Every quality milestone check must have a string id.",
+    );
+    assert.notEqual(check.id, "", "Quality milestone ids must not be empty.");
+    assert.equal(
+      priorIds.has(check.id),
+      false,
+      `Duplicate quality milestone id: ${check.id}.`,
+    );
+    assert.equal(
+      typeof check.command,
+      "string",
+      `Quality milestone check ${check.id} must have a string command.`,
+    );
+    assert.notEqual(
+      check.command,
+      "",
+      `Quality milestone check ${check.id} must have a command.`,
+    );
+    assert(
+      Array.isArray(check.args) &&
+        check.args.every((argument) => typeof argument === "string"),
+      `Quality milestone check ${check.id} must have string arguments.`,
+    );
+    assert(
+      Array.isArray(check.prerequisites) &&
+        check.prerequisites.every(
+          (prerequisite) => typeof prerequisite === "string",
+        ),
+      `Quality milestone check ${check.id} must have string prerequisites.`,
+    );
+    assert.equal(
+      new Set(check.prerequisites).size,
+      check.prerequisites.length,
+      `Quality milestone check ${check.id} has duplicate prerequisites.`,
+    );
+    for (const prerequisite of check.prerequisites) {
+      assert(
+        priorIds.has(prerequisite),
+        `Quality milestone prerequisite ${prerequisite} for ${check.id} must name an earlier check.`,
+      );
+    }
+    priorIds.add(check.id);
+  }
+}
+
+function elapsedMilliseconds(startedAt, finishedAt) {
+  return Number(finishedAt - startedAt) / 1_000_000;
+}
+
+function failureDescription(result) {
+  if (result.error !== undefined) {
+    return `spawn error: ${result.error instanceof Error ? result.error.message : String(result.error)}`;
+  }
+  if (result.signal !== null && result.signal !== undefined) {
+    return `signal ${result.signal}`;
+  }
+  return `exit ${result.status ?? "unknown"}`;
+}
+
+function outcomeLine(outcome) {
+  const duration = `${(outcome.durationMilliseconds / 1_000).toFixed(3)}s`;
+  if (outcome.status === "PASS") {
+    return `PASS ${duration} ${outcome.id}`;
+  }
+  if (outcome.status === "FAIL") {
+    return `FAIL ${duration} ${outcome.id} (${outcome.failure})`;
+  }
+  return `BLOCKED ${duration} ${outcome.id} (blocked by ${outcome.blockedBy.join(", ")})`;
+}
+
+function executeQualityMilestone(
+  plan,
+  {
+    execute = (check) =>
+      spawnSync(check.command, check.args, {
+        cwd: ROOT,
+        encoding: "utf8",
+        stdio: "inherit",
+      }),
+    now = () => process.hrtime.bigint(),
+    write = (message) => process.stdout.write(message),
+  } = {},
+) {
+  validateQualityMilestonePlan(plan);
+  const outcomes = [];
+  const outcomesById = new Map();
+  let emergencyCheckId;
+
+  for (const check of plan) {
+    const blockedBy =
+      emergencyCheckId === undefined
+        ? check.prerequisites.filter(
+            (prerequisite) => outcomesById.get(prerequisite)?.status !== "PASS",
+          )
+        : [emergencyCheckId];
+    if (blockedBy.length > 0) {
+      const outcome = {
+        status: "BLOCKED",
+        id: check.id,
+        durationMilliseconds: 0,
+        blockedBy,
+      };
+      outcomes.push(outcome);
+      outcomesById.set(check.id, outcome);
+      write(`${outcomeLine(outcome)}\n`);
+      continue;
+    }
+
+    write(`RUN ${check.id}: ${check.command} ${check.args.join(" ")}\n`);
+    const startedAt = now();
+    let result;
+    try {
+      result = execute(check);
+    } catch (error) {
+      result = { status: null, signal: null, error };
+    }
+    const durationMilliseconds = elapsedMilliseconds(startedAt, now());
+    const outcome =
+      result.error === undefined && result.status === 0
+        ? { status: "PASS", id: check.id, durationMilliseconds }
+        : {
+            status: "FAIL",
+            id: check.id,
+            durationMilliseconds,
+            failure: failureDescription(result),
+          };
+    outcomes.push(outcome);
+    outcomesById.set(check.id, outcome);
+    write(`${outcomeLine(outcome)}\n`);
+    if (result.status === 137 || result.signal === "SIGKILL") {
+      emergencyCheckId = check.id;
+    }
+  }
+
+  write("\nQUALITY MILESTONE SUMMARY\n");
+  for (const outcome of outcomes) write(`${outcomeLine(outcome)}\n`);
+  const exitCode =
+    emergencyCheckId !== undefined
+      ? 137
+      : outcomes.some((outcome) => outcome.status === "FAIL")
+        ? 1
+        : 0;
+  return { outcomes, exitCode };
+}
+
+function runQualityMilestone() {
+  const result = executeQualityMilestone(QUALITY_MILESTONE_PLAN);
+  process.exitCode = result.exitCode;
 }
 
 function checkCircularDependencies() {
@@ -511,38 +672,198 @@ function selfTest() {
   );
   assert.match(qualityGuidance.stderr, /pnpm quality:milestone/);
   assert.match(qualityGuidance.stderr, /Raw Swarm deterministic verification/);
-  assert.match(
+  assert.equal(
     rootPackage.scripts["quality:body"],
-    /(?:^|&&\s*)pnpm run coverage:body(?:\s*&&|$)/,
-    "The public quality gate must run the workspace coverage thresholds.",
+    "scripts/assert-resource-lock.sh broad && node scripts/workspace-quality-harness.mjs milestone",
+    "The quality body must assert the inherited broad lock and invoke the collector.",
   );
   assert.equal(
     rootPackage.scripts["check:srd-stat-block-catalog"],
     "pnpm exec tsx scripts/check-srd-stat-block-catalog.ts",
     "The public SRD Stat Block catalog diagnostic must retain its exact alias.",
   );
-  const qualityBodyCommands =
-    rootPackage.scripts["quality:body"].split(/\s*&&\s*/u);
-  const catalogDiagnosticCommand = "pnpm check:srd-stat-block-catalog";
+  validateQualityMilestonePlan(QUALITY_MILESTONE_PLAN);
   assert.equal(
-    qualityBodyCommands.filter(
-      (command) => command === catalogDiagnosticCommand,
-    ).length,
-    1,
-    "The quality body must invoke the public SRD Stat Block catalog diagnostic exactly once.",
+    QUALITY_MILESTONE_PLAN.length,
+    49,
+    "The quality milestone plan must retain every existing check.",
   );
-  const catalogDiagnosticIndex = qualityBodyCommands.indexOf(
-    catalogDiagnosticCommand,
+  assert(
+    QUALITY_MILESTONE_PLAN.every(
+      (check) =>
+        Object.isFrozen(check) &&
+        Object.isFrozen(check.args) &&
+        Object.isFrozen(check.prerequisites),
+    ),
+    "The quality milestone plan and its records must be immutable.",
+  );
+  assert.equal(Object.isFrozen(QUALITY_MILESTONE_PLAN), true);
+  const catalogDiagnosticIndex = QUALITY_MILESTONE_PLAN.findIndex(
+    (check) => check.id === "srd-stat-block-catalog",
   );
   assert.equal(
-    qualityBodyCommands[catalogDiagnosticIndex - 1],
-    "pnpm check:surface-content-publication",
+    QUALITY_MILESTONE_PLAN[catalogDiagnosticIndex - 1].id,
+    "surface-content-publication",
     "The catalog diagnostic must immediately follow Surface publication checks.",
   );
   assert.equal(
-    qualityBodyCommands[catalogDiagnosticIndex + 1],
-    "pnpm check:stat-block-procedure-pressure:self-test",
+    QUALITY_MILESTONE_PLAN[catalogDiagnosticIndex + 1].id,
+    "stat-block-procedure-pressure-self-test",
     "The catalog diagnostic must precede the execution-evidence families.",
+  );
+  assert.deepEqual(QUALITY_MILESTONE_PLAN[catalogDiagnosticIndex].args, [
+    "check:srd-stat-block-catalog",
+  ]);
+  assert.deepEqual(QUALITY_MILESTONE_PLAN.at(-1).args, [
+    "run",
+    "coverage:body",
+  ]);
+  const fixtureCheck = (id, prerequisites = []) => ({
+    id,
+    command: "fixture",
+    args: [id],
+    prerequisites,
+  });
+  const collectingPlan = [
+    fixtureCheck("failure"),
+    fixtureCheck("dependent", ["failure"]),
+    fixtureCheck("independent-pass"),
+    fixtureCheck("independent-failure"),
+    fixtureCheck("transitive-dependent", ["dependent"]),
+  ];
+  const collectingCalls = [];
+  let collectingOutput = "";
+  let collectingClock = 0n;
+  const collectingResult = executeQualityMilestone(collectingPlan, {
+    execute: (check) => {
+      collectingCalls.push(check.id);
+      return {
+        status:
+          check.id === "failure"
+            ? 2
+            : check.id === "independent-failure"
+              ? 3
+              : 0,
+        signal: null,
+      };
+    },
+    now: () => {
+      const current = collectingClock;
+      collectingClock += 1_000_000_000n;
+      return current;
+    },
+    write: (message) => {
+      collectingOutput += message;
+    },
+  });
+  assert.deepEqual(collectingCalls, [
+    "failure",
+    "independent-pass",
+    "independent-failure",
+  ]);
+  assert.deepEqual(
+    collectingResult.outcomes.map((outcome) => outcome.status),
+    ["FAIL", "BLOCKED", "PASS", "FAIL", "BLOCKED"],
+  );
+  assert.deepEqual(collectingResult.outcomes[1].blockedBy, ["failure"]);
+  assert.deepEqual(collectingResult.outcomes[4].blockedBy, ["dependent"]);
+  assert.equal(collectingResult.outcomes[0].durationMilliseconds, 1_000);
+  assert.equal(collectingResult.outcomes[1].durationMilliseconds, 0);
+  assert.equal(collectingResult.exitCode, 1);
+  assert.match(collectingOutput, /FAIL 1\.000s failure \(exit 2\)/);
+  assert.match(
+    collectingOutput,
+    /BLOCKED 0\.000s dependent \(blocked by failure\)/,
+  );
+  assert.match(collectingOutput, /PASS 1\.000s independent-pass/);
+  assert.match(collectingOutput, /QUALITY MILESTONE SUMMARY/);
+
+  const allPassResult = executeQualityMilestone(
+    [fixtureCheck("first"), fixtureCheck("second")],
+    {
+      execute: () => ({ status: 0, signal: null }),
+      now: () => 0n,
+      write: () => {},
+    },
+  );
+  assert.deepEqual(
+    allPassResult.outcomes.map((outcome) => outcome.status),
+    ["PASS", "PASS"],
+  );
+  assert.equal(allPassResult.exitCode, 0);
+
+  const spawnFailureResult = executeQualityMilestone(
+    [fixtureCheck("spawn-failure"), fixtureCheck("after-spawn-failure")],
+    {
+      execute: (check) => {
+        if (check.id === "spawn-failure") throw new Error("synthetic spawn");
+        return { status: 0, signal: null };
+      },
+      now: () => 0n,
+      write: () => {},
+    },
+  );
+  assert.deepEqual(
+    spawnFailureResult.outcomes.map((outcome) => outcome.status),
+    ["FAIL", "PASS"],
+  );
+  assert.match(spawnFailureResult.outcomes[0].failure, /synthetic spawn/);
+
+  const signalFailureResult = executeQualityMilestone(
+    [fixtureCheck("signal-failure"), fixtureCheck("after-signal-failure")],
+    {
+      execute: (check) =>
+        check.id === "signal-failure"
+          ? { status: null, signal: "SIGTERM" }
+          : { status: 0, signal: null },
+      now: () => 0n,
+      write: () => {},
+    },
+  );
+  assert.deepEqual(
+    signalFailureResult.outcomes.map((outcome) => outcome.status),
+    ["FAIL", "PASS"],
+  );
+  assert.equal(signalFailureResult.outcomes[0].failure, "signal SIGTERM");
+  assert.equal(signalFailureResult.exitCode, 1);
+
+  const emergencyCalls = [];
+  const emergencyResult = executeQualityMilestone(
+    [
+      fixtureCheck("emergency"),
+      fixtureCheck("independent-after-emergency"),
+      fixtureCheck("another-independent-after-emergency"),
+    ],
+    {
+      execute: (check) => {
+        emergencyCalls.push(check.id);
+        return { status: 137, signal: null };
+      },
+      now: () => 0n,
+      write: () => {},
+    },
+  );
+  assert.deepEqual(emergencyCalls, ["emergency"]);
+  assert.deepEqual(
+    emergencyResult.outcomes.map((outcome) => outcome.status),
+    ["FAIL", "BLOCKED", "BLOCKED"],
+  );
+  assert.equal(emergencyResult.exitCode, 137);
+  assert.throws(
+    () =>
+      validateQualityMilestonePlan([
+        fixtureCheck("dependent", ["not-yet-run"]),
+        fixtureCheck("not-yet-run"),
+      ]),
+    /must name an earlier check/,
+  );
+  assert.throws(
+    () =>
+      validateQualityMilestonePlan([
+        fixtureCheck("duplicate"),
+        fixtureCheck("duplicate"),
+      ]),
+    /Duplicate quality milestone id/,
   );
   const configured = Object.keys(PACKAGE_POLICIES);
   assert.deepEqual(inventoryIssues(configured, configured), {
@@ -662,8 +983,9 @@ else if (command === "complexity") await checkCyclomaticComplexity(false);
 else if (command === "complexity:prune") await checkCyclomaticComplexity(true);
 else if (command === "duplication") checkDuplication();
 else if (command === "coverage") checkCoverage();
+else if (command === "milestone") runQualityMilestone();
 else {
   throw new Error(
-    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage",
+    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|milestone",
   );
 }

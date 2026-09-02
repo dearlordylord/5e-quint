@@ -44,6 +44,7 @@ const root = resolve(__dirname, "../..");
 const packageJson = JSON.parse(
   readFileSync(join(root, "package.json"), "utf8"),
 );
+const { QUALITY_MILESTONE_PLAN } = require("../quality-milestone-plan.cjs");
 
 function filesBelow(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -1180,6 +1181,46 @@ function runTestSourceListing(testPathArgument) {
   }
 }
 
+function assertQualityMilestonePlanLaneBoundaries(scripts) {
+  assert.equal(
+    scripts["quality:body"],
+    "scripts/assert-resource-lock.sh broad && node scripts/workspace-quality-harness.mjs milestone",
+    "Quality body must preserve the broad lock assertion and invoke the milestone collector.",
+  );
+
+  const planInvocations = QUALITY_MILESTONE_PLAN.map(({ command, args }) =>
+    [command, ...args].join(" "),
+  );
+  assert.equal(
+    planInvocations.filter(
+      (invocation) => invocation === "pnpm check:raw-swarm-lane-hygiene",
+    ).length,
+    1,
+    "The quality milestone plan must invoke Raw Swarm lane hygiene exactly once.",
+  );
+
+  const forbiddenLaneInvocation = new RegExp(
+    [
+      "check:raw-swarm-deterministic",
+      "raw-swarm:model",
+      "check:raw-swarm-sdk-player",
+      "run-deterministic-check",
+      "run-model-backed",
+      ...MODEL_BACKED_ENTRYPOINTS,
+    ]
+      .map(escapeRegExp)
+      .join("|"),
+    "u",
+  );
+  for (const invocation of planInvocations) {
+    assert.doesNotMatch(
+      invocation,
+      forbiddenLaneInvocation,
+      `The quality milestone plan must not invoke a deterministic or model-backed Raw Swarm lane: ${invocation}`,
+    );
+  }
+}
+
 function runLaneHygiene() {
   const discoveredTests = filesBelow(join(root, "scripts/raw-swarm"))
     .filter((path) => isSupportedVitestTestFilename(path))
@@ -1297,20 +1338,7 @@ function runLaneHygiene() {
     ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh campaign node scripts/raw-swarm/run-model-backed.mjs campaign",
   );
 
-  const qualityBody = scripts["quality:body"];
-  assert.match(qualityBody, /pnpm check:raw-swarm-lane-hygiene/);
-  assert.doesNotMatch(qualityBody, /check:raw-swarm-deterministic/);
-  assert.doesNotMatch(
-    qualityBody,
-    /raw-swarm:model|check:raw-swarm-sdk-player/,
-  );
-  for (const entrypoint of MODEL_BACKED_ENTRYPOINTS) {
-    assert.doesNotMatch(
-      qualityBody,
-      new RegExp(entrypoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-      `Quality must not invoke model-backed entrypoint ${entrypoint}.`,
-    );
-  }
+  assertQualityMilestonePlanLaneBoundaries(scripts);
   assert.equal(
     new Set(MODEL_BACKED_ENTRYPOINTS).size,
     MODEL_BACKED_ENTRYPOINTS.length,
