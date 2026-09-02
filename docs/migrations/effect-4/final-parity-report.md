@@ -261,13 +261,14 @@ revision, each acquiring the public broad lock normally:
 - `pnpm typecheck`: exit 0; 14 of 14 package tasks passed.
 - `pnpm test`: exit 0; 11 of 11 package tasks passed.
 
-The receipt commit follows the gated implementation revision. Closure therefore
-also requires an attestation that the tracked diff from the gated revision to
-the receipt revision contains only this report and that
-`pnpm check:markdown-links` passes at the receipt revision. Any intervening
-executable, configuration, generated, certificate, or other tracked change
-invalidates that attestation and requires the public gates at the new source
-tip.
+Receipt commit `c9361ad89bd54704c8f9df20740990d9670f56dd` follows the gated
+implementation revision. The tracked diff from
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea` through that receipt contains only
+this report: 140 added lines and 64 removed lines.
+`pnpm check:markdown-links` passed at the receipt revision across all 234
+tracked Markdown files. No executable source, configuration, generated
+artifact, or certificate changed after the gated implementation revision, so
+the public-gate evidence remains applicable.
 
 The requested process retrospective is intentionally outside migration
 closure. [Issue #493](https://github.com/dearlordylord/5e-quint/issues/493)
@@ -288,4 +289,4 @@ is intentionally unchanged by this report.
 | Vite large-chunk advisory                              | Reconfirmed as a non-failing terminal build advisory                                      |
 | RAW/domain/QNT/runtime/architecture review convergence | Complete; final tooling repairs reached zero-finding Standards and Spec re-review         |
 | Public `typecheck`, `test`, and `quality:milestone`    | Complete at the certified implementation revision                                         |
-| Live #386 and SR-00 receipt closure                    | Terminal evidence complete; receipt-only diff attestation and ledger/issue updates follow |
+| Live #386 and SR-00 receipt closure                    | Terminal evidence and receipt-only diff attestation complete; ledger/issue updates follow |
