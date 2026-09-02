@@ -59,12 +59,14 @@ and its [review rationale](./surface-publication-delta.md). Those artifacts own
 their dynamic membership, record-delta, schema, and digest evidence; this
 report deliberately does not restate those values.
 
-The final current-tip oracle recertification at `d3bea8b68` records 8,965
-reviewed identities: it removes only the 17 migration-only
-`wildShapeStatBlockCatalogRequired` sites required to restore Effect 3 parity;
-the mastery-admission repair adds no public oracle identities. The remaining 14
-identity hash replacements are the reviewed MCP, Surface publication, and Raw
-Swarm artifact projections.
+The terminal oracle recertification at `06b9c6c9f` records 8,993 reviewed
+identities. The preceding `cc6a9180c` certificate removed the 17 migration-only
+`wildShapeStatBlockCatalogRequired` sites required to restore Effect 3 parity.
+The later Mastery recertification added 28 reviewed sites: 22 MCP catalog
+response sites and the six canonical Mastery Dhall/JSON artifacts. Their
+classifications, changed metadata and digest sites, exact hashes, and unchanged
+baseline authorities remain owned by the executable certificate and the
+[declaration-bundle convergence record](./declaration-bundle-convergence.md).
 
 The 2026-09-01 final convergence recertification retains the aggregate bytes
 and narrows the published Life Bond `caster_heal_link.rangeFeet` contract to
