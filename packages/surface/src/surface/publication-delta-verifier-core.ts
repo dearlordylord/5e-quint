@@ -1086,50 +1086,46 @@ function classifyCandidateSchema(
       ? proposed
       : transformed;
   };
-  const classifyUnitIdItemId: CandidateSchemaClassifier = (
-    value,
-    pointer,
-    transformed,
-  ) => {
-    if (
-      !pointer.endsWith("/itemId") ||
-      !reachable.has(value) ||
-      transformed.type !== "string" ||
-      transformed.minLength !== 1 ||
-      typeof transformed.pattern !== "string"
-    ) {
-      return transformed;
-    }
-    const proposed = jsonObjectWithoutKeys(transformed, [
-      "minLength",
-      "pattern",
-    ]);
-    return authorize("unitIdItemId", pointer, value, proposed)
-      ? proposed
-      : transformed;
-  };
-  const classifyUnitIdLinkedSpellEnd: CandidateSchemaClassifier = (
-    value,
-    pointer,
-    transformed,
-  ) => {
-    if (
-      !pointer.endsWith("/endsWhenGrantedSpellEnds") ||
-      !reachable.has(value) ||
-      transformed.type !== "string" ||
-      transformed.minLength !== 1 ||
-      typeof transformed.pattern !== "string"
-    ) {
-      return transformed;
-    }
-    const proposed = jsonObjectWithoutKeys(transformed, [
-      "minLength",
-      "pattern",
-    ]);
-    return authorize("unitIdLinkedSpellEnd", pointer, value, proposed)
-      ? proposed
-      : transformed;
-  };
+  type UnitIdSchemaReversalSpec =
+    | {
+        readonly pointerSuffix: "/itemId";
+        readonly classificationKind: "unitIdItemId";
+      }
+    | {
+        readonly pointerSuffix: "/endsWhenGrantedSpellEnds";
+        readonly classificationKind: "unitIdLinkedSpellEnd";
+      };
+  const makeUnitIdSchemaReversalClassifier =
+    ({
+      pointerSuffix,
+      classificationKind,
+    }: UnitIdSchemaReversalSpec): CandidateSchemaClassifier =>
+    (value, pointer, transformed) => {
+      if (
+        !pointer.endsWith(pointerSuffix) ||
+        !reachable.has(value) ||
+        transformed.type !== "string" ||
+        transformed.minLength !== 1 ||
+        typeof transformed.pattern !== "string"
+      ) {
+        return transformed;
+      }
+      const proposed = jsonObjectWithoutKeys(transformed, [
+        "minLength",
+        "pattern",
+      ]);
+      return authorize(classificationKind, pointer, value, proposed)
+        ? proposed
+        : transformed;
+    };
+  const classifyUnitIdItemId = makeUnitIdSchemaReversalClassifier({
+    pointerSuffix: "/itemId",
+    classificationKind: "unitIdItemId",
+  });
+  const classifyUnitIdLinkedSpellEnd = makeUnitIdSchemaReversalClassifier({
+    pointerSuffix: "/endsWhenGrantedSpellEnds",
+    classificationKind: "unitIdLinkedSpellEnd",
+  });
   const classifyFlyOnlyHover: CandidateSchemaClassifier = (
     value,
     pointer,
