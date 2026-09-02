@@ -51,6 +51,7 @@ import {
   projectCharacterSheetSpellSource,
   type CharacterSheetSpellSource,
 } from "./character-spell-projection.ts";
+import { isSpellcastingBuild } from "./character-build-shape.ts";
 
 import { characterSheetResources } from "./resources.ts";
 import { characterSheetSpellInvocation } from "./spell-invocation.ts";
@@ -74,7 +75,7 @@ import {
   type CharacterSheetRetainedCompanionState,
 } from "./sheet-types.ts";
 import { parseHp } from "./hit-points.ts";
-import { isRecord, isSpellcastingBuild } from "./stored-sheet-parser.ts";
+import { isRecord } from "./record-shape.ts";
 
 type RetainedCompanionCreationSourceFacts =
   | {
