@@ -11,7 +11,7 @@
 
 This section is the sole mutable handoff for a new session.
 
-- Ledger state observed: 2026-08-31
+- Ledger state observed: 2026-09-01
 - Current frontier: `SR-04`
 - Active work: #474 Battle spell mechanics procedure admission
 - Active owner: Codex orchestrator
@@ -21,10 +21,18 @@ This section is the sole mutable handoff for a new session.
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
 - Active landing unit: `integration/cleanroom-sr-04g` at
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`
-- Next action: converge the canonical static-admission foundation and
-  parse-once execution carrier, then divide compiler-enforced profile-owner
-  migrations and exact 99-complete/22-partial/74-no-owner observation coverage
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
+  `master` synchronization base `cc6a9180c`, integration head `369912462`
+- Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
+  `369912462`; `SR-04G` remains Active and incomplete. The exact observation
+  baseline is 99 complete, 22 partial, and 74 with no owner.
+- Clean unintegrated lanes: B3 at `f478cc7b2255c8837b0dc42bc73a44634b0f363a`
+  still has review findings for a path collision, a fabricated coordinate, a
+  dead `castLevel`, untyped keys, and duplicated constants; A4 at
+  `c8e75b922211b9ca6970895b49580d87cab1bc59` awaits review.
+- Next action: repair and re-review B3 to dual-axis convergence, review A4,
+  then integrate only each clean reviewed lane before assigning the remaining
+  profile batches.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -144,12 +152,11 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                                      | Base SHA    | Write lease                                                                                                                                 | State  |
-| --------------- | ----------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                        | `42c838942` | Spell profile-owner static projection, exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence | Active |
-| `SR-04G-A`      | #474 attack/direct/reaction profile migration   | McClintock         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-profile-attack`; `work/cleanroom-sr04g-profile-attack`   | `85877a5b8` | Migrate the 25 attack, direct, and reaction authored declarations to bound parse-once mechanics admission                                   | Active |
-| `SR-04G-B`      | #474 save/activation profile migration          | Popper             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-profile-save`; `work/cleanroom-sr04g-profile-save`       | `85877a5b8` | Migrate the 17 save and activation authored declarations plus the exclusively leased save-gate helper                                       | Active |
-| `SR-04G-C`      | #474 ongoing/persistent/spawn/glyph migration   | Turing             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-profile-ongoing`; `work/cleanroom-sr04g-profile-ongoing` | `85877a5b8` | Migrate the 33 ongoing, persistent, spawned-object, and glyph-related authored declarations                                                 | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                          | State          |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `cc6a9180c` | Integration head `369912462`; C2 integrated; exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence remain in progress | Active         |
+| `SR-04G-B3`     | #474 save/activation profile migration          | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-b3`; `work/sr04g-b3`              | `f478cc7b2` | Clean unintegrated tip; repair the five recorded review findings and repeat both review axes before integration                                                      | Repair pending |
+| `SR-04G-A4`     | #474 attack/direct/reaction profile migration   | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a4`; `work/sr04g-a4`              | `c8e75b922` | Clean unintegrated tip; complete both review axes before integration                                                                                                 | Review pending |
 
 ## Landing discipline
 
