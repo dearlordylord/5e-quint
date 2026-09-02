@@ -172,7 +172,7 @@ import { invalidResult } from "./result-helpers.ts";
 import {
   battleStateWithReconciledCurrentActorTurnConstraint,
   saveGatedTurnConstraintActionOrBonusActionTurnResources,
-} from "./save-gated-turn-constraint-runtime.ts";
+} from "./save-gated-turn-constraint-turn-resources.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,

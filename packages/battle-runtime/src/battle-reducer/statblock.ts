@@ -33,7 +33,7 @@ import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
-import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-runtime.ts";
+import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-turn-resources.ts";
 
 export function statBlockMultiattackDispatchResourceDemandForActor(
   state: BattleState,
