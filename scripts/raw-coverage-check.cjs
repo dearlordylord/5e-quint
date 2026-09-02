@@ -1116,6 +1116,8 @@ function runSelfTests() {
     ]);
     const linkedWorktreeRoot = path.join(fixtureRoot, "linked-worktree");
     runFixtureGit(fixtureRoot, [
+      "-c",
+      "core.hooksPath=/dev/null",
       "worktree",
       "add",
       "--quiet",
