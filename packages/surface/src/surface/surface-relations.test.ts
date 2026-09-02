@@ -66,6 +66,32 @@ const arrayValue = (value: unknown, label: string): unknown[] => {
 
 const mutablePublishedSurface = () => structuredClone(srdSurface);
 
+const decodeCorpusSurfaceWithUnitMutation = (
+  unitId: string,
+  mutate: (unit: Record<string, unknown>) => void,
+) => {
+  const records = corpusAudit.readSurfaceRecords().map((record) => ({
+    kind: record.kind,
+    value: structuredClone(record.value),
+  }));
+  const record = records.find(
+    ({ value }) => objectValue(value, unitId).id === unitId,
+  );
+  if (record === undefined) {
+    throw new Error(`Missing synthetic relation fixture ${unitId}`);
+  }
+  mutate(objectValue(record.value, unitId));
+  return decodeSrdSurfaceResult({
+    kind: "srd-5.2.1-surface-catalog",
+    units: records
+      .filter(({ kind }) => kind !== "statBlock")
+      .map(({ value }) => value),
+    statBlocks: records
+      .filter(({ kind }) => kind === "statBlock")
+      .map(({ value }) => value),
+  });
+};
+
 const mutableUnit = (
   surface: ReturnType<typeof mutablePublishedSurface>,
   id: string,
@@ -246,88 +272,44 @@ describe("canonical Surface authored relations", () => {
     );
   });
 
-  it("reports every independently malformed authored target without throwing", () => {
-    const malformedRecords = corpusAudit.readSurfaceRecords().map((record) => ({
-      kind: record.kind,
-      value: structuredClone(record.value),
-    }));
-    const crystalBall = malformedRecords.find(
-      (record) =>
-        objectValue(record.value, "crystal ball").id ===
+  it("rejects malformed authored targets at the Surface parse boundary", () => {
+    for (const malformedId of ["", " synthetic_malformed "]) {
+      const durationResult = decodeCorpusSurfaceWithUnitMutation(
         "magic_item_crystal_ball_of_mind_reading",
-    );
-    const quarterstaff = malformedRecords.find(
-      (record) =>
-        objectValue(record.value, "quarterstaff").id ===
+        (unit) => {
+          const mechanics = objectValue(
+            unit.mechanics,
+            "crystal ball mechanics",
+          );
+          const grant = objectValue(
+            arrayValue(mechanics.grants, "crystal ball grants")[1],
+            "crystal ball grant",
+          );
+          objectValue(
+            grant.durationOverride,
+            "crystal ball duration override",
+          ).endsWhenGrantedSpellEnds = malformedId;
+        },
+      );
+      expect(Result.isFailure(durationResult)).toBe(true);
+
+      const itemResult = decodeCorpusSurfaceWithUnitMutation(
         "magic_item_quarterstaff_of_the_acrobat",
-    );
-    if (crystalBall === undefined || quarterstaff === undefined) {
-      throw new Error("Expected synthetic relation fixtures in the corpus");
+        (unit) => {
+          const mechanics = objectValue(
+            unit.mechanics,
+            "quarterstaff mechanics",
+          );
+          const grant = objectValue(
+            arrayValue(mechanics.grants, "quarterstaff grants")[0],
+            "quarterstaff grant",
+          );
+          objectValue(grant.weaponFilter, "quarterstaff weapon filter").itemId =
+            malformedId;
+        },
+      );
+      expect(Result.isFailure(itemResult)).toBe(true);
     }
-
-    const crystalMechanics = objectValue(
-      objectValue(crystalBall.value, "crystal ball").mechanics,
-      "crystal ball mechanics",
-    );
-    const crystalGrants = arrayValue(
-      crystalMechanics.grants,
-      "crystal ball grants",
-    );
-    const crystalGrant = objectValue(crystalGrants[1], "crystal ball grant");
-    objectValue(
-      crystalGrant.durationOverride,
-      "crystal ball duration override",
-    ).endsWhenGrantedSpellEnds = "";
-
-    const quarterstaffMechanics = objectValue(
-      objectValue(quarterstaff.value, "quarterstaff").mechanics,
-      "quarterstaff mechanics",
-    );
-    const quarterstaffGrants = arrayValue(
-      quarterstaffMechanics.grants,
-      "quarterstaff grants",
-    );
-    objectValue(
-      objectValue(quarterstaffGrants[0], "quarterstaff first grant")
-        .weaponFilter,
-      "quarterstaff first weapon filter",
-    ).itemId = " ";
-    objectValue(
-      objectValue(quarterstaffGrants[1], "quarterstaff second grant")
-        .weaponFilter,
-      "quarterstaff second weapon filter",
-    ).itemId = " synthetic malformed ";
-
-    const malformedSurface = {
-      kind: "srd-5.2.1-surface-catalog" as const,
-      units: malformedRecords
-        .filter((record) => record.kind !== "statBlock")
-        .map((record) => record.value),
-      statBlocks: malformedRecords
-        .filter((record) => record.kind === "statBlock")
-        .map((record) => record.value),
-    };
-    const decoded = decodeSrdSurfaceResult(malformedSurface);
-    expect(Result.isSuccess(decoded)).toBe(true);
-    if (Result.isFailure(decoded)) return;
-
-    expect(() =>
-      collectSurfaceAuthoredRelations(decoded.success),
-    ).not.toThrow();
-    const result = collectSurfaceAuthoredRelations(decoded.success);
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isSuccess(result)) return;
-    const invalidIssues = result.failure.filter(
-      (issue) => issue.code === "invalidRecord",
-    );
-    expect(invalidIssues).toHaveLength(3);
-    expect(invalidIssues.map((issue) => issue.path)).toEqual(
-      expect.arrayContaining([
-        "value.mechanics.grants[1].durationOverride.endsWhenGrantedSpellEnds",
-        "value.mechanics.grants[0].weaponFilter.itemId",
-        "value.mechanics.grants[1].weaponFilter.itemId",
-      ]),
-    );
   });
 
   it("reports malformed stat-block reference and dependency targets", () => {

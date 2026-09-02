@@ -52,6 +52,14 @@ constraints (fourteen changed keyword leaves). The remaining graph changes are
 reference extraction/factoring and removal of one structurally subsumed
 Barbarian general-feature branch from `51307f83f`.
 
+The linked-spell duration dependency
+`durationOverride.endsWhenGrantedSpellEnds` now projects through the same
+decoded `UnitId` boundary. Its two reachable schema occurrences each gain the
+non-empty, trimmed-string constraints. The graph certificate records these four
+keyword leaves under a separate `unitIdLinkedSpellEnd` classification, so an
+`itemId` constraint cannot substitute for a linked-spell dependency constraint
+or inherit its reviewed pointer authority.
+
 The final convergence repair also synchronizes Life Bond's
 `caster_heal_link.rangeFeet` publication contract with its existing decoded
 positive-integer domain. At the one reachable owning schema node, the
@@ -80,16 +88,16 @@ schema bytes, and then classifies the complete comparison-to-current rooted
 graph. Substituting either intermediate artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
-`UnitId`, Life Bond range, and movement-trace effect narrowings, proves the
-removed Barbarian member is a structural subset of a retained member, treats
-local `$ref` extraction and associative, set-valued `anyOf` factoring
-transparently, and applies joint partition refinement to both rooted graphs.
-Each reversal is authorized by an exact reachable JSON pointer and the
-canonical hashes of the node before and after that reversal. An equivalent-
-looking node at another or unreachable location does not inherit the
-classification. Any remaining changed region fails closed, and malformed or
-non-converging graph analysis is reported as typed invalid evidence rather
-than escaping the verifier.
+specific-item `UnitId`, linked-spell `UnitId`, Life Bond range, and
+movement-trace effect narrowings, proves the removed Barbarian member is a
+structural subset of a retained member, treats local `$ref` extraction and
+associative, set-valued `anyOf` factoring transparently, and applies joint
+partition refinement to both rooted graphs. Each reversal is authorized by an
+exact reachable JSON pointer and the canonical hashes of the node before and
+after that reversal. An equivalent-looking node at another or unreachable
+location does not inherit the classification. Any remaining changed region
+fails closed, and malformed or non-converging graph analysis is reported as
+typed invalid evidence rather than escaping the verifier.
 This is executable evidence about these two finite schema graphs. It is not a
 claim of equivalence for the JSON Schema language in general. The AJV matrix
 still requires each schema to accept its corresponding aggregate and reject

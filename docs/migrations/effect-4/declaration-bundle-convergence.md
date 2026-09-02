@@ -249,6 +249,25 @@ changes therefore do not alter the admitted declaration graph.
 The subsequent Character Battle admission correction at `d7262c234` also left
 the admitted graph byte-identical.
 
+## Linked-spell identity recertification (2026-09-01)
+
+At immutable implementation source `7f5da6475`, the granted-spell duration
+link is decoded as the existing `UnitId` domain rather than an unrestricted
+string. The admitted declaration graph retains exactly 571 paths and the
+unchanged sorted POSIX path-ledger SHA-256
+`4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`.
+The production emitter measured 10,298,121 bytes, leaving 187,639 bytes below
+the unchanged 10 MiB cap. Its sorted content-ledger SHA-256 is
+`4d3ded53627e74be2ac9ecfb507d8691d591c19e14cd314d6fe7e597de63319d`.
+
+Relative to the preceding reviewed graph, exactly one declaration changes:
+`packages/surface/src/surface/schema-base.d.ts` grows by 41 bytes. Its
+`endsWhenGrantedSpellEnds` decoded type narrows from `string` to the branded
+`UnitId` string while its encoded type remains `string`; no declaration path,
+runtime/data owner, or other declaration content changes. The coarse safety
+ceiling and forbidden-owner set remain unchanged, and production emission
+continues to fail closed on the exact reviewed manifest.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

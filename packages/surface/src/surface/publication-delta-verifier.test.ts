@@ -894,6 +894,46 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("schema-delta-unclassified");
   }, 180_000);
 
+  test("rejects tampering with a linked-spell UnitId classification pointer", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const classifiedChanges = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(
+                fixtureObjectField(certificate, "artifacts"),
+                "schema",
+              ),
+              "evidence",
+            ),
+            "graphDelta",
+          ),
+          "classifiedChanges",
+        );
+        const linkedSpellClassifications = fixtureArrayField(
+          classifiedChanges,
+          "unitIdLinkedSpellEnd",
+        );
+        const first = fixtureObject(
+          linkedSpellClassifications[0],
+          "unitIdLinkedSpellEnd[0]",
+        );
+        first.pointer =
+          "/$defs/UnreviewedLinkedSpell/properties/endsWhenGrantedSpellEnds";
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
   test("rejects a reachable Life Bond range lookalike outside the certified pointer", () => {
     const result = withFixture(
       (paths) => {
@@ -945,6 +985,45 @@ describe("Surface publication delta verifier", () => {
         definitions.UnreachableUnitIdLookalike = { ...itemId };
         Reflect.deleteProperty(itemId, "minLength");
         Reflect.deleteProperty(itemId, "pattern");
+        writeFileSync(path, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).not.toContain("candidate-hash-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+  }, 180_000);
+
+  test("rejects substituting an unreachable linked-spell UnitId lookalike", () => {
+    const result = withFixture(
+      (paths) => {
+        const path = join(paths.publicationDir, "srd-surface.schema.json");
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "schema",
+        );
+        const definitions = fixtureObjectField(schema, "$defs");
+        const linkedSpellId = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(
+              fixtureObjectField(definitions, "SrdRecordUnion352Encoded"),
+              "properties",
+            ),
+            "durationOverride",
+          ),
+          "properties",
+        ).endsWhenGrantedSpellEnds;
+        const linkedSpellIdObject = fixtureObject(
+          linkedSpellId,
+          "endsWhenGrantedSpellEnds",
+        );
+        definitions.UnreachableLinkedSpellIdLookalike = {
+          ...linkedSpellIdObject,
+        };
+        Reflect.deleteProperty(linkedSpellIdObject, "minLength");
+        Reflect.deleteProperty(linkedSpellIdObject, "pattern");
         writeFileSync(path, JSON.stringify(schema));
         certifyCandidateSchemaSnapshot(paths);
       },

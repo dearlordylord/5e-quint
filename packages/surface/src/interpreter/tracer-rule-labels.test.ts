@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { UnitId } from "@dnd/shared/game-facts";
 
 import huntersMarkInput from "../../content/hunters_mark.json";
 import wardingBondInput from "../../content/warding_bond.json";
@@ -395,7 +396,7 @@ describe("Surface trace rule labels", () => {
     expect(
       describeGrantedSpellDurationOverride({
         removeConcentration: true,
-        endsWhenGrantedSpellEnds: "source_spell",
+        endsWhenGrantedSpellEnds: UnitId.make("source_spell"),
       }),
     ).toBe(
       "\nduration override: no concentration\nduration override: ends when source_spell ends",
