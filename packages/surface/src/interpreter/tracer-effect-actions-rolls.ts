@@ -1,4 +1,5 @@
 import type { AbilityFilter, AreaDirectEffectAtom } from "../surface/types.ts";
+import { Match } from "effect";
 import type { TraceNode } from "./tracer-model.ts";
 import {
   describeCriticalRangeAttackFilter,
@@ -10,6 +11,8 @@ import {
   describeWeaponFilter,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
+
+const byKind = Match.discriminator("kind");
 
 export type ActionAndRollEffectAtom = Extract<
   AreaDirectEffectAtom,
@@ -74,472 +77,472 @@ export function traceActionAndRollEffectAtom(
   nodes: TraceNode[],
   ids: IdGen,
 ): string | null {
-  switch (e.kind) {
-    case "take_standard_action": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "take_standard_action",
-        label: `take_standard_action\n${e.action}\ncost: ${e.cost}`,
-      });
-      return id;
-    }
-    case "grant_alternate_action_cost": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "grant_alternate_action_cost",
-        label: `grant_alternate_action_cost\n${e.from.actions.join(", ")}\nas ${e.to.kind}`,
-      });
-      return id;
-    }
-    case "grant_extra_action": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "grant_extra_action",
-        label: "grant_extra_action\n(1 additional action)",
-      });
-      return id;
-    }
-    case "choose_action_or_bonus_action_each_turn": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "choose_action_or_bonus_action_each_turn",
-        label:
-          "choose_action_or_bonus_action_each_turn\ntarget chooses Action or Bonus Action each turn",
-      });
-      return id;
-    }
-    case "modify_roll_numeric": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_roll_numeric",
-        label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}${describeAbilityFilter(e.abilityFilter)}${describeWeaponFilter(e.weaponFilter)}`,
-      });
-      return id;
-    }
-    case "suppress_movement_trace": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "suppress_movement_trace",
-        label: "suppress_movement_trace",
-      });
-      return id;
-    }
-    case "initiative_swap": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "initiative_swap",
-        label: [
-          "initiative_swap",
-          e.timing,
-          e.ally,
-          `blocked by ${e.prohibitedByCondition}`,
-        ].join("\n"),
-      });
-      return id;
-    }
-    case "jack_of_all_trades_ability_check_bonus": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "jack_of_all_trades_ability_check_bonus",
-        label:
-          "Jack of All Trades\nhalf Proficiency Bonus on unproficient skill Ability Checks\nno other Proficiency Bonus",
-      });
-      return id;
-    }
-    case "modify_damage_numeric": {
-      const id = ids("eff");
-      const damageSource =
-        e.damageSourceFilter === undefined
-          ? ""
-          : `\nsource: ${e.damageSourceFilter.attackRollFilter}`;
-      const minimum =
-        e.minimumDamageTotal === undefined
-          ? ""
-          : `\nminimum total: ${e.minimumDamageTotal}`;
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_damage_numeric",
-        label: `modify_damage_numeric\n${describeDelta(e.delta)}${damageSource}${describeWeaponFilter(e.weaponFilter)}${minimum}`,
-      });
-      return id;
-    }
-    case "modify_size_category": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_size_category",
-        label: `modify_size_category\n${e.direction} ${e.steps}`,
-      });
-      return id;
-    }
-    case "modify_roll_advantage": {
-      const id = ids("eff");
-      const by =
-        e.attackerTypeFilter !== undefined && e.attackerTypeFilter.length > 0
-          ? `\nby: ${e.attackerTypeFilter.join("/")}`
-          : "";
-      const condition =
-        e.conditionFilter !== undefined && e.conditionFilter.length > 0
-          ? `\ncondition: ${e.conditionFilter.join("/")}`
-          : "";
-      const ability = describeAbilityFilter(e.abilityFilter, "ability");
-      const saveAbility = describeAbilityFilter(
-        e.saveAbilityFilter,
-        "save ability",
-      );
-      const contextRange =
-        e.contextRangeFeet !== undefined
-          ? `\ncontext: within ${e.contextRangeFeet} ft`
-          : "";
-      const attackRollTarget =
-        e.attackRollTarget === undefined
-          ? ""
-          : `\nattack target: ${e.attackRollTarget}`;
-      const spellSource =
-        e.spellSourceFilter === undefined
-          ? ""
-          : `\nsource: ${e.spellSourceFilter.className} spells`;
-      const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveAbility}${attackRollTarget}${spellSource}${saveSource}${contextRange}`,
-      });
-      return id;
-    }
-    case "suppress_roll_disadvantage": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "suppress_roll_disadvantage",
-        label: `suppress_roll_disadvantage\non ${e.on.join(", ")}${describeSkillFilter(e.skillFilter)}`,
-      });
-      return id;
-    }
-    case "remove_equipment_requirement": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "remove_equipment_requirement",
-        label: `remove_equipment_requirement\n${e.requirement}`,
-      });
-      return id;
-    }
-    case "modify_crit_range": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_crit_range",
-        label: `modify_crit_range\n${describeCriticalRangeAttackFilter(e.attackRollFilter)} crits on ${e.threshold}-20${describeWeaponFilter(e.weaponFilter)}`,
-      });
-      return id;
-    }
-    case "transfer_weapon_bonus_to_ac": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "transfer_weapon_bonus_to_ac",
-        label: `transfer_weapon_bonus_to_ac\nup to +${e.maxBonus} from ${e.from}\n${e.trigger} until ${e.duration}${describeWeaponFilter(e.weaponFilter)}`,
-      });
-      return id;
-    }
-    case "suppress_incoming_critical_hit": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "suppress_incoming_critical_hit",
-        label:
-          "suppress_incoming_critical_hit\ncritical hits against bearer become normal hits",
-      });
-      return id;
-    }
-    case "scale_attack_count": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "scale_attack_count",
-        label: `scale_attack_count\n+${e.additional} attack${e.additional === 1 ? "" : "s"} per Attack action`,
-      });
-      return id;
-    }
-    case "cap_attack_action_attacks": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "cap_attack_action_attacks",
-        label: `cap_attack_action_attacks\nmax ${e.maxAttacks} attack${e.maxAttacks === 1 ? "" : "s"} per Attack action`,
-      });
-      return id;
-    }
-    case "somatic_spell_failure_chance": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "somatic_spell_failure_chance",
-        label: `somatic_spell_failure_chance\n${e.percent}% chance spell fails`,
-      });
-      return id;
-    }
-    case "modify_speed": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_speed",
-        label: `modify_speed\n${e.delta >= 0 ? "+" : ""}${e.delta} ${e.unit}`,
-      });
-      return id;
-    }
-    case "force_move": {
-      const id = ids("eff");
-      let movementDetail: string = e.movementKind;
-      if (e.movementKind === "move") {
-        movementDetail = `${e.movementKind} ${e.direction}`;
-      } else if (e.movementKind === "push" && e.originDirection !== undefined) {
-        movementDetail = `${e.movementKind} ${e.originDirection}`;
-      }
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "force_move",
-        label: `force_move\n${movementDetail} ${e.distanceFeet} ft`,
-      });
-      return id;
-    }
-    case "push_unsecured_objects": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "push_unsecured_objects",
-        label: `push_unsecured_objects\n${e.objectLocation}\n${e.originDirection} ${e.distanceFeet} ft`,
-      });
-      return id;
-    }
-    case "suspend_target": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "suspend_target",
-        label: `suspend_target\nuntil: ${e.until}`,
-      });
-      return id;
-    }
-    case "fall_at_end_of_next_turn_unless_reapplied": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "fall_at_end_of_next_turn_unless_reapplied",
-        label: "fall_at_end_of_next_turn_unless_reapplied",
-      });
-      return id;
-    }
-    case "force_fall": {
-      const id = ids("eff");
-      const distance =
-        e.maxDistanceFeet === undefined
-          ? ""
-          : `\nup to ${e.maxDistanceFeet} ft`;
-      const impact =
-        e.impactAsNormalFall === true ? "\nimpact as normal fall" : "";
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "force_fall",
-        label: `force_fall\n${e.direction}${distance}${impact}`,
-      });
-      return id;
-    }
-    case "levitate_target": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "levitate_target",
-        label: [
-          `levitate_target\nrise up to ${e.initialRiseMaxFeet} ft`,
-          `suspend: ${e.suspension}`,
-          `movement: ${e.targetMovement.allowedBy}`,
-          `mode: ${e.targetMovement.movementMode}`,
-          `caster altitude: ${e.casterAltitudeControl.direction} ${e.casterAltitudeControl.maxDistanceFeet} ft`,
-          `cost: ${e.casterAltitudeControl.cost}`,
-          `self altitude: ${e.selfAltitudeControl.cost}`,
-          `ending: ${e.ending}`,
-        ].join("\n"),
-      });
-      return id;
-    }
-    case "grab_fixed_object": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "grab_fixed_object",
-        label: "grab_fixed_object",
-      });
-      return id;
-    }
-    case "suspend_in_area": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "suspend_in_area",
-        label: `suspend_in_area\nlocation: ${e.location}\nuntil: ${e.until}`,
-      });
-      return id;
-    }
-    case "fall_when_effect_ends": {
-      const id = ids("eff");
-      const unless =
-        e.unlessCanStopFall === true ? "\nunless can stop fall" : "";
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "fall_when_effect_ends",
-        label: `fall_when_effect_ends\n${e.direction}${unless}`,
-      });
-      return id;
-    }
-    case "move_area": {
-      const id = ids("eff");
-      const carry =
-        e.includeCreaturesInArea === true ? "\nwith creatures in area" : "";
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "move_area",
-        label: `move_area\n${e.direction} ${e.distanceFeet} ft${carry}`,
-      });
-      return id;
-    }
-    case "reduce_area_height": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "reduce_area_height",
-        label: `reduce_area_height\n${describeDiceAmount(e.amount)}`,
-      });
-      return id;
-    }
-    case "end_current_effect_at_area_height_zero": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "lifecycle",
-        atomKind: "end_current_effect_at_area_height_zero",
-        label: "end_current_effect_at_area_height_zero",
-      });
-      return id;
-    }
-    case "ability_check_to_move_in_area": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "resolution",
-        atomKind: "ability_check_to_move_in_area",
-        label: `ability_check_to_move_in_area\n${e.ability.toUpperCase()} (${e.skill}) vs ${describeDc(e.dc)}\non failure: ${e.onFailure}`,
-      });
-      return id;
-    }
-    case "fall_to_ground": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "fall_to_ground",
-        label: "fall_to_ground",
-      });
-      return id;
-    }
-    /* v8 ignore next -- @preserve -- the valid block-targeting arm is directly asserted in tracer.test.ts; V8 retains a zero-count switch-arm artifact in aggregate coverage */
-    case "block_targeting": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "block_targeting",
-        label: `block_targeting\nscope: ${e.scope}`,
-      });
-      return id;
-    }
-    case "choose_new_target_or_lose": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "choose_new_target_or_lose",
-        label: `choose_new_target_or_lose\n${e.subject}`,
-      });
-      return id;
-    }
-    case "block_travel": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "block_travel",
-        label: `block_travel\nscope: ${e.scope}`,
-      });
-      return id;
-    }
-    case "end_if_created_in_occupied_space": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "lifecycle",
-        atomKind: "end_if_created_in_occupied_space",
-        label: "end_if_created_in_occupied_space",
-      });
-      return id;
-    }
-    case "allow_designated_creatures_safe_passage": {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "allow_designated_creatures_safe_passage",
-        label: "allow_designated_creatures_safe_passage",
-      });
-      return id;
-    }
-    /* v8 ignore start -- @preserve -- this action/roll effect subset is decoder-narrowed to the handled tags */
-    default: {
-      const _exhaustive: never = e;
-      throw new Error(
-        `unhandled action or roll effect atom: ${String(_exhaustive)}`,
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+  return Match.value(e)
+    .pipe(
+      byKind("take_standard_action", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "take_standard_action",
+          label: `take_standard_action\n${e.action}\ncost: ${e.cost}`,
+        });
+        return id;
+      }),
+      byKind("grant_alternate_action_cost", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "grant_alternate_action_cost",
+          label: `grant_alternate_action_cost\n${e.from.actions.join(", ")}\nas ${e.to.kind}`,
+        });
+        return id;
+      }),
+      byKind("grant_extra_action", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "grant_extra_action",
+          label: "grant_extra_action\n(1 additional action)",
+        });
+        return id;
+      }),
+      byKind("choose_action_or_bonus_action_each_turn", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "choose_action_or_bonus_action_each_turn",
+          label:
+            "choose_action_or_bonus_action_each_turn\ntarget chooses Action or Bonus Action each turn",
+        });
+        return id;
+      }),
+      byKind("modify_roll_numeric", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "modify_roll_numeric",
+          label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}${describeAbilityFilter(e.abilityFilter)}${describeWeaponFilter(e.weaponFilter)}`,
+        });
+        return id;
+      }),
+      byKind("suppress_movement_trace", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "suppress_movement_trace",
+          label: "suppress_movement_trace",
+        });
+        return id;
+      }),
+      byKind("initiative_swap", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "initiative_swap",
+          label: [
+            "initiative_swap",
+            e.timing,
+            e.ally,
+            `blocked by ${e.prohibitedByCondition}`,
+          ].join("\n"),
+        });
+        return id;
+      }),
+      byKind("jack_of_all_trades_ability_check_bonus", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "jack_of_all_trades_ability_check_bonus",
+          label:
+            "Jack of All Trades\nhalf Proficiency Bonus on unproficient skill Ability Checks\nno other Proficiency Bonus",
+        });
+        return id;
+      }),
+      byKind("modify_damage_numeric", (e) => {
+        const id = ids("eff");
+        const damageSource =
+          e.damageSourceFilter === undefined
+            ? ""
+            : `\nsource: ${e.damageSourceFilter.attackRollFilter}`;
+        const minimum =
+          e.minimumDamageTotal === undefined
+            ? ""
+            : `\nminimum total: ${e.minimumDamageTotal}`;
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "modify_damage_numeric",
+          label: `modify_damage_numeric\n${describeDelta(e.delta)}${damageSource}${describeWeaponFilter(e.weaponFilter)}${minimum}`,
+        });
+        return id;
+      }),
+      byKind("modify_size_category", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "modify_size_category",
+          label: `modify_size_category\n${e.direction} ${e.steps}`,
+        });
+        return id;
+      }),
+      byKind("modify_roll_advantage", (e) => {
+        const id = ids("eff");
+        const by =
+          e.attackerTypeFilter !== undefined && e.attackerTypeFilter.length > 0
+            ? `\nby: ${e.attackerTypeFilter.join("/")}`
+            : "";
+        const condition =
+          e.conditionFilter !== undefined && e.conditionFilter.length > 0
+            ? `\ncondition: ${e.conditionFilter.join("/")}`
+            : "";
+        const ability = describeAbilityFilter(e.abilityFilter, "ability");
+        const saveAbility = describeAbilityFilter(
+          e.saveAbilityFilter,
+          "save ability",
+        );
+        const contextRange =
+          e.contextRangeFeet !== undefined
+            ? `\ncontext: within ${e.contextRangeFeet} ft`
+            : "";
+        const attackRollTarget =
+          e.attackRollTarget === undefined
+            ? ""
+            : `\nattack target: ${e.attackRollTarget}`;
+        const spellSource =
+          e.spellSourceFilter === undefined
+            ? ""
+            : `\nsource: ${e.spellSourceFilter.className} spells`;
+        const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "modify_roll_advantage",
+          label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveAbility}${attackRollTarget}${spellSource}${saveSource}${contextRange}`,
+        });
+        return id;
+      }),
+      byKind("suppress_roll_disadvantage", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "suppress_roll_disadvantage",
+          label: `suppress_roll_disadvantage\non ${e.on.join(", ")}${describeSkillFilter(e.skillFilter)}`,
+        });
+        return id;
+      }),
+      byKind("remove_equipment_requirement", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "remove_equipment_requirement",
+          label: `remove_equipment_requirement\n${e.requirement}`,
+        });
+        return id;
+      }),
+    )
+    .pipe(
+      byKind("modify_crit_range", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "modify_crit_range",
+          label: `modify_crit_range\n${describeCriticalRangeAttackFilter(e.attackRollFilter)} crits on ${e.threshold}-20${describeWeaponFilter(e.weaponFilter)}`,
+        });
+        return id;
+      }),
+      byKind("transfer_weapon_bonus_to_ac", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "transfer_weapon_bonus_to_ac",
+          label: `transfer_weapon_bonus_to_ac\nup to +${e.maxBonus} from ${e.from}\n${e.trigger} until ${e.duration}${describeWeaponFilter(e.weaponFilter)}`,
+        });
+        return id;
+      }),
+      byKind("suppress_incoming_critical_hit", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "suppress_incoming_critical_hit",
+          label:
+            "suppress_incoming_critical_hit\ncritical hits against bearer become normal hits",
+        });
+        return id;
+      }),
+      byKind("scale_attack_count", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "scale_attack_count",
+          label: `scale_attack_count\n+${e.additional} attack${e.additional === 1 ? "" : "s"} per Attack action`,
+        });
+        return id;
+      }),
+      byKind("cap_attack_action_attacks", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "cap_attack_action_attacks",
+          label: `cap_attack_action_attacks\nmax ${e.maxAttacks} attack${e.maxAttacks === 1 ? "" : "s"} per Attack action`,
+        });
+        return id;
+      }),
+      byKind("somatic_spell_failure_chance", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "somatic_spell_failure_chance",
+          label: `somatic_spell_failure_chance\n${e.percent}% chance spell fails`,
+        });
+        return id;
+      }),
+      byKind("modify_speed", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "modify_speed",
+          label: `modify_speed\n${e.delta >= 0 ? "+" : ""}${e.delta} ${e.unit}`,
+        });
+        return id;
+      }),
+      byKind("force_move", (e) => {
+        const id = ids("eff");
+        let movementDetail: string = e.movementKind;
+        if (e.movementKind === "move") {
+          movementDetail = `${e.movementKind} ${e.direction}`;
+        } else if (
+          e.movementKind === "push" &&
+          e.originDirection !== undefined
+        ) {
+          movementDetail = `${e.movementKind} ${e.originDirection}`;
+        }
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "force_move",
+          label: `force_move\n${movementDetail} ${e.distanceFeet} ft`,
+        });
+        return id;
+      }),
+      byKind("push_unsecured_objects", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "push_unsecured_objects",
+          label: `push_unsecured_objects\n${e.objectLocation}\n${e.originDirection} ${e.distanceFeet} ft`,
+        });
+        return id;
+      }),
+      byKind("suspend_target", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "suspend_target",
+          label: `suspend_target\nuntil: ${e.until}`,
+        });
+        return id;
+      }),
+      byKind("fall_at_end_of_next_turn_unless_reapplied", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "fall_at_end_of_next_turn_unless_reapplied",
+          label: "fall_at_end_of_next_turn_unless_reapplied",
+        });
+        return id;
+      }),
+      byKind("force_fall", (e) => {
+        const id = ids("eff");
+        const distance =
+          e.maxDistanceFeet === undefined
+            ? ""
+            : `\nup to ${e.maxDistanceFeet} ft`;
+        const impact =
+          e.impactAsNormalFall === true ? "\nimpact as normal fall" : "";
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "force_fall",
+          label: `force_fall\n${e.direction}${distance}${impact}`,
+        });
+        return id;
+      }),
+      byKind("levitate_target", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "levitate_target",
+          label: [
+            `levitate_target\nrise up to ${e.initialRiseMaxFeet} ft`,
+            `suspend: ${e.suspension}`,
+            `movement: ${e.targetMovement.allowedBy}`,
+            `mode: ${e.targetMovement.movementMode}`,
+            `caster altitude: ${e.casterAltitudeControl.direction} ${e.casterAltitudeControl.maxDistanceFeet} ft`,
+            `cost: ${e.casterAltitudeControl.cost}`,
+            `self altitude: ${e.selfAltitudeControl.cost}`,
+            `ending: ${e.ending}`,
+          ].join("\n"),
+        });
+        return id;
+      }),
+    )
+    .pipe(
+      byKind("grab_fixed_object", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "grab_fixed_object",
+          label: "grab_fixed_object",
+        });
+        return id;
+      }),
+      byKind("suspend_in_area", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "suspend_in_area",
+          label: `suspend_in_area\nlocation: ${e.location}\nuntil: ${e.until}`,
+        });
+        return id;
+      }),
+      byKind("fall_when_effect_ends", (e) => {
+        const id = ids("eff");
+        const unless =
+          e.unlessCanStopFall === true ? "\nunless can stop fall" : "";
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "fall_when_effect_ends",
+          label: `fall_when_effect_ends\n${e.direction}${unless}`,
+        });
+        return id;
+      }),
+      byKind("move_area", (e) => {
+        const id = ids("eff");
+        const carry =
+          e.includeCreaturesInArea === true ? "\nwith creatures in area" : "";
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "move_area",
+          label: `move_area\n${e.direction} ${e.distanceFeet} ft${carry}`,
+        });
+        return id;
+      }),
+      byKind("reduce_area_height", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "reduce_area_height",
+          label: `reduce_area_height\n${describeDiceAmount(e.amount)}`,
+        });
+        return id;
+      }),
+      byKind("end_current_effect_at_area_height_zero", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "lifecycle",
+          atomKind: "end_current_effect_at_area_height_zero",
+          label: "end_current_effect_at_area_height_zero",
+        });
+        return id;
+      }),
+      byKind("ability_check_to_move_in_area", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "resolution",
+          atomKind: "ability_check_to_move_in_area",
+          label: `ability_check_to_move_in_area\n${e.ability.toUpperCase()} (${e.skill}) vs ${describeDc(e.dc)}\non failure: ${e.onFailure}`,
+        });
+        return id;
+      }),
+      byKind("fall_to_ground", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "fall_to_ground",
+          label: "fall_to_ground",
+        });
+        return id;
+      }),
+      byKind("block_targeting", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "block_targeting",
+          label: `block_targeting\nscope: ${e.scope}`,
+        });
+        return id;
+      }),
+      byKind("choose_new_target_or_lose", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "choose_new_target_or_lose",
+          label: `choose_new_target_or_lose\n${e.subject}`,
+        });
+        return id;
+      }),
+      byKind("block_travel", (e) => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "block_travel",
+          label: `block_travel\nscope: ${e.scope}`,
+        });
+        return id;
+      }),
+      byKind("end_if_created_in_occupied_space", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "lifecycle",
+          atomKind: "end_if_created_in_occupied_space",
+          label: "end_if_created_in_occupied_space",
+        });
+        return id;
+      }),
+      byKind("allow_designated_creatures_safe_passage", () => {
+        const id = ids("eff");
+        nodes.push({
+          id,
+          category: "effect",
+          atomKind: "allow_designated_creatures_safe_passage",
+          label: "allow_designated_creatures_safe_passage",
+        });
+        return id;
+      }),
+      Match.exhaustive,
+    );
 }

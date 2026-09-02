@@ -1,4 +1,5 @@
 import type { AreaDirectEffectAtom } from "../surface/types.ts";
+import { Match } from "effect";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
@@ -12,6 +13,8 @@ import { traceAttachmentAndAreaEffectAtom } from "./tracer-effect-attachments-ar
 
 import { traceCompositeAndCountermagicEffectAtom } from "./tracer-effect-composite-countermagic.ts";
 import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
+
+const byKind = Match.discriminator("kind");
 
 export function traceEffectAtom(
   e: AreaDirectEffectAtom,
@@ -28,8 +31,8 @@ export function traceEffectAtom(
       traceEffectAtom,
     );
   }
-  switch (e.kind) {
-    case "spell_created_held_object": {
+  return Match.value(e).pipe(
+    byKind("spell_created_held_object", (e) => {
       const id = ids("eff");
       nodes.push({
         id,
@@ -44,8 +47,8 @@ export function traceEffectAtom(
         ].join("\n"),
       });
       return id;
-    }
-    case "half_initial_damage_only": {
+    }),
+    byKind("half_initial_damage_only", () => {
       const id = ids("eff");
       nodes.push({
         id,
@@ -54,45 +57,49 @@ export function traceEffectAtom(
         label: "half_initial_damage_only",
       });
       return id;
-    }
-    case "object_contact_damage":
-    case "none":
-    case "damage":
-    case "conditional_bonus_damage":
-    case "conditional_by_current_hp":
-    case "kill_target":
-    case "end_current_effect":
-    case "effect_end_target_state":
-    case "repeat_save_for_condition":
-    case "repeat_save_counter":
-    case "delayed_save":
-    case "condition_persists_after_full_duration":
-    case "heal_hp":
-    case "grant_rest_benefit":
-    case "spell_recipient_rest_lockout":
-    case "prevent_hit_point_regain":
-    case "heal_to_max_hp":
-    case "modify_max_hp":
-    case "modify_ac":
-    case "modify_ac_set_base":
-    case "modify_save_dc":
-    case "apply_condition":
-    case "apply_condition_while_in_area_or_until_escape":
-    case "suppress_condition_self_end":
-    case "restrict_action_usage":
-    case "target_effect_escape_action":
-    case "compelled_target_next_turn":
-    case "forced_reaction_movement":
-    case "jump_movement_replacement":
-    case "feather_fall_mitigation":
-    case "audible":
-    case "remove_condition":
-    case "grant_resistance":
-    case "reduce_damage_taken":
-    case "share_damage_to_caster":
-    case "retaliatory_damage":
-      return traceOutcomeEffectAtom(e, nodes, ids, edges, traceEffectAtom);
-    case "deliver_mental_message": {
+    }),
+    byKind(
+      "object_contact_damage",
+      "none",
+      "damage",
+      "conditional_bonus_damage",
+      "conditional_by_current_hp",
+      "kill_target",
+      "end_current_effect",
+      "effect_end_target_state",
+      "repeat_save_for_condition",
+      "repeat_save_counter",
+      "delayed_save",
+      "condition_persists_after_full_duration",
+      "heal_hp",
+      "grant_rest_benefit",
+      "spell_recipient_rest_lockout",
+      "prevent_hit_point_regain",
+      "heal_to_max_hp",
+      "modify_max_hp",
+      "modify_ac",
+      "modify_ac_set_base",
+      "modify_save_dc",
+      "apply_condition",
+      "apply_condition_while_in_area_or_until_escape",
+      "suppress_condition_self_end",
+      "restrict_action_usage",
+      "target_effect_escape_action",
+      "compelled_target_next_turn",
+      "forced_reaction_movement",
+      "jump_movement_replacement",
+      "feather_fall_mitigation",
+      "audible",
+      "remove_condition",
+      "grant_resistance",
+      "reduce_damage_taken",
+      "share_damage_to_caster",
+      "retaliatory_damage",
+      (e) => {
+        return traceOutcomeEffectAtom(e, nodes, ids, edges, traceEffectAtom);
+      },
+    ),
+    byKind("deliver_mental_message", (e) => {
       const id = ids("eff");
       nodes.push({
         id,
@@ -108,193 +115,204 @@ export function traceEffectAtom(
         ].join("\n"),
       });
       return id;
-    }
-    case "take_standard_action":
-    case "grant_alternate_action_cost":
-    case "grant_extra_action":
-    case "choose_action_or_bonus_action_each_turn":
-    case "modify_roll_numeric":
-    case "suppress_movement_trace":
-    case "initiative_swap":
-    case "jack_of_all_trades_ability_check_bonus":
-    case "modify_damage_numeric":
-    case "modify_size_category":
-    case "modify_roll_advantage":
-    case "suppress_roll_disadvantage":
-    case "remove_equipment_requirement":
-    case "modify_crit_range":
-    case "transfer_weapon_bonus_to_ac":
-    case "suppress_incoming_critical_hit":
-    case "scale_attack_count":
-    case "cap_attack_action_attacks":
-    case "somatic_spell_failure_chance":
-    case "modify_speed":
-    case "force_move":
-    case "push_unsecured_objects":
-    case "suspend_target":
-    case "fall_at_end_of_next_turn_unless_reapplied":
-    case "force_fall":
-    case "levitate_target":
-    case "grab_fixed_object":
-    case "suspend_in_area":
-    case "fall_when_effect_ends":
-    case "move_area":
-    case "reduce_area_height":
-    case "end_current_effect_at_area_height_zero":
-    case "ability_check_to_move_in_area":
-    case "fall_to_ground":
-    case "block_targeting":
-    case "choose_new_target_or_lose":
-    case "block_travel":
-    case "end_if_created_in_occupied_space":
-    case "allow_designated_creatures_safe_passage":
-      return traceActionAndRollEffectAtom(e, nodes, ids);
-    case "object_immune_to_all_damage":
-    case "object_destroyed_by_spell":
-    case "cannot_be_dispelled_by_spell":
-    case "block_ethereal_travel":
-    case "replace_destroyed_object_section_with_area":
-    case "block_projectiles":
-    case "block_gases_and_gaseous_creatures":
-    case "block_flying_movement":
-    case "negate_named_effect":
-    case "see_invisible_and_ethereal":
-    case "grant_sense":
-    case "modify_sense_range":
-    case "grant_language_understanding":
-    case "grant_creature_communication":
-    case "deny_opportunity_attack":
-    case "grant_temp_hp":
-    case "prevent_drop_to_0_hp":
-    case "negate_instant_death":
-    case "make_stable":
-    case "revive_dead_creature":
-    case "grant_feat":
-    case "grant_proficiency":
-    case "grant_expertise":
-    case "grant_language":
-    case "grant_hidden_language_messages":
-    case "grant_language_choice":
-    case "grant_spell_access":
-    case "grant_spell_access_choice":
-    case "grant_class_level_prepared_spell_access":
-    case "grant_land_choice_prepared_spell_access":
-    case "grant_spell_free_casts":
-    case "grant_die_token":
-    case "grant_bonus_action_attack":
-    case "replace_damage_die":
-    case "substitute_ability_for_rolls":
-    case "offer_ability_substitution_for_ability_checks":
-    case "offer_ability_substitution_for_jump_distance":
-    case "grant_weapon_attack_enhancement":
-    case "grant_condition_immunity":
-    case "suppress_condition_benefit":
-    case "grant_damage_immunity":
-    case "block_max_hp_reduction":
-    case "set_ability_score":
-    case "modify_ability_score":
-    case "modify_proficiency_bonus":
-    case "create_extradimensional_space":
-      return traceObjectAndBarrierEffectAtom(e, nodes, ids);
-    case "teleport":
-    case "transport_exile":
-    case "ethereal_phase":
-    case "make_weapon_attack":
-    case "override_attached_weapon_attack":
-    case "container_storage":
-    case "create_sensor":
-    case "remote_perception":
-    case "set_speed":
-    case "set_speed_ratio":
-    case "block_reanimation":
-    case "ignite_objects":
-    case "create_object":
-    case "create_illusion":
-    case "create_phantasmal_illusion":
-    case "force_drop_item":
-    case "move_object":
-    case "pull_object_away":
-    case "manipulate_object":
-    case "break_concentration":
-    case "damage_structure":
-    case "collapse_structure":
-    case "bury_in_rubble":
-    case "bond_objects":
-    case "lock_object":
-    case "release_object_access":
-    case "suppress_arcane_lock":
-    case "reposition_attachment":
-    case "area_is_difficult_terrain":
-    case "area_emits_dim_light":
-    case "area_is_lightly_obscured":
-    case "area_is_heavily_obscured":
-    case "douse_exposed_flames":
-    case "area_is_magical_darkness":
-    case "area_of_silence":
-    case "truthfulness_constraint":
-    case "reveal_save_outcome_to_caster":
-    case "end_overlapping_spell_created_bright_or_dim_light":
-    case "area_anchor_or_layering_requirement":
-    case "area_section_burns_away":
-    case "area_has_strong_wind":
-    case "prevent_ranged_weapon_attacks":
-    case "area_movement_cost_multiplier":
-    case "plant_enrichment":
-    case "grant_cover":
-    case "block_line_of_sight":
-    case "prevent_creature_passage":
-    case "prevent_spellcasting_and_magic_actions":
-    case "prevent_magical_ranged_attacks":
-    case "block_magical_targeting_and_aoe":
-    case "block_teleport_and_planar_travel":
-    case "suppress_magic_items":
-    case "suppress_ongoing_magic_effects":
-    case "ordered_barrier_layers":
-    case "allow_reaction_stand_up":
-    case "revert_shape_shift_to_true_form":
-    case "suppress_shape_shifting_while_in_area":
-      return traceAttachmentAndAreaEffectAtom(
-        e,
-        nodes,
-        ids,
-        edges,
-        traceEffectAtom,
-      );
-    case "composite":
-    case "choose_effect_mode":
-    case "curse_occurrence":
-    case "grant_speed":
-    case "grant_liquid_surface_traversal":
-    case "ignore_web_restrictions":
-    case "alter_item_kind":
-    case "natural_weapons":
-    case "water_breathing":
-    case "detect":
-    case "magical_identity_mask":
-    case "locate_kind":
-    case "object_location_sense":
-    case "block_divination_targeting_and_scrying_perception":
-    case "divination_omen":
-    case "planar_entity_answers":
-    case "assign_courier_task":
-    case "negate_triggering_spell":
-    case "reflect_triggering_spell":
-    case "waste_triggering_spell_or_effect":
-    case "end_ongoing_spells":
-    case "maximize_healing_received":
-    case "transform_target":
-      return traceCompositeAndCountermagicEffectAtom(
-        e,
-        nodes,
-        ids,
-        edges,
-        traceEffectAtom,
-      );
-    /* v8 ignore start -- @preserve -- EffectAtom is a decoded tagged union exhausted by the routed subsets above */
-    default: {
-      const _exhaustive: never = e;
-      throw new Error(`unhandled effect atom: ${String(_exhaustive)}`);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+    }),
+    byKind(
+      "take_standard_action",
+      "grant_alternate_action_cost",
+      "grant_extra_action",
+      "choose_action_or_bonus_action_each_turn",
+      "modify_roll_numeric",
+      "suppress_movement_trace",
+      "initiative_swap",
+      "jack_of_all_trades_ability_check_bonus",
+      "modify_damage_numeric",
+      "modify_size_category",
+      "modify_roll_advantage",
+      "suppress_roll_disadvantage",
+      "remove_equipment_requirement",
+      "modify_crit_range",
+      "transfer_weapon_bonus_to_ac",
+      "suppress_incoming_critical_hit",
+      "scale_attack_count",
+      "cap_attack_action_attacks",
+      "somatic_spell_failure_chance",
+      "modify_speed",
+      "force_move",
+      "push_unsecured_objects",
+      "suspend_target",
+      "fall_at_end_of_next_turn_unless_reapplied",
+      "force_fall",
+      "levitate_target",
+      "grab_fixed_object",
+      "suspend_in_area",
+      "fall_when_effect_ends",
+      "move_area",
+      "reduce_area_height",
+      "end_current_effect_at_area_height_zero",
+      "ability_check_to_move_in_area",
+      "fall_to_ground",
+      "block_targeting",
+      "choose_new_target_or_lose",
+      "block_travel",
+      "end_if_created_in_occupied_space",
+      "allow_designated_creatures_safe_passage",
+      (e) => {
+        return traceActionAndRollEffectAtom(e, nodes, ids);
+      },
+    ),
+    byKind(
+      "object_immune_to_all_damage",
+      "object_destroyed_by_spell",
+      "cannot_be_dispelled_by_spell",
+      "block_ethereal_travel",
+      "replace_destroyed_object_section_with_area",
+      "block_projectiles",
+      "block_gases_and_gaseous_creatures",
+      "block_flying_movement",
+      "negate_named_effect",
+      "see_invisible_and_ethereal",
+      "grant_sense",
+      "modify_sense_range",
+      "grant_language_understanding",
+      "grant_creature_communication",
+      "deny_opportunity_attack",
+      "grant_temp_hp",
+      "prevent_drop_to_0_hp",
+      "negate_instant_death",
+      "make_stable",
+      "revive_dead_creature",
+      "grant_feat",
+      "grant_proficiency",
+      "grant_expertise",
+      "grant_language",
+      "grant_hidden_language_messages",
+      "grant_language_choice",
+      "grant_spell_access",
+      "grant_spell_access_choice",
+      "grant_class_level_prepared_spell_access",
+      "grant_land_choice_prepared_spell_access",
+      "grant_spell_free_casts",
+      "grant_die_token",
+      "grant_bonus_action_attack",
+      "replace_damage_die",
+      "substitute_ability_for_rolls",
+      "offer_ability_substitution_for_ability_checks",
+      "offer_ability_substitution_for_jump_distance",
+      "grant_weapon_attack_enhancement",
+      "grant_condition_immunity",
+      "suppress_condition_benefit",
+      "grant_damage_immunity",
+      "block_max_hp_reduction",
+      "set_ability_score",
+      "modify_ability_score",
+      "modify_proficiency_bonus",
+      "create_extradimensional_space",
+      (e) => {
+        return traceObjectAndBarrierEffectAtom(e, nodes, ids);
+      },
+    ),
+    byKind(
+      "teleport",
+      "transport_exile",
+      "ethereal_phase",
+      "make_weapon_attack",
+      "override_attached_weapon_attack",
+      "container_storage",
+      "create_sensor",
+      "remote_perception",
+      "set_speed",
+      "set_speed_ratio",
+      "block_reanimation",
+      "ignite_objects",
+      "create_object",
+      "create_illusion",
+      "create_phantasmal_illusion",
+      "force_drop_item",
+      "move_object",
+      "pull_object_away",
+      "manipulate_object",
+      "break_concentration",
+      "damage_structure",
+      "collapse_structure",
+      "bury_in_rubble",
+      "bond_objects",
+      "lock_object",
+      "release_object_access",
+      "suppress_arcane_lock",
+      "reposition_attachment",
+      "area_is_difficult_terrain",
+      "area_emits_dim_light",
+      "area_is_lightly_obscured",
+      "area_is_heavily_obscured",
+      "douse_exposed_flames",
+      "area_is_magical_darkness",
+      "area_of_silence",
+      "truthfulness_constraint",
+      "reveal_save_outcome_to_caster",
+      "end_overlapping_spell_created_bright_or_dim_light",
+      "area_anchor_or_layering_requirement",
+      "area_section_burns_away",
+      "area_has_strong_wind",
+      "prevent_ranged_weapon_attacks",
+      "area_movement_cost_multiplier",
+      "plant_enrichment",
+      "grant_cover",
+      "block_line_of_sight",
+      "prevent_creature_passage",
+      "prevent_spellcasting_and_magic_actions",
+      "prevent_magical_ranged_attacks",
+      "block_magical_targeting_and_aoe",
+      "block_teleport_and_planar_travel",
+      "suppress_magic_items",
+      "suppress_ongoing_magic_effects",
+      "ordered_barrier_layers",
+      "allow_reaction_stand_up",
+      "revert_shape_shift_to_true_form",
+      "suppress_shape_shifting_while_in_area",
+      (e) => {
+        return traceAttachmentAndAreaEffectAtom(
+          e,
+          nodes,
+          ids,
+          edges,
+          traceEffectAtom,
+        );
+      },
+    ),
+    byKind(
+      "composite",
+      "choose_effect_mode",
+      "curse_occurrence",
+      "grant_speed",
+      "grant_liquid_surface_traversal",
+      "ignore_web_restrictions",
+      "alter_item_kind",
+      "natural_weapons",
+      "water_breathing",
+      "detect",
+      "magical_identity_mask",
+      "locate_kind",
+      "object_location_sense",
+      "block_divination_targeting_and_scrying_perception",
+      "divination_omen",
+      "planar_entity_answers",
+      "assign_courier_task",
+      "negate_triggering_spell",
+      "reflect_triggering_spell",
+      "waste_triggering_spell_or_effect",
+      "end_ongoing_spells",
+      "maximize_healing_received",
+      "transform_target",
+      (e) => {
+        return traceCompositeAndCountermagicEffectAtom(
+          e,
+          nodes,
+          ids,
+          edges,
+          traceEffectAtom,
+        );
+      },
+    ),
+    Match.exhaustive,
+  );
 }
