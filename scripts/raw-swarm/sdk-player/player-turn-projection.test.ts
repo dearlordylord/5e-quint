@@ -160,6 +160,13 @@ const statBlockProcedureRef = JSON.stringify({
   ordinal: 0,
 });
 
+const rolledStatBlockDamageSelection = [
+  {
+    componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+    notation: "rolled",
+  },
+] as const;
+
 describe("player current-turn projection", () => {
   test("projects limited, unlimited, and point-pool character resources", () => {
     const before = mutableClone(beforeSession);
@@ -622,12 +629,14 @@ describe("player current-turn projection", () => {
         actorId: "fighter",
         familiarId: "familiar",
         procedureRef: statBlockProcedureRef,
+        statBlockDamageSelection: rolledStatBlockDamageSelection,
       }),
     ).toEqual({
       tag: "companionAttack",
       actorId: "fighter",
       familiarId: "familiar",
       procedureRef: statBlockProcedureRef,
+      statBlockDamageSelection: rolledStatBlockDamageSelection,
     });
     expect(
       projectPlayerSubject({
@@ -1070,21 +1079,21 @@ describe("player current-turn projection", () => {
         checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: {
           kind: "interruptDecision" as const,
-          trigger: "attackHit" as const,
+          trigger: "creatureFalls" as const,
           decisionHole: {
             holeInstanceKey: "battle:interrupt",
             holeId: "battle:interrupt",
             kind: "interruptDecision" as const,
             label: "Respond",
-            trigger: "attackHit" as const,
+            trigger: "creatureFalls" as const,
             eligibleResponders: ["fighter"],
           },
           choices: [
             {
-              kind: "reactionRollOrDamageReduction" as const,
-              reactorId: "fighter",
+              kind: "reactionModifier" as const,
+              responderId: "fighter",
               initialHoles: [],
-              choice: {
+              modifier: {
                 kind: "fallDamageReduction" as const,
                 procedureRef: attackProcedureRef,
                 reduction: { kind: "flat" as const, amount: 1 },
@@ -1109,23 +1118,22 @@ describe("player current-turn projection", () => {
       result: interruptResult,
       resultSha256: sha256Canonical(interruptResult),
     };
-    expect(
-      playerCurrentTurnProjection({
-        continuation: 1,
-        calls: [call],
-        beforeSession,
-        afterSession: beforeSession,
-        tacticalNote: "",
-      }),
-    ).toMatchObject({
+    const interruptProjection = playerCurrentTurnProjection({
+      continuation: 1,
+      calls: [call],
+      beforeSession,
+      afterSession: beforeSession,
+      tacticalNote: "",
+    });
+    expect(interruptProjection).toMatchObject({
       tag: "valid",
       projection: {
         frontier: {
           kind: "interruptDecision",
           choices: [
             {
-              kind: "reactionRollOrDamageReduction",
-              reactorId: "fighter",
+              kind: "reactionModifier",
+              responderId: "fighter",
             },
           ],
         },
