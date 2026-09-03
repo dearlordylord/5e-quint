@@ -32,6 +32,9 @@ Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
 retains its printed Darkvision, and Stone Giant retains its printed Dexterity
 save. These corrections change the authenticated candidate shapes without
 changing their existing `added` classification or catalog membership.
+The same integration closes the canonical weapon-reference graph with the SRD
+Graze, Nick, and Vex mastery records. These are authenticated catalog
+additions; their typed Surface mechanics do not imply Battle runtime admission.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record

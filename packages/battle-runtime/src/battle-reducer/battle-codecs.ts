@@ -33,6 +33,7 @@ import {
   AmmunitionKindSchema,
   STANDARD_ACTION_KINDS,
   StatBlockId,
+  UnitId,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
 import {
@@ -7131,7 +7132,7 @@ const BattlePresentedCreatureSnapshotSchema =
   );
 
 const ClassicNonSrdMechanicsUnitSchema = Schema.Struct({
-  id: Schema.String,
+  id: UnitId,
   syntheticLabel: Schema.String,
   provenance: Schema.Struct({
     kind: Schema.Literal("classic-2024-mechanics-source-lane"),

@@ -428,6 +428,18 @@ effect query and turn-resource reconciliation while preserving the established
 exports. It adds no authored or runtime capability and does not widen the
 forbidden-owner set or either coarse limit.
 
+The Stat Block parity integration at source revision `85b717d1a` keeps all 578
+declaration paths and the same path-ledger SHA-256. The reviewed graph grows by
+25 bytes to 10,300,013 bytes, leaving 185,747 bytes below the unchanged 10 MiB
+cap, and its content-ledger SHA-256 becomes
+`4563447912ff31a92210fe4f47ef416b029ebb88763710187282b49323c7a420`.
+Exactly two declarations differ from the preceding certificate:
+`battle-codecs.d.ts` grows by 25 bytes because the existing synthetic Unit
+fixture now carries the canonical branded `UnitId`, while `schema.d.ts` only
+reorders the existing Graze schema export and does not change its byte count.
+The integration adds no declaration path, consumer capability, forbidden
+owner, or coarse-limit change.
+
 ## Consumer compiler boundary
 
 The consumer configuration no longer exposes unrestricted

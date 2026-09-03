@@ -10,13 +10,24 @@ describe("Surface Weapon Mastery trace projections", () => {
   test.each([
     {
       input: grazeInput,
-      atomKinds: ["attack_roll", "damage", "mastery_root"],
+      atomKinds: [
+        "attack_roll",
+        "damage",
+        "mastery_root",
+        "on_miss_window",
+        "target",
+      ],
       labels: [
-        "attack_roll\nweapon attack miss\noptional true",
+        "attack_roll\nweapon attack miss",
+        "on_miss_window\n(wielder choice)",
+        "target\n(primary)",
         "damage\nattack_ability_modifier\nweapon_damage_type\nattack_ability_modifier_only",
       ],
       edges: [
-        ["attack_roll", "damage", "grants"],
+        ["attack_roll", "on_miss_window", "opens_window"],
+        ["attack_roll", "target", "attaches_to"],
+        ["on_miss_window", "damage", "grants"],
+        ["damage", "target", "attaches_to"],
         ["mastery_root", "attack_roll", "roots"],
       ],
     },

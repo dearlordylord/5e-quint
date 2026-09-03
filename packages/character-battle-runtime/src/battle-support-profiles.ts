@@ -467,11 +467,11 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
     if (Result.isFailure(resolution)) {
       return Result.fail(resolution.failure);
     }
-    return Result.succeed([resolution.success.mastery.id]);
+    return Result.succeed(resolution.success.mastery.id);
   });
   return Result.isFailure(unitIds)
     ? Result.fail(unitIds.failure)
-    : Result.succeed(uniqueUnitIds(unitIds.success.flat()));
+    : Result.succeed(uniqueUnitIds(unitIds.success));
 }
 
 function uniqueUnitIds(

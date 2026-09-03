@@ -41,7 +41,14 @@ import {
 import { initiativeEntries } from "../../../packages/shared-algebras/src/initiative-algebra.ts";
 
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
-import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
+import {
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
+  PHASE1_WEAPON_SPEAR_UNIT_ID,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+  creationChoiceOptionId,
+  finalizeCharacterDraft,
+} from "../../../packages/character-creation-runtime/src/index.ts";
 import {
   characterBattleRuntimeIssueMessage,
   characterSheetBattleInit,
@@ -607,8 +614,31 @@ describe("scenario setup public-SDK boundary", () => {
       });
       expect(unitCatalog.tag).toBe("ok");
       if (unitCatalog.tag === "invalid") return;
+      const supportedMasteryWeaponIds = [
+        PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+        PHASE1_WEAPON_SPEAR_UNIT_ID,
+        PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
+      ] as const;
+      const controllerDraft = {
+        ...FIGHTER_EXAMPLE_DRAFT,
+        selections: {
+          ...FIGHTER_EXAMPLE_DRAFT.selections,
+          choices: FIGHTER_EXAMPLE_DRAFT.selections.choices.map((choice) =>
+            choice.kind === "unitChoice" &&
+            choice.source.choiceKey === WEAPON_MASTERY_OPTIONS_CHOICE_KEY
+              ? {
+                  ...choice,
+                  options: supportedMasteryWeaponIds.map((unitId) => ({
+                    optionId: creationChoiceOptionId(unitId),
+                    unitRef: { unitId },
+                  })),
+                }
+              : choice,
+          ),
+        },
+      };
       const finalized = finalizeCharacterDraft({
-        draft: FIGHTER_EXAMPLE_DRAFT,
+        draft: controllerDraft,
         unitLibrary: unitCatalog.catalog,
       });
       expect(finalized.tag).toBe("ready");
