@@ -3692,7 +3692,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "compelledNextTurnBehavior";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
       readonly dc: DcSource;

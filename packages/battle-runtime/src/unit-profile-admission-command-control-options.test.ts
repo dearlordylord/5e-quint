@@ -5,6 +5,16 @@ import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.t
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterBonusAttackSubjectForTest,
@@ -33,7 +43,18 @@ import {
   spellActInvocation,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import { compelledNextTurnBehaviorProfile } from "./battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import type {
   AvailableBattleAct,
   BattleFill,
@@ -51,6 +72,293 @@ import {
   snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
+
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function commandMechanics(): ActivationSpellMechanics {
+  const mechanics = spellRecord(commandUnitId).mechanics;
+  if (mechanics.family !== "activation")
+    throw new Error("Expected Command activation mechanics.");
+  return mechanics;
+}
+
+function syntheticCommandRecord(
+  mechanics: ActivationSpellMechanics,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_compelled_behavior_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Compelled Behavior ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_compelled_behavior_${suffix}`,
+    },
+    mechanics,
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function malformedCommandSource(
+  mutate: (mechanics: ActivationSpellMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(commandUnitId));
+  const mechanics = structuredClone(commandMechanics());
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function issueShape(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}) {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("compelledNextTurnBehavior static admission", () => {
+  test("projects canonical Command mechanics, evidence, and mechanics-free invocations", () => {
+    const source = spellAdmissionSource(spellRecord(commandUnitId));
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 1,
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      targetCount: { base: 1, baseLevel: 1, perSlotAboveBase: 1 },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected Command caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null)
+      throw new Error("Expected Command admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        ...context,
+        castingSource: source.castingSource,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations[0]).toMatchObject({
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
+    });
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("recognizes renamed synthetic mechanics independently of authored identity", () => {
+    const original = compelledNextTurnBehaviorProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(spellRecord(commandUnitId))),
+    );
+    const renamed = compelledNextTurnBehaviorProfile.admitMechanics(
+      mechanicsSource(
+        spellAdmissionSource(
+          syntheticCommandRecord(commandMechanics(), "renamed"),
+        ),
+      ),
+    );
+    expect(original.tag).toBe("supported");
+    expect(renamed.tag).toBe("supported");
+    if (original.tag !== "supported" || renamed.tag !== "supported") return;
+    expect(renamed.admitted.facts).toEqual(original.admitted.facts);
+    expect(renamed.admitted.evidence).toEqual(original.admitted.evidence);
+  });
+
+  test("accumulates exact header and root-shape issues", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics, "level", 2);
+        Reflect.set(mechanics, "school", "illusion");
+        Reflect.set(mechanics.castingTime, "kind", "bonus_action");
+        Reflect.set(mechanics.range, "feet", 30);
+        Reflect.set(mechanics, "syntheticRootFact", true);
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
+      { failedFact: "level", mechanicsPath: spellMechanicsHeaderPath("level") },
+      {
+        failedFact: "school",
+        mechanicsPath: spellMechanicsHeaderPath("school"),
+      },
+      { failedFact: "range", mechanicsPath: spellMechanicsHeaderPath("range") },
+      {
+        failedFact: "castingTime",
+        mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+      },
+    ]);
+  });
+
+  test("reports components and duration independently", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics.components, "s", true);
+        Reflect.set(mechanics.duration, "syntheticDurationFact", true);
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+    ]);
+  });
+
+  test("accumulates save, target-count, repeat, and every option issue", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(phase, "ability", "cha");
+        Reflect.set(phase.dc, "kind", "fixed");
+        Reflect.set(phase.onSuccess, "kind", "damage");
+        Reflect.set(phase, "repeatSaves", [
+          { cadence: "end_of_target_turn", onSuccess: "ends_on_target" },
+        ]);
+        if (
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target" ||
+          phase.attachment.value.selection.mode !== "choose_up_to" ||
+          typeof phase.attachment.value.selection.count !== "object" ||
+          phase.attachment.value.selection.count.kind !== "linear" ||
+          phase.onFail.kind !== "compelled_target_next_turn"
+        )
+          throw new Error("Expected Command mechanics.");
+        Reflect.set(phase.attachment.value.selection.count, "base", 2);
+        Reflect.set(phase.attachment.value.selection, "targetKinds", [
+          "object",
+        ]);
+        Reflect.set(phase.onFail, "execution", "synthetic_later_turn");
+        Reflect.set(phase.onFail.options, "syntheticOption", true);
+        Reflect.set(phase.onFail.options.approach, "route", "synthetic_route");
+        Reflect.set(phase.onFail.options.drop, "afterward", "continue_turn");
+        Reflect.set(phase.onFail.options.flee, "means", "slowest_available");
+        Reflect.set(phase.onFail.options.grovel, "condition", "restrained");
+        Reflect.set(phase.onFail.options.halt, "action", "one_action");
+      }),
+    );
+    const phasePath = spellActivationPhasePath(PositiveInteger(1));
+    const effectPath = spellActivationEffectPath(
+      PositiveInteger(1),
+      PositiveInteger(1),
+    );
+    expect(issueShape(result)).toEqual([
+      { failedFact: "saveAbility", mechanicsPath: phasePath },
+      { failedFact: "saveDc", mechanicsPath: phasePath },
+      { failedFact: "successOutcome", mechanicsPath: phasePath },
+      {
+        failedFact: "repeatSave",
+        mechanicsPath: spellActivationRepeatPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "attachment",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "targetCount",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      { failedFact: "failureExecution", mechanicsPath: effectPath },
+      { failedFact: "optionsShape", mechanicsPath: effectPath },
+      { failedFact: "approachOption", mechanicsPath: effectPath },
+      { failedFact: "dropOption", mechanicsPath: effectPath },
+      { failedFact: "fleeOption", mechanicsPath: effectPath },
+      { failedFact: "grovelOption", mechanicsPath: effectPath },
+      { failedFact: "haltOption", mechanicsPath: effectPath },
+    ]);
+  });
+
+  test("preserves the authored phase ordinal and rejects a malformed failure discriminant", () => {
+    const unrelated = spellRecord("burning_hands").mechanics;
+    if (unrelated.family !== "activation")
+      throw new Error("Expected an unrelated activation-phase fixture.");
+    const reordered = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics, "phases", [
+          unrelated.phases[0],
+          mechanics.phases[0],
+        ]);
+      }),
+    );
+    expect(issueShape(reordered)).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "phaseOrder",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(2)),
+      },
+    ]);
+
+    const malformedFailure = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(phase, "onFail", { kind: "none" });
+      }),
+    );
+    expect(issueShape(malformedFailure)).toEqual([
+      {
+        failedFact: "failureEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+});
 
 describe("QMBT14 deterministic Command control option admission", () => {
   test("command is admitted as a target-list save spell with promoted option choices and slot-scaled targets", () => {

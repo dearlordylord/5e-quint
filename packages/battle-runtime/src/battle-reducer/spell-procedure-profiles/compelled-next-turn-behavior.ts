@@ -18,31 +18,40 @@ import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagi
 //   - UBIQUITOUS_LANGUAGE.md: Table Decisions, Saving Throw, Turn, Prone,
 //     Magic Action, and Spell Invocation.
 
-import { spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
+import { PositiveInteger } from "@dnd/shared/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import type {
   ActivationPhase,
-  TargetSelection,
+  Components,
+  SpellMechanics,
 } from "@dnd/surface/surface/types";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
+  type BattleSpellExecutionSource,
   type BattleState,
-  type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveCompelledNextTurnBehaviorSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import {
-  preparedSpellSlotInvocationsFrom,
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
@@ -54,166 +63,539 @@ import {
   compelledBehaviorOptionChoiceHole,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 
 type CompelledNextTurnBehaviorSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "compelledNextTurnBehavior" }
 >;
 
+type CompelledBehaviorMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
 type CompelledBehaviorPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
-> & {
+>;
+type CompelledBehaviorFailedEffect = Extract<
+  CompelledBehaviorPhase["onFail"],
+  { readonly kind: "compelled_target_next_turn" }
+>;
+type CompelledBehaviorHoleAttachment = Extract<
+  CompelledBehaviorPhase["attachment"],
+  { readonly kind: "hole" }
+>;
+type CompelledBehaviorTargetAttachment = CompelledBehaviorHoleAttachment & {
+  readonly value: Extract<
+    CompelledBehaviorHoleAttachment["value"],
+    { readonly kind: "target" }
+  >;
+};
+type CompelledBehaviorMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly ability: "wis";
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "target";
-      readonly selection: TargetSelection;
-    };
-  };
-  readonly onFail: {
-    readonly kind: "compelled_target_next_turn";
-    readonly execution: "target_next_turn";
-    readonly options: {
-      readonly approach: {
-        readonly route: "shortest_direct_to_caster";
-        readonly endsTurnWhenWithinFeet: 5;
-      };
-      readonly drop: {
-        readonly objectSet: "held_objects";
-        readonly afterward: "end_turn";
-      };
-      readonly flee: {
-        readonly direction: "away_from_caster";
-        readonly means: "fastest_available";
-        readonly duration: "target_turn";
-      };
-      readonly grovel: {
-        readonly condition: "prone";
-        readonly afterward: "end_turn";
-      };
-      readonly halt: {
-        readonly movement: "none";
-        readonly action: "none";
-        readonly bonusAction: "none";
-        readonly duration: "target_turn";
-      };
-    };
+  readonly dc: CompelledNextTurnBehaviorSpellInvocation["dc"];
+  readonly targetCount: {
+    readonly base: number;
+    readonly baseLevel: number;
+    readonly perSlotAboveBase: number;
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for CompelledBehaviorFailedFact.
+const COMPELLED_BEHAVIOR_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "phaseCount",
+  "phaseOrder",
+  "phaseShape",
+  "attachment",
+  "targetCount",
+  "saveAbility",
+  "saveDc",
+  "successOutcome",
+  "failureEffect",
+  "failureExecution",
+  "optionsShape",
+  "approachOption",
+  "dropOption",
+  "fleeOption",
+  "grovelOption",
+  "haltOption",
+  "repeatSave",
+] as const;
+type CompelledBehaviorFailedFact =
+  (typeof COMPELLED_BEHAVIOR_FAILED_FACTS)[number];
+type CompelledBehaviorAdmissionIssue = SpellProcedureAdmissionIssue<
+  "compelledNextTurnBehavior",
+  CompelledBehaviorFailedFact,
+  UnitMechanicsPath
+>;
+type CompelledBehaviorIssueFact = {
+  readonly failedFact: CompelledBehaviorFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+};
+
+const ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const satisfies ReadonlyArray<keyof CompelledBehaviorMechanics>;
+const RANGE_FIELDS = ["kind", "feet"] as const;
+type CommandComponentKeySpace = Pick<Components, "v" | "s" | "m">;
+const COMPONENT_FIELDS = ["v", "s", "m"] as const satisfies ReadonlyArray<
+  keyof CommandComponentKeySpace
+>;
+const DURATION_FIELDS = ["kind"] as const;
+const CASTING_TIME_FIELDS = ["kind"] as const;
+const PHASE_FIELDS = [
+  "kind",
+  "attachment",
+  "ability",
+  "dc",
+  "onFail",
+  "onSuccess",
+  "repeatSaves",
+] as const;
+const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
+const TARGET_VALUE_FIELDS = ["kind", "selection"] as const;
+const SELECTION_FIELDS = ["mode", "targetKinds", "count"] as const;
+const COUNT_FIELDS = ["kind", "base", "baseLevel", "perSlotAboveBase"] as const;
+const DC_FIELDS = ["kind"] as const;
+const SUCCESS_FIELDS = ["kind"] as const;
+const FAILURE_FIELDS = ["kind", "execution", "options"] as const;
+const OPTIONS_FIELDS = ["approach", "drop", "flee", "grovel", "halt"] as const;
+const APPROACH_FIELDS = ["route", "endsTurnWhenWithinFeet"] as const;
+const DROP_FIELDS = ["objectSet", "afterward"] as const;
+const FLEE_FIELDS = ["direction", "means", "duration"] as const;
+const GROVEL_FIELDS = ["condition", "afterward"] as const;
+const HALT_FIELDS = ["movement", "action", "bonusAction", "duration"] as const;
 
 type CompelledBehaviorResolveInput =
   SpellProcedureProfileResolveInput<CompelledNextTurnBehaviorSpellInvocation>;
 
 function admitCompelledNextTurnBehavior(
-  spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: CompelledBehaviorMechanicsFacts,
 ): readonly CompelledNextTurnBehaviorSpellInvocation[] {
-  return supportedPreparedCompelledNextTurnBehaviorProfile(
-    spell,
-    ctx.spellCastOptions,
+  return ctx.spellCastOptions.flatMap(
+    (castOption): readonly CompelledNextTurnBehaviorSpellInvocation[] =>
+      Number(castOption.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(castOption),
+              spell,
+              procedure: "compelledNextTurnBehavior",
+              actionCost: "magicAction",
+              ability: facts.ability,
+              dc: facts.dc,
+              targeting: {
+                kind: "targetList",
+                minTargets: 1,
+                maxTargets:
+                  facts.targetCount.base +
+                  Math.max(
+                    0,
+                    Number(castOption.spellLevel) - facts.targetCount.baseLevel,
+                  ) *
+                    facts.targetCount.perSlotAboveBase,
+              },
+            },
+          ],
   );
 }
 
-export function supportedPreparedCompelledNextTurnBehaviorProfile(
-  spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
-  castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly CompelledNextTurnBehaviorSpellInvocation[] {
-  const command = commandSpell(spell);
-  if (command === null) {
-    return [];
-  }
-
-  return preparedSpellSlotInvocationsFrom(
-    spell,
-    castOptions,
-    (base, slotLevel) => ({
-      ...base,
-      procedure: "compelledNextTurnBehavior",
-      actionCost: "magicAction",
-      ability: command.phase.ability,
-      dc: command.phase.dc,
-      targeting: command.targeting(slotLevel),
-    }),
-  );
-}
-
-function commandSpell(
-  spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
-): {
-  readonly phase: CompelledBehaviorPhase;
-  readonly targeting: (
-    slotLevel: SpellSlotLevel,
-  ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
-} | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1 ||
-    !isCompelledBehaviorPhase(phase)
-  ) {
-    return null;
-  }
-  const targetSelection = phase.attachment.value.selection;
-  const targetCountBySlot = oneAdditionalTargetPerSpellSlotAboveBaseLevel(
-    targetSelection,
-    spell.mechanics.level,
-  );
-  if (
-    targetSelection.mode !== "choose_up_to" ||
-    targetSelection.targetKinds?.length !== 1 ||
-    targetSelection.targetKinds[0] !== "creature" ||
-    targetCountBySlot === null ||
-    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
-  ) {
-    return null;
-  }
-
+function compelledBehaviorIssue(
+  failedFact: CompelledBehaviorFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): CompelledBehaviorAdmissionIssue {
   return {
-    phase,
-    targeting: (slotLevel) => ({
-      kind: "targetList",
-      minTargets: 1,
-      maxTargets: targetCountBySlot(slotLevel),
-    }),
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "compelledNextTurnBehavior",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported compelledNextTurnBehavior mechanics fact: ${failedFact}.`,
   };
 }
 
-function isCompelledBehaviorPhase(
-  phase: ActivationPhase | undefined,
-): phase is CompelledBehaviorPhase {
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
-  return (
-    phase?.kind === "save_gate" &&
-    phase.repeatSaves === undefined &&
-    phase.ability === "wis" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target" &&
-    failedEffect?.kind === "compelled_target_next_turn" &&
-    failedEffect.execution === "target_next_turn" &&
-    failedEffect.options.approach.route === "shortest_direct_to_caster" &&
-    failedEffect.options.approach.endsTurnWhenWithinFeet === 5 &&
-    failedEffect.options.drop.objectSet === "held_objects" &&
-    failedEffect.options.drop.afterward === "end_turn" &&
-    failedEffect.options.flee.direction === "away_from_caster" &&
-    failedEffect.options.flee.means === "fastest_available" &&
-    failedEffect.options.flee.duration === "target_turn" &&
-    failedEffect.options.grovel.condition === "prone" &&
-    failedEffect.options.grovel.afterward === "end_turn" &&
-    failedEffect.options.halt.movement === "none" &&
-    failedEffect.options.halt.action === "none" &&
-    failedEffect.options.halt.bonusAction === "none" &&
-    failedEffect.options.halt.duration === "target_turn"
+function compelledBehaviorRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is CompelledBehaviorMechanics {
+  if (mechanics.family !== "activation") return false;
+  const phase = mechanics.phases.find(
+    (candidate): candidate is CompelledBehaviorPhase =>
+      candidate.kind === "save_gate" &&
+      candidate.onFail.kind === "compelled_target_next_turn",
+  );
+  return spellProcedureHasRedundantSignature({
+    kind: "twoWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present:
+          mechanics.level === 1 &&
+          mechanics.school === "enchantment" &&
+          mechanics.castingTime.kind === "action",
+      },
+      {
+        name: "range",
+        present:
+          mechanics.range.kind === "point" && mechanics.range.feet === 60,
+      },
+      {
+        name: "componentsAndDuration",
+        present:
+          mechanics.components.v === true &&
+          mechanics.components.s === false &&
+          mechanics.components.m === false &&
+          mechanics.duration.kind === "instantaneous",
+      },
+      {
+        name: "saveGate",
+        present: phase?.ability === "wis",
+      },
+      {
+        name: "compelledBehavior",
+        present: phase?.onFail.kind === "compelled_target_next_turn",
+      },
+    ],
+  });
+}
+
+function isCompelledBehaviorTargetAttachment(
+  attachment: CompelledBehaviorPhase["attachment"],
+): attachment is CompelledBehaviorTargetAttachment {
+  return attachment.kind === "hole" && attachment.value.kind === "target";
+}
+
+type CompelledBehaviorInspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly [
+        CompelledBehaviorIssueFact,
+        ...CompelledBehaviorIssueFact[],
+      ];
+    }
+  | {
+      readonly tag: "parsed";
+      readonly facts: CompelledBehaviorMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
+
+function compelledBehaviorOptionIsSupported(
+  effect: CompelledBehaviorFailedEffect,
+  option: "approach" | "drop" | "flee" | "grovel" | "halt",
+): boolean {
+  const value = effect.options[option];
+  return Match.value(option).pipe(
+    Match.when(
+      "approach",
+      () =>
+        value === effect.options.approach &&
+        value.route === "shortest_direct_to_caster" &&
+        value.endsTurnWhenWithinFeet === 5 &&
+        spellMechanicsObjectHasOnlyKeys(value, APPROACH_FIELDS),
+    ),
+    Match.when(
+      "drop",
+      () =>
+        value === effect.options.drop &&
+        value.objectSet === "held_objects" &&
+        value.afterward === "end_turn" &&
+        spellMechanicsObjectHasOnlyKeys(value, DROP_FIELDS),
+    ),
+    Match.when(
+      "flee",
+      () =>
+        value === effect.options.flee &&
+        value.direction === "away_from_caster" &&
+        value.means === "fastest_available" &&
+        value.duration === "target_turn" &&
+        spellMechanicsObjectHasOnlyKeys(value, FLEE_FIELDS),
+    ),
+    Match.when(
+      "grovel",
+      () =>
+        value === effect.options.grovel &&
+        value.condition === "prone" &&
+        value.afterward === "end_turn" &&
+        spellMechanicsObjectHasOnlyKeys(value, GROVEL_FIELDS),
+    ),
+    Match.when(
+      "halt",
+      () =>
+        value === effect.options.halt &&
+        value.movement === "none" &&
+        value.action === "none" &&
+        value.bonusAction === "none" &&
+        value.duration === "target_turn" &&
+        spellMechanicsObjectHasOnlyKeys(value, HALT_FIELDS),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function inspectCompelledBehaviorMechanics(
+  source: SpellMechanicsAdmissionSource,
+): CompelledBehaviorInspection {
+  if (!compelledBehaviorRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const issues: CompelledBehaviorIssueFact[] = [];
+  const push = (
+    failedFact: CompelledBehaviorFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== 1) push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "enchantment")
+    push("school", spellMechanicsHeaderPath("school"));
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 60 ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== false ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys<CommandComponentKeySpace>(
+      mechanics.components,
+      COMPONENT_FIELDS,
+    )
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+  if (
+    mechanics.duration.kind !== "instantaneous" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS)
+  )
+    push("duration", spellMechanicsHeaderPath("duration"));
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+
+  const representedIndex = mechanics.phases.findIndex(
+    (candidate) =>
+      candidate.kind === "save_gate" &&
+      candidate.onFail.kind === "compelled_target_next_turn",
+  );
+  const saveGateIndex = mechanics.phases.findIndex(
+    (candidate) => candidate.kind === "save_gate",
+  );
+  const phaseIndex =
+    representedIndex >= 0 ? representedIndex : Math.max(saveGateIndex, 0);
+  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
+  const phase = mechanics.phases[phaseIndex];
+  for (const [index] of mechanics.phases.entries())
+    if (index !== phaseIndex)
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
+  if (phase === undefined)
+    push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+  if (phaseIndex !== 0)
+    push("phaseOrder", spellActivationPhasePath(phaseOrdinal));
+  if (phase?.kind !== "save_gate") {
+    if (phase !== undefined)
+      push("phaseShape", spellActivationPhasePath(phaseOrdinal));
+    return {
+      tag: "unsupported",
+      issues: spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues)) ?? [
+        { failedFact: "phaseCount", mechanicsPath: spellMechanicsRootPath() },
+      ],
+    };
+  }
+  if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
+    push("phaseShape", spellActivationPhasePath(phaseOrdinal));
+  if (phase.ability !== "wis")
+    push("saveAbility", spellActivationPhasePath(phaseOrdinal));
+  if (
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.dc, DC_FIELDS)
+  )
+    push("saveDc", spellActivationPhasePath(phaseOrdinal));
+  if (
+    phase.onSuccess.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, SUCCESS_FIELDS)
+  )
+    push("successOutcome", spellActivationPhasePath(phaseOrdinal));
+  for (const [index] of (phase.repeatSaves ?? []).entries())
+    push(
+      "repeatSave",
+      spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
+    );
+
+  const targetAttachment = isCompelledBehaviorTargetAttachment(phase.attachment)
+    ? phase.attachment
+    : undefined;
+  if (
+    targetAttachment === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(targetAttachment, ATTACHMENT_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      targetAttachment.value,
+      TARGET_VALUE_FIELDS,
+    )
+  )
+    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
+  const selection = targetAttachment?.value.selection;
+  const selectionSupported =
+    selection?.mode === "choose_up_to" &&
+    selection.targetKinds?.length === 1 &&
+    selection.targetKinds.includes("creature") &&
+    spellMechanicsObjectHasOnlyKeys(selection, SELECTION_FIELDS);
+  if (selection !== undefined && !selectionSupported)
+    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
+  const count =
+    selection?.mode === "choose_up_to" ? selection.count : undefined;
+  const targetCount =
+    typeof count === "object" &&
+    count.kind === "linear" &&
+    count.base === 1 &&
+    count.baseLevel === 1 &&
+    count.perSlotAboveBase === 1 &&
+    spellMechanicsObjectHasOnlyKeys(count, COUNT_FIELDS)
+      ? count
+      : undefined;
+  if (targetCount === undefined)
+    push("targetCount", spellActivationAttachmentPath(phaseOrdinal));
+
+  const failedEffect = phase.onFail;
+  const effectPath = spellActivationEffectPath(
+    phaseOrdinal,
+    PositiveInteger(1),
+  );
+  if (failedEffect.kind !== "compelled_target_next_turn") {
+    push("failureEffect", effectPath);
+  } else {
+    if (!spellMechanicsObjectHasOnlyKeys(failedEffect, FAILURE_FIELDS))
+      push("failureEffect", effectPath);
+    if (failedEffect.execution !== "target_next_turn")
+      push("failureExecution", effectPath);
+    if (!spellMechanicsObjectHasOnlyKeys(failedEffect.options, OPTIONS_FIELDS))
+      push("optionsShape", effectPath);
+    for (const [option, failedFact] of [
+      ["approach", "approachOption"],
+      ["drop", "dropOption"],
+      ["flee", "fleeOption"],
+      ["grovel", "grovelOption"],
+      ["halt", "haltOption"],
+    ] as const)
+      if (!compelledBehaviorOptionIsSupported(failedEffect, option))
+        push(failedFact, effectPath);
+  }
+
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined)
+    return { tag: "unsupported", issues: nonEmptyIssues };
+  if (targetCount === undefined)
+    return {
+      tag: "unsupported",
+      issues: [
+        { failedFact: "targetCount", mechanicsPath: spellMechanicsRootPath() },
+      ],
+    };
+  return {
+    tag: "parsed",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      ability: "wis",
+      dc: phase.dc,
+      targetCount,
+    },
+    evidence: {
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(phaseOrdinal),
+        spellActivationAttachmentPath(phaseOrdinal),
+        effectPath,
+      ],
+      unowned: [],
+    },
+  };
+}
+
+function admitCompelledBehaviorMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "compelledNextTurnBehavior",
+  CompelledBehaviorMechanicsFacts,
+  CompelledNextTurnBehaviorSpellInvocation,
+  CompelledBehaviorAdmissionIssue
+> {
+  return Match.value(inspectCompelledBehaviorMechanics(source)).pipe(
+    Match.when({ tag: "notRepresented" }, () => ({
+      tag: "notRepresented" as const,
+    })),
+    Match.when({ tag: "unsupported" }, ({ issues }) => ({
+      tag: "unsupported" as const,
+      issues: spellProcedureMapNonEmpty(
+        issues,
+        ({ failedFact, mechanicsPath }) =>
+          compelledBehaviorIssue(failedFact, mechanicsPath),
+      ),
+    })),
+    Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
+      tag: "supported" as const,
+      admitted: {
+        binding: "ready" as const,
+        procedure: "compelledNextTurnBehavior" as const,
+        facts,
+        evidence,
+        admit: (
+          spell: BattleSpellExecutionSource,
+          ctx: SpellAdmissionContext,
+        ) => admitCompelledNextTurnBehavior(spell, ctx, facts),
+      },
+    })),
+    Match.exhaustive,
   );
 }
 
@@ -275,10 +657,12 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
 export const compelledNextTurnBehaviorProfile = {
   procedure: "compelledNextTurnBehavior",
   executionSchema: CommandInvocationSchema,
-  admit: admitCompelledNextTurnBehavior,
+  admitMechanics: admitCompelledBehaviorMechanics,
   discoverCastAct: discoverCompelledNextTurnBehaviorCastAct,
   resolve: resolveCompelledNextTurnBehavior,
 } satisfies SpellProcedureDeclaration<
   "compelledNextTurnBehavior",
-  CompelledNextTurnBehaviorSpellInvocation
+  CompelledNextTurnBehaviorSpellInvocation,
+  CompelledBehaviorMechanicsFacts,
+  CompelledBehaviorAdmissionIssue
 >;
