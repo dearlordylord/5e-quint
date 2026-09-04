@@ -2398,7 +2398,7 @@ export type LinkedDefenseResistanceDamageShareSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "linkedDefenseResistanceDamageShare";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
