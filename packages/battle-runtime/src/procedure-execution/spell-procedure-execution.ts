@@ -207,6 +207,7 @@ export type MagicSuppressionEmanationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly durationTicks: ElapsedTimeTicks;
+    readonly exceptSources: readonly ["artifact", "deity"];
     readonly procedure: "magicSuppressionEmanation";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
