@@ -1916,6 +1916,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
         targeting: value.targeting,
+        visibility: value.visibility,
       }),
       conditionImmunityAndTurnStartTemporaryHitPoints: (value) => ({
         spellRuleFacts,

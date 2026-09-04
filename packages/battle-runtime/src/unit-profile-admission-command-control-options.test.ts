@@ -60,6 +60,7 @@ import { spellTargetListHole } from "./battle-reducer/spells-targeting.ts";
 import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 import type {
   AvailableBattleAct,
   BattleFill,
@@ -198,6 +199,9 @@ describe("compelledNextTurnBehavior static admission", () => {
     const invocation = invocations[0];
     if (invocation === undefined)
       throw new Error("Expected admitted Command invocation.");
+    expect(spellProcedureExecution(invocation).visibility).toBe(
+      "caster_can_see",
+    );
     expect(
       spellTargetListHole(session.state, spellCasterId, {
         access: invocation.access,
