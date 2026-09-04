@@ -155,6 +155,7 @@ const ONGOING_SPELL_END_FAILED_FACTS = [
   "selection",
   "selectionMode",
   "selectionTargetKinds",
+  "targetCount",
   "typeFilter",
   "stateFilter",
   "visibility",
@@ -326,6 +327,7 @@ function attachmentFact(
     Match.when("selection", () => "selection" as const),
     Match.when("mode", () => "selectionMode" as const),
     Match.when("targetKinds", () => "selectionTargetKinds" as const),
+    Match.when("count", () => "targetCount" as const),
     Match.whenOr(
       "typeFilter",
       "stateFilter",
@@ -342,7 +344,6 @@ function attachmentFact(
     ),
     Match.whenOr(
       "rangeOrigin",
-      "count",
       "shape",
       "origin",
       "occupantDispositionFilter",
@@ -354,35 +355,50 @@ function attachmentFact(
   );
 }
 
-function targetKindsSupported(phase: ActivationPhase): boolean {
-  if (!("attachment" in phase)) return false;
+function inspectTargetAttachment(
+  phase: ActivationPhase,
+  ordinal: PositiveInteger,
+  push: (
+    failedFact: OngoingSpellEndFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ) => void,
+): void {
+  if (!("attachment" in phase)) {
+    push("attachmentShape", spellActivationAttachmentPath(ordinal));
+    return;
+  }
   const admission = admitSpellTargetAttachment(phase.attachment, [
     "mode",
     "targetKinds",
   ]);
-  if (admission.tag !== "admitted") return false;
-  const selection = admission.attachment.value.selection;
-  return (
-    "targetKinds" in selection &&
-    selection.targetKinds !== undefined &&
-    selection.targetKinds.length === ONGOING_SPELL_END_TARGET_KINDS.length &&
-    new Set(selection.targetKinds).size === selection.targetKinds.length &&
-    ONGOING_SPELL_END_TARGET_KINDS.every((kind) =>
-      new Set<string>(selection.targetKinds).has(kind),
-    )
-  );
-}
+  if (admission.tag === "rejected")
+    for (const rejection of admission.rejections)
+      push(
+        attachmentFact(rejection, phase),
+        spellActivationAttachmentPath(ordinal),
+      );
 
-function targetModeSupported(phase: ActivationPhase): boolean {
-  if (!("attachment" in phase)) return false;
-  const admission = admitSpellTargetAttachment(phase.attachment, [
-    "mode",
-    "targetKinds",
-  ]);
-  return (
-    admission.tag === "admitted" &&
-    admission.attachment.value.selection.mode === "one"
-  );
+  const selection =
+    phase.attachment.kind === "target"
+      ? phase.attachment.selection
+      : phase.attachment.kind === "hole" &&
+          phase.attachment.value.kind === "target"
+        ? phase.attachment.value.selection
+        : undefined;
+  if (selection === undefined) return;
+  if (selection.mode !== "one")
+    push("selectionMode", spellActivationAttachmentPath(ordinal));
+  const targetKinds =
+    "targetKinds" in selection ? selection.targetKinds : undefined;
+  if (
+    targetKinds === undefined ||
+    targetKinds.length !== ONGOING_SPELL_END_TARGET_KINDS.length ||
+    new Set(targetKinds).size !== targetKinds.length ||
+    !ONGOING_SPELL_END_TARGET_KINDS.every((kind) =>
+      new Set<string>(targetKinds).has(kind),
+    )
+  )
+    push("selectionTargetKinds", spellActivationAttachmentPath(ordinal));
 }
 
 type Inspection =
@@ -492,28 +508,11 @@ function inspect(source: SpellMechanicsAdmissionSource): Inspection {
       directCandidate.ordinal !== PositiveInteger(1)
     )
       push("phaseOrder", path);
-    if ("attachment" in directCandidate.phase) {
-      const admission = admitSpellTargetAttachment(
-        directCandidate.phase.attachment,
-        ["mode", "targetKinds"],
-      );
-      if (admission.tag === "rejected")
-        for (const rejection of admission.rejections)
-          push(
-            attachmentFact(rejection, directCandidate.phase),
-            spellActivationAttachmentPath(directCandidate.ordinal),
-          );
-    }
-    if (!targetKindsSupported(directCandidate.phase))
-      push(
-        "selectionTargetKinds",
-        spellActivationAttachmentPath(directCandidate.ordinal),
-      );
-    if (!targetModeSupported(directCandidate.phase))
-      push(
-        "selectionMode",
-        spellActivationAttachmentPath(directCandidate.ordinal),
-      );
+    inspectTargetAttachment(
+      directCandidate.phase,
+      directCandidate.ordinal,
+      push,
+    );
     const effects =
       "effects" in directCandidate.phase
         ? (directCandidate.phase.effects ?? [])
@@ -567,28 +566,7 @@ function inspect(source: SpellMechanicsAdmissionSource): Inspection {
       checkCandidate.ordinal !== PositiveInteger(2)
     )
       push("phaseOrder", path);
-    if ("attachment" in checkCandidate.phase) {
-      const admission = admitSpellTargetAttachment(
-        checkCandidate.phase.attachment,
-        ["mode", "targetKinds"],
-      );
-      if (admission.tag === "rejected")
-        for (const rejection of admission.rejections)
-          push(
-            attachmentFact(rejection, checkCandidate.phase),
-            spellActivationAttachmentPath(checkCandidate.ordinal),
-          );
-    }
-    if (!targetKindsSupported(checkCandidate.phase))
-      push(
-        "selectionTargetKinds",
-        spellActivationAttachmentPath(checkCandidate.ordinal),
-      );
-    if (!targetModeSupported(checkCandidate.phase))
-      push(
-        "selectionMode",
-        spellActivationAttachmentPath(checkCandidate.ordinal),
-      );
+    inspectTargetAttachment(checkCandidate.phase, checkCandidate.ordinal, push);
     if (
       !("ability" in checkCandidate.phase) ||
       checkCandidate.phase.ability !== "caster_spellcasting_ability"

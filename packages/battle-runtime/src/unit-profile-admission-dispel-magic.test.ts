@@ -144,6 +144,25 @@ function mutatedDispelMechanics(
   );
 }
 
+function mutatedDispelTargetSelections(
+  mutate: (selection: object) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(dispelMagicUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "activation")
+    throw new Error("Expected Dispel Magic activation mechanics.");
+  for (const phase of mechanics.phases) {
+    if (
+      !("attachment" in phase) ||
+      phase.attachment.kind !== "hole" ||
+      phase.attachment.value.kind !== "target"
+    )
+      continue;
+    mutate(phase.attachment.value.selection);
+  }
+  return { ...dispelMechanicsSource(source), mechanics };
+}
+
 function staticDispelActor(): SpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
@@ -465,6 +484,56 @@ describe("ongoingSpellEnd static admission", () => {
             PositiveInteger(ordinal),
           ),
         });
+    },
+  );
+  test.each([
+    {
+      label: "bad visibility only",
+      mutate: (selection: object) => {
+        Reflect.set(selection, "visibility", "caster_can_see");
+      },
+      expectedFacts: ["visibility"],
+    },
+    {
+      label: "bad target kinds only",
+      mutate: (selection: object) => {
+        Reflect.set(selection, "targetKinds", ["creature"]);
+      },
+      expectedFacts: ["selectionTargetKinds"],
+    },
+    {
+      label: "bad mode only",
+      mutate: (selection: object) => {
+        Reflect.set(selection, "mode", "choose_up_to");
+      },
+      expectedFacts: ["selectionMode"],
+    },
+    {
+      label: "independent accumulated fields",
+      mutate: (selection: object) => {
+        Reflect.set(selection, "visibility", "caster_can_see");
+        Reflect.set(selection, "targetKinds", ["creature"]);
+        Reflect.set(selection, "mode", "choose_up_to");
+      },
+      expectedFacts: ["visibility", "selectionTargetKinds", "selectionMode"],
+    },
+  ] as const)(
+    "reports $label without fabricated sibling issues",
+    ({ mutate, expectedFacts }) => {
+      const facts = admissionIssueFacts(
+        ongoingSpellEndProfile.admitMechanics(
+          mutatedDispelTargetSelections(mutate),
+        ),
+      );
+      expect(facts).toHaveLength(expectedFacts.length * 2);
+      for (const ordinal of [1, 2] as const)
+        for (const failedFact of expectedFacts)
+          expect(facts).toContainEqual({
+            failedFact,
+            mechanicsPath: spellActivationAttachmentPath(
+              PositiveInteger(ordinal),
+            ),
+          });
     },
   );
 });
