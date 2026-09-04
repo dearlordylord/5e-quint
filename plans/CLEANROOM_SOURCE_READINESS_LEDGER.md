@@ -285,9 +285,14 @@ This section is the sole mutable handoff for a new session.
   `magic-suppression-emanation.ts`,
   `unit-profile-admission-antimagic-field.test.ts`, and only the
   `magicSuppressionEmanation` invocation source-field line in
-  `battle-state-execution.ts` needed for mechanics-free execution. No shared
-  schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated
-  runtime file is leased.
+  `battle-state-execution.ts` needed for mechanics-free execution. The lease
+  also owns only the `magicSuppressionEmanation` execution projection field in
+  `procedure-execution/spell-procedure-execution.ts`, because
+  `SpellExecutableExecutionOf<MagicSuppressionEmanationInvocation>` currently
+  drops the canonical admitted `exceptSources` policy; no other content in that
+  file is leased. No shared schema, registry, coverage-map, QNT, MBT, Surface
+  artifact, or unrelated runtime file is leased. Luna max produced two bounded
+  no-edit checkpoints, so Sol is the implementation fallback.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -425,7 +430,7 @@ explicitly abandoned.
 | Checkpoint/unit | Ticket/slice                                    | Owner                                     | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                              | State  |
 | --------------- | ----------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                        | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `cc4826a31`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, and directional persistent area integrated; cumulative Surface publication delta certified; 10 top-level profile migrations remain | Active |
-| `SR-04G/W10`    | magic-suppression-emanation profile admission   | Codex orchestrator; implementer: Luna max | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magic-suppression-emanation`; `work/sr04g-magic-suppression-emanation` | `2efce770c` | `magic-suppression-emanation.ts`, `unit-profile-admission-antimagic-field.test.ts`, and only the `magicSuppressionEmanation` invocation source-field line in `battle-state-execution.ts`. No shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated runtime lease                                                                                                               | Active |
+| `SR-04G/W10`    | magic-suppression-emanation profile admission   | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magic-suppression-emanation`; `work/sr04g-magic-suppression-emanation` | `2efce770c` | `magic-suppression-emanation.ts`, `unit-profile-admission-antimagic-field.test.ts`, only the `magicSuppressionEmanation` invocation source-field line in `battle-state-execution.ts`, and only the `magicSuppressionEmanation` execution projection field in `procedure-execution/spell-procedure-execution.ts` required to retain canonical admitted `exceptSources`; no other content in that file and no shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated runtime lease | Active |
 
 ## Landing discipline
 
