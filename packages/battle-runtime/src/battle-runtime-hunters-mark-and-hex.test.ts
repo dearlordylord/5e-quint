@@ -651,6 +651,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           classLevels: [{ className: "ranger", level: 1 }],
           spellcasting: {
             ...wizardSpellcasting({
+              cantrips: [],
               preparedSpells: [spellRecord("hunters_mark")],
               spellSlots: [{ spellLevel: 1, count: 2 }],
             }),
