@@ -251,14 +251,17 @@ describe("compelledNextTurnBehavior static admission", () => {
     ]);
   });
 
-  test("accumulates save, target-count, repeat, and every option issue", () => {
+  test("accumulates every independent save, selection, and option-field issue", () => {
     const result = compelledNextTurnBehaviorProfile.admitMechanics(
       malformedCommandSource((mechanics) => {
         const phase = mechanics.phases[0];
         if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
         Reflect.set(phase, "ability", "cha");
         Reflect.set(phase.dc, "kind", "fixed");
+        Reflect.set(phase.dc, "syntheticDcFact", true);
         Reflect.set(phase.onSuccess, "kind", "damage");
+        Reflect.set(phase.onSuccess, "syntheticSuccessFact", true);
+        Reflect.set(phase, "syntheticPhaseFact", true);
         Reflect.set(phase, "repeatSaves", [
           { cadence: "end_of_target_turn", onSuccess: "ends_on_target" },
         ]);
@@ -272,16 +275,51 @@ describe("compelledNextTurnBehavior static admission", () => {
         )
           throw new Error("Expected Command mechanics.");
         Reflect.set(phase.attachment.value.selection.count, "base", 2);
+        Reflect.set(phase.attachment, "syntheticAttachmentFact", true);
+        Reflect.set(phase.attachment, "holeId", "synthetic_target");
+        Reflect.set(phase.attachment, "label", "synthetic target");
+        Reflect.set(phase.attachment.value.selection, "mode", "choose_exactly");
+        Reflect.set(
+          phase.attachment.value.selection,
+          "syntheticSelectionFact",
+          true,
+        );
         Reflect.set(phase.attachment.value.selection, "targetKinds", [
           "object",
         ]);
         Reflect.set(phase.onFail, "execution", "synthetic_later_turn");
+        Reflect.set(phase.onFail, "syntheticFailureFact", true);
         Reflect.set(phase.onFail.options, "syntheticOption", true);
+        Reflect.set(
+          phase.onFail.options.approach,
+          "syntheticApproachFact",
+          true,
+        );
         Reflect.set(phase.onFail.options.approach, "route", "synthetic_route");
+        Reflect.set(
+          phase.onFail.options.approach,
+          "endsTurnWhenWithinFeet",
+          10,
+        );
+        Reflect.set(phase.onFail.options.drop, "syntheticDropFact", true);
+        Reflect.set(
+          phase.onFail.options.drop,
+          "objectSet",
+          "synthetic_objects",
+        );
         Reflect.set(phase.onFail.options.drop, "afterward", "continue_turn");
+        Reflect.set(phase.onFail.options.flee, "syntheticFleeFact", true);
+        Reflect.set(phase.onFail.options.flee, "direction", "toward_caster");
         Reflect.set(phase.onFail.options.flee, "means", "slowest_available");
+        Reflect.set(phase.onFail.options.flee, "duration", "current_turn");
+        Reflect.set(phase.onFail.options.grovel, "syntheticGrovelFact", true);
         Reflect.set(phase.onFail.options.grovel, "condition", "restrained");
+        Reflect.set(phase.onFail.options.grovel, "afterward", "continue_turn");
+        Reflect.set(phase.onFail.options.halt, "syntheticHaltFact", true);
+        Reflect.set(phase.onFail.options.halt, "movement", "normal");
         Reflect.set(phase.onFail.options.halt, "action", "one_action");
+        Reflect.set(phase.onFail.options.halt, "bonusAction", "one_action");
+        Reflect.set(phase.onFail.options.halt, "duration", "current_turn");
       }),
     );
     const phasePath = spellActivationPhasePath(PositiveInteger(1));
@@ -290,9 +328,12 @@ describe("compelledNextTurnBehavior static admission", () => {
       PositiveInteger(1),
     );
     expect(issueShape(result)).toEqual([
+      { failedFact: "phaseShape", mechanicsPath: phasePath },
       { failedFact: "saveAbility", mechanicsPath: phasePath },
       { failedFact: "saveDc", mechanicsPath: phasePath },
+      { failedFact: "saveDcShape", mechanicsPath: phasePath },
       { failedFact: "successOutcome", mechanicsPath: phasePath },
+      { failedFact: "successShape", mechanicsPath: phasePath },
       {
         failedFact: "repeatSave",
         mechanicsPath: spellActivationRepeatPath(
@@ -301,20 +342,87 @@ describe("compelledNextTurnBehavior static admission", () => {
         ),
       },
       {
-        failedFact: "attachment",
+        failedFact: "attachmentShape",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "attachmentHoleId",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "attachmentLabel",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "selectionShape",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "selectionMode",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "selectionTargetKinds",
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
       {
         failedFact: "targetCount",
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
+      { failedFact: "failureShape", mechanicsPath: effectPath },
       { failedFact: "failureExecution", mechanicsPath: effectPath },
       { failedFact: "optionsShape", mechanicsPath: effectPath },
-      { failedFact: "approachOption", mechanicsPath: effectPath },
-      { failedFact: "dropOption", mechanicsPath: effectPath },
-      { failedFact: "fleeOption", mechanicsPath: effectPath },
-      { failedFact: "grovelOption", mechanicsPath: effectPath },
-      { failedFact: "haltOption", mechanicsPath: effectPath },
+      { failedFact: "approachShape", mechanicsPath: effectPath },
+      { failedFact: "approachRoute", mechanicsPath: effectPath },
+      { failedFact: "approachEndDistance", mechanicsPath: effectPath },
+      { failedFact: "dropShape", mechanicsPath: effectPath },
+      { failedFact: "dropObjectSet", mechanicsPath: effectPath },
+      { failedFact: "dropAfterward", mechanicsPath: effectPath },
+      { failedFact: "fleeShape", mechanicsPath: effectPath },
+      { failedFact: "fleeDirection", mechanicsPath: effectPath },
+      { failedFact: "fleeMeans", mechanicsPath: effectPath },
+      { failedFact: "fleeDuration", mechanicsPath: effectPath },
+      { failedFact: "grovelShape", mechanicsPath: effectPath },
+      { failedFact: "grovelCondition", mechanicsPath: effectPath },
+      { failedFact: "grovelAfterward", mechanicsPath: effectPath },
+      { failedFact: "haltShape", mechanicsPath: effectPath },
+      { failedFact: "haltMovement", mechanicsPath: effectPath },
+      { failedFact: "haltAction", mechanicsPath: effectPath },
+      { failedFact: "haltBonusAction", mechanicsPath: effectPath },
+      { failedFact: "haltDuration", mechanicsPath: effectPath },
+    ]);
+  });
+
+  test("reports an absent phase at the mechanics root without fabricating an ordinal", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics, "phases", []);
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      { failedFact: "phaseCount", mechanicsPath: spellMechanicsRootPath() },
+    ]);
+  });
+
+  test("accumulates attachment discriminants independently", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(phase.attachment, "kind", "synthetic_attachment");
+      }),
+    );
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+    expect(issueShape(result)).toEqual([
+      { failedFact: "attachmentShape", mechanicsPath: attachmentPath },
+      { failedFact: "attachmentKind", mechanicsPath: attachmentPath },
+      { failedFact: "attachmentHoleId", mechanicsPath: attachmentPath },
+      { failedFact: "attachmentLabel", mechanicsPath: attachmentPath },
+      { failedFact: "attachmentValueKind", mechanicsPath: attachmentPath },
+      { failedFact: "selectionShape", mechanicsPath: attachmentPath },
+      { failedFact: "selectionMode", mechanicsPath: attachmentPath },
+      { failedFact: "selectionTargetKinds", mechanicsPath: attachmentPath },
+      { failedFact: "targetCount", mechanicsPath: attachmentPath },
     ]);
   });
 

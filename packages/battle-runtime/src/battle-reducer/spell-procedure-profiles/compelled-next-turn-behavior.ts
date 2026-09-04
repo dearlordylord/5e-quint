@@ -64,6 +64,11 @@ import {
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
 import {
+  saveGateTargetCountFactsFromSelection,
+  saveGatedConditionTargetingFromFacts,
+  type SaveGateTargetCountFacts,
+} from "./_save-gate-helpers.ts";
+import {
   spellConsumedMaterialEvidencePaths,
   spellDurationChildCoordinates,
   spellDurationChildFailedFact,
@@ -93,10 +98,6 @@ type CompelledBehaviorPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >;
-type CompelledBehaviorFailedEffect = Extract<
-  CompelledBehaviorPhase["onFail"],
-  { readonly kind: "compelled_target_next_turn" }
->;
 type CompelledBehaviorHoleAttachment = Extract<
   CompelledBehaviorPhase["attachment"],
   { readonly kind: "hole" }
@@ -107,14 +108,23 @@ type CompelledBehaviorTargetAttachment = CompelledBehaviorHoleAttachment & {
     { readonly kind: "target" }
   >;
 };
+type CommandAttachmentKeySpace = Pick<
+  CompelledBehaviorTargetAttachment,
+  "kind" | "holeId" | "label" | "value"
+>;
+type CommandTargetValueKeySpace = Pick<
+  CompelledBehaviorTargetAttachment["value"],
+  "kind" | "selection"
+>;
+type CommandSelectionKeySpace = {
+  readonly mode: unknown;
+  readonly targetKinds?: unknown;
+  readonly count?: unknown;
+};
 type CompelledBehaviorMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly ability: "wis";
   readonly dc: CompelledNextTurnBehaviorSpellInvocation["dc"];
-  readonly targetCount: {
-    readonly base: number;
-    readonly baseLevel: number;
-    readonly perSlotAboveBase: number;
-  };
+  readonly targetCount: SaveGateTargetCountFacts;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for CompelledBehaviorFailedFact.
@@ -132,19 +142,42 @@ const COMPELLED_BEHAVIOR_FAILED_FACTS = [
   "phaseCount",
   "phaseOrder",
   "phaseShape",
-  "attachment",
+  "attachmentShape",
+  "attachmentKind",
+  "attachmentHoleId",
+  "attachmentLabel",
+  "attachmentValueKind",
+  "selectionShape",
+  "selectionMode",
+  "selectionTargetKinds",
   "targetCount",
   "saveAbility",
   "saveDc",
+  "saveDcShape",
   "successOutcome",
+  "successShape",
   "failureEffect",
+  "failureShape",
   "failureExecution",
   "optionsShape",
-  "approachOption",
-  "dropOption",
-  "fleeOption",
-  "grovelOption",
-  "haltOption",
+  "approachShape",
+  "approachRoute",
+  "approachEndDistance",
+  "dropShape",
+  "dropObjectSet",
+  "dropAfterward",
+  "fleeShape",
+  "fleeDirection",
+  "fleeMeans",
+  "fleeDuration",
+  "grovelShape",
+  "grovelCondition",
+  "grovelAfterward",
+  "haltShape",
+  "haltMovement",
+  "haltAction",
+  "haltBonusAction",
+  "haltDuration",
   "repeatSave",
 ] as const;
 type CompelledBehaviorFailedFact =
@@ -188,7 +221,6 @@ const PHASE_FIELDS = [
 const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
 const TARGET_VALUE_FIELDS = ["kind", "selection"] as const;
 const SELECTION_FIELDS = ["mode", "targetKinds", "count"] as const;
-const COUNT_FIELDS = ["kind", "base", "baseLevel", "perSlotAboveBase"] as const;
 const DC_FIELDS = ["kind"] as const;
 const SUCCESS_FIELDS = ["kind"] as const;
 const FAILURE_FIELDS = ["kind", "execution", "options"] as const;
@@ -220,17 +252,10 @@ function admitCompelledNextTurnBehavior(
               actionCost: "magicAction",
               ability: facts.ability,
               dc: facts.dc,
-              targeting: {
-                kind: "targetList",
-                minTargets: 1,
-                maxTargets:
-                  facts.targetCount.base +
-                  Math.max(
-                    0,
-                    Number(castOption.spellLevel) - facts.targetCount.baseLevel,
-                  ) *
-                    facts.targetCount.perSlotAboveBase,
-              },
+              targeting: saveGatedConditionTargetingFromFacts(
+                { kind: "targetList", count: facts.targetCount },
+                castOption.spellLevel,
+              ),
             },
           ],
   );
@@ -314,59 +339,6 @@ type CompelledBehaviorInspection =
       readonly evidence: SpellProcedureMechanicsEvidence;
     };
 
-function compelledBehaviorOptionIsSupported(
-  effect: CompelledBehaviorFailedEffect,
-  option: "approach" | "drop" | "flee" | "grovel" | "halt",
-): boolean {
-  const value = effect.options[option];
-  return Match.value(option).pipe(
-    Match.when(
-      "approach",
-      () =>
-        value === effect.options.approach &&
-        value.route === "shortest_direct_to_caster" &&
-        value.endsTurnWhenWithinFeet === 5 &&
-        spellMechanicsObjectHasOnlyKeys(value, APPROACH_FIELDS),
-    ),
-    Match.when(
-      "drop",
-      () =>
-        value === effect.options.drop &&
-        value.objectSet === "held_objects" &&
-        value.afterward === "end_turn" &&
-        spellMechanicsObjectHasOnlyKeys(value, DROP_FIELDS),
-    ),
-    Match.when(
-      "flee",
-      () =>
-        value === effect.options.flee &&
-        value.direction === "away_from_caster" &&
-        value.means === "fastest_available" &&
-        value.duration === "target_turn" &&
-        spellMechanicsObjectHasOnlyKeys(value, FLEE_FIELDS),
-    ),
-    Match.when(
-      "grovel",
-      () =>
-        value === effect.options.grovel &&
-        value.condition === "prone" &&
-        value.afterward === "end_turn" &&
-        spellMechanicsObjectHasOnlyKeys(value, GROVEL_FIELDS),
-    ),
-    Match.when(
-      "halt",
-      () =>
-        value === effect.options.halt &&
-        value.movement === "none" &&
-        value.action === "none" &&
-        value.bonusAction === "none" &&
-        value.duration === "target_turn" &&
-        spellMechanicsObjectHasOnlyKeys(value, HALT_FIELDS),
-    ),
-    Match.exhaustive,
-  );
-}
-
 function inspectCompelledBehaviorMechanics(
   source: SpellMechanicsAdmissionSource,
 ): CompelledBehaviorInspection {
@@ -424,20 +396,25 @@ function inspectCompelledBehaviorMechanics(
   const saveGateIndex = mechanics.phases.findIndex(
     (candidate) => candidate.kind === "save_gate",
   );
-  const phaseIndex =
-    representedIndex >= 0 ? representedIndex : Math.max(saveGateIndex, 0);
-  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
+  const phaseIndex = representedIndex >= 0 ? representedIndex : saveGateIndex;
   const phase = mechanics.phases[phaseIndex];
+  if (phase === undefined) {
+    push("phaseCount", spellMechanicsRootPath());
+    return {
+      tag: "unsupported",
+      issues: spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues)) ?? [
+        { failedFact: "phaseCount", mechanicsPath: spellMechanicsRootPath() },
+      ],
+    };
+  }
+  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
   for (const [index] of mechanics.phases.entries())
     if (index !== phaseIndex)
       push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-  if (phase === undefined)
-    push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
   if (phaseIndex !== 0)
     push("phaseOrder", spellActivationPhasePath(phaseOrdinal));
   if (phase?.kind !== "save_gate") {
-    if (phase !== undefined)
-      push("phaseShape", spellActivationPhasePath(phaseOrdinal));
+    push("phaseShape", spellActivationPhasePath(phaseOrdinal));
     return {
       tag: "unsupported",
       issues: spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues)) ?? [
@@ -447,18 +424,19 @@ function inspectCompelledBehaviorMechanics(
   }
   if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
     push("phaseShape", spellActivationPhasePath(phaseOrdinal));
-  if (phase.ability !== "wis")
+  const saveAbility = phase.ability === "wis" ? phase.ability : undefined;
+  if (saveAbility === undefined)
     push("saveAbility", spellActivationPhasePath(phaseOrdinal));
-  if (
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    !spellMechanicsObjectHasOnlyKeys(phase.dc, DC_FIELDS)
-  )
+  const saveDc =
+    phase.dc.kind === "caster_spell_save_dc" ? phase.dc : undefined;
+  if (saveDc === undefined)
     push("saveDc", spellActivationPhasePath(phaseOrdinal));
-  if (
-    phase.onSuccess.kind !== "none" ||
-    !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, SUCCESS_FIELDS)
-  )
+  if (!spellMechanicsObjectHasOnlyKeys(phase.dc, DC_FIELDS))
+    push("saveDcShape", spellActivationPhasePath(phaseOrdinal));
+  if (phase.onSuccess.kind !== "none")
     push("successOutcome", spellActivationPhasePath(phaseOrdinal));
+  if (!spellMechanicsObjectHasOnlyKeys(phase.onSuccess, SUCCESS_FIELDS))
+    push("successShape", spellActivationPhasePath(phaseOrdinal));
   for (const [index] of (phase.repeatSaves ?? []).entries())
     push(
       "repeatSave",
@@ -468,36 +446,75 @@ function inspectCompelledBehaviorMechanics(
   const targetAttachment = isCompelledBehaviorTargetAttachment(phase.attachment)
     ? phase.attachment
     : undefined;
+  const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
   if (
     targetAttachment === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(targetAttachment, ATTACHMENT_FIELDS) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      targetAttachment.value,
-      TARGET_VALUE_FIELDS,
+    !spellMechanicsObjectHasOnlyKeys<CommandAttachmentKeySpace>(
+      targetAttachment,
+      ATTACHMENT_FIELDS,
     )
   )
-    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
+    push("attachmentShape", attachmentPath);
+  if (phase.attachment.kind !== "hole") push("attachmentKind", attachmentPath);
+  if (phase.attachment.kind === "hole") {
+    if (phase.attachment.holeId !== "command_target")
+      push("attachmentHoleId", attachmentPath);
+    if (phase.attachment.label !== "target")
+      push("attachmentLabel", attachmentPath);
+    if (
+      targetAttachment === undefined ||
+      !spellMechanicsObjectHasOnlyKeys<CommandTargetValueKeySpace>(
+        targetAttachment.value,
+        TARGET_VALUE_FIELDS,
+      )
+    )
+      push("attachmentShape", attachmentPath);
+    if (phase.attachment.value.kind !== "target")
+      push("attachmentValueKind", attachmentPath);
+  } else {
+    push("attachmentHoleId", attachmentPath);
+    push("attachmentLabel", attachmentPath);
+    push("attachmentValueKind", attachmentPath);
+  }
   const selection = targetAttachment?.value.selection;
-  const selectionSupported =
-    selection?.mode === "choose_up_to" &&
-    selection.targetKinds?.length === 1 &&
-    selection.targetKinds.includes("creature") &&
-    spellMechanicsObjectHasOnlyKeys(selection, SELECTION_FIELDS);
-  if (selection !== undefined && !selectionSupported)
-    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  const count =
-    selection?.mode === "choose_up_to" ? selection.count : undefined;
+  if (
+    selection === undefined ||
+    !spellMechanicsObjectHasOnlyKeys<CommandSelectionKeySpace>(
+      selection,
+      SELECTION_FIELDS,
+    )
+  )
+    push("selectionShape", attachmentPath);
+  if (selection?.mode !== "choose_up_to") push("selectionMode", attachmentPath);
+  if (
+    selection?.targetKinds?.length !== 1 ||
+    !selection.targetKinds.includes("creature")
+  )
+    push("selectionTargetKinds", attachmentPath);
   const targetCount =
-    typeof count === "object" &&
-    count.kind === "linear" &&
-    count.base === 1 &&
-    count.baseLevel === 1 &&
-    count.perSlotAboveBase === 1 &&
-    spellMechanicsObjectHasOnlyKeys(count, COUNT_FIELDS)
-      ? count
+    selection === undefined
+      ? null
+      : saveGateTargetCountFactsFromSelection(
+          selection,
+          source.spellDefinitionRuleFacts.level,
+        );
+  const selectionCount =
+    selection !== undefined && "count" in selection
+      ? selection.count
       : undefined;
-  if (targetCount === undefined)
-    push("targetCount", spellActivationAttachmentPath(phaseOrdinal));
+  const independentlyParsedTargetCount =
+    selectionCount === undefined
+      ? null
+      : saveGateTargetCountFactsFromSelection(
+          {
+            mode: "choose_up_to",
+            count: selectionCount,
+            targetKinds: ["creature"],
+          },
+          source.spellDefinitionRuleFacts.level,
+        );
+  if (independentlyParsedTargetCount === null)
+    push("targetCount", attachmentPath);
 
   const failedEffect = phase.onFail;
   const effectPath = spellActivationEffectPath(
@@ -508,20 +525,38 @@ function inspectCompelledBehaviorMechanics(
     push("failureEffect", effectPath);
   } else {
     if (!spellMechanicsObjectHasOnlyKeys(failedEffect, FAILURE_FIELDS))
-      push("failureEffect", effectPath);
+      push("failureShape", effectPath);
     if (failedEffect.execution !== "target_next_turn")
       push("failureExecution", effectPath);
     if (!spellMechanicsObjectHasOnlyKeys(failedEffect.options, OPTIONS_FIELDS))
       push("optionsShape", effectPath);
-    for (const [option, failedFact] of [
-      ["approach", "approachOption"],
-      ["drop", "dropOption"],
-      ["flee", "fleeOption"],
-      ["grovel", "grovelOption"],
-      ["halt", "haltOption"],
-    ] as const)
-      if (!compelledBehaviorOptionIsSupported(failedEffect, option))
-        push(failedFact, effectPath);
+    const { approach, drop, flee, grovel, halt } = failedEffect.options;
+    if (!spellMechanicsObjectHasOnlyKeys(approach, APPROACH_FIELDS))
+      push("approachShape", effectPath);
+    if (approach.route !== "shortest_direct_to_caster")
+      push("approachRoute", effectPath);
+    if (approach.endsTurnWhenWithinFeet !== 5)
+      push("approachEndDistance", effectPath);
+    if (!spellMechanicsObjectHasOnlyKeys(drop, DROP_FIELDS))
+      push("dropShape", effectPath);
+    if (drop.objectSet !== "held_objects") push("dropObjectSet", effectPath);
+    if (drop.afterward !== "end_turn") push("dropAfterward", effectPath);
+    if (!spellMechanicsObjectHasOnlyKeys(flee, FLEE_FIELDS))
+      push("fleeShape", effectPath);
+    if (flee.direction !== "away_from_caster")
+      push("fleeDirection", effectPath);
+    if (flee.means !== "fastest_available") push("fleeMeans", effectPath);
+    if (flee.duration !== "target_turn") push("fleeDuration", effectPath);
+    if (!spellMechanicsObjectHasOnlyKeys(grovel, GROVEL_FIELDS))
+      push("grovelShape", effectPath);
+    if (grovel.condition !== "prone") push("grovelCondition", effectPath);
+    if (grovel.afterward !== "end_turn") push("grovelAfterward", effectPath);
+    if (!spellMechanicsObjectHasOnlyKeys(halt, HALT_FIELDS))
+      push("haltShape", effectPath);
+    if (halt.movement !== "none") push("haltMovement", effectPath);
+    if (halt.action !== "none") push("haltAction", effectPath);
+    if (halt.bonusAction !== "none") push("haltBonusAction", effectPath);
+    if (halt.duration !== "target_turn") push("haltDuration", effectPath);
   }
 
   const nonEmptyIssues = spellProcedureNonEmpty(
@@ -529,19 +564,37 @@ function inspectCompelledBehaviorMechanics(
   );
   if (nonEmptyIssues !== undefined)
     return { tag: "unsupported", issues: nonEmptyIssues };
-  if (targetCount === undefined)
+  if (targetCount === null)
+    return {
+      tag: "unsupported",
+      issues: [{ failedFact: "targetCount", mechanicsPath: attachmentPath }],
+    };
+  if (saveAbility === undefined)
     return {
       tag: "unsupported",
       issues: [
-        { failedFact: "targetCount", mechanicsPath: spellMechanicsRootPath() },
+        {
+          failedFact: "saveAbility",
+          mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+        },
+      ],
+    };
+  if (saveDc === undefined)
+    return {
+      tag: "unsupported",
+      issues: [
+        {
+          failedFact: "saveDc",
+          mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+        },
       ],
     };
   return {
     tag: "parsed",
     facts: {
       ...source.spellDefinitionRuleFacts,
-      ability: "wis",
-      dc: phase.dc,
+      ability: saveAbility,
+      dc: saveDc,
       targetCount,
     },
     evidence: {
