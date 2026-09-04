@@ -196,9 +196,12 @@ This section is the sole mutable handoff for a new session.
 - Next action: continue the remaining top-level Battle profile migration. The
   current audit retains 13 legacy top-level `admit:` declarations. The landed
   W6 magical-darkness-point-origin lease is clear. W7 now holds the narrow
-  `area-movement-distance-damage.ts` profile and existing focused
-  `unit-profile-admission-forced-movement-spells.test.ts` lease from
-  `af5855c49`. Shared registry/state or coverage-map edits require an explicit
+  `area-movement-distance-damage.ts` profile, existing forced-movement test,
+  dedicated `unit-profile-admission-area-movement-distance-damage.test.ts`
+  test owner, and narrow invocation source field lease from `af5855c49`. The
+  dedicated test lease was added after Standards review found that Spike
+  Growth admission does not belong to the forced-movement domain. Shared
+  registry/state or coverage-map edits require an explicit
   lease expansion, and no QNT/MBT run is authorized unless implementation
   changes semantics.
   Before every landing, fetch `origin` and prove the current `master` tip is
@@ -335,10 +338,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                                                                        | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                    | State  |
-| --------------- | ----------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                          | `dd1350f81` | Integration checkpoint `f4555acbe`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, and magical darkness integrated; cumulative Surface publication delta certified; 13 top-level profile migrations remain | Active |
-| `SR-04G/W7`     | area-movement-distance-damage profile admission | Codex orchestrator; implementer: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-area-movement-distance-damage`; `work/sr04g-area-movement-distance-damage` | `af5855c49` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-movement-distance-damage.ts`; `packages/battle-runtime/src/unit-profile-admission-forced-movement-spells.test.ts`; `packages/battle-runtime/src/battle-state-execution.ts`                                                           | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                                                                        | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                      | State  |
+| --------------- | ----------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                          | `dd1350f81` | Integration checkpoint `f4555acbe`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, and magical darkness integrated; cumulative Surface publication delta certified; 13 top-level profile migrations remain                                   | Active |
+| `SR-04G/W7`     | area-movement-distance-damage profile admission | Codex orchestrator; implementer: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-area-movement-distance-damage`; `work/sr04g-area-movement-distance-damage` | `af5855c49` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-movement-distance-damage.ts`; `packages/battle-runtime/src/unit-profile-admission-forced-movement-spells.test.ts`; `packages/battle-runtime/src/unit-profile-admission-area-movement-distance-damage.test.ts`; `packages/battle-runtime/src/battle-state-execution.ts` | Active |
 
 ## Landing discipline
 
