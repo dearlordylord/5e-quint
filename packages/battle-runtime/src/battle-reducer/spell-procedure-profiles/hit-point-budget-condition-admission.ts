@@ -22,6 +22,7 @@ import type {
   EffectAtom,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -85,6 +86,7 @@ import {
   spellActivationPhasePath,
   spellActivationRepeatPath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellDurationValuePath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -142,7 +144,7 @@ type StagedSaveConditionFailedFact =
 type StagedSaveConditionMechanicsIssue = SpellProcedureAdmissionIssue<
   "stagedSaveCondition",
   StagedSaveConditionFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 const STAGED_SAVE_CONDITION_FAILED_FACT_MESSAGES = {
@@ -175,7 +177,7 @@ const STAGED_SAVE_CONDITION_FAILED_FACT_MESSAGES = {
 
 function stagedSaveConditionIssue(
   failedFact: StagedSaveConditionFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): StagedSaveConditionMechanicsIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -191,9 +193,11 @@ type SaveGatePhase = Extract<
   { readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind }
 >;
 
-function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
+function stagedSaveConditionPhaseWitnesses(
+  phase: ActivationPhase,
+): readonly [boolean, boolean, boolean] {
   if (phase.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
-    return false;
+    return [false, false, false];
   }
   const attachmentValue =
     phase.attachment.kind === "hole" ? phase.attachment.value : null;
@@ -225,14 +229,46 @@ function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
           STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.repeat.onFailAgain
             .condition,
     ) === true;
+  return [pointSphereWitness, automaticSuccessWitness, stagedRepeatWitness];
+}
+
+function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: stagedSaveConditionPhaseWitnesses(phase),
+  });
+}
+
+function stagedSaveConditionHeaderSignature(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
-      pointSphereWitness,
-      automaticSuccessWitness,
-      stagedRepeatWitness,
+      mechanics.level === STAGED_SAVE_CONDITION_AUTHORED_FACTS.level &&
+        mechanics.castingTime.kind ===
+          STAGED_SAVE_CONDITION_AUTHORED_FACTS.castingTimeKind,
+      mechanics.range.kind ===
+        STAGED_SAVE_CONDITION_AUTHORED_FACTS.range.kind &&
+        mechanics.range.feet ===
+          STAGED_SAVE_CONDITION_AUTHORED_FACTS.range.feet,
+      isStagedConditionDuration(mechanics.duration),
     ],
   });
+}
+
+function stagedSaveConditionRootShape(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  if (mechanics.phases.some(stagedSaveConditionRootPhase)) return true;
+  if (mechanics.phases.length > 1) return false;
+  const phase = mechanics.phases[0];
+  const phaseBoundaryCompatible =
+    phase === undefined ||
+    stagedSaveConditionPhaseWitnesses(phase).some((witness) => witness);
+  return (
+    phaseBoundaryCompatible && stagedSaveConditionHeaderSignature(mechanics)
+  );
 }
 
 function isStagedConditionDuration(
@@ -515,18 +551,18 @@ function admitStagedSaveConditionMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(stagedSaveConditionRootPhase);
-  if (phaseIndex < 0) {
+  if (!stagedSaveConditionRootShape(mechanics)) {
     return { tag: "notRepresented" };
   }
+  const representedPhaseIndex = mechanics.phases.findIndex(
+    stagedSaveConditionRootPhase,
+  );
+  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
   const phase = mechanics.phases[phaseIndex];
-  if (phase?.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
-    return { tag: "notRepresented" };
-  }
   const issues: StagedSaveConditionMechanicsIssue[] = [];
   const push = (
     failedFact: StagedSaveConditionFailedFact,
-    path: SpellMechanicsBranchPath,
+    path: UnitMechanicsPath,
   ): void => {
     issues.push(stagedSaveConditionIssue(failedFact, path));
   };
@@ -572,7 +608,7 @@ function admitStagedSaveConditionMechanics(
       }
     }
     if (mechanics.phases.length < 1) {
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+      push("phaseCount", spellMechanicsRootPath());
     }
   }
   if (phaseIndex !== 0) {
@@ -580,6 +616,17 @@ function admitStagedSaveConditionMechanics(
       "phaseOrder",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
+  }
+  if (phase?.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
+    const nonEmptyIssues = spellProcedureNonEmpty(
+      spellUniqueMechanicsIssues(issues),
+    );
+    return {
+      tag: "unsupported",
+      issues: nonEmptyIssues ?? [
+        stagedSaveConditionIssue("requiredFacts", spellMechanicsRootPath()),
+      ],
+    };
   }
   if (
     !spellHasOnlyNamedFields(phase, [

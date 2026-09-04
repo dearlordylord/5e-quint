@@ -26,9 +26,11 @@ import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra
 import { MovementFeet, PositiveInteger, movementFeet } from "@dnd/shared/types";
 import type {
   ActivationPhase,
+  Attachment,
   EffectAtom,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
@@ -92,6 +94,7 @@ import {
   spellDurationEvidencePaths,
   spellDurationTicksFromCanonicalValue,
   spellHasOnlyNamedFields,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
@@ -106,6 +109,7 @@ import {
   spellActivationRepeatPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 
@@ -169,7 +173,7 @@ type SaveGatedTurnConstraintBundleFailedFact =
 type SaveGatedTurnConstraintBundleMechanicsIssue = SpellProcedureAdmissionIssue<
   "saveGatedTurnConstraintBundle",
   SaveGatedTurnConstraintBundleFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 const SAVE_GATED_TURN_CONSTRAINT_LEVEL = 3;
@@ -221,7 +225,7 @@ const SAVE_GATED_TURN_CONSTRAINT_FAILED_FACT_MESSAGES = {
 
 function saveGatedTurnConstraintBundleIssue(
   failedFact: SaveGatedTurnConstraintBundleFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): SaveGatedTurnConstraintBundleMechanicsIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -362,21 +366,102 @@ function slowFailedEffectAdmission(
   return undefined;
 }
 
-function slowRootPhase(phase: ActivationPhase): boolean {
+function slowAttachmentSupported(attachment: Attachment): boolean {
+  const areaAdmission = admitSpellAreaAttachment(
+    attachment,
+    ["mode", "count", "targetKinds"],
+    ["selection"],
+  );
+  const areaAttachment =
+    areaAdmission.tag === "admitted" ? areaAdmission.attachment : null;
+  const areaValue =
+    areaAttachment === null
+      ? null
+      : areaAttachment.kind === "hole"
+        ? areaAttachment.value
+        : areaAttachment;
+  const selection = areaValue?.selection;
   return (
-    phase.kind === "save_gate" &&
-    phase.onFail.kind === "composite" &&
-    phase.onFail.effects.some(
-      (effect) =>
-        effect.kind === "set_speed_ratio" ||
-        effect.kind === "modify_ac" ||
-        effect.kind === "modify_roll_numeric" ||
-        effect.kind === "restrict_action_usage" ||
-        effect.kind === "choose_action_or_bonus_action_each_turn" ||
-        effect.kind === "cap_attack_action_attacks" ||
-        effect.kind === "somatic_spell_failure_chance",
+    areaAttachment?.kind === "hole" &&
+    areaValue !== null &&
+    areaValue.origin.kind === "point_within_range" &&
+    spellHasOnlyNamedFields(areaValue.origin, ["kind"]) &&
+    areaValue.shape.kind === "cube" &&
+    spellHasOnlyNamedFields(areaValue.shape, ["kind", "sideFeet"]) &&
+    areaValue.shape.sideFeet === SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET &&
+    selection !== undefined &&
+    selection.mode === "choose_up_to" &&
+    selection.count === SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS &&
+    selection.targetKinds !== undefined &&
+    sameStringSet(
+      selection.targetKinds,
+      SAVE_GATED_TURN_CONSTRAINT_TARGET_KINDS,
     )
   );
+}
+
+function slowPhaseWitnesses(
+  phase: ActivationPhase,
+): readonly [boolean, boolean, boolean] {
+  if (phase.kind !== "save_gate") return [false, false, false];
+  const constraintEffectsWitness =
+    phase.onFail.kind === "composite" &&
+    phase.onFail.effects.some(
+      (effect) => slowFailedEffectAdmission(effect) !== undefined,
+    );
+  const repeatSaveWitness =
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === "end_of_target_turn" &&
+        repeatSave.onSuccess === "ends_on_target",
+    ) === true;
+  return [
+    slowAttachmentSupported(phase.attachment),
+    constraintEffectsWitness,
+    repeatSaveWitness,
+  ];
+}
+
+function slowRootPhase(phase: ActivationPhase): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: slowPhaseWitnesses(phase),
+  });
+}
+
+function slowDurationSupported(duration: SpellMechanics["duration"]): boolean {
+  return (
+    duration.kind === "concentration" &&
+    isSpellCanonicalDurationValue(duration.upTo) &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES
+  );
+}
+
+function slowHeaderSignature(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [
+      mechanics.level === SAVE_GATED_TURN_CONSTRAINT_LEVEL &&
+        mechanics.castingTime.kind === "action",
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET,
+      slowDurationSupported(mechanics.duration),
+    ],
+  });
+}
+
+function slowRootShape(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  if (mechanics.phases.some(slowRootPhase)) return true;
+  if (mechanics.phases.length > 1) return false;
+  const phase = mechanics.phases[0];
+  const phaseBoundaryCompatible =
+    phase === undefined || slowPhaseWitnesses(phase).some((witness) => witness);
+  return phaseBoundaryCompatible && slowHeaderSignature(mechanics);
 }
 
 function slowDurationIssues(
@@ -392,11 +477,7 @@ function slowDurationIssues(
     );
     return issues;
   }
-  if (
-    !isSpellCanonicalDurationValue(duration.upTo) ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES
-  ) {
+  if (!slowDurationSupported(duration)) {
     issues.push(
       saveGatedTurnConstraintBundleIssue(
         "durationValue",
@@ -488,14 +569,14 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   if (source.mechanics.family !== "activation")
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(slowRootPhase);
-  if (phaseIndex < 0) return { tag: "notRepresented" };
+  if (!slowRootShape(mechanics)) return { tag: "notRepresented" };
+  const representedPhaseIndex = mechanics.phases.findIndex(slowRootPhase);
+  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
   const phase = mechanics.phases[phaseIndex];
-  if (phase?.kind !== "save_gate") return { tag: "notRepresented" };
   const issues: SaveGatedTurnConstraintBundleMechanicsIssue[] = [];
   const push = (
     failedFact: SaveGatedTurnConstraintBundleFailedFact,
-    path: SpellMechanicsBranchPath,
+    path: UnitMechanicsPath,
   ): void => {
     issues.push(saveGatedTurnConstraintBundleIssue(failedFact, path));
   };
@@ -540,7 +621,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
       }
     }
     if (mechanics.phases.length === 0) {
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+      push("phaseCount", spellMechanicsRootPath());
     }
   }
   if (phaseIndex !== 0) {
@@ -548,6 +629,20 @@ function admitSaveGatedTurnConstraintBundleMechanics(
       "phaseOrder",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
+  }
+  if (phase?.kind !== "save_gate") {
+    const nonEmptyIssues = spellProcedureNonEmpty(
+      spellUniqueMechanicsIssues(issues),
+    );
+    return {
+      tag: "unsupported",
+      issues: nonEmptyIssues ?? [
+        saveGatedTurnConstraintBundleIssue(
+          "requiredFacts",
+          spellMechanicsRootPath(),
+        ),
+      ],
+    };
   }
   if (
     !spellHasOnlyNamedFields(phase, [
@@ -577,36 +672,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   ) {
     push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
   }
-  const areaAdmission = admitSpellAreaAttachment(
-    phase.attachment,
-    ["mode", "count", "targetKinds"],
-    ["selection"],
-  );
-  const areaAttachment =
-    areaAdmission.tag === "admitted" ? areaAdmission.attachment : null;
-  const areaValue =
-    areaAttachment === null
-      ? null
-      : areaAttachment.kind === "hole"
-        ? areaAttachment.value
-        : areaAttachment;
-  const selection = areaValue?.selection;
-  const attachmentSupported =
-    areaAttachment?.kind === "hole" &&
-    areaValue !== null &&
-    areaValue.origin.kind === "point_within_range" &&
-    spellHasOnlyNamedFields(areaValue.origin, ["kind"]) &&
-    areaValue.shape.kind === "cube" &&
-    spellHasOnlyNamedFields(areaValue.shape, ["kind", "sideFeet"]) &&
-    areaValue.shape.sideFeet === SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET &&
-    selection !== undefined &&
-    selection.mode === "choose_up_to" &&
-    selection.count === SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS &&
-    selection.targetKinds !== undefined &&
-    sameStringSet(
-      selection.targetKinds,
-      SAVE_GATED_TURN_CONSTRAINT_TARGET_KINDS,
-    );
+  const attachmentSupported = slowAttachmentSupported(phase.attachment);
   if (!attachmentSupported) {
     push(
       "attachment",
@@ -705,11 +771,6 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   }
   if (
     !attachmentSupported ||
-    areaValue === null ||
-    areaValue.shape.kind !== "cube" ||
-    selection === undefined ||
-    selection.mode !== "choose_up_to" ||
-    selection.count !== SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS ||
     mechanics.range.kind !== "point" ||
     typeof mechanics.range.feet !== "number" ||
     mechanics.duration.kind !== "concentration" ||
@@ -746,7 +807,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
     dc: phase.dc,
     targeting: {
       kind: "pointOriginCube" as const,
-      sideFeet: movementFeet(areaValue.shape.sideFeet),
+      sideFeet: movementFeet(SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET),
     },
     maxTargets: SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS,
     rangeFeet: movementFeet(mechanics.range.feet),

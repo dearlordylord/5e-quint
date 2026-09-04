@@ -25,6 +25,7 @@ import type {
   EffectAtom,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   type BattleSpellExecutionSource,
   type BattleActDiscoveryCandidate,
@@ -88,6 +89,7 @@ import {
   spellActivationPhasePath,
   spellActivationRepeatPath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellDurationValuePath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -139,7 +141,7 @@ type SaveGatedConditionWithRepeatFailedFact =
 type SaveGatedConditionWithRepeatMechanicsIssue = SpellProcedureAdmissionIssue<
   "saveGatedConditionWithRepeat",
   SaveGatedConditionWithRepeatFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 const SAVE_GATED_CONDITION_WITH_REPEAT_FAILED_FACT_MESSAGES = {
@@ -171,7 +173,7 @@ const SAVE_GATED_CONDITION_WITH_REPEAT_FAILED_FACT_MESSAGES = {
 
 function saveGatedConditionWithRepeatIssue(
   failedFact: SaveGatedConditionWithRepeatFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): SaveGatedConditionWithRepeatMechanicsIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -189,11 +191,13 @@ type SaveGatePhase = Extract<
   }
 >;
 
-function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
+function hideousLaughterPhaseWitnesses(
+  phase: ActivationPhase,
+): readonly [boolean, boolean, boolean] {
   if (
     phase.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
   ) {
-    return false;
+    return [false, false, false];
   }
   const attachmentValue =
     phase.attachment.kind === "hole" ? phase.attachment.value : null;
@@ -241,14 +245,46 @@ function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
           SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
             .onSuccess,
     ) === true;
+  return [targetScalingWitness, endTurnRepeatWitness, damageRepeatWitness];
+}
+
+function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: hideousLaughterPhaseWitnesses(phase),
+  });
+}
+
+function hideousLaughterHeaderSignature(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
-      targetScalingWitness,
-      endTurnRepeatWitness,
-      damageRepeatWitness,
+      mechanics.level ===
+        SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.level &&
+        mechanics.castingTime.kind ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.castingTimeKind,
+      mechanics.range.kind ===
+        SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind &&
+        mechanics.range.feet ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.feet,
+      isHideousLaughterDuration(mechanics.duration),
     ],
   });
+}
+
+function hideousLaughterRootShape(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  if (mechanics.phases.some(hideousLaughterRootPhase)) return true;
+  if (mechanics.phases.length > 1) return false;
+  const phase = mechanics.phases[0];
+  const phaseWitnesses =
+    phase === undefined ? null : hideousLaughterPhaseWitnesses(phase);
+  const phaseBoundaryCompatible =
+    phaseWitnesses === null || phaseWitnesses[0] || phaseWitnesses[2];
+  return phaseBoundaryCompatible && hideousLaughterHeaderSignature(mechanics);
 }
 
 function isHideousLaughterDuration(
@@ -517,18 +553,16 @@ function admitSaveGatedConditionWithRepeatMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(hideousLaughterRootPhase);
-  if (phaseIndex < 0) return { tag: "notRepresented" };
+  if (!hideousLaughterRootShape(mechanics)) return { tag: "notRepresented" };
+  const representedPhaseIndex = mechanics.phases.findIndex(
+    hideousLaughterRootPhase,
+  );
+  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
   const phase = mechanics.phases[phaseIndex];
-  if (
-    phase?.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
-  ) {
-    return { tag: "notRepresented" };
-  }
   const issues: SaveGatedConditionWithRepeatMechanicsIssue[] = [];
   const push = (
     failedFact: SaveGatedConditionWithRepeatFailedFact,
-    path: SpellMechanicsBranchPath,
+    path: UnitMechanicsPath,
   ): void => {
     issues.push(saveGatedConditionWithRepeatIssue(failedFact, path));
   };
@@ -577,12 +611,31 @@ function admitSaveGatedConditionWithRepeatMechanics(
         );
       }
     }
+    if (mechanics.phases.length === 0) {
+      push("phaseCount", spellMechanicsRootPath());
+    }
   }
   if (phaseIndex !== 0) {
     push(
       "phaseOrder",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
+  }
+  if (
+    phase?.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
+  ) {
+    const nonEmptyIssues = spellProcedureNonEmpty(
+      spellUniqueMechanicsIssues(issues),
+    );
+    return {
+      tag: "unsupported",
+      issues: nonEmptyIssues ?? [
+        saveGatedConditionWithRepeatIssue(
+          "requiredFacts",
+          spellMechanicsRootPath(),
+        ),
+      ],
+    };
   }
   if (
     !spellHasOnlyNamedFields(phase, [

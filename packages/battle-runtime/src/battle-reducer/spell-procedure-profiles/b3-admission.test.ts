@@ -8,6 +8,7 @@ import {
   type MovementFeet,
 } from "@dnd/shared/types";
 import { Schema } from "effect";
+import type { ActivationPhase } from "@dnd/surface/surface/types";
 import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
@@ -33,7 +34,10 @@ import {
   type BattleCreatureState,
 } from "../../battle-state-execution.ts";
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
-import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
+import {
+  spellCasterId,
+  unitLibrary,
+} from "../../unit-profile-admission-catalog.test-support.ts";
 import { spellProcedureExecution } from "../../character-execution-admission.ts";
 import { battleProcedureExecutionRefForTest } from "../../battle-runtime.test-support.ts";
 import { BattleHoleSchema } from "../battle-codecs.ts";
@@ -557,6 +561,188 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       ),
     ).toEqual({ tag: "notRepresented" });
   });
+
+  test.each([
+    ["Sleep", stagedSaveConditionProfile, "command"],
+    ["Hideous Laughter", saveGatedConditionWithRepeatProfile, "bane"],
+    ["Slow", saveGatedTurnConstraintBundleProfile, "hypnotic_pattern"],
+  ] as const)(
+    "%s does not claim its actual catalog sibling",
+    (_name, profile, sibling) => {
+      expect(profile.admitMechanics(mechanicsSource(sibling))).toEqual({
+        tag: "notRepresented",
+      });
+    },
+  );
+
+  test.each([
+    ["Sleep", stagedSaveConditionProfile, "sleep"],
+    [
+      "Hideous Laughter",
+      saveGatedConditionWithRepeatProfile,
+      "hideous_laughter",
+    ],
+    ["Slow", saveGatedTurnConstraintBundleProfile, "slow"],
+  ] as const)(
+    "%s claims only its intended owner across the whole spell catalog",
+    (_name, profile, ownerId) => {
+      const representedSpellIds = unitLibrary.listUnits().flatMap((unit) => {
+        if (unit.kind !== "spell") return [];
+        const source = spellAdmissionSource(unit);
+        const result = profile.admitMechanics({
+          mechanics: source.mechanics,
+          spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+        });
+        return result.tag === "notRepresented" ? [] : [unit.id];
+      });
+      expect(representedSpellIds).toEqual([unitId(ownerId)]);
+    },
+  );
+
+  test.each([
+    ["Sleep", stagedSaveConditionProfile, "sleep"],
+    [
+      "Hideous Laughter",
+      saveGatedConditionWithRepeatProfile,
+      "hideous_laughter",
+    ],
+    ["Slow", saveGatedTurnConstraintBundleProfile, "slow"],
+  ] as const)(
+    "keeps %s owned when its sole activation phase is deleted",
+    (_name, profile, spellId) => {
+      const source = mechanicsSource(spellId);
+      if (source.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const mechanicsWithoutPhase = { ...source.mechanics };
+      Object.defineProperty(mechanicsWithoutPhase, "phases", { value: [] });
+      const result = profile.admitMechanics({
+        ...source,
+        mechanics: mechanicsWithoutPhase,
+      });
+
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({
+          failedFact: "phaseCount",
+          mechanicsPath: spellMechanicsRootPath(),
+        }),
+      );
+      expect(result.issues).not.toContainEqual(
+        expect.objectContaining({
+          failedFact: "phaseCount",
+          mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+        }),
+      );
+    },
+  );
+
+  test.each([
+    ["Sleep", stagedSaveConditionProfile, "sleep"],
+    [
+      "Hideous Laughter",
+      saveGatedConditionWithRepeatProfile,
+      "hideous_laughter",
+    ],
+    ["Slow", saveGatedTurnConstraintBundleProfile, "slow"],
+  ] as const)(
+    "applies %s's stable header gate under phase and header corruption",
+    (_name, profile, spellId) => {
+      const source = mechanicsSource(spellId);
+      if (source.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const oneHeaderWitnessMissing = {
+        ...source.mechanics,
+        range: { kind: "self" } as const,
+      };
+      Object.defineProperty(oneHeaderWitnessMissing, "phases", { value: [] });
+      const retained = profile.admitMechanics({
+        ...source,
+        mechanics: oneHeaderWitnessMissing,
+      });
+      expect(retained.tag).toBe("unsupported");
+      if (retained.tag === "unsupported") {
+        expect(retained.issues).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              failedFact: "range",
+              mechanicsPath: spellMechanicsHeaderPath("range"),
+            }),
+            expect.objectContaining({
+              failedFact: "phaseCount",
+              mechanicsPath: spellMechanicsRootPath(),
+            }),
+          ]),
+        );
+      }
+
+      const twoHeaderWitnessesMissing = {
+        ...source.mechanics,
+        range: { kind: "self" } as const,
+        duration: { kind: "instantaneous" } as const,
+      };
+      Object.defineProperty(twoHeaderWitnessesMissing, "phases", { value: [] });
+      expect(
+        profile.admitMechanics({
+          ...source,
+          mechanics: twoHeaderWitnessesMissing,
+        }),
+      ).toEqual({ tag: "notRepresented" });
+    },
+  );
+
+  test.each([
+    [
+      "Sleep",
+      stagedSaveConditionProfile,
+      "sleep",
+      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => {
+        const withoutAutomaticSuccess = { ...phase, repeatSaves: [] };
+        Reflect.deleteProperty(withoutAutomaticSuccess, "autoSuccessIfTarget");
+        return withoutAutomaticSuccess;
+      },
+    ],
+    [
+      "Hideous Laughter",
+      saveGatedConditionWithRepeatProfile,
+      "hideous_laughter",
+      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => ({
+        ...phase,
+        repeatSaves: [],
+      }),
+    ],
+    [
+      "Slow",
+      saveGatedTurnConstraintBundleProfile,
+      "slow",
+      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => ({
+        ...phase,
+        onFail: { kind: "none" } as const,
+        repeatSaves: [],
+      }),
+    ],
+  ] as const)(
+    "keeps %s owned when only one phase witness survives",
+    (_name, profile, spellId, corruptPhase) => {
+      const source = mechanicsSource(spellId);
+      if (
+        source.mechanics.family !== "activation" ||
+        source.mechanics.phases[0]?.kind !== "save_gate"
+      ) {
+        throw new Error("Expected activation save-gate mechanics.");
+      }
+      const result = profile.admitMechanics({
+        ...source,
+        mechanics: {
+          ...source.mechanics,
+          phases: [corruptPhase(source.mechanics.phases[0])],
+        },
+      });
+      expect(result.tag).toBe("unsupported");
+    },
+  );
 
   test.each(["barkskin", "guidance", "mage_armor", "resistance"] as const)(
     "does not claim ongoing sibling %s",
