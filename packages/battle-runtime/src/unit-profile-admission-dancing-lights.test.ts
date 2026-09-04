@@ -296,6 +296,40 @@ describe("movableLightManifestation static admission", () => {
       "operationCount",
     ]);
   });
+
+  test("keeps a wholly replaced operations branch owned", () => {
+    const source = spellAdmissionSource(
+      syntheticMovableLight(
+        (mechanics) => ({
+          ...mechanics,
+          operations: [
+            {
+              trigger: { kind: "passive" as const },
+              effect: {
+                kind: "grant_resistance" as const,
+                damageType: "fire" as const,
+              },
+            },
+          ],
+        }),
+        "replaced_operations",
+      ),
+    );
+    const result = movableLightManifestationProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues.map(({ failedFact }) => failedFact)).toEqual([
+      "illusionOperation",
+      "illuminationOperation",
+      "repositionOperation",
+      "operationCount",
+      "operationCount",
+      "operationCount",
+    ]);
+  });
 });
 
 describe("SRDINV32A deterministic Dancing Lights admission", () => {

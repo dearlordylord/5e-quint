@@ -434,20 +434,18 @@ function movableLightRepresentation(
     mechanics.attachment.value.kind === "area" &&
     mechanics.attachment.value.origin.kind === "point_within_range" &&
     mechanics.attachment.value.shape.kind === "sphere" &&
-    mechanics.attachment.value.shape.radiusFeet === 10;
-  return (
-    hasCharacteristicOperation &&
-    spellProcedureHasRedundantSignature({
-      kind: "oneOfFiveWitnessesMayBeMissing",
-      witnesses: [
-        { name: "operations", present: hasCharacteristicOperation },
-        { name: "header", present: hasHeader },
-        { name: "range", present: hasRange },
-        { name: "duration", present: hasDuration },
-        { name: "attachment", present: hasAreaAttachment },
-      ],
-    })
-  );
+    mechanics.attachment.value.shape.radiusFeet ===
+      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET);
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      { name: "operations", present: hasCharacteristicOperation },
+      { name: "header", present: hasHeader },
+      { name: "range", present: hasRange },
+      { name: "duration", present: hasDuration },
+      { name: "attachment", present: hasAreaAttachment },
+    ],
+  });
 }
 
 function movableLightAttachmentIsSupported(
@@ -470,7 +468,8 @@ function movableLightAttachmentIsSupported(
       MOVABLE_LIGHT_ORIGIN_FIELDS,
     ) &&
     attachment.value.shape.kind === "sphere" &&
-    attachment.value.shape.radiusFeet === 10 &&
+    attachment.value.shape.radiusFeet ===
+      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET) &&
     spellMechanicsObjectHasOnlyKeys(
       attachment.value.shape,
       MOVABLE_LIGHT_SHAPE_FIELDS,
