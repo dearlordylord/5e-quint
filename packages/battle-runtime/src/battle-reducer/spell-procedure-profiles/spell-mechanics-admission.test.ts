@@ -365,4 +365,33 @@ describe("battle spell static mechanics admission", () => {
       }),
     ).toBe(false);
   });
+
+  test("requires four distinct matches when one of five witnesses may be missing", () => {
+    const witnesses = [
+      { name: "effect", present: true },
+      { name: "ending", present: true },
+      { name: "duration", present: true },
+      { name: "attachment", present: false },
+      { name: "castingTime", present: false },
+    ] as const;
+
+    expect(
+      spellProcedureHasRedundantSignature({
+        kind: "oneOfFiveWitnessesMayBeMissing",
+        witnesses,
+      }),
+    ).toBe(false);
+    expect(
+      spellProcedureHasRedundantSignature({
+        kind: "oneOfFiveWitnessesMayBeMissing",
+        witnesses: [
+          { name: "effect", present: true },
+          { name: "ending", present: true },
+          { name: "duration", present: true },
+          { name: "attachment", present: true },
+          { name: "castingTime", present: false },
+        ],
+      }),
+    ).toBe(true);
+  });
 });
