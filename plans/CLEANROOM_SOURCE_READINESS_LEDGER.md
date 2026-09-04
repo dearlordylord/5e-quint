@@ -57,7 +57,9 @@ This section is the sole mutable handoff for a new session.
   `f4555acbe3b20d284ca5490e266a6b27c4a9a839`; the
   area-movement-distance-damage admission reviewed tip
   `cf4284425b599e595dffc728543c7134925e3b1b` is integrated by
-  `d07e59f5c08ac978866a4ae3d41f275be15964e1`.
+  `d07e59f5c08ac978866a4ae3d41f275be15964e1`; the compelled-next-turn-behavior
+  admission reviewed tip `51b9017bd1e3589ab97a10adeca7636847024cfe`
+  is integrated by `a1ac97140f3e34915b9c6ec283cbf22a49486af0`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -198,6 +200,28 @@ This section is the sole mutable handoff for a new session.
   run is not lifecycle verification. No lifecycle, package-wide, broad,
   coverage, QNT, MBT, or registry verification is claimed. The remaining 12
   legacy declarations prevent whole-package convergence.
+- Compelled-next-turn-behavior evidence: exact reviewed tip `51b9017bd`
+  migrates Command's legacy top-level declaration to parse-once
+  `admitMechanics`. Admission accumulates independent exact-path issues for the
+  complete supported root, including all nested option and target-selection
+  facts and authored phase ordinals. Renamed synthetic record, hole-id, and
+  label parity proves admission and execution are identity-inert. Slot scaling
+  is carried as source-derived branded facts; Surface records the local-RAW
+  `caster_can_see` requirement and Battle projects it to the existing
+  `requiresSight` target-hole request and codec. The table retains Command
+  option selection, while execution receives no authored mechanics. Local
+  Command RAW was inspected, and Standards and Spec/RAW review axes converged
+  with zero findings after four rounds. The final focused static Command
+  selection passed 12/12 with nine lifecycle tests skipped. Changed-file
+  diagnostics were zero; focused Surface catalog and portable checks, Dhall and
+  artifact generators, and scoped lint, formatting, generation, and diff
+  checks passed. An accidental ad-hoc single-file `tsc` invocation produced
+  only TS5097 import-extension noise and is explicitly excluded from
+  verification. No package-wide, lifecycle, full/broad, coverage, QNT, MBT, or
+  registry pass is claimed. Command visibility is a table-owned fact outside
+  the Command QNT relation, and the applicable locked Command MBT remains
+  deferred until the registry loads completely. The remaining 11 legacy
+  declarations prevent whole-package convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -214,29 +238,17 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current audit retains 12 legacy top-level `admit:` declarations in 11 files.
-  The landed W7 area-movement-distance-damage lease is clear. W8 is the next
-  smallest coherent single-profile slice: `compelled-next-turn-behavior.ts`
-  with its existing focused
-  `unit-profile-admission-command-control-options.test.ts` owner, based on
-  `faf3c96e2`. The clean W8 worktree is
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-compelled-next-turn-behavior`
-  on `work/sr04g-compelled-next-turn-behavior`. Its invocation source still
-  carries admission mechanics, so W8 also holds the narrow
-  `battle-state-execution.ts` source-field lease needed to pass only projected
-  execution facts. W8 round-one review found Command's visible-creature RAW
-  fact absent from the generic `choose_up_to` Surface branch. The expanded
-  lease reuses the existing `caster_can_see` vocabulary in Surface
-  `schema-spell.ts`, Command Dhall/JSON, `unit-catalog.test.ts`, and the owned
-  publication/portable artifacts; Battle additionally leases
-  `spells-targeting.ts` and `battle-codecs.ts` to project that fact to the
-  existing `requiresSight` target-hole request, plus only the Command field in
-  `procedure-execution/spell-procedure-execution.ts`, its canonical executable
-  procedure type owner. Sight remains a table fact
-  explicitly outside the mapped Command ordering relation, so no QNT owner edit
-  is leased; the applicable locked Command MBT remains deferred until the
-  registry loads completely. Other shared registry/state or coverage-map edits
-  require an explicit lease expansion.
+  current read-only audit retains exactly 11 legacy top-level `admit:`
+  declarations in 10 files. The landed W8 compelled-next-turn-behavior lease is
+  clear. W9 is the smallest coherent remaining single-profile slice:
+  `directional-persistent-area.ts` with its existing focused
+  `unit-profile-admission-gust-of-wind.test.ts` owner. Create the clean
+  `work/sr04g-directional-persistent-area` branch and
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-directional-persistent-area`
+  worktree from this W8 landing-receipt commit, then record its exact base and
+  active lease before implementation. No shared registry, coverage-map, QNT,
+  MBT, or unrelated runtime file is leased; any additional production or
+  artifact owner requires an explicit lease expansion.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -371,10 +383,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                 | Worktree/branch                                                                                                                      | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                    | State  |
-| --------------- | ----------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                    | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                        | `dd1350f81` | Integration checkpoint `d07e59f5c`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, and movement-distance area damage integrated; cumulative Surface publication delta certified; 12 top-level profile migrations remain                                                                                                  | Active |
-| `SR-04G/W8`     | compelled-next-turn-behavior profile admission  | Codex orchestrator; implementers: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-compelled-next-turn-behavior`; `work/sr04g-compelled-next-turn-behavior` | `faf3c96e2` | Battle: `compelled-next-turn-behavior.ts`, `unit-profile-admission-command-control-options.test.ts`, `battle-state-execution.ts`, `spells-targeting.ts`, `battle-codecs.ts`, Command field only in `procedure-execution/spell-procedure-execution.ts`. Surface: `schema-spell.ts`, `content/command.{dhall,json}`, `unit-catalog.test.ts`, publication and portable artifacts listed above. No registry, coverage-map, QNT, or MBT write lease | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                 | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `a1ac97140`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, and compelled next-turn behavior integrated; cumulative Surface publication delta certified; 11 top-level profile migrations remain | Active |
 
 ## Landing discipline
 
