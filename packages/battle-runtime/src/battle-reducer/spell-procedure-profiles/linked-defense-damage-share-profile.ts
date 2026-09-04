@@ -105,6 +105,7 @@ type LinkedDefenseResistanceDamageShareFacts = SpellProcedureMechanicsFacts & {
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for LinkedDefenseResistanceDamageShareFailedFact.
 const LINKED_DEFENSE_RESISTANCE_DAMAGE_SHARE_FAILED_FACTS = [
+  "mechanics",
   "level",
   "school",
   "range",
@@ -703,9 +704,9 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
   }
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (mechanics.authoredConditionalMechanics !== undefined)
-    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, LINKED_DEFENSE_ROOT_FIELDS))
+    pushIssue("mechanics", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined)
     pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   if (
     !linkedDefenseResistanceDamageShareAttachmentIsSupported(

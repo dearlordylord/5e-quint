@@ -22,6 +22,8 @@ import {
 } from "./spell-mechanics-admission.ts";
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { heldLightProfile } from "./held-light.ts";
+import { linkedDefenseResistanceDamageShareProfile } from "./linked-defense-damage-share-profile.ts";
+import { movableLightManifestationProfile } from "./movable-illumination-manifestation.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
@@ -1459,6 +1461,55 @@ describe("C2 support profile static admission", () => {
           tag: "unsupported",
           issues: [expectedIssue(procedure, failedFact, mechanicsPath)],
         });
+      }
+    },
+  );
+
+  test.each([
+    {
+      caseName: "root-only",
+      includeConditionalMechanic: false,
+      expectedFacts: ["mechanics"],
+    },
+    {
+      caseName: "root and conditional-mechanic",
+      includeConditionalMechanic: true,
+      expectedFacts: ["mechanics", "authoredConditionalMechanics"],
+    },
+  ] as const)(
+    "reports $caseName defects separately for linked defense and movable light",
+    ({ includeConditionalMechanic, expectedFacts }) => {
+      for (const [spellId, profile] of [
+        ["warding_bond", linkedDefenseResistanceDamageShareProfile],
+        ["dancing_lights", movableLightManifestationProfile],
+      ] as const) {
+        const result = profile.admitMechanics(
+          sourceWith(spellId, (mechanics) => {
+            if (mechanics.family !== "ongoing_effect")
+              throw new Error("Expected ongoing-effect mechanics.");
+            const malformed = structuredClone(mechanics);
+            Reflect.set(malformed, "syntheticRootFact", true);
+            if (includeConditionalMechanic)
+              Reflect.set(malformed, "authoredConditionalMechanics", [
+                authoredConditionalMechanic,
+              ]);
+            return malformed;
+          }),
+        );
+
+        expect(result.tag).toBe("unsupported");
+        if (result.tag !== "unsupported") continue;
+        expect(
+          result.issues.map(({ failedFact, mechanicsPath }) => ({
+            failedFact,
+            mechanicsPath,
+          })),
+        ).toEqual(
+          expectedFacts.map((failedFact) => ({
+            failedFact,
+            mechanicsPath: spellMechanicsRootPath(),
+          })),
+        );
       }
     },
   );

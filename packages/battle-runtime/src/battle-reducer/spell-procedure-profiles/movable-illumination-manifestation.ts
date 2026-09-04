@@ -229,6 +229,7 @@ type MovableLightMechanicsFacts = SpellProcedureMechanicsFacts &
   MovableLightSpellProfile;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for MovableLightFailedFact.
 const MOVABLE_LIGHT_FAILED_FACTS = [
+  "mechanics",
   "level",
   "school",
   "range",
@@ -579,10 +580,9 @@ function admitMovableLightMechanics(
     pushIssue("attachment", spellOngoingAttachmentPath());
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (
-    mechanics.authoredConditionalMechanics !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS)
-  )
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS))
+    pushIssue("mechanics", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined)
     pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
 
   const missingChecks = MOVABLE_LIGHT_OPERATION_CHECKS.filter(
