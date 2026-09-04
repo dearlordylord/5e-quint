@@ -8,6 +8,7 @@ import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
+  spellOngoingConcurrentEffectLimitPath,
   spellOngoingModeChoicePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
@@ -177,6 +178,7 @@ describe("SR-04G-B4 static spell procedure admission", () => {
         ...headers,
         spellDurationValuePath(),
         spellOngoingAttachmentPath(),
+        spellOngoingConcurrentEffectLimitPath(),
       ],
       unowned: [modePath],
     });
@@ -347,6 +349,43 @@ describe("SR-04G-B4 static spell procedure admission", () => {
     });
   });
 
+  test("reports the exact Sanctuary ending path after a single-ending mutation", () => {
+    const base = spellRecord("sanctuary");
+    if (
+      base.mechanics.family !== "ongoing_effect" ||
+      base.mechanics.duration.kind !== "timed" ||
+      base.mechanics.duration.earlyEnd === undefined
+    ) {
+      throw new Error("Expected Sanctuary timed duration endings.");
+    }
+    const earlyEnd = base.mechanics.duration.earlyEnd;
+    const mutated = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_sanctuary_ending",
+      mechanics: {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          earlyEnd: earlyEnd.map((ending, index) =>
+            index === 1 ? { kind: "target_makes_attack_roll" } : ending,
+          ),
+        },
+      },
+    });
+    const result = targetingSaveInterdictionProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(mutated)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+        }),
+      ],
+    });
+  });
+
   test("reports Thaumaturgy's exact collective path after mutating the owned effect", () => {
     const base = spellRecord("thaumaturgy");
     if (base.mechanics.family !== "modal_ongoing_effect") {
@@ -389,6 +428,119 @@ describe("SR-04G-B4 static spell procedure admission", () => {
     if (result.tag === "unsupported") {
       expect(result.issues[0]?.mechanicsPath).toEqual(collectivePath);
     }
+  });
+
+  test("rejects an unsupported Thaumaturgy effect count at the collective path", () => {
+    const base = spellRecord("thaumaturgy");
+    if (base.mechanics.family !== "modal_ongoing_effect") {
+      throw new Error("Expected Thaumaturgy modal ongoing mechanics.");
+    }
+    const mutated = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_thaumaturgy_count",
+      mechanics: {
+        ...base.mechanics,
+        mode: {
+          ...base.mechanics.mode,
+          options: base.mechanics.mode.options.map((option) =>
+            option.id === "booming_voice"
+              ? {
+                  ...option,
+                  effects: option.effects?.map((effect) => ({
+                    ...effect,
+                    count: 2,
+                  })),
+                }
+              : option,
+          ),
+        },
+      },
+    });
+    const result = temporaryAbilityCheckRollModeProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(mutated)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "effect",
+          mechanicsPath: spellOngoingModeChoicePath(),
+        }),
+      ],
+    });
+  });
+
+  test("rejects an unsupported Thaumaturgy expiry at the collective path", () => {
+    const base = spellRecord("thaumaturgy");
+    if (base.mechanics.family !== "modal_ongoing_effect") {
+      throw new Error("Expected Thaumaturgy modal ongoing mechanics.");
+    }
+    const mutated = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_thaumaturgy_expiry",
+      mechanics: {
+        ...base.mechanics,
+        mode: {
+          ...base.mechanics.mode,
+          options: base.mechanics.mode.options.map((option) =>
+            option.id === "booming_voice"
+              ? {
+                  ...option,
+                  effects: option.effects?.map((effect) => ({
+                    ...effect,
+                    expiresOn: { kind: "end_of_next_turn" },
+                  })),
+                }
+              : option,
+          ),
+        },
+      },
+    });
+    const result = temporaryAbilityCheckRollModeProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(mutated)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "effect",
+          mechanicsPath: spellOngoingModeChoicePath(),
+        }),
+      ],
+    });
+  });
+
+  test("reports the exact Thaumaturgy concurrency resource path after mutation", () => {
+    const base = spellRecord("thaumaturgy");
+    if (
+      base.mechanics.family !== "modal_ongoing_effect" ||
+      base.mechanics.concurrentEffectLimit === undefined
+    ) {
+      throw new Error("Expected Thaumaturgy concurrent-effect limit.");
+    }
+    const mutated = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_thaumaturgy_limit",
+      mechanics: {
+        ...base.mechanics,
+        concurrentEffectLimit: {
+          ...base.mechanics.concurrentEffectLimit,
+          maximumActive: 2,
+        },
+      },
+    });
+    const result = temporaryAbilityCheckRollModeProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(mutated)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "concurrentEffectLimit",
+          mechanicsPath: spellOngoingConcurrentEffectLimitPath(),
+        }),
+      ],
+    });
   });
 
   test("does not treat a collective Thaumaturgy node as five fabricated option paths", () => {

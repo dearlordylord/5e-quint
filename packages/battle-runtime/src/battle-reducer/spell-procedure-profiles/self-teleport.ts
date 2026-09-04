@@ -96,7 +96,8 @@ type SelfTeleportMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly maxDistanceFeet: ReturnType<typeof movementFeet>;
 };
 
-export const SELF_TELEPORT_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SelfTeleportFailedFact.
+const SELF_TELEPORT_FAILED_FACTS = [
   "level",
   "school",
   "range",

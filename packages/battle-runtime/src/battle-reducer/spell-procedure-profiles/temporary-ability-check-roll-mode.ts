@@ -64,6 +64,7 @@ import { cantripSpellAccessFor } from "./profile.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   isSpellCanonicalDurationValue,
+  spellMechanicsObjectHasOnlyKeys,
   spellConsumedMaterialEvidencePaths,
   spellDurationChildCoordinates,
   spellDurationChildPath,
@@ -77,6 +78,7 @@ import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
+  spellOngoingConcurrentEffectLimitPath,
   spellOngoingModeChoicePath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -107,7 +109,8 @@ type TemporaryAbilityCheckRollModeMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly concurrentDurationModeLimit: TemporaryAbilityCheckRollModeInvocation["concurrentDurationModeLimit"];
 };
 
-export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for TemporaryAbilityCheckRollModeFailedFact.
+const TEMPORARY_ABILITY_CHECK_ROLL_MODE_FAILED_FACTS = [
   "level",
   "school",
   "range",
@@ -148,6 +151,15 @@ const TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION = {
   rollMode: "advantage",
   effectDuration: "spellDuration",
 } as const satisfies TemporaryAbilityCheckRollModeInvocation["selectedMode"];
+
+const TEMPORARY_ABILITY_CHECK_ROLL_MODE_EFFECT_FIELDS = [
+  "kind",
+  "mode",
+  "affects",
+  "on",
+  "skillFilter",
+  "abilityFilter",
+] as const satisfies ReadonlyArray<keyof TemporaryAbilityCheckRollModeEffect>;
 
 function temporaryAbilityCheckRollModeMechanicsIssue(
   failedFact: TemporaryAbilityCheckRollModeFailedFact,
@@ -203,6 +215,10 @@ function temporaryAbilityCheckRollModeEffectMatches(
 ): boolean {
   const skillFilter = rollModifierSkillFilter(effect.skillFilter);
   return [
+    spellMechanicsObjectHasOnlyKeys(
+      effect,
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_EFFECT_FIELDS,
+    ),
     effect.mode === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION.rollMode,
     (effect.affects ?? "self_roll") === "self_roll",
     sameStringSet(effect.on, ["ability_check"]),
@@ -317,7 +333,7 @@ function admitTemporaryAbilityCheckRollModeMechanics(
     mechanics.concurrentEffectLimit.maximumActive !==
       TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS
   ) {
-    push("concurrentEffectLimit", spellMechanicsHeaderPath("family"));
+    push("concurrentEffectLimit", spellOngoingConcurrentEffectLimitPath());
   }
   if (effect === undefined) {
     push("mode", spellOngoingModeChoicePath());
@@ -375,6 +391,7 @@ function admitTemporaryAbilityCheckRollModeMechanics(
           spellMechanicsHeaderPath("family"),
           spellDurationValuePath(),
           spellOngoingAttachmentPath(),
+          spellOngoingConcurrentEffectLimitPath(),
           ...spellConsumedMaterialEvidencePaths(mechanics.components),
         ],
         unowned: [spellOngoingModeChoicePath()],

@@ -115,7 +115,8 @@ type TargetingSaveInterdictionMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly saveDc: TargetingSaveInterdictionInvocation["activeEffect"]["save"]["dc"];
 };
 
-export const TARGETING_SAVE_INTERDICTION_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for TargetingSaveInterdictionFailedFact.
+const TARGETING_SAVE_INTERDICTION_FAILED_FACTS = [
   "level",
   "school",
   "range",
@@ -253,7 +254,7 @@ function targetingSaveInterdictionMechanicsRepresentation(
   );
 }
 
-function sanctuaryDurationSupported(
+function sanctuaryDurationValueSupported(
   duration: SpellMechanics["duration"],
 ): duration is Extract<
   SpellMechanics["duration"],
@@ -278,10 +279,24 @@ function sanctuaryDurationSupported(
   ) {
     return false;
   }
-  return sameStringSet(
-    (duration.earlyEnd ?? []).map((ending) => ending.kind),
-    SANCTUARY_EARLY_END_KINDS,
+  return true;
+}
+
+function sanctuaryDurationEndingMismatchOrdinals(
+  duration: Extract<SpellMechanics["duration"], { readonly kind: "timed" }>,
+): readonly PositiveInteger[] {
+  const actualEndings = duration.earlyEnd ?? [];
+  const endingCount = Math.max(
+    actualEndings.length,
+    SANCTUARY_EARLY_END_KINDS.length,
   );
+  const mismatches: PositiveInteger[] = [];
+  for (let index = 0; index < endingCount; index += 1) {
+    if (actualEndings[index]?.kind !== SANCTUARY_EARLY_END_KINDS[index]) {
+      mismatches.push(PositiveInteger(index + 1));
+    }
+  }
+  return mismatches;
 }
 
 function admitTargetingSaveInterdictionMechanics(
@@ -297,7 +312,7 @@ function admitTargetingSaveInterdictionMechanics(
       operation.effect.kind === "save_gate",
   );
   const operation = mechanics.operations[operationIndex];
-  const duration = sanctuaryDurationSupported(mechanics.duration)
+  const duration = sanctuaryDurationValueSupported(mechanics.duration)
     ? mechanics.duration
     : undefined;
   const targetAttachment = admitSpellTargetAttachment(
@@ -374,18 +389,15 @@ function admitTargetingSaveInterdictionMechanics(
       ) {
         push("durationValue", spellDurationValuePath());
       }
-      for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-        push("durationEnding", spellDurationChildPath(child));
-      }
-      const endingCount = mechanics.duration.earlyEnd?.length ?? 0;
-      for (let ordinal = endingCount + 1; ordinal <= 3; ordinal += 1) {
-        push(
-          "durationEnding",
-          spellDurationEndingPath(PositiveInteger(ordinal)),
-        );
-      }
     } else {
       push("durationValue", spellDurationValuePath());
+    }
+  }
+  if (mechanics.duration.kind === "timed") {
+    for (const ordinal of sanctuaryDurationEndingMismatchOrdinals(
+      mechanics.duration,
+    )) {
+      push("durationEnding", spellDurationEndingPath(ordinal));
     }
   }
   if (

@@ -74,6 +74,7 @@ const SPELL_ACTIVATION_BRANCH_COORDINATES = {
 
 const SPELL_ONGOING_BRANCH_COORDINATES = {
   attachment: { role: "effect", ordinal: PositiveInteger(1) },
+  concurrentEffectLimit: { role: "resource" },
   /** The collective choose node emitted for modal ongoing-effect mechanics. */
   modeChoice: { role: "procedure", ordinal: PositiveInteger(1) },
   operationEffect: { role: "effect", ordinal: PositiveInteger(1) },
@@ -208,6 +209,13 @@ export function spellActivationEffectPath(
 export function spellOngoingAttachmentPath(): SpellMechanicsBranchPath {
   const attachment = SPELL_ONGOING_BRANCH_COORDINATES.attachment;
   return spellMechanicsPath(occurrence(attachment.role, attachment.ordinal));
+}
+
+/** Canonical root resource coordinate for an ongoing effect's concurrency limit. */
+export function spellOngoingConcurrentEffectLimitPath(): SpellMechanicsBranchPath {
+  const concurrentEffectLimit =
+    SPELL_ONGOING_BRANCH_COORDINATES.concurrentEffectLimit;
+  return spellMechanicsPath(singleton(concurrentEffectLimit.role));
 }
 
 export function spellOngoingInitialPhasePath(): SpellMechanicsBranchPath {
