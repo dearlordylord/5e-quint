@@ -74,7 +74,7 @@ import {
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { Schema } from "effect";
@@ -127,7 +127,7 @@ const TARGETING_SAVE_INTERDICTION_FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "operation",
   "trigger",
@@ -166,7 +166,7 @@ const SANCTUARY_ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const;
 const SANCTUARY_RANGE_FIELDS = ["kind", "feet"] as const;
 const SANCTUARY_COMPONENT_FIELDS = [
@@ -441,11 +441,11 @@ function admitTargetingSaveInterdictionMechanics(
   if (mechanics.initialPhase !== undefined) {
     push("initialPhase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.authoredConditionalEffects !== undefined) {
-    for (const [index] of mechanics.authoredConditionalEffects.entries()) {
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    for (const [index] of mechanics.authoredConditionalMechanics.entries()) {
       push(
-        "authoredConditionalEffects",
-        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
       );
     }
   }

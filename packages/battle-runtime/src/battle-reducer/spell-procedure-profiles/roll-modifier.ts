@@ -292,7 +292,7 @@ type RollModifierFailedFact =
   | "castingTime"
   | "range"
   | "duration"
-  | "authoredConditionalEffects"
+  | "authoredConditionalMechanics"
   | "durationExtension"
   | "durationEnding"
   | "initialPhase"
@@ -937,8 +937,8 @@ function rollModifierOngoingBranchProjection(
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.authoredConditionalEffects !== undefined) {
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
   const occurrences = spellOngoingOperationOccurrences(mechanics);
   for (const occurrence of occurrences) {

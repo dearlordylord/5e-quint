@@ -517,8 +517,8 @@ export type OngoingActionCost = Schema.Schema.Type<
 export type OngoingPredicate = Schema.Schema.Type<
   typeof SurfaceSchema.OngoingPredicateSchema
 >;
-export type AuthoredConditionalEffect = Schema.Schema.Type<
-  typeof SurfaceSchema.AuthoredConditionalEffectSchema
+export type AuthoredConditionalMechanic = Schema.Schema.Type<
+  typeof SurfaceSchema.AuthoredConditionalMechanicSchema
 >;
 export type ModifyAcSetBaseEffect = Schema.Schema.Type<
   typeof SurfaceSchema.ModifyAcSetBaseEffectSchema

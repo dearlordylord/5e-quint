@@ -19,7 +19,7 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -699,7 +699,8 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       stagedSaveConditionProfile,
       "sleep",
       (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => {
-        const withoutAutomaticSuccess = { ...phase, repeatSaves: [] };
+        const withoutAutomaticSuccess = structuredClone(phase);
+        Reflect.set(withoutAutomaticSuccess, "repeatSaves", []);
         Reflect.deleteProperty(withoutAutomaticSuccess, "autoSuccessIfTarget");
         return withoutAutomaticSuccess;
       },
@@ -708,20 +709,22 @@ describe("SR-04G-B3 static spell procedure admission", () => {
       "Hideous Laughter",
       saveGatedConditionWithRepeatProfile,
       "hideous_laughter",
-      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => ({
-        ...phase,
-        repeatSaves: [],
-      }),
+      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => {
+        const withoutRepeatSaves = structuredClone(phase);
+        Reflect.set(withoutRepeatSaves, "repeatSaves", []);
+        return withoutRepeatSaves;
+      },
     ],
     [
       "Slow",
       saveGatedTurnConstraintBundleProfile,
       "slow",
-      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => ({
-        ...phase,
-        onFail: { kind: "none" } as const,
-        repeatSaves: [],
-      }),
+      (phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>) => {
+        const withoutTurnConstraint = structuredClone(phase);
+        Reflect.set(withoutTurnConstraint, "onFail", { kind: "none" });
+        Reflect.set(withoutTurnConstraint, "repeatSaves", []);
+        return withoutTurnConstraint;
+      },
     ],
   ] as const)(
     "keeps %s owned when only one phase witness survives",
@@ -787,35 +790,37 @@ describe("SR-04G-B3 static spell procedure admission", () => {
     );
   });
 
-  test("reports an authored ongoing conditional effect at its non-colliding sibling coordinate", () => {
+  test("reports an authored ongoing conditional mechanic at its non-colliding sibling coordinate", () => {
     const dragon = mechanicsSource("dragons_breath");
     const conditional = mechanicsSource("phantasmal_force");
     if (
       dragon.mechanics.family !== "ongoing_effect" ||
       conditional.mechanics.family !== "ongoing_effect" ||
-      conditional.mechanics.authoredConditionalEffects?.[0] === undefined
+      conditional.mechanics.authoredConditionalMechanics?.[0] === undefined
     ) {
-      throw new Error("Expected ongoing mechanics with a conditional effect.");
+      throw new Error(
+        "Expected ongoing mechanics with a conditional mechanic.",
+      );
     }
     const result = grantedAreaSaveDamageActionProfile.admitMechanics({
       ...dragon,
       mechanics: {
         ...dragon.mechanics,
-        authoredConditionalEffects: [
-          conditional.mechanics.authoredConditionalEffects[0],
+        authoredConditionalMechanics: [
+          conditional.mechanics.authoredConditionalMechanics[0],
         ],
       },
     });
 
     expect(result.tag).toBe("unsupported");
     if (result.tag !== "unsupported") return;
-    const conditionalPath = spellOngoingAuthoredConditionalEffectPath(
+    const conditionalPath = spellOngoingAuthoredConditionalMechanicPath(
       PositiveInteger(1),
     );
     expect(conditionalPath).not.toEqual(spellOngoingAttachmentPath());
     expect(result.issues).toContainEqual(
       expect.objectContaining({
-        failedFact: "authoredConditionalEffects",
+        failedFact: "authoredConditionalMechanics",
         mechanicsPath: conditionalPath,
       }),
     );

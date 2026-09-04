@@ -157,7 +157,7 @@ type HeldLightFailedFact =
   | "durationExtension"
   | "durationEnding"
   | "initialPhase"
-  | "authoredConditionalEffects"
+  | "authoredConditionalMechanics"
   | "attachment"
   | "predicate"
   | "targetLimit"
@@ -433,8 +433,8 @@ function heldLightFactsFromMechanics(
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.authoredConditionalEffects !== undefined) {
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
   for (const occurrence of occurrences) {
     for (const failedFact of spellOngoingOperationUnsupportedFacts(

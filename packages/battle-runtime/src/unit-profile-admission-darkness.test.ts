@@ -21,7 +21,7 @@ import {
   spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -127,6 +127,8 @@ function mechanicsSourceWithOperationCount(
 ): SpellMechanicsAdmissionSource {
   const source = spellAdmissionSource(spellRecord(darknessUnitId));
   const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Darkness ongoing-effect mechanics.");
   if (
     !Reflect.set(mechanics, "operations", mechanics.operations.slice(0, count))
   )
@@ -497,21 +499,25 @@ describe("magicalDarknessPointOrigin static admission", () => {
     ]);
   });
 
-  test("reports every conditional effect and extra operation at its authored ordinal", () => {
+  test("reports every conditional mechanic and extra operation at its authored ordinal", () => {
     const conditionalSource = spellRecord("phantasmal_force").mechanics;
     if (
       conditionalSource.family !== "ongoing_effect" ||
-      conditionalSource.authoredConditionalEffects === undefined
+      conditionalSource.authoredConditionalMechanics === undefined
     )
-      throw new Error("Expected a conditional-effect fixture source.");
-    const conditionalEffect = conditionalSource.authoredConditionalEffects[0];
-    if (conditionalEffect === undefined)
-      throw new Error("Expected a conditional-effect fixture.");
+      throw new Error("Expected a conditional-mechanic fixture source.");
+    const conditionalMechanic =
+      conditionalSource.authoredConditionalMechanics[0];
+    if (conditionalMechanic === undefined)
+      throw new Error("Expected a conditional-mechanic fixture.");
     const record = syntheticDarknessRecord(
       (mechanics) => ({
         ...mechanics,
         operations: [...mechanics.operations, mechanics.operations[0]],
-        authoredConditionalEffects: [conditionalEffect, conditionalEffect],
+        authoredConditionalMechanics: [
+          conditionalMechanic,
+          conditionalMechanic,
+        ],
       }),
       "extra_branches",
     );
@@ -521,14 +527,14 @@ describe("magicalDarknessPointOrigin static admission", () => {
 
     expect(issueShape(result)).toEqual([
       {
-        failedFact: "authoredConditionalEffects",
-        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+        failedFact: "authoredConditionalMechanics",
+        mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
           PositiveInteger(1),
         ),
       },
       {
-        failedFact: "authoredConditionalEffects",
-        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+        failedFact: "authoredConditionalMechanics",
+        mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
           PositiveInteger(2),
         ),
       },

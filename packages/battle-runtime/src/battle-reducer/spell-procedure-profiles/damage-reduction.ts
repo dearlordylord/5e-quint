@@ -126,7 +126,7 @@ type DamageReductionFailedFact =
   | "range"
   | "duration"
   | "initialPhase"
-  | "authoredConditionalEffects"
+  | "authoredConditionalMechanics"
   | "attachment"
   | "rangeOrigin"
   | "typeFilter"
@@ -378,8 +378,8 @@ function damageReductionMechanicsAdmission(
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.authoredConditionalEffects !== undefined) {
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
   for (const occurrence of occurrences) {
     for (const failedFact of spellOngoingOperationUnsupportedFacts(

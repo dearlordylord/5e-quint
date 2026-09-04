@@ -22,6 +22,8 @@ import {
 } from "./spell-mechanics-admission.ts";
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { heldLightProfile } from "./held-light.ts";
+import { linkedDefenseResistanceDamageShareProfile } from "./linked-defense-damage-share-profile.ts";
+import { movableLightManifestationProfile } from "./movable-illumination-manifestation.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
@@ -42,7 +44,7 @@ import {
 import type {
   ActivationPhase,
   Attachment,
-  AuthoredConditionalEffect,
+  AuthoredConditionalMechanic,
   CastTimeEffectModeChoice,
   DiceAmount,
   EffectAtom,
@@ -135,7 +137,7 @@ type SaveGateTargetAutoSuccess = Exclude<
   undefined
 >;
 
-const authoredConditionalEffect: AuthoredConditionalEffect = {
+const authoredConditionalMechanic: AuthoredConditionalMechanic = {
   kind: "phantasm_damage",
   source: "dangerous_creature_or_hazard",
   choice: "caster_may_deal",
@@ -227,10 +229,11 @@ const saveGateOptionalUpdates = [
   ],
   [
     "autoSuccessIfTarget",
-    (phase: SaveGatePhase): SaveGatePhase => ({
-      ...phase,
-      autoSuccessIfTarget: saveGateTargetAutoSuccess,
-    }),
+    (phase: SaveGatePhase): SaveGatePhase => {
+      const updated = structuredClone(phase);
+      Reflect.set(updated, "autoSuccessIfTarget", saveGateTargetAutoSuccess);
+      return updated;
+    },
     spellActivationPhasePath(PositiveInteger(1)),
   ],
   [
@@ -350,12 +353,15 @@ function updateHeldLightHurlOperation(
   if (hurlIndex < 0) {
     throw new Error("Expected Produce Flame hurl operation.");
   }
-  return {
-    ...mechanics,
-    operations: mechanics.operations.map((operation, index) =>
+  const updated = structuredClone(mechanics);
+  Reflect.set(
+    updated,
+    "operations",
+    updated.operations.map((operation, index) =>
       index === hurlIndex ? update(operation) : operation,
     ),
-  };
+  );
+  return updated;
 }
 
 const heldLightHurlOptionalUpdates = [
@@ -1083,14 +1089,14 @@ describe("C2 support profile static admission", () => {
       const result = rollModifierProfile.admitMechanics(
         sourceWith("bless", (mechanics) => {
           if (mechanics.family !== "ongoing_effect") return mechanics;
-          const operation = mechanics.operations[0];
+          const updated = structuredClone(mechanics);
+          const operation = updated.operations[0];
           if (operation?.effect.kind !== "modify_roll_numeric") {
             throw new Error("Expected Bless numeric roll-modifier effect.");
           }
-          return {
-            ...mechanics,
-            operations: [{ ...operation, effect: update(operation.effect) }],
-          };
+          Reflect.set(operation, "effect", update(operation.effect));
+          Reflect.set(updated, "operations", [operation]);
+          return updated;
         }),
       );
       expect(result).toEqual({
@@ -1223,7 +1229,8 @@ describe("C2 support profile static admission", () => {
             if (mechanics.family !== "activation") {
               throw new Error("Expected scalar-buff activation mechanics.");
             }
-            const phase = mechanics.phases[0];
+            const updated = structuredClone(mechanics);
+            const phase = updated.phases[0];
             if (
               phase?.kind !== "direct" ||
               phase.attachment.kind !== "hole" ||
@@ -1231,21 +1238,8 @@ describe("C2 support profile static admission", () => {
             ) {
               throw new Error("Expected scalar-buff target attachment.");
             }
-            return {
-              ...mechanics,
-              phases: [
-                {
-                  ...phase,
-                  attachment: {
-                    ...phase.attachment,
-                    value: {
-                      ...phase.attachment.value,
-                      rangeOrigin: "caster",
-                    },
-                  },
-                },
-              ],
-            };
+            Reflect.set(phase.attachment.value, "rangeOrigin", "caster");
+            return updated;
           }
           if (
             mechanics.family !== "ongoing_effect" ||
@@ -1254,16 +1248,14 @@ describe("C2 support profile static admission", () => {
           ) {
             throw new Error("Expected ongoing target attachment.");
           }
-          return {
-            ...mechanics,
-            attachment: {
-              ...mechanics.attachment,
-              value: {
-                ...mechanics.attachment.value,
-                rangeOrigin: "caster",
-              },
-            },
-          };
+          const updated = structuredClone(mechanics);
+          if (
+            updated.attachment.kind !== "hole" ||
+            updated.attachment.value.kind !== "target"
+          )
+            throw new Error("Expected cloned ongoing target attachment.");
+          Reflect.set(updated.attachment.value, "rangeOrigin", "caster");
+          return updated;
         }),
       );
       expect(result).toEqual({
@@ -1317,7 +1309,8 @@ describe("C2 support profile static admission", () => {
               if (mechanics.family !== "activation") {
                 throw new Error("Expected scalar-buff activation mechanics.");
               }
-              const phase = mechanics.phases[0];
+              const updated = structuredClone(mechanics);
+              const phase = updated.phases[0];
               if (
                 phase?.kind !== "direct" ||
                 phase.attachment.kind !== "hole" ||
@@ -1325,21 +1318,12 @@ describe("C2 support profile static admission", () => {
               ) {
                 throw new Error("Expected scalar-buff target attachment.");
               }
-              return {
-                ...mechanics,
-                phases: [
-                  {
-                    ...phase,
-                    attachment: {
-                      ...phase.attachment,
-                      value: {
-                        ...phase.attachment.value,
-                        selection: update(phase.attachment.value.selection),
-                      },
-                    },
-                  },
-                ],
-              };
+              Reflect.set(
+                phase.attachment.value,
+                "selection",
+                update(phase.attachment.value.selection),
+              );
+              return updated;
             }
             if (
               mechanics.family !== "ongoing_effect" ||
@@ -1348,16 +1332,18 @@ describe("C2 support profile static admission", () => {
             ) {
               throw new Error("Expected ongoing target attachment.");
             }
-            return {
-              ...mechanics,
-              attachment: {
-                ...mechanics.attachment,
-                value: {
-                  ...mechanics.attachment.value,
-                  selection: update(mechanics.attachment.value.selection),
-                },
-              },
-            };
+            const updated = structuredClone(mechanics);
+            if (
+              updated.attachment.kind !== "hole" ||
+              updated.attachment.value.kind !== "target"
+            )
+              throw new Error("Expected cloned ongoing target attachment.");
+            Reflect.set(
+              updated.attachment.value,
+              "selection",
+              update(updated.attachment.value.selection),
+            );
+            return updated;
           }),
         );
         expect(result).toEqual({
@@ -1449,14 +1435,14 @@ describe("C2 support profile static admission", () => {
       spellOngoingInitialPhasePath(),
     ],
     [
-      "authoredConditionalEffects",
+      "authoredConditionalMechanics",
       (mechanics: SpellMechanics): SpellMechanics => {
         if (mechanics.family !== "ongoing_effect") {
           throw new Error("Expected ongoing-effect mechanics.");
         }
         return {
           ...mechanics,
-          authoredConditionalEffects: [authoredConditionalEffect],
+          authoredConditionalMechanics: [authoredConditionalMechanic],
         };
       },
       spellMechanicsRootPath(),
@@ -1475,6 +1461,55 @@ describe("C2 support profile static admission", () => {
           tag: "unsupported",
           issues: [expectedIssue(procedure, failedFact, mechanicsPath)],
         });
+      }
+    },
+  );
+
+  test.each([
+    {
+      caseName: "root-only",
+      includeConditionalMechanic: false,
+      expectedFacts: ["mechanics"],
+    },
+    {
+      caseName: "root and conditional-mechanic",
+      includeConditionalMechanic: true,
+      expectedFacts: ["mechanics", "authoredConditionalMechanics"],
+    },
+  ] as const)(
+    "reports $caseName defects separately for linked defense and movable light",
+    ({ includeConditionalMechanic, expectedFacts }) => {
+      for (const [spellId, profile] of [
+        ["warding_bond", linkedDefenseResistanceDamageShareProfile],
+        ["dancing_lights", movableLightManifestationProfile],
+      ] as const) {
+        const result = profile.admitMechanics(
+          sourceWith(spellId, (mechanics) => {
+            if (mechanics.family !== "ongoing_effect")
+              throw new Error("Expected ongoing-effect mechanics.");
+            const malformed = structuredClone(mechanics);
+            Reflect.set(malformed, "syntheticRootFact", true);
+            if (includeConditionalMechanic)
+              Reflect.set(malformed, "authoredConditionalMechanics", [
+                authoredConditionalMechanic,
+              ]);
+            return malformed;
+          }),
+        );
+
+        expect(result.tag).toBe("unsupported");
+        if (result.tag !== "unsupported") continue;
+        expect(
+          result.issues.map(({ failedFact, mechanicsPath }) => ({
+            failedFact,
+            mechanicsPath,
+          })),
+        ).toEqual(
+          expectedFacts.map((failedFact) => ({
+            failedFact,
+            mechanicsPath: spellMechanicsRootPath(),
+          })),
+        );
       }
     },
   );
@@ -1689,7 +1724,8 @@ describe("C2 support profile static admission", () => {
     const result = scalarBuffProfile.admitMechanics(
       sourceWith("longstrider", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
-        const phase = mechanics.phases[0];
+        const updated = structuredClone(mechanics);
+        const phase = updated.phases[0];
         if (phase?.kind !== "direct") {
           throw new Error("Expected Longstrider direct phase.");
         }
@@ -1715,16 +1751,17 @@ describe("C2 support profile static admission", () => {
     const result = scalarBuffProfile.admitMechanics(
       sourceWith("longstrider", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
-        const phase = mechanics.phases[0];
+        const updated = structuredClone(mechanics);
+        const phase = updated.phases[0];
         if (phase?.kind !== "direct") {
           throw new Error("Expected Longstrider direct phase.");
         }
-        return {
-          ...mechanics,
-          phases: [
-            { ...phase, effects: [{ kind: "none" }, ...(phase.effects ?? [])] },
-          ],
-        };
+        Reflect.set(phase, "effects", [
+          { kind: "none" },
+          ...(phase.effects ?? []),
+        ]);
+        Reflect.set(updated, "phases", [phase]);
+        return updated;
       }),
     );
     expect(result).toEqual({
@@ -1834,7 +1871,8 @@ describe("C2 support profile static admission", () => {
     const result = seeInvisibleObserverSightProfile.admitMechanics(
       sourceWith("see_invisibility", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
-        const phase = mechanics.phases[0];
+        const updated = structuredClone(mechanics);
+        const phase = updated.phases[0];
         if (phase?.kind !== "direct") {
           throw new Error("Expected See Invisibility direct phase.");
         }
@@ -1860,16 +1898,17 @@ describe("C2 support profile static admission", () => {
     const result = seeInvisibleObserverSightProfile.admitMechanics(
       sourceWith("see_invisibility", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
-        const phase = mechanics.phases[0];
+        const updated = structuredClone(mechanics);
+        const phase = updated.phases[0];
         if (phase?.kind !== "direct") {
           throw new Error("Expected See Invisibility direct phase.");
         }
-        return {
-          ...mechanics,
-          phases: [
-            { ...phase, effects: [{ kind: "none" }, ...(phase.effects ?? [])] },
-          ],
-        };
+        Reflect.set(phase, "effects", [
+          { kind: "none" },
+          ...(phase.effects ?? []),
+        ]);
+        Reflect.set(updated, "phases", [phase]);
+        return updated;
       }),
     );
     expect(result).toEqual({

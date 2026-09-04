@@ -3650,7 +3650,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "areaMovementDistanceDamage";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "pointOriginSphere" }

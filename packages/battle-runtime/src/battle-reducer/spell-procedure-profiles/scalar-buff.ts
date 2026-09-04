@@ -331,7 +331,7 @@ type ScalarBuffFailedFact =
   | "castingTime"
   | "range"
   | "duration"
-  | "authoredConditionalEffects"
+  | "authoredConditionalMechanics"
   | "durationExtension"
   | "durationEnding"
   | "phaseCount"
@@ -1043,8 +1043,8 @@ function scalarBuffOngoingBranchProjection(
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.authoredConditionalEffects !== undefined) {
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
   const occurrences = spellOngoingOperationOccurrences(mechanics);
   for (const occurrence of occurrences) {

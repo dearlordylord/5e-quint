@@ -37,7 +37,7 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
@@ -132,7 +132,7 @@ const PERSISTENT_AREA_OBSCUREMENT_FAILED_FACTS = [
   "attachment",
   "radiusScaling",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "operation",
   "obscurementEffect",
@@ -156,7 +156,7 @@ const ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const satisfies ReadonlyArray<keyof PersistentAreaObscurementMechanics>;
 const RANGE_FIELDS = ["kind", "feet"] as const;
 const COMPONENT_FIELDS = ["v", "s", "m"] as const;
@@ -494,10 +494,12 @@ function inspectPersistentAreaObscurementMechanics(
   }
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
     pushIssue(
-      "authoredConditionalEffects",
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
     );
 
   const obscurementOperationIndex = mechanics.operations.findIndex(

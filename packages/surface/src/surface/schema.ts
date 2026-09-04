@@ -188,7 +188,7 @@ export {
   ObjectFilterSchema,
   ObjectMaterialSchema,
   OngoingActionCostSchema,
-  AuthoredConditionalEffectSchema,
+  AuthoredConditionalMechanicSchema,
   OngoingEffectMechanicsSchema,
   ModalOngoingEffectMechanicsSchema,
   OngoingEffectSchema,

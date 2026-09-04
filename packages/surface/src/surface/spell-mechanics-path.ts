@@ -78,9 +78,9 @@ const SPELL_ONGOING_BRANCH_COORDINATES = {
   /** The collective choose node emitted for modal ongoing-effect mechanics. */
   modeChoice: { role: "procedure", ordinal: PositiveInteger(1) },
   operationEffect: { role: "effect", ordinal: PositiveInteger(1) },
-  authoredConditionalEffect: {
-    role: "effect",
-    firstOrdinal: PositiveInteger(2),
+  authoredConditionalMechanic: {
+    role: "generalFact",
+    firstOrdinal: PositiveInteger(SPELL_MECHANICS_HEADER_FACTS.length + 1),
   },
 } as const;
 
@@ -248,11 +248,12 @@ export function spellOngoingOperationEffectPath(
   );
 }
 
-/** Canonical coordinate for each root-authored ongoing conditional effect. */
-export function spellOngoingAuthoredConditionalEffectPath(
+/** Canonical coordinate for each root-authored ongoing conditional mechanic. */
+export function spellOngoingAuthoredConditionalMechanicPath(
   ordinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
-  const coordinate = SPELL_ONGOING_BRANCH_COORDINATES.authoredConditionalEffect;
+  const coordinate =
+    SPELL_ONGOING_BRANCH_COORDINATES.authoredConditionalMechanic;
   return spellMechanicsPath(
     occurrence(
       coordinate.role,

@@ -229,6 +229,7 @@ type MovableLightMechanicsFacts = SpellProcedureMechanicsFacts &
   MovableLightSpellProfile;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for MovableLightFailedFact.
 const MOVABLE_LIGHT_FAILED_FACTS = [
+  "mechanics",
   "level",
   "school",
   "range",
@@ -237,7 +238,7 @@ const MOVABLE_LIGHT_FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "illusionOperation",
   "illuminationOperation",
@@ -262,7 +263,7 @@ const MOVABLE_LIGHT_ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const satisfies ReadonlyArray<keyof MovableLightMechanics>;
 const MOVABLE_LIGHT_RANGE_FIELDS = ["kind", "feet"] as const;
 const MOVABLE_LIGHT_CASTING_TIME_FIELDS = ["kind"] as const;
@@ -579,11 +580,10 @@ function admitMovableLightMechanics(
     pushIssue("attachment", spellOngoingAttachmentPath());
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (
-    mechanics.authoredConditionalEffects !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS)
-  )
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS))
+    pushIssue("mechanics", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined)
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
 
   const missingChecks = MOVABLE_LIGHT_OPERATION_CHECKS.filter(
     (check) => !mechanics.operations.some(check.represented),

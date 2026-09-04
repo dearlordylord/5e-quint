@@ -105,6 +105,7 @@ type LinkedDefenseResistanceDamageShareFacts = SpellProcedureMechanicsFacts & {
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for LinkedDefenseResistanceDamageShareFailedFact.
 const LINKED_DEFENSE_RESISTANCE_DAMAGE_SHARE_FAILED_FACTS = [
+  "mechanics",
   "level",
   "school",
   "range",
@@ -116,7 +117,7 @@ const LINKED_DEFENSE_RESISTANCE_DAMAGE_SHARE_FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "armorClassOperation",
   "savingThrowOperation",
@@ -149,7 +150,7 @@ const LINKED_DEFENSE_ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const satisfies ReadonlyArray<
   keyof LinkedDefenseResistanceDamageShareMechanics
 >;
@@ -703,10 +704,10 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
   }
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (mechanics.authoredConditionalEffects !== undefined)
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, LINKED_DEFENSE_ROOT_FIELDS))
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+    pushIssue("mechanics", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined)
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   if (
     !linkedDefenseResistanceDamageShareAttachmentIsSupported(
       mechanics.attachment,

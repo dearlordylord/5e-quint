@@ -17,7 +17,7 @@
         }
       }
     },
-    "authoredConditionalEffects": [
+    "authoredConditionalMechanics": [
       {
         "amount": {
           "expr": {

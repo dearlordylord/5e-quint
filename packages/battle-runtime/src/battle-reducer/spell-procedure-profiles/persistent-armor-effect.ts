@@ -171,7 +171,7 @@ const PERSISTENT_ARMOR_EFFECT_FAILED_FACTS = [
   "durationEnding",
   "castingTime",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "attachment",
   "operationCount",
   "operation",
@@ -570,8 +570,8 @@ function admitPersistentArmorEffectMechanics(
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.authoredConditionalEffects !== undefined) {
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
 
   if (

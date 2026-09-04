@@ -16,6 +16,7 @@ import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
 import phantasmalForceInput from "../../content/phantasmal_force.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
+import spikeGrowthInput from "../../content/spike_growth.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -535,7 +536,7 @@ describe("SRD Unit catalog boundary", () => {
           },
         },
         level: 2,
-        authoredConditionalEffects: [
+        authoredConditionalMechanics: [
           {
             amount: {
               expr: { dice: 2, dieSize: 8, flat: 0 },
@@ -573,7 +574,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     });
     expect(decoded.mechanics.operations).toHaveLength(1);
-    expect(decoded.mechanics.authoredConditionalEffects).toHaveLength(1);
+    expect(decoded.mechanics.authoredConditionalMechanics).toHaveLength(1);
     expect(publishedRulesExcerpt(decoded.id)).toContain(
       "While affected by the spell, the target treats the phantasm as if it were real and rationalizes any illogical outcomes",
     );
@@ -599,6 +600,161 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(Result.isFailure(decodeUnitRecordResult(contradictory))).toBe(true);
+  });
+
+  test("decodes camouflaged-area recognition as table-owned authored facts", () => {
+    const decoded = decodeUnitRecordSync(spikeGrowthInput);
+
+    expect(decoded).toMatchObject({
+      id: "spike_growth",
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        authoredConditionalMechanics: [
+          {
+            kind: "camouflaged_area_recognition",
+            camouflage: "looks_natural",
+            eligibility: {
+              kind: "unable_to_see_area_when_spell_cast",
+            },
+            attempt: {
+              action: "search",
+              check: {
+                ability: "wis",
+                skillOptions: ["perception", "survival"],
+                dc: { kind: "caster_spell_save_dc" },
+                onSuccess: {
+                  kind: "recognize_hazardous_terrain",
+                  timing: "before_entering_area",
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test("accepts camouflaged-area recognition skills in either authored order", () => {
+    const reversed: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                  .attempt.check,
+                skillOptions: ["survival", "perception"],
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    expect(Result.isSuccess(decodeUnitRecordResult(reversed))).toBe(true);
+  });
+
+  test("rejects empty and duplicate camouflaged-area recognition skills", () => {
+    const withSkillOptions = (skillOptions: readonly string[]): unknown => ({
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                  .attempt.check,
+                skillOptions,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(Result.isFailure(decodeUnitRecordResult(withSkillOptions([])))).toBe(
+      true,
+    );
+    expect(
+      Result.isFailure(
+        decodeUnitRecordResult(
+          withSkillOptions(["perception", "survival", "perception"]),
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("strictly rejects incomplete or mixed camouflaged-area recognition shapes", () => {
+    const incomplete: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                  .attempt.check,
+                skillOptions: ["perception"],
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const mixed: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            source: "dangerous_creature_or_hazard",
+          },
+        ],
+      },
+    };
+
+    const missingSuccessfulOutcome: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ability: "wis",
+                skillOptions: ["perception", "survival"],
+                dc: { kind: "caster_spell_save_dc" },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    expect(Result.isFailure(decodeUnitRecordResult(incomplete))).toBe(true);
+    expect(Result.isFailure(decodeUnitRecordResult(mixed))).toBe(true);
+    expect(
+      Result.isFailure(decodeUnitRecordResult(missingSuccessfulOutcome)),
+    ).toBe(true);
   });
 
   test("keeps Shield of Faith's creature target and Armor Class bonus explicit", () => {
