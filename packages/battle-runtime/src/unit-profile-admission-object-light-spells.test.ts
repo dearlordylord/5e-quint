@@ -413,6 +413,31 @@ describe("objectLight static admission", () => {
       ]);
     },
   );
+
+  test.each([
+    [lightUnitId, spellDurationValuePath()],
+    [continualFlameUnitId, spellMechanicsHeaderPath("duration")],
+  ] as const)(
+    "does not invent a child ending issue for wrong-kind %s duration",
+    (spellId, mechanicsPath) => {
+      const source = spellAdmissionSource(
+        syntheticObjectLight(
+          spellId,
+          (mechanics) => ({
+            ...mechanics,
+            duration: { kind: "instantaneous" as const },
+          }),
+          `wrong_duration_kind_${spellId}`,
+        ),
+      );
+      const result = objectLightProfile.admitMechanics(mechanicsSource(source));
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toEqual([
+        expect.objectContaining({ failedFact: "duration", mechanicsPath }),
+      ]);
+    },
+  );
 });
 
 describe("SRDINV70B deterministic object-light Spell Unit admission", () => {

@@ -442,57 +442,69 @@ function admitObjectLightMechanics(
       : undefined;
   if (variant === "lightCantripObject") {
     const duration = mechanics.duration;
-    if (
-      duration.kind !== "timed" ||
-      duration.value.unit !== "hour" ||
-      duration.value.amount !== LIGHT_CANTRIP_DURATION_HOURS ||
-      !spellMechanicsObjectHasOnlyKeys(
-        duration,
-        OBJECT_LIGHT_TIMED_DURATION_FIELDS,
-      ) ||
-      !spellMechanicsObjectHasOnlyKeys(
-        duration.value,
-        OBJECT_LIGHT_DURATION_VALUE_FIELDS,
-      ) ||
-      durationTicks === undefined
-    )
+    if (duration.kind !== "timed") {
       pushIssue("duration", spellDurationValuePath());
-    const endings = duration.kind === "timed" ? duration.earlyEnd : undefined;
-    if (endings === undefined || endings.length === 0) {
-      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
     } else {
-      for (const [index, ending] of endings.entries()) {
-        if (
-          index > 0 ||
-          ending.kind !== "caster_recasts_spell" ||
-          !spellMechanicsObjectHasOnlyKeys(ending, OBJECT_LIGHT_ENDING_FIELDS)
-        )
-          pushIssue(
-            "durationEnding",
-            spellDurationEndingPath(PositiveInteger(index + 1)),
-          );
+      if (
+        duration.value.unit !== "hour" ||
+        duration.value.amount !== LIGHT_CANTRIP_DURATION_HOURS ||
+        !spellMechanicsObjectHasOnlyKeys(
+          duration,
+          OBJECT_LIGHT_TIMED_DURATION_FIELDS,
+        ) ||
+        !spellMechanicsObjectHasOnlyKeys(
+          duration.value,
+          OBJECT_LIGHT_DURATION_VALUE_FIELDS,
+        ) ||
+        durationTicks === undefined
+      )
+        pushIssue("duration", spellDurationValuePath());
+      const endings = duration.earlyEnd;
+      if (endings === undefined || endings.length === 0) {
+        pushIssue(
+          "durationEnding",
+          spellDurationEndingPath(PositiveInteger(1)),
+        );
+      } else {
+        for (const [index, ending] of endings.entries()) {
+          if (
+            index > 0 ||
+            ending.kind !== "caster_recasts_spell" ||
+            !spellMechanicsObjectHasOnlyKeys(ending, OBJECT_LIGHT_ENDING_FIELDS)
+          )
+            pushIssue(
+              "durationEnding",
+              spellDurationEndingPath(PositiveInteger(index + 1)),
+            );
+        }
       }
     }
   } else {
     const duration = mechanics.duration;
-    if (
-      duration.kind !== "permanent" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        duration,
-        OBJECT_LIGHT_PERMANENT_DURATION_FIELDS,
-      )
-    )
+    if (duration.kind !== "permanent") {
       pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    const endings = duration.kind === "permanent" ? duration.endsOn : undefined;
-    if (endings === undefined || endings.length === 0) {
-      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
     } else {
-      for (const [index, ending] of endings.entries()) {
-        if (index > 0 || ending !== "dispel")
-          pushIssue(
-            "durationEnding",
-            spellDurationEndingPath(PositiveInteger(index + 1)),
-          );
+      if (
+        !spellMechanicsObjectHasOnlyKeys(
+          duration,
+          OBJECT_LIGHT_PERMANENT_DURATION_FIELDS,
+        )
+      )
+        pushIssue("duration", spellMechanicsHeaderPath("duration"));
+      const endings = duration.endsOn;
+      if (endings === undefined || endings.length === 0) {
+        pushIssue(
+          "durationEnding",
+          spellDurationEndingPath(PositiveInteger(1)),
+        );
+      } else {
+        for (const [index, ending] of endings.entries()) {
+          if (index > 0 || ending !== "dispel")
+            pushIssue(
+              "durationEnding",
+              spellDurationEndingPath(PositiveInteger(index + 1)),
+            );
+        }
       }
     }
   }
