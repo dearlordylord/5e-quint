@@ -2,9 +2,12 @@ import { PositiveInteger } from "@dnd/shared/types";
 import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
 import {
   spellDurationEndingPath,
+  spellDurationExtensionPath,
   spellDurationValuePath,
+  spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -279,6 +282,117 @@ describe("persistentAreaTrait static admission", () => {
       {
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports priced and consumed material at their canonical child paths", () => {
+    const record = syntheticFogCloudRecord(
+      (mechanics) => ({
+        ...mechanics,
+        components: {
+          v: true,
+          s: true,
+          m: "a synthetic reagent",
+          materialCostGp: 5,
+          materialConsumed: true,
+        },
+      }),
+      "material_children",
+    );
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("cost"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("consumption"),
+      },
+    ]);
+  });
+
+  test("reports every duration extension at its canonical ordinal", () => {
+    const record = syntheticFogCloudRecord((mechanics) => {
+      if (mechanics.duration.kind !== "concentration") {
+        throw new Error("Expected Fog Cloud Concentration mechanics.");
+      }
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          upTo: {
+            ...mechanics.duration.upTo,
+            upcastTiers: [
+              { atSlot: 2, amount: 2 },
+              { atSlot: 4, amount: 3 },
+            ],
+          },
+        },
+      };
+    }, "duration_extensions");
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports every authored conditional effect at its canonical ordinal", () => {
+    const conditionalEffects = spellRecord("phantasmal_force").mechanics;
+    if (
+      conditionalEffects.family !== "ongoing_effect" ||
+      conditionalEffects.authoredConditionalEffects === undefined
+    ) {
+      throw new Error(
+        "Expected a synthetic conditional-effect fixture source.",
+      );
+    }
+    const effect = conditionalEffects.authoredConditionalEffects[0];
+    if (effect === undefined) {
+      throw new Error("Expected a conditional-effect fixture.");
+    }
+    const record = syntheticFogCloudRecord(
+      (mechanics) => ({
+        ...mechanics,
+        authoredConditionalEffects: [effect, effect],
+      }),
+      "conditional_effects",
+    );
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+          PositiveInteger(2),
+        ),
       },
     ]);
   });

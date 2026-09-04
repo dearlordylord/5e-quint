@@ -1,6 +1,10 @@
 import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement
-import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import {
+  elapsedTimeTicks,
+  ELAPSED_TIME_TICKS_PER_HOUR,
+  ElapsedTimeTicksSchema,
+} from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE
 //
 // The Fog Cloud Spell Procedure Profile: action-time Spell Slot casting creates
@@ -18,13 +22,11 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Concentration, Spell Slot, Spell
 //     Invocation, Area of Effect/Sphere, and Heavily Obscured.
 
-import {
-  type ElapsedTimeTicks,
-  elapsedTimeTicksFromTimeSpanDuration,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   movementFeet,
   PositiveInteger,
+  spellSlotLevel,
   type MovementFeet as MovementFeetType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -35,12 +37,13 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
-import { Match, Result, Schema } from "effect";
+import { Match, Schema } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -65,10 +68,13 @@ import {
 } from "./profile.ts";
 import {
   spellMechanicsObjectHasOnlyKeys,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
-  spellSlotLevelFromSurface,
   spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureAdmissionIssue,
@@ -115,6 +121,7 @@ const PERSISTENT_AREA_OBSCUREMENT_FAILED_FACTS = [
   "components",
   "duration",
   "durationValue",
+  "durationExtension",
   "durationEnding",
   "castingTime",
   "attachment",
@@ -268,9 +275,9 @@ function persistentAreaObscurementOngoingRepresentation(
   });
 }
 
-function persistentAreaObscurementRadius(
+function persistentAreaObscurementRadiusIsSupported(
   mechanics: PersistentAreaObscurementMechanics,
-): PersistentAreaObscurementMechanicsFacts["radius"] | undefined {
+): boolean {
   const attachment = mechanics.attachment;
   if (
     attachment.kind !== "hole" ||
@@ -283,10 +290,9 @@ function persistentAreaObscurementRadius(
     !spellMechanicsObjectHasOnlyKeys(attachment.value.shape, SHAPE_FIELDS) ||
     typeof attachment.value.shape.radiusFeet !== "object"
   ) {
-    return undefined;
+    return false;
   }
   const radius = attachment.value.shape.radiusFeet;
-  const startingSlotLevel = spellSlotLevelFromSurface(radius.startingAtLevel);
   if (
     radius.kind !== "linear_per_level" ||
     radius.axis !== "slot" ||
@@ -294,17 +300,33 @@ function persistentAreaObscurementRadius(
     radius.perLevel !==
       PERSISTENT_AREA_OBSCUREMENT_RADIUS_FEET_PER_SLOT_LEVEL ||
     radius.startingAtLevel !== PERSISTENT_AREA_OBSCUREMENT_LEVEL ||
-    startingSlotLevel === undefined ||
     !spellMechanicsObjectHasOnlyKeys(radius, RADIUS_FIELDS)
   ) {
-    return undefined;
+    return false;
   }
-  return {
-    baseFeet: movementFeet(radius.base),
-    startingSlotLevel,
-    perSlotLevelFeet: movementFeet(radius.perLevel),
-  };
+  return true;
 }
+
+type PersistentAreaObscurementInspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly [
+        {
+          readonly failedFact: PersistentAreaObscurementFailedFact;
+          readonly mechanicsPath: UnitMechanicsPath;
+        },
+        ...Array<{
+          readonly failedFact: PersistentAreaObscurementFailedFact;
+          readonly mechanicsPath: UnitMechanicsPath;
+        }>,
+      ];
+    }
+  | {
+      readonly tag: "parsed";
+      readonly facts: PersistentAreaObscurementMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
 
 function operationShellIsSupported(
   operation: PersistentAreaObscurementOperation | undefined,
@@ -348,14 +370,9 @@ function persistentAreaObscurementEvidence(
   };
 }
 
-function admitPersistentAreaObscurementMechanics(
+function inspectPersistentAreaObscurementMechanics(
   source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "persistentAreaTrait",
-  PersistentAreaObscurementMechanicsFacts,
-  PersistentAreaTraitSpellInvocation,
-  PersistentAreaObscurementAdmissionIssue
-> {
+): PersistentAreaObscurementInspection {
   if (!persistentAreaObscurementRepresentation(source.mechanics)) {
     return { tag: "notRepresented" };
   }
@@ -378,38 +395,35 @@ function admitPersistentAreaObscurementMechanics(
   if (mechanics.school !== "conjuration")
     pushIssue("school", spellMechanicsHeaderPath("school"));
 
-  const rangeFeet =
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET &&
-    spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-      ? movementFeet(mechanics.range.feet)
-      : undefined;
-  if (rangeFeet === undefined)
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+  )
     pushIssue("range", spellMechanicsHeaderPath("range"));
   if (
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
     mechanics.components.m !== false ||
     !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
-  )
+  ) {
     pushIssue("components", spellMechanicsHeaderPath("components"));
+    for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+      pushIssue("components", path);
+  }
   if (
     mechanics.castingTime.kind !== "action" ||
     !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
   )
     pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
 
-  const durationTicks =
-    mechanics.duration.kind === "concentration" &&
-    mechanics.duration.upTo.unit === "hour" &&
-    mechanics.duration.upTo.amount ===
-      PERSISTENT_AREA_OBSCUREMENT_DURATION_HOURS
-      ? elapsedTimeTicksFromTimeSpanDuration(mechanics.duration.upTo)
-      : undefined;
   if (mechanics.duration.kind !== "concentration") {
     pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    pushIssue("durationValue", spellDurationValuePath());
-    pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
+    for (const child of spellDurationChildCoordinates(mechanics.duration))
+      pushIssue(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      );
   } else {
     if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
       pushIssue("duration", spellMechanicsHeaderPath("duration"));
@@ -420,38 +434,40 @@ function admitPersistentAreaObscurementMechanics(
       !spellMechanicsObjectHasOnlyKeys(
         mechanics.duration.upTo,
         DURATION_VALUE_FIELDS,
-      ) ||
-      durationTicks === undefined ||
-      Result.isFailure(durationTicks)
+      )
     )
       pushIssue("durationValue", spellDurationValuePath());
-    const earlyEnd = mechanics.duration.earlyEnd;
-    if (earlyEnd === undefined || earlyEnd.length === 0) {
-      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
-    } else {
-      for (const [index, ending] of earlyEnd.entries()) {
-        if (
-          ending.kind !== "area_dispersed_by_strong_wind" ||
-          index > 0 ||
-          !spellMechanicsObjectHasOnlyKeys(ending, ENDING_FIELDS)
-        )
-          pushIssue(
-            "durationEnding",
-            spellDurationEndingPath(PositiveInteger(index + 1)),
-          );
-      }
-    }
-    if (mechanics.duration.permanentIfMaintainedFull === true)
+    const durationChildren = spellDurationChildCoordinates(mechanics.duration);
+    const endingChildren = durationChildren.filter(
+      (child) => child.branch === "ending",
+    );
+    if (endingChildren.length === 0)
       pushIssue(
         "durationEnding",
-        spellDurationEndingPath(
-          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
-        ),
+        spellDurationChildPath({
+          branch: "ending",
+          ordinal: PositiveInteger(1),
+          ending: {
+            kind: "earlyEnd",
+            trigger: { kind: "area_dispersed_by_strong_wind" },
+          },
+        }),
       );
+    for (const child of durationChildren) {
+      if (child.branch === "extension") {
+        pushIssue("durationExtension", spellDurationChildPath(child));
+      } else if (
+        child.ordinal !== 1 ||
+        child.ending.kind !== "earlyEnd" ||
+        child.ending.trigger.kind !== "area_dispersed_by_strong_wind" ||
+        !spellMechanicsObjectHasOnlyKeys(child.ending.trigger, ENDING_FIELDS)
+      ) {
+        pushIssue("durationEnding", spellDurationChildPath(child));
+      }
+    }
   }
 
-  const radius = persistentAreaObscurementRadius(mechanics);
-  if (radius === undefined) {
+  if (!persistentAreaObscurementRadiusIsSupported(mechanics)) {
     const attachment = mechanics.attachment;
     const hasAreaShell =
       attachment.kind === "hole" &&
@@ -465,8 +481,11 @@ function admitPersistentAreaObscurementMechanics(
   }
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (mechanics.authoredConditionalEffects !== undefined)
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+  for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
+    pushIssue(
+      "authoredConditionalEffects",
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+    );
 
   const obscurementOperationIndex = mechanics.operations.findIndex(
     ({ effect }) => effect.kind === "area_is_heavily_obscured",
@@ -496,54 +515,66 @@ function admitPersistentAreaObscurementMechanics(
   if (failures !== undefined) {
     return {
       tag: "unsupported",
-      issues: spellProcedureMapNonEmpty(
-        failures,
-        ({ failedFact, mechanicsPath }) =>
-          persistentAreaObscurementIssue(failedFact, mechanicsPath),
-      ),
-    };
-  }
-  if (
-    rangeFeet === undefined ||
-    radius === undefined ||
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks)
-  ) {
-    return {
-      tag: "unsupported",
-      issues: [
-        persistentAreaObscurementIssue(
-          rangeFeet === undefined
-            ? "range"
-            : radius === undefined
-              ? "radiusScaling"
-              : "durationValue",
-          rangeFeet === undefined
-            ? spellMechanicsHeaderPath("range")
-            : radius === undefined
-              ? spellOngoingAttachmentPath()
-              : spellDurationValuePath(),
-        ),
-      ],
+      issues: failures,
     };
   }
 
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    durationTicks: durationTicks.success,
-    rangeFeet,
-    radius,
+    durationTicks: elapsedTimeTicks(
+      ELAPSED_TIME_TICKS_PER_HOUR * PERSISTENT_AREA_OBSCUREMENT_DURATION_HOURS,
+    ),
+    rangeFeet: movementFeet(PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET),
+    radius: {
+      baseFeet: movementFeet(PERSISTENT_AREA_OBSCUREMENT_BASE_RADIUS_FEET),
+      startingSlotLevel: spellSlotLevel(PERSISTENT_AREA_OBSCUREMENT_LEVEL),
+      perSlotLevelFeet: movementFeet(
+        PERSISTENT_AREA_OBSCUREMENT_RADIUS_FEET_PER_SLOT_LEVEL,
+      ),
+    },
   } satisfies PersistentAreaObscurementMechanicsFacts;
   return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "persistentAreaTrait",
-      facts,
-      evidence: persistentAreaObscurementEvidence(operationOrdinal),
-      admit: (spell, ctx) => admitPersistentAreaTrait(spell, ctx, facts),
-    },
+    tag: "parsed",
+    facts,
+    evidence: persistentAreaObscurementEvidence(operationOrdinal),
   };
+}
+
+function admitPersistentAreaObscurementMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "persistentAreaTrait",
+  PersistentAreaObscurementMechanicsFacts,
+  PersistentAreaTraitSpellInvocation,
+  PersistentAreaObscurementAdmissionIssue
+> {
+  return Match.value(inspectPersistentAreaObscurementMechanics(source)).pipe(
+    Match.when({ tag: "notRepresented" }, () => ({
+      tag: "notRepresented" as const,
+    })),
+    Match.when({ tag: "unsupported" }, ({ issues }) => ({
+      tag: "unsupported" as const,
+      issues: spellProcedureMapNonEmpty(
+        issues,
+        ({ failedFact, mechanicsPath }) =>
+          persistentAreaObscurementIssue(failedFact, mechanicsPath),
+      ),
+    })),
+    Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
+      tag: "supported" as const,
+      admitted: {
+        binding: "ready" as const,
+        procedure: "persistentAreaTrait" as const,
+        facts,
+        evidence,
+        admit: (
+          spell: BattleSpellExecutionSource,
+          ctx: SpellAdmissionContext,
+        ) => admitPersistentAreaTrait(spell, ctx, facts),
+      },
+    })),
+    Match.exhaustive,
+  );
 }
 
 function admitPersistentAreaTrait(
