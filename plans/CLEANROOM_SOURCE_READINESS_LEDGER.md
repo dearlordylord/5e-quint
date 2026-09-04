@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `f4555acbe3b20d284ca5490e266a6b27c4a9a839`
+  `d07e59f5c08ac978866a4ae3d41f275be15964e1`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -54,7 +54,10 @@ This section is the sole mutable handoff for a new session.
   `7425d13b9e3b71ba603eac7f2e0bf3cefaee4992`; the
   magical-darkness-point-origin admission reviewed tip
   `9ac1fd18e0268f03ee9de4f9684ac2b612a43a6a` is integrated by
-  `f4555acbe3b20d284ca5490e266a6b27c4a9a839`.
+  `f4555acbe3b20d284ca5490e266a6b27c4a9a839`; the
+  area-movement-distance-damage admission reviewed tip
+  `cf4284425b599e595dffc728543c7134925e3b1b` is integrated by
+  `d07e59f5c08ac978866a4ae3d41f275be15964e1`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -178,6 +181,23 @@ This section is the sole mutable handoff for a new session.
   lifecycle, full-file, package, broad, coverage, QNT, MBT, or registry run is
   claimed, and reducer semantics are unchanged. The remaining 13 legacy
   declarations prevent whole-package convergence.
+- Area-movement-distance-damage evidence: exact reviewed tip `cf4284425`
+  migrates the legacy top-level area-movement-distance-damage declaration to
+  `admitMechanics`. It widens the typed Surface canonical
+  `authoredConditionalMechanics` collection and honestly renames its canonical
+  mechanics path. Spike Growth camouflage/Search is retained as exact
+  ordinal-1 unowned Table evidence. Local RAW was inspected, and Standards and
+  Spec/RAW review axes converged with zero findings after five rounds. Surface
+  focused checks passed 216/216, and portable/generator checks passed 93/93.
+  Battle focused checks passed 18/18 for the area profile, 173/173 for the
+  combined B3, C2, and area selection, 1/1 each for the changed static Fog and
+  Darkness selections, and 2/2 for linked-defense and movable-light controls.
+  Changed-root diagnostics were zero; scoped lint, formatting, diff, and
+  generation checks passed. The initial five-file Battle run had 12 known
+  lifecycle registry-harness failures; those failures are excluded and that
+  run is not lifecycle verification. No lifecycle, package-wide, broad,
+  coverage, QNT, MBT, or registry verification is claimed. The remaining 12
+  legacy declarations prevent whole-package convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -194,34 +214,14 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current audit retains 13 legacy top-level `admit:` declarations. The landed
-  W6 magical-darkness-point-origin lease is clear. W7 now holds the narrow
-  `area-movement-distance-damage.ts` profile, existing forced-movement test,
-  dedicated `unit-profile-admission-area-movement-distance-damage.test.ts`
-  test owner, and narrow invocation source field lease from `af5855c49`. The
-  dedicated test lease was added after Standards review found that Spike
-  Growth admission does not belong to the forced-movement domain. Spec/RAW
-  review then found that Surface retained the camouflage/Search rule only as
-  prose, so W7 also holds the exact Surface schema, Spike Growth content,
-  tracer, focused tests, and owned publication/portable-case artifacts needed
-  to make that table-owned branch typed and report its canonical conditional
-  path as unowned. Shared registry/state or coverage-map edits require an explicit
-  lease expansion, and no QNT/MBT run is authorized unless implementation
-  changes semantics.
-  W7 round-two review requires the one canonical collection/path vocabulary to
-  be renamed from conditional _effect_ to conditional _mechanic_; splitting it
-  would duplicate optional collections and diagnostic traversal. The additional
-  exact lease is Surface `schema.ts`, `types.ts`, `spell-mechanics-path.ts` and
-  its test; Phantasmal Force Dhall/JSON; Battle profile consumers
-  `damage-reduction`, `granted-area-save-damage`, `held-light`,
-  `linked-defense-damage-share-profile`, `magical-darkness-point-origin`,
-  `movable-illumination-manifestation`, `persistent-area-obscurement`,
-  `persistent-armor-effect`, `roll-modifier`, `scalar-buff`, and
-  `targeting-save-interdiction`; and Battle tests `b3-admission.test.ts`,
-  `c2-support-profile-admission.test.ts`, `battle-runtime-fog-cloud.test.ts`,
-  and `unit-profile-admission-darkness.test.ts`. Existing W7 leases already own
-  the remaining area profile, Surface schema/tracer/catalog tests, Spike Growth
-  content, and publication/portable artifacts affected by the rename.
+  current audit retains 12 legacy top-level `admit:` declarations in 11 files.
+  The landed W7 area-movement-distance-damage lease is clear. W8 is the next
+  smallest coherent single-profile slice: `compelled-next-turn-behavior.ts`
+  with its existing focused
+  `unit-profile-admission-command-control-options.test.ts` owner, based on
+  `d07e59f5c`; no W8 branch or worktree exists yet. Shared registry/state or
+  coverage-map edits require an explicit lease expansion, and no QNT/MBT run
+  is authorized unless implementation changes semantics.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -356,10 +356,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                 | Worktree/branch                                                                                                                        | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                    | State  |
-| --------------- | ----------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                    | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                          | `dd1350f81` | Integration checkpoint `f4555acbe`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, and magical darkness integrated; cumulative Surface publication delta certified; 13 top-level profile migrations remain | Active |
-| `SR-04G/W7`     | area-movement-distance-damage profile admission | Codex orchestrator; implementers: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-area-movement-distance-damage`; `work/sr04g-area-movement-distance-damage` | `af5855c49` | Original Battle/Surface files listed here at lease commits `faeb9e1c5` and `acf802844`, plus the exact round-two canonical conditional-mechanic rename manifest in Next action. No registry, coverage-map, QNT, or MBT write lease                                                                             | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                   | State   |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `d07e59f5c`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, and movement-distance area damage integrated; cumulative Surface publication delta certified; 12 top-level profile migrations remain | Active  |
+| `SR-04G/W8`     | compelled-next-turn-behavior profile admission  | Unassigned         | Not created                                                                                   | `d07e59f5c` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts`; `packages/battle-runtime/src/unit-profile-admission-command-control-options.test.ts`; shared registry/state changes require explicit lease expansion                                                                                   | Planned |
 
 ## Landing discipline
 
