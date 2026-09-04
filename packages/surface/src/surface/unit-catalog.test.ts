@@ -32,6 +32,7 @@ import {
   GlyphWardingMechanicsSchema,
   JumpMovementReplacementSchema,
   MagicCircleWardMechanicsSchema,
+  OngoingTriggerSchema,
   OnHitTriggerMechanicsSchema,
   PublishedSrdSurfaceSchema,
   StoneMergeMechanicsSchema,
@@ -3445,10 +3446,20 @@ describe("SRD Unit catalog boundary", () => {
           trigger: {
             kind: "on_caster_spends_action",
             cost: { kind: "bonus_action" },
+            laterTurnsOnly: true,
           },
           effect: { kind: "reposition_attachment" },
         },
       ]);
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(Schema.toType(OngoingTriggerSchema))({
+            kind: "on_caster_spends_action",
+            cost: { kind: "bonus_action" },
+            laterTurnsOnly: false,
+          }),
+        ),
+      ).toBe(true);
     }
   });
 

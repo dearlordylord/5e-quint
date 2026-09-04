@@ -3546,7 +3546,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "directionalPersistentArea";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly ability: Extract<Ability, "str">;
       readonly dc: DcSource;
       readonly targeting: Extract<

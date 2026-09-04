@@ -21956,7 +21956,8 @@
                     "kind": "on_caster_spends_action",
                     "cost": {
                       "kind": "bonus_action"
-                    }
+                    },
+                    "laterTurnsOnly": true
                   },
                   "effect": {
                     "kind": "reposition_attachment"

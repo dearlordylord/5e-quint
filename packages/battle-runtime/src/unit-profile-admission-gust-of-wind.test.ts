@@ -8,9 +8,32 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
-import { resourceCount } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import { directionalPersistentAreaProfile } from "./battle-reducer/spell-procedure-profiles/directional-persistent-area.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleCreatureState,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterSeed,
@@ -40,6 +63,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
+  spellAdmissionSource,
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -71,6 +95,570 @@ import {
   thunderwaveSecondTargetId,
   unitLibrary,
 } from "./unit-profile-admission-catalog.test-support.ts";
+
+type OngoingMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function gustMechanics(): OngoingMechanics {
+  const mechanics = spellRecord(gustOfWindUnitId).mechanics;
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Gust of Wind ongoing-effect mechanics.");
+  return mechanics;
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function syntheticGustRecord(
+  mutate: (mechanics: OngoingMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_directional_area_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Directional Area ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_directional_area_${suffix}`,
+    },
+    mechanics: mutate(structuredClone(gustMechanics())),
+  });
+}
+
+function staticSpellAdmissionActor(): SpellAdmissionActor {
+  const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+    spellCasterId,
+  );
+  if (!isSpellAdmissionActor(actor))
+    throw new Error("Expected a spellcasting character fixture.");
+  return actor;
+}
+
+function isSpellAdmissionActor(
+  actor: BattleCreatureState | undefined,
+): actor is SpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
+}
+
+function issueFacts(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}): readonly {
+  readonly failedFact: string;
+  readonly mechanicsPath: unknown;
+}[] {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+function mutatedGustMechanicsSource(
+  mutate: (mechanics: OngoingMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(gustOfWindUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Gust of Wind ongoing-effect mechanics.");
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function requireSaveArea(
+  save:
+    | OngoingMechanics["initialPhase"]
+    | OngoingMechanics["operations"][number]["effect"]
+    | undefined,
+): Extract<
+  Exclude<
+    Extract<typeof save, { readonly kind: "save_gate" }>["attachment"],
+    undefined
+  >,
+  { readonly kind: "hole" }
+>["value"] {
+  if (
+    save?.kind !== "save_gate" ||
+    save.attachment?.kind !== "hole" ||
+    save.attachment.value.kind !== "area"
+  )
+    throw new Error("Expected a hole-wrapped save area.");
+  return save.attachment.value;
+}
+
+describe("directionalPersistentArea static admission", () => {
+  test("projects Gust mechanics once with exact owned and table-owned evidence", () => {
+    const source = spellAdmissionSource(spellRecord(gustOfWindUnitId));
+    const result = directionalPersistentAreaProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 2,
+      durationTicks: 10,
+      lengthFeet: 60,
+      widthFeet: 10,
+      rangeFeet: 0,
+      ability: "str",
+      dc: { kind: "caster_spell_save_dc" },
+      pushDistanceFeet: 15,
+      movementCost: { multiplier: 2, appliesTo: "towardSource" },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingInitialPhasePath(),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+        spellOngoingOperationPath(PositiveInteger(3)),
+        spellOngoingOperationEffectPath(PositiveInteger(3)),
+        spellOngoingOperationPath(PositiveInteger(4)),
+        spellOngoingOperationEffectPath(PositiveInteger(4)),
+      ],
+      unowned: [
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+      ],
+    });
+
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: staticSpellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("recognizes renamed spell and hole identity with identical facts and execution", () => {
+    const original = spellAdmissionSource(spellRecord(gustOfWindUnitId));
+    const renamed = spellAdmissionSource(
+      syntheticGustRecord((mechanics) => {
+        const attachments = [
+          mechanics.attachment,
+          mechanics.initialPhase?.kind === "save_gate"
+            ? mechanics.initialPhase.attachment
+            : undefined,
+          ...mechanics.operations.map(({ effect }) =>
+            effect.kind === "save_gate" ? effect.attachment : undefined,
+          ),
+        ];
+        for (const attachment of attachments)
+          if (attachment?.kind === "hole") {
+            Reflect.set(attachment, "holeId", "renamed_directional_area");
+            Reflect.set(attachment, "label", "renamed directional area");
+          }
+        return mechanics;
+      }, "renamed"),
+    );
+    const originalResult = directionalPersistentAreaProfile.admitMechanics(
+      mechanicsSource(original),
+    );
+    const renamedResult = directionalPersistentAreaProfile.admitMechanics(
+      mechanicsSource(renamed),
+    );
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test("rejects a direct root area while remaining indifferent to hole identity", () => {
+    const source = mutatedGustMechanicsSource((mechanics) => {
+      if (
+        mechanics.attachment.kind !== "hole" ||
+        mechanics.attachment.value.kind !== "area"
+      )
+        throw new Error("Expected the Gust Line hole.");
+      Reflect.set(mechanics, "attachment", mechanics.attachment.value);
+    });
+    expect(
+      issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+    ).toContainEqual({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+  });
+
+  test("accepts reordered operations and preserves their authored ordinals", () => {
+    const reversed = spellAdmissionSource(
+      syntheticGustRecord(
+        (mechanics) => ({
+          ...mechanics,
+          operations: [...mechanics.operations].reverse(),
+        }),
+        "reordered",
+      ),
+    );
+    const result = directionalPersistentAreaProfile.admitMechanics(
+      mechanicsSource(reversed),
+    );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.evidence.unowned).toEqual([
+      spellOngoingOperationPath(PositiveInteger(4)),
+      spellOngoingOperationEffectPath(PositiveInteger(4)),
+    ]);
+    expect(result.admitted.evidence.consumed).toContainEqual(
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    );
+  });
+
+  test("accumulates independent nested failures at actual operation paths", () => {
+    const malformed = spellAdmissionSource(
+      syntheticGustRecord((mechanics) => {
+        if (mechanics.initialPhase?.kind !== "save_gate")
+          throw new Error("Expected initial save gate.");
+        Reflect.set(mechanics.initialPhase, "ability", "dex");
+        const movement = mechanics.operations[1];
+        const repeated = mechanics.operations[2];
+        const direction = mechanics.operations[3];
+        if (
+          movement?.effect.kind !== "area_movement_cost_multiplier" ||
+          repeated?.effect.kind !== "save_gate" ||
+          direction?.trigger.kind !== "on_caster_spends_action"
+        )
+          throw new Error("Expected canonical Gust operations.");
+        Reflect.set(movement.effect, "multiplier", 3);
+        Reflect.set(repeated.effect, "ability", "dex");
+        Reflect.set(direction.trigger, "cost", {
+          kind: "standard_action",
+          action: "magic",
+        });
+        return mechanics;
+      }, "malformed"),
+    );
+    const result = directionalPersistentAreaProfile.admitMechanics(
+      mechanicsSource(malformed),
+    );
+
+    expect(issueFacts(result)).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "initialSaveAbility",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        },
+        {
+          failedFact: "movementCostMultiplier",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+        },
+        {
+          failedFact: "endTurnSaveAbility",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(3)),
+        },
+        {
+          failedFact: "directionActionCost",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(4)),
+        },
+      ]),
+    );
+  });
+
+  test.each([
+    {
+      label: "strong-wind trigger",
+      ordinal: 1,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "on_effect_starts" }),
+      failedFact: "strongWindTrigger",
+      effectPath: false,
+    },
+    {
+      label: "strong-wind effect",
+      ordinal: 1,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "strongWindEffect",
+      effectPath: true,
+    },
+    {
+      label: "movement-cost trigger",
+      ordinal: 2,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "on_effect_starts" }),
+      failedFact: "movementCostTrigger",
+      effectPath: false,
+    },
+    {
+      label: "movement-cost effect",
+      ordinal: 2,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "movementCostEffect",
+      effectPath: true,
+    },
+    {
+      label: "end-turn trigger",
+      ordinal: 3,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "passive" }),
+      failedFact: "endTurnTrigger",
+      effectPath: false,
+    },
+    {
+      label: "end-turn effect",
+      ordinal: 3,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "endTurnSaveFailure",
+      effectPath: true,
+    },
+    {
+      label: "direction trigger",
+      ordinal: 4,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "passive" }),
+      failedFact: "directionTrigger",
+      effectPath: false,
+    },
+    {
+      label: "direction effect",
+      ordinal: 4,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "directionEffect",
+      effectPath: true,
+    },
+  ])(
+    "keeps malformed $label assigned to its authored ordinal",
+    ({ ordinal, mutate, failedFact, effectPath }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const operation = mechanics.operations[ordinal - 1];
+        if (operation === undefined)
+          throw new Error("Expected the selected Gust operation.");
+        mutate(operation);
+      });
+      const result = directionalPersistentAreaProfile.admitMechanics(source);
+      expect(issueFacts(result)).toContainEqual({
+        failedFact,
+        mechanicsPath: effectPath
+          ? spellOngoingOperationEffectPath(PositiveInteger(ordinal))
+          : spellOngoingOperationPath(PositiveInteger(ordinal)),
+      });
+      expect(issueFacts(result)).not.toContainEqual({
+        failedFact: "operationCount",
+        mechanicsPath: spellMechanicsRootPath(),
+      });
+    },
+  );
+
+  test.each([
+    {
+      label: "authored order",
+      order: [0, 1, 2, 3],
+      ambiguousOrdinals: [1, 2],
+    },
+    {
+      label: "reordered",
+      order: [3, 0, 2, 1],
+      ambiguousOrdinals: [2, 4],
+    },
+  ] as const)(
+    "reports $label ambiguous passive roles generically without invented attribution",
+    ({ order, ambiguousOrdinals }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const operations = order.map((index) => mechanics.operations[index]);
+        if (operations.some((operation) => operation === undefined))
+          throw new Error("Expected all Gust operations.");
+        for (const operation of operations)
+          if (operation?.trigger.kind === "passive")
+            Reflect.set(operation, "effect", { kind: "none" });
+        Reflect.set(mechanics, "operations", operations);
+      });
+      const issues = issueFacts(
+        directionalPersistentAreaProfile.admitMechanics(source),
+      );
+      for (const ordinal of ambiguousOrdinals)
+        expect(issues).toContainEqual({
+          failedFact: "operation",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(ordinal)),
+        });
+      expect(issues.map(({ failedFact }) => failedFact)).not.toEqual(
+        expect.arrayContaining([
+          "strongWindEffect",
+          "movementCostEffect",
+          "operationCount",
+        ]),
+      );
+    },
+  );
+
+  test.each([
+    {
+      label: "initial Sphere",
+      operationIndex: undefined,
+      shape: { kind: "sphere", radiusFeet: 10 },
+      failedFact: "initialSaveAttachment",
+      path: spellOngoingInitialPhasePath(),
+    },
+    {
+      label: "initial wrong-size Line",
+      operationIndex: undefined,
+      shape: { kind: "line", lengthFeet: 50, widthFeet: 10 },
+      failedFact: "initialSaveAttachment",
+      path: spellOngoingInitialPhasePath(),
+    },
+    {
+      label: "repeated Sphere",
+      operationIndex: 2,
+      shape: { kind: "sphere", radiusFeet: 10 },
+      failedFact: "endTurnSaveAttachment",
+      path: spellOngoingOperationEffectPath(PositiveInteger(3)),
+    },
+    {
+      label: "repeated wrong-size Line",
+      operationIndex: 2,
+      shape: { kind: "line", lengthFeet: 60, widthFeet: 15 },
+      failedFact: "endTurnSaveAttachment",
+      path: spellOngoingOperationEffectPath(PositiveInteger(3)),
+    },
+  ] as const)(
+    "rejects a $label at the save path",
+    ({ operationIndex, shape, failedFact, path }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const save =
+          operationIndex === undefined
+            ? mechanics.initialPhase
+            : mechanics.operations[operationIndex]?.effect;
+        Reflect.set(requireSaveArea(save), "shape", shape);
+      });
+      expect(
+        issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+      ).toContainEqual({ failedFact, mechanicsPath: path });
+    },
+  );
+
+  test("accumulates every optional save branch independently for both saves", () => {
+    const source = mutatedGustMechanicsSource((mechanics) => {
+      const saves = [mechanics.initialPhase, mechanics.operations[2]?.effect];
+      for (const save of saves) {
+        if (save?.kind !== "save_gate")
+          throw new Error("Expected Gust save gates.");
+        Reflect.set(save, "repeatSaves", []);
+        Reflect.set(save, "autoSuccessIfCasterSlotGte", 3);
+        Reflect.set(save, "autoSuccessIfTarget", { kind: "construct" });
+        Reflect.set(save, "saveAppliesIf", { kind: "target_can_hear" });
+        Reflect.set(save, "usageLimit", { kind: "once_per_turn" });
+      }
+    });
+    const result = directionalPersistentAreaProfile.admitMechanics(source);
+    expect(issueFacts(result).map(({ failedFact }) => failedFact)).toEqual(
+      expect.arrayContaining([
+        "initialRepeatSaves",
+        "initialAutoSuccessIfCasterSlotGte",
+        "initialAutoSuccessIfTarget",
+        "initialSaveAppliesIf",
+        "initialUsageLimit",
+        "endTurnRepeatSaves",
+        "endTurnAutoSuccessIfCasterSlotGte",
+        "endTurnAutoSuccessIfTarget",
+        "endTurnSaveAppliesIf",
+        "endTurnUsageLimit",
+      ]),
+    );
+  });
+
+  test("rejects every unsupported authored conditional mechanic at its actual ordinal", () => {
+    const source = mutatedGustMechanicsSource((mechanics) => {
+      const fixture = spellRecord("phantasmal_force").mechanics;
+      if (
+        fixture.family !== "ongoing_effect" ||
+        fixture.authoredConditionalMechanics === undefined ||
+        fixture.authoredConditionalMechanics[0] === undefined
+      )
+        throw new Error("Expected an authored conditional-mechanic fixture.");
+      Reflect.set(mechanics, "authoredConditionalMechanics", [
+        structuredClone(fixture.authoredConditionalMechanics[0]),
+        structuredClone(fixture.authoredConditionalMechanics[0]),
+      ]);
+    });
+    expect(
+      issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(1),
+          ),
+        },
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(2),
+          ),
+        },
+      ]),
+    );
+  });
+
+  test.each([
+    {
+      label: "missing",
+      mutate: (trigger: object) =>
+        Reflect.deleteProperty(trigger, "laterTurnsOnly"),
+    },
+    {
+      label: "false",
+      mutate: (trigger: object) =>
+        Reflect.set(trigger, "laterTurnsOnly", false),
+    },
+  ])(
+    "rejects $label later-turn direction timing at its authored operation",
+    ({ mutate }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const operation = mechanics.operations[3];
+        if (operation?.trigger.kind !== "on_caster_spends_action")
+          throw new Error("Expected the Gust direction-change trigger.");
+        if (!mutate(operation.trigger))
+          throw new Error(
+            "Expected the direction trigger fixture to be writable.",
+          );
+      });
+      expect(
+        issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+      ).toContainEqual({
+        failedFact: "directionLaterTurns",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(4)),
+      });
+    },
+  );
+});
 
 describe("L12G deterministic Gust of Wind Line admission", () => {
   test("gust of wind is admitted as a self-origin Line STR-save concentration spell", () => {
