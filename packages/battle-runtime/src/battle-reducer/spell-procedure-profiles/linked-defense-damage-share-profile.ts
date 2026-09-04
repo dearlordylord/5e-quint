@@ -18,7 +18,6 @@ import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra
 import { PositiveInteger } from "@dnd/shared/types";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
-import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
 
 import { LinkedDefenseResistanceDamageShareTemplateSchema } from "../../active-effect/codecs.ts";
 import {
@@ -136,6 +135,9 @@ type LinkedDefenseDuration = Extract<
   LinkedDefenseResistanceDamageShareMechanics["duration"],
   { readonly kind: "timed" }
 >;
+type LinkedDefenseDurationEnding = NonNullable<
+  LinkedDefenseDuration["earlyEnd"]
+>[number];
 const LINKED_DEFENSE_ROOT_FIELDS = [
   "level",
   "school",
@@ -384,7 +386,7 @@ function linkedDefenseResistanceDamageSharePairedMaterialIsSupported(
 }
 
 function linkedDefenseResistanceDamageShareEarlyEndsAreSupported(
-  earlyEnds: readonly { readonly kind: string }[] | undefined,
+  earlyEnds: readonly LinkedDefenseDurationEnding[] | undefined,
 ): boolean {
   return (
     earlyEnds !== undefined &&
@@ -661,7 +663,7 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
     }
     const earlyEnd = mechanics.duration.earlyEnd;
     if (earlyEnd !== undefined) {
-      const seenEndingKinds = new Set<string>();
+      const seenEndingKinds = new Set<LinkedDefenseDurationEnding["kind"]>();
       for (const [index, ending] of earlyEnd.entries()) {
         const supportedKind = LINKED_DEFENSE_ENDING_KINDS.some(
           (kind) => kind === ending.kind,
@@ -746,16 +748,21 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
         linkedDefenseResistanceDamageShareDamageShareOperationIsSupported,
     },
   ] as const;
-  for (const [expectedIndex, check] of operationChecks.entries()) {
+  const missingOperationChecks = operationChecks.filter(
+    (check) => !mechanics.operations.some(check.represented),
+  );
+  for (const [missingIndex, check] of missingOperationChecks.entries()) {
+    pushIssue(
+      check.failedFact,
+      spellOngoingOperationEffectPath(
+        PositiveInteger(mechanics.operations.length + missingIndex + 1),
+      ),
+    );
+  }
+  for (const check of operationChecks) {
     const represented = mechanics.operations.flatMap((operation, index) =>
       check.represented(operation) ? [{ operation, index }] : [],
     );
-    if (represented.length === 0) {
-      pushIssue(
-        check.failedFact,
-        spellOngoingOperationEffectPath(PositiveInteger(expectedIndex + 1)),
-      );
-    }
     for (const { operation, index } of represented) {
       if (!check.supported(operation)) {
         pushIssue(
@@ -821,7 +828,7 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
   }
   const durationTicks = spellDurationTicksFromCanonicalValue(durationValue);
   const facts = {
-    ...projectSpellDefinitionRuleFacts(mechanics),
+    ...source.spellDefinitionRuleFacts,
     durationTicks,
   } satisfies LinkedDefenseResistanceDamageShareFacts;
   return {

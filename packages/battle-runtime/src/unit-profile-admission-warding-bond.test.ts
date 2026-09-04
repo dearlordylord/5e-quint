@@ -242,26 +242,6 @@ describe("linkedDefenseResistanceDamageShare static admission", () => {
     );
   });
 
-  test("projects canonical facts from admitted mechanics instead of stale source facts", () => {
-    const source = spellAdmissionSource(spellRecord("warding_bond"));
-    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics({
-      mechanics: source.mechanics,
-      spellDefinitionRuleFacts: {
-        ...source.spellDefinitionRuleFacts,
-        level: 9,
-        range: { kind: "self" },
-      },
-    });
-
-    expect(result.tag).toBe("supported");
-    if (result.tag !== "supported") return;
-    expect(result.admitted.facts).toMatchObject({
-      level: 2,
-      range: { kind: "touch" },
-      durationTicks: 600,
-    });
-  });
-
   test("does not claim unrelated shipped spell mechanics", () => {
     const results = unitLibrary
       .listUnits()
@@ -505,6 +485,34 @@ describe("linkedDefenseResistanceDamageShare static admission", () => {
       expect.objectContaining({
         failedFact: "operationCount",
         mechanicsPath: spellOngoingOperationPath(PositiveInteger(3)),
+      }),
+    ]);
+  });
+
+  test("reports a missing reordered operation role at the absent tail coordinate", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond(
+        (mechanics) => ({
+          ...mechanics,
+          operations: mechanics.operations.slice(1),
+        }),
+        "missing_reordered_operation",
+      ),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "armorClassOperation",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(4)),
+      }),
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(4)),
       }),
     ]);
   });
