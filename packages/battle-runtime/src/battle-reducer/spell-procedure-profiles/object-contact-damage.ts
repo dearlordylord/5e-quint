@@ -702,9 +702,8 @@ function objectContactDamageDieSizeAt<const Expected extends DamageDieSize>(
 }
 
 function objectContactDamageDamageProjection(
-  amount: DiceAmount,
+  amount: SupportedObjectContactDamageAmount,
 ): ObjectContactDamageDamageProjection | undefined {
-  if (!isSupportedObjectContactDamageAmount(amount)) return undefined;
   const baseDice = objectContactDamagePositiveIntegerAt(amount.base.dice, 2);
   const dieSize = objectContactDamageDieSizeAt(amount.base.dieSize, 8);
   const perSlotDice = objectContactDamagePositiveIntegerAt(
