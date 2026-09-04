@@ -23,7 +23,10 @@ mechanics, resources, communication, and ordered procedures. The certificate
 schema couples the changed-record classes to `changed`; `added` and `removed`
 accept only the catalog-membership class.
 Persistent rule facts include Pass without Trace's typed movement-trace
-suppression alongside its existing Stealth modifier.
+suppression alongside its existing Stealth modifier, and Hunter's Mark's typed
+creature target plus its passive Wisdom check advantage for the exact
+Perception-or-Survival scope. Hunter's Mark changes only the aggregate: all of
+its published shapes already belong to the reviewed candidate schema graph.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -45,9 +48,9 @@ evidence.
 The canonical Weapon Mastery closure in `a027913d4` adds the Graze, Nick, and
 Vex authored Units referenced by the published weapon records. The candidate
 aggregate now contains 437 Units and 330 Stat Blocks. Its byte digest is
-`8622a70b0d6e71c3baee263f93f50cf57dd68d9933d31895a494b9f49a148584`,
+`a93a325a47e94fb92155a0264a74828c2cd15deacd7537841f002aea6dc324c5`,
 and its canonical JSON digest is
-`d1ccad279f65ed81dc3bf8ea83d483dd04248f8a6f35fc4dc62e61e3da3d1095`.
+`d5cb47f66dfa82d65b373e155da0c9163a9f65f9047963ac2706572605bdee4d`.
 Each new Unit is an exact reviewed `authored-catalog-membership` addition. This
 publication evidence does not change the separate runtime support profile:
 Battle admission of these Mastery mechanics remains unsupported.

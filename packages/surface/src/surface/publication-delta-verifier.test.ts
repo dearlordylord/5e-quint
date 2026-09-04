@@ -1032,7 +1032,7 @@ describe("Surface publication delta verifier", () => {
           fixtureObjectField(
             fixtureObjectField(
               fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
+              "SrdRecordUnion1058Encoded",
             ),
             "properties",
           ),
@@ -1048,7 +1048,7 @@ describe("Surface publication delta verifier", () => {
           fixtureObjectField(
             fixtureObjectField(
               fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
+              "SrdRecordUnion1058Encoded",
             ),
             "properties",
           ),
@@ -1065,7 +1065,7 @@ describe("Surface publication delta verifier", () => {
           fixtureObjectField(
             fixtureObjectField(
               fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
+              "SrdRecordUnion1058Encoded",
             ),
             "properties",
           ),
@@ -1081,7 +1081,7 @@ describe("Surface publication delta verifier", () => {
           fixtureObjectField(
             fixtureObjectField(
               fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
+              "SrdRecordUnion1058Encoded",
             ),
             "properties",
           ),
@@ -1096,7 +1096,7 @@ describe("Surface publication delta verifier", () => {
         const properties = fixtureObjectField(
           fixtureObjectField(
             fixtureObjectField(schema, "$defs"),
-            "SrdRecordUnion586Encoded",
+            "SrdRecordUnion587Encoded",
           ),
           "properties",
         );
@@ -1110,7 +1110,7 @@ describe("Surface publication delta verifier", () => {
           fixtureObjectField(
             fixtureObjectField(
               fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1053Encoded",
+              "SrdRecordUnion1054Encoded",
             ),
             "properties",
           ),
@@ -1125,7 +1125,7 @@ describe("Surface publication delta verifier", () => {
         const anyOf = fixtureArrayField(
           fixtureObjectField(
             fixtureObjectField(schema, "$defs"),
-            "SrdRecordUnion1047Encoded",
+            "SrdRecordUnion1048Encoded",
           ),
           "anyOf",
         );
@@ -1310,7 +1310,7 @@ describe("Surface publication delta verifier", () => {
         const linkedSpellId = fixtureObjectField(
           fixtureObjectField(
             fixtureObjectField(
-              fixtureObjectField(definitions, "SrdRecordUnion352Encoded"),
+              fixtureObjectField(definitions, "SrdRecordUnion353Encoded"),
               "properties",
             ),
             "durationOverride",

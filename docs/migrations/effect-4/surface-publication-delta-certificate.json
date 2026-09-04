@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2188143,
-        "sha256": "8622a70b0d6e71c3baee263f93f50cf57dd68d9933d31895a494b9f49a148584"
+        "byteLength": 2188397,
+        "sha256": "a93a325a47e94fb92155a0264a74828c2cd15deacd7537841f002aea6dc324c5"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "d1ccad279f65ed81dc3bf8ea83d483dd04248f8a6f35fc4dc62e61e3da3d1095",
+        "candidateCanonicalJsonSha256": "d5cb47f66dfa82d65b373e155da0c9163a9f65f9047963ac2706572605bdee4d",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -196,6 +196,14 @@
             "id": "pass_without_trace",
             "baselineCanonicalJsonSha256": "49ddb020aa34028336ea89f9a3eb47d24939675acbde59ca76b6087a55652372",
             "candidateCanonicalJsonSha256": "1bf8d945e5760abc5460a175f3f10b968dcceafa0739eca47379e423a3fcf704",
+            "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "hunters_mark",
+            "baselineCanonicalJsonSha256": "643863e078ef93361f0dafdcf8b3f686526a12c0845683df14f13fc953656bf4",
+            "candidateCanonicalJsonSha256": "c6e7be0506bfc18491af3677f42c437bf144af829311511689481b7c00c9ae5d",
             "semanticClass": "authored-persistent-rule-facts"
           },
           {
