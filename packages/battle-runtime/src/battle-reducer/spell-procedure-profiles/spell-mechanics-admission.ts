@@ -338,6 +338,9 @@ export function spellTouchRangeFeet(): MovementFeet {
  */
 type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
 type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
+type SpellTargetSelectionKeySpace = {
+  readonly [Field in SpellTargetSelectionField]?: unknown;
+};
 
 type AdmittedSpellTargetSelection<
   AllowedFields extends SpellTargetSelectionField,
@@ -403,9 +406,9 @@ const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
  * field that a procedure does not consume. Own-key inspection makes that
  * omission fail closed instead of silently projecting a partial branch.
  */
-export function spellMechanicsObjectHasOnlyKeys(
-  value: object,
-  allowedFields: readonly PropertyKey[],
+export function spellMechanicsObjectHasOnlyKeys<const Value extends object>(
+  value: Value,
+  allowedFields: readonly (keyof Value)[],
 ): boolean {
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
@@ -454,7 +457,10 @@ function isAdmittedSpellTargetSelection<
 ): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
   return (
     selection !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(selection, allowedFields)
+    spellMechanicsObjectHasOnlyKeys<SpellTargetSelectionKeySpace>(
+      selection,
+      allowedFields,
+    )
   );
 }
 

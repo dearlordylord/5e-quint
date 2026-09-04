@@ -5,6 +5,8 @@ import {
   spellActivationEffectPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { Result, Schema } from "effect";
@@ -14,6 +16,7 @@ import {
   type BattleCreatureState,
 } from "../../battle-state-execution.ts";
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
+import { zeroAbilityWeaponAttack } from "../../unit-profile-admission-creature-fixture.test-support.ts";
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import {
   decodeSpellRecordForTest,
@@ -497,6 +500,342 @@ describe("SR-04G-A4 static spell procedure admission", () => {
         failedFact: "targeting",
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
+    ]);
+  });
+
+  test("reports deleted and replaced hosted-weapon attachments at the exact path", () => {
+    const base = spellRecord("true_strike");
+    if (base.mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const phase = base.mechanics.phases[0];
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected direct mechanics.");
+    }
+    const deletedAttachment = { ...phase };
+    Reflect.deleteProperty(deletedAttachment, "attachment");
+    const replacedAttachment = Object.defineProperty(
+      { ...phase },
+      "attachment",
+      {
+        configurable: true,
+        enumerable: true,
+        value: { kind: "self", unexpected: true },
+        writable: true,
+      },
+    );
+    for (const malformedPhase of [deletedAttachment, replacedAttachment]) {
+      const result = spellHostedWeaponAttackProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, {
+          ...base.mechanics,
+          phases: [malformedPhase],
+        }),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "attachment",
+          mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+        },
+      ]);
+    }
+  });
+
+  test("reports deleted and replaced weapon-enhancement attachments at the exact path", () => {
+    const base = spellRecord("magic_weapon");
+    if (base.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const deletedAttachment = { ...base.mechanics };
+    Reflect.deleteProperty(deletedAttachment, "attachment");
+    const replacedAttachment = Object.defineProperty(
+      { ...base.mechanics },
+      "attachment",
+      {
+        configurable: true,
+        enumerable: true,
+        value: { kind: "self" },
+        writable: true,
+      },
+    );
+    for (const mechanics of [deletedAttachment, replacedAttachment]) {
+      const result = weaponAttackDamageEnhancementProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+      ]);
+    }
+  });
+
+  test("reports the full dependent issue set for deleted and replaced spatial-proxy attachments", () => {
+    const base = spellRecord("spiritual_weapon");
+    if (base.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const deletedAttachment = { ...base.mechanics };
+    Reflect.deleteProperty(deletedAttachment, "attachment");
+    const replacedAttachment = Object.defineProperty(
+      { ...base.mechanics },
+      "attachment",
+      {
+        configurable: true,
+        enumerable: true,
+        value: { kind: "self" },
+        writable: true,
+      },
+    );
+    for (const mechanics of [deletedAttachment, replacedAttachment]) {
+      const result = spatialMeleeSpellAttackProxyProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+        {
+          failedFact: "initialPhase",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        },
+        {
+          failedFact: "initialAttack",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        },
+        {
+          failedFact: "repeatAttack",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+        },
+      ]);
+    }
+  });
+
+  test.each(["eldritch_blast", "scorching_ray"] as const)(
+    "retains %s attack-sequence ownership after hit-damage deletion and replacement",
+    (spellId) => {
+      const base = spellRecord(spellId);
+      if (base.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const phase = base.mechanics.phases[0];
+      if (phase?.kind !== "attack_roll") {
+        throw new Error("Expected attack-roll mechanics.");
+      }
+      const deletedDamage = Object.defineProperty({ ...phase }, "onHit", {
+        configurable: true,
+        enumerable: true,
+        value: [],
+        writable: true,
+      });
+      const replacedDamage = Object.defineProperty({ ...phase }, "onHit", {
+        configurable: true,
+        enumerable: true,
+        value: [{ kind: "none" }],
+        writable: true,
+      });
+      for (const malformedPhase of [deletedDamage, replacedDamage]) {
+        const result = spellAttackSequenceProfile.admitMechanics(
+          mechanicsSourceWithBaseDefinitionFacts(base, {
+            ...base.mechanics,
+            phases: [malformedPhase],
+          }),
+        );
+        expect(result.tag).toBe("unsupported");
+        expect(issuesOf(result)).toEqual([
+          {
+            failedFact: "hitDamage",
+            mechanicsPath: spellActivationEffectPath(
+              PositiveInteger(1),
+              PositiveInteger(1),
+            ),
+          },
+          {
+            failedFact: "damageType",
+            mechanicsPath: spellActivationEffectPath(
+              PositiveInteger(1),
+              PositiveInteger(1),
+            ),
+          },
+        ]);
+      }
+    },
+  );
+
+  test.each([
+    ["abilityOverride", "weaponAttackEffect"],
+    ["missingDamageTypeChoice", "damageTypeChoice"],
+    ["invalidDamageTypeChoice", "damageTypeChoice"],
+    ["missingBonusDamage", "bonusDamage"],
+    ["invalidBonusDamage", "bonusDamage"],
+  ] as const)(
+    "reports hosted-weapon $0 mutation as the exact $1 fact",
+    (mutation, failedFact) => {
+      const base = spellRecord("true_strike");
+      if (base.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const phase = base.mechanics.phases[0];
+      const weaponEffect =
+        phase?.kind === "direct" &&
+        phase.effects?.[0]?.kind === "make_weapon_attack"
+          ? phase.effects[0]
+          : undefined;
+      if (phase?.kind !== "direct" || weaponEffect === undefined) {
+        throw new Error("Expected hosted weapon-attack mechanics.");
+      }
+      const malformedEffect = { ...weaponEffect };
+      if (mutation === "missingDamageTypeChoice") {
+        Reflect.deleteProperty(malformedEffect, "damageTypeChoice");
+      } else if (mutation === "missingBonusDamage") {
+        Reflect.deleteProperty(malformedEffect, "bonusDamage");
+      } else {
+        const property =
+          mutation === "abilityOverride"
+            ? mutation
+            : mutation === "invalidDamageTypeChoice"
+              ? "damageTypeChoice"
+              : "bonusDamage";
+        Object.defineProperty(malformedEffect, property, {
+          configurable: true,
+          enumerable: true,
+          value:
+            mutation === "abilityOverride"
+              ? "dex"
+              : mutation === "invalidDamageTypeChoice"
+                ? ["radiant", "radiant"]
+                : { ...weaponEffect.bonusDamage, damageType: "force" },
+          writable: true,
+        });
+      }
+      const result = spellHostedWeaponAttackProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, {
+          ...base.mechanics,
+          phases: [{ ...phase, effects: [malformedEffect] }],
+        }),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact,
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(1),
+          ),
+        },
+      ]);
+    },
+  );
+
+  test("carries narrowed authored finding skills and hosted damage choices into projections", () => {
+    const marked = spellRecord("hunters_mark");
+    if (marked.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const findingEffect = marked.mechanics.operations.find(
+      (operation) => operation.effect.kind === "modify_roll_advantage",
+    )?.effect;
+    const findingSkills =
+      findingEffect?.kind === "modify_roll_advantage" &&
+      findingEffect.skillFilter?.kind === "fixed"
+        ? findingEffect.skillFilter.skills
+        : undefined;
+    const markedSource = spellAdmissionSource(marked);
+    const markedResult = markedDamageRiderProfile.admitMechanics({
+      mechanics: markedSource.mechanics,
+      spellDefinitionRuleFacts: markedSource.spellDefinitionRuleFacts,
+    });
+    expect(markedResult.tag).toBe("supported");
+    if (markedResult.tag !== "supported" || findingSkills === undefined) {
+      return;
+    }
+    const markedInvocation = markedResult.admitted
+      .admit(battleSpellExecutionSourceFromAdmission(markedSource), {
+        actor: spellAdmissionActor(),
+        castingSource: markedSource.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+        ],
+      })
+      .find(
+        (invocation) =>
+          invocation.action === "cast" &&
+          invocation.abilityCheckBehavior.kind === "findingAdvantage",
+      );
+    expect(
+      markedInvocation?.action === "cast" &&
+        markedInvocation.abilityCheckBehavior.kind === "findingAdvantage"
+        ? markedInvocation.abilityCheckBehavior.skills
+        : undefined,
+    ).toBe(findingSkills);
+
+    const hosted = spellRecord("true_strike");
+    if (hosted.mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const hostedPhase = hosted.mechanics.phases[0];
+    const hostedEffect =
+      hostedPhase?.kind === "direct" &&
+      hostedPhase.effects?.[0]?.kind === "make_weapon_attack"
+        ? hostedPhase.effects[0]
+        : undefined;
+    if (
+      hostedPhase?.kind !== "direct" ||
+      hostedEffect?.damageTypeChoice === undefined
+    ) {
+      throw new Error("Expected hosted damage-type choices.");
+    }
+    const reversedEffect = Object.defineProperty(
+      { ...hostedEffect },
+      "damageTypeChoice",
+      {
+        configurable: true,
+        enumerable: true,
+        value: [...hostedEffect.damageTypeChoice].reverse(),
+        writable: true,
+      },
+    );
+    const hostedResult = spellHostedWeaponAttackProfile.admitMechanics(
+      mechanicsSourceWithBaseDefinitionFacts(hosted, {
+        ...hosted.mechanics,
+        phases: [{ ...hostedPhase, effects: [reversedEffect] }],
+      }),
+    );
+    expect(hostedResult.tag).toBe("supported");
+    if (hostedResult.tag !== "supported") {
+      return;
+    }
+    const hostedSource = spellAdmissionSource(hosted);
+    const hostedActor = spellBattle({
+      preparedSpells: [],
+      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      casterWeaponProficiencies: [
+        { kind: "weapon_category", category: "simple" },
+      ],
+    }).state.combatants.get(spellCasterId);
+    if (!isSpellAdmissionActor(hostedActor)) {
+      throw new Error("Expected a weapon-bearing spellcasting fixture.");
+    }
+    const hostedInvocation = hostedResult.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(hostedSource),
+      {
+        actor: hostedActor,
+        castingSource: hostedSource.castingSource,
+        battle: undefined,
+        spellCastOptions: [],
+      },
+    );
+    expect(hostedInvocation.length).toBeGreaterThan(0);
+    const firstHostedInvocation = hostedInvocation[0];
+    if (firstHostedInvocation === undefined) return;
+    expect(firstHostedInvocation.damageTypeChoices).toEqual([
+      firstHostedInvocation.componentWeapon.attack.weapon.damage.damageType,
+      "radiant",
     ]);
   });
 

@@ -26,8 +26,10 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
+  Attachment,
   DamageType,
   DiceAmount,
+  DiceExpr,
   EffectAtom,
   SpellMechanics,
   WeaponProficiency,
@@ -99,11 +101,6 @@ import {
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 
-const DAMAGE_TYPE_CHOICES = [
-  "radiant",
-  "weapon_normal",
-] as const satisfies readonly string[];
-
 type SpellHostedWeaponAttackResolveInput =
   SpellProcedureProfileResolveInput<SpellHostedWeaponAttackInvocation>;
 
@@ -124,8 +121,49 @@ type SupportedSpellHostedWeaponAttackBonusDamage = Omit<
 type SpellHostedWeaponAttackDamageTypeChoices = NonNullable<
   SpellHostedWeaponAttackEffect["damageTypeChoice"]
 >;
+type SupportedSpellHostedWeaponAttackDamageTypeChoices =
+  | readonly ["radiant", "weapon_normal"]
+  | readonly ["weapon_normal", "radiant"];
+type SpellHostedWeaponAttackMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+type SpellHostedWeaponAttackPhase = Extract<
+  SpellHostedWeaponAttackMechanics["phases"][number],
+  { readonly kind: "direct" }
+>;
+type SpellHostedWeaponAttackSelfAttachment = Extract<
+  Attachment,
+  { readonly kind: "self" }
+>;
+type SpellHostedWeaponAttackBonusAmount = Extract<
+  DiceAmount,
+  { readonly kind: "threshold_tiers" }
+>;
+type SpellHostedWeaponAttackBonusTier =
+  SpellHostedWeaponAttackBonusAmount["tiers"][number];
+type SpellHostedWeaponAttackBonusOverride =
+  SpellHostedWeaponAttackBonusTier["override"];
+type SpellHostedWeaponAttackCastingTime = Extract<
+  SpellHostedWeaponAttackMechanics["castingTime"],
+  { readonly kind: "action" }
+>;
+type SpellHostedWeaponAttackRange = Extract<
+  SpellMechanics["range"],
+  { readonly kind: "self" }
+>;
+type SpellHostedWeaponAttackDuration = Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "instantaneous" }
+>;
+const DAMAGE_TYPE_CHOICES = [
+  "radiant",
+  "weapon_normal",
+] as const satisfies ReadonlyArray<
+  SpellHostedWeaponAttackDamageTypeChoices[number]
+>;
 type SpellHostedWeaponAttackMechanicsFacts = SpellDefinitionRuleFacts & {
-  readonly damageTypeChoices: SpellHostedWeaponAttackDamageTypeChoices;
+  readonly damageTypeChoices: SupportedSpellHostedWeaponAttackDamageTypeChoices;
   readonly bonusDamage: {
     readonly damageType: DamageType;
     readonly amount: DiceAmount;
@@ -158,8 +196,21 @@ const SPELL_HOSTED_PHASE_FIELDS = [
   "attachment",
   "effects",
   "mode",
-] as const;
-const SPELL_HOSTED_CASTING_TIME_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackPhase>;
+const SPELL_HOSTED_CASTING_TIME_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackCastingTime>;
+const SPELL_HOSTED_RANGE_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpellHostedWeaponAttackRange
+>;
+const SPELL_HOSTED_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
+const SPELL_HOSTED_DURATION_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpellHostedWeaponAttackDuration
+>;
 const SPELL_HOSTED_ROOT_FIELDS = [
   "level",
   "school",
@@ -169,25 +220,39 @@ const SPELL_HOSTED_ROOT_FIELDS = [
   "castingTime",
   "family",
   "phases",
-] as const;
-const SPELL_HOSTED_SELF_ATTACHMENT_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackMechanics>;
+const SPELL_HOSTED_SELF_ATTACHMENT_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackSelfAttachment>;
 const SPELL_HOSTED_EFFECT_FIELDS = [
   "kind",
   "weapon",
   "abilityOverride",
   "damageTypeChoice",
   "bonusDamage",
-] as const;
-const SPELL_HOSTED_BONUS_DAMAGE_FIELDS = ["damageType", "amount"] as const;
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackEffect>;
+const SPELL_HOSTED_BONUS_DAMAGE_FIELDS = [
+  "damageType",
+  "amount",
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackBonusDamage>;
 const SPELL_HOSTED_BONUS_AMOUNT_FIELDS = [
   "kind",
   "axis",
   "base",
   "tiers",
-] as const;
-const SPELL_HOSTED_BONUS_BASE_FIELDS = ["dice", "dieSize", "flat"] as const;
-const SPELL_HOSTED_BONUS_TIER_FIELDS = ["atLevel", "override"] as const;
-const SPELL_HOSTED_BONUS_OVERRIDE_FIELDS = ["dice"] as const;
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackBonusAmount>;
+const SPELL_HOSTED_BONUS_BASE_FIELDS = [
+  "dice",
+  "dieSize",
+  "flat",
+] as const satisfies ReadonlyArray<keyof DiceExpr>;
+const SPELL_HOSTED_BONUS_TIER_FIELDS = [
+  "atLevel",
+  "override",
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackBonusTier>;
+const SPELL_HOSTED_BONUS_OVERRIDE_FIELDS = [
+  "dice",
+] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackBonusOverride>;
 const SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE = [
   { atLevel: 5, dice: 1 },
   { atLevel: 11, dice: 2 },
@@ -244,12 +309,12 @@ function spellHostedWeaponAttackBonusDamageFacts(
       SPELL_HOSTED_BONUS_DAMAGE_FIELDS,
     ) ||
     damageType !== "radiant" ||
+    amount.kind !== "threshold_tiers" ||
     !spellMechanicsObjectHasOnlyKeys(amount, SPELL_HOSTED_BONUS_AMOUNT_FIELDS)
   ) {
     return undefined;
   }
   if (
-    amount.kind !== "threshold_tiers" ||
     amount.axis !== "character" ||
     !spellMechanicsObjectHasOnlyKeys(
       amount.base,
@@ -283,14 +348,43 @@ function spellHostedWeaponAttackBonusDamageFacts(
     : { ...bonusDamage, damageType, amount: { ...amount, tiers } };
 }
 
+function spellHostedWeaponAttackEffectShapeIsSupported(
+  effect: SpellHostedWeaponAttackEffect | undefined,
+): effect is SpellHostedWeaponAttackEffect {
+  return (
+    effect !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(effect, SPELL_HOSTED_EFFECT_FIELDS) &&
+    effect.weapon === "material_component" &&
+    effect.abilityOverride === "spellcasting"
+  );
+}
+
+function isSupportedSpellHostedWeaponAttackDamageTypeChoices(
+  choices: SpellHostedWeaponAttackDamageTypeChoices,
+): choices is SupportedSpellHostedWeaponAttackDamageTypeChoices {
+  return sameStringSet(choices, DAMAGE_TYPE_CHOICES);
+}
+
 function spellHostedWeaponAttackDamageTypeChoices(
   effect: SpellHostedWeaponAttackEffect | undefined,
-): SpellHostedWeaponAttackDamageTypeChoices | undefined {
+): SupportedSpellHostedWeaponAttackDamageTypeChoices | undefined {
   const choices = effect?.damageTypeChoice;
   return choices !== undefined &&
-    sameStringSet(choices, [...DAMAGE_TYPE_CHOICES])
-    ? DAMAGE_TYPE_CHOICES
+    isSupportedSpellHostedWeaponAttackDamageTypeChoices(choices)
+    ? choices
     : undefined;
+}
+
+function spellHostedWeaponAttackSelfAttachmentIsSupported(
+  attachment: Attachment | undefined,
+): attachment is SpellHostedWeaponAttackSelfAttachment {
+  return (
+    attachment?.kind === "self" &&
+    spellMechanicsObjectHasOnlyKeys(
+      attachment,
+      SPELL_HOSTED_SELF_ATTACHMENT_FIELDS,
+    )
+  );
 }
 
 function spellHostedWeaponAttackMechanicsEvidence(
@@ -352,6 +446,8 @@ function admitSpellHostedWeaponAttackMechanics(
       : undefined;
   const weaponEffect =
     effect?.kind === "make_weapon_attack" ? effect : undefined;
+  const weaponEffectShapeIsSupported =
+    spellHostedWeaponAttackEffectShapeIsSupported(weaponEffect);
   const damageTypeChoices =
     spellHostedWeaponAttackDamageTypeChoices(weaponEffect);
   const bonusDamage =
@@ -372,7 +468,7 @@ function admitSpellHostedWeaponAttackMechanics(
   }
   if (
     mechanics.range.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind"])
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, SPELL_HOSTED_RANGE_FIELDS)
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
@@ -380,13 +476,19 @@ function admitSpellHostedWeaponAttackMechanics(
     mechanics.components.v !== false ||
     mechanics.components.s !== true ||
     typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      SPELL_HOSTED_COMPONENT_FIELDS,
+    )
   ) {
     push("components", spellMechanicsHeaderPath("components"));
   }
   if (
     mechanics.duration.kind !== "instantaneous" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.duration, ["kind"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.duration,
+      SPELL_HOSTED_DURATION_FIELDS,
+    )
   ) {
     push("duration", spellMechanicsHeaderPath("duration"));
   }
@@ -419,11 +521,7 @@ function admitSpellHostedWeaponAttackMechanics(
     phase === undefined ||
     !spellMechanicsObjectHasOnlyKeys(phase, SPELL_HOSTED_PHASE_FIELDS) ||
     phase.mode !== undefined ||
-    phase.attachment.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      phase.attachment,
-      SPELL_HOSTED_SELF_ATTACHMENT_FIELDS,
-    )
+    !spellHostedWeaponAttackSelfAttachmentIsSupported(phase.attachment)
   ) {
     push("attachment", spellActivationAttachmentPath(phaseOrdinal));
   }
@@ -443,16 +541,7 @@ function admitSpellHostedWeaponAttackMechanics(
       );
     }
   }
-  if (
-    weaponEffect === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      weaponEffect,
-      SPELL_HOSTED_EFFECT_FIELDS,
-    ) ||
-    weaponEffect.weapon !== "material_component" ||
-    weaponEffect.abilityOverride !== "spellcasting" ||
-    damageTypeChoices === undefined
-  ) {
+  if (weaponEffect === undefined || !weaponEffectShapeIsSupported) {
     push(
       "weaponAttackEffect",
       spellActivationEffectPath(
@@ -461,7 +550,16 @@ function admitSpellHostedWeaponAttackMechanics(
       ),
     );
   }
-  if (damageTypeChoices === undefined || bonusDamage === undefined) {
+  if (damageTypeChoices === undefined) {
+    push(
+      "damageTypeChoice",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(Math.max(1, effectIndex + 1)),
+      ),
+    );
+  }
+  if (bonusDamage === undefined) {
     push(
       "bonusDamage",
       spellActivationEffectPath(
@@ -479,12 +577,12 @@ function admitSpellHostedWeaponAttackMechanics(
     );
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (damageTypeChoices === undefined) {
+  if (weaponEffect === undefined || !weaponEffectShapeIsSupported) {
     return {
       tag: "unsupported",
       issues: [
         spellHostedWeaponAttackIssueResult({
-          failedFact: "damageTypeChoice",
+          failedFact: "weaponAttackEffect",
           mechanicsPath: spellActivationEffectPath(
             phaseOrdinal,
             PositiveInteger(Math.max(1, effectIndex + 1)),
@@ -493,12 +591,15 @@ function admitSpellHostedWeaponAttackMechanics(
       ],
     };
   }
-  if (bonusDamage === undefined) {
+  if (damageTypeChoices === undefined || bonusDamage === undefined) {
     return {
       tag: "unsupported",
       issues: [
         spellHostedWeaponAttackIssueResult({
-          failedFact: "bonusDamage",
+          failedFact:
+            damageTypeChoices === undefined
+              ? "damageTypeChoice"
+              : "bonusDamage",
           mechanicsPath: spellActivationEffectPath(
             phaseOrdinal,
             PositiveInteger(Math.max(1, effectIndex + 1)),

@@ -39,7 +39,9 @@ import {
   type Attachment,
   type DamageType,
   type DiceAmount,
+  type DiceExpr,
   type EffectAtom,
+  type Skill,
   type SpellMechanics,
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
@@ -164,22 +166,63 @@ type MarkedDamageRiderDurationFacts = {
   readonly upcastTiers: ReadonlyNonEmptyArray<MarkedDamageRiderDurationTier>;
 };
 
-type MarkedDamageRiderAttachment = Extract<
+type MarkedDamageRiderHoleAttachment = Extract<
   Attachment,
   { readonly kind: "hole" }
-> & {
-  readonly value: Extract<
-    Extract<Attachment, { readonly kind: "hole" }>["value"],
-    { readonly kind: "mark" }
-  > & {
+>;
+type MarkedDamageRiderMarkAttachmentValue = Extract<
+  MarkedDamageRiderHoleAttachment["value"],
+  { readonly kind: "mark" }
+>;
+type MarkedDamageRiderMarkTransfer = NonNullable<
+  MarkedDamageRiderMarkAttachmentValue["transfer"]
+>;
+type MarkedDamageRiderAttachment = MarkedDamageRiderHoleAttachment & {
+  readonly value: MarkedDamageRiderMarkAttachmentValue & {
     readonly transfer: NonNullable<
-      Extract<
-        Extract<Attachment, { readonly kind: "hole" }>["value"],
-        { readonly kind: "mark" }
-      >["transfer"]
+      MarkedDamageRiderMarkAttachmentValue["transfer"]
     >;
   };
 };
+type MarkedDamageRiderDuration = Extract<
+  OngoingEffectMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
+type MarkedDamageRiderSourceDurationTier = NonNullable<
+  MarkedDamageRiderDuration["upTo"]["upcastTiers"]
+>[number];
+type MarkedDamageRiderAbilityEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_roll_advantage" }
+>;
+type MarkedDamageRiderSkillFilter = Extract<
+  NonNullable<MarkedDamageRiderAbilityEffect["skillFilter"]>,
+  { readonly kind: "fixed" }
+>;
+type MarkedDamageRiderAbilityFilterHole = Extract<
+  NonNullable<MarkedDamageRiderAbilityEffect["abilityFilter"]>,
+  { readonly kind: "hole" }
+>;
+type MarkedDamageRiderAbilityChoice = Extract<
+  MarkedDamageRiderAbilityFilterHole["value"],
+  { readonly kind: "choice" }
+>;
+type MarkedDamageRiderCastingTime = Extract<
+  OngoingEffectMechanics["castingTime"],
+  { readonly kind: "bonus_action" }
+>;
+type MarkedDamageRiderRange = Extract<
+  SpellMechanics["range"],
+  { readonly kind: "point" }
+>;
+type MarkedDamageRiderDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "damage" }
+>;
+type MarkedDamageRiderFixedDamageAmount = Extract<
+  DiceAmount,
+  { readonly kind: "fixed" }
+>;
 
 type MarkedDamageRiderMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly rangeFeet: MovementFeet;
@@ -228,33 +271,51 @@ const MARKED_DAMAGE_RIDER_ATTACHMENT_FIELDS = [
   "holeId",
   "label",
   "value",
-] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderHoleAttachment>;
 const MARKED_DAMAGE_RIDER_MARK_VALUE_FIELDS = [
   "kind",
   "selection",
   "transfer",
-] as const;
-const MARKED_DAMAGE_RIDER_SELECTION_FIELDS = ["mode", "targetKinds"] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderMarkAttachmentValue>;
+const MARKED_DAMAGE_RIDER_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+] as const satisfies ReadonlyArray<
+  keyof MarkedDamageRiderMarkAttachmentValue["selection"]
+>;
 const MARKED_DAMAGE_RIDER_TRANSFER_FIELDS = [
   "onEvent",
   "availability",
   "cost",
-] as const;
-const MARKED_DAMAGE_RIDER_TRANSFER_EVENT_FIELDS = ["kind"] as const;
-const MARKED_DAMAGE_RIDER_TRANSFER_AVAILABILITY_FIELDS = ["kind"] as const;
-const MARKED_DAMAGE_RIDER_TRANSFER_COST_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderMarkTransfer>;
+const MARKED_DAMAGE_RIDER_TRANSFER_EVENT_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<
+  keyof MarkedDamageRiderMarkTransfer["onEvent"]
+>;
+const MARKED_DAMAGE_RIDER_TRANSFER_AVAILABILITY_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<
+  keyof MarkedDamageRiderMarkTransfer["availability"]
+>;
+const MARKED_DAMAGE_RIDER_TRANSFER_COST_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderMarkTransfer["cost"]>;
 const MARKED_DAMAGE_RIDER_DURATION_FIELDS = [
   "kind",
   "upTo",
   "earlyEnd",
   "permanentIfMaintainedFull",
-] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderDuration>;
 const MARKED_DAMAGE_RIDER_DURATION_VALUE_FIELDS = [
   "unit",
   "amount",
   "upcastTiers",
-] as const;
-const MARKED_DAMAGE_RIDER_DURATION_TIER_FIELDS = ["atSlot", "amount"] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderDuration["upTo"]>;
+const MARKED_DAMAGE_RIDER_DURATION_TIER_FIELDS = [
+  "atSlot",
+  "amount",
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderSourceDurationTier>;
 const MARKED_DAMAGE_RIDER_DURATION_TIER_TABLES = [
   [
     { atSlot: 3, amount: 8 },
@@ -266,8 +327,21 @@ const MARKED_DAMAGE_RIDER_DURATION_TIER_TABLES = [
     { atSlot: 5, amount: 24 },
   ],
 ] as const;
-const MARKED_DAMAGE_RIDER_TRIGGER_FIELDS = ["kind"] as const;
-const MARKED_DAMAGE_RIDER_CASTING_TIME_FIELDS = ["kind"] as const;
+const MARKED_DAMAGE_RIDER_TRIGGER_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof OngoingEffectOperation["trigger"]>;
+const MARKED_DAMAGE_RIDER_CASTING_TIME_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderCastingTime>;
+const MARKED_DAMAGE_RIDER_RANGE_FIELDS = [
+  "kind",
+  "feet",
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderRange>;
+const MARKED_DAMAGE_RIDER_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
 const MARKED_DAMAGE_RIDER_ROOT_FIELDS = [
   "level",
   "school",
@@ -278,39 +352,45 @@ const MARKED_DAMAGE_RIDER_ROOT_FIELDS = [
   "family",
   "attachment",
   "operations",
-] as const;
-const MARKED_DAMAGE_RIDER_AMOUNT_FIELDS = ["kind", "expr"] as const;
+] as const satisfies ReadonlyArray<keyof OngoingEffectMechanics>;
+const MARKED_DAMAGE_RIDER_AMOUNT_FIELDS = [
+  "kind",
+  "expr",
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderFixedDamageAmount>;
 const MARKED_DAMAGE_RIDER_DICE_EXPR_FIELDS = [
   "dice",
   "dieSize",
   "flat",
   "spellcastingMod",
   "abilityModifier",
-] as const;
-const MARKED_DAMAGE_RIDER_SKILL_FILTER_FIELDS = ["kind", "skills"] as const;
+] as const satisfies ReadonlyArray<keyof DiceExpr>;
+const MARKED_DAMAGE_RIDER_SKILL_FILTER_FIELDS = [
+  "kind",
+  "skills",
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderSkillFilter>;
 const MARKED_DAMAGE_RIDER_ABILITY_FILTER_HOLE_FIELDS = [
   "kind",
   "holeId",
   "value",
   "label",
-] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderAbilityFilterHole>;
 const MARKED_DAMAGE_RIDER_ABILITY_CHOICE_FIELDS = [
   "kind",
   "label",
   "options",
-] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderAbilityChoice>;
 const MARKED_DAMAGE_RIDER_OPERATION_FIELDS = [
   "trigger",
   "predicate",
   "targetLimit",
   "effect",
   "usageLimit",
-] as const;
+] as const satisfies ReadonlyArray<keyof OngoingEffectOperation>;
 const MARKED_DAMAGE_RIDER_DAMAGE_EFFECT_FIELDS = [
   "kind",
   "damageType",
   "amount",
-] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderDamageEffect>;
 const MARKED_DAMAGE_RIDER_ABILITY_EFFECT_FIELDS = [
   "kind",
   "mode",
@@ -328,7 +408,7 @@ const MARKED_DAMAGE_RIDER_ABILITY_EFFECT_FIELDS = [
   "attackRollTarget",
   "count",
   "expiresOn",
-] as const;
+] as const satisfies ReadonlyArray<keyof MarkedDamageRiderAbilityEffect>;
 
 function markedDamageRiderIssueResult(issue: MarkedDamageRiderMechanicsIssue) {
   return {
@@ -586,9 +666,20 @@ function markedDamageRiderAbilityEffect(
   );
 }
 
+function markedDamageRiderFindingSkillsAreSupported(
+  skills: readonly Skill[],
+): skills is typeof MARKED_TARGET_FINDING_SKILLS {
+  return (
+    skills.length === MARKED_TARGET_FINDING_SKILLS.length &&
+    skills[0] === MARKED_TARGET_FINDING_SKILLS[0] &&
+    skills[1] === MARKED_TARGET_FINDING_SKILLS[1]
+  );
+}
+
 function markedDamageRiderFindingBehavior(
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
 ): MarkedDamageRiderCastAbilityCheckBehavior | undefined {
+  const skillFilter = effect.skillFilter;
   if (
     effect.mode !== "advantage" ||
     (effect.affects ?? "self_roll") !== "self_roll" ||
@@ -600,21 +691,19 @@ function markedDamageRiderFindingBehavior(
       "abilityFilter",
       "skillFilter",
     ]) ||
-    effect.skillFilter?.kind !== "fixed" ||
+    skillFilter?.kind !== "fixed" ||
     !spellMechanicsObjectHasOnlyKeys(
-      effect.skillFilter,
+      skillFilter,
       MARKED_DAMAGE_RIDER_SKILL_FILTER_FIELDS,
     ) ||
-    effect.skillFilter.skills.length !== MARKED_TARGET_FINDING_SKILLS.length ||
-    effect.skillFilter.skills[0] !== MARKED_TARGET_FINDING_SKILLS[0] ||
-    effect.skillFilter.skills[1] !== MARKED_TARGET_FINDING_SKILLS[1]
+    !markedDamageRiderFindingSkillsAreSupported(skillFilter.skills)
   ) {
     return undefined;
   }
   return {
     kind: "findingAdvantage",
     ability: "wis",
-    skills: MARKED_TARGET_FINDING_SKILLS,
+    skills: skillFilter.skills,
   };
 }
 
@@ -634,16 +723,17 @@ function markedDamageRiderChosenAbilityBehavior(
     typeof abilityFilter !== "object" ||
     Array.isArray(abilityFilter) ||
     !("kind" in abilityFilter) ||
+    abilityFilter.kind !== "hole" ||
+    abilityFilter.value === undefined ||
+    abilityFilter.value.kind !== "choice" ||
     !spellMechanicsObjectHasOnlyKeys(
       abilityFilter,
       MARKED_DAMAGE_RIDER_ABILITY_FILTER_HOLE_FIELDS,
     ) ||
-    abilityFilter.kind !== "hole" ||
     !spellMechanicsObjectHasOnlyKeys(
       abilityFilter.value,
       MARKED_DAMAGE_RIDER_ABILITY_CHOICE_FIELDS,
-    ) ||
-    abilityFilter.value.kind !== "choice"
+    )
   ) {
     return undefined;
   }
@@ -768,7 +858,10 @@ function admitMarkedDamageRiderMechanics(
   if (
     mechanics.range.kind !== "point" ||
     mechanics.range.feet !== 90 ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind", "feet"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      MARKED_DAMAGE_RIDER_RANGE_FIELDS,
+    )
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
@@ -776,7 +869,10 @@ function admitMarkedDamageRiderMechanics(
     push("range", spellMechanicsHeaderPath("range"));
   }
   if (
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"]) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      MARKED_DAMAGE_RIDER_COMPONENT_FIELDS,
+    ) ||
     mechanics.components.v !== true ||
     (mechanics.components.s !== true && mechanics.components.s !== false) ||
     (mechanics.components.m !== false &&

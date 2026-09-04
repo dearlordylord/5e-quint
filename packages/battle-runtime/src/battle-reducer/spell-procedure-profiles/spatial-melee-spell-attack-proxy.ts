@@ -51,6 +51,8 @@ import type {
   EffectAtom,
   OngoingEffect,
   SpellMechanics,
+  TargetRelativePosition,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import {
@@ -180,6 +182,66 @@ type SpatialMeleeSpellAttackProxyMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
+type SpatialMeleeSpellAttackProxyHoleAttachment = Extract<
+  Attachment,
+  { readonly kind: "hole" }
+>;
+type SpatialMeleeSpellAttackProxyLocationAttachmentValue = Extract<
+  SpatialMeleeSpellAttackProxyHoleAttachment["value"],
+  { readonly kind: "location" }
+>;
+type SpatialMeleeSpellAttackProxyInitialPhase = Extract<
+  NonNullable<SpatialMeleeSpellAttackProxyMechanics["initialPhase"]>,
+  { readonly kind: "attack_roll" }
+>;
+type SpatialMeleeSpellAttackProxyOperation =
+  SpatialMeleeSpellAttackProxyMechanics["operations"][number];
+type SpatialMeleeSpellAttackProxyRepeatTrigger = Extract<
+  SpatialMeleeSpellAttackProxyOperation["trigger"],
+  { readonly kind: "bonus_action" }
+>;
+type SpatialMeleeSpellAttackProxyRepeatCost = NonNullable<
+  SpatialMeleeSpellAttackProxyRepeatTrigger["cost"]
+>;
+type SpatialMeleeSpellAttackProxyCompositeEffect = Extract<
+  OngoingEffect,
+  { readonly kind: "composite_ongoing" }
+>;
+type SpatialMeleeSpellAttackProxyRepositionEffect = Extract<
+  OngoingEffect,
+  { readonly kind: "reposition_attachment" }
+>;
+type SpatialMeleeSpellAttackProxyRepeatAttack = Extract<
+  OngoingEffect,
+  { readonly kind: "attack_roll" }
+>;
+type SpatialMeleeSpellAttackProxyRelativePosition = Extract<
+  NonNullable<TargetRelativePosition>,
+  { readonly kind: "within_feet_of_attachment" }
+>;
+type SpatialMeleeSpellAttackProxyTargetSelection = TargetSelection & {
+  readonly relativePosition?: TargetRelativePosition;
+};
+type SpatialMeleeSpellAttackProxyDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "damage" }
+>;
+type SpatialMeleeSpellAttackProxyNoneEffect = Extract<
+  EffectAtom,
+  { readonly kind: "none" }
+>;
+type SpatialMeleeSpellAttackProxyCastingTime = Extract<
+  SpatialMeleeSpellAttackProxyMechanics["castingTime"],
+  { readonly kind: "bonus_action" }
+>;
+type SpatialMeleeSpellAttackProxyDuration = Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
+type SpatialMeleeSpellAttackProxyRange = Extract<
+  SpellMechanics["range"],
+  { readonly kind: "point" }
+>;
 type SpatialMeleeSpellAttackProxyMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly durationValue: SpellCanonicalDurationValue;
   readonly rangeFeet: MovementFeet;
@@ -226,7 +288,9 @@ const SPATIAL_ONGOING_ATTACHMENT_FIELDS = [
   "holeId",
   "label",
   "value",
-] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyHoleAttachment
+>;
 const SPATIAL_ROOT_FIELDS = [
   "level",
   "school",
@@ -238,8 +302,13 @@ const SPATIAL_ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-] as const;
-const SPATIAL_LOCATION_VALUE_FIELDS = ["kind", "description"] as const;
+] as const satisfies ReadonlyArray<keyof SpatialMeleeSpellAttackProxyMechanics>;
+const SPATIAL_LOCATION_VALUE_FIELDS = [
+  "kind",
+  "description",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyLocationAttachmentValue
+>;
 const SPATIAL_INITIAL_PHASE_FIELDS = [
   "kind",
   "attachment",
@@ -247,66 +316,116 @@ const SPATIAL_INITIAL_PHASE_FIELDS = [
   "onHit",
   "onMiss",
   "continue",
-] as const;
-const SPATIAL_CASTING_TIME_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyInitialPhase
+>;
+const SPATIAL_CASTING_TIME_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyCastingTime
+>;
+const SPATIAL_DURATION_FIELDS = [
+  "kind",
+  "upTo",
+  "earlyEnd",
+  "permanentIfMaintainedFull",
+] as const satisfies ReadonlyArray<keyof SpatialMeleeSpellAttackProxyDuration>;
+const SPATIAL_DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyDuration["upTo"]
+>;
+const SPATIAL_RANGE_FIELDS = ["kind", "feet"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRange
+>;
+const SPATIAL_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
 const SPATIAL_REPEAT_OPERATION_FIELDS = [
   "trigger",
   "predicate",
   "targetLimit",
   "effect",
   "usageLimit",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpatialMeleeSpellAttackProxyOperation>;
 const SPATIAL_REPEAT_TRIGGER_FIELDS = [
   "kind",
   "cost",
   "laterTurnsOnly",
-] as const;
-const SPATIAL_REPEAT_COST_FIELDS = ["kind"] as const;
-const SPATIAL_COMPOSITE_EFFECT_FIELDS = ["kind", "effects"] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepeatTrigger
+>;
+const SPATIAL_REPEAT_COST_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepeatCost
+>;
+const SPATIAL_COMPOSITE_EFFECT_FIELDS = [
+  "kind",
+  "effects",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyCompositeEffect
+>;
 const SPATIAL_REPOSITION_FIELDS = [
   "kind",
   "maxMoveFeet",
   "destination",
-] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepositionEffect
+>;
 const SPATIAL_ATTACK_PHASE_FIELDS = [
   "kind",
   "attachment",
   "attackKind",
   "onHit",
   "onMiss",
-] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepeatAttack
+>;
 const SPATIAL_TARGET_SELECTION_FIELDS = [
   "mode",
   "targetKinds",
   "relativePosition",
-] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyTargetSelection
+>;
 const SPATIAL_RELATIVE_POSITION_FIELDS = [
   "kind",
   "attachmentHoleId",
   "feet",
-] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRelativePosition
+>;
 const SPATIAL_DAMAGE_EFFECT_FIELDS = [
   "kind",
   "damageType",
   "amount",
   "timing",
-] as const;
-const SPATIAL_NONE_EFFECT_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyDamageEffect
+>;
+const SPATIAL_NONE_EFFECT_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyNoneEffect
+>;
 const SPATIAL_DAMAGE_AMOUNT_FIELDS = [
   "kind",
   "axis",
   "base",
   "perLevel",
   "startingAtLevel",
-] as const;
+] as const satisfies ReadonlyArray<keyof LinearPerLevelDiceAmount>;
 const SPATIAL_BASE_EXPR_FIELDS = [
   "dice",
   "dieSize",
   "flat",
   "spellcastingMod",
   "abilityModifier",
-] as const;
-const SPATIAL_DELTA_EXPR_FIELDS = ["dice", "dieSize", "flat"] as const;
+] as const satisfies ReadonlyArray<keyof DiceExpr>;
+const SPATIAL_DELTA_EXPR_FIELDS = [
+  "dice",
+  "dieSize",
+  "flat",
+] as const satisfies ReadonlyArray<keyof DiceExprDelta>;
 type SpatialMeleeSpellAttackProxyForceHoleId = Extract<
   Attachment,
   { readonly kind: "hole" }
@@ -536,17 +655,11 @@ function spatialMeleeSpellAttackProxyDurationIsSupported(
 > {
   return (
     duration.kind === "concentration" &&
-    spellMechanicsObjectHasOnlyKeys(duration, [
-      "kind",
-      "upTo",
-      "earlyEnd",
-      "permanentIfMaintainedFull",
-    ]) &&
-    spellMechanicsObjectHasOnlyKeys(duration.upTo, [
-      "unit",
-      "amount",
-      "upcastTiers",
-    ]) &&
+    spellMechanicsObjectHasOnlyKeys(duration, SPATIAL_DURATION_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      SPATIAL_DURATION_VALUE_FIELDS,
+    ) &&
     duration.upTo.unit === "minute" &&
     duration.upTo.amount === 1 &&
     isSpellCanonicalDurationValue(duration.upTo) &&
@@ -965,7 +1078,7 @@ function admitSpatialMeleeSpellAttackProxyMechanics(
   if (
     mechanics.range.kind !== "point" ||
     mechanics.range.feet !== SPATIAL_MELEE_SPELL_ATTACK_PROXY_CAST_RANGE_FEET ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind", "feet"])
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, SPATIAL_RANGE_FIELDS)
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
@@ -976,7 +1089,10 @@ function admitSpatialMeleeSpellAttackProxyMechanics(
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
     mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      SPATIAL_COMPONENT_FIELDS,
+    )
   ) {
     push("components", spellMechanicsHeaderPath("components"));
   }

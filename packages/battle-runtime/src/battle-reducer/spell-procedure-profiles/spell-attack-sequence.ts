@@ -72,6 +72,8 @@ import type {
   Attachment,
   DamageType,
   DiceAmount,
+  DiceExpr,
+  EffectAtom,
   SpellMechanics,
   TargetSelection,
 } from "@dnd/surface/surface/types";
@@ -133,6 +135,50 @@ type SpellAttackSequenceMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly damageType: DamageType;
   readonly count: SpellAttackSequenceCountFacts;
 };
+type SpellAttackSequenceMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+type SpellAttackSequenceActivationPhase =
+  SpellAttackSequenceMechanics["phases"][number];
+type SpellAttackSequenceTargetSelection = Extract<
+  TargetSelection,
+  { readonly mode: "choose_up_to" }
+>;
+type SpellAttackSequenceAttackPhase = Extract<
+  SpellAttackSequenceActivationPhase,
+  { readonly kind: "attack_roll" }
+>;
+type SpellAttackSequenceCharacterCount = Extract<
+  SpellAttackSequenceTargetSelection["count"],
+  { readonly kind: "threshold_tiers" }
+>;
+type SpellAttackSequenceSlotCount = Extract<
+  SpellAttackSequenceTargetSelection["count"],
+  { readonly kind: "linear" }
+>;
+type SpellAttackSequenceCountTier =
+  SpellAttackSequenceCharacterCount["tiers"][number];
+type SpellAttackSequenceCastingTime = Extract<
+  SpellAttackSequenceMechanics["castingTime"],
+  { readonly kind: "action" }
+>;
+type SpellAttackSequenceRange = Extract<
+  SpellMechanics["range"],
+  { readonly kind: "point" }
+>;
+type SpellAttackSequenceDuration = Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "instantaneous" }
+>;
+type SpellAttackSequenceDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "damage" }
+>;
+type SpellAttackSequenceDamageAmount = Extract<
+  DiceAmount,
+  { readonly kind: "fixed" }
+>;
 
 export const SPELL_ATTACK_SEQUENCE_FAILED_FACTS = [
   "level",
@@ -166,7 +212,7 @@ const SPELL_ATTACK_SEQUENCE_PHASE_FIELDS = [
   "onHit",
   "onMiss",
   "continue",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceAttackPhase>;
 const SPELL_ATTACK_SEQUENCE_ROOT_FIELDS = [
   "level",
   "school",
@@ -176,46 +222,66 @@ const SPELL_ATTACK_SEQUENCE_ROOT_FIELDS = [
   "castingTime",
   "family",
   "phases",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceMechanics>;
 const SPELL_ATTACK_SEQUENCE_TARGET_SELECTION_FIELDS = [
   "mode",
   "count",
   "repeatsAllowed",
   "targetKinds",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceTargetSelection>;
 const SPELL_ATTACK_SEQUENCE_CHARACTER_COUNT_FIELDS = [
   "kind",
   "axis",
   "base",
   "tiers",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceCharacterCount>;
 const SPELL_ATTACK_SEQUENCE_SLOT_COUNT_FIELDS = [
   "kind",
   "base",
   "perSlotAboveBase",
   "baseLevel",
-] as const;
-const SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS = ["atLevel", "value"] as const;
-const SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceSlotCount>;
+const SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS = [
+  "atLevel",
+  "value",
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceCountTier>;
+const SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceCastingTime>;
+const SPELL_ATTACK_SEQUENCE_RANGE_FIELDS = [
+  "kind",
+  "feet",
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceRange>;
+const SPELL_ATTACK_SEQUENCE_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
+const SPELL_ATTACK_SEQUENCE_DURATION_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceDuration>;
 const SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS = [
   "kind",
   "damageType",
   "amount",
   "timing",
-] as const;
-const SPELL_ATTACK_SEQUENCE_DAMAGE_AMOUNT_FIELDS = ["kind", "expr"] as const;
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceDamageEffect>;
+const SPELL_ATTACK_SEQUENCE_DAMAGE_AMOUNT_FIELDS = [
+  "kind",
+  "expr",
+] as const satisfies ReadonlyArray<keyof SpellAttackSequenceDamageAmount>;
 const SPELL_ATTACK_SEQUENCE_DICE_EXPR_FIELDS = [
   "dice",
   "dieSize",
   "flat",
   "spellcastingMod",
   "abilityModifier",
-] as const;
-
-type SpellAttackSequenceActivationPhase = Extract<
-  SpellMechanics,
-  { readonly family: "activation" }
->["phases"][number];
+] as const satisfies ReadonlyArray<keyof DiceExpr>;
+const SPELL_ATTACK_SEQUENCE_NONE_EFFECT_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<
+  keyof Extract<EffectAtom, { readonly kind: "none" }>
+>;
 
 function spellAttackSequenceCandidatePhase(
   phase: SpellAttackSequenceActivationPhase,
@@ -257,8 +323,7 @@ function spellAttackSequenceDistinctiveHeaderFallback(
     mechanics.castingTime.kind === "action" &&
     mechanics.range.kind === "point" &&
     mechanics.range.feet === 120 &&
-    mechanics.duration.kind === "instantaneous" &&
-    mechanics.phases.some(spellAttackSequenceCandidatePhase)
+    mechanics.duration.kind === "instantaneous"
   );
 }
 
@@ -296,11 +361,11 @@ function spellAttackSequenceCountFacts(
     level === 0 &&
     count !== null &&
     typeof count === "object" &&
+    count.kind === "threshold_tiers" &&
     spellMechanicsObjectHasOnlyKeys(
       count,
       SPELL_ATTACK_SEQUENCE_CHARACTER_COUNT_FIELDS,
     ) &&
-    count.kind === "threshold_tiers" &&
     count.axis === "character" &&
     count.base === CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS[0]
   ) {
@@ -336,11 +401,11 @@ function spellAttackSequenceCountFacts(
     level === 2 &&
     count !== null &&
     typeof count === "object" &&
+    count.kind === "linear" &&
     spellMechanicsObjectHasOnlyKeys(
       count,
       SPELL_ATTACK_SEQUENCE_SLOT_COUNT_FIELDS,
     ) &&
-    count.kind === "linear" &&
     count.base === SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS[0] &&
     count.baseLevel === SLOT_LEVEL_SCALED_SPELL_ATTACK_BASE_SLOT_LEVEL &&
     count.perSlotAboveBase === SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNT_PER_SLOT
@@ -435,6 +500,7 @@ function admitSpellAttackSequenceMechanics(
   const hitEffect =
     hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
   const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
+  const missEffect = attackPhase?.onMiss[0];
   const targetAttachmentAdmission =
     attackPhase === undefined
       ? undefined
@@ -472,7 +538,10 @@ function admitSpellAttackSequenceMechanics(
   if (
     mechanics.range.kind !== "point" ||
     mechanics.range.feet !== 120 ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind", "feet"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      SPELL_ATTACK_SEQUENCE_RANGE_FIELDS,
+    )
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
@@ -480,13 +549,19 @@ function admitSpellAttackSequenceMechanics(
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
     mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      SPELL_ATTACK_SEQUENCE_COMPONENT_FIELDS,
+    )
   ) {
     push("components", spellMechanicsHeaderPath("components"));
   }
   if (
     mechanics.duration.kind !== "instantaneous" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.duration, ["kind"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.duration,
+      SPELL_ATTACK_SEQUENCE_DURATION_FIELDS,
+    )
   ) {
     push("duration", spellMechanicsHeaderPath("duration"));
   }
@@ -562,10 +637,12 @@ function admitSpellAttackSequenceMechanics(
   }
   if (
     attackPhase === undefined ||
-    attackPhase.onHit.length !== 1 ||
     attackPhase.onMiss.length !== 1 ||
-    attackPhase.onMiss[0]?.kind !== "none" ||
-    !spellMechanicsObjectHasOnlyKeys(attackPhase.onMiss[0] ?? {}, ["kind"])
+    missEffect?.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      missEffect,
+      SPELL_ATTACK_SEQUENCE_NONE_EFFECT_FIELDS,
+    )
   ) {
     push("missEffect", spellActivationPhasePath(phaseOrdinal));
   }
@@ -573,7 +650,7 @@ function admitSpellAttackSequenceMechanics(
     mechanics.level === 0 ? "force" : "fire";
   const damageType: DamageType | undefined =
     damageEffect?.damageType === expectedDamageType
-      ? expectedDamageType
+      ? damageEffect.damageType
       : undefined;
   if (damageType === undefined) {
     push(

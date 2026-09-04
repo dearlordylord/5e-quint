@@ -117,6 +117,42 @@ type OngoingEffectMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
+type WeaponAttackEnhancementAttachment = Extract<
+  Attachment,
+  { readonly kind: "hole" }
+>;
+type WeaponAttackEnhancementObjectAttachmentValue = Extract<
+  WeaponAttackEnhancementAttachment["value"],
+  { readonly kind: "object" }
+>;
+type WeaponAttackEnhancementObjectFilter = NonNullable<
+  WeaponAttackEnhancementObjectAttachmentValue["filter"]
+>;
+type WeaponAttackEnhancementDuration = Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "timed" }
+>;
+type WeaponAttackEnhancementDurationEnd = NonNullable<
+  WeaponAttackEnhancementDuration["earlyEnd"]
+>[number];
+type WeaponAttackEnhancementOperation =
+  OngoingEffectMechanics["operations"][number];
+type WeaponAttackEnhancementTrigger = Extract<
+  WeaponAttackEnhancementOperation["trigger"],
+  { readonly kind: "passive" }
+>;
+type WeaponAttackEnhancementCastingTime = Extract<
+  OngoingEffectMechanics["castingTime"],
+  { readonly kind: "bonus_action" }
+>;
+type WeaponAttackEnhancementRange = Extract<
+  SpellMechanics["range"],
+  { readonly kind: "touch" }
+>;
+type WeaponAttackEnhancementEffect = Extract<
+  EffectAtom,
+  { readonly kind: "grant_weapon_attack_enhancement" }
+>;
 type WeaponAttackDamageEnhancementMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -162,7 +198,7 @@ const WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS = [
   "holeId",
   "label",
   "value",
-] as const;
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementAttachment>;
 const WEAPON_ENHANCEMENT_ROOT_FIELDS = [
   "level",
   "school",
@@ -173,39 +209,74 @@ const WEAPON_ENHANCEMENT_ROOT_FIELDS = [
   "family",
   "attachment",
   "operations",
-] as const;
-const WEAPON_ENHANCEMENT_OBJECT_FIELDS = ["kind", "count", "filter"] as const;
-const WEAPON_ENHANCEMENT_FILTER_FIELDS = ["objectKind", "magicality"] as const;
+] as const satisfies ReadonlyArray<keyof OngoingEffectMechanics>;
+const WEAPON_ENHANCEMENT_OBJECT_FIELDS = [
+  "kind",
+  "count",
+  "filter",
+] as const satisfies ReadonlyArray<
+  keyof WeaponAttackEnhancementObjectAttachmentValue
+>;
+const WEAPON_ENHANCEMENT_FILTER_FIELDS = [
+  "objectKind",
+  "magicality",
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementObjectFilter>;
 const WEAPON_ENHANCEMENT_DURATION_FIELDS = [
   "kind",
   "value",
   "earlyEnd",
   "permanentAfter",
-] as const;
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementDuration>;
 const WEAPON_ENHANCEMENT_DURATION_VALUE_FIELDS = [
   "unit",
   "amount",
   "upcastTiers",
-] as const;
-const WEAPON_ENHANCEMENT_DURATION_END_FIELDS = ["kind"] as const;
+] as const satisfies ReadonlyArray<
+  keyof WeaponAttackEnhancementDuration["value"]
+>;
+const WEAPON_ENHANCEMENT_DURATION_END_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementDurationEnd>;
 const WEAPON_ENHANCEMENT_OPERATION_FIELDS = [
   "trigger",
   "predicate",
   "targetLimit",
   "effect",
   "usageLimit",
-] as const;
-const WEAPON_ENHANCEMENT_TRIGGER_FIELDS = ["kind"] as const;
-const WEAPON_ENHANCEMENT_CASTING_TIME_FIELDS = ["kind"] as const;
-const WEAPON_ENHANCEMENT_EFFECT_FIELDS = ["kind", "bonus"] as const;
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementOperation>;
+const WEAPON_ENHANCEMENT_TRIGGER_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementTrigger>;
+const WEAPON_ENHANCEMENT_CASTING_TIME_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementCastingTime>;
+const WEAPON_ENHANCEMENT_RANGE_FIELDS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementRange>;
+const WEAPON_ENHANCEMENT_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
+const WEAPON_ENHANCEMENT_EFFECT_FIELDS = [
+  "kind",
+  "bonus",
+] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementEffect>;
 const WEAPON_ENHANCEMENT_BONUS_FIELDS = [
   "kind",
   "axis",
   "base",
   "tiers",
   "sign",
-] as const;
-const WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS = ["atLevel", "value"] as const;
+] as const satisfies ReadonlyArray<
+  keyof WeaponAttackDamageEnhancementThresholdBonusSource
+>;
+const WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS = [
+  "atLevel",
+  "value",
+] as const satisfies ReadonlyArray<
+  keyof WeaponAttackDamageEnhancementThresholdBonusSource["tiers"][number]
+>;
 const WEAPON_ENHANCEMENT_BONUS_TIER_TABLE = [
   { atLevel: 3, value: 2 },
   { atLevel: 6, value: 3 },
@@ -243,17 +314,20 @@ function weaponAttackEnhancementDistinctiveHeaderFallback(
     mechanics.level === 2 &&
     mechanics.castingTime.kind === "bonus_action" &&
     mechanics.range.kind === "touch" &&
-    mechanics.duration.kind === "timed" &&
-    mechanics.attachment.kind === "hole" &&
-    mechanics.attachment.value.kind === "object"
+    mechanics.duration.kind === "timed"
   );
 }
 
 function weaponAttackEnhancementAttachmentIsSupported(
-  attachment: Attachment,
-): boolean {
+  attachment: Attachment | undefined,
+): attachment is WeaponAttackEnhancementAttachment & {
+  readonly value: WeaponAttackEnhancementObjectAttachmentValue & {
+    readonly filter: WeaponAttackEnhancementObjectFilter;
+  };
+} {
   if (
-    attachment.kind !== "hole" ||
+    attachment?.kind !== "hole" ||
+    attachment.value === undefined ||
     attachment.value.kind !== "object" ||
     !spellMechanicsObjectHasOnlyKeys(
       attachment,
@@ -317,8 +391,8 @@ function weaponAttackEnhancementBonusFacts(
   bonus: WeaponAttackDamageEnhancementBonusSource,
 ): WeaponAttackDamageEnhancementBonusFacts | undefined {
   if (
-    !spellMechanicsObjectHasOnlyKeys(bonus, WEAPON_ENHANCEMENT_BONUS_FIELDS) ||
     bonus.kind !== "threshold_tiers" ||
+    !spellMechanicsObjectHasOnlyKeys(bonus, WEAPON_ENHANCEMENT_BONUS_FIELDS) ||
     bonus.axis !== "slot" ||
     bonus.base !== 1 ||
     bonus.sign !== "+" ||
@@ -451,7 +525,10 @@ function admitWeaponAttackDamageEnhancementMechanics(
   }
   if (
     mechanics.range.kind !== "touch" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      WEAPON_ENHANCEMENT_RANGE_FIELDS,
+    )
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
@@ -459,7 +536,10 @@ function admitWeaponAttackDamageEnhancementMechanics(
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
     mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"])
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      WEAPON_ENHANCEMENT_COMPONENT_FIELDS,
+    )
   ) {
     push("components", spellMechanicsHeaderPath("components"));
   }
