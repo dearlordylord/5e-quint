@@ -135,8 +135,8 @@ This section is the sole mutable handoff for a new session.
   current audit retains 17 legacy top-level `admit:` declarations. The landed
   W2 movable-light lease is clear. The next narrow lease selected for a future
   implementation worktree is the object-light profile and its existing
-  `unit-profile-admission-object-light-spells.test.ts`; no implementation
-  worktree currently holds that lease. Shared registry/state or coverage-map
+  `unit-profile-admission-object-light-spells.test.ts`; the W3 implementation
+  worktree now holds that lease. Shared registry/state or coverage-map
   edits require an explicit lease expansion, and no QNT/MBT run is authorized
   unless implementation changes semantics. The observation baseline remains
   exactly 99 complete, 22 partial, and 74 with no owner; integrating
@@ -261,9 +261,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                           | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `c7d0da9cf`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, and movable light integrated; cumulative Surface publication delta certified; 17 top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                      | Base SHA    | Write lease                                                                                                                                                                                                                                                  | State  |
+| --------------- | ----------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`        | `dd1350f81` | Integration checkpoint `c7d0da9cf`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, and movable light integrated; cumulative Surface publication delta certified; 17 top-level profile migrations remain                                        | Active |
+| `SR-04G/W3`     | #474 object-light profile migration             | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-object-light`; `work/sr04g-object-light` | `96feef137` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts` and existing `packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts` only; no shared registry/state edits; no QNT/MBT unless semantics change | Active |
 
 ## Landing discipline
 
