@@ -533,6 +533,38 @@ describe("directionalPersistentArea static admission", () => {
       ]),
     );
   });
+
+  test.each([
+    {
+      label: "missing",
+      mutate: (trigger: object) =>
+        Reflect.deleteProperty(trigger, "laterTurnsOnly"),
+    },
+    {
+      label: "false",
+      mutate: (trigger: object) =>
+        Reflect.set(trigger, "laterTurnsOnly", false),
+    },
+  ])(
+    "rejects $label later-turn direction timing at its authored operation",
+    ({ mutate }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const operation = mechanics.operations[3];
+        if (operation?.trigger.kind !== "on_caster_spends_action")
+          throw new Error("Expected the Gust direction-change trigger.");
+        if (!mutate(operation.trigger))
+          throw new Error(
+            "Expected the direction trigger fixture to be writable.",
+          );
+      });
+      expect(
+        issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+      ).toContainEqual({
+        failedFact: "directionLaterTurns",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(4)),
+      });
+    },
+  );
 });
 
 describe("L12G deterministic Gust of Wind Line admission", () => {

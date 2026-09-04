@@ -788,6 +788,11 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
           "directionActionCost",
           spellOngoingOperationPath(direction.ordinal),
         );
+      if (trigger.laterTurnsOnly !== true)
+        push(
+          "directionLaterTurns",
+          spellOngoingOperationPath(direction.ordinal),
+        );
     }
     if (
       direction.operation.effect.kind !== "reposition_attachment" ||
