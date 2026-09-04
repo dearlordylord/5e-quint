@@ -3565,7 +3565,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaTrait";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "pointOriginSphere" }

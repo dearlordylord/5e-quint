@@ -1,9 +1,29 @@
+import { PositiveInteger } from "@dnd/shared/types";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+import { persistentAreaTraitProfile } from "./battle-reducer/spell-procedure-profiles/persistent-area-obscurement.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import {
   startBattleSessionRight,
   requireElapsedHours,
@@ -32,7 +52,404 @@ import {
   supportedSpellActs,
   requireHole,
 } from "./battle-runtime.test-support.ts";
+import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
+import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import { describe, expect, test } from "vitest";
+
+type OngoingSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function fogCloudMechanics(): OngoingSpellMechanics {
+  const mechanics = spellRecord("fog_cloud").mechanics;
+  if (mechanics.family !== "ongoing_effect") {
+    throw new Error("Expected Fog Cloud ongoing-effect mechanics.");
+  }
+  return mechanics;
+}
+
+function syntheticFogCloudRecord(
+  mutate: (mechanics: OngoingSpellMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_persistent_obscurement_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Persistent Obscurement ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_persistent_obscurement_${suffix}`,
+    },
+    mechanics: mutate(fogCloudMechanics()),
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function issueShape(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}): readonly {
+  readonly failedFact: string;
+  readonly mechanicsPath: unknown;
+}[] {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("persistentAreaTrait static admission", () => {
+  test("projects Fog Cloud's complete mechanics and binds slot-scaled execution facts", () => {
+    const source = spellAdmissionSource(spellRecord("fog_cloud"));
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 1,
+      rangeFeet: 120,
+      durationTicks: requireElapsedHours(1),
+      radius: {
+        baseFeet: 20,
+        startingSlotLevel: 1,
+        perSlotLevelFeet: 20,
+      },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellDurationEndingPath(PositiveInteger(1)),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the Fog Cloud caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) {
+      throw new Error("Expected a spell-admission context for the caster.");
+    }
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      { ...context, castingSource: source.castingSource },
+    );
+
+    expect(invocations).toHaveLength(2);
+    expect(invocations).toEqual([
+      expect.objectContaining({
+        resource: { tag: "spellSlot", slotLevel: 1 },
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: movementFeet(20),
+        },
+        durationTicks: requireElapsedHours(1),
+        rangeFeet: movementFeet(120),
+      }),
+      expect.objectContaining({
+        resource: { tag: "spellSlot", slotLevel: 3 },
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: movementFeet(60),
+        },
+      }),
+    ]);
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("keeps authored renaming out of recognition and projected evidence", () => {
+    const original = spellAdmissionSource(spellRecord("fog_cloud"));
+    const renamed = spellAdmissionSource(
+      syntheticFogCloudRecord((mechanics) => mechanics, "renamed"),
+    );
+    const originalResult = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(original),
+    );
+    const renamedResult = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(renamed),
+    );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported") return;
+    if (renamedResult.tag !== "supported") return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test("keeps a malformed scaling candidate represented with one exact issue", () => {
+    const record = syntheticFogCloudRecord((mechanics) => {
+      if (
+        mechanics.attachment.kind !== "hole" ||
+        mechanics.attachment.value.kind !== "area" ||
+        mechanics.attachment.value.shape.kind !== "sphere" ||
+        typeof mechanics.attachment.value.shape.radiusFeet !== "object"
+      ) {
+        throw new Error("Expected Fog Cloud's scaling Sphere attachment.");
+      }
+      return {
+        ...mechanics,
+        attachment: {
+          ...mechanics.attachment,
+          value: {
+            ...mechanics.attachment.value,
+            shape: {
+              ...mechanics.attachment.value.shape,
+              radiusFeet: {
+                ...mechanics.attachment.value.shape.radiusFeet,
+                perLevel: 10,
+              },
+            },
+          },
+        },
+      };
+    }, "unsupported_radius");
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "radiusScaling",
+        mechanicsPath: spellOngoingAttachmentPath(),
+      },
+    ]);
+  });
+
+  test("accumulates independent duration issues at their exact paths", () => {
+    const record = syntheticFogCloudRecord((mechanics) => {
+      if (mechanics.duration.kind !== "concentration") {
+        throw new Error("Expected Fog Cloud Concentration mechanics.");
+      }
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          upTo: { ...mechanics.duration.upTo, amount: 2 },
+          earlyEnd: [
+            { kind: "area_dispersed_by_strong_wind" as const },
+            { kind: "caster_recasts_spell" as const },
+          ],
+        },
+      };
+    }, "accumulated_duration_issues");
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    expect(issueShape(result)).toEqual([
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports priced and consumed material at their canonical child paths", () => {
+    const record = syntheticFogCloudRecord(
+      (mechanics) => ({
+        ...mechanics,
+        components: {
+          v: true,
+          s: true,
+          m: "a synthetic reagent",
+          materialCostGp: 5,
+          materialConsumed: true,
+        },
+      }),
+      "material_children",
+    );
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("cost"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("consumption"),
+      },
+    ]);
+  });
+
+  test("reports every duration extension at its canonical ordinal", () => {
+    const record = syntheticFogCloudRecord((mechanics) => {
+      if (mechanics.duration.kind !== "concentration") {
+        throw new Error("Expected Fog Cloud Concentration mechanics.");
+      }
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          upTo: {
+            ...mechanics.duration.upTo,
+            upcastTiers: [
+              { atSlot: 2, amount: 2 },
+              { atSlot: 4, amount: 3 },
+            ],
+          },
+        },
+      };
+    }, "duration_extensions");
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports the value and every owned child of a timed duration", () => {
+    const record = syntheticFogCloudRecord(
+      (mechanics) => ({
+        ...mechanics,
+        duration: {
+          kind: "timed",
+          value: {
+            unit: "hour",
+            amount: 1,
+            upcastTiers: [{ atSlot: 2, amount: 2 }],
+          },
+          earlyEnd: [{ kind: "area_dispersed_by_strong_wind" }],
+        },
+      }),
+      "timed_duration_children",
+    );
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+    ]);
+  });
+
+  test("reports every authored conditional effect at its canonical ordinal", () => {
+    const conditionalEffects = spellRecord("phantasmal_force").mechanics;
+    if (
+      conditionalEffects.family !== "ongoing_effect" ||
+      conditionalEffects.authoredConditionalEffects === undefined
+    ) {
+      throw new Error(
+        "Expected a synthetic conditional-effect fixture source.",
+      );
+    }
+    const effect = conditionalEffects.authoredConditionalEffects[0];
+    if (effect === undefined) {
+      throw new Error("Expected a conditional-effect fixture.");
+    }
+    const record = syntheticFogCloudRecord(
+      (mechanics) => ({
+        ...mechanics,
+        authoredConditionalEffects: [effect, effect],
+      }),
+      "conditional_effects",
+    );
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+          PositiveInteger(2),
+        ),
+      },
+    ]);
+  });
+
+  test("does not claim any other shipped spell root", () => {
+    const results = unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is SpellRecord =>
+          unit.kind === "spell" && unit.id !== "fog_cloud",
+      )
+      .map((spell) =>
+        persistentAreaTraitProfile.admitMechanics(
+          mechanicsSource(spellAdmissionSource(spell)),
+        ),
+      );
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results).toEqual(results.map(() => ({ tag: "notRepresented" })));
+  });
+});
 
 describe("battle runtime: Fog Cloud", () => {
   test("Fog Cloud admits caller-supplied fog area and slot-scaled radius", () => {
