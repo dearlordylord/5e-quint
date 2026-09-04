@@ -3224,7 +3224,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "repeatedDamageAllocation";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: {
         readonly kind: "repeatedEffectTargetAllocation";
         readonly repeatedEffectCount: number;
