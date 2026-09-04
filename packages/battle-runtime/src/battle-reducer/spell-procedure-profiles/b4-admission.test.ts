@@ -490,6 +490,46 @@ describe("SR-04G-B4 static spell procedure admission", () => {
     });
   });
 
+  test("reports Sanctuary permanent-after as an extra ending ordinal", () => {
+    const base = spellRecord("sanctuary");
+    if (
+      base.mechanics.family !== "ongoing_effect" ||
+      base.mechanics.duration.kind !== "timed" ||
+      base.mechanics.duration.earlyEnd === undefined
+    ) {
+      throw new Error("Expected Sanctuary timed duration endings.");
+    }
+    const permanentAfter = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_sanctuary_permanent_after",
+      mechanics: {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          permanentAfter: {
+            kind: "repeated_casts",
+            cadence: "daily",
+            count: 1,
+            target: "same_target",
+            endsOn: ["dispel"],
+          },
+        },
+      },
+    });
+    const result = targetingSaveInterdictionProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(permanentAfter)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellDurationEndingPath(PositiveInteger(4)),
+        }),
+      ],
+    });
+  });
+
   test("reports Thaumaturgy's exact collective path after mutating the owned effect", () => {
     const base = spellRecord("thaumaturgy");
     if (base.mechanics.family !== "modal_ongoing_effect") {

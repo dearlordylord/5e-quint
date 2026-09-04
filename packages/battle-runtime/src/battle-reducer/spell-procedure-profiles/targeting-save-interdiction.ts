@@ -274,8 +274,7 @@ function sanctuaryDurationValueSupported(
     ) ||
     duration.value.unit !== "minute" ||
     duration.value.amount !== 1 ||
-    !isSpellCanonicalDurationValue(duration.value) ||
-    duration.permanentAfter !== undefined
+    !isSpellCanonicalDurationValue(duration.value)
   ) {
     return false;
   }
@@ -416,6 +415,14 @@ function admitTargetingSaveInterdictionMechanics(
     }
     if (endingInspection.missingRequiredKind) {
       push("durationEnding", spellMechanicsHeaderPath("duration"));
+    }
+    if (mechanics.duration.permanentAfter !== undefined) {
+      push(
+        "durationEnding",
+        spellDurationEndingPath(
+          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
+        ),
+      );
     }
   }
   if (
