@@ -34,7 +34,8 @@
               "mode": "choose_up_to",
               "targetKinds": [
                 "creature"
-              ]
+              ],
+              "visibility": "caster_can_see"
             }
           }
         },

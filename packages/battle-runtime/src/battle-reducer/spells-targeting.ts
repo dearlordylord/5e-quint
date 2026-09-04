@@ -635,7 +635,11 @@ function ordinarySpellTargetSpatialFactRequest(
           casterId: actorId,
           sourceProcedureRef: invocation.sourceProcedureRef,
           rangeFeet,
-          visibility: "notSpecifiedByProcedure" as const,
+          visibility:
+            "visibility" in invocation &&
+            invocation.visibility === "caster_can_see"
+              ? ("requiresSight" as const)
+              : ("notSpecifiedByProcedure" as const),
         },
       };
 }

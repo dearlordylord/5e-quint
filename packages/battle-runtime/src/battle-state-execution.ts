@@ -3692,7 +3692,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "compelledNextTurnBehavior";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
       readonly dc: DcSource;
@@ -3700,6 +3700,7 @@ type SupportedSpellInvocationSource =
         SpellTargeting,
         { readonly kind: "targetList" }
       >;
+      readonly visibility: "caster_can_see";
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -5189,7 +5190,7 @@ export type BattleSpellTargetListHole = {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly rangeFeet: MovementFeet;
-    readonly visibility: "notSpecifiedByProcedure";
+    readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
   };
   readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;

@@ -1,10 +1,23 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
-import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterBonusAttackSubjectForTest,
@@ -33,7 +46,20 @@ import {
   spellActInvocation,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import { compelledNextTurnBehaviorProfile } from "./battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts";
+import { spellTargetListHole } from "./battle-reducer/spells-targeting.ts";
+import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import type {
   AvailableBattleAct,
   BattleFill,
@@ -51,6 +77,599 @@ import {
   snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
+
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function commandMechanics(): ActivationSpellMechanics {
+  const mechanics = spellRecord(commandUnitId).mechanics;
+  if (mechanics.family !== "activation")
+    throw new Error("Expected Command activation mechanics.");
+  return mechanics;
+}
+
+function syntheticCommandRecord(
+  mechanics: ActivationSpellMechanics,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_compelled_behavior_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Compelled Behavior ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_compelled_behavior_${suffix}`,
+    },
+    mechanics,
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function malformedCommandSource(
+  mutate: (mechanics: ActivationSpellMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(commandUnitId));
+  const mechanics = structuredClone(commandMechanics());
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function issueShape(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}) {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("compelledNextTurnBehavior static admission", () => {
+  test("projects canonical Command mechanics, evidence, and mechanics-free invocations", () => {
+    const source = spellAdmissionSource(spellRecord(commandUnitId));
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 1,
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      targetCount: { base: 1, baseLevel: 1, perSlotAboveBase: 1 },
+      visibility: "caster_can_see",
+    });
+    expect(result.admitted.facts.targetCount).not.toHaveProperty("kind");
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected Command caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null)
+      throw new Error("Expected Command admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        ...context,
+        castingSource: source.castingSource,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations[0]).toMatchObject({
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
+      visibility: "caster_can_see",
+    });
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+    const invocation = invocations[0];
+    if (invocation === undefined)
+      throw new Error("Expected admitted Command invocation.");
+    expect(
+      spellTargetListHole(session.state, spellCasterId, {
+        access: invocation.access,
+        resource: invocation.resource,
+        procedure: invocation.procedure,
+        spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
+          source.spellDefinitionRuleFacts,
+          source.castingSource,
+        ),
+        actionCost: invocation.actionCost,
+        ability: invocation.ability,
+        dc: invocation.dc,
+        targeting: invocation.targeting,
+        visibility: invocation.visibility,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest("command-visibility"),
+      }),
+    ).toMatchObject({
+      spellTargetSpatialFactRequest: { visibility: "requiresSight" },
+    });
+  });
+
+  test("recognizes renamed synthetic mechanics independently of authored identity", () => {
+    const renamedMechanics = structuredClone(commandMechanics());
+    const renamedPhase = renamedMechanics.phases[0];
+    if (
+      renamedPhase?.kind !== "save_gate" ||
+      renamedPhase.attachment.kind !== "hole"
+    )
+      throw new Error("Expected Command target hole.");
+    Reflect.set(renamedPhase.attachment, "holeId", "synthetic_target_hole");
+    Reflect.set(renamedPhase.attachment, "label", "Synthetic target choice");
+    const originalSource = spellAdmissionSource(spellRecord(commandUnitId));
+    const renamedSource = spellAdmissionSource(
+      syntheticCommandRecord(renamedMechanics, "renamed"),
+    );
+    const original = compelledNextTurnBehaviorProfile.admitMechanics(
+      mechanicsSource(originalSource),
+    );
+    const renamed = compelledNextTurnBehaviorProfile.admitMechanics(
+      mechanicsSource(renamedSource),
+    );
+    expect(original.tag).toBe("supported");
+    expect(renamed.tag).toBe("supported");
+    if (original.tag !== "supported" || renamed.tag !== "supported") return;
+    expect(renamed.admitted.facts).toEqual(original.admitted.facts);
+    expect(renamed.admitted.evidence).toEqual(original.admitted.evidence);
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected Command caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected admission context.");
+    const castContext = {
+      ...context,
+      spellCastOptions: [
+        { spellLevel: spellSlotLevel(1), payment: { tag: "slot" as const } },
+      ],
+    };
+    const originalInvocation = original.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(originalSource),
+      { ...castContext, castingSource: originalSource.castingSource },
+    )[0];
+    const renamedInvocation = renamed.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(renamedSource),
+      { ...castContext, castingSource: renamedSource.castingSource },
+    )[0];
+    if (originalInvocation === undefined || renamedInvocation === undefined)
+      throw new Error("Expected renamed parity invocations.");
+    expect({
+      access: renamedInvocation.access,
+      resource: renamedInvocation.resource,
+      procedure: renamedInvocation.procedure,
+      actionCost: renamedInvocation.actionCost,
+      ability: renamedInvocation.ability,
+      dc: renamedInvocation.dc,
+      targeting: renamedInvocation.targeting,
+      visibility: renamedInvocation.visibility,
+    }).toEqual({
+      access: originalInvocation.access,
+      resource: originalInvocation.resource,
+      procedure: originalInvocation.procedure,
+      actionCost: originalInvocation.actionCost,
+      ability: originalInvocation.ability,
+      dc: originalInvocation.dc,
+      targeting: originalInvocation.targeting,
+      visibility: originalInvocation.visibility,
+    });
+  });
+
+  test("accumulates exact header and root-shape issues", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics, "level", 2);
+        Reflect.set(mechanics, "school", "illusion");
+        Reflect.set(mechanics.castingTime, "kind", "bonus_action");
+        Reflect.set(mechanics.range, "feet", 30);
+        Reflect.set(mechanics, "syntheticRootFact", true);
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
+      { failedFact: "level", mechanicsPath: spellMechanicsHeaderPath("level") },
+      {
+        failedFact: "school",
+        mechanicsPath: spellMechanicsHeaderPath("school"),
+      },
+      { failedFact: "range", mechanicsPath: spellMechanicsHeaderPath("range") },
+      {
+        failedFact: "castingTime",
+        mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+      },
+    ]);
+  });
+
+  test("reports components and duration independently", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics.components, "s", true);
+        Reflect.set(mechanics.duration, "syntheticDurationFact", true);
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+    ]);
+  });
+
+  test("accumulates every independent save, selection, and option-field issue", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(phase, "ability", "cha");
+        Reflect.set(phase.dc, "kind", "fixed");
+        Reflect.set(phase.dc, "syntheticDcFact", true);
+        Reflect.set(phase.onSuccess, "kind", "damage");
+        Reflect.set(phase.onSuccess, "syntheticSuccessFact", true);
+        Reflect.set(phase, "syntheticPhaseFact", true);
+        Reflect.set(phase, "repeatSaves", [
+          { cadence: "end_of_target_turn", onSuccess: "ends_on_target" },
+        ]);
+        if (
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target" ||
+          phase.attachment.value.selection.mode !== "choose_up_to" ||
+          typeof phase.attachment.value.selection.count !== "object" ||
+          phase.attachment.value.selection.count.kind !== "linear" ||
+          phase.onFail.kind !== "compelled_target_next_turn"
+        )
+          throw new Error("Expected Command mechanics.");
+        Reflect.set(phase.attachment.value.selection.count, "base", 2);
+        Reflect.set(phase.attachment, "syntheticAttachmentFact", true);
+        Reflect.set(phase.attachment, "holeId", "synthetic_target");
+        Reflect.set(phase.attachment, "label", "synthetic target");
+        Reflect.set(phase.attachment.value.selection, "mode", "choose_exactly");
+        Reflect.set(
+          phase.attachment.value.selection,
+          "syntheticSelectionFact",
+          true,
+        );
+        Reflect.set(phase.attachment.value.selection, "targetKinds", [
+          "object",
+        ]);
+        Reflect.set(phase.onFail, "execution", "synthetic_later_turn");
+        Reflect.set(phase.onFail, "syntheticFailureFact", true);
+        Reflect.set(phase.onFail.options, "syntheticOption", true);
+        Reflect.set(
+          phase.onFail.options.approach,
+          "syntheticApproachFact",
+          true,
+        );
+        Reflect.set(phase.onFail.options.approach, "route", "synthetic_route");
+        Reflect.set(
+          phase.onFail.options.approach,
+          "endsTurnWhenWithinFeet",
+          10,
+        );
+        Reflect.set(phase.onFail.options.drop, "syntheticDropFact", true);
+        Reflect.set(
+          phase.onFail.options.drop,
+          "objectSet",
+          "synthetic_objects",
+        );
+        Reflect.set(phase.onFail.options.drop, "afterward", "continue_turn");
+        Reflect.set(phase.onFail.options.flee, "syntheticFleeFact", true);
+        Reflect.set(phase.onFail.options.flee, "direction", "toward_caster");
+        Reflect.set(phase.onFail.options.flee, "means", "slowest_available");
+        Reflect.set(phase.onFail.options.flee, "duration", "current_turn");
+        Reflect.set(phase.onFail.options.grovel, "syntheticGrovelFact", true);
+        Reflect.set(phase.onFail.options.grovel, "condition", "restrained");
+        Reflect.set(phase.onFail.options.grovel, "afterward", "continue_turn");
+        Reflect.set(phase.onFail.options.halt, "syntheticHaltFact", true);
+        Reflect.set(phase.onFail.options.halt, "movement", "normal");
+        Reflect.set(phase.onFail.options.halt, "action", "one_action");
+        Reflect.set(phase.onFail.options.halt, "bonusAction", "one_action");
+        Reflect.set(phase.onFail.options.halt, "duration", "current_turn");
+      }),
+    );
+    const phasePath = spellActivationPhasePath(PositiveInteger(1));
+    const effectPath = spellActivationEffectPath(
+      PositiveInteger(1),
+      PositiveInteger(1),
+    );
+    expect(issueShape(result)).toEqual([
+      { failedFact: "phaseShape", mechanicsPath: phasePath },
+      { failedFact: "saveAbility", mechanicsPath: phasePath },
+      { failedFact: "saveDc", mechanicsPath: phasePath },
+      { failedFact: "saveDcShape", mechanicsPath: phasePath },
+      { failedFact: "successOutcome", mechanicsPath: phasePath },
+      { failedFact: "successShape", mechanicsPath: phasePath },
+      {
+        failedFact: "repeatSave",
+        mechanicsPath: spellActivationRepeatPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "attachmentShape",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "selectionShape",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "selectionMode",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "selectionTargetKinds",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "targetCount",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      { failedFact: "failureShape", mechanicsPath: effectPath },
+      { failedFact: "failureExecution", mechanicsPath: effectPath },
+      { failedFact: "optionsShape", mechanicsPath: effectPath },
+      { failedFact: "approachShape", mechanicsPath: effectPath },
+      { failedFact: "approachRoute", mechanicsPath: effectPath },
+      { failedFact: "approachEndDistance", mechanicsPath: effectPath },
+      { failedFact: "dropShape", mechanicsPath: effectPath },
+      { failedFact: "dropObjectSet", mechanicsPath: effectPath },
+      { failedFact: "dropAfterward", mechanicsPath: effectPath },
+      { failedFact: "fleeShape", mechanicsPath: effectPath },
+      { failedFact: "fleeDirection", mechanicsPath: effectPath },
+      { failedFact: "fleeMeans", mechanicsPath: effectPath },
+      { failedFact: "fleeDuration", mechanicsPath: effectPath },
+      { failedFact: "grovelShape", mechanicsPath: effectPath },
+      { failedFact: "grovelCondition", mechanicsPath: effectPath },
+      { failedFact: "grovelAfterward", mechanicsPath: effectPath },
+      { failedFact: "haltShape", mechanicsPath: effectPath },
+      { failedFact: "haltMovement", mechanicsPath: effectPath },
+      { failedFact: "haltAction", mechanicsPath: effectPath },
+      { failedFact: "haltBonusAction", mechanicsPath: effectPath },
+      { failedFact: "haltDuration", mechanicsPath: effectPath },
+    ]);
+  });
+
+  test("reports an absent phase at the mechanics root without fabricating an ordinal", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics, "phases", []);
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      { failedFact: "phaseCount", mechanicsPath: spellMechanicsRootPath() },
+    ]);
+  });
+
+  test("accumulates independent optional save branches at the authored phase", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(
+          phase,
+          "autoSuccessIfCasterSlotGte",
+          "triggering_spell_level",
+        );
+        Reflect.set(phase, "autoSuccessIfTarget", {
+          kind: "all",
+          predicates: [{ kind: "creature_type", creatureType: "undead" }],
+        });
+        Reflect.set(phase, "saveAppliesIf", "unwilling_target");
+        Reflect.set(phase, "usageLimit", { kind: "once_per_turn" });
+      }),
+    );
+    const phasePath = spellActivationPhasePath(PositiveInteger(1));
+    expect(issueShape(result)).toEqual([
+      { failedFact: "autoSuccessIfCasterSlotGte", mechanicsPath: phasePath },
+      { failedFact: "autoSuccessIfTarget", mechanicsPath: phasePath },
+      { failedFact: "saveAppliesIf", mechanicsPath: phasePath },
+      { failedFact: "usageLimit", mechanicsPath: phasePath },
+    ]);
+  });
+
+  test("rejects missing and wrong target visibility at the attachment path", () => {
+    const missing = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Command target selection.");
+        Reflect.deleteProperty(phase.attachment.value.selection, "visibility");
+      }),
+    );
+    const wrong = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Command target selection.");
+        Reflect.set(
+          phase.attachment.value.selection,
+          "visibility",
+          "target_can_see_caster",
+        );
+      }),
+    );
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+    expect(issueShape(missing)).toEqual([
+      { failedFact: "visibility", mechanicsPath: attachmentPath },
+    ]);
+    expect(issueShape(wrong)).toEqual([
+      { failedFact: "visibility", mechanicsPath: attachmentPath },
+    ]);
+  });
+
+  test("accumulates attachment discriminants independently", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(phase.attachment, "kind", "synthetic_attachment");
+      }),
+    );
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+    expect(issueShape(result)).toEqual([
+      { failedFact: "attachmentKind", mechanicsPath: attachmentPath },
+    ]);
+  });
+
+  test("reports an area-valued hole as attachment shape, not wrapper kind", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate" || phase.attachment.kind !== "hole")
+          throw new Error("Expected save-gate hole attachment.");
+        Reflect.set(phase.attachment, "value", {
+          kind: "area",
+          origin: { kind: "self" },
+          shape: { kind: "sphere", radiusFeet: 5 },
+        });
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "attachmentShape",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+    ]);
+  });
+
+  test("preserves every known unowned target-selection field as a distinct issue", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Command target selection.");
+        const selection = phase.attachment.value.selection;
+        Reflect.set(selection, "typeFilter", ["undead"]);
+        Reflect.set(selection, "creatureSizeFilter", {
+          kind: "exact",
+          creatureSize: "medium",
+        });
+        Reflect.set(selection, "relativePosition", {
+          kind: "within_feet_of_attachment",
+          attachmentHoleId: "synthetic_origin",
+          feet: 5,
+        });
+        Reflect.set(selection, "objectFilter", { material: "metal" });
+        Reflect.set(selection, "creatureDisposition", "willing");
+        Reflect.set(selection, "objectOrLocationMaxDimensionFeet", 10);
+        Reflect.set(selection, "repeatsAllowed", true);
+        Reflect.set(selection, "castingRequirement", {
+          kind: "remain_within_spell_range_for_entire_casting",
+        });
+        Reflect.set(selection, "stateFilter", ["zero_hp_not_dead"]);
+        Reflect.set(selection, "disposition", "willing");
+      }),
+    );
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+    expect(issueShape(result)).toEqual([
+      { failedFact: "typeFilter", mechanicsPath: attachmentPath },
+      { failedFact: "creatureSizeFilter", mechanicsPath: attachmentPath },
+      { failedFact: "relativePosition", mechanicsPath: attachmentPath },
+      { failedFact: "objectFilter", mechanicsPath: attachmentPath },
+      { failedFact: "creatureDisposition", mechanicsPath: attachmentPath },
+      {
+        failedFact: "objectOrLocationMaxDimensionFeet",
+        mechanicsPath: attachmentPath,
+      },
+      { failedFact: "repeatsAllowed", mechanicsPath: attachmentPath },
+      { failedFact: "castingRequirement", mechanicsPath: attachmentPath },
+      { failedFact: "stateFilter", mechanicsPath: attachmentPath },
+      { failedFact: "disposition", mechanicsPath: attachmentPath },
+    ]);
+  });
+
+  test("preserves the authored phase ordinal and rejects a malformed failure discriminant", () => {
+    const unrelated = spellRecord("burning_hands").mechanics;
+    if (unrelated.family !== "activation")
+      throw new Error("Expected an unrelated activation-phase fixture.");
+    const reordered = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        Reflect.set(mechanics, "phases", [
+          unrelated.phases[0],
+          mechanics.phases[0],
+        ]);
+      }),
+    );
+    expect(issueShape(reordered)).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "phaseOrder",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(2)),
+      },
+    ]);
+
+    const malformedFailure = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(phase, "onFail", { kind: "none" });
+      }),
+    );
+    expect(issueShape(malformedFailure)).toEqual([
+      {
+        failedFact: "failureEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+});
 
 describe("QMBT14 deterministic Command control option admission", () => {
   test("command is admitted as a target-list save spell with promoted option choices and slot-scaled targets", () => {

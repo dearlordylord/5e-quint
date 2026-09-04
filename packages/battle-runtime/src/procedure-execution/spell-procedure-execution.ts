@@ -324,6 +324,7 @@ export type CompelledNextTurnBehaviorSpellProcedureExecution =
       readonly minTargets: 1;
       readonly maxTargets: number;
     };
+    readonly visibility: "caster_can_see";
   };
 
 export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellProcedureExecution =

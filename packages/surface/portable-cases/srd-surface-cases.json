@@ -17945,7 +17945,8 @@
                         },
                         "targetKinds": [
                           "creature"
-                        ]
+                        ],
+                        "visibility": "caster_can_see"
                       }
                     },
                     "label": "target"
