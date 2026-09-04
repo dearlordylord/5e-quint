@@ -332,8 +332,16 @@ This section is the sole mutable handoff for a new session.
   condition-immunity and turn-start Temporary Hit Points lease is clear. The
   current-tip write-set audit selects `ongoingSpellEnd` as W12's smallest
   coherent remaining single-profile slice, paired with the existing focused
-  Dispel Magic admission test. W12 activation will record its exact receipt
-  base and isolated branch/worktree lease separately.
+  Dispel Magic admission test. Its `work/sr04g-ongoing-spell-end` branch and
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-ongoing-spell-end`
+  worktree start from exact W11 receipt
+  `6aa2774efc48c1e9802e263d0ab10a9f67016c81`. W12 owns
+  `ongoing-spell-end.ts`, `unit-profile-admission-dispel-magic.test.ts`, and
+  only the `ongoingSpellEnd` invocation source-field line in
+  `battle-state-execution.ts` required for mechanics-free execution. No shared
+  schema, procedure-execution projection, registry, coverage-map, QNT, MBT,
+  Surface artifact, or unrelated runtime lease is active. The initial W12
+  implementation owner is Luna max.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -468,9 +476,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `5269bd92b`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, and condition-immunity turn-start Temporary Hit Points integrated; cumulative Surface publication delta certified; eight top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                        | Worktree/branch                                                                                                | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | State  |
+| --------------- | ----------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator           | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                  | `dd1350f81` | Integration checkpoint `5269bd92b`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, and condition-immunity turn-start Temporary Hit Points integrated; cumulative Surface publication delta certified; eight top-level profile migrations remain | Active |
+| `SR-04G/W12`    | ongoing-spell-end profile admission             | Codex orchestrator; Luna max | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-ongoing-spell-end`; `work/sr04g-ongoing-spell-end` | `6aa2774ef` | `ongoing-spell-end.ts`, `unit-profile-admission-dispel-magic.test.ts`, and only the `ongoingSpellEnd` invocation source-field line in `battle-state-execution.ts`. No shared schema, procedure-execution projection, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated runtime lease                                                                                                                                                                                          | Active |
 
 ## Landing discipline
 
