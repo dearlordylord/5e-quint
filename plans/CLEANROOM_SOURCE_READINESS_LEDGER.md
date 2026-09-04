@@ -98,8 +98,11 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current audit retains 19 legacy top-level `admit:` declarations. No profile
-  lane currently holds a write lease. The observation baseline remains exactly
+  current audit retains 19 legacy top-level `admit:` declarations. W1 owns the
+  linked-defense profile and its existing Warding Bond admission test; W2 owns
+  the movable-light profile and its existing Dancing Lights admission test.
+  Neither lane may edit shared registry/state files or run QNT/MBT unless its
+  implementation changes semantics. The observation baseline remains exactly
   99 complete, 22 partial, and 74 with no owner; integrating
   `persistentArmorEffect` does not reclassify those catalog-root observations.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
@@ -221,9 +224,11 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                            | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `acdbacb9a`; C2, B3, A4, B4, A5, and `persistentArmorEffect` integrated; cumulative Surface publication delta certified; 19 top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                          | Base SHA                                   | Write lease                                                                                                                                                                                                                                                                   | State  |
+| --------------- | ----------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`            | `dd1350f81`                                | Integration checkpoint `acdbacb9a`; C2, B3, A4, B4, A5, and `persistentArmorEffect` integrated; cumulative Surface publication delta certified; 19 top-level profile migrations remain                                                                                        | Active |
+| `SR-04G/W1`     | #474 linked-defense profile migration           | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-linked-defense`; `work/sr04g-linked-defense` | `5be12de5b9e8c3cbfb3ecb147ea96678e99c7b6e` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts` and existing `packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts` only; no shared registry/state edits; no QNT/MBT unless semantics change  | Active |
+| `SR-04G/W2`     | #474 movable-light profile migration            | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-movable-light`; `work/sr04g-movable-light`   | `5be12de5b9e8c3cbfb3ecb147ea96678e99c7b6e` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts` and existing `packages/battle-runtime/src/unit-profile-admission-dancing-lights.test.ts` only; no shared registry/state edits; no QNT/MBT unless semantics change | Active |
 
 ## Landing discipline
 
