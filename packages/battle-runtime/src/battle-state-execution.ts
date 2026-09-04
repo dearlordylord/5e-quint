@@ -3597,6 +3597,7 @@ type SupportedSpellInvocationSource =
       >;
       readonly durationTicks: ElapsedTimeTicks;
       readonly rangeFeet: MovementFeet;
+      readonly exceptSources: readonly ["artifact", "deity"];
     }
   | {
       readonly access: PreparedSpellAccess;

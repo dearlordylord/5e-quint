@@ -124,12 +124,14 @@ type MagicSuppressionEmanationDuration = Extract<
   MagicSuppressionEmanationMechanics["duration"],
   { readonly kind: "concentration" }
 >;
-type MagicSuppressionSourceException = "artifact" | "deity";
+const MAGIC_SUPPRESSION_EXEMPT_SOURCES = ["artifact", "deity"] as const;
+type MagicSuppressionSourceException =
+  (typeof MAGIC_SUPPRESSION_EXEMPT_SOURCES)[number];
 type MagicSuppressionEmanationMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly radiusFeet: MovementFeetType;
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: MovementFeetType;
-  readonly exceptSources: readonly MagicSuppressionSourceException[];
+  readonly exceptSources: typeof MAGIC_SUPPRESSION_EXEMPT_SOURCES;
   readonly suppressedTimeCountsAgainstDuration: true;
 };
 
@@ -137,10 +139,6 @@ const MAGIC_SUPPRESSION_EMANATION_LEVEL = 8 as const;
 const MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS = 1 as const;
 const MAGIC_SUPPRESSION_EMANATION_RADIUS_FEET = 10 as const;
 const MAGIC_SUPPRESSION_EMANATION_MATERIAL = "iron filings" as const;
-const MAGIC_SUPPRESSION_EXEMPT_SOURCES = [
-  "artifact",
-  "deity",
-] as const satisfies readonly MagicSuppressionSourceException[];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for MagicSuppressionEmanationFailedFact.
 const MAGIC_SUPPRESSION_EMANATION_FAILED_FACTS = [
@@ -334,8 +332,8 @@ function isUnownedMagicSuppressionEffectKind(
 }
 
 function hasExactMagicSuppressionExceptions(
-  values: readonly string[] | undefined,
-): values is readonly MagicSuppressionSourceException[] {
+  values: readonly MagicSuppressionSourceException[] | undefined,
+): boolean {
   return (
     values !== undefined &&
     values.length === MAGIC_SUPPRESSION_EXEMPT_SOURCES.length &&
@@ -525,41 +523,26 @@ function inspectMagicSuppressionEmanationMechanics(
       push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
   }
 
+  for (const occurrence of suppressionOccurrences) {
+    const effect = occurrence.operation.effect;
+    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
+    if (effect.kind !== "suppress_ongoing_magic_effects") continue;
+    if (!spellMechanicsObjectHasOnlyKeys(effect, SUPPRESSION_EFFECT_FIELDS))
+      push("operationEffect", effectPath);
+    if (effect.suppressedTimeCountsAgainstDuration !== true)
+      push("suppressedTimeCountsAgainstDuration", effectPath);
+    if (!hasExactMagicSuppressionExceptions(effect.exceptSources))
+      push("exceptSources", effectPath);
+  }
+
   const suppressionEffect =
     suppression?.operation.effect.kind === "suppress_ongoing_magic_effects"
       ? suppression.operation.effect
       : undefined;
-  const exceptSources = suppressionEffect?.exceptSources;
   const suppressedTimeCountsAgainstDuration =
     suppressionEffect?.suppressedTimeCountsAgainstDuration === true
       ? suppressionEffect.suppressedTimeCountsAgainstDuration
       : undefined;
-  if (
-    suppression !== undefined &&
-    suppressionEffect !== undefined &&
-    !spellMechanicsObjectHasOnlyKeys(
-      suppressionEffect,
-      SUPPRESSION_EFFECT_FIELDS,
-    )
-  )
-    push(
-      "operationEffect",
-      spellOngoingOperationEffectPath(suppression.ordinal),
-    );
-  if (
-    suppression !== undefined &&
-    suppressedTimeCountsAgainstDuration === undefined
-  )
-    push(
-      "suppressedTimeCountsAgainstDuration",
-      spellOngoingOperationEffectPath(suppression.ordinal),
-    );
-  if (
-    suppression !== undefined &&
-    !hasExactMagicSuppressionExceptions(exceptSources)
-  )
-    push("exceptSources", spellOngoingOperationEffectPath(suppression.ordinal));
-
   const unownedPaths = spellProcedureNonEmpty(
     unownedOccurrences.map(({ ordinal }) =>
       spellOngoingOperationEffectPath(ordinal),
@@ -577,7 +560,8 @@ function inspectMagicSuppressionEmanationMechanics(
     suppression === undefined ||
     unownedPaths === undefined ||
     suppressedTimeCountsAgainstDuration === undefined ||
-    !hasExactMagicSuppressionExceptions(exceptSources)
+    suppressionEffect === undefined ||
+    !hasExactMagicSuppressionExceptions(suppressionEffect.exceptSources)
   )
     return {
       tag: "unsupported",
@@ -595,7 +579,7 @@ function inspectMagicSuppressionEmanationMechanics(
       radiusFeet,
       durationTicks,
       rangeFeet: movementFeet(0),
-      exceptSources,
+      exceptSources: MAGIC_SUPPRESSION_EXEMPT_SOURCES,
       suppressedTimeCountsAgainstDuration,
     },
     evidence: {
@@ -676,6 +660,7 @@ function admitMagicSuppressionEmanation(
           },
           durationTicks: facts.durationTicks,
           rangeFeet: facts.rangeFeet,
+          exceptSources: facts.exceptSources,
         },
       ];
     },
@@ -821,7 +806,12 @@ function applyMagicSuppressionEmanationCastEffect(input: {
     return input.state;
   }
   const suppressedOngoingSpellEffects = input.affectedOngoingSpellEffects
-    .filter((effect) => effect.sourceKind === "ordinarySpell")
+    .filter(
+      (effect) =>
+        !input.invocation.exceptSources.some(
+          (exceptSource) => exceptSource === effect.sourceKind,
+        ),
+    )
     .map((effect) => effect.effect);
   return replaceTargetSpellActiveEffect(
     input.state,
@@ -859,6 +849,10 @@ const MagicSuppressionEmanationInvocationSchema = spellProcedureExecutionSchema(
     }),
     durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
+    exceptSources: Schema.Tuple([
+      Schema.Literal("artifact"),
+      Schema.Literal("deity"),
+    ]),
   }),
 );
 export const magicSuppressionEmanationProfile = {

@@ -20,7 +20,7 @@ import {
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { magicSuppressionEmanationProfile } from "./battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts";
@@ -242,6 +242,7 @@ describe("magicSuppressionEmanation static admission", () => {
     if (invocation === undefined)
       throw new Error("Expected an admitted Antimagic Field invocation.");
     expect(invocation.spell).not.toHaveProperty("mechanics");
+    expect(invocation.exceptSources).toEqual(["artifact", "deity"]);
     const { spell: _spell, ...procedureFacts } = invocation;
     const execution = {
       ...procedureFacts,
@@ -257,6 +258,16 @@ describe("magicSuppressionEmanation static admission", () => {
       magicSuppressionEmanationProfile.executionSchema,
     )(execution);
     expect(encoded).not.toHaveProperty("mechanics");
+    expect(encoded).toHaveProperty("exceptSources", ["artifact", "deity"]);
+    const { exceptSources: _exceptSources, ...withoutExceptionPolicy } =
+      encoded;
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(
+          magicSuppressionEmanationProfile.executionSchema,
+        )(withoutExceptionPolicy),
+      ),
+    ).toBe(true);
     const { sourceProcedureRef: _sourceProcedureRef, ...schemaFacts } =
       execution;
     expect(
@@ -317,7 +328,7 @@ describe("magicSuppressionEmanation static admission", () => {
     const result = magicSuppressionEmanationProfile.admitMechanics(source);
     expect(result.tag).toBe("supported");
     if (result.tag !== "supported") return;
-    expect(result.admitted.facts.exceptSources).toEqual(["deity", "artifact"]);
+    expect(result.admitted.facts.exceptSources).toEqual(["artifact", "deity"]);
     expect(result.admitted.evidence.consumed).toContainEqual(
       spellOngoingOperationEffectPath(PositiveInteger(1)),
     );
@@ -470,6 +481,60 @@ describe("magicSuppressionEmanation static admission", () => {
           failedFact: "suppressedTimeCountsAgainstDuration",
           mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(5)),
         },
+      ]),
+    );
+  });
+
+  test("accumulates every malformed duplicated suppression occurrence", () => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      const suppression = mechanics.operations[4];
+      if (suppression?.effect.kind !== "suppress_ongoing_magic_effects")
+        throw new Error("Expected suppression operation ordinal 5.");
+      const duplicate = structuredClone(suppression);
+      Reflect.set(suppression.effect, "syntheticExtra", true);
+      Reflect.set(
+        suppression.effect,
+        "suppressedTimeCountsAgainstDuration",
+        false,
+      );
+      Reflect.set(suppression.effect, "exceptSources", ["artifact"]);
+      Reflect.set(duplicate.effect, "anotherSyntheticExtra", true);
+      Reflect.deleteProperty(
+        duplicate.effect,
+        "suppressedTimeCountsAgainstDuration",
+      );
+      Reflect.set(duplicate.effect, "exceptSources", ["deity", "deity"]);
+      Reflect.set(mechanics, "operations", [
+        ...mechanics.operations,
+        duplicate,
+      ]);
+    });
+    expect(
+      issueFacts(magicSuppressionEmanationProfile.admitMechanics(source)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "suppressionOperation",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+        {
+          failedFact: "operationCount",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(6)),
+        },
+        ...[PositiveInteger(5), PositiveInteger(6)].flatMap((ordinal) => [
+          {
+            failedFact: "operationEffect",
+            mechanicsPath: spellOngoingOperationEffectPath(ordinal),
+          },
+          {
+            failedFact: "suppressedTimeCountsAgainstDuration",
+            mechanicsPath: spellOngoingOperationEffectPath(ordinal),
+          },
+          {
+            failedFact: "exceptSources",
+            mechanicsPath: spellOngoingOperationEffectPath(ordinal),
+          },
+        ]),
       ]),
     );
   });
