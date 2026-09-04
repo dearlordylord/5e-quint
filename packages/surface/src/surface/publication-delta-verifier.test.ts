@@ -147,6 +147,161 @@ function fixtureArrayField(
   return field;
 }
 
+function fixtureLocalReferenceTargetIfPresent(
+  schema: Record<string, unknown>,
+  value: unknown,
+): Record<string, unknown> | undefined {
+  const definitions = fixtureObjectField(schema, "$defs");
+  const visited = new Set<string>();
+  if (!isFixtureObject(value)) return undefined;
+  let target = value;
+  while (typeof target.$ref === "string") {
+    const prefix = "#/$defs/";
+    if (!target.$ref.startsWith(prefix) || visited.has(target.$ref)) {
+      return undefined;
+    }
+    visited.add(target.$ref);
+    const referenced = definitions[target.$ref.slice(prefix.length)];
+    if (!isFixtureObject(referenced)) return undefined;
+    target = referenced;
+  }
+  return target;
+}
+
+function fixtureLocalReferenceTarget(
+  schema: Record<string, unknown>,
+  value: unknown,
+  label: string,
+): Record<string, unknown> {
+  const target = fixtureLocalReferenceTargetIfPresent(schema, value);
+  if (target === undefined) {
+    throw new Error(`Expected ${label} to have an acyclic local reference`);
+  }
+  return target;
+}
+
+function fixtureSingleMatch(
+  values: readonly unknown[],
+  label: string,
+  predicate: (value: Record<string, unknown>) => boolean,
+): Record<string, unknown> {
+  const matches = values
+    .filter(isFixtureObject)
+    .filter((value) => predicate(value));
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one ${label}; found ${String(matches.length)}`,
+    );
+  }
+  return matches[0]!;
+}
+
+function fixtureDefinitionByDiscriminant(
+  schema: Record<string, unknown>,
+  discriminant: string,
+): Record<string, unknown> {
+  return fixtureSingleMatch(
+    Object.values(fixtureObjectField(schema, "$defs")),
+    `${discriminant} definition`,
+    (definition) => {
+      const properties = definition.properties;
+      if (!isFixtureObject(properties) || !isFixtureObject(properties.kind)) {
+        return false;
+      }
+      const kind = fixtureLocalReferenceTarget(
+        schema,
+        properties.kind,
+        `${discriminant} discriminant`,
+      );
+      return (
+        kind.type === "string" &&
+        Array.isArray(kind.enum) &&
+        kind.enum.length === 1 &&
+        kind.enum[0] === discriminant
+      );
+    },
+  );
+}
+
+function fixtureUnionMembers(
+  schema: Record<string, unknown>,
+  union: Record<string, unknown>,
+  label: string,
+): Record<string, unknown>[] {
+  return fixtureArrayField(union, "anyOf").map((member) =>
+    fixtureLocalReferenceTarget(schema, member, `${label} member`),
+  );
+}
+
+function fixtureUnconditionalSpeedUnion(
+  schema: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureSingleMatch(
+    Object.values(fixtureObjectField(schema, "$defs")),
+    "unconditional Speed union definition",
+    (definition) => {
+      if (!Array.isArray(definition.anyOf) || definition.anyOf.length !== 2) {
+        return false;
+      }
+      const members = definition.anyOf.map((member) =>
+        fixtureLocalReferenceTargetIfPresent(schema, member),
+      );
+      if (members.some((member) => member === undefined)) return false;
+      const speedMembers = members.filter(isFixtureObject);
+      const unconditionalSpeedMembers = speedMembers.filter((member) => {
+        const properties = member.properties;
+        const required = member.required;
+        return (
+          isFixtureObject(properties) &&
+          "feet" in properties &&
+          "hover" in properties &&
+          "availability" in properties &&
+          Array.isArray(required) &&
+          !required.includes("availability")
+        );
+      });
+      const flyMembers = speedMembers.filter((member) => {
+        const properties = member.properties;
+        if (!isFixtureObject(properties)) return false;
+        const kind = fixtureLocalReferenceTargetIfPresent(
+          schema,
+          properties.kind,
+        );
+        return (
+          kind !== undefined &&
+          Array.isArray(kind.enum) &&
+          kind.enum[0] === "fly"
+        );
+      });
+      return (
+        speedMembers.length === 2 &&
+        unconditionalSpeedMembers.length === 2 &&
+        flyMembers.length === 1
+      );
+    },
+  );
+}
+
+function fixtureUnconditionalFlySpeed(
+  schema: Record<string, unknown>,
+): Record<string, unknown> {
+  const union = fixtureUnconditionalSpeedUnion(schema);
+  return fixtureSingleMatch(
+    fixtureUnionMembers(schema, union, "unconditional Speed union"),
+    "unconditional Fly speed member",
+    (member) => {
+      const properties = member.properties;
+      if (!isFixtureObject(properties)) return false;
+      const kind = fixtureLocalReferenceTarget(
+        schema,
+        properties.kind,
+        "Speed kind",
+      );
+      return Array.isArray(kind.enum) && kind.enum[0] === "fly";
+    },
+  );
+}
+
 function fixtureAggregateCandidateDigest(
   certificate: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -1030,10 +1185,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1058Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1046,10 +1198,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1058Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1063,10 +1212,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1058Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1079,10 +1225,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1058Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1094,10 +1237,7 @@ describe("Surface publication delta verifier", () => {
       name: "caster-heal range boolean schema",
       mutate: (schema: Record<string, unknown>): void => {
         const properties = fixtureObjectField(
-          fixtureObjectField(
-            fixtureObjectField(schema, "$defs"),
-            "SrdRecordUnion587Encoded",
-          ),
+          fixtureDefinitionByDiscriminant(schema, "caster_heal_link"),
           "properties",
         );
         properties.rangeFeet = true;
@@ -1108,10 +1248,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const hover = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1054Encoded",
-            ),
+            fixtureUnconditionalFlySpeed(schema),
             "properties",
           ),
           "hover",
@@ -1123,10 +1260,7 @@ describe("Surface publication delta verifier", () => {
       name: "fly-hover union with a boolean branch",
       mutate: (schema: Record<string, unknown>): void => {
         const anyOf = fixtureArrayField(
-          fixtureObjectField(
-            fixtureObjectField(schema, "$defs"),
-            "SrdRecordUnion1048Encoded",
-          ),
+          fixtureUnconditionalSpeedUnion(schema),
           "anyOf",
         );
         anyOf[0] = false;
@@ -1307,12 +1441,13 @@ describe("Surface publication delta verifier", () => {
           "schema",
         );
         const definitions = fixtureObjectField(schema, "$defs");
+        const grantSpellAccess = fixtureDefinitionByDiscriminant(
+          schema,
+          "grant_spell_access",
+        );
         const linkedSpellId = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(definitions, "SrdRecordUnion353Encoded"),
-              "properties",
-            ),
+            fixtureObjectField(grantSpellAccess, "properties"),
             "durationOverride",
           ),
           "properties",

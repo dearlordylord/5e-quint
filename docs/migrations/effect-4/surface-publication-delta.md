@@ -46,19 +46,12 @@ content while separately retaining whole-artifact hashes and ordered-record
 evidence.
 
 The canonical Weapon Mastery closure in `a027913d4` adds the Graze, Nick, and
-Vex authored Units referenced by the published weapon records. The candidate
-aggregate now contains 437 Units and 330 Stat Blocks. Its byte digest is
-`a93a325a47e94fb92155a0264a74828c2cd15deacd7537841f002aea6dc324c5`,
-and its canonical JSON digest is
-`d5cb47f66dfa82d65b373e155da0c9163a9f65f9047963ac2706572605bdee4d`.
-Each new Unit is an exact reviewed `authored-catalog-membership` addition. This
-publication evidence does not change the separate runtime support profile:
-Battle admission of these Mastery mechanics remains unsupported.
-The corresponding generated schema contains 1,231 definitions and 7,671 local
-references. Its byte digest is
-`6fd810ca4f3c4342a149b9fec951b382ce20578d6238b157d2f5cc73544fff9a`,
-and its canonical JSON digest is
-`538f5d9a5f6c226d29cc3c51d8ded8b2ed2492ce0122ce87f5299a40fd875822`.
+Vex authored Units referenced by the published weapon records. Each new Unit
+is an exact reviewed `authored-catalog-membership` addition. This publication
+evidence does not change the separate runtime support profile: Battle
+admission of these Mastery mechanics remains unsupported. The executable
+certificate solely owns current aggregate and schema counts, digests, and
+classified identities.
 
 After the publication schema was last synchronized at `bef31d34b`, the
 canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
