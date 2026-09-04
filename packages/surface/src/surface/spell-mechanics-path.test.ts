@@ -13,7 +13,7 @@ import {
   spellActivationEffectPath,
   spellActivationPhasePath,
   spellActivationRepeatPath,
-  spellCreatureTypeProtectionCapabilityPath,
+  spellCreatureTypeScopedProtectionPath,
   spellDurationEndingPath,
   spellDurationExtensionPath,
   spellDurationValuePath,
@@ -145,43 +145,53 @@ describe("spell mechanics paths", () => {
         "recordMechanics/procedure:3/effect:1",
       ],
       [
-        spellCreatureTypeProtectionCapabilityPath(
+        spellCreatureTypeScopedProtectionPath(
           spellOngoingOperationEffectPath(PositiveInteger(3)),
           PositiveInteger(2),
         ),
         "recordMechanics/procedure:3/effect:1/effect:2",
       ],
       [
-        spellOngoingSpecialFunctionPath(PositiveInteger(1), PositiveInteger(1)),
-        "recordMechanics/procedure:2",
+        spellOngoingSpecialFunctionPath(
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+          PositiveInteger(1),
+        ),
+        "recordMechanics/procedure:1/effect:1/procedure:1",
       ],
       [
         spellOngoingSpecialFunctionTargetPath(
-          PositiveInteger(1),
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
           PositiveInteger(2),
         ),
-        "recordMechanics/procedure:3/generalFact:1",
+        "recordMechanics/procedure:1/effect:1/procedure:2/generalFact:1",
       ],
       [
         spellOngoingSpecialFunctionResolutionPath(
-          PositiveInteger(1),
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
           PositiveInteger(2),
         ),
-        "recordMechanics/procedure:3/procedure:1",
+        "recordMechanics/procedure:1/effect:1/procedure:2/procedure:1",
       ],
       [
         spellOngoingSpecialFunctionResultPath(
-          PositiveInteger(1),
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
           PositiveInteger(2),
         ),
-        "recordMechanics/procedure:3/effect:1",
+        "recordMechanics/procedure:1/effect:1/procedure:2/effect:1",
       ],
       [
         spellOngoingSpecialFunctionSpellEndingPath(
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
           PositiveInteger(1),
+        ),
+        "recordMechanics/procedure:1/effect:1/procedure:1/effect:2",
+      ],
+      [
+        spellOngoingSpecialFunctionSpellEndingPath(
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
           PositiveInteger(2),
         ),
-        "recordMechanics/procedure:3/effect:2",
+        "recordMechanics/procedure:1/effect:1/procedure:2/effect:2",
       ],
     ]);
   });

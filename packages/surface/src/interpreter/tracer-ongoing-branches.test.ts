@@ -25,7 +25,6 @@ describe("Surface ongoing trace branches", () => {
         kind: "end_source_scoped_relevant_effects",
         action: "magic",
         target: { kind: "touched_creature" },
-        sourceCreatureTypes: ["fey"],
         conditions: ["charmed"],
         possession: "included",
       },
@@ -33,7 +32,6 @@ describe("Surface ongoing trace branches", () => {
         kind: "dismiss_creature_to_home_plane",
         action: "magic",
         target: { kind: "visible_creature_within_feet", feet: 5 },
-        eligibleCreatureTypes: ["fey", "undead"],
         save: {
           ability: "cha",
           dc: { kind: "caster_spell_save_dc" },
@@ -51,7 +49,7 @@ describe("Surface ongoing trace branches", () => {
     for (const specialFunction of functions) {
       traceOngoingSpecialFunction(
         specialFunction,
-        "spell-procedure",
+        "creature-type-ward",
         nodes,
         edges,
         ids,
@@ -68,7 +66,7 @@ describe("Surface ongoing trace branches", () => {
       procedureNodes.every((procedure) =>
         edges.some(
           (edge) =>
-            edge.from === "spell-procedure" &&
+            edge.from === "creature-type-ward" &&
             edge.to === procedure.id &&
             edge.relation === "offers",
         ),
@@ -77,6 +75,14 @@ describe("Surface ongoing trace branches", () => {
     expect(
       nodes.filter((node) => node.atomKind === "end_current_spell"),
     ).toHaveLength(2);
+    expect(
+      procedureNodes.every(
+        (procedure) =>
+          edges.filter(
+            (edge) => edge.from === procedure.id && edge.relation === "ends",
+          ).length === 1,
+      ),
+    ).toBe(true);
     expect(edges).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ relation: "resolves_via" }),

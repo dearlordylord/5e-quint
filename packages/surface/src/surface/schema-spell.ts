@@ -970,13 +970,12 @@ type EffectEndTargetState = {
   };
 };
 
-type CreatureTypeProtection = {
-  readonly kind: "creature_type_protection";
+type CreatureTypeProtections = {
   readonly sourceCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
   readonly protections: ReadonlyNonEmptyArray<
     | {
         readonly kind: "attack_rolls_against_target";
-        readonly mode: "advantage" | "disadvantage";
+        readonly mode: "disadvantage";
       }
     | {
         readonly kind: "new_relevant_effect_applications";
@@ -992,6 +991,10 @@ type CreatureTypeProtection = {
       }
   >;
 };
+
+type CreatureTypeProtection = {
+  readonly kind: "creature_type_protection";
+} & CreatureTypeProtections;
 
 type EffectAtom =
   | ObjectContactDamageEffect
@@ -2136,12 +2139,15 @@ type OngoingOperation = {
   readonly usageLimit?: UsageLimit;
 };
 
+type OngoingEffectMechanicsOperation = Omit<OngoingOperation, "effect"> & {
+  readonly effect: OngoingEffect | CreatureTypeWard;
+};
+
 type OngoingSpecialFunction =
   | {
       readonly kind: "end_source_scoped_relevant_effects";
       readonly action: "magic";
       readonly target: { readonly kind: "touched_creature" };
-      readonly sourceCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
       readonly conditions: ReadonlyNonEmptyArray<Condition>;
       readonly possession: "included";
     }
@@ -2152,7 +2158,6 @@ type OngoingSpecialFunction =
         readonly kind: "visible_creature_within_feet";
         readonly feet: number;
       };
-      readonly eligibleCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
       readonly save: {
         readonly ability: "cha";
         readonly dc: DcSource;
@@ -2168,6 +2173,11 @@ type OngoingSpecialFunction =
         };
       };
     };
+
+type CreatureTypeWard = {
+  readonly kind: "creature_type_ward";
+  readonly specialFunctions: ReadonlyNonEmptyArray<OngoingSpecialFunction>;
+} & CreatureTypeProtections;
 
 export const ReactionTriggerSchema: Schema.Codec<
   ReactionTrigger,
@@ -3366,8 +3376,7 @@ const ApplyConditionEffectSchema = strictStruct({
   ),
 });
 
-export const CreatureTypeProtectionSchema = strictStruct({
-  kind: Schema.Literal("creature_type_protection"),
+const CreatureTypeProtectionsSchema = strictStruct({
   sourceCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
     Schema.check(
       Schema.makeFilter(allValuesDistinct, {
@@ -3380,7 +3389,7 @@ export const CreatureTypeProtectionSchema = strictStruct({
     Schema.Union([
       strictStruct({
         kind: Schema.Literal("attack_rolls_against_target"),
-        mode: Schema.Literals(["advantage", "disadvantage"]),
+        mode: Schema.Literal("disadvantage"),
       }),
       strictStruct({
         kind: Schema.Literal("new_relevant_effect_applications"),
@@ -3417,6 +3426,11 @@ export const CreatureTypeProtectionSchema = strictStruct({
       }),
     ),
   ),
+});
+
+export const CreatureTypeProtectionSchema = strictStruct({
+  kind: Schema.Literal("creature_type_protection"),
+  ...CreatureTypeProtectionsSchema.fields,
 });
 
 export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
@@ -5037,14 +5051,6 @@ export const OngoingSpecialFunctionSchema: Schema.Codec<
     kind: Schema.Literal("end_source_scoped_relevant_effects"),
     action: Schema.Literal("magic"),
     target: strictStruct({ kind: Schema.Literal("touched_creature") }),
-    sourceCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
-      Schema.check(
-        Schema.makeFilter(allValuesDistinct, {
-          message: "Source Creature Types must be unique.",
-          toJsonSchema: () => ({ uniqueItems: true }),
-        }),
-      ),
-    ),
     conditions: nonEmpty(ConditionSchema).pipe(
       Schema.check(
         Schema.makeFilter(allValuesDistinct, {
@@ -5062,14 +5068,6 @@ export const OngoingSpecialFunctionSchema: Schema.Codec<
       kind: Schema.Literal("visible_creature_within_feet"),
       feet: PositiveIntegerSchema,
     }),
-    eligibleCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
-      Schema.check(
-        Schema.makeFilter(allValuesDistinct, {
-          message: "Eligible Creature Types must be unique.",
-          toJsonSchema: () => ({ uniqueItems: true }),
-        }),
-      ),
-    ),
     save: strictStruct({
       ability: Schema.Literal("cha"),
       dc: DcSourceSchema,
@@ -5121,14 +5119,37 @@ const OngoingSpecialFunctionsSchema = nonEmpty(
   ),
 );
 
+export const CreatureTypeWardSchema: Schema.Codec<
+  CreatureTypeWard,
+  unknown,
+  never,
+  never
+> = strictStruct({
+  kind: Schema.Literal("creature_type_ward"),
+  ...CreatureTypeProtectionsSchema.fields,
+  specialFunctions: OngoingSpecialFunctionsSchema,
+});
+
+export const OngoingEffectMechanicsOperationSchema: Schema.Codec<
+  OngoingEffectMechanicsOperation,
+  unknown,
+  never,
+  never
+> = OngoingOperationSchema.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      effect: Schema.Union([CreatureTypeWardSchema, OngoingEffectSchema]),
+    }).fields,
+  ),
+);
+
 export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
   Schema.fieldsAssign(
     Schema.Struct({
       family: Schema.Literal("ongoing_effect"),
       attachment: AttachmentSchema,
       initialPhase: optionalExact(ActivationPhaseSchema),
-      operations: nonEmpty(OngoingOperationSchema),
-      specialFunctions: optionalExact(OngoingSpecialFunctionsSchema),
+      operations: nonEmpty(OngoingEffectMechanicsOperationSchema),
       authoredConditionalMechanics: optionalExact(
         nonEmpty(AuthoredConditionalMechanicSchema),
       ),

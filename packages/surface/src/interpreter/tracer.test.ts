@@ -99,9 +99,29 @@ describe("Surface trace interpreter", () => {
     const unit = decodeUnitRecordSync(dispelEvilAndGoodInput);
     const trace = traceUnit(unit);
 
+    if (unit.kind !== "spell" || unit.mechanics.family !== "ongoing_effect") {
+      throw new Error("decoded Dispel fixture changed mechanics family");
+    }
+    const ward = unit.mechanics.operations[0]?.effect;
+    if (ward?.kind !== "creature_type_ward") {
+      throw new Error("decoded Dispel fixture changed ward shape");
+    }
+    expect(ward.sourceCreatureTypes).toEqual([
+      "celestial",
+      "elemental",
+      "fey",
+      "fiend",
+      "undead",
+    ]);
+    expect(
+      ward.specialFunctions.every(
+        (specialFunction) => !("sourceCreatureTypes" in specialFunction),
+      ),
+    ).toBe(true);
+
     expect(trace.atomKinds).toEqual(
       expect.arrayContaining([
-        "creature_type_protection",
+        "creature_type_ward",
         "attack_rolls_against_target",
         "end_source_scoped_relevant_effects",
         "dismiss_creature_to_home_plane",
@@ -117,7 +137,7 @@ describe("Surface trace interpreter", () => {
     ).toHaveLength(2);
   });
 
-  test("rejects empty or duplicate capability and special-function states", () => {
+  test("rejects invalid protection and special-function states", () => {
     const protectionWithNoCapabilities = structuredClone(
       protectionFromEvilAndGoodInput,
     );
@@ -143,17 +163,35 @@ describe("Surface trace interpreter", () => {
       decodeUnitRecordSync(protectionWithDuplicateCapabilities),
     ).toThrow();
 
+    const protectionWithAdvantageOnIncomingAttacks = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithAdvantageOnIncomingAttacks.mechanics.phases[0]!.effects[0]!.protections[0]!.mode =
+      "advantage";
+    expect(() =>
+      decodeUnitRecordSync(protectionWithAdvantageOnIncomingAttacks),
+    ).toThrow();
+
+    const wardInActivation = structuredClone(protectionFromEvilAndGoodInput);
+    Object.assign(
+      wardInActivation.mechanics.phases[0]!.effects[0]!,
+      dispelEvilAndGoodInput.mechanics.operations[0]!.effect,
+    );
+    expect(() => decodeUnitRecordSync(wardInActivation)).toThrow();
+
     const dispelWithNoSpecialFunctions = structuredClone(
       dispelEvilAndGoodInput,
     );
-    dispelWithNoSpecialFunctions.mechanics.specialFunctions = [];
+    dispelWithNoSpecialFunctions.mechanics.operations[0]!.effect.specialFunctions =
+      [];
     expect(() => decodeUnitRecordSync(dispelWithNoSpecialFunctions)).toThrow();
 
     const dispelWithDuplicateSpecialFunctions = structuredClone(
       dispelEvilAndGoodInput,
     );
-    dispelWithDuplicateSpecialFunctions.mechanics.specialFunctions.push(
-      dispelWithDuplicateSpecialFunctions.mechanics.specialFunctions[0]!,
+    dispelWithDuplicateSpecialFunctions.mechanics.operations[0]!.effect.specialFunctions.push(
+      dispelWithDuplicateSpecialFunctions.mechanics.operations[0]!.effect
+        .specialFunctions[0]!,
     );
     expect(() =>
       decodeUnitRecordSync(dispelWithDuplicateSpecialFunctions),
@@ -162,7 +200,13 @@ describe("Surface trace interpreter", () => {
     const dispelWithWrongHomePlaneOverride = structuredClone(
       dispelEvilAndGoodInput,
     );
-    dispelWithWrongHomePlaneOverride.mechanics.specialFunctions[1]!.save.onFailure.creatureTypeDestinationOverrides[0]!.destination =
+    const dismissal =
+      dispelWithWrongHomePlaneOverride.mechanics.operations[0]!.effect
+        .specialFunctions[1];
+    if (dismissal?.save === undefined) {
+      throw new Error("decoded Dismissal fixture changed shape");
+    }
+    dismissal.save.onFailure.creatureTypeDestinationOverrides[0]!.destination =
       "feywild";
     expect(() =>
       decodeUnitRecordSync(dispelWithWrongHomePlaneOverride),

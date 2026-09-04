@@ -25,7 +25,7 @@
     "operations": [
       {
         "effect": {
-          "kind": "creature_type_protection",
+          "kind": "creature_type_ward",
           "protections": [
             {
               "kind": "attack_rolls_against_target",
@@ -38,6 +38,47 @@
             "fey",
             "fiend",
             "undead"
+          ],
+          "specialFunctions": [
+            {
+              "action": "magic",
+              "conditions": [
+                "charmed",
+                "frightened"
+              ],
+              "kind": "end_source_scoped_relevant_effects",
+              "possession": "included",
+              "target": {
+                "kind": "touched_creature"
+              }
+            },
+            {
+              "action": "magic",
+              "kind": "dismiss_creature_to_home_plane",
+              "save": {
+                "ability": "cha",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFailure": {
+                  "creatureTypeDestinationOverrides": [
+                    {
+                      "creatureType": "undead",
+                      "destination": "shadowfell"
+                    },
+                    {
+                      "creatureType": "fey",
+                      "destination": "feywild"
+                    }
+                  ],
+                  "kind": "send_to_home_plane_if_not_already_there"
+                }
+              },
+              "target": {
+                "feet": 5,
+                "kind": "visible_creature_within_feet"
+              }
+            }
           ]
         },
         "trigger": {
@@ -48,62 +89,7 @@
     "range": {
       "kind": "self"
     },
-    "school": "abjuration",
-    "specialFunctions": [
-      {
-        "action": "magic",
-        "conditions": [
-          "charmed",
-          "frightened"
-        ],
-        "kind": "end_source_scoped_relevant_effects",
-        "possession": "included",
-        "sourceCreatureTypes": [
-          "celestial",
-          "elemental",
-          "fey",
-          "fiend",
-          "undead"
-        ],
-        "target": {
-          "kind": "touched_creature"
-        }
-      },
-      {
-        "action": "magic",
-        "eligibleCreatureTypes": [
-          "celestial",
-          "elemental",
-          "fey",
-          "fiend",
-          "undead"
-        ],
-        "kind": "dismiss_creature_to_home_plane",
-        "save": {
-          "ability": "cha",
-          "dc": {
-            "kind": "caster_spell_save_dc"
-          },
-          "onFailure": {
-            "creatureTypeDestinationOverrides": [
-              {
-                "creatureType": "undead",
-                "destination": "shadowfell"
-              },
-              {
-                "creatureType": "fey",
-                "destination": "feywild"
-              }
-            ],
-            "kind": "send_to_home_plane_if_not_already_there"
-          }
-        },
-        "target": {
-          "feet": 5,
-          "kind": "visible_creature_within_feet"
-        }
-      }
-    ]
+    "school": "abjuration"
   },
   "name": "Dispel Evil and Good",
   "provenance": {

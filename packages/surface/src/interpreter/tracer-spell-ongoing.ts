@@ -4,7 +4,7 @@ import type {
   MarkTransfer,
   OngoingActionCost,
   OngoingEffectMechanics,
-  OngoingOperation,
+  OngoingEffectMechanicsOperation,
   OngoingSpecialFunction,
   Range,
 } from "../surface/types.ts";
@@ -22,7 +22,10 @@ import {
 import type { IdGen } from "./tracer-rule-labels.ts";
 import type { OngoingTriggerCtx, SpellCtx } from "./tracer-spell-context.ts";
 
-import { traceEffectAtom } from "./tracer-effect-atom.ts";
+import {
+  traceCreatureTypeProtections,
+  traceEffectAtom,
+} from "./tracer-effect-atom.ts";
 
 import {
   traceEffectAtomScaling,
@@ -111,10 +114,6 @@ export function traceOngoingEffect(
     );
   }
 
-  for (const specialFunction of m.specialFunctions ?? []) {
-    traceOngoingSpecialFunction(specialFunction, ctx.procId, nodes, edges, ids);
-  }
-
   for (const mechanic of m.authoredConditionalMechanics ?? []) {
     const mechanicId = ids("authored");
     const tracedMechanic = authoredConditionalMechanicTraceNode(mechanic);
@@ -165,10 +164,11 @@ export function traceOngoingSpecialFunction(
           category: "effect",
           atomKind: "end_source_scoped_relevant_effects_result",
           label:
-            `end_source_scoped_relevant_effects_result\nsources: ${specialFunction.sourceCreatureTypes.join("/")}\n` +
-            `conditions: ${specialFunction.conditions.join("/")}\npossession: ${specialFunction.possession}`,
+            `end_source_scoped_relevant_effects_result\nconditions: ${specialFunction.conditions.join("/")}\n` +
+            `possession: ${specialFunction.possession}`,
         });
         edges.push({ from: functionId, to: resultId, relation: "grants" });
+        traceSpecialFunctionSpellEnding(functionId, nodes, edges, ids);
       },
     ),
     ongoingSpecialFunctionByKind(
@@ -179,9 +179,7 @@ export function traceOngoingSpecialFunction(
           id: targetId,
           category: "attachment",
           atomKind: specialFunction.target.kind,
-          label:
-            `${specialFunction.target.kind}\nwithin ${specialFunction.target.feet} ft\n` +
-            `types: ${specialFunction.eligibleCreatureTypes.join("/")}`,
+          label: `${specialFunction.target.kind}\nwithin ${specialFunction.target.feet} ft`,
         });
         edges.push({ from: functionId, to: targetId, relation: "attaches_to" });
 
@@ -209,11 +207,19 @@ export function traceOngoingSpecialFunction(
           label: `${specialFunction.save.onFailure.kind}\noverrides: ${overrides}`,
         });
         edges.push({ from: saveId, to: resultId, relation: "on_failure" });
+        traceSpecialFunctionSpellEnding(functionId, nodes, edges, ids);
       },
     ),
     Match.exhaustive,
   );
+}
 
+function traceSpecialFunctionSpellEnding(
+  functionId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
   const endingId = ids("end");
   nodes.push({
     id: endingId,
@@ -294,7 +300,7 @@ export function traceMarkTransfer(
 }
 
 export function traceOngoingOperation(
-  op: OngoingOperation,
+  op: OngoingEffectMechanicsOperation,
   procId: string,
   attId: string,
   slotId: string | null,
@@ -789,7 +795,7 @@ export function describeOngoingTurnWindow(
 }
 
 export function traceOngoingOpEffect(
-  eff: import("../surface/types.ts").OngoingEffect,
+  eff: OngoingEffectMechanicsOperation["effect"],
   hostId: string,
   hostRelation: "grants" | "opens_window",
   attId: string,
@@ -800,6 +806,15 @@ export function traceOngoingOpEffect(
   ids: IdGen,
 ): void {
   switch (eff.kind) {
+    case "creature_type_ward": {
+      const wardId = traceCreatureTypeProtections(eff, nodes, ids, edges);
+      edges.push({ from: hostId, to: wardId, relation: hostRelation });
+      edges.push({ from: wardId, to: attId, relation: "attaches_to" });
+      for (const specialFunction of eff.specialFunctions) {
+        traceOngoingSpecialFunction(specialFunction, wardId, nodes, edges, ids);
+      }
+      return;
+    }
     case "modify_ac_set_floor": {
       const id = ids("op");
       nodes.push({

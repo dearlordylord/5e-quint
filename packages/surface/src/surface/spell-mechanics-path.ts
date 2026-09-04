@@ -255,72 +255,66 @@ export function spellOngoingOperationEffectPath(
   );
 }
 
-/** A creature-type-protection capability nested under its owning effect atom. */
-export function spellCreatureTypeProtectionCapabilityPath(
-  protectionPath: SpellMechanicsBranchPath,
-  capabilityOrdinal: PositiveInteger,
+/** A protection capability nested under its owning creature-type effect. */
+export function spellCreatureTypeScopedProtectionPath(
+  creatureTypeEffectPath: SpellMechanicsBranchPath,
+  protectionOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return appendSpellMechanicsPath(
-    protectionPath,
-    occurrence("effect", capabilityOrdinal),
+    creatureTypeEffectPath,
+    occurrence("effect", protectionOrdinal),
   );
 }
 
-/**
- * Special functions follow recurring operations in the root procedure order.
- * Taking the operation count explicitly preserves authored sibling ordinals.
- */
 export function spellOngoingSpecialFunctionPath(
-  operationCount: PositiveInteger,
+  creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
-  return spellMechanicsPath(
-    occurrence(
-      "procedure",
-      PositiveInteger(operationCount + specialFunctionOrdinal),
-    ),
+  return appendSpellMechanicsPath(
+    creatureTypeWardPath,
+    occurrence("procedure", specialFunctionOrdinal),
   );
 }
 
 export function spellOngoingSpecialFunctionTargetPath(
-  operationCount: PositiveInteger,
+  creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return ongoingSpecialFunctionBranchPath(
-    operationCount,
+    creatureTypeWardPath,
     specialFunctionOrdinal,
     SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.target,
   );
 }
 
 export function spellOngoingSpecialFunctionResolutionPath(
-  operationCount: PositiveInteger,
+  creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return ongoingSpecialFunctionBranchPath(
-    operationCount,
+    creatureTypeWardPath,
     specialFunctionOrdinal,
     SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.resolution,
   );
 }
 
 export function spellOngoingSpecialFunctionResultPath(
-  operationCount: PositiveInteger,
+  creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return ongoingSpecialFunctionBranchPath(
-    operationCount,
+    creatureTypeWardPath,
     specialFunctionOrdinal,
     SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.result,
   );
 }
 
 export function spellOngoingSpecialFunctionSpellEndingPath(
-  operationCount: PositiveInteger,
+  creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return ongoingSpecialFunctionBranchPath(
-    operationCount,
+    creatureTypeWardPath,
     specialFunctionOrdinal,
     SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.spellEnding,
   );
@@ -415,7 +409,7 @@ function spellDurationBranchPath(
 }
 
 function ongoingSpecialFunctionBranchPath(
-  operationCount: PositiveInteger,
+  creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,
   coordinate: {
     readonly role: "generalFact" | "procedure" | "effect";
@@ -423,7 +417,10 @@ function ongoingSpecialFunctionBranchPath(
   },
 ): SpellMechanicsBranchPath {
   return appendSpellMechanicsPath(
-    spellOngoingSpecialFunctionPath(operationCount, specialFunctionOrdinal),
+    spellOngoingSpecialFunctionPath(
+      creatureTypeWardPath,
+      specialFunctionOrdinal,
+    ),
     occurrence(coordinate.role, coordinate.ordinal),
   );
 }

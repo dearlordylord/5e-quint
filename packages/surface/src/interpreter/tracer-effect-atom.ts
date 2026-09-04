@@ -1,4 +1,8 @@
-import type { AreaDirectEffectAtom } from "../surface/types.ts";
+import type {
+  AreaDirectEffectAtom,
+  CreatureTypeProtection,
+  CreatureTypeWard,
+} from "../surface/types.ts";
 import { Match } from "effect";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
@@ -33,47 +37,9 @@ export function traceEffectAtom(
     );
   }
   return Match.value(e).pipe(
-    byKind("creature_type_protection", (e) => {
-      const id = ids("eff");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "creature_type_protection",
-        label: `creature_type_protection\nsources: ${e.sourceCreatureTypes.join("/")}`,
-      });
-
-      for (const protection of e.protections) {
-        const protectionId = ids("eff");
-        const label = Match.value(protection).pipe(
-          protectionByKind(
-            "attack_rolls_against_target",
-            (protection) => `${protection.kind}\nmode: ${protection.mode}`,
-          ),
-          protectionByKind(
-            "new_relevant_effect_applications",
-            (protection) =>
-              `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
-              `possession: ${protection.possession}\nresult: ${protection.result}`,
-          ),
-          protectionByKind(
-            "new_saves_against_existing_relevant_effects",
-            (protection) =>
-              `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
-              `possession: ${protection.possession}\nmode: ${protection.mode}`,
-          ),
-          Match.exhaustive,
-        );
-        nodes.push({
-          id: protectionId,
-          category: "effect",
-          atomKind: protection.kind,
-          label,
-        });
-        edges?.push({ from: id, to: protectionId, relation: "grants" });
-      }
-
-      return id;
-    }),
+    byKind("creature_type_protection", (e) =>
+      traceCreatureTypeProtections(e, nodes, ids, edges),
+    ),
     byKind("spell_created_held_object", (e) => {
       const id = ids("eff");
       nodes.push({
@@ -357,4 +323,51 @@ export function traceEffectAtom(
     ),
     Match.exhaustive,
   );
+}
+
+export function traceCreatureTypeProtections(
+  effect: CreatureTypeProtection | CreatureTypeWard,
+  nodes: TraceNode[],
+  ids: IdGen,
+  edges?: TraceEdge[],
+): string {
+  const id = ids("eff");
+  nodes.push({
+    id,
+    category: "effect",
+    atomKind: effect.kind,
+    label: `${effect.kind}\nsources: ${effect.sourceCreatureTypes.join("/")}`,
+  });
+
+  for (const protection of effect.protections) {
+    const protectionId = ids("eff");
+    const label = Match.value(protection).pipe(
+      protectionByKind(
+        "attack_rolls_against_target",
+        (protection) => `${protection.kind}\nmode: ${protection.mode}`,
+      ),
+      protectionByKind(
+        "new_relevant_effect_applications",
+        (protection) =>
+          `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
+          `possession: ${protection.possession}\nresult: ${protection.result}`,
+      ),
+      protectionByKind(
+        "new_saves_against_existing_relevant_effects",
+        (protection) =>
+          `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
+          `possession: ${protection.possession}\nmode: ${protection.mode}`,
+      ),
+      Match.exhaustive,
+    );
+    nodes.push({
+      id: protectionId,
+      category: "effect",
+      atomKind: protection.kind,
+      label,
+    });
+    edges?.push({ from: id, to: protectionId, relation: "grants" });
+  }
+
+  return id;
 }

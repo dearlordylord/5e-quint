@@ -23,7 +23,7 @@ let dispelEvilAndGood =
           , operations =
               [ { trigger = { kind = "passive" }
                 , effect =
-                    { kind = "creature_type_protection"
+                    { kind = "creature_type_ward"
                     , sourceCreatureTypes =
                         [ "celestial", "elemental", "fey", "fiend", "undead" ]
                     , protections =
@@ -34,56 +34,57 @@ let dispelEvilAndGood =
                           , result = None Text
                           }
                         ]
+                    , specialFunctions =
+                            [ { kind = "end_source_scoped_relevant_effects"
+                              , action = "magic"
+                              , target =
+                                  { kind = "touched_creature"
+                                  , feet = None Natural
+                                  }
+                              , conditions = Some [ "charmed", "frightened" ]
+                              , possession = Some "included"
+                              , save =
+                                  None
+                                    { ability : Text
+                                    , dc : { kind : Text }
+                                    , onFailure :
+                                        { kind : Text
+                                        , creatureTypeDestinationOverrides :
+                                            List
+                                              { creatureType : Text
+                                              , destination : Text
+                                              }
+                                        }
+                                    }
+                              }
+                            , { kind = "dismiss_creature_to_home_plane"
+                              , action = "magic"
+                              , target =
+                                  { kind = "visible_creature_within_feet"
+                                  , feet = Some 5
+                                  }
+                              , conditions = None (List Text)
+                              , possession = None Text
+                              , save =
+                                  Some
+                                    { ability = "cha"
+                                    , dc = { kind = "caster_spell_save_dc" }
+                                    , onFailure =
+                                        { kind =
+                                            "send_to_home_plane_if_not_already_there"
+                                        , creatureTypeDestinationOverrides =
+                                            [ { creatureType = "undead"
+                                              , destination = "shadowfell"
+                                              }
+                                            , { creatureType = "fey"
+                                              , destination = "feywild"
+                                              }
+                                            ]
+                                        }
+                                    }
+                              }
+                            ]
                     }
-                }
-              ]
-          , specialFunctions =
-              [ { kind = "end_source_scoped_relevant_effects"
-                , action = "magic"
-                , target = { kind = "touched_creature", feet = None Natural }
-                , sourceCreatureTypes =
-                    Some
-                      [ "celestial", "elemental", "fey", "fiend", "undead" ]
-                , eligibleCreatureTypes = None (List Text)
-                , conditions = Some [ "charmed", "frightened" ]
-                , possession = Some "included"
-                , save =
-                    None
-                      { ability : Text
-                      , dc : { kind : Text }
-                      , onFailure :
-                          { kind : Text
-                          , creatureTypeDestinationOverrides :
-                              List { creatureType : Text, destination : Text }
-                          }
-                      }
-                }
-              , { kind = "dismiss_creature_to_home_plane"
-                , action = "magic"
-                , target =
-                    { kind = "visible_creature_within_feet", feet = Some 5 }
-                , sourceCreatureTypes = None (List Text)
-                , eligibleCreatureTypes =
-                    Some
-                      [ "celestial", "elemental", "fey", "fiend", "undead" ]
-                , conditions = None (List Text)
-                , possession = None Text
-                , save =
-                    Some
-                      { ability = "cha"
-                      , dc = { kind = "caster_spell_save_dc" }
-                      , onFailure =
-                          { kind = "send_to_home_plane_if_not_already_there"
-                          , creatureTypeDestinationOverrides =
-                              [ { creatureType = "undead"
-                                , destination = "shadowfell"
-                                }
-                              , { creatureType = "fey"
-                                , destination = "feywild"
-                                }
-                              ]
-                          }
-                      }
                 }
               ]
           }
