@@ -1246,6 +1246,40 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
   }, 180_000);
 
+  test("rejects tampering with cumulative spell-vocabulary classifications", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const classifiedChanges = fixtureClassifiedChanges(certificate);
+        for (const classificationKind of [
+          "targetSelectionVisibility",
+          "authoredConditionalMechanics",
+          "creatureTypeProtectionVocabulary",
+          "ongoingMechanicsEnvelope",
+        ]) {
+          const classifications = fixtureArrayField(
+            classifiedChanges,
+            classificationKind,
+          );
+          const first = fixtureObject(
+            classifications[0],
+            `${classificationKind}[0]`,
+          );
+          first.pointer = `/$defs/Unreviewed${classificationKind}`;
+        }
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
   test("rejects tampering with the canonical Mastery classification pointer", () => {
     const result = withFixture(
       ({ certificatePath: fixturePath }) => {

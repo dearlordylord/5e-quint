@@ -27,6 +27,12 @@ suppression alongside its existing Stealth modifier, and Hunter's Mark's typed
 creature target plus its passive Wisdom check advantage for the exact
 Perception-or-Survival scope. Hunter's Mark changes only the aggregate: all of
 its published shapes already belong to the reviewed candidate schema graph.
+The cumulative SR-04G Surface join also authenticates Command's visible-target
+selection, Gust of Wind's later-turn timing, Phantasmal Force's renamed
+conditional-mechanics owner, Spike Growth's camouflaged-area recognition, and
+the creature-type protection and ward facts shared by Protection from Evil and
+Good and Dispel Evil and Good. These remain authored Surface facts; their
+presence in the publication does not itself claim Battle execution support.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -73,6 +79,16 @@ non-empty, trimmed-string constraints. The graph certificate records these four
 keyword leaves under a separate `unitIdLinkedSpellEnd` classification, so an
 `itemId` constraint cannot substitute for a linked-spell dependency constraint
 or inherit its reviewed pointer authority.
+
+The cumulative schema graph classifies Command visibility only on the generic
+`choose_up_to` target-selection owner; willing-target variants retain their
+pre-existing visibility contract. Conditional-mechanics evidence separately
+accounts for the property rename and camouflaged-area branch. Creature-type
+protection evidence removes only the new protection and ward discriminants,
+then compares the ongoing-mechanics envelope with its immutable comparison
+owner so reference extraction cannot masquerade as a semantic delta. Each
+classification is authorized by exact before/after node hashes, and unmatched
+or stale occurrences remain verifier failures.
 
 The final convergence repair also synchronizes Life Bond's
 `caster_heal_link.rangeFeet` publication contract with its existing decoded

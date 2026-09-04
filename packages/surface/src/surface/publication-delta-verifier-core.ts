@@ -158,6 +158,14 @@ const SchemaCertificateSchema = Schema.Struct({
         suppressMovementTraceEffect: Schema.Array(
           SchemaNodeClassificationSchema,
         ),
+        targetSelectionVisibility: Schema.Array(SchemaNodeClassificationSchema),
+        authoredConditionalMechanics: Schema.Array(
+          SchemaNodeClassificationSchema,
+        ),
+        creatureTypeProtectionVocabulary: Schema.Array(
+          SchemaNodeClassificationSchema,
+        ),
+        ongoingMechanicsEnvelope: Schema.Array(SchemaNodeClassificationSchema),
         canonicalMasteryVariants: Schema.Array(SchemaNodeClassificationSchema),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
@@ -737,6 +745,10 @@ type CandidateSchemaClassifications = {
   readonly unitIdLinkedSpellEnd: readonly SchemaNodeClassification[];
   readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
   readonly suppressMovementTraceEffect: readonly SchemaNodeClassification[];
+  readonly targetSelectionVisibility: readonly SchemaNodeClassification[];
+  readonly authoredConditionalMechanics: readonly SchemaNodeClassification[];
+  readonly creatureTypeProtectionVocabulary: readonly SchemaNodeClassification[];
+  readonly ongoingMechanicsEnvelope: readonly SchemaNodeClassification[];
   readonly canonicalMasteryVariants: readonly SchemaNodeClassification[];
 };
 
@@ -1420,6 +1432,7 @@ function classifyFlyOnlyHover(
 
 function classifyCandidateSchema(
   schema: SchemaDocument,
+  comparisonSchema: SchemaDocument,
   expected: CandidateSchemaClassifications,
 ): ClassifiedSchemaTransform {
   const reachable = reachableSchemaNodes(schema);
@@ -1430,6 +1443,10 @@ function classifyCandidateSchema(
     unitIdLinkedSpellEnd: SchemaNodeClassification[];
     casterHealLinkRangeFeet: SchemaNodeClassification[];
     suppressMovementTraceEffect: SchemaNodeClassification[];
+    targetSelectionVisibility: SchemaNodeClassification[];
+    authoredConditionalMechanics: SchemaNodeClassification[];
+    creatureTypeProtectionVocabulary: SchemaNodeClassification[];
+    ongoingMechanicsEnvelope: SchemaNodeClassification[];
     canonicalMasteryVariants: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
@@ -1438,6 +1455,10 @@ function classifyCandidateSchema(
     unitIdLinkedSpellEnd: [],
     casterHealLinkRangeFeet: [],
     suppressMovementTraceEffect: [],
+    targetSelectionVisibility: [],
+    authoredConditionalMechanics: [],
+    creatureTypeProtectionVocabulary: [],
+    ongoingMechanicsEnvelope: [],
     canonicalMasteryVariants: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
@@ -1593,6 +1614,144 @@ function classifyCandidateSchema(
       ? proposed
       : transformed;
   };
+  const classifyRemovedObjectField =
+    (
+      classificationKind: keyof CandidateSchemaClassifications,
+      fieldName: string,
+      replacementFieldName?: string,
+      matchesOwner: (properties: JsonObject) => boolean = () => true,
+    ): SchemaObjectClassifier =>
+    (value, pointer, transformed) => {
+      if (!reachable.has(value)) return transformed;
+      const properties = objectAt(transformed, "properties");
+      if (
+        properties === undefined ||
+        !(fieldName in properties) ||
+        !matchesOwner(properties)
+      ) {
+        return transformed;
+      }
+      const replacementProperties = jsonObjectWithoutKeys(properties, [
+        fieldName,
+      ]);
+      const proposedProperties =
+        replacementFieldName === undefined
+          ? replacementProperties
+          : {
+              ...replacementProperties,
+              [replacementFieldName]: properties[fieldName],
+            };
+      const required = Array.isArray(transformed.required)
+        ? transformed.required.map((requiredField) =>
+            requiredField === fieldName && replacementFieldName !== undefined
+              ? replacementFieldName
+              : requiredField,
+          )
+        : undefined;
+      const proposed = {
+        ...transformed,
+        properties: proposedProperties,
+        ...(required === undefined ? {} : { required }),
+      };
+      return authorize(classificationKind, pointer, value, proposed)
+        ? proposed
+        : transformed;
+    };
+  const classifyTargetSelectionVisibility = classifyRemovedObjectField(
+    "targetSelectionVisibility",
+    "visibility",
+    undefined,
+    (properties) => {
+      const mode = objectAt(properties, "mode");
+      return (
+        mode?.type === "string" &&
+        Array.isArray(mode.enum) &&
+        mode.enum.length === 1 &&
+        mode.enum[0] === "choose_up_to" &&
+        !("disposition" in properties)
+      );
+    },
+  );
+  const classifyAuthoredConditionalMechanicsField = classifyRemovedObjectField(
+    "authoredConditionalMechanics",
+    "authoredConditionalMechanics",
+    "authoredConditionalEffects",
+  );
+  const classifyUnionKinds =
+    (
+      classificationKind: keyof CandidateSchemaClassifications,
+      removedKinds: ReadonlySet<string>,
+    ): SchemaObjectClassifier =>
+    (value, pointer, transformed) => {
+      if (!reachable.has(value) || !Array.isArray(transformed.anyOf)) {
+        return transformed;
+      }
+      const removed = transformed.anyOf.filter((member) => {
+        const resolved = resolvePureLocalReference(schema, member);
+        if (!isJsonObject(resolved)) return false;
+        const properties = objectAt(resolved, "properties");
+        const kind =
+          properties === undefined ? undefined : objectAt(properties, "kind");
+        return (
+          kind?.type === "string" &&
+          Array.isArray(kind.enum) &&
+          kind.enum.length === 1 &&
+          typeof kind.enum[0] === "string" &&
+          removedKinds.has(kind.enum[0])
+        );
+      });
+      if (removed.length === 0) return transformed;
+      const retained = transformed.anyOf.filter(
+        (member) => !removed.includes(member),
+      );
+      const proposed =
+        retained.length === 1 && isJsonObject(retained[0])
+          ? retained[0]
+          : { ...transformed, anyOf: retained };
+      return authorize(classificationKind, pointer, value, proposed)
+        ? proposed
+        : transformed;
+    };
+  const classifyCamouflagedAreaRecognition = classifyUnionKinds(
+    "authoredConditionalMechanics",
+    new Set(["camouflaged_area_recognition"]),
+  );
+  const classifyCreatureTypeProtectionVocabulary = classifyUnionKinds(
+    "creatureTypeProtectionVocabulary",
+    new Set(["creature_type_protection", "creature_type_ward"]),
+  );
+  const comparisonOngoingMechanicsOwner = objectAt(
+    comparisonSchema.$defs,
+    "SrdRecordUnion1Encoded",
+  );
+  const classifyOngoingMechanicsEnvelope: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      comparisonOngoingMechanicsOwner === undefined
+    ) {
+      return transformed;
+    }
+    const properties = objectAt(value, "properties");
+    if (
+      properties === undefined ||
+      !("operations" in properties) ||
+      !("authoredConditionalMechanics" in properties)
+    ) {
+      return transformed;
+    }
+    return authorize(
+      "ongoingMechanicsEnvelope",
+      pointer,
+      value,
+      comparisonOngoingMechanicsOwner,
+    )
+      ? comparisonOngoingMechanicsOwner
+      : transformed;
+  };
   const classifiers = [
     classifyCasterHealLinkRangeFeetForCandidate,
     classifyGmSpeedChoiceMinimumForCandidate,
@@ -1600,6 +1759,11 @@ function classifyCandidateSchema(
     classifyUnitIdLinkedSpellEnd,
     classifyFlyOnlyHoverForCandidate,
     classifySuppressMovementTraceEffect,
+    classifyTargetSelectionVisibility,
+    classifyCamouflagedAreaRecognition,
+    classifyAuthoredConditionalMechanicsField,
+    classifyCreatureTypeProtectionVocabulary,
+    classifyOngoingMechanicsEnvelope,
     classifyCanonicalMasteryVariants,
   ] as const;
   const classify: SchemaObjectClassifier = (value, pointer, transformed) =>
@@ -2694,7 +2858,7 @@ function classifySchemaGraphDelta(
   readonly candidate: ClassifiedSchemaTransform;
   readonly comparison: ReturnType<typeof classifyComparisonSchema>;
 } {
-  const candidate = classifyCandidateSchema(candidateSchema, {
+  const candidate = classifyCandidateSchema(candidateSchema, comparisonSchema, {
     gmSpeedChoiceMinimum: expected.classifiedChanges.gmSpeedChoiceMinimum,
     flyOnlyHover: expected.classifiedChanges.flyOnlyHover,
     unitIdItemId: expected.classifiedChanges.unitIdItemId,
@@ -2704,6 +2868,14 @@ function classifySchemaGraphDelta(
       expected.classifiedChanges.suppressMovementTraceEffect,
     canonicalMasteryVariants:
       expected.classifiedChanges.canonicalMasteryVariants,
+    targetSelectionVisibility:
+      expected.classifiedChanges.targetSelectionVisibility,
+    authoredConditionalMechanics:
+      expected.classifiedChanges.authoredConditionalMechanics,
+    creatureTypeProtectionVocabulary:
+      expected.classifiedChanges.creatureTypeProtectionVocabulary,
+    ongoingMechanicsEnvelope:
+      expected.classifiedChanges.ongoingMechanicsEnvelope,
   });
   const comparison = classifyComparisonSchema(
     comparisonSchema,
