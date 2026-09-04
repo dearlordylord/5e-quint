@@ -23,8 +23,8 @@ This section is the sole mutable handoff for a new session.
 - Active landing unit: `integration/cleanroom-sr-04g` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
-  integration certification checkpoint
-  `73921983ca794c3584b300ae4f2feb27a4347af1`
+  integration certification-review checkpoint
+  `2bd514943`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -37,7 +37,8 @@ This section is the sole mutable handoff for a new session.
   reviewed tip `42ceb3a3e2bdbac5005b9ce5911bb699c597dc1a` is integrated by
   `7e37645a92a9cde80e824bf23969ae6b645203ce`; the cumulative Surface
   publication delta is classified and certified by
-  `73921983ca794c3584b300ae4f2feb27a4347af1`.
+  `73921983ca794c3584b300ae4f2feb27a4347af1`, with Standards review repairs at
+  `2bd514943` and zero Spec findings.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -76,11 +77,19 @@ This section is the sole mutable handoff for a new session.
   64/64. The deeper delta-verifier suite passed 42/48 before exposing six stale
   schema fixture coordinates; after repairing all eight affected coordinate
   cases, their focused rerun passed 8/8. ESLint, Prettier, and diff checks
-  passed; no broad/full or QNT/MBT pass is claimed.
-- Next action: complete focused composite verification and reviewer
-  convergence. The observation baseline remains 99 complete, 22 partial, and
-  74 with no owner;
-  integrating A5 does not reclassify those catalog-root observations.
+  passed. Standards review's two P2 findings were repaired at `2bd514943`: the
+  eight fixture mutations now use unique semantic/discriminant locators that
+  follow local Speed-union references, and the rationale leaves volatile
+  counts and digests to the executable certificate. Spec review had zero
+  findings. No broad/full or QNT/MBT pass is claimed.
+- Next action: continue the remaining top-level Battle profile migration. The
+  current audit retains 20 legacy `admit:` declarations producing 59 fan-out
+  diagnostics. The active `persistentArmorEffect` lane owns one declaration
+  and one catalog root at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-armor`
+  on `work/sr04g-persistent-armor`, based at `e0ce7ea6`. The observation
+  baseline remains 99 complete, 22 partial, and 74 with no owner; integrating
+  A5 does not reclassify those catalog-root observations.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -200,9 +209,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                     | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration certification checkpoint `73921983c`; C2, B3, A4, B4, and A5 integrated; cumulative Surface publication delta certified; focused composite verification and reviewer convergence remain in progress | Active |
+| Checkpoint/unit  | Ticket/slice                                    | Owner              | Worktree/branch                                                                                              | Base SHA    | Write lease                                                                                                                                                                                      | State  |
+| ---------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| `SR-04G`         | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                | `dd1350f81` | Integration certification-review checkpoint `2bd514943`; C2, B3, A4, B4, and A5 integrated; cumulative Surface publication delta certified; remaining top-level profile migration is in progress | Active |
+| `SR-04G/profile` | #474 `persistentArmorEffect` profile migration  | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-armor`; `work/sr04g-persistent-armor` | `e0ce7ea6`  | One legacy top-level `admit:` declaration and its one catalog root                                                                                                                               | Active |
 
 ## Landing discipline
 
