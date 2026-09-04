@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `7cede904b5c177a9d69a22f13541e902f0c1ffb4`
+  `acdbacb9ae44b1bb111d1b93b92df2c7f7e7eeed`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -38,7 +38,10 @@ This section is the sole mutable handoff for a new session.
   `7e37645a92a9cde80e824bf23969ae6b645203ce`; the cumulative Surface
   publication delta is classified and certified by
   `73921983ca794c3584b300ae4f2feb27a4347af1`, with Standards review repairs at
-  `2bd514943` and `7cede904b`; Spec review had zero findings.
+  `2bd514943` and `7cede904b`; Spec review had zero findings. The
+  `persistentArmorEffect` admission reviewed tip
+  `ae0216827fa4788c371677b067b36ce93e24f5f0` is integrated by
+  `acdbacb9ae44b1bb111d1b93b92df2c7f7e7eeed`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -69,6 +72,16 @@ This section is the sole mutable handoff for a new session.
   report no error in the five A5 files, while the documented incomplete-frontier
   profile/registry errors remain elsewhere, so no Battle typecheck or broader
   registry/runtime pass is claimed.
+- Persistent-armor evidence: exact reviewed tip `ae0216827` migrates the legacy
+  top-level `persistentArmorEffect` declaration to `admitMechanics`; the
+  persistent-armor plus shared spell-mechanics admission suites passed 27/27,
+  and the five focused Mage Armor/Armor of Shadows parser tests passed 5/5.
+  Rules-kernel coverage passed 162 obligations, and scoped ESLint, Prettier,
+  and diff checks passed. Battle package typecheck reports no diagnostics in
+  the six changed TypeScript files, but remains incomplete elsewhere at the
+  registry-wide migration frontier. The remaining 19 legacy declarations
+  prevent whole-package convergence, and no registry-wide or full lifecycle
+  pass is claimed.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -85,13 +98,10 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current audit retains 20 legacy `admit:` declarations producing 59 fan-out
-  diagnostics. The active `persistentArmorEffect` lane owns one declaration
-  and one catalog root at
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-armor`
-  on `work/sr04g-persistent-armor`, based at `e0ce7ea6`. The observation
-  baseline remains 99 complete, 22 partial, and 74 with no owner; integrating
-  A5 does not reclassify those catalog-root observations.
+  current audit retains 19 legacy top-level `admit:` declarations. No profile
+  lane currently holds a write lease. The observation baseline remains exactly
+  99 complete, 22 partial, and 74 with no owner; integrating
+  `persistentArmorEffect` does not reclassify those catalog-root observations.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -211,10 +221,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit  | Ticket/slice                                    | Owner              | Worktree/branch                                                                                              | Base SHA    | Write lease                                                                                                                                                                                      | State  |
-| ---------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| `SR-04G`         | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                | `dd1350f81` | Integration certification-review checkpoint `7cede904b`; C2, B3, A4, B4, and A5 integrated; cumulative Surface publication delta certified; remaining top-level profile migration is in progress | Active |
-| `SR-04G/profile` | #474 `persistentArmorEffect` profile migration  | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-armor`; `work/sr04g-persistent-armor` | `e0ce7ea6`  | One legacy top-level `admit:` declaration and its one catalog root                                                                                                                               | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                            | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `acdbacb9a`; C2, B3, A4, B4, A5, and `persistentArmorEffect` integrated; cumulative Surface publication delta certified; 19 top-level profile migrations remain | Active |
 
 ## Landing discipline
 
