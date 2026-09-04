@@ -347,6 +347,15 @@ describe("persistentArmorEffect static admission", () => {
       spellMechanicsHeaderPath("components"),
     ],
     [
+      "duration kind",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        duration: { kind: "instantaneous" as const },
+      }),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ],
+    [
       "duration value",
       (mechanics: OngoingSpellMechanics) => {
         if (mechanics.duration.kind !== "timed") {

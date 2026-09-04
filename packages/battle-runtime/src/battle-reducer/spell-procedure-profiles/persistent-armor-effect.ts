@@ -259,6 +259,12 @@ function persistentArmorEffectHasTargetDonsArmorEnding(
   );
 }
 
+function isPersistentArmorEffectDurationHourAmount(
+  amount: PositiveInteger,
+): amount is PositiveInteger & 8 {
+  return amount === 8;
+}
+
 /**
  * Keep the owner candidate stable when one represented fact is malformed,
  * while requiring the AC replacement/armor-ending signature that separates
@@ -282,19 +288,24 @@ function persistentArmorEffectRepresentation(
   const hasActionCastingTime = mechanics.castingTime.kind === "action";
   const hasTargetDonsArmorEnding =
     persistentArmorEffectHasTargetDonsArmorEnding(mechanics);
+  const hasPersistentArmorDuration =
+    hasEightHourDuration && hasTargetDonsArmorEnding;
+  const hasPersistentArmorHeader =
+    mechanics.level === 1 &&
+    mechanics.school === "abjuration" &&
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    typeof mechanics.components.m === "string";
   return (
     (hasBaseArmorOperation || hasTargetDonsArmorEnding) &&
     spellProcedureHasRedundantSignature({
       kind: "oneOfFiveWitnessesMayBeMissing",
       witnesses: [
         { name: "baseArmorOperation", present: hasBaseArmorOperation },
-        {
-          name: "targetDonsArmorEnding",
-          present: hasTargetDonsArmorEnding,
-        },
+        { name: "duration", present: hasPersistentArmorDuration },
         { name: "willingCreatureTarget", present: hasWillingCreatureTarget },
-        { name: "eightHourDuration", present: hasEightHourDuration },
         { name: "actionCastingTime", present: hasActionCastingTime },
+        { name: "header", present: hasPersistentArmorHeader },
       ],
     })
   );
@@ -328,7 +339,7 @@ function persistentArmorEffectDuration(
   if (
     !isSpellCanonicalDurationValue(durationValue) ||
     durationValue.unit !== "hour" ||
-    durationValue.amount !== 8
+    !isPersistentArmorEffectDurationHourAmount(durationValue.amount)
   ) {
     return undefined;
   }
@@ -345,12 +356,9 @@ function persistentArmorEffectDuration(
   ) {
     return undefined;
   }
-  // The immediately preceding equality guard proves the literal while the
-  // Surface boundary parser already proves the PositiveInteger brand.
-  const amount = durationValue.amount as PositiveInteger & 8;
   const value: PersistentArmorEffectDuration["value"] = {
     unit: durationValue.unit,
-    amount,
+    amount: durationValue.amount,
   };
   return {
     ...duration,
