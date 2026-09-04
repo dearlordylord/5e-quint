@@ -277,9 +277,17 @@ This section is the sole mutable handoff for a new session.
   `magicSuppressionEmanation`, and `creatureTypeProtection`. The landed W9
   directional-persistent-area lease is clear. The smallest coherent remaining
   single-profile slice is W10 `magicSuppressionEmanation`, paired with its
-  existing focused Antimagic Field admission owner; activate its exact lease
-  from the W9 bookkeeping receipt before implementation. No shared schema,
-  registry, coverage-map, QNT, MBT, or unrelated runtime file is anticipated.
+  existing focused Antimagic Field admission owner. Its clean
+  `work/sr04g-magic-suppression-emanation` branch and
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magic-suppression-emanation`
+  worktree start from exact W9 bookkeeping receipt
+  `2efce770ce2bdd2ec9a7372da21aa065325f1a57`. W10 owns
+  `magic-suppression-emanation.ts`,
+  `unit-profile-admission-antimagic-field.test.ts`, and only the
+  `magicSuppressionEmanation` invocation source-field line in
+  `battle-state-execution.ts` needed for mechanics-free execution. No shared
+  schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated
+  runtime file is leased.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -414,9 +422,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                              | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `cc4826a31`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, and directional persistent area integrated; cumulative Surface publication delta certified; 10 top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                     | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                              | State  |
+| --------------- | ----------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                        | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `cc4826a31`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, and directional persistent area integrated; cumulative Surface publication delta certified; 10 top-level profile migrations remain | Active |
+| `SR-04G/W10`    | magic-suppression-emanation profile admission   | Codex orchestrator; implementer: Luna max | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magic-suppression-emanation`; `work/sr04g-magic-suppression-emanation` | `2efce770c` | `magic-suppression-emanation.ts`, `unit-profile-admission-antimagic-field.test.ts`, and only the `magicSuppressionEmanation` invocation source-field line in `battle-state-execution.ts`. No shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated runtime lease                                                                                                               | Active |
 
 ## Landing discipline
 
