@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `eadaeaf108ce4792d9deb78e076b3b4ea3feae52`
+  `7425d13b9e3b71ba603eac7f2e0bf3cefaee4992`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -49,7 +49,9 @@ This section is the sole mutable handoff for a new session.
   reviewed tip `3a6008cb25f426ef2ea6228a860cef3d1c0967b7` is integrated by
   `6de14f5a66a9422dbca471e9e2c52ae5146d3f91`; the repeated-damage-allocation
   admission reviewed tip `a8d079fa06fb5e993d8eb7e7b9a42361180373fb` is integrated by
-  `eadaeaf108ce4792d9deb78e076b3b4ea3feae52`.
+  `eadaeaf108ce4792d9deb78e076b3b4ea3feae52`; the persistent-area-obscurement
+  admission reviewed tip `a467206400b25ae7d4f48baec62af8edc8b434c5` is integrated by
+  `7425d13b9e3b71ba603eac7f2e0bf3cefaee4992`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -147,6 +149,19 @@ This section is the sole mutable handoff for a new session.
   claimed as lifecycle verification. No coverage checker, QNT, MBT, registry,
   or broad/full verification is claimed. The remaining 15 legacy declarations
   prevent whole-package convergence.
+- Persistent-area-obscurement evidence: exact reviewed tip `a46720640`
+  migrates the legacy top-level persistent-area-obscurement declaration to
+  `admitMechanics`; Standards and Spec/RAW review axes converged with zero
+  findings after three rounds. The focused static-admission selection passed
+  9/9 with five lifecycle tests skipped. Changed-root type diagnostics were
+  zero, and scoped ESLint, Prettier, and diff checks passed. The actual reviewed
+  write set was the persistent-area-obscurement profile, the Fog Cloud test,
+  and `battle-state-execution.ts`. Lifecycle and full-file verification are not
+  claimed because the remaining registry frontier raises
+  `admitMechanics is not a function` before those assertions. No package,
+  broad, coverage, QNT, MBT, or registry run is claimed, and reducer semantics
+  are unchanged. The remaining 14 legacy declarations prevent whole-package
+  convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -163,10 +178,11 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current audit retains 15 legacy top-level `admit:` declarations. The landed
-  W4 repeated-damage-allocation lease is clear. W5 now holds the narrow
-  `persistent-area-obscurement.ts` profile and existing focused
-  `battle-runtime-fog-cloud.test.ts` lease from `4254b96d5`. Shared
+  current audit retains 14 legacy top-level `admit:` declarations. The landed
+  W5 persistent-area-obscurement lease is clear. W6 is the next narrow slice:
+  `magical-darkness-point-origin.ts` with the existing focused
+  `unit-profile-admission-darkness.test.ts`, based on `7425d13b9`; no W6 branch
+  or worktree exists yet. Shared
   registry/state or coverage-map edits require an explicit lease expansion,
   and no QNT/MBT run is authorized unless implementation changes semantics.
   Before every landing, fetch `origin` and prove the current `master` tip is
@@ -303,10 +319,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                     | State  |
-| --------------- | ----------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `eadaeaf10`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, and repeated damage allocation integrated; cumulative Surface publication delta certified; 15 top-level profile migrations remain | Active |
-| `SR-04G/W5`     | persistent-area-obscurement profile admission   | Codex orchestrator; implementer: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-area-obscurement`; `work/sr04g-persistent-area-obscurement` | `4254b96d5` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-obscurement.ts`; `packages/battle-runtime/src/battle-runtime-fog-cloud.test.ts`; `packages/battle-runtime/src/battle-state-execution.ts`                                   | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                  | State   |
+| --------------- | ----------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `7425d13b9`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, and persistent area obscurement integrated; cumulative Surface publication delta certified; 14 top-level profile migrations remain | Active  |
+| `SR-04G/W6`     | magical-darkness-point-origin profile admission | Codex orchestrator; implementer: Sol | Not created                                                                                   | `7425d13b9` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts`; `packages/battle-runtime/src/unit-profile-admission-darkness.test.ts`; shared registry/state changes require explicit lease expansion                                                | Planned |
 
 ## Landing discipline
 
