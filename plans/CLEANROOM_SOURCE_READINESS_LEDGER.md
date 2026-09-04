@@ -164,18 +164,18 @@ This section is the sole mutable handoff for a new session.
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
   current audit retains 15 legacy top-level `admit:` declarations. The landed
-  W4 repeated-damage-allocation lease is clear. The next narrow slice is the
-  `persistent-area-obscurement.ts` profile with its existing focused
-  `battle-runtime-fog-cloud.test.ts`; assign implementation to a Sol agent, but
-  no worktree or lease exists yet. Shared registry/state or coverage-map edits
-  require an explicit lease expansion, and no QNT/MBT run is authorized unless
-  implementation changes semantics. Before every landing, fetch `origin` and
-  prove the current `master` tip is present in the integration branch; this is
-  routine integration work and does not require an operator decision. The
-  observation baseline remains exactly 99 complete, 22 partial, and 74 with no
-  owner; integrating `persistentArmorEffect`, linked defense, movable light,
-  object light, and repeated-damage allocation does not reclassify those
-  catalog-root observations.
+  W4 repeated-damage-allocation lease is clear. W5 now holds the narrow
+  `persistent-area-obscurement.ts` profile and existing focused
+  `battle-runtime-fog-cloud.test.ts` lease from `4254b96d5`. Shared
+  registry/state or coverage-map edits require an explicit lease expansion,
+  and no QNT/MBT run is authorized unless implementation changes semantics.
+  Before every landing, fetch `origin` and prove the current `master` tip is
+  present in the integration branch; this is routine integration work and does
+  not require an operator decision. The observation baseline remains exactly
+  99 complete, 22 partial, and 74 with no owner; integrating
+  `persistentArmorEffect`, linked defense, movable light, object light, and
+  repeated-damage allocation does not reclassify those catalog-root
+  observations.
 - Deferred SR-04G convergence contract: before an SR-04G acceptance claim,
   audit and repair or reject the unknown
   `spell.invocation-persistent-armor-effect` Unit-profile marker; run an
@@ -303,9 +303,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                     | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `eadaeaf10`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, and repeated damage allocation integrated; cumulative Surface publication delta certified; 15 top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                     | State  |
+| --------------- | ----------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `eadaeaf10`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, and repeated damage allocation integrated; cumulative Surface publication delta certified; 15 top-level profile migrations remain | Active |
+| `SR-04G/W5`     | persistent-area-obscurement profile admission   | Codex orchestrator; implementer: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-area-obscurement`; `work/sr04g-persistent-area-obscurement` | `4254b96d5` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-obscurement.ts`; `packages/battle-runtime/src/battle-runtime-fog-cloud.test.ts`                                                                                            | Active |
 
 ## Landing discipline
 
