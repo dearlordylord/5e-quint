@@ -245,10 +245,13 @@ This section is the sole mutable handoff for a new session.
   `unit-profile-admission-gust-of-wind.test.ts` owner. Create the clean
   `work/sr04g-directional-persistent-area` branch and
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-directional-persistent-area`
-  worktree from this W8 landing-receipt commit, then record its exact base and
-  active lease before implementation. No shared registry, coverage-map, QNT,
-  MBT, or unrelated runtime file is leased; any additional production or
-  artifact owner requires an explicit lease expansion.
+  worktree from exact base
+  `5bae05d51332c142756458ea6f1b8d30179e68dd`. W9 owns those two files plus
+  only the `directionalPersistentArea` invocation source-field line in
+  `battle-state-execution.ts`, needed to carry a mechanics-free execution
+  source. No shared registry, coverage-map, QNT, MBT, or unrelated runtime file
+  is leased; any additional production or artifact owner requires an explicit
+  lease expansion.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -383,9 +386,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                 | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `a1ac97140`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, and compelled next-turn behavior integrated; cumulative Surface publication delta certified; 11 top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                 | State  |
+| --------------- | ----------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `a1ac97140`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, and compelled next-turn behavior integrated; cumulative Surface publication delta certified; 11 top-level profile migrations remain | Active |
+| `SR-04G/W9`     | directional-persistent-area profile admission   | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-directional-persistent-area`; `work/sr04g-directional-persistent-area` | `5bae05d51` | `directional-persistent-area.ts`, `unit-profile-admission-gust-of-wind.test.ts`, and only the `directionalPersistentArea` invocation source-field line in `battle-state-execution.ts`; no registry, coverage-map, QNT, MBT, or other shared-file write lease                                                                                                                | Active |
 
 ## Landing discipline
 
