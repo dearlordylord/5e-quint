@@ -25,7 +25,13 @@
     "operations": [
       {
         "effect": {
-          "creatureTypes": ["celestial", "elemental", "fey", "fiend", "undead"],
+          "creatureTypes": [
+            "celestial",
+            "elemental",
+            "fey",
+            "fiend",
+            "undead"
+          ],
           "kind": "creature_type_ward",
           "protections": [
             {
@@ -36,7 +42,10 @@
           "specialFunctions": [
             {
               "action": "magic",
-              "conditions": ["charmed", "frightened"],
+              "conditions": [
+                "charmed",
+                "frightened"
+              ],
               "kind": "end_source_scoped_relevant_effects",
               "possession": "included",
               "target": {
