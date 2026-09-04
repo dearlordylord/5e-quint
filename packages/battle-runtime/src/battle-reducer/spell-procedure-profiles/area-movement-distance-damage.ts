@@ -19,6 +19,7 @@ import {
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import type {
+  Components,
   DamageType,
   DiceExpr,
   SpellMechanics,
@@ -160,13 +161,22 @@ const ROOT_FIELDS = [
   "authoredConditionalEffects",
 ] as const satisfies ReadonlyArray<keyof AreaMovementDistanceDamageMechanics>;
 const RANGE_FIELDS = ["kind", "feet"] as const;
+type AreaMovementDistanceDamageComponentKeySpace = Pick<
+  Components,
+  "v" | "s" | "m"
+> & {
+  readonly materialCostGp?: unknown;
+  readonly materialConsumed?: unknown;
+};
 const COMPONENT_FIELDS = [
   "v",
   "s",
   "m",
   "materialCostGp",
   "materialConsumed",
-] as const;
+] as const satisfies ReadonlyArray<
+  keyof AreaMovementDistanceDamageComponentKeySpace
+>;
 const CASTING_TIME_FIELDS = ["kind"] as const;
 const DURATION_FIELDS = [
   "kind",
@@ -192,13 +202,6 @@ const DIFFICULT_TERRAIN_EFFECT_FIELDS = ["kind"] as const;
 const DAMAGE_EFFECT_FIELDS = ["kind", "damageType", "amount"] as const;
 const DAMAGE_AMOUNT_FIELDS = ["kind", "expr"] as const;
 const DICE_EXPR_FIELDS = ["dice", "dieSize", "flat"] as const;
-
-function areaMovementDistanceDamageComponentsHaveOnlyKnownFields(
-  components: object,
-): boolean {
-  const knownFields = new Set<PropertyKey>(COMPONENT_FIELDS);
-  return Reflect.ownKeys(components).every((field) => knownFields.has(field));
-}
 
 function areaMovementDistanceDamageIssue(
   failedFact: AreaMovementDistanceDamageFailedFact,
@@ -470,20 +473,12 @@ function areaMovementDistanceDamageEffectProjection(
 }
 
 function areaMovementDistanceDamageOperationOrdinals(input: {
-  readonly operationCount: number;
   readonly terrainIndex: number;
   readonly damageIndex: number;
 }): readonly [PositiveInteger, PositiveInteger] {
-  const firstMissingIndex = input.operationCount;
   return [
-    PositiveInteger(
-      input.terrainIndex >= 0 ? input.terrainIndex + 1 : firstMissingIndex + 1,
-    ),
-    PositiveInteger(
-      input.damageIndex >= 0
-        ? input.damageIndex + 1
-        : firstMissingIndex + (input.terrainIndex >= 0 ? 1 : 2),
-    ),
+    PositiveInteger(input.terrainIndex >= 0 ? input.terrainIndex + 1 : 1),
+    PositiveInteger(input.damageIndex >= 0 ? input.damageIndex + 1 : 2),
   ];
 }
 
@@ -551,8 +546,9 @@ function inspectAreaMovementDistanceDamageMechanics(
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
     mechanics.components.m !== AREA_MOVEMENT_DISTANCE_DAMAGE_MATERIAL ||
-    !areaMovementDistanceDamageComponentsHaveOnlyKnownFields(
+    !spellMechanicsObjectHasOnlyKeys<AreaMovementDistanceDamageComponentKeySpace>(
       mechanics.components,
+      COMPONENT_FIELDS,
     )
   )
     push("components", spellMechanicsHeaderPath("components"));
@@ -589,16 +585,27 @@ function inspectAreaMovementDistanceDamageMechanics(
       spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
     );
 
-  const terrainIndex = mechanics.operations.findIndex(
+  const terrainEffectIndex = mechanics.operations.findIndex(
     ({ effect }) => effect.kind === "area_is_difficult_terrain",
   );
-  const damageIndex = mechanics.operations.findIndex(
-    ({ trigger, effect }) =>
-      trigger.kind === "on_creature_moves" && effect.kind === "damage",
+  const terrainIndex =
+    terrainEffectIndex >= 0
+      ? terrainEffectIndex
+      : mechanics.operations.findIndex(
+          ({ trigger }) => trigger.kind === "passive",
+        );
+  const movementTriggerIndex = mechanics.operations.findIndex(
+    ({ trigger }) => trigger.kind === "on_creature_moves",
   );
+  const damageIndex =
+    movementTriggerIndex >= 0
+      ? movementTriggerIndex
+      : mechanics.operations.findIndex(
+          ({ effect }, index) =>
+            index !== terrainIndex && effect.kind === "damage",
+        );
   const [terrainOrdinal, damageOrdinal] =
     areaMovementDistanceDamageOperationOrdinals({
-      operationCount: mechanics.operations.length,
       terrainIndex,
       damageIndex,
     });
@@ -612,11 +619,9 @@ function inspectAreaMovementDistanceDamageMechanics(
         "operationCount",
         spellOngoingOperationPath(PositiveInteger(index + 1)),
       );
-  for (let index = mechanics.operations.length; index < 2; index += 1)
-    push(
-      "operationCount",
-      spellOngoingOperationPath(PositiveInteger(index + 1)),
-    );
+  for (const ordinal of [PositiveInteger(1), PositiveInteger(2)] as const)
+    if (mechanics.operations[Number(ordinal) - 1] === undefined)
+      push("operationCount", spellOngoingOperationPath(ordinal));
   if (
     !areaMovementDistanceDamageDifficultTerrainOperationIsSupported(
       terrainOperation,
