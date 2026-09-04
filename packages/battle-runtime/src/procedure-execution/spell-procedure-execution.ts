@@ -60,6 +60,7 @@ import type {
   SpellComponent,
   SpellFailedSaveConditionEffect,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -1415,10 +1416,7 @@ export type SpellHostedWeaponAttackSpellProcedureExecution =
     readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly attackBonus: AttackBonus;
-    readonly bonusDamage: {
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    } | null;
+    readonly bonusDamage: SpellHostedWeaponAttackBonusDamageApplicability;
     readonly componentWeaponObjectId: BattleObjectId;
     readonly damageTypeChoices: readonly DamageType[];
     readonly procedure: "spellHostedWeaponAttack";

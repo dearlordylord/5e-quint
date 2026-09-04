@@ -1,4 +1,7 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellAdmissionSource,
+  BattleSpellExecutionSource,
+} from "../../battle-state-execution.ts";
 import {
   ongoingSpellRepeatCastIsAvailable,
   ongoingSpellRepeatIsOnLaterTurn,
@@ -32,21 +35,27 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // Weapon attacks share one target, attack-roll, damage, reaction, reduction,
 // and concentration-save lifecycle.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   attackBonus,
   movementFeet,
+  PositiveInteger,
   type AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
+  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
   Attachment,
+  DamageType,
   DiceAmount,
   DiceExpr,
   DiceExprDelta,
   EffectAtom,
+  OngoingEffect,
+  SpellMechanics,
+  TargetRelativePosition,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
-import { Match, Result } from "effect";
+import { Match } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
@@ -68,7 +77,6 @@ import {
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
 import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -82,12 +90,39 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  preparedSpellSlotInvocations,
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
+  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import {
+  admitSpellTargetAttachment,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationValueEvidencePaths,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  spellDurationTicksFromCanonicalValue,
+  spellDefinitionPointRangeFeet,
+  isSpellCanonicalDurationValue,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 
 type SpatialMeleeSpellAttackProxyAttackProxyInvocation = Extract<
   SupportedSpellInvocation,
@@ -112,22 +147,28 @@ type LinearPerLevelDiceAmount = Extract<
   DiceAmount,
   { readonly kind: "linear_per_level" }
 >;
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_BASE_SLOT_LEVEL = 2;
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_CAST_RANGE_FEET = 60;
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_FORCE_REACH_FEET = 5;
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_REPEAT_MOVE_MAX_FEET = 20;
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DICE = 1;
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DIE_SIZE = 8;
 type SupportedSpatialMeleeSpellAttackProxyDamageAmount =
   LinearPerLevelDiceAmount & {
     readonly axis: "slot";
     readonly base: DiceExpr & {
-      readonly dice: 1;
-      readonly dieSize: 8;
+      readonly dice: typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DICE;
+      readonly dieSize: typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DIE_SIZE;
       readonly flat?: undefined;
       readonly spellcastingMod: true;
       readonly abilityModifier?: undefined;
     };
     readonly perLevel: DiceExprDelta & {
-      readonly dice: 1;
-      readonly dieSize: 8;
+      readonly dice: typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DICE;
+      readonly dieSize: typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DIE_SIZE;
       readonly flat?: undefined;
     };
-    readonly startingAtLevel: 2;
+    readonly startingAtLevel: typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_BASE_SLOT_LEVEL;
   };
 type SupportedSpatialMeleeSpellAttackProxyDamageEffect = Extract<
   EffectAtom,
@@ -137,48 +178,316 @@ type SupportedSpatialMeleeSpellAttackProxyDamageEffect = Extract<
   readonly amount: SupportedSpatialMeleeSpellAttackProxyDamageAmount;
 };
 
+type SpatialMeleeSpellAttackProxyMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+type SpatialMeleeSpellAttackProxyHoleAttachment = Extract<
+  Attachment,
+  { readonly kind: "hole" }
+>;
+type SpatialMeleeSpellAttackProxyLocationAttachmentValue = Extract<
+  SpatialMeleeSpellAttackProxyHoleAttachment["value"],
+  { readonly kind: "location" }
+>;
+type SpatialMeleeSpellAttackProxyInitialPhase = Extract<
+  NonNullable<SpatialMeleeSpellAttackProxyMechanics["initialPhase"]>,
+  { readonly kind: "attack_roll" }
+>;
+type SpatialMeleeSpellAttackProxyOperation =
+  SpatialMeleeSpellAttackProxyMechanics["operations"][number];
+type SpatialMeleeSpellAttackProxyRepeatTrigger = Extract<
+  SpatialMeleeSpellAttackProxyOperation["trigger"],
+  { readonly kind: "bonus_action" }
+>;
+type SpatialMeleeSpellAttackProxyRepeatCost = NonNullable<
+  SpatialMeleeSpellAttackProxyRepeatTrigger["cost"]
+>;
+type SpatialMeleeSpellAttackProxyCompositeEffect = Extract<
+  OngoingEffect,
+  { readonly kind: "composite_ongoing" }
+>;
+type SpatialMeleeSpellAttackProxyRepositionEffect = Extract<
+  OngoingEffect,
+  { readonly kind: "reposition_attachment" }
+>;
+type SpatialMeleeSpellAttackProxyRepeatAttack = Extract<
+  OngoingEffect,
+  { readonly kind: "attack_roll" }
+>;
+type SpatialMeleeSpellAttackProxyRelativePosition = Extract<
+  NonNullable<TargetRelativePosition>,
+  { readonly kind: "within_feet_of_attachment" }
+>;
+type SpatialMeleeSpellAttackProxyTargetSelection = TargetSelection & {
+  readonly relativePosition?: TargetRelativePosition;
+};
+type SpatialMeleeSpellAttackProxyDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "damage" }
+>;
+type SpatialMeleeSpellAttackProxyNoneEffect = Extract<
+  EffectAtom,
+  { readonly kind: "none" }
+>;
+type SpatialMeleeSpellAttackProxyCastingTime = Extract<
+  SpatialMeleeSpellAttackProxyMechanics["castingTime"],
+  { readonly kind: "bonus_action" }
+>;
+type SpatialMeleeSpellAttackProxyDuration = Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
+type SpatialMeleeSpellAttackProxyRange = Extract<
+  SpellMechanics["range"],
+  { readonly kind: "point" }
+>;
+type SpatialMeleeSpellAttackProxyMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly durationValue: SpellCanonicalDurationValue;
+  readonly rangeFeet: MovementFeet;
+  readonly forceReachFeet: MovementFeet;
+  readonly repeatMoveMaxFeet: MovementFeet;
+  readonly damageAmount: SupportedSpatialMeleeSpellAttackProxyDamageAmount;
+  readonly attackKind: "melee_spell_attack";
+  readonly damageType: Extract<DamageType, "force">;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SpatialMeleeSpellAttackProxyFailedFact.
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_FAILED_FACTS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "attachment",
+  "initialPhase",
+  "initialAttack",
+  "initialDamage",
+  "initialMiss",
+  "operationCount",
+  "operation",
+  "operationEffect",
+  "repositionEffect",
+  "repeatAttack",
+  "repeatDamage",
+  "repeatMiss",
+  "damageAmount",
+] as const;
+type SpatialMeleeSpellAttackProxyFailedFact =
+  (typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_FAILED_FACTS)[number];
+type SpatialMeleeSpellAttackProxyMechanicsIssue = {
+  readonly failedFact: SpatialMeleeSpellAttackProxyFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+const SPATIAL_ONGOING_ATTACHMENT_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyHoleAttachment
+>;
+const SPATIAL_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "initialPhase",
+  "operations",
+] as const satisfies ReadonlyArray<keyof SpatialMeleeSpellAttackProxyMechanics>;
+const SPATIAL_LOCATION_VALUE_FIELDS = [
+  "kind",
+  "description",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyLocationAttachmentValue
+>;
+const SPATIAL_INITIAL_PHASE_FIELDS = [
+  "kind",
+  "attachment",
+  "attackKind",
+  "onHit",
+  "onMiss",
+  "continue",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyInitialPhase
+>;
+const SPATIAL_CASTING_TIME_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyCastingTime
+>;
+const SPATIAL_DURATION_FIELDS = [
+  "kind",
+  "upTo",
+  "earlyEnd",
+  "permanentIfMaintainedFull",
+] as const satisfies ReadonlyArray<keyof SpatialMeleeSpellAttackProxyDuration>;
+const SPATIAL_DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyDuration["upTo"]
+>;
+const SPATIAL_RANGE_FIELDS = ["kind", "feet"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRange
+>;
+const SPATIAL_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
+const SPATIAL_REPEAT_OPERATION_FIELDS = [
+  "trigger",
+  "predicate",
+  "targetLimit",
+  "effect",
+  "usageLimit",
+] as const satisfies ReadonlyArray<keyof SpatialMeleeSpellAttackProxyOperation>;
+const SPATIAL_REPEAT_TRIGGER_FIELDS = [
+  "kind",
+  "cost",
+  "laterTurnsOnly",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepeatTrigger
+>;
+const SPATIAL_REPEAT_COST_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepeatCost
+>;
+const SPATIAL_COMPOSITE_EFFECT_FIELDS = [
+  "kind",
+  "effects",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyCompositeEffect
+>;
+const SPATIAL_REPOSITION_FIELDS = [
+  "kind",
+  "maxMoveFeet",
+  "destination",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepositionEffect
+>;
+const SPATIAL_ATTACK_PHASE_FIELDS = [
+  "kind",
+  "attachment",
+  "attackKind",
+  "onHit",
+  "onMiss",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRepeatAttack
+>;
+const SPATIAL_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+  "relativePosition",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyTargetSelection
+>;
+const SPATIAL_RELATIVE_POSITION_FIELDS = [
+  "kind",
+  "attachmentHoleId",
+  "feet",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyRelativePosition
+>;
+const SPATIAL_DAMAGE_EFFECT_FIELDS = [
+  "kind",
+  "damageType",
+  "amount",
+  "timing",
+] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyDamageEffect
+>;
+const SPATIAL_NONE_EFFECT_FIELDS = ["kind"] as const satisfies ReadonlyArray<
+  keyof SpatialMeleeSpellAttackProxyNoneEffect
+>;
+const SPATIAL_DAMAGE_AMOUNT_FIELDS = [
+  "kind",
+  "axis",
+  "base",
+  "perLevel",
+  "startingAtLevel",
+] as const satisfies ReadonlyArray<keyof LinearPerLevelDiceAmount>;
+const SPATIAL_BASE_EXPR_FIELDS = [
+  "dice",
+  "dieSize",
+  "flat",
+  "spellcastingMod",
+  "abilityModifier",
+] as const satisfies ReadonlyArray<keyof DiceExpr>;
+const SPATIAL_DELTA_EXPR_FIELDS = [
+  "dice",
+  "dieSize",
+  "flat",
+] as const satisfies ReadonlyArray<keyof DiceExprDelta>;
+type SpatialMeleeSpellAttackProxyForceHoleId = Extract<
+  Attachment,
+  { readonly kind: "hole" }
+>["holeId"];
+
 function admitSpatialMeleeSpellAttackProxyAttackProxy(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: SpatialMeleeSpellAttackProxyMechanicsFacts,
 ): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] {
-  const proxy = spatialMeleeSpellAttackProxySpell(spell);
-  if (proxy === null) {
-    return [];
-  }
   const spellcasting = ctx.actor.origin.spellcasting;
-  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
-    const damageExpr = supportedDamageAmountExpr({
-      amount: proxy.damageAmount,
-      spellLevel: spell.mechanics.level,
-      slotLevel,
-    });
-    return damageExpr === null
-      ? null
-      : {
-          ...base,
+  const durationTicks = spellDurationTicksFromCanonicalValue(
+    facts.durationValue,
+  );
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] => {
+      if (Number(slot.spellLevel) < facts.level) return [];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "spatialMeleeSpellAttackProxy",
           operation: "createAndAttack",
+          spell,
           actionCost: "bonusAction",
           targeting: { kind: "singleCombatant" },
-          durationTicks: proxy.durationTicks,
-          rangeFeet: movementFeet(proxy.rangeFeet),
-          forceReachFeet: movementFeet(proxy.forceReachFeet),
-          repeatMoveMaxFeet: movementFeet(proxy.repeatMoveMaxFeet),
+          durationTicks,
+          rangeFeet: facts.rangeFeet,
+          forceReachFeet: facts.forceReachFeet,
+          repeatMoveMaxFeet: facts.repeatMoveMaxFeet,
           damage: {
             kind: "fixedSpellAttackDamage",
-            expr: {
-              ...damageExpr,
-              flat: Number(ctx.castingSource.abilityModifier),
-            },
-            damageType: "force",
+            expr: spatialMeleeSpellAttackProxyDamageExpr(
+              facts.damageAmount,
+              slot.spellLevel,
+              ctx.castingSource.abilityModifier,
+            ),
+            damageType: facts.damageType,
           },
-          attackKind: "melee_spell_attack",
+          attackKind: facts.attackKind,
           attackBonus: spatialMeleeSpellAttackProxyAttackBonus({
             spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
             proficiencyBonus: spellcasting.proficiencyBonus,
           }),
-        };
-  });
+        },
+      ];
+    },
+  );
+}
+
+function spatialMeleeSpellAttackProxyDamageExpr(
+  amount: SupportedSpatialMeleeSpellAttackProxyDamageAmount,
+  slotLevel: SpellSlotLevel,
+  spellcastingAbilityModifier: AbilityModifier,
+): DiceExpr {
+  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel);
+  return {
+    dice: amount.base.dice + amount.perLevel.dice * slotDelta,
+    dieSize: amount.base.dieSize,
+    flat: Number(spellcastingAbilityModifier),
+  };
 }
 
 function spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(
@@ -240,12 +549,9 @@ function spatialMeleeSpellAttackProxyRepeatExecutionFacts(
 }
 
 function admitSpatialMeleeSpellAttackProxyRepeatAttack(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] {
-  if (spatialMeleeSpellAttackProxySpell(spell) === null) {
-    return [];
-  }
   return ctx.actor.activeEffects.flatMap(
     (effect): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] => {
       if (!spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(effect, ctx)) {
@@ -304,92 +610,182 @@ function spatialMeleeSpellAttackProxyRepeatIsLaterTurn(
   );
 }
 
-function spatialMeleeSpellAttackProxySpell(spell: BattleSpellAdmissionSource) {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const forceAttachment = spell.mechanics.attachment;
-  const initialAttack = spell.mechanics.initialPhase;
-  const [repeatOperation, ...extraOperations] = spell.mechanics.operations;
-  const repeatEffects =
-    repeatOperation?.effect.kind === "composite_ongoing"
-      ? repeatOperation.effect.effects
-      : [];
-  const [reposition, repeatAttack, ...extraRepeatEffects] = repeatEffects;
-  const initialHit =
-    initialAttack?.kind === "attack_roll" ? initialAttack.onHit[0] : undefined;
-  const initialMiss =
-    initialAttack?.kind === "attack_roll" ? initialAttack.onMiss[0] : undefined;
-  const repeatHit =
-    repeatAttack?.kind === "attack_roll" ? repeatAttack.onHit[0] : undefined;
-  const repeatMiss =
-    repeatAttack?.kind === "attack_roll" ? repeatAttack.onMiss[0] : undefined;
+function spatialMeleeSpellAttackProxySemanticCandidate(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "ongoing_effect" &&
+    mechanics.initialPhase?.kind === "attack_roll" &&
+    mechanics.operations.some(
+      (operation) => operation.effect.kind === "composite_ongoing",
+    )
+  );
+}
 
-  if (
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    extraOperations.length !== 0 ||
-    durationTicks === null ||
-    Result.isFailure(durationTicks) ||
-    forceAttachment.kind !== "hole" ||
-    forceAttachment.value.kind !== "location" ||
-    initialAttack?.kind !== "attack_roll" ||
-    initialAttack.attackKind !== "melee_spell_attack" ||
-    initialAttack.attachment.kind !== "hole" ||
-    !spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
-      initialAttack.attachment,
-      forceAttachment.holeId,
-    ) ||
-    initialAttack.onHit.length !== 1 ||
-    initialAttack.onMiss.length !== 1 ||
-    !isSupportedSpatialMeleeSpellAttackProxyDamageEffect(initialHit) ||
-    !isSupportedSpatialMeleeSpellAttackProxyMissEffect(initialMiss) ||
-    repeatOperation?.trigger.kind !== "on_caster_spends_action" ||
-    repeatOperation.trigger.cost.kind !== "bonus_action" ||
-    repeatOperation.trigger.laterTurnsOnly !== true ||
-    repeatOperation.predicate !== undefined ||
-    repeatOperation.targetLimit !== undefined ||
-    repeatOperation.usageLimit !== undefined ||
-    repeatOperation.effect.kind !== "composite_ongoing" ||
-    extraRepeatEffects.length !== 0 ||
-    reposition?.kind !== "reposition_attachment" ||
-    reposition.maxMoveFeet !== 20 ||
-    repeatAttack?.kind !== "attack_roll" ||
-    repeatAttack.attackKind !== "melee_spell_attack" ||
-    !spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
-      repeatAttack.attachment,
-      forceAttachment.holeId,
-    ) ||
-    repeatAttack.onHit.length !== 1 ||
-    repeatAttack.onMiss.length !== 1 ||
-    !isSupportedSpatialMeleeSpellAttackProxyDamageEffect(repeatHit) ||
-    !isSupportedSpatialMeleeSpellAttackProxyMissEffect(repeatMiss) ||
-    !sameSpatialMeleeSpellAttackProxyDamageEffect(initialHit, repeatHit)
-  ) {
-    return null;
-  }
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet: 60,
-    forceReachFeet: 5,
-    repeatMoveMaxFeet: reposition.maxMoveFeet,
-    damageAmount: initialHit.amount,
-  };
+function spatialMeleeSpellAttackProxyDistinctiveHeaderFallback(
+  mechanics: SpellMechanics,
+): boolean {
+  return (
+    mechanics.family === "ongoing_effect" &&
+    mechanics.level === SPATIAL_MELEE_SPELL_ATTACK_PROXY_BASE_SLOT_LEVEL &&
+    mechanics.castingTime.kind === "bonus_action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === SPATIAL_MELEE_SPELL_ATTACK_PROXY_CAST_RANGE_FEET &&
+    mechanics.duration.kind === "concentration"
+  );
+}
+
+function spatialMeleeSpellAttackProxyForceAttachmentIsSupported(
+  attachment: Attachment | undefined,
+): attachment is Extract<Attachment, { readonly kind: "hole" }> & {
+  readonly value: { readonly kind: "location" };
+} {
+  return (
+    attachment?.kind === "hole" &&
+    attachment.value !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      attachment,
+      SPATIAL_ONGOING_ATTACHMENT_FIELDS,
+    ) &&
+    attachment.value.kind === "location" &&
+    spellMechanicsObjectHasOnlyKeys(
+      attachment.value,
+      SPATIAL_LOCATION_VALUE_FIELDS,
+    )
+  );
+}
+
+function spatialMeleeSpellAttackProxyDurationIsSupported(
+  duration: SpellMechanics["duration"],
+): duration is Extract<
+  SpatialMeleeSpellAttackProxyMechanics["duration"],
+  { readonly kind: "concentration"; readonly upTo: SpellCanonicalDurationValue }
+> {
+  return (
+    duration.kind === "concentration" &&
+    spellMechanicsObjectHasOnlyKeys(duration, SPATIAL_DURATION_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      SPATIAL_DURATION_VALUE_FIELDS,
+    ) &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.upTo) &&
+    duration.upTo.upcastTiers === undefined &&
+    duration.earlyEnd === undefined &&
+    duration.permanentIfMaintainedFull === undefined
+  );
+}
+
+function spatialMeleeSpellAttackProxyAttackPhaseIsSupported(
+  phase:
+    | Extract<
+        SpatialMeleeSpellAttackProxyMechanics["initialPhase"],
+        { readonly kind: "attack_roll" }
+      >
+    | undefined,
+  forceHoleId: SpatialMeleeSpellAttackProxyForceHoleId | undefined,
+): phase is Extract<
+  SpatialMeleeSpellAttackProxyMechanics["initialPhase"],
+  { readonly kind: "attack_roll" }
+> {
+  return (
+    phase !== undefined &&
+    forceHoleId !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(phase, SPATIAL_INITIAL_PHASE_FIELDS) &&
+    phase.continue === undefined &&
+    phase.attackKind === "melee_spell_attack" &&
+    spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
+      phase.attachment,
+      forceHoleId,
+    ) &&
+    phase.onHit.length === 1 &&
+    phase.onMiss.length === 1
+  );
+}
+
+function spatialMeleeSpellAttackProxyRepeatAttackPhaseIsSupported(
+  phase: Extract<OngoingEffect, { readonly kind: "attack_roll" }> | undefined,
+  forceHoleId: SpatialMeleeSpellAttackProxyForceHoleId | undefined,
+): phase is Extract<OngoingEffect, { readonly kind: "attack_roll" }> {
+  return (
+    phase !== undefined &&
+    forceHoleId !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(phase, SPATIAL_ATTACK_PHASE_FIELDS) &&
+    phase.attackKind === "melee_spell_attack" &&
+    spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
+      phase.attachment,
+      forceHoleId,
+    ) &&
+    phase.onHit.length === 1 &&
+    phase.onMiss.length === 1
+  );
+}
+
+function spatialMeleeSpellAttackProxyOperationIsSupported(
+  operation:
+    | SpatialMeleeSpellAttackProxyMechanics["operations"][number]
+    | undefined,
+): operation is SpatialMeleeSpellAttackProxyMechanics["operations"][number] & {
+  readonly effect: Extract<
+    OngoingEffect,
+    { readonly kind: "composite_ongoing" }
+  >;
+} {
+  return (
+    operation !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation,
+      SPATIAL_REPEAT_OPERATION_FIELDS,
+    ) &&
+    operation.predicate === undefined &&
+    operation.targetLimit === undefined &&
+    operation.usageLimit === undefined &&
+    operation.trigger.kind === "on_caster_spends_action" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.trigger,
+      SPATIAL_REPEAT_TRIGGER_FIELDS,
+    ) &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.trigger.cost,
+      SPATIAL_REPEAT_COST_FIELDS,
+    ) &&
+    operation.trigger.cost.kind === "bonus_action" &&
+    operation.trigger.laterTurnsOnly === true &&
+    operation.effect.kind === "composite_ongoing" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.effect,
+      SPATIAL_COMPOSITE_EFFECT_FIELDS,
+    )
+  );
+}
+
+function spatialMeleeSpellAttackProxyRepositionIsSupported(
+  effect: OngoingEffect | undefined,
+): effect is Extract<
+  OngoingEffect,
+  { readonly kind: "reposition_attachment" }
+> & {
+  readonly maxMoveFeet: typeof SPATIAL_MELEE_SPELL_ATTACK_PROXY_REPEAT_MOVE_MAX_FEET;
+} {
+  return (
+    effect !== undefined &&
+    effect.kind === "reposition_attachment" &&
+    spellMechanicsObjectHasOnlyKeys(effect, SPATIAL_REPOSITION_FIELDS) &&
+    effect.maxMoveFeet ===
+      SPATIAL_MELEE_SPELL_ATTACK_PROXY_REPEAT_MOVE_MAX_FEET &&
+    effect.destination === undefined
+  );
 }
 
 function isSupportedSpatialMeleeSpellAttackProxyDamageEffect(
   effect: EffectAtom | undefined,
 ): effect is SupportedSpatialMeleeSpellAttackProxyDamageEffect {
-  if (effect?.kind !== "damage") {
+  if (
+    effect?.kind !== "damage" ||
+    !spellMechanicsObjectHasOnlyKeys(effect, SPATIAL_DAMAGE_EFFECT_FIELDS) ||
+    effect.timing !== undefined
+  ) {
     return false;
   }
   return (
@@ -401,7 +797,10 @@ function isSupportedSpatialMeleeSpellAttackProxyDamageEffect(
 function isSupportedSpatialMeleeSpellAttackProxyMissEffect(
   effect: EffectAtom | undefined,
 ): effect is Extract<EffectAtom, { readonly kind: "none" }> {
-  return effect?.kind === "none";
+  return (
+    effect?.kind === "none" &&
+    spellMechanicsObjectHasOnlyKeys(effect, SPATIAL_NONE_EFFECT_FIELDS)
+  );
 }
 
 function isSupportedSpatialMeleeSpellAttackProxyDamageAmount(
@@ -410,7 +809,9 @@ function isSupportedSpatialMeleeSpellAttackProxyDamageAmount(
   if (
     amount.kind !== "linear_per_level" ||
     amount.axis !== "slot" ||
-    amount.startingAtLevel !== 2
+    amount.startingAtLevel !==
+      SPATIAL_MELEE_SPELL_ATTACK_PROXY_BASE_SLOT_LEVEL ||
+    !spellMechanicsObjectHasOnlyKeys(amount, SPATIAL_DAMAGE_AMOUNT_FIELDS)
   ) {
     return false;
   }
@@ -424,8 +825,9 @@ function isSupportedSpatialMeleeSpellAttackProxyBaseDamage(
   amount: DiceExpr,
 ): boolean {
   return (
-    amount.dice === 1 &&
-    amount.dieSize === 8 &&
+    spellMechanicsObjectHasOnlyKeys(amount, SPATIAL_BASE_EXPR_FIELDS) &&
+    amount.dice === SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DICE &&
+    amount.dieSize === SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DIE_SIZE &&
     amount.flat === undefined &&
     amount.spellcastingMod === true &&
     amount.abilityModifier === undefined
@@ -435,7 +837,12 @@ function isSupportedSpatialMeleeSpellAttackProxyBaseDamage(
 function isSupportedSpatialMeleeSpellAttackProxyPerLevelDamage(
   amount: DiceExprDelta,
 ): boolean {
-  return amount.dice === 1 && amount.dieSize === 8 && amount.flat === undefined;
+  return (
+    spellMechanicsObjectHasOnlyKeys(amount, SPATIAL_DELTA_EXPR_FIELDS) &&
+    amount.dice === SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DICE &&
+    amount.dieSize === SPATIAL_MELEE_SPELL_ATTACK_PROXY_DAMAGE_DIE_SIZE &&
+    amount.flat === undefined
+  );
 }
 
 function sameSpatialMeleeSpellAttackProxyBaseDamage(
@@ -483,27 +890,403 @@ function sameSpatialMeleeSpellAttackProxyDamageEffect(
 
 function spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
   attachment: Attachment | undefined,
-  forceHoleId: string,
+  forceHoleId: SpatialMeleeSpellAttackProxyForceHoleId | undefined,
 ): boolean {
+  return (
+    spatialMeleeSpellAttackProxyForceReachFeet(attachment, forceHoleId) !==
+    undefined
+  );
+}
+
+function spatialMeleeSpellAttackProxyForceReachFeet(
+  attachment: Attachment | undefined,
+  forceHoleId: SpatialMeleeSpellAttackProxyForceHoleId | undefined,
+): MovementFeet | undefined {
+  if (attachment?.kind !== "hole" || forceHoleId === undefined) {
+    return undefined;
+  }
+  const admitted = admitSpellTargetAttachment(
+    attachment,
+    SPATIAL_TARGET_SELECTION_FIELDS,
+  );
+  if (admitted.tag !== "admitted") return undefined;
+  const selection = admitted.attachment.value.selection;
   if (
-    attachment?.kind !== "hole" ||
-    attachment.value.kind !== "target" ||
-    attachment.value.selection.mode !== "one" ||
-    attachment.value.selection.targetKinds === undefined ||
-    attachment.value.selection.targetKinds.length !== 1 ||
-    attachment.value.selection.targetKinds[0] !== "creature"
+    selection.mode !== "one" ||
+    selection.targetKinds === undefined ||
+    selection.targetKinds.length !== 1 ||
+    selection.targetKinds[0] !== "creature"
   ) {
-    return false;
+    return undefined;
   }
   const relativePosition =
-    "relativePosition" in attachment.value.selection
-      ? attachment.value.selection.relativePosition
-      : undefined;
-  return (
-    relativePosition?.kind === "within_feet_of_attachment" &&
+    "relativePosition" in selection ? selection.relativePosition : undefined;
+  return relativePosition !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      relativePosition,
+      SPATIAL_RELATIVE_POSITION_FIELDS,
+    ) &&
+    relativePosition.kind === "within_feet_of_attachment" &&
     relativePosition.attachmentHoleId === forceHoleId &&
-    relativePosition.feet === 5
+    relativePosition.feet === SPATIAL_MELEE_SPELL_ATTACK_PROXY_FORCE_REACH_FEET
+    ? movementFeet(relativePosition.feet)
+    : undefined;
+}
+
+function spatialMeleeSpellAttackProxyIssueResult(
+  issue: SpatialMeleeSpellAttackProxyMechanicsIssue,
+) {
+  return {
+    tag: "spellProcedureAdmissionIssue" as const,
+    procedure: "spatialMeleeSpellAttackProxy" as const,
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported spatialMeleeSpellAttackProxy mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function spatialMeleeSpellAttackProxyMechanicsEvidence(
+  mechanics: SpatialMeleeSpellAttackProxyMechanics,
+  operationIndex: number,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellOngoingAttachmentPath(),
+    spellOngoingInitialPhasePath(),
+    spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
+    spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitSpatialMeleeSpellAttackProxyMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "spatialMeleeSpellAttackProxy",
+  SpatialMeleeSpellAttackProxyMechanicsFacts,
+  SpatialMeleeSpellAttackProxyInvocation,
+  ReturnType<typeof spatialMeleeSpellAttackProxyIssueResult>
+> {
+  if (
+    !spatialMeleeSpellAttackProxySemanticCandidate(source.mechanics) &&
+    !spatialMeleeSpellAttackProxyDistinctiveHeaderFallback(source.mechanics)
+  ) {
+    return { tag: "notRepresented" };
+  }
+  if (source.mechanics.family !== "ongoing_effect") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const forceAttachment =
+    spatialMeleeSpellAttackProxyForceAttachmentIsSupported(mechanics.attachment)
+      ? mechanics.attachment
+      : undefined;
+  const forceHoleId = forceAttachment?.holeId;
+  const initialPhase =
+    mechanics.initialPhase?.kind === "attack_roll"
+      ? mechanics.initialPhase
+      : undefined;
+  const operationIndex = mechanics.operations.findIndex(
+    (operation) => operation.effect.kind === "composite_ongoing",
   );
+  const operation =
+    operationIndex < 0 ? undefined : mechanics.operations[operationIndex];
+  const repeatEffect =
+    operation?.effect.kind === "composite_ongoing"
+      ? operation.effect
+      : undefined;
+  const repeatEffects = repeatEffect?.effects ?? [];
+  const repositionIndex = repeatEffects.findIndex(
+    (effect) => effect.kind === "reposition_attachment",
+  );
+  const repeatAttackIndex = repeatEffects.findIndex(
+    (effect) => effect.kind === "attack_roll",
+  );
+  const reposition =
+    repositionIndex < 0 ? undefined : repeatEffects[repositionIndex];
+  const repeatAttack =
+    repeatAttackIndex < 0 ? undefined : repeatEffects[repeatAttackIndex];
+  const initialHit = initialPhase?.onHit[0];
+  const initialMiss = initialPhase?.onMiss[0];
+  const repeatHit =
+    repeatAttack?.kind === "attack_roll" ? repeatAttack.onHit[0] : undefined;
+  const repeatMiss =
+    repeatAttack?.kind === "attack_roll" ? repeatAttack.onMiss[0] : undefined;
+  const initialAttackValid = spatialMeleeSpellAttackProxyAttackPhaseIsSupported(
+    initialPhase,
+    forceHoleId,
+  );
+  const repeatAttackValid =
+    spatialMeleeSpellAttackProxyRepeatAttackPhaseIsSupported(
+      repeatAttack?.kind === "attack_roll" ? repeatAttack : undefined,
+      forceHoleId,
+    );
+  const initialDamageValid =
+    isSupportedSpatialMeleeSpellAttackProxyDamageEffect(initialHit);
+  const repeatDamageValid =
+    isSupportedSpatialMeleeSpellAttackProxyDamageEffect(repeatHit);
+  const initialDamage = initialDamageValid ? initialHit : undefined;
+  const repeatDamage = repeatDamageValid ? repeatHit : undefined;
+  const attackKind =
+    initialPhase?.attackKind === "melee_spell_attack"
+      ? initialPhase.attackKind
+      : undefined;
+  const damageType = initialDamage?.damageType;
+  const damageAmountsCorrelated =
+    initialDamage !== undefined &&
+    repeatDamage !== undefined &&
+    sameSpatialMeleeSpellAttackProxyDamageEffect(initialDamage, repeatDamage);
+  const durationValid = spatialMeleeSpellAttackProxyDurationIsSupported(
+    mechanics.duration,
+  );
+  const durationValue =
+    mechanics.duration.kind === "concentration" &&
+    isSpellCanonicalDurationValue(mechanics.duration.upTo)
+      ? mechanics.duration.upTo
+      : undefined;
+  const rangeFeet = spellDefinitionPointRangeFeet(
+    source.spellDefinitionRuleFacts.range,
+  );
+  const forceReachFeet =
+    initialPhase === undefined
+      ? undefined
+      : spatialMeleeSpellAttackProxyForceReachFeet(
+          initialPhase.attachment,
+          forceHoleId,
+        );
+  const repeatMoveMaxFeet = spatialMeleeSpellAttackProxyRepositionIsSupported(
+    reposition,
+  )
+    ? movementFeet(reposition.maxMoveFeet)
+    : undefined;
+  const operationValid =
+    spatialMeleeSpellAttackProxyOperationIsSupported(operation);
+  const issues: SpatialMeleeSpellAttackProxyMechanicsIssue[] = [];
+  const push = (
+    failedFact: SpatialMeleeSpellAttackProxyFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ) => issues.push({ failedFact, mechanicsPath });
+
+  if (mechanics.level !== SPATIAL_MELEE_SPELL_ATTACK_PROXY_BASE_SLOT_LEVEL) {
+    push("level", spellMechanicsHeaderPath("level"));
+  }
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, SPATIAL_ROOT_FIELDS)) {
+    push("operation", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.school !== "evocation") {
+    push("school", spellMechanicsHeaderPath("school"));
+  }
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== SPATIAL_MELEE_SPELL_ATTACK_PROXY_CAST_RANGE_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, SPATIAL_RANGE_FIELDS)
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  if (rangeFeet === undefined) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      SPATIAL_COMPONENT_FIELDS,
+    )
+  ) {
+    push("components", spellMechanicsHeaderPath("components"));
+  }
+  if (!durationValid) {
+    push("duration", spellMechanicsHeaderPath("duration"));
+    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
+      push("durationValue", path);
+    }
+    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+      push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+    }
+  }
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    mechanics.castingTime.trigger !== undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SPATIAL_CASTING_TIME_FIELDS,
+    )
+  ) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (!forceAttachment) {
+    push("attachment", spellOngoingAttachmentPath());
+  }
+  if (!initialAttackValid) {
+    push("initialPhase", spellOngoingInitialPhasePath());
+    push("initialAttack", spellOngoingInitialPhasePath());
+  }
+  if (!initialDamageValid) {
+    push("initialDamage", spellOngoingInitialPhasePath());
+  }
+  if (!isSupportedSpatialMeleeSpellAttackProxyMissEffect(initialMiss)) {
+    push("initialMiss", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.operations.length !== 1) {
+    for (const [index] of mechanics.operations.entries()) {
+      if (index === operationIndex) continue;
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+    if (mechanics.operations.length === 0) {
+      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+    }
+  }
+  if (!operationValid) {
+    push(
+      "operation",
+      spellOngoingOperationPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+    push(
+      "operationEffect",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  if (repeatEffects.length !== 2) {
+    push(
+      "operationEffect",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  if (!spatialMeleeSpellAttackProxyRepositionIsSupported(reposition)) {
+    push(
+      "repositionEffect",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  if (!repeatAttackValid) {
+    push(
+      "repeatAttack",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  if (!repeatDamageValid) {
+    push(
+      "repeatDamage",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  if (!isSupportedSpatialMeleeSpellAttackProxyMissEffect(repeatMiss)) {
+    push(
+      "repeatMiss",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  if (!damageAmountsCorrelated) {
+    push(
+      "damageAmount",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
+  const uniqueIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (uniqueIssues !== undefined) {
+    const [first, ...rest] = uniqueIssues.map(
+      spatialMeleeSpellAttackProxyIssueResult,
+    );
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  if (
+    !durationValid ||
+    durationValue === undefined ||
+    rangeFeet === undefined ||
+    forceReachFeet === undefined ||
+    repeatMoveMaxFeet === undefined ||
+    !forceAttachment ||
+    !initialDamageValid ||
+    !repeatDamageValid ||
+    !damageAmountsCorrelated ||
+    !reposition ||
+    !spatialMeleeSpellAttackProxyRepositionIsSupported(reposition) ||
+    !operationValid ||
+    attackKind === undefined ||
+    damageType === undefined
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        spatialMeleeSpellAttackProxyIssueResult({
+          failedFact: "initialPhase",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        }),
+      ],
+    };
+  }
+  const damageAmount = initialDamage?.amount;
+  if (damageAmount === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        spatialMeleeSpellAttackProxyIssueResult({
+          failedFact: "initialDamage",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        }),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    durationValue,
+    rangeFeet,
+    forceReachFeet,
+    repeatMoveMaxFeet,
+    damageAmount,
+    attackKind,
+    damageType,
+  } satisfies SpatialMeleeSpellAttackProxyMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "spatialMeleeSpellAttackProxy",
+      facts,
+      evidence: spatialMeleeSpellAttackProxyMechanicsEvidence(
+        mechanics,
+        operationIndex,
+      ),
+      admit: (executionSource, ctx) => [
+        ...admitSpatialMeleeSpellAttackProxyAttackProxy(
+          executionSource,
+          ctx,
+          facts,
+        ),
+        ...admitSpatialMeleeSpellAttackProxyRepeatAttack(executionSource, ctx),
+      ],
+    },
+  };
 }
 
 function discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct(
@@ -613,10 +1396,7 @@ export const spatialMeleeSpellAttackProxyProfile = {
     SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
     SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema,
   ]),
-  admit: (spell, context) => [
-    ...admitSpatialMeleeSpellAttackProxyAttackProxy(spell, context),
-    ...admitSpatialMeleeSpellAttackProxyRepeatAttack(spell, context),
-  ],
+  admitMechanics: admitSpatialMeleeSpellAttackProxyMechanics,
   discoverCastAct: (state, actorId, invocation) =>
     Match.value(invocation).pipe(
       Match.when({ operation: "createAndAttack" }, (createInvocation) =>

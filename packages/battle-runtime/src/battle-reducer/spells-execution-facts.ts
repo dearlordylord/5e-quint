@@ -48,18 +48,10 @@ export function supportedDamageAmountExpr(input: {
   const { amount } = input;
   if (amount.kind === "fixed") return amount.expr;
   if (
-    amount.kind === "threshold_tiers" &&
-    amount.axis === "character" &&
-    input.characterLevel !== undefined
+    isCharacterThresholdTierDamageAmount(amount) &&
+    isCharacterLevel(input.characterLevel)
   ) {
-    return amount.tiers.reduce(
-      (expr, tier) =>
-        input.characterLevel !== undefined &&
-        input.characterLevel >= tier.atLevel
-          ? diceExprWithDelta(expr, tier.override)
-          : expr,
-      amount.base,
-    );
+    return thresholdTierDamageExpr(amount, input.characterLevel);
   }
   if (
     amount.kind === "threshold_tiers_exploding_max_die" &&
@@ -98,6 +90,36 @@ export function supportedDamageAmountExpr(input: {
     };
   }
   return null;
+}
+
+type CharacterThresholdTierDamageAmount = Extract<
+  SurfaceDiceAmount,
+  { readonly kind: "threshold_tiers" }
+> & { readonly axis: "character" };
+
+function isCharacterThresholdTierDamageAmount(
+  amount: SurfaceDiceAmount,
+): amount is CharacterThresholdTierDamageAmount {
+  return amount.kind === "threshold_tiers" && amount.axis === "character";
+}
+
+function isCharacterLevel(value: number | undefined): value is CharacterLevel {
+  return (
+    value !== undefined && Number.isInteger(value) && value >= 1 && value <= 20
+  );
+}
+
+export function thresholdTierDamageExpr(
+  amount: CharacterThresholdTierDamageAmount,
+  scalingLevel: CharacterLevel,
+): DiceExpr {
+  return amount.tiers.reduce(
+    (expr, tier) =>
+      scalingLevel >= tier.atLevel
+        ? diceExprWithDelta(expr, tier.override)
+        : expr,
+    amount.base,
+  );
 }
 
 export function supportedSpellSlotDamageFacts(input: {
@@ -139,6 +161,7 @@ export function diceExprWithDelta(
 import { optionalProperty } from "../optional-property.ts";
 import {
   movementFeet,
+  type CharacterLevel,
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";

@@ -6,9 +6,11 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
 import {
+  characterLevel,
   PositiveInteger,
-  spellSlotLevel,
   movementFeet,
+  spellSlotLevel,
+  type CharacterLevel,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
   type SpellSlotLevel,
@@ -105,24 +107,6 @@ export function spellDefinitionPointRangeFeet(
     : undefined;
 }
 
-/** Preserve positive Surface scalar facts as branded admission facts. */
-export function spellPositiveIntegerFromSurface(
-  value: number,
-): PositiveInteger | undefined {
-  return Number.isInteger(value) && value > 0
-    ? PositiveInteger(value)
-    : undefined;
-}
-
-/** Spell-slot progressions are restricted to the existing 1–9 slot domain. */
-export function spellSlotLevelFromSurface(
-  value: number,
-): SpellSlotLevel | undefined {
-  return Number.isInteger(value) && value >= 1 && value <= 9
-    ? spellSlotLevel(value)
-    : undefined;
-}
-
 /**
  * A parsed DurationValue has positive integral units at the Surface boundary.
  * Carrying that proof lets execution derive elapsed time without reparsing or
@@ -136,6 +120,33 @@ export function isSpellCanonicalDurationValue(
   value: DurationValue,
 ): value is SpellCanonicalDurationValue {
   return Number.isInteger(value.amount) && value.amount > 0;
+}
+
+/** Parse a positive Surface number once before it enters procedure facts. */
+export function spellPositiveIntegerFromSurface(
+  value: number,
+): PositiveInteger | undefined {
+  return Number.isInteger(value) && value > 0
+    ? PositiveInteger(value)
+    : undefined;
+}
+
+/** Parse a Surface spell-slot threshold without the clamping constructor. */
+export function spellSlotLevelFromSurface(
+  value: number,
+): SpellSlotLevel | undefined {
+  return Number.isInteger(value) && value >= 1 && value <= 9
+    ? spellSlotLevel(value)
+    : undefined;
+}
+
+/** Parse a Surface character-level threshold without the clamping constructor. */
+export function spellCharacterLevelFromSurface(
+  value: number,
+): CharacterLevel | undefined {
+  return Number.isInteger(value) && value >= 1 && value <= 20
+    ? characterLevel(value)
+    : undefined;
 }
 
 export function spellDurationTicksFromCanonicalValue(
@@ -367,7 +378,7 @@ export function spellOngoingOperationUnsupportedFacts(
  */
 type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
 type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
-type SpellTargetSelectionFieldShape = {
+type SpellTargetSelectionKeySpace = {
   readonly [Field in SpellTargetSelectionField]?: unknown;
 };
 
@@ -523,10 +534,10 @@ const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
  * field that a procedure does not consume. Own-key inspection makes that
  * omission fail closed instead of silently projecting a partial branch.
  */
-export function spellMechanicsObjectHasOnlyKeys<
-  Value extends object,
-  const AllowedFields extends readonly (keyof Value)[],
->(value: Value, allowedFields: AllowedFields): boolean {
+export function spellMechanicsObjectHasOnlyKeys<const Value extends object>(
+  value: Value,
+  allowedFields: readonly (keyof Value)[],
+): boolean {
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
 }
@@ -585,9 +596,17 @@ function isSpellAttachmentValueField(
 }
 
 function spellTargetSelectionRejections(
-  selection: object,
+  selection: object | undefined,
   allowedFields: readonly SpellTargetSelectionField[],
 ): readonly SpellAttachmentRejection[] {
+  if (selection === undefined) {
+    return [
+      {
+        failedFact: "selection",
+        coordinate: { kind: "value", field: "selection" },
+      },
+    ];
+  }
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(selection)
     .filter((field) => !allowed.has(field))
@@ -622,27 +641,59 @@ function isSpellTargetSelectionField(
   );
 }
 
+/**
+ * Validate an unordered authored table against one fixed rule table and return
+ * the authored entries in rule order. Equal cardinality plus both-way matching
+ * rejects duplicates while retaining parsed source values for execution.
+ */
+export function spellMechanicsFixedTableEntries<Actual, Expected>(
+  actualEntries: readonly Actual[],
+  expectedEntries: readonly Expected[],
+  matches: (actual: Actual, expected: Expected) => boolean,
+): readonly Actual[] | undefined {
+  if (actualEntries.length !== expectedEntries.length) return undefined;
+  const orderedEntries = expectedEntries.flatMap((expected) => {
+    const actual = actualEntries.find((candidate) =>
+      matches(candidate, expected),
+    );
+    return actual === undefined ? [] : [actual];
+  });
+  return orderedEntries.length === expectedEntries.length &&
+    actualEntries.every((actual) =>
+      expectedEntries.some((expected) => matches(actual, expected)),
+    )
+    ? orderedEntries
+    : undefined;
+}
+
 function isSpellTargetAttachment(
-  attachment: Attachment,
+  attachment: Attachment | undefined,
 ): attachment is SpellTargetAttachment {
-  return attachment.kind === "hole" && attachment.value.kind === "target";
+  return (
+    attachment?.kind === "hole" &&
+    attachment.value !== undefined &&
+    attachment.value.kind === "target"
+  );
 }
 
 function isSpellDirectTargetAttachment(
-  attachment: Attachment,
+  attachment: Attachment | undefined,
 ): attachment is SpellDirectTargetAttachment {
-  return attachment.kind === "target";
+  return attachment?.kind === "target";
 }
 
 function isAdmittedSpellTargetSelection<
   const AllowedFields extends readonly SpellTargetSelectionField[],
 >(
-  selection: TargetSelection,
+  selection: TargetSelection | undefined,
   allowedFields: AllowedFields,
 ): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
-  return spellHasOnlyNamedFields<SpellTargetSelectionFieldShape>(
-    selection,
-    allowedFields,
+  return (
+    selection !== undefined &&
+    spellMechanicsObjectHasOnlyKeys<SpellTargetSelectionKeySpace>(
+      selection,
+      allowedFields,
+    )
   );
 }
 
@@ -656,7 +707,7 @@ function isAdmittedSpellTargetSelection<
 export function admitSpellTargetAttachment<
   const AllowedFields extends readonly SpellTargetSelectionField[],
 >(
-  attachment: Attachment,
+  attachment: Attachment | undefined,
   allowedSelectionFields: AllowedFields,
 ): SpellTargetAttachmentAdmissionResult<AllowedFields[number]> {
   if (!isSpellTargetAttachment(attachment)) {

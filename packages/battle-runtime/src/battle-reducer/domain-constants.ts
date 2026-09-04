@@ -451,9 +451,20 @@ export const CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS = [
 ] as const;
 export type MultiBeamSpellAttackBeamCount =
   (typeof CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[number];
+export function multiBeamSpellAttackBeamCount(
+  value: number,
+): MultiBeamSpellAttackBeamCount | null {
+  return (
+    CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS.find(
+      (count) => count === value,
+    ) ?? null
+  );
+}
 export const SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS = [
   3, 4, 5, 6, 7, 8, 9, 10,
 ] as const;
+export const SLOT_LEVEL_SCALED_SPELL_ATTACK_BASE_SLOT_LEVEL = 2;
+export const SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNT_PER_SLOT = 1;
 export type MultiRaySpellAttackRayCount =
   (typeof SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[number];
 

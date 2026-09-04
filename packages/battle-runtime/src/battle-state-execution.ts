@@ -27,6 +27,7 @@ import type {
   SpellFailedSaveConditionEndTurnSaveLifecycle,
   SpellFailedSaveConditionNoRepeatLifecycle,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -67,6 +68,7 @@ export type {
   SpellFailedSaveConditionNoRepeatLifecycle,
   SpellFailedSaveFixedConditionEffect,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -404,7 +406,6 @@ import {
   type PerceptionGatedAttackRollDefenseBypassSense,
   CRITICAL_HIT_THRESHOLDS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
-  MARKED_TARGET_FINDING_SKILLS,
   type DuplicateHitInterceptionDuplicateCount as DuplicateHitInterceptionCount,
   type DuplicateHitInterceptionUnaffectedSense as DuplicateHitInterceptionUnaffectedSense,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
@@ -2827,7 +2828,7 @@ export type WeaponAttackDamageEnhancementSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "weaponAttackDamageEnhancement";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly bonus: WeaponAttackDamageEnhancementBonus;
   readonly durationTicks: ElapsedTimeTicks;
@@ -2899,7 +2900,7 @@ export type MarkedDamageRiderSpellInvocation =
   | (PreparedLeveledSpellSource & {
       readonly procedure: "markedDamageRider";
       readonly action: "cast";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly targeting: { readonly kind: "singleCombatant" };
       readonly damage: {
@@ -2916,7 +2917,7 @@ export type MarkedDamageRiderSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "markedDamageRider";
       readonly action: "transfer";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly targeting: { readonly kind: "singleCombatant" };
       readonly rangeFeet: MovementFeet;
@@ -3102,7 +3103,7 @@ export type RepeatSpatialMeleeSpellAttackProxyInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "spatialMeleeSpellAttackProxy";
   readonly operation: "repositionAndAttack";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly activeEffect: Extract<
     BattleActiveEffect,
@@ -3129,7 +3130,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly access: CantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "spellHostedWeaponAttack";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly componentWeapon: {
     readonly objectId: BattleObjectId;
@@ -3138,10 +3139,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
   readonly damageTypeChoices: readonly DamageType[];
-  readonly bonusDamage: {
-    readonly expr: DiceExpr;
-    readonly damageType: DamageType;
-  } | null;
+  readonly bonusDamage: SpellHostedWeaponAttackBonusDamageApplicability;
 };
 export type WeaponAttackOverrideSpellInvocation = {
   readonly access: CantripSpellAccess;
@@ -3252,7 +3250,7 @@ type SupportedSpellInvocationSource =
     })
   | (CantripDamageSpellSource & {
       readonly procedure: "spellAttackSequence";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: CantripSpellAttackSequenceTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
@@ -3264,7 +3262,7 @@ type SupportedSpellInvocationSource =
     })
   | (PreparedDamageSpellSource & {
       readonly procedure: "spellAttackSequence";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: PreparedSpellAttackSequenceTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
@@ -3630,7 +3628,7 @@ type SupportedSpellInvocationSource =
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spatialMeleeSpellAttackProxy";
       readonly operation: "createAndAttack";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly targeting: Extract<
         SpellTargeting,
@@ -4086,13 +4084,9 @@ export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
     | "afterHitDamageAndIllumination"
     | "spellHostedWeaponAttack";
 };
-export type MarkedDamageRiderFindingAdvantage = {
-  readonly kind: "findingAdvantage";
-  readonly ability: Extract<Ability, "wis">;
-  readonly skills: typeof MARKED_TARGET_FINDING_SKILLS;
-};
 export type {
   MarkedDamageRiderAbilityCheckBehavior,
+  MarkedDamageRiderFindingAdvantage,
   SpellMarkedDamageRider,
 } from "./active-effect/types.ts";
 export type AttackDamageRiderUsage = {

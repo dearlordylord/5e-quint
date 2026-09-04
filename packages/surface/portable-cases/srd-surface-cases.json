@@ -22580,7 +22580,10 @@
                 "value": {
                   "kind": "mark",
                   "selection": {
-                    "mode": "one"
+                    "mode": "one",
+                    "targetKinds": [
+                      "creature"
+                    ]
                   },
                   "transfer": {
                     "onEvent": {
@@ -22611,6 +22614,29 @@
                         "dieSize": 6
                       }
                     }
+                  }
+                },
+                {
+                  "trigger": {
+                    "kind": "passive"
+                  },
+                  "effect": {
+                    "kind": "modify_roll_advantage",
+                    "mode": "advantage",
+                    "affects": "self_roll",
+                    "on": [
+                      "ability_check"
+                    ],
+                    "skillFilter": {
+                      "kind": "fixed",
+                      "skills": [
+                        "perception",
+                        "survival"
+                      ]
+                    },
+                    "abilityFilter": [
+                      "wis"
+                    ]
                   }
                 }
               ]
