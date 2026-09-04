@@ -2997,7 +2997,7 @@ export type MovableLightManifestationSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "create";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly form: "separateLights";
       readonly dimRadiusFeet: MovementFeet;
@@ -3014,7 +3014,7 @@ export type MovableLightManifestationSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "create";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly form: "combinedMediumForm";
       readonly dimRadiusFeet: MovementFeet;
@@ -3031,7 +3031,7 @@ export type MovableLightManifestationSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "reposition";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly activeEffectRef: BattleEffectExecutionRef;
       readonly sourceManifestationProcedureRef: BattleProcedureExecutionRef;
