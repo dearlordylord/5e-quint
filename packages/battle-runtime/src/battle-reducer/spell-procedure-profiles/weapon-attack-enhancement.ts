@@ -172,7 +172,8 @@ type WeaponAttackDamageEnhancementMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly bonus: WeaponAttackDamageEnhancementBonusFacts;
 };
 
-export const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for WeaponAttackDamageEnhancementFailedFact.
+const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_FAILED_FACTS = [
   "level",
   "school",
   "range",

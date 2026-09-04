@@ -3,6 +3,8 @@ import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -28,7 +30,10 @@ import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
 import { spatialMeleeSpellAttackProxyProfile } from "./spatial-melee-spell-attack-proxy.ts";
 import { spellAttackSequenceProfile } from "./spell-attack-sequence.ts";
-import { spellHostedWeaponAttackProfile } from "./spell-hosted-weapon-attack.ts";
+import {
+  SpellHostedWeaponAttackInvocationSchema,
+  spellHostedWeaponAttackProfile,
+} from "./spell-hosted-weapon-attack.ts";
 import { weaponAttackDamageEnhancementProfile } from "./weapon-attack-enhancement.ts";
 
 function mechanicsSource(
@@ -210,6 +215,63 @@ describe("SR-04G-A4 static spell procedure admission", () => {
       originalResult.admitted.facts,
     );
   });
+
+  test.each([
+    ["hunters_mark", "hex", 3],
+    ["hex", "hunters_mark", 2],
+  ] as const)(
+    "rejects the %s structural variant when mixed with %s correlated facts",
+    (baseSpellId, crossedSpellId, crossedDurationTierCount) => {
+      const base = spellRecord(baseSpellId);
+      const crossed = spellRecord(crossedSpellId);
+      if (
+        base.mechanics.family !== "ongoing_effect" ||
+        crossed.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error("Expected marked-rider ongoing-effect mechanics.");
+      }
+      const result = markedDamageRiderProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, {
+          ...base.mechanics,
+          components: crossed.mechanics.components,
+          duration: crossed.mechanics.duration,
+          attachment: crossed.mechanics.attachment,
+          operations: crossed.mechanics.operations,
+        }),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "components",
+          mechanicsPath: spellMechanicsHeaderPath("components"),
+        },
+        {
+          failedFact: "duration",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
+        },
+        {
+          failedFact: "durationValue",
+          mechanicsPath: spellDurationValuePath(),
+        },
+        ...Array.from({ length: crossedDurationTierCount }, (_, index) => ({
+          failedFact: "durationExtension",
+          mechanicsPath: spellDurationExtensionPath(PositiveInteger(index + 1)),
+        })),
+        {
+          failedFact: "attachment",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+        {
+          failedFact: "damageEffect",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+        },
+        {
+          failedFact: "abilityScope",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+        },
+      ]);
+    },
+  );
 
   test("recognizes Spiritual Weapon repeat roles after composite-effect reordering", () => {
     const base = spellRecord("spiritual_weapon");
@@ -928,6 +990,37 @@ describe("SR-04G-A4 static spell procedure admission", () => {
       firstHostedInvocation.componentWeapon.attack.weapon.damage.damageType,
       "radiant",
     ]);
+    expect(firstHostedInvocation.bonusDamage).toEqual({
+      kind: "notApplicable",
+    });
+
+    const levelFiveActor = spellBattle({
+      preparedSpells: [],
+      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      casterClassLevels: [{ className: "wizard", level: 5 }],
+      casterWeaponProficiencies: [
+        { kind: "weapon_category", category: "simple" },
+      ],
+    }).state.combatants.get(spellCasterId);
+    if (!isSpellAdmissionActor(levelFiveActor)) {
+      throw new Error("Expected a level-five weapon-bearing spellcaster.");
+    }
+    const levelFiveInvocation = hostedResult.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(hostedSource),
+      {
+        actor: levelFiveActor,
+        castingSource: hostedSource.castingSource,
+        battle: undefined,
+        spellCastOptions: [],
+      },
+    )[0];
+    expect(levelFiveInvocation?.bonusDamage).toEqual({
+      kind: "applicable",
+      damage: {
+        expr: { dice: 1, dieSize: 6 },
+        damageType: "radiant",
+      },
+    });
   });
 
   test.each([
@@ -987,6 +1080,64 @@ describe("SR-04G-A4 static spell procedure admission", () => {
         ),
       ).toBe(true);
     }
+  });
+
+  test("the hosted-weapon decoder admits only explicit bonus-damage applicability states", () => {
+    const decode = Schema.decodeUnknownResult(
+      SpellHostedWeaponAttackInvocationSchema,
+    );
+    const baseExecution = {
+      access: { tag: "classCantrip" },
+      resource: { tag: "none" },
+      procedure: "spellHostedWeaponAttack",
+      spellRuleFacts: {
+        castingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: 3,
+        },
+        level: 0,
+        range: { kind: "self" },
+        duration: { kind: "instantaneous" },
+        components: {
+          verbal: false,
+          somatic: true,
+          hasMaterial: true,
+          hasPricedOrConsumedMaterial: false,
+        },
+        twinnedTargetCount: null,
+      },
+      actionCost: "magicAction",
+      componentWeaponObjectId: "synthetic-hosted-weapon",
+      spellcastingAbilityModifier: 3,
+      attackBonus: 5,
+      damageTypeChoices: ["radiant", "piercing"],
+    };
+    expect(
+      Result.isSuccess(
+        decode({
+          ...baseExecution,
+          bonusDamage: { kind: "notApplicable" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({
+          ...baseExecution,
+          bonusDamage: {
+            kind: "applicable",
+            damage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "radiant",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(decode({ ...baseExecution, bonusDamage: null })),
+    ).toBe(true);
   });
 
   test("fails closed when Hunter's Mark adds an unowned operation", () => {

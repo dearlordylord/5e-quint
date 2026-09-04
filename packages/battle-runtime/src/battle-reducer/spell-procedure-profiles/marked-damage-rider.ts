@@ -162,6 +162,34 @@ type MarkedDamageRiderDurationFacts = {
   readonly amount: PositiveInteger;
   readonly upcastTiers: ReadonlyNonEmptyArray<MarkedDamageRiderDurationTier>;
 };
+type MarkedDamageRiderFindingDurationFacts = Omit<
+  MarkedDamageRiderDurationFacts,
+  "upcastTiers"
+> & {
+  readonly upcastTiers: readonly [
+    MarkedDamageRiderDurationTier,
+    MarkedDamageRiderDurationTier,
+  ];
+};
+type MarkedDamageRiderChosenAbilityDurationFacts = Omit<
+  MarkedDamageRiderDurationFacts,
+  "upcastTiers"
+> & {
+  readonly upcastTiers: readonly [
+    MarkedDamageRiderDurationTier,
+    MarkedDamageRiderDurationTier,
+    MarkedDamageRiderDurationTier,
+  ];
+};
+type MarkedDamageRiderDurationVariantFacts =
+  | {
+      readonly kind: "findingAdvantage";
+      readonly durationFacts: MarkedDamageRiderFindingDurationFacts;
+    }
+  | {
+      readonly kind: "chosenAbilityDisadvantage";
+      readonly durationFacts: MarkedDamageRiderChosenAbilityDurationFacts;
+    };
 
 type MarkedDamageRiderHoleAttachment = Extract<
   Attachment,
@@ -230,17 +258,86 @@ type MarkedDamageRiderDamageAmount = MarkedDamageRiderFixedDamageAmount & {
   };
 };
 type MarkedDamageRiderDamageType = Extract<DamageType, "force" | "necrotic">;
-
-type MarkedDamageRiderMechanicsFacts = SpellDefinitionRuleFacts & {
-  readonly rangeFeet: MovementFeet;
-  readonly durationFacts: MarkedDamageRiderDurationFacts;
-  readonly damageAmount: MarkedDamageRiderDamageAmount;
+type MarkedDamageRiderFindingBehavior = Extract<
+  MarkedDamageRiderCastAbilityCheckBehavior,
+  { readonly kind: "findingAdvantage" }
+>;
+type MarkedDamageRiderChosenAbilityBehavior = Extract<
+  MarkedDamageRiderCastAbilityCheckBehavior,
+  { readonly kind: "chosenAbilityDisadvantage" }
+>;
+const MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS = [
+  {
+    kind: "findingAdvantage",
+    school: "divination",
+    somatic: false,
+    material: "none",
+    damageType: "force",
+    retargetTiming: "sameTurn",
+    durationTiers: [
+      { atSlot: 3, amount: 8 },
+      { atSlot: 5, amount: 24 },
+    ],
+  },
+  {
+    kind: "chosenAbilityDisadvantage",
+    school: "enchantment",
+    somatic: true,
+    material: "described",
+    damageType: "necrotic",
+    retargetTiming: "laterTurn",
+    durationTiers: [
+      { atSlot: 2, amount: 4 },
+      { atSlot: 3, amount: 8 },
+      { atSlot: 5, amount: 24 },
+    ],
+  },
+] as const satisfies readonly {
+  readonly kind:
+    | MarkedDamageRiderFindingBehavior["kind"]
+    | MarkedDamageRiderChosenAbilityBehavior["kind"];
+  readonly school: Extract<
+    SpellMechanics["school"],
+    "divination" | "enchantment"
+  >;
+  readonly somatic: boolean;
+  readonly material: "none" | "described";
   readonly damageType: MarkedDamageRiderDamageType;
-  readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly retargetTiming: MarkedDamageRiderRetargetTiming;
-};
+  readonly durationTiers: readonly {
+    readonly atSlot: number;
+    readonly amount: number;
+  }[];
+}[];
+type MarkedDamageRiderStructuralVariant =
+  (typeof MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS)[number];
 
-export const MARKED_DAMAGE_RIDER_FAILED_FACTS = [
+type MarkedDamageRiderCommonMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly rangeFeet: MovementFeet;
+  readonly damageAmount: MarkedDamageRiderDamageAmount;
+};
+type MarkedDamageRiderMechanicsFacts =
+  | (MarkedDamageRiderCommonMechanicsFacts & {
+      readonly durationFacts: MarkedDamageRiderFindingDurationFacts;
+      readonly damageType: Extract<MarkedDamageRiderDamageType, "force">;
+      readonly abilityCheckBehavior: MarkedDamageRiderFindingBehavior;
+      readonly retargetTiming: Extract<
+        MarkedDamageRiderRetargetTiming,
+        "sameTurn"
+      >;
+    })
+  | (MarkedDamageRiderCommonMechanicsFacts & {
+      readonly durationFacts: MarkedDamageRiderChosenAbilityDurationFacts;
+      readonly damageType: Extract<MarkedDamageRiderDamageType, "necrotic">;
+      readonly abilityCheckBehavior: MarkedDamageRiderChosenAbilityBehavior;
+      readonly retargetTiming: Extract<
+        MarkedDamageRiderRetargetTiming,
+        "laterTurn"
+      >;
+    });
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for MarkedDamageRiderFailedFact.
+const MARKED_DAMAGE_RIDER_FAILED_FACTS = [
   "level",
   "school",
   "range",
@@ -323,17 +420,6 @@ const MARKED_DAMAGE_RIDER_DURATION_TIER_FIELDS = [
   "atSlot",
   "amount",
 ] as const satisfies ReadonlyArray<keyof MarkedDamageRiderSourceDurationTier>;
-const MARKED_DAMAGE_RIDER_DURATION_TIER_TABLES = [
-  [
-    { atSlot: 3, amount: 8 },
-    { atSlot: 5, amount: 24 },
-  ],
-  [
-    { atSlot: 2, amount: 4 },
-    { atSlot: 3, amount: 8 },
-    { atSlot: 5, amount: 24 },
-  ],
-] as const;
 const MARKED_DAMAGE_RIDER_TRIGGER_FIELDS = [
   "kind",
 ] as const satisfies ReadonlyArray<keyof OngoingEffectOperation["trigger"]>;
@@ -461,6 +547,37 @@ function markedDamageRiderDistinctiveHeaderFallback(
   );
 }
 
+function markedDamageRiderStructuralVariant(
+  school: SpellMechanics["school"],
+): MarkedDamageRiderStructuralVariant | undefined {
+  return MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS.find(
+    (variant) => variant.school === school,
+  );
+}
+
+function markedDamageRiderComponentsMatchVariant(
+  components: SpellMechanics["components"],
+  variant: MarkedDamageRiderStructuralVariant | undefined,
+): boolean {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      components,
+      MARKED_DAMAGE_RIDER_COMPONENT_FIELDS,
+    ) ||
+    components.v !== true
+  ) {
+    return false;
+  }
+  const matches = (candidate: MarkedDamageRiderStructuralVariant) =>
+    components.s === candidate.somatic &&
+    (candidate.material === "none"
+      ? components.m === false
+      : typeof components.m === "string");
+  return variant === undefined
+    ? MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS.some(matches)
+    : matches(variant);
+}
+
 function markedDamageRiderAttachmentIsSupported(
   attachment: Attachment | undefined,
 ): attachment is MarkedDamageRiderAttachment {
@@ -522,9 +639,27 @@ function markedDamageRiderAttachmentIsSupported(
   );
 }
 
-function markedDamageRiderDurationFacts(
+function markedDamageRiderRetargetTiming(
+  attachment: MarkedDamageRiderAttachment | undefined,
+): MarkedDamageRiderRetargetTiming | undefined {
+  return attachment === undefined
+    ? undefined
+    : attachment.value.transfer.availability.kind === "after_trigger"
+      ? "sameTurn"
+      : "laterTurn";
+}
+
+function markedDamageRiderRetargetTimingMatchesVariant(
+  timing: MarkedDamageRiderRetargetTiming | undefined,
+  variant: MarkedDamageRiderStructuralVariant | undefined,
+): boolean {
+  if (timing === undefined) return false;
+  return variant === undefined || timing === variant.retargetTiming;
+}
+
+function markedDamageRiderDurationVariantFacts(
   duration: OngoingEffectMechanics["duration"],
-): MarkedDamageRiderDurationFacts | undefined {
+): MarkedDamageRiderDurationVariantFacts | undefined {
   const baseAmount =
     duration.kind === "concentration"
       ? spellPositiveIntegerFromSurface(duration.upTo.amount)
@@ -567,28 +702,47 @@ function markedDamageRiderDurationFacts(
       : [];
   });
   if (parsedTiers.length !== tiers.length) return undefined;
-  const orderedTiers = MARKED_DAMAGE_RIDER_DURATION_TIER_TABLES.flatMap(
-    (expectedTiers) => {
-      const matched = spellMechanicsFixedTableEntries(
+  const matchingDuration = MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS.flatMap(
+    (variant) => {
+      const orderedTiers = spellMechanicsFixedTableEntries(
         parsedTiers,
-        expectedTiers,
+        variant.durationTiers,
         (actual, expected) =>
           Number(actual.atSlot) === expected.atSlot &&
           Number(actual.amount) === expected.amount,
       );
-      return matched === undefined ? [] : [matched];
+      return orderedTiers === undefined
+        ? []
+        : [{ variant: variant.kind, orderedTiers }];
     },
   )[0];
-  const upcastTiers =
-    orderedTiers === undefined
+  if (matchingDuration === undefined) return undefined;
+  const { variant: matchingVariant, orderedTiers } = matchingDuration;
+  if (matchingVariant === "findingAdvantage") {
+    const [firstTier, secondTier] = orderedTiers;
+    return firstTier === undefined || secondTier === undefined
       ? undefined
-      : spellProcedureNonEmpty(orderedTiers);
-  return upcastTiers === undefined
+      : {
+          kind: matchingVariant,
+          durationFacts: {
+            unit: duration.upTo.unit,
+            amount: baseAmount,
+            upcastTiers: [firstTier, secondTier],
+          },
+        };
+  }
+  const [firstTier, secondTier, thirdTier] = orderedTiers;
+  return firstTier === undefined ||
+    secondTier === undefined ||
+    thirdTier === undefined
     ? undefined
     : {
-        unit: duration.upTo.unit,
-        amount: baseAmount,
-        upcastTiers,
+        kind: matchingVariant,
+        durationFacts: {
+          unit: duration.upTo.unit,
+          amount: baseAmount,
+          upcastTiers: [firstTier, secondTier, thirdTier],
+        },
       };
 }
 
@@ -688,7 +842,7 @@ function markedDamageRiderFindingSkillsAreSupported(
 
 function markedDamageRiderFindingBehavior(
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
-): MarkedDamageRiderCastAbilityCheckBehavior | undefined {
+): MarkedDamageRiderFindingBehavior | undefined {
   const skillFilter = effect.skillFilter;
   if (
     effect.mode !== "advantage" ||
@@ -719,7 +873,7 @@ function markedDamageRiderFindingBehavior(
 
 function markedDamageRiderChosenAbilityBehavior(
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
-): MarkedDamageRiderCastAbilityCheckBehavior | undefined {
+): MarkedDamageRiderChosenAbilityBehavior | undefined {
   const abilityFilter = effect.abilityFilter;
   if (
     effect.mode !== "disadvantage" ||
@@ -786,6 +940,22 @@ function markedDamageRiderAbilityBehavior(
   );
 }
 
+function markedDamageRiderAbilityBehaviorMatchesVariant(
+  behavior: MarkedDamageRiderCastAbilityCheckBehavior | undefined,
+  variant: MarkedDamageRiderStructuralVariant | undefined,
+): boolean {
+  if (behavior === undefined) return false;
+  return variant === undefined || behavior.kind === variant.kind;
+}
+
+function markedDamageRiderDamageTypeMatchesVariant(
+  damageType: MarkedDamageRiderDamageType | undefined,
+  variant: MarkedDamageRiderStructuralVariant | undefined,
+): boolean {
+  if (damageType === undefined) return false;
+  return variant === undefined || damageType === variant.damageType;
+}
+
 function markedDamageRiderMechanicsEvidence(
   mechanics: OngoingEffectMechanics,
 ): SpellProcedureMechanicsEvidence {
@@ -821,6 +991,9 @@ function admitMarkedDamageRiderMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
+  const structuralVariant = markedDamageRiderStructuralVariant(
+    mechanics.school,
+  );
   const attachment = markedDamageRiderAttachmentIsSupported(
     mechanics.attachment,
   )
@@ -841,7 +1014,9 @@ function admitMarkedDamageRiderMechanics(
       : operations[damageIndex];
   const abilityOperation =
     abilityIndex < 0 ? undefined : operations[abilityIndex];
-  const durationFacts = markedDamageRiderDurationFacts(mechanics.duration);
+  const durationVariantFacts = markedDamageRiderDurationVariantFacts(
+    mechanics.duration,
+  );
   const rangeFeet = spellDefinitionPointRangeFeet(
     source.spellDefinitionRuleFacts.range,
   );
@@ -850,6 +1025,7 @@ function admitMarkedDamageRiderMechanics(
     abilityOperation.effect.kind === "modify_roll_advantage"
       ? markedDamageRiderAbilityBehavior(abilityOperation.effect)
       : undefined;
+  const retargetTiming = markedDamageRiderRetargetTiming(attachment);
   const issues: MarkedDamageRiderMechanicsIssue[] = [];
   const push = (
     failedFact: MarkedDamageRiderFailedFact,
@@ -879,20 +1055,18 @@ function admitMarkedDamageRiderMechanics(
     push("range", spellMechanicsHeaderPath("range"));
   }
   if (
-    !spellMechanicsObjectHasOnlyKeys(
+    !markedDamageRiderComponentsMatchVariant(
       mechanics.components,
-      MARKED_DAMAGE_RIDER_COMPONENT_FIELDS,
-    ) ||
-    mechanics.components.v !== true ||
-    (mechanics.components.s !== true && mechanics.components.s !== false) ||
-    (mechanics.components.m !== false &&
-      typeof mechanics.components.m !== "string")
+      structuralVariant,
+    )
   ) {
     push("components", spellMechanicsHeaderPath("components"));
   }
   if (
     mechanics.duration.kind !== "concentration" ||
-    durationFacts === undefined
+    durationVariantFacts === undefined ||
+    (structuralVariant !== undefined &&
+      durationVariantFacts.kind !== structuralVariant.kind)
   ) {
     push("duration", spellMechanicsHeaderPath("duration"));
     for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
@@ -912,7 +1086,13 @@ function admitMarkedDamageRiderMechanics(
   ) {
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
-  if (attachment === undefined) {
+  if (
+    attachment === undefined ||
+    !markedDamageRiderRetargetTimingMatchesVariant(
+      retargetTiming,
+      structuralVariant,
+    )
+  ) {
     push("attachment", spellOngoingAttachmentPath());
   }
   if (operations.length !== 2) {
@@ -935,7 +1115,11 @@ function admitMarkedDamageRiderMechanics(
   }
   if (
     damageOperation === undefined ||
-    !markedDamageRiderDamageEffect(damageOperation)
+    !markedDamageRiderDamageEffect(damageOperation) ||
+    !markedDamageRiderDamageTypeMatchesVariant(
+      damageOperation.effect.damageType,
+      structuralVariant,
+    )
   ) {
     push(
       "damageEffect",
@@ -958,7 +1142,10 @@ function admitMarkedDamageRiderMechanics(
   }
   if (
     abilityOperation?.effect.kind !== "modify_roll_advantage" ||
-    abilityBehavior === undefined
+    !markedDamageRiderAbilityBehaviorMatchesVariant(
+      abilityBehavior,
+      structuralVariant,
+    )
   ) {
     push(
       "abilityScope",
@@ -977,9 +1164,11 @@ function admitMarkedDamageRiderMechanics(
   if (
     damageOperation === undefined ||
     abilityBehavior === undefined ||
-    durationFacts === undefined ||
+    durationVariantFacts === undefined ||
     rangeFeet === undefined ||
-    attachment === undefined
+    attachment === undefined ||
+    structuralVariant === undefined ||
+    retargetTiming === undefined
   ) {
     const issue = markedDamageRiderIssue(
       damageOperation === undefined ? "damageEffect" : "abilityScope",
@@ -996,18 +1185,49 @@ function admitMarkedDamageRiderMechanics(
       issues: [markedDamageRiderIssueResult(issue)],
     };
   }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    rangeFeet,
-    durationFacts,
-    damageAmount: damageOperation.effect.amount,
-    damageType: damageOperation.effect.damageType,
-    abilityCheckBehavior: abilityBehavior,
-    retargetTiming:
-      attachment.value.transfer.availability.kind === "after_trigger"
-        ? "sameTurn"
-        : "laterTurn",
-  } satisfies MarkedDamageRiderMechanicsFacts;
+  const facts =
+    structuralVariant.kind === "findingAdvantage" &&
+    durationVariantFacts.kind === structuralVariant.kind &&
+    damageOperation.effect.damageType === structuralVariant.damageType &&
+    abilityBehavior.kind === structuralVariant.kind &&
+    retargetTiming === structuralVariant.retargetTiming
+      ? ({
+          ...source.spellDefinitionRuleFacts,
+          rangeFeet,
+          durationFacts: durationVariantFacts.durationFacts,
+          damageAmount: damageOperation.effect.amount,
+          damageType: damageOperation.effect.damageType,
+          abilityCheckBehavior: abilityBehavior,
+          retargetTiming,
+        } satisfies MarkedDamageRiderMechanicsFacts)
+      : structuralVariant.kind === "chosenAbilityDisadvantage" &&
+          durationVariantFacts.kind === structuralVariant.kind &&
+          damageOperation.effect.damageType === structuralVariant.damageType &&
+          abilityBehavior.kind === structuralVariant.kind &&
+          retargetTiming === structuralVariant.retargetTiming
+        ? ({
+            ...source.spellDefinitionRuleFacts,
+            rangeFeet,
+            durationFacts: durationVariantFacts.durationFacts,
+            damageAmount: damageOperation.effect.amount,
+            damageType: damageOperation.effect.damageType,
+            abilityCheckBehavior: abilityBehavior,
+            retargetTiming,
+          } satisfies MarkedDamageRiderMechanicsFacts)
+        : undefined;
+  if (facts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        markedDamageRiderIssueResult({
+          failedFact: "abilityScope",
+          mechanicsPath: spellOngoingOperationEffectPath(
+            PositiveInteger(Math.max(1, abilityIndex + 1)),
+          ),
+        }),
+      ],
+    };
+  }
   return {
     tag: "supported",
     admitted: {

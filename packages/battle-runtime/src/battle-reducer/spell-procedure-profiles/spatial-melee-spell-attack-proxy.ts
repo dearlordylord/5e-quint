@@ -41,6 +41,7 @@ import {
   PositiveInteger,
   type AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
+  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
   Attachment,
@@ -76,7 +77,6 @@ import {
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
 import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -252,7 +252,8 @@ type SpatialMeleeSpellAttackProxyMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly damageType: Extract<DamageType, "force">;
 };
 
-export const SPATIAL_MELEE_SPELL_ATTACK_PROXY_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SpatialMeleeSpellAttackProxyFailedFact.
+const SPATIAL_MELEE_SPELL_ATTACK_PROXY_FAILED_FACTS = [
   "level",
   "school",
   "range",
@@ -443,43 +444,50 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
-      const damageExpr = supportedDamageAmountExpr({
-        amount: facts.damageAmount,
-        spellLevel: facts.level,
-        slotLevel: slot.spellLevel,
-      });
-      return damageExpr === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "spatialMeleeSpellAttackProxy",
-              operation: "createAndAttack",
-              spell,
-              actionCost: "bonusAction",
-              targeting: { kind: "singleCombatant" },
-              durationTicks,
-              rangeFeet: facts.rangeFeet,
-              forceReachFeet: facts.forceReachFeet,
-              repeatMoveMaxFeet: facts.repeatMoveMaxFeet,
-              damage: {
-                kind: "fixedSpellAttackDamage",
-                expr: {
-                  ...damageExpr,
-                  flat: Number(ctx.castingSource.abilityModifier),
-                },
-                damageType: facts.damageType,
-              },
-              attackKind: facts.attackKind,
-              attackBonus: spatialMeleeSpellAttackProxyAttackBonus({
-                spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-                proficiencyBonus: spellcasting.proficiencyBonus,
-              }),
-            },
-          ];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "spatialMeleeSpellAttackProxy",
+          operation: "createAndAttack",
+          spell,
+          actionCost: "bonusAction",
+          targeting: { kind: "singleCombatant" },
+          durationTicks,
+          rangeFeet: facts.rangeFeet,
+          forceReachFeet: facts.forceReachFeet,
+          repeatMoveMaxFeet: facts.repeatMoveMaxFeet,
+          damage: {
+            kind: "fixedSpellAttackDamage",
+            expr: spatialMeleeSpellAttackProxyDamageExpr(
+              facts.damageAmount,
+              slot.spellLevel,
+              ctx.castingSource.abilityModifier,
+            ),
+            damageType: facts.damageType,
+          },
+          attackKind: facts.attackKind,
+          attackBonus: spatialMeleeSpellAttackProxyAttackBonus({
+            spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
+            proficiencyBonus: spellcasting.proficiencyBonus,
+          }),
+        },
+      ];
     },
   );
+}
+
+function spatialMeleeSpellAttackProxyDamageExpr(
+  amount: SupportedSpatialMeleeSpellAttackProxyDamageAmount,
+  slotLevel: SpellSlotLevel,
+  spellcastingAbilityModifier: AbilityModifier,
+): DiceExpr {
+  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel);
+  return {
+    dice: amount.base.dice + amount.perLevel.dice * slotDelta,
+    dieSize: amount.base.dieSize,
+    flat: Number(spellcastingAbilityModifier),
+  };
 }
 
 function spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(

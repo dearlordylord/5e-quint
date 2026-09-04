@@ -23,6 +23,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   attackBonus,
   PositiveInteger,
+  type CharacterLevel,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
@@ -46,6 +47,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type CharacterBattleCreatureState,
+  type SpellHostedWeaponAttackBonusDamageApplicability,
   type SpellHostedWeaponAttackInvocation,
 } from "../../battle-state-execution.ts";
 import { BattleObjectId, type CombatantId } from "../../identity.ts";
@@ -107,7 +109,7 @@ type SpellHostedWeaponAttackEffect = Extract<
   EffectAtom,
   { readonly kind: "make_weapon_attack" }
 >;
-type SpellHostedWeaponAttackBonusDamage = NonNullable<
+type SpellHostedWeaponAttackAuthoredBonusDamage = NonNullable<
   SpellHostedWeaponAttackEffect["bonusDamage"]
 >;
 type SpellHostedWeaponAttackDamageTypeChoices = NonNullable<
@@ -164,7 +166,7 @@ type SupportedSpellHostedWeaponAttackBonusAmount =
     ];
   };
 type SupportedSpellHostedWeaponAttackBonusDamage = Omit<
-  SpellHostedWeaponAttackBonusDamage,
+  SpellHostedWeaponAttackAuthoredBonusDamage,
   "amount" | "damageType"
 > & {
   readonly damageType: "radiant";
@@ -193,7 +195,8 @@ type SpellHostedWeaponAttackMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly bonusDamage: SupportedSpellHostedWeaponAttackBonusDamage;
 };
 
-export const SPELL_HOSTED_WEAPON_ATTACK_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SpellHostedWeaponAttackFailedFact.
+const SPELL_HOSTED_WEAPON_ATTACK_FAILED_FACTS = [
   "level",
   "school",
   "range",
@@ -257,7 +260,9 @@ const SPELL_HOSTED_EFFECT_FIELDS = [
 const SPELL_HOSTED_BONUS_DAMAGE_FIELDS = [
   "damageType",
   "amount",
-] as const satisfies ReadonlyArray<keyof SpellHostedWeaponAttackBonusDamage>;
+] as const satisfies ReadonlyArray<
+  keyof SpellHostedWeaponAttackAuthoredBonusDamage
+>;
 const SPELL_HOSTED_BONUS_AMOUNT_FIELDS = [
   "kind",
   "axis",
@@ -373,7 +378,7 @@ function spellHostedWeaponAttackBonusAmountIsCanonical(
 }
 
 function spellHostedWeaponAttackBonusDamageFacts(
-  bonusDamage: SpellHostedWeaponAttackBonusDamage,
+  bonusDamage: SpellHostedWeaponAttackAuthoredBonusDamage,
 ): SupportedSpellHostedWeaponAttackBonusDamage | undefined {
   return spellMechanicsObjectHasOnlyKeys(
     bonusDamage,
@@ -706,15 +711,28 @@ function admitSpellHostedWeaponAttack(
             ),
           ),
         ],
-        bonusDamage: {
-          expr: thresholdTierDamageExpr(
-            facts.bonusDamage.amount,
-            spellAdmissionCharacterLevel(ctx),
-          ),
-          damageType: facts.bonusDamage.damageType,
-        },
+        bonusDamage: spellHostedWeaponAttackBonusDamageApplicability(
+          facts.bonusDamage,
+          spellAdmissionCharacterLevel(ctx),
+        ),
       }),
     );
+}
+
+function spellHostedWeaponAttackBonusDamageApplicability(
+  bonusDamage: SupportedSpellHostedWeaponAttackBonusDamage,
+  characterLevel: CharacterLevel,
+): SpellHostedWeaponAttackBonusDamageApplicability {
+  const firstApplicableTier = bonusDamage.amount.tiers[0];
+  return characterLevel < firstApplicableTier.atLevel
+    ? { kind: "notApplicable" }
+    : {
+        kind: "applicable",
+        damage: {
+          expr: thresholdTierDamageExpr(bonusDamage.amount, characterLevel),
+          damageType: bonusDamage.damageType,
+        },
+      };
 }
 
 function spellHostedWeaponAttacks(
@@ -987,18 +1005,22 @@ function spellHostedWeaponAttackBonusDamageAdditions(
   invocation: BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
   actorId: CombatantId,
 ): ReadonlyNonEmptyArray<AttackSpellDamageAddition> | undefined {
-  return invocation.bonusDamage === null ||
-    invocation.bonusDamage.expr.dice <= 0
-    ? undefined
-    : [
+  return Match.value(invocation.bonusDamage).pipe(
+    byKind("notApplicable", () => undefined),
+    byKind(
+      "applicable",
+      ({ damage }): ReadonlyNonEmptyArray<AttackSpellDamageAddition> => [
         {
           kind: "attackSpellDamageAddition",
           sourceProcedure: "spellHostedWeaponAttack",
           sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
-          damage: invocation.bonusDamage,
+          damage,
         },
-      ];
+      ],
+    ),
+    Match.exhaustive,
+  );
 }
 
 export const SpellHostedWeaponAttackInvocationSchema =
@@ -1013,12 +1035,16 @@ export const SpellHostedWeaponAttackInvocationSchema =
       spellcastingAbilityModifier: AbilityModifier,
       attackBonus: AttackBonus,
       damageTypeChoices: Schema.Array(DamageTypeSchema),
-      bonusDamage: Schema.NullOr(
+      bonusDamage: Schema.Union([
+        Schema.Struct({ kind: Schema.Literal("notApplicable") }),
         Schema.Struct({
-          expr: DiceExprSchema,
-          damageType: DamageTypeSchema,
+          kind: Schema.Literal("applicable"),
+          damage: Schema.Struct({
+            expr: DiceExprSchema,
+            damageType: DamageTypeSchema,
+          }),
         }),
-      ),
+      ]),
     }),
   );
 export const spellHostedWeaponAttackProfile: SpellProcedureDeclaration<

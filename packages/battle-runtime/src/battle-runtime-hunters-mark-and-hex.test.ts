@@ -648,10 +648,18 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord("hunters_mark")],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
+          classLevels: [{ className: "ranger", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [spellRecord("hunters_mark")],
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
+          },
         }),
         statBlockCreatureInit({ initiative: 10 }),
         skeletonCreatureInit({ initiative: 5 }),

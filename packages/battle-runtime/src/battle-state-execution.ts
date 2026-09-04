@@ -27,6 +27,7 @@ import type {
   SpellFailedSaveConditionEndTurnSaveLifecycle,
   SpellFailedSaveConditionNoRepeatLifecycle,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -67,6 +68,7 @@ export type {
   SpellFailedSaveConditionNoRepeatLifecycle,
   SpellFailedSaveFixedConditionEffect,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -3137,10 +3139,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
   readonly damageTypeChoices: readonly DamageType[];
-  readonly bonusDamage: {
-    readonly expr: DiceExpr;
-    readonly damageType: DamageType;
-  } | null;
+  readonly bonusDamage: SpellHostedWeaponAttackBonusDamageApplicability;
 };
 export type WeaponAttackOverrideSpellInvocation = {
   readonly access: CantripSpellAccess;

@@ -1172,8 +1172,11 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         spellcastingAbilityModifier: 3,
         damageTypeChoices: ["radiant", "bludgeoning"],
         bonusDamage: {
-          expr: { dice: 1, dieSize: 6 },
-          damageType: "radiant",
+          kind: "applicable",
+          damage: {
+            expr: { dice: 1, dieSize: 6 },
+            damageType: "radiant",
+          },
         },
       },
     };

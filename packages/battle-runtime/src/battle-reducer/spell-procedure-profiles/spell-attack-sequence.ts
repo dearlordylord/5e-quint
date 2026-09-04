@@ -213,7 +213,8 @@ type SpellAttackSequenceDamageAmount = Extract<
   { readonly kind: "fixed" }
 >;
 
-export const SPELL_ATTACK_SEQUENCE_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SpellAttackSequenceFailedFact.
+const SPELL_ATTACK_SEQUENCE_FAILED_FACTS = [
   "level",
   "school",
   "range",
