@@ -4,10 +4,30 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, Round } from "@dnd/shared/types";
+import {
+  movementFeet,
+  PositiveInteger,
+  Round,
+  spellSlotLevel,
+} from "@dnd/shared/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { magicSuppressionEmanationProfile } from "./battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
   characterExecutionWithSpellInvocations,
@@ -30,9 +50,12 @@ import {
   type BattleState,
 } from "./index.ts";
 import type {
+  BattleCreatureState,
+  BattleSpellAdmissionSource,
   BattleStoredLightEmitterTemplate,
   BattleTrackedOngoingSpellLightEmitterMechanicalFacts,
 } from "./battle-state-execution.ts";
+import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
 import {
   antimagicFieldUnitId,
   continualFlameUnitId,
@@ -52,7 +75,11 @@ import {
   spatialMeleeSpellAttackProxyPositionFill,
   spatialMeleeSpellAttackProxyTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
@@ -71,6 +98,411 @@ const antimagicFieldAreaId = battleAreaId("unit-profile-antimagic-field-area");
 type SpellBattleSlots = NonNullable<
   Parameters<typeof spellBattle>[0]["spellSlots"]
 >;
+
+type OngoingSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function antimagicFieldMechanics(): OngoingSpellMechanics {
+  const mechanics = spellRecord(antimagicFieldUnitId).mechanics;
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Antimagic Field ongoing-effect mechanics.");
+  return mechanics;
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function mutatedAntimagicFieldSource(
+  mutate: (mechanics: OngoingSpellMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(antimagicFieldUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Antimagic Field ongoing-effect mechanics.");
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function syntheticAntimagicFieldRecord(
+  mutate: (mechanics: OngoingSpellMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_magic_suppression_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Magic Suppression ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_magic_suppression_${suffix}`,
+    },
+    mechanics: mutate(structuredClone(antimagicFieldMechanics())),
+  });
+}
+
+function staticSpellAdmissionActor(): SpellAdmissionActor {
+  const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+    spellCasterId,
+  );
+  if (!isSpellAdmissionActor(actor))
+    throw new Error("Expected a spellcasting character fixture.");
+  return actor;
+}
+
+function isSpellAdmissionActor(
+  actor: BattleCreatureState | undefined,
+): actor is SpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
+}
+
+function issueFacts(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}): readonly {
+  readonly failedFact: string;
+  readonly mechanicsPath: unknown;
+}[] {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("magicSuppressionEmanation static admission", () => {
+  test("projects exact Antimagic mechanics and mechanics-free execution", () => {
+    const source = spellAdmissionSource(spellRecord(antimagicFieldUnitId));
+    const result = magicSuppressionEmanationProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 8,
+      radiusFeet: 10,
+      durationTicks: 600,
+      rangeFeet: 0,
+      exceptSources: ["artifact", "deity"],
+      suppressedTimeCountsAgainstDuration: true,
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationPath(PositiveInteger(3)),
+        spellOngoingOperationPath(PositiveInteger(4)),
+        spellOngoingOperationPath(PositiveInteger(5)),
+        spellOngoingOperationEffectPath(PositiveInteger(5)),
+      ],
+      unowned: [
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(3)),
+        spellOngoingOperationEffectPath(PositiveInteger(4)),
+      ],
+    });
+
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: staticSpellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(8), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    const invocation = invocations[0];
+    if (invocation === undefined)
+      throw new Error("Expected an admitted Antimagic Field invocation.");
+    expect(invocation.spell).not.toHaveProperty("mechanics");
+    const { spell: _spell, ...procedureFacts } = invocation;
+    const execution = {
+      ...procedureFacts,
+      spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
+        source.spellDefinitionRuleFacts,
+        source.castingSource,
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-antimagic-static",
+      ),
+    };
+    const encoded = Schema.encodeSync(
+      magicSuppressionEmanationProfile.executionSchema,
+    )(execution);
+    expect(encoded).not.toHaveProperty("mechanics");
+    const { sourceProcedureRef: _sourceProcedureRef, ...schemaFacts } =
+      execution;
+    expect(
+      Schema.decodeSync(magicSuppressionEmanationProfile.executionSchema)(
+        encoded,
+      ),
+    ).toEqual(schemaFacts);
+  });
+
+  test("recognizes renamed identity and a renamed structural area hole", () => {
+    const canonical = spellAdmissionSource(spellRecord(antimagicFieldUnitId));
+    const renamed = spellAdmissionSource(
+      syntheticAntimagicFieldRecord((mechanics) => {
+        if (mechanics.attachment.kind !== "area")
+          throw new Error("Expected the canonical direct Emanation.");
+        return {
+          ...mechanics,
+          attachment: {
+            kind: "hole",
+            holeId: "synthetic_emanation_hole",
+            label: "synthetic emanation",
+            value: mechanics.attachment,
+          },
+        };
+      }, "renamed"),
+    );
+    const canonicalResult = magicSuppressionEmanationProfile.admitMechanics(
+      mechanicsSource(canonical),
+    );
+    const renamedResult = magicSuppressionEmanationProfile.admitMechanics(
+      mechanicsSource(renamed),
+    );
+    expect(canonicalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (
+      canonicalResult.tag !== "supported" ||
+      renamedResult.tag !== "supported"
+    )
+      return;
+    expect(renamedResult.admitted.facts).toEqual(
+      canonicalResult.admitted.facts,
+    );
+    expect(renamedResult.admitted.evidence).toEqual(
+      canonicalResult.admitted.evidence,
+    );
+  });
+
+  test("accepts reversed exception and operation order with actual evidence ordinals", () => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      const suppression = mechanics.operations.find(
+        ({ effect }) => effect.kind === "suppress_ongoing_magic_effects",
+      );
+      if (suppression?.effect.kind !== "suppress_ongoing_magic_effects")
+        throw new Error("Expected suppression operation.");
+      Reflect.set(suppression.effect, "exceptSources", ["deity", "artifact"]);
+      Reflect.set(mechanics, "operations", [...mechanics.operations].reverse());
+    });
+    const result = magicSuppressionEmanationProfile.admitMechanics(source);
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts.exceptSources).toEqual(["deity", "artifact"]);
+    expect(result.admitted.evidence.consumed).toContainEqual(
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    );
+    expect(result.admitted.evidence.unowned).toEqual([
+      spellOngoingOperationEffectPath(PositiveInteger(2)),
+      spellOngoingOperationEffectPath(PositiveInteger(3)),
+      spellOngoingOperationEffectPath(PositiveInteger(4)),
+      spellOngoingOperationEffectPath(PositiveInteger(5)),
+    ]);
+  });
+
+  test.each([
+    ["missing deity", ["artifact"]],
+    ["duplicate artifact", ["artifact", "artifact"]],
+    ["extra duplicate", ["artifact", "deity", "artifact"]],
+  ] as const)("rejects $0 suppression exceptions", (_label, exceptSources) => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      const suppression = mechanics.operations.find(
+        ({ effect }) => effect.kind === "suppress_ongoing_magic_effects",
+      );
+      if (suppression?.effect.kind !== "suppress_ongoing_magic_effects")
+        throw new Error("Expected suppression operation.");
+      Reflect.set(suppression.effect, "exceptSources", exceptSources);
+    });
+    expect(
+      issueFacts(magicSuppressionEmanationProfile.admitMechanics(source)),
+    ).toContainEqual({
+      failedFact: "exceptSources",
+      mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(5)),
+    });
+  });
+
+  test("keeps malformed suppression trigger at its actual ordinal", () => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      const suppression = mechanics.operations[4];
+      if (suppression?.effect.kind !== "suppress_ongoing_magic_effects")
+        throw new Error("Expected suppression operation ordinal 5.");
+      Reflect.set(suppression, "trigger", { kind: "on_effect_starts" });
+    });
+    expect(
+      issueFacts(magicSuppressionEmanationProfile.admitMechanics(source)),
+    ).toContainEqual({
+      failedFact: "operationTrigger",
+      mechanicsPath: spellOngoingOperationPath(PositiveInteger(5)),
+    });
+  });
+
+  test("reports structurally unknowable malformed effect generically at its actual ordinal", () => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      const suppression = mechanics.operations[4];
+      if (suppression === undefined)
+        throw new Error("Expected suppression operation ordinal 5.");
+      Reflect.set(suppression, "effect", { kind: "none" });
+    });
+    const issues = issueFacts(
+      magicSuppressionEmanationProfile.admitMechanics(source),
+    );
+    expect(issues).toContainEqual({
+      failedFact: "operationEffect",
+      mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(5)),
+    });
+    expect(issues).toContainEqual({
+      failedFact: "suppressionOperation",
+      mechanicsPath: spellMechanicsRootPath(),
+    });
+  });
+
+  test("accumulates exact extra operation and authored conditional paths", () => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      const extra = structuredClone(mechanics.operations[0]);
+      if (extra === undefined)
+        throw new Error("Expected an operation fixture.");
+      Reflect.set(extra, "predicate", { kind: "synthetic" });
+      Reflect.set(mechanics, "operations", [...mechanics.operations, extra]);
+      const conditionalFixture = spellRecord("phantasmal_force").mechanics;
+      if (
+        conditionalFixture.family !== "ongoing_effect" ||
+        conditionalFixture.authoredConditionalMechanics?.[0] === undefined
+      )
+        throw new Error("Expected an authored conditional fixture.");
+      Reflect.set(mechanics, "authoredConditionalMechanics", [
+        structuredClone(conditionalFixture.authoredConditionalMechanics[0]),
+        structuredClone(conditionalFixture.authoredConditionalMechanics[0]),
+      ]);
+    });
+    expect(
+      issueFacts(magicSuppressionEmanationProfile.admitMechanics(source)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "operationPredicate",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(6)),
+        },
+        {
+          failedFact: "operationCount",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(6)),
+        },
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(1),
+          ),
+        },
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(2),
+          ),
+        },
+      ]),
+    );
+  });
+
+  test("accumulates independent header and suppression failures", () => {
+    const source = mutatedAntimagicFieldSource((mechanics) => {
+      Reflect.set(mechanics, "level", 7);
+      Reflect.set(mechanics, "school", "evocation");
+      Reflect.set(mechanics, "castingTime", { kind: "bonus_action" });
+      const suppression = mechanics.operations[4];
+      if (suppression?.effect.kind !== "suppress_ongoing_magic_effects")
+        throw new Error("Expected suppression operation ordinal 5.");
+      Reflect.set(suppression.effect, "exceptSources", ["artifact"]);
+      Reflect.set(
+        suppression.effect,
+        "suppressedTimeCountsAgainstDuration",
+        false,
+      );
+    });
+    expect(
+      issueFacts(magicSuppressionEmanationProfile.admitMechanics(source)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "level",
+          mechanicsPath: spellMechanicsHeaderPath("level"),
+        },
+        {
+          failedFact: "school",
+          mechanicsPath: spellMechanicsHeaderPath("school"),
+        },
+        {
+          failedFact: "castingTime",
+          mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+        },
+        {
+          failedFact: "exceptSources",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(5)),
+        },
+        {
+          failedFact: "suppressedTimeCountsAgainstDuration",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(5)),
+        },
+      ]),
+    );
+  });
+
+  test.each([
+    {
+      label: "duration value",
+      mutate: (mechanics: OngoingSpellMechanics) => {
+        if (mechanics.duration.kind === "concentration")
+          Reflect.set(mechanics.duration.upTo, "amount", 2);
+      },
+      failedFact: "durationValue",
+      mechanicsPath: spellDurationValuePath(),
+    },
+    {
+      label: "Emanation radius",
+      mutate: (mechanics: OngoingSpellMechanics) => {
+        if (mechanics.attachment.kind === "area")
+          Reflect.set(mechanics.attachment.shape, "radiusFeet", 15);
+      },
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    },
+  ])(
+    "rejects an unsupported $label at its exact path",
+    ({ mutate, failedFact, mechanicsPath }) => {
+      const source = mutatedAntimagicFieldSource(mutate);
+      expect(
+        issueFacts(magicSuppressionEmanationProfile.admitMechanics(source)),
+      ).toContainEqual({ failedFact, mechanicsPath });
+    },
+  );
+});
 
 describe("SRD Antimagic Field ongoing spell suppression admission", () => {
   test("antimagic field is admitted as a level-8 self Emanation suppression spell", () => {
