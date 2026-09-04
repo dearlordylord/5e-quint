@@ -12,23 +12,19 @@
 --    against the relevant effect."
 --
 -- Consolidated validation reference for:
---   • EffectAtom.modify_roll_advantage.attackerTypeFilter (attacker-
---     side creature-type narrowing; complements the target-side
---     filter on TargetSelection used by Hold Person. Both share the
---     SRD 5.2.1 CreatureType enum.)
+--   • EffectAtom.creature_type_protection, whose three discriminated
+--     capabilities preserve attack Disadvantage, prevention of new
+--     relevant effects, and Advantage on new saves against relevant
+--     effects that already exist.
 --   • Components.materialCostGp = 25 + materialConsumed = True (the
 --     25-GP Holy Water "which the spell consumes" material-cost
 --     metadata. No behavioral wiring; present on the spell card.)
 --   • family = activation with a single direct phase under
 --     concentration duration (same pattern as Fly's grant_speed — the
 --     effect persists for the concentration window).
--- Runtime note: the battle runtime promotes the remaining protection
--- clauses from this same retained spell shape as a creature-type
--- protection active effect. The save-Advantage clause is not projected
--- onto fresh spell-cast saves; RAW grants Advantage only on new saves
--- against the already-applied relevant effect, and the runtime needs a
--- true active-effect repeat-save or possession-save boundary before
--- wiring that clause into production holes.
+-- Runtime note: the save-Advantage capability is explicitly scoped to
+-- new saves against an existing relevant effect. It is not a modifier
+-- on fresh spell-invocation saves.
 
 let protectionFromEvilAndGood =
       { kind = "spell"
@@ -72,16 +68,35 @@ let protectionFromEvilAndGood =
                         }
                     }
                 , effects =
-                    [ { kind = "modify_roll_advantage"
-                      , mode = "disadvantage"
-                      , on = [ "attack_roll" ]
-                      , attackerTypeFilter =
+                    [ { kind = "creature_type_protection"
+                      , sourceCreatureTypes =
                           [ "aberration"
                           , "celestial"
                           , "elemental"
                           , "fey"
                           , "fiend"
                           , "undead"
+                          ]
+                      , protections =
+                          [ { kind = "attack_rolls_against_target"
+                            , mode = Some "disadvantage"
+                            , conditions = None (List Text)
+                            , possession = None Text
+                            , result = None Text
+                            }
+                          , { kind = "new_relevant_effect_applications"
+                            , mode = None Text
+                            , conditions = Some [ "charmed", "frightened" ]
+                            , possession = Some "included"
+                            , result = Some "prevented"
+                            }
+                          , { kind =
+                                "new_saves_against_existing_relevant_effects"
+                            , conditions = Some [ "charmed", "frightened" ]
+                            , possession = Some "included"
+                            , mode = Some "advantage"
+                            , result = None Text
+                            }
                           ]
                       }
                     ]

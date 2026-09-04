@@ -25,18 +25,19 @@
     "operations": [
       {
         "effect": {
-          "affects": "rolls_against_self",
-          "attackerTypeFilter": [
+          "kind": "creature_type_protection",
+          "protections": [
+            {
+              "kind": "attack_rolls_against_target",
+              "mode": "disadvantage"
+            }
+          ],
+          "sourceCreatureTypes": [
             "celestial",
             "elemental",
             "fey",
             "fiend",
             "undead"
-          ],
-          "kind": "modify_roll_advantage",
-          "mode": "disadvantage",
-          "on": [
-            "attack_roll"
           ]
         },
         "trigger": {
@@ -47,7 +48,62 @@
     "range": {
       "kind": "self"
     },
-    "school": "abjuration"
+    "school": "abjuration",
+    "specialFunctions": [
+      {
+        "action": "magic",
+        "conditions": [
+          "charmed",
+          "frightened"
+        ],
+        "kind": "end_source_scoped_relevant_effects",
+        "possession": "included",
+        "sourceCreatureTypes": [
+          "celestial",
+          "elemental",
+          "fey",
+          "fiend",
+          "undead"
+        ],
+        "target": {
+          "kind": "touched_creature"
+        }
+      },
+      {
+        "action": "magic",
+        "eligibleCreatureTypes": [
+          "celestial",
+          "elemental",
+          "fey",
+          "fiend",
+          "undead"
+        ],
+        "kind": "dismiss_creature_to_home_plane",
+        "save": {
+          "ability": "cha",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "onFailure": {
+            "creatureTypeDestinationOverrides": [
+              {
+                "creatureType": "undead",
+                "destination": "shadowfell"
+              },
+              {
+                "creatureType": "fey",
+                "destination": "feywild"
+              }
+            ],
+            "kind": "send_to_home_plane_if_not_already_there"
+          }
+        },
+        "target": {
+          "feet": 5,
+          "kind": "visible_creature_within_feet"
+        }
+      }
+    ]
   },
   "name": "Dispel Evil and Good",
   "provenance": {

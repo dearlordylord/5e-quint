@@ -40,18 +40,38 @@
         },
         "effects": [
           {
-            "attackerTypeFilter": [
+            "kind": "creature_type_protection",
+            "protections": [
+              {
+                "kind": "attack_rolls_against_target",
+                "mode": "disadvantage"
+              },
+              {
+                "conditions": [
+                  "charmed",
+                  "frightened"
+                ],
+                "kind": "new_relevant_effect_applications",
+                "possession": "included",
+                "result": "prevented"
+              },
+              {
+                "conditions": [
+                  "charmed",
+                  "frightened"
+                ],
+                "kind": "new_saves_against_existing_relevant_effects",
+                "mode": "advantage",
+                "possession": "included"
+              }
+            ],
+            "sourceCreatureTypes": [
               "aberration",
               "celestial",
               "elemental",
               "fey",
               "fiend",
               "undead"
-            ],
-            "kind": "modify_roll_advantage",
-            "mode": "disadvantage",
-            "on": [
-              "attack_roll"
             ]
           }
         ],

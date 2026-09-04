@@ -84,6 +84,13 @@ const SPELL_ONGOING_BRANCH_COORDINATES = {
   },
 } as const;
 
+const SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES = {
+  target: { role: "generalFact", ordinal: PositiveInteger(1) },
+  resolution: { role: "procedure", ordinal: PositiveInteger(1) },
+  result: { role: "effect", ordinal: PositiveInteger(1) },
+  spellEnding: { role: "effect", ordinal: PositiveInteger(2) },
+} as const;
+
 const SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES = {
   statBlock: { role: "effect", ordinal: PositiveInteger(1) },
   control: { role: "procedure", ordinal: PositiveInteger(1) },
@@ -248,6 +255,77 @@ export function spellOngoingOperationEffectPath(
   );
 }
 
+/** A creature-type-protection capability nested under its owning effect atom. */
+export function spellCreatureTypeProtectionCapabilityPath(
+  protectionPath: SpellMechanicsBranchPath,
+  capabilityOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    protectionPath,
+    occurrence("effect", capabilityOrdinal),
+  );
+}
+
+/**
+ * Special functions follow recurring operations in the root procedure order.
+ * Taking the operation count explicitly preserves authored sibling ordinals.
+ */
+export function spellOngoingSpecialFunctionPath(
+  operationCount: PositiveInteger,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellMechanicsPath(
+    occurrence(
+      "procedure",
+      PositiveInteger(operationCount + specialFunctionOrdinal),
+    ),
+  );
+}
+
+export function spellOngoingSpecialFunctionTargetPath(
+  operationCount: PositiveInteger,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    operationCount,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.target,
+  );
+}
+
+export function spellOngoingSpecialFunctionResolutionPath(
+  operationCount: PositiveInteger,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    operationCount,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.resolution,
+  );
+}
+
+export function spellOngoingSpecialFunctionResultPath(
+  operationCount: PositiveInteger,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    operationCount,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.result,
+  );
+}
+
+export function spellOngoingSpecialFunctionSpellEndingPath(
+  operationCount: PositiveInteger,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    operationCount,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.spellEnding,
+  );
+}
+
 /** Canonical coordinate for each root-authored ongoing conditional mechanic. */
 export function spellOngoingAuthoredConditionalMechanicPath(
   ordinal: PositiveInteger,
@@ -334,6 +412,27 @@ function spellDurationBranchPath(
   ordinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return spellMechanicsPath(headerNode("duration"), occurrence(role, ordinal));
+}
+
+function ongoingSpecialFunctionBranchPath(
+  operationCount: PositiveInteger,
+  specialFunctionOrdinal: PositiveInteger,
+  coordinate: {
+    readonly role: "generalFact" | "procedure" | "effect";
+    readonly ordinal: PositiveInteger;
+  },
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    spellOngoingSpecialFunctionPath(operationCount, specialFunctionOrdinal),
+    occurrence(coordinate.role, coordinate.ordinal),
+  );
+}
+
+function appendSpellMechanicsPath(
+  path: SpellMechanicsBranchPath,
+  node: MechanicsGraphPathNode,
+): SpellMechanicsBranchPath {
+  return { ...path, nodes: [...path.nodes, node] };
 }
 
 function durationBranchOrdinal(

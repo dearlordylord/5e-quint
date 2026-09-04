@@ -5,6 +5,7 @@ import type {
   OngoingActionCost,
   OngoingEffectMechanics,
   OngoingOperation,
+  OngoingSpecialFunction,
   Range,
 } from "../surface/types.ts";
 import { Match } from "effect";
@@ -110,6 +111,10 @@ export function traceOngoingEffect(
     );
   }
 
+  for (const specialFunction of m.specialFunctions ?? []) {
+    traceOngoingSpecialFunction(specialFunction, ctx.procId, nodes, edges, ids);
+  }
+
   for (const mechanic of m.authoredConditionalMechanics ?? []) {
     const mechanicId = ids("authored");
     const tracedMechanic = authoredConditionalMechanicTraceNode(mechanic);
@@ -121,6 +126,102 @@ export function traceOngoingEffect(
     });
     edges.push({ from: ctx.procId, to: mechanicId, relation: "documents" });
   }
+}
+
+const ongoingSpecialFunctionByKind = Match.discriminator("kind");
+
+export function traceOngoingSpecialFunction(
+  specialFunction: OngoingSpecialFunction,
+  spellProcedureId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const functionId = ids("proc");
+  nodes.push({
+    id: functionId,
+    category: "procedure",
+    atomKind: specialFunction.kind,
+    label: `${specialFunction.kind}\n${specialFunction.action} action`,
+  });
+  edges.push({ from: spellProcedureId, to: functionId, relation: "offers" });
+
+  Match.value(specialFunction).pipe(
+    ongoingSpecialFunctionByKind(
+      "end_source_scoped_relevant_effects",
+      (specialFunction) => {
+        const targetId = ids("att");
+        nodes.push({
+          id: targetId,
+          category: "attachment",
+          atomKind: specialFunction.target.kind,
+          label: specialFunction.target.kind,
+        });
+        edges.push({ from: functionId, to: targetId, relation: "attaches_to" });
+
+        const resultId = ids("eff");
+        nodes.push({
+          id: resultId,
+          category: "effect",
+          atomKind: "end_source_scoped_relevant_effects_result",
+          label:
+            `end_source_scoped_relevant_effects_result\nsources: ${specialFunction.sourceCreatureTypes.join("/")}\n` +
+            `conditions: ${specialFunction.conditions.join("/")}\npossession: ${specialFunction.possession}`,
+        });
+        edges.push({ from: functionId, to: resultId, relation: "grants" });
+      },
+    ),
+    ongoingSpecialFunctionByKind(
+      "dismiss_creature_to_home_plane",
+      (specialFunction) => {
+        const targetId = ids("att");
+        nodes.push({
+          id: targetId,
+          category: "attachment",
+          atomKind: specialFunction.target.kind,
+          label:
+            `${specialFunction.target.kind}\nwithin ${specialFunction.target.feet} ft\n` +
+            `types: ${specialFunction.eligibleCreatureTypes.join("/")}`,
+        });
+        edges.push({ from: functionId, to: targetId, relation: "attaches_to" });
+
+        const saveId = ids("res");
+        nodes.push({
+          id: saveId,
+          category: "resolution",
+          atomKind: "saving_throw",
+          label: `saving_throw\n${specialFunction.save.ability}\n${describeDc(specialFunction.save.dc)}`,
+        });
+        edges.push({ from: functionId, to: saveId, relation: "resolves_via" });
+
+        const resultId = ids("eff");
+        const overrides =
+          specialFunction.save.onFailure.creatureTypeDestinationOverrides
+            .map(
+              ({ creatureType, destination }) =>
+                `${creatureType}->${destination}`,
+            )
+            .join(", ");
+        nodes.push({
+          id: resultId,
+          category: "effect",
+          atomKind: specialFunction.save.onFailure.kind,
+          label: `${specialFunction.save.onFailure.kind}\noverrides: ${overrides}`,
+        });
+        edges.push({ from: saveId, to: resultId, relation: "on_failure" });
+      },
+    ),
+    Match.exhaustive,
+  );
+
+  const endingId = ids("end");
+  nodes.push({
+    id: endingId,
+    category: "lifecycle",
+    atomKind: "end_current_spell",
+    label: "end_current_spell\nafter special function use",
+  });
+  edges.push({ from: functionId, to: endingId, relation: "ends" });
 }
 
 export function traceMarkAttachmentEffects(

@@ -781,6 +781,14 @@ function distinctSkills(skills: readonly Skill[]): boolean {
   return new Set(skills).size === skills.length;
 }
 
+function distinctKinds(values: readonly { readonly kind: string }[]): boolean {
+  return new Set(values.map(({ kind }) => kind)).size === values.length;
+}
+
+function allValuesDistinct(values: readonly string[]): boolean {
+  return new Set(values).size === values.length;
+}
+
 function sameStringSet(
   left: readonly string[],
   right: readonly string[],
@@ -962,10 +970,34 @@ type EffectEndTargetState = {
   };
 };
 
+type CreatureTypeProtection = {
+  readonly kind: "creature_type_protection";
+  readonly sourceCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
+  readonly protections: ReadonlyNonEmptyArray<
+    | {
+        readonly kind: "attack_rolls_against_target";
+        readonly mode: "advantage" | "disadvantage";
+      }
+    | {
+        readonly kind: "new_relevant_effect_applications";
+        readonly conditions: ReadonlyNonEmptyArray<Condition>;
+        readonly possession: "included";
+        readonly result: "prevented";
+      }
+    | {
+        readonly kind: "new_saves_against_existing_relevant_effects";
+        readonly conditions: ReadonlyNonEmptyArray<Condition>;
+        readonly possession: "included";
+        readonly mode: "advantage";
+      }
+  >;
+};
+
 type EffectAtom =
   | ObjectContactDamageEffect
   | CurseOccurrenceEffect
   | EffectEndTargetState
+  | CreatureTypeProtection
   | {
       readonly kind: "damage";
       readonly damageType: DamageTypeRef;
@@ -2103,6 +2135,39 @@ type OngoingOperation = {
   readonly effect: OngoingEffect;
   readonly usageLimit?: UsageLimit;
 };
+
+type OngoingSpecialFunction =
+  | {
+      readonly kind: "end_source_scoped_relevant_effects";
+      readonly action: "magic";
+      readonly target: { readonly kind: "touched_creature" };
+      readonly sourceCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
+      readonly conditions: ReadonlyNonEmptyArray<Condition>;
+      readonly possession: "included";
+    }
+  | {
+      readonly kind: "dismiss_creature_to_home_plane";
+      readonly action: "magic";
+      readonly target: {
+        readonly kind: "visible_creature_within_feet";
+        readonly feet: number;
+      };
+      readonly eligibleCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
+      readonly save: {
+        readonly ability: "cha";
+        readonly dc: DcSource;
+        readonly onFailure: {
+          readonly kind: "send_to_home_plane_if_not_already_there";
+          readonly creatureTypeDestinationOverrides: ReadonlyNonEmptyArray<
+            | {
+                readonly creatureType: "undead";
+                readonly destination: "shadowfell";
+              }
+            | { readonly creatureType: "fey"; readonly destination: "feywild" }
+          >;
+        };
+      };
+    };
 
 export const ReactionTriggerSchema: Schema.Codec<
   ReactionTrigger,
@@ -3301,12 +3366,66 @@ const ApplyConditionEffectSchema = strictStruct({
   ),
 });
 
+export const CreatureTypeProtectionSchema = strictStruct({
+  kind: Schema.Literal("creature_type_protection"),
+  sourceCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
+    Schema.check(
+      Schema.makeFilter(allValuesDistinct, {
+        message: "Source Creature Types must be unique.",
+        toJsonSchema: () => ({ uniqueItems: true }),
+      }),
+    ),
+  ),
+  protections: nonEmpty(
+    Schema.Union([
+      strictStruct({
+        kind: Schema.Literal("attack_rolls_against_target"),
+        mode: Schema.Literals(["advantage", "disadvantage"]),
+      }),
+      strictStruct({
+        kind: Schema.Literal("new_relevant_effect_applications"),
+        conditions: nonEmpty(ConditionSchema).pipe(
+          Schema.check(
+            Schema.makeFilter(allValuesDistinct, {
+              message: "Relevant Conditions must be unique.",
+              toJsonSchema: () => ({ uniqueItems: true }),
+            }),
+          ),
+        ),
+        possession: Schema.Literal("included"),
+        result: Schema.Literal("prevented"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("new_saves_against_existing_relevant_effects"),
+        conditions: nonEmpty(ConditionSchema).pipe(
+          Schema.check(
+            Schema.makeFilter(allValuesDistinct, {
+              message: "Relevant Conditions must be unique.",
+              toJsonSchema: () => ({ uniqueItems: true }),
+            }),
+          ),
+        ),
+        possession: Schema.Literal("included"),
+        mode: Schema.Literal("advantage"),
+      }),
+    ]),
+  ).pipe(
+    Schema.check(
+      Schema.makeFilter(distinctKinds, {
+        message: "Creature-type protection capabilities must be unique.",
+        toJsonSchema: () => ({ uniqueItems: true }),
+      }),
+    ),
+  ),
+});
+
 export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
   Schema.suspend(
     (): Schema.Codec<EffectAtom, unknown, never, never> =>
       Schema.Union([
         ObjectContactDamageEffectSchema,
         EffectEndTargetStateSchema,
+        CreatureTypeProtectionSchema,
         Schema.Struct({
           kind: Schema.Literal("curse_occurrence"),
           removal: strictStruct({
@@ -4908,6 +5027,100 @@ export const OngoingOperationSchema = Schema.Struct({
   usageLimit: optionalExact(UsageLimitSchema),
 });
 
+export const OngoingSpecialFunctionSchema: Schema.Codec<
+  OngoingSpecialFunction,
+  unknown,
+  never,
+  never
+> = Schema.Union([
+  strictStruct({
+    kind: Schema.Literal("end_source_scoped_relevant_effects"),
+    action: Schema.Literal("magic"),
+    target: strictStruct({ kind: Schema.Literal("touched_creature") }),
+    sourceCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
+      Schema.check(
+        Schema.makeFilter(allValuesDistinct, {
+          message: "Source Creature Types must be unique.",
+          toJsonSchema: () => ({ uniqueItems: true }),
+        }),
+      ),
+    ),
+    conditions: nonEmpty(ConditionSchema).pipe(
+      Schema.check(
+        Schema.makeFilter(allValuesDistinct, {
+          message: "Relevant Conditions must be unique.",
+          toJsonSchema: () => ({ uniqueItems: true }),
+        }),
+      ),
+    ),
+    possession: Schema.Literal("included"),
+  }),
+  strictStruct({
+    kind: Schema.Literal("dismiss_creature_to_home_plane"),
+    action: Schema.Literal("magic"),
+    target: strictStruct({
+      kind: Schema.Literal("visible_creature_within_feet"),
+      feet: PositiveIntegerSchema,
+    }),
+    eligibleCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
+      Schema.check(
+        Schema.makeFilter(allValuesDistinct, {
+          message: "Eligible Creature Types must be unique.",
+          toJsonSchema: () => ({ uniqueItems: true }),
+        }),
+      ),
+    ),
+    save: strictStruct({
+      ability: Schema.Literal("cha"),
+      dc: DcSourceSchema,
+      onFailure: strictStruct({
+        kind: Schema.Literal("send_to_home_plane_if_not_already_there"),
+        creatureTypeDestinationOverrides: nonEmpty(
+          Schema.Union([
+            strictStruct({
+              creatureType: Schema.Literal("undead"),
+              destination: Schema.Literal("shadowfell"),
+            }),
+            strictStruct({
+              creatureType: Schema.Literal("fey"),
+              destination: Schema.Literal("feywild"),
+            }),
+          ]),
+        ).pipe(
+          Schema.check(
+            Schema.makeFilter(
+              (overrides) =>
+                sameStringSet(
+                  overrides.map(
+                    ({ creatureType, destination }) =>
+                      `${creatureType}:${destination}`,
+                  ),
+                  ["undead:shadowfell", "fey:feywild"],
+                ),
+              {
+                message:
+                  "Home-plane overrides must map Undead to the Shadowfell and Fey to the Feywild.",
+                toJsonSchema: () => ({ minItems: 2, maxItems: 2 }),
+              },
+            ),
+          ),
+        ),
+      }),
+    }),
+  }),
+]);
+
+const OngoingSpecialFunctionsSchema = nonEmpty(
+  OngoingSpecialFunctionSchema,
+).pipe(
+  Schema.check(
+    Schema.makeFilter(distinctKinds, {
+      message: "Ongoing special functions must be unique.",
+      toJsonSchema: () => ({ uniqueItems: true }),
+    }),
+  ),
+);
+
 export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
   Schema.fieldsAssign(
     Schema.Struct({
@@ -4915,6 +5128,7 @@ export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
       attachment: AttachmentSchema,
       initialPhase: optionalExact(ActivationPhaseSchema),
       operations: nonEmpty(OngoingOperationSchema),
+      specialFunctions: optionalExact(OngoingSpecialFunctionsSchema),
       authoredConditionalMechanics: optionalExact(
         nonEmpty(AuthoredConditionalMechanicSchema),
       ),

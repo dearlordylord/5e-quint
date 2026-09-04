@@ -12,6 +12,7 @@ import chillTouchInput from "../../content/chill_touch.json";
 import classFighterInput from "../../content/class_fighter.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import dispelMagicInput from "../../content/dispel_magic.json";
+import dispelEvilAndGoodInput from "../../content/dispel_evil_and_good.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import flameBladeInput from "../../content/flame_blade.json";
@@ -29,6 +30,7 @@ import moonbeamInput from "../../content/moonbeam.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import phantasmalForceInput from "../../content/phantasmal_force.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
+import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
 import searingSmiteInput from "../../content/searing_smite.json";
@@ -56,6 +58,117 @@ import { idGen } from "./tracer-rule-labels.ts";
 import { traceStatBlock, traceUnit } from "./tracer.ts";
 
 describe("Surface trace interpreter", () => {
+  test("traces each authored creature-type protection capability", () => {
+    const trace = traceUnit(
+      decodeUnitRecordSync(protectionFromEvilAndGoodInput),
+    );
+
+    expect(trace.atomKinds).toEqual(
+      expect.arrayContaining([
+        "creature_type_protection",
+        "attack_rolls_against_target",
+        "new_relevant_effect_applications",
+        "new_saves_against_existing_relevant_effects",
+      ]),
+    );
+    const protection = trace.nodes.find(
+      (node) => node.atomKind === "creature_type_protection",
+    );
+    const capabilities = trace.nodes.filter((node) =>
+      [
+        "attack_rolls_against_target",
+        "new_relevant_effect_applications",
+        "new_saves_against_existing_relevant_effects",
+      ].includes(node.atomKind),
+    );
+    expect(protection).toBeDefined();
+    expect(capabilities).toHaveLength(3);
+    expect(
+      capabilities.every((capability) =>
+        trace.edges.some(
+          (edge) =>
+            edge.from === protection?.id &&
+            edge.to === capability.id &&
+            edge.relation === "grants",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps Dispel protection attack-only and traces both special functions", () => {
+    const unit = decodeUnitRecordSync(dispelEvilAndGoodInput);
+    const trace = traceUnit(unit);
+
+    expect(trace.atomKinds).toEqual(
+      expect.arrayContaining([
+        "creature_type_protection",
+        "attack_rolls_against_target",
+        "end_source_scoped_relevant_effects",
+        "dismiss_creature_to_home_plane",
+        "send_to_home_plane_if_not_already_there",
+        "end_current_spell",
+      ]),
+    );
+    expect(trace.atomKinds).not.toContain(
+      "new_saves_against_existing_relevant_effects",
+    );
+    expect(
+      trace.nodes.filter((node) => node.atomKind === "end_current_spell"),
+    ).toHaveLength(2);
+  });
+
+  test("rejects empty or duplicate capability and special-function states", () => {
+    const protectionWithNoCapabilities = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithNoCapabilities.mechanics.phases[0]!.effects[0]!.protections =
+      [];
+    expect(() => decodeUnitRecordSync(protectionWithNoCapabilities)).toThrow();
+
+    const protectionWithNoSourceTypes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithNoSourceTypes.mechanics.phases[0]!.effects[0]!.sourceCreatureTypes =
+      [];
+    expect(() => decodeUnitRecordSync(protectionWithNoSourceTypes)).toThrow();
+
+    const protectionWithDuplicateCapabilities = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithDuplicateCapabilities.mechanics.phases[0]!.effects[0]!.protections.push(
+      protectionWithDuplicateCapabilities.mechanics.phases[0]!.effects[0]!
+        .protections[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateCapabilities),
+    ).toThrow();
+
+    const dispelWithNoSpecialFunctions = structuredClone(
+      dispelEvilAndGoodInput,
+    );
+    dispelWithNoSpecialFunctions.mechanics.specialFunctions = [];
+    expect(() => decodeUnitRecordSync(dispelWithNoSpecialFunctions)).toThrow();
+
+    const dispelWithDuplicateSpecialFunctions = structuredClone(
+      dispelEvilAndGoodInput,
+    );
+    dispelWithDuplicateSpecialFunctions.mechanics.specialFunctions.push(
+      dispelWithDuplicateSpecialFunctions.mechanics.specialFunctions[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(dispelWithDuplicateSpecialFunctions),
+    ).toThrow();
+
+    const dispelWithWrongHomePlaneOverride = structuredClone(
+      dispelEvilAndGoodInput,
+    );
+    dispelWithWrongHomePlaneOverride.mechanics.specialFunctions[1]!.save.onFailure.creatureTypeDestinationOverrides[0]!.destination =
+      "feywild";
+    expect(() =>
+      decodeUnitRecordSync(dispelWithWrongHomePlaneOverride),
+    ).toThrow();
+  });
+
   test("traces optional effect-label facts in both domain states", () => {
     const effects = [
       { kind: "scale_attack_count", additional: 1 },

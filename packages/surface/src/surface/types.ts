@@ -380,6 +380,9 @@ export type AreaDirectEffectAtom = Schema.Schema.Type<
 export type EffectAtom = Schema.Schema.Type<
   typeof SurfaceSchema.EffectAtomSchema
 >;
+export type CreatureTypeProtection = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureTypeProtectionSchema
+>;
 export type EffectEndTargetState = Schema.Schema.Type<
   typeof SurfaceSchema.EffectEndTargetStateSchema
 >;
@@ -531,6 +534,9 @@ export type OngoingEffect = Schema.Schema.Type<
 >;
 export type OngoingOperation = Schema.Schema.Type<
   typeof SurfaceSchema.OngoingOperationSchema
+>;
+export type OngoingSpecialFunction = Schema.Schema.Type<
+  typeof SurfaceSchema.OngoingSpecialFunctionSchema
 >;
 export type ActionRestriction = Schema.Schema.Type<
   typeof SurfaceSchema.ActionRestrictionSchema

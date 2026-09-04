@@ -13,6 +13,7 @@ import {
   spellActivationEffectPath,
   spellActivationPhasePath,
   spellActivationRepeatPath,
+  spellCreatureTypeProtectionCapabilityPath,
   spellDurationEndingPath,
   spellDurationExtensionPath,
   spellDurationValuePath,
@@ -31,6 +32,11 @@ import {
   spellOngoingModeChoicePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
+  spellOngoingSpecialFunctionPath,
+  spellOngoingSpecialFunctionResolutionPath,
+  spellOngoingSpecialFunctionResultPath,
+  spellOngoingSpecialFunctionSpellEndingPath,
+  spellOngoingSpecialFunctionTargetPath,
   spellSpawnedCreatureControlPath,
   spellSpawnedCreatureDismissalPath,
   spellSpawnedCreaturePath,
@@ -137,6 +143,45 @@ describe("spell mechanics paths", () => {
       [
         spellOngoingOperationEffectPath(PositiveInteger(3)),
         "recordMechanics/procedure:3/effect:1",
+      ],
+      [
+        spellCreatureTypeProtectionCapabilityPath(
+          spellOngoingOperationEffectPath(PositiveInteger(3)),
+          PositiveInteger(2),
+        ),
+        "recordMechanics/procedure:3/effect:1/effect:2",
+      ],
+      [
+        spellOngoingSpecialFunctionPath(PositiveInteger(1), PositiveInteger(1)),
+        "recordMechanics/procedure:2",
+      ],
+      [
+        spellOngoingSpecialFunctionTargetPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+        "recordMechanics/procedure:3/generalFact:1",
+      ],
+      [
+        spellOngoingSpecialFunctionResolutionPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+        "recordMechanics/procedure:3/procedure:1",
+      ],
+      [
+        spellOngoingSpecialFunctionResultPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+        "recordMechanics/procedure:3/effect:1",
+      ],
+      [
+        spellOngoingSpecialFunctionSpellEndingPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+        "recordMechanics/procedure:3/effect:2",
       ],
     ]);
   });
