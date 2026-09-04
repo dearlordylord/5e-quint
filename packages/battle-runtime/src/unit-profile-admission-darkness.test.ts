@@ -122,6 +122,18 @@ function mechanicsSource(
   };
 }
 
+function mechanicsSourceWithOperationCount(
+  count: 0 | 1,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(darknessUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (
+    !Reflect.set(mechanics, "operations", mechanics.operations.slice(0, count))
+  )
+    throw new Error("Expected the malformed operation fixture to be writable.");
+  return { ...mechanicsSource(source), mechanics };
+}
+
 function issueShape(result: {
   readonly tag: string;
   readonly issues?: readonly {
@@ -322,17 +334,62 @@ describe("magicalDarknessPointOrigin static admission", () => {
     ]);
   });
 
-  test("reports material and duration children at their exact canonical paths", () => {
-    const record = syntheticDarknessRecord((mechanics) => {
-      if (mechanics.duration.kind !== "concentration")
-        throw new Error("Expected Darkness Concentration mechanics.");
-      return {
+  test("reports both unsupported material children without a container issue", () => {
+    const record = syntheticDarknessRecord(
+      (mechanics) => ({
         ...mechanics,
         components: {
           ...mechanics.components,
           materialCostGp: 5,
           materialConsumed: true,
         },
+      }),
+      "material_children",
+    );
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("cost"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("consumption"),
+      },
+    ]);
+  });
+
+  test("rejects a genuinely extra components container key at the header", () => {
+    const source = spellAdmissionSource(spellRecord(darknessUnitId));
+    const mechanics = {
+      ...source.mechanics,
+      components: {
+        ...source.mechanics.components,
+        syntheticContainerFact: true,
+      },
+    };
+    const result = magicalDarknessPointOriginProfile.admitMechanics({
+      ...mechanicsSource(source),
+      mechanics,
+    });
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+    ]);
+  });
+
+  test("reports duration children at their exact canonical paths", () => {
+    const record = syntheticDarknessRecord((mechanics) => {
+      if (mechanics.duration.kind !== "concentration")
+        throw new Error("Expected Darkness Concentration mechanics.");
+      return {
+        ...mechanics,
         duration: {
           ...mechanics.duration,
           upTo: {
@@ -349,24 +406,88 @@ describe("magicalDarknessPointOrigin static admission", () => {
 
     expect(issueShape(result)).toEqual([
       {
-        failedFact: "components",
-        mechanicsPath: spellMechanicsHeaderPath("components"),
-      },
-      {
-        failedFact: "components",
-        mechanicsPath: spellMaterialComponentPath("cost"),
-      },
-      {
-        failedFact: "components",
-        mechanicsPath: spellMaterialComponentPath("consumption"),
-      },
-      {
         failedFact: "durationExtension",
         mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
       },
       {
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+    ]);
+  });
+
+  test("reports distinct exact expected coordinates when both operations are absent", () => {
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSourceWithOperationCount(0),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "darknessOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "darknessEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "dispelLightOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "dispelLightEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("preserves each operation's authored ordinal when the roles are reordered", () => {
+    const record = syntheticDarknessRecord(
+      (mechanics) => ({
+        ...mechanics,
+        operations: [mechanics.operations[1], mechanics.operations[0]],
+      }),
+      "reordered_operations",
+    );
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.evidence.consumed.slice(-4)).toEqual([
+      spellOngoingOperationPath(PositiveInteger(2)),
+      spellOngoingOperationEffectPath(PositiveInteger(2)),
+      spellOngoingOperationPath(PositiveInteger(1)),
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ]);
+  });
+
+  test("preserves the remaining operation and assigns the missing role to slot 2", () => {
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSourceWithOperationCount(1),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "dispelLightOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "dispelLightEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
       },
     ]);
   });
