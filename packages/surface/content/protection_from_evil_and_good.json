@@ -32,7 +32,9 @@
             "selection": {
               "disposition": "willing",
               "mode": "one",
-              "targetKinds": ["creature"]
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },
@@ -53,7 +55,10 @@
                 "mode": "disadvantage"
               },
               {
-                "conditions": ["charmed", "frightened"],
+                "conditions": [
+                  "charmed",
+                  "frightened"
+                ],
                 "kind": "relevant_effect_protection",
                 "outcomes": [
                   {
