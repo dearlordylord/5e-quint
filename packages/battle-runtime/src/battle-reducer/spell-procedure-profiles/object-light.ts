@@ -1,6 +1,6 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE
@@ -24,9 +24,23 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //   - spellObjectLightTargetFact and spellObjectTargetHole stay in
 //     spells-targeting.ts until target legality and hole dispatch migrate.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import { Result } from "effect";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { movementFeet, PositiveInteger } from "@dnd/shared/types";
+import { Match, Result } from "effect";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import {
   battleSpellEffectOccurrenceId,
   type BattleObjectId,
@@ -74,220 +88,506 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverDistantSpellMetamagicSelections } from "../metamagic-support.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 
 const LIGHT_OBJECT_MAX_SIZE = "large" as const;
+const OBJECT_LIGHT_BRIGHT_RADIUS_FEET = 20;
+const OBJECT_LIGHT_DIM_ADDITIONAL_FEET = 20;
+const LIGHT_CANTRIP_DURATION_HOURS = 1;
+const PERMANENT_OBJECT_LIGHT_MATERIAL_COST_GP = 50;
 
 type ActivationPhase = Extract<
-  BattleSpellAdmissionSource["mechanics"],
+  SpellMechanics,
   { readonly family: "activation" }
 >["phases"][number];
-type LightCantripObjectLightDirectPhase = Extract<
-  ActivationPhase,
-  { readonly kind: "direct" }
-> & {
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "object";
-      readonly count: 1;
-      readonly filter: {
-        readonly targetRelation: "not_worn_or_carried";
-        readonly maxSize: typeof LIGHT_OBJECT_MAX_SIZE;
-      };
-    };
-  };
-};
-type TouchedObjectLightDirectPhase = Extract<
-  ActivationPhase,
-  { readonly kind: "direct" }
-> & {
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "object";
-      readonly count: 1;
-      readonly filter?: undefined;
-    };
-  };
-};
-
 type ObjectLightInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "objectLight" }
 >;
 
-function isLightObjectSpell(
-  spell: BattleSpellAdmissionSource,
-): spell is BattleSpellAdmissionSource & {
-  readonly mechanics: Extract<
-    BattleSpellAdmissionSource["mechanics"],
-    { family: "activation" }
-  >;
-} {
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  return (
-    spell.mechanics.family === "activation" &&
-    spell.mechanics.level === 0 &&
-    spell.mechanics.castingTime.kind === "action" &&
-    spell.mechanics.range.kind === "touch" &&
-    spell.mechanics.duration.kind === "timed" &&
-    spell.mechanics.duration.value.unit === "hour" &&
-    spell.mechanics.duration.value.amount === 1 &&
-    earlyEnd.length === 1 &&
-    earlyEnd[0]?.kind === "caster_recasts_spell"
-  );
-}
-
-function isObjectLightDirectPhase(
-  phase: ActivationPhase,
-): phase is LightCantripObjectLightDirectPhase {
-  return (
-    phase.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "object" &&
-    phase.attachment.value.count === 1 &&
-    phase.attachment.value.filter?.targetRelation === "not_worn_or_carried" &&
-    phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
-    phase.effects?.some(
-      (effect) => effect.kind === "emit_bright_and_dim_illumination",
-    ) === true
-  );
-}
+type ObjectLightMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+type ObjectLightMechanicsFacts = SpellProcedureMechanicsFacts &
+  (
+    | {
+        readonly kind: "lightCantripObject";
+        readonly durationTicks: ElapsedTimeTicks;
+        readonly maxObjectSize: typeof LIGHT_OBJECT_MAX_SIZE;
+      }
+    | { readonly kind: "permanentTouchedObject" }
+  ) & {
+    readonly brightRadiusFeet: ReturnType<typeof movementFeet>;
+    readonly dimAdditionalFeet: ReturnType<typeof movementFeet>;
+  };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for ObjectLightFailedFact.
+const OBJECT_LIGHT_FAILED_FACTS = [
+  "level",
+  "school",
+  "castingTime",
+  "range",
+  "components",
+  "duration",
+  "durationEnding",
+  "phaseCount",
+  "phase",
+  "attachment",
+  "lightEffect",
+] as const;
+type ObjectLightFailedFact = (typeof OBJECT_LIGHT_FAILED_FACTS)[number];
+type ObjectLightAdmissionIssue = SpellProcedureAdmissionIssue<
+  "objectLight",
+  ObjectLightFailedFact,
+  UnitMechanicsPath
+>;
 
 function admitCantripObjectLight(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: Extract<
+    ObjectLightMechanicsFacts,
+    { readonly kind: "lightCantripObject" }
+  >,
 ): readonly ObjectLightInvocation[] {
-  if (!isLightObjectSpell(spell)) {
-    return [];
-  }
-  const lightPhase = spell.mechanics.phases.find(isObjectLightDirectPhase);
-  const maxObjectSize = lightPhase?.attachment.value.filter?.maxSize;
-  const lightEffects =
-    lightPhase === undefined || !("effects" in lightPhase)
-      ? undefined
-      : lightPhase.effects;
-  const lightEffect = lightEffects?.find(
-    (effect) => effect.kind === "emit_bright_and_dim_illumination",
-  );
-  if (
-    lightEffect === undefined ||
-    lightEffect.kind !== "emit_bright_and_dim_illumination" ||
-    maxObjectSize === undefined ||
-    lightEffect.brightRadiusFeet !== 20 ||
-    lightEffect.dimAdditionalFeet !== 20
-  ) {
-    return [];
-  }
-  const duration = spell.mechanics.duration;
-  if (duration.kind !== "timed") {
-    return [];
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  return Result.isFailure(durationTicks)
-    ? []
-    : [
-        {
-          access: cantripSpellAccessFor(ctx.castingSource),
-          resource: { tag: "none" },
-          procedure: "objectLight",
-          spell,
-          actionCost: "magicAction",
-          targeting: {
-            kind: "singleObject",
-            object: {
-              kind: "lightCantripObject",
-              maxSize: maxObjectSize,
-            },
-          },
-          light: {
-            kind: "brightAndDim",
-            brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
-            dimAdditionalFeet: movementFeet(lightEffect.dimAdditionalFeet),
-          },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
+  return [
+    {
+      access: cantripSpellAccessFor(ctx.castingSource),
+      resource: { tag: "none" },
+      procedure: "objectLight",
+      spell,
+      actionCost: "magicAction",
+      targeting: {
+        kind: "singleObject",
+        object: {
+          kind: "lightCantripObject",
+          maxSize: facts.maxObjectSize,
         },
-      ];
+      },
+      light: {
+        kind: "brightAndDim",
+        brightRadiusFeet: facts.brightRadiusFeet,
+        dimAdditionalFeet: facts.dimAdditionalFeet,
+      },
+      expiresAt: { kind: "duration", durationTicks: facts.durationTicks },
+    },
+  ];
 }
 
-function isPermanentDispellableObjectIlluminationSpell(
-  spell: BattleSpellAdmissionSource,
-): spell is BattleSpellAdmissionSource & {
-  readonly mechanics: Extract<
-    BattleSpellAdmissionSource["mechanics"],
-    { family: "activation" }
-  >;
-} {
-  const components = spell.mechanics.components;
-  const endsOn =
-    spell.mechanics.duration.kind === "permanent"
-      ? (spell.mechanics.duration.endsOn ?? [])
-      : [];
-  return (
-    spell.mechanics.family === "activation" &&
-    spell.mechanics.level === 2 &&
-    spell.mechanics.castingTime.kind === "action" &&
-    spell.mechanics.range.kind === "touch" &&
-    spell.mechanics.duration.kind === "permanent" &&
-    endsOn.length === 1 &&
-    endsOn[0] === "dispel" &&
-    components.v === true &&
-    components.s === true &&
-    components.m !== false &&
-    "materialConsumed" in components &&
-    components.materialConsumed === true &&
-    "materialCostGp" in components &&
-    components.materialCostGp === 50
-  );
+const OBJECT_LIGHT_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const satisfies ReadonlyArray<keyof ObjectLightMechanics>;
+const OBJECT_LIGHT_RANGE_FIELDS = ["kind"] as const;
+const OBJECT_LIGHT_CASTING_TIME_FIELDS = ["kind"] as const;
+const OBJECT_LIGHT_PHASE_FIELDS = ["kind", "attachment", "effects"] as const;
+const OBJECT_LIGHT_ATTACHMENT_FIELDS = [
+  "kind",
+  "holeId",
+  "label",
+  "value",
+] as const;
+const OBJECT_LIGHT_CANTRIP_VALUE_FIELDS = ["kind", "count", "filter"] as const;
+const OBJECT_LIGHT_PERMANENT_VALUE_FIELDS = ["kind", "count"] as const;
+const OBJECT_LIGHT_FILTER_FIELDS = ["targetRelation", "maxSize"] as const;
+const OBJECT_LIGHT_EFFECT_FIELDS = [
+  "kind",
+  "brightRadiusFeet",
+  "dimAdditionalFeet",
+] as const;
+const OBJECT_LIGHT_CANTRIP_COMPONENT_FIELDS = ["v", "s", "m"] as const;
+const OBJECT_LIGHT_PERMANENT_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+  "materialConsumed",
+  "materialCostGp",
+] as const;
+const OBJECT_LIGHT_TIMED_DURATION_FIELDS = [
+  "kind",
+  "value",
+  "earlyEnd",
+] as const;
+const OBJECT_LIGHT_DURATION_VALUE_FIELDS = ["unit", "amount"] as const;
+const OBJECT_LIGHT_ENDING_FIELDS = ["kind"] as const;
+const OBJECT_LIGHT_PERMANENT_DURATION_FIELDS = ["kind", "endsOn"] as const;
+
+function objectLightIssue(
+  failedFact: ObjectLightFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): ObjectLightAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "objectLight",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported objectLight mechanics fact: ${failedFact}.`,
+  };
 }
 
-function isTouchedObjectLightDirectPhase(
-  phase: ActivationPhase,
-): phase is TouchedObjectLightDirectPhase {
-  return (
-    phase.kind === "direct" &&
+type ObjectLightVariant = "lightCantripObject" | "permanentTouchedObject";
+
+function objectLightVariant(
+  mechanics: ObjectLightMechanics,
+): ObjectLightVariant | undefined {
+  const phase = mechanics.phases[0];
+  const hasCantripFilter =
+    phase?.kind === "direct" &&
     phase.attachment.kind === "hole" &&
     phase.attachment.value.kind === "object" &&
-    phase.attachment.value.count === 1 &&
-    phase.attachment.value.filter === undefined &&
-    phase.effects?.some(
-      (effect) => effect.kind === "emit_bright_and_dim_illumination",
-    ) === true
+    phase.attachment.value.filter?.targetRelation === "not_worn_or_carried";
+  const cantripWitnesses = [
+    mechanics.level === 0,
+    mechanics.duration.kind === "timed",
+    mechanics.components.s === false,
+    hasCantripFilter,
+  ].filter(Boolean).length;
+  const hasPermanentMaterial =
+    mechanics.components.m !== false &&
+    "materialConsumed" in mechanics.components &&
+    mechanics.components.materialConsumed === true;
+  const permanentWitnesses = [
+    mechanics.level === 2,
+    mechanics.duration.kind === "permanent",
+    mechanics.components.s === true,
+    hasPermanentMaterial,
+  ].filter(Boolean).length;
+  if (cantripWitnesses > permanentWitnesses) return "lightCantripObject";
+  if (permanentWitnesses > cantripWitnesses) return "permanentTouchedObject";
+  return undefined;
+}
+
+function objectLightRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is ObjectLightMechanics {
+  if (mechanics.family !== "activation") return false;
+  const variant = objectLightVariant(mechanics);
+  if (variant === undefined) return false;
+  const hasHeader = mechanics.school === "evocation";
+  const hasCastingRange =
+    mechanics.castingTime.kind === "action" && mechanics.range.kind === "touch";
+  const hasVariantHeader =
+    variant === "lightCantripObject"
+      ? mechanics.level === 0 && mechanics.components.s === false
+      : mechanics.level === 2 && mechanics.components.s === true;
+  const hasVariantDuration =
+    variant === "lightCantripObject"
+      ? mechanics.duration.kind === "timed"
+      : mechanics.duration.kind === "permanent";
+  const hasLightPhase = mechanics.phases.some((phase) =>
+    phase.kind === "direct"
+      ? phase.effects?.some(
+          (effect) => effect.kind === "emit_bright_and_dim_illumination",
+        ) === true
+      : false,
   );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      { name: "header", present: hasHeader },
+      { name: "castingRange", present: hasCastingRange },
+      { name: "variantHeader", present: hasVariantHeader },
+      { name: "variantDuration", present: hasVariantDuration },
+      { name: "lightPhase", present: hasLightPhase },
+    ],
+  });
+}
+
+function objectLightPhaseIsSupported(
+  phase: ActivationPhase,
+  variant: ObjectLightVariant,
+): boolean {
+  if (!objectLightDirectPhaseShellIsSupported(phase)) return false;
+  if (!objectLightAttachmentIsSupported(phase, variant)) return false;
+  const effect = phase.effects[0];
+  return (
+    effect?.kind === "emit_bright_and_dim_illumination" &&
+    effect.brightRadiusFeet === OBJECT_LIGHT_BRIGHT_RADIUS_FEET &&
+    effect.dimAdditionalFeet === OBJECT_LIGHT_DIM_ADDITIONAL_FEET &&
+    spellMechanicsObjectHasOnlyKeys(effect, OBJECT_LIGHT_EFFECT_FIELDS)
+  );
+}
+
+function objectLightDirectPhaseShellIsSupported(
+  phase: ActivationPhase,
+): phase is Extract<ActivationPhase, { readonly kind: "direct" }> {
+  return (
+    phase.kind === "direct" &&
+    spellMechanicsObjectHasOnlyKeys(phase, OBJECT_LIGHT_PHASE_FIELDS) &&
+    phase.effects?.length === 1
+  );
+}
+
+function objectLightAttachmentIsSupported(
+  phase: Extract<ActivationPhase, { readonly kind: "direct" }>,
+  variant: ObjectLightVariant,
+): boolean {
+  const attachment = phase.attachment;
+  if (
+    attachment.kind !== "hole" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment,
+      OBJECT_LIGHT_ATTACHMENT_FIELDS,
+    ) ||
+    attachment.value.kind !== "object" ||
+    attachment.value.count !== 1
+  )
+    return false;
+  if (variant === "lightCantripObject") {
+    if (
+      !spellMechanicsObjectHasOnlyKeys(
+        attachment.value,
+        OBJECT_LIGHT_CANTRIP_VALUE_FIELDS,
+      ) ||
+      attachment.value.filter?.targetRelation !== "not_worn_or_carried" ||
+      attachment.value.filter.maxSize !== LIGHT_OBJECT_MAX_SIZE ||
+      !spellMechanicsObjectHasOnlyKeys(
+        attachment.value.filter,
+        OBJECT_LIGHT_FILTER_FIELDS,
+      )
+    )
+      return false;
+  } else if (
+    !spellMechanicsObjectHasOnlyKeys(
+      attachment.value,
+      OBJECT_LIGHT_PERMANENT_VALUE_FIELDS,
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function admitObjectLightMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "objectLight",
+  ObjectLightMechanicsFacts,
+  ObjectLightInvocation,
+  ObjectLightAdmissionIssue
+> {
+  if (!objectLightRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const variant = objectLightVariant(mechanics);
+  if (variant === undefined) return { tag: "notRepresented" };
+  const issues: Array<{
+    readonly failedFact: ObjectLightFailedFact;
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const pushIssue = (
+    failedFact: ObjectLightFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+  if (mechanics.level !== (variant === "lightCantripObject" ? 0 : 2))
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "evocation")
+    pushIssue("school", spellMechanicsHeaderPath("school"));
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      OBJECT_LIGHT_CASTING_TIME_FIELDS,
+    )
+  )
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  if (
+    mechanics.range.kind !== "touch" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, OBJECT_LIGHT_RANGE_FIELDS)
+  )
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  const componentsSupported =
+    variant === "lightCantripObject"
+      ? mechanics.components.v === true &&
+        mechanics.components.s === false &&
+        typeof mechanics.components.m === "string" &&
+        spellMechanicsObjectHasOnlyKeys(
+          mechanics.components,
+          OBJECT_LIGHT_CANTRIP_COMPONENT_FIELDS,
+        )
+      : mechanics.components.v === true &&
+        mechanics.components.s === true &&
+        typeof mechanics.components.m === "string" &&
+        "materialConsumed" in mechanics.components &&
+        mechanics.components.materialConsumed === true &&
+        "materialCostGp" in mechanics.components &&
+        mechanics.components.materialCostGp ===
+          PERMANENT_OBJECT_LIGHT_MATERIAL_COST_GP &&
+        spellMechanicsObjectHasOnlyKeys(
+          mechanics.components,
+          OBJECT_LIGHT_PERMANENT_COMPONENT_FIELDS,
+        );
+  if (!componentsSupported)
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+
+  let durationTicks: ElapsedTimeTicks | undefined;
+  if (variant === "lightCantripObject") {
+    const duration = mechanics.duration;
+    const ending =
+      duration.kind === "timed" ? duration.earlyEnd?.[0] : undefined;
+    const projected =
+      duration.kind === "timed"
+        ? elapsedTimeTicksFromTimeSpanDuration(duration.value)
+        : undefined;
+    if (
+      duration.kind !== "timed" ||
+      duration.value.unit !== "hour" ||
+      duration.value.amount !== LIGHT_CANTRIP_DURATION_HOURS ||
+      !spellMechanicsObjectHasOnlyKeys(
+        duration,
+        OBJECT_LIGHT_TIMED_DURATION_FIELDS,
+      ) ||
+      !spellMechanicsObjectHasOnlyKeys(
+        duration.value,
+        OBJECT_LIGHT_DURATION_VALUE_FIELDS,
+      ) ||
+      projected === undefined ||
+      Result.isFailure(projected)
+    )
+      pushIssue("duration", spellDurationValuePath());
+    else durationTicks = projected.success;
+    if (
+      duration.kind !== "timed" ||
+      duration.earlyEnd?.length !== 1 ||
+      ending?.kind !== "caster_recasts_spell" ||
+      !spellMechanicsObjectHasOnlyKeys(ending, OBJECT_LIGHT_ENDING_FIELDS)
+    )
+      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
+  } else {
+    const duration = mechanics.duration;
+    if (
+      duration.kind !== "permanent" ||
+      duration.endsOn?.length !== 1 ||
+      duration.endsOn[0] !== "dispel" ||
+      !spellMechanicsObjectHasOnlyKeys(
+        duration,
+        OBJECT_LIGHT_PERMANENT_DURATION_FIELDS,
+      )
+    )
+      pushIssue("duration", spellDurationEndingPath(PositiveInteger(1)));
+  }
+
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, OBJECT_LIGHT_ROOT_FIELDS))
+    pushIssue("phase", spellMechanicsRootPath());
+  for (const [index, phase] of mechanics.phases.entries()) {
+    const ordinal = PositiveInteger(index + 1);
+    if (index > 0) {
+      pushIssue("phaseCount", spellActivationPhasePath(ordinal));
+      continue;
+    }
+    if (!objectLightDirectPhaseShellIsSupported(phase)) {
+      pushIssue("phase", spellActivationPhasePath(ordinal));
+      continue;
+    }
+    if (!objectLightPhaseIsSupported(phase, variant)) {
+      const attachmentSupported = objectLightAttachmentIsSupported(
+        phase,
+        variant,
+      );
+      pushIssue(
+        attachmentSupported ? "lightEffect" : "attachment",
+        attachmentSupported
+          ? spellActivationEffectPath(ordinal, PositiveInteger(1))
+          : spellActivationAttachmentPath(ordinal),
+      );
+    }
+  }
+
+  const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  if (failures !== undefined)
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        failures,
+        ({ failedFact, mechanicsPath }) =>
+          objectLightIssue(failedFact, mechanicsPath),
+      ),
+    };
+
+  const sharedFacts = {
+    ...source.spellDefinitionRuleFacts,
+    brightRadiusFeet: movementFeet(OBJECT_LIGHT_BRIGHT_RADIUS_FEET),
+    dimAdditionalFeet: movementFeet(OBJECT_LIGHT_DIM_ADDITIONAL_FEET),
+  };
+  const supportedAdmission = (facts: ObjectLightMechanicsFacts) => ({
+    tag: "supported" as const,
+    admitted: {
+      binding: "ready" as const,
+      procedure: "objectLight" as const,
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          ...(facts.kind === "lightCantripObject"
+            ? [
+                spellDurationValuePath(),
+                spellDurationEndingPath(PositiveInteger(1)),
+              ]
+            : [spellDurationEndingPath(PositiveInteger(1))]),
+          spellActivationPhasePath(PositiveInteger(1)),
+          spellActivationAttachmentPath(PositiveInteger(1)),
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ...spellConsumedMaterialEvidencePaths(mechanics.components),
+        ],
+        unowned: [],
+      } satisfies SpellProcedureMechanicsEvidence,
+      admit: (spell: BattleSpellExecutionSource, ctx: SpellAdmissionContext) =>
+        admitObjectLight(spell, ctx, facts),
+    },
+  });
+  if (variant === "permanentTouchedObject") {
+    return supportedAdmission({ ...sharedFacts, kind: variant });
+  }
+  if (durationTicks === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [objectLightIssue("duration", spellDurationValuePath())],
+    };
+  }
+  return supportedAdmission({
+    ...sharedFacts,
+    kind: variant,
+    durationTicks,
+    maxObjectSize: LIGHT_OBJECT_MAX_SIZE,
+  });
 }
 
 function admitPreparedObjectLight(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   castOptions: SpellAdmissionContext["spellCastOptions"],
+  facts: Extract<
+    ObjectLightMechanicsFacts,
+    { readonly kind: "permanentTouchedObject" }
+  >,
 ): readonly ObjectLightInvocation[] {
-  if (!isPermanentDispellableObjectIlluminationSpell(spell)) {
-    return [];
-  }
-  const lightPhase = spell.mechanics.phases.find(
-    isTouchedObjectLightDirectPhase,
-  );
-  const lightEffects =
-    lightPhase === undefined || !("effects" in lightPhase)
-      ? undefined
-      : lightPhase.effects;
-  const lightEffect = lightEffects?.find(
-    (effect) => effect.kind === "emit_bright_and_dim_illumination",
-  );
-  const brightRadiusFeet = lightEffect?.brightRadiusFeet;
-  const dimAdditionalFeet = lightEffect?.dimAdditionalFeet;
-  if (
-    lightEffect === undefined ||
-    lightEffect.kind !== "emit_bright_and_dim_illumination" ||
-    brightRadiusFeet !== 20 ||
-    dimAdditionalFeet !== 20
-  ) {
-    return [];
-  }
   return castOptions.flatMap((slot): readonly ObjectLightInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
+    Number(slot.spellLevel) < facts.level
       ? []
       : [
           {
@@ -302,8 +602,8 @@ function admitPreparedObjectLight(
             },
             light: {
               kind: "brightAndDim",
-              brightRadiusFeet: movementFeet(brightRadiusFeet),
-              dimAdditionalFeet: movementFeet(dimAdditionalFeet),
+              brightRadiusFeet: facts.brightRadiusFeet,
+              dimAdditionalFeet: facts.dimAdditionalFeet,
             },
             expiresAt: { kind: "untilDispelled" },
           },
@@ -312,13 +612,19 @@ function admitPreparedObjectLight(
 }
 
 function admitObjectLight(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: ObjectLightMechanicsFacts,
 ): readonly ObjectLightInvocation[] {
-  return [
-    ...admitCantripObjectLight(spell, ctx),
-    ...admitPreparedObjectLight(spell, ctx.spellCastOptions),
-  ];
+  return Match.value(facts).pipe(
+    Match.when({ kind: "lightCantripObject" }, (cantripFacts) =>
+      admitCantripObjectLight(spell, ctx, cantripFacts),
+    ),
+    Match.when({ kind: "permanentTouchedObject" }, (permanentFacts) =>
+      admitPreparedObjectLight(spell, ctx.spellCastOptions, permanentFacts),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function discoverObjectLightCastAct(
@@ -554,11 +860,13 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
 );
 export const objectLightProfile: SpellProcedureDeclaration<
   "objectLight",
-  ObjectLightInvocation
+  ObjectLightInvocation,
+  ObjectLightMechanicsFacts,
+  ObjectLightAdmissionIssue
 > = {
   procedure: "objectLight",
   executionSchema: ObjectLightInvocationSchema,
-  admit: admitObjectLight,
+  admitMechanics: admitObjectLightMechanics,
   discoverCastAct: discoverObjectLightCastAct,
   resolve: resolveObjectLight,
 };

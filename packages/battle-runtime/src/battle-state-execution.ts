@@ -2965,7 +2965,7 @@ type ObjectLightSpellSource =
   | ObjectLightSpellSlotSource;
 type ObjectLightSpellInvocationBase = {
   readonly procedure: "objectLight";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly light: Extract<
     BattleLightEmission,

@@ -1889,7 +1889,8 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

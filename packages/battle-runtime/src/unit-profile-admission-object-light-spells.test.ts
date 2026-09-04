@@ -6,7 +6,11 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { resourceCount } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
@@ -32,7 +36,27 @@ import {
   spellObjectLightTargetFill,
   spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { objectLightProfile } from "./battle-reducer/spell-procedure-profiles/object-light.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  type SpellMechanicsAdmissionSource,
+} from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import type { BattleTrackedOngoingSpellLightEmitter } from "./index.ts";
 import type {
   BattleRuntimeSession,
@@ -141,6 +165,209 @@ function sorceryPointsRemaining(state: BattleState): unknown {
   );
   return resource?.pointsRemaining;
 }
+
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function syntheticObjectLight(
+  baseId: typeof lightUnitId | typeof continualFlameUnitId,
+  mutate: (mechanics: ActivationSpellMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  const mechanics = spellRecord(baseId).mechanics;
+  if (mechanics.family !== "activation")
+    throw new Error("Expected activation object-light mechanics.");
+  return decodeSpellRecordForTest({
+    id: `synthetic_object_light_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Object Light ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_object_light_${suffix}`,
+    },
+    mechanics: mutate(mechanics),
+  });
+}
+
+function mechanicsSource(
+  source: ReturnType<typeof spellAdmissionSource>,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+describe("objectLight static admission", () => {
+  test.each([
+    [lightUnitId, "lightCantripObject", 0],
+    [continualFlameUnitId, "permanentTouchedObject", 2],
+  ] as const)(
+    "projects exact %s facts and evidence",
+    (spellId, kind, level) => {
+      const source = spellAdmissionSource(spellRecord(spellId));
+      const result = objectLightProfile.admitMechanics(mechanicsSource(source));
+
+      expect(result.tag).toBe("supported");
+      if (result.tag !== "supported") return;
+      expect(result.admitted.facts).toMatchObject({
+        kind,
+        level,
+        range: { kind: "touch" },
+        brightRadiusFeet: 20,
+        dimAdditionalFeet: 20,
+      });
+      expect(result.admitted.evidence).toEqual({
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          ...(kind === "lightCantripObject"
+            ? [
+                spellDurationValuePath(),
+                spellDurationEndingPath(PositiveInteger(1)),
+              ]
+            : [spellDurationEndingPath(PositiveInteger(1))]),
+          spellActivationPhasePath(PositiveInteger(1)),
+          spellActivationAttachmentPath(PositiveInteger(1)),
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ...spellConsumedMaterialEvidencePaths(
+            spellRecord(spellId).mechanics.components,
+          ),
+        ],
+        unowned: [],
+      });
+
+      const session = spellBattle({ cantrips: [], preparedSpells: [] });
+      const actor = session.state.combatants.get(spellCasterId);
+      if (actor === undefined) throw new Error("Expected caster fixture.");
+      const context = spellAdmissionContextFor(actor, session.state);
+      if (context === null) throw new Error("Expected admission context.");
+      const invocations = result.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(source),
+        {
+          ...context,
+          castingSource: source.castingSource,
+          spellCastOptions:
+            level === 0
+              ? []
+              : [{ spellLevel: spellSlotLevel(2), payment: { tag: "slot" } }],
+        },
+      );
+      expect(invocations).toHaveLength(1);
+      expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+    },
+  );
+
+  test.each([lightUnitId, continualFlameUnitId] as const)(
+    "recognizes renamed %s mechanics independently of identity",
+    (spellId) => {
+      const original = objectLightProfile.admitMechanics(
+        mechanicsSource(spellAdmissionSource(spellRecord(spellId))),
+      );
+      const renamed = objectLightProfile.admitMechanics(
+        mechanicsSource(
+          spellAdmissionSource(
+            syntheticObjectLight(spellId, (mechanics) => mechanics, "renamed"),
+          ),
+        ),
+      );
+      expect(original.tag).toBe("supported");
+      expect(renamed.tag).toBe("supported");
+      if (original.tag !== "supported" || renamed.tag !== "supported") return;
+      expect(renamed.admitted.facts).toEqual(original.admitted.facts);
+    },
+  );
+
+  test("does not claim unrelated shipped spells", () => {
+    const results = unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is SpellRecord =>
+          unit.kind === "spell" &&
+          unit.id !== lightUnitId &&
+          unit.id !== continualFlameUnitId,
+      )
+      .map((spell) =>
+        objectLightProfile.admitMechanics(
+          mechanicsSource(spellAdmissionSource(spell)),
+        ),
+      );
+    expect(results).toEqual(results.map(() => ({ tag: "notRepresented" })));
+  });
+
+  test("keeps a malformed cantrip light effect owned at its exact path", () => {
+    const source = spellAdmissionSource(
+      syntheticObjectLight(
+        lightUnitId,
+        (mechanics) => {
+          const phase = mechanics.phases[0];
+          if (
+            phase?.kind !== "direct" ||
+            phase.effects?.[0]?.kind !== "emit_bright_and_dim_illumination"
+          )
+            throw new Error("Expected object-light direct phase.");
+          return {
+            ...mechanics,
+            phases: [
+              {
+                ...phase,
+                effects: [{ ...phase.effects[0], brightRadiusFeet: 25 }],
+              },
+            ],
+          };
+        },
+        "bad_radius",
+      ),
+    );
+    const result = objectLightProfile.admitMechanics(mechanicsSource(source));
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "lightEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      }),
+    ]);
+  });
+
+  test("keeps a wholly replaced phase branch owned", () => {
+    const source = spellAdmissionSource(
+      syntheticObjectLight(
+        continualFlameUnitId,
+        (mechanics) => ({
+          ...mechanics,
+          phases: [
+            {
+              kind: "direct" as const,
+              attachment: { kind: "self" as const },
+              effects: [{ kind: "none" as const }],
+            },
+          ],
+        }),
+        "replaced_phase",
+      ),
+    );
+    const result = objectLightProfile.admitMechanics(mechanicsSource(source));
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "attachment",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      }),
+    ]);
+  });
+});
 
 describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
   test("light is admitted as a Magic action cantrip object emitter", () => {
