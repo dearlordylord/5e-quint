@@ -158,6 +158,20 @@ This section is the sole mutable handoff for a new session.
   partial, and 74 with no owner; integrating
   `persistentArmorEffect`, linked defense, movable light, and object light does
   not reclassify those catalog-root observations.
+- W4 restart contract: the Luna implementation attempt was stopped without a
+  worktree change or commit. Keep the existing clean W4 worktree and lease, and
+  assign the next implementation attempt to a Sol agent. Before every landing,
+  fetch `origin` and prove the current `master` tip is present in the integration
+  branch; this is routine integration work and does not require an operator
+  decision.
+- Deferred SR-04G convergence contract: before an SR-04G acceptance claim,
+  audit and repair or reject the unknown
+  `spell.invocation-persistent-armor-effect` Unit-profile marker; run an
+  independent cumulative implementation/architecture review of the
+  linked-defense, movable-light, and object-light landings; run the applicable
+  locked MBT selection after the registry loads completely; and run the public
+  broad milestone gate only on a stable integration revision when resource
+  conditions permit. Interrupted or incomplete runs remain unverified.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -277,10 +291,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                                                  | Base SHA    | Write lease                                                                                                                                                                                                                         | State  |
-| --------------- | ----------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                    | `dd1350f81` | Integration checkpoint `6de14f5a6`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, and object light integrated; cumulative Surface publication delta certified; 16 top-level profile migrations remain | Active |
-| `SR-04G/W4`     | repeated-damage-allocation profile admission    | Luna implementer   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-repeated-damage-allocation`; `work/sr04g-repeated-damage-allocation` | `d3e3d2bf9` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/repeated-damage-allocation.ts`; `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts`                                                     | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                     | Worktree/branch                                                                                                                  | Base SHA    | Write lease                                                                                                                                                                                                                         | State  |
+| --------------- | ----------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                        | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                    | `dd1350f81` | Integration checkpoint `6de14f5a6`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, and object light integrated; cumulative Surface publication delta certified; 16 top-level profile migrations remain | Active |
+| `SR-04G/W4`     | repeated-damage-allocation profile admission    | Codex orchestrator; next implementer: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-repeated-damage-allocation`; `work/sr04g-repeated-damage-allocation` | `d3e3d2bf9` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/repeated-damage-allocation.ts`; `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts`                                                     | Active |
 
 ## Landing discipline
 
