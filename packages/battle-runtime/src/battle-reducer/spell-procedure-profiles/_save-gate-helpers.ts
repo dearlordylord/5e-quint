@@ -189,7 +189,12 @@ export function saveGatedConditionTargetingFromFacts(
     { readonly kind: "targetList" }
   >,
   slotLevel: SpellSlotLevel,
-): Extract<SaveGatedConditionSpellTargeting, { readonly kind: "targetList" }>;
+): Extract<
+  SaveGatedConditionSpellTargeting,
+  { readonly kind: "targetList" }
+> & {
+  readonly maxTargets: PositiveInteger;
+};
 export function saveGatedConditionTargetingFromFacts(
   facts: SaveGateConditionTargetingFacts,
   slotLevel: SpellSlotLevel,

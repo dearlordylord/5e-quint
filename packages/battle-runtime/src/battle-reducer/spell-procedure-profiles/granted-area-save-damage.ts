@@ -89,6 +89,7 @@ import {
   spellDurationEvidencePaths,
   spellDurationTicksFromCanonicalValue,
   spellHasOnlyNamedFields,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellTouchRangeFeet,
   spellUniqueMechanicsIssues,
@@ -356,13 +357,33 @@ function dragonRootAttachmentSupported(
 function dragonOngoingRootShape(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
 ): boolean {
-  return (
-    mechanics.operations.some(
-      (operation) =>
-        operation.trigger.kind ===
-        GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.triggerKind,
-    ) || dragonRootAttachmentSupported(mechanics.attachment)
+  const headerMatches =
+    mechanics.level === GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.level &&
+    mechanics.castingTime.kind ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.castingTimeKind &&
+    mechanics.range.kind ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.rangeKind &&
+    mechanics.duration.kind ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.kind &&
+    mechanics.duration.upTo.unit ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.unit &&
+    mechanics.duration.upTo.amount ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.amount;
+  const operationMatches = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind ===
+        GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.triggerKind &&
+      operation.effect.kind ===
+        GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind,
   );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [
+      headerMatches,
+      dragonRootAttachmentSupported(mechanics.attachment),
+      operationMatches,
+    ],
+  });
 }
 
 function grantedAreaSaveDamageActionMechanicsEvidence(

@@ -723,7 +723,7 @@ export type SaveGatedConditionWithRepeatSpellProcedureExecution =
     readonly targeting: {
       readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.kind;
       readonly minTargets: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.minTargets;
-      readonly maxTargets: number;
+      readonly maxTargets: PositiveInteger;
     };
   };
 
@@ -739,7 +739,8 @@ export type SaveGatedTurnConstraintFacts = {
     typeof SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA;
   readonly dexteritySavingThrowDelta: Integer &
     typeof SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA;
-  readonly maxAttacks: typeof SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS;
+  readonly maxAttacks: PositiveInteger &
+    typeof SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS;
   readonly somaticFailurePercent: PositiveInteger &
     typeof SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT;
 };

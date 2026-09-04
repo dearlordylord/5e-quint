@@ -187,24 +187,46 @@ describe("SR-04G-B3 static spell procedure admission", () => {
     });
     expect(laughter.tag).toBe("supported");
     if (laughter.tag !== "supported") return;
-    expect(
-      laughter.admitted.admit(
-        battleSpellExecutionSourceFromAdmission(laughterSource),
-        {
-          actor,
-          castingSource: laughterSource.castingSource,
-          battle: undefined,
-          spellCastOptions: [
-            { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
-          ],
-        },
-      ),
-    ).toEqual([
+    const [laughterInvocation] = laughter.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(laughterSource),
+      {
+        actor,
+        castingSource: laughterSource.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(laughterInvocation).toEqual(
       expect.objectContaining({
         procedure: "saveGatedConditionWithRepeat",
         spell: expect.objectContaining({ id: laughterSource.id }),
       }),
-    ]);
+    );
+    if (laughterInvocation === undefined) {
+      throw new Error("Expected a Hideous Laughter invocation.");
+    }
+    expectTypeOf(
+      laughterInvocation.targeting.maxTargets,
+    ).toEqualTypeOf<PositiveInteger>();
+    const laughterExecution = spellProcedureExecution(laughterInvocation);
+    const isLaughterExecution = Schema.is(
+      saveGatedConditionWithRepeatProfile.executionSchema,
+    );
+    expect(isLaughterExecution(laughterExecution)).toBe(true);
+    expect(
+      isLaughterExecution({
+        ...laughterExecution,
+        targeting: { ...laughterExecution.targeting, maxTargets: 0 },
+      }),
+    ).toBe(false);
+    expect(
+      isLaughterExecution({
+        ...laughterExecution,
+        targeting: { ...laughterExecution.targeting, maxTargets: 1.5 },
+      }),
+    ).toBe(false);
   });
 
   test("projects every Dragon's Breath execution fact instead of recomputing it", () => {
@@ -351,7 +373,9 @@ describe("SR-04G-B3 static spell procedure admission", () => {
     expectTypeOf(
       slow.admitted.facts.constraints.dexteritySavingThrowDelta,
     ).toEqualTypeOf<Integer & -2>();
-    expectTypeOf(slow.admitted.facts.constraints.maxAttacks).toEqualTypeOf<1>();
+    expectTypeOf(slow.admitted.facts.constraints.maxAttacks).toEqualTypeOf<
+      PositiveInteger & 1
+    >();
     expectTypeOf(
       slow.admitted.facts.constraints.somaticFailurePercent,
     ).toEqualTypeOf<PositiveInteger & 25>();
@@ -516,7 +540,7 @@ describe("SR-04G-B3 static spell procedure admission", () => {
     }
   });
 
-  test("does not claim sibling save-gate or ongoing shapes", () => {
+  test("does not claim sibling save-gate shapes", () => {
     expect(
       stagedSaveConditionProfile.admitMechanics(
         mechanicsSource("hideous_laughter"),
@@ -532,12 +556,18 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         mechanicsSource("hypnotic_pattern"),
       ),
     ).toEqual({ tag: "notRepresented" });
-    expect(
-      grantedAreaSaveDamageActionProfile.admitMechanics(
-        mechanicsSource("haste"),
-      ),
-    ).toEqual({ tag: "notRepresented" });
   });
+
+  test.each(["barkskin", "guidance", "mage_armor", "resistance"] as const)(
+    "does not claim ongoing sibling %s",
+    (sibling) => {
+      expect(
+        grantedAreaSaveDamageActionProfile.admitMechanics(
+          mechanicsSource(sibling),
+        ),
+      ).toEqual({ tag: "notRepresented" });
+    },
+  );
 
   test("roots Dragon's Breath's missing sole operation on the existing mechanics parent", () => {
     const source = mechanicsSource("dragons_breath");

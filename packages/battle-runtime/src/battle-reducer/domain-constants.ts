@@ -8,6 +8,7 @@ import {
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Condition, CreatureType } from "@dnd/shared/game-facts";
 import { movementFeet, type DamageDieSize } from "@dnd/shared/types";
+import { Schema } from "effect";
 import type {
   CreatureSense,
   DamageType,
@@ -312,7 +313,11 @@ export const SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO = {
 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA = -2;
 export const SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA = -2;
-export const SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS = 1;
+export const SaveGatedTurnConstraintMaxAttacksSchema = Schema.Literal(1).pipe(
+  Schema.brand("PositiveInteger"),
+);
+export const SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS =
+  SaveGatedTurnConstraintMaxAttacksSchema.make(1);
 export const SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT = 25;
 export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:decision",

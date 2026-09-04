@@ -854,7 +854,10 @@ const SaveGatedConditionWithRepeatInvocationSchema =
         minTargets: Schema.Literal(
           SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.minTargets,
         ),
-        maxTargets: Schema.Number,
+        maxTargets: Schema.Number.pipe(
+          Schema.check(Schema.isInt(), Schema.isGreaterThan(0)),
+          Schema.brand("PositiveInteger"),
+        ),
       }),
       rangeFeet: MovementFeet,
     }),

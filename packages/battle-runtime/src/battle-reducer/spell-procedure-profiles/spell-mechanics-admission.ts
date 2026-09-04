@@ -297,14 +297,25 @@ type SpellTargetSelectionFieldShape = {
   readonly [Field in SpellTargetSelectionField]?: unknown;
 };
 
-type SpellAreaAttachmentField =
-  | "selection"
-  | "occupantDispositionFilter"
-  | "occupantPerceptionFilter"
-  | "excludedAreas"
-  | "rangeOrigin";
-
 type SpellAreaAttachmentValue = Extract<Attachment, { readonly kind: "area" }>;
+const SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS = [
+  "kind",
+  "shape",
+  "origin",
+] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
+type SpellAreaAttachmentRequiredField =
+  (typeof SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS)[number];
+const SPELL_AREA_ATTACHMENT_OPTIONAL_FIELDS = [
+  "selection",
+  "occupantDispositionFilter",
+  "occupantPerceptionFilter",
+  "excludedAreas",
+  "rangeOrigin",
+] as const satisfies ReadonlyArray<
+  Exclude<keyof SpellAreaAttachmentValue, SpellAreaAttachmentRequiredField>
+>;
+type SpellAreaAttachmentField =
+  (typeof SPELL_AREA_ATTACHMENT_OPTIONAL_FIELDS)[number];
 type SpellAreaHoleAttachment = Extract<
   Attachment,
   { readonly kind: "hole" }
@@ -499,15 +510,9 @@ export type SpellAreaAttachmentAdmissionResult<
         | "areaSelectionConstraint";
     };
 
-const SPELL_AREA_ATTACHMENT_FIELDS = [
-  "kind",
-  "shape",
-  "origin",
-  "selection",
-  "occupantDispositionFilter",
-  "occupantPerceptionFilter",
-  "excludedAreas",
-  "rangeOrigin",
+const SPELL_AREA_ATTACHMENT_VALUE_FIELDS = [
+  ...SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS,
+  ...SPELL_AREA_ATTACHMENT_OPTIONAL_FIELDS,
 ] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
 const SPELL_AREA_HOLE_ATTACHMENT_FIELDS = [
   "kind",
@@ -532,9 +537,7 @@ function isSpellAreaAttachmentValueWithAllowedFields<
   AllowedAreaFields[number]
 > {
   const allowedAreaValueFields = [
-    "kind",
-    "shape",
-    "origin",
+    ...SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS,
     ...allowedAreaFields,
   ] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
   return spellHasOnlyNamedFields(areaValue, allowedAreaValueFields);
@@ -591,7 +594,7 @@ export function admitSpellAreaAttachment<
       return { tag: "rejected", reason: "areaAttachmentConstraint" };
     }
   } else if (
-    !spellHasOnlyNamedFields(attachment, SPELL_AREA_ATTACHMENT_FIELDS)
+    !spellHasOnlyNamedFields(attachment, SPELL_AREA_ATTACHMENT_VALUE_FIELDS)
   ) {
     return { tag: "rejected", reason: "areaAttachmentConstraint" };
   }

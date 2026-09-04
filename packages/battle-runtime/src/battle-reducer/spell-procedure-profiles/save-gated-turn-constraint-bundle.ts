@@ -53,6 +53,7 @@ import {
   SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS,
   SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO,
+  SaveGatedTurnConstraintMaxAttacksSchema,
 } from "../domain-constants.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
 import { resolveAreaSaveMetamagicFills } from "../spells-resolve-save-gates.ts";
@@ -340,7 +341,12 @@ function slowFailedEffectAdmission(
     effect.maxAttacks === SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS &&
     spellHasOnlyNamedFields(effect, ["kind", "maxAttacks"])
   ) {
-    return { role: "attackCap", maxAttacks: effect.maxAttacks };
+    return {
+      role: "attackCap",
+      maxAttacks: SaveGatedTurnConstraintMaxAttacksSchema.make(
+        effect.maxAttacks,
+      ),
+    };
   }
   if (
     effect.kind === "somatic_spell_failure_chance" &&
@@ -1041,7 +1047,7 @@ const SaveGatedTurnConstraintBundleInvocationSchema =
         armorClassDelta: SaveGatedTurnConstraintArmorClassDeltaSchema,
         dexteritySavingThrowDelta:
           SaveGatedTurnConstraintDexteritySaveDeltaSchema,
-        maxAttacks: Schema.Literal(SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS),
+        maxAttacks: SaveGatedTurnConstraintMaxAttacksSchema,
         somaticFailurePercent:
           SaveGatedTurnConstraintSomaticFailurePercentSchema,
       }),

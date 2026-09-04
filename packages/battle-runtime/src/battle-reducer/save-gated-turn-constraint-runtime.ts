@@ -10,6 +10,7 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { Match } from "effect";
+import { SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS } from "./domain-constants.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleCreatureState,
@@ -63,7 +64,7 @@ export function combatantHasSaveGatedTurnConstraintAttackCap(
 ): boolean {
   return saveGatedTurnConstraintBundleEffects(state, combatant).some((effect) =>
     Match.value(effect.constraints.maxAttacks).pipe(
-      Match.when(1, () => true),
+      Match.when(SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS, () => true),
       Match.exhaustive,
     ),
   );
