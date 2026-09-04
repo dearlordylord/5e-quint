@@ -179,10 +179,9 @@ This section is the sole mutable handoff for a new session.
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
   current audit retains 14 legacy top-level `admit:` declarations. The landed
-  W5 persistent-area-obscurement lease is clear. W6 is the next narrow slice:
-  `magical-darkness-point-origin.ts` with the existing focused
-  `unit-profile-admission-darkness.test.ts`, based on `7425d13b9`; no W6 branch
-  or worktree exists yet. Shared
+  W5 persistent-area-obscurement lease is clear. W6 now holds the narrow
+  `magical-darkness-point-origin.ts` profile and existing focused
+  `unit-profile-admission-darkness.test.ts` lease from `27f2537f1`. Shared
   registry/state or coverage-map edits require an explicit lease expansion,
   and no QNT/MBT run is authorized unless implementation changes semantics.
   Before every landing, fetch `origin` and prove the current `master` tip is
@@ -319,10 +318,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                  | State   |
-| --------------- | ----------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `7425d13b9`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, and persistent area obscurement integrated; cumulative Surface publication delta certified; 14 top-level profile migrations remain | Active  |
-| `SR-04G/W6`     | magical-darkness-point-origin profile admission | Codex orchestrator; implementer: Sol | Not created                                                                                   | `7425d13b9` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts`; `packages/battle-runtime/src/unit-profile-admission-darkness.test.ts`; shared registry/state changes require explicit lease expansion                                                | Planned |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                | Worktree/branch                                                                                                                        | Base SHA    | Write lease                                                                                                                                                                                                                                                                                  | State  |
+| --------------- | ----------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                          | `dd1350f81` | Integration checkpoint `7425d13b9`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, and persistent area obscurement integrated; cumulative Surface publication delta certified; 14 top-level profile migrations remain | Active |
+| `SR-04G/W6`     | magical-darkness-point-origin profile admission | Codex orchestrator; implementer: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magical-darkness-point-origin`; `work/sr04g-magical-darkness-point-origin` | `27f2537f1` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts`; `packages/battle-runtime/src/unit-profile-admission-darkness.test.ts`; shared registry/state changes require explicit lease expansion                                                | Active |
 
 ## Landing discipline
 
