@@ -832,6 +832,52 @@ function reachableSchemaNodes(schema: SchemaDocument): ReadonlySet<JsonValue> {
   return reachable;
 }
 
+export function locateComparisonOngoingMechanicsOwner(
+  schema: SchemaDocument,
+):
+  | { readonly tag: "found"; readonly owner: JsonObject }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const reachable = reachableSchemaNodes(schema);
+  const matches = Object.entries(schema.$defs).filter(
+    (entry): entry is [string, JsonObject] => {
+      const value = entry[1];
+      if (!reachable.has(value) || !isJsonObject(value)) return false;
+      const properties = objectAt(value, "properties");
+      if (properties === undefined) return false;
+      const family = objectAt(properties, "family");
+      const operations = objectAt(properties, "operations");
+      const authoredConditionalEffects = objectAt(
+        properties,
+        "authoredConditionalEffects",
+      );
+      return (
+        family?.type === "string" &&
+        Array.isArray(family.enum) &&
+        family.enum.length === 1 &&
+        family.enum[0] === "ongoing_effect" &&
+        operations?.type === "array" &&
+        Array.isArray(operations.prefixItems) &&
+        operations.prefixItems.length > 0 &&
+        isJsonObject(operations.items) &&
+        authoredConditionalEffects?.type === "array" &&
+        Array.isArray(authoredConditionalEffects.prefixItems) &&
+        authoredConditionalEffects.prefixItems.length > 0 &&
+        isJsonObject(authoredConditionalEffects.items)
+      );
+    },
+  );
+  if (matches.length !== 1) {
+    const pointers = matches.map(([definitionName]) =>
+      jsonPointerChild("/$defs", definitionName),
+    );
+    return {
+      tag: "invalid",
+      message: `Expected exactly one reachable comparison-schema ongoing-effect owner with operations and authoredConditionalEffects arrays; found ${matches.length}${pointers.length === 0 ? "" : ` at ${pointers.join(", ")}`}.`,
+    };
+  }
+  return { tag: "found", owner: matches[0][1] };
+}
+
 function directlyReachableSchemaChildren(
   schema: SchemaDocument,
   value: JsonValue,
@@ -1720,21 +1766,17 @@ function classifyCandidateSchema(
     "creatureTypeProtectionVocabulary",
     new Set(["creature_type_protection", "creature_type_ward"]),
   );
-  const comparisonOngoingMechanicsOwner = objectAt(
-    comparisonSchema.$defs,
-    "SrdRecordUnion1Encoded",
-  );
+  const comparisonOngoingMechanicsOwner =
+    locateComparisonOngoingMechanicsOwner(comparisonSchema);
+  if (comparisonOngoingMechanicsOwner.tag === "invalid") {
+    throw new Error(comparisonOngoingMechanicsOwner.message);
+  }
   const classifyOngoingMechanicsEnvelope: SchemaObjectClassifier = (
     value,
     pointer,
     transformed,
   ) => {
-    if (
-      !reachable.has(value) ||
-      comparisonOngoingMechanicsOwner === undefined
-    ) {
-      return transformed;
-    }
+    if (!reachable.has(value)) return transformed;
     const properties = objectAt(value, "properties");
     if (
       properties === undefined ||
@@ -1747,9 +1789,9 @@ function classifyCandidateSchema(
       "ongoingMechanicsEnvelope",
       pointer,
       value,
-      comparisonOngoingMechanicsOwner,
+      comparisonOngoingMechanicsOwner.owner,
     )
-      ? comparisonOngoingMechanicsOwner
+      ? comparisonOngoingMechanicsOwner.owner
       : transformed;
   };
   const classifiers = [

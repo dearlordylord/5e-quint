@@ -19,6 +19,7 @@ import {
   type SurfacePublicationDeltaVerificationOptions,
   verifySurfacePublicationDelta,
 } from "./publication-delta-verifier.ts";
+import { locateComparisonOngoingMechanicsOwner } from "./publication-delta-verifier-core.ts";
 import { verifySurfacePublicationDeltaFixture } from "./publication-delta-verifier.test-support.ts";
 import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
@@ -498,6 +499,42 @@ function canonicalizeFixture(value: unknown): unknown {
 
 function canonicalFixtureSha256(value: unknown): string {
   return sha256(Buffer.from(JSON.stringify(canonicalizeFixture(value))));
+}
+
+function ongoingMechanicsOwnerSchema(
+  definitionNames: readonly string[],
+  definitionOrder: readonly string[],
+) {
+  const owner = {
+    type: "object",
+    properties: {
+      family: { type: "string", enum: ["ongoing_effect"] },
+      operations: {
+        type: "array",
+        prefixItems: [{ type: "object" }],
+        items: { type: "object" },
+      },
+      authoredConditionalEffects: {
+        type: "array",
+        prefixItems: [{ type: "object" }],
+        items: { type: "object" },
+      },
+    },
+  };
+  const unrelated = { type: "string" };
+  const definitions = Object.fromEntries(
+    definitionOrder.map((name) => [
+      name,
+      definitionNames.includes(name) ? owner : unrelated,
+    ]),
+  );
+  return {
+    owner,
+    schema: {
+      $defs: definitions,
+      anyOf: definitionNames.map((name) => ({ $ref: `#/$defs/${name}` })),
+    },
+  };
 }
 
 function membershipEvidence(aggregate: {
@@ -1279,6 +1316,48 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
     expect(issueKinds(result)).toContain("schema-delta-unclassified");
   }, 180_000);
+
+  test("locates the comparison ongoing-mechanics owner after generated definitions are renamed and reordered", () => {
+    const first = ongoingMechanicsOwnerSchema(
+      ["GeneratedOngoing947"],
+      ["GeneratedOther2", "GeneratedOngoing947", "GeneratedOther1"],
+    );
+    const renamed = ongoingMechanicsOwnerSchema(
+      ["GeneratedOngoing4"],
+      ["GeneratedOngoing4", "GeneratedOther1", "GeneratedOther2"],
+    );
+
+    expect(locateComparisonOngoingMechanicsOwner(first.schema)).toEqual({
+      tag: "found",
+      owner: first.owner,
+    });
+    expect(locateComparisonOngoingMechanicsOwner(renamed.schema)).toEqual({
+      tag: "found",
+      owner: renamed.owner,
+    });
+  });
+
+  test("fails closed when the comparison ongoing-mechanics owner is absent or ambiguous", () => {
+    const absent = ongoingMechanicsOwnerSchema(
+      [],
+      ["GeneratedOther1", "GeneratedOther2"],
+    );
+    const ambiguous = ongoingMechanicsOwnerSchema(
+      ["GeneratedOngoing4", "GeneratedOngoing947"],
+      ["GeneratedOngoing947", "GeneratedOther1", "GeneratedOngoing4"],
+    );
+
+    expect(locateComparisonOngoingMechanicsOwner(absent.schema)).toEqual({
+      tag: "invalid",
+      message:
+        "Expected exactly one reachable comparison-schema ongoing-effect owner with operations and authoredConditionalEffects arrays; found 0.",
+    });
+    expect(locateComparisonOngoingMechanicsOwner(ambiguous.schema)).toEqual({
+      tag: "invalid",
+      message:
+        "Expected exactly one reachable comparison-schema ongoing-effect owner with operations and authoredConditionalEffects arrays; found 2 at /$defs/GeneratedOngoing947, /$defs/GeneratedOngoing4.",
+    });
+  });
 
   test("rejects tampering with the canonical Mastery classification pointer", () => {
     const result = withFixture(
