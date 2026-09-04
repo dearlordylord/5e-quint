@@ -1,39 +1,40 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
-//
-// The areaMovementDistanceDamage Spell Procedure Profile: action-time Spell
-// Slot casting creates a caster-owned Concentration Sphere of Difficult
-// Terrain. The runtime owns Spell Slot spending, Concentration duration,
-// table-supplied Sphere identity, Difficult Terrain movement-cost facts, and
-// Piercing damage scaled by movement distance through the area; the table
-// owns spatial path facts and the camouflaged terrain recognition check.
-//
-// RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Spike Growth":
-//     Action; 150 feet; Concentration up to 10 minutes; 20-foot-radius
-//     Sphere; area becomes Difficult Terrain; moving into or within the area
-//     deals 2d4 Piercing damage for every 5 feet traveled; camouflage
-//     recognition requires a Search action and Wisdom (Perception or
-//     Survival) check against the caster's spell save DC before entering.
-//   - UBIQUITOUS_LANGUAGE.md: Magic Action, Concentration, Spell Slot, Spell
-//     Invocation, Area of Effect/Sphere, Difficult Terrain, Movement, Damage
-//     Type, Search, and Skill.
-
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+  movementFeet,
+  PositiveInteger,
+  type MovementFeet as MovementFeetType,
+} from "@dnd/shared/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
+import type {
+  DamageType,
+  DiceExpr,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
+import { Match, Schema } from "effect";
 
 import {
   type BattleResolutionResult,
+  type BattleSpellExecutionSource,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import {
+  LeveledSpellInvocationResourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+} from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveAreaMovementDistanceDamageSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -41,16 +42,39 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  MovementFeet,
-  PreparedSpellAccessSchema,
-  LeveledSpellInvocationResourceSchema,
-} from "../codec-building-blocks.ts";
+  isSpellCanonicalDurationValue,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
+  spellDurationTicksFromCanonicalValue,
+  spellDurationValueEvidencePaths,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+//
+// This profile owns action-time Spell Slot casting, a caster-owned
+// Concentration Sphere of Difficult Terrain, and Piercing damage scaled by
+// movement distance through the area. Spatial path facts and camouflaged
+// terrain recognition remain table-owned.
+//
+// RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Spike Growth".
 
 type AreaMovementDistanceDamageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -58,128 +82,679 @@ type AreaMovementDistanceDamageSpellInvocation = Extract<
 >;
 type AreaMovementDistanceDamageResolveInput =
   SpellProcedureProfileResolveInput<AreaMovementDistanceDamageSpellInvocation>;
+type AreaMovementDistanceDamageMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+type AreaMovementDistanceDamageOperation =
+  AreaMovementDistanceDamageMechanics["operations"][number];
+type AreaMovementDistanceDamageDuration = Extract<
+  AreaMovementDistanceDamageMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
 
-type AreaMovementDistanceDamageProfileShape = {
+const AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL = 2 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET = 150 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES = 10 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET = 20 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_INTERVAL_FEET = 5 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_DICE = 2 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_DIE_SIZE = 4 as const;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_MATERIAL = "seven thorns" as const;
+
+type AreaMovementDistanceDamageMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly durationTicks: ElapsedTimeTicks;
-  readonly radiusFeet: number;
-  readonly rangeFeet: number;
+  readonly radiusFeet: MovementFeetType;
+  readonly rangeFeet: MovementFeetType;
   readonly damage: {
     readonly expr: DiceExpr;
     readonly damageType: Extract<DamageType, "piercing">;
   };
-  readonly damagePerFeet: number;
+  readonly damagePerFeet: MovementFeetType;
 };
 
-const AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL = 2;
-const AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET = 150;
-const AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES = 10;
-const AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET = 20;
-const AREA_MOVEMENT_DISTANCE_DAMAGE_INTERVAL_FEET = 5;
-const AREA_MOVEMENT_DISTANCE_DAMAGE_DICE = 2;
-const AREA_MOVEMENT_DISTANCE_DAMAGE_DIE_SIZE = 4;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for AreaMovementDistanceDamageFailedFact.
+const AREA_MOVEMENT_DISTANCE_DAMAGE_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "attachment",
+  "initialPhase",
+  "authoredConditionalEffects",
+  "operationCount",
+  "difficultTerrainOperation",
+  "difficultTerrainEffect",
+  "movementDamageOperation",
+  "movementDamageEffect",
+] as const;
+type AreaMovementDistanceDamageFailedFact =
+  (typeof AREA_MOVEMENT_DISTANCE_DAMAGE_FAILED_FACTS)[number];
+type AreaMovementDistanceDamageAdmissionIssue = SpellProcedureAdmissionIssue<
+  "areaMovementDistanceDamage",
+  AreaMovementDistanceDamageFailedFact,
+  UnitMechanicsPath
+>;
+type AreaMovementDistanceDamageIssueFact = {
+  readonly failedFact: AreaMovementDistanceDamageFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+};
 
-function admitAreaMovementDistanceDamage(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly AreaMovementDistanceDamageSpellInvocation[] {
-  const areaMovementDistanceDamage = areaMovementDistanceDamageSpell(spell);
-  if (areaMovementDistanceDamage === null) {
-    return [];
-  }
+const ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "initialPhase",
+  "operations",
+  "authoredConditionalEffects",
+] as const satisfies ReadonlyArray<keyof AreaMovementDistanceDamageMechanics>;
+const RANGE_FIELDS = ["kind", "feet"] as const;
+const COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+  "materialCostGp",
+  "materialConsumed",
+] as const;
+const CASTING_TIME_FIELDS = ["kind"] as const;
+const DURATION_FIELDS = [
+  "kind",
+  "upTo",
+  "earlyEnd",
+  "permanentIfMaintainedFull",
+] as const;
+const DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<
+  keyof AreaMovementDistanceDamageDuration["upTo"]
+>;
+const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
+const AREA_FIELDS = ["kind", "origin", "shape"] as const;
+const ORIGIN_FIELDS = ["kind"] as const;
+const SHAPE_FIELDS = ["kind", "radiusFeet"] as const;
+const OPERATION_FIELDS = ["trigger", "effect"] as const;
+const PASSIVE_TRIGGER_FIELDS = ["kind"] as const;
+const MOVEMENT_TRIGGER_FIELDS = ["kind", "perFeet"] as const;
+const DIFFICULT_TERRAIN_EFFECT_FIELDS = ["kind"] as const;
+const DAMAGE_EFFECT_FIELDS = ["kind", "damageType", "amount"] as const;
+const DAMAGE_AMOUNT_FIELDS = ["kind", "expr"] as const;
+const DICE_EXPR_FIELDS = ["dice", "dieSize", "flat"] as const;
 
-  return ctx.spellCastOptions.flatMap(
-    (slot): readonly AreaMovementDistanceDamageSpellInvocation[] => {
-      if (Number(slot.spellLevel) < AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: spellInvocationResourceForCastOption(slot),
-          procedure: "areaMovementDistanceDamage",
-          spell,
-          targeting: {
-            kind: "pointOriginSphere",
-            radiusFeet: movementFeet(areaMovementDistanceDamage.radiusFeet),
+function areaMovementDistanceDamageComponentsHaveOnlyKnownFields(
+  components: object,
+): boolean {
+  const knownFields = new Set<PropertyKey>(COMPONENT_FIELDS);
+  return Reflect.ownKeys(components).every((field) => knownFields.has(field));
+}
+
+function areaMovementDistanceDamageIssue(
+  failedFact: AreaMovementDistanceDamageFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): AreaMovementDistanceDamageAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "areaMovementDistanceDamage",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported areaMovementDistanceDamage mechanics fact: ${failedFact}.`,
+  };
+}
+
+function areaMovementDistanceDamageRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is AreaMovementDistanceDamageMechanics {
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "ongoing_effect" }, (ongoing) => {
+      const area =
+        ongoing.attachment.kind === "hole" &&
+        ongoing.attachment.value.kind === "area"
+          ? ongoing.attachment.value
+          : undefined;
+      return spellProcedureHasRedundantSignature({
+        kind: "oneOfFiveWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "header",
+            present:
+              ongoing.level === AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL &&
+              ongoing.school === "transmutation" &&
+              ongoing.castingTime.kind === "action",
           },
-          durationTicks: areaMovementDistanceDamage.durationTicks,
-          rangeFeet: movementFeet(areaMovementDistanceDamage.rangeFeet),
-          damage: {
-            expr: areaMovementDistanceDamage.damage.expr,
-            damageType: areaMovementDistanceDamage.damage.damageType,
+          {
+            name: "rangeAndComponents",
+            present:
+              ongoing.range.kind === "point" &&
+              ongoing.range.feet === AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET &&
+              ongoing.components.v === true &&
+              ongoing.components.s === true &&
+              ongoing.components.m === AREA_MOVEMENT_DISTANCE_DAMAGE_MATERIAL,
           },
-          damagePerFeet: movementFeet(areaMovementDistanceDamage.damagePerFeet),
-        },
-      ];
-    },
+          {
+            name: "duration",
+            present:
+              ongoing.duration.kind === "concentration" &&
+              ongoing.duration.upTo.unit === "minute" &&
+              ongoing.duration.upTo.amount ===
+                AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES,
+          },
+          {
+            name: "area",
+            present:
+              area?.origin.kind === "point_within_range" &&
+              area.shape.kind === "sphere" &&
+              area.shape.radiusFeet ===
+                AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET,
+          },
+          {
+            name: "operations",
+            present:
+              ongoing.operations.some(
+                ({ effect }) => effect.kind === "area_is_difficult_terrain",
+              ) &&
+              ongoing.operations.some(
+                ({ trigger, effect }) =>
+                  trigger.kind === "on_creature_moves" &&
+                  effect.kind === "damage",
+              ),
+          },
+        ],
+      });
+    }),
+    Match.whenOr(
+      { family: "modal_ongoing_effect" },
+      { family: "activation" },
+      { family: "modal_activation" },
+      { family: "triggered_reaction" },
+      { family: "passive_hit_intercept" },
+      { family: "anchored_trigger" },
+      { family: "magic_circle_ward" },
+      { family: "stone_merge" },
+      { family: "glyph_warding" },
+      { family: "spawned_creature" },
+      { family: "reanimated_creature" },
+      { family: "templated_multi_spawn" },
+      { family: "object_repair" },
+      { family: "minor_magic_effect_menu" },
+      () => false,
+    ),
+    Match.exhaustive,
   );
 }
 
-function areaMovementDistanceDamageSpell(
-  spell: BattleSpellAdmissionSource,
-): AreaMovementDistanceDamageProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const attachment = spell.mechanics.attachment;
-  const area =
-    attachment.kind === "hole" && attachment.value.kind === "area"
-      ? attachment.value
-      : null;
-  const difficultTerrainOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "area_is_difficult_terrain",
-  );
-  const movementDamageOperation = spell.mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_moves",
-  );
+type AreaMovementDistanceDamageProjection<A> =
+  | { readonly tag: "parsed"; readonly fact: A }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: AreaMovementDistanceDamageIssueFact;
+    };
 
+function areaMovementDistanceDamageRangeProjection(
+  range: AreaMovementDistanceDamageMechanics["range"],
+): AreaMovementDistanceDamageProjection<MovementFeetType> {
+  return range.kind === "point" &&
+    typeof range.feet === "number" &&
+    range.feet === AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET &&
+    spellMechanicsObjectHasOnlyKeys(range, RANGE_FIELDS)
+    ? { tag: "parsed", fact: movementFeet(range.feet) }
+    : {
+        tag: "unsupported",
+        issue: {
+          failedFact: "range",
+          mechanicsPath: spellMechanicsHeaderPath("range"),
+        },
+      };
+}
+
+function areaMovementDistanceDamageDurationProjection(
+  duration: AreaMovementDistanceDamageMechanics["duration"],
+): AreaMovementDistanceDamageProjection<ElapsedTimeTicks> {
+  if (duration.kind !== "concentration")
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+    };
+  const value = duration.upTo;
+  return value.unit === "minute" &&
+    value.amount === AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES &&
+    isSpellCanonicalDurationValue(value) &&
+    spellMechanicsObjectHasOnlyKeys(value, DURATION_VALUE_FIELDS)
+    ? { tag: "parsed", fact: spellDurationTicksFromCanonicalValue(value) }
+    : {
+        tag: "unsupported",
+        issue: {
+          failedFact: "durationValue",
+          mechanicsPath: spellDurationValuePath(),
+        },
+      };
+}
+
+function areaMovementDistanceDamageAttachmentProjection(
+  attachment: AreaMovementDistanceDamageMechanics["attachment"],
+): AreaMovementDistanceDamageProjection<MovementFeetType> {
   if (
-    spell.mechanics.level !== AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !==
-      AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES ||
-    durationTicks === null ||
-    Result.isFailure(durationTicks) ||
     attachment.kind !== "hole" ||
-    area?.kind !== "area" ||
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET ||
-    difficultTerrainOperation?.effect.kind !== "area_is_difficult_terrain" ||
-    movementDamageOperation?.trigger.kind !== "on_creature_moves" ||
-    movementDamageOperation.trigger.perFeet !==
-      AREA_MOVEMENT_DISTANCE_DAMAGE_INTERVAL_FEET ||
-    movementDamageOperation.effect.kind !== "damage" ||
-    movementDamageOperation.effect.damageType !== "piercing" ||
-    movementDamageOperation.effect.amount.kind !== "fixed" ||
-    movementDamageOperation.effect.amount.expr.dice !==
-      AREA_MOVEMENT_DISTANCE_DAMAGE_DICE ||
-    movementDamageOperation.effect.amount.expr.dieSize !==
-      AREA_MOVEMENT_DISTANCE_DAMAGE_DIE_SIZE
-  ) {
-    return null;
-  }
-
+    !spellMechanicsObjectHasOnlyKeys(attachment, ATTACHMENT_FIELDS) ||
+    attachment.value.kind !== "area" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment.value, AREA_FIELDS) ||
+    attachment.value.origin.kind !== "point_within_range" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment.value.origin, ORIGIN_FIELDS) ||
+    attachment.value.shape.kind !== "sphere" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment.value.shape, SHAPE_FIELDS) ||
+    typeof attachment.value.shape.radiusFeet !== "number" ||
+    attachment.value.shape.radiusFeet !==
+      AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET
+  )
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "attachment",
+        mechanicsPath: spellOngoingAttachmentPath(),
+      },
+    };
   return {
-    durationTicks: durationTicks.success,
-    radiusFeet: area.shape.radiusFeet,
-    rangeFeet: spell.mechanics.range.feet,
-    damage: {
-      expr: movementDamageOperation.effect.amount.expr,
-      damageType: movementDamageOperation.effect.damageType,
-    },
-    damagePerFeet: movementDamageOperation.trigger.perFeet,
+    tag: "parsed",
+    fact: movementFeet(attachment.value.shape.radiusFeet),
   };
+}
+
+function areaMovementDistanceDamageOperationShellIsSupported(
+  operation: AreaMovementDistanceDamageOperation | undefined,
+): boolean {
+  return (
+    operation !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(operation, OPERATION_FIELDS)
+  );
+}
+
+function areaMovementDistanceDamageDifficultTerrainOperationIsSupported(
+  operation: AreaMovementDistanceDamageOperation | undefined,
+): boolean {
+  return (
+    areaMovementDistanceDamageOperationShellIsSupported(operation) &&
+    operation?.trigger.kind === "passive" &&
+    spellMechanicsObjectHasOnlyKeys(operation.trigger, PASSIVE_TRIGGER_FIELDS)
+  );
+}
+
+function areaMovementDistanceDamageDifficultTerrainEffectIsSupported(
+  operation: AreaMovementDistanceDamageOperation | undefined,
+): boolean {
+  return (
+    operation?.effect.kind === "area_is_difficult_terrain" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.effect,
+      DIFFICULT_TERRAIN_EFFECT_FIELDS,
+    )
+  );
+}
+
+type MovementDamageEffectFacts = Pick<
+  AreaMovementDistanceDamageMechanicsFacts,
+  "damage"
+>;
+
+function areaMovementDistanceDamageMovementProjection(
+  operation: AreaMovementDistanceDamageOperation | undefined,
+  ordinal: PositiveInteger,
+): AreaMovementDistanceDamageProjection<MovementFeetType> {
+  if (
+    !areaMovementDistanceDamageOperationShellIsSupported(operation) ||
+    operation?.trigger.kind !== "on_creature_moves" ||
+    operation.trigger.perFeet !== AREA_MOVEMENT_DISTANCE_DAMAGE_INTERVAL_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(operation.trigger, MOVEMENT_TRIGGER_FIELDS)
+  )
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "movementDamageOperation",
+        mechanicsPath: spellOngoingOperationPath(ordinal),
+      },
+    };
+  return { tag: "parsed", fact: movementFeet(operation.trigger.perFeet) };
+}
+
+function areaMovementDistanceDamageEffectProjection(
+  operation: AreaMovementDistanceDamageOperation | undefined,
+  ordinal: PositiveInteger,
+): AreaMovementDistanceDamageProjection<MovementDamageEffectFacts> {
+  if (
+    operation?.effect.kind !== "damage" ||
+    operation.effect.damageType !== "piercing" ||
+    !spellMechanicsObjectHasOnlyKeys(operation.effect, DAMAGE_EFFECT_FIELDS) ||
+    operation.effect.amount.kind !== "fixed" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      operation.effect.amount,
+      DAMAGE_AMOUNT_FIELDS,
+    ) ||
+    operation.effect.amount.expr.dice !== AREA_MOVEMENT_DISTANCE_DAMAGE_DICE ||
+    operation.effect.amount.expr.dieSize !==
+      AREA_MOVEMENT_DISTANCE_DAMAGE_DIE_SIZE ||
+    operation.effect.amount.expr.flat !== undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      operation.effect.amount.expr,
+      DICE_EXPR_FIELDS,
+    )
+  )
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "movementDamageEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(ordinal),
+      },
+    };
+  return {
+    tag: "parsed",
+    fact: {
+      damage: {
+        expr: operation.effect.amount.expr,
+        damageType: operation.effect.damageType,
+      },
+    },
+  };
+}
+
+function areaMovementDistanceDamageOperationOrdinals(input: {
+  readonly operationCount: number;
+  readonly terrainIndex: number;
+  readonly damageIndex: number;
+}): readonly [PositiveInteger, PositiveInteger] {
+  const firstMissingIndex = input.operationCount;
+  return [
+    PositiveInteger(
+      input.terrainIndex >= 0 ? input.terrainIndex + 1 : firstMissingIndex + 1,
+    ),
+    PositiveInteger(
+      input.damageIndex >= 0
+        ? input.damageIndex + 1
+        : firstMissingIndex + (input.terrainIndex >= 0 ? 1 : 2),
+    ),
+  ];
+}
+
+function areaMovementDistanceDamageEvidence(
+  terrainOrdinal: PositiveInteger,
+  damageOrdinal: PositiveInteger,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      spellDurationValuePath(),
+      spellOngoingAttachmentPath(),
+      spellOngoingOperationPath(terrainOrdinal),
+      spellOngoingOperationEffectPath(terrainOrdinal),
+      spellOngoingOperationPath(damageOrdinal),
+      spellOngoingOperationEffectPath(damageOrdinal),
+    ],
+    unowned: [],
+  };
+}
+
+type AreaMovementDistanceDamageInspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly [
+        AreaMovementDistanceDamageIssueFact,
+        ...AreaMovementDistanceDamageIssueFact[],
+      ];
+    }
+  | {
+      readonly tag: "parsed";
+      readonly facts: AreaMovementDistanceDamageMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
+
+function inspectAreaMovementDistanceDamageMechanics(
+  source: SpellMechanicsAdmissionSource,
+): AreaMovementDistanceDamageInspection {
+  if (!areaMovementDistanceDamageRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const issues: AreaMovementDistanceDamageIssueFact[] = [];
+  const push = (
+    failedFact: AreaMovementDistanceDamageFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "transmutation")
+    push("school", spellMechanicsHeaderPath("school"));
+  const range = areaMovementDistanceDamageRangeProjection(mechanics.range);
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== AREA_MOVEMENT_DISTANCE_DAMAGE_MATERIAL ||
+    !areaMovementDistanceDamageComponentsHaveOnlyKnownFields(
+      mechanics.components,
+    )
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+
+  const duration = areaMovementDistanceDamageDurationProjection(
+    mechanics.duration,
+  );
+  if (mechanics.duration.kind !== "concentration") {
+    for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+      push("durationValue", path);
+  } else if (
+    !spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS)
+  ) {
+    push("duration", spellMechanicsHeaderPath("duration"));
+  }
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+
+  const area = areaMovementDistanceDamageAttachmentProjection(
+    mechanics.attachment,
+  );
+  if (mechanics.initialPhase !== undefined)
+    push("initialPhase", spellOngoingInitialPhasePath());
+  for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
+    push(
+      "authoredConditionalEffects",
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+    );
+
+  const terrainIndex = mechanics.operations.findIndex(
+    ({ effect }) => effect.kind === "area_is_difficult_terrain",
+  );
+  const damageIndex = mechanics.operations.findIndex(
+    ({ trigger, effect }) =>
+      trigger.kind === "on_creature_moves" && effect.kind === "damage",
+  );
+  const [terrainOrdinal, damageOrdinal] =
+    areaMovementDistanceDamageOperationOrdinals({
+      operationCount: mechanics.operations.length,
+      terrainIndex,
+      damageIndex,
+    });
+  const terrainOperation =
+    terrainIndex >= 0 ? mechanics.operations[terrainIndex] : undefined;
+  const damageOperation =
+    damageIndex >= 0 ? mechanics.operations[damageIndex] : undefined;
+  for (const [index] of mechanics.operations.entries())
+    if (index !== terrainIndex && index !== damageIndex)
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+  for (let index = mechanics.operations.length; index < 2; index += 1)
+    push(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+    );
+  if (
+    !areaMovementDistanceDamageDifficultTerrainOperationIsSupported(
+      terrainOperation,
+    )
+  )
+    push(
+      "difficultTerrainOperation",
+      spellOngoingOperationPath(terrainOrdinal),
+    );
+  if (
+    !areaMovementDistanceDamageDifficultTerrainEffectIsSupported(
+      terrainOperation,
+    )
+  )
+    push(
+      "difficultTerrainEffect",
+      spellOngoingOperationEffectPath(terrainOrdinal),
+    );
+  const movement = areaMovementDistanceDamageMovementProjection(
+    damageOperation,
+    damageOrdinal,
+  );
+  const movementDamage = areaMovementDistanceDamageEffectProjection(
+    damageOperation,
+    damageOrdinal,
+  );
+
+  const projections = [
+    range,
+    duration,
+    area,
+    movement,
+    movementDamage,
+  ] as const;
+  const projectionIssues = projections.flatMap((projection) =>
+    projection.tag === "unsupported" ? [projection.issue] : [],
+  );
+  const unsupportedIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues([...issues, ...projectionIssues]),
+  );
+  if (range.tag === "unsupported")
+    return { tag: "unsupported", issues: unsupportedIssues ?? [range.issue] };
+  if (duration.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: unsupportedIssues ?? [duration.issue],
+    };
+  if (area.tag === "unsupported")
+    return { tag: "unsupported", issues: unsupportedIssues ?? [area.issue] };
+  if (movement.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: unsupportedIssues ?? [movement.issue],
+    };
+  if (movementDamage.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: unsupportedIssues ?? [movementDamage.issue],
+    };
+  if (unsupportedIssues !== undefined)
+    return { tag: "unsupported", issues: unsupportedIssues };
+  return {
+    tag: "parsed",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      durationTicks: duration.fact,
+      radiusFeet: area.fact,
+      rangeFeet: range.fact,
+      damage: movementDamage.fact.damage,
+      damagePerFeet: movement.fact,
+    },
+    evidence: areaMovementDistanceDamageEvidence(terrainOrdinal, damageOrdinal),
+  };
+}
+
+function admitAreaMovementDistanceDamageMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "areaMovementDistanceDamage",
+  AreaMovementDistanceDamageMechanicsFacts,
+  AreaMovementDistanceDamageSpellInvocation,
+  AreaMovementDistanceDamageAdmissionIssue
+> {
+  return Match.value(inspectAreaMovementDistanceDamageMechanics(source)).pipe(
+    Match.when({ tag: "notRepresented" }, () => ({
+      tag: "notRepresented" as const,
+    })),
+    Match.when({ tag: "unsupported" }, ({ issues }) => ({
+      tag: "unsupported" as const,
+      issues: spellProcedureMapNonEmpty(
+        issues,
+        ({ failedFact, mechanicsPath }) =>
+          areaMovementDistanceDamageIssue(failedFact, mechanicsPath),
+      ),
+    })),
+    Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
+      tag: "supported" as const,
+      admitted: {
+        binding: "ready" as const,
+        procedure: "areaMovementDistanceDamage" as const,
+        facts,
+        evidence,
+        admit: (
+          spell: BattleSpellExecutionSource,
+          ctx: SpellAdmissionContext,
+        ) => admitAreaMovementDistanceDamage(spell, ctx, facts),
+      },
+    })),
+    Match.exhaustive,
+  );
+}
+
+function admitAreaMovementDistanceDamage(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: AreaMovementDistanceDamageMechanicsFacts,
+): readonly AreaMovementDistanceDamageSpellInvocation[] {
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly AreaMovementDistanceDamageSpellInvocation[] =>
+      Number(slot.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "areaMovementDistanceDamage",
+              spell,
+              targeting: {
+                kind: "pointOriginSphere",
+                radiusFeet: facts.radiusFeet,
+              },
+              durationTicks: facts.durationTicks,
+              rangeFeet: facts.rangeFeet,
+              damage: facts.damage,
+              damagePerFeet: facts.damagePerFeet,
+            },
+          ],
+  );
 }
 
 function resolveAreaMovementDistanceDamage(
@@ -213,14 +788,16 @@ const AreaMovementDistanceDamageInvocationSchema =
       damagePerFeet: MovementFeet,
     }),
   );
+
 export const areaMovementDistanceDamageProfile = {
   procedure: "areaMovementDistanceDamage",
   executionSchema: AreaMovementDistanceDamageInvocationSchema,
-  admit: admitAreaMovementDistanceDamage,
+  admitMechanics: admitAreaMovementDistanceDamageMechanics,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveAreaMovementDistanceDamage,
 } satisfies SpellProcedureDeclaration<
   "areaMovementDistanceDamage",
-  AreaMovementDistanceDamageSpellInvocation
+  AreaMovementDistanceDamageSpellInvocation,
+  AreaMovementDistanceDamageMechanicsFacts,
+  AreaMovementDistanceDamageAdmissionIssue
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";
