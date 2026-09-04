@@ -166,10 +166,12 @@ describe("SR-04G-A5 static spell procedure admission", () => {
       if (profile.procedure === "objectContactDamage") {
         expect(result.admitted.facts).toMatchObject({
           rangeFeet: 60,
-          durationValue: { amount: 1, unit: "minute" },
-          damageAmount: {
-            base: { dice: 2, dieSize: 8 },
-            perLevel: { dice: 1 },
+          durationTicks: 10,
+          damage: {
+            baseDice: 2,
+            dieSize: 8,
+            perSlotDice: 1,
+            startingAtLevel: 3,
           },
           damageType: "fire",
         });
@@ -183,9 +185,12 @@ describe("SR-04G-A5 static spell procedure admission", () => {
         });
       } else if (profile.procedure === "objectContactDamageRepeat") {
         expect(result.admitted.facts).toMatchObject({
-          damageAmount: {
-            base: { dice: 2, dieSize: 8 },
-            perLevel: { dice: 1 },
+          durationTicks: 10,
+          damage: {
+            baseDice: 2,
+            dieSize: 8,
+            perSlotDice: 1,
+            startingAtLevel: 3,
           },
           damageType: "fire",
         });
@@ -209,8 +214,8 @@ describe("SR-04G-A5 static spell procedure admission", () => {
         });
       } else {
         expect(result.admitted.facts).toMatchObject({
-          durationValue: { amount: 1, unit: "minute" },
-          damageAmount: { expr: { dice: 1, dieSize: 4 } },
+          durationTicks: 10,
+          damage: { dice: 1, dieSize: 4 },
         });
         expect(invocation).toMatchObject({
           procedure: "weaponDamageRider",
@@ -225,6 +230,32 @@ describe("SR-04G-A5 static spell procedure admission", () => {
       }
     },
   );
+
+  test("projects Heat Metal's admitted slot-scaled damage without reparsing mechanics", () => {
+    const source = spellAdmissionSource(spellRecord("heat_metal"));
+    const result = objectContactDamageProfile.admitMechanics(
+      mechanicsSource(spellRecord("heat_metal")),
+    );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" as const } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]?.damage).toEqual({
+      expr: { dice: 3, dieSize: 8 },
+      damageType: "fire",
+    });
+    expect(invocations[0]?.durationTicks).toBe(10);
+  });
 
   test("projects Shillelagh's correlated character-tier rows into execution", () => {
     const source = spellAdmissionSource(spellRecord("shillelagh"));
@@ -355,6 +386,88 @@ describe("SR-04G-A5 static spell procedure admission", () => {
         tag: "notRepresented",
       });
     }
+  });
+
+  test("does not claim Produce Flame when its operations root is missing", () => {
+    const base = spellRecord("produce_flame");
+    if (base.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const mechanics = { ...base.mechanics };
+    Reflect.deleteProperty(mechanics, "operations");
+    expect(
+      weaponAttackOverrideProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("does not claim Darkness when its attachment root is missing", () => {
+    const base = spellRecord("darkness");
+    if (base.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const mechanics = { ...base.mechanics };
+    Reflect.deleteProperty(mechanics, "attachment");
+    expect(
+      objectContactDamageProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("does not claim Searing Smite when its duration root is missing", () => {
+    const base = spellRecord("searing_smite");
+    if (base.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const mechanics = { ...base.mechanics };
+    Reflect.deleteProperty(mechanics, "duration");
+    expect(
+      weaponDamageRiderProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("does not claim malformed sibling roots through another A5 profile", () => {
+    const darkness = spellRecord("darkness");
+    const produceFlame = spellRecord("produce_flame");
+    const searingSmite = spellRecord("searing_smite");
+    if (
+      darkness.mechanics.family !== "ongoing_effect" ||
+      produceFlame.mechanics.family !== "ongoing_effect" ||
+      searingSmite.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected ongoing-effect mechanics.");
+    }
+    const darknessMechanics = { ...darkness.mechanics };
+    Reflect.deleteProperty(darknessMechanics, "attachment");
+    const produceFlameMechanics = { ...produceFlame.mechanics };
+    Reflect.deleteProperty(produceFlameMechanics, "operations");
+    const searingSmiteMechanics = { ...searingSmite.mechanics };
+    Reflect.deleteProperty(searingSmiteMechanics, "duration");
+    expect(
+      weaponDamageRiderProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(darkness, darknessMechanics),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      objectContactDamageProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(
+          produceFlame,
+          produceFlameMechanics,
+        ),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      weaponAttackOverrideProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(
+          searingSmite,
+          searingSmiteMechanics,
+        ),
+      ),
+    ).toEqual({ tag: "notRepresented" });
   });
 
   test("rejects Heat Metal mechanics crossed with Divine Favor definition facts", () => {

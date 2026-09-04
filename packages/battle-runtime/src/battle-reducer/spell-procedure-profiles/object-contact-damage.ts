@@ -4,7 +4,10 @@ import {
   ongoingSpellRepeatIsOnLaterTurn,
 } from "../ongoing-spell-repeat-cast.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import {
+  ElapsedTimeTicksSchema,
+  type ElapsedTimeTicks,
+} from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 //
@@ -34,6 +37,8 @@ import {
   movementFeet,
   PositiveInteger,
   MovementFeet,
+  type DamageDieSize,
+  type PositiveInteger as PositiveIntegerType,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
@@ -64,10 +69,7 @@ import {
   spellObjectContactTargetsHole,
   spellObjectTargetHole,
 } from "../spells-targeting.ts";
-import {
-  sameStringSet,
-  supportedDamageAmountExpr,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -96,6 +98,7 @@ import {
   spellDurationTicksFromCanonicalValue,
   isSpellCanonicalDurationValue,
   spellMechanicsObjectHasOnlyKeys,
+  spellPositiveIntegerFromSurface,
   spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
@@ -172,6 +175,12 @@ type SupportedObjectContactDamageEffect = ObjectContactDamageEffect & {
   readonly damageType: Extract<DamageType, "fire">;
   readonly amount: SupportedObjectContactDamageAmount;
 };
+type ObjectContactDamageDamageProjection = {
+  readonly baseDice: PositiveIntegerType & 2;
+  readonly dieSize: DamageDieSize & 8;
+  readonly perSlotDice: PositiveIntegerType & 1;
+  readonly startingAtLevel: PositiveIntegerType & 3;
+};
 type ManufacturedMetalObjectAttachment = Extract<
   OngoingEffectSpellMechanics["attachment"],
   { readonly kind: "hole" }
@@ -188,8 +197,8 @@ type ManufacturedMetalObjectAttachment = Extract<
 };
 type ObjectContactDamageMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly rangeFeet: MovementFeet;
-  readonly durationValue: SpellCanonicalDurationValue;
-  readonly damageAmount: SupportedObjectContactDamageAmount;
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly damage: ObjectContactDamageDamageProjection;
   readonly damageType: Extract<DamageType, "fire">;
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for ObjectContactDamageFailedFact.
@@ -555,10 +564,10 @@ function objectContactDamageStructuralCandidate(
 }
 
 function objectContactDamageDurationValue(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): SpellCanonicalDurationValue | undefined {
   if (
-    duration.kind !== "concentration" ||
+    duration?.kind !== "concentration" ||
     !spellMechanicsObjectHasOnlyKeys(
       duration,
       OBJECT_CONTACT_DAMAGE_DURATION_FIELDS,
@@ -577,18 +586,19 @@ function objectContactDamageDurationValue(
 }
 
 function objectContactDamageDurationExtensionsAreSupported(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): boolean {
   return (
-    duration.kind === "concentration" && duration.upTo.upcastTiers === undefined
+    duration?.kind === "concentration" &&
+    duration.upTo.upcastTiers === undefined
   );
 }
 
 function objectContactDamageDurationEndingsAreSupported(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): boolean {
   return (
-    duration.kind === "concentration" &&
+    duration?.kind === "concentration" &&
     duration.earlyEnd === undefined &&
     duration.permanentIfMaintainedFull === undefined
   );
@@ -662,6 +672,55 @@ function isSupportedObjectContactDamageAmount(
     amount.perLevel.dieSize === undefined &&
     amount.perLevel.flat === undefined
   );
+}
+
+function objectContactDamagePositiveIntegerAt<const Expected extends number>(
+  value: number,
+  expected: Expected,
+): (PositiveIntegerType & Expected) | undefined {
+  const parsed = spellPositiveIntegerFromSurface(value);
+  return parsed !== undefined &&
+    objectContactDamagePositiveIntegerMatches(parsed, expected)
+    ? parsed
+    : undefined;
+}
+
+function objectContactDamagePositiveIntegerMatches<
+  const Expected extends number,
+>(
+  value: PositiveIntegerType,
+  expected: Expected,
+): value is PositiveIntegerType & Expected {
+  return Number(value) === expected;
+}
+
+function objectContactDamageDieSizeAt<const Expected extends DamageDieSize>(
+  value: number,
+  expected: Expected,
+): (DamageDieSize & Expected) | undefined {
+  return value === expected ? expected : undefined;
+}
+
+function objectContactDamageDamageProjection(
+  amount: DiceAmount,
+): ObjectContactDamageDamageProjection | undefined {
+  if (!isSupportedObjectContactDamageAmount(amount)) return undefined;
+  const baseDice = objectContactDamagePositiveIntegerAt(amount.base.dice, 2);
+  const dieSize = objectContactDamageDieSizeAt(amount.base.dieSize, 8);
+  const perSlotDice = objectContactDamagePositiveIntegerAt(
+    amount.perLevel.dice,
+    1,
+  );
+  const startingAtLevel = objectContactDamagePositiveIntegerAt(
+    amount.startingAtLevel,
+    3,
+  );
+  return baseDice === undefined ||
+    dieSize === undefined ||
+    perSlotDice === undefined ||
+    startingAtLevel === undefined
+    ? undefined
+    : { baseDice, dieSize, perSlotDice, startingAtLevel };
 }
 
 function isSupportedObjectContactHoldingOrWearingSave(
@@ -862,14 +921,14 @@ function objectContactDamageMechanicsEvidence(
 function inspectObjectContactDamageMechanics(
   source: SpellMechanicsAdmissionSource,
 ): ObjectContactDamageMechanicsInspection {
+  if (!objectContactDamageStructuralCandidate(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
   const missingRootIssues = objectContactDamageMissingRootIssues(
     source.mechanics,
   );
   if (missingRootIssues !== undefined) {
     return { tag: "unsupported", issues: missingRootIssues };
-  }
-  if (!objectContactDamageStructuralCandidate(source.mechanics)) {
-    return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "ongoing_effect") {
     return { tag: "notRepresented" };
@@ -904,6 +963,10 @@ function inspectObjectContactDamageMechanics(
   const initialEffectSupported = isObjectContactDamageEffect(initialEffect)
     ? initialEffect
     : undefined;
+  const damage =
+    initialEffectSupported === undefined
+      ? undefined
+      : objectContactDamageDamageProjection(initialEffectSupported.amount);
   const repeatOperationSupported = isObjectContactDamageRepeatOperation(
     repeatOperation,
   )
@@ -1018,6 +1081,8 @@ function inspectObjectContactDamageMechanics(
     )
       push("damageAmount", spellOngoingInitialPhasePath());
   }
+  if (initialEffectSupported !== undefined && damage === undefined)
+    push("damageAmount", spellOngoingInitialPhasePath());
   if (mechanics.operations.length !== 1) {
     for (const [index] of mechanics.operations.entries()) {
       if (index === 0) continue;
@@ -1087,13 +1152,14 @@ function inspectObjectContactDamageMechanics(
     !definitionFacts.range ||
     !definitionFacts.duration ||
     rangeFeet === undefined ||
-    durationValue === undefined
+    durationValue === undefined ||
+    damage === undefined
   ) {
     return {
       tag: "unsupported",
       issues: [
         {
-          failedFact: "initialEffect",
+          failedFact: damage === undefined ? "damageAmount" : "initialEffect",
           mechanicsPath: spellOngoingInitialPhasePath(),
         },
       ],
@@ -1102,8 +1168,8 @@ function inspectObjectContactDamageMechanics(
   const facts = {
     ...source.spellDefinitionRuleFacts,
     rangeFeet,
-    durationValue,
-    damageAmount: initialEffectSupported.amount,
+    durationTicks: spellDurationTicksFromCanonicalValue(durationValue),
+    damage,
     damageType: initialEffectSupported.damageType,
   } satisfies ObjectContactDamageMechanicsFacts;
   return {
@@ -1182,35 +1248,35 @@ function admitObjectContactDamage(
   ctx: SpellAdmissionContext,
   facts: ObjectContactDamageMechanicsFacts,
 ): readonly ObjectContactDamageInvocation[] {
-  const durationTicks = spellDurationTicksFromCanonicalValue(
-    facts.durationValue,
-  );
   return ctx.spellCastOptions.flatMap(
     (slot): readonly ObjectContactDamageInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
-      const damageExpr = supportedDamageAmountExpr({
-        amount: facts.damageAmount,
-        spellLevel: facts.level,
-        slotLevel: slot.spellLevel,
-      });
-      return damageExpr === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "objectContactDamage",
-              spell,
-              actionCost: "magicAction",
-              targeting: { kind: "singleManufacturedMetalObject" },
-              damage: {
-                expr: damageExpr,
-                damageType: facts.damageType,
-              },
-              rangeFeet: facts.rangeFeet,
-              durationTicks,
-            },
-          ];
+      const damageExpr: DiceExpr = {
+        dice:
+          Number(facts.damage.baseDice) +
+          Math.max(
+            0,
+            Number(slot.spellLevel) - Number(facts.damage.startingAtLevel) + 1,
+          ) *
+            Number(facts.damage.perSlotDice),
+        dieSize: facts.damage.dieSize,
+      };
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "objectContactDamage",
+          spell,
+          actionCost: "magicAction",
+          targeting: { kind: "singleManufacturedMetalObject" },
+          damage: {
+            expr: damageExpr,
+            damageType: facts.damageType,
+          },
+          rangeFeet: facts.rangeFeet,
+          durationTicks: facts.durationTicks,
+        },
+      ];
     },
   );
 }

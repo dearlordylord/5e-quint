@@ -398,10 +398,10 @@ function weaponAttackOverrideStructuralCandidate(
 }
 
 function weaponAttackOverrideDurationValue(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): SpellCanonicalDurationValue | undefined {
   if (
-    duration.kind !== "timed" ||
+    duration?.kind !== "timed" ||
     !spellMechanicsObjectHasOnlyKeys(
       duration,
       WEAPON_ATTACK_OVERRIDE_DURATION_FIELDS,
@@ -420,15 +420,15 @@ function weaponAttackOverrideDurationValue(
 }
 
 function weaponAttackOverrideDurationExtensionsAreSupported(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): boolean {
-  return duration.kind === "timed" && duration.value.upcastTiers === undefined;
+  return duration?.kind === "timed" && duration.value.upcastTiers === undefined;
 }
 
 function weaponAttackOverrideDurationEndingsAreSupported(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): boolean {
-  if (duration.kind !== "timed" || duration.permanentAfter !== undefined) {
+  if (duration?.kind !== "timed" || duration.permanentAfter !== undefined) {
     return false;
   }
   const earlyEnd = duration.earlyEnd;
@@ -659,6 +659,9 @@ function admitWeaponAttackOverrideMechanics(
   WeaponAttackOverrideInvocation,
   WeaponAttackOverrideAdmissionIssue
 > {
+  if (!weaponAttackOverrideStructuralCandidate(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
   const missingRootIssues = weaponAttackOverrideMissingRootIssues(
     source.mechanics,
   );
@@ -671,9 +674,6 @@ function admitWeaponAttackOverrideMechanics(
       tag: "unsupported",
       issues,
     };
-  }
-  if (!weaponAttackOverrideStructuralCandidate(source.mechanics)) {
-    return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "ongoing_effect") {
     return { tag: "notRepresented" };

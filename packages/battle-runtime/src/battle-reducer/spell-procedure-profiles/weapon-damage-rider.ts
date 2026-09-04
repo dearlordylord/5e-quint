@@ -14,20 +14,23 @@ import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts
 
 import {
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffectExpiration,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  type DamageDieSize,
+  type PositiveInteger as PositiveIntegerType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
+import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { SpellWeaponDamageRiderTemplateSchema } from "../../active-effect/codecs.ts";
 import { type CombatantId } from "../../identity.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import { spellCastCandidate } from "../spell-cast-candidate.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
@@ -48,8 +51,10 @@ import {
   spellDurationChildPath,
   spellDurationEvidencePaths,
   spellDurationValueEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
   isSpellCanonicalDurationValue,
   spellMechanicsObjectHasOnlyKeys,
+  spellPositiveIntegerFromSurface,
   spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
@@ -101,9 +106,13 @@ type WeaponDamageRiderFixedAmount = Extract<
     readonly abilityModifier?: undefined;
   };
 };
+type WeaponDamageRiderDamageProjection = {
+  readonly dice: PositiveIntegerType & 1;
+  readonly dieSize: DamageDieSize & 4;
+};
 type WeaponDamageRiderMechanicsFacts = SpellDefinitionRuleFacts & {
-  readonly durationValue: SpellCanonicalDurationValue;
-  readonly damageAmount: WeaponDamageRiderFixedAmount;
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly damage: WeaponDamageRiderDamageProjection;
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for WeaponDamageRiderFailedFact.
 const WEAPON_DAMAGE_RIDER_FAILED_FACTS = [
@@ -321,10 +330,10 @@ function weaponDamageRiderStructuralCandidate(
 }
 
 function weaponDamageRiderDurationValue(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): SpellCanonicalDurationValue | undefined {
   if (
-    duration.kind !== "timed" ||
+    duration?.kind !== "timed" ||
     !spellMechanicsObjectHasOnlyKeys(
       duration,
       WEAPON_DAMAGE_RIDER_DURATION_FIELDS,
@@ -343,16 +352,16 @@ function weaponDamageRiderDurationValue(
 }
 
 function weaponDamageRiderDurationExtensionsAreSupported(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): boolean {
-  return duration.kind === "timed" && duration.value.upcastTiers === undefined;
+  return duration?.kind === "timed" && duration.value.upcastTiers === undefined;
 }
 
 function weaponDamageRiderDurationEndingsAreSupported(
-  duration: SpellMechanics["duration"],
+  duration: SpellMechanics["duration"] | undefined,
 ): boolean {
   return (
-    duration.kind === "timed" &&
+    duration?.kind === "timed" &&
     duration.earlyEnd === undefined &&
     duration.permanentAfter === undefined
   );
@@ -377,6 +386,42 @@ function weaponDamageRiderAmountIsCanonical(
     amount.expr.spellcastingMod === undefined &&
     amount.expr.abilityModifier === undefined
   );
+}
+
+function weaponDamageRiderPositiveIntegerAt<const Expected extends number>(
+  value: number,
+  expected: Expected,
+): (PositiveIntegerType & Expected) | undefined {
+  const parsed = spellPositiveIntegerFromSurface(value);
+  return parsed !== undefined &&
+    weaponDamageRiderPositiveIntegerMatches(parsed, expected)
+    ? parsed
+    : undefined;
+}
+
+function weaponDamageRiderPositiveIntegerMatches<const Expected extends number>(
+  value: PositiveIntegerType,
+  expected: Expected,
+): value is PositiveIntegerType & Expected {
+  return Number(value) === expected;
+}
+
+function weaponDamageRiderDieSizeAt<const Expected extends DamageDieSize>(
+  value: number,
+  expected: Expected,
+): (DamageDieSize & Expected) | undefined {
+  return value === expected ? expected : undefined;
+}
+
+function weaponDamageRiderDamageProjection(
+  amount: DiceAmount | undefined,
+): WeaponDamageRiderDamageProjection | undefined {
+  if (!weaponDamageRiderAmountIsCanonical(amount)) return undefined;
+  const dice = weaponDamageRiderPositiveIntegerAt(amount.expr.dice, 1);
+  const dieSize = weaponDamageRiderDieSizeAt(amount.expr.dieSize, 4);
+  return dice === undefined || dieSize === undefined
+    ? undefined
+    : { dice, dieSize };
 }
 
 function weaponDamageRiderOperationRole(
@@ -437,6 +482,9 @@ function admitWeaponDamageRiderMechanics(
   WeaponDamageRiderInvocation,
   WeaponDamageRiderAdmissionIssue
 > {
+  if (!weaponDamageRiderStructuralCandidate(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
   const missingRootIssues = weaponDamageRiderMissingRootIssues(
     source.mechanics,
   );
@@ -449,9 +497,6 @@ function admitWeaponDamageRiderMechanics(
       tag: "unsupported",
       issues,
     };
-  }
-  if (!weaponDamageRiderStructuralCandidate(source.mechanics)) {
-    return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "ongoing_effect") {
     return { tag: "notRepresented" };
@@ -471,6 +516,14 @@ function admitWeaponDamageRiderMechanics(
     durationValue !== undefined &&
     durationExtensionsSupported &&
     durationEndingsSupported;
+  const durationTicks =
+    durationValue === undefined
+      ? undefined
+      : spellDurationTicksFromCanonicalValue(durationValue);
+  const damage =
+    operationRole === undefined
+      ? undefined
+      : weaponDamageRiderDamageProjection(operationRole.effect.amount);
   const issues: WeaponDamageRiderMechanicsIssue[] = [];
   const push = (
     failedFact: WeaponDamageRiderFailedFact,
@@ -582,7 +635,7 @@ function admitWeaponDamageRiderMechanics(
   }
   if (operationRole === undefined) {
     push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  } else if (!weaponDamageRiderAmountIsCanonical(operationRole.effect.amount)) {
+  } else if (damage === undefined) {
     push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
 
@@ -595,8 +648,9 @@ function admitWeaponDamageRiderMechanics(
   }
   if (
     operationRole === undefined ||
-    !weaponDamageRiderAmountIsCanonical(operationRole.effect.amount) ||
-    !durationSupported
+    damage === undefined ||
+    !durationSupported ||
+    durationTicks === undefined
   ) {
     return {
       tag: "unsupported",
@@ -605,34 +659,23 @@ function admitWeaponDamageRiderMechanics(
           failedFact:
             operationRole === undefined
               ? "damageEffect"
-              : !weaponDamageRiderAmountIsCanonical(operationRole.effect.amount)
+              : damage === undefined
                 ? "damageAmount"
                 : "duration",
           mechanicsPath:
             operationRole === undefined
               ? spellOngoingOperationEffectPath(PositiveInteger(1))
-              : !weaponDamageRiderAmountIsCanonical(operationRole.effect.amount)
+              : damage === undefined
                 ? spellOngoingOperationEffectPath(PositiveInteger(1))
                 : spellMechanicsHeaderPath("duration"),
         }),
       ],
     };
   }
-  if (durationValue === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        weaponDamageRiderIssueResult({
-          failedFact: "durationValue",
-          mechanicsPath: spellMechanicsHeaderPath("duration"),
-        }),
-      ],
-    };
-  }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    durationValue,
-    damageAmount: operationRole.effect.amount,
+    durationTicks,
+    damage,
   } satisfies WeaponDamageRiderMechanicsFacts;
   return {
     tag: "supported",
@@ -656,9 +699,6 @@ function admitWeaponDamageRider(
     ctx.actor.combatantId,
     facts,
   );
-  if (activeEffect === null) {
-    return [];
-  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly WeaponDamageRiderInvocation[] =>
       Number(slot.spellLevel) < facts.level
@@ -679,39 +719,19 @@ function admitWeaponDamageRider(
 function weaponDamageRiderActiveEffect(
   actorId: CombatantId,
   facts: WeaponDamageRiderMechanicsFacts,
-): WeaponDamageRiderInvocation["activeEffect"] | null {
-  const expiresAt = weaponDamageRiderExpiration(actorId, facts.durationValue);
-  const damage = weaponDamageRiderDamage(facts.damageAmount);
-  return expiresAt === null || damage === null
-    ? null
-    : {
-        kind: "spellWeaponDamageRider",
-        sourceCombatantId: actorId,
-        damage,
-        expiresAt,
-      };
-}
-
-function weaponDamageRiderExpiration(
-  actorId: CombatantId,
-  durationValue: SpellCanonicalDurationValue,
-): BattleActiveEffectExpiration | null {
-  return scalarBuffActiveEffectExpiration(actorId, {
-    kind: "timed",
-    value: durationValue,
-  });
-}
-
-function weaponDamageRiderDamage(
-  amount: WeaponDamageRiderFixedAmount,
-): WeaponDamageRiderInvocation["activeEffect"]["damage"] | null {
-  const expr = supportedDamageAmountExpr({ amount });
-  return expr === null
-    ? null
-    : {
-        expr,
-        damageType: "radiant",
-      };
+): WeaponDamageRiderInvocation["activeEffect"] {
+  return {
+    kind: "spellWeaponDamageRider",
+    sourceCombatantId: actorId,
+    damage: {
+      expr: facts.damage,
+      damageType: "radiant",
+    },
+    expiresAt: {
+      kind: "duration",
+      durationTicks: facts.durationTicks,
+    },
+  };
 }
 
 function discoverWeaponDamageRiderCastAct(
