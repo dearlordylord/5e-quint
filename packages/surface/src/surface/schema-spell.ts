@@ -2494,6 +2494,7 @@ export const TargetSelectionSchema = Schema.Union([
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
     castingRequirement: optionalExact(TargetCastingRequirementSchema),
+    visibility: optionalExact(TargetVisibilityRequirementSchema),
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),

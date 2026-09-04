@@ -48,6 +48,7 @@ let command =
                                 , baseLevel = 1
                                 }
                             , targetKinds = [ "creature" ]
+                            , visibility = "caster_can_see"
                             }
                         }
                     }

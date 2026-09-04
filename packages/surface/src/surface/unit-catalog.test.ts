@@ -2988,8 +2988,17 @@ describe("SRD Unit catalog boundary", () => {
             baseLevel: 1,
           },
           targetKinds: ["creature"],
+          visibility: "caster_can_see",
         },
       });
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(Schema.toType(TargetSelectionSchema))({
+            ...phase.attachment.value.selection,
+            visibility: "target_can_see",
+          }),
+        ),
+      ).toBe(true);
     }
   });
 
