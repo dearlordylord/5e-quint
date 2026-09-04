@@ -2,6 +2,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   movementFeet,
+  PositiveInteger,
   type MovementFeet as MovementFeetType,
 } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
@@ -10,6 +11,7 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
@@ -119,6 +121,7 @@ const FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
+  "authoredConditionalMechanics",
   "initialSaveAttachment",
   "initialSaveAbility",
   "initialSaveDc",
@@ -356,6 +359,7 @@ type Role = "strongWind" | "movementCost" | "endTurn" | "direction";
 
 type RoleAssignment = Readonly<Record<Role, Occurrence>>;
 type PartialRoleAssignment = Readonly<Partial<Record<Role, Occurrence>>>;
+type ResolvedRoleAssignment = Readonly<Record<Role, Occurrence | undefined>>;
 
 function operationRoleWitnessScore(role: Role, operation: Operation): number {
   return Match.value(role).pipe(
@@ -429,19 +433,54 @@ function operationAssignmentScore(assignment: RoleAssignment): number {
   );
 }
 
+type OperationRoleResolution = {
+  readonly assignment: ResolvedRoleAssignment;
+  readonly ambiguousOccurrences: readonly Occurrence[];
+  readonly hasCompleteAssignment: boolean;
+};
+
 function directionalOperationAssignment(
   occurrences: readonly Occurrence[],
-): RoleAssignment | undefined {
-  return operationRoleAssignments(OPERATION_ROLES, occurrences)
-    .filter(isCompleteRoleAssignment)
-    .reduce<RoleAssignment | undefined>(
-      (best, candidate) =>
-        best === undefined ||
-        operationAssignmentScore(candidate) > operationAssignmentScore(best)
-          ? candidate
-          : best,
-      undefined,
-    );
+): OperationRoleResolution {
+  const completeAssignments = operationRoleAssignments(
+    OPERATION_ROLES,
+    occurrences,
+  ).filter(isCompleteRoleAssignment);
+  const maximumScore = completeAssignments.reduce(
+    (maximum, assignment) =>
+      Math.max(maximum, operationAssignmentScore(assignment)),
+    Number.NEGATIVE_INFINITY,
+  );
+  const bestAssignments = completeAssignments.filter(
+    (assignment) => operationAssignmentScore(assignment) === maximumScore,
+  );
+  const commonOccurrence = (role: Role): Occurrence | undefined => {
+    const candidate = bestAssignments[0]?.[role];
+    return candidate !== undefined &&
+      bestAssignments.every(
+        (assignment) => assignment[role].ordinal === candidate.ordinal,
+      )
+      ? candidate
+      : undefined;
+  };
+  const assignment: ResolvedRoleAssignment = {
+    strongWind: commonOccurrence("strongWind"),
+    movementCost: commonOccurrence("movementCost"),
+    endTurn: commonOccurrence("endTurn"),
+    direction: commonOccurrence("direction"),
+  };
+  const ambiguousOrdinals = OPERATION_ROLES.flatMap((role) =>
+    assignment[role] === undefined
+      ? bestAssignments.map((candidate) => candidate[role].ordinal)
+      : [],
+  );
+  return {
+    assignment,
+    ambiguousOccurrences: occurrences.filter(({ ordinal }) =>
+      ambiguousOrdinals.includes(ordinal),
+    ),
+    hasCompleteAssignment: completeAssignments.length > 0,
+  };
 }
 
 type SaveFacts = {
@@ -449,6 +488,51 @@ type SaveFacts = {
   readonly dc: Invocation["dc"];
   readonly distance: MovementFeetType;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for OptionalSaveField.
+const OPTIONAL_SAVE_FIELDS = [
+  "repeatSaves",
+  "autoSuccessIfCasterSlotGte",
+  "autoSuccessIfTarget",
+  "saveAppliesIf",
+  "usageLimit",
+] as const;
+type OptionalSaveField = (typeof OPTIONAL_SAVE_FIELDS)[number];
+
+function hasOptionalSaveFact(
+  save: Extract<
+    Mechanics["initialPhase"] | Operation["effect"],
+    { readonly kind: "save_gate" }
+  >,
+  field: OptionalSaveField,
+): boolean {
+  return Match.value(field).pipe(
+    Match.when(
+      "repeatSaves",
+      () => "repeatSaves" in save && save.repeatSaves !== undefined,
+    ),
+    Match.when(
+      "autoSuccessIfCasterSlotGte",
+      () =>
+        "autoSuccessIfCasterSlotGte" in save &&
+        save.autoSuccessIfCasterSlotGte !== undefined,
+    ),
+    Match.when(
+      "autoSuccessIfTarget",
+      () =>
+        "autoSuccessIfTarget" in save && save.autoSuccessIfTarget !== undefined,
+    ),
+    Match.when(
+      "saveAppliesIf",
+      () => "saveAppliesIf" in save && save.saveAppliesIf !== undefined,
+    ),
+    Match.when(
+      "usageLimit",
+      () => "usageLimit" in save && save.usageLimit !== undefined,
+    ),
+    Match.exhaustive,
+  );
+}
 
 type Inspection =
   | { readonly tag: "notRepresented" }
@@ -528,10 +612,8 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
 
   const areaAdmission = admitSpellAreaAttachment(mechanics.attachment, [], []);
   const area =
-    areaAdmission.tag === "admitted"
-      ? areaAdmission.attachment.kind === "area"
-        ? areaAdmission.attachment
-        : areaAdmission.attachment.value
+    areaAdmission.tag === "admitted" && areaAdmission.attachment.kind === "hole"
+      ? areaAdmission.attachment.value
       : undefined;
   const line =
     area?.origin.kind === "self" &&
@@ -601,15 +683,12 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
         repeated: "endTurnUsageLimit",
       },
     ] as const satisfies readonly {
-      readonly field: keyof SaveKeySpace;
+      readonly field: OptionalSaveField;
       readonly initial: FailedFact;
       readonly repeated: FailedFact;
     }[];
     for (const optionalFact of optionalSaveFacts)
-      if (
-        optionalFact.field in save &&
-        save[optionalFact.field as keyof typeof save] !== undefined
-      )
+      if (hasOptionalSaveFact(save, optionalFact.field))
         push(fact(optionalFact.initial, optionalFact.repeated), path);
     if (save.ability !== "str")
       push(fact("initialSaveAbility", "endTurnSaveAbility"), path);
@@ -662,20 +741,35 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
     spellOngoingInitialPhasePath(),
     "initial",
   );
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
+    push(
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+    );
   const occurrences = spellOngoingOperationOccurrences(mechanics);
-  const assignment = directionalOperationAssignment(occurrences);
-  const strongWind = assignment?.strongWind;
-  const movementCost = assignment?.movementCost;
-  const endTurn = assignment?.endTurn;
-  const direction = assignment?.direction;
+  const roleResolution = directionalOperationAssignment(occurrences);
+  const strongWind = roleResolution.assignment.strongWind;
+  const movementCost = roleResolution.assignment.movementCost;
+  const endTurn = roleResolution.assignment.endTurn;
+  const direction = roleResolution.assignment.direction;
   const selected = [strongWind, movementCost, endTurn, direction] as const;
   const selectedOrdinals = selected.flatMap((occurrence) =>
     occurrence === undefined ? [] : [occurrence.ordinal],
   );
+  const ambiguousOrdinals = roleResolution.ambiguousOccurrences.map(
+    ({ ordinal }) => ordinal,
+  );
   for (const occurrence of occurrences)
-    if (!selectedOrdinals.includes(occurrence.ordinal))
+    if (
+      !selectedOrdinals.includes(occurrence.ordinal) &&
+      !ambiguousOrdinals.includes(occurrence.ordinal)
+    )
       push("operationCount", spellOngoingOperationPath(occurrence.ordinal));
-  if (selected.some((occurrence) => occurrence === undefined))
+  for (const occurrence of roleResolution.ambiguousOccurrences)
+    push("operation", spellOngoingOperationPath(occurrence.ordinal));
+  if (!roleResolution.hasCompleteAssignment)
     push("operationCount", spellMechanicsRootPath());
 
   const validateShell = (occurrence: Occurrence): void => {

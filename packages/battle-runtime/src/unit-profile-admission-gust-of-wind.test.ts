@@ -18,6 +18,7 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
@@ -297,6 +298,23 @@ describe("directionalPersistentArea static admission", () => {
     );
   });
 
+  test("rejects a direct root area while remaining indifferent to hole identity", () => {
+    const source = mutatedGustMechanicsSource((mechanics) => {
+      if (
+        mechanics.attachment.kind !== "hole" ||
+        mechanics.attachment.value.kind !== "area"
+      )
+        throw new Error("Expected the Gust Line hole.");
+      Reflect.set(mechanics, "attachment", mechanics.attachment.value);
+    });
+    expect(
+      issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+    ).toContainEqual({
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+  });
+
   test("accepts reordered operations and preserves their authored ordinals", () => {
     const reversed = spellAdmissionSource(
       syntheticGustRecord(
@@ -461,6 +479,47 @@ describe("directionalPersistentArea static admission", () => {
 
   test.each([
     {
+      label: "authored order",
+      order: [0, 1, 2, 3],
+      ambiguousOrdinals: [1, 2],
+    },
+    {
+      label: "reordered",
+      order: [3, 0, 2, 1],
+      ambiguousOrdinals: [2, 4],
+    },
+  ] as const)(
+    "reports $label ambiguous passive roles generically without invented attribution",
+    ({ order, ambiguousOrdinals }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const operations = order.map((index) => mechanics.operations[index]);
+        if (operations.some((operation) => operation === undefined))
+          throw new Error("Expected all Gust operations.");
+        for (const operation of operations)
+          if (operation?.trigger.kind === "passive")
+            Reflect.set(operation, "effect", { kind: "none" });
+        Reflect.set(mechanics, "operations", operations);
+      });
+      const issues = issueFacts(
+        directionalPersistentAreaProfile.admitMechanics(source),
+      );
+      for (const ordinal of ambiguousOrdinals)
+        expect(issues).toContainEqual({
+          failedFact: "operation",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(ordinal)),
+        });
+      expect(issues.map(({ failedFact }) => failedFact)).not.toEqual(
+        expect.arrayContaining([
+          "strongWindEffect",
+          "movementCostEffect",
+          "operationCount",
+        ]),
+      );
+    },
+  );
+
+  test.each([
+    {
       label: "initial Sphere",
       operationIndex: undefined,
       shape: { kind: "sphere", radiusFeet: 10 },
@@ -530,6 +589,40 @@ describe("directionalPersistentArea static admission", () => {
         "endTurnAutoSuccessIfTarget",
         "endTurnSaveAppliesIf",
         "endTurnUsageLimit",
+      ]),
+    );
+  });
+
+  test("rejects every unsupported authored conditional mechanic at its actual ordinal", () => {
+    const source = mutatedGustMechanicsSource((mechanics) => {
+      const fixture = spellRecord("phantasmal_force").mechanics;
+      if (
+        fixture.family !== "ongoing_effect" ||
+        fixture.authoredConditionalMechanics === undefined ||
+        fixture.authoredConditionalMechanics[0] === undefined
+      )
+        throw new Error("Expected an authored conditional-mechanic fixture.");
+      Reflect.set(mechanics, "authoredConditionalMechanics", [
+        structuredClone(fixture.authoredConditionalMechanics[0]),
+        structuredClone(fixture.authoredConditionalMechanics[0]),
+      ]);
+    });
+    expect(
+      issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(1),
+          ),
+        },
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(2),
+          ),
+        },
       ]),
     );
   });

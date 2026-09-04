@@ -14,13 +14,12 @@
 --    in which the Line blasts from you."
 --
 -- Runtime profile boundary:
---   * the Surface records the strong-wind Line, initial and end-turn
---     Strength save push, directional Movement cost, and Bonus Action
---     direction change;
---   * battle-runtime support remains blocked on persistent self-origin
---     Line area identity, repeated area-save/force-move execution,
---     directional Movement cost witnesses, and gas/flame presentation
---     ownership.
+--   * the self-origin Line, initial and end-turn Strength saves and push,
+--     directional Movement cost, strong-wind fact, and later-turn Bonus Action
+--     direction change are statically admitted and executable where the
+--     battle runtime owns their behavior;
+--   * gas, vapor, and flame interactions remain table-owned and unowned by
+--     battle execution.
 
 let Area =
       { kind : Text
