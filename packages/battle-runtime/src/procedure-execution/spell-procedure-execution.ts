@@ -4,6 +4,7 @@ import type {
   AbilityModifier,
   AttackBonus,
   DamageDieSize,
+  DifficultyClass,
   MovementFeet,
   Integer,
   PositiveInteger,
@@ -981,6 +982,7 @@ export type OngoingSpellEndSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly procedure: "ongoingSpellEnd";
     readonly rangeFeet: MovementFeet;
+    readonly abilityCheckDcBase: DifficultyClass;
     readonly resource: LeveledSpellInvocationResource;
   };
 

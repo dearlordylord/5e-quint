@@ -2390,6 +2390,7 @@ export function spellProcedureExecution(
         actionCost: value.actionCost,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
+        abilityCheckDcBase: value.abilityCheckDcBase,
         resource: value.resource,
       }),
       persistentArmorEffect: (value) =>

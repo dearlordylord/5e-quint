@@ -2981,9 +2981,10 @@ export type OngoingSpellEndSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "ongoingSpellEnd";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly rangeFeet: MovementFeet;
+  readonly abilityCheckDcBase: DifficultyClass;
 };
 export type HeldLightHurlSpellInvocation = HeldLightHurlMechanicalFacts & {
   readonly access: CantripSpellAccess;

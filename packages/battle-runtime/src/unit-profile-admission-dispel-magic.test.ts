@@ -20,8 +20,20 @@ import {
   characterLevel,
   proficiencyBonusForCharacterLevel,
   Round,
+  PositiveInteger,
+  spellSlotLevel,
 } from "@dnd/shared/types";
-import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellMechanicsHeaderPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  ActivationPhase,
+  SpellMechanics,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
@@ -33,9 +45,13 @@ import {
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import type {
   BattleActiveEffect,
+  BattleCreatureState,
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
-import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleStoredLightEmitterTemplate,
+} from "./battle-state-execution.ts";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
   BattleHoleSchema,
@@ -62,8 +78,13 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
+  spellAdmissionSource,
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
+import { ongoingSpellEndProfile } from "./battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   battleAreaId,
   battleObjectId,
@@ -86,6 +107,270 @@ type OngoingSpellTargetChoiceFill = Extract<
 type OngoingSpellTarget = OngoingSpellTargetChoiceFill["value"];
 type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
+
+type DispelMagicMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function dispelMechanicsSource(
+  source: ReturnType<typeof spellAdmissionSource>,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function mutatedDispelMechanics(
+  mutate: (mechanics: DispelMagicMechanics) => unknown,
+): SpellMechanicsAdmissionSource {
+  const record = spellRecord(dispelMagicUnitId);
+  if (record.mechanics.family !== "activation")
+    throw new Error("Expected Dispel Magic activation mechanics.");
+  return dispelMechanicsSource(
+    spellAdmissionSource(
+      decodeSpellRecordForTest({
+        ...record,
+        id: "synthetic_mutated_ongoing_spell_end",
+        name: "Synthetic Mutated Ongoing Spell End",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic_mutated_ongoing_spell_end",
+        },
+        mechanics: mutate(record.mechanics),
+      }),
+    ),
+  );
+}
+
+function staticDispelActor(): SpellAdmissionActor {
+  const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+    spellCasterId,
+  );
+  if (!isStaticDispelActor(actor))
+    throw new Error("Expected a spellcasting character fixture.");
+  return actor;
+}
+
+function isStaticDispelActor(
+  actor: BattleCreatureState | undefined,
+): actor is SpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
+}
+
+function admissionIssueFacts(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}) {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("ongoingSpellEnd static admission", () => {
+  test("projects exact facts and complete evidence into mechanics-free execution", () => {
+    const source = spellAdmissionSource(spellRecord(dispelMagicUnitId));
+    const result = ongoingSpellEndProfile.admitMechanics(
+      dispelMechanicsSource(source),
+    );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 3,
+      rangeFeet: 120,
+      abilityCheckDcBase: 10,
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+        spellActivationPhasePath(PositiveInteger(2)),
+        spellActivationAttachmentPath(PositiveInteger(2)),
+        spellActivationEffectPath(PositiveInteger(2), PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: staticDispelActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    const invocation = invocations[0];
+    if (invocation === undefined) throw new Error("Expected invocation.");
+    expect(invocation.spell).not.toHaveProperty("mechanics");
+    const { spell: _spell, ...facts } = invocation;
+    const execution = {
+      ...facts,
+      spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
+        source.spellDefinitionRuleFacts,
+        source.castingSource,
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-dispel-static",
+      ),
+    };
+    const encoded = Schema.encodeSync(ongoingSpellEndProfile.executionSchema)(
+      execution,
+    );
+    expect(encoded).not.toHaveProperty("mechanics");
+    expect(encoded).toHaveProperty("abilityCheckDcBase", 10);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(ongoingSpellEndProfile.executionSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    const { abilityCheckDcBase: _abilityCheckDcBase, ...withoutDcBase } =
+      encoded;
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(ongoingSpellEndProfile.executionSchema)(
+          withoutDcBase,
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("renamed spell and target-hole identities preserve facts and evidence", () => {
+    const originalRecord = spellRecord(dispelMagicUnitId);
+    if (originalRecord.mechanics.family !== "activation")
+      throw new Error("Expected activation mechanics.");
+    const renamedRecord = decodeSpellRecordForTest({
+      ...originalRecord,
+      id: "synthetic_renamed_ongoing_spell_end",
+      name: "Synthetic Ongoing Spell End",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_renamed_ongoing_spell_end",
+      },
+      mechanics: {
+        ...originalRecord.mechanics,
+        phases: originalRecord.mechanics.phases.map((phase) =>
+          "attachment" in phase && phase.attachment.kind === "hole"
+            ? {
+                ...phase,
+                attachment: {
+                  ...phase.attachment,
+                  holeId: "synthetic_other_target",
+                  label: "synthetic selection",
+                },
+              }
+            : phase,
+        ),
+      },
+    });
+    const original = spellAdmissionSource(originalRecord);
+    const renamed = spellAdmissionSource(renamedRecord);
+    const canonicalResult = ongoingSpellEndProfile.admitMechanics(
+      dispelMechanicsSource(original),
+    );
+    const renamedResult = ongoingSpellEndProfile.admitMechanics(renamed);
+    expect(renamedResult.tag).toBe("supported");
+    if (
+      canonicalResult.tag !== "supported" ||
+      renamedResult.tag !== "supported"
+    )
+      return;
+    expect(renamedResult.admitted.facts).toEqual(
+      canonicalResult.admitted.facts,
+    );
+    expect(renamedResult.admitted.evidence).toEqual(
+      canonicalResult.admitted.evidence,
+    );
+  });
+
+  test("accumulates exact authored ordinals for reordered and malformed phases", () => {
+    const reordered = mutatedDispelMechanics((mechanics) => ({
+      ...mechanics,
+      phases: [mechanics.phases[1], mechanics.phases[0]],
+    }));
+    expect(
+      admissionIssueFacts(ongoingSpellEndProfile.admitMechanics(reordered)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "phaseOrder",
+          mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+        },
+        {
+          failedFact: "phaseOrder",
+          mechanicsPath: spellActivationPhasePath(PositiveInteger(2)),
+        },
+      ]),
+    );
+
+    const malformed = mutatedDispelMechanics((mechanics) => ({
+      ...mechanics,
+      components: { ...mechanics.components, v: false },
+      phases: mechanics.phases.map((phase, index) =>
+        index === 0 && phase.kind === "direct"
+          ? {
+              ...phase,
+              effects: [
+                {
+                  kind: "end_ongoing_spells",
+                  maxSpellLevel: "contested_spell_level",
+                },
+              ],
+            }
+          : index === 1 && phase.kind === "ability_check_gate"
+            ? { ...phase, dc: 11, onFail: { kind: "none" } }
+            : phase,
+      ),
+    }));
+    expect(
+      admissionIssueFacts(ongoingSpellEndProfile.admitMechanics(malformed)),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "components",
+          mechanicsPath: spellMechanicsHeaderPath("components"),
+        },
+        {
+          failedFact: "directMaxSpellLevel",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(1),
+          ),
+        },
+        {
+          failedFact: "checkDc",
+          mechanicsPath: spellActivationPhasePath(PositiveInteger(2)),
+        },
+        {
+          failedFact: "checkOnFail",
+          mechanicsPath: spellActivationPhasePath(PositiveInteger(2)),
+        },
+      ]),
+    );
+  });
+});
 
 describe("SRD Dispel Magic ongoing spell ending admission", () => {
   test("dispel magic is admitted with an ongoing spell target choice", () => {
@@ -151,12 +436,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       "synthetic_dispel_check_on_fail",
     );
 
-    for (const spell of [
-      narrowTargetSpell,
-      splitHoleSpell,
-      extraPhaseSpell,
-      onFailSpell,
-    ]) {
+    for (const spell of [narrowTargetSpell, extraPhaseSpell, onFailSpell]) {
       const state = spellBattle({
         preparedSpells: [spell],
         spellSlots: [{ spellLevel: 3, count: 1 }],
@@ -166,6 +446,18 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         maybeSpellAct({ session: state, spellId: spell.id, slotLevel: 3 }),
       ).toBeUndefined();
     }
+
+    const splitHoleState = spellBattle({
+      preparedSpells: [splitHoleSpell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    expect(
+      maybeSpellAct({
+        session: splitHoleState,
+        spellId: splitHoleSpell.id,
+        slotLevel: 3,
+      }),
+    ).toBeDefined();
   });
 
   test("level 3 dispel magic automatically ends object-attached continual flame", () => {
