@@ -74,6 +74,8 @@ const SPELL_ACTIVATION_BRANCH_COORDINATES = {
 
 const SPELL_ONGOING_BRANCH_COORDINATES = {
   attachment: { role: "effect", ordinal: PositiveInteger(1) },
+  /** The collective choose node emitted for modal ongoing-effect mechanics. */
+  modeChoice: { role: "procedure", ordinal: PositiveInteger(1) },
   operationEffect: { role: "effect", ordinal: PositiveInteger(1) },
   authoredConditionalEffect: {
     role: "effect",
@@ -216,6 +218,16 @@ export function spellOngoingOperationPath(
   operationOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return spellMechanicsPath(occurrence("procedure", operationOrdinal));
+}
+
+/**
+ * Canonical coordinate for a modal ongoing-effect's collective mode choice.
+ * Individual options intentionally have no coordinates: the Surface tracer
+ * emits them as one collective choice node.
+ */
+export function spellOngoingModeChoicePath(): SpellMechanicsBranchPath {
+  const modeChoice = SPELL_ONGOING_BRANCH_COORDINATES.modeChoice;
+  return spellMechanicsPath(occurrence(modeChoice.role, modeChoice.ordinal));
 }
 
 export function spellOngoingOperationEffectPath(

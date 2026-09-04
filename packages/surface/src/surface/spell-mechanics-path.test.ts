@@ -27,6 +27,7 @@ import {
   spellOngoingAttachmentPath,
   spellOngoingAuthoredConditionalEffectPath,
   spellOngoingInitialPhasePath,
+  spellOngoingModeChoicePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   spellSpawnedCreatureControlPath,
@@ -126,6 +127,7 @@ describe("spell mechanics paths", () => {
         "recordMechanics/effect:3",
       ],
       [spellOngoingInitialPhasePath(), "recordMechanics/action"],
+      [spellOngoingModeChoicePath(), "recordMechanics/procedure:1"],
       [
         spellOngoingOperationPath(PositiveInteger(3)),
         "recordMechanics/procedure:3",
