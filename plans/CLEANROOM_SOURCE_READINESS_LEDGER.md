@@ -23,8 +23,8 @@ This section is the sole mutable handoff for a new session.
 - Active landing unit: `integration/cleanroom-sr-04g` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
-  integration implementation checkpoint
-  `7e37645a92a9cde80e824bf23969ae6b645203ce`
+  integration certification checkpoint
+  `73921983ca794c3584b300ae4f2feb27a4347af1`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -35,7 +35,9 @@ This section is the sole mutable handoff for a new session.
   `952da11aba37773353f02f6defc86b3b8a5c4d84` is integrated by
   `f11d07e2248cb5f685a7a72bf1b2bd0557857dba`; A5 contact/weapon admission
   reviewed tip `42ceb3a3e2bdbac5005b9ce5911bb699c597dc1a` is integrated by
-  `7e37645a92a9cde80e824bf23969ae6b645203ce`.
+  `7e37645a92a9cde80e824bf23969ae6b645203ce`; the cumulative Surface
+  publication delta is classified and certified by
+  `73921983ca794c3584b300ae4f2feb27a4347af1`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -54,9 +56,7 @@ This section is the sole mutable handoff for a new session.
   still project `admitMechanics: undefined`. Battle package diagnostics retain
   the corresponding legacy profile/registry errors, so no Battle typecheck or
   registry/runtime pass is claimed. Scoped ESLint, Prettier, and diff checks
-  passed. Surface Unit and Stat Block aggregate checks passed; the content-sync
-  certificate correctly remains red for the newly changed Hunter's Mark source
-  until the landing-unit publication delta is classified and certified.
+  passed.
 - B4 evidence: Standards and Spec/RAW review axes converged with no findings at
   `952da11ab`; integrated B4 admission tests passed 17/17 and Surface path tests
   passed 6/6. Scoped ESLint, Prettier, and diff checks passed. Battle package
@@ -68,9 +68,18 @@ This section is the sole mutable handoff for a new session.
   report no error in the five A5 files, while the documented incomplete-frontier
   profile/registry errors remain elsewhere, so no Battle typecheck or broader
   registry/runtime pass is claimed.
-- Next action: classify and certify the cumulative Surface publication delta,
-  then complete focused composite verification and reviewer convergence. The
-  observation baseline remains 99 complete, 22 partial, and 74 with no owner;
+- Surface publication evidence: exact checkpoint `73921983c` classifies
+  Hunter's Mark's source-derived aggregate change without adding a schema or
+  runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
+  aggregate checks, 935-peer content-publication sync, delta verifier, and
+  publication typecheck passed. The lock-owning publication self-test passed
+  64/64. The deeper delta-verifier suite passed 42/48 before exposing six stale
+  schema fixture coordinates; after repairing all eight affected coordinate
+  cases, their focused rerun passed 8/8. ESLint, Prettier, and diff checks
+  passed; no broad/full or QNT/MBT pass is claimed.
+- Next action: complete focused composite verification and reviewer
+  convergence. The observation baseline remains 99 complete, 22 partial, and
+  74 with no owner;
   integrating A5 does not reclassify those catalog-root observations.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
@@ -191,9 +200,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                             | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration implementation checkpoint `7e37645a9`; C2, B3, A4, B4, and A5 integrated; remaining cumulative publication-delta certification, focused composite verification, and reviewer convergence remain in progress | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                     | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration certification checkpoint `73921983c`; C2, B3, A4, B4, and A5 integrated; cumulative Surface publication delta certified; focused composite verification and reviewer convergence remain in progress | Active |
 
 ## Landing discipline
 
