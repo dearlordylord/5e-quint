@@ -2,11 +2,13 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
 import { describe, expect, test } from "vitest";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   dancingLightsUnitId,
   longstriderUnitId,
@@ -25,7 +27,11 @@ import {
   knownWillingSpellTargetFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
@@ -49,6 +55,282 @@ import type {
   BattleFill,
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { movableLightManifestationProfile } from "./battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+
+type OngoingSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function dancingLightsMechanics(): OngoingSpellMechanics {
+  const mechanics = spellRecord(dancingLightsUnitId).mechanics;
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Dancing Lights ongoing mechanics.");
+  return mechanics;
+}
+
+function syntheticMovableLight(
+  mutate: (mechanics: OngoingSpellMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_movable_light_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Movable Light ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_movable_light_${suffix}`,
+    },
+    mechanics: mutate(dancingLightsMechanics()),
+  });
+}
+
+function mechanicsSource(
+  source: ReturnType<typeof spellAdmissionSource>,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+describe("movableLightManifestation static admission", () => {
+  test("projects exact facts, complete evidence, and mechanics-free casts", () => {
+    const source = spellAdmissionSource(spellRecord(dancingLightsUnitId));
+    const result = movableLightManifestationProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 0,
+      range: { kind: "point", feet: 120 },
+      durationTicks: 10,
+      dimRadiusFeet: 10,
+      rangeFeet: 120,
+      maxMoveFeet: 60,
+      spacingFeet: 20,
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+        spellOngoingOperationPath(PositiveInteger(3)),
+        spellOngoingOperationEffectPath(PositiveInteger(3)),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({ cantrips: [], preparedSpells: [] });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      { ...context, castingSource: source.castingSource },
+    );
+    expect(invocations).toHaveLength(2);
+    expect(invocations.every(({ spell }) => !("mechanics" in spell))).toBe(
+      true,
+    );
+  });
+
+  test("recognizes identical mechanics independently of authored identity", () => {
+    const original = movableLightManifestationProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(spellRecord(dancingLightsUnitId))),
+    );
+    const renamed = movableLightManifestationProfile.admitMechanics(
+      mechanicsSource(
+        spellAdmissionSource(
+          syntheticMovableLight((mechanics) => mechanics, "renamed"),
+        ),
+      ),
+    );
+
+    expect(original.tag).toBe("supported");
+    expect(renamed.tag).toBe("supported");
+    if (original.tag !== "supported" || renamed.tag !== "supported") return;
+    expect(renamed.admitted.facts).toEqual(original.admitted.facts);
+  });
+
+  test("does not claim unrelated shipped spell mechanics", () => {
+    const results = unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is SpellRecord =>
+          unit.kind === "spell" && unit.id !== dancingLightsUnitId,
+      )
+      .map((spell) =>
+        movableLightManifestationProfile.admitMechanics(
+          mechanicsSource(spellAdmissionSource(spell)),
+        ),
+      );
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results).toEqual(results.map(() => ({ tag: "notRepresented" })));
+  });
+
+  test.each([
+    [
+      "level",
+      (mechanics: OngoingSpellMechanics) => ({ ...mechanics, level: 1 }),
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ],
+    [
+      "duration",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        duration: { kind: "instantaneous" as const },
+      }),
+      "duration",
+      spellDurationValuePath(),
+    ],
+    [
+      "attachment",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        attachment: { kind: "self" as const },
+      }),
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ],
+    [
+      "illumination",
+      (mechanics: OngoingSpellMechanics) => {
+        const operation = mechanics.operations[1];
+        if (operation?.effect.kind !== "emit_dim_illumination")
+          throw new Error("Expected Dim Light operation.");
+        return {
+          ...mechanics,
+          operations: [
+            mechanics.operations[0],
+            { ...operation, effect: { ...operation.effect, radiusFeet: 15 } },
+            mechanics.operations[2],
+          ],
+        };
+      },
+      "illuminationOperation",
+      spellOngoingOperationEffectPath(PositiveInteger(2)),
+    ],
+    [
+      "reposition trigger",
+      (mechanics: OngoingSpellMechanics) => {
+        const operation = mechanics.operations[2];
+        if (operation?.effect.kind !== "reposition_attachment")
+          throw new Error("Expected reposition operation.");
+        return {
+          ...mechanics,
+          operations: [
+            mechanics.operations[0],
+            mechanics.operations[1],
+            { ...operation, trigger: { kind: "passive" as const } },
+          ],
+        };
+      },
+      "repositionOperation",
+      spellOngoingOperationPath(PositiveInteger(3)),
+    ],
+  ] as const)(
+    "keeps a one-field %s mutation owned with one exact issue",
+    (_label, mutate, failedFact, mechanicsPath) => {
+      const source = spellAdmissionSource(
+        syntheticMovableLight(mutate, `mutation_${failedFact}`),
+      );
+      const result = movableLightManifestationProfile.admitMechanics(
+        mechanicsSource(source),
+      );
+
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toEqual([
+        expect.objectContaining({ failedFact, mechanicsPath }),
+      ]);
+    },
+  );
+
+  test("keeps a whole operations-field mutation owned", () => {
+    const source = spellAdmissionSource(
+      syntheticMovableLight(
+        (mechanics) => ({
+          ...mechanics,
+          operations: mechanics.operations.slice(0, 1),
+        }),
+        "missing_operations",
+      ),
+    );
+    const result = movableLightManifestationProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues.map(({ failedFact }) => failedFact)).toEqual([
+      "illuminationOperation",
+      "repositionOperation",
+      "operationCount",
+      "operationCount",
+    ]);
+  });
+
+  test("keeps a wholly replaced operations branch owned", () => {
+    const source = spellAdmissionSource(
+      syntheticMovableLight(
+        (mechanics) => ({
+          ...mechanics,
+          operations: [
+            {
+              trigger: { kind: "passive" as const },
+              effect: {
+                kind: "grant_resistance" as const,
+                damageType: "fire" as const,
+              },
+            },
+          ],
+        }),
+        "replaced_operations",
+      ),
+    );
+    const result = movableLightManifestationProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues.map(({ failedFact }) => failedFact)).toEqual([
+      "illusionOperation",
+      "illuminationOperation",
+      "repositionOperation",
+      "operationCount",
+      "operationCount",
+      "operationCount",
+    ]);
+  });
+});
 
 describe("SRDINV32A deterministic Dancing Lights admission", () => {
   test("dancing_lights is admitted as Magic Action source-owned movable Dim Light", () => {
