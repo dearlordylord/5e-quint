@@ -11,7 +11,22 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { damageAmount, DieRollResult, Hp } from "@dnd/shared/types";
+import {
+  damageAmount,
+  DieRollResult,
+  Hp,
+  PositiveInteger,
+} from "@dnd/shared/types";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
   linkedDefenseResistanceDamageShareConcentrationSavingThrowHoles,
@@ -25,7 +40,11 @@ import {
   characterAttackSubjectForTest,
   concentrationSavingThrowFill,
 } from "./battle-runtime.test-support.ts";
-import { type BattleInterruptedProcedure } from "./battle-state-execution.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleInterruptedProcedure,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
 import { resumeInterruptedProcedure } from "./battle-reducer/interrupt-continuation.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
@@ -61,7 +80,14 @@ import {
   spellTargetFill,
   linkedDefenseResistanceDamageShareSpellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+import { linkedDefenseResistanceDamageShareProfile } from "./battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { spellActiveEffectExecutionRef } from "./effect-execution-ref.ts";
 import {
   applyBattleHitPointDamage,
@@ -86,6 +112,411 @@ import type {
   CombatantId,
 } from "./unit-profile-admission.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
+
+type OngoingSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function wardingBondMechanics(): OngoingSpellMechanics {
+  const mechanics = spellRecord("warding_bond").mechanics;
+  if (mechanics.family !== "ongoing_effect") {
+    throw new Error(
+      "Expected the shipped Warding Bond mechanics to be ongoing.",
+    );
+  }
+  return mechanics;
+}
+
+function syntheticWardingBond(
+  mutate: (mechanics: OngoingSpellMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_linked_defense_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Linked Defense ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_linked_defense_${suffix}`,
+    },
+    mechanics: mutate(wardingBondMechanics()),
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+describe("linkedDefenseResistanceDamageShare static admission", () => {
+  test("projects exact facts, complete evidence, and a mechanics-free invocation", () => {
+    const source = spellAdmissionSource(spellRecord("warding_bond"));
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 2,
+      range: { kind: "touch" },
+      durationTicks: 600,
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellDurationEndingPath(PositiveInteger(1)),
+        spellDurationEndingPath(PositiveInteger(2)),
+        spellDurationEndingPath(PositiveInteger(3)),
+        spellMaterialComponentPath("cost"),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+        spellOngoingOperationPath(PositiveInteger(3)),
+        spellOngoingOperationEffectPath(PositiveInteger(3)),
+        spellOngoingOperationPath(PositiveInteger(4)),
+        spellOngoingOperationEffectPath(PositiveInteger(4)),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({ spellSlots: [{ spellLevel: 2, count: 1 }] });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      { ...context, castingSource: source.castingSource },
+    );
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]).toMatchObject({
+      procedure: "linkedDefenseResistanceDamageShare",
+      actionCost: "magicAction",
+      rangeFeet: 5,
+      connectionRangeFeet: 60,
+      activeEffect: {
+        kind: "linkedDefenseResistanceDamageShare",
+        sourceCombatantId: spellCasterId,
+        expiresAt: { kind: "duration", durationTicks: 600 },
+      },
+    });
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("recognizes identical mechanics independently of authored identity", () => {
+    const original = spellAdmissionSource(spellRecord("warding_bond"));
+    const renamed = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => mechanics, "renamed"),
+    );
+    const originalResult =
+      linkedDefenseResistanceDamageShareProfile.admitMechanics(
+        mechanicsSource(original),
+      );
+    const renamedResult =
+      linkedDefenseResistanceDamageShareProfile.admitMechanics(
+        mechanicsSource(renamed),
+      );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test("does not claim unrelated shipped spell mechanics", () => {
+    const results = unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is SpellRecord =>
+          unit.kind === "spell" && unit.id !== "warding_bond",
+      )
+      .map((spell) =>
+        linkedDefenseResistanceDamageShareProfile.admitMechanics(
+          mechanicsSource(spellAdmissionSource(spell)),
+        ),
+      );
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results).toEqual(results.map(() => ({ tag: "notRepresented" })));
+  });
+
+  test.each([
+    [
+      "level",
+      (mechanics: OngoingSpellMechanics) => ({ ...mechanics, level: 3 }),
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ],
+    [
+      "duration",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        duration: { kind: "instantaneous" as const },
+      }),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ],
+    [
+      "material cost",
+      (mechanics: OngoingSpellMechanics) => {
+        if (
+          typeof mechanics.components.m !== "object" ||
+          mechanics.components.m === null ||
+          mechanics.components.m.kind !== "paired_worn_items"
+        )
+          throw new Error("Expected paired linked-defense materials.");
+        return {
+          ...mechanics,
+          components: {
+            ...mechanics.components,
+            m: { ...mechanics.components.m, minimumValueGpEach: 49 },
+          },
+        };
+      },
+      "components",
+      spellMaterialComponentPath("cost"),
+    ],
+    [
+      "attachment",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        attachment: { kind: "self" as const },
+      }),
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ],
+    [
+      "duration ending",
+      (mechanics: OngoingSpellMechanics) => {
+        if (mechanics.duration.kind !== "timed")
+          throw new Error("Expected the linked-defense timed duration.");
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            earlyEnd: mechanics.duration.earlyEnd?.map((ending, index) =>
+              index === 1 ? { kind: "target_dons_armor" as const } : ending,
+            ),
+          },
+        };
+      },
+      "durationEnding",
+      spellDurationEndingPath(PositiveInteger(2)),
+    ],
+    [
+      "armor operation",
+      (mechanics: OngoingSpellMechanics) => {
+        const operation = mechanics.operations[0];
+        if (operation?.effect.kind !== "modify_ac")
+          throw new Error("Expected the linked-defense AC operation.");
+        return {
+          ...mechanics,
+          operations: [
+            {
+              ...operation,
+              effect: {
+                ...operation.effect,
+                delta: { ...operation.effect.delta, dice: 2 },
+              },
+            },
+            ...mechanics.operations.slice(1),
+          ],
+        };
+      },
+      "armorClassOperation",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+  ] as const)(
+    "keeps a one-field %s mutation owned with one exact issue",
+    (_label, mutate, failedFact, mechanicsPath) => {
+      const source = spellAdmissionSource(
+        syntheticWardingBond(mutate, `mutation_${failedFact}`),
+      );
+      const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+        mechanicsSource(source),
+      );
+
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toHaveLength(1);
+      expect(result.issues[0]).toMatchObject({ failedFact, mechanicsPath });
+    },
+  );
+
+  test("keeps a whole operations-field mutation owned", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond(
+        (mechanics) => ({
+          ...mechanics,
+          operations: mechanics.operations.slice(0, 1),
+        }),
+        "missing_operations",
+      ),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues.map(({ failedFact }) => failedFact)).toEqual([
+      "savingThrowOperation",
+      "resistanceOperation",
+      "damageShareOperation",
+      "operationCount",
+      "operationCount",
+      "operationCount",
+    ]);
+  });
+
+  test("reports every missing duration ending coordinate", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => {
+        if (mechanics.duration.kind !== "timed")
+          throw new Error("Expected the linked-defense timed duration.");
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            earlyEnd: mechanics.duration.earlyEnd?.slice(0, 1),
+          },
+        };
+      }, "missing_duration_endings"),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+      }),
+      expect.objectContaining({
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(3)),
+      }),
+    ]);
+  });
+
+  test("reports operation-shell defects at their operation coordinate", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => {
+        const operation = mechanics.operations[0];
+        if (operation?.effect.kind !== "modify_ac")
+          throw new Error("Expected the linked-defense AC operation.");
+        return {
+          ...mechanics,
+          operations: [
+            { ...operation, trigger: { kind: "on_attached_damaged" as const } },
+            ...mechanics.operations.slice(1),
+          ],
+        };
+      }, "operation_shell"),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "armorClassOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      }),
+    ]);
+  });
+
+  test("reports malformed duplicate operations at their actual coordinates", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => {
+        const operation = mechanics.operations[0];
+        if (operation?.effect.kind !== "modify_ac")
+          throw new Error("Expected the linked-defense AC operation.");
+        return {
+          ...mechanics,
+          operations: [
+            ...mechanics.operations.slice(0, 2),
+            {
+              ...operation,
+              effect: {
+                ...operation.effect,
+                delta: { ...operation.effect.delta, dice: 2 },
+              },
+            },
+            ...mechanics.operations.slice(2),
+          ],
+        };
+      }, "malformed_duplicate_operation"),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "armorClassOperation",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(3)),
+      }),
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(3)),
+      }),
+    ]);
+  });
+
+  test("reports a missing reordered operation role at the absent tail coordinate", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond(
+        (mechanics) => ({
+          ...mechanics,
+          operations: mechanics.operations.slice(1),
+        }),
+        "missing_reordered_operation",
+      ),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "armorClassOperation",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(4)),
+      }),
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(4)),
+      }),
+    ]);
+  });
+});
 
 describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding Bond admission", () => {
   test("casts as a level-2 Magic Action spell with willing target, worn rings, and connection facts", () => {
