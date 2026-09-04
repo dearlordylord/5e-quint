@@ -84,6 +84,13 @@ const SPELL_ONGOING_BRANCH_COORDINATES = {
   },
 } as const;
 
+const SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES = {
+  target: { role: "generalFact", ordinal: PositiveInteger(1) },
+  resolution: { role: "procedure", ordinal: PositiveInteger(1) },
+  result: { role: "effect", ordinal: PositiveInteger(1) },
+  spellEnding: { role: "effect", ordinal: PositiveInteger(2) },
+} as const;
+
 const SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES = {
   statBlock: { role: "effect", ordinal: PositiveInteger(1) },
   control: { role: "procedure", ordinal: PositiveInteger(1) },
@@ -248,6 +255,82 @@ export function spellOngoingOperationEffectPath(
   );
 }
 
+/** A protection capability nested under its owning creature-type effect. */
+export function spellCreatureTypeScopedProtectionPath(
+  creatureTypeEffectPath: SpellMechanicsBranchPath,
+  protectionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    creatureTypeEffectPath,
+    occurrence("effect", protectionOrdinal),
+  );
+}
+
+/** An outcome nested under its shared relevant-effect protection scope. */
+export function spellRelevantEffectProtectionOutcomePath(
+  relevantEffectProtectionPath: SpellMechanicsBranchPath,
+  outcomeOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    relevantEffectProtectionPath,
+    occurrence("effect", outcomeOrdinal),
+  );
+}
+
+export function spellOngoingSpecialFunctionPath(
+  creatureTypeWardPath: SpellMechanicsBranchPath,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    creatureTypeWardPath,
+    occurrence("procedure", specialFunctionOrdinal),
+  );
+}
+
+export function spellOngoingSpecialFunctionTargetPath(
+  creatureTypeWardPath: SpellMechanicsBranchPath,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    creatureTypeWardPath,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.target,
+  );
+}
+
+export function spellOngoingSpecialFunctionResolutionPath(
+  creatureTypeWardPath: SpellMechanicsBranchPath,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    creatureTypeWardPath,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.resolution,
+  );
+}
+
+export function spellOngoingSpecialFunctionResultPath(
+  creatureTypeWardPath: SpellMechanicsBranchPath,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    creatureTypeWardPath,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.result,
+  );
+}
+
+export function spellOngoingSpecialFunctionSpellEndingPath(
+  creatureTypeWardPath: SpellMechanicsBranchPath,
+  specialFunctionOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return ongoingSpecialFunctionBranchPath(
+    creatureTypeWardPath,
+    specialFunctionOrdinal,
+    SPELL_ONGOING_SPECIAL_FUNCTION_BRANCH_COORDINATES.spellEnding,
+  );
+}
+
 /** Canonical coordinate for each root-authored ongoing conditional mechanic. */
 export function spellOngoingAuthoredConditionalMechanicPath(
   ordinal: PositiveInteger,
@@ -334,6 +417,30 @@ function spellDurationBranchPath(
   ordinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return spellMechanicsPath(headerNode("duration"), occurrence(role, ordinal));
+}
+
+function ongoingSpecialFunctionBranchPath(
+  creatureTypeWardPath: SpellMechanicsBranchPath,
+  specialFunctionOrdinal: PositiveInteger,
+  coordinate: {
+    readonly role: "generalFact" | "procedure" | "effect";
+    readonly ordinal: PositiveInteger;
+  },
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    spellOngoingSpecialFunctionPath(
+      creatureTypeWardPath,
+      specialFunctionOrdinal,
+    ),
+    occurrence(coordinate.role, coordinate.ordinal),
+  );
+}
+
+function appendSpellMechanicsPath(
+  path: SpellMechanicsBranchPath,
+  node: MechanicsGraphPathNode,
+): SpellMechanicsBranchPath {
+  return { ...path, nodes: [...path.nodes, node] };
 }
 
 function durationBranchOrdinal(

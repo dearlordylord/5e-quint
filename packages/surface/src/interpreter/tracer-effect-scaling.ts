@@ -237,6 +237,7 @@ export function traceEffectAtomScaling(
         "natural_weapons",
         "water_breathing",
         "spell_created_held_object",
+        "creature_type_protection",
         "block_reanimation",
         "ignite_objects",
         "create_object",

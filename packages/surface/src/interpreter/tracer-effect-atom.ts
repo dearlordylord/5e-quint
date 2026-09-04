@@ -1,4 +1,8 @@
-import type { AreaDirectEffectAtom } from "../surface/types.ts";
+import type {
+  AreaDirectEffectAtom,
+  CreatureTypeProtection,
+  CreatureTypeWard,
+} from "../surface/types.ts";
 import { Match } from "effect";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
@@ -15,6 +19,8 @@ import { traceCompositeAndCountermagicEffectAtom } from "./tracer-effect-composi
 import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
 
 const byKind = Match.discriminator("kind");
+const protectionByKind = Match.discriminator("kind");
+const relevantEffectOutcomeByKind = Match.discriminator("kind");
 
 export function traceEffectAtom(
   e: AreaDirectEffectAtom,
@@ -32,6 +38,9 @@ export function traceEffectAtom(
     );
   }
   return Match.value(e).pipe(
+    byKind("creature_type_protection", (e) =>
+      traceCreatureTypeProtections(e, nodes, ids, edges),
+    ),
     byKind("spell_created_held_object", (e) => {
       const id = ids("eff");
       nodes.push({
@@ -315,4 +324,77 @@ export function traceEffectAtom(
     ),
     Match.exhaustive,
   );
+}
+
+export function traceCreatureTypeProtections(
+  effect: CreatureTypeProtection | CreatureTypeWard,
+  nodes: TraceNode[],
+  ids: IdGen,
+  edges?: TraceEdge[],
+): string {
+  const id = ids("eff");
+  nodes.push({
+    id,
+    category: "effect",
+    atomKind: effect.kind,
+    label: `${effect.kind}\ncreature types: ${effect.creatureTypes.join("/")}`,
+  });
+
+  for (const protection of effect.protections) {
+    const protectionId = ids("eff");
+    const label = Match.value(protection).pipe(
+      protectionByKind(
+        "attack_rolls_against_target",
+        (protection) => `${protection.kind}\nmode: ${protection.mode}`,
+      ),
+      protectionByKind(
+        "relevant_effect_protection",
+        (protection) =>
+          `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
+          `possession: ${protection.possession}`,
+      ),
+      Match.exhaustive,
+    );
+    nodes.push({
+      id: protectionId,
+      category: "effect",
+      atomKind: protection.kind,
+      label,
+    });
+    edges?.push({ from: id, to: protectionId, relation: "grants" });
+
+    Match.value(protection).pipe(
+      protectionByKind("attack_rolls_against_target", () => undefined),
+      protectionByKind("relevant_effect_protection", (protection) => {
+        for (const outcome of protection.outcomes) {
+          const outcomeId = ids("eff");
+          const outcomeLabel = Match.value(outcome).pipe(
+            relevantEffectOutcomeByKind(
+              "new_applications",
+              (outcome) => `${outcome.kind}\nresult: ${outcome.result}`,
+            ),
+            relevantEffectOutcomeByKind(
+              "new_saves_against_existing_effects",
+              (outcome) => `${outcome.kind}\nmode: ${outcome.mode}`,
+            ),
+            Match.exhaustive,
+          );
+          nodes.push({
+            id: outcomeId,
+            category: "effect",
+            atomKind: outcome.kind,
+            label: outcomeLabel,
+          });
+          edges?.push({
+            from: protectionId,
+            to: outcomeId,
+            relation: "grants",
+          });
+        }
+      }),
+      Match.exhaustive,
+    );
+  }
+
+  return id;
 }

@@ -12,6 +12,7 @@ import chillTouchInput from "../../content/chill_touch.json";
 import classFighterInput from "../../content/class_fighter.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import dispelMagicInput from "../../content/dispel_magic.json";
+import dispelEvilAndGoodInput from "../../content/dispel_evil_and_good.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import flameBladeInput from "../../content/flame_blade.json";
@@ -29,6 +30,7 @@ import moonbeamInput from "../../content/moonbeam.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import phantasmalForceInput from "../../content/phantasmal_force.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
+import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
 import searingSmiteInput from "../../content/searing_smite.json";
@@ -56,6 +58,254 @@ import { idGen } from "./tracer-rule-labels.ts";
 import { traceStatBlock, traceUnit } from "./tracer.ts";
 
 describe("Surface trace interpreter", () => {
+  test("traces each authored creature-type protection capability", () => {
+    const trace = traceUnit(
+      decodeUnitRecordSync(protectionFromEvilAndGoodInput),
+    );
+
+    expect(trace.atomKinds).toEqual(
+      expect.arrayContaining([
+        "creature_type_protection",
+        "attack_rolls_against_target",
+        "relevant_effect_protection",
+        "new_applications",
+        "new_saves_against_existing_effects",
+      ]),
+    );
+    const protection = trace.nodes.find(
+      (node) => node.atomKind === "creature_type_protection",
+    );
+    const capabilities = trace.nodes.filter((node) =>
+      ["attack_rolls_against_target", "relevant_effect_protection"].includes(
+        node.atomKind,
+      ),
+    );
+    expect(protection).toBeDefined();
+    expect(capabilities).toHaveLength(2);
+    expect(
+      capabilities.every((capability) =>
+        trace.edges.some(
+          (edge) =>
+            edge.from === protection?.id &&
+            edge.to === capability.id &&
+            edge.relation === "grants",
+        ),
+      ),
+    ).toBe(true);
+    const relevantEffectProtection = capabilities.find(
+      (capability) => capability.atomKind === "relevant_effect_protection",
+    );
+    const relevantEffectOutcomes = trace.nodes.filter((node) =>
+      ["new_applications", "new_saves_against_existing_effects"].includes(
+        node.atomKind,
+      ),
+    );
+    expect(relevantEffectOutcomes).toHaveLength(2);
+    expect(
+      relevantEffectOutcomes.every((outcome) =>
+        trace.edges.some(
+          (edge) =>
+            edge.from === relevantEffectProtection?.id &&
+            edge.to === outcome.id &&
+            edge.relation === "grants",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps Dispel protection attack-only and traces both special functions", () => {
+    const unit = decodeUnitRecordSync(dispelEvilAndGoodInput);
+    const trace = traceUnit(unit);
+
+    if (unit.kind !== "spell" || unit.mechanics.family !== "ongoing_effect") {
+      throw new Error("decoded Dispel fixture changed mechanics family");
+    }
+    const ward = unit.mechanics.operations[0]?.effect;
+    if (ward?.kind !== "creature_type_ward") {
+      throw new Error("decoded Dispel fixture changed ward shape");
+    }
+    expect(ward.creatureTypes).toEqual([
+      "celestial",
+      "elemental",
+      "fey",
+      "fiend",
+      "undead",
+    ]);
+    expect(
+      ward.specialFunctions.every(
+        (specialFunction) => !("creatureTypes" in specialFunction),
+      ),
+    ).toBe(true);
+
+    expect(trace.atomKinds).toEqual(
+      expect.arrayContaining([
+        "creature_type_ward",
+        "attack_rolls_against_target",
+        "end_source_scoped_relevant_effects",
+        "dismiss_creature_to_home_plane",
+        "send_to_home_plane_if_not_already_there",
+        "end_current_spell",
+      ]),
+    );
+    expect(trace.atomKinds).not.toContain("new_saves_against_existing_effects");
+    expect(
+      trace.nodes.filter((node) => node.atomKind === "end_current_spell"),
+    ).toHaveLength(2);
+  });
+
+  test("rejects invalid protection and special-function states", () => {
+    const protectionWithNoCapabilities = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithNoCapabilities.mechanics.phases[0]!.effects[0]!.protections =
+      [];
+    expect(() => decodeUnitRecordSync(protectionWithNoCapabilities)).toThrow();
+
+    const protectionWithNoCreatureTypes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithNoCreatureTypes.mechanics.phases[0]!.effects[0]!.creatureTypes =
+      [];
+    expect(() => decodeUnitRecordSync(protectionWithNoCreatureTypes)).toThrow();
+
+    const protectionWithDuplicateCreatureTypes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithDuplicateCreatureTypes.mechanics.phases[0]!.effects[0]!.creatureTypes.push(
+      protectionWithDuplicateCreatureTypes.mechanics.phases[0]!.effects[0]!
+        .creatureTypes[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateCreatureTypes),
+    ).toThrow();
+
+    const protectionWithDuplicateCapabilities = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithDuplicateCapabilities.mechanics.phases[0]!.effects[0]!.protections.push(
+      protectionWithDuplicateCapabilities.mechanics.phases[0]!.effects[0]!
+        .protections[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateCapabilities),
+    ).toThrow();
+
+    const protectionWithNoRelevantEffectOutcomes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const relevantEffectProtection =
+      protectionWithNoRelevantEffectOutcomes.mechanics.phases[0]!.effects[0]!
+        .protections[1];
+    if (relevantEffectProtection?.outcomes === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    relevantEffectProtection.outcomes = [];
+    expect(() =>
+      decodeUnitRecordSync(protectionWithNoRelevantEffectOutcomes),
+    ).toThrow();
+
+    const protectionWithNoRelevantConditions = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const emptyConditionScope =
+      protectionWithNoRelevantConditions.mechanics.phases[0]!.effects[0]!
+        .protections[1];
+    if (emptyConditionScope?.conditions === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    emptyConditionScope.conditions = [];
+    expect(() =>
+      decodeUnitRecordSync(protectionWithNoRelevantConditions),
+    ).toThrow();
+
+    const protectionWithDuplicateRelevantConditions = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const duplicateConditionScope =
+      protectionWithDuplicateRelevantConditions.mechanics.phases[0]!.effects[0]!
+        .protections[1];
+    if (duplicateConditionScope?.conditions === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    duplicateConditionScope.conditions.push(
+      duplicateConditionScope.conditions[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateRelevantConditions),
+    ).toThrow();
+
+    const protectionWithDuplicateRelevantEffectOutcomes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const duplicateOutcomeScope =
+      protectionWithDuplicateRelevantEffectOutcomes.mechanics.phases[0]!
+        .effects[0]!.protections[1];
+    if (duplicateOutcomeScope?.outcomes === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    duplicateOutcomeScope.outcomes.push(duplicateOutcomeScope.outcomes[0]!);
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateRelevantEffectOutcomes),
+    ).toThrow();
+
+    const protectionWithAdvantageOnIncomingAttacks = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithAdvantageOnIncomingAttacks.mechanics.phases[0]!.effects[0]!.protections[0]!.mode =
+      "advantage";
+    expect(() =>
+      decodeUnitRecordSync(protectionWithAdvantageOnIncomingAttacks),
+    ).toThrow();
+
+    const wardInActivation = structuredClone(protectionFromEvilAndGoodInput);
+    Object.assign(
+      wardInActivation.mechanics.phases[0]!.effects[0]!,
+      dispelEvilAndGoodInput.mechanics.operations[0]!.effect,
+    );
+    expect(() => decodeUnitRecordSync(wardInActivation)).toThrow();
+
+    const dispelWithNoSpecialFunctions = structuredClone(
+      dispelEvilAndGoodInput,
+    );
+    dispelWithNoSpecialFunctions.mechanics.operations[0]!.effect.specialFunctions =
+      [];
+    expect(() => decodeUnitRecordSync(dispelWithNoSpecialFunctions)).toThrow();
+
+    const dispelWithDuplicateSpecialFunctions = structuredClone(
+      dispelEvilAndGoodInput,
+    );
+    dispelWithDuplicateSpecialFunctions.mechanics.operations[0]!.effect.specialFunctions.push(
+      dispelWithDuplicateSpecialFunctions.mechanics.operations[0]!.effect
+        .specialFunctions[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(dispelWithDuplicateSpecialFunctions),
+    ).toThrow();
+
+    const dispelWithWrongHomePlaneOverride = structuredClone(
+      dispelEvilAndGoodInput,
+    );
+    const dismissal =
+      dispelWithWrongHomePlaneOverride.mechanics.operations[0]!.effect
+        .specialFunctions[1];
+    if (dismissal?.save === undefined) {
+      throw new Error("decoded Dismissal fixture changed shape");
+    }
+    dismissal.save.onFailure.creatureTypeDestinationOverrides[0]!.destination =
+      "feywild";
+    expect(() =>
+      decodeUnitRecordSync(dispelWithWrongHomePlaneOverride),
+    ).toThrow();
+  });
+
   test("traces optional effect-label facts in both domain states", () => {
     const effects = [
       { kind: "scale_attack_count", additional: 1 },
