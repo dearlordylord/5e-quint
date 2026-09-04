@@ -25,7 +25,7 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingConcurrentEffectLimitPath,
   spellOngoingInitialPhasePath,
   spellOngoingModeChoicePath,
@@ -121,12 +121,12 @@ describe("spell mechanics paths", () => {
       [spellOngoingAttachmentPath(), "recordMechanics/effect:1"],
       [spellOngoingConcurrentEffectLimitPath(), "recordMechanics/resource"],
       [
-        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
-        "recordMechanics/effect:2",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
+        "recordMechanics/generalFact:8",
       ],
       [
-        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(2)),
-        "recordMechanics/effect:3",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(2)),
+        "recordMechanics/generalFact:9",
       ],
       [spellOngoingInitialPhasePath(), "recordMechanics/action"],
       [spellOngoingModeChoicePath(), "recordMechanics/procedure:1"],
@@ -141,11 +141,11 @@ describe("spell mechanics paths", () => {
     ]);
   });
 
-  test("keeps ongoing attachment and conditional-effect coordinates distinct", () => {
+  test("keeps ongoing attachment and conditional-mechanic coordinates distinct", () => {
     const coordinates = [
       spellOngoingAttachmentPath(),
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(2)),
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(2)),
     ].map(coordinate);
 
     expect(new Set(coordinates).size).toBe(coordinates.length);

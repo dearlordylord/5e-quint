@@ -1,6 +1,6 @@
 import type {
   Attachment,
-  AuthoredConditionalEffect,
+  AuthoredConditionalMechanic,
   MarkTransfer,
   OngoingActionCost,
   OngoingEffectMechanics,
@@ -40,30 +40,34 @@ import {
   traceTargetCountScaling,
 } from "./tracer-scaling.ts";
 
-const authoredConditionalEffectByKind = Match.discriminator("kind");
+const authoredConditionalMechanicByKind = Match.discriminator("kind");
 
-function describeAuthoredConditionalEffect(
-  effect: AuthoredConditionalEffect,
-): string {
-  return Match.value(effect).pipe(
-    authoredConditionalEffectByKind(
-      "phantasm_damage",
-      (effect) =>
-        `${effect.source}\n${effect.choice}\n${effect.timing}\n` +
-        `${effect.eligibility.kind} (${effect.eligibility.feet} ft)\n` +
-        `${describeDiceAmount(effect.amount)} ${effect.damageType} damage\n` +
-        `perceived as: ${effect.perceivedAs}`,
-    ),
-    authoredConditionalEffectByKind(
+function authoredConditionalMechanicTraceNode(
+  mechanic: AuthoredConditionalMechanic,
+): Pick<TraceNode, "category" | "label"> {
+  return Match.value(mechanic).pipe(
+    authoredConditionalMechanicByKind("phantasm_damage", (mechanic) => ({
+      category: "effect",
+      label:
+        `${mechanic.source}\n${mechanic.choice}\n${mechanic.timing}\n` +
+        `${mechanic.eligibility.kind} (${mechanic.eligibility.feet} ft)\n` +
+        `${describeDiceAmount(mechanic.amount)} ${mechanic.damageType} damage\n` +
+        `perceived as: ${mechanic.perceivedAs}\n(non-executable)`,
+    })),
+    authoredConditionalMechanicByKind(
       "camouflaged_area_recognition",
-      (effect) =>
-        `camouflage: ${effect.camouflage}\n` +
-        `eligible: ${effect.eligibility.kind}\n` +
-        `${effect.attempt.action} action\n` +
-        `${describeAbilityCheck(effect.attempt.check.ability)} ` +
-        `(${effect.attempt.check.skillOptions.join(" or ")}) vs ` +
-        `${describeDc(effect.attempt.check.dc)}\n` +
-        `recognizes: ${effect.recognition}\n${effect.timing}`,
+      (mechanic) => ({
+        category: "resolution",
+        label:
+          `camouflage: ${mechanic.camouflage}\n` +
+          `eligible: ${mechanic.eligibility.kind}\n` +
+          `${mechanic.attempt.action} action\n` +
+          `${describeAbilityCheck(mechanic.attempt.check.ability)} ` +
+          `(${mechanic.attempt.check.skillOptions.join(" or ")}) vs ` +
+          `${describeDc(mechanic.attempt.check.dc)}\n` +
+          `on success: ${mechanic.attempt.check.onSuccess.kind}\n` +
+          `${mechanic.attempt.check.onSuccess.timing}\n(table-owned)`,
+      }),
     ),
     Match.exhaustive,
   );
@@ -106,17 +110,16 @@ export function traceOngoingEffect(
     );
   }
 
-  for (const effect of m.authoredConditionalEffects ?? []) {
-    const effectId = ids("authored");
+  for (const mechanic of m.authoredConditionalMechanics ?? []) {
+    const mechanicId = ids("authored");
+    const tracedMechanic = authoredConditionalMechanicTraceNode(mechanic);
     nodes.push({
-      id: effectId,
-      category: "effect",
-      atomKind: "authored_conditional_effect",
-      label:
-        `authored_conditional_effect\n${describeAuthoredConditionalEffect(effect)}\n` +
-        `(non-executable)\n(table-owned)`,
+      id: mechanicId,
+      category: tracedMechanic.category,
+      atomKind: "authored_conditional_mechanic",
+      label: `authored_conditional_mechanic\n${tracedMechanic.label}`,
     });
-    edges.push({ from: ctx.procId, to: effectId, relation: "documents" });
+    edges.push({ from: ctx.procId, to: mechanicId, relation: "documents" });
   }
 }
 

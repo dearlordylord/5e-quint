@@ -65,7 +65,7 @@ let spikeGrowth =
                         }
                 }
               ]
-          , authoredConditionalEffects =
+          , authoredConditionalMechanics =
               Some
                 [ { kind = "camouflaged_area_recognition"
                   , camouflage = "looks_natural"
@@ -77,10 +77,12 @@ let spikeGrowth =
                           { ability = "wis"
                           , skillOptions = [ "perception", "survival" ]
                           , dc = { kind = "caster_spell_save_dc" }
+                          , onSuccess =
+                              { kind = "recognize_hazardous_terrain"
+                              , timing = "before_entering_area"
+                              }
                           }
                       }
-                  , recognition = "terrain_as_hazardous"
-                  , timing = "before_entering_area"
                   }
                 ]
           }

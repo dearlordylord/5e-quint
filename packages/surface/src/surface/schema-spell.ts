@@ -4832,6 +4832,23 @@ const AuthoredPhantasmDamageSchema = strictStruct({
   perceivedAs: Schema.Literal("illusion_appropriate"),
 });
 
+const DuplicateFreeSkillCollectionSchema = Schema.NonEmptyArray(
+  SkillSchema,
+).pipe(
+  Schema.check(
+    Schema.makeFilter(distinctSkills, {
+      message: "Skill collections must not contain duplicate skills.",
+      toJsonSchema: () => ({ uniqueItems: true }),
+    }),
+  ),
+  Schema.brand("DuplicateFreeSkillCollection"),
+);
+
+const CAMOUFLAGED_AREA_RECOGNITION_SKILLS = [
+  "perception",
+  "survival",
+] as const satisfies ReadonlyNonEmptyArray<Skill>;
+
 const AuthoredCamouflagedAreaRecognitionSchema = strictStruct({
   kind: Schema.Literal("camouflaged_area_recognition"),
   camouflage: Schema.Literal("looks_natural"),
@@ -4842,18 +4859,36 @@ const AuthoredCamouflagedAreaRecognitionSchema = strictStruct({
     action: Schema.Literal("search"),
     check: strictStruct({
       ability: Schema.Literal("wis"),
-      skillOptions: Schema.Tuple([
-        Schema.Literal("perception"),
-        Schema.Literal("survival"),
-      ]),
+      skillOptions: DuplicateFreeSkillCollectionSchema.pipe(
+        Schema.check(
+          Schema.makeFilter(
+            (skills) =>
+              sameStringSet(skills, CAMOUFLAGED_AREA_RECOGNITION_SKILLS),
+            {
+              message:
+                "Camouflaged-area recognition requires Perception or Survival.",
+              toJsonSchema: () => ({
+                minItems: 2,
+                maxItems: 2,
+                allOf: [
+                  { contains: { const: "perception" } },
+                  { contains: { const: "survival" } },
+                ],
+              }),
+            },
+          ),
+        ),
+      ),
       dc: strictStruct({ kind: Schema.Literal("caster_spell_save_dc") }),
+      onSuccess: strictStruct({
+        kind: Schema.Literal("recognize_hazardous_terrain"),
+        timing: Schema.Literal("before_entering_area"),
+      }),
     }),
   }),
-  recognition: Schema.Literal("terrain_as_hazardous"),
-  timing: Schema.Literal("before_entering_area"),
 });
 
-export const AuthoredConditionalEffectSchema = Schema.Union([
+export const AuthoredConditionalMechanicSchema = Schema.Union([
   AuthoredPhantasmDamageSchema,
   AuthoredCamouflagedAreaRecognitionSchema,
 ]);
@@ -4879,8 +4914,8 @@ export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
       attachment: AttachmentSchema,
       initialPhase: optionalExact(ActivationPhaseSchema),
       operations: nonEmpty(OngoingOperationSchema),
-      authoredConditionalEffects: optionalExact(
-        nonEmpty(AuthoredConditionalEffectSchema),
+      authoredConditionalMechanics: optionalExact(
+        nonEmpty(AuthoredConditionalMechanicSchema),
       ),
     }).fields,
   ),

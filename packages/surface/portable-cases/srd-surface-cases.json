@@ -24635,7 +24635,7 @@
                   }
                 }
               ],
-              "authoredConditionalEffects": [
+              "authoredConditionalMechanics": [
                 {
                   "kind": "phantasm_damage",
                   "source": "dangerous_creature_or_hazard",
@@ -30708,7 +30708,7 @@
                   }
                 }
               ],
-              "authoredConditionalEffects": [
+              "authoredConditionalMechanics": [
                 {
                   "kind": "camouflaged_area_recognition",
                   "camouflage": "looks_natural",
@@ -30725,11 +30725,13 @@
                       ],
                       "dc": {
                         "kind": "caster_spell_save_dc"
+                      },
+                      "onSuccess": {
+                        "kind": "recognize_hazardous_terrain",
+                        "timing": "before_entering_area"
                       }
                     }
-                  },
-                  "recognition": "terrain_as_hazardous",
-                  "timing": "before_entering_area"
+                  }
                 }
               ]
             },

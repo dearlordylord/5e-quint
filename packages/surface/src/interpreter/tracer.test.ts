@@ -1289,33 +1289,35 @@ describe("Surface trace interpreter", () => {
 
   test("preserves Phantasmal Force authored conditional damage in the trace", () => {
     const trace = traceUnit(decodeUnitRecordSync(phantasmalForceInput));
-    const authoredConditionalEffect = trace.nodes.find(
-      (node) => node.atomKind === "authored_conditional_effect",
+    const authoredConditionalMechanic = trace.nodes.find(
+      (node) => node.atomKind === "authored_conditional_mechanic",
     );
 
-    expect(authoredConditionalEffect?.label).toContain("2d8 psychic damage");
-    expect(authoredConditionalEffect?.label).toContain("(non-executable)");
+    expect(authoredConditionalMechanic?.label).toContain("2d8 psychic damage");
+    expect(authoredConditionalMechanic?.label).toContain("(non-executable)");
+    expect(authoredConditionalMechanic?.label).not.toContain("(table-owned)");
+    expect(authoredConditionalMechanic?.category).toBe("effect");
   });
 
   test("preserves camouflaged-area recognition as table-owned trace evidence", () => {
     const trace = traceUnit(decodeUnitRecordSync(spikeGrowthInput));
-    const authoredConditionalEffect = trace.nodes.find(
-      (node) => node.atomKind === "authored_conditional_effect",
+    const authoredConditionalMechanic = trace.nodes.find(
+      (node) => node.atomKind === "authored_conditional_mechanic",
     );
 
-    expect(authoredConditionalEffect?.label).toBe(
+    expect(authoredConditionalMechanic?.label).toBe(
       [
-        "authored_conditional_effect",
+        "authored_conditional_mechanic",
         "camouflage: looks_natural",
         "eligible: unable_to_see_area_when_spell_cast",
         "search action",
         "WIS (perception or survival) vs caster spell save DC",
-        "recognizes: terrain_as_hazardous",
+        "on success: recognize_hazardous_terrain",
         "before_entering_area",
-        "(non-executable)",
         "(table-owned)",
       ].join("\n"),
     );
+    expect(authoredConditionalMechanic?.category).toBe("resolution");
   });
 
   test("renders Flame Blade held-object lifecycle and active blade gates", () => {
