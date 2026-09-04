@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `2bd514943`
+  `7cede904b5c177a9d69a22f13541e902f0c1ffb4`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -38,7 +38,7 @@ This section is the sole mutable handoff for a new session.
   `7e37645a92a9cde80e824bf23969ae6b645203ce`; the cumulative Surface
   publication delta is classified and certified by
   `73921983ca794c3584b300ae4f2feb27a4347af1`, with Standards review repairs at
-  `2bd514943` and zero Spec findings.
+  `2bd514943` and `7cede904b`; Spec review had zero findings.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -77,11 +77,13 @@ This section is the sole mutable handoff for a new session.
   64/64. The deeper delta-verifier suite passed 42/48 before exposing six stale
   schema fixture coordinates; after repairing all eight affected coordinate
   cases, their focused rerun passed 8/8. ESLint, Prettier, and diff checks
-  passed. Standards review's two P2 findings were repaired at `2bd514943`: the
-  eight fixture mutations now use unique semantic/discriminant locators that
-  follow local Speed-union references, and the rationale leaves volatile
-  counts and digests to the executable certificate. Spec review had zero
-  findings. No broad/full or QNT/MBT pass is claimed.
+  passed. The Standards rationale repair at `2bd514943` leaves volatile counts
+  and digests to the executable certificate. The final locator repair at
+  `7cede904b` makes every changed fixture mutation use unique
+  semantic/discriminant evidence, follows local Speed-union references, and
+  removes all numbered generated definition names; its two affected negative
+  cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
+  is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
   current audit retains 20 legacy `admit:` declarations producing 59 fan-out
   diagnostics. The active `persistentArmorEffect` lane owns one declaration
@@ -211,7 +213,7 @@ explicitly abandoned.
 
 | Checkpoint/unit  | Ticket/slice                                    | Owner              | Worktree/branch                                                                                              | Base SHA    | Write lease                                                                                                                                                                                      | State  |
 | ---------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| `SR-04G`         | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                | `dd1350f81` | Integration certification-review checkpoint `2bd514943`; C2, B3, A4, B4, and A5 integrated; cumulative Surface publication delta certified; remaining top-level profile migration is in progress | Active |
+| `SR-04G`         | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                | `dd1350f81` | Integration certification-review checkpoint `7cede904b`; C2, B3, A4, B4, and A5 integrated; cumulative Surface publication delta certified; remaining top-level profile migration is in progress | Active |
 | `SR-04G/profile` | #474 `persistentArmorEffect` profile migration  | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-persistent-armor`; `work/sr04g-persistent-armor` | `e0ce7ea6`  | One legacy top-level `admit:` declaration and its one catalog root                                                                                                                               | Active |
 
 ## Landing discipline
