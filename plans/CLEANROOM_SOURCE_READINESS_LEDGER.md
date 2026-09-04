@@ -24,13 +24,16 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration implementation checkpoint
-  `c8de3e14638c0503a3c546291882a80e10109b15`
+  `f11d07e2248cb5f685a7a72bf1b2bd0557857dba`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
   `83f568febf6aed7b77e73198ed7aac1036b45731`; A4 attack/direct/reaction
   admission reviewed tip `83a5b71b1e623ff5e4c87ad992735775b7250ec2`
-  is integrated by `527b59b01cca6f133ba6d47e64f4cb4217a42d6f`.
+  is integrated by `527b59b01cca6f133ba6d47e64f4cb4217a42d6f`;
+  B4 teleport/interdiction/roll-mode admission reviewed tip
+  `952da11aba37773353f02f6defc86b3b8a5c4d84` is integrated by
+  `f11d07e2248cb5f685a7a72bf1b2bd0557857dba`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -52,9 +55,13 @@ This section is the sole mutable handoff for a new session.
   passed. Surface Unit and Stat Block aggregate checks passed; the content-sync
   certificate correctly remains red for the newly changed Hunter's Mark source
   until the landing-unit publication delta is classified and certified.
-- Next action: assign the remaining profile batches from this combined A4/B3
-  checkpoint, then classify and certify the cumulative Surface publication
-  delta before composite convergence.
+- B4 evidence: Standards and Spec/RAW review axes converged with no findings at
+  `952da11ab`; integrated B4 admission tests passed 17/17 and Surface path tests
+  passed 6/6. Scoped ESLint, Prettier, and diff checks passed. Battle package
+  diagnostics retain the documented incomplete-frontier profile/registry
+  errors, so no Battle typecheck or broader registry/runtime pass is claimed.
+- Next action: integrate the active A5 profile lane, then classify and certify
+  the cumulative Surface publication delta before composite convergence.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -174,11 +181,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                  | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration implementation checkpoint `c8de3e146`; C2, B3, and A4 integrated; remaining profile migration, publication-delta certification, focused verification, and convergence remain in progress                                                                                                                                                                                                         | Active |
-| `SR-04G-A5`     | #474 contact/weapon profile migration           | Codex A5 lane      | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a5`; `work/sr04g-a5`              | `c8de3e146` | `objectContactDamage` plus its repeat-composition declaration (Heat Metal), `weaponAttackOverride` (Shillelagh), and `weaponDamageRider` (Divine Favor): 4 declarations / 3 catalog roots. Owns profile, admission, tests, and minimal central admission registration only; Surface publication and generated artifacts remain integration-owned.                                                            | Active |
-| `SR-04G-B4`     | #474 teleport/interdiction/roll-mode migration  | Codex B4 lane      | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-b4`; `work/sr04g-b4`              | `c8de3e146` | `selfTeleport` (Misty Step, complete), `targetingSaveInterdiction` (Sanctuary, complete), and `temporaryAbilityCheckRollMode` (Thaumaturgy, partial because the tracer currently exposes one collective modal-choice node): 3 declarations / 3 roots. Owns profile, admission, tests, and minimal central admission registration only; Surface publication and generated artifacts remain integration-owned. | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                       | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration implementation checkpoint `f11d07e22`; C2, B3, A4, and B4 integrated; remaining A5 profile migration, publication-delta certification, focused verification, and convergence remain in progress                                                                                                                                       | Active |
+| `SR-04G-A5`     | #474 contact/weapon profile migration           | Codex A5 lane      | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a5`; `work/sr04g-a5`              | `c8de3e146` | `objectContactDamage` plus its repeat-composition declaration (Heat Metal), `weaponAttackOverride` (Shillelagh), and `weaponDamageRider` (Divine Favor): 4 declarations / 3 catalog roots. Owns profile, admission, tests, and minimal central admission registration only; Surface publication and generated artifacts remain integration-owned. | Active |
 
 ## Landing discipline
 
