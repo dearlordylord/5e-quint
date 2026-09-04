@@ -219,9 +219,11 @@ This section is the sole mutable handoff for a new session.
   smallest coherent single-profile slice: `compelled-next-turn-behavior.ts`
   with its existing focused
   `unit-profile-admission-command-control-options.test.ts` owner, based on
-  `d07e59f5c`; no W8 branch or worktree exists yet. Shared registry/state or
-  coverage-map edits require an explicit lease expansion, and no QNT/MBT run
-  is authorized unless implementation changes semantics.
+  `faf3c96e2`. The clean W8 worktree is
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-compelled-next-turn-behavior`
+  on `work/sr04g-compelled-next-turn-behavior`. Shared registry/state or
+  coverage-map edits require an explicit lease expansion, and no QNT/MBT run is
+  authorized unless implementation changes semantics.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -356,10 +358,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                   | State   |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `d07e59f5c`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, and movement-distance area damage integrated; cumulative Surface publication delta certified; 12 top-level profile migrations remain | Active  |
-| `SR-04G/W8`     | compelled-next-turn-behavior profile admission  | Unassigned         | Not created                                                                                   | `d07e59f5c` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts`; `packages/battle-runtime/src/unit-profile-admission-command-control-options.test.ts`; shared registry/state changes require explicit lease expansion                                                                                   | Planned |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                                                      | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                   | State  |
+| --------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                        | `dd1350f81` | Integration checkpoint `d07e59f5c`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, and movement-distance area damage integrated; cumulative Surface publication delta certified; 12 top-level profile migrations remain | Active |
+| `SR-04G/W8`     | compelled-next-turn-behavior profile admission  | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-compelled-next-turn-behavior`; `work/sr04g-compelled-next-turn-behavior` | `faf3c96e2` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts`; `packages/battle-runtime/src/unit-profile-admission-command-control-options.test.ts`; shared registry/state changes require explicit lease expansion                                                                                   | Active |
 
 ## Landing discipline
 
