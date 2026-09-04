@@ -121,19 +121,6 @@ export function boundTargetingSaveInterdictionEffect(
 
 export type BoundGrantedAreaSaveDamageActionEffect =
   EffectOf<"grantedAreaSaveDamageAction"> & {
-    readonly castLevel: GrantedAreaSaveDamageActionSpellProcedureExecution["resource"] extends infer Resource
-      ? Resource extends {
-          readonly tag: "spellSlot";
-          readonly slotLevel: infer Level;
-        }
-        ? Level
-        : Resource extends {
-              readonly tag: "spellAccessFreeCast";
-              readonly castLevel: infer Level;
-            }
-          ? Level
-          : never
-      : never;
     readonly save: Pick<
       GrantedAreaSaveDamageActionSpellProcedureExecution,
       "ability" | "dc"
@@ -151,10 +138,6 @@ export function boundGrantedAreaSaveDamageActionEffect(
   return facts?.procedure === "grantedAreaSaveDamageAction"
     ? {
         ...effect,
-        castLevel:
-          facts.resource.tag === "spellSlot"
-            ? facts.resource.slotLevel
-            : facts.resource.castLevel,
         save: { ability: facts.ability, dc: facts.dc },
         coneLengthFeet: facts.coneLengthFeet,
         damageDice: facts.damageDice,

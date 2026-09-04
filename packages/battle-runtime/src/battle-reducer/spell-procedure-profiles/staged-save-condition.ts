@@ -53,6 +53,12 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { spellTargetListHole } from "../spells-holes-fills.ts";
+import {
+  SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS,
+  SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS,
+  SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES,
+  SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES,
+} from "../domain-constants.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   saveGateTargetCountFactsFromSelection,
@@ -92,11 +98,13 @@ type SaveGatedConditionWithRepeatSpellInvocation = Extract<
 >;
 
 type SaveGatedConditionWithRepeatMechanicsFacts = SpellDefinitionRuleFacts & {
-  readonly ability: "wis";
+  readonly ability: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.ability;
   readonly dc: SaveGatedConditionWithRepeatSpellInvocation["dc"];
   readonly targeting: Extract<
     SaveGateConditionTargetingFacts,
-    { readonly kind: "targetList" }
+    {
+      readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.kind;
+    }
   >;
   readonly rangeFeet: MovementFeet;
   readonly durationTicks: ElapsedTimeTicks;
@@ -104,13 +112,6 @@ type SaveGatedConditionWithRepeatMechanicsFacts = SpellDefinitionRuleFacts & {
 
 type SaveGatedConditionWithRepeatResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedConditionWithRepeatSpellInvocation>;
-
-const HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING = {
-  base: 1,
-  baseLevel: 1,
-  perSlotAboveBase: 1,
-} as const;
-const HIDEOUS_LAUGHTER_TARGET_KINDS = ["creature"] as const;
 
 type SaveGatedConditionWithRepeatFailedFact =
   | "level"
@@ -181,37 +182,64 @@ function saveGatedConditionWithRepeatIssue(
   };
 }
 
-type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+type SaveGatePhase = Extract<
+  ActivationPhase,
+  {
+    readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind;
+  }
+>;
 
 function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
-  if (phase.kind !== "save_gate") return false;
+  if (
+    phase.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
+  ) {
+    return false;
+  }
   const attachmentValue =
     phase.attachment.kind === "hole" ? phase.attachment.value : null;
   const selection =
     attachmentValue?.kind === "target" ? attachmentValue.selection : null;
   const targetScalingWitness =
-    selection?.mode === "choose_up_to" &&
+    selection?.mode ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.mode &&
     typeof selection.count === "object" &&
-    selection.count.kind === "linear" &&
-    selection.count.base === HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING.base &&
+    selection.count.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count.kind &&
+    selection.count.base ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count.base &&
     selection.count.baseLevel ===
-      HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING.baseLevel &&
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count
+        .baseLevel &&
     selection.count.perSlotAboveBase ===
-      HIDEOUS_LAUGHTER_TARGET_COUNT_SCALING.perSlotAboveBase &&
-    selection.targetKinds?.length === HIDEOUS_LAUGHTER_TARGET_KINDS.length &&
-    selection.targetKinds[0] === HIDEOUS_LAUGHTER_TARGET_KINDS[0];
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count
+        .perSlotAboveBase &&
+    selection.targetKinds?.length ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds
+        .length &&
+    selection.targetKinds[0] ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds[0];
   const endTurnRepeatWitness =
     phase.repeatSaves?.some(
       (repeatSave) =>
-        repeatSave.cadence === "end_of_target_turn" &&
-        repeatSave.onSuccess === "ends_on_target",
+        repeatSave.cadence ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats
+            .endOfTurn.cadence &&
+        repeatSave.onSuccess ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats
+            .endOfTurn.onSuccess,
     ) === true;
   const damageRepeatWitness =
     phase.repeatSaves?.some(
       (repeatSave) =>
-        repeatSave.cadence === "on_target_takes_damage" &&
-        repeatSave.rollMode === "advantage" &&
-        repeatSave.onSuccess === "ends_on_target",
+        repeatSave.cadence ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
+            .cadence &&
+        repeatSave.rollMode ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
+            .rollMode &&
+        repeatSave.onSuccess ===
+          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
+            .onSuccess,
     ) === true;
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
@@ -227,20 +255,27 @@ function isHideousLaughterDuration(
   duration: SpellMechanics["duration"],
 ): duration is Extract<
   SpellMechanics["duration"],
-  { readonly kind: "concentration" }
+  {
+    readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.kind;
+  }
 > & {
   readonly upTo: Extract<
     SpellMechanics["duration"],
-    { readonly kind: "concentration" }
+    {
+      readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.kind;
+    }
   >["upTo"] & {
     readonly amount: PositiveInteger;
   };
 } {
   return (
-    duration.kind === "concentration" &&
+    duration.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.kind &&
     isSpellCanonicalDurationValue(duration.upTo) &&
-    duration.upTo.unit === "minute" &&
-    duration.upTo.amount === 1
+    duration.upTo.unit ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.unit &&
+    duration.upTo.amount ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.amount
   );
 }
 
@@ -249,7 +284,10 @@ function hideousLaughterDurationIssues(
 ): SaveGatedConditionWithRepeatMechanicsIssue[] {
   const issues: SaveGatedConditionWithRepeatMechanicsIssue[] = [];
   const duration = mechanics.duration;
-  if (duration.kind !== "concentration") {
+  if (
+    duration.kind !==
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.kind
+  ) {
     issues.push(
       saveGatedConditionWithRepeatIssue(
         "duration",
@@ -261,8 +299,10 @@ function hideousLaughterDurationIssues(
   if (
     !isHideousLaughterDuration(duration) ||
     !isSpellCanonicalDurationValue(duration.upTo) ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== 1
+    duration.upTo.unit !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.unit ||
+    duration.upTo.amount !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.amount
   ) {
     issues.push(
       saveGatedConditionWithRepeatIssue(
@@ -283,29 +323,51 @@ function hideousLaughterDurationIssues(
 }
 
 type HideousLaughterFailureRoleEffect =
-  | Extract<EffectAtom, { readonly kind: "apply_condition" }>
-  | Extract<EffectAtom, { readonly kind: "suppress_condition_self_end" }>;
+  | Extract<
+      EffectAtom,
+      {
+        readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.kind;
+      }
+    >
+  | Extract<
+      EffectAtom,
+      {
+        readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.suppressProne.kind;
+      }
+    >;
 
 function hideousLaughterFailureRoleEffect(
   effect: EffectAtom,
 ): HideousLaughterFailureRoleEffect | undefined {
   if (
-    effect.kind === "apply_condition" &&
-    effect.condition === "prone" &&
+    effect.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone
+        .kind &&
+    effect.condition ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone
+        .condition &&
     spellHasOnlyNamedFields(effect, ["kind", "condition"])
   ) {
     return effect;
   }
   if (
-    effect.kind === "apply_condition" &&
-    effect.condition === "incapacitated" &&
+    effect.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
+        .incapacitated.kind &&
+    effect.condition ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
+        .incapacitated.condition &&
     spellHasOnlyNamedFields(effect, ["kind", "condition"])
   ) {
     return effect;
   }
   if (
-    effect.kind === "suppress_condition_self_end" &&
-    effect.condition === "prone" &&
+    effect.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
+        .suppressProne.kind &&
+    effect.condition ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
+        .suppressProne.condition &&
     spellHasOnlyNamedFields(effect, ["kind", "condition"])
   ) {
     return effect;
@@ -315,18 +377,28 @@ function hideousLaughterFailureRoleEffect(
 
 function hideousLaughterFailureRole(
   effect: EffectAtom,
-): "prone" | "incapacitated" | "suppressProne" | null {
+): (typeof SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES)[number] | null {
   const roleEffect = hideousLaughterFailureRoleEffect(effect);
   if (roleEffect === undefined) return null;
   return Match.value(roleEffect).pipe(
-    Match.when({ kind: "apply_condition" }, (value) =>
-      value.condition === "prone"
-        ? ("prone" as const)
-        : ("incapacitated" as const),
+    Match.when(
+      {
+        kind: SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase
+          .failureEffects.prone.kind,
+      },
+      (value) =>
+        value.condition ===
+        SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
+          .prone.condition
+          ? SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES[0]
+          : SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES[1],
     ),
     Match.when(
-      { kind: "suppress_condition_self_end" },
-      () => "suppressProne" as const,
+      {
+        kind: SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase
+          .failureEffects.suppressProne.kind,
+      },
+      () => SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES[2],
     ),
     Match.exhaustive,
   );
@@ -334,30 +406,40 @@ function hideousLaughterFailureRole(
 
 function hideousLaughterRepeatRole(
   repeatSave: NonNullable<SaveGatePhase["repeatSaves"]>[number],
-): "endOfTurn" | "onDamage" | null {
+): (typeof SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES)[number] | null {
   if (
-    repeatSave.cadence === "end_of_target_turn" &&
+    repeatSave.cadence ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.endOfTurn
+        .cadence &&
     repeatSave.rollMode === undefined &&
-    repeatSave.onSuccess === "ends_on_target" &&
+    repeatSave.onSuccess ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.endOfTurn
+        .onSuccess &&
     repeatSave.onFailAgain === undefined &&
     repeatSave.successesRequired === undefined &&
     repeatSave.failuresRequired === undefined &&
     repeatSave.onFailureThreshold === undefined &&
     spellHasOnlyNamedFields(repeatSave, ["cadence", "onSuccess"])
   ) {
-    return "endOfTurn";
+    return SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES[0];
   }
   if (
-    repeatSave.cadence === "on_target_takes_damage" &&
-    repeatSave.rollMode === "advantage" &&
-    repeatSave.onSuccess === "ends_on_target" &&
+    repeatSave.cadence ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
+        .cadence &&
+    repeatSave.rollMode ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
+        .rollMode &&
+    repeatSave.onSuccess ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
+        .onSuccess &&
     repeatSave.onFailAgain === undefined &&
     repeatSave.successesRequired === undefined &&
     repeatSave.failuresRequired === undefined &&
     repeatSave.onFailureThreshold === undefined &&
     spellHasOnlyNamedFields(repeatSave, ["cadence", "rollMode", "onSuccess"])
   ) {
-    return "onDamage";
+    return SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES[1];
   }
   return null;
 }
@@ -366,7 +448,11 @@ function saveGatedConditionWithRepeatMechanicsEvidence(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   phase: SaveGatePhase,
 ): SpellProcedureMechanicsEvidence {
-  const effects = phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  const effects =
+    phase.onFail.kind ===
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureKind
+      ? phase.onFail.effects
+      : [];
   const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
     spellMechanicsHeaderPath("level"),
     spellMechanicsHeaderPath("school"),
@@ -404,7 +490,8 @@ function saveGatedConditionWithRepeatInvocationsFromFacts(
               resource: spellInvocationResourceForCastOption(slot),
               procedure: "saveGatedConditionWithRepeat",
               spell,
-              actionCost: "magicAction",
+              actionCost:
+                SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.actionCost,
               ability: facts.ability,
               dc: facts.dc,
               targeting: saveGatedConditionTargetingFromFacts(
@@ -433,7 +520,11 @@ function admitSaveGatedConditionWithRepeatMechanics(
   const phaseIndex = mechanics.phases.findIndex(hideousLaughterRootPhase);
   if (phaseIndex < 0) return { tag: "notRepresented" };
   const phase = mechanics.phases[phaseIndex];
-  if (phase?.kind !== "save_gate") return { tag: "notRepresented" };
+  if (
+    phase?.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
+  ) {
+    return { tag: "notRepresented" };
+  }
   const issues: SaveGatedConditionWithRepeatMechanicsIssue[] = [];
   const push = (
     failedFact: SaveGatedConditionWithRepeatFailedFact,
@@ -441,16 +532,23 @@ function admitSaveGatedConditionWithRepeatMechanics(
   ): void => {
     issues.push(saveGatedConditionWithRepeatIssue(failedFact, path));
   };
-  if (mechanics.level !== 1) push("level", spellMechanicsHeaderPath("level"));
   if (
-    mechanics.castingTime.kind !== "action" ||
+    mechanics.level !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.level
+  ) {
+    push("level", spellMechanicsHeaderPath("level"));
+  }
+  if (
+    mechanics.castingTime.kind !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.castingTimeKind ||
     !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
   ) {
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
   if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 30 ||
+    mechanics.range.kind !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind ||
+    mechanics.range.feet !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.feet ||
     !spellHasOnlyNamedFields(mechanics.range, ["kind", "feet"])
   ) {
     push("range", spellMechanicsHeaderPath("range"));
@@ -502,14 +600,18 @@ function admitSaveGatedConditionWithRepeatMechanics(
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
-  if (phase.ability !== "wis") {
+  if (
+    phase.ability !==
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.ability
+  ) {
     push(
       "phaseAbility",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
   }
   if (
-    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.dc.kind !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.dcKind ||
     !spellHasOnlyNamedFields(phase.dc, ["kind"])
   ) {
     push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
@@ -532,9 +634,14 @@ function admitSaveGatedConditionWithRepeatMechanics(
         );
   const targetSupported =
     targetSelection !== undefined &&
-    targetSelection.mode === "choose_up_to" &&
-    targetSelection.targetKinds?.length === 1 &&
-    targetSelection.targetKinds[0] === "creature" &&
+    targetSelection.mode ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.mode &&
+    targetSelection.targetKinds?.length ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds
+        .length &&
+    targetSelection.targetKinds[0] ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting
+        .targetKinds[0] &&
     targetCountFacts !== null;
   if (!targetSupported) {
     push(
@@ -543,7 +650,8 @@ function admitSaveGatedConditionWithRepeatMechanics(
     );
   }
   if (
-    phase.onSuccess.kind !== "none" ||
+    phase.onSuccess.kind !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.successKind ||
     !spellHasOnlyNamedFields(phase.onSuccess, ["kind"])
   ) {
     push(
@@ -552,9 +660,13 @@ function admitSaveGatedConditionWithRepeatMechanics(
     );
   }
   const failureEffects =
-    phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+    phase.onFail.kind ===
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureKind
+      ? phase.onFail.effects
+      : [];
   if (
-    phase.onFail.kind !== "composite" ||
+    phase.onFail.kind !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureKind ||
     !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
   ) {
     push(
@@ -577,9 +689,9 @@ function admitSaveGatedConditionWithRepeatMechanics(
         roles.add(role);
       }
     }
-    const missingRoles = (
-      ["prone", "incapacitated", "suppressProne"] as const
-    ).filter((role) => !roles.has(role));
+    const missingRoles = SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES.filter(
+      (role) => !roles.has(role),
+    );
     if (missingRoles.length > 0) {
       push(
         "missingFailureEffect",
@@ -603,9 +715,10 @@ function admitSaveGatedConditionWithRepeatMechanics(
       roles.add(role);
     }
   }
-  const missingRepeatRoles = (["endOfTurn", "onDamage"] as const).filter(
-    (role) => !roles.has(role),
-  );
+  const missingRepeatRoles =
+    SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES.filter(
+      (role) => !roles.has(role),
+    );
   if (missingRepeatRoles.length > 0) {
     push(
       "missingRepeat",
@@ -638,7 +751,8 @@ function admitSaveGatedConditionWithRepeatMechanics(
     targetAdmission.tag !== "admitted" ||
     !targetSupported ||
     targetCountFacts === null ||
-    mechanics.range.kind !== "point" ||
+    mechanics.range.kind !==
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind ||
     typeof mechanics.range.feet !== "number"
   ) {
     return {
@@ -653,10 +767,10 @@ function admitSaveGatedConditionWithRepeatMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    ability: "wis" as const,
+    ability: SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.ability,
     dc: phase.dc,
     targeting: {
-      kind: "targetList" as const,
+      kind: SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.kind,
       count: targetCountFacts,
     },
     rangeFeet: movementFeet(mechanics.range.feet),
@@ -725,13 +839,21 @@ const SaveGatedConditionWithRepeatInvocationSchema =
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedConditionWithRepeat"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      ability: Schema.Literal("wis"),
+      actionCost: Schema.Literal(
+        SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.actionCost,
+      ),
+      ability: Schema.Literal(
+        SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.ability,
+      ),
       dc: DcSourceSchema,
       durationTicks: ElapsedTimeTicksSchema,
       targeting: Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
+        kind: Schema.Literal(
+          SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.kind,
+        ),
+        minTargets: Schema.Literal(
+          SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.minTargets,
+        ),
         maxTargets: Schema.Number,
       }),
       rangeFeet: MovementFeet,

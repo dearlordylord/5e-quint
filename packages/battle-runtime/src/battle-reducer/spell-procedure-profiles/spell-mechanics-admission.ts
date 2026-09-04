@@ -398,9 +398,9 @@ const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
   "selection",
 ] as const satisfies ReadonlyArray<keyof SpellTargetAttachmentValue>;
 
-export function spellHasOnlyNamedFields<Value extends object>(
+export function spellHasOnlyNamedFields<const Value extends object>(
   value: Value,
-  allowedFields: readonly PropertyKey[],
+  allowedFields: readonly (keyof Value)[],
 ): boolean {
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
@@ -508,13 +508,13 @@ const SPELL_AREA_ATTACHMENT_FIELDS = [
   "occupantPerceptionFilter",
   "excludedAreas",
   "rangeOrigin",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
 const SPELL_AREA_HOLE_ATTACHMENT_FIELDS = [
   "kind",
   "holeId",
   "label",
   "value",
-] as const;
+] as const satisfies ReadonlyArray<keyof SpellAreaHoleAttachment>;
 
 function isSpellAreaAttachment(
   attachment: Attachment,
@@ -531,13 +531,13 @@ function isSpellAreaAttachmentValueWithAllowedFields<
 ): areaValue is SpellAreaAttachmentValueWithAllowedFields<
   AllowedAreaFields[number]
 > {
-  const allowedAreaValueFields = new Set<PropertyKey>([
+  const allowedAreaValueFields = [
     "kind",
     "shape",
     "origin",
     ...allowedAreaFields,
-  ]);
-  return spellHasOnlyNamedFields(areaValue, [...allowedAreaValueFields]);
+  ] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
+  return spellHasOnlyNamedFields(areaValue, allowedAreaValueFields);
 }
 
 function isAdmittedSpellAreaAttachmentValue<
@@ -620,7 +620,7 @@ export function admitSpellAreaAttachment<
 /** Stable issue identity: only the failed fact and its exact source path. */
 export function spellMechanicsIssueKey(issue: {
   readonly failedFact: string;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly mechanicsPath: UnitMechanicsPath;
 }): string {
   return JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
 }
@@ -629,7 +629,7 @@ export function spellMechanicsIssueKey(issue: {
 export function spellUniqueMechanicsIssues<
   Issue extends {
     readonly failedFact: string;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   },
 >(issues: readonly Issue[]): readonly Issue[] {
   const seen = new Set<string>();

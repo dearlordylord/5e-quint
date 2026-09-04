@@ -312,10 +312,10 @@ import type {
   SpawnedCompanionLifecycleExecutionFacts,
   CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
   GrantedAreaSaveDamageActionSpellProcedureExecution,
+  SaveGatedConditionWithRepeatSpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
   SaveGatedTurnConstraintFacts,
-  StagedSaveConditionAutomaticSuccessPredicates,
-  StagedSaveConditionEscapeAction,
+  StagedSaveConditionSpellProcedureExecution,
   TemporaryAbilityCheckRollModeConcurrentDurationModeLimit,
   TemporaryAbilityCheckRollModeSelectedMode,
 } from "./procedure-execution/spell-procedure-execution.ts";
@@ -2716,13 +2716,9 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "grantedAreaSaveDamageAction";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
-  readonly ability: "dex";
-  readonly targeting: {
-    readonly kind: "targetList";
-    readonly minTargets: 1;
-    readonly maxTargets: 1;
-  };
+  readonly actionCost: GrantedAreaSaveDamageActionSpellProcedureExecution["actionCost"];
+  readonly ability: GrantedAreaSaveDamageActionSpellProcedureExecution["ability"];
+  readonly targeting: GrantedAreaSaveDamageActionSpellProcedureExecution["targeting"];
   readonly activeEffect: Omit<
     BattleSpellActiveEffectTemplate<
       Extract<
@@ -3412,15 +3408,12 @@ type SupportedSpellInvocationSource =
       readonly procedure: "stagedSaveCondition";
       readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
-      readonly ability: Extract<Ability, "wis">;
+      readonly ability: StagedSaveConditionSpellProcedureExecution["ability"];
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "pointOriginSphere" }
-      >;
+      readonly targeting: StagedSaveConditionSpellProcedureExecution["targeting"];
       readonly rangeFeet: MovementFeet;
-      readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
-      readonly escapeAction: StagedSaveConditionEscapeAction;
+      readonly automaticSuccessPredicates: StagedSaveConditionSpellProcedureExecution["automaticSuccessPredicates"];
+      readonly escapeAction: StagedSaveConditionSpellProcedureExecution["escapeAction"];
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -3429,13 +3422,10 @@ type SupportedSpellInvocationSource =
       readonly rangeFeet: MovementFeet;
       readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
-      readonly actionCost: "magicAction";
-      readonly ability: Extract<Ability, "wis">;
+      readonly actionCost: SaveGatedConditionWithRepeatSpellProcedureExecution["actionCost"];
+      readonly ability: SaveGatedConditionWithRepeatSpellProcedureExecution["ability"];
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "targetList" }
-      >;
+      readonly targeting: SaveGatedConditionWithRepeatSpellProcedureExecution["targeting"];
     }
   | {
       readonly access: PreparedSpellAccess;

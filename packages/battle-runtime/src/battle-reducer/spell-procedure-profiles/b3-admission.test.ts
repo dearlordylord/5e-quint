@@ -16,7 +16,9 @@ import {
   spellDurationEndingPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -535,6 +537,72 @@ describe("SR-04G-B3 static spell procedure admission", () => {
         mechanicsSource("haste"),
       ),
     ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("roots Dragon's Breath's missing sole operation on the existing mechanics parent", () => {
+    const source = mechanicsSource("dragons_breath");
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Dragon's Breath ongoing mechanics.");
+    }
+    const mechanicsWithoutOperations = { ...source.mechanics };
+    // Exercise the defensive admission branch with a malformed boundary value;
+    // the public Surface decoder correctly makes this state unconstructable.
+    Object.defineProperty(mechanicsWithoutOperations, "operations", {
+      value: [],
+    });
+    const result = grantedAreaSaveDamageActionProfile.admitMechanics({
+      ...source,
+      mechanics: mechanicsWithoutOperations,
+    });
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellMechanicsRootPath(),
+      }),
+    );
+    expect(result.issues).not.toContainEqual(
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      }),
+    );
+  });
+
+  test("reports an authored ongoing conditional effect at its non-colliding sibling coordinate", () => {
+    const dragon = mechanicsSource("dragons_breath");
+    const conditional = mechanicsSource("phantasmal_force");
+    if (
+      dragon.mechanics.family !== "ongoing_effect" ||
+      conditional.mechanics.family !== "ongoing_effect" ||
+      conditional.mechanics.authoredConditionalEffects?.[0] === undefined
+    ) {
+      throw new Error("Expected ongoing mechanics with a conditional effect.");
+    }
+    const result = grantedAreaSaveDamageActionProfile.admitMechanics({
+      ...dragon,
+      mechanics: {
+        ...dragon.mechanics,
+        authoredConditionalEffects: [
+          conditional.mechanics.authoredConditionalEffects[0],
+        ],
+      },
+    });
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    const conditionalPath = spellOngoingAuthoredConditionalEffectPath(
+      PositiveInteger(1),
+    );
+    expect(conditionalPath).not.toEqual(spellOngoingAttachmentPath());
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: conditionalPath,
+      }),
+    );
   });
 
   test("accumulates independent Sleep header and phase failures at stable paths", () => {

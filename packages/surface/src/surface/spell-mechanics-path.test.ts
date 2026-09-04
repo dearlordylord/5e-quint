@@ -25,6 +25,7 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
@@ -116,6 +117,14 @@ describe("spell mechanics paths", () => {
         "recordMechanics/procedure:2/effect:4",
       ],
       [spellOngoingAttachmentPath(), "recordMechanics/effect:1"],
+      [
+        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
+        "recordMechanics/effect:2",
+      ],
+      [
+        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(2)),
+        "recordMechanics/effect:3",
+      ],
       [spellOngoingInitialPhasePath(), "recordMechanics/action"],
       [
         spellOngoingOperationPath(PositiveInteger(3)),
@@ -126,6 +135,16 @@ describe("spell mechanics paths", () => {
         "recordMechanics/procedure:3/effect:1",
       ],
     ]);
+  });
+
+  test("keeps ongoing attachment and conditional-effect coordinates distinct", () => {
+    const coordinates = [
+      spellOngoingAttachmentPath(),
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(2)),
+    ].map(coordinate);
+
+    expect(new Set(coordinates).size).toBe(coordinates.length);
   });
 
   test("builds templated and spawned-creature coordinates", () => {

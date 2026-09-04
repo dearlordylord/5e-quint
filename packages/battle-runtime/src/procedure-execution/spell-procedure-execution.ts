@@ -85,14 +85,17 @@ import type {
 } from "./spell-invocation-vocabulary.ts";
 import type { WeaponAttackOverrideSpellProcedureExecution } from "./weapon-attack-override.ts";
 import { Schema } from "effect";
-import type {
+import {
+  GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS,
   GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
   GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+  SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS,
   SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
   SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
   SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS,
   SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO,
+  STAGED_SAVE_CONDITION_EXECUTION_FACTS,
 } from "../battle-reducer/domain-constants.ts";
 
 type SurfaceSkill = Skill;
@@ -523,8 +526,8 @@ export type DirectHitPointRestorationSpellProcedureExecution =
 export type GrantedAreaSaveDamageActionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "bonusAction";
-    readonly ability: "dex";
+    readonly actionCost: typeof GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost;
+    readonly ability: typeof GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability;
     readonly activeEffect: Omit<
       SpellActiveEffectTemplate<"grantedAreaSaveDamageAction">,
       "damageType"
@@ -540,9 +543,9 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
-      readonly maxTargets: 1;
+      readonly kind: typeof GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting.kind;
+      readonly minTargets: typeof GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting.minTargets;
+      readonly maxTargets: typeof GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting.maxTargets;
     };
   };
 
@@ -709,17 +712,17 @@ export type HeldLightHurlSpellProcedureExecution =
 
 export type SaveGatedConditionWithRepeatSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly ability: "wis";
+    readonly ability: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.ability;
     readonly access: PreparedSpellAccess;
-    readonly actionCost: "magicAction";
+    readonly actionCost: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.actionCost;
     readonly dc: DcSource;
     readonly procedure: "saveGatedConditionWithRepeat";
     readonly rangeFeet: MovementFeet;
     readonly durationTicks: ElapsedTimeTicks;
     readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
+      readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.kind;
+      readonly minTargets: typeof SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.minTargets;
       readonly maxTargets: number;
     };
   };
@@ -1225,10 +1228,21 @@ export type TriggeredArmorDefenseSpellProcedureExecution =
 
 export const StagedSaveConditionAutomaticSuccessPredicatesSchema = Schema.Tuple(
   [
-    Schema.Struct({ kind: Schema.Literal("doesNotSleep") }),
     Schema.Struct({
-      kind: Schema.Literal("conditionImmunity"),
-      condition: Schema.Literal("exhaustion"),
+      kind: Schema.Literal(
+        STAGED_SAVE_CONDITION_EXECUTION_FACTS.automaticSuccessPredicates[0]
+          .kind,
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal(
+        STAGED_SAVE_CONDITION_EXECUTION_FACTS.automaticSuccessPredicates[1]
+          .kind,
+      ),
+      condition: Schema.Literal(
+        STAGED_SAVE_CONDITION_EXECUTION_FACTS.automaticSuccessPredicates[1]
+          .condition,
+      ),
     }),
   ],
 );
@@ -1236,17 +1250,21 @@ export type StagedSaveConditionAutomaticSuccessPredicates =
   typeof StagedSaveConditionAutomaticSuccessPredicatesSchema.Type;
 
 export const StagedSaveConditionEscapeActionSchema = Schema.Struct({
-  kind: Schema.Literal("endCurrentEffect"),
-  actor: Schema.Literal("anotherCreature"),
-  cost: Schema.Literal("action"),
-  method: Schema.Literal("shakeAwake"),
+  kind: Schema.Literal(STAGED_SAVE_CONDITION_EXECUTION_FACTS.escapeAction.kind),
+  actor: Schema.Literal(
+    STAGED_SAVE_CONDITION_EXECUTION_FACTS.escapeAction.actor,
+  ),
+  cost: Schema.Literal(STAGED_SAVE_CONDITION_EXECUTION_FACTS.escapeAction.cost),
+  method: Schema.Literal(
+    STAGED_SAVE_CONDITION_EXECUTION_FACTS.escapeAction.method,
+  ),
 });
 export type StagedSaveConditionEscapeAction =
   typeof StagedSaveConditionEscapeActionSchema.Type;
 
 export type StagedSaveConditionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly ability: "wis";
+    readonly ability: typeof STAGED_SAVE_CONDITION_EXECUTION_FACTS.ability;
     readonly access: PreparedSpellAccess;
     readonly dc: DcSource;
     readonly durationTicks: ElapsedTimeTicks;
@@ -1254,7 +1272,7 @@ export type StagedSaveConditionSpellProcedureExecution =
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
-      readonly kind: "pointOriginSphere";
+      readonly kind: typeof STAGED_SAVE_CONDITION_EXECUTION_FACTS.targeting.kind;
       readonly radiusFeet: MovementFeet;
     };
     readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;

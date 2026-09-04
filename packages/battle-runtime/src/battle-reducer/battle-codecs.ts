@@ -157,9 +157,11 @@ import {
   DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES,
   GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
   GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+  GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   SELF_TRANSFORMATION_MODE_KINDS,
+  STAGED_SAVE_CONDITION_EXECUTION_FACTS,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { BattleDamageRelationshipQuestionIdSchema } from "./damage-relationship-question-id.ts";
@@ -507,7 +509,9 @@ const BattleMovableLightPlacementValueSchema = Schema.Union([
 ]);
 
 const BattleStagedConditionAutomaticSuccessFactSchema = Schema.Struct({
-  kind: Schema.Literal("doesNotSleep"),
+  kind: Schema.Literal(
+    STAGED_SAVE_CONDITION_EXECUTION_FACTS.automaticSuccessPredicates[0].kind,
+  ),
   targetId: CombatantId,
 });
 const BattleImmediateAreaPushDispositionSchema = Schema.Union([
@@ -3021,7 +3025,7 @@ const BattleHolePayloadMembers = [
         sourceProcedureRef: BattleProcedureExecutionRef,
         lengthFeet: GrantedAreaSaveDamageConeLengthFeetSchema,
       }),
-      ability: Schema.Literal("dex"),
+      ability: Schema.Literal(GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability),
       dc: DcSourceSchema,
       areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
       targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),

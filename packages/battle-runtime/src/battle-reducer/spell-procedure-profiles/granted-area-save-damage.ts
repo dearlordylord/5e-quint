@@ -47,8 +47,11 @@ import {
 } from "../../battle-state-execution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import {
+  GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS,
   GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
   GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+  GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS,
+  GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES,
 } from "../domain-constants.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
@@ -101,9 +104,11 @@ import {
   spellOngoingOperationPath,
   spellOngoingInitialPhasePath,
   spellDurationValuePath,
+  spellMechanicsRootPath,
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThan(0)),
@@ -130,44 +135,29 @@ type GrantedAreaSaveDamageActionInvocation = Extract<
 type GrantedAreaSaveDamageActionResolveInput =
   SpellProcedureProfileResolveInput<GrantedAreaSaveDamageActionInvocation>;
 
-const GRANTED_AREA_SAVE_DAMAGE_SCALING = {
-  baseDice: 3,
-  dieSize: GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
-  perSlotDice: 1,
-  startingAtLevel: 2,
-} as const;
-
-const GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES = [
-  "acid",
-  "cold",
-  "fire",
-  "lightning",
-  "poison",
-] as const satisfies readonly [DamageType, ...DamageType[]];
-
 type GrantedAreaSaveDamageAmount = Extract<
   DiceAmount,
-  { readonly kind: "linear_per_level" }
+  {
+    readonly kind: typeof GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.kind;
+  }
 > & {
-  readonly axis: "slot";
+  readonly axis: typeof GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.axis;
   readonly base: {
     readonly dice: PositiveInteger &
-      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["baseDice"];
-    readonly dieSize: DamageDieSize &
-      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["dieSize"];
+      (typeof GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage)["baseDice"];
+    readonly dieSize: DamageDieSize & typeof GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE;
   };
   readonly perLevel: {
     readonly dice: PositiveInteger &
-      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["perSlotDice"];
-    readonly dieSize?: DamageDieSize &
-      (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["dieSize"];
+      (typeof GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage)["perSlotDice"];
+    readonly dieSize?: DamageDieSize & typeof GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE;
   };
   readonly startingAtLevel: PositiveInteger &
-    (typeof GRANTED_AREA_SAVE_DAMAGE_SCALING)["startingAtLevel"];
+    (typeof GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage)["startingAtLevel"];
 };
 
 type GrantedAreaSaveDamageActionMechanicsFacts = SpellDefinitionRuleFacts & {
-  readonly ability: "dex";
+  readonly ability: typeof GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability;
   readonly dc: GrantedAreaSaveDamageActionInvocation["dc"];
   readonly rangeFeet: MovementFeet;
   readonly durationTicks: ElapsedTimeTicks;
@@ -212,7 +202,7 @@ type GrantedAreaSaveDamageActionFailedFact =
 type GrantedAreaSaveDamageActionMechanicsIssue = SpellProcedureAdmissionIssue<
   "grantedAreaSaveDamageAction",
   GrantedAreaSaveDamageActionFailedFact,
-  SpellMechanicsBranchPath
+  UnitMechanicsPath
 >;
 
 const GRANTED_AREA_SAVE_DAMAGE_FAILED_FACT_MESSAGES = {
@@ -247,7 +237,7 @@ const GRANTED_AREA_SAVE_DAMAGE_FAILED_FACT_MESSAGES = {
 
 function grantedAreaSaveDamageIssue(
   failedFact: GrantedAreaSaveDamageActionFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
+  mechanicsPath: UnitMechanicsPath,
 ): GrantedAreaSaveDamageActionMechanicsIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
@@ -263,7 +253,7 @@ function dragonDurationIssues(
 ): GrantedAreaSaveDamageActionMechanicsIssue[] {
   const issues: GrantedAreaSaveDamageActionMechanicsIssue[] = [];
   const duration = mechanics.duration;
-  if (duration.kind !== "concentration") {
+  if (duration.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.kind) {
     issues.push(
       grantedAreaSaveDamageIssue(
         "duration",
@@ -274,8 +264,10 @@ function dragonDurationIssues(
   }
   if (
     !isSpellCanonicalDurationValue(duration.upTo) ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== 1
+    duration.upTo.unit !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.unit ||
+    duration.upTo.amount !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.amount
   ) {
     issues.push(
       grantedAreaSaveDamageIssue("durationValue", spellDurationValuePath()),
@@ -312,13 +304,15 @@ function dragonDamageAmountSupported(
   amount: DiceAmount,
 ): amount is GrantedAreaSaveDamageAmount {
   if (
-    amount.kind !== "linear_per_level" ||
-    amount.axis !== "slot" ||
-    amount.base.dice !== GRANTED_AREA_SAVE_DAMAGE_SCALING.baseDice ||
-    amount.base.dieSize !== GRANTED_AREA_SAVE_DAMAGE_SCALING.dieSize ||
-    amount.perLevel.dice !== GRANTED_AREA_SAVE_DAMAGE_SCALING.perSlotDice ||
+    amount.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.kind ||
+    amount.axis !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.axis ||
+    amount.base.dice !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.baseDice ||
+    amount.base.dieSize !== GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE ||
+    amount.perLevel.dice !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.perSlotDice ||
     amount.startingAtLevel !==
-      GRANTED_AREA_SAVE_DAMAGE_SCALING.startingAtLevel ||
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.startingAtLevel ||
     !spellHasOnlyNamedFields(amount, [
       "kind",
       "axis",
@@ -329,7 +323,7 @@ function dragonDamageAmountSupported(
     !spellHasOnlyNamedFields(amount.base, ["dice", "dieSize"]) ||
     !spellHasOnlyNamedFields(amount.perLevel, ["dice", "dieSize"]) ||
     (amount.perLevel.dieSize !== undefined &&
-      amount.perLevel.dieSize !== GRANTED_AREA_SAVE_DAMAGE_SCALING.dieSize)
+      amount.perLevel.dieSize !== GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE)
   ) {
     return false;
   }
@@ -347,11 +341,15 @@ function dragonRootAttachmentSupported(
   if (result.tag !== "admitted") return false;
   const selection = result.attachment.value.selection;
   return (
-    selection.mode === "one" &&
+    selection.mode ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.attachment.mode &&
     "disposition" in selection &&
-    selection.disposition === "willing" &&
-    selection.targetKinds?.length === 1 &&
-    selection.targetKinds[0] === "creature"
+    selection.disposition ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.attachment.disposition &&
+    selection.targetKinds?.length ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.attachment.targetKinds.length &&
+    selection.targetKinds[0] ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.attachment.targetKinds[0]
   );
 }
 
@@ -360,7 +358,9 @@ function dragonOngoingRootShape(
 ): boolean {
   return (
     mechanics.operations.some(
-      (operation) => operation.trigger.kind === "on_attached_spends_action",
+      (operation) =>
+        operation.trigger.kind ===
+        GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.triggerKind,
     ) || dragonRootAttachmentSupported(mechanics.attachment)
   );
 }
@@ -408,14 +408,14 @@ function grantedAreaSaveDamageActionInvocationsFromFacts(
           resource: spellInvocationResourceForCastOption(slot),
           procedure: "grantedAreaSaveDamageAction",
           spell,
-          actionCost: "bonusAction",
+          actionCost: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost,
           ability: facts.ability,
-          targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+          targeting: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting,
           activeEffect: {
-            kind: "grantedAreaSaveDamageAction",
+            kind: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.activeEffectKind,
             sourceCombatantId: actorId,
             expiresAt: {
-              kind: "concentration",
+              kind: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.expirationKind,
               combatantId: actorId,
               durationTicks: facts.durationTicks,
             },
@@ -447,19 +447,23 @@ function admitGrantedAreaSaveDamageActionMechanics(
   const issues: GrantedAreaSaveDamageActionMechanicsIssue[] = [];
   const push = (
     failedFact: GrantedAreaSaveDamageActionFailedFact,
-    path: SpellMechanicsBranchPath,
+    path: UnitMechanicsPath,
   ): void => {
     issues.push(grantedAreaSaveDamageIssue(failedFact, path));
   };
-  if (mechanics.level !== 2) push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.level !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.level) {
+    push("level", spellMechanicsHeaderPath("level"));
+  }
   if (
-    mechanics.castingTime.kind !== "bonus_action" ||
+    mechanics.castingTime.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.castingTimeKind ||
     !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
   ) {
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
   if (
-    mechanics.range.kind !== "touch" ||
+    mechanics.range.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.rangeKind ||
     !spellHasOnlyNamedFields(mechanics.range, ["kind"])
   ) {
     push("range", spellMechanicsHeaderPath("range"));
@@ -496,7 +500,10 @@ function admitGrantedAreaSaveDamageActionMechanics(
   if (mechanics.initialPhase !== undefined) {
     push("phase", spellOngoingInitialPhasePath());
   }
-  if (mechanics.operations.length !== 1) {
+  if (
+    mechanics.operations.length !==
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operationCount
+  ) {
     for (const [index] of mechanics.operations.entries()) {
       if (index > 0) {
         push(
@@ -506,7 +513,7 @@ function admitGrantedAreaSaveDamageActionMechanics(
       }
     }
     if (mechanics.operations.length === 0) {
-      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+      push("operationCount", spellMechanicsRootPath());
     }
   }
   const operation = mechanics.operations[0];
@@ -518,10 +525,7 @@ function admitGrantedAreaSaveDamageActionMechanics(
       return {
         tag: "unsupported",
         issues: [
-          grantedAreaSaveDamageIssue(
-            "requiredFacts",
-            spellOngoingOperationPath(PositiveInteger(1)),
-          ),
+          grantedAreaSaveDamageIssue("requiredFacts", spellMechanicsRootPath()),
         ],
       };
     }
@@ -540,17 +544,21 @@ function admitGrantedAreaSaveDamageActionMechanics(
     push("operation", spellOngoingOperationPath(PositiveInteger(1)));
   }
   if (
-    operation.trigger.kind !== "on_attached_spends_action" ||
+    operation.trigger.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.triggerKind ||
     !spellHasOnlyNamedFields(operation.trigger, ["kind", "cost"]) ||
-    operation.trigger.cost.kind !== "standard_action" ||
-    operation.trigger.cost.action !== "magic" ||
+    operation.trigger.cost.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.costKind ||
+    operation.trigger.cost.action !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.action ||
     !spellHasOnlyNamedFields(operation.trigger.cost, ["kind", "action"])
   ) {
     push("trigger", spellOngoingOperationPath(PositiveInteger(1)));
   }
   const effect = operation.effect;
   if (
-    effect.kind !== "save_gate" ||
+    effect.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind ||
     !spellHasOnlyNamedFields(effect, [
       "kind",
       "attachment",
@@ -562,12 +570,19 @@ function admitGrantedAreaSaveDamageActionMechanics(
   ) {
     push("effect", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
-  const saveGate = effect.kind === "save_gate" ? effect : null;
-  if (saveGate?.ability !== "dex") {
+  const saveGate =
+    effect.kind === GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind
+      ? effect
+      : null;
+  if (
+    saveGate?.ability !==
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.ability
+  ) {
     push("saveAbility", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
   if (
-    saveGate?.dc.kind !== "caster_spell_save_dc" ||
+    saveGate?.dc.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.dcKind ||
     (saveGate !== null && !spellHasOnlyNamedFields(saveGate.dc, ["kind"]))
   ) {
     push("saveDc", spellOngoingOperationEffectPath(PositiveInteger(1)));
@@ -587,15 +602,18 @@ function admitGrantedAreaSaveDamageActionMechanics(
   if (
     areaAttachment === null ||
     areaValue === null ||
-    areaValue.origin.kind !== "on_attached_creature" ||
+    areaValue.origin.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaOriginKind ||
     !spellHasOnlyNamedFields(areaValue.origin, ["kind"]) ||
-    areaValue.shape.kind !== "cone" ||
+    areaValue.shape.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaShapeKind ||
     !spellHasOnlyNamedFields(areaValue.shape, ["kind", "lengthFeet"])
   ) {
     push("saveAttachment", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
   const coneLengthFeet =
-    areaValue?.shape.kind === "cone" &&
+    areaValue?.shape.kind ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaShapeKind &&
     areaValue.shape.lengthFeet === GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET
       ? GrantedAreaSaveDamageConeLengthFeetSchema.make(
           areaValue.shape.lengthFeet,
@@ -605,13 +623,17 @@ function admitGrantedAreaSaveDamageActionMechanics(
     push("cone", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
   if (
-    saveGate?.onSuccess.kind !== "half_damage" ||
+    saveGate?.onSuccess.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.successKind ||
     !spellHasOnlyNamedFields(saveGate?.onSuccess ?? { kind: "none" }, ["kind"])
   ) {
     push("successOutcome", spellOngoingOperationEffectPath(PositiveInteger(1)));
   }
   const failedDamage =
-    saveGate?.onFail.kind === "damage" ? saveGate.onFail : null;
+    saveGate?.onFail.kind ===
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.failureKind
+      ? saveGate.onFail
+      : null;
   if (
     failedDamage === null ||
     !spellHasOnlyNamedFields(failedDamage, ["kind", "damageType", "amount"])
@@ -667,7 +689,7 @@ function admitGrantedAreaSaveDamageActionMechanics(
     failedDamage === null ||
     !dragonDamageAmountSupported(damageAmount) ||
     saveGate === null ||
-    duration.kind !== "concentration" ||
+    duration.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.kind ||
     !isSpellCanonicalDurationValue(duration.upTo)
   ) {
     return {
@@ -682,7 +704,7 @@ function admitGrantedAreaSaveDamageActionMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    ability: "dex" as const,
+    ability: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability,
     dc: saveGate.dc,
     rangeFeet: spellTouchRangeFeet(),
     durationTicks: spellDurationTicksFromCanonicalValue(duration.upTo),
@@ -776,7 +798,7 @@ function resolveGrantedAreaSaveDamageAction(
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
     targetSelection.targetIds,
-    { kind: "bonusAction" },
+    { kind: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost },
     undefined,
   );
   if (spellCastReactionWindow !== null) {
@@ -810,20 +832,32 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
       resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("grantedAreaSaveDamageAction"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("bonusAction"),
-      ability: Schema.Literal("dex"),
+      actionCost: Schema.Literal(
+        GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.actionCost,
+      ),
+      ability: Schema.Literal(GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability),
       dc: DcSourceSchema,
       targeting: Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Literal(1),
+        kind: Schema.Literal(
+          GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting.kind,
+        ),
+        minTargets: Schema.Literal(
+          GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting.minTargets,
+        ),
+        maxTargets: Schema.Literal(
+          GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.targeting.maxTargets,
+        ),
       }),
       activeEffect: Schema.Struct({
         ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("grantedAreaSaveDamageAction"),
+        kind: Schema.Literal(
+          GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.activeEffectKind,
+        ),
         sourceCombatantId: CombatantId,
         expiresAt: Schema.Struct({
-          kind: Schema.Literal("concentration"),
+          kind: Schema.Literal(
+            GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.expirationKind,
+          ),
           combatantId: CombatantId,
           durationTicks: ElapsedTimeTicksSchema,
         }),
