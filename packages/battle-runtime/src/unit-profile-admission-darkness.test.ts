@@ -13,7 +13,19 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Round } from "@dnd/shared/types";
+import { PositiveInteger, Round } from "@dnd/shared/types";
+import {
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -52,10 +64,498 @@ import {
   type BattleRuntimeSession,
 } from "./battle-runtime.test-support.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+import { magicalDarknessPointOriginProfile } from "./battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
-import { darknessUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  darknessUnitId,
+  spellCasterId,
+  unitLibrary,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 
 const darknessDurationTicks = elapsedTimeTicks(100);
+
+type OngoingSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function darknessMechanics(): OngoingSpellMechanics {
+  const mechanics = spellRecord(darknessUnitId).mechanics;
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Darkness ongoing-effect mechanics.");
+  return mechanics;
+}
+
+function syntheticDarknessRecord(
+  mutate: (mechanics: OngoingSpellMechanics) => unknown,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_magical_obscurement_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Magical Obscurement ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_magical_obscurement_${suffix}`,
+    },
+    mechanics: mutate(darknessMechanics()),
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function mechanicsSourceWithOperationCount(
+  count: 0 | 1,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(darknessUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (
+    !Reflect.set(mechanics, "operations", mechanics.operations.slice(0, count))
+  )
+    throw new Error("Expected the malformed operation fixture to be writable.");
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function issueShape(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}): readonly {
+  readonly failedFact: string;
+  readonly mechanicsPath: unknown;
+}[] {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("magicalDarknessPointOrigin static admission", () => {
+  test("projects complete point-origin mechanics and binds mechanics-free execution", () => {
+    const source = spellAdmissionSource(spellRecord(darknessUnitId));
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 2,
+      rangeFeet: 60,
+      radiusFeet: 15,
+      durationTicks: darknessDurationTicks,
+      dispelledSpellCreatedLightMaxSpellLevel: 2,
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      { ...context, castingSource: source.castingSource },
+    );
+
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]).toMatchObject({
+      resource: { tag: "spellSlot", slotLevel: 2 },
+      targeting: { kind: "pointOriginSphere", radiusFeet: 15 },
+      durationTicks: darknessDurationTicks,
+      rangeFeet: 60,
+      dispelledSpellCreatedLightMaxSpellLevel: 2,
+    });
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("recognizes identical mechanics independently of authored identity", () => {
+    const original = spellAdmissionSource(spellRecord(darknessUnitId));
+    const renamed = spellAdmissionSource(
+      syntheticDarknessRecord((mechanics) => mechanics, "renamed"),
+    );
+    const originalResult = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(original),
+    );
+    const renamedResult = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(renamed),
+    );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test.each([
+    [
+      "level",
+      (mechanics: OngoingSpellMechanics) => ({ ...mechanics, level: 3 }),
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ],
+    [
+      "material",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        components: { ...mechanics.components, m: "synthetic black sand" },
+      }),
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ],
+    [
+      "radius",
+      (mechanics: OngoingSpellMechanics) => {
+        if (
+          mechanics.attachment.kind !== "hole" ||
+          mechanics.attachment.value.kind !== "area" ||
+          mechanics.attachment.value.shape.kind !== "sphere"
+        )
+          throw new Error("Expected Darkness point-origin Sphere attachment.");
+        return {
+          ...mechanics,
+          attachment: {
+            ...mechanics.attachment,
+            value: {
+              ...mechanics.attachment.value,
+              shape: { ...mechanics.attachment.value.shape, radiusFeet: 20 },
+            },
+          },
+        };
+      },
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ],
+    [
+      "dispel threshold",
+      (mechanics: OngoingSpellMechanics) => ({
+        ...mechanics,
+        operations: mechanics.operations.map((operation) =>
+          operation.effect.kind ===
+          "end_overlapping_spell_created_bright_or_dim_light"
+            ? {
+                ...operation,
+                effect: { ...operation.effect, maxSpellLevel: 3 },
+              }
+            : operation,
+        ),
+      }),
+      "dispelLightEffect",
+      spellOngoingOperationEffectPath(PositiveInteger(2)),
+    ],
+  ] as const)(
+    "keeps a one-field %s mutation represented with one exact issue",
+    (_label, mutate, failedFact, mechanicsPath) => {
+      const result = magicalDarknessPointOriginProfile.admitMechanics(
+        mechanicsSource(
+          spellAdmissionSource(
+            syntheticDarknessRecord(mutate, `mutation_${failedFact}`),
+          ),
+        ),
+      );
+
+      expect(result.tag).toBe("unsupported");
+      expect(issueShape(result)).toEqual([{ failedFact, mechanicsPath }]);
+    },
+  );
+
+  test("rejects the unrepresented object-origin branch at its attachment path", () => {
+    const record = syntheticDarknessRecord(
+      (mechanics) => ({
+        ...mechanics,
+        attachment: {
+          kind: "hole" as const,
+          holeId: "synthetic_darkness_object",
+          label: "target object",
+          value: {
+            kind: "object" as const,
+            count: 1 as const,
+            filter: { targetRelation: "not_worn_or_carried" as const },
+          },
+        },
+      }),
+      "object_origin_branch",
+    );
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    expect(issueShape(result)).toEqual([
+      { failedFact: "attachment", mechanicsPath: spellOngoingAttachmentPath() },
+    ]);
+  });
+
+  test("reports both unsupported material children without a container issue", () => {
+    const record = syntheticDarknessRecord(
+      (mechanics) => ({
+        ...mechanics,
+        components: {
+          ...mechanics.components,
+          materialCostGp: 5,
+          materialConsumed: true,
+        },
+      }),
+      "material_children",
+    );
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("cost"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("consumption"),
+      },
+    ]);
+  });
+
+  test("rejects a genuinely extra components container key at the header", () => {
+    const source = spellAdmissionSource(spellRecord(darknessUnitId));
+    const mechanics = {
+      ...source.mechanics,
+      components: {
+        ...source.mechanics.components,
+        syntheticContainerFact: true,
+      },
+    };
+    const result = magicalDarknessPointOriginProfile.admitMechanics({
+      ...mechanicsSource(source),
+      mechanics,
+    });
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+    ]);
+  });
+
+  test("reports duration children at their exact canonical paths", () => {
+    const record = syntheticDarknessRecord((mechanics) => {
+      if (mechanics.duration.kind !== "concentration")
+        throw new Error("Expected Darkness Concentration mechanics.");
+      return {
+        ...mechanics,
+        duration: {
+          ...mechanics.duration,
+          upTo: {
+            ...mechanics.duration.upTo,
+            upcastTiers: [{ atSlot: 3, amount: 20 }],
+          },
+          earlyEnd: [{ kind: "caster_recasts_spell" as const }],
+          permanentIfMaintainedFull: true as const,
+        },
+      };
+    }, "nested_children");
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports distinct exact expected coordinates when both operations are absent", () => {
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSourceWithOperationCount(0),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "darknessOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "darknessEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "dispelLightOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "dispelLightEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("preserves each operation's authored ordinal when the roles are reordered", () => {
+    const record = syntheticDarknessRecord(
+      (mechanics) => ({
+        ...mechanics,
+        operations: [mechanics.operations[1], mechanics.operations[0]],
+      }),
+      "reordered_operations",
+    );
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.evidence.consumed.slice(-4)).toEqual([
+      spellOngoingOperationPath(PositiveInteger(2)),
+      spellOngoingOperationEffectPath(PositiveInteger(2)),
+      spellOngoingOperationPath(PositiveInteger(1)),
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ]);
+  });
+
+  test("preserves the remaining operation and assigns the missing role to slot 2", () => {
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSourceWithOperationCount(1),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "dispelLightOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "dispelLightEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports every conditional effect and extra operation at its authored ordinal", () => {
+    const conditionalSource = spellRecord("phantasmal_force").mechanics;
+    if (
+      conditionalSource.family !== "ongoing_effect" ||
+      conditionalSource.authoredConditionalEffects === undefined
+    )
+      throw new Error("Expected a conditional-effect fixture source.");
+    const conditionalEffect = conditionalSource.authoredConditionalEffects[0];
+    if (conditionalEffect === undefined)
+      throw new Error("Expected a conditional-effect fixture.");
+    const record = syntheticDarknessRecord(
+      (mechanics) => ({
+        ...mechanics,
+        operations: [...mechanics.operations, mechanics.operations[0]],
+        authoredConditionalEffects: [conditionalEffect, conditionalEffect],
+      }),
+      "extra_branches",
+    );
+    const result = magicalDarknessPointOriginProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "authoredConditionalEffects",
+        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+          PositiveInteger(2),
+        ),
+      },
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(3)),
+      },
+    ]);
+  });
+
+  test("does not claim any other shipped spell root", () => {
+    const results = unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is SpellRecord =>
+          unit.kind === "spell" && unit.id !== darknessUnitId,
+      )
+      .map((spell) =>
+        magicalDarknessPointOriginProfile.admitMechanics(
+          mechanicsSource(spellAdmissionSource(spell)),
+        ),
+      );
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results).toEqual(results.map(() => ({ tag: "notRepresented" })));
+  });
+});
 
 describe("battle runtime: Darkness", () => {
   test("Darkness admits only level-2-or-higher point-origin Sphere casts", () => {
