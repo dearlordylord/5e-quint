@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `d07e59f5c08ac978866a4ae3d41f275be15964e1`
+  `cc4826a31a275162c4b794e8e798c8effd213a91`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -59,7 +59,10 @@ This section is the sole mutable handoff for a new session.
   `cf4284425b599e595dffc728543c7134925e3b1b` is integrated by
   `d07e59f5c08ac978866a4ae3d41f275be15964e1`; the compelled-next-turn-behavior
   admission reviewed tip `51b9017bd1e3589ab97a10adeca7636847024cfe`
-  is integrated by `a1ac97140f3e34915b9c6ec283cbf22a49486af0`.
+  is integrated by `a1ac97140f3e34915b9c6ec283cbf22a49486af0`; the
+  directional-persistent-area admission reviewed tip
+  `1162ed6b4d50dbae3622ac2c83b214b45efdfe7e` is integrated by
+  `cc4826a31a275162c4b794e8e798c8effd213a91`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -222,6 +225,33 @@ This section is the sole mutable handoff for a new session.
   the Command QNT relation, and the applicable locked Command MBT remains
   deferred until the registry loads completely. The remaining 11 legacy
   declarations prevent whole-package convergence.
+- Directional-persistent-area evidence: exact reviewed tip `1162ed6b4d`
+  migrates Gust of Wind's legacy top-level declaration to parse-once
+  `admitMechanics`; it is integrated by `cc4826a31`. The profile accumulates
+  independent exact-path issues across the complete represented root, retains
+  actual authored operation and conditional-mechanic ordinals, requires the
+  canonical table-hole wrapper without dispatching on hole id or label, and
+  carries source-derived branded 60-by-10-foot Line, duration, save, push, and
+  movement-cost facts into mechanics-free execution. Renamed synthetic spell
+  and hole identity parity is unchanged. `laterTurnsOnly: true` is now explicit
+  in canonical Surface data and admission; the existing runtime `castTurn`
+  boundary already owns later-turn enforcement, so the applicable focused QNT
+  relation required no change. Strong-wind evidence and the RAW gas, vapor,
+  and flame interactions remain table-owned; every authored conditional
+  mechanic is rejected independently at its own evidence path. Required local
+  RAW discovery and direct corpus inspection completed. Review convergence took
+  three rounds: round one returned four findings; round two returned four
+  Standards and two Spec/RAW findings; round three returned zero findings on
+  both axes. The final Battle static selection passed 23/23 with 18 lifecycle
+  tests skipped, and diagnostics rooted at the three changed Battle files were
+  zero. Surface catalog selection passed 1/1 with 175 skipped, the portable
+  generator passed 5/5, and focused sync passed 2/2 with 26 skipped. Bounded
+  generation, Dhall/JSON byte synchronization, scoped ESLint, Prettier, and
+  diff checks passed with no artifact drift. A pre-existing full-file Gust
+  Dhall formatting issue remains excluded. Incidental commit-hook inventory
+  and gitleaks checks are not a QNT execution claim. No lifecycle, package,
+  broad, registry, coverage, QNT, or MBT verification is claimed. The remaining
+  10 legacy declarations prevent whole-package convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -238,25 +268,18 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current read-only audit retains exactly 11 legacy top-level `admit:`
-  declarations in 10 files. The landed W8 compelled-next-turn-behavior lease is
-  clear. W9 is the smallest coherent remaining single-profile slice:
-  `directional-persistent-area.ts` with its existing focused
-  `unit-profile-admission-gust-of-wind.test.ts` owner. Create the clean
-  `work/sr04g-directional-persistent-area` branch and
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-directional-persistent-area`
-  worktree from exact base
-  `5bae05d51332c142756458ea6f1b8d30179e68dd`. W9 owns those two files plus
-  only the `directionalPersistentArea` invocation source-field line in
-  `battle-state-execution.ts`, needed to carry a mechanics-free execution
-  source. No shared registry, coverage-map, QNT, MBT, or unrelated runtime file
-  is leased. W9 round-one review found the existing optional
-  `laterTurnsOnly: true` trigger fact absent from authored Gust of Wind. The
-  expanded Surface lease owns `content/gust_of_wind.{dhall,json}`,
-  `src/surface/unit-catalog.test.ts`, `publication/srd-surface.json`, and
-  `portable-cases/srd-surface-{cases,independent-expectations}.json`. No schema,
-  tracer, runtime-discovery, QNT, or MBT file is leased: existing Surface
-  vocabulary and runtime `castTurn` state already own those boundaries.
+  current integration-tip declaration audit retains exactly 10 legacy
+  top-level `SpellProcedureDeclaration` `admit` fields in nine files:
+  `creatureSizeChange`, `creatureSizeDecrease`,
+  `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
+  `controlledVerticalSuspension`, `spellCreatedHeldObject`,
+  `conditionImmunityAndTurnStartTemporaryHitPoints`, `ongoingSpellEnd`,
+  `magicSuppressionEmanation`, and `creatureTypeProtection`. The landed W9
+  directional-persistent-area lease is clear. The smallest coherent remaining
+  single-profile slice is W10 `magicSuppressionEmanation`, paired with its
+  existing focused Antimagic Field admission owner; activate its exact lease
+  from the W9 bookkeeping receipt before implementation. No shared schema,
+  registry, coverage-map, QNT, MBT, or unrelated runtime file is anticipated.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -391,10 +414,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                 | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                     | State  |
-| --------------- | ----------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                    | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `a1ac97140`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, and compelled next-turn behavior integrated; cumulative Surface publication delta certified; 11 top-level profile migrations remain                                     | Active |
-| `SR-04G/W9`     | directional-persistent-area profile admission   | Codex orchestrator; implementers: Sol | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-directional-persistent-area`; `work/sr04g-directional-persistent-area` | `5bae05d51` | Battle: `directional-persistent-area.ts`, `unit-profile-admission-gust-of-wind.test.ts`, directional invocation source field in `battle-state-execution.ts`. Surface: `content/gust_of_wind.{dhall,json}`, `src/surface/unit-catalog.test.ts`, `publication/srd-surface.json`, `portable-cases/srd-surface-{cases,independent-expectations}.json`. No schema, tracer, registry, coverage-map, QNT, or MBT lease | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                              | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `cc4826a31`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, and directional persistent area integrated; cumulative Surface publication delta certified; 10 top-level profile migrations remain | Active |
 
 ## Landing discipline
 
