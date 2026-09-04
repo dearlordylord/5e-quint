@@ -131,7 +131,8 @@
           "cost": {
             "kind": "bonus_action"
           },
-          "kind": "on_caster_spends_action"
+          "kind": "on_caster_spends_action",
+          "laterTurnsOnly": true
         }
       }
     ],

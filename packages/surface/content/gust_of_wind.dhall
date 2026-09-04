@@ -35,7 +35,10 @@ let ActionCost : Type =
       { kind : Text }
 
 let Trigger : Type =
-      { kind : Text, cost : Optional ActionCost }
+      { kind : Text
+      , cost : Optional ActionCost
+      , laterTurnsOnly : Optional Bool
+      }
 
 let EffectLeaf : Type =
       { kind : Text
@@ -126,14 +129,21 @@ let changeDirection : Effect =
       none // { kind = "reposition_attachment" }
 
 let passiveTrigger : Trigger =
-      { kind = "passive", cost = None ActionCost }
+      { kind = "passive"
+      , cost = None ActionCost
+      , laterTurnsOnly = None Bool
+      }
 
 let endTurnInAreaTrigger : Trigger =
-      { kind = "on_creature_ends_turn_in_area", cost = None ActionCost }
+      { kind = "on_creature_ends_turn_in_area"
+      , cost = None ActionCost
+      , laterTurnsOnly = None Bool
+      }
 
 let bonusActionTrigger : Trigger =
       { kind = "on_caster_spends_action"
       , cost = Some { kind = "bonus_action" }
+      , laterTurnsOnly = Some True
       }
 
 let gustOfWind =
