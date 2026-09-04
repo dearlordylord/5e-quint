@@ -1,8 +1,15 @@
-import { describe, expect, test } from "vitest";
-import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import { describe, expect, expectTypeOf, test } from "vitest";
+import { unitId } from "@dnd/shared/game-facts";
+import {
+  PositiveInteger,
+  spellSlotLevel,
+  type CharacterLevel,
+  type DamageDieSize,
+  type PositiveInteger as PositiveIntegerType,
+} from "@dnd/shared/types";
 import {
   spellDurationEndingPath,
-  spellDurationValuePath,
+  spellDurationExtensionPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
@@ -15,7 +22,10 @@ import {
 } from "../../battle-state-execution.ts";
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
 import { zeroAbilityWeaponAttack } from "../../unit-profile-admission-creature-fixture.test-support.ts";
-import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
+import {
+  spellCasterId,
+  unitLibrary,
+} from "../../unit-profile-admission-catalog.test-support.ts";
 import {
   decodeSpellRecordForTest,
   spellAdmissionSource,
@@ -90,6 +100,7 @@ const A5_PROFILES = [
     name: "Heat Metal initial contact damage",
     profile: objectContactDamageProfile,
     spellId: "heat_metal",
+    expectedInvocationCount: 1,
     castOptions: [
       { spellLevel: spellSlotLevel(2), payment: { tag: "slot" as const } },
     ],
@@ -98,18 +109,21 @@ const A5_PROFILES = [
     name: "Heat Metal repeat contact damage",
     profile: objectContactDamageRepeatProfile,
     spellId: "heat_metal",
+    expectedInvocationCount: 0,
     castOptions: [],
   },
   {
     name: "Shillelagh weapon attack override",
     profile: weaponAttackOverrideProfile,
     spellId: "shillelagh",
+    expectedInvocationCount: 1,
     castOptions: [],
   },
   {
     name: "Divine Favor weapon damage rider",
     profile: weaponDamageRiderProfile,
     spellId: "divine_favor",
+    expectedInvocationCount: 1,
     castOptions: [
       { spellLevel: spellSlotLevel(1), payment: { tag: "slot" as const } },
     ],
@@ -119,7 +133,7 @@ const A5_PROFILES = [
 describe("SR-04G-A5 static spell procedure admission", () => {
   test.each(A5_PROFILES)(
     "supports $name with complete evidence and a mechanics-free execution source",
-    ({ profile, spellId, castOptions }) => {
+    ({ profile, spellId, castOptions, expectedInvocationCount }) => {
       const source = spellAdmissionSource(spellRecord(spellId));
       const result = profile.admitMechanics(
         mechanicsSource(spellRecord(spellId)),
@@ -147,11 +161,112 @@ describe("SR-04G-A5 static spell procedure admission", () => {
           spellCastOptions: castOptions,
         },
       );
+      expect(invocations).toHaveLength(expectedInvocationCount);
+      const invocation = invocations[0];
+      if (profile.procedure === "objectContactDamage") {
+        expect(result.admitted.facts).toMatchObject({
+          rangeFeet: 60,
+          durationValue: { amount: 1, unit: "minute" },
+          damageAmount: {
+            base: { dice: 2, dieSize: 8 },
+            perLevel: { dice: 1 },
+          },
+          damageType: "fire",
+        });
+        expect(invocation).toMatchObject({
+          procedure: "objectContactDamage",
+          actionCost: "magicAction",
+          targeting: { kind: "singleManufacturedMetalObject" },
+          damage: { expr: { dice: 2, dieSize: 8 }, damageType: "fire" },
+          rangeFeet: 60,
+          durationTicks: 10,
+        });
+      } else if (profile.procedure === "objectContactDamageRepeat") {
+        expect(result.admitted.facts).toMatchObject({
+          damageAmount: {
+            base: { dice: 2, dieSize: 8 },
+            perLevel: { dice: 1 },
+          },
+          damageType: "fire",
+        });
+        expect(invocation).toBeUndefined();
+      } else if (profile.procedure === "weaponAttackOverride") {
+        if (!("damageDie" in result.admitted.facts)) {
+          throw new Error("Expected Shillelagh damage-die facts.");
+        }
+        expect(result.admitted.facts.damageDie).toEqual({
+          base: { dice: 1, dieSize: 8 },
+          tiers: [
+            { atLevel: 5, override: { dice: 1, dieSize: 10 } },
+            { atLevel: 11, override: { dice: 1, dieSize: 12 } },
+            { atLevel: 17, override: { dice: 2, dieSize: 6 } },
+          ],
+        });
+        expect(invocation).toMatchObject({
+          procedure: "weaponAttackOverride",
+          actionCost: "bonusAction",
+          activeEffect: { damage: { expr: { dice: 1, dieSize: 8 } } },
+        });
+      } else {
+        expect(result.admitted.facts).toMatchObject({
+          durationValue: { amount: 1, unit: "minute" },
+          damageAmount: { expr: { dice: 1, dieSize: 4 } },
+        });
+        expect(invocation).toMatchObject({
+          procedure: "weaponDamageRider",
+          actionCost: "bonusAction",
+          activeEffect: {
+            damage: { expr: { dice: 1, dieSize: 4 }, damageType: "radiant" },
+          },
+        });
+      }
       for (const invocation of invocations) {
         expect(invocation.spell).not.toHaveProperty("mechanics");
       }
     },
   );
+
+  test("projects Shillelagh's correlated character-tier rows into execution", () => {
+    const source = spellAdmissionSource(spellRecord("shillelagh"));
+    const result = weaponAttackOverrideProfile.admitMechanics(
+      mechanicsSource(spellRecord("shillelagh")),
+    );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expectTypeOf(result.admitted.facts.damageDie.base.dice).toEqualTypeOf<
+      PositiveIntegerType & 1
+    >();
+    expectTypeOf(result.admitted.facts.damageDie.base.dieSize).toEqualTypeOf<
+      DamageDieSize & 8
+    >();
+    expectTypeOf(
+      result.admitted.facts.damageDie.tiers[0].atLevel,
+    ).toEqualTypeOf<CharacterLevel & 5>();
+    expectTypeOf(
+      result.admitted.facts.damageDie.tiers[2].override.dice,
+    ).toEqualTypeOf<PositiveIntegerType & 2>();
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: spellAdmissionActor({
+          preparedSpells: [],
+          attack: zeroAbilityWeaponAttack("weapon_club"),
+          casterClassLevels: [{ className: "wizard", level: 17 }],
+          casterWeaponProficiencies: [
+            { kind: "weapon_category", category: "simple" },
+          ],
+        }),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]).toMatchObject({
+      procedure: "weaponAttackOverride",
+      activeEffect: { damage: { expr: { dice: 2, dieSize: 6 } } },
+    });
+  });
 
   test.each(A5_PROFILES)(
     "keeps $name recognition and evidence invariant under identity mutation",
@@ -184,6 +299,64 @@ describe("SR-04G-A5 static spell procedure admission", () => {
     },
   );
 
+  test.each([
+    [
+      "Heat Metal initial contact damage",
+      objectContactDamageProfile,
+      "heat_metal",
+    ],
+    [
+      "Heat Metal repeat contact damage",
+      objectContactDamageRepeatProfile,
+      "heat_metal",
+    ],
+    [
+      "Shillelagh weapon attack override",
+      weaponAttackOverrideProfile,
+      "shillelagh",
+    ],
+    [
+      "Divine Favor weapon damage rider",
+      weaponDamageRiderProfile,
+      "divine_favor",
+    ],
+  ] as const)(
+    "%s claims only its intended owner across the whole spell catalog",
+    (_name, profile, ownerId) => {
+      const representedSpellIds = unitLibrary.listUnits().flatMap((unit) => {
+        if (unit.kind !== "spell") return [];
+        const source = spellAdmissionSource(unit);
+        const result = profile.admitMechanics({
+          mechanics: source.mechanics,
+          spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+        });
+        return result.tag === "notRepresented" ? [] : [unit.id];
+      });
+      expect(representedSpellIds).toEqual([unitId(ownerId)]);
+    },
+  );
+
+  test.each([
+    "darkness",
+    "flaming_sphere",
+    "phantasmal_force",
+    "web",
+    "produce_flame",
+    "searing_smite",
+  ] as const)("does not claim sibling mechanics shape %s", (siblingId) => {
+    const source = mechanicsSource(spellRecord(siblingId));
+    for (const profile of [
+      objectContactDamageProfile,
+      objectContactDamageRepeatProfile,
+      weaponAttackOverrideProfile,
+      weaponDamageRiderProfile,
+    ]) {
+      expect(profile.admitMechanics(source)).toEqual({
+        tag: "notRepresented",
+      });
+    }
+  });
+
   test("rejects Heat Metal mechanics crossed with Divine Favor definition facts", () => {
     const heatMetal = spellRecord("heat_metal");
     const divineFavor = spellAdmissionSource(spellRecord("divine_favor"));
@@ -202,10 +375,6 @@ describe("SR-04G-A5 static spell procedure admission", () => {
       {
         failedFact: "duration",
         mechanicsPath: spellMechanicsHeaderPath("duration"),
-      },
-      {
-        failedFact: "durationValue",
-        mechanicsPath: spellDurationValuePath(),
       },
     ]);
   });
@@ -475,13 +644,101 @@ describe("SR-04G-A5 static spell procedure admission", () => {
         mechanicsPath: spellMechanicsHeaderPath("duration"),
       },
       {
-        failedFact: "durationValue",
-        mechanicsPath: spellDurationValuePath(),
-      },
-      {
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
       },
     ]);
   });
+
+  test.each([
+    [objectContactDamageProfile, "heat_metal"],
+    [weaponDamageRiderProfile, "divine_favor"],
+  ] as const)(
+    "reports %s duration-ending mutation without a duration-value failure",
+    (profile, spellId) => {
+      const base = spellRecord(spellId);
+      if (base.mechanics.family !== "ongoing_effect") {
+        throw new Error("Expected ongoing-effect mechanics.");
+      }
+      const mechanics = {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          earlyEnd: [{ kind: "caster_recasts_spell" as const }],
+        },
+      };
+      const malformed = decodeSpellRecordForTest({
+        ...base,
+        mechanics,
+      });
+      const result = profile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, malformed.mechanics),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "duration",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
+        },
+        {
+          failedFact: "durationEnding",
+          mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+        },
+      ]);
+    },
+  );
+
+  test.each([
+    [objectContactDamageProfile, "heat_metal"],
+    [weaponAttackOverrideProfile, "shillelagh"],
+    [weaponDamageRiderProfile, "divine_favor"],
+  ] as const)(
+    "reports %s duration-extension mutation without a duration-value failure",
+    (profile, spellId) => {
+      const base = spellRecord(spellId);
+      if (base.mechanics.family !== "ongoing_effect") {
+        throw new Error("Expected ongoing-effect mechanics.");
+      }
+      if (
+        base.mechanics.duration.kind !== "concentration" &&
+        base.mechanics.duration.kind !== "timed"
+      ) {
+        throw new Error("Expected a time-valued ongoing duration.");
+      }
+      const duration =
+        base.mechanics.duration.kind === "concentration"
+          ? {
+              ...base.mechanics.duration,
+              upTo: {
+                ...base.mechanics.duration.upTo,
+                upcastTiers: [{ atSlot: 2, amount: 2 }],
+              },
+            }
+          : {
+              ...base.mechanics.duration,
+              value: {
+                ...base.mechanics.duration.value,
+                upcastTiers: [{ atSlot: 2, amount: 2 }],
+              },
+            };
+      const malformed = decodeSpellRecordForTest({
+        ...base,
+        mechanics: { ...base.mechanics, duration },
+      });
+      const result = profile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, malformed.mechanics),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "duration",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
+        },
+        {
+          failedFact: "durationExtension",
+          mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+        },
+      ]);
+    },
+  );
 });

@@ -50,6 +50,7 @@ import {
   spellDurationValueEvidencePaths,
   isSpellCanonicalDurationValue,
   spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   type SpellCanonicalDurationValue,
@@ -253,56 +254,105 @@ function weaponDamageRiderMissingRootIssues(
   return spellProcedureNonEmpty(issues);
 }
 
-function weaponDamageRiderSemanticCandidate(
+function weaponDamageRiderStructuralCandidate(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "ongoing_effect" &&
-    mechanics.attachment.kind === "self" &&
-    mechanics.range.kind === "self" &&
-    mechanics.operations.some(
-      (operation) =>
-        operation.trigger.kind === "on_caster_attack_hit" &&
-        operation.effect.kind === "damage" &&
-        operation.effect.damageType === "radiant",
-    )
-  );
+  if (mechanics.family !== "ongoing_effect") return false;
+  const operation = mechanics.operations?.[0];
+  const operationRole = weaponDamageRiderOperationRole(operation)
+    ? operation
+    : undefined;
+  return spellProcedureHasRedundantSignature({
+    kind: "twoWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present:
+          mechanics.level === 1 &&
+          mechanics.school === "transmutation" &&
+          mechanics.range?.kind === "self" &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.range,
+            WEAPON_DAMAGE_RIDER_RANGE_FIELDS,
+          ) &&
+          mechanics.components?.v === true &&
+          mechanics.components.s === true &&
+          mechanics.components.m === false &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.components,
+            WEAPON_DAMAGE_RIDER_COMPONENT_FIELDS,
+          ) &&
+          mechanics.castingTime?.kind === "bonus_action" &&
+          mechanics.castingTime.trigger === undefined &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.castingTime,
+            WEAPON_DAMAGE_RIDER_CASTING_TIME_FIELDS,
+          ),
+      },
+      {
+        name: "duration",
+        present:
+          weaponDamageRiderDurationValue(mechanics.duration) !== undefined &&
+          weaponDamageRiderDurationExtensionsAreSupported(mechanics.duration) &&
+          weaponDamageRiderDurationEndingsAreSupported(mechanics.duration),
+      },
+      {
+        name: "attachment",
+        present:
+          mechanics.attachment?.kind === "self" &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.attachment,
+            WEAPON_DAMAGE_RIDER_ATTACHMENT_FIELDS,
+          ),
+      },
+      {
+        name: "operation",
+        present:
+          mechanics.operations?.length === 1 && operationRole !== undefined,
+      },
+      {
+        name: "damageAmount",
+        present:
+          operationRole !== undefined &&
+          weaponDamageRiderAmountIsCanonical(operationRole.effect.amount),
+      },
+    ],
+  });
 }
 
-function weaponDamageRiderDistinctiveHeaderFallback(
-  mechanics: SpellMechanics,
-): boolean {
-  return (
-    mechanics.family === "ongoing_effect" &&
-    mechanics.level === 1 &&
-    mechanics.castingTime.kind === "bonus_action" &&
-    mechanics.range.kind === "self" &&
-    mechanics.duration.kind === "timed"
-  );
-}
-
-function weaponDamageRiderDurationIsSupported(
+function weaponDamageRiderDurationValue(
   duration: SpellMechanics["duration"],
-): duration is Extract<
-  SpellMechanics["duration"],
-  { readonly kind: "timed" }
-> & {
-  readonly value: SpellCanonicalDurationValue;
-} {
-  return (
-    duration.kind === "timed" &&
-    spellMechanicsObjectHasOnlyKeys(
+): SpellCanonicalDurationValue | undefined {
+  if (
+    duration.kind !== "timed" ||
+    !spellMechanicsObjectHasOnlyKeys(
       duration,
       WEAPON_DAMAGE_RIDER_DURATION_FIELDS,
-    ) &&
-    spellMechanicsObjectHasOnlyKeys(
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
       duration.value,
       WEAPON_DAMAGE_RIDER_DURATION_VALUE_FIELDS,
-    ) &&
-    duration.value.unit === "minute" &&
-    duration.value.amount === 1 &&
-    isSpellCanonicalDurationValue(duration.value) &&
-    duration.value.upcastTiers === undefined &&
+    ) ||
+    duration.value.unit !== "minute" ||
+    duration.value.amount !== 1 ||
+    !isSpellCanonicalDurationValue(duration.value)
+  ) {
+    return undefined;
+  }
+  return duration.value;
+}
+
+function weaponDamageRiderDurationExtensionsAreSupported(
+  duration: SpellMechanics["duration"],
+): boolean {
+  return duration.kind === "timed" && duration.value.upcastTiers === undefined;
+}
+
+function weaponDamageRiderDurationEndingsAreSupported(
+  duration: SpellMechanics["duration"],
+): boolean {
+  return (
+    duration.kind === "timed" &&
     duration.earlyEnd === undefined &&
     duration.permanentAfter === undefined
   );
@@ -400,10 +450,7 @@ function admitWeaponDamageRiderMechanics(
       issues,
     };
   }
-  if (
-    !weaponDamageRiderSemanticCandidate(source.mechanics) &&
-    !weaponDamageRiderDistinctiveHeaderFallback(source.mechanics)
-  ) {
+  if (!weaponDamageRiderStructuralCandidate(source.mechanics)) {
     return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "ongoing_effect") {
@@ -414,9 +461,16 @@ function admitWeaponDamageRiderMechanics(
   const operationRole = weaponDamageRiderOperationRole(operation)
     ? operation
     : undefined;
-  const durationSupported = weaponDamageRiderDurationIsSupported(
+  const durationValue = weaponDamageRiderDurationValue(mechanics.duration);
+  const durationExtensionsSupported =
+    weaponDamageRiderDurationExtensionsAreSupported(mechanics.duration);
+  const durationEndingsSupported = weaponDamageRiderDurationEndingsAreSupported(
     mechanics.duration,
   );
+  const durationSupported =
+    durationValue !== undefined &&
+    durationExtensionsSupported &&
+    durationEndingsSupported;
   const issues: WeaponDamageRiderMechanicsIssue[] = [];
   const push = (
     failedFact: WeaponDamageRiderFailedFact,
@@ -477,12 +531,23 @@ function admitWeaponDamageRiderMechanics(
   }
   if (!durationSupported) {
     push("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      push("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-    }
+    if (durationValue === undefined)
+      for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+        push("durationValue", path);
+    if (!durationExtensionsSupported)
+      for (const child of spellDurationChildCoordinates(mechanics.duration))
+        if (child.branch === "extension")
+          push(
+            spellDurationChildFailedFact(child),
+            spellDurationChildPath(child),
+          );
+    if (!durationEndingsSupported)
+      for (const child of spellDurationChildCoordinates(mechanics.duration))
+        if (child.branch === "ending")
+          push(
+            spellDurationChildFailedFact(child),
+            spellDurationChildPath(child),
+          );
   }
   if (
     mechanics.castingTime.kind !== "bonus_action" ||
@@ -553,8 +618,7 @@ function admitWeaponDamageRiderMechanics(
       ],
     };
   }
-  const durationValue = mechanics.duration.value;
-  if (!isSpellCanonicalDurationValue(durationValue)) {
+  if (durationValue === undefined) {
     return {
       tag: "unsupported",
       issues: [

@@ -1,8 +1,8 @@
 import {
-  DAMAGE_DIE_SIZES,
   attackBonus,
   type CharacterLevel,
   type DamageDieSize,
+  type PositiveInteger,
 } from "@dnd/shared/types";
 import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import type {
@@ -55,18 +55,28 @@ export type WeaponAttackOverrideInvocation =
     };
   };
 
+export type WeaponAttackOverrideDamageTierFacts<
+  AtLevel extends number,
+  Dice extends number,
+  DieSize extends DamageDieSize,
+> = {
+  readonly atLevel: CharacterLevel & AtLevel;
+  readonly override: {
+    readonly dice: PositiveInteger & Dice;
+    readonly dieSize: DamageDieSize & DieSize;
+  };
+};
+
 export type WeaponAttackOverrideDamageDieFacts = {
   readonly base: {
-    readonly dice: 1;
-    readonly dieSize: 8;
+    readonly dice: PositiveInteger & 1;
+    readonly dieSize: DamageDieSize & 8;
   };
-  readonly tiers: readonly {
-    readonly atLevel: CharacterLevel;
-    readonly override: {
-      readonly dice?: number;
-      readonly dieSize?: number;
-    };
-  }[];
+  readonly tiers: readonly [
+    WeaponAttackOverrideDamageTierFacts<5, 1, 10>,
+    WeaponAttackOverrideDamageTierFacts<11, 1, 12>,
+    WeaponAttackOverrideDamageTierFacts<17, 2, 6>,
+  ];
 };
 
 export type WeaponAttackOverrideMechanicsProjection = {
@@ -83,7 +93,6 @@ export function admitWeaponAttackOverride(
     projection.damageDie,
     characterBattleLevel(ctx.actor.origin.classLevels),
   );
-  if (damageExpr === null) return [];
   const spellcasting = ctx.actor.origin.spellcasting;
   return attachedWeaponAttacksEligibleForOverride(ctx).map(
     ({ itemId, slot, attack }): WeaponAttackOverrideInvocation => ({
@@ -176,33 +185,18 @@ function weaponAttackOverrideDamageExpr(
   damageDie: WeaponAttackOverrideDamageDieFacts,
   characterLevel: CharacterLevel,
 ): {
-  readonly dice: number;
+  readonly dice: PositiveInteger;
   readonly dieSize: DamageDieSize;
-} | null {
-  if (damageDie.base.dice !== 1 || damageDie.base.dieSize !== 8) {
-    return null;
+} {
+  const [tierAtFive, tierAtEleven, tierAtSeventeen] = damageDie.tiers;
+  if (characterLevel >= tierAtSeventeen.atLevel) {
+    return tierAtSeventeen.override;
   }
-  const override = damageDie.tiers.reduce<{
-    readonly dice: number;
-    readonly dieSize: number;
-  }>(
-    (projection, tier) =>
-      characterLevel >= tier.atLevel
-        ? {
-            dice: tier.override.dice ?? projection.dice,
-            dieSize: tier.override.dieSize ?? projection.dieSize,
-          }
-        : projection,
-    damageDie.base,
-  );
-  return isDamageDieSize(override.dieSize) && override.dice > 0
-    ? {
-        dice: override.dice,
-        dieSize: override.dieSize,
-      }
-    : null;
-}
-
-function isDamageDieSize(value: number): value is DamageDieSize {
-  return DAMAGE_DIE_SIZES.some((dieSize) => dieSize === value);
+  if (characterLevel >= tierAtEleven.atLevel) {
+    return tierAtEleven.override;
+  }
+  if (characterLevel >= tierAtFive.atLevel) {
+    return tierAtFive.override;
+  }
+  return damageDie.base;
 }

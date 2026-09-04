@@ -13,7 +13,13 @@
 //   - UBIQUITOUS_LANGUAGE.md: Bonus Action, Attack Roll, Damage Roll, Damage
 //     Type, and Weapon Property.
 
-import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  type CharacterLevel,
+  type DamageDieSize,
+  type PositiveInteger as PositiveIntegerType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   interruptWindowProgress,
   snapshotBattle,
@@ -22,6 +28,7 @@ import {
 import {
   admitWeaponAttackOverride,
   type WeaponAttackOverrideDamageDieFacts,
+  type WeaponAttackOverrideDamageTierFacts,
   type WeaponAttackOverrideInvocation,
   type WeaponAttackOverrideMechanicsProjection,
 } from "../../weapon-attack-override-admission.ts";
@@ -51,12 +58,13 @@ import {
   spellDurationChildPath,
   spellDurationEvidencePaths,
   spellDurationValueEvidencePaths,
-  spellMechanicsFixedTableEntries,
   spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
   isSpellCanonicalDurationValue,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   spellCharacterLevelFromSurface,
+  spellPositiveIntegerFromSurface,
   spellDurationTicksFromCanonicalValue,
   type SpellCanonicalDurationValue,
   type SpellMechanicsAdmissionSource,
@@ -231,22 +239,55 @@ const WEAPON_ATTACK_OVERRIDE_TIER_OVERRIDE_FIELDS = [
   keyof OverrideDamageDie["tiers"][number]["override"]
 >;
 const WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS = [
-  { atLevel: 5, override: { dieSize: 10 } },
-  { atLevel: 11, override: { dieSize: 12 } },
-  { atLevel: 17, override: { dice: 2, dieSize: 6 } },
+  { atLevel: 5, dice: 1, dieSize: 10 },
+  { atLevel: 11, dice: 1, dieSize: 12 },
+  { atLevel: 17, dice: 2, dieSize: 6 },
 ] as const;
 
-function weaponAttackOverrideDamageTierMatches(
-  actual: OverrideDamageDie["tiers"][number]["override"],
-  expected: (typeof WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS)[number]["override"],
-): boolean {
-  return (
-    ("dice" in actual ? actual.dice : undefined) ===
-      ("dice" in expected ? expected.dice : undefined) &&
-    actual.dieSize === expected.dieSize &&
-    ("flat" in actual ? actual.flat : undefined) ===
-      ("flat" in expected ? expected.flat : undefined)
-  );
+function weaponAttackOverrideCharacterLevelAt<const Expected extends number>(
+  value: number,
+  expected: Expected,
+): (CharacterLevel & Expected) | undefined {
+  const parsed = spellCharacterLevelFromSurface(value);
+  return parsed !== undefined &&
+    weaponAttackOverrideCharacterLevelMatches(parsed, expected)
+    ? parsed
+    : undefined;
+}
+
+function weaponAttackOverrideCharacterLevelMatches<
+  const Expected extends number,
+>(
+  value: CharacterLevel,
+  expected: Expected,
+): value is CharacterLevel & Expected {
+  return Number(value) === expected;
+}
+
+function weaponAttackOverridePositiveIntegerAt<const Expected extends number>(
+  value: number,
+  expected: Expected,
+): (PositiveIntegerType & Expected) | undefined {
+  const parsed = spellPositiveIntegerFromSurface(value);
+  return parsed !== undefined &&
+    weaponAttackOverridePositiveIntegerMatches(parsed, expected)
+    ? parsed
+    : undefined;
+}
+
+function weaponAttackOverridePositiveIntegerMatches<
+  const Expected extends number,
+>(
+  value: PositiveIntegerType,
+  expected: Expected,
+): value is PositiveIntegerType & Expected {
+  return Number(value) === expected;
+}
+
+function weaponAttackOverrideDamageDieSizeAt<
+  const Expected extends DamageDieSize,
+>(value: number, expected: Expected): (DamageDieSize & Expected) | undefined {
+  return value === expected ? expected : undefined;
 }
 
 function weaponAttackOverrideIssueResult(
@@ -290,38 +331,75 @@ function weaponAttackOverrideMissingRootIssues(
   return spellProcedureNonEmpty(issues);
 }
 
-function weaponAttackOverrideSemanticCandidate(
+function weaponAttackOverrideStructuralCandidate(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "ongoing_effect" &&
-    mechanics.operations.some(
-      (operation) =>
-        operation.effect.kind === "override_attached_weapon_attack",
-    )
-  );
+  if (mechanics.family !== "ongoing_effect") return false;
+  const operation = mechanics.operations?.[0];
+  const operationRole = weaponAttackOverrideOperationRole(operation)
+    ? operation
+    : undefined;
+  return spellProcedureHasRedundantSignature({
+    kind: "twoWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present:
+          mechanics.level === 0 &&
+          mechanics.school === "transmutation" &&
+          mechanics.range?.kind === "self" &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.range,
+            WEAPON_ATTACK_OVERRIDE_RANGE_FIELDS,
+          ) &&
+          mechanics.components?.v === true &&
+          mechanics.components.s === true &&
+          typeof mechanics.components.m === "string" &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.components,
+            WEAPON_ATTACK_OVERRIDE_COMPONENT_FIELDS,
+          ) &&
+          mechanics.castingTime?.kind === "bonus_action" &&
+          mechanics.castingTime.trigger === undefined &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.castingTime,
+            WEAPON_ATTACK_OVERRIDE_CASTING_TIME_FIELDS,
+          ),
+      },
+      {
+        name: "duration",
+        present:
+          weaponAttackOverrideDurationValue(mechanics.duration) !== undefined &&
+          weaponAttackOverrideDurationExtensionsAreSupported(
+            mechanics.duration,
+          ) &&
+          weaponAttackOverrideDurationEndingsAreSupported(mechanics.duration),
+      },
+      {
+        name: "attachment",
+        present:
+          mechanics.attachment !== undefined &&
+          weaponAttackOverrideAttachmentIsSupported(mechanics.attachment),
+      },
+      {
+        name: "operation",
+        present:
+          mechanics.operations?.length === 1 && operationRole !== undefined,
+      },
+      {
+        name: "damageDie",
+        present:
+          operationRole !== undefined &&
+          weaponAttackOverrideDamageDieFacts(operationRole.effect.damageDie) !==
+            undefined,
+      },
+    ],
+  });
 }
 
-function weaponAttackOverrideDistinctiveHeaderFallback(
-  mechanics: SpellMechanics,
-): boolean {
-  return (
-    mechanics.family === "ongoing_effect" &&
-    mechanics.level === 0 &&
-    mechanics.castingTime.kind === "bonus_action" &&
-    mechanics.range.kind === "self" &&
-    mechanics.duration.kind === "timed"
-  );
-}
-
-function weaponAttackOverrideDurationIsSupported(
+function weaponAttackOverrideDurationValue(
   duration: SpellMechanics["duration"],
-): duration is Extract<
-  SpellMechanics["duration"],
-  { readonly kind: "timed" }
-> & {
-  readonly value: SpellCanonicalDurationValue;
-} {
+): SpellCanonicalDurationValue | undefined {
   if (
     duration.kind !== "timed" ||
     !spellMechanicsObjectHasOnlyKeys(
@@ -334,10 +412,23 @@ function weaponAttackOverrideDurationIsSupported(
     ) ||
     duration.value.unit !== "minute" ||
     duration.value.amount !== 1 ||
-    !isSpellCanonicalDurationValue(duration.value) ||
-    duration.value.upcastTiers !== undefined ||
-    duration.permanentAfter !== undefined
+    !isSpellCanonicalDurationValue(duration.value)
   ) {
+    return undefined;
+  }
+  return duration.value;
+}
+
+function weaponAttackOverrideDurationExtensionsAreSupported(
+  duration: SpellMechanics["duration"],
+): boolean {
+  return duration.kind === "timed" && duration.value.upcastTiers === undefined;
+}
+
+function weaponAttackOverrideDurationEndingsAreSupported(
+  duration: SpellMechanics["duration"],
+): boolean {
+  if (duration.kind !== "timed" || duration.permanentAfter !== undefined) {
     return false;
   }
   const earlyEnd = duration.earlyEnd;
@@ -398,36 +489,90 @@ function weaponAttackOverrideDamageDieFacts(
   ) {
     return undefined;
   }
-  const parsedTiers = damageDie.tiers.flatMap((tier) => {
-    const atLevel = spellCharacterLevelFromSurface(tier.atLevel);
-    return atLevel !== undefined &&
-      spellMechanicsObjectHasOnlyKeys(
-        tier,
-        WEAPON_ATTACK_OVERRIDE_TIER_FIELDS,
-      ) &&
-      spellMechanicsObjectHasOnlyKeys(
-        tier.override,
-        WEAPON_ATTACK_OVERRIDE_TIER_OVERRIDE_FIELDS,
-      ) &&
-      tier.override.flat === undefined &&
-      (tier.override.dice === undefined || tier.override.dice > 0) &&
-      (tier.override.dieSize === undefined || tier.override.dieSize > 0)
-      ? [{ ...tier, atLevel }]
-      : [];
-  });
-  const orderedTiers = spellMechanicsFixedTableEntries(
-    parsedTiers,
-    WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS,
-    (actual, expected) =>
-      Number(actual.atLevel) === expected.atLevel &&
-      weaponAttackOverrideDamageTierMatches(actual.override, expected.override),
+  const baseDice = weaponAttackOverridePositiveIntegerAt(
+    damageDie.base.dice,
+    1,
   );
-  return orderedTiers === undefined
+  const baseDieSize = weaponAttackOverrideDamageDieSizeAt(
+    damageDie.base.dieSize,
+    8,
+  );
+  const firstTier = weaponAttackOverrideDamageTierFacts(
+    damageDie.tiers,
+    WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS[0],
+  );
+  const secondTier = weaponAttackOverrideDamageTierFacts(
+    damageDie.tiers,
+    WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS[1],
+  );
+  const thirdTier = weaponAttackOverrideDamageTierFacts(
+    damageDie.tiers,
+    WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS[2],
+  );
+  return baseDice === undefined ||
+    baseDieSize === undefined ||
+    firstTier === undefined ||
+    secondTier === undefined ||
+    thirdTier === undefined
     ? undefined
     : {
-        base: { dice: 1, dieSize: 8 },
-        tiers: orderedTiers,
+        base: { dice: baseDice, dieSize: baseDieSize },
+        tiers: [firstTier, secondTier, thirdTier],
       };
+}
+
+function weaponAttackOverrideDamageTierFacts<
+  const AtLevel extends number,
+  const Dice extends number,
+  const DieSize extends DamageDieSize,
+>(
+  tiers: readonly OverrideDamageDie["tiers"][number][],
+  expected: {
+    readonly atLevel: AtLevel;
+    readonly dice: Dice;
+    readonly dieSize: DieSize;
+  },
+): WeaponAttackOverrideDamageTierFacts<AtLevel, Dice, DieSize> | undefined {
+  const matchingTiers = tiers.filter(
+    (tier) => tier.atLevel === expected.atLevel,
+  );
+  const [tier] = matchingTiers;
+  if (
+    matchingTiers.length !== 1 ||
+    tier === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      tier,
+      WEAPON_ATTACK_OVERRIDE_TIER_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      tier.override,
+      WEAPON_ATTACK_OVERRIDE_TIER_OVERRIDE_FIELDS,
+    ) ||
+    tier.override.flat !== undefined
+  ) {
+    return undefined;
+  }
+  const atLevel = weaponAttackOverrideCharacterLevelAt(
+    tier.atLevel,
+    expected.atLevel,
+  );
+  const dice =
+    tier.override.dice === undefined
+      ? weaponAttackOverridePositiveIntegerAt(expected.dice, expected.dice)
+      : weaponAttackOverridePositiveIntegerAt(
+          tier.override.dice,
+          expected.dice,
+        );
+  const dieSize =
+    tier.override.dieSize === undefined
+      ? undefined
+      : weaponAttackOverrideDamageDieSizeAt(
+          tier.override.dieSize,
+          expected.dieSize,
+        );
+  return atLevel === undefined || dice === undefined || dieSize === undefined
+    ? undefined
+    : { atLevel, override: { dice, dieSize } };
 }
 
 function weaponAttackOverrideOperationRole(
@@ -527,10 +672,7 @@ function admitWeaponAttackOverrideMechanics(
       issues,
     };
   }
-  if (
-    !weaponAttackOverrideSemanticCandidate(source.mechanics) &&
-    !weaponAttackOverrideDistinctiveHeaderFallback(source.mechanics)
-  ) {
+  if (!weaponAttackOverrideStructuralCandidate(source.mechanics)) {
     return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "ongoing_effect") {
@@ -541,9 +683,15 @@ function admitWeaponAttackOverrideMechanics(
   const operationRole = weaponAttackOverrideOperationRole(operation)
     ? operation
     : undefined;
-  const durationSupported = weaponAttackOverrideDurationIsSupported(
-    mechanics.duration,
-  );
+  const durationValue = weaponAttackOverrideDurationValue(mechanics.duration);
+  const durationExtensionsSupported =
+    weaponAttackOverrideDurationExtensionsAreSupported(mechanics.duration);
+  const durationEndingsSupported =
+    weaponAttackOverrideDurationEndingsAreSupported(mechanics.duration);
+  const durationSupported =
+    durationValue !== undefined &&
+    durationExtensionsSupported &&
+    durationEndingsSupported;
   const attachmentSupported = weaponAttackOverrideAttachmentIsSupported(
     mechanics.attachment,
   );
@@ -607,12 +755,23 @@ function admitWeaponAttackOverrideMechanics(
   }
   if (!durationSupported) {
     push("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      push("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-    }
+    if (durationValue === undefined)
+      for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+        push("durationValue", path);
+    if (!durationExtensionsSupported)
+      for (const child of spellDurationChildCoordinates(mechanics.duration))
+        if (child.branch === "extension")
+          push(
+            spellDurationChildFailedFact(child),
+            spellDurationChildPath(child),
+          );
+    if (!durationEndingsSupported)
+      for (const child of spellDurationChildCoordinates(mechanics.duration))
+        if (child.branch === "ending")
+          push(
+            spellDurationChildFailedFact(child),
+            spellDurationChildPath(child),
+          );
   }
   if (
     mechanics.castingTime.kind !== "bonus_action" ||
@@ -677,8 +836,7 @@ function admitWeaponAttackOverrideMechanics(
       issues: [weaponAttackOverrideIssueResult(issue)],
     };
   }
-  const durationValue = mechanics.duration.value;
-  if (!isSpellCanonicalDurationValue(durationValue)) {
+  if (durationValue === undefined) {
     return {
       tag: "unsupported",
       issues: [

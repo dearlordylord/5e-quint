@@ -96,6 +96,7 @@ import {
   spellDurationTicksFromCanonicalValue,
   isSpellCanonicalDurationValue,
   spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   type SpellCanonicalDurationValue,
@@ -486,64 +487,143 @@ function objectContactDamageMissingRootIssues(
   return spellProcedureNonEmpty(issues);
 }
 
-function objectContactDamageSemanticCandidate(
+function objectContactDamageStructuralCandidate(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "ongoing_effect" &&
-    (mechanics.operations?.some(
-      (operation) => operation.effect.kind === "object_contact_damage",
+  if (mechanics.family !== "ongoing_effect") return false;
+  const initialPhase = mechanics.initialPhase;
+  const initialEffect =
+    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
+  const repeatOperation = mechanics.operations?.[0];
+  return spellProcedureHasRedundantSignature({
+    kind: "twoWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present:
+          mechanics.level === 2 &&
+          mechanics.school === "transmutation" &&
+          mechanics.range?.kind === "point" &&
+          mechanics.range.feet === 60 &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.range,
+            OBJECT_CONTACT_DAMAGE_RANGE_FIELDS,
+          ) &&
+          mechanics.components?.v === true &&
+          mechanics.components.s === true &&
+          typeof mechanics.components.m === "string" &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.components,
+            OBJECT_CONTACT_DAMAGE_COMPONENT_FIELDS,
+          ) &&
+          mechanics.castingTime?.kind === "action" &&
+          mechanics.castingTime.ritual === undefined &&
+          spellMechanicsObjectHasOnlyKeys(
+            mechanics.castingTime,
+            OBJECT_CONTACT_DAMAGE_CASTING_TIME_FIELDS,
+          ),
+      },
+      {
+        name: "duration",
+        present:
+          objectContactDamageDurationValue(mechanics.duration) !== undefined &&
+          objectContactDamageDurationExtensionsAreSupported(
+            mechanics.duration,
+          ) &&
+          objectContactDamageDurationEndingsAreSupported(mechanics.duration),
+      },
+      {
+        name: "attachment",
+        present: isManufacturedMetalObjectAttachment(mechanics.attachment),
+      },
+      {
+        name: "initialEffect",
+        present:
+          initialPhase?.kind === "direct" &&
+          initialPhase.effects?.length === 1 &&
+          isObjectContactDamageEffect(initialEffect),
+      },
+      {
+        name: "repeatOperation",
+        present:
+          mechanics.operations?.length === 1 &&
+          isObjectContactDamageRepeatOperation(repeatOperation) &&
+          isObjectContactDamageEffect(repeatOperation.effect),
+      },
+    ],
+  });
+}
+
+function objectContactDamageDurationValue(
+  duration: SpellMechanics["duration"],
+): SpellCanonicalDurationValue | undefined {
+  if (
+    duration.kind !== "concentration" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      duration,
+      OBJECT_CONTACT_DAMAGE_DURATION_FIELDS,
     ) ||
-      (mechanics.initialPhase?.kind === "direct" &&
-        mechanics.initialPhase.effects?.some(
-          (effect) => effect.kind === "object_contact_damage",
-        ) === true) ||
-      (mechanics.attachment?.kind === "hole" &&
-        mechanics.attachment.value.kind === "object" &&
-        mechanics.attachment.value.filter?.material === "metal"))
+    !spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      OBJECT_CONTACT_DAMAGE_DURATION_VALUE_FIELDS,
+    ) ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== 1 ||
+    !isSpellCanonicalDurationValue(duration.upTo)
+  ) {
+    return undefined;
+  }
+  return duration.upTo;
+}
+
+function objectContactDamageDurationExtensionsAreSupported(
+  duration: SpellMechanics["duration"],
+): boolean {
+  return (
+    duration.kind === "concentration" && duration.upTo.upcastTiers === undefined
   );
 }
 
-function objectContactDamageDistinctiveHeaderFallback(
-  mechanics: SpellMechanics,
+function objectContactDamageDurationEndingsAreSupported(
+  duration: SpellMechanics["duration"],
 ): boolean {
   return (
-    mechanics.family === "ongoing_effect" &&
-    mechanics.level === 2 &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === 60 &&
-    mechanics.duration.kind === "concentration"
+    duration.kind === "concentration" &&
+    duration.earlyEnd === undefined &&
+    duration.permanentIfMaintainedFull === undefined
   );
 }
 
 function isManufacturedMetalObjectAttachment(
   attachment: OngoingEffectSpellMechanics["attachment"] | undefined,
 ): attachment is ManufacturedMetalObjectAttachment {
+  const value = attachment?.kind === "hole" ? attachment.value : undefined;
+  const filter = value?.kind === "object" ? value.filter : undefined;
   if (
     attachment?.kind !== "hole" ||
     !spellMechanicsObjectHasOnlyKeys(
       attachment,
       OBJECT_CONTACT_DAMAGE_ATTACHMENT_FIELDS,
     ) ||
-    attachment.value.kind !== "object" ||
+    value?.kind !== "object" ||
+    value === undefined ||
     !spellMechanicsObjectHasOnlyKeys(
-      attachment.value,
+      value,
       OBJECT_CONTACT_DAMAGE_OBJECT_VALUE_FIELDS,
     ) ||
-    attachment.value.count !== 1 ||
-    attachment.value.filter === undefined ||
+    value.count !== 1 ||
+    filter === undefined ||
     !spellMechanicsObjectHasOnlyKeys(
-      attachment.value.filter,
+      filter,
       OBJECT_CONTACT_DAMAGE_OBJECT_FILTER_FIELDS,
     )
   ) {
     return false;
   }
   return (
-    attachment.value.filter.manufactured === true &&
-    attachment.value.filter.material === "metal" &&
-    attachment.value.filter.visibility === "caster_can_see"
+    filter.manufactured === true &&
+    filter.material === "metal" &&
+    filter.visibility === "caster_can_see"
   );
 }
 
@@ -788,10 +868,7 @@ function inspectObjectContactDamageMechanics(
   if (missingRootIssues !== undefined) {
     return { tag: "unsupported", issues: missingRootIssues };
   }
-  if (
-    !objectContactDamageSemanticCandidate(source.mechanics) &&
-    !objectContactDamageDistinctiveHeaderFallback(source.mechanics)
-  ) {
+  if (!objectContactDamageStructuralCandidate(source.mechanics)) {
     return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "ongoing_effect") {
@@ -803,27 +880,15 @@ function inspectObjectContactDamageMechanics(
     initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
   const repeatOperation = mechanics.operations[0];
   const repeatEffect = repeatOperation?.effect;
+  const durationValue = objectContactDamageDurationValue(mechanics.duration);
+  const durationExtensionsSupported =
+    objectContactDamageDurationExtensionsAreSupported(mechanics.duration);
+  const durationEndingsSupported =
+    objectContactDamageDurationEndingsAreSupported(mechanics.duration);
   const durationSupported =
-    mechanics.duration.kind === "concentration" &&
-    spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      OBJECT_CONTACT_DAMAGE_DURATION_FIELDS,
-    ) &&
-    spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration.upTo,
-      OBJECT_CONTACT_DAMAGE_DURATION_VALUE_FIELDS,
-    ) &&
-    mechanics.duration.upTo.unit === "minute" &&
-    mechanics.duration.upTo.amount === 1 &&
-    isSpellCanonicalDurationValue(mechanics.duration.upTo) &&
-    mechanics.duration.upTo.upcastTiers === undefined &&
-    mechanics.duration.earlyEnd === undefined &&
-    mechanics.duration.permanentIfMaintainedFull === undefined;
-  const durationValue =
-    mechanics.duration.kind === "concentration" &&
-    isSpellCanonicalDurationValue(mechanics.duration.upTo)
-      ? mechanics.duration.upTo
-      : undefined;
+    durationValue !== undefined &&
+    durationExtensionsSupported &&
+    durationEndingsSupported;
   const rangeFeet =
     mechanics.range.kind === "point" && mechanics.range.feet === 60
       ? movementFeet(mechanics.range.feet)
@@ -895,10 +960,23 @@ function inspectObjectContactDamageMechanics(
     push("components", spellMechanicsHeaderPath("components"));
   if (!durationSupported || !definitionFacts.duration) {
     push("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-      push("durationValue", path);
-    for (const child of spellDurationChildCoordinates(mechanics.duration))
-      push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+    if (durationValue === undefined)
+      for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+        push("durationValue", path);
+    if (!durationExtensionsSupported)
+      for (const child of spellDurationChildCoordinates(mechanics.duration))
+        if (child.branch === "extension")
+          push(
+            spellDurationChildFailedFact(child),
+            spellDurationChildPath(child),
+          );
+    if (!durationEndingsSupported)
+      for (const child of spellDurationChildCoordinates(mechanics.duration))
+        if (child.branch === "ending")
+          push(
+            spellDurationChildFailedFact(child),
+            spellDurationChildPath(child),
+          );
   }
   if (
     mechanics.castingTime.kind !== "action" ||
