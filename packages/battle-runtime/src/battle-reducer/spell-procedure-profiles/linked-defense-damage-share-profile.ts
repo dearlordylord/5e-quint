@@ -18,6 +18,7 @@ import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra
 import { PositiveInteger } from "@dnd/shared/types";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
 
 import { LinkedDefenseResistanceDamageShareTemplateSchema } from "../../active-effect/codecs.ts";
 import {
@@ -412,6 +413,28 @@ function linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePr
   );
 }
 
+function linkedDefenseResistanceDamageShareOperationShellIsSupported(
+  operation: LinkedDefenseResistanceDamageShareMechanics["operations"][number],
+): boolean {
+  const requiresPredicate = operation.effect.kind !== "share_damage_to_caster";
+  const expectedFields = requiresPredicate
+    ? LINKED_DEFENSE_PASSIVE_OPERATION_FIELDS
+    : LINKED_DEFENSE_DAMAGE_SHARE_OPERATION_FIELDS;
+  const expectedTrigger = requiresPredicate ? "passive" : "on_attached_damaged";
+  return (
+    spellMechanicsObjectHasOnlyKeys(operation, expectedFields) &&
+    operation.trigger.kind === expectedTrigger &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.trigger,
+      LINKED_DEFENSE_TRIGGER_FIELDS,
+    ) &&
+    (!requiresPredicate ||
+      linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
+        operation,
+      ))
+  );
+}
+
 function linkedDefenseResistanceDamageShareArmorClassOperationIsSupported(
   operation: Extract<
     BattleSpellAdmissionSource["mechanics"],
@@ -637,9 +660,7 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
         pushIssue("durationExtension", spellDurationChildPath(child));
     }
     const earlyEnd = mechanics.duration.earlyEnd;
-    if (earlyEnd === undefined || earlyEnd.length === 0) {
-      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
-    } else {
+    if (earlyEnd !== undefined) {
       const seenEndingKinds = new Set<string>();
       for (const [index, ending] of earlyEnd.entries()) {
         const supportedKind = LINKED_DEFENSE_ENDING_KINDS.some(
@@ -657,12 +678,17 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
         }
         seenEndingKinds.add(ending.kind);
       }
-      if (earlyEnd.length < LINKED_DEFENSE_ENDING_KINDS.length) {
-        pushIssue(
-          "durationEnding",
-          spellDurationEndingPath(PositiveInteger(earlyEnd.length + 1)),
-        );
-      }
+    }
+    const endingCount = earlyEnd?.length ?? 0;
+    for (
+      let missingOrdinal = endingCount + 1;
+      missingOrdinal <= LINKED_DEFENSE_ENDING_KINDS.length;
+      missingOrdinal += 1
+    ) {
+      pushIssue(
+        "durationEnding",
+        spellDurationEndingPath(PositiveInteger(missingOrdinal)),
+      );
     }
     if (mechanics.duration.permanentAfter !== undefined) {
       pushIssue(
@@ -720,29 +746,50 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
         linkedDefenseResistanceDamageShareDamageShareOperationIsSupported,
     },
   ] as const;
-  if (mechanics.operations.length !== operationChecks.length) {
-    pushIssue(
-      "operationCount",
-      spellOngoingOperationPath(
-        PositiveInteger(
-          mechanics.operations.length > operationChecks.length
-            ? operationChecks.length + 1
-            : mechanics.operations.length + 1,
-        ),
-      ),
-    );
-  }
   for (const [expectedIndex, check] of operationChecks.entries()) {
-    const representedIndex = mechanics.operations.findIndex(check.represented);
-    const operation = mechanics.operations[representedIndex];
-    if (operation === undefined || !check.supported(operation)) {
+    const represented = mechanics.operations.flatMap((operation, index) =>
+      check.represented(operation) ? [{ operation, index }] : [],
+    );
+    if (represented.length === 0) {
       pushIssue(
         check.failedFact,
-        spellOngoingOperationEffectPath(
-          PositiveInteger(
-            representedIndex < 0 ? expectedIndex + 1 : representedIndex + 1,
-          ),
-        ),
+        spellOngoingOperationEffectPath(PositiveInteger(expectedIndex + 1)),
+      );
+    }
+    for (const { operation, index } of represented) {
+      if (!check.supported(operation)) {
+        pushIssue(
+          check.failedFact,
+          linkedDefenseResistanceDamageShareOperationShellIsSupported(operation)
+            ? spellOngoingOperationEffectPath(PositiveInteger(index + 1))
+            : spellOngoingOperationPath(PositiveInteger(index + 1)),
+        );
+      }
+    }
+    for (const { index } of represented.slice(1)) {
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  for (const [index, operation] of mechanics.operations.entries()) {
+    if (!operationChecks.some((check) => check.represented(operation))) {
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  if (mechanics.operations.length < operationChecks.length) {
+    for (
+      let missingOrdinal = mechanics.operations.length + 1;
+      missingOrdinal <= operationChecks.length;
+      missingOrdinal += 1
+    ) {
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(missingOrdinal)),
       );
     }
   }
@@ -774,7 +821,7 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
   }
   const durationTicks = spellDurationTicksFromCanonicalValue(durationValue);
   const facts = {
-    ...source.spellDefinitionRuleFacts,
+    ...projectSpellDefinitionRuleFacts(mechanics),
     durationTicks,
   } satisfies LinkedDefenseResistanceDamageShareFacts;
   return {

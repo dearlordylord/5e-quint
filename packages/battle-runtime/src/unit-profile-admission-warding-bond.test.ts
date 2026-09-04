@@ -242,6 +242,26 @@ describe("linkedDefenseResistanceDamageShare static admission", () => {
     );
   });
 
+  test("projects canonical facts from admitted mechanics instead of stale source facts", () => {
+    const source = spellAdmissionSource(spellRecord("warding_bond"));
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics({
+      mechanics: source.mechanics,
+      spellDefinitionRuleFacts: {
+        ...source.spellDefinitionRuleFacts,
+        level: 9,
+        range: { kind: "self" },
+      },
+    });
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 2,
+      range: { kind: "touch" },
+      durationTicks: 600,
+    });
+  });
+
   test("does not claim unrelated shipped spell mechanics", () => {
     const results = unitLibrary
       .listUnits()
@@ -379,10 +399,113 @@ describe("linkedDefenseResistanceDamageShare static admission", () => {
     expect(result.tag).toBe("unsupported");
     if (result.tag !== "unsupported") return;
     expect(result.issues.map(({ failedFact }) => failedFact)).toEqual([
-      "operationCount",
       "savingThrowOperation",
       "resistanceOperation",
       "damageShareOperation",
+      "operationCount",
+      "operationCount",
+      "operationCount",
+    ]);
+  });
+
+  test("reports every missing duration ending coordinate", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => {
+        if (mechanics.duration.kind !== "timed")
+          throw new Error("Expected the linked-defense timed duration.");
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            earlyEnd: mechanics.duration.earlyEnd?.slice(0, 1),
+          },
+        };
+      }, "missing_duration_endings"),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+      }),
+      expect.objectContaining({
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(3)),
+      }),
+    ]);
+  });
+
+  test("reports operation-shell defects at their operation coordinate", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => {
+        const operation = mechanics.operations[0];
+        if (operation?.effect.kind !== "modify_ac")
+          throw new Error("Expected the linked-defense AC operation.");
+        return {
+          ...mechanics,
+          operations: [
+            { ...operation, trigger: { kind: "on_attached_damaged" as const } },
+            ...mechanics.operations.slice(1),
+          ],
+        };
+      }, "operation_shell"),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "armorClassOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      }),
+    ]);
+  });
+
+  test("reports malformed duplicate operations at their actual coordinates", () => {
+    const source = spellAdmissionSource(
+      syntheticWardingBond((mechanics) => {
+        const operation = mechanics.operations[0];
+        if (operation?.effect.kind !== "modify_ac")
+          throw new Error("Expected the linked-defense AC operation.");
+        return {
+          ...mechanics,
+          operations: [
+            ...mechanics.operations.slice(0, 2),
+            {
+              ...operation,
+              effect: {
+                ...operation.effect,
+                delta: { ...operation.effect.delta, dice: 2 },
+              },
+            },
+            ...mechanics.operations.slice(2),
+          ],
+        };
+      }, "malformed_duplicate_operation"),
+    );
+    const result = linkedDefenseResistanceDamageShareProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "armorClassOperation",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(3)),
+      }),
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(3)),
+      }),
     ]);
   });
 });

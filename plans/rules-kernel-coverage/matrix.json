@@ -2857,7 +2857,8 @@
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
