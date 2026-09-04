@@ -74,6 +74,9 @@ const SPELL_ACTIVATION_BRANCH_COORDINATES = {
 
 const SPELL_ONGOING_BRANCH_COORDINATES = {
   attachment: { role: "effect", ordinal: PositiveInteger(1) },
+  concurrentEffectLimit: { role: "resource" },
+  /** The collective choose node emitted for modal ongoing-effect mechanics. */
+  modeChoice: { role: "procedure", ordinal: PositiveInteger(1) },
   operationEffect: { role: "effect", ordinal: PositiveInteger(1) },
   authoredConditionalEffect: {
     role: "effect",
@@ -208,6 +211,13 @@ export function spellOngoingAttachmentPath(): SpellMechanicsBranchPath {
   return spellMechanicsPath(occurrence(attachment.role, attachment.ordinal));
 }
 
+/** Canonical root resource coordinate for an ongoing effect's concurrency limit. */
+export function spellOngoingConcurrentEffectLimitPath(): SpellMechanicsBranchPath {
+  const concurrentEffectLimit =
+    SPELL_ONGOING_BRANCH_COORDINATES.concurrentEffectLimit;
+  return spellMechanicsPath(singleton(concurrentEffectLimit.role));
+}
+
 export function spellOngoingInitialPhasePath(): SpellMechanicsBranchPath {
   return spellMechanicsPath(singleton("action"));
 }
@@ -216,6 +226,16 @@ export function spellOngoingOperationPath(
   operationOrdinal: PositiveInteger,
 ): SpellMechanicsBranchPath {
   return spellMechanicsPath(occurrence("procedure", operationOrdinal));
+}
+
+/**
+ * Canonical coordinate for a modal ongoing-effect's collective mode choice.
+ * Individual options intentionally have no coordinates: the Surface tracer
+ * emits them as one collective choice node.
+ */
+export function spellOngoingModeChoicePath(): SpellMechanicsBranchPath {
+  const modeChoice = SPELL_ONGOING_BRANCH_COORDINATES.modeChoice;
+  return spellMechanicsPath(occurrence(modeChoice.role, modeChoice.ordinal));
 }
 
 export function spellOngoingOperationEffectPath(

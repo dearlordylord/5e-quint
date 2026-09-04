@@ -1,4 +1,3 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
@@ -19,16 +18,18 @@ import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 //     Slot, Spell Invocation, Spell Effect, and Spell Save DC.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { movementFeet, PositiveInteger } from "@dnd/shared/types";
+import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
+  type BattleSpellExecutionSource,
   type BattleResolutionResult,
   type BattleState,
-  type TargetingSaveInterdictionSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
@@ -50,10 +51,36 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  admitSpellTargetAttachment,
+  isSpellCanonicalDurationValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  spellOngoingAuthoredConditionalEffectPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
-  preparedSpellSlotInvocations,
+  spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -82,92 +109,533 @@ type TargetingSaveInterdictionInvocation = Extract<
 type TargetingSaveInterdictionResolveInput =
   SpellProcedureProfileResolveInput<TargetingSaveInterdictionInvocation>;
 
-function admitTargetingSaveInterdiction(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly TargetingSaveInterdictionInvocation[] {
-  const projection = targetingSaveInterdictionProjection(
-    ctx.actor.combatantId,
-    spell,
-  );
-  if (projection === null) {
-    return [];
-  }
-  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
-    ...base,
-    procedure: "targetingSaveInterdiction",
-    actionCost: "bonusAction",
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-    ...projection,
-  }));
+type TargetingSaveInterdictionMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly rangeFeet: ReturnType<typeof movementFeet>;
+  readonly saveDc: TargetingSaveInterdictionInvocation["activeEffect"]["save"]["dc"];
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for TargetingSaveInterdictionFailedFact.
+const TARGETING_SAVE_INTERDICTION_FAILED_FACTS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationEnding",
+  "castingTime",
+  "attachment",
+  "initialPhase",
+  "authoredConditionalEffects",
+  "operationCount",
+  "operation",
+  "trigger",
+  "effect",
+  "saveGate",
+] as const;
+type TargetingSaveInterdictionFailedFact =
+  (typeof TARGETING_SAVE_INTERDICTION_FAILED_FACTS)[number];
+type TargetingSaveInterdictionMechanicsIssue = SpellProcedureAdmissionIssue<
+  "targetingSaveInterdiction",
+  TargetingSaveInterdictionFailedFact,
+  UnitMechanicsPath
+>;
+type TargetingSaveInterdictionMechanicsInspection =
+  SpellProcedureMechanicsInspection<
+    "targetingSaveInterdiction",
+    TargetingSaveInterdictionMechanicsFacts,
+    TargetingSaveInterdictionInvocation,
+    TargetingSaveInterdictionMechanicsIssue
+  >;
+
+const SANCTUARY_TARGET_SELECTION_FIELDS = ["mode", "targetKinds"] as const;
+const SANCTUARY_EARLY_END_KINDS = [
+  "target_makes_attack_roll",
+  "target_casts_spell",
+  "target_deals_damage",
+] as const;
+const SANCTUARY_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "initialPhase",
+  "operations",
+  "authoredConditionalEffects",
+] as const;
+const SANCTUARY_RANGE_FIELDS = ["kind", "feet"] as const;
+const SANCTUARY_COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+  "materialCostGp",
+  "materialConsumed",
+] as const;
+const SANCTUARY_DURATION_FIELDS = [
+  "kind",
+  "value",
+  "earlyEnd",
+  "permanentAfter",
+] as const;
+const SANCTUARY_DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const;
+const SANCTUARY_CASTING_TIME_FIELDS = ["kind", "trigger"] as const;
+const SANCTUARY_OPERATION_FIELDS = [
+  "trigger",
+  "predicate",
+  "targetLimit",
+  "effect",
+  "usageLimit",
+] as const;
+const SANCTUARY_TRIGGER_FIELDS = ["kind", "targeting", "excludes"] as const;
+const SANCTUARY_SAVE_GATE_FIELDS = [
+  "kind",
+  "ability",
+  "dc",
+  "onFail",
+  "onSuccess",
+] as const;
+const SANCTUARY_SAVE_GATE_DC_FIELDS = ["kind"] as const;
+const SANCTUARY_SAVE_GATE_FAIL_FIELDS = ["kind", "subject"] as const;
+const SANCTUARY_SAVE_GATE_SUCCESS_FIELDS = ["kind"] as const;
+
+type GenericSpellComponents = Extract<
+  Components,
+  { readonly m: false | string }
+>;
+
+function isGenericSpellComponents(
+  components: Components,
+): components is GenericSpellComponents {
+  return components.m === false || typeof components.m === "string";
 }
 
-function targetingSaveInterdictionProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  TargetingSaveInterdictionSpellInvocation,
-  "activeEffect" | "rangeFeet"
-> | null {
+function targetingSaveInterdictionMechanicsIssue(
+  failedFact: TargetingSaveInterdictionFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): TargetingSaveInterdictionMechanicsIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "targetingSaveInterdiction",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported targetingSaveInterdiction mechanics fact: ${failedFact}.`,
+  };
+}
+
+function targetingSaveInterdictionMechanicsRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is Extract<SpellMechanics, { readonly family: "ongoing_effect" }> {
+  if (mechanics.family !== "ongoing_effect") return false;
+  const hasDistinctiveHeaders =
+    mechanics.level === 1 &&
+    mechanics.school === "abjuration" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === 30 &&
+    mechanics.duration.kind === "timed" &&
+    mechanics.duration.value.unit === "minute" &&
+    mechanics.duration.value.amount === 1 &&
+    mechanics.castingTime.kind === "bonus_action";
+  return (
+    hasDistinctiveHeaders ||
+    mechanics.operations.some(
+      (operation) =>
+        operation.trigger.kind === "on_attached_targeted" ||
+        operation.effect.kind === "save_gate",
+    )
+  );
+}
+
+function sanctuaryDurationValueSupported(
+  duration: SpellMechanics["duration"],
+): duration is Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "timed" }
+> & {
+  readonly value: Extract<
+    Extract<SpellMechanics["duration"], { readonly kind: "timed" }>["value"],
+    { readonly unit: "minute"; readonly amount: 1 }
+  >;
+} {
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 30 ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
+    duration.kind !== "timed" ||
+    !spellMechanicsObjectHasOnlyKeys(duration, SANCTUARY_DURATION_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      duration.value,
+      SANCTUARY_DURATION_VALUE_FIELDS,
+    ) ||
+    duration.value.unit !== "minute" ||
+    duration.value.amount !== 1 ||
+    !isSpellCanonicalDurationValue(duration.value)
   ) {
-    return null;
+    return false;
   }
-  const attachment = spell.mechanics.attachment;
-  const targetSelection =
-    attachment.kind === "hole" && attachment.value.kind === "target"
-      ? attachment.value.selection
-      : null;
-  const operation = spell.mechanics.operations[0];
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
+  return true;
+}
+
+type SanctuaryDurationEndingInspection = {
+  readonly unsupportedOrdinals: readonly PositiveInteger[];
+  readonly missingRequiredKind: boolean;
+};
+
+function sanctuaryDurationEndingInspection(
+  duration: Extract<SpellMechanics["duration"], { readonly kind: "timed" }>,
+): SanctuaryDurationEndingInspection {
+  const actualEndings = duration.earlyEnd ?? [];
+  const seenKinds = new Set<string>();
+  const unsupportedOrdinals: PositiveInteger[] = [];
+  for (const [index, ending] of actualEndings.entries()) {
+    if (
+      !SANCTUARY_EARLY_END_KINDS.some(
+        (expectedKind) => expectedKind === ending.kind,
+      ) ||
+      seenKinds.has(ending.kind)
+    ) {
+      unsupportedOrdinals.push(PositiveInteger(index + 1));
+    } else {
+      seenKinds.add(ending.kind);
+    }
+  }
+  return {
+    unsupportedOrdinals,
+    missingRequiredKind: SANCTUARY_EARLY_END_KINDS.some(
+      (expectedKind) => !seenKinds.has(expectedKind),
+    ),
+  };
+}
+
+function admitTargetingSaveInterdictionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): TargetingSaveInterdictionMechanicsInspection {
+  if (!targetingSaveInterdictionMechanicsRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const operationIndex = mechanics.operations.findIndex(
+    (operation) =>
+      operation.trigger.kind === "on_attached_targeted" ||
+      operation.effect.kind === "save_gate",
+  );
+  const operation = mechanics.operations[operationIndex];
+  const duration = sanctuaryDurationValueSupported(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  const targetAttachment = admitSpellTargetAttachment(
+    mechanics.attachment,
+    SANCTUARY_TARGET_SELECTION_FIELDS,
+  );
+  const selection =
+    targetAttachment.tag === "admitted"
+      ? targetAttachment.attachment.value.selection
+      : undefined;
+  const attachmentSupported =
+    targetAttachment.tag === "admitted" &&
+    selection?.mode === "one" &&
+    sameStringSet(selection?.targetKinds ?? [], ["creature"]);
+  const saveGate =
+    operation?.effect.kind === "save_gate" ? operation.effect : undefined;
+  const issues: TargetingSaveInterdictionMechanicsIssue[] = [];
+  const push = (
+    failedFact: TargetingSaveInterdictionFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push(
+      targetingSaveInterdictionMechanicsIssue(failedFact, mechanicsPath),
+    );
+  };
+
+  if (mechanics.level !== 1) {
+    push("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.school !== "abjuration") {
+    push("school", spellMechanicsHeaderPath("school"));
+  }
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, SANCTUARY_ROOT_FIELDS)) {
+    push("operation", spellMechanicsHeaderPath("family"));
+  }
   if (
-    targetSelection?.mode !== "one" ||
-    !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
-    operation?.trigger.kind !== "on_attached_targeted" ||
-    operation.trigger.excludes !== "area_of_effect" ||
-    !sameStringSet(operation.trigger.targeting, [
-      "attack_roll",
-      "damaging_spell",
-    ]) ||
-    operation.effect.kind !== "save_gate" ||
-    operation.effect.ability !== "wis" ||
-    operation.effect.dc.kind !== "caster_spell_save_dc" ||
-    operation.effect.onSuccess.kind !== "none" ||
-    operation.effect.onFail.kind !== "choose_new_target_or_lose" ||
-    operation.effect.onFail.subject !== "triggering_attack_or_spell" ||
-    !sameStringSet(
-      earlyEnd.map((end) => end.kind),
-      ["target_makes_attack_roll", "target_casts_spell", "target_deals_damage"],
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 30 ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, SANCTUARY_RANGE_FIELDS)
+  ) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  let componentsSupported = false;
+  if (
+    isGenericSpellComponents(mechanics.components) &&
+    typeof mechanics.components.m === "string"
+  ) {
+    const components = mechanics.components;
+    componentsSupported =
+      components.v === true &&
+      components.s === true &&
+      spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
+        components,
+        SANCTUARY_COMPONENT_FIELDS,
+      ) &&
+      !("materialCostGp" in components) &&
+      !("materialConsumed" in components);
+  }
+  if (!componentsSupported) {
+    push("components", spellMechanicsHeaderPath("components"));
+    for (const path of spellConsumedMaterialEvidencePaths(
+      mechanics.components,
+    )) {
+      push("components", path);
+    }
+  }
+  if (duration === undefined) {
+    push("duration", spellMechanicsHeaderPath("duration"));
+    if (mechanics.duration.kind === "timed") {
+      if (
+        mechanics.duration.value.unit !== "minute" ||
+        mechanics.duration.value.amount !== 1 ||
+        !isSpellCanonicalDurationValue(mechanics.duration.value)
+      ) {
+        push("durationValue", spellDurationValuePath());
+      }
+    } else {
+      push("durationValue", spellDurationValuePath());
+    }
+  }
+  if (mechanics.duration.kind === "timed") {
+    const endingInspection = sanctuaryDurationEndingInspection(
+      mechanics.duration,
+    );
+    for (const ordinal of endingInspection.unsupportedOrdinals) {
+      push("durationEnding", spellDurationEndingPath(ordinal));
+    }
+    if (endingInspection.missingRequiredKind) {
+      push("durationEnding", spellMechanicsHeaderPath("duration"));
+    }
+    if (mechanics.duration.permanentAfter !== undefined) {
+      push(
+        "durationEnding",
+        spellDurationEndingPath(
+          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
+        ),
+      );
+    }
+  }
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    mechanics.castingTime.trigger !== undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SANCTUARY_CASTING_TIME_FIELDS,
     )
   ) {
-    return null;
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
+  if (mechanics.attachment.kind !== "hole" || !attachmentSupported) {
+    push("attachment", spellOngoingAttachmentPath());
+  }
+  if (mechanics.initialPhase !== undefined) {
+    push("initialPhase", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.authoredConditionalEffects !== undefined) {
+    for (const [index] of mechanics.authoredConditionalEffects.entries()) {
+      push(
+        "authoredConditionalEffects",
+        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  if (mechanics.operations.length !== 1 || operationIndex !== 0) {
+    if (mechanics.operations.length === 0) {
+      push("operationCount", spellMechanicsRootPath());
+    }
+    for (const [index] of mechanics.operations.entries()) {
+      if (index === operationIndex) continue;
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+    }
+  }
+  if (operation === undefined) {
+    if (mechanics.operations.length === 0) {
+      push("operation", spellMechanicsRootPath());
+    } else {
+      push("operation", spellOngoingOperationPath(PositiveInteger(1)));
+      push("effect", spellOngoingOperationEffectPath(PositiveInteger(1)));
+    }
+  } else {
+    if (
+      !spellMechanicsObjectHasOnlyKeys(operation, SANCTUARY_OPERATION_FIELDS)
+    ) {
+      push(
+        "operation",
+        spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
+      );
+    }
+    if (
+      operation.trigger.kind !== "on_attached_targeted" ||
+      operation.trigger.excludes !== "area_of_effect" ||
+      !sameStringSet(operation.trigger.targeting, [
+        "attack_roll",
+        "damaging_spell",
+      ]) ||
+      !spellMechanicsObjectHasOnlyKeys(
+        operation.trigger,
+        SANCTUARY_TRIGGER_FIELDS,
+      )
+    ) {
+      push(
+        "trigger",
+        spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
+      );
+    }
+    if (saveGate === undefined) {
+      push(
+        "effect",
+        spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+      );
+    } else if (
+      saveGate.ability !== "wis" ||
+      saveGate.dc.kind !== "caster_spell_save_dc" ||
+      saveGate.onSuccess.kind !== "none" ||
+      saveGate.onFail.kind !== "choose_new_target_or_lose" ||
+      saveGate.onFail.subject !== "triggering_attack_or_spell" ||
+      !spellMechanicsObjectHasOnlyKeys(saveGate, SANCTUARY_SAVE_GATE_FIELDS) ||
+      !spellMechanicsObjectHasOnlyKeys(
+        saveGate.dc,
+        SANCTUARY_SAVE_GATE_DC_FIELDS,
+      ) ||
+      !spellMechanicsObjectHasOnlyKeys(
+        saveGate.onFail,
+        SANCTUARY_SAVE_GATE_FAIL_FIELDS,
+      ) ||
+      !spellMechanicsObjectHasOnlyKeys(
+        saveGate.onSuccess,
+        SANCTUARY_SAVE_GATE_SUCCESS_FIELDS,
+      )
+    ) {
+      push(
+        "saveGate",
+        spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+      );
+    }
+    if (
+      operation.predicate !== undefined ||
+      operation.targetLimit !== undefined ||
+      operation.usageLimit !== undefined
+    ) {
+      push(
+        "operation",
+        spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
+      );
+    }
+  }
+
+  const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  if (nonEmpty !== undefined) {
+    return { tag: "unsupported", issues: nonEmpty };
+  }
+  if (
+    duration === undefined ||
+    operation === undefined ||
+    saveGate === undefined ||
+    !attachmentSupported
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        targetingSaveInterdictionMechanicsIssue(
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    };
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
+  if (Result.isFailure(durationTicks)) {
+    return {
+      tag: "unsupported",
+      issues: [
+        targetingSaveInterdictionMechanicsIssue(
+          "durationValue",
+          spellDurationValuePath(),
+        ),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    durationTicks: durationTicks.success,
+    rangeFeet: movementFeet(30),
+    saveDc: saveGate.dc,
+  } satisfies TargetingSaveInterdictionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "targetingSaveInterdiction",
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          ...spellDurationChildCoordinates(duration).map(
+            spellDurationChildPath,
+          ),
+          spellOngoingAttachmentPath(),
+          spellOngoingOperationPath(PositiveInteger(1)),
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+          ...spellConsumedMaterialEvidencePaths(mechanics.components),
+        ],
+        unowned: [],
+      },
+      admit: (executionSource, ctx) =>
+        admitTargetingSaveInterdiction(executionSource, ctx, facts),
+    },
+  };
+}
+
+function admitTargetingSaveInterdiction(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: TargetingSaveInterdictionMechanicsFacts,
+): readonly TargetingSaveInterdictionInvocation[] {
+  return ctx.spellCastOptions.flatMap(
+    (slot): readonly TargetingSaveInterdictionInvocation[] =>
+      Number(slot.spellLevel) < facts.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: spellInvocationResourceForCastOption(slot),
+              procedure: "targetingSaveInterdiction",
+              spell,
+              actionCost: "bonusAction",
+              targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+              activeEffect: {
+                kind: "targetingSaveInterdiction",
+                sourceCombatantId: ctx.actor.combatantId,
+                save: { ability: "wis", dc: facts.saveDc },
+                expiresAt: {
+                  kind: "duration",
+                  durationTicks: facts.durationTicks,
+                },
+              },
+              rangeFeet: facts.rangeFeet,
+            },
+          ],
   );
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        rangeFeet: movementFeet(30),
-        activeEffect: {
-          kind: "targetingSaveInterdiction",
-          sourceCombatantId: actorId,
-          save: { ability: "wis", dc: operation.effect.dc },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
-        },
-      };
 }
 
 function discoverTargetingSaveInterdictionCastAct(
@@ -258,7 +726,7 @@ const TargetingSaveInterdictionInvocationSchema = spellProcedureExecutionSchema(
 export const targetingSaveInterdictionProfile = {
   procedure: "targetingSaveInterdiction",
   executionSchema: TargetingSaveInterdictionInvocationSchema,
-  admit: admitTargetingSaveInterdiction,
+  admitMechanics: admitTargetingSaveInterdictionMechanics,
   discoverCastAct: discoverTargetingSaveInterdictionCastAct,
   resolve: resolveTargetingSaveInterdiction,
 } satisfies SpellProcedureDeclaration<

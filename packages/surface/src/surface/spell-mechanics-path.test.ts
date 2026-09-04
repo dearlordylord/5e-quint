@@ -26,7 +26,9 @@ import {
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
   spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingConcurrentEffectLimitPath,
   spellOngoingInitialPhasePath,
+  spellOngoingModeChoicePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   spellSpawnedCreatureControlPath,
@@ -117,6 +119,7 @@ describe("spell mechanics paths", () => {
         "recordMechanics/procedure:2/effect:4",
       ],
       [spellOngoingAttachmentPath(), "recordMechanics/effect:1"],
+      [spellOngoingConcurrentEffectLimitPath(), "recordMechanics/resource"],
       [
         spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
         "recordMechanics/effect:2",
@@ -126,6 +129,7 @@ describe("spell mechanics paths", () => {
         "recordMechanics/effect:3",
       ],
       [spellOngoingInitialPhasePath(), "recordMechanics/action"],
+      [spellOngoingModeChoicePath(), "recordMechanics/procedure:1"],
       [
         spellOngoingOperationPath(PositiveInteger(3)),
         "recordMechanics/procedure:3",

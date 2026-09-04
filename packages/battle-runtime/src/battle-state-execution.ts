@@ -2452,7 +2452,7 @@ export type TemporaryAbilityCheckRollModeSpellInvocation = {
   readonly access: CantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "temporaryAbilityCheckRollMode";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
@@ -2771,7 +2771,7 @@ export type SelfTeleportSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTeleport";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly maxDistanceFeet: MovementFeet;
 };
@@ -2779,7 +2779,7 @@ export type TargetingSaveInterdictionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "targetingSaveInterdiction";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly targeting: {
     readonly kind: "targetList";
