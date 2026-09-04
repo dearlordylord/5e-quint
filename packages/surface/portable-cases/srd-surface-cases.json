@@ -19205,18 +19205,60 @@
                     "kind": "passive"
                   },
                   "effect": {
-                    "kind": "modify_roll_advantage",
-                    "mode": "disadvantage",
-                    "affects": "rolls_against_self",
-                    "on": [
-                      "attack_roll"
-                    ],
-                    "attackerTypeFilter": [
+                    "kind": "creature_type_ward",
+                    "creatureTypes": [
                       "celestial",
                       "elemental",
                       "fey",
                       "fiend",
                       "undead"
+                    ],
+                    "protections": [
+                      {
+                        "kind": "attack_rolls_against_target",
+                        "mode": "disadvantage"
+                      }
+                    ],
+                    "specialFunctions": [
+                      {
+                        "kind": "end_source_scoped_relevant_effects",
+                        "action": "magic",
+                        "target": {
+                          "kind": "touched_creature"
+                        },
+                        "conditions": [
+                          "charmed",
+                          "frightened"
+                        ],
+                        "possession": "included"
+                      },
+                      {
+                        "kind": "dismiss_creature_to_home_plane",
+                        "action": "magic",
+                        "target": {
+                          "kind": "visible_creature_within_feet",
+                          "feet": 5
+                        },
+                        "save": {
+                          "ability": "cha",
+                          "dc": {
+                            "kind": "caster_spell_save_dc"
+                          },
+                          "onFailure": {
+                            "kind": "send_to_home_plane_if_not_already_there",
+                            "creatureTypeDestinationOverrides": [
+                              {
+                                "creatureType": "undead",
+                                "destination": "shadowfell"
+                              },
+                              {
+                                "creatureType": "fey",
+                                "destination": "feywild"
+                              }
+                            ]
+                          }
+                        }
+                      }
                     ]
                   }
                 }
@@ -25255,18 +25297,38 @@
                   },
                   "effects": [
                     {
-                      "kind": "modify_roll_advantage",
-                      "mode": "disadvantage",
-                      "on": [
-                        "attack_roll"
-                      ],
-                      "attackerTypeFilter": [
+                      "kind": "creature_type_protection",
+                      "creatureTypes": [
                         "aberration",
                         "celestial",
                         "elemental",
                         "fey",
                         "fiend",
                         "undead"
+                      ],
+                      "protections": [
+                        {
+                          "kind": "attack_rolls_against_target",
+                          "mode": "disadvantage"
+                        },
+                        {
+                          "kind": "relevant_effect_protection",
+                          "conditions": [
+                            "charmed",
+                            "frightened"
+                          ],
+                          "possession": "included",
+                          "outcomes": [
+                            {
+                              "kind": "new_applications",
+                              "result": "prevented"
+                            },
+                            {
+                              "kind": "new_saves_against_existing_effects",
+                              "mode": "advantage"
+                            }
+                          ]
+                        }
                       ]
                     }
                   ]
