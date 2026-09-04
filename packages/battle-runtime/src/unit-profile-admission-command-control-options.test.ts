@@ -558,6 +558,77 @@ describe("compelledNextTurnBehavior static admission", () => {
     ]);
   });
 
+  test("reports an area-valued hole as attachment shape, not wrapper kind", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate" || phase.attachment.kind !== "hole")
+          throw new Error("Expected save-gate hole attachment.");
+        Reflect.set(phase.attachment, "value", {
+          kind: "area",
+          origin: { kind: "self" },
+          shape: { kind: "sphere", radiusFeet: 5 },
+        });
+      }),
+    );
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "attachmentShape",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+    ]);
+  });
+
+  test("preserves every known unowned target-selection field as a distinct issue", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Command target selection.");
+        const selection = phase.attachment.value.selection;
+        Reflect.set(selection, "typeFilter", ["undead"]);
+        Reflect.set(selection, "creatureSizeFilter", {
+          kind: "exact",
+          creatureSize: "medium",
+        });
+        Reflect.set(selection, "relativePosition", {
+          kind: "within_feet_of_attachment",
+          attachmentHoleId: "synthetic_origin",
+          feet: 5,
+        });
+        Reflect.set(selection, "objectFilter", { material: "metal" });
+        Reflect.set(selection, "creatureDisposition", "willing");
+        Reflect.set(selection, "objectOrLocationMaxDimensionFeet", 10);
+        Reflect.set(selection, "repeatsAllowed", true);
+        Reflect.set(selection, "castingRequirement", {
+          kind: "remain_within_spell_range_for_entire_casting",
+        });
+        Reflect.set(selection, "stateFilter", ["zero_hp_not_dead"]);
+        Reflect.set(selection, "disposition", "willing");
+      }),
+    );
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+    expect(issueShape(result)).toEqual([
+      { failedFact: "typeFilter", mechanicsPath: attachmentPath },
+      { failedFact: "creatureSizeFilter", mechanicsPath: attachmentPath },
+      { failedFact: "relativePosition", mechanicsPath: attachmentPath },
+      { failedFact: "objectFilter", mechanicsPath: attachmentPath },
+      { failedFact: "creatureDisposition", mechanicsPath: attachmentPath },
+      {
+        failedFact: "objectOrLocationMaxDimensionFeet",
+        mechanicsPath: attachmentPath,
+      },
+      { failedFact: "repeatsAllowed", mechanicsPath: attachmentPath },
+      { failedFact: "castingRequirement", mechanicsPath: attachmentPath },
+      { failedFact: "stateFilter", mechanicsPath: attachmentPath },
+      { failedFact: "disposition", mechanicsPath: attachmentPath },
+    ]);
+  });
+
   test("preserves the authored phase ordinal and rejects a malformed failure discriminant", () => {
     const unrelated = spellRecord("burning_hands").mechanics;
     if (unrelated.family !== "activation")

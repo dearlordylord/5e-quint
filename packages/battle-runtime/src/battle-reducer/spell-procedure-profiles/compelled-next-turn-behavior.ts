@@ -79,6 +79,7 @@ import {
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
+  type SpellAttachmentRejection,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsEvidence,
@@ -128,6 +129,16 @@ const COMPELLED_BEHAVIOR_FAILED_FACTS = [
   "selectionTargetKinds",
   "targetCount",
   "visibility",
+  "typeFilter",
+  "creatureSizeFilter",
+  "relativePosition",
+  "objectFilter",
+  "creatureDisposition",
+  "objectOrLocationMaxDimensionFeet",
+  "repeatsAllowed",
+  "castingRequirement",
+  "stateFilter",
+  "disposition",
   "saveAbility",
   "saveDc",
   "saveDcShape",
@@ -261,6 +272,48 @@ function compelledBehaviorIssue(
     mechanicsPath,
     message: `Unsupported compelledNextTurnBehavior mechanics fact: ${failedFact}.`,
   };
+}
+
+function compelledBehaviorAttachmentFailedFact(
+  rejection: SpellAttachmentRejection,
+  phase: CompelledBehaviorPhase,
+): CompelledBehaviorFailedFact {
+  if (rejection.failedFact === "attachment")
+    return rejection.coordinate.kind === "wrapper" &&
+      rejection.coordinate.field === "kind" &&
+      phase.attachment.kind !== "hole"
+      ? "attachmentKind"
+      : "attachmentShape";
+  return Match.value(rejection.failedFact).pipe(
+    Match.when("selection", () => "selectionShape" as const),
+    Match.when("mode", () => "selectionMode" as const),
+    Match.when("targetKinds", () => "selectionTargetKinds" as const),
+    Match.when("count", () => "targetCount" as const),
+    Match.whenOr(
+      "visibility",
+      "typeFilter",
+      "creatureSizeFilter",
+      "relativePosition",
+      "objectFilter",
+      "creatureDisposition",
+      "objectOrLocationMaxDimensionFeet",
+      "repeatsAllowed",
+      "castingRequirement",
+      "stateFilter",
+      "disposition",
+      (failedFact) => failedFact,
+    ),
+    Match.whenOr(
+      "rangeOrigin",
+      "shape",
+      "origin",
+      "occupantDispositionFilter",
+      "occupantPerceptionFilter",
+      "excludedAreas",
+      () => "attachmentShape" as const,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function compelledBehaviorRepresentation(
@@ -442,13 +495,7 @@ function inspectCompelledBehaviorMechanics(
   if (targetAttachmentAdmission.tag === "rejected")
     for (const rejection of targetAttachmentAdmission.rejections)
       push(
-        rejection.failedFact === "attachment" &&
-          rejection.coordinate.kind === "wrapper" &&
-          rejection.coordinate.field === "kind"
-          ? "attachmentKind"
-          : rejection.coordinate.kind === "selection"
-            ? "selectionShape"
-            : "attachmentShape",
+        compelledBehaviorAttachmentFailedFact(rejection, phase),
         attachmentPath,
       );
   const selection =
