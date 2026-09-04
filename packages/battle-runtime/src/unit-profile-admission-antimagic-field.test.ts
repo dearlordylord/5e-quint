@@ -31,6 +31,7 @@ import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/
 import {
   characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
   characterExecutionWithSpellInvocations,
+  spellProcedureExecution,
 } from "./character-execution-admission.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
@@ -243,6 +244,10 @@ describe("magicSuppressionEmanation static admission", () => {
       throw new Error("Expected an admitted Antimagic Field invocation.");
     expect(invocation.spell).not.toHaveProperty("mechanics");
     expect(invocation.exceptSources).toEqual(["artifact", "deity"]);
+    expect(spellProcedureExecution(invocation).exceptSources).toEqual([
+      "artifact",
+      "deity",
+    ]);
     const { spell: _spell, ...procedureFacts } = invocation;
     const execution = {
       ...procedureFacts,

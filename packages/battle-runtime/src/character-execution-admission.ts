@@ -1857,6 +1857,7 @@ export function spellProcedureExecution(
         spellRuleFacts,
         access: value.access,
         durationTicks: value.durationTicks,
+        exceptSources: value.exceptSources,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         resource: value.resource,
