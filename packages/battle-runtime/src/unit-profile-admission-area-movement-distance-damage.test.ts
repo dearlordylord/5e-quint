@@ -6,7 +6,7 @@ import {
   spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -122,35 +122,39 @@ function mechanicsSourceWithOperationDiscriminant(input: {
   return { ...mechanicsSource(source), mechanics };
 }
 
-function conditionalEffectFixture(kind: "recognition" | "phantasm"): object {
+function conditionalMechanicFixture(kind: "recognition" | "phantasm"): object {
   const record = spellRecord(
     kind === "recognition" ? spikeGrowthUnitId : "phantasmal_force",
   );
   if (
     record.mechanics.family !== "ongoing_effect" ||
-    record.mechanics.authoredConditionalEffects === undefined
+    record.mechanics.authoredConditionalMechanics === undefined
   )
-    throw new Error("Expected an authored conditional-effect fixture.");
-  const effect = record.mechanics.authoredConditionalEffects[0];
+    throw new Error("Expected an authored conditional-mechanic fixture.");
+  const effect = record.mechanics.authoredConditionalMechanics[0];
   if (effect === undefined)
-    throw new Error("Expected an authored conditional-effect fixture.");
+    throw new Error("Expected an authored conditional-mechanic fixture.");
   return structuredClone(effect);
 }
 
-function mechanicsSourceWithConditionalEffects(
-  effects: readonly object[] | undefined,
+function mechanicsSourceWithConditionalMechanics(
+  mechanicsValue: readonly object[] | undefined,
 ): SpellMechanicsAdmissionSource {
   const source = spellAdmissionSource(spellRecord(spikeGrowthUnitId));
   const mechanics = structuredClone(source.mechanics);
   if (mechanics.family !== "ongoing_effect")
     throw new Error("Expected Spike Growth ongoing-effect mechanics.");
-  if (effects === undefined) {
-    if (!Reflect.deleteProperty(mechanics, "authoredConditionalEffects"))
+  if (mechanicsValue === undefined) {
+    if (!Reflect.deleteProperty(mechanics, "authoredConditionalMechanics"))
       throw new Error(
-        "Expected the conditional-effect fixture to be writable.",
+        "Expected the conditional-mechanic fixture to be writable.",
       );
-  } else if (!Reflect.set(mechanics, "authoredConditionalEffects", effects)) {
-    throw new Error("Expected the conditional-effect fixture to be writable.");
+  } else if (
+    !Reflect.set(mechanics, "authoredConditionalMechanics", mechanicsValue)
+  ) {
+    throw new Error(
+      "Expected the conditional-mechanic fixture to be writable.",
+    );
   }
   return { ...mechanicsSource(source), mechanics };
 }
@@ -191,7 +195,9 @@ describe("areaMovementDistanceDamage static admission", () => {
         spellOngoingOperationPath(PositiveInteger(2)),
         spellOngoingOperationEffectPath(PositiveInteger(2)),
       ],
-      unowned: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1))],
+      unowned: [
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
+      ],
     });
 
     const invocations = result.admitted.admit(
@@ -244,56 +250,101 @@ describe("areaMovementDistanceDamage static admission", () => {
     );
   });
 
+  test("recognizes the duplicate-free skill set independently of authored order", () => {
+    const canonicalSource = spellAdmissionSource(
+      spellRecord(spikeGrowthUnitId),
+    );
+    const reversedRecognition = conditionalMechanicFixture("recognition");
+    if (
+      !(
+        "attempt" in reversedRecognition &&
+        typeof reversedRecognition.attempt === "object" &&
+        reversedRecognition.attempt !== null &&
+        "check" in reversedRecognition.attempt &&
+        typeof reversedRecognition.attempt.check === "object" &&
+        reversedRecognition.attempt.check !== null
+      ) ||
+      !Reflect.set(reversedRecognition.attempt.check, "skillOptions", [
+        "survival",
+        "perception",
+      ])
+    )
+      throw new Error("Expected the recognition check fixture to be writable.");
+    const canonical = areaMovementDistanceDamageProfile.admitMechanics(
+      mechanicsSource(canonicalSource),
+    );
+    const reversed = areaMovementDistanceDamageProfile.admitMechanics(
+      mechanicsSourceWithConditionalMechanics([reversedRecognition]),
+    );
+
+    expect(canonical.tag).toBe("supported");
+    expect(reversed.tag).toBe("supported");
+    if (canonical.tag !== "supported" || reversed.tag !== "supported") return;
+    expect(reversed.admitted.facts).toEqual(canonical.admitted.facts);
+    expect(reversed.admitted.evidence).toEqual(canonical.admitted.evidence);
+  });
+
   test.each([
     {
       caseName: "missing recognition branch",
-      effects: undefined,
-      paths: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1))],
+      mechanicsValue: undefined,
+      paths: [spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1))],
     },
     {
       caseName: "malformed recognition branch",
-      effects: [
+      mechanicsValue: [
         {
-          ...conditionalEffectFixture("recognition"),
-          timing: "synthetic_after_entering_area",
+          ...conditionalMechanicFixture("recognition"),
+          attempt: {
+            action: "search",
+            check: {
+              ability: "wis",
+              skillOptions: ["perception", "survival"],
+              dc: { kind: "caster_spell_save_dc" },
+              onSuccess: {
+                kind: "recognize_hazardous_terrain",
+                timing: "synthetic_after_entering_area",
+              },
+            },
+          },
         },
       ],
-      paths: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1))],
+      paths: [spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1))],
     },
     {
       caseName: "unsupported conditional branch",
-      effects: [conditionalEffectFixture("phantasm")],
-      paths: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1))],
+      mechanicsValue: [conditionalMechanicFixture("phantasm")],
+      paths: [spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1))],
     },
     {
       caseName: "extra conditional branch",
-      effects: [
-        conditionalEffectFixture("recognition"),
-        conditionalEffectFixture("phantasm"),
+      mechanicsValue: [
+        conditionalMechanicFixture("recognition"),
+        conditionalMechanicFixture("phantasm"),
       ],
-      paths: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(2))],
+      paths: [spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(2))],
     },
     {
       caseName: "reordered conditional branches",
-      effects: [
-        conditionalEffectFixture("phantasm"),
-        conditionalEffectFixture("recognition"),
+      mechanicsValue: [
+        conditionalMechanicFixture("phantasm"),
+        conditionalMechanicFixture("recognition"),
       ],
       paths: [
-        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
-        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(2)),
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(2)),
       ],
     },
   ] as const)(
     "rejects $caseName at exact authored paths",
-    ({ effects, paths }) => {
+    ({ mechanicsValue, paths }) => {
       const result = areaMovementDistanceDamageProfile.admitMechanics(
-        mechanicsSourceWithConditionalEffects(effects),
+        mechanicsSourceWithConditionalMechanics(mechanicsValue),
       );
 
       expect(issueShape(result)).toEqual(
         paths.map((mechanicsPath) => ({
-          failedFact: "authoredConditionalEffects",
+          failedFact: "authoredConditionalMechanics",
           mechanicsPath,
         })),
       );

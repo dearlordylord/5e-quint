@@ -237,7 +237,7 @@ const MOVABLE_LIGHT_FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "illusionOperation",
   "illuminationOperation",
@@ -262,7 +262,7 @@ const MOVABLE_LIGHT_ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const satisfies ReadonlyArray<keyof MovableLightMechanics>;
 const MOVABLE_LIGHT_RANGE_FIELDS = ["kind", "feet"] as const;
 const MOVABLE_LIGHT_CASTING_TIME_FIELDS = ["kind"] as const;
@@ -580,10 +580,10 @@ function admitMovableLightMechanics(
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   if (
-    mechanics.authoredConditionalEffects !== undefined ||
+    mechanics.authoredConditionalMechanics !== undefined ||
     !spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS)
   )
-    pushIssue("authoredConditionalEffects", spellMechanicsRootPath());
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
 
   const missingChecks = MOVABLE_LIGHT_OPERATION_CHECKS.filter(
     (check) => !mechanics.operations.some(check.represented),

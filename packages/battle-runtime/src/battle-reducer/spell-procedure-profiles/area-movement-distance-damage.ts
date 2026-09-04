@@ -12,14 +12,14 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import type {
-  AuthoredConditionalEffect,
+  AuthoredConditionalMechanic,
   Components,
   DamageType,
   DiceExpr,
@@ -129,7 +129,7 @@ const AREA_MOVEMENT_DISTANCE_DAMAGE_FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "difficultTerrainOperation",
   "difficultTerrainEffect",
@@ -159,7 +159,7 @@ const ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const satisfies ReadonlyArray<keyof AreaMovementDistanceDamageMechanics>;
 const RANGE_FIELDS = ["kind", "feet"] as const;
 type AreaMovementDistanceDamageComponentKeySpace = Pick<
@@ -208,13 +208,17 @@ const RECOGNITION_FIELDS = [
   "camouflage",
   "eligibility",
   "attempt",
-  "recognition",
-  "timing",
 ] as const;
 const RECOGNITION_ELIGIBILITY_FIELDS = ["kind"] as const;
 const RECOGNITION_ATTEMPT_FIELDS = ["action", "check"] as const;
-const RECOGNITION_CHECK_FIELDS = ["ability", "skillOptions", "dc"] as const;
+const RECOGNITION_CHECK_FIELDS = [
+  "ability",
+  "skillOptions",
+  "dc",
+  "onSuccess",
+] as const;
 const RECOGNITION_DC_FIELDS = ["kind"] as const;
+const RECOGNITION_SUCCESS_FIELDS = ["kind", "timing"] as const;
 
 function areaMovementDistanceDamageIssue(
   failedFact: AreaMovementDistanceDamageFailedFact,
@@ -230,7 +234,7 @@ function areaMovementDistanceDamageIssue(
 }
 
 function areaMovementDistanceDamageHasTableOwnedRecognition(
-  effect: AuthoredConditionalEffect,
+  effect: AuthoredConditionalMechanic,
 ): boolean {
   return Match.value(effect).pipe(
     Match.when({ kind: "phantasm_damage" }, () => false),
@@ -241,11 +245,12 @@ function areaMovementDistanceDamageHasTableOwnedRecognition(
         recognition.attempt.action === "search" &&
         recognition.attempt.check.ability === "wis" &&
         recognition.attempt.check.skillOptions.length === 2 &&
-        recognition.attempt.check.skillOptions[0] === "perception" &&
-        recognition.attempt.check.skillOptions[1] === "survival" &&
+        recognition.attempt.check.skillOptions.includes("perception") &&
+        recognition.attempt.check.skillOptions.includes("survival") &&
         recognition.attempt.check.dc.kind === "caster_spell_save_dc" &&
-        recognition.recognition === "terrain_as_hazardous" &&
-        recognition.timing === "before_entering_area" &&
+        recognition.attempt.check.onSuccess.kind ===
+          "recognize_hazardous_terrain" &&
+        recognition.attempt.check.onSuccess.timing === "before_entering_area" &&
         spellMechanicsObjectHasOnlyKeys(recognition, RECOGNITION_FIELDS) &&
         spellMechanicsObjectHasOnlyKeys(
           recognition.eligibility,
@@ -262,6 +267,10 @@ function areaMovementDistanceDamageHasTableOwnedRecognition(
         spellMechanicsObjectHasOnlyKeys(
           recognition.attempt.check.dc,
           RECOGNITION_DC_FIELDS,
+        ) &&
+        spellMechanicsObjectHasOnlyKeys(
+          recognition.attempt.check.onSuccess,
+          RECOGNITION_SUCCESS_FIELDS,
         ),
       ),
     ),
@@ -555,7 +564,7 @@ function areaMovementDistanceDamageEvidence(
       spellOngoingOperationPath(damageOrdinal),
       spellOngoingOperationEffectPath(damageOrdinal),
     ],
-    unowned: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1))],
+    unowned: [spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1))],
   };
 }
 
@@ -632,20 +641,21 @@ function inspectAreaMovementDistanceDamageMechanics(
   );
   if (mechanics.initialPhase !== undefined)
     push("initialPhase", spellOngoingInitialPhasePath());
-  const authoredConditionalEffects = mechanics.authoredConditionalEffects ?? [];
-  const recognitionIndex = authoredConditionalEffects.findIndex(
+  const authoredConditionalMechanics =
+    mechanics.authoredConditionalMechanics ?? [];
+  const recognitionIndex = authoredConditionalMechanics.findIndex(
     areaMovementDistanceDamageHasTableOwnedRecognition,
   );
   if (recognitionIndex !== 0)
     push(
-      "authoredConditionalEffects",
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
     );
-  for (const [index] of authoredConditionalEffects.entries())
+  for (const [index] of authoredConditionalMechanics.entries())
     if (index !== recognitionIndex || index !== 0)
       push(
-        "authoredConditionalEffects",
-        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
       );
 
   const terrainEffectIndex = mechanics.operations.findIndex(

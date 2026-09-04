@@ -7,7 +7,7 @@ import {
   spellMaterialComponentPath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -392,26 +392,26 @@ describe("persistentAreaTrait static admission", () => {
     ]);
   });
 
-  test("reports every authored conditional effect at its canonical ordinal", () => {
-    const conditionalEffects = spellRecord("phantasmal_force").mechanics;
+  test("reports every authored conditional mechanic at its canonical ordinal", () => {
+    const conditionalMechanics = spellRecord("phantasmal_force").mechanics;
     if (
-      conditionalEffects.family !== "ongoing_effect" ||
-      conditionalEffects.authoredConditionalEffects === undefined
+      conditionalMechanics.family !== "ongoing_effect" ||
+      conditionalMechanics.authoredConditionalMechanics === undefined
     ) {
       throw new Error(
-        "Expected a synthetic conditional-effect fixture source.",
+        "Expected a synthetic conditional-mechanic fixture source.",
       );
     }
-    const effect = conditionalEffects.authoredConditionalEffects[0];
-    if (effect === undefined) {
-      throw new Error("Expected a conditional-effect fixture.");
+    const mechanic = conditionalMechanics.authoredConditionalMechanics[0];
+    if (mechanic === undefined) {
+      throw new Error("Expected a conditional-mechanic fixture.");
     }
     const record = syntheticFogCloudRecord(
       (mechanics) => ({
         ...mechanics,
-        authoredConditionalEffects: [effect, effect],
+        authoredConditionalMechanics: [mechanic, mechanic],
       }),
-      "conditional_effects",
+      "conditional_mechanics",
     );
     const result = persistentAreaTraitProfile.admitMechanics(
       mechanicsSource(spellAdmissionSource(record)),
@@ -419,14 +419,14 @@ describe("persistentAreaTrait static admission", () => {
 
     expect(issueShape(result)).toEqual([
       {
-        failedFact: "authoredConditionalEffects",
-        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+        failedFact: "authoredConditionalMechanics",
+        mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
           PositiveInteger(1),
         ),
       },
       {
-        failedFact: "authoredConditionalEffects",
-        mechanicsPath: spellOngoingAuthoredConditionalEffectPath(
+        failedFact: "authoredConditionalMechanics",
+        mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
           PositiveInteger(2),
         ),
       },

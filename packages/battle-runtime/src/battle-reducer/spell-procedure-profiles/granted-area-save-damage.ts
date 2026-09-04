@@ -100,7 +100,7 @@ import {
 } from "./spell-mechanics-admission.ts";
 import {
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   spellOngoingInitialPhasePath,
@@ -197,7 +197,7 @@ type GrantedAreaSaveDamageActionFailedFact =
   | "damageType"
   | "damageTypeChoices"
   | "extraOperation"
-  | "authoredConditionalEffects"
+  | "authoredConditionalMechanics"
   | "requiredFacts";
 
 type GrantedAreaSaveDamageActionMechanicsIssue = SpellProcedureAdmissionIssue<
@@ -231,8 +231,8 @@ const GRANTED_AREA_SAVE_DAMAGE_FAILED_FACT_MESSAGES = {
   damageType: "Dragon's Breath requires a damage-type choice.",
   damageTypeChoices: "Dragon's Breath has unsupported damage-type choices.",
   extraOperation: "Dragon's Breath has an unsupported additional operation.",
-  authoredConditionalEffects:
-    "Dragon's Breath has unsupported authored conditional effects.",
+  authoredConditionalMechanics:
+    "Dragon's Breath has unsupported authored conditional mechanics.",
   requiredFacts: "Dragon's Breath did not retain required projected facts.",
 } as const satisfies Record<GrantedAreaSaveDamageActionFailedFact, string>;
 
@@ -505,17 +505,17 @@ function admitGrantedAreaSaveDamageActionMechanics(
       "attachment",
       "initialPhase",
       "operations",
-      "authoredConditionalEffects",
+      "authoredConditionalMechanics",
     ])
   ) {
     push("rootShape", spellMechanicsHeaderPath("family"));
   }
   for (const [index] of (
-    mechanics.authoredConditionalEffects ?? []
+    mechanics.authoredConditionalMechanics ?? []
   ).entries()) {
     push(
-      "authoredConditionalEffects",
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
     );
   }
   if (!dragonRootAttachmentSupported(mechanics.attachment)) {

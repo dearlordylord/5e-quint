@@ -12,12 +12,12 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
   spellOngoingAttachmentPath,
-  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingAuthoredConditionalMechanicPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
 import {
@@ -113,7 +113,7 @@ const MAGICAL_DARKNESS_FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
   "operationCount",
   "darknessOperation",
   "darknessEffect",
@@ -139,16 +139,20 @@ const ROOT_FIELDS = [
   "attachment",
   "initialPhase",
   "operations",
-  "authoredConditionalEffects",
+  "authoredConditionalMechanics",
 ] as const satisfies ReadonlyArray<keyof MagicalDarknessPointOriginMechanics>;
 const RANGE_FIELDS = ["kind", "feet"] as const;
+type MagicalDarknessComponentKeySpace = Pick<Components, "v" | "s" | "m"> & {
+  readonly materialCostGp?: unknown;
+  readonly materialConsumed?: unknown;
+};
 const COMPONENT_FIELDS = [
   "v",
   "s",
   "m",
   "materialCostGp",
   "materialConsumed",
-] as const;
+] as const satisfies ReadonlyArray<keyof MagicalDarknessComponentKeySpace>;
 const CASTING_TIME_FIELDS = ["kind"] as const;
 const DURATION_FIELDS = [
   "kind",
@@ -566,7 +570,10 @@ function inspectMagicalDarknessPointOriginMechanics(
     mechanics.components.v !== true ||
     mechanics.components.s !== false ||
     mechanics.components.m !== MAGICAL_DARKNESS_MATERIAL ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+    !spellMechanicsObjectHasOnlyKeys<MagicalDarknessComponentKeySpace>(
+      mechanics.components,
+      COMPONENT_FIELDS,
+    )
   )
     pushIssue("components", spellMechanicsHeaderPath("components"));
   for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
@@ -602,10 +609,12 @@ function inspectMagicalDarknessPointOriginMechanics(
   const attachmentProjection = magicalDarknessAttachmentProjection(attachment);
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
     pushIssue(
-      "authoredConditionalEffects",
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
     );
 
   const darknessIndex = mechanics.operations.findIndex(
