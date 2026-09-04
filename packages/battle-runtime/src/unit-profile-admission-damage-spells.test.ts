@@ -308,6 +308,25 @@ describe("repeatedDamageAllocation static admission", () => {
       spellActivationAttachmentPath(PositiveInteger(1)),
     );
   });
+
+  test("reports only damageEffect when the damage effect has an extra key", () => {
+    const source = spellAdmissionSource(spellRecord(magicMissileUnitId));
+    if (source.mechanics.family !== "activation")
+      throw new Error("Expected activation mechanics.");
+    const phase = source.mechanics.phases[0];
+    const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+    if (phase?.kind !== "direct" || effect?.kind !== "damage")
+      throw new Error("Expected direct damage mechanics.");
+    const effectWithExtraKey = { ...effect, unexpectedProcedureFact: true };
+    expectUnsupportedRepeatedDamageMechanics(
+      {
+        ...source.mechanics,
+        phases: [{ ...phase, effects: [effectWithExtraKey] }],
+      },
+      "damageEffect",
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    );
+  });
 });
 
 function spellExecutionForAct(

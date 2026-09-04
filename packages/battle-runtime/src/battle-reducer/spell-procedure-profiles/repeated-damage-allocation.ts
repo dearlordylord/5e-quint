@@ -175,6 +175,10 @@ type RepeatedEffectCount = Exclude<
   readonly baseLevel: typeof REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL;
   readonly perSlotAboveBase: typeof REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL;
 };
+type RepeatedEffectCountInput = Extract<
+  TargetSelection,
+  { readonly mode: "choose_up_to" }
+>["count"];
 type RepeatedDamageEffect = Extract<
   DirectPhaseEffect,
   { readonly kind: "damage" }
@@ -215,17 +219,14 @@ const EFFECT_FIELDS = ["kind", "amount", "damageType"] as const;
 const AMOUNT_FIELDS = ["kind", "expr"] as const;
 const DICE_EXPR_FIELDS = ["dice", "dieSize", "flat"] as const;
 
-function isRepeatedEffectCount(value: unknown): value is RepeatedEffectCount {
+function isRepeatedEffectCount(
+  value: RepeatedEffectCountInput | undefined,
+): value is RepeatedEffectCount {
   return (
     typeof value === "object" &&
-    value !== null &&
-    "kind" in value &&
     value.kind === "linear" &&
-    "base" in value &&
     value.base === REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT &&
-    "baseLevel" in value &&
     value.baseLevel === REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL &&
-    "perSlotAboveBase" in value &&
     value.perSlotAboveBase ===
       REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL &&
     spellMechanicsObjectHasOnlyKeys(value, COUNT_FIELDS)
@@ -439,36 +440,42 @@ function inspectRepeatedDamageAllocationMechanics(
     );
 
   const effect = phase?.effects?.[0];
-  if (
-    effect?.kind !== "damage" ||
-    !spellMechanicsObjectHasOnlyKeys(effect, EFFECT_FIELDS)
-  )
+  const damageEffectSupported =
+    effect?.kind === "damage" &&
+    spellMechanicsObjectHasOnlyKeys(effect, EFFECT_FIELDS);
+  if (!damageEffectSupported)
     pushIssue(
       "damageEffect",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
-  const damageAmountSupported =
+  const parsedDamageAmount =
     repeatedDamageAmountMatchesSignature(effect) &&
     spellMechanicsObjectHasOnlyKeys(effect.amount, AMOUNT_FIELDS) &&
-    spellMechanicsObjectHasOnlyKeys(effect.amount.expr, DICE_EXPR_FIELDS);
+    spellMechanicsObjectHasOnlyKeys(effect.amount.expr, DICE_EXPR_FIELDS)
+      ? effect.amount
+      : undefined;
+  const damageAmountSupported = parsedDamageAmount !== undefined;
   if (!damageAmountSupported)
     pushIssue(
       "damageAmount",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
-  const damageTypeSupported =
+  const parsedDamageType =
     effect?.kind === "damage" &&
-    effect.damageType ===
-      REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.damageType;
+    effect.damageType === REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.damageType
+      ? effect.damageType
+      : undefined;
+  const damageTypeSupported = parsedDamageType !== undefined;
   if (!damageTypeSupported)
     pushIssue(
       "damageType",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
 
-  const parsedDamage = isRepeatedDamageEffect(effect)
-    ? { expr: effect.amount.expr, damageType: effect.damageType }
-    : undefined;
+  const parsedDamage =
+    parsedDamageAmount !== undefined && parsedDamageType !== undefined
+      ? { expr: parsedDamageAmount.expr, damageType: parsedDamageType }
+      : undefined;
   const uniqueIssues = spellUniqueMechanicsIssues(issues);
   if (parsedRangeFeet === undefined) {
     const rangeIssue = {
