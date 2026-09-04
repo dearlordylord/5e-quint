@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `1bdac2e20e81475c28d120378a3298504485d548`
+  `c7d0da9cf1d2ec30f18e2e4e0f88271eff9b6fcf`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -43,7 +43,9 @@ This section is the sole mutable handoff for a new session.
   `ae0216827fa4788c371677b067b36ce93e24f5f0` is integrated by
   `acdbacb9ae44b1bb111d1b93b92df2c7f7e7eeed`; the linked-defense admission
   reviewed tip `98f660aeb3f4296120f9e85ab7a52ae94e48a711` is integrated by
-  `1bdac2e20e81475c28d120378a3298504485d548`.
+  `1bdac2e20e81475c28d120378a3298504485d548`; the movable-light admission
+  reviewed tip `1d575ad22faf096f334bd88d048d93c73128bc75` is integrated by
+  `c7d0da9cf1d2ec30f18e2e4e0f88271eff9b6fcf`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -99,6 +101,21 @@ This section is the sole mutable handoff for a new session.
   rules-kernel obligations/matrix plus Unit-profile coverage map. No QNT/MBT
   run is claimed. The remaining 18 legacy declarations prevent whole-package
   convergence.
+- Movable-light evidence: exact reviewed tip
+  `1d575ad22faf096f334bd88d048d93c73128bc75` migrates the legacy
+  top-level movable-light declaration to `admitMechanics`; Standards and
+  Spec/RAW review axes converged with no findings. The focused static-admission
+  selection passed 10/10. Changed-file type diagnostics were zero, focused
+  ESLint, Prettier, and diff checks passed, and rules-kernel coverage passed
+  162 obligations. Unit-profile coverage remains baseline-blocked by the prior
+  unknown `spell.invocation-persistent-armor-effect` profile marker. The actual
+  reviewed write set was the movable-light profile, Dancing Lights admission
+  test, `battle-state-execution.ts` invocation-source boundary, and the
+  rules-kernel obligations/matrix plus Unit-profile coverage map. The full
+  lifecycle selection was not run or claimed because the remaining legacy
+  registry frontier still prevents it from reaching those assertions. No
+  QNT/MBT run is claimed. The remaining 17 legacy declarations prevent
+  whole-package convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -115,12 +132,15 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current audit retains 18 legacy top-level `admit:` declarations. The landed
-  W1 linked-defense lease is clear. W2 owns the movable-light profile and its
-  existing Dancing Lights admission test; it may not edit shared registry/state
-  files or run QNT/MBT unless its implementation changes semantics. The
-  observation baseline remains exactly 99 complete, 22 partial, and 74 with no
-  owner; integrating `persistentArmorEffect` and linked defense does not
+  current audit retains 17 legacy top-level `admit:` declarations. The landed
+  W2 movable-light lease is clear. The next narrow lease selected for a future
+  implementation worktree is the object-light profile and its existing
+  `unit-profile-admission-object-light-spells.test.ts`; no implementation
+  worktree currently holds that lease. Shared registry/state or coverage-map
+  edits require an explicit lease expansion, and no QNT/MBT run is authorized
+  unless implementation changes semantics. The observation baseline remains
+  exactly 99 complete, 22 partial, and 74 with no owner; integrating
+  `persistentArmorEffect`, linked defense, and movable light does not
   reclassify those catalog-root observations.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
@@ -241,10 +261,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                                        | Base SHA                                   | Write lease                                                                                                                                                                                                                                                                   | State  |
-| --------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`          | `dd1350f81`                                | Integration checkpoint `1bdac2e20`; C2, B3, A4, B4, A5, `persistentArmorEffect`, and linked defense integrated; cumulative Surface publication delta certified; 18 top-level profile migrations remain                                                                        | Active |
-| `SR-04G/W2`     | #474 movable-light profile migration            | Codex implementer  | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-movable-light`; `work/sr04g-movable-light` | `5be12de5b9e8c3cbfb3ecb147ea96678e99c7b6e` | `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts` and existing `packages/battle-runtime/src/unit-profile-admission-dancing-lights.test.ts` only; no shared registry/state edits; no QNT/MBT unless semantics change | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                           | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `c7d0da9cf`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, and movable light integrated; cumulative Surface publication delta certified; 17 top-level profile migrations remain | Active |
 
 ## Landing discipline
 
