@@ -234,9 +234,9 @@ function areaMovementDistanceDamageIssue(
 }
 
 function areaMovementDistanceDamageHasTableOwnedRecognition(
-  effect: AuthoredConditionalMechanic,
+  mechanic: AuthoredConditionalMechanic,
 ): boolean {
-  return Match.value(effect).pipe(
+  return Match.value(mechanic).pipe(
     Match.when({ kind: "phantasm_damage" }, () => false),
     Match.when({ kind: "camouflaged_area_recognition" }, (recognition) =>
       Boolean(

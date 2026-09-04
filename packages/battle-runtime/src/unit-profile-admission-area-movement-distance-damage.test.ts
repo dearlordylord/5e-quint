@@ -131,10 +131,10 @@ function conditionalMechanicFixture(kind: "recognition" | "phantasm"): object {
     record.mechanics.authoredConditionalMechanics === undefined
   )
     throw new Error("Expected an authored conditional-mechanic fixture.");
-  const effect = record.mechanics.authoredConditionalMechanics[0];
-  if (effect === undefined)
+  const mechanic = record.mechanics.authoredConditionalMechanics[0];
+  if (mechanic === undefined)
     throw new Error("Expected an authored conditional-mechanic fixture.");
-  return structuredClone(effect);
+  return structuredClone(mechanic);
 }
 
 function mechanicsSourceWithConditionalMechanics(
