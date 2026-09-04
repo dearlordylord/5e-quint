@@ -1,7 +1,10 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
-import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -53,6 +56,8 @@ import {
   type BattleSpellAdmissionSource,
 } from "./battle-state-execution.ts";
 import { compelledNextTurnBehaviorProfile } from "./battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts";
+import { spellTargetListHole } from "./battle-reducer/spells-targeting.ts";
+import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import type {
@@ -148,7 +153,9 @@ describe("compelledNextTurnBehavior static admission", () => {
       ability: "wis",
       dc: { kind: "caster_spell_save_dc" },
       targetCount: { base: 1, baseLevel: 1, perSlotAboveBase: 1 },
+      visibility: "caster_can_see",
     });
+    expect(result.admitted.facts.targetCount).not.toHaveProperty("kind");
     expect(result.admitted.evidence).toEqual({
       consumed: [
         spellMechanicsHeaderPath("level"),
@@ -185,8 +192,32 @@ describe("compelledNextTurnBehavior static admission", () => {
     );
     expect(invocations[0]).toMatchObject({
       targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
+      visibility: "caster_can_see",
     });
     expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+    const invocation = invocations[0];
+    if (invocation === undefined)
+      throw new Error("Expected admitted Command invocation.");
+    expect(
+      spellTargetListHole(session.state, spellCasterId, {
+        access: invocation.access,
+        resource: invocation.resource,
+        procedure: invocation.procedure,
+        spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
+          source.spellDefinitionRuleFacts,
+          source.castingSource,
+        ),
+        actionCost: invocation.actionCost,
+        ability: invocation.ability,
+        dc: invocation.dc,
+        targeting: invocation.targeting,
+        visibility: invocation.visibility,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest("command-visibility"),
+      }),
+    ).toMatchObject({
+      spellTargetSpatialFactRequest: { visibility: "requiresSight" },
+    });
   });
 
   test("recognizes renamed synthetic mechanics independently of authored identity", () => {
@@ -404,6 +435,44 @@ describe("compelledNextTurnBehavior static admission", () => {
     ]);
   });
 
+  test("rejects missing and wrong target visibility at the attachment path", () => {
+    const missing = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Command target selection.");
+        Reflect.deleteProperty(phase.attachment.value.selection, "visibility");
+      }),
+    );
+    const wrong = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Command target selection.");
+        Reflect.set(
+          phase.attachment.value.selection,
+          "visibility",
+          "target_can_see_caster",
+        );
+      }),
+    );
+    const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
+    expect(issueShape(missing)).toEqual([
+      { failedFact: "visibility", mechanicsPath: attachmentPath },
+    ]);
+    expect(issueShape(wrong)).toEqual([
+      { failedFact: "visibility", mechanicsPath: attachmentPath },
+    ]);
+  });
+
   test("accumulates attachment discriminants independently", () => {
     const result = compelledNextTurnBehaviorProfile.admitMechanics(
       malformedCommandSource((mechanics) => {
@@ -422,6 +491,7 @@ describe("compelledNextTurnBehavior static admission", () => {
       { failedFact: "selectionShape", mechanicsPath: attachmentPath },
       { failedFact: "selectionMode", mechanicsPath: attachmentPath },
       { failedFact: "selectionTargetKinds", mechanicsPath: attachmentPath },
+      { failedFact: "visibility", mechanicsPath: attachmentPath },
       { failedFact: "targetCount", mechanicsPath: attachmentPath },
     ]);
   });

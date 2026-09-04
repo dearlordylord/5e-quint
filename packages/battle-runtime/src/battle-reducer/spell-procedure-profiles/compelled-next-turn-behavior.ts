@@ -120,11 +120,13 @@ type CommandSelectionKeySpace = {
   readonly mode: unknown;
   readonly targetKinds?: unknown;
   readonly count?: unknown;
+  readonly visibility?: unknown;
 };
 type CompelledBehaviorMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly ability: "wis";
   readonly dc: CompelledNextTurnBehaviorSpellInvocation["dc"];
   readonly targetCount: SaveGateTargetCountFacts;
+  readonly visibility: "caster_can_see";
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for CompelledBehaviorFailedFact.
@@ -151,6 +153,7 @@ const COMPELLED_BEHAVIOR_FAILED_FACTS = [
   "selectionMode",
   "selectionTargetKinds",
   "targetCount",
+  "visibility",
   "saveAbility",
   "saveDc",
   "saveDcShape",
@@ -220,7 +223,12 @@ const PHASE_FIELDS = [
 ] as const;
 const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
 const TARGET_VALUE_FIELDS = ["kind", "selection"] as const;
-const SELECTION_FIELDS = ["mode", "targetKinds", "count"] as const;
+const SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+  "count",
+  "visibility",
+] as const;
 const DC_FIELDS = ["kind"] as const;
 const SUCCESS_FIELDS = ["kind"] as const;
 const FAILURE_FIELDS = ["kind", "execution", "options"] as const;
@@ -252,6 +260,7 @@ function admitCompelledNextTurnBehavior(
               actionCost: "magicAction",
               ability: facts.ability,
               dc: facts.dc,
+              visibility: facts.visibility,
               targeting: saveGatedConditionTargetingFromFacts(
                 { kind: "targetList", count: facts.targetCount },
                 castOption.spellLevel,
@@ -491,6 +500,13 @@ function inspectCompelledBehaviorMechanics(
     !selection.targetKinds.includes("creature")
   )
     push("selectionTargetKinds", attachmentPath);
+  const visibility =
+    selection !== undefined &&
+    "visibility" in selection &&
+    selection.visibility === "caster_can_see"
+      ? selection.visibility
+      : undefined;
+  if (visibility === undefined) push("visibility", attachmentPath);
   const targetCount =
     selection === undefined
       ? null
@@ -589,6 +605,11 @@ function inspectCompelledBehaviorMechanics(
         },
       ],
     };
+  if (visibility === undefined)
+    return {
+      tag: "unsupported",
+      issues: [{ failedFact: "visibility", mechanicsPath: attachmentPath }],
+    };
   return {
     tag: "parsed",
     facts: {
@@ -596,6 +617,7 @@ function inspectCompelledBehaviorMechanics(
       ability: saveAbility,
       dc: saveDc,
       targetCount,
+      visibility,
     },
     evidence: {
       consumed: [
@@ -705,6 +727,7 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
     }),
+    visibility: Schema.Literal("caster_can_see"),
   }),
 );
 export const compelledNextTurnBehaviorProfile = {

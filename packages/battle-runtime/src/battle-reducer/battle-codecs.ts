@@ -2437,7 +2437,10 @@ const BattleHolePayloadMembers = [
         casterId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
         rangeFeet: MovementFeet,
-        visibility: Schema.Literal("notSpecifiedByProcedure"),
+        visibility: Schema.Literals([
+          "requiresSight",
+          "notSpecifiedByProcedure",
+        ]),
       }),
     ),
     requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
