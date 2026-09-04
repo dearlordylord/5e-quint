@@ -106,10 +106,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { MARKED_TARGET_FINDING_SKILLS } from "../domain-constants.ts";
-import {
-  sameStringSet,
-  supportedDamageAmountExpr,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
@@ -223,12 +220,22 @@ type MarkedDamageRiderFixedDamageAmount = Extract<
   DiceAmount,
   { readonly kind: "fixed" }
 >;
+type MarkedDamageRiderDamageAmount = MarkedDamageRiderFixedDamageAmount & {
+  readonly expr: DiceExpr & {
+    readonly dice: 1;
+    readonly dieSize: 6;
+    readonly flat?: undefined;
+    readonly spellcastingMod?: undefined;
+    readonly abilityModifier?: undefined;
+  };
+};
+type MarkedDamageRiderDamageType = Extract<DamageType, "force" | "necrotic">;
 
 type MarkedDamageRiderMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly rangeFeet: MovementFeet;
   readonly durationFacts: MarkedDamageRiderDurationFacts;
-  readonly damageAmount: DiceAmount;
-  readonly damageType: DamageType;
+  readonly damageAmount: MarkedDamageRiderDamageAmount;
+  readonly damageType: MarkedDamageRiderDamageType;
   readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly retargetTiming: MarkedDamageRiderRetargetTiming;
 };
@@ -585,7 +592,9 @@ function markedDamageRiderDurationFacts(
       };
 }
 
-function markedDamageAmountIsCanonical(amount: DiceAmount): boolean {
+function markedDamageAmountIsCanonical(
+  amount: DiceAmount,
+): amount is MarkedDamageRiderDamageAmount {
   return (
     amount.kind === "fixed" &&
     spellMechanicsObjectHasOnlyKeys(
@@ -608,7 +617,8 @@ function markedDamageRiderDamageEffect(
   operation: OngoingEffectOperation | undefined,
 ): operation is OngoingEffectOperation & {
   readonly effect: Extract<EffectAtom, { readonly kind: "damage" }> & {
-    readonly damageType: "force" | "necrotic";
+    readonly damageType: MarkedDamageRiderDamageType;
+    readonly amount: MarkedDamageRiderDamageAmount;
   };
 } {
   return (
@@ -1023,14 +1033,7 @@ function admitMarkedDamageRider(
         facts.durationFacts,
         slot.spellLevel,
       );
-      const expr = supportedDamageAmountExpr({
-        amount: facts.damageAmount,
-        spellLevel: facts.level,
-        slotLevel: slot.spellLevel,
-      });
-      return Number(slot.spellLevel) < facts.level ||
-        expiresAt === null ||
-        expr === null
+      return Number(slot.spellLevel) < facts.level || expiresAt === null
         ? []
         : [
             {
@@ -1041,7 +1044,10 @@ function admitMarkedDamageRider(
               spell,
               actionCost: "bonusAction",
               targeting: { kind: "singleCombatant" },
-              damage: { expr, damageType: facts.damageType },
+              damage: {
+                expr: facts.damageAmount.expr,
+                damageType: facts.damageType,
+              },
               abilityCheckBehavior: facts.abilityCheckBehavior,
               retargetTiming: facts.retargetTiming,
               rangeFeet: facts.rangeFeet,

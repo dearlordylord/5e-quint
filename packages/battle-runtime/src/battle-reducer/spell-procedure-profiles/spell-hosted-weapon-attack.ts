@@ -55,7 +55,7 @@ import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   sameStringSet,
-  supportedDamageAmountExpr,
+  thresholdTierDamageExpr,
 } from "../spells-execution-facts.ts";
 import { loadoutHeldWeaponSlotIsUsable } from "../wild-shape-equipment.ts";
 import { battleObjectIsOnGround } from "../battle-object-lifecycle.ts";
@@ -84,7 +84,6 @@ import {
 } from "./profile.ts";
 import {
   spellConsumedMaterialEvidencePaths,
-  spellMechanicsFixedTableEntries,
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
@@ -111,13 +110,6 @@ type SpellHostedWeaponAttackEffect = Extract<
 type SpellHostedWeaponAttackBonusDamage = NonNullable<
   SpellHostedWeaponAttackEffect["bonusDamage"]
 >;
-type SupportedSpellHostedWeaponAttackBonusDamage = Omit<
-  SpellHostedWeaponAttackBonusDamage,
-  "amount" | "damageType"
-> & {
-  readonly damageType: "radiant";
-  readonly amount: Extract<DiceAmount, { readonly kind: "threshold_tiers" }>;
-};
 type SpellHostedWeaponAttackDamageTypeChoices = NonNullable<
   SpellHostedWeaponAttackEffect["damageTypeChoice"]
 >;
@@ -144,6 +136,40 @@ type SpellHostedWeaponAttackBonusTier =
   SpellHostedWeaponAttackBonusAmount["tiers"][number];
 type SpellHostedWeaponAttackBonusOverride =
   SpellHostedWeaponAttackBonusTier["override"];
+type SpellHostedWeaponAttackBonusTierIndex = 0 | 1 | 2;
+type SupportedSpellHostedWeaponAttackBonusTier<
+  Index extends SpellHostedWeaponAttackBonusTierIndex,
+> = SpellHostedWeaponAttackBonusTier & {
+  readonly atLevel: (typeof SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE)[Index]["atLevel"];
+  readonly override: SpellHostedWeaponAttackBonusOverride & {
+    readonly dice: (typeof SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE)[Index]["dice"];
+    readonly dieSize?: undefined;
+    readonly flat?: undefined;
+  };
+};
+type SupportedSpellHostedWeaponAttackBonusAmount =
+  SpellHostedWeaponAttackBonusAmount & {
+    readonly axis: "character";
+    readonly base: DiceExpr & {
+      readonly dice: 0;
+      readonly dieSize: 6;
+      readonly flat?: undefined;
+      readonly spellcastingMod?: undefined;
+      readonly abilityModifier?: undefined;
+    };
+    readonly tiers: readonly [
+      SupportedSpellHostedWeaponAttackBonusTier<0>,
+      SupportedSpellHostedWeaponAttackBonusTier<1>,
+      SupportedSpellHostedWeaponAttackBonusTier<2>,
+    ];
+  };
+type SupportedSpellHostedWeaponAttackBonusDamage = Omit<
+  SpellHostedWeaponAttackBonusDamage,
+  "amount" | "damageType"
+> & {
+  readonly damageType: "radiant";
+  readonly amount: SupportedSpellHostedWeaponAttackBonusAmount;
+};
 type SpellHostedWeaponAttackCastingTime = Extract<
   SpellHostedWeaponAttackMechanics["castingTime"],
   { readonly kind: "action" }
@@ -164,10 +190,7 @@ const DAMAGE_TYPE_CHOICES = [
 >;
 type SpellHostedWeaponAttackMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly damageTypeChoices: SupportedSpellHostedWeaponAttackDamageTypeChoices;
-  readonly bonusDamage: {
-    readonly damageType: DamageType;
-    readonly amount: DiceAmount;
-  };
+  readonly bonusDamage: SupportedSpellHostedWeaponAttackBonusDamage;
 };
 
 export const SPELL_HOSTED_WEAPON_ATTACK_FAILED_FACTS = [
@@ -298,23 +321,36 @@ function spellHostedWeaponAttackDistinctiveHeaderFallback(
   );
 }
 
-function spellHostedWeaponAttackBonusDamageFacts(
-  bonusDamage: SpellHostedWeaponAttackBonusDamage,
-): SupportedSpellHostedWeaponAttackBonusDamage | undefined {
-  const amount = bonusDamage.amount;
-  const damageType = bonusDamage.damageType;
+function spellHostedWeaponAttackBonusTierIsCanonical<
+  const Index extends SpellHostedWeaponAttackBonusTierIndex,
+>(
+  tier: SpellHostedWeaponAttackBonusTier | undefined,
+  index: Index,
+): tier is SupportedSpellHostedWeaponAttackBonusTier<Index> {
+  const expected = SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE[index];
+  return (
+    tier !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(tier, SPELL_HOSTED_BONUS_TIER_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      tier.override,
+      SPELL_HOSTED_BONUS_OVERRIDE_FIELDS,
+    ) &&
+    tier.atLevel === expected.atLevel &&
+    tier.override.dice === expected.dice &&
+    tier.override.dieSize === undefined &&
+    tier.override.flat === undefined
+  );
+}
+
+function spellHostedWeaponAttackBonusAmountIsCanonical(
+  amount: DiceAmount,
+): amount is SupportedSpellHostedWeaponAttackBonusAmount {
   if (
-    !spellMechanicsObjectHasOnlyKeys(
-      bonusDamage,
-      SPELL_HOSTED_BONUS_DAMAGE_FIELDS,
-    ) ||
-    damageType !== "radiant" ||
     amount.kind !== "threshold_tiers" ||
-    !spellMechanicsObjectHasOnlyKeys(amount, SPELL_HOSTED_BONUS_AMOUNT_FIELDS)
-  ) {
-    return undefined;
-  }
-  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      amount,
+      SPELL_HOSTED_BONUS_AMOUNT_FIELDS,
+    ) ||
     amount.axis !== "character" ||
     !spellMechanicsObjectHasOnlyKeys(
       amount.base,
@@ -323,29 +359,34 @@ function spellHostedWeaponAttackBonusDamageFacts(
     amount.base.dice !== 0 ||
     amount.base.dieSize !== 6 ||
     amount.base.flat !== undefined ||
+    amount.base.spellcastingMod !== undefined ||
+    amount.base.abilityModifier !== undefined ||
     amount.tiers.length !== SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE.length
   ) {
-    return undefined;
+    return false;
   }
-  const orderedTiers = spellMechanicsFixedTableEntries(
-    amount.tiers,
-    SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE,
-    (tier, expected) =>
-      spellMechanicsObjectHasOnlyKeys(tier, SPELL_HOSTED_BONUS_TIER_FIELDS) &&
-      spellMechanicsObjectHasOnlyKeys(
-        tier.override,
-        SPELL_HOSTED_BONUS_OVERRIDE_FIELDS,
-      ) &&
-      tier.atLevel === expected.atLevel &&
-      tier.override.dice === expected.dice,
+  return (
+    spellHostedWeaponAttackBonusTierIsCanonical(amount.tiers[0], 0) &&
+    spellHostedWeaponAttackBonusTierIsCanonical(amount.tiers[1], 1) &&
+    spellHostedWeaponAttackBonusTierIsCanonical(amount.tiers[2], 2)
   );
-  const tiers =
-    orderedTiers === undefined
-      ? undefined
-      : spellProcedureNonEmpty(orderedTiers);
-  return tiers === undefined
-    ? undefined
-    : { ...bonusDamage, damageType, amount: { ...amount, tiers } };
+}
+
+function spellHostedWeaponAttackBonusDamageFacts(
+  bonusDamage: SpellHostedWeaponAttackBonusDamage,
+): SupportedSpellHostedWeaponAttackBonusDamage | undefined {
+  return spellMechanicsObjectHasOnlyKeys(
+    bonusDamage,
+    SPELL_HOSTED_BONUS_DAMAGE_FIELDS,
+  ) &&
+    bonusDamage.damageType === "radiant" &&
+    spellHostedWeaponAttackBonusAmountIsCanonical(bonusDamage.amount)
+    ? {
+        ...bonusDamage,
+        damageType: bonusDamage.damageType,
+        amount: bonusDamage.amount,
+      }
+    : undefined;
 }
 
 function spellHostedWeaponAttackEffectShapeIsSupported(
@@ -611,10 +652,7 @@ function admitSpellHostedWeaponAttackMechanics(
   const facts = {
     ...source.spellDefinitionRuleFacts,
     damageTypeChoices,
-    bonusDamage: {
-      damageType: bonusDamage.damageType,
-      amount: bonusDamage.amount,
-    },
+    bonusDamage,
   } satisfies SpellHostedWeaponAttackMechanicsFacts;
   return {
     tag: "supported",
@@ -668,19 +706,13 @@ function admitSpellHostedWeaponAttack(
             ),
           ),
         ],
-        bonusDamage: (() => {
-          const expr = supportedDamageAmountExpr({
-            amount: facts.bonusDamage.amount,
-            spellLevel: facts.level,
-            characterLevel: spellAdmissionCharacterLevel(ctx),
-          });
-          return expr === null
-            ? null
-            : {
-                expr,
-                damageType: facts.bonusDamage.damageType,
-              };
-        })(),
+        bonusDamage: {
+          expr: thresholdTierDamageExpr(
+            facts.bonusDamage.amount,
+            spellAdmissionCharacterLevel(ctx),
+          ),
+          damageType: facts.bonusDamage.damageType,
+        },
       }),
     );
 }

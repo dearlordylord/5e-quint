@@ -64,13 +64,9 @@ import {
   spellProcedureExecutionSchema,
   spellProcedureResolutionContext,
 } from "./profile.ts";
-import {
-  sameStringSet,
-  supportedDamageAmountExpr,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import type {
   Attachment,
-  DamageType,
   DiceAmount,
   DiceExpr,
   EffectAtom,
@@ -128,13 +124,50 @@ type SpellAttackSequenceCountFacts =
       readonly baseLevel: SpellSlotLevel;
       readonly perSlotAboveBase: PositiveInteger;
     };
-type SpellAttackSequenceMechanicsFacts = SpellDefinitionRuleFacts & {
+type SpellAttackSequenceCharacterCountFacts = Extract<
+  SpellAttackSequenceCountFacts,
+  { readonly kind: "character" }
+>;
+type SpellAttackSequenceSlotCountFacts = Extract<
+  SpellAttackSequenceCountFacts,
+  { readonly kind: "slot" }
+>;
+type SpellAttackSequenceCanonicalDiceExpr<
+  Dice extends number,
+  DieSize extends number,
+> = DiceExpr & {
+  readonly dice: Dice;
+  readonly dieSize: DieSize;
+  readonly flat?: undefined;
+  readonly spellcastingMod?: undefined;
+  readonly abilityModifier?: undefined;
+};
+type SpellAttackSequenceCanonicalDamageAmount<
+  Dice extends number,
+  DieSize extends number,
+> = Extract<DiceAmount, { readonly kind: "fixed" }> & {
+  readonly expr: SpellAttackSequenceCanonicalDiceExpr<Dice, DieSize>;
+};
+type SpellAttackSequenceMechanicsFacts = Omit<
+  SpellDefinitionRuleFacts,
+  "level"
+> & {
   readonly rangeFeet: MovementFeetType;
   readonly attackKind: "ranged_spell_attack";
-  readonly damageAmount: DiceAmount;
-  readonly damageType: DamageType;
-  readonly count: SpellAttackSequenceCountFacts;
-};
+} & (
+    | {
+        readonly level: 0;
+        readonly damageAmount: SpellAttackSequenceCanonicalDamageAmount<1, 10>;
+        readonly damageType: "force";
+        readonly count: SpellAttackSequenceCharacterCountFacts;
+      }
+    | {
+        readonly level: 2;
+        readonly damageAmount: SpellAttackSequenceCanonicalDamageAmount<2, 6>;
+        readonly damageType: "fire";
+        readonly count: SpellAttackSequenceSlotCountFacts;
+      }
+  );
 type SpellAttackSequenceMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
@@ -424,29 +457,30 @@ function spellAttackSequenceCountFacts(
   return undefined;
 }
 
-function spellAttackSequenceDamageAmountIsSupported(
+function spellAttackSequenceDamageAmountIsCanonical<
+  const Dice extends number,
+  const DieSize extends number,
+>(
   amount: DiceAmount,
-  level: number,
-): boolean {
-  if (
-    amount.kind !== "fixed" ||
-    !spellMechanicsObjectHasOnlyKeys(
+  dice: Dice,
+  dieSize: DieSize,
+): amount is SpellAttackSequenceCanonicalDamageAmount<Dice, DieSize> {
+  if (amount.kind !== "fixed") return false;
+  return (
+    spellMechanicsObjectHasOnlyKeys(
       amount,
       SPELL_ATTACK_SEQUENCE_DAMAGE_AMOUNT_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
+    ) &&
+    spellMechanicsObjectHasOnlyKeys(
       amount.expr,
       SPELL_ATTACK_SEQUENCE_DICE_EXPR_FIELDS,
-    ) ||
-    amount.expr.flat !== undefined ||
-    amount.expr.spellcastingMod !== undefined ||
-    amount.expr.abilityModifier !== undefined
-  ) {
-    return false;
-  }
-  return level === 0
-    ? amount.expr.dice === 1 && amount.expr.dieSize === 10
-    : amount.expr.dice === 2 && amount.expr.dieSize === 6;
+    ) &&
+    amount.expr.dice === dice &&
+    amount.expr.dieSize === dieSize &&
+    amount.expr.flat === undefined &&
+    amount.expr.spellcastingMod === undefined &&
+    amount.expr.abilityModifier === undefined
+  );
 }
 
 function spellAttackSequenceMechanicsEvidence(
@@ -500,6 +534,28 @@ function admitSpellAttackSequenceMechanics(
   const hitEffect =
     hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
   const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
+  const cantripDamageAmount =
+    mechanics.level === 0 &&
+    damageEffect !== undefined &&
+    spellAttackSequenceDamageAmountIsCanonical(damageEffect.amount, 1, 10)
+      ? damageEffect.amount
+      : undefined;
+  const rayDamageAmount =
+    mechanics.level === 2 &&
+    damageEffect !== undefined &&
+    spellAttackSequenceDamageAmountIsCanonical(damageEffect.amount, 2, 6)
+      ? damageEffect.amount
+      : undefined;
+  const damageAmount = cantripDamageAmount ?? rayDamageAmount;
+  const cantripDamageType =
+    mechanics.level === 0 && damageEffect?.damageType === "force"
+      ? damageEffect.damageType
+      : undefined;
+  const rayDamageType =
+    mechanics.level === 2 && damageEffect?.damageType === "fire"
+      ? damageEffect.damageType
+      : undefined;
+  const damageType = cantripDamageType ?? rayDamageType;
   const missEffect = attackPhase?.onMiss[0];
   const targetAttachmentAdmission =
     attackPhase === undefined
@@ -611,6 +667,22 @@ function admitSpellAttackSequenceMechanics(
   if (selection === undefined || count === undefined) {
     push("targeting", spellActivationAttachmentPath(phaseOrdinal));
   }
+  const hitEffects = attackPhase?.onHit ?? [];
+  if (hitEffects.length !== 1) {
+    for (const [index] of hitEffects.entries()) {
+      if (index === hitEffectIndex) continue;
+      push(
+        "hitDamage",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+      );
+    }
+    if (hitEffects.length === 0) {
+      push(
+        "hitDamage",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+      );
+    }
+  }
   if (damageEffect === undefined || hitEffectIndex < 0) {
     push(
       "hitDamage",
@@ -622,10 +694,7 @@ function admitSpellAttackSequenceMechanics(
       SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS,
     ) ||
     damageEffect.timing !== undefined ||
-    !spellAttackSequenceDamageAmountIsSupported(
-      damageEffect.amount,
-      mechanics.level,
-    )
+    damageAmount === undefined
   ) {
     push(
       "damageAmount",
@@ -646,12 +715,6 @@ function admitSpellAttackSequenceMechanics(
   ) {
     push("missEffect", spellActivationPhasePath(phaseOrdinal));
   }
-  const expectedDamageType: DamageType =
-    mechanics.level === 0 ? "force" : "fire";
-  const damageType: DamageType | undefined =
-    damageEffect?.damageType === expectedDamageType
-      ? damageEffect.damageType
-      : undefined;
   if (damageType === undefined) {
     push(
       "damageType",
@@ -667,6 +730,36 @@ function admitSpellAttackSequenceMechanics(
   if (rangeFeet === undefined) {
     push("range", spellMechanicsHeaderPath("range"));
   }
+  const facts: SpellAttackSequenceMechanicsFacts | undefined =
+    rangeFeet !== undefined &&
+    mechanics.level === 0 &&
+    count?.kind === "character" &&
+    cantripDamageType !== undefined &&
+    cantripDamageAmount !== undefined
+      ? {
+          ...source.spellDefinitionRuleFacts,
+          level: mechanics.level,
+          rangeFeet,
+          attackKind: "ranged_spell_attack",
+          damageAmount: cantripDamageAmount,
+          damageType: cantripDamageType,
+          count,
+        }
+      : rangeFeet !== undefined &&
+          mechanics.level === 2 &&
+          count?.kind === "slot" &&
+          rayDamageType !== undefined &&
+          rayDamageAmount !== undefined
+        ? {
+            ...source.spellDefinitionRuleFacts,
+            level: mechanics.level,
+            rangeFeet,
+            attackKind: "ranged_spell_attack",
+            damageAmount: rayDamageAmount,
+            damageType: rayDamageType,
+            count,
+          }
+        : undefined;
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -677,14 +770,7 @@ function admitSpellAttackSequenceMechanics(
   if (
     attackPhase === undefined ||
     selection === undefined ||
-    count === undefined ||
-    damageEffect === undefined ||
-    !spellAttackSequenceDamageAmountIsSupported(
-      damageEffect.amount,
-      mechanics.level,
-    ) ||
-    rangeFeet === undefined ||
-    damageType === undefined
+    facts === undefined
   ) {
     return {
       tag: "unsupported",
@@ -696,14 +782,6 @@ function admitSpellAttackSequenceMechanics(
       ],
     };
   }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    rangeFeet,
-    attackKind: "ranged_spell_attack" as const,
-    damageAmount: damageEffect.amount,
-    damageType,
-    count,
-  } satisfies SpellAttackSequenceMechanicsFacts;
   return {
     tag: "supported",
     admitted: {
@@ -731,19 +809,13 @@ function admitSpellAttackSequence(
     Number(ctx.castingSource.abilityModifier) +
       Number(spellcasting.proficiencyBonus),
   );
-  if (facts.count.kind === "character") {
+  if (facts.level === 0) {
     const characterLevel = spellAdmissionCharacterLevel(ctx);
     const attackCount = facts.count.tiers.reduce<MultiBeamSpellAttackBeamCount>(
       (current, tier) =>
         Number(characterLevel) >= Number(tier.atLevel) ? tier.value : current,
       facts.count.base,
     );
-    const damageExpr = supportedDamageAmountExpr({
-      amount: facts.damageAmount,
-      spellLevel: facts.level,
-      characterLevel,
-    });
-    if (damageExpr === null) return [];
     return [
       {
         access: cantripSpellAccessFor(spell.castingSource),
@@ -755,7 +827,10 @@ function admitSpellAttackSequence(
           countSource: "characterLevel",
           attackCount,
         },
-        damage: { expr: damageExpr, damageType: facts.damageType },
+        damage: {
+          expr: facts.damageAmount.expr,
+          damageType: facts.damageType,
+        },
         rangeFeet: facts.rangeFeet,
         attackKind: facts.attackKind,
         attackBonus: attackBonusValue,
@@ -771,12 +846,7 @@ function admitSpellAttackSequence(
           (Number(slot.spellLevel) - Number(slotCount.baseLevel)) *
             Number(slotCount.perSlotAboveBase),
       );
-      const damageExpr = supportedDamageAmountExpr({
-        amount: facts.damageAmount,
-        spellLevel: facts.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (attackCount === null || damageExpr === null) return [];
+      if (attackCount === null) return [];
       return [
         {
           access: { tag: "prepared" },
@@ -788,7 +858,10 @@ function admitSpellAttackSequence(
             countSource: "spellSlotLevel",
             attackCount,
           },
-          damage: { expr: damageExpr, damageType: facts.damageType },
+          damage: {
+            expr: facts.damageAmount.expr,
+            damageType: facts.damageType,
+          },
           rangeFeet: facts.rangeFeet,
           attackKind: facts.attackKind,
           attackBonus: attackBonusValue,

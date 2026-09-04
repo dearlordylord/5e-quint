@@ -52,14 +52,7 @@ export function supportedDamageAmountExpr(input: {
     amount.axis === "character" &&
     input.characterLevel !== undefined
   ) {
-    return amount.tiers.reduce(
-      (expr, tier) =>
-        input.characterLevel !== undefined &&
-        input.characterLevel >= tier.atLevel
-          ? diceExprWithDelta(expr, tier.override)
-          : expr,
-      amount.base,
-    );
+    return thresholdTierDamageExpr(amount, input.characterLevel);
   }
   if (
     amount.kind === "threshold_tiers_exploding_max_die" &&
@@ -98,6 +91,24 @@ export function supportedDamageAmountExpr(input: {
     };
   }
   return null;
+}
+
+type ThresholdTierDamageAmount = Extract<
+  SurfaceDiceAmount,
+  { readonly kind: "threshold_tiers" }
+>;
+
+export function thresholdTierDamageExpr(
+  amount: ThresholdTierDamageAmount,
+  scalingLevel: number,
+): DiceExpr {
+  return amount.tiers.reduce(
+    (expr, tier) =>
+      scalingLevel >= tier.atLevel
+        ? diceExprWithDelta(expr, tier.override)
+        : expr,
+    amount.base,
+  );
 }
 
 export function supportedSpellSlotDamageFacts(input: {

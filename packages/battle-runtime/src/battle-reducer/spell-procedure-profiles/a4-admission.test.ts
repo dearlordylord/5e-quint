@@ -667,6 +667,97 @@ describe("SR-04G-A4 static spell procedure admission", () => {
   );
 
   test.each([
+    { spellId: "eldritch_blast", extraEffect: "none" },
+    { spellId: "eldritch_blast", extraEffect: "damage" },
+    { spellId: "eldritch_blast", extraEffect: "condition" },
+    { spellId: "scorching_ray", extraEffect: "none" },
+    { spellId: "scorching_ray", extraEffect: "damage" },
+    { spellId: "scorching_ray", extraEffect: "condition" },
+  ] as const)(
+    "rejects an extra $extraEffect effect for $spellId at the exact path",
+    ({ spellId, extraEffect }) => {
+      const base = spellRecord(spellId);
+      if (base.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const phase = base.mechanics.phases[0];
+      const damageEffect =
+        phase?.kind === "attack_roll" && phase.onHit[0]?.kind === "damage"
+          ? phase.onHit[0]
+          : undefined;
+      if (phase?.kind !== "attack_roll" || damageEffect === undefined) {
+        throw new Error("Expected attack-roll damage mechanics.");
+      }
+      const extra =
+        extraEffect === "none"
+          ? { kind: "none" as const }
+          : extraEffect === "damage"
+            ? { ...damageEffect }
+            : { kind: "apply_condition" as const, condition: "prone" as const };
+      const result = spellAttackSequenceProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, {
+          ...base.mechanics,
+          phases: [{ ...phase, onHit: [...phase.onHit, extra] }],
+        }),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([
+        {
+          failedFact: "hitDamage",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(2),
+          ),
+        },
+      ]);
+    },
+  );
+
+  test.each(["eldritch_blast", "scorching_ray"] as const)(
+    "accumulates every additional %s on-hit effect at its exact path",
+    (spellId) => {
+      const base = spellRecord(spellId);
+      if (base.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const phase = base.mechanics.phases[0];
+      const damageEffect =
+        phase?.kind === "attack_roll" && phase.onHit[0]?.kind === "damage"
+          ? phase.onHit[0]
+          : undefined;
+      if (phase?.kind !== "attack_roll" || damageEffect === undefined) {
+        throw new Error("Expected attack-roll damage mechanics.");
+      }
+      const result = spellAttackSequenceProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, {
+          ...base.mechanics,
+          phases: [
+            {
+              ...phase,
+              onHit: [
+                damageEffect,
+                { kind: "none" },
+                { ...damageEffect },
+                { kind: "apply_condition", condition: "prone" },
+              ],
+            },
+          ],
+        }),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual(
+        [2, 3, 4].map((effectOrdinal) => ({
+          failedFact: "hitDamage",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(effectOrdinal),
+          ),
+        })),
+      );
+    },
+  );
+
+  test.each([
     ["abilityOverride", "weaponAttackEffect"],
     ["missingDamageTypeChoice", "damageTypeChoice"],
     ["invalidDamageTypeChoice", "damageTypeChoice"],

@@ -101,16 +101,20 @@ type WeaponAttackDamageEnhancementThresholdBonusSource = Extract<
   WeaponAttackDamageEnhancementBonusSource,
   { readonly kind: "threshold_tiers" }
 >;
+type WeaponAttackDamageEnhancementBonusTierSource =
+  WeaponAttackDamageEnhancementThresholdBonusSource["tiers"][number];
 type WeaponAttackDamageEnhancementBonusFacts = Omit<
   WeaponAttackDamageEnhancementThresholdBonusSource,
-  "base" | "tiers"
+  "axis" | "base" | "sign" | "tiers"
 > & {
+  readonly axis: "slot";
   readonly base: WeaponAttackDamageEnhancementBonus;
+  readonly sign: "+";
   readonly tiers: ReadonlyNonEmptyArray<
-    Omit<
-      WeaponAttackDamageEnhancementThresholdBonusSource["tiers"][number],
-      "atLevel"
-    > & { readonly atLevel: SpellSlotLevel }
+    Omit<WeaponAttackDamageEnhancementBonusTierSource, "atLevel" | "value"> & {
+      readonly atLevel: SpellSlotLevel;
+      readonly value: WeaponAttackDamageEnhancementBonus;
+    }
   >;
 };
 type OngoingEffectMechanics = Extract<
@@ -403,13 +407,15 @@ function weaponAttackEnhancementBonusFacts(
   const base = weaponAttackDamageEnhancementBonusFromNumber(bonus.base);
   const parsedTiers = bonus.tiers.flatMap((tier) => {
     const atLevel = spellSlotLevelFromSurface(tier.atLevel);
+    const value = weaponAttackDamageEnhancementBonusFromNumber(tier.value);
     return atLevel === undefined ||
+      value === null ||
       !spellMechanicsObjectHasOnlyKeys(
         tier,
         WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS,
       )
       ? []
-      : [{ ...tier, atLevel }];
+      : [{ ...tier, atLevel, value }];
   });
   const orderedTiers = spellMechanicsFixedTableEntries(
     parsedTiers,
@@ -675,19 +681,17 @@ function admitWeaponAttackDamageEnhancement(
         facts.bonus,
         slot.spellLevel,
       );
-      return bonus === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "weaponAttackDamageEnhancement",
-              spell,
-              actionCost: "bonusAction",
-              bonus,
-              durationTicks,
-            },
-          ];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "weaponAttackDamageEnhancement",
+          spell,
+          actionCost: "bonusAction",
+          bonus,
+          durationTicks,
+        },
+      ];
     },
   );
 }
@@ -695,18 +699,7 @@ function admitWeaponAttackDamageEnhancement(
 function weaponAttackDamageEnhancementBonusForSlot(
   bonus: WeaponAttackDamageEnhancementBonusFacts,
   slotLevel: SpellSlotLevel,
-): WeaponAttackDamageEnhancementBonus | null {
-  if (
-    bonus.kind !== "threshold_tiers" ||
-    bonus.axis !== "slot" ||
-    bonus.sign !== "+"
-  ) {
-    return null;
-  }
-  const base = weaponAttackDamageEnhancementBonusFromNumber(bonus.base);
-  if (base === null) {
-    return null;
-  }
+): WeaponAttackDamageEnhancementBonus {
   const applicableTier = bonus.tiers.reduce<
     (typeof bonus.tiers)[number] | undefined
   >((current, tier) => {
@@ -718,9 +711,7 @@ function weaponAttackDamageEnhancementBonusForSlot(
     }
     return tier;
   }, undefined);
-  return applicableTier === undefined
-    ? base
-    : weaponAttackDamageEnhancementBonusFromNumber(applicableTier.value);
+  return applicableTier === undefined ? bonus.base : applicableTier.value;
 }
 
 function weaponAttackDamageEnhancementBonusFromNumber(
