@@ -16,6 +16,7 @@ import {
 import {
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
@@ -165,6 +166,38 @@ function issueFacts(result: {
         mechanicsPath,
       }))
     : [];
+}
+
+function mutatedGustMechanicsSource(
+  mutate: (mechanics: OngoingMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(gustOfWindUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Gust of Wind ongoing-effect mechanics.");
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function requireSaveArea(
+  save:
+    | OngoingMechanics["initialPhase"]
+    | OngoingMechanics["operations"][number]["effect"]
+    | undefined,
+): Extract<
+  Exclude<
+    Extract<typeof save, { readonly kind: "save_gate" }>["attachment"],
+    undefined
+  >,
+  { readonly kind: "hole" }
+>["value"] {
+  if (
+    save?.kind !== "save_gate" ||
+    save.attachment?.kind !== "hole" ||
+    save.attachment.value.kind !== "area"
+  )
+    throw new Error("Expected a hole-wrapped save area.");
+  return save.attachment.value;
 }
 
 describe("directionalPersistentArea static admission", () => {
@@ -334,6 +367,169 @@ describe("directionalPersistentArea static admission", () => {
           failedFact: "directionActionCost",
           mechanicsPath: spellOngoingOperationPath(PositiveInteger(4)),
         },
+      ]),
+    );
+  });
+
+  test.each([
+    {
+      label: "strong-wind trigger",
+      ordinal: 1,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "on_effect_starts" }),
+      failedFact: "strongWindTrigger",
+      effectPath: false,
+    },
+    {
+      label: "strong-wind effect",
+      ordinal: 1,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "strongWindEffect",
+      effectPath: true,
+    },
+    {
+      label: "movement-cost trigger",
+      ordinal: 2,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "on_effect_starts" }),
+      failedFact: "movementCostTrigger",
+      effectPath: false,
+    },
+    {
+      label: "movement-cost effect",
+      ordinal: 2,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "movementCostEffect",
+      effectPath: true,
+    },
+    {
+      label: "end-turn trigger",
+      ordinal: 3,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "passive" }),
+      failedFact: "endTurnTrigger",
+      effectPath: false,
+    },
+    {
+      label: "end-turn effect",
+      ordinal: 3,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "endTurnSaveFailure",
+      effectPath: true,
+    },
+    {
+      label: "direction trigger",
+      ordinal: 4,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "trigger", { kind: "passive" }),
+      failedFact: "directionTrigger",
+      effectPath: false,
+    },
+    {
+      label: "direction effect",
+      ordinal: 4,
+      mutate: (operation: OngoingMechanics["operations"][number]) =>
+        Reflect.set(operation, "effect", { kind: "none" }),
+      failedFact: "directionEffect",
+      effectPath: true,
+    },
+  ])(
+    "keeps malformed $label assigned to its authored ordinal",
+    ({ ordinal, mutate, failedFact, effectPath }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const operation = mechanics.operations[ordinal - 1];
+        if (operation === undefined)
+          throw new Error("Expected the selected Gust operation.");
+        mutate(operation);
+      });
+      const result = directionalPersistentAreaProfile.admitMechanics(source);
+      expect(issueFacts(result)).toContainEqual({
+        failedFact,
+        mechanicsPath: effectPath
+          ? spellOngoingOperationEffectPath(PositiveInteger(ordinal))
+          : spellOngoingOperationPath(PositiveInteger(ordinal)),
+      });
+      expect(issueFacts(result)).not.toContainEqual({
+        failedFact: "operationCount",
+        mechanicsPath: spellMechanicsRootPath(),
+      });
+    },
+  );
+
+  test.each([
+    {
+      label: "initial Sphere",
+      operationIndex: undefined,
+      shape: { kind: "sphere", radiusFeet: 10 },
+      failedFact: "initialSaveAttachment",
+      path: spellOngoingInitialPhasePath(),
+    },
+    {
+      label: "initial wrong-size Line",
+      operationIndex: undefined,
+      shape: { kind: "line", lengthFeet: 50, widthFeet: 10 },
+      failedFact: "initialSaveAttachment",
+      path: spellOngoingInitialPhasePath(),
+    },
+    {
+      label: "repeated Sphere",
+      operationIndex: 2,
+      shape: { kind: "sphere", radiusFeet: 10 },
+      failedFact: "endTurnSaveAttachment",
+      path: spellOngoingOperationEffectPath(PositiveInteger(3)),
+    },
+    {
+      label: "repeated wrong-size Line",
+      operationIndex: 2,
+      shape: { kind: "line", lengthFeet: 60, widthFeet: 15 },
+      failedFact: "endTurnSaveAttachment",
+      path: spellOngoingOperationEffectPath(PositiveInteger(3)),
+    },
+  ] as const)(
+    "rejects a $label at the save path",
+    ({ operationIndex, shape, failedFact, path }) => {
+      const source = mutatedGustMechanicsSource((mechanics) => {
+        const save =
+          operationIndex === undefined
+            ? mechanics.initialPhase
+            : mechanics.operations[operationIndex]?.effect;
+        Reflect.set(requireSaveArea(save), "shape", shape);
+      });
+      expect(
+        issueFacts(directionalPersistentAreaProfile.admitMechanics(source)),
+      ).toContainEqual({ failedFact, mechanicsPath: path });
+    },
+  );
+
+  test("accumulates every optional save branch independently for both saves", () => {
+    const source = mutatedGustMechanicsSource((mechanics) => {
+      const saves = [mechanics.initialPhase, mechanics.operations[2]?.effect];
+      for (const save of saves) {
+        if (save?.kind !== "save_gate")
+          throw new Error("Expected Gust save gates.");
+        Reflect.set(save, "repeatSaves", []);
+        Reflect.set(save, "autoSuccessIfCasterSlotGte", 3);
+        Reflect.set(save, "autoSuccessIfTarget", { kind: "construct" });
+        Reflect.set(save, "saveAppliesIf", { kind: "target_can_hear" });
+        Reflect.set(save, "usageLimit", { kind: "once_per_turn" });
+      }
+    });
+    const result = directionalPersistentAreaProfile.admitMechanics(source);
+    expect(issueFacts(result).map(({ failedFact }) => failedFact)).toEqual(
+      expect.arrayContaining([
+        "initialRepeatSaves",
+        "initialAutoSuccessIfCasterSlotGte",
+        "initialAutoSuccessIfTarget",
+        "initialSaveAppliesIf",
+        "initialUsageLimit",
+        "endTurnRepeatSaves",
+        "endTurnAutoSuccessIfCasterSlotGte",
+        "endTurnAutoSuccessIfTarget",
+        "endTurnSaveAppliesIf",
+        "endTurnUsageLimit",
       ]),
     );
   });

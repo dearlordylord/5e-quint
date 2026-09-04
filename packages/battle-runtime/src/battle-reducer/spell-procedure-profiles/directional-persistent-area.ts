@@ -119,6 +119,7 @@ const FAILED_FACTS = [
   "castingTime",
   "attachment",
   "initialPhase",
+  "initialSaveAttachment",
   "initialSaveAbility",
   "initialSaveDc",
   "initialSaveSuccess",
@@ -138,6 +139,7 @@ const FAILED_FACTS = [
   "movementCostMultiplier",
   "movementCostDirection",
   "endTurnTrigger",
+  "endTurnSaveAttachment",
   "endTurnSaveAbility",
   "endTurnSaveDc",
   "endTurnSaveSuccess",
@@ -145,6 +147,16 @@ const FAILED_FACTS = [
   "endTurnPushKind",
   "endTurnPushDirection",
   "endTurnPushDistance",
+  "initialRepeatSaves",
+  "initialAutoSuccessIfCasterSlotGte",
+  "initialAutoSuccessIfTarget",
+  "initialSaveAppliesIf",
+  "initialUsageLimit",
+  "endTurnRepeatSaves",
+  "endTurnAutoSuccessIfCasterSlotGte",
+  "endTurnAutoSuccessIfTarget",
+  "endTurnSaveAppliesIf",
+  "endTurnUsageLimit",
   "directionTrigger",
   "directionActionCost",
   "directionLaterTurns",
@@ -232,6 +244,11 @@ const SAVE_FIELDS = [
   "dc",
   "onFail",
   "onSuccess",
+  "repeatSaves",
+  "autoSuccessIfCasterSlotGte",
+  "autoSuccessIfTarget",
+  "saveAppliesIf",
+  "usageLimit",
 ] as const satisfies ReadonlyArray<keyof SaveKeySpace>;
 const DC_FIELDS = ["kind"] as const;
 const NONE_FIELDS = ["kind"] as const;
@@ -337,14 +354,94 @@ function isRepresentation(mechanics: SpellMechanics): mechanics is Mechanics {
 type Occurrence = ReturnType<typeof spellOngoingOperationOccurrences>[number];
 type Role = "strongWind" | "movementCost" | "endTurn" | "direction";
 
-function operationRole(operation: Operation): Role | undefined {
-  if (operation.effect.kind === "area_has_strong_wind") return "strongWind";
-  if (operation.effect.kind === "area_movement_cost_multiplier")
-    return "movementCost";
-  if (operation.trigger.kind === "on_creature_ends_turn_in_area")
-    return "endTurn";
-  if (operation.effect.kind === "reposition_attachment") return "direction";
-  return undefined;
+type RoleAssignment = Readonly<Record<Role, Occurrence>>;
+type PartialRoleAssignment = Readonly<Partial<Record<Role, Occurrence>>>;
+
+function operationRoleWitnessScore(role: Role, operation: Operation): number {
+  return Match.value(role).pipe(
+    Match.when(
+      "strongWind",
+      () =>
+        (operation.trigger.kind === "passive" ? 1 : 0) +
+        (operation.effect.kind === "area_has_strong_wind" ? 2 : 0),
+    ),
+    Match.when(
+      "movementCost",
+      () =>
+        (operation.trigger.kind === "passive" ? 1 : 0) +
+        (operation.effect.kind === "area_movement_cost_multiplier" ? 2 : 0),
+    ),
+    Match.when(
+      "endTurn",
+      () =>
+        (operation.trigger.kind === "on_creature_ends_turn_in_area" ? 2 : 0) +
+        (operation.effect.kind === "save_gate" ? 1 : 0),
+    ),
+    Match.when(
+      "direction",
+      () =>
+        (operation.trigger.kind === "on_caster_spends_action" ? 2 : 0) +
+        (operation.effect.kind === "reposition_attachment" ? 1 : 0),
+    ),
+    Match.exhaustive,
+  );
+}
+
+const OPERATION_ROLES = [
+  "strongWind",
+  "movementCost",
+  "endTurn",
+  "direction",
+] as const satisfies readonly Role[];
+
+function operationRoleAssignments(
+  roles: readonly Role[],
+  occurrences: readonly Occurrence[],
+): readonly PartialRoleAssignment[] {
+  const [role, ...remainingRoles] = roles;
+  if (role === undefined) return [{}];
+  return occurrences.flatMap((occurrence, index) =>
+    operationRoleWitnessScore(role, occurrence.operation) === 0
+      ? []
+      : operationRoleAssignments(
+          remainingRoles,
+          occurrences.filter((_, candidateIndex) => candidateIndex !== index),
+        ).map(
+          (assignment): PartialRoleAssignment => ({
+            ...assignment,
+            [role]: occurrence,
+          }),
+        ),
+  );
+}
+
+function isCompleteRoleAssignment(
+  assignment: PartialRoleAssignment,
+): assignment is RoleAssignment {
+  return OPERATION_ROLES.every((role) => assignment[role] !== undefined);
+}
+
+function operationAssignmentScore(assignment: RoleAssignment): number {
+  return OPERATION_ROLES.reduce(
+    (score, role) =>
+      score + operationRoleWitnessScore(role, assignment[role].operation),
+    0,
+  );
+}
+
+function directionalOperationAssignment(
+  occurrences: readonly Occurrence[],
+): RoleAssignment | undefined {
+  return operationRoleAssignments(OPERATION_ROLES, occurrences)
+    .filter(isCompleteRoleAssignment)
+    .reduce<RoleAssignment | undefined>(
+      (best, candidate) =>
+        best === undefined ||
+        operationAssignmentScore(candidate) > operationAssignmentScore(best)
+          ? candidate
+          : best,
+      undefined,
+    );
 }
 
 type SaveFacts = {
@@ -459,11 +556,61 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
     }
     if (!spellMechanicsObjectHasOnlyKeys<SaveKeySpace>(save, SAVE_FIELDS))
       push(fact("initialPhase", "endTurnSaveFailure"), path);
+    const saveAreaAdmission =
+      save.attachment === undefined
+        ? undefined
+        : admitSpellAreaAttachment(save.attachment, [], []);
+    const saveArea =
+      saveAreaAdmission?.tag === "admitted"
+        ? saveAreaAdmission.attachment.kind === "area"
+          ? saveAreaAdmission.attachment
+          : saveAreaAdmission.attachment.value
+        : undefined;
     if (
-      save.attachment === undefined ||
-      admitSpellAreaAttachment(save.attachment, [], []).tag === "rejected"
+      saveArea?.origin.kind !== "self" ||
+      saveArea.shape.kind !== "line" ||
+      line === undefined ||
+      saveArea.shape.lengthFeet !== line.lengthFeet ||
+      saveArea.shape.widthFeet !== line.widthFeet
     )
-      push(fact("initialPhase", "endTurnSaveFailure"), path);
+      push(fact("initialSaveAttachment", "endTurnSaveAttachment"), path);
+    const optionalSaveFacts = [
+      {
+        field: "repeatSaves",
+        initial: "initialRepeatSaves",
+        repeated: "endTurnRepeatSaves",
+      },
+      {
+        field: "autoSuccessIfCasterSlotGte",
+        initial: "initialAutoSuccessIfCasterSlotGte",
+        repeated: "endTurnAutoSuccessIfCasterSlotGte",
+      },
+      {
+        field: "autoSuccessIfTarget",
+        initial: "initialAutoSuccessIfTarget",
+        repeated: "endTurnAutoSuccessIfTarget",
+      },
+      {
+        field: "saveAppliesIf",
+        initial: "initialSaveAppliesIf",
+        repeated: "endTurnSaveAppliesIf",
+      },
+      {
+        field: "usageLimit",
+        initial: "initialUsageLimit",
+        repeated: "endTurnUsageLimit",
+      },
+    ] as const satisfies readonly {
+      readonly field: keyof SaveKeySpace;
+      readonly initial: FailedFact;
+      readonly repeated: FailedFact;
+    }[];
+    for (const optionalFact of optionalSaveFacts)
+      if (
+        optionalFact.field in save &&
+        save[optionalFact.field as keyof typeof save] !== undefined
+      )
+        push(fact(optionalFact.initial, optionalFact.repeated), path);
     if (save.ability !== "str")
       push(fact("initialSaveAbility", "endTurnSaveAbility"), path);
     if (
@@ -516,11 +663,12 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
     "initial",
   );
   const occurrences = spellOngoingOperationOccurrences(mechanics);
-  const roles = ["strongWind", "movementCost", "endTurn", "direction"] as const;
-  const selected = roles.map((wanted) =>
-    occurrences.find(({ operation }) => operationRole(operation) === wanted),
-  );
-  const [strongWind, movementCost, endTurn, direction] = selected;
+  const assignment = directionalOperationAssignment(occurrences);
+  const strongWind = assignment?.strongWind;
+  const movementCost = assignment?.movementCost;
+  const endTurn = assignment?.endTurn;
+  const direction = assignment?.direction;
+  const selected = [strongWind, movementCost, endTurn, direction] as const;
   const selectedOrdinals = selected.flatMap((occurrence) =>
     occurrence === undefined ? [] : [occurrence.ordinal],
   );
