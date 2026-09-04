@@ -23,7 +23,7 @@ This section is the sole mutable handoff for a new session.
 - Active landing unit: `integration/cleanroom-sr-04g` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
-  integration implementation checkpoint `2055236628e751bf1942ef5044d50810e1d0d122`
+  integration branch head `366cb1b39d74df90e2c59eab5d24457a861eb08a`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
@@ -155,11 +155,11 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                               | State          |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `bcb61f7fa` | Integration implementation checkpoint `d212b24fe`; C2 integrated; exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence remain in progress | Active         |
-| `SR-04G-B3`     | #474 save/activation profile migration          | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-b3`; `work/sr04g-b3`              | `f478cc7b2` | Clean unintegrated tip; repair the five recorded review findings and repeat both review axes before integration                                                                           | Repair pending |
-| `SR-04G-A4`     | #474 attack/direct/reaction profile migration   | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a4`; `work/sr04g-a4`              | `c8e75b922` | Clean unintegrated tip; complete both review axes before integration                                                                                                                      | Review pending |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                 | State          |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration branch head `366cb1b39`; C2 integrated; exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence remain in progress | Active         |
+| `SR-04G-B3`     | #474 save/activation profile migration          | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-b3`; `work/sr04g-b3`              | `f478cc7b2` | Clean unintegrated tip; repair the five recorded review findings and repeat both review axes before integration                                                             | Repair pending |
+| `SR-04G-A4`     | #474 attack/direct/reaction profile migration   | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a4`; `work/sr04g-a4`              | `c8e75b922` | Clean unintegrated tip; complete both review axes before integration                                                                                                        | Review pending |
 
 ## Landing discipline
 
