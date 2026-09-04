@@ -150,7 +150,12 @@ const COMPONENT_FIELDS = [
   "materialConsumed",
 ] as const;
 const CASTING_TIME_FIELDS = ["kind"] as const;
-const DURATION_FIELDS = ["kind", "upTo", "earlyEnd"] as const;
+const DURATION_FIELDS = [
+  "kind",
+  "upTo",
+  "earlyEnd",
+  "permanentIfMaintainedFull",
+] as const;
 const DURATION_VALUE_FIELDS = [
   "unit",
   "amount",
@@ -423,6 +428,92 @@ function magicalDarknessDispelLightProjection(
       };
 }
 
+function magicalDarknessOperationOrdinals(input: {
+  readonly operationCount: number;
+  readonly darknessIndex: number;
+  readonly dispelLightIndex: number;
+}): readonly [PositiveInteger, PositiveInteger] {
+  const firstMissingIndex = input.operationCount;
+  const darknessOrdinal = PositiveInteger(
+    input.darknessIndex >= 0 ? input.darknessIndex + 1 : firstMissingIndex + 1,
+  );
+  const dispelLightOrdinal = PositiveInteger(
+    input.dispelLightIndex >= 0
+      ? input.dispelLightIndex + 1
+      : firstMissingIndex + (input.darknessIndex >= 0 ? 1 : 2),
+  );
+  return [darknessOrdinal, dispelLightOrdinal];
+}
+
+function magicalDarknessParsedCandidate(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly range: MagicalDarknessSourceFactProjection<MovementFeetType>;
+  readonly duration: MagicalDarknessSourceFactProjection<{
+    readonly ticks: ElapsedTimeTicks;
+  }>;
+  readonly attachment: MagicalDarknessSourceFactProjection<MovementFeetType>;
+  readonly dispelLight: MagicalDarknessSourceFactProjection<BattleSpellEffectLevel>;
+  readonly darknessOrdinal: PositiveInteger;
+  readonly dispelLightOrdinal: PositiveInteger;
+}): Exclude<
+  MagicalDarknessPointOriginInspection,
+  { readonly tag: "notRepresented" }
+> {
+  if (input.range.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: [
+        input.range.issue,
+        ...(input.duration.tag === "unsupported" ? [input.duration.issue] : []),
+        ...(input.attachment.tag === "unsupported"
+          ? [input.attachment.issue]
+          : []),
+        ...(input.dispelLight.tag === "unsupported"
+          ? [input.dispelLight.issue]
+          : []),
+      ],
+    };
+  if (input.duration.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: [
+        input.duration.issue,
+        ...(input.attachment.tag === "unsupported"
+          ? [input.attachment.issue]
+          : []),
+        ...(input.dispelLight.tag === "unsupported"
+          ? [input.dispelLight.issue]
+          : []),
+      ],
+    };
+  if (input.attachment.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: [
+        input.attachment.issue,
+        ...(input.dispelLight.tag === "unsupported"
+          ? [input.dispelLight.issue]
+          : []),
+      ],
+    };
+  if (input.dispelLight.tag === "unsupported")
+    return { tag: "unsupported", issues: [input.dispelLight.issue] };
+  return {
+    tag: "parsed",
+    facts: {
+      ...input.source.spellDefinitionRuleFacts,
+      durationTicks: input.duration.fact.ticks,
+      rangeFeet: input.range.fact,
+      radiusFeet: input.attachment.fact,
+      dispelledSpellCreatedLightMaxSpellLevel: input.dispelLight.fact,
+    },
+    evidence: magicalDarknessPointOriginEvidence(
+      input.darknessOrdinal,
+      input.dispelLightOrdinal,
+    ),
+  };
+}
+
 function magicalDarknessPointOriginEvidence(
   darknessOrdinal: PositiveInteger,
   dispelLightOrdinal: PositiveInteger,
@@ -471,7 +562,6 @@ function inspectMagicalDarknessPointOriginMechanics(
   if (mechanics.school !== "evocation")
     pushIssue("school", spellMechanicsHeaderPath("school"));
   const rangeProjection = magicalDarknessRangeProjection(mechanics.range);
-  if (rangeProjection.tag === "unsupported") issues.push(rangeProjection.issue);
   if (
     mechanics.components.v !== true ||
     mechanics.components.s !== false ||
@@ -490,8 +580,6 @@ function inspectMagicalDarknessPointOriginMechanics(
   const durationProjection = magicalDarknessDurationProjection(
     mechanics.duration,
   );
-  if (durationProjection.tag === "unsupported")
-    issues.push(durationProjection.issue);
   if (mechanics.duration.kind !== "concentration") {
     for (const path of spellDurationValueEvidencePaths(mechanics.duration))
       pushIssue("durationValue", path);
@@ -512,8 +600,6 @@ function inspectMagicalDarknessPointOriginMechanics(
 
   const attachment = mechanics.attachment;
   const attachmentProjection = magicalDarknessAttachmentProjection(attachment);
-  if (attachmentProjection.tag === "unsupported")
-    issues.push(attachmentProjection.issue);
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
@@ -529,15 +615,12 @@ function inspectMagicalDarknessPointOriginMechanics(
     ({ effect }) =>
       effect.kind === "end_overlapping_spell_created_bright_or_dim_light",
   );
-  let nextMissingOperationIndex = mechanics.operations.length;
-  const darknessOrdinal =
-    darknessIndex >= 0
-      ? PositiveInteger(darknessIndex + 1)
-      : PositiveInteger((nextMissingOperationIndex += 1));
-  const dispelLightOrdinal =
-    dispelLightIndex >= 0
-      ? PositiveInteger(dispelLightIndex + 1)
-      : PositiveInteger((nextMissingOperationIndex += 1));
+  const [darknessOrdinal, dispelLightOrdinal] =
+    magicalDarknessOperationOrdinals({
+      operationCount: mechanics.operations.length,
+      darknessIndex,
+      dispelLightIndex,
+    });
   const darknessOperation =
     darknessIndex >= 0 ? mechanics.operations[darknessIndex] : undefined;
   const dispelLightOperation =
@@ -575,49 +658,23 @@ function inspectMagicalDarknessPointOriginMechanics(
     dispelLightOperation,
     dispelLightOrdinal,
   );
-  if (dispelLightProjection.tag === "unsupported")
-    issues.push(dispelLightProjection.issue);
-
-  const factsProjection =
-    rangeProjection.tag === "parsed" &&
-    durationProjection.tag === "parsed" &&
-    attachmentProjection.tag === "parsed" &&
-    dispelLightProjection.tag === "parsed"
-      ? {
-          tag: "parsed" as const,
-          facts: {
-            ...source.spellDefinitionRuleFacts,
-            durationTicks: durationProjection.fact.ticks,
-            rangeFeet: rangeProjection.fact,
-            radiusFeet: attachmentProjection.fact,
-            dispelledSpellCreatedLightMaxSpellLevel: dispelLightProjection.fact,
-          },
-          evidence: magicalDarknessPointOriginEvidence(
-            darknessOrdinal,
-            dispelLightOrdinal,
-          ),
-        }
-      : {
-          tag: "unsupported" as const,
-          issues: [
-            ...(rangeProjection.tag === "unsupported"
-              ? [rangeProjection.issue]
-              : []),
-            ...(durationProjection.tag === "unsupported"
-              ? [durationProjection.issue]
-              : []),
-            ...(attachmentProjection.tag === "unsupported"
-              ? [attachmentProjection.issue]
-              : []),
-            ...(dispelLightProjection.tag === "unsupported"
-              ? [dispelLightProjection.issue]
-              : []),
-          ],
-        };
-
+  const parsedCandidate = magicalDarknessParsedCandidate({
+    source,
+    range: rangeProjection,
+    duration: durationProjection,
+    attachment: attachmentProjection,
+    dispelLight: dispelLightProjection,
+    darknessOrdinal,
+    dispelLightOrdinal,
+  });
   const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
-  if (failures !== undefined) return { tag: "unsupported", issues: failures };
-  return factsProjection;
+  if (failures === undefined) return parsedCandidate;
+  return parsedCandidate.tag === "unsupported"
+    ? {
+        tag: "unsupported",
+        issues: [...failures, ...parsedCandidate.issues],
+      }
+    : { tag: "unsupported", issues: failures };
 }
 
 function admitMagicalDarknessPointOriginMechanics(

@@ -397,6 +397,7 @@ describe("magicalDarknessPointOrigin static admission", () => {
             upcastTiers: [{ atSlot: 3, amount: 20 }],
           },
           earlyEnd: [{ kind: "caster_recasts_spell" as const }],
+          permanentIfMaintainedFull: true as const,
         },
       };
     }, "nested_children");
@@ -412,6 +413,10 @@ describe("magicalDarknessPointOrigin static admission", () => {
       {
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
       },
     ]);
   });
