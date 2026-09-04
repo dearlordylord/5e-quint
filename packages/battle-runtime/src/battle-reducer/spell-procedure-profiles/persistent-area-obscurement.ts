@@ -72,6 +72,7 @@ import {
   spellDurationChildCoordinates,
   spellDurationChildFailedFact,
   spellDurationChildPath,
+  spellDurationValueEvidencePaths,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
@@ -95,6 +96,10 @@ type PersistentAreaObscurementMechanics = Extract<
 >;
 type PersistentAreaObscurementOperation =
   PersistentAreaObscurementMechanics["operations"][number];
+type PersistentAreaObscurementDuration = Extract<
+  PersistentAreaObscurementMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
 
 const PERSISTENT_AREA_OBSCUREMENT_LEVEL = 1 as const;
 const PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET = 120 as const;
@@ -157,7 +162,13 @@ const RANGE_FIELDS = ["kind", "feet"] as const;
 const COMPONENT_FIELDS = ["v", "s", "m"] as const;
 const CASTING_TIME_FIELDS = ["kind"] as const;
 const DURATION_FIELDS = ["kind", "upTo", "earlyEnd"] as const;
-const DURATION_VALUE_FIELDS = ["unit", "amount"] as const;
+const DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<
+  keyof PersistentAreaObscurementDuration["upTo"]
+>;
 const ENDING_FIELDS = ["kind"] as const;
 const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
 const AREA_FIELDS = ["kind", "origin", "shape"] as const;
@@ -419,6 +430,8 @@ function inspectPersistentAreaObscurementMechanics(
 
   if (mechanics.duration.kind !== "concentration") {
     pushIssue("duration", spellMechanicsHeaderPath("duration"));
+    for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+      pushIssue("durationValue", path);
     for (const child of spellDurationChildCoordinates(mechanics.duration))
       pushIssue(
         spellDurationChildFailedFact(child),

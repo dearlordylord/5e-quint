@@ -344,7 +344,6 @@ describe("persistentAreaTrait static admission", () => {
     );
 
     expect(issueShape(result)).toEqual([
-      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
       {
         failedFact: "durationExtension",
         mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
@@ -352,6 +351,43 @@ describe("persistentAreaTrait static admission", () => {
       {
         failedFact: "durationExtension",
         mechanicsPath: spellDurationExtensionPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
+  test("reports the value and every owned child of a timed duration", () => {
+    const record = syntheticFogCloudRecord(
+      (mechanics) => ({
+        ...mechanics,
+        duration: {
+          kind: "timed",
+          value: {
+            unit: "hour",
+            amount: 1,
+            upcastTiers: [{ atSlot: 2, amount: 2 }],
+          },
+          earlyEnd: [{ kind: "area_dispersed_by_strong_wind" }],
+        },
+      }),
+      "timed_duration_children",
+    );
+    const result = persistentAreaTraitProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(record)),
+    );
+
+    expect(issueShape(result)).toEqual([
+      {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
       },
     ]);
   });
