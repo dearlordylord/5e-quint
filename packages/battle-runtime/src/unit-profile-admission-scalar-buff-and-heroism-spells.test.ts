@@ -2444,6 +2444,7 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
       level: 1,
       rangeFeet: 5,
       targetCount: { base: 1, baseLevel: 1, perSlotAboveBase: 1 },
+      requiredTargetDisposition: "willing",
       condition: "frightened",
       temporaryHitPointsAmount: "spellcastingAbilityModifier",
     });
@@ -2703,6 +2704,108 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
       ]),
     );
   });
+
+  test.each([false, true])(
+    "inspects every fully malformed passive immunity candidate when reordered=$0",
+    (reordered) => {
+      const result =
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+          mutatedHeroismSource((mechanics) => {
+            const immunity = mechanics.operations[0];
+            const temporaryHitPoints = mechanics.operations[1];
+            if (immunity === undefined || temporaryHitPoints === undefined)
+              throw new Error("Expected canonical Heroism operations.");
+            const firstMalformed = structuredClone(immunity);
+            const secondMalformed = structuredClone(immunity);
+            Reflect.set(firstMalformed, "effect", { kind: "none" });
+            Reflect.set(secondMalformed, "effect", { kind: "none" });
+            const operations = [
+              firstMalformed,
+              secondMalformed,
+              temporaryHitPoints,
+            ];
+            Reflect.set(
+              mechanics,
+              "operations",
+              reordered ? [...operations].reverse() : operations,
+            );
+          }),
+        );
+      const issues = heroismIssueFacts(result);
+      const malformedOrdinals = reordered ? [2, 3] : [1, 2];
+      for (const ordinal of malformedOrdinals) {
+        expect(issues).toEqual(
+          expect.arrayContaining([
+            {
+              failedFact: "immunityEffect",
+              mechanicsPath: spellOngoingOperationEffectPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+            {
+              failedFact: "operationCount",
+              mechanicsPath: spellOngoingOperationPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+          ]),
+        );
+      }
+      expect(issues).toContainEqual({
+        failedFact: "immunityOperation",
+        mechanicsPath: spellMechanicsRootPath(),
+      });
+    },
+  );
+
+  test.each([false, true])(
+    "inspects every fully malformed turn-start Temporary Hit Points candidate when reordered=$0",
+    (reordered) => {
+      const result =
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+          mutatedHeroismSource((mechanics) => {
+            const immunity = mechanics.operations[0];
+            const temporaryHitPoints = mechanics.operations[1];
+            if (immunity === undefined || temporaryHitPoints === undefined)
+              throw new Error("Expected canonical Heroism operations.");
+            const firstMalformed = structuredClone(temporaryHitPoints);
+            const secondMalformed = structuredClone(temporaryHitPoints);
+            Reflect.set(firstMalformed, "effect", { kind: "none" });
+            Reflect.set(secondMalformed, "effect", { kind: "none" });
+            const operations = [immunity, firstMalformed, secondMalformed];
+            Reflect.set(
+              mechanics,
+              "operations",
+              reordered ? [...operations].reverse() : operations,
+            );
+          }),
+        );
+      const issues = heroismIssueFacts(result);
+      const malformedOrdinals = reordered ? [1, 2] : [2, 3];
+      for (const ordinal of malformedOrdinals) {
+        expect(issues).toEqual(
+          expect.arrayContaining([
+            {
+              failedFact: "temporaryHitPointsEffect",
+              mechanicsPath: spellOngoingOperationEffectPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+            {
+              failedFact: "operationCount",
+              mechanicsPath: spellOngoingOperationPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+          ]),
+        );
+      }
+      expect(issues).toContainEqual({
+        failedFact: "temporaryHitPointsOperation",
+        mechanicsPath: spellMechanicsRootPath(),
+      });
+    },
+  );
 
   test.each([
     {

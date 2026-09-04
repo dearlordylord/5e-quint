@@ -117,6 +117,7 @@ type HeroismDuration = Extract<
 type HeroismMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly rangeFeet: MovementFeetType;
   readonly targetCount: SaveGateTargetCountFacts;
+  readonly requiredTargetDisposition: "willing";
   readonly condition: "frightened";
   readonly temporaryHitPointsAmount: "spellcastingAbilityModifier";
 };
@@ -489,6 +490,12 @@ function inspectHeroismMechanics(
           mechanics.attachment.value.kind === "target"
         ? mechanics.attachment.value.selection
         : undefined;
+  const requiredTargetDisposition =
+    selection !== undefined &&
+    "disposition" in selection &&
+    selection.disposition === "willing"
+      ? selection.disposition
+      : undefined;
   if (selection !== undefined) {
     if (selection.mode !== "choose_up_to")
       push("selectionMode", spellOngoingAttachmentPath());
@@ -497,7 +504,7 @@ function inspectHeroismMechanics(
       !selection.targetKinds.includes("creature")
     )
       push("selectionTargetKinds", spellOngoingAttachmentPath());
-    if (!("disposition" in selection) || selection.disposition !== "willing")
+    if (requiredTargetDisposition === undefined)
       push("selectionDisposition", spellOngoingAttachmentPath());
   }
   const targetCount =
@@ -650,7 +657,9 @@ function inspectHeroismMechanics(
 
   const immunityInspections = scoredOccurrences.filter(
     ({ occurrence, immunityEffectWitness }) =>
-      immunityEffectWitness || occurrence.ordinal === immunity?.ordinal,
+      immunityEffectWitness ||
+      occurrence.operation.trigger.kind === "passive" ||
+      occurrence.ordinal === immunity?.ordinal,
   );
   for (const inspection of immunityInspections) {
     const { occurrence } = inspection;
@@ -681,6 +690,7 @@ function inspectHeroismMechanics(
   const temporaryHitPointsInspections = scoredOccurrences.filter(
     ({ occurrence, temporaryHitPointsEffectWitness }) =>
       temporaryHitPointsEffectWitness ||
+      occurrence.operation.trigger.kind === "on_attached_turn_start" ||
       occurrence.ordinal === temporaryHitPoints?.ordinal,
   );
   for (const inspection of temporaryHitPointsInspections) {
@@ -720,6 +730,7 @@ function inspectHeroismMechanics(
   if (
     !durationSupported ||
     targetCount === null ||
+    requiredTargetDisposition === undefined ||
     !rolesAreDistinct ||
     immunity === undefined ||
     temporaryHitPoints === undefined
@@ -736,6 +747,7 @@ function inspectHeroismMechanics(
       ...source.spellDefinitionRuleFacts,
       rangeFeet: movementFeet(5),
       targetCount,
+      requiredTargetDisposition,
       condition: "frightened",
       temporaryHitPointsAmount: "spellcastingAbilityModifier",
     },
@@ -832,7 +844,7 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
             kind: "targetList",
             minTargets: 1,
             maxTargets,
-            requiredTargetDisposition: "willing",
+            requiredTargetDisposition: facts.requiredTargetDisposition,
           },
           activeEffects: [
             {
