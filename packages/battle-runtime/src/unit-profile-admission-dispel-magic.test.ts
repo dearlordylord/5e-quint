@@ -163,6 +163,23 @@ function mutatedDispelTargetSelections(
   return { ...dispelMechanicsSource(source), mechanics };
 }
 
+function dispelMechanicsWithTargetRangeOrigin(): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(dispelMagicUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "activation")
+    throw new Error("Expected Dispel Magic activation mechanics.");
+  for (const phase of mechanics.phases) {
+    if (
+      !("attachment" in phase) ||
+      phase.attachment.kind !== "hole" ||
+      phase.attachment.value.kind !== "target"
+    )
+      continue;
+    Reflect.set(phase.attachment.value, "rangeOrigin", "caster");
+  }
+  return { ...dispelMechanicsSource(source), mechanics };
+}
+
 function staticDispelActor(): SpellAdmissionActor {
   const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
     spellCasterId,
@@ -536,6 +553,24 @@ describe("ongoingSpellEnd static admission", () => {
           });
     },
   );
+
+  test("attributes range origin independently at both authored attachments", () => {
+    const facts = admissionIssueFacts(
+      ongoingSpellEndProfile.admitMechanics(
+        dispelMechanicsWithTargetRangeOrigin(),
+      ),
+    );
+    expect(facts).toEqual([
+      {
+        failedFact: "rangeOrigin",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "rangeOrigin",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(2)),
+      },
+    ]);
+  });
 });
 
 describe("SRD Dispel Magic ongoing spell ending admission", () => {
