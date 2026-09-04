@@ -282,21 +282,35 @@ function sanctuaryDurationValueSupported(
   return true;
 }
 
-function sanctuaryDurationEndingMismatchOrdinals(
+type SanctuaryDurationEndingInspection = {
+  readonly unsupportedOrdinals: readonly PositiveInteger[];
+  readonly missingRequiredKind: boolean;
+};
+
+function sanctuaryDurationEndingInspection(
   duration: Extract<SpellMechanics["duration"], { readonly kind: "timed" }>,
-): readonly PositiveInteger[] {
+): SanctuaryDurationEndingInspection {
   const actualEndings = duration.earlyEnd ?? [];
-  const endingCount = Math.max(
-    actualEndings.length,
-    SANCTUARY_EARLY_END_KINDS.length,
-  );
-  const mismatches: PositiveInteger[] = [];
-  for (let index = 0; index < endingCount; index += 1) {
-    if (actualEndings[index]?.kind !== SANCTUARY_EARLY_END_KINDS[index]) {
-      mismatches.push(PositiveInteger(index + 1));
+  const seenKinds = new Set<string>();
+  const unsupportedOrdinals: PositiveInteger[] = [];
+  for (const [index, ending] of actualEndings.entries()) {
+    if (
+      !SANCTUARY_EARLY_END_KINDS.some(
+        (expectedKind) => expectedKind === ending.kind,
+      ) ||
+      seenKinds.has(ending.kind)
+    ) {
+      unsupportedOrdinals.push(PositiveInteger(index + 1));
+    } else {
+      seenKinds.add(ending.kind);
     }
   }
-  return mismatches;
+  return {
+    unsupportedOrdinals,
+    missingRequiredKind: SANCTUARY_EARLY_END_KINDS.some(
+      (expectedKind) => !seenKinds.has(expectedKind),
+    ),
+  };
 }
 
 function admitTargetingSaveInterdictionMechanics(
@@ -394,10 +408,14 @@ function admitTargetingSaveInterdictionMechanics(
     }
   }
   if (mechanics.duration.kind === "timed") {
-    for (const ordinal of sanctuaryDurationEndingMismatchOrdinals(
+    const endingInspection = sanctuaryDurationEndingInspection(
       mechanics.duration,
-    )) {
+    );
+    for (const ordinal of endingInspection.unsupportedOrdinals) {
       push("durationEnding", spellDurationEndingPath(ordinal));
+    }
+    if (endingInspection.missingRequiredKind) {
+      push("durationEnding", spellMechanicsHeaderPath("duration"));
     }
   }
   if (

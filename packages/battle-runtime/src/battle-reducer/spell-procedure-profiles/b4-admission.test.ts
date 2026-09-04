@@ -349,7 +349,7 @@ describe("SR-04G-B4 static spell procedure admission", () => {
     });
   });
 
-  test("reports the exact Sanctuary ending path after a single-ending mutation", () => {
+  test("admits Sanctuary early endings in any semantic-set permutation", () => {
     const base = spellRecord("sanctuary");
     if (
       base.mechanics.family !== "ongoing_effect" ||
@@ -359,21 +359,50 @@ describe("SR-04G-B4 static spell procedure admission", () => {
       throw new Error("Expected Sanctuary timed duration endings.");
     }
     const earlyEnd = base.mechanics.duration.earlyEnd;
-    const mutated = decodeSpellRecordForTest({
+    const permuted = decodeSpellRecordForTest({
       ...base,
-      id: "synthetic_b4_sanctuary_ending",
+      id: "synthetic_b4_sanctuary_permuted_endings",
       mechanics: {
         ...base.mechanics,
         duration: {
           ...base.mechanics.duration,
-          earlyEnd: earlyEnd.map((ending, index) =>
-            index === 1 ? { kind: "target_makes_attack_roll" } : ending,
-          ),
+          earlyEnd: [...earlyEnd].reverse(),
         },
       },
     });
     const result = targetingSaveInterdictionProfile.admitMechanics(
-      mechanicsSource(spellAdmissionSource(mutated)),
+      mechanicsSource(spellAdmissionSource(permuted)),
+    );
+    expect(result.tag).toBe("supported");
+  });
+
+  test("reports duplicate and missing Sanctuary endings without semantic ordinals", () => {
+    const base = spellRecord("sanctuary");
+    if (
+      base.mechanics.family !== "ongoing_effect" ||
+      base.mechanics.duration.kind !== "timed" ||
+      base.mechanics.duration.earlyEnd === undefined
+    ) {
+      throw new Error("Expected Sanctuary timed duration endings.");
+    }
+    const earlyEnd = base.mechanics.duration.earlyEnd;
+    const [firstEnding, , thirdEnding] = earlyEnd;
+    if (firstEnding === undefined || thirdEnding === undefined) {
+      throw new Error("Expected three Sanctuary duration endings.");
+    }
+    const duplicate = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_sanctuary_duplicate_ending",
+      mechanics: {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          earlyEnd: [firstEnding, firstEnding, thirdEnding],
+        },
+      },
+    });
+    const result = targetingSaveInterdictionProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(duplicate)),
     );
     expect(result).toEqual({
       tag: "unsupported",
@@ -381,6 +410,81 @@ describe("SR-04G-B4 static spell procedure admission", () => {
         expect.objectContaining({
           failedFact: "durationEnding",
           mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+        }),
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
+        }),
+      ],
+    });
+  });
+
+  test("reports an extra Sanctuary ending at its authored ordinal", () => {
+    const base = spellRecord("sanctuary");
+    if (
+      base.mechanics.family !== "ongoing_effect" ||
+      base.mechanics.duration.kind !== "timed" ||
+      base.mechanics.duration.earlyEnd === undefined
+    ) {
+      throw new Error("Expected Sanctuary timed duration endings.");
+    }
+    const extra = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_sanctuary_extra_ending",
+      mechanics: {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          earlyEnd: [
+            ...base.mechanics.duration.earlyEnd,
+            { kind: "target_takes_damage" },
+          ],
+        },
+      },
+    });
+    const result = targetingSaveInterdictionProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(extra)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellDurationEndingPath(PositiveInteger(4)),
+        }),
+      ],
+    });
+  });
+
+  test("reports a missing Sanctuary ending on the duration header", () => {
+    const base = spellRecord("sanctuary");
+    if (
+      base.mechanics.family !== "ongoing_effect" ||
+      base.mechanics.duration.kind !== "timed" ||
+      base.mechanics.duration.earlyEnd === undefined
+    ) {
+      throw new Error("Expected Sanctuary timed duration endings.");
+    }
+    const missing = decodeSpellRecordForTest({
+      ...base,
+      id: "synthetic_b4_sanctuary_missing_ending",
+      mechanics: {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          earlyEnd: base.mechanics.duration.earlyEnd.slice(0, 2),
+        },
+      },
+    });
+    const result = targetingSaveInterdictionProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(missing)),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
         }),
       ],
     });
