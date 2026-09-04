@@ -340,7 +340,15 @@ describe("ongoingSpellEnd static admission", () => {
               ],
             }
           : index === 1 && phase.kind === "ability_check_gate"
-            ? { ...phase, dc: 11, onFail: { kind: "none" } }
+            ? {
+                ...phase,
+                dc: 11,
+                onFail: { kind: "none" },
+                onPass: {
+                  kind: "end_ongoing_spells",
+                  maxSpellLevel: "caster_slot_level",
+                },
+              }
             : phase,
       ),
     }));
@@ -367,9 +375,98 @@ describe("ongoingSpellEnd static admission", () => {
           failedFact: "checkOnFail",
           mechanicsPath: spellActivationPhasePath(PositiveInteger(2)),
         },
+        {
+          failedFact: "checkMaxSpellLevel",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(2),
+            PositiveInteger(1),
+          ),
+        },
       ]),
     );
   });
+
+  test("rejects an authored direct-phase mode at the phase path", () => {
+    const withMode = mutatedDispelMechanics((mechanics) => ({
+      ...mechanics,
+      phases: mechanics.phases.map((phase) =>
+        phase.kind === "direct"
+          ? {
+              ...phase,
+              mode: {
+                label: "synthetic mode",
+                options: [
+                  {
+                    id: "synthetic_mode",
+                    displayName: "Synthetic Mode",
+                    effects: [{ kind: "none" }],
+                  },
+                ],
+              },
+            }
+          : phase,
+      ),
+    }));
+    const result = ongoingSpellEndProfile.admitMechanics(withMode);
+    expect(result.tag).toBe("unsupported");
+    expect(admissionIssueFacts(result)).toContainEqual({
+      failedFact: "directMode",
+      mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+    });
+    expect(result).not.toHaveProperty("admitted.evidence.unowned");
+  });
+
+  test.each([
+    {
+      label: "canonical first and extra later",
+      effects: [
+        { kind: "end_ongoing_spells", maxSpellLevel: "caster_slot_level" },
+        { kind: "none" },
+      ],
+      extraOrdinals: [2],
+    },
+    {
+      label: "extra first and canonical later",
+      effects: [
+        { kind: "none" },
+        { kind: "end_ongoing_spells", maxSpellLevel: "caster_slot_level" },
+      ],
+      extraOrdinals: [1],
+    },
+    {
+      label: "duplicate canonical effects",
+      effects: [
+        { kind: "end_ongoing_spells", maxSpellLevel: "caster_slot_level" },
+        { kind: "end_ongoing_spells", maxSpellLevel: "caster_slot_level" },
+      ],
+      extraOrdinals: [1, 2],
+    },
+  ] as const)(
+    "attributes $label by actual effect ordinal",
+    ({ effects, extraOrdinals }) => {
+      const source = mutatedDispelMechanics((mechanics) => ({
+        ...mechanics,
+        phases: mechanics.phases.map((phase) =>
+          phase.kind === "direct" ? { ...phase, effects } : phase,
+        ),
+      }));
+      const facts = admissionIssueFacts(
+        ongoingSpellEndProfile.admitMechanics(source),
+      );
+      expect(facts).toContainEqual({
+        failedFact: "directEffectCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      });
+      for (const ordinal of extraOrdinals)
+        expect(facts).toContainEqual({
+          failedFact: "directEffectCount",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(ordinal),
+          ),
+        });
+    },
+  );
 });
 
 describe("SRD Dispel Magic ongoing spell ending admission", () => {

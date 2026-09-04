@@ -167,15 +167,16 @@ const ONGOING_SPELL_END_FAILED_FACTS = [
   "castingRequirement",
   "disposition",
   "directEffectCount",
+  "directMode",
   "directEffect",
   "directMaxSpellLevel",
   "checkAbility",
   "checkSkill",
   "checkDc",
   "checkOnPass",
+  "checkMaxSpellLevel",
   "checkOnFail",
   "checkAutoSuccess",
-  "phaseShape",
 ] as const;
 type OngoingSpellEndFailedFact =
   (typeof ONGOING_SPELL_END_FAILED_FACTS)[number];
@@ -482,6 +483,11 @@ function inspect(source: SpellMechanicsAdmissionSource): Inspection {
     )
       push("phase", path);
     if (
+      "mode" in directCandidate.phase &&
+      directCandidate.phase.mode !== undefined
+    )
+      push("directMode", path);
+    if (
       directCandidates.length === 1 &&
       directCandidate.ordinal !== PositiveInteger(1)
     )
@@ -512,16 +518,26 @@ function inspect(source: SpellMechanicsAdmissionSource): Inspection {
       "effects" in directCandidate.phase
         ? (directCandidate.phase.effects ?? [])
         : [];
-    if (effects.length !== 1)
-      push(
-        "directEffectCount",
-        effects.length === 0
-          ? path
-          : spellActivationEffectPath(
+    const canonicalEffectIndexes = effects.flatMap((effect, index) =>
+      effect.kind === "end_ongoing_spells" &&
+      effect.maxSpellLevel === "caster_slot_level"
+        ? [index]
+        : [],
+    );
+    if (effects.length !== 1) push("directEffectCount", path);
+    if (effects.length > 1)
+      for (const [index] of effects.entries())
+        if (
+          canonicalEffectIndexes.length !== 1 ||
+          canonicalEffectIndexes[0] !== index
+        )
+          push(
+            "directEffectCount",
+            spellActivationEffectPath(
               directCandidate.ordinal,
-              PositiveInteger(1),
+              PositiveInteger(index + 1),
             ),
-      );
+          );
     for (const [index, effect] of effects.entries()) {
       const effectPath = spellActivationEffectPath(
         directCandidate.ordinal,
@@ -611,7 +627,7 @@ function inspect(source: SpellMechanicsAdmissionSource): Inspection {
       checkCandidate.phase.onPass.maxSpellLevel !== "contested_spell_level"
     )
       push(
-        "directMaxSpellLevel",
+        "checkMaxSpellLevel",
         spellActivationEffectPath(checkCandidate.ordinal, PositiveInteger(1)),
       );
   }
