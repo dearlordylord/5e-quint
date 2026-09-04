@@ -68,12 +68,10 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
-import { supportedPreparedSaveGatedConditionWithRepeatProfile } from "./battle-reducer/spell-procedure-profiles/staged-save-condition.ts";
 import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
 import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
@@ -389,10 +387,8 @@ export {
   startBattleWithInitialInitiativeSetup,
   STUNNING_STRIKE_SUPPORT_PROFILE,
   supportedPreparedAfterDamageReactionSaveSpellProfile,
-  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedStagedSaveConditionProfile,
   trueStrikeInput,
   validateSavingThrowOutcomes,
   validateSpellDamageFill,

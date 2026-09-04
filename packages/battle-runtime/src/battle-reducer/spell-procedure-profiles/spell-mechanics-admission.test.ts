@@ -330,25 +330,16 @@ describe("battle spell static mechanics admission", () => {
       throw new Error("Expected direct area attachment mechanics.");
     }
 
-    expect(
-      admitSpellAreaAttachment(mechanics.attachment, [
-        "kind",
-        "shape",
-        "origin",
-      ] as const),
-    ).toEqual({ tag: "admitted", attachment: mechanics.attachment });
+    expect(admitSpellAreaAttachment(mechanics.attachment, [], [])).toEqual({
+      tag: "admitted",
+      attachment: mechanics.attachment,
+    });
 
     const withSelection = {
       ...mechanics.attachment,
       selection: { mode: "one", targetKinds: ["creature"] },
     } as const;
-    expect(
-      admitSpellAreaAttachment(withSelection, [
-        "kind",
-        "shape",
-        "origin",
-      ] as const),
-    ).toEqual({
+    expect(admitSpellAreaAttachment(withSelection, [], [])).toEqual({
       tag: "rejected",
       reason: "areaAttachmentConstraint",
       rejections: [

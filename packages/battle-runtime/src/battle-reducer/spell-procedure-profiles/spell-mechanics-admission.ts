@@ -367,6 +367,57 @@ export function spellOngoingOperationUnsupportedFacts(
  */
 type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
 type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
+type SpellTargetSelectionFieldShape = {
+  readonly [Field in SpellTargetSelectionField]?: unknown;
+};
+
+type SpellAreaAttachmentValue = Extract<Attachment, { readonly kind: "area" }>;
+const SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS = [
+  "kind",
+  "shape",
+  "origin",
+] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
+type SpellAreaAttachmentRequiredField =
+  (typeof SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS)[number];
+type SpellAreaAttachmentField = Exclude<
+  keyof SpellAreaAttachmentValue,
+  SpellAreaAttachmentRequiredField
+>;
+type SpellAreaHoleAttachment = Extract<
+  Attachment,
+  { readonly kind: "hole" }
+> & {
+  readonly value: SpellAreaAttachmentValue;
+};
+
+type SpellAreaAttachmentValueWithAllowedFields<
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> = SpellAreaAttachmentValue & {
+  readonly [Field in Exclude<
+    SpellAreaAttachmentField,
+    AllowedAreaFields
+  >]?: never;
+};
+
+type AdmittedSpellAreaAttachmentValue<
+  AllowedSelectionFields extends SpellTargetSelectionField,
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> = SpellAreaAttachmentValueWithAllowedFields<AllowedAreaFields> &
+  ("selection" extends AllowedAreaFields
+    ? {
+        readonly selection?: AdmittedSpellTargetSelection<AllowedSelectionFields>;
+      }
+    : { readonly selection?: never });
+
+type AdmittedSpellAreaHoleAttachment<
+  AllowedSelectionFields extends SpellTargetSelectionField,
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> = Omit<SpellAreaHoleAttachment, "value"> & {
+  readonly value: AdmittedSpellAreaAttachmentValue<
+    AllowedSelectionFields,
+    AllowedAreaFields
+  >;
+};
 
 type AdmittedSpellTargetSelection<
   AllowedFields extends SpellTargetSelectionField,
@@ -391,16 +442,6 @@ type SpellDirectTargetAttachment = Extract<
   Attachment,
   { readonly kind: "target" }
 >;
-
-type SpellAreaAttachmentValue = Extract<
-  SpellTargetHoleAttachment["value"],
-  { readonly kind: "area" }
->;
-type SpellAreaAttachment =
-  | SpellAreaAttachmentValue
-  | (Omit<SpellTargetHoleAttachment, "value"> & {
-      readonly value: SpellAreaAttachmentValue;
-    });
 
 const SPELL_ATTACHMENT_WRAPPER_FIELDS = [
   "kind",
@@ -470,33 +511,6 @@ export type SpellTargetAttachmentAdmissionResult<
       readonly rejections: ReadonlyNonEmptyArray<SpellAttachmentRejection>;
     };
 
-type AdmittedSpellAreaAttachmentValue<
-  AllowedFields extends SpellAttachmentValueField,
-> = SpellAreaAttachmentValue & {
-  readonly [Field in Exclude<SpellAttachmentValueField, AllowedFields>]?: never;
-};
-
-type AdmittedSpellAreaAttachment<
-  AllowedFields extends SpellAttachmentValueField,
-> =
-  | AdmittedSpellAreaAttachmentValue<AllowedFields>
-  | (Omit<SpellTargetHoleAttachment, "value"> & {
-      readonly value: AdmittedSpellAreaAttachmentValue<AllowedFields>;
-    });
-
-export type SpellAreaAttachmentAdmissionResult<
-  AllowedFields extends SpellAttachmentValueField,
-> =
-  | {
-      readonly tag: "admitted";
-      readonly attachment: AdmittedSpellAreaAttachment<AllowedFields>;
-    }
-  | {
-      readonly tag: "rejected";
-      readonly reason: "areaAttachmentMissing" | "areaAttachmentConstraint";
-      readonly rejections: ReadonlyNonEmptyArray<SpellAttachmentRejection>;
-    };
-
 const SPELL_TARGET_ATTACHMENT_VALUE_FIELDS = [
   "kind",
   "selection",
@@ -515,6 +529,13 @@ export function spellMechanicsObjectHasOnlyKeys<
 >(value: Value, allowedFields: AllowedFields): boolean {
   const allowed = new Set<PropertyKey>(allowedFields);
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
+}
+
+export function spellHasOnlyNamedFields<const Value extends object>(
+  value: Value,
+  allowedFields: readonly (keyof Value)[],
+): boolean {
+  return spellMechanicsObjectHasOnlyKeys(value, allowedFields);
 }
 
 function spellAttachmentRejections(
@@ -611,6 +632,18 @@ function isSpellDirectTargetAttachment(
   attachment: Attachment,
 ): attachment is SpellDirectTargetAttachment {
   return attachment.kind === "target";
+}
+
+function isAdmittedSpellTargetSelection<
+  const AllowedFields extends readonly SpellTargetSelectionField[],
+>(
+  selection: TargetSelection,
+  allowedFields: AllowedFields,
+): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
+  return spellHasOnlyNamedFields<SpellTargetSelectionFieldShape>(
+    selection,
+    allowedFields,
+  );
 }
 
 /**
@@ -723,25 +756,77 @@ export function admitSpellTargetAttachment<
   };
 }
 
+export type SpellAreaAttachmentAdmissionResult<
+  AllowedSelectionFields extends SpellTargetSelectionField,
+  AllowedAreaFields extends SpellAreaAttachmentField,
+> =
+  | {
+      readonly tag: "admitted";
+      readonly attachment:
+        | AdmittedSpellAreaAttachmentValue<
+            AllowedSelectionFields,
+            AllowedAreaFields
+          >
+        | AdmittedSpellAreaHoleAttachment<
+            AllowedSelectionFields,
+            AllowedAreaFields
+          >;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly reason:
+        | "areaAttachmentMissing"
+        | "areaAttachmentConstraint"
+        | "areaSelectionConstraint";
+      readonly rejections: ReadonlyNonEmptyArray<SpellAttachmentRejection>;
+    };
+
 function isSpellAreaAttachment(
   attachment: Attachment,
-): attachment is SpellAreaAttachment {
+): attachment is SpellAreaAttachmentValue | SpellAreaHoleAttachment {
+  if (attachment.kind === "area") return true;
+  return attachment.kind === "hole" && attachment.value.kind === "area";
+}
+
+function isAdmittedSpellAreaAttachmentValue<
+  const AllowedSelectionFields extends readonly SpellTargetSelectionField[],
+  const AllowedAreaFields extends readonly SpellAreaAttachmentField[],
+>(
+  areaValue: SpellAreaAttachmentValueWithAllowedFields<
+    AllowedAreaFields[number]
+  >,
+  allowedSelectionFields: AllowedSelectionFields,
+  allowedAreaFields: AllowedAreaFields,
+): areaValue is AdmittedSpellAreaAttachmentValue<
+  AllowedSelectionFields[number],
+  AllowedAreaFields[number]
+> {
+  const selection = areaValue.selection;
   return (
-    attachment.kind === "area" ||
-    (attachment.kind === "hole" && attachment.value.kind === "area")
+    selection === undefined ||
+    (allowedAreaFields.some((field) => field === "selection") &&
+      isAdmittedSpellTargetSelection(selection, allowedSelectionFields))
   );
 }
 
 /**
- * Admit an area attachment while retaining only the fields a procedure owns.
- * Both direct and target-hole area forms use this one fail-closed boundary.
+ * Admit the area attachment shape consumed by a save-gate procedure. The
+ * caller names every optional area field it projects; unknown or future
+ * fields, including range-origin metadata, are rejected unless explicitly
+ * owned. A target-selection field list is required whenever `selection` is
+ * part of the admitted area shape.
  */
 export function admitSpellAreaAttachment<
-  const AllowedFields extends readonly SpellAttachmentValueField[],
+  const AllowedSelectionFields extends readonly SpellTargetSelectionField[],
+  const AllowedAreaFields extends readonly SpellAreaAttachmentField[],
 >(
   attachment: Attachment,
-  allowedFields: AllowedFields,
-): SpellAreaAttachmentAdmissionResult<AllowedFields[number]> {
+  allowedSelectionFields: AllowedSelectionFields,
+  allowedAreaFields: AllowedAreaFields,
+): SpellAreaAttachmentAdmissionResult<
+  AllowedSelectionFields[number],
+  AllowedAreaFields[number]
+> {
   if (!isSpellAreaAttachment(attachment)) {
     return {
       tag: "rejected",
@@ -754,51 +839,78 @@ export function admitSpellAreaAttachment<
       ]),
     };
   }
+
   const areaValue = attachment.kind === "area" ? attachment : attachment.value;
+  const allowedAreaValueFields = [
+    ...SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS,
+    ...allowedAreaFields,
+  ] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
   const wrapperRejections =
     attachment.kind === "hole"
       ? spellAttachmentWrapperRejections(attachment)
       : [];
   const areaValueRejections = spellAttachmentValueRejections(
     areaValue,
-    allowedFields,
+    allowedAreaValueFields,
   );
-  const nonEmptyWrapperRejections = spellProcedureNonEmpty(wrapperRejections);
-  const nonEmptyAreaValueRejections =
-    spellProcedureNonEmpty(areaValueRejections);
-  if (nonEmptyWrapperRejections !== undefined) {
+  const nonEmptyAttachmentRejections = spellProcedureNonEmpty([
+    ...wrapperRejections,
+    ...areaValueRejections,
+  ]);
+  if (nonEmptyAttachmentRejections !== undefined) {
     return {
       tag: "rejected",
       reason: "areaAttachmentConstraint",
-      rejections: spellAttachmentRejections([
-        nonEmptyWrapperRejections[0],
-        ...nonEmptyWrapperRejections.slice(1),
-        ...areaValueRejections,
-      ]),
+      rejections: spellAttachmentRejections(nonEmptyAttachmentRejections),
     };
   }
-  if (nonEmptyAreaValueRejections !== undefined) {
+  // The exact own-key rejection pass above proved that the area contains only
+  // required fields and the procedure's allowed optional fields.
+  const areaValueWithAllowedFields =
+    areaValue as SpellAreaAttachmentValueWithAllowedFields<
+      AllowedAreaFields[number]
+    >;
+  const selectionRejections =
+    areaValue.selection === undefined
+      ? []
+      : spellTargetSelectionRejections(
+          areaValue.selection,
+          allowedSelectionFields,
+        );
+  const nonEmptySelectionRejections =
+    spellProcedureNonEmpty(selectionRejections);
+  if (
+    !isAdmittedSpellAreaAttachmentValue(
+      areaValueWithAllowedFields,
+      allowedSelectionFields,
+      allowedAreaFields,
+    )
+  ) {
     return {
       tag: "rejected",
-      reason: "areaAttachmentConstraint",
-      rejections: spellAttachmentRejections([
-        nonEmptyAreaValueRejections[0],
-        ...nonEmptyAreaValueRejections.slice(1),
-      ]),
+      reason: "areaSelectionConstraint",
+      rejections:
+        nonEmptySelectionRejections ??
+        spellAttachmentRejections([
+          {
+            failedFact: "selection",
+            coordinate: { kind: "value", field: "selection" },
+          },
+        ]),
     };
   }
-  // Both own-key parsers returned empty, so this area attachment satisfies the
-  // procedure's admitted field projection.
-  const admittedAttachment = attachment as AdmittedSpellAreaAttachment<
-    AllowedFields[number]
-  >;
-  return { tag: "admitted", attachment: admittedAttachment };
+  return attachment.kind === "hole"
+    ? {
+        tag: "admitted",
+        attachment: { ...attachment, value: areaValueWithAllowedFields },
+      }
+    : { tag: "admitted", attachment: areaValueWithAllowedFields };
 }
 
 /** Stable issue identity: only the failed fact and its exact source path. */
 export function spellMechanicsIssueKey(issue: {
   readonly failedFact: string;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly mechanicsPath: UnitMechanicsPath;
 }): string {
   return JSON.stringify([issue.failedFact, issue.mechanicsPath.nodes]);
 }
@@ -807,7 +919,7 @@ export function spellMechanicsIssueKey(issue: {
 export function spellUniqueMechanicsIssues<
   Issue extends {
     readonly failedFact: string;
-    readonly mechanicsPath: SpellMechanicsBranchPath;
+    readonly mechanicsPath: UnitMechanicsPath;
   },
 >(issues: readonly Issue[]): readonly Issue[] {
   const seen = new Set<string>();

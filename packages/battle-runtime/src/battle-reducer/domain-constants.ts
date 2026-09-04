@@ -7,7 +7,8 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Condition, CreatureType } from "@dnd/shared/game-facts";
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, type DamageDieSize } from "@dnd/shared/types";
+import { Schema } from "effect";
 import type {
   CreatureSense,
   DamageType,
@@ -120,13 +121,203 @@ export const STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:staged-condition-repeat-save:end-turn:";
 export const STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:staged-condition-repeat-save:damage:";
-export const STAGED_CONDITION_DURATION_TICKS = elapsedTimeTicks(10);
+
+/** Authored Surface facts that identify the granted-area Save-damage profile. */
+export const GRANTED_AREA_SAVE_DAMAGE_SPELL_LEVEL = 2;
+export const GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS = {
+  level: GRANTED_AREA_SAVE_DAMAGE_SPELL_LEVEL,
+  castingTimeKind: "bonus_action",
+  rangeKind: "touch",
+  duration: { kind: "concentration", unit: "minute", amount: 1 },
+  attachment: {
+    mode: "one",
+    disposition: "willing",
+    targetKinds: ["creature"],
+  },
+  operationCount: 1,
+  operation: {
+    triggerKind: "on_attached_spends_action",
+    costKind: "standard_action",
+    action: "magic",
+    effectKind: "save_gate",
+    ability: "dex",
+    dcKind: "caster_spell_save_dc",
+    areaOriginKind: "on_attached_creature",
+    areaShapeKind: "cone",
+    successKind: "half_damage",
+    failureKind: "damage",
+  },
+  damage: {
+    kind: "linear_per_level",
+    axis: "slot",
+    baseDice: 3,
+    perSlotDice: 1,
+    startingAtLevel: GRANTED_AREA_SAVE_DAMAGE_SPELL_LEVEL,
+  },
+} as const;
+export const GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET = 15;
+export const GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE = 6 satisfies DamageDieSize;
+export const GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES = [
+  "acid",
+  "cold",
+  "fire",
+  "lightning",
+  "poison",
+] as const satisfies readonly [DamageType, ...DamageType[]];
+export const GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS = {
+  actionCost: "bonusAction",
+  ability: GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.ability,
+  targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+  activeEffectKind: "grantedAreaSaveDamageAction",
+  expirationKind: GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.kind,
+} as const;
+
+/** Authored Surface facts that identify the staged Save-condition profile. */
+export const STAGED_SAVE_CONDITION_AUTHORED_FACTS = {
+  level: 1,
+  castingTimeKind: "action",
+  range: { kind: "point", feet: 60 },
+  duration: {
+    kind: "concentration",
+    unit: "minute",
+    amount: 1,
+    earlyEndKind: "target_takes_damage",
+  },
+  phase: {
+    kind: "save_gate",
+    ability: "wis",
+    dcKind: "caster_spell_save_dc",
+    areaOriginKind: "point_within_range",
+    areaShapeKind: "sphere",
+    radiusFeet: 5,
+    successKind: "none",
+    failureKind: "composite",
+    failureEffects: {
+      condition: { kind: "apply_condition", condition: "incapacitated" },
+      escape: {
+        kind: "target_effect_escape_action",
+        actor: "another_creature",
+        cost: "action",
+        method: "shake_awake",
+        outcome: "end_current_effect",
+      },
+    },
+    repeat: {
+      cadence: "end_of_target_turn",
+      onSuccess: "ends_on_target",
+      onFailAgain: { kind: "apply_condition", condition: "unconscious" },
+    },
+  },
+  automaticSuccessPredicates: {
+    kind: "any",
+    predicates: [
+      { kind: "does_not_sleep" },
+      { kind: "has_condition_immunity", condition: "exhaustion" },
+    ],
+  },
+} as const;
+export const STAGED_SAVE_CONDITION_FAILURE_ROLES = [
+  "incapacitated",
+  "escape",
+] as const;
+export const STAGED_SAVE_CONDITION_EXECUTION_FACTS = {
+  ability: STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.ability,
+  targeting: {
+    kind: "pointOriginSphere",
+    radiusFeet: movementFeet(
+      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.radiusFeet,
+    ),
+  },
+  automaticSuccessPredicates: [
+    { kind: "doesNotSleep" },
+    {
+      kind: "conditionImmunity",
+      condition:
+        STAGED_SAVE_CONDITION_AUTHORED_FACTS.automaticSuccessPredicates
+          .predicates[1].condition,
+    },
+  ],
+  escapeAction: {
+    kind: "endCurrentEffect",
+    actor: "anotherCreature",
+    cost: STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.cost,
+    method: "shakeAwake",
+  },
+} as const;
+
+/** Authored Surface facts that identify the repeated Save-condition profile. */
+export const SAVE_GATED_CONDITION_WITH_REPEAT_SPELL_LEVEL = 1;
+export const SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS = {
+  level: SAVE_GATED_CONDITION_WITH_REPEAT_SPELL_LEVEL,
+  castingTimeKind: "action",
+  range: { kind: "point", feet: 30 },
+  duration: { kind: "concentration", unit: "minute", amount: 1 },
+  phase: {
+    kind: "save_gate",
+    ability: "wis",
+    dcKind: "caster_spell_save_dc",
+    successKind: "none",
+    failureKind: "composite",
+    failureEffects: {
+      prone: { kind: "apply_condition", condition: "prone" },
+      incapacitated: { kind: "apply_condition", condition: "incapacitated" },
+      suppressProne: {
+        kind: "suppress_condition_self_end",
+        condition: "prone",
+      },
+    },
+    repeats: {
+      endOfTurn: {
+        cadence: "end_of_target_turn",
+        onSuccess: "ends_on_target",
+      },
+      onDamage: {
+        cadence: "on_target_takes_damage",
+        rollMode: "advantage",
+        onSuccess: "ends_on_target",
+      },
+    },
+  },
+  targeting: {
+    mode: "choose_up_to",
+    count: {
+      kind: "linear",
+      base: 1,
+      baseLevel: SAVE_GATED_CONDITION_WITH_REPEAT_SPELL_LEVEL,
+      perSlotAboveBase: 1,
+    },
+    targetKinds: ["creature"],
+  },
+} as const;
+export const SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES = [
+  "prone",
+  "incapacitated",
+  "suppressProne",
+] as const;
+export const SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES = [
+  "endOfTurn",
+  "onDamage",
+] as const;
+export const SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS = {
+  actionCost: "magicAction",
+  ability: SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.ability,
+  targeting: {
+    kind: "targetList",
+    minTargets:
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count.base,
+  },
+} as const;
 export const SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO = {
   numerator: 1,
   denominator: 2,
 } as const;
 export const SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA = -2;
 export const SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA = -2;
+export const SaveGatedTurnConstraintMaxAttacksSchema = Schema.Literal(1).pipe(
+  Schema.brand("PositiveInteger"),
+);
+export const SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS =
+  SaveGatedTurnConstraintMaxAttacksSchema.make(1);
 export const SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT = 25;
 export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:decision",

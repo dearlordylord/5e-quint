@@ -340,11 +340,8 @@ const ROLL_MODIFIER_TARGET_SELECTION_FIELDS = [
   "targetKinds",
   "disposition",
 ] as const;
-const ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS = [
-  "kind",
-  "shape",
-  "origin",
-] as const;
+const ROLL_MODIFIER_AREA_SELECTION_FIELDS = [] as const;
+const ROLL_MODIFIER_AREA_OPTIONAL_FIELDS = [] as const;
 const ROLL_MODIFIER_SCHOOLS = [
   "divination",
   "enchantment",
@@ -360,7 +357,8 @@ type RollModifierAdmittedTargetAttachment = Extract<
 >["attachment"];
 type RollModifierAdmittedAreaAttachment = Extract<
   SpellAreaAttachmentAdmissionResult<
-    (typeof ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS)[number]
+    (typeof ROLL_MODIFIER_AREA_SELECTION_FIELDS)[number],
+    (typeof ROLL_MODIFIER_AREA_OPTIONAL_FIELDS)[number]
   >,
   { readonly tag: "admitted" }
 >["attachment"];
@@ -865,7 +863,8 @@ function rollModifierAttachmentProjection(
   }
   const areaAdmission = admitSpellAreaAttachment(
     attachment,
-    ROLL_MODIFIER_AREA_ATTACHMENT_FIELDS,
+    ROLL_MODIFIER_AREA_SELECTION_FIELDS,
+    ROLL_MODIFIER_AREA_OPTIONAL_FIELDS,
   );
   if (areaAdmission.tag === "rejected") {
     return { tag: "rejected", rejections: [...areaAdmission.rejections] };

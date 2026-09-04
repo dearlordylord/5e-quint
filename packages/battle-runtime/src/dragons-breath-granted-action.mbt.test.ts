@@ -68,6 +68,8 @@ import {
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import { boundGrantedAreaSaveDamageActionEffect } from "./battle-reducer/spell-modifier-binding.ts";
+import { spellProcedureBoundToActiveEffect } from "./battle-reducer/spell-active-effect-binding.ts";
+import { spellInvocationCastLevel } from "./battle-reducer/spells-effective-level.ts";
 import {
   dragonsBreathUnitId,
   spellCasterId,
@@ -76,6 +78,7 @@ import {
 
 type DragonsBreathTurnRole = "caster" | "target";
 type DragonsBreathSlotLevel = 2 | 3;
+type DragonsBreathDamageDice = 3 | 4;
 type DragonsBreathLegalDamageType = MembersOf<
   DamageType,
   "acid" | "cold" | "fire" | "lightning" | "poison"
@@ -144,10 +147,10 @@ type DragonsBreathEffect = Extract<
 >;
 
 const DRAGONS_BREATH_DAMAGE_ROLLS = {
-  2: [[2, 2, 2]],
-  3: [[2, 3, 3, 3]],
+  3: [[2, 2, 2]],
+  4: [[2, 3, 3, 3]],
 } as const satisfies Record<
-  DragonsBreathSlotLevel,
+  DragonsBreathDamageDice,
   readonly (readonly number[])[]
 >;
 
@@ -510,8 +513,8 @@ function resolveSavingThrow(
       sourceProcedureRef: effect.sourceProcedureRef,
       damageType: effect.damageType,
       expr: {
-        dice: Number(effect.castLevel) + 1,
-        dieSize: 6,
+        dice: effect.damageDice,
+        dieSize: effect.damageDieSize,
       },
     },
   });
@@ -532,7 +535,7 @@ function resolveDamageRoll(
   const saveHole = grantedAreaSaveDamageActionSavingThrowHole(state);
   const damageHole = requireHole(state.holes, "rolledDice");
   const effect = requireBoundDragonsBreathTargetEffect(state.session.state);
-  const damageRoll = grantedAreaSaveDamageActionDamageRoll(effect.castLevel);
+  const damageRoll = grantedAreaSaveDamageActionDamageRoll(effect.damageDice);
   const result = resolveBattleSubject({
     state: state.session.state,
     subject,
@@ -584,7 +587,7 @@ function resolveConcentration(
         ),
         damageRollFillWithGroups(
           damageHole,
-          grantedAreaSaveDamageActionDamageRoll(effect.castLevel).groups,
+          grantedAreaSaveDamageActionDamageRoll(effect.damageDice).groups,
         ),
         {
           kind: "concentrationSavingThrow",
@@ -648,7 +651,13 @@ function grantedAreaSaveDamageActionGrantedActionProjection(
       effect === undefined
         ? "none"
         : grantedAreaSaveDamageActionDamageType(effect.damageType),
-    effectOriginalSlotLevel: Number(effect?.castLevel ?? 0),
+    effectOriginalSlotLevel:
+      effect === undefined
+        ? 0
+        : grantedAreaSaveDamageActionOriginalSlotLevel(
+            state.session.state,
+            effect,
+          ),
     effectSpellSaveDc:
       effect === undefined
         ? 0
@@ -720,6 +729,17 @@ function requireBoundDragonsBreathTargetEffect(state: BattleState) {
   return effect;
 }
 
+function grantedAreaSaveDamageActionOriginalSlotLevel(
+  state: BattleState,
+  effect: DragonsBreathEffect,
+): number {
+  const procedure = spellProcedureBoundToActiveEffect(state, effect);
+  if (procedure?.procedure !== "grantedAreaSaveDamageAction") {
+    throw new Error("Expected a source-bound Dragon's Breath procedure.");
+  }
+  return Number(spellInvocationCastLevel(procedure));
+}
+
 function grantedAreaSaveDamageActionSavingThrowHole(
   state: DragonsBreathRuntimeState,
 ): Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> {
@@ -743,13 +763,13 @@ function requirePendingExhale(state: DragonsBreathRuntimeState): BattleSubject {
   return state.pendingExhale;
 }
 
-function grantedAreaSaveDamageActionDamageRoll(slotLevel: number): {
+function grantedAreaSaveDamageActionDamageRoll(damageDice: number): {
   readonly groups: readonly (readonly number[])[];
   readonly total: number;
 } {
   const groups =
     DRAGONS_BREATH_DAMAGE_ROLLS[
-      grantedAreaSaveDamageActionSlotLevel(slotLevel)
+      grantedAreaSaveDamageActionDamageDice(damageDice)
     ];
   return {
     groups,
@@ -889,6 +909,13 @@ function grantedAreaSaveDamageActionSlotLevel(
 ): DragonsBreathSlotLevel {
   if (raw === 2 || raw === 3) return raw;
   throw new Error(`Unknown Dragon's Breath slot level: ${String(raw)}.`);
+}
+
+function grantedAreaSaveDamageActionDamageDice(
+  raw: unknown,
+): DragonsBreathDamageDice {
+  if (raw === 3 || raw === 4) return raw;
+  throw new Error(`Unknown Dragon's Breath damage dice: ${String(raw)}.`);
 }
 
 function grantedAreaSaveDamageActionDamageType(

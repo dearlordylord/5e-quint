@@ -29,6 +29,7 @@ import {
   flameStrikeUnitId,
   guidingBoltUnitId,
   saveGatedConditionWithRepeatUnitId,
+  saveGatedConditionWithRepeatDurationTicks,
   inflictWoundsUnitId,
   lightningBoltUnitId,
   magicMissileUnitId,
@@ -2256,6 +2257,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       expiresAt: {
         kind: "concentration" as const,
         combatantId: spellCasterId,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
     } as const;
     const concentratingState: BattleState = {

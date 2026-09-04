@@ -371,7 +371,8 @@ const SCALAR_BUFF_TARGET_SELECTION_FIELDS = [
   "targetKinds",
   "disposition",
 ] as const;
-const SCALAR_BUFF_AREA_ATTACHMENT_FIELDS = ["kind", "shape", "origin"] as const;
+const SCALAR_BUFF_AREA_SELECTION_FIELDS = [] as const;
+const SCALAR_BUFF_AREA_OPTIONAL_FIELDS = [] as const;
 const FIRST_ORDINAL = PositiveInteger(1);
 
 type ScalarBuffActivationPhaseOccurrence = {
@@ -547,7 +548,8 @@ function scalarBuffTargetingProjection(
     }
     const areaAdmission = admitSpellAreaAttachment(
       attachment,
-      SCALAR_BUFF_AREA_ATTACHMENT_FIELDS,
+      SCALAR_BUFF_AREA_SELECTION_FIELDS,
+      SCALAR_BUFF_AREA_OPTIONAL_FIELDS,
     );
     if (areaAdmission.tag === "rejected") {
       return { tag: "rejected", rejections: [...areaAdmission.rejections] };

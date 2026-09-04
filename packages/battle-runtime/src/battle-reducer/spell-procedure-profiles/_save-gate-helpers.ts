@@ -83,6 +83,7 @@ import {
   spellDurationChildPath,
   spellDurationEvidencePaths,
   spellDurationValueEvidencePaths,
+  spellHasOnlyNamedFields,
   spellProcedureNonEmpty,
   type SpellMechanicsAdmissionSource,
   type SpellDurationChild,
@@ -182,6 +183,22 @@ export type SaveGatedConditionMechanicsFacts = {
 };
 
 /** Apply contextual spell-slot scaling to immutable targeting facts. */
+export function saveGatedConditionTargetingFromFacts(
+  facts: Extract<
+    SaveGateConditionTargetingFacts,
+    { readonly kind: "targetList" }
+  >,
+  slotLevel: SpellSlotLevel,
+): Extract<
+  SaveGatedConditionSpellTargeting,
+  { readonly kind: "targetList" }
+> & {
+  readonly maxTargets: PositiveInteger;
+};
+export function saveGatedConditionTargetingFromFacts(
+  facts: SaveGateConditionTargetingFacts,
+  slotLevel: SpellSlotLevel,
+): SaveGatedConditionSpellTargeting;
 export function saveGatedConditionTargetingFromFacts(
   facts: SaveGateConditionTargetingFacts,
   slotLevel: SpellSlotLevel,
@@ -2896,7 +2913,12 @@ export function oneAdditionalTargetPerSpellSlotAboveBaseLevel(
     : (slotLevel) => saveGateTargetCountAtSlot(facts, slotLevel);
 }
 
-function saveGateTargetCountFactsFromSelection(
+/**
+ * Project linear target-count scaling without retaining the authored
+ * selection. Callers can carry this immutable fact into contextual admission
+ * and derive a target list for the chosen spell slot.
+ */
+export function saveGateTargetCountFactsFromSelection(
   selection: TargetSelection,
   spellLevel: number,
 ): SaveGateTargetCountFacts | null {
@@ -2907,6 +2929,12 @@ function saveGateTargetCountFactsFromSelection(
   if (
     typeof count === "number" ||
     count.kind !== "linear" ||
+    !spellHasOnlyNamedFields(count, [
+      "kind",
+      "base",
+      "perSlotAboveBase",
+      "baseLevel",
+    ]) ||
     count.base !== 1 ||
     count.baseLevel !== spellLevel ||
     count.perSlotAboveBase !== 1

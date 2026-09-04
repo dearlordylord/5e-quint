@@ -1902,14 +1902,6 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
-    | Extract<
-        BattleActiveEffect,
-        { readonly kind: "stagedSaveConditionPendingRepeat" }
-      >
-    | Extract<
-        BattleActiveEffect,
-        { readonly kind: "stagedSaveConditionApplied" }
-      >
     | Extract<BattleActiveEffect, { readonly kind: "spellDashBonusAction" }>
     | Extract<
         BattleActiveEffect,
@@ -2508,6 +2500,7 @@ function applyHitPointBudgetConditionRepeatSaveFills(
       expiresAt: {
         kind: "concentration" as const,
         combatantId: effect.sourceCombatantId,
+        durationTicks: effect.expiresAt.durationTicks,
       },
     };
     const activeEffects = [...activeEffectsWithoutPending, unconsciousEffect];
@@ -4692,11 +4685,7 @@ type ConcentrationEffectSource = {
 function activeEffectDurationTicks(
   effect: BattleActiveEffect,
 ): DurationActiveEffect["expiresAt"]["durationTicks"] | null {
-  if (
-    effect.kind === "stagedSaveConditionPendingRepeat" ||
-    effect.kind === "stagedSaveConditionApplied" ||
-    !("expiresAt" in effect)
-  ) {
+  if (!("expiresAt" in effect)) {
     return null;
   }
   if (effect.expiresAt.kind === "duration") {

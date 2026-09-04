@@ -119,7 +119,6 @@ import {
 } from "../character-execution-queries.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import {
-  SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
   MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
@@ -130,6 +129,7 @@ import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,
 } from "./creature-size-change-effects.ts";
+import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 type RuntimeDamageSpellProcedureOf<Procedure> = Procedure extends {
@@ -1573,6 +1573,7 @@ export function savingThrowFlatBonusProjections(
       target,
     ),
     ...saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
+      state,
       target,
       ability,
     ),
@@ -1580,20 +1581,23 @@ export function savingThrowFlatBonusProjections(
 }
 
 function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
+  state: BattleState,
   target: BattleCreatureState,
   ability: Ability,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
   if (ability !== "dex") {
     return [];
   }
-  const effect = target.activeEffects.find(
-    (
+  const effect = target.activeEffects.flatMap((candidate) => {
+    if (candidate.kind !== "saveGatedTurnConstraintBundle") {
+      return [];
+    }
+    const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
+      state,
       candidate,
-    ): candidate is Extract<
-      BattleCreatureState["activeEffects"][number],
-      { readonly kind: "saveGatedTurnConstraintBundle" }
-    > => candidate.kind === "saveGatedTurnConstraintBundle",
-  );
+    );
+    return boundEffect === undefined ? [] : [boundEffect];
+  })[0];
   return effect === undefined
     ? []
     : [
@@ -1601,7 +1605,7 @@ function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
           targetId: target.combatantId,
           sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
-          bonus: SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
+          bonus: effect.constraints.dexteritySavingThrowDelta,
         },
       ];
 }

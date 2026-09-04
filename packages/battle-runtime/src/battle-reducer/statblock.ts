@@ -33,7 +33,7 @@ import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
-import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-turn-resources.ts";
+import { combatantHasSaveGatedTurnConstraintAttackCap } from "./save-gated-turn-constraint-runtime.ts";
 
 export function statBlockMultiattackDispatchResourceDemandForActor(
   state: BattleState,
@@ -41,7 +41,7 @@ export function statBlockMultiattackDispatchResourceDemandForActor(
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
 ): StatBlockMultiattackDispatchResourceDemand {
   return {
-    kind: combatantHasSaveGatedTurnConstraintBundle(state, actor)
+    kind: combatantHasSaveGatedTurnConstraintAttackCap(state, actor)
       ? "oneListedDispatch"
       : "allListedDispatches",
     procedureRefs: binding.procedure.dispatchProcedureRefs,

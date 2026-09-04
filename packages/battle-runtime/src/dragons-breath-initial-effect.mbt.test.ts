@@ -61,6 +61,8 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { boundGrantedAreaSaveDamageActionEffect } from "./battle-reducer/spell-modifier-binding.ts";
+import { spellProcedureBoundToActiveEffect } from "./battle-reducer/spell-active-effect-binding.ts";
+import { spellInvocationCastLevel } from "./battle-reducer/spells-effective-level.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
@@ -370,7 +372,13 @@ function grantedAreaSaveDamageActionEffectProjection(
       effect === undefined
         ? "none"
         : grantedAreaSaveDamageActionDamageType(effect.damageType),
-    effectOriginalSlotLevel: effect?.castLevel ?? 0,
+    effectOriginalSlotLevel:
+      effect === undefined
+        ? 0
+        : grantedAreaSaveDamageActionOriginalSlotLevel(
+            state.battle.state,
+            effect,
+          ),
     effectSpellSaveDc: effect === undefined ? 0 : Number(spellSaveDc),
     effectDurationTicks:
       effect?.expiresAt.kind === "concentration"
@@ -409,6 +417,17 @@ function boundGrantedAreaSaveDamageActionEffectProjection(state: BattleState) {
   return effect === undefined
     ? undefined
     : boundGrantedAreaSaveDamageActionEffect(state, effect);
+}
+
+function grantedAreaSaveDamageActionOriginalSlotLevel(
+  state: BattleState,
+  effect: DragonsBreathEffect,
+): number {
+  const procedure = spellProcedureBoundToActiveEffect(state, effect);
+  if (procedure?.procedure !== "grantedAreaSaveDamageAction") {
+    throw new Error("Expected a source-bound Dragon's Breath procedure.");
+  }
+  return Number(spellInvocationCastLevel(procedure));
 }
 
 function grantedAreaSaveDamageActionActAvailable(

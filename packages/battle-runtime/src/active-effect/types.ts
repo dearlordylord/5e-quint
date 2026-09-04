@@ -599,7 +599,7 @@ export type BattleActiveEffect = (
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "concentration" }
-        >;
+        > & { readonly durationTicks: ElapsedTimeTicks };
       })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
@@ -608,7 +608,7 @@ export type BattleActiveEffect = (
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "concentration" }
-        >;
+        > & { readonly durationTicks: ElapsedTimeTicks };
       })
   | (BattleSpellEffectBase & {
       readonly kind: "saveGatedConditionWithRepeat";
@@ -621,7 +621,7 @@ export type BattleActiveEffect = (
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
-      >;
+      > & { readonly durationTicks: ElapsedTimeTicks };
     })
   | (BattleSpellEffectBase & {
       readonly kind: "saveGatedAreaControl";

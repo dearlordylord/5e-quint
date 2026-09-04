@@ -311,9 +311,11 @@ import type {
 import type {
   SpawnedCompanionLifecycleExecutionFacts,
   CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
+  GrantedAreaSaveDamageActionSpellProcedureExecution,
+  SaveGatedConditionWithRepeatSpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
-  StagedSaveConditionAutomaticSuccessPredicates,
-  StagedSaveConditionEscapeAction,
+  SaveGatedTurnConstraintFacts,
+  StagedSaveConditionSpellProcedureExecution,
   TemporaryAbilityCheckRollModeConcurrentDurationModeLimit,
   TemporaryAbilityCheckRollModeSelectedMode,
 } from "./procedure-execution/spell-procedure-execution.ts";
@@ -2713,13 +2715,9 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "grantedAreaSaveDamageAction";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
-  readonly ability: "dex";
-  readonly targeting: {
-    readonly kind: "targetList";
-    readonly minTargets: 1;
-    readonly maxTargets: 1;
-  };
+  readonly actionCost: GrantedAreaSaveDamageActionSpellProcedureExecution["actionCost"];
+  readonly ability: GrantedAreaSaveDamageActionSpellProcedureExecution["ability"];
+  readonly targeting: GrantedAreaSaveDamageActionSpellProcedureExecution["targeting"];
   readonly activeEffect: Omit<
     BattleSpellActiveEffectTemplate<
       Extract<
@@ -2730,7 +2728,10 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
     "damageType"
   >;
   readonly dc: DcSource;
-  readonly damageTypeChoices: readonly DamageType[];
+  readonly coneLengthFeet: GrantedAreaSaveDamageActionSpellProcedureExecution["coneLengthFeet"];
+  readonly damageDice: GrantedAreaSaveDamageActionSpellProcedureExecution["damageDice"];
+  readonly damageDieSize: GrantedAreaSaveDamageActionSpellProcedureExecution["damageDieSize"];
+  readonly damageTypeChoices: GrantedAreaSaveDamageActionSpellProcedureExecution["damageTypeChoices"];
   readonly rangeFeet: MovementFeet;
 };
 export type CompositeTargetBuffWithAftermathSpellInvocation = {
@@ -3404,29 +3405,26 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "stagedSaveCondition";
+      readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
-      readonly ability: Extract<Ability, "wis">;
+      readonly ability: StagedSaveConditionSpellProcedureExecution["ability"];
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "pointOriginSphere" }
-      >;
+      readonly targeting: StagedSaveConditionSpellProcedureExecution["targeting"];
       readonly rangeFeet: MovementFeet;
-      readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
-      readonly escapeAction: StagedSaveConditionEscapeAction;
+      readonly automaticSuccessPredicates: StagedSaveConditionSpellProcedureExecution["automaticSuccessPredicates"];
+      readonly escapeAction: StagedSaveConditionSpellProcedureExecution["escapeAction"];
     }
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedConditionWithRepeat";
+      readonly rangeFeet: MovementFeet;
+      readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
-      readonly actionCost: "magicAction";
-      readonly ability: Extract<Ability, "wis">;
+      readonly actionCost: SaveGatedConditionWithRepeatSpellProcedureExecution["actionCost"];
+      readonly ability: SaveGatedConditionWithRepeatSpellProcedureExecution["ability"];
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "targetList" }
-      >;
+      readonly targeting: SaveGatedConditionWithRepeatSpellProcedureExecution["targeting"];
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -3447,6 +3445,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedTurnConstraintBundle";
+      readonly constraints: SaveGatedTurnConstraintFacts;
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
@@ -4898,7 +4897,7 @@ export type BattleTurnConstraintSomaticSpellFailureOutcomeHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly failurePercent: 25;
+  readonly failurePercent: SaveGatedTurnConstraintFacts["somaticFailurePercent"];
   readonly activeEffectSources: readonly {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
@@ -5377,7 +5376,10 @@ export type BattleGrantedAreaSaveDamageActionDamageRollHole = Extract<
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly damageType: DamageType;
-    readonly expr: DiceExpr;
+    readonly expr: {
+      readonly dice: GrantedAreaSaveDamageActionSpellInvocation["damageDice"];
+      readonly dieSize: GrantedAreaSaveDamageActionSpellInvocation["damageDieSize"];
+    };
   };
 };
 export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
@@ -6236,7 +6238,7 @@ export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly grantedAreaSaveDamageAction: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly lengthFeet: 15;
+    readonly lengthFeet: GrantedAreaSaveDamageActionSpellInvocation["coneLengthFeet"];
   };
   readonly ability: Extract<Ability, "dex">;
   readonly dc: DcSource;
