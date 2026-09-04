@@ -365,8 +365,54 @@ describe("objectLight static admission", () => {
         failedFact: "attachment",
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       }),
+      expect.objectContaining({
+        failedFact: "lightEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      }),
     ]);
   });
+
+  test.each([lightUnitId, continualFlameUnitId] as const)(
+    "reports an extra %s duration ending at its own ordinal",
+    (spellId) => {
+      const source = spellAdmissionSource(
+        syntheticObjectLight(
+          spellId,
+          (mechanics) => ({
+            ...mechanics,
+            duration:
+              mechanics.duration.kind === "timed"
+                ? {
+                    ...mechanics.duration,
+                    earlyEnd: [
+                      ...(mechanics.duration.earlyEnd ?? []),
+                      { kind: "caster_recasts_spell" as const },
+                    ],
+                  }
+                : mechanics.duration.kind === "permanent"
+                  ? {
+                      ...mechanics.duration,
+                      endsOn: [...(mechanics.duration.endsOn ?? []), "dispel"],
+                    }
+                  : mechanics.duration,
+          }),
+          `extra_ending_${spellId}`,
+        ),
+      );
+      const result = objectLightProfile.admitMechanics(mechanicsSource(source));
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toEqual([
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+        }),
+      ]);
+    },
+  );
 });
 
 describe("SRDINV70B deterministic object-light Spell Unit admission", () => {

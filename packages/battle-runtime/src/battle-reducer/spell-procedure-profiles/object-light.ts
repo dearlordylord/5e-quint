@@ -121,14 +121,20 @@ type ObjectLightMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
 >;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for ObjectLightVariant.
+const OBJECT_LIGHT_VARIANTS = [
+  "lightCantripObject",
+  "permanentTouchedObject",
+] as const;
+type ObjectLightVariant = (typeof OBJECT_LIGHT_VARIANTS)[number];
 type ObjectLightMechanicsFacts = SpellProcedureMechanicsFacts &
   (
     | {
-        readonly kind: "lightCantripObject";
+        readonly kind: (typeof OBJECT_LIGHT_VARIANTS)[0];
         readonly durationTicks: ElapsedTimeTicks;
         readonly maxObjectSize: typeof LIGHT_OBJECT_MAX_SIZE;
       }
-    | { readonly kind: "permanentTouchedObject" }
+    | { readonly kind: (typeof OBJECT_LIGHT_VARIANTS)[1] }
   ) & {
     readonly brightRadiusFeet: ReturnType<typeof movementFeet>;
     readonly dimAdditionalFeet: ReturnType<typeof movementFeet>;
@@ -243,8 +249,6 @@ function objectLightIssue(
   };
 }
 
-type ObjectLightVariant = "lightCantripObject" | "permanentTouchedObject";
-
 function objectLightVariant(
   mechanics: ObjectLightMechanics,
 ): ObjectLightVariant | undefined {
@@ -275,12 +279,15 @@ function objectLightVariant(
   return undefined;
 }
 
-function objectLightRepresentation(
-  mechanics: SpellMechanics,
-): mechanics is ObjectLightMechanics {
-  if (mechanics.family !== "activation") return false;
+function objectLightRepresentation(mechanics: SpellMechanics):
+  | {
+      readonly mechanics: ObjectLightMechanics;
+      readonly variant: ObjectLightVariant;
+    }
+  | undefined {
+  if (mechanics.family !== "activation") return undefined;
   const variant = objectLightVariant(mechanics);
-  if (variant === undefined) return false;
+  if (variant === undefined) return undefined;
   const hasHeader = mechanics.school === "evocation";
   const hasCastingRange =
     mechanics.castingTime.kind === "action" && mechanics.range.kind === "touch";
@@ -308,22 +315,9 @@ function objectLightRepresentation(
       { name: "variantDuration", present: hasVariantDuration },
       { name: "lightPhase", present: hasLightPhase },
     ],
-  });
-}
-
-function objectLightPhaseIsSupported(
-  phase: ActivationPhase,
-  variant: ObjectLightVariant,
-): boolean {
-  if (!objectLightDirectPhaseShellIsSupported(phase)) return false;
-  if (!objectLightAttachmentIsSupported(phase, variant)) return false;
-  const effect = phase.effects[0];
-  return (
-    effect?.kind === "emit_bright_and_dim_illumination" &&
-    effect.brightRadiusFeet === OBJECT_LIGHT_BRIGHT_RADIUS_FEET &&
-    effect.dimAdditionalFeet === OBJECT_LIGHT_DIM_ADDITIONAL_FEET &&
-    spellMechanicsObjectHasOnlyKeys(effect, OBJECT_LIGHT_EFFECT_FIELDS)
-  );
+  })
+    ? { mechanics, variant }
+    : undefined;
 }
 
 function objectLightDirectPhaseShellIsSupported(
@@ -384,11 +378,9 @@ function admitObjectLightMechanics(
   ObjectLightInvocation,
   ObjectLightAdmissionIssue
 > {
-  if (!objectLightRepresentation(source.mechanics))
-    return { tag: "notRepresented" };
-  const mechanics = source.mechanics;
-  const variant = objectLightVariant(mechanics);
-  if (variant === undefined) return { tag: "notRepresented" };
+  const representation = objectLightRepresentation(source.mechanics);
+  if (representation === undefined) return { tag: "notRepresented" };
+  const { mechanics, variant } = representation;
   const issues: Array<{
     readonly failedFact: ObjectLightFailedFact;
     readonly mechanicsPath: UnitMechanicsPath;
@@ -440,15 +432,16 @@ function admitObjectLightMechanics(
   if (!componentsSupported)
     pushIssue("components", spellMechanicsHeaderPath("components"));
 
-  let durationTicks: ElapsedTimeTicks | undefined;
+  const durationProjection =
+    variant === "lightCantripObject" && mechanics.duration.kind === "timed"
+      ? elapsedTimeTicksFromTimeSpanDuration(mechanics.duration.value)
+      : undefined;
+  const durationTicks =
+    durationProjection !== undefined && Result.isSuccess(durationProjection)
+      ? durationProjection.success
+      : undefined;
   if (variant === "lightCantripObject") {
     const duration = mechanics.duration;
-    const ending =
-      duration.kind === "timed" ? duration.earlyEnd?.[0] : undefined;
-    const projected =
-      duration.kind === "timed"
-        ? elapsedTimeTicksFromTimeSpanDuration(duration.value)
-        : undefined;
     if (
       duration.kind !== "timed" ||
       duration.value.unit !== "hour" ||
@@ -461,30 +454,47 @@ function admitObjectLightMechanics(
         duration.value,
         OBJECT_LIGHT_DURATION_VALUE_FIELDS,
       ) ||
-      projected === undefined ||
-      Result.isFailure(projected)
+      durationTicks === undefined
     )
       pushIssue("duration", spellDurationValuePath());
-    else durationTicks = projected.success;
-    if (
-      duration.kind !== "timed" ||
-      duration.earlyEnd?.length !== 1 ||
-      ending?.kind !== "caster_recasts_spell" ||
-      !spellMechanicsObjectHasOnlyKeys(ending, OBJECT_LIGHT_ENDING_FIELDS)
-    )
+    const endings = duration.kind === "timed" ? duration.earlyEnd : undefined;
+    if (endings === undefined || endings.length === 0) {
       pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
+    } else {
+      for (const [index, ending] of endings.entries()) {
+        if (
+          index > 0 ||
+          ending.kind !== "caster_recasts_spell" ||
+          !spellMechanicsObjectHasOnlyKeys(ending, OBJECT_LIGHT_ENDING_FIELDS)
+        )
+          pushIssue(
+            "durationEnding",
+            spellDurationEndingPath(PositiveInteger(index + 1)),
+          );
+      }
+    }
   } else {
     const duration = mechanics.duration;
     if (
       duration.kind !== "permanent" ||
-      duration.endsOn?.length !== 1 ||
-      duration.endsOn[0] !== "dispel" ||
       !spellMechanicsObjectHasOnlyKeys(
         duration,
         OBJECT_LIGHT_PERMANENT_DURATION_FIELDS,
       )
     )
-      pushIssue("duration", spellDurationEndingPath(PositiveInteger(1)));
+      pushIssue("duration", spellMechanicsHeaderPath("duration"));
+    const endings = duration.kind === "permanent" ? duration.endsOn : undefined;
+    if (endings === undefined || endings.length === 0) {
+      pushIssue("durationEnding", spellDurationEndingPath(PositiveInteger(1)));
+    } else {
+      for (const [index, ending] of endings.entries()) {
+        if (index > 0 || ending !== "dispel")
+          pushIssue(
+            "durationEnding",
+            spellDurationEndingPath(PositiveInteger(index + 1)),
+          );
+      }
+    }
   }
 
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, OBJECT_LIGHT_ROOT_FIELDS))
@@ -497,19 +507,33 @@ function admitObjectLightMechanics(
     }
     if (!objectLightDirectPhaseShellIsSupported(phase)) {
       pushIssue("phase", spellActivationPhasePath(ordinal));
-      continue;
     }
-    if (!objectLightPhaseIsSupported(phase, variant)) {
-      const attachmentSupported = objectLightAttachmentIsSupported(
-        phase,
-        variant,
-      );
+    if (phase.kind !== "direct") continue;
+    if (!objectLightAttachmentIsSupported(phase, variant))
+      pushIssue("attachment", spellActivationAttachmentPath(ordinal));
+    const effects = phase.effects;
+    if (effects === undefined || effects.length === 0) {
       pushIssue(
-        attachmentSupported ? "lightEffect" : "attachment",
-        attachmentSupported
-          ? spellActivationEffectPath(ordinal, PositiveInteger(1))
-          : spellActivationAttachmentPath(ordinal),
+        "lightEffect",
+        spellActivationEffectPath(ordinal, PositiveInteger(1)),
       );
+    } else {
+      for (const [effectIndex, effect] of effects.entries()) {
+        if (
+          effectIndex > 0 ||
+          effect.kind !== "emit_bright_and_dim_illumination" ||
+          effect.brightRadiusFeet !== OBJECT_LIGHT_BRIGHT_RADIUS_FEET ||
+          effect.dimAdditionalFeet !== OBJECT_LIGHT_DIM_ADDITIONAL_FEET ||
+          !spellMechanicsObjectHasOnlyKeys(effect, OBJECT_LIGHT_EFFECT_FIELDS)
+        )
+          pushIssue(
+            "lightEffect",
+            spellActivationEffectPath(
+              ordinal,
+              PositiveInteger(effectIndex + 1),
+            ),
+          );
+      }
     }
   }
 
@@ -757,13 +781,9 @@ function resolveObjectLight(
       ): fact is Extract<
         (typeof objectTarget.spatialFacts)[number],
         {
-          readonly kind:
-            | "spellObjectLightTarget"
-            | "spellDistantObjectLightTarget"
-            | "spellTouchedObjectTarget"
-            | "spellDistantTouchedObjectTarget";
+          readonly kind: ObjectLightTargetFactKind;
         }
-      > => objectLightTargetFactKinds.has(fact.kind),
+      > => OBJECT_LIGHT_TARGET_FACT_KINDS.some((kind) => kind === fact.kind),
     ),
     input.actorId,
     objectTarget.objectId,
@@ -877,7 +897,6 @@ const OBJECT_LIGHT_TARGET_FACT_KINDS = [
   "spellTouchedObjectTarget",
   "spellDistantTouchedObjectTarget",
 ] as const satisfies ReadonlyArray<ObjectLightTargetFact["kind"]>;
-const objectLightTargetFactKinds: ReadonlySet<string> = new Set(
-  OBJECT_LIGHT_TARGET_FACT_KINDS,
-);
+type ObjectLightTargetFactKind =
+  (typeof OBJECT_LIGHT_TARGET_FACT_KINDS)[number];
 import { spellInvocationResourceForCastOption } from "./profile.ts";
