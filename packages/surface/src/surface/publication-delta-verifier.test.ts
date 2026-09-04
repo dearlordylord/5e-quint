@@ -147,6 +147,66 @@ function fixtureArrayField(
   return field;
 }
 
+function fixtureJsonPointer(
+  value: unknown,
+  pointer: string,
+  label: string,
+): unknown {
+  if (!pointer.startsWith("/")) {
+    throw new Error(`Expected ${label} to be an absolute JSON pointer`);
+  }
+  return pointer
+    .slice(1)
+    .split("/")
+    .map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"))
+    .reduce<unknown>((current, segment) => {
+      if (Array.isArray(current)) {
+        const index = Number(segment);
+        if (!Number.isInteger(index) || index < 0 || index >= current.length) {
+          throw new Error(`Expected ${label} array index ${segment}`);
+        }
+        return current[index];
+      }
+      if (!isFixtureObject(current) || !(segment in current)) {
+        throw new Error(`Expected ${label} segment ${segment}`);
+      }
+      return current[segment];
+    }, value);
+}
+
+function fixtureClassifiedChanges(
+  certificate: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(
+        fixtureObjectField(
+          fixtureObjectField(certificate, "artifacts"),
+          "schema",
+        ),
+        "evidence",
+      ),
+      "graphDelta",
+    ),
+    "classifiedChanges",
+  );
+}
+
+function fixtureSingleClassificationPointer(
+  certificate: Record<string, unknown>,
+  classification: string,
+): string {
+  const change = fixtureSingleMatch(
+    fixtureArrayField(fixtureClassifiedChanges(certificate), classification),
+    `${classification} classification`,
+    () => true,
+  );
+  if (typeof change.pointer !== "string") {
+    throw new Error(`Expected ${classification} classification pointer`);
+  }
+  return change.pointer;
+}
+
 function fixtureLocalReferenceTargetIfPresent(
   schema: Record<string, unknown>,
   value: unknown,
@@ -299,6 +359,80 @@ function fixtureUnconditionalFlySpeed(
       );
       return Array.isArray(kind.enum) && kind.enum[0] === "fly";
     },
+  );
+}
+
+function fixtureLocalReferenceCount(
+  schema: Record<string, unknown>,
+  definitionPointer: string,
+): number {
+  const expectedReference = `#${definitionPointer}`;
+  let count = 0;
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (!isFixtureObject(value)) return;
+    for (const [key, child] of Object.entries(value)) {
+      if (key === "$ref" && child === expectedReference) count += 1;
+      visit(child);
+    }
+  };
+  visit(schema);
+  return count;
+}
+
+function fixtureLiveSpecificItemId(
+  schema: Record<string, unknown>,
+  certificate: Record<string, unknown>,
+): Record<string, unknown> {
+  const itemIdChanges = fixtureArrayField(
+    fixtureClassifiedChanges(certificate),
+    "unitIdItemId",
+  );
+  const liveOwners = itemIdChanges.flatMap((rawChange) => {
+    const change = fixtureObject(rawChange, "unitIdItemId classification");
+    if (typeof change.pointer !== "string") {
+      throw new Error("Expected unitIdItemId classification pointer");
+    }
+    const ownerSuffix = "/properties/itemId";
+    if (!change.pointer.endsWith(ownerSuffix)) return [];
+    const ownerPointer = change.pointer.slice(0, -ownerSuffix.length);
+    const owner = fixtureObject(
+      fixtureJsonPointer(schema, ownerPointer, "specific_item owner"),
+      "specific_item owner",
+    );
+    const properties = fixtureObjectField(owner, "properties");
+    const kind = fixtureLocalReferenceTarget(
+      schema,
+      properties.kind,
+      "specific_item discriminant",
+    );
+    const directDefinitionMatch = /^\/\$defs\/[^/]+$/u.test(ownerPointer);
+    const multiplyReferenced =
+      directDefinitionMatch &&
+      fixtureLocalReferenceCount(schema, ownerPointer) > 1;
+    return kind.type === "string" &&
+      Array.isArray(kind.enum) &&
+      kind.enum.length === 1 &&
+      kind.enum[0] === "specific_item" &&
+      multiplyReferenced
+      ? [change]
+      : [];
+  });
+  const liveOwner = fixtureSingleMatch(
+    liveOwners,
+    "multiply referenced specific_item owner classification",
+    () => true,
+  );
+  return fixtureObject(
+    fixtureJsonPointer(
+      schema,
+      String(liveOwner.pointer),
+      "live specific_item.itemId",
+    ),
+    "live specific_item.itemId",
   );
 }
 
@@ -1067,30 +1201,42 @@ describe("Surface publication delta verifier", () => {
 
   test("rejects tampering with a finite schema classification pointer", () => {
     const result = withFixture(
-      ({ certificatePath: fixturePath }) => {
+      (paths) => {
+        const fixturePath = paths.certificatePath;
         const certificate = fixtureObject(
           JSON.parse(readFileSync(fixturePath, "utf8")),
           "certificate",
         );
-        const classifiedChanges = fixtureObjectField(
-          fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(
-                fixtureObjectField(certificate, "artifacts"),
-                "schema",
-              ),
-              "evidence",
+        const schema = fixtureObject(
+          JSON.parse(
+            readFileSync(
+              join(paths.publicationDir, "srd-surface.schema.json"),
+              "utf8",
             ),
-            "graphDelta",
           ),
-          "classifiedChanges",
+          "schema",
         );
+        const classifiedChanges = fixtureClassifiedChanges(certificate);
         const flyOnlyHover = fixtureArrayField(
           classifiedChanges,
           "flyOnlyHover",
         );
         const first = fixtureObject(flyOnlyHover[0], "flyOnlyHover[0]");
-        first.pointer = "/$defs/SrdRecordUnion1052Encoded";
+        const originalPointer = first.pointer;
+        const wrongPointer = fixtureSingleClassificationPointer(
+          certificate,
+          "casterHealLinkRangeFeet",
+        );
+        fixtureJsonPointer(schema, wrongPointer, "wrong semantic schema node");
+        if (originalPointer === wrongPointer) {
+          throw new Error("Expected distinct Fly and caster-heal pointers");
+        }
+        first.pointer = wrongPointer;
+        if (first.pointer === originalPointer) {
+          throw new Error(
+            "Expected classification-pointer tampering to mutate",
+          );
+        }
         writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
       },
       { reviewMutatedCertificate: true },
@@ -1411,13 +1557,11 @@ describe("Surface publication delta verifier", () => {
           "schema",
         );
         const definitions = fixtureObjectField(schema, "$defs");
-        const itemId = fixtureObjectField(
-          fixtureObjectField(
-            fixtureObjectField(definitions, "SrdRecordUnion79Encoded"),
-            "properties",
-          ),
-          "itemId",
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+          "certificate",
         );
+        const itemId = fixtureLiveSpecificItemId(schema, certificate);
         definitions.UnreachableUnitIdLookalike = { ...itemId };
         Reflect.deleteProperty(itemId, "minLength");
         Reflect.deleteProperty(itemId, "pattern");
