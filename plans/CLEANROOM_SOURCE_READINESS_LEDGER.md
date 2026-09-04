@@ -23,19 +23,25 @@ This section is the sole mutable handoff for a new session.
 - Active landing unit: `integration/cleanroom-sr-04g` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
-  integration branch head `366cb1b39d74df90e2c59eab5d24457a861eb08a`
+  integration implementation checkpoint
+  `83f568febf6aed7b77e73198ed7aac1036b45731`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
-  `369912462`; current `master` tip
+  `369912462`; B3 save/activation admission reviewed tip
+  `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
+  `83f568febf6aed7b77e73198ed7aac1036b45731`; current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
   observation baseline is 99 complete, 22 partial, and 74 with no owner.
-- Clean unintegrated lanes: B3 at `f478cc7b2255c8837b0dc42bc73a44634b0f363a`
-  still has review findings for a path collision, a fabricated coordinate, a
-  dead `castLevel`, untyped keys, and duplicated constants; A4 at
-  `c8e75b922211b9ca6970895b49580d87cab1bc59` awaits review.
-- Next action: repair and re-review B3 to dual-axis convergence, review A4,
-  then integrate only each clean reviewed lane before assigning the remaining
-  profile batches.
+- B3 evidence: Standards and Spec/RAW review axes converged with no findings;
+  focused B3 plus shared admission tests passed 47/47, and Surface path tests
+  passed 6/6. A secondary registry/runtime run passed its 5 helper tests; its
+  other 64 tests stopped at the known incomplete-frontier
+  `admitMechanics is not a function` boundary before scenario assertions, so
+  no broader registry verification is claimed.
+- Clean unintegrated lane: A4 repair and re-review remain active. Record its
+  next tip only after the lane is clean and both review axes reconverge.
+- Next action: finish and re-review A4, then integrate only its clean reviewed
+  tip before assigning the remaining profile batches.
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -155,11 +161,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                 | State          |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration branch head `366cb1b39`; C2 integrated; exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence remain in progress | Active         |
-| `SR-04G-B3`     | #474 save/activation profile migration          | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-b3`; `work/sr04g-b3`              | `f478cc7b2` | Clean unintegrated tip; repair the five recorded review findings and repeat both review axes before integration                                                             | Repair pending |
-| `SR-04G-A4`     | #474 attack/direct/reaction profile migration   | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a4`; `work/sr04g-a4`              | `c8e75b922` | Clean unintegrated tip; complete both review axes before integration                                                                                                        | Review pending |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                         | State         |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration implementation checkpoint `83f568feb`; C2 and B3 integrated; remaining profile migration, exact path evidence, focused verification, and convergence remain in progress | Active        |
+| `SR-04G-A4`     | #474 attack/direct/reaction profile migration   | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-a4`; `work/sr04g-a4`              | `c8e75b922` | Repair and dual-axis re-review active; record the next clean reviewed tip before integration                                                                                        | Repair active |
 
 ## Landing discipline
 
