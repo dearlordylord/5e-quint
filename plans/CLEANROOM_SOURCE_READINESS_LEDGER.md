@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `cc4826a31a275162c4b794e8e798c8effd213a91`
+  `7920c5e00637bd91142a8dafc2fa6308869a18df`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -62,7 +62,10 @@ This section is the sole mutable handoff for a new session.
   is integrated by `a1ac97140f3e34915b9c6ec283cbf22a49486af0`; the
   directional-persistent-area admission reviewed tip
   `1162ed6b4d50dbae3622ac2c83b214b45efdfe7e` is integrated by
-  `cc4826a31a275162c4b794e8e798c8effd213a91`.
+  `cc4826a31a275162c4b794e8e798c8effd213a91`; the
+  magic-suppression-emanation admission reviewed tip
+  `9b57ca535ecbad7927bb59ab3a6099dbaf6298ab` is integrated by
+  `7920c5e00637bd91142a8dafc2fa6308869a18df`.
   Current `master` tip
   `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea` is synchronized by this
   integration merge. `SR-04G` remains Active and incomplete. The exact
@@ -252,6 +255,30 @@ This section is the sole mutable handoff for a new session.
   and gitleaks checks are not a QNT execution claim. No lifecycle, package,
   broad, registry, coverage, QNT, or MBT verification is claimed. The remaining
   10 legacy declarations prevent whole-package convergence.
+- Magic-suppression-emanation evidence: Luna max produced two bounded no-edit
+  checkpoints before Sol fallback implemented initial tip `dee06cd21`; exact
+  lease expansion `4e9d4c5ee1201151fe0c1eefe3617daecf248a42` added only the
+  canonical `magicSuppressionEmanation` procedure-execution projection field,
+  and repair tip `9b57ca535ecbad7927bb59ab3a6099dbaf6298ab` is integrated by
+  `7920c5e00`. Parse-once admission owns the exact local-RAW Action, Self, V/S/M
+  iron-filings, 1-hour Concentration, 10-foot Emanation, ongoing suppression,
+  suppressed-time-counting, and Artifact/deity exception facts. It accumulates
+  exact-path and actual-ordinal issues, retains the four non-executed operation
+  effects as exact unowned evidence, ignores authored spell and area-hole
+  identity, and passes no authored mechanics to execution. The exact normalized
+  exception tuple is source-derived once and threaded through facts,
+  invocation, canonical procedure execution, codec, and runtime filtering.
+  Required local RAW bounded discovery and direct corpus inspection completed.
+  Review round one returned three Standards findings and one overlapping
+  Spec/RAW exact-set finding; round two returned zero findings on both axes. The
+  focused static selection passed 13/13 with eight lifecycle tests skipped.
+  Four-root diagnostics reported zero leased-file errors; 21 unrelated baseline
+  diagnostics were excluded, as were the pre-expansion two leased-file errors
+  plus those same 21 baseline diagnostics. Scoped ESLint, Prettier, and diff
+  checks passed. Commit-hook inventory, lint-staged, and gitleaks checks are
+  incidental only. No lifecycle, package, broad, registry, coverage, QNT, or
+  MBT verification is claimed. The remaining nine legacy declarations prevent
+  whole-package convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -268,31 +295,19 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current integration-tip declaration audit retains exactly 10 legacy
-  top-level `SpellProcedureDeclaration` `admit` fields in nine files:
+  current integration-tip declaration audit retains exactly nine legacy
+  top-level `SpellProcedureDeclaration` `admit` fields in eight files:
   `creatureSizeChange`, `creatureSizeDecrease`,
   `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
   `controlledVerticalSuspension`, `spellCreatedHeldObject`,
-  `conditionImmunityAndTurnStartTemporaryHitPoints`, `ongoingSpellEnd`,
-  `magicSuppressionEmanation`, and `creatureTypeProtection`. The landed W9
-  directional-persistent-area lease is clear. The smallest coherent remaining
-  single-profile slice is W10 `magicSuppressionEmanation`, paired with its
-  existing focused Antimagic Field admission owner. Its clean
-  `work/sr04g-magic-suppression-emanation` branch and
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magic-suppression-emanation`
-  worktree start from exact W9 bookkeeping receipt
-  `2efce770ce2bdd2ec9a7372da21aa065325f1a57`. W10 owns
-  `magic-suppression-emanation.ts`,
-  `unit-profile-admission-antimagic-field.test.ts`, and only the
-  `magicSuppressionEmanation` invocation source-field line in
-  `battle-state-execution.ts` needed for mechanics-free execution. The lease
-  also owns only the `magicSuppressionEmanation` execution projection field in
-  `procedure-execution/spell-procedure-execution.ts`, because
-  `SpellExecutableExecutionOf<MagicSuppressionEmanationInvocation>` currently
-  drops the canonical admitted `exceptSources` policy; no other content in that
-  file is leased. No shared schema, registry, coverage-map, QNT, MBT, Surface
-  artifact, or unrelated runtime file is leased. Luna max produced two bounded
-  no-edit checkpoints, so Sol is the implementation fallback.
+  `conditionImmunityAndTurnStartTemporaryHitPoints`, `ongoingSpellEnd`, and
+  `creatureTypeProtection`. The landed W10 magic-suppression-emanation lease is
+  clear. W11's smallest coherent remaining single-profile slice is
+  `conditionImmunityAndTurnStartTemporaryHitPoints`, paired with the existing
+  focused Heroism admission owner; activate its exact lease from the W10
+  bookkeeping receipt before implementation. No shared schema, registry,
+  coverage-map, QNT, MBT, Surface artifact, or unrelated runtime file is
+  anticipated.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -427,10 +442,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                     | Worktree/branch                                                                                                                    | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                              | State  |
-| --------------- | ----------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                        | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                      | `dd1350f81` | Integration checkpoint `cc4826a31`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, and directional persistent area integrated; cumulative Surface publication delta certified; 10 top-level profile migrations remain | Active |
-| `SR-04G/W10`    | magic-suppression-emanation profile admission   | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-magic-suppression-emanation`; `work/sr04g-magic-suppression-emanation` | `2efce770c` | `magic-suppression-emanation.ts`, `unit-profile-admission-antimagic-field.test.ts`, only the `magicSuppressionEmanation` invocation source-field line in `battle-state-execution.ts`, and only the `magicSuppressionEmanation` execution projection field in `procedure-execution/spell-procedure-execution.ts` required to retain canonical admitted `exceptSources`; no other content in that file and no shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated runtime lease | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                             | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `7920c5e00`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, and magic suppression emanation integrated; cumulative Surface publication delta certified; nine top-level profile migrations remain | Active |
 
 ## Landing discipline
 
