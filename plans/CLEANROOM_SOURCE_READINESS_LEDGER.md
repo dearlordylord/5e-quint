@@ -304,10 +304,17 @@ This section is the sole mutable handoff for a new session.
   `creatureTypeProtection`. The landed W10 magic-suppression-emanation lease is
   clear. W11's smallest coherent remaining single-profile slice is
   `conditionImmunityAndTurnStartTemporaryHitPoints`, paired with the existing
-  focused Heroism admission owner; activate its exact lease from the W10
-  bookkeeping receipt before implementation. No shared schema, registry,
-  coverage-map, QNT, MBT, Surface artifact, or unrelated runtime file is
-  anticipated.
+  focused Heroism admission owner. Its clean
+  `work/sr04g-condition-immunity-turn-start-temporary-hit-points` branch and
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-condition-immunity-turn-start-temporary-hit-points`
+  worktree start from exact W10 bookkeeping receipt
+  `8cd46d491d5ce493fcdca6e2a45d4ed198cb2ea8`. W11 owns
+  `condition-immunity-turn-start-temporary-hit-points.ts`,
+  `unit-profile-admission-scalar-buff-and-heroism-spells.test.ts`, and only the
+  `conditionImmunityAndTurnStartTemporaryHitPoints` invocation source-field
+  line in `battle-state-execution.ts` required for mechanics-free execution.
+  No shared schema, registry, coverage-map, QNT, MBT, Surface artifact,
+  procedure-execution projection, or unrelated runtime file is leased.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -442,9 +449,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                             | State  |
-| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `7920c5e00`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, and magic suppression emanation integrated; cumulative Surface publication delta certified; nine top-level profile migrations remain | Active |
+| Checkpoint/unit | Ticket/slice                                                             | Owner                                     | Worktree/branch                                                                                                                                                                  | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                             | State  |
+| --------------- | ------------------------------------------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission                          | Codex orchestrator                        | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                                                                    | `dd1350f81` | Integration checkpoint `7920c5e00`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, and magic suppression emanation integrated; cumulative Surface publication delta certified; nine top-level profile migrations remain | Active |
+| `SR-04G/W11`    | condition-immunity and turn-start Temporary Hit Points profile admission | Codex orchestrator; implementer: Luna max | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-condition-immunity-turn-start-temporary-hit-points`; `work/sr04g-condition-immunity-turn-start-temporary-hit-points` | `8cd46d491` | `condition-immunity-turn-start-temporary-hit-points.ts`, `unit-profile-admission-scalar-buff-and-heroism-spells.test.ts`, and only the `conditionImmunityAndTurnStartTemporaryHitPoints` invocation source-field line in `battle-state-execution.ts`. No shared schema, registry, coverage-map, QNT, MBT, Surface artifact, procedure-execution projection, or unrelated runtime lease                                                  | Active |
 
 ## Landing discipline
 
