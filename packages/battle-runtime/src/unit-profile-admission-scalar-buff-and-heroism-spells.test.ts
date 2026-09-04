@@ -77,6 +77,10 @@ import type {
 import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
+import {
+  spellInvocationRequiresKnownWillingTarget,
+  spellTargetIsKnownWilling,
+} from "./battle-reducer/spells-targeting.ts";
 import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   applyCondition,
@@ -2438,7 +2442,6 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
     if (result.tag !== "supported") return;
     expect(result.admitted.facts).toMatchObject({
       level: 1,
-      durationTicks: 10,
       rangeFeet: 5,
       targetCount: { base: 1, baseLevel: 1, perSlotAboveBase: 1 },
       condition: "frightened",
@@ -2478,6 +2481,7 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
     if (invocation === undefined)
       throw new Error("Expected a Heroism invocation.");
     expect(invocation.targeting.maxTargets).toBe(3);
+    expect(invocation.targeting.requiredTargetDisposition).toBe("willing");
     expect(invocation.spell).not.toHaveProperty("mechanics");
     const { spell: _spell, ...procedureFacts } = invocation;
     const [conditionImmunity, turnStartTemporaryHitPoints] =
@@ -2498,10 +2502,18 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
         "synthetic-heroism-static",
       ),
     };
+    expect(spellInvocationRequiresKnownWillingTarget(execution)).toBe(true);
+    expect(
+      spellTargetIsKnownWilling(spellCasterId, spellTargetId, execution),
+    ).toBe(false);
     const encoded = Schema.encodeSync(
       conditionImmunityAndTurnStartTemporaryHitPointsProfile.executionSchema,
     )(execution);
     expect(encoded).not.toHaveProperty("mechanics");
+    expect(encoded).toHaveProperty(
+      "targeting.requiredTargetDisposition",
+      "willing",
+    );
     expect(
       Result.isSuccess(
         Schema.decodeUnknownResult(
@@ -2596,6 +2608,164 @@ describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () 
       ]),
     );
   });
+
+  test("accumulates nested failures for every duplicate role occurrence", () => {
+    const result =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          const immunity = mechanics.operations[0];
+          const temporaryHitPoints = mechanics.operations[1];
+          if (
+            immunity?.effect.kind !== "grant_condition_immunity" ||
+            temporaryHitPoints?.effect.kind !== "grant_temp_hp"
+          )
+            throw new Error("Expected canonical Heroism operations.");
+          const duplicateImmunity = structuredClone(immunity);
+          const duplicateTemporaryHitPoints =
+            structuredClone(temporaryHitPoints);
+          if (duplicateTemporaryHitPoints.effect.kind !== "grant_temp_hp")
+            throw new Error("Expected duplicated Temporary Hit Points effect.");
+          Reflect.set(immunity.effect, "condition", "charmed");
+          Reflect.set(immunity.effect, "syntheticExtra", true);
+          Reflect.set(duplicateImmunity.effect, "condition", "poisoned");
+          Reflect.set(duplicateImmunity.effect, "syntheticExtra", true);
+          Reflect.set(temporaryHitPoints.effect.amount, "kind", "per_level");
+          Reflect.set(temporaryHitPoints.effect, "syntheticExtra", true);
+          Reflect.set(
+            duplicateTemporaryHitPoints.effect.amount,
+            "kind",
+            "per_level",
+          );
+          Reflect.set(
+            duplicateTemporaryHitPoints.effect,
+            "syntheticExtra",
+            true,
+          );
+          Reflect.set(mechanics, "operations", [
+            immunity,
+            temporaryHitPoints,
+            duplicateImmunity,
+            duplicateTemporaryHitPoints,
+          ]);
+        }),
+      );
+    const issues = heroismIssueFacts(result);
+    for (const ordinal of [1, 3]) {
+      expect(issues).toEqual(
+        expect.arrayContaining([
+          {
+            failedFact: "immunityEffect",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+          {
+            failedFact: "immunityCondition",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+        ]),
+      );
+    }
+    for (const ordinal of [2, 4]) {
+      expect(issues).toEqual(
+        expect.arrayContaining([
+          {
+            failedFact: "temporaryHitPointsEffect",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+          {
+            failedFact: "temporaryHitPointsAmount",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+        ]),
+      );
+    }
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "immunityOperation",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+        {
+          failedFact: "temporaryHitPointsOperation",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+        ...[1, 2, 3, 4].map((ordinal) => ({
+          failedFact: "operationCount",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(ordinal)),
+        })),
+      ]),
+    );
+  });
+
+  test.each([
+    {
+      label: "before canonical roles",
+      arrange: (
+        conflict: HeroismOngoingMechanics["operations"][number],
+        canonical: HeroismOngoingMechanics["operations"],
+      ) => [conflict, ...canonical],
+      conflictOrdinal: 1,
+      canonicalTemporaryHitPointsOrdinal: 3,
+    },
+    {
+      label: "after reversed canonical roles",
+      arrange: (
+        conflict: HeroismOngoingMechanics["operations"][number],
+        canonical: HeroismOngoingMechanics["operations"],
+      ) => [...canonical].reverse().concat(conflict),
+      conflictOrdinal: 3,
+      canonicalTemporaryHitPointsOrdinal: 1,
+    },
+  ])(
+    "assigns conflicting passive Temporary Hit Points structurally $label",
+    ({ arrange, conflictOrdinal, canonicalTemporaryHitPointsOrdinal }) => {
+      const result =
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+          mutatedHeroismSource((mechanics) => {
+            const temporaryHitPoints = mechanics.operations[1];
+            if (temporaryHitPoints?.effect.kind !== "grant_temp_hp")
+              throw new Error("Expected Heroism Temporary Hit Points.");
+            const conflict = structuredClone(temporaryHitPoints);
+            Reflect.set(conflict, "trigger", { kind: "passive" });
+            Reflect.set(
+              mechanics,
+              "operations",
+              arrange(conflict, mechanics.operations),
+            );
+          }),
+        );
+      const issues = heroismIssueFacts(result);
+      expect(issues).toEqual(
+        expect.arrayContaining([
+          {
+            failedFact: "operationTrigger",
+            mechanicsPath: spellOngoingOperationPath(
+              PositiveInteger(conflictOrdinal),
+            ),
+          },
+          {
+            failedFact: "operationCount",
+            mechanicsPath: spellOngoingOperationPath(
+              PositiveInteger(conflictOrdinal),
+            ),
+          },
+        ]),
+      );
+      expect(issues).not.toContainEqual({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(
+          PositiveInteger(canonicalTemporaryHitPointsOrdinal),
+        ),
+      });
+    },
+  );
 
   test("rejects a direct target and malformed linear scaling structurally", () => {
     const directTarget =

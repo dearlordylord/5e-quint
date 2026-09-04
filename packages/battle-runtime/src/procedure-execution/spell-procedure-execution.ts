@@ -339,7 +339,9 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellProcedureExecuti
     readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
-    readonly targeting: SpellTargetListTargeting;
+    readonly targeting: SpellTargetListTargeting & {
+      readonly requiredTargetDisposition: "willing";
+    };
   };
 
 export type ConditionRemovalProtectionSpellProcedureExecution =

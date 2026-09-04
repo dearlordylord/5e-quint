@@ -1,4 +1,3 @@
-import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -88,7 +87,6 @@ import {
   spellDurationChildCoordinates,
   spellDurationChildFailedFact,
   spellDurationChildPath,
-  spellDurationTicksFromCanonicalValue,
   spellMechanicsObjectHasOnlyKeys,
   spellOngoingOperationOccurrences,
   spellOngoingOperationUnsupportedFacts,
@@ -117,7 +115,6 @@ type HeroismDuration = Extract<
   { readonly kind: "concentration" }
 >;
 type HeroismMechanicsFacts = SpellProcedureMechanicsFacts & {
-  readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: MovementFeetType;
   readonly targetCount: SaveGateTargetCountFacts;
   readonly condition: "frightened";
@@ -455,7 +452,7 @@ function inspectHeroismMechanics(
       ? mechanics.duration
       : undefined;
   const durationValue = duration?.upTo;
-  const durationTicks =
+  const durationSupported =
     durationValue !== undefined &&
     durationValue.unit === "minute" &&
     durationValue.amount === HEROISM_DURATION_MINUTES &&
@@ -464,15 +461,14 @@ function inspectHeroismMechanics(
       durationValue,
       HEROISM_DURATION_VALUE_FIELDS,
     )
-      ? spellDurationTicksFromCanonicalValue(durationValue)
-      : undefined;
+      ? true
+      : false;
   if (
     duration === undefined ||
     !spellMechanicsObjectHasOnlyKeys(duration, HEROISM_DURATION_FIELDS)
   )
     push("duration", spellMechanicsHeaderPath("duration"));
-  if (durationTicks === undefined)
-    push("durationValue", spellDurationValuePath());
+  if (!durationSupported) push("durationValue", spellDurationValuePath());
   for (const child of spellDurationChildCoordinates(mechanics.duration))
     push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
 
@@ -522,32 +518,82 @@ function inspectHeroismMechanics(
     );
 
   const occurrences = spellOngoingOperationOccurrences(mechanics);
-  const immunityCandidates = occurrences.filter(
-    ({ operation }) =>
-      operation.trigger.kind === "passive" ||
+  const scoredOccurrences = occurrences.map((occurrence) => {
+    const { operation } = occurrence;
+    const immunityEffectWitness =
       operation.effect.kind === "grant_condition_immunity" ||
-      ("condition" in operation.effect &&
-        operation.effect.condition === "frightened"),
+      "condition" in operation.effect;
+    const temporaryHitPointsEffectWitness =
+      operation.effect.kind === "grant_temp_hp" || "amount" in operation.effect;
+    const validTemporaryHitPointsAmount =
+      "amount" in operation.effect &&
+      typeof operation.effect.amount === "object" &&
+      operation.effect.amount !== null &&
+      hasHeroismTemporaryHitPointsAmount(operation.effect.amount);
+    return {
+      occurrence,
+      immunityEffectWitness,
+      temporaryHitPointsEffectWitness,
+      immunityScore:
+        (operation.effect.kind === "grant_condition_immunity" ? 2 : 0) +
+        ("condition" in operation.effect &&
+        operation.effect.condition === "frightened"
+          ? 1
+          : 0) +
+        (operation.trigger.kind === "passive" ? 1 : 0),
+      temporaryHitPointsScore:
+        (operation.effect.kind === "grant_temp_hp" ? 2 : 0) +
+        (validTemporaryHitPointsAmount ? 1 : 0) +
+        (operation.trigger.kind === "on_attached_turn_start" ? 1 : 0),
+    };
+  });
+  const immunityCandidates = scoredOccurrences.filter(
+    ({ immunityScore }) => immunityScore > 0,
   );
-  const temporaryHitPointsCandidates = occurrences.filter(
-    ({ operation }) =>
-      operation.trigger.kind === "on_attached_turn_start" ||
-      operation.effect.kind === "grant_temp_hp" ||
-      ("amount" in operation.effect &&
-        typeof operation.effect.amount === "object" &&
-        operation.effect.amount !== null &&
-        hasHeroismTemporaryHitPointsAmount(operation.effect.amount)),
+  const temporaryHitPointsCandidates = scoredOccurrences.filter(
+    ({ temporaryHitPointsScore }) => temporaryHitPointsScore > 0,
+  );
+  const roleAssignments = immunityCandidates.flatMap((immunity) =>
+    temporaryHitPointsCandidates.flatMap((temporaryHitPoints) =>
+      immunity.occurrence.ordinal === temporaryHitPoints.occurrence.ordinal
+        ? []
+        : [
+            {
+              immunity,
+              temporaryHitPoints,
+              score:
+                immunity.immunityScore +
+                temporaryHitPoints.temporaryHitPointsScore,
+            },
+          ],
+    ),
+  );
+  const highestRoleAssignmentScore = Math.max(
+    ...roleAssignments.map(({ score }) => score),
+  );
+  const highestRoleAssignments = roleAssignments.filter(
+    ({ score }) => score === highestRoleAssignmentScore,
+  );
+  const highestImmunityOrdinals = new Set(
+    highestRoleAssignments.map(
+      ({ immunity: candidate }) => candidate.occurrence.ordinal,
+    ),
+  );
+  const highestTemporaryHitPointsOrdinals = new Set(
+    highestRoleAssignments.map(
+      ({ temporaryHitPoints: candidate }) => candidate.occurrence.ordinal,
+    ),
   );
   const immunity =
-    immunityCandidates.length === 1 ? immunityCandidates[0] : undefined;
+    highestImmunityOrdinals.size === 1
+      ? highestRoleAssignments[0]?.immunity.occurrence
+      : undefined;
   const temporaryHitPoints =
-    temporaryHitPointsCandidates.length === 1
-      ? temporaryHitPointsCandidates[0]
+    highestTemporaryHitPointsOrdinals.size === 1
+      ? highestRoleAssignments[0]?.temporaryHitPoints.occurrence
       : undefined;
   const rolesAreDistinct =
-    immunity !== undefined &&
-    temporaryHitPoints !== undefined &&
-    immunity.ordinal !== temporaryHitPoints.ordinal;
+    immunity !== undefined && temporaryHitPoints !== undefined;
 
   for (const occurrence of occurrences) {
     const operationPath = spellOngoingOperationPath(occurrence.ordinal);
@@ -571,73 +617,96 @@ function inspectHeroismMechanics(
         operationPath,
       );
     if (
-      !immunityCandidates.includes(occurrence) &&
-      !temporaryHitPointsCandidates.includes(occurrence)
+      !immunityCandidates.some(
+        (candidate) => candidate.occurrence.ordinal === occurrence.ordinal,
+      ) &&
+      !temporaryHitPointsCandidates.some(
+        (candidate) => candidate.occurrence.ordinal === occurrence.ordinal,
+      )
     )
       push("operationCount", operationPath);
   }
   if (immunity === undefined)
     push("immunityOperation", spellMechanicsRootPath());
-  for (const duplicate of immunityCandidates.slice(1))
-    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
+  for (const duplicate of immunityCandidates.filter(
+    ({ occurrence }) => occurrence.ordinal !== immunity?.ordinal,
+  ))
+    push(
+      "operationCount",
+      spellOngoingOperationPath(duplicate.occurrence.ordinal),
+    );
   if (temporaryHitPoints === undefined)
     push("temporaryHitPointsOperation", spellMechanicsRootPath());
-  for (const duplicate of temporaryHitPointsCandidates.slice(1))
-    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
+  for (const duplicate of temporaryHitPointsCandidates.filter(
+    ({ occurrence }) =>
+      occurrence.ordinal !== temporaryHitPoints?.ordinal &&
+      occurrence.ordinal !== immunity?.ordinal,
+  ))
+    push(
+      "operationCount",
+      spellOngoingOperationPath(duplicate.occurrence.ordinal),
+    );
   if (!rolesAreDistinct) push("operationCount", spellMechanicsRootPath());
 
-  if (immunity !== undefined) {
-    const path = spellOngoingOperationPath(immunity.ordinal);
-    const effectPath = spellOngoingOperationEffectPath(immunity.ordinal);
+  const immunityInspections = scoredOccurrences.filter(
+    ({ occurrence, immunityEffectWitness }) =>
+      immunityEffectWitness || occurrence.ordinal === immunity?.ordinal,
+  );
+  for (const inspection of immunityInspections) {
+    const { occurrence } = inspection;
+    const path = spellOngoingOperationPath(occurrence.ordinal);
+    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
     if (
-      immunity.operation.trigger.kind !== "passive" ||
+      occurrence.operation.trigger.kind !== "passive" ||
       !spellMechanicsObjectHasOnlyKeys(
-        immunity.operation.trigger,
+        occurrence.operation.trigger,
         HEROISM_TRIGGER_FIELDS,
       )
     )
       push("operationTrigger", path);
-    if (immunity.operation.effect.kind !== "grant_condition_immunity")
+    if (occurrence.operation.effect.kind !== "grant_condition_immunity")
       push("immunityEffect", effectPath);
     else {
       if (
         !spellMechanicsObjectHasOnlyKeys(
-          immunity.operation.effect,
+          occurrence.operation.effect,
           HEROISM_IMMUNITY_EFFECT_FIELDS,
         )
       )
         push("immunityEffect", effectPath);
-      if (immunity.operation.effect.condition !== "frightened")
+      if (occurrence.operation.effect.condition !== "frightened")
         push("immunityCondition", effectPath);
     }
   }
-  if (temporaryHitPoints !== undefined) {
-    const path = spellOngoingOperationPath(temporaryHitPoints.ordinal);
-    const effectPath = spellOngoingOperationEffectPath(
-      temporaryHitPoints.ordinal,
-    );
+  const temporaryHitPointsInspections = scoredOccurrences.filter(
+    ({ occurrence, temporaryHitPointsEffectWitness }) =>
+      temporaryHitPointsEffectWitness ||
+      occurrence.ordinal === temporaryHitPoints?.ordinal,
+  );
+  for (const inspection of temporaryHitPointsInspections) {
+    const { occurrence } = inspection;
+    const path = spellOngoingOperationPath(occurrence.ordinal);
+    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
     if (
-      temporaryHitPoints.operation.trigger.kind !== "on_attached_turn_start" ||
+      occurrence.operation.trigger.kind !== "on_attached_turn_start" ||
       !spellMechanicsObjectHasOnlyKeys(
-        temporaryHitPoints.operation.trigger,
+        occurrence.operation.trigger,
         HEROISM_TRIGGER_FIELDS,
       )
     )
       push("operationTrigger", path);
-    if (temporaryHitPoints.operation.effect.kind !== "grant_temp_hp")
+    if (occurrence.operation.effect.kind !== "grant_temp_hp")
       push("temporaryHitPointsEffect", effectPath);
     else {
       if (
         !spellMechanicsObjectHasOnlyKeys(
-          temporaryHitPoints.operation.effect,
+          occurrence.operation.effect,
           HEROISM_TEMP_HP_EFFECT_FIELDS,
         )
       )
         push("temporaryHitPointsEffect", effectPath);
       if (
-        !hasHeroismTemporaryHitPointsAmount(
-          temporaryHitPoints.operation.effect.amount,
-        )
+        !hasHeroismTemporaryHitPointsAmount(occurrence.operation.effect.amount)
       )
         push("temporaryHitPointsAmount", effectPath);
     }
@@ -649,7 +718,7 @@ function inspectHeroismMechanics(
   if (unsupported !== undefined)
     return { tag: "unsupported", issues: unsupported };
   if (
-    durationTicks === undefined ||
+    !durationSupported ||
     targetCount === null ||
     !rolesAreDistinct ||
     immunity === undefined ||
@@ -665,7 +734,6 @@ function inspectHeroismMechanics(
     tag: "parsed",
     facts: {
       ...source.spellDefinitionRuleFacts,
-      durationTicks,
       rangeFeet: movementFeet(5),
       targetCount,
       condition: "frightened",
@@ -764,6 +832,7 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
             kind: "targetList",
             minTargets: 1,
             maxTargets,
+            requiredTargetDisposition: "willing",
           },
           activeEffects: [
             {
@@ -960,6 +1029,7 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Number,
+        requiredTargetDisposition: Schema.Literal("willing"),
       }),
       activeEffects: Schema.Tuple([
         ConditionImmunityTemplateSchema,
