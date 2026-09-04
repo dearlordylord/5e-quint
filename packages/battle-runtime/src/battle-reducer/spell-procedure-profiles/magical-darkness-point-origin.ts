@@ -1,41 +1,43 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
-//
-// The magicalDarknessPointOrigin Spell Procedure Profile: action-time Spell
-// Slot casting creates a caster-owned Concentration Sphere of magical
-// Darkness. The runtime owns Spell Slot spending, Concentration duration,
-// caller-supplied point-origin Sphere identity, magical Darkness sight and
-// nonmagical-light projection, overlap dispel of tracked spell-created light,
-// and cleanup. The object-origin Emanation branch remains a separate
-// object-origin spell-area boundary.
-//
-// RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Darkness": Action;
-//     60 feet; Concentration up to 10 minutes; magical Darkness spreads from
-//     a point within range and fills a 15-foot-radius Sphere; Darkvision can't
-//     see through it; nonmagical light can't illuminate it; overlapping Bright
-//     Light or Dim Light created by a spell of level 2 or lower is dispelled.
-//   - UBIQUITOUS_LANGUAGE.md: Magic Action, Concentration, Spell Slot, Spell
-//     Invocation, Area of Effect/Sphere, Darkness, Heavily Obscured,
-//     Darkvision, Bright Light, Dim Light, and Illumination.
-
 import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import { Result } from "effect";
+  elapsedTimeTicks,
+  ELAPSED_TIME_TICKS_PER_MINUTE,
+  ElapsedTimeTicksSchema,
+} from "@dnd/shared/elapsed-time";
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  movementFeet,
+  PositiveInteger,
+  type MovementFeet as MovementFeetType,
+} from "@dnd/shared/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalEffectPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
+import { Match, Schema } from "effect";
 
 import {
   type BattleResolutionResult,
+  type BattleSpellExecutionSource,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  parseBattleSpellEffectLevel,
   BattleSpellEffectLevel,
+  parseBattleSpellEffectLevel,
 } from "../spells-effective-level.ts";
+import {
+  LeveledSpellInvocationResourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+} from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveMagicalDarknessPointOriginSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -43,16 +45,30 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  MovementFeet,
-  PreparedSpellAccessSchema,
-  LeveledSpellInvocationResourceSchema,
-} from "../codec-building-blocks.ts";
+  spellMechanicsObjectHasOnlyKeys,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
+  spellDurationValueEvidencePaths,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 type MagicalDarknessPointOriginSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -60,34 +76,504 @@ type MagicalDarknessPointOriginSpellInvocation = Extract<
 >;
 type MagicalDarknessPointOriginResolveInput =
   SpellProcedureProfileResolveInput<MagicalDarknessPointOriginSpellInvocation>;
-type MagicalDarknessPointOriginProfileShape = {
+type MagicalDarknessPointOriginMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+type MagicalDarknessPointOriginOperation =
+  MagicalDarknessPointOriginMechanics["operations"][number];
+type MagicalDarknessPointOriginDuration = Extract<
+  MagicalDarknessPointOriginMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
+
+const MAGICAL_DARKNESS_LEVEL = 2 as const;
+const MAGICAL_DARKNESS_RANGE_FEET = 60 as const;
+const MAGICAL_DARKNESS_DURATION_MINUTES = 10 as const;
+const MAGICAL_DARKNESS_RADIUS_FEET = 15 as const;
+const MAGICAL_DARKNESS_DISPEL_LIGHT_MAX_SPELL_LEVEL = 2 as const;
+const MAGICAL_DARKNESS_MATERIAL = "bat fur and a piece of coal" as const;
+
+type MagicalDarknessPointOriginMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly durationTicks: ElapsedTimeTicks;
-  readonly rangeFeet: number;
-  readonly radiusFeet: number;
+  readonly rangeFeet: MovementFeetType;
+  readonly radiusFeet: MovementFeetType;
   readonly dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel;
 };
 
-const MAGICAL_OBSCUREMENT_AREA_STARTING_LEVEL = 2;
-const MAGICAL_OBSCUREMENT_AREA_RANGE_FEET = 60;
-const MAGICAL_OBSCUREMENT_AREA_DURATION_MINUTES = 10;
-const MAGICAL_OBSCUREMENT_AREA_OPERATION_COUNT = 2;
-const MAGICAL_OBSCUREMENT_AREA_RADIUS_FEET = 15;
-const MAGICAL_OBSCUREMENT_AREA_DISPELLED_ILLUMINATION_MAX_SPELL_LEVEL = 2;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for MagicalDarknessPointOriginFailedFact.
+const MAGICAL_DARKNESS_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "attachment",
+  "initialPhase",
+  "authoredConditionalEffects",
+  "operationCount",
+  "darknessOperation",
+  "darknessEffect",
+  "dispelLightOperation",
+  "dispelLightEffect",
+] as const;
+type MagicalDarknessPointOriginFailedFact =
+  (typeof MAGICAL_DARKNESS_FAILED_FACTS)[number];
+type MagicalDarknessPointOriginAdmissionIssue = SpellProcedureAdmissionIssue<
+  "magicalDarknessPointOrigin",
+  MagicalDarknessPointOriginFailedFact,
+  UnitMechanicsPath
+>;
 
-function admitMagicalDarknessPointOrigin(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly MagicalDarknessPointOriginSpellInvocation[] {
-  const magicalObscurement = magicalDarknessPointOriginSpell(spell);
-  if (magicalObscurement === null) {
-    return [];
+const ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "initialPhase",
+  "operations",
+  "authoredConditionalEffects",
+] as const satisfies ReadonlyArray<keyof MagicalDarknessPointOriginMechanics>;
+const RANGE_FIELDS = ["kind", "feet"] as const;
+const COMPONENT_FIELDS = ["v", "s", "m"] as const;
+const CASTING_TIME_FIELDS = ["kind"] as const;
+const DURATION_FIELDS = ["kind", "upTo", "earlyEnd"] as const;
+const DURATION_VALUE_FIELDS = [
+  "unit",
+  "amount",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<
+  keyof MagicalDarknessPointOriginDuration["upTo"]
+>;
+const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
+const AREA_FIELDS = ["kind", "origin", "shape"] as const;
+const ORIGIN_FIELDS = ["kind"] as const;
+const SHAPE_FIELDS = ["kind", "radiusFeet"] as const;
+const OPERATION_FIELDS = ["trigger", "effect"] as const;
+const TRIGGER_FIELDS = ["kind"] as const;
+const DARKNESS_EFFECT_FIELDS = ["kind"] as const;
+const DISPEL_LIGHT_EFFECT_FIELDS = ["kind", "maxSpellLevel"] as const;
+
+function magicalDarknessPointOriginIssue(
+  failedFact: MagicalDarknessPointOriginFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): MagicalDarknessPointOriginAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "magicalDarknessPointOrigin",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported magicalDarknessPointOrigin mechanics fact: ${failedFact}.`,
+  };
+}
+
+function magicalDarknessPointOriginRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is MagicalDarknessPointOriginMechanics {
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "ongoing_effect" }, (ongoing) => {
+      const area =
+        ongoing.attachment.kind === "hole" &&
+        ongoing.attachment.value.kind === "area"
+          ? ongoing.attachment.value
+          : undefined;
+      const hasDarknessEffect = ongoing.operations.some(
+        ({ effect }) => effect.kind === "area_is_magical_darkness",
+      );
+      const hasDispelLightEffect = ongoing.operations.some(
+        ({ effect }) =>
+          effect.kind === "end_overlapping_spell_created_bright_or_dim_light",
+      );
+      return spellProcedureHasRedundantSignature({
+        kind: "oneOfFiveWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "header",
+            present:
+              ongoing.level === MAGICAL_DARKNESS_LEVEL &&
+              ongoing.school === "evocation" &&
+              ongoing.castingTime.kind === "action",
+          },
+          {
+            name: "rangeAndComponents",
+            present:
+              ongoing.range.kind === "point" &&
+              ongoing.range.feet === MAGICAL_DARKNESS_RANGE_FEET &&
+              ongoing.components.v === true &&
+              ongoing.components.s === false &&
+              ongoing.components.m === MAGICAL_DARKNESS_MATERIAL,
+          },
+          {
+            name: "duration",
+            present:
+              ongoing.duration.kind === "concentration" &&
+              ongoing.duration.upTo.unit === "minute" &&
+              ongoing.duration.upTo.amount ===
+                MAGICAL_DARKNESS_DURATION_MINUTES,
+          },
+          {
+            name: "pointOriginSphere",
+            present:
+              area?.origin.kind === "point_within_range" &&
+              area.shape.kind === "sphere" &&
+              area.shape.radiusFeet === MAGICAL_DARKNESS_RADIUS_FEET,
+          },
+          {
+            name: "operations",
+            present: hasDarknessEffect && hasDispelLightEffect,
+          },
+        ],
+      });
+    }),
+    Match.whenOr(
+      { family: "modal_ongoing_effect" },
+      { family: "activation" },
+      { family: "modal_activation" },
+      { family: "triggered_reaction" },
+      { family: "passive_hit_intercept" },
+      { family: "anchored_trigger" },
+      { family: "magic_circle_ward" },
+      { family: "stone_merge" },
+      { family: "glyph_warding" },
+      { family: "spawned_creature" },
+      { family: "reanimated_creature" },
+      { family: "templated_multi_spawn" },
+      { family: "object_repair" },
+      { family: "minor_magic_effect_menu" },
+      () => false,
+    ),
+    Match.exhaustive,
+  );
+}
+
+type MagicalDarknessPointOriginInspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly [
+        {
+          readonly failedFact: MagicalDarknessPointOriginFailedFact;
+          readonly mechanicsPath: UnitMechanicsPath;
+        },
+        ...Array<{
+          readonly failedFact: MagicalDarknessPointOriginFailedFact;
+          readonly mechanicsPath: UnitMechanicsPath;
+        }>,
+      ];
+    }
+  | {
+      readonly tag: "parsed";
+      readonly facts: MagicalDarknessPointOriginMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
+
+function operationShellIsSupported(
+  operation: MagicalDarknessPointOriginOperation | undefined,
+): boolean {
+  return (
+    operation !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(operation, OPERATION_FIELDS) &&
+    operation.trigger.kind === "passive" &&
+    spellMechanicsObjectHasOnlyKeys(operation.trigger, TRIGGER_FIELDS)
+  );
+}
+
+function darknessEffectIsSupported(
+  operation: MagicalDarknessPointOriginOperation | undefined,
+): boolean {
+  return (
+    operation?.effect.kind === "area_is_magical_darkness" &&
+    spellMechanicsObjectHasOnlyKeys(operation.effect, DARKNESS_EFFECT_FIELDS)
+  );
+}
+
+function dispelLightEffectLevel(
+  operation: MagicalDarknessPointOriginOperation | undefined,
+): BattleSpellEffectLevel | undefined {
+  if (
+    operation?.effect.kind !==
+      "end_overlapping_spell_created_bright_or_dim_light" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      operation.effect,
+      DISPEL_LIGHT_EFFECT_FIELDS,
+    )
+  )
+    return undefined;
+  return (
+    parseBattleSpellEffectLevel(operation.effect.maxSpellLevel) ?? undefined
+  );
+}
+
+function magicalDarknessPointOriginEvidence(
+  darknessOrdinal: PositiveInteger,
+  dispelLightOrdinal: PositiveInteger,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      spellDurationValuePath(),
+      spellOngoingAttachmentPath(),
+      spellOngoingOperationPath(darknessOrdinal),
+      spellOngoingOperationEffectPath(darknessOrdinal),
+      spellOngoingOperationPath(dispelLightOrdinal),
+      spellOngoingOperationEffectPath(dispelLightOrdinal),
+    ],
+    unowned: [],
+  };
+}
+
+function inspectMagicalDarknessPointOriginMechanics(
+  source: SpellMechanicsAdmissionSource,
+): MagicalDarknessPointOriginInspection {
+  if (!magicalDarknessPointOriginRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const issues: Array<{
+    readonly failedFact: MagicalDarknessPointOriginFailedFact;
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const pushIssue = (
+    failedFact: MagicalDarknessPointOriginFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    pushIssue("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== MAGICAL_DARKNESS_LEVEL)
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "evocation")
+    pushIssue("school", spellMechanicsHeaderPath("school"));
+  if (
+    mechanics.range.kind !== "point" ||
+    typeof mechanics.range.feet !== "number" ||
+    mechanics.range.feet !== MAGICAL_DARKNESS_RANGE_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+  )
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== false ||
+    mechanics.components.m !== MAGICAL_DARKNESS_MATERIAL ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+  ) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+    for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+      pushIssue("components", path);
+  }
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+
+  if (mechanics.duration.kind !== "concentration") {
+    pushIssue("duration", spellMechanicsHeaderPath("duration"));
+    for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+      pushIssue("durationValue", path);
+    for (const child of spellDurationChildCoordinates(mechanics.duration))
+      pushIssue(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      );
+  } else {
+    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
+      pushIssue("duration", spellMechanicsHeaderPath("duration"));
+    if (
+      mechanics.duration.upTo.unit !== "minute" ||
+      mechanics.duration.upTo.amount !== MAGICAL_DARKNESS_DURATION_MINUTES ||
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.duration.upTo,
+        DURATION_VALUE_FIELDS,
+      )
+    )
+      pushIssue("durationValue", spellDurationValuePath());
+    for (const child of spellDurationChildCoordinates(mechanics.duration))
+      pushIssue(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      );
   }
 
+  const attachment = mechanics.attachment;
+  if (
+    attachment.kind !== "hole" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment, ATTACHMENT_FIELDS) ||
+    attachment.value.kind !== "area" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment.value, AREA_FIELDS) ||
+    attachment.value.origin.kind !== "point_within_range" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment.value.origin, ORIGIN_FIELDS) ||
+    attachment.value.shape.kind !== "sphere" ||
+    !spellMechanicsObjectHasOnlyKeys(attachment.value.shape, SHAPE_FIELDS) ||
+    typeof attachment.value.shape.radiusFeet !== "number" ||
+    attachment.value.shape.radiusFeet !== MAGICAL_DARKNESS_RADIUS_FEET
+  )
+    pushIssue("attachment", spellOngoingAttachmentPath());
+  if (mechanics.initialPhase !== undefined)
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
+    pushIssue(
+      "authoredConditionalEffects",
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+    );
+
+  const darknessIndex = mechanics.operations.findIndex(
+    ({ effect }) => effect.kind === "area_is_magical_darkness",
+  );
+  const dispelLightIndex = mechanics.operations.findIndex(
+    ({ effect }) =>
+      effect.kind === "end_overlapping_spell_created_bright_or_dim_light",
+  );
+  const darknessOrdinal = PositiveInteger(
+    darknessIndex >= 0 ? darknessIndex + 1 : mechanics.operations.length + 1,
+  );
+  const dispelLightOrdinal = PositiveInteger(
+    dispelLightIndex >= 0
+      ? dispelLightIndex + 1
+      : mechanics.operations.length + 1,
+  );
+  const darknessOperation =
+    darknessIndex >= 0 ? mechanics.operations[darknessIndex] : undefined;
+  const dispelLightOperation =
+    dispelLightIndex >= 0 ? mechanics.operations[dispelLightIndex] : undefined;
+
+  for (const [index] of mechanics.operations.entries()) {
+    if (index !== darknessIndex && index !== dispelLightIndex)
+      pushIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+  }
+  for (
+    let absentIndex = mechanics.operations.length;
+    absentIndex < 2;
+    absentIndex += 1
+  )
+    pushIssue(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(absentIndex + 1)),
+    );
+  if (!operationShellIsSupported(darknessOperation))
+    pushIssue("darknessOperation", spellOngoingOperationPath(darknessOrdinal));
+  if (!darknessEffectIsSupported(darknessOperation))
+    pushIssue(
+      "darknessEffect",
+      spellOngoingOperationEffectPath(darknessOrdinal),
+    );
+  if (!operationShellIsSupported(dispelLightOperation))
+    pushIssue(
+      "dispelLightOperation",
+      spellOngoingOperationPath(dispelLightOrdinal),
+    );
+  const maxSpellLevel = dispelLightEffectLevel(dispelLightOperation);
+  if (maxSpellLevel !== MAGICAL_DARKNESS_DISPEL_LIGHT_MAX_SPELL_LEVEL)
+    pushIssue(
+      "dispelLightEffect",
+      spellOngoingOperationEffectPath(dispelLightOrdinal),
+    );
+
+  const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  if (failures !== undefined) return { tag: "unsupported", issues: failures };
+
+  if (
+    mechanics.range.kind !== "point" ||
+    typeof mechanics.range.feet !== "number" ||
+    mechanics.duration.kind !== "concentration" ||
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "area" ||
+    attachment.value.shape.kind !== "sphere" ||
+    typeof attachment.value.shape.radiusFeet !== "number" ||
+    maxSpellLevel === undefined
+  )
+    return {
+      tag: "unsupported",
+      issues: [
+        {
+          failedFact: "mechanics",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+      ],
+    };
+
+  return {
+    tag: "parsed",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      durationTicks: elapsedTimeTicks(
+        mechanics.duration.upTo.amount * ELAPSED_TIME_TICKS_PER_MINUTE,
+      ),
+      rangeFeet: movementFeet(mechanics.range.feet),
+      radiusFeet: movementFeet(attachment.value.shape.radiusFeet),
+      dispelledSpellCreatedLightMaxSpellLevel: maxSpellLevel,
+    },
+    evidence: magicalDarknessPointOriginEvidence(
+      darknessOrdinal,
+      dispelLightOrdinal,
+    ),
+  };
+}
+
+function admitMagicalDarknessPointOriginMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "magicalDarknessPointOrigin",
+  MagicalDarknessPointOriginMechanicsFacts,
+  MagicalDarknessPointOriginSpellInvocation,
+  MagicalDarknessPointOriginAdmissionIssue
+> {
+  return Match.value(inspectMagicalDarknessPointOriginMechanics(source)).pipe(
+    Match.when({ tag: "notRepresented" }, () => ({
+      tag: "notRepresented" as const,
+    })),
+    Match.when({ tag: "unsupported" }, ({ issues }) => ({
+      tag: "unsupported" as const,
+      issues: spellProcedureMapNonEmpty(
+        issues,
+        ({ failedFact, mechanicsPath }) =>
+          magicalDarknessPointOriginIssue(failedFact, mechanicsPath),
+      ),
+    })),
+    Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
+      tag: "supported" as const,
+      admitted: {
+        binding: "ready" as const,
+        procedure: "magicalDarknessPointOrigin" as const,
+        facts,
+        evidence,
+        admit: (
+          spell: BattleSpellExecutionSource,
+          ctx: SpellAdmissionContext,
+        ) => admitMagicalDarknessPointOrigin(spell, ctx, facts),
+      },
+    })),
+    Match.exhaustive,
+  );
+}
+
+function admitMagicalDarknessPointOrigin(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: MagicalDarknessPointOriginMechanicsFacts,
+): readonly MagicalDarknessPointOriginSpellInvocation[] {
   return ctx.spellCastOptions.flatMap(
     (slot): readonly MagicalDarknessPointOriginSpellInvocation[] => {
-      if (Number(slot.spellLevel) < MAGICAL_OBSCUREMENT_AREA_STARTING_LEVEL) {
-        return [];
-      }
+      if (Number(slot.spellLevel) < facts.level) return [];
       return [
         {
           access: { tag: "prepared" },
@@ -96,80 +582,16 @@ function admitMagicalDarknessPointOrigin(
           spell,
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(magicalObscurement.radiusFeet),
+            radiusFeet: facts.radiusFeet,
           },
-          durationTicks: magicalObscurement.durationTicks,
-          rangeFeet: movementFeet(magicalObscurement.rangeFeet),
+          durationTicks: facts.durationTicks,
+          rangeFeet: facts.rangeFeet,
           dispelledSpellCreatedLightMaxSpellLevel:
-            magicalObscurement.dispelledSpellCreatedLightMaxSpellLevel,
+            facts.dispelledSpellCreatedLightMaxSpellLevel,
         },
       ];
     },
   );
-}
-
-function magicalDarknessPointOriginSpell(
-  spell: BattleSpellAdmissionSource,
-): MagicalDarknessPointOriginProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const attachment = spell.mechanics.attachment;
-  const obscuringOperation = spell.mechanics.operations[0];
-  const overlapOperation = spell.mechanics.operations[1];
-  const maxSpellLevel =
-    overlapOperation?.effect.kind ===
-    "end_overlapping_spell_created_bright_or_dim_light"
-      ? parseBattleSpellEffectLevel(overlapOperation.effect.maxSpellLevel)
-      : null;
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const earlyEnd =
-    spell.mechanics.duration.kind === "concentration"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  const rangeFeet =
-    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
-  const area =
-    attachment.kind === "hole" &&
-    attachment.value.kind === "area" &&
-    "shape" in attachment.value
-      ? attachment.value
-      : null;
-  const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
-
-  if (
-    spell.mechanics.level !== MAGICAL_OBSCUREMENT_AREA_STARTING_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== MAGICAL_OBSCUREMENT_AREA_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !==
-      MAGICAL_OBSCUREMENT_AREA_DURATION_MINUTES ||
-    earlyEnd.length !== 0 ||
-    spell.mechanics.operations.length !==
-      MAGICAL_OBSCUREMENT_AREA_OPERATION_COUNT ||
-    obscuringOperation?.trigger.kind !== "passive" ||
-    obscuringOperation.effect.kind !== "area_is_magical_darkness" ||
-    overlapOperation?.trigger.kind !== "passive" ||
-    maxSpellLevel !==
-      MAGICAL_OBSCUREMENT_AREA_DISPELLED_ILLUMINATION_MAX_SPELL_LEVEL ||
-    area?.origin.kind !== "point_within_range" ||
-    radius !== MAGICAL_OBSCUREMENT_AREA_RADIUS_FEET ||
-    durationTicks === null ||
-    Result.isFailure(durationTicks)
-  ) {
-    return null;
-  }
-
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet,
-    radiusFeet: radius,
-    dispelledSpellCreatedLightMaxSpellLevel: maxSpellLevel,
-  };
 }
 
 function resolveMagicalDarknessPointOrigin(
@@ -199,14 +621,16 @@ const MagicalDarknessPointOriginInvocationSchema =
       dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel,
     }),
   );
+
 export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
   executionSchema: MagicalDarknessPointOriginInvocationSchema,
-  admit: admitMagicalDarknessPointOrigin,
+  admitMechanics: admitMagicalDarknessPointOriginMechanics,
   discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveMagicalDarknessPointOrigin,
 } satisfies SpellProcedureDeclaration<
   "magicalDarknessPointOrigin",
-  MagicalDarknessPointOriginSpellInvocation
+  MagicalDarknessPointOriginSpellInvocation,
+  MagicalDarknessPointOriginMechanicsFacts,
+  MagicalDarknessPointOriginAdmissionIssue
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";
