@@ -130,9 +130,14 @@ function repeatedDamageMechanicsSource(
   };
 }
 
+type RepeatedDamageAllocationFailedFact = Extract<
+  ReturnType<typeof repeatedDamageAllocationProfile.admitMechanics>,
+  { readonly tag: "unsupported" }
+>["issues"][number]["failedFact"];
+
 function expectUnsupportedRepeatedDamageMechanics(
   mechanics: SpellMechanics,
-  failedFact: string,
+  failedFact: RepeatedDamageAllocationFailedFact,
   mechanicsPath: UnitMechanicsPath,
 ): void {
   const result = repeatedDamageAllocationProfile.admitMechanics({

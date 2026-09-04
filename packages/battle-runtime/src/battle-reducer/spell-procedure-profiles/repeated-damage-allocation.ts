@@ -95,12 +95,18 @@ type DirectPhase = Extract<
   { readonly kind: "direct" }
 >;
 
+const REPEATED_DAMAGE_ALLOCATION_LEVEL = 1 as const;
+const REPEATED_DAMAGE_ALLOCATION_RANGE_FEET = 120 as const;
+const REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT = 3 as const;
+const REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL = 1 as const;
+const REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL = 1 as const;
+
 type RepeatedDamageAllocationMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly rangeFeet: ReturnType<typeof movementFeet>;
   readonly repeatedEffectCount: {
-    readonly base: number;
-    readonly baseLevel: number;
-    readonly perSlotAboveBase: number;
+    readonly base: typeof REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT;
+    readonly baseLevel: typeof REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL;
+    readonly perSlotAboveBase: typeof REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL;
   };
   readonly damage: {
     readonly expr: DiceExpr;
@@ -192,7 +198,7 @@ function repeatedDamageAllocationRepresentation(
       {
         name: "header",
         present:
-          mechanics.level === 1 &&
+          mechanics.level === REPEATED_DAMAGE_ALLOCATION_LEVEL &&
           mechanics.school === "evocation" &&
           mechanics.castingTime.kind === "action",
       },
@@ -200,7 +206,7 @@ function repeatedDamageAllocationRepresentation(
         name: "rangeAndDuration",
         present:
           mechanics.range.kind === "point" &&
-          mechanics.range.feet === 120 &&
+          mechanics.range.feet === REPEATED_DAMAGE_ALLOCATION_RANGE_FEET &&
           mechanics.duration.kind === "instantaneous",
       },
       {
@@ -264,7 +270,7 @@ function admitRepeatedDamageAllocationMechanics(
 
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
     pushIssue("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== 1)
+  if (mechanics.level !== REPEATED_DAMAGE_ALLOCATION_LEVEL)
     pushIssue("level", spellMechanicsHeaderPath("level"));
   if (mechanics.school !== "evocation")
     pushIssue("school", spellMechanicsHeaderPath("school"));
@@ -273,12 +279,14 @@ function admitRepeatedDamageAllocationMechanics(
     !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
   )
     pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 120 ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-  )
-    pushIssue("range", spellMechanicsHeaderPath("range"));
+  const parsedRangeFeet =
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === REPEATED_DAMAGE_ALLOCATION_RANGE_FEET &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+      ? movementFeet(mechanics.range.feet)
+      : undefined;
+  const rangeSupported = parsedRangeFeet !== undefined;
+  if (!rangeSupported) pushIssue("range", spellMechanicsHeaderPath("range"));
   if (
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
@@ -331,13 +339,21 @@ function admitRepeatedDamageAllocationMechanics(
   const count = repeatedSelection?.count;
   const linearCount =
     typeof count === "object" && count.kind === "linear" ? count : undefined;
-  if (
-    linearCount === undefined ||
-    linearCount.base !== 3 ||
-    linearCount.baseLevel !== 1 ||
-    linearCount.perSlotAboveBase !== 1 ||
-    !spellMechanicsObjectHasOnlyKeys(linearCount, COUNT_FIELDS)
-  )
+  const parsedRepeatedEffectCount =
+    linearCount !== undefined &&
+    linearCount.base === REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT &&
+    linearCount.baseLevel === REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL &&
+    linearCount.perSlotAboveBase ===
+      REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL &&
+    spellMechanicsObjectHasOnlyKeys(linearCount, COUNT_FIELDS)
+      ? {
+          base: REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT,
+          baseLevel: REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL,
+          perSlotAboveBase: REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL,
+        }
+      : undefined;
+  const repeatedEffectCountSupported = parsedRepeatedEffectCount !== undefined;
+  if (!repeatedEffectCountSupported)
     pushIssue(
       "repeatedEffectCount",
       spellActivationAttachmentPath(phaseOrdinal),
@@ -354,25 +370,77 @@ function admitRepeatedDamageAllocationMechanics(
     );
   const amount = effect?.kind === "damage" ? effect.amount : undefined;
   const damageExpr = amount?.kind === "fixed" ? amount.expr : undefined;
-  if (
+  const damageAmountSupported =
     amount?.kind !== "fixed" ||
     !spellMechanicsObjectHasOnlyKeys(amount, AMOUNT_FIELDS) ||
     damageExpr?.dice !== 1 ||
     damageExpr.dieSize !== 4 ||
     damageExpr.flat !== 1 ||
     !spellMechanicsObjectHasOnlyKeys(damageExpr, DICE_EXPR_FIELDS)
-  )
+      ? false
+      : true;
+  if (!damageAmountSupported)
     pushIssue(
       "damageAmount",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
-  if (effect?.kind !== "damage" || effect.damageType !== "force")
+  const damageTypeSupported =
+    effect?.kind === "damage" && effect.damageType === "force";
+  if (!damageTypeSupported)
     pushIssue(
       "damageType",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
 
-  const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  const parsedDamage =
+    damageAmountSupported &&
+    damageTypeSupported &&
+    damageExpr !== undefined &&
+    effect?.kind === "damage"
+      ? { expr: damageExpr, damageType: effect.damageType }
+      : undefined;
+  const parsedCandidate =
+    parsedRangeFeet !== undefined &&
+    parsedRepeatedEffectCount !== undefined &&
+    parsedDamage !== undefined
+      ? {
+          rangeFeet: parsedRangeFeet,
+          repeatedEffectCount: parsedRepeatedEffectCount,
+          damage: parsedDamage,
+        }
+      : undefined;
+  const uniqueIssues = spellUniqueMechanicsIssues(issues);
+  if (parsedCandidate === undefined) {
+    const parserIssue = repeatedDamageAllocationIssue(
+      parsedRangeFeet === undefined
+        ? "range"
+        : parsedRepeatedEffectCount === undefined
+          ? "repeatedEffectCount"
+          : "damageAmount",
+      parsedRangeFeet === undefined
+        ? spellMechanicsHeaderPath("range")
+        : parsedRepeatedEffectCount === undefined
+          ? spellActivationAttachmentPath(phaseOrdinal)
+          : spellActivationEffectPath(phaseOrdinal, effectOrdinal),
+    );
+    const [firstIssue, ...remainingIssues] = uniqueIssues;
+    return {
+      tag: "unsupported",
+      issues:
+        firstIssue === undefined
+          ? [parserIssue]
+          : [
+              repeatedDamageAllocationIssue(
+                firstIssue.failedFact,
+                firstIssue.mechanicsPath,
+              ),
+              ...remainingIssues.map(({ failedFact, mechanicsPath }) =>
+                repeatedDamageAllocationIssue(failedFact, mechanicsPath),
+              ),
+            ],
+    };
+  }
+  const failures = spellProcedureNonEmpty(uniqueIssues);
   if (failures !== undefined)
     return {
       tag: "unsupported",
@@ -383,36 +451,9 @@ function admitRepeatedDamageAllocationMechanics(
       ),
     };
 
-  if (
-    linearCount === undefined ||
-    damageExpr === undefined ||
-    effect?.kind !== "damage" ||
-    effect.damageType !== "force"
-  ) {
-    return {
-      tag: "unsupported",
-      issues: [
-        repeatedDamageAllocationIssue(
-          linearCount === undefined ? "repeatedEffectCount" : "damageAmount",
-          linearCount === undefined
-            ? spellActivationAttachmentPath(phaseOrdinal)
-            : spellActivationEffectPath(phaseOrdinal, effectOrdinal),
-        ),
-      ],
-    };
-  }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    rangeFeet: movementFeet(120),
-    repeatedEffectCount: {
-      base: linearCount.base,
-      baseLevel: linearCount.baseLevel,
-      perSlotAboveBase: linearCount.perSlotAboveBase,
-    },
-    damage: {
-      expr: damageExpr,
-      damageType: effect.damageType,
-    },
+    ...parsedCandidate,
   } satisfies RepeatedDamageAllocationMechanicsFacts;
   return {
     tag: "supported",
