@@ -26,6 +26,7 @@ import type {
   DamageType,
   DiceExpr,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
@@ -54,7 +55,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -94,12 +95,19 @@ type DirectPhase = Extract<
   ActivationMechanics["phases"][number],
   { readonly kind: "direct" }
 >;
+type DirectPhaseEffect = NonNullable<DirectPhase["effects"]>[number];
 
 const REPEATED_DAMAGE_ALLOCATION_LEVEL = 1 as const;
 const REPEATED_DAMAGE_ALLOCATION_RANGE_FEET = 120 as const;
 const REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT = 3 as const;
 const REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL = 1 as const;
 const REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL = 1 as const;
+const REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE = {
+  dice: 1,
+  dieSize: 4,
+  flat: 1,
+  damageType: "force",
+} as const;
 
 type RepeatedDamageAllocationMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly rangeFeet: ReturnType<typeof movementFeet>;
@@ -139,6 +147,50 @@ type RepeatedDamageAllocationAdmissionIssue = SpellProcedureAdmissionIssue<
   RepeatedDamageAllocationFailedFact,
   UnitMechanicsPath
 >;
+type RepeatedDamageAllocationMechanicsIssue = Pick<
+  RepeatedDamageAllocationAdmissionIssue,
+  "failedFact" | "mechanicsPath"
+>;
+type RepeatedDamageAllocationMechanicsInspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly [
+        RepeatedDamageAllocationMechanicsIssue,
+        ...RepeatedDamageAllocationMechanicsIssue[],
+      ];
+    }
+  | {
+      readonly tag: "parsed";
+      readonly facts: RepeatedDamageAllocationMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
+
+type RepeatedEffectCount = Exclude<
+  Extract<TargetSelection, { readonly mode: "choose_up_to" }>["count"],
+  number
+> & {
+  readonly kind: "linear";
+  readonly base: typeof REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT;
+  readonly baseLevel: typeof REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL;
+  readonly perSlotAboveBase: typeof REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL;
+};
+type RepeatedDamageEffect = Extract<
+  DirectPhaseEffect,
+  { readonly kind: "damage" }
+> & {
+  readonly damageType: typeof REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.damageType;
+  readonly amount: Extract<
+    Extract<DirectPhaseEffect, { readonly kind: "damage" }>["amount"],
+    { readonly kind: "fixed" }
+  > & {
+    readonly expr: DiceExpr & {
+      readonly dice: typeof REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.dice;
+      readonly dieSize: typeof REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.dieSize;
+      readonly flat: typeof REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.flat;
+    };
+  };
+};
 
 const ROOT_FIELDS = [
   "level",
@@ -162,6 +214,53 @@ const COUNT_FIELDS = ["kind", "base", "baseLevel", "perSlotAboveBase"] as const;
 const EFFECT_FIELDS = ["kind", "amount", "damageType"] as const;
 const AMOUNT_FIELDS = ["kind", "expr"] as const;
 const DICE_EXPR_FIELDS = ["dice", "dieSize", "flat"] as const;
+
+function isRepeatedEffectCount(value: unknown): value is RepeatedEffectCount {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "kind" in value &&
+    value.kind === "linear" &&
+    "base" in value &&
+    value.base === REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT &&
+    "baseLevel" in value &&
+    value.baseLevel === REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL &&
+    "perSlotAboveBase" in value &&
+    value.perSlotAboveBase ===
+      REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL &&
+    spellMechanicsObjectHasOnlyKeys(value, COUNT_FIELDS)
+  );
+}
+
+function repeatedDamageAmountMatchesSignature(
+  effect: DirectPhaseEffect | undefined,
+): effect is Extract<DirectPhaseEffect, { readonly kind: "damage" }> & {
+  readonly amount: Extract<
+    Extract<DirectPhaseEffect, { readonly kind: "damage" }>["amount"],
+    { readonly kind: "fixed" }
+  >;
+} {
+  if (effect?.kind !== "damage" || effect.amount.kind !== "fixed") return false;
+  const expr = effect.amount.expr;
+  return (
+    expr.dice === REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.dice &&
+    expr.dieSize === REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.dieSize &&
+    expr.flat === REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.flat
+  );
+}
+
+function isRepeatedDamageEffect(
+  effect: DirectPhaseEffect | undefined,
+): effect is RepeatedDamageEffect {
+  return (
+    repeatedDamageAmountMatchesSignature(effect) &&
+    effect.damageType ===
+      REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.damageType &&
+    spellMechanicsObjectHasOnlyKeys(effect, EFFECT_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(effect.amount, AMOUNT_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(effect.amount.expr, DICE_EXPR_FIELDS)
+  );
+}
 
 function repeatedDamageAllocationIssue(
   failedFact: RepeatedDamageAllocationFailedFact,
@@ -188,10 +287,6 @@ function repeatedDamageAllocationRepresentation(
       ? phase.attachment.value.selection
       : undefined;
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const damageExpr =
-    effect?.kind === "damage" && effect.amount.kind === "fixed"
-      ? effect.amount.expr
-      : undefined;
   return spellProcedureHasRedundantSignature({
     kind: "oneOfFiveWitnessesMayBeMissing",
     witnesses: [
@@ -224,12 +319,7 @@ function repeatedDamageAllocationRepresentation(
       },
       {
         name: "damage",
-        present:
-          effect?.kind === "damage" &&
-          effect.damageType === "force" &&
-          damageExpr?.dice === 1 &&
-          damageExpr.dieSize === 4 &&
-          damageExpr.flat === 1,
+        present: isRepeatedDamageEffect(effect),
       },
     ],
   })
@@ -243,14 +333,9 @@ function directPhase(
   return phase?.kind === "direct" ? phase : undefined;
 }
 
-function admitRepeatedDamageAllocationMechanics(
+function inspectRepeatedDamageAllocationMechanics(
   source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "repeatedDamageAllocation",
-  RepeatedDamageAllocationMechanicsFacts,
-  RepeatedDamageAllocationInvocation,
-  RepeatedDamageAllocationAdmissionIssue
-> {
+): RepeatedDamageAllocationMechanicsInspection {
   const mechanics = repeatedDamageAllocationRepresentation(source.mechanics);
   if (mechanics === undefined) return { tag: "notRepresented" };
 
@@ -337,21 +422,15 @@ function admitRepeatedDamageAllocationMechanics(
   )
     pushIssue("selection", spellActivationAttachmentPath(phaseOrdinal));
   const count = repeatedSelection?.count;
-  const linearCount =
-    typeof count === "object" && count.kind === "linear" ? count : undefined;
+  const linearCount = isRepeatedEffectCount(count) ? count : undefined;
   const parsedRepeatedEffectCount =
-    linearCount !== undefined &&
-    linearCount.base === REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT &&
-    linearCount.baseLevel === REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL &&
-    linearCount.perSlotAboveBase ===
-      REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL &&
-    spellMechanicsObjectHasOnlyKeys(linearCount, COUNT_FIELDS)
-      ? {
-          base: REPEATED_DAMAGE_ALLOCATION_BASE_EFFECT_COUNT,
-          baseLevel: REPEATED_DAMAGE_ALLOCATION_BASE_SLOT_LEVEL,
-          perSlotAboveBase: REPEATED_DAMAGE_ALLOCATION_EFFECTS_PER_SLOT_LEVEL,
-        }
-      : undefined;
+    linearCount === undefined
+      ? undefined
+      : {
+          base: linearCount.base,
+          baseLevel: linearCount.baseLevel,
+          perSlotAboveBase: linearCount.perSlotAboveBase,
+        };
   const repeatedEffectCountSupported = parsedRepeatedEffectCount !== undefined;
   if (!repeatedEffectCountSupported)
     pushIssue(
@@ -368,76 +447,74 @@ function admitRepeatedDamageAllocationMechanics(
       "damageEffect",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
-  const amount = effect?.kind === "damage" ? effect.amount : undefined;
-  const damageExpr = amount?.kind === "fixed" ? amount.expr : undefined;
   const damageAmountSupported =
-    amount?.kind !== "fixed" ||
-    !spellMechanicsObjectHasOnlyKeys(amount, AMOUNT_FIELDS) ||
-    damageExpr?.dice !== 1 ||
-    damageExpr.dieSize !== 4 ||
-    damageExpr.flat !== 1 ||
-    !spellMechanicsObjectHasOnlyKeys(damageExpr, DICE_EXPR_FIELDS)
-      ? false
-      : true;
+    repeatedDamageAmountMatchesSignature(effect) &&
+    spellMechanicsObjectHasOnlyKeys(effect.amount, AMOUNT_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(effect.amount.expr, DICE_EXPR_FIELDS);
   if (!damageAmountSupported)
     pushIssue(
       "damageAmount",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
   const damageTypeSupported =
-    effect?.kind === "damage" && effect.damageType === "force";
+    effect?.kind === "damage" &&
+    effect.damageType ===
+      REPEATED_DAMAGE_ALLOCATION_DAMAGE_SIGNATURE.damageType;
   if (!damageTypeSupported)
     pushIssue(
       "damageType",
       spellActivationEffectPath(phaseOrdinal, effectOrdinal),
     );
 
-  const parsedDamage =
-    damageAmountSupported &&
-    damageTypeSupported &&
-    damageExpr !== undefined &&
-    effect?.kind === "damage"
-      ? { expr: damageExpr, damageType: effect.damageType }
-      : undefined;
-  const parsedCandidate =
-    parsedRangeFeet !== undefined &&
-    parsedRepeatedEffectCount !== undefined &&
-    parsedDamage !== undefined
-      ? {
-          rangeFeet: parsedRangeFeet,
-          repeatedEffectCount: parsedRepeatedEffectCount,
-          damage: parsedDamage,
-        }
-      : undefined;
+  const parsedDamage = isRepeatedDamageEffect(effect)
+    ? { expr: effect.amount.expr, damageType: effect.damageType }
+    : undefined;
   const uniqueIssues = spellUniqueMechanicsIssues(issues);
-  if (parsedCandidate === undefined) {
-    const parserIssue = repeatedDamageAllocationIssue(
-      parsedRangeFeet === undefined
-        ? "range"
-        : parsedRepeatedEffectCount === undefined
-          ? "repeatedEffectCount"
-          : "damageAmount",
-      parsedRangeFeet === undefined
-        ? spellMechanicsHeaderPath("range")
-        : parsedRepeatedEffectCount === undefined
-          ? spellActivationAttachmentPath(phaseOrdinal)
-          : spellActivationEffectPath(phaseOrdinal, effectOrdinal),
-    );
-    const [firstIssue, ...remainingIssues] = uniqueIssues;
+  if (parsedRangeFeet === undefined) {
+    const rangeIssue = {
+      failedFact: "range" as const,
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    };
     return {
       tag: "unsupported",
-      issues:
-        firstIssue === undefined
-          ? [parserIssue]
-          : [
-              repeatedDamageAllocationIssue(
-                firstIssue.failedFact,
-                firstIssue.mechanicsPath,
-              ),
-              ...remainingIssues.map(({ failedFact, mechanicsPath }) =>
-                repeatedDamageAllocationIssue(failedFact, mechanicsPath),
-              ),
-            ],
+      issues: [
+        rangeIssue,
+        ...uniqueIssues.filter(
+          (issue) => issue.failedFact !== rangeIssue.failedFact,
+        ),
+      ],
+    };
+  }
+  if (parsedRepeatedEffectCount === undefined) {
+    const countIssue = {
+      failedFact: "repeatedEffectCount" as const,
+      mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
+    };
+    return {
+      tag: "unsupported",
+      issues: [
+        countIssue,
+        ...uniqueIssues.filter(
+          (issue) => issue.failedFact !== countIssue.failedFact,
+        ),
+      ],
+    };
+  }
+  if (parsedDamage === undefined) {
+    const damageIssue = {
+      failedFact: damageAmountSupported
+        ? ("damageType" as const)
+        : ("damageAmount" as const),
+      mechanicsPath: spellActivationEffectPath(phaseOrdinal, effectOrdinal),
+    };
+    return {
+      tag: "unsupported",
+      issues: [
+        damageIssue,
+        ...uniqueIssues.filter(
+          (issue) => issue.failedFact !== damageIssue.failedFact,
+        ),
+      ],
     };
   }
   const failures = spellProcedureNonEmpty(uniqueIssues);
@@ -453,32 +530,66 @@ function admitRepeatedDamageAllocationMechanics(
 
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    ...parsedCandidate,
+    rangeFeet: parsedRangeFeet,
+    repeatedEffectCount: parsedRepeatedEffectCount,
+    damage: parsedDamage,
   } satisfies RepeatedDamageAllocationMechanicsFacts;
   return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "repeatedDamageAllocation",
-      facts,
-      evidence: {
-        consumed: [
-          spellMechanicsHeaderPath("level"),
-          spellMechanicsHeaderPath("school"),
-          spellMechanicsHeaderPath("range"),
-          spellMechanicsHeaderPath("components"),
-          spellMechanicsHeaderPath("duration"),
-          spellMechanicsHeaderPath("castingTime"),
-          spellMechanicsHeaderPath("family"),
-          spellActivationPhasePath(phaseOrdinal),
-          spellActivationAttachmentPath(phaseOrdinal),
-          spellActivationEffectPath(phaseOrdinal, effectOrdinal),
-        ],
-        unowned: [],
-      } satisfies SpellProcedureMechanicsEvidence,
-      admit: (spell, ctx) => admitRepeatedDamageAllocation(spell, ctx, facts),
-    },
+    tag: "parsed",
+    facts,
+    evidence: {
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(phaseOrdinal),
+        spellActivationAttachmentPath(phaseOrdinal),
+        spellActivationEffectPath(phaseOrdinal, effectOrdinal),
+      ],
+      unowned: [],
+    } satisfies SpellProcedureMechanicsEvidence,
   };
+}
+
+function admitRepeatedDamageAllocationMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "repeatedDamageAllocation",
+  RepeatedDamageAllocationMechanicsFacts,
+  RepeatedDamageAllocationInvocation,
+  RepeatedDamageAllocationAdmissionIssue
+> {
+  return Match.value(inspectRepeatedDamageAllocationMechanics(source)).pipe(
+    Match.when({ tag: "notRepresented" }, () => ({
+      tag: "notRepresented" as const,
+    })),
+    Match.when({ tag: "unsupported" }, ({ issues }) => ({
+      tag: "unsupported" as const,
+      issues: spellProcedureMapNonEmpty(
+        issues,
+        ({ failedFact, mechanicsPath }) =>
+          repeatedDamageAllocationIssue(failedFact, mechanicsPath),
+      ),
+    })),
+    Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
+      tag: "supported" as const,
+      admitted: {
+        binding: "ready" as const,
+        procedure: "repeatedDamageAllocation" as const,
+        facts,
+        evidence,
+        admit: (
+          spell: BattleSpellExecutionSource,
+          ctx: SpellAdmissionContext,
+        ) => admitRepeatedDamageAllocation(spell, ctx, facts),
+      },
+    })),
+    Match.exhaustive,
+  );
 }
 
 function admitRepeatedDamageAllocation(
