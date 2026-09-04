@@ -1,11 +1,13 @@
 import type {
   Attachment,
+  AuthoredConditionalEffect,
   MarkTransfer,
   OngoingActionCost,
   OngoingEffectMechanics,
   OngoingOperation,
   Range,
 } from "../surface/types.ts";
+import { Match } from "effect";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeAbilityCheck,
@@ -37,6 +39,35 @@ import {
   traceDiceAmountScaling,
   traceTargetCountScaling,
 } from "./tracer-scaling.ts";
+
+const authoredConditionalEffectByKind = Match.discriminator("kind");
+
+function describeAuthoredConditionalEffect(
+  effect: AuthoredConditionalEffect,
+): string {
+  return Match.value(effect).pipe(
+    authoredConditionalEffectByKind(
+      "phantasm_damage",
+      (effect) =>
+        `${effect.source}\n${effect.choice}\n${effect.timing}\n` +
+        `${effect.eligibility.kind} (${effect.eligibility.feet} ft)\n` +
+        `${describeDiceAmount(effect.amount)} ${effect.damageType} damage\n` +
+        `perceived as: ${effect.perceivedAs}`,
+    ),
+    authoredConditionalEffectByKind(
+      "camouflaged_area_recognition",
+      (effect) =>
+        `camouflage: ${effect.camouflage}\n` +
+        `eligible: ${effect.eligibility.kind}\n` +
+        `${effect.attempt.action} action\n` +
+        `${describeAbilityCheck(effect.attempt.check.ability)} ` +
+        `(${effect.attempt.check.skillOptions.join(" or ")}) vs ` +
+        `${describeDc(effect.attempt.check.dc)}\n` +
+        `recognizes: ${effect.recognition}\n${effect.timing}`,
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function traceOngoingEffect(
   m: OngoingEffectMechanics,
@@ -82,11 +113,8 @@ export function traceOngoingEffect(
       category: "effect",
       atomKind: "authored_conditional_effect",
       label:
-        `authored_conditional_effect\n${effect.source}\n` +
-        `${effect.choice}\n${effect.timing}\n` +
-        `${effect.eligibility.kind} (${effect.eligibility.feet} ft)\n` +
-        `${describeDiceAmount(effect.amount)} ${effect.damageType} damage\n` +
-        `perceived as: ${effect.perceivedAs}\n(non-executable)`,
+        `authored_conditional_effect\n${describeAuthoredConditionalEffect(effect)}\n` +
+        `(non-executable)\n(table-owned)`,
     });
     edges.push({ from: ctx.procId, to: effectId, relation: "documents" });
   }

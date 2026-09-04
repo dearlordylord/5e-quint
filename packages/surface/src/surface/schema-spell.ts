@@ -4818,7 +4818,7 @@ export const OngoingEffectSchema: Schema.Codec<
   Schema.annotate({ identifier: "OngoingEffect" }),
 );
 
-export const AuthoredConditionalEffectSchema = strictStruct({
+const AuthoredPhantasmDamageSchema = strictStruct({
   kind: Schema.Literal("phantasm_damage"),
   source: Schema.Literal("dangerous_creature_or_hazard"),
   choice: Schema.Literal("caster_may_deal"),
@@ -4831,6 +4831,32 @@ export const AuthoredConditionalEffectSchema = strictStruct({
   amount: DiceAmountSchema,
   perceivedAs: Schema.Literal("illusion_appropriate"),
 });
+
+const AuthoredCamouflagedAreaRecognitionSchema = strictStruct({
+  kind: Schema.Literal("camouflaged_area_recognition"),
+  camouflage: Schema.Literal("looks_natural"),
+  eligibility: strictStruct({
+    kind: Schema.Literal("unable_to_see_area_when_spell_cast"),
+  }),
+  attempt: strictStruct({
+    action: Schema.Literal("search"),
+    check: strictStruct({
+      ability: Schema.Literal("wis"),
+      skillOptions: Schema.Tuple([
+        Schema.Literal("perception"),
+        Schema.Literal("survival"),
+      ]),
+      dc: strictStruct({ kind: Schema.Literal("caster_spell_save_dc") }),
+    }),
+  }),
+  recognition: Schema.Literal("terrain_as_hazardous"),
+  timing: Schema.Literal("before_entering_area"),
+});
+
+export const AuthoredConditionalEffectSchema = Schema.Union([
+  AuthoredPhantasmDamageSchema,
+  AuthoredCamouflagedAreaRecognitionSchema,
+]);
 
 export const OngoingOperationSchema = Schema.Struct({
   trigger: OngoingTriggerSchema,

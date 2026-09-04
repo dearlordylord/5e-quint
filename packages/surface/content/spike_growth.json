@@ -17,6 +17,30 @@
         }
       }
     },
+    "authoredConditionalEffects": [
+      {
+        "attempt": {
+          "action": "search",
+          "check": {
+            "ability": "wis",
+            "dc": {
+              "kind": "caster_spell_save_dc"
+            },
+            "skillOptions": [
+              "perception",
+              "survival"
+            ]
+          }
+        },
+        "camouflage": "looks_natural",
+        "eligibility": {
+          "kind": "unable_to_see_area_when_spell_cast"
+        },
+        "kind": "camouflaged_area_recognition",
+        "recognition": "terrain_as_hazardous",
+        "timing": "before_entering_area"
+      }
+    ],
     "castingTime": {
       "kind": "action"
     },

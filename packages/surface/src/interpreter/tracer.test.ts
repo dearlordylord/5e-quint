@@ -33,6 +33,7 @@ import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
+import spikeGrowthInput from "../../content/spike_growth.json";
 import summonDragonInput from "../../content/summon_dragon.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import webInput from "../../content/web.json";
@@ -1294,6 +1295,27 @@ describe("Surface trace interpreter", () => {
 
     expect(authoredConditionalEffect?.label).toContain("2d8 psychic damage");
     expect(authoredConditionalEffect?.label).toContain("(non-executable)");
+  });
+
+  test("preserves camouflaged-area recognition as table-owned trace evidence", () => {
+    const trace = traceUnit(decodeUnitRecordSync(spikeGrowthInput));
+    const authoredConditionalEffect = trace.nodes.find(
+      (node) => node.atomKind === "authored_conditional_effect",
+    );
+
+    expect(authoredConditionalEffect?.label).toBe(
+      [
+        "authored_conditional_effect",
+        "camouflage: looks_natural",
+        "eligible: unable_to_see_area_when_spell_cast",
+        "search action",
+        "WIS (perception or survival) vs caster spell save DC",
+        "recognizes: terrain_as_hazardous",
+        "before_entering_area",
+        "(non-executable)",
+        "(table-owned)",
+      ].join("\n"),
+    );
   });
 
   test("renders Flame Blade held-object lifecycle and active blade gates", () => {

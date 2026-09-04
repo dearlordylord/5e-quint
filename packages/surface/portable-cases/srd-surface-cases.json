@@ -30707,6 +30707,30 @@
                     }
                   }
                 }
+              ],
+              "authoredConditionalEffects": [
+                {
+                  "kind": "camouflaged_area_recognition",
+                  "camouflage": "looks_natural",
+                  "eligibility": {
+                    "kind": "unable_to_see_area_when_spell_cast"
+                  },
+                  "attempt": {
+                    "action": "search",
+                    "check": {
+                      "ability": "wis",
+                      "skillOptions": [
+                        "perception",
+                        "survival"
+                      ],
+                      "dc": {
+                        "kind": "caster_spell_save_dc"
+                      }
+                    }
+                  },
+                  "recognition": "terrain_as_hazardous",
+                  "timing": "before_entering_area"
+                }
               ]
             },
             "provenance": {

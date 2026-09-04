@@ -16,6 +16,7 @@ import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
 import phantasmalForceInput from "../../content/phantasmal_force.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
+import spikeGrowthInput from "../../content/spike_growth.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -599,6 +600,76 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(Result.isFailure(decodeUnitRecordResult(contradictory))).toBe(true);
+  });
+
+  test("decodes camouflaged-area recognition as table-owned authored facts", () => {
+    const decoded = decodeUnitRecordSync(spikeGrowthInput);
+
+    expect(decoded).toMatchObject({
+      id: "spike_growth",
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        authoredConditionalEffects: [
+          {
+            kind: "camouflaged_area_recognition",
+            camouflage: "looks_natural",
+            eligibility: {
+              kind: "unable_to_see_area_when_spell_cast",
+            },
+            attempt: {
+              action: "search",
+              check: {
+                ability: "wis",
+                skillOptions: ["perception", "survival"],
+                dc: { kind: "caster_spell_save_dc" },
+              },
+            },
+            recognition: "terrain_as_hazardous",
+            timing: "before_entering_area",
+          },
+        ],
+      },
+    });
+  });
+
+  test("strictly rejects incomplete or mixed camouflaged-area recognition shapes", () => {
+    const incomplete: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalEffects: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalEffects[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalEffects[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalEffects[0]
+                  .attempt.check,
+                skillOptions: ["perception"],
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const mixed: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalEffects: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalEffects[0],
+            source: "dangerous_creature_or_hazard",
+          },
+        ],
+      },
+    };
+
+    expect(Result.isFailure(decodeUnitRecordResult(incomplete))).toBe(true);
+    expect(Result.isFailure(decodeUnitRecordResult(mixed))).toBe(true);
   });
 
   test("keeps Shield of Faith's creature target and Armor Class bonus explicit", () => {
