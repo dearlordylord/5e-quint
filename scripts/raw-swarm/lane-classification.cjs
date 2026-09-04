@@ -93,6 +93,7 @@ const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/sdk-player/authored-source-admission.test.ts",
   "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
   "scripts/raw-swarm/sdk-player/consumer-protocol-boundaries.test.ts",
+  "scripts/raw-swarm/sdk-player/effect-declaration-compiler-support.test.ts",
   "scripts/raw-swarm/sdk-player/player-turn-projection.test.ts",
   "scripts/raw-swarm/sdk-player/scenario-character-runtime.test.ts",
   "scripts/raw-swarm/sdk-player/scenario-setup-authoring.test.ts",

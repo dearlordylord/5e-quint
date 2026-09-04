@@ -5,32 +5,34 @@ Issue: [#371](https://github.com/dearlordylord/5e-quint/issues/371)
 Cutover starting point: `fba977c5ed3abf554631ce43c006b5a0ad4c5557`
 Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
-Status: current merge-tree certification pending. The parent checkpoints below
-recorded separate zero-diagnostic inventories for 14-owner and 13-owner
-snapshots. Those historical observations remain evidence for their named
-revisions only; neither substitutes for the post-merge public typecheck, test,
-quality milestone, refreshed certificates, or issue receipt. No historical
-controlled-red snapshot is a current waiver or exception.
+Status: terminal merge-tree revision
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea` certified. Its public
+`pnpm quality:milestone` receipt completed with exit 0 and all 49 checks
+passing. The parent checkpoints below recorded separate zero-diagnostic
+inventories for 14-owner and 13-owner snapshots. Those historical observations
+remain evidence for their named revisions only and do not substitute for the
+terminal receipt. No historical controlled-red snapshot is a current waiver or
+exception.
 
 ## Scope and ownership
 
-This issue owns the workspace dependency cutover, lockfile regeneration, the
-cohort verifier and root quality gate, the selected Node/tool policy, and this
-ledger. The #374 shared-algebra source, test, connector, and bridge migration
-is complete in this refresh. The remaining source and test API migration is
-downstream work owned by #375 and later issues. No D&D rule behavior, Quint
-model behavior, authored identity, or Effect 3 behavioral-oracle output was
-changed here.
+At the #371/#374 checkpoint, this issue owned the workspace dependency cutover,
+lockfile regeneration, the cohort verifier and root quality gate, the selected
+Node/tool policy, and this ledger. The #374 shared-algebra source, test,
+connector, and bridge migration completed in that refresh. Source and test API
+migration was then downstream work owned by #375 and later issues. That
+checkpoint changed no D&D rule behavior, Quint model behavior, authored
+identity, or Effect 3 behavioral-oracle output.
 
 The baseline oracle remains the authority for migration parity:
 [`baseline-certification.md`](./baseline-certification.md) and
 [`effect3-behavioral-oracle.json`](./effect3-behavioral-oracle.json).
 
-The remaining `effect/Either` imports and v3-shaped schemas are intentionally
-not changed by this cutover or #374. They are the downstream source/test
-migration owned by #375 and later issues; this ledger makes their red state
-explicit so the dependency gate can be activated without a compatibility
-facade, cast, or waiver.
+At that checkpoint, the remaining `effect/Either` imports and v3-shaped schemas
+were intentionally not changed by the cutover or #374. They were the downstream
+source/test migration owned by #375 and later issues; this ledger recorded that
+historical red state so the dependency gate could be activated without a
+compatibility facade, cast, or waiver.
 
 ## Selected cohort and invariants
 
@@ -1226,7 +1228,8 @@ Surface publication parity is independently owned by the reviewed
 [`surface-publication-delta-certificate.json`](./surface-publication-delta-certificate.json).
 Those certificates, not this ledger, own their dynamic identities,
 classifications, membership, operation counts, and hashes. Their self-tests and
-pinned verifiers pass on the reviewed integration line.
+pinned verifiers pass on the reviewed integration line. The Effect 3 baseline
+remains immutable and unchanged by the terminal certification.
 
 The master reconciliation retained the authored-identity, provenance, PHB+,
 domain, architecture, and connascence boundaries. Standards and Spec/RAW
@@ -1239,24 +1242,22 @@ Its exact fixed point, recorded owner disposition, elapsed time, tracked log,
 measurement, digest, limitations, and unchanged-range evidence are owned by
 the [final parity report](./final-parity-report.md#qnt-and-runtime-parity).
 
-The migration exception is closed in source and no waiver remains. Final issue
-closure is nevertheless pending these exact public commands at the final
-committed tip:
+The migration exception is closed in source and no waiver remains. Commit
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea` is the terminal certified source
+revision. The exact public command
 
 ```sh
-pnpm typecheck
-pnpm test
 pnpm quality:milestone
 ```
 
-They will run serially and directly under their owning repository locks. The
-[final parity report](./final-parity-report.md#terminal-public-receipts) alone
-will own their exact commit, exit status, and result summary; this ledger links
-to that receipt instead of restating it. The report also owns the required
-post-first-gates tracked-document attestation before closure. This ledger does
-not infer terminal passes from the zero-diagnostic inventory, focused checks,
-certificates, or earlier broad runs.
+completed with exit 0 at that revision. Its collector reported all 49 checks
+passing, including the proof, typecheck, test, build, and coverage checks. The
+Surface function result is 96.90%; issue #227 owns the remaining coverage debt
+and the return to the repository's 99% target. The
+[final parity report](./final-parity-report.md#terminal-public-receipts) owns the
+complete terminal receipt and result summary.
 
-The SR-00 post-landing Cleanroom receipt remains unchanged until the #386
-terminal receipts exist. Active SR-04G work is independent and is not modified
-by this migration-ledger refresh.
+The [terminal #386 receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5515847382)
+is published, issue #386 is closed, and the certification is recorded for the
+SR-00 post-landing Cleanroom receipt. Active SR-04G work is independent and is
+not modified by this migration-ledger refresh.

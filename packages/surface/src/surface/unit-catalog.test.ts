@@ -2697,56 +2697,19 @@ describe("SRD Unit catalog boundary", () => {
       })),
     ).toEqual([
       { weaponUnitId: "weapon_club", masteryUnitId: "mastery_slow" },
+      { weaponUnitId: "weapon_dagger", masteryUnitId: "mastery_nick" },
       { weaponUnitId: "weapon_greataxe", masteryUnitId: "mastery_cleave" },
       { weaponUnitId: "weapon_longsword", masteryUnitId: "mastery_sap" },
       { weaponUnitId: "weapon_spear", masteryUnitId: "mastery_sap" },
       { weaponUnitId: "weapon_flail", masteryUnitId: "mastery_sap" },
+      { weaponUnitId: "weapon_shortbow", masteryUnitId: "mastery_vex" },
+      { weaponUnitId: "weapon_shortsword", masteryUnitId: "mastery_vex" },
       {
         weaponUnitId: "weapon_quarterstaff",
         masteryUnitId: "mastery_topple",
       },
     ]);
-    expect(graph.issues).toEqual([
-      {
-        tag: "missing",
-        root: { kind: "unit", id: "weapon_dagger" },
-        mechanicsPath: {
-          family: "unit",
-          nodes: [
-            { kind: "singleton", role: "recordMechanics" },
-            { kind: "singleton", role: "reference" },
-          ],
-        },
-        fieldPath: "masteryUnitId",
-        masteryUnitId: "mastery_nick",
-      },
-      {
-        tag: "missing",
-        root: { kind: "unit", id: "weapon_shortbow" },
-        mechanicsPath: {
-          family: "unit",
-          nodes: [
-            { kind: "singleton", role: "recordMechanics" },
-            { kind: "singleton", role: "reference" },
-          ],
-        },
-        fieldPath: "masteryUnitId",
-        masteryUnitId: "mastery_vex",
-      },
-      {
-        tag: "missing",
-        root: { kind: "unit", id: "weapon_shortsword" },
-        mechanicsPath: {
-          family: "unit",
-          nodes: [
-            { kind: "singleton", role: "recordMechanics" },
-            { kind: "singleton", role: "reference" },
-          ],
-        },
-        fieldPath: "masteryUnitId",
-        masteryUnitId: "mastery_vex",
-      },
-    ]);
+    expect(graph.issues).toEqual([]);
   });
 
   test("returns the matched weapon with its narrowed mastery record", () => {

@@ -43,7 +43,7 @@ import {
   type CharacterSheet,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
-} from "@dnd/character-sheet-runtime/consumer-protocol";
+} from "@dnd/character-sheet-runtime/battle-init-protocol";
 import {
   Hp,
   abilityModifier,
@@ -58,7 +58,7 @@ import type { Language } from "@dnd/shared/game-facts";
 import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-contract";
 import { Match, Option, Result } from "effect";
 import {
@@ -68,11 +68,10 @@ import {
   battleCreatureInitIssuesFromMessages,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
-  characterAttackActionOption,
+  characterWeaponAttackActionOptions,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
   characterInvocationFeatures,
-  characterOffHandAttackActionOption,
   characterPactBladeBondedWeaponItemId,
   characterSpellcasting,
   getRequiredUnit,
@@ -344,24 +343,13 @@ export function battleCreatureInitFromCharacterBuild(
         }),
       );
     }
-    const pactBladeBondedWeaponItemId =
-      yield* characterPactBladeBondedWeaponItemId({
-        build: input.build,
-        unitLibrary: input.unitLibrary,
-        itemId: input.pactBladeBondedWeaponItemId,
-      });
-    const attack = yield* characterAttackActionOption(
-      input.build,
-      input.unitLibrary,
+    const weaponAttackOptions = yield* characterBattleWeaponAttackOptions({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      weaponMasteries: weaponMasteries.success,
       classLevels,
-      pactBladeBondedWeaponItemId,
-    );
-    const offHandAttack = yield* characterOffHandAttackActionOption(
-      input.build,
-      input.unitLibrary,
-      classLevels,
-      pactBladeBondedWeaponItemId,
-    );
+      pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
+    });
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
     const unitFeatures = yield* characterBattleFeatures(
       input.build,
@@ -478,9 +466,11 @@ export function battleCreatureInitFromCharacterBuild(
         selectedLoadout,
         weaponMasteries: weaponMasteries.success,
         invocationFeatures: characterInvocationFeatures(input.build),
-        attack,
+        attack: weaponAttackOptions.attack,
         unarmedStrike,
-        ...(offHandAttack === undefined ? {} : { offHandAttack }),
+        ...(weaponAttackOptions.offHandAttack === undefined
+          ? {}
+          : { offHandAttack: weaponAttackOptions.offHandAttack }),
         unitFeatures,
         resources,
         ...(metamagic === undefined ? {} : { metamagic }),
@@ -490,6 +480,32 @@ export function battleCreatureInitFromCharacterBuild(
           : { druidWildShapeAvailableForms }),
       },
     };
+  });
+}
+
+function characterBattleWeaponAttackOptions(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"];
+  readonly classLevels: CharacterBattleCreatureInit["classLevels"];
+  readonly pactBladeBondedWeaponItemId: CharacterBuildCreatureInput["pactBladeBondedWeaponItemId"];
+}) {
+  return Result.gen(function* () {
+    const pactBladeBondedWeaponItemId =
+      yield* characterPactBladeBondedWeaponItemId({
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        itemId: input.pactBladeBondedWeaponItemId,
+      });
+    return yield* characterWeaponAttackActionOptions({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      weaponMasteries: input.weaponMasteries,
+      classLevels: input.classLevels,
+      ...(pactBladeBondedWeaponItemId === undefined
+        ? {}
+        : { pactBladeBondedWeaponItemId }),
+    });
   });
 }
 

@@ -34,10 +34,28 @@ Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
 retains its printed Darkvision, and Stone Giant retains its printed Dexterity
 save. These corrections change the authenticated candidate shapes without
 changing their existing `added` classification or catalog membership.
+The same integration closes the canonical weapon-reference graph with the SRD
+Graze, Nick, and Vex mastery records. These are authenticated catalog
+additions; their typed Surface mechanics do not imply Battle runtime admission.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
 evidence.
+
+The canonical Weapon Mastery closure in `a027913d4` adds the Graze, Nick, and
+Vex authored Units referenced by the published weapon records. The candidate
+aggregate now contains 437 Units and 330 Stat Blocks. Its byte digest is
+`8622a70b0d6e71c3baee263f93f50cf57dd68d9933d31895a494b9f49a148584`,
+and its canonical JSON digest is
+`d1ccad279f65ed81dc3bf8ea83d483dd04248f8a6f35fc4dc62e61e3da3d1095`.
+Each new Unit is an exact reviewed `authored-catalog-membership` addition. This
+publication evidence does not change the separate runtime support profile:
+Battle admission of these Mastery mechanics remains unsupported.
+The corresponding generated schema contains 1,231 definitions and 7,671 local
+references. Its byte digest is
+`6fd810ca4f3c4342a149b9fec951b382ce20578d6238b157d2f5cc73544fff9a`,
+and its canonical JSON digest is
+`538f5d9a5f6c226d29cc3c51d8ded8b2ed2492ce0122ce87f5299a40fd875822`.
 
 After the publication schema was last synchronized at `bef31d34b`, the
 canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
@@ -88,14 +106,17 @@ schema bytes, and then classifies the complete comparison-to-current rooted
 graph. Substituting either intermediate artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
-specific-item `UnitId`, linked-spell `UnitId`, Life Bond range, and
-movement-trace effect narrowings, proves the removed Barbarian member is a
-structural subset of a retained member, treats local `$ref` extraction and
-associative, set-valued `anyOf` factoring transparently, and applies joint
-partition refinement to both rooted graphs. Each reversal is authorized by an
-exact reachable JSON pointer and the canonical hashes of the node before and
-after that reversal. An equivalent-looking node at another or unreachable
-location does not inherit the classification. Any remaining changed region
+specific-item `UnitId`, linked-spell `UnitId`, Life Bond range, movement-trace
+effect narrowings, and canonical Mastery variants, proves the removed Barbarian
+member is a structural subset of a retained member, treats local `$ref`
+extraction and associative, set-valued `anyOf` factoring transparently, and
+applies joint partition refinement to both rooted graphs. The Mastery reversal
+is limited to the one reachable `mechanics` union that contains exactly the two
+canonical Graze and Nick schema-node hashes plus the retained on-hit branch used
+by Vex. Each reversal is authorized by an exact reachable JSON pointer and the
+canonical hashes of the node before and after that reversal. A changed Mastery
+shape, an equivalent-looking node at another pointer, or an unreachable
+lookalike does not inherit the classification. Any remaining changed region
 fails closed, and malformed or non-converging graph analysis is reported as
 typed invalid evidence rather than escaping the verifier.
 This is executable evidence about these two finite schema graphs. It is not a

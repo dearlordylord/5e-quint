@@ -37,14 +37,18 @@ import {
   requireSuccess,
   resourceCount,
   storedAvailableSheetInput,
+  statBlockCatalog as fixtureStatBlockCatalog,
   unitLibrary,
 } from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / druid features", () => {
-  test("uses the canonical installed Stat Block catalog by default", () => {
+  test("uses an explicit Stat Block catalog or the canonical installed default", () => {
     expect(druidWildShapeStatBlockCatalogFromInput(undefined)).toBe(
       srdStatBlockCatalog,
     );
+    expect(
+      druidWildShapeStatBlockCatalogFromInput(fixtureStatBlockCatalog),
+    ).toBe(fixtureStatBlockCatalog);
   });
 
   test("uses the canonical Stat Block catalog for replacement at Long Rest", () => {

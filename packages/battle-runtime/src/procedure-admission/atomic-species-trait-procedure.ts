@@ -192,16 +192,15 @@ function inspectCreatureSpaceMovementPermission(
     return { tag: "notRepresented" };
   }
   const mechanics = unit.mechanics;
-  const issues: AtomicSpeciesTraitProcedureAdmissionIssue[] = [];
-  if (
-    mechanics.moveThrough.kind !== "occupied_creature_space" ||
-    mechanics.moveThrough.creatureSizeRelationToSelf !== "larger"
-  ) {
-    issues.push(creatureSpaceMovementIssue("movementTarget"));
-  }
-  if (mechanics.canStopInOccupiedSpace !== false) {
-    issues.push(creatureSpaceMovementIssue("occupiedSpaceStopping"));
-  }
+  const supportByFailedFact = {
+    movementTarget:
+      mechanics.moveThrough.kind === "occupied_creature_space" &&
+      mechanics.moveThrough.creatureSizeRelationToSelf === "larger",
+    occupiedSpaceStopping: mechanics.canStopInOccupiedSpace === false,
+  } satisfies Record<CreatureSpaceMovementFailedFact, boolean>;
+  const issues = CREATURE_SPACE_MOVEMENT_FAILED_FACTS.filter(
+    (failedFact) => !supportByFailedFact[failedFact],
+  ).map(creatureSpaceMovementIssue);
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
     ? {
@@ -233,16 +232,14 @@ function inspectD20TestNaturalOneReroll(
     return { tag: "notRepresented" };
   }
   const mechanics = unit.mechanics;
-  const issues: AtomicSpeciesTraitProcedureAdmissionIssue[] = [];
-  if (!naturalOneRerollOptionalityIsSupported(mechanics)) {
-    issues.push(naturalOneRerollIssue("rerollOptionality"));
-  }
-  if (!naturalOneRerollTriggerIsSupported(mechanics)) {
-    issues.push(naturalOneRerollIssue("rerollTrigger"));
-  }
-  if (!naturalOneRerollUseIsSupported(mechanics)) {
-    issues.push(naturalOneRerollIssue("rerollUse"));
-  }
+  const supportByFailedFact = {
+    rerollOptionality: naturalOneRerollOptionalityIsSupported(mechanics),
+    rerollTrigger: naturalOneRerollTriggerIsSupported(mechanics),
+    rerollUse: naturalOneRerollUseIsSupported(mechanics),
+  } satisfies Record<NaturalOneRerollFailedFact, boolean>;
+  const issues = NATURAL_ONE_REROLL_FAILED_FACTS.filter(
+    (failedFact) => !supportByFailedFact[failedFact],
+  ).map(naturalOneRerollIssue);
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
     ? {
@@ -301,17 +298,16 @@ function inspectHideActionObscurementPermission(
     return { tag: "notRepresented" };
   }
   const mechanics = unit.mechanics;
-  const issues: AtomicSpeciesTraitProcedureAdmissionIssue[] = [];
-  if (mechanics.action !== "hide") {
-    issues.push(hideObscurementIssue("hideAction"));
-  }
-  if (
-    mechanics.allowedObscurement.kind !== "obscured_only_by_creature" ||
-    mechanics.allowedObscurement.creatureSizeRelationToSelf !==
-      "at_least_one_size_larger"
-  ) {
-    issues.push(hideObscurementIssue("hideObscurement"));
-  }
+  const supportByFailedFact = {
+    hideAction: mechanics.action === "hide",
+    hideObscurement:
+      mechanics.allowedObscurement.kind === "obscured_only_by_creature" &&
+      mechanics.allowedObscurement.creatureSizeRelationToSelf ===
+        "at_least_one_size_larger",
+  } satisfies Record<HideObscurementFailedFact, boolean>;
+  const issues = HIDE_OBSCUREMENT_FAILED_FACTS.filter(
+    (failedFact) => !supportByFailedFact[failedFact],
+  ).map(hideObscurementIssue);
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
     ? {

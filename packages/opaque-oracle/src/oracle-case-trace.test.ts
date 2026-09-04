@@ -1,5 +1,6 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
+  admitResolvedCharacterWeaponExecutionWeapon,
   BattleFillSchema,
   combatantId,
   BattleSubjectSchema,
@@ -12,8 +13,13 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
+  characterDraftId,
   creationChoiceOptionId,
   creationHoleId,
+  createCharacterDraft,
+  discoverCreationHoles,
+  fillCreationHoles,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
 } from "@dnd/character-creation-runtime";
 import {
   decodeOracleCase,
@@ -31,6 +37,7 @@ import {
 } from "./index.ts";
 import {
   buildUnitCatalog,
+  resolveWeaponMasteryReference,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import {
@@ -159,6 +166,67 @@ const standardCreationFillBatches = completeCreationFillBatches();
 const ORACLE_LONG_TEST_TIMEOUT_MS = 20_000;
 
 describe("Opaque Oracle Case and Trace contract", () => {
+  it("selects Battle-admitted Masteries for the reusable creation fixture", () => {
+    let draft = createCharacterDraft({
+      draftId: characterDraftId("opaque-oracle:mastery-fixture-test"),
+    });
+    let admittedMasterySelections = 0;
+
+    for (const fillBatch of standardCreationFillBatches) {
+      const hole = discoverCreationHoles({ draft, unitLibrary })[0];
+      if (
+        hole?.kind === "choice" &&
+        hole.source.tag === "unitChoice" &&
+        hole.source.choiceKey === WEAPON_MASTERY_OPTIONS_CHOICE_KEY
+      ) {
+        const masteryFill = fillBatch.find(
+          (fill) => fill.kind === "choice" && fill.holeId === hole.holeId,
+        );
+        expect(masteryFill?.kind).toBe("choice");
+        if (masteryFill?.kind !== "choice") continue;
+
+        for (const optionId of masteryFill.optionIds) {
+          const option = hole.options.find(
+            (candidate) => candidate.optionId === optionId,
+          );
+          expect(option?.unitRef).toBeDefined();
+          if (option?.unitRef === undefined) continue;
+          const weapon = unitLibrary.getUnit(option.unitRef.unitId);
+          expect(Option.isSome(weapon) && weapon.value.kind === "weapon").toBe(
+            true,
+          );
+          if (Option.isNone(weapon) || weapon.value.kind !== "weapon") continue;
+          const masteryReference = resolveWeaponMasteryReference(
+            weapon.value,
+            unitLibrary,
+          );
+          expect(Result.isSuccess(masteryReference)).toBe(true);
+          if (Result.isFailure(masteryReference)) continue;
+          expect(
+            Result.isSuccess(
+              admitResolvedCharacterWeaponExecutionWeapon(
+                masteryReference.success,
+              ),
+            ),
+          ).toBe(true);
+          admittedMasterySelections += 1;
+        }
+      }
+
+      const result = fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: fillBatch,
+      });
+      expect(result.tag).toBe("accepted");
+      if (result.tag !== "accepted") return;
+      draft = result.draft;
+    }
+
+    expect(admittedMasterySelections).toBeGreaterThan(0);
+  });
+
   it("serializes character display mismatches from canonical role and Unit kind facts", () => {
     const mismatch = {
       tag: "rejected",

@@ -1,4 +1,5 @@
 import {
+  admitResolvedCharacterWeaponExecutionWeapon,
   BattleStatBlockProcedureExecutionRef,
   combatantId,
   discoverBattleActs,
@@ -878,24 +879,23 @@ function battleExecutableChoiceOptions(
   ) {
     return hole.options;
   }
-  const supported: (typeof hole.options)[number][] = [];
-  const unsupportedWeaponMasteries: (typeof hole.options)[number][] = [];
-  for (const option of hole.options) {
+  return hole.options.filter((option) => {
     const unit =
       option.unitRef === undefined
         ? Option.none()
         : unitLibrary.getUnit(option.unitRef.unitId);
-    if (
-      Option.isSome(unit) &&
-      unit.value.kind === "weapon" &&
-      Result.isFailure(resolveWeaponMasteryReference(unit.value, unitLibrary))
-    ) {
-      unsupportedWeaponMasteries.push(option);
-    } else {
-      supported.push(option);
-    }
-  }
-  return [...supported, ...unsupportedWeaponMasteries];
+    if (Option.isNone(unit) || unit.value.kind !== "weapon") return false;
+    const masteryReference = resolveWeaponMasteryReference(
+      unit.value,
+      unitLibrary,
+    );
+    return (
+      Result.isSuccess(masteryReference) &&
+      Result.isSuccess(
+        admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success),
+      )
+    );
+  });
 }
 
 function choiceCombinations(

@@ -10,7 +10,7 @@ export const SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH =
   "docs/migrations/effect-4/surface-publication-delta-certificate.json";
 
 const SURFACE_PUBLICATION_DELTA_CERTIFICATE_SHA256 =
-  "22499207fee594ac7c25ad2aa0de46e37a714bf336db98af05ab66f38799b7b8";
+  "550f1a796c2c7fc00fdff6a17ac8447e0dc48b01f31ebfcf02eb5fac5bf8ee0c";
 
 export type SurfacePublicationDeltaVerificationOptions = {
   readonly repoRoot: string;

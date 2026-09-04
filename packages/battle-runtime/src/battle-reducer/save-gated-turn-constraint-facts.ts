@@ -1,10 +1,10 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
-  BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleTurnConstraintSomaticSpellFailureOutcomeHole,
   BattleState,
@@ -14,13 +14,8 @@ import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./domain-con
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import { subtleSpellComponentProjectionForApplications } from "./metamagic-support.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
-import {
-  boundSaveGatedTurnConstraintBundleEffect,
-  type BoundSaveGatedTurnConstraintBundleEffect,
-} from "./spell-modifier-binding.ts";
-
-type SaveGatedTurnConstraintBundleEffect =
-  BoundSaveGatedTurnConstraintBundleEffect;
+import { saveGatedTurnConstraintBundleEffects } from "./save-gated-turn-constraint-turn-resources.ts";
+export { saveGatedTurnConstraintBundleEffects } from "./save-gated-turn-constraint-turn-resources.ts";
 
 export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
   readonly state: BattleState;
@@ -65,24 +60,6 @@ export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
       sourceCombatantId: effect.sourceCombatantId,
     })),
   };
-}
-
-export function saveGatedTurnConstraintBundleEffects(
-  state: BattleState,
-  combatant: BattleCreatureState | undefined,
-): readonly SaveGatedTurnConstraintBundleEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.flatMap((effect) => {
-        if (effect.kind !== "saveGatedTurnConstraintBundle") {
-          return [];
-        }
-        const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
-          state,
-          effect,
-        );
-        return boundEffect === undefined ? [] : [boundEffect];
-      });
 }
 
 function spellInvocationRequiresEffectiveSomaticComponent(input: {

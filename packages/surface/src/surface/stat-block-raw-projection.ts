@@ -44,6 +44,7 @@ import {
   StatBlockGearItemSchema,
   StatBlockInitiativeSchema,
   StatBlockLanguageNameSchema,
+  StatBlockLanguageSetSchema,
   StatBlockPassivePerceptionSchema,
   StatBlockProcedureDescriptionSchema,
   StatBlockProcedureNameSchema,
@@ -689,6 +690,13 @@ export type StatBlockScopedFidelityProjection = Schema.Schema.Type<
 >;
 
 type ScopedGeneralFacts = StatBlockScopedFidelityProjection["generalFacts"];
+type StatBlockLanguageSet = Schema.Schema.Type<
+  typeof StatBlockLanguageSetSchema
+>;
+type StatBlockLanguageNames = Extract<
+  StatBlockLanguageSet,
+  { readonly kind: "named" }
+>["languages"];
 type ProcedureProjection =
   StatBlockScopedFidelityProjection["procedures"][number];
 type StructuralProcedure = Exclude<
@@ -1006,7 +1014,7 @@ const parseMetadataAlignment = (
       { order: "neutral" as const, morality: "neutral" as const },
     );
   }
-  const [order, morality] = parts as [string, string];
+  const [order, morality] = parts;
   return {
     order: parsedLiteral(
       issueContext,
@@ -2456,7 +2464,7 @@ const parseLanguageNames = (
   issueContext: ProjectionIssueContext,
   value: string,
   field: string,
-) =>
+): StatBlockLanguageNames =>
   nonEmptyValues(
     issueContext,
     value.split(/, (?![^()]*\))| and /).map((language, index) => {
@@ -2479,7 +2487,7 @@ const parseLanguageSet = (
   issueContext: ProjectionIssueContext,
   value: string,
   languageField = "communication.languages",
-): unknown => {
+): StatBlockLanguageSet => {
   if (value === "All") return { kind: "all" };
   const additional = value.match(
     /^(.+) plus (one|two|three|four|five) other languages?$/,
@@ -2491,20 +2499,29 @@ const parseLanguageSet = (
   );
   if (additional === null) return { kind: "named", languages };
   const additionalLanguageWord = matchCapture(additional, 2);
-  const additionalLanguageCount = NUMBER_WORDS.find(
+  const additionalLanguage = NUMBER_WORDS.find(
     ([word]) => word === additionalLanguageWord,
-  )?.[1] as 1 | 2 | 3 | 4 | 5;
+  );
+  if (additionalLanguage === undefined) {
+    return malformedEvidence(
+      issueContext,
+      languageField,
+      additionalLanguageWord,
+      "one, two, three, four, or five other languages",
+      { kind: "named", languages },
+    );
+  }
   return {
     kind: "named_plus_other_languages",
     languages,
-    additionalLanguages: additionalLanguageCount,
+    additionalLanguages: PositiveInteger(additionalLanguage[1]),
   };
 };
 
 const trailingTelepathy = (
   issueContext: ProjectionIssueContext,
   telepathyText: RegExpMatchArray | null,
-): { readonly telepathy?: { readonly rangeFeet: number } } => {
+): { readonly telepathy?: { readonly rangeFeet: PositiveInteger } } => {
   if (telepathyText === null) return {};
   return {
     telepathy: {
@@ -2520,8 +2537,8 @@ const trailingTelepathy = (
 const parseTelepathyCommunicationQualifier = (
   issueContext: ProjectionIssueContext,
   qualifier: string,
-  spokenLanguages: unknown,
-): unknown => {
+  spokenLanguages: StatBlockLanguageSet,
+): StatBlockCommunication => {
   const telepathy = assess(issueContext, () =>
     requireMatch(
       issueContext,
@@ -2561,8 +2578,8 @@ const parseTelepathyCommunicationQualifier = (
 const parseUnderstoodCommunicationQualifier = (
   issueContext: ProjectionIssueContext,
   qualifier: string,
-  spokenLanguages: unknown,
-): unknown => {
+  spokenLanguages: StatBlockLanguageSet,
+): StatBlockCommunication => {
   const understood = assess(issueContext, () =>
     requireMatch(
       issueContext,
@@ -2591,10 +2608,10 @@ const parseUnderstoodCommunicationQualifier = (
 const parseCommunicationQualifier = (
   issueContext: ProjectionIssueContext,
   qualifier: string | undefined,
-  spokenLanguages: unknown,
+  spokenLanguages: StatBlockLanguageSet,
   text: string,
   contextLabel: string,
-): unknown => {
+): StatBlockCommunication => {
   if (qualifier === undefined) {
     return { kind: "spoken_and_understood", languages: spokenLanguages };
   }
@@ -2625,7 +2642,7 @@ const parseCommunicationCandidate = (
   issueContext: ProjectionIssueContext,
   lines: readonly string[],
   contextLabel: string,
-): unknown => {
+): StatBlockCommunication => {
   const communicationLine = assess(issueContext, () =>
     requireLine(issueContext, lines, "**Languages**", "communication"),
   );
@@ -3239,7 +3256,7 @@ const parseDamage = (
     /^(\d+)(?: \((\d+)d(\d+)(?: ([+−-]) (\d+))?\))? ([A-Z][a-z]+) damage$/,
   );
   if (match === null) return undefined;
-  const damageTypeText = match[6] as string;
+  const damageTypeText = matchCapture(match, 6);
   const staticDamage = decodeEvidenceValue(
     issueContext,
     PositiveIntegerSchema,
@@ -3545,9 +3562,12 @@ const attackHitResidual = (hit: string): string =>
     .replace(/\bplus\b/gi, "")
     .replace(/[\s,.]/g, "");
 
-const parsedAttackType = (match: RegExpMatchArray): "melee" | "ranged" => {
+const parsedAttackType = (
+  match: RegExpMatchArray,
+): "melee" | "ranged" | undefined => {
   const attackType = matchCapture(match, 1).toLowerCase();
-  return attackType as "melee" | "ranged";
+  if (attackType === "melee" || attackType === "ranged") return attackType;
+  return undefined;
 };
 
 const rangedAttackRange = (
@@ -3619,6 +3639,7 @@ const parseSimpleAttack = (
   ];
   if (attackHitResidual(hit) !== "") return undefined;
   const attackType = parsedAttackType(match);
+  if (attackType === undefined) return undefined;
   const attackAbility = attackAbilityEvidence(
     rawAttackAbilityCandidates(
       generalFacts.abilityScores,
@@ -3759,10 +3780,11 @@ const parsePairedMultiattack = (
   section: ProcedureSection,
   pair: RegExpMatchArray,
 ): ProcedureProjection | undefined => {
-  const firstCount = numberWordValue(pair[1]) as number;
-  const secondCount = numberWordValue(pair[3]) as number;
-  const firstProcedureName = pair[2] as string;
-  const secondProcedureName = pair[4] as string;
+  const firstCount = numberWordValue(pair[1]);
+  const secondCount = numberWordValue(pair[3]);
+  if (firstCount === undefined || secondCount === undefined) return undefined;
+  const firstProcedureName = matchCapture(pair, 2);
+  const secondProcedureName = matchCapture(pair, 4);
   return {
     section,
     name: normalizedProcedureName(entry.name),
@@ -3784,8 +3806,9 @@ const parseSingleMultiattack = (
     /^The .+ makes (one|two|three) (.+) attacks\.$/,
   );
   if (match === null || match[2]?.includes(" or ") === true) return undefined;
-  const count = numberWordValue(match[1]) as number;
-  const procedureName = match[2] as string;
+  const count = numberWordValue(match[1]);
+  if (count === undefined) return undefined;
+  const procedureName = matchCapture(match, 2);
   return {
     section,
     name: normalizedProcedureName(entry.name),

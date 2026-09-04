@@ -49,6 +49,11 @@ each Case call. The builder is the only source-side staging step: it writes the
 exact projection bytes, while the executable reads only its beside-executable
 assets and rebuilds services from those bytes.
 
+The evaluator imports the Character Sheet and Character Battle source-free
+construction subpaths. Those contracts require the Stat Block catalog rebuilt
+from the startup projection; they do not traverse either package root's bundled
+canonical-catalog defaults.
+
 `scripts/build-distribution.ts` emits one flat, deterministic distribution
 root containing the bundled `oracle.mjs`, the three canonical publication
 schemas, `oracle-startup-surface.json`, and narrow `oracle-identity.json`

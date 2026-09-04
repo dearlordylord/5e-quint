@@ -133,7 +133,7 @@ import {
   spellEndTargetStatePromotesIncapacitated,
 } from "./spell-end-target-state.ts";
 import { battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects } from "./spell-granted-action-resource.ts";
-import { battleStateWithReconciledCurrentActorTurnConstraint } from "./save-gated-turn-constraint-runtime.ts";
+import { battleStateWithReconciledCurrentActorTurnConstraint } from "./save-gated-turn-constraint-turn-resources.ts";
 import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import {
   d20TestNaturalOneRerollOutcomeIssue,

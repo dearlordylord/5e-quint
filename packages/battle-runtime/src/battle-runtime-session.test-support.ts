@@ -14,7 +14,7 @@ import type { CombatantId } from "./identity.ts";
 export {
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
-} from "./battle-runtime.test-support.ts";
+} from "./battle-effect-occurrence-allocation.test-support.ts";
 
 /**
  * Test-only construction for reducer-state fixtures that bypass battle

@@ -79,6 +79,12 @@ play-state fields.
 MCP and app code should call this package instead of owning parallel
 Character Sheet/battle projection logic.
 
+Source-free construction and Oracle consumers import roster composition from
+`@dnd/character-battle-runtime/source-free-construction`. That subpath owns the
+Character Sheet battle initialization and roster admission algorithms without
+traversing this package's settlement surface or either runtime package root.
+The package root re-exports the same owners for existing integration callers.
+
 Rules-kernel coverage for battle/sheet composition semantics is tracked in
 `plans/rules-kernel-coverage/`. New handoff or battle-initialization reducer
 behavior should add or extend a semantic obligation and connect QNT ownership to

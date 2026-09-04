@@ -6,7 +6,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./consumer-protocol": "./src/consumer-protocol.ts"
+    "./battle-init-protocol": "./src/battle-init-protocol.ts",
+    "./consumer-protocol": "./src/consumer-protocol.ts",
+    "./fresh-character-sheet-schema": "./src/fresh-character-sheet-schema.ts",
+    "./source-free-construction": "./src/source-free-construction.ts"
   },
   "imports": {
     "#/*": "./src/*"

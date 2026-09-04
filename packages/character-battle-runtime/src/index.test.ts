@@ -148,7 +148,7 @@ import {
   admitCharacterSheetCompanionToBattle,
   battleCreatureInitFromCharacterBuild as battleCreatureInitFromCharacterBuildRuntime,
   battleCreatureInitFromCharacterBuildWithRoute as battleCreatureInitFromCharacterBuildWithRouteRuntime,
-  characterAttackActionOption,
+  characterWeaponAttackActionOptions,
   characterBaseUnarmedStrikeActionOption,
   characterBattleSupportProjection,
   characterSheetBattleInit,
@@ -160,7 +160,6 @@ import {
   composeBattleCompanionRoster,
   type BattleRosterEntries,
   characterBattleLoadoutFromBuild,
-  characterOffHandAttackActionOption,
   characterSpellcasting as characterSpellcastingRuntime,
   settleCharacterSheetFromBattle,
   characterBattleRuntimeIssueMessage,
@@ -857,63 +856,64 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
-  test("omits selected weapon masteries outside the canonical Battle slice", () => {
-    const unsupportedWeaponUnitIds = [
-      authoredUnitId("weapon_dagger"),
-      authoredUnitId("weapon_shortsword"),
-    ] as const;
-    const supportedMastery = unitLibrary.requireUnit(
-      authoredUnitId("mastery_sap"),
-    );
-    if (supportedMastery.kind !== "mastery") {
-      throw new Error("Expected the supported mastery fixture.");
-    }
-    const typedUnsupportedMasteries = unsupportedWeaponUnitIds.map(
-      (weaponUnitId) => {
-        const weapon = unitLibrary.requireUnit(weaponUnitId);
-        if (weapon.kind !== "weapon") {
-          throw new Error("Expected the unsupported-mastery weapon fixture.");
-        }
-        return {
-          ...supportedMastery,
-          id: weapon.masteryUnitId,
-          name: "Synthetic Unsupported Mastery Catalog Fixture",
-          provenance: {
-            kind: "synthetic-test" as const,
-            section: weapon.id,
-          },
-        };
-      },
-    );
-    const typedUnsupportedMasteryCatalog: UnitCatalog = {
-      getUnit: (id) => {
-        const mastery = typedUnsupportedMasteries.find(
-          (candidate) => candidate.id === id,
-        );
-        return mastery === undefined
-          ? unitLibrary.getUnit(id)
-          : Option.some(mastery);
-      },
-      listUnits: () => [
-        ...unitLibrary.listUnits(),
-        ...typedUnsupportedMasteries,
+  test("passes Dagger's installed mastery reference to downstream support admission", () => {
+    const dagger = characterBattleSupportProjection(build, unitLibrary, [
+      { weaponUnitId: authoredUnitId("weapon_dagger") },
+    ]);
+
+    expect(dagger).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          tag: "battleSupportProfileIssue",
+          message: "Unsupported battle Weapon Mastery Unit hook: mastery_nick.",
+        },
       ],
-      requireUnit: (id) =>
-        typedUnsupportedMasteries.find((candidate) => candidate.id === id) ??
-        unitLibrary.requireUnit(id),
-    };
-    const refs = characterBattleSupportProjection(
-      build,
-      typedUnsupportedMasteryCatalog,
-      unsupportedWeaponUnitIds.map((weaponUnitId) => ({ weaponUnitId })),
+    });
+  });
+
+  test("initializes an equipped Dagger without admitting its unselected mastery", () => {
+    const daggerBuild = monkBuild({
+      weaponUnitId: "weapon_dagger",
+      offHandWeaponUnitId: "weapon_dagger",
+      str: 12,
+      dex: 16,
+    });
+    const projection = characterBattleSupportProjection(
+      daggerBuild,
+      unitLibrary,
     );
 
-    expect(Result.isSuccess(refs)).toBe(true);
-    if (Result.isFailure(refs)) return;
-    expect(refs.success.unitRefs.map(({ unit }) => unit.id)).not.toEqual(
-      expect.arrayContaining(
-        typedUnsupportedMasteries.map((mastery) => mastery.id),
-      ),
+    expect(projection).toMatchObject({ _tag: "Success" });
+    if (Result.isFailure(projection)) return;
+    expect(projection.success.unitRefs.map(({ unit }) => unit.id)).toEqual(
+      expect.arrayContaining(["weapon_dagger"]),
+    );
+    expect(
+      projection.success.unitRefs.map(({ unit }) => unit.id),
+    ).not.toContain("mastery_nick");
+
+    const init = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("ordinary-dagger-without-mastery"),
+      characterId: characterId("character:ordinary-dagger-without-mastery"),
+      displayName: "Ordinary Dagger Character",
+      build: daggerBuild,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      unitLibrary,
+    });
+    expect(init).toMatchObject({ _tag: "Success" });
+    if (
+      Result.isFailure(init) ||
+      init.success.creatureInit.kind !== "character"
+    ) {
+      return;
+    }
+    expect(init.success.creatureInit.attack?.weapon).not.toHaveProperty(
+      "masteryProperty",
+    );
+    expect(init.success.creatureInit.offHandAttack?.weapon).not.toHaveProperty(
+      "masteryProperty",
     );
   });
 
@@ -8176,7 +8176,12 @@ describe("Character Build battle projection", () => {
       },
     } satisfies CharacterBuild;
     expect(
-      characterAttackActionOption(missingEquipmentBuild, unitLibrary),
+      characterWeaponAttackActionOptions({
+        build: missingEquipmentBuild,
+        unitLibrary,
+        weaponMasteries: [],
+        classLevels: [],
+      }),
     ).toMatchObject({
       _tag: "Failure",
       failure: { message: expect.stringContaining("Unknown Unit") },
@@ -8196,13 +8201,6 @@ describe("Character Build battle projection", () => {
         attackAbility: "str",
       },
     });
-    expect(
-      characterOffHandAttackActionOption(missingEquipmentBuild, unitLibrary),
-    ).toMatchObject({
-      _tag: "Failure",
-      failure: { message: expect.stringContaining("Unknown Unit") },
-    });
-
     expect(
       characterArmorClassState({
         build: {
@@ -8246,8 +8244,8 @@ describe("Character Build battle projection", () => {
       ),
     });
     expect(
-      characterAttackActionOption(
-        {
+      characterWeaponAttackActionOptions({
+        build: {
           ...build,
           features: [
             {
@@ -8269,7 +8267,9 @@ describe("Character Build battle projection", () => {
           },
         },
         unitLibrary,
-      ),
+        weaponMasteries: [],
+        classLevels: [],
+      }),
     ).toMatchObject({
       _tag: "Failure",
       failure: { message: expect.stringContaining("Unknown Unit") },
@@ -8282,8 +8282,8 @@ describe("Character Build battle projection", () => {
       ),
     });
     expect(
-      characterAttackActionOption(
-        {
+      characterWeaponAttackActionOptions({
+        build: {
           ...build,
           equipment: {
             startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
@@ -8298,8 +8298,10 @@ describe("Character Build battle projection", () => {
           },
         },
         unitLibrary,
-      ),
-    ).toEqual(Result.succeed(null));
+        weaponMasteries: [],
+        classLevels: [],
+      }),
+    ).toEqual(Result.succeed({ attack: null, offHandAttack: undefined }));
 
     const init = {
       combatantId: combatantId("missing-projection-unit"),
@@ -8857,20 +8859,22 @@ describe("Character Build battle projection", () => {
   });
 
   test("projects an empty weapon loadout and rejects a non-Weapon off-hand reference", () => {
-    expect(characterAttackActionOption(build, unitLibrary)).toEqual(
-      Result.succeed(null),
-    );
-    expect(characterOffHandAttackActionOption(build, unitLibrary)).toEqual(
-      Result.succeed(undefined),
-    );
+    expect(
+      characterWeaponAttackActionOptions({
+        build,
+        unitLibrary,
+        weaponMasteries: [],
+        classLevels: [],
+      }),
+    ).toEqual(Result.succeed({ attack: null, offHandAttack: undefined }));
     const leatherArmorUnitId = authoredUnitId("armor_leather");
     const leatherArmorItemId = characterEquipmentItemId({
       slot: "off",
       unitId: expectSuccess(characterEquipmentItemUnitId(leatherArmorUnitId)),
     });
     expect(
-      characterOffHandAttackActionOption(
-        {
+      characterWeaponAttackActionOptions({
+        build: {
           ...build,
           equipment: {
             startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
@@ -8885,7 +8889,9 @@ describe("Character Build battle projection", () => {
           },
         },
         unitLibrary,
-      ),
+        weaponMasteries: [],
+        classLevels: [],
+      }),
     ).toEqual(
       Result.fail({
         tag: "battleCreatureInitIssue",
@@ -10684,20 +10690,44 @@ describe("Character Build battle projection", () => {
     });
 
     const shortsword = expectSuccess(
-      characterAttackActionOption(
-        monkBuild({
+      characterWeaponAttackActionOptions({
+        build: monkBuild({
           weaponUnitId: "weapon_shortsword",
           str: 12,
           dex: 16,
         }),
         unitLibrary,
-        [{ className: "monk", level: 1 }],
-      ),
-    );
+        weaponMasteries: [],
+        classLevels: [{ className: "monk", level: 1 }],
+      }),
+    ).attack;
     expect(shortsword?.weapon.damage).toMatchObject({
       kind: "dice",
       dice: 1,
       dieSize: 6,
+    });
+  });
+
+  test("rejects a selected unsupported mastery in direct weapon attack projection", () => {
+    const daggerBuild = monkBuild({
+      weaponUnitId: "weapon_dagger",
+      str: 12,
+      dex: 16,
+    });
+
+    expect(
+      characterWeaponAttackActionOptions({
+        build: daggerBuild,
+        unitLibrary,
+        weaponMasteries: [{ weaponUnitId: authoredUnitId("weapon_dagger") }],
+        classLevels: [{ className: "monk", level: 1 }],
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "battleCreatureInitIssue",
+        message: "Unsupported battle Weapon Mastery Unit hook: mastery_nick.",
+      },
     });
   });
 
@@ -10769,8 +10799,14 @@ describe("Character Build battle projection", () => {
       }
       expect(
         expectSuccess(
-          characterAttackActionOption(pactBuild, catalog, [], bondedItemId),
-        )?.damageTypeChoices,
+          characterWeaponAttackActionOptions({
+            build: pactBuild,
+            unitLibrary: catalog,
+            weaponMasteries: [],
+            classLevels: [],
+            pactBladeBondedWeaponItemId: bondedItemId,
+          }),
+        ).attack?.damageTypeChoices,
       ).toEqual(expected);
     }
   });

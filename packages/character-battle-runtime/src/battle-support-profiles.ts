@@ -21,11 +21,13 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,
   UnitRecord,
+  WeaponRecord,
   WeaponMasteryName,
 } from "@dnd/surface/surface/types";
 import {
   resolveWeaponMasteryReference,
   type UnitCatalog,
+  type WeaponMasteryReferenceResolution,
 } from "@dnd/surface/surface/unit-catalog-core";
 import { Match, Option, Result } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
@@ -255,6 +257,25 @@ function battleSupportProfileIssue(
   return Result.fail({ tag: "battleSupportProfileIssue", message });
 }
 
+export function resolveSelectedWeaponMasteryReferenceForBattle(
+  weapon: WeaponRecord,
+  unitLibrary: UnitCatalog,
+): Result.Result<WeaponMasteryReferenceResolution, BattleSupportProfileIssue> {
+  const resolution = resolveWeaponMasteryReference(weapon, unitLibrary);
+  if (Result.isSuccess(resolution)) return Result.succeed(resolution.success);
+  const issue = resolution.failure;
+  return battleSupportProfileIssue(
+    Match.value(issue).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        missing: (missing) =>
+          `Selected weapon ${missing.root.id} references unknown mastery Unit ${missing.masteryUnitId} through ${missing.fieldPath}.`,
+        wrongKind: (wrongKind) =>
+          `Selected weapon ${wrongKind.root.id} references ${wrongKind.masteryUnitId} through ${wrongKind.fieldPath}, but that Unit has kind ${wrongKind.actualKind} instead of mastery.`,
+      }),
+    ),
+  );
+}
+
 function withBattleSupportProfiles(
   unitRef: ReturnType<typeof characterBuildUnitRefs>[number],
   unitLibrary: UnitCatalog,
@@ -439,32 +460,18 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
         `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
       );
     }
-    if (!battleSupportsWeaponMasteryUnitId(weapon.value.masteryUnitId)) {
-      return Result.succeed([]);
-    }
-    const resolution = resolveWeaponMasteryReference(weapon.value, unitLibrary);
+    const resolution = resolveSelectedWeaponMasteryReferenceForBattle(
+      weapon.value,
+      unitLibrary,
+    );
     if (Result.isFailure(resolution)) {
-      const issue = resolution.failure;
-      if (issue.tag === "missing") {
-        return battleSupportProfileIssue(
-          `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`,
-        );
-      }
-      return battleSupportProfileIssue(
-        `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,
-      );
+      return Result.fail(resolution.failure);
     }
-    return Result.succeed([resolution.success.mastery.id]);
+    return Result.succeed(resolution.success.mastery.id);
   });
   return Result.isFailure(unitIds)
     ? Result.fail(unitIds.failure)
-    : Result.succeed(uniqueUnitIds(unitIds.success.flat()));
-}
-
-function battleSupportsWeaponMasteryUnitId(unitId: UnitRecord["id"]): boolean {
-  return Object.values(
-    BATTLE_SUPPORTED_WEAPON_MASTERY_UNIT_ID_BY_PROPERTY,
-  ).some((supportedUnitId) => supportedUnitId === unitId);
+    : Result.succeed(uniqueUnitIds(unitIds.success));
 }
 
 function uniqueUnitIds(

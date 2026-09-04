@@ -7,8 +7,8 @@
     "path": "docs/migrations/effect-4/effect3-behavioral-oracle.json"
   },
   "candidate": {
-    "byteLength": 50667014,
-    "sha256": "d36fb06bcdbadae3470dfa8c7fdcae2521d56121d2d05ad4c62f7cd8b4e32093"
+    "byteLength": 50669363,
+    "sha256": "4cea44ff11131702655ad12bda69f8336c60c08f3044a1f0b8e8065aef6032ad"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -117,9 +117,9 @@
           "membershipSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b"
         },
         "candidate": {
-          "count": 1866,
-          "memberOrderSha256": "0bb46fc07b756ede424773e1c6ae203fd8581f2624c86d7e8719ffd01429174a",
-          "membershipSha256": "0bb46fc07b756ede424773e1c6ae203fd8581f2624c86d7e8719ffd01429174a"
+          "count": 1872,
+          "memberOrderSha256": "1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9",
+          "membershipSha256": "1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9"
         },
         "id": "surface-content-artifacts",
         "reasonId": "surface-authored-contract-convergence"
@@ -291,7 +291,7 @@
       {
         "delta": {
           "baselineSha256": "02c4732c8a1aa03f6e8727f459f03b9abc2c843202caabdd3b827c41494c50a9",
-          "candidateSha256": "842a788e650267c5cc7e1c64aa1485e192ae71300677f024ac2fe83c44d7b4c0",
+          "candidateSha256": "2b5838579c89fbe0cdc74abb36f45b4c8e958087872d9c1c9b0fb3b4fd295fda",
           "operation": "changed",
           "segments": [
             "surface",
@@ -3456,7 +3456,7 @@
       {
         "delta": {
           "baselineSha256": "1120e94cd0f50c39d58df7279081ef2a45d15825adf0f3eb31997b1e46b31fe6",
-          "candidateSha256": "2e6fe11896f29a8eb3153ff34a40a5c57d9c049f2c9f9a7de492f63c42eee2e2",
+          "candidateSha256": "b61606f943172350b25e0aad38527d9196cfdf81d64702e7215bed6a086c5b80",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -9790,7 +9790,7 @@
       {
         "delta": {
           "baselineSha256": "1bec21730513b197c582a1b99237f7e95e3b7b86dfd1bf72b45cafe224edd5ce",
-          "candidateSha256": "26d2d36bb37bb0007a7da09107bff86d2f96837c27c3b684cce7c7c16e621bb2",
+          "candidateSha256": "575c47b6867b676c276ac1c3f4f64ae1b511bcc627613fc74f343b4731df5500",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -28246,6 +28246,46 @@
       },
       {
         "delta": {
+          "baselineSha256": "3123afaaa238ad96698f89333768bec56a7b2978ef5f6b53526da210c586bfe8",
+          "candidateSha256": "c1ece1dd1d78f226fdfde99b0c1f4186943ac44cd24518175b61a6768d423c80",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "1",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "3123afaaa238ad96698f89333768bec56a7b2978ef5f6b53526da210c586bfe8",
+          "candidateSha256": "c1ece1dd1d78f226fdfde99b0c1f4186943ac44cd24518175b61a6768d423c80",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "1",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
           "baselineSha256": "314b412875bb70067330501a4ab2010c1e78db1b287da6ed3b41eb16c218fc8e",
           "operation": "removed",
           "segments": [
@@ -29603,7 +29643,7 @@
       {
         "delta": {
           "baselineSha256": "31dc4263bcfd887e249c3b2a7dc2bdb4933719cb7c9ee24ba29f45b89dae8cf7",
-          "candidateSha256": "782e1cefab77f8192575603d08ecf4f91cbc1d2f00177b9076e0e818f358fb93",
+          "candidateSha256": "f9e8fb0ed5e1c5a5cd71d9104b95e9979ff683ef965f29cd18eea95956511785",
           "operation": "changed",
           "segments": [
             "surface",
@@ -42049,6 +42089,46 @@
             "spell",
             "185",
             "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "4e8b11719f05565f94c6d6ea5da230778e43b1742a04ef303253ee57ab07a2db",
+          "candidateSha256": "c0f6be422a5737573e084b47cb4799dcf7e6fdcf9d09c62ee68487b6aa1e3434",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "1",
+            "id"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "4e8b11719f05565f94c6d6ea5da230778e43b1742a04ef303253ee57ab07a2db",
+          "candidateSha256": "c0f6be422a5737573e084b47cb4799dcf7e6fdcf9d09c62ee68487b6aa1e3434",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "1",
+            "id"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -58283,6 +58363,46 @@
       },
       {
         "delta": {
+          "baselineSha256": "62127c1a58d89cd3c4b5fc1db2423f49764425c68591d9c833a740bca2527743",
+          "candidateSha256": "7fbbb44f1188040db1cd51f287af6ae933a51070462c80279ba2cca6e5113cb3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "2",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "62127c1a58d89cd3c4b5fc1db2423f49764425c68591d9c833a740bca2527743",
+          "candidateSha256": "7fbbb44f1188040db1cd51f287af6ae933a51070462c80279ba2cca6e5113cb3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "2",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
           "baselineSha256": "6289a4836ce46ab417d66dafaded3d625f4331cd045ea184fd5083f289052cee",
           "candidateSha256": "af501f782293bfb616d1beaac391449129357318a364ebe98802f500279b3fe4",
           "operation": "changed",
@@ -60005,6 +60125,46 @@
             "outputSchema",
             "$defs",
             "OperationResult_Shared_9a238a83d328b9da"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "683d6dd1554ea760665160f60fb9f60a48f34d23174203e4dba551c194b1a9c0",
+          "candidateSha256": "4e8b11719f05565f94c6d6ea5da230778e43b1742a04ef303253ee57ab07a2db",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "3",
+            "id"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "683d6dd1554ea760665160f60fb9f60a48f34d23174203e4dba551c194b1a9c0",
+          "candidateSha256": "4e8b11719f05565f94c6d6ea5da230778e43b1742a04ef303253ee57ab07a2db",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "3",
+            "id"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -66246,6 +66406,46 @@
       {
         "delta": {
           "baselineSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
+          "candidateSha256": "3123afaaa238ad96698f89333768bec56a7b2978ef5f6b53526da210c586bfe8",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "3",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
+          "candidateSha256": "3123afaaa238ad96698f89333768bec56a7b2978ef5f6b53526da210c586bfe8",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "3",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
           "candidateSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
           "operation": "changed",
           "segments": [
@@ -68786,6 +68986,46 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "887079605bf077ab94826847652eb3766c69dc3c05e22e2ddcf9efefe4075e06",
+          "candidateSha256": "c50505199d981e4e1417c42147ec4fbb2a0df79783c69d18d097516e04ce39a4",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "4",
+            "id"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "887079605bf077ab94826847652eb3766c69dc3c05e22e2ddcf9efefe4075e06",
+          "candidateSha256": "c50505199d981e4e1417c42147ec4fbb2a0df79783c69d18d097516e04ce39a4",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "4",
+            "id"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
       },
       {
         "delta": {
@@ -88998,7 +89238,7 @@
       {
         "delta": {
           "baselineSha256": "b37a110a5614989e3179f3947b5947b47f99620575a77bcd07d0c0b42780205a",
-          "candidateSha256": "81eeb3dd617f414790d0300613cbc794c82645946681cf364ae89a6861f4c15e",
+          "candidateSha256": "091af16efeb558525b34ea286470cad54eb76a77efa8ddea51585c730a1b70d9",
           "operation": "changed",
           "segments": [
             "surface",
@@ -89066,7 +89306,7 @@
       {
         "delta": {
           "baselineSha256": "b42b55acbb24a12264633c3082a25181eeb5e51a3fd0bfe129594375206de78c",
-          "candidateSha256": "dbd254a0f7bf27c55cafd08d3ee6e857824ac62dbd2b3ca689d80c196af2a643",
+          "candidateSha256": "2e075272e6496256a5c10aa4889d2eb79924b20ca186704706f38647ebc18a2f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89084,7 +89324,7 @@
       {
         "delta": {
           "baselineSha256": "b42b55acbb24a12264633c3082a25181eeb5e51a3fd0bfe129594375206de78c",
-          "candidateSha256": "dbd254a0f7bf27c55cafd08d3ee6e857824ac62dbd2b3ca689d80c196af2a643",
+          "candidateSha256": "2e075272e6496256a5c10aa4889d2eb79924b20ca186704706f38647ebc18a2f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -98890,6 +99130,46 @@
             "outputSchema",
             "$defs",
             "OperationResult_Shared_ea103b28d3882af3"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "c50505199d981e4e1417c42147ec4fbb2a0df79783c69d18d097516e04ce39a4",
+          "candidateSha256": "25eb85f5c1cfea4144adda5f38f31c2344950e9db30e20367992087d1d453cbb",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "2",
+            "id"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "c50505199d981e4e1417c42147ec4fbb2a0df79783c69d18d097516e04ce39a4",
+          "candidateSha256": "25eb85f5c1cfea4144adda5f38f31c2344950e9db30e20367992087d1d453cbb",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "2",
+            "id"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -117759,7 +118039,7 @@
       {
         "delta": {
           "baselineSha256": "d4db4d00a31b9af91b691830cee1c338eff1f620667d8560697d080e672523fc",
-          "candidateSha256": "eec8356b22440359fcabfab9d001b1f12b85ed5a9b929770bb6ecd2117be487c",
+          "candidateSha256": "126865ce4d38ef8d77a59c70e1a53af1f40460671c4792b301c491a7e8b48f4b",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -122904,6 +123184,46 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "f0ca165b7dc33b614564e0cf8d3e125e34481dbc4a38113393baface4dbf85ae",
+          "candidateSha256": "62127c1a58d89cd3c4b5fc1db2423f49764425c68591d9c833a740bca2527743",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "4",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "f0ca165b7dc33b614564e0cf8d3e125e34481dbc4a38113393baface4dbf85ae",
+          "candidateSha256": "62127c1a58d89cd3c4b5fc1db2423f49764425c68591d9c833a740bca2527743",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "4",
+            "name"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
       },
       {
         "delta": {
@@ -128275,7 +128595,7 @@
       {
         "delta": {
           "baselineSha256": "fa39529ae8918c2cb33041a4d15cd2573c1d5beffdfb6a5784e84840725950fd",
-          "candidateSha256": "1220d03e0e72308449e7fddb7c74d2460eb5236673c9fdec23cbc9a926e9dc26",
+          "candidateSha256": "7290628483e564fb21dd6f19a258e1fa6120b1a78b9d07a11d21828f80c4572a",
           "operation": "changed",
           "segments": [
             "surface",
@@ -130598,6 +130918,42 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "121778d0439b40159e64d4fe45847dbbab5ab54d9c7e1c40de85de5ec76cbf53",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "121778d0439b40159e64d4fe45847dbbab5ab54d9c7e1c40de85de5ec76cbf53",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
       },
       {
         "delta": {
@@ -148404,6 +148760,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "27e4f010fc477ad3a90e04a39c1e14e7d0184a13823339de20d294aa37cff6f7",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/mastery_nick.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "27f0fb02dda301faaa469985b8e5e6f113f7ea93dbf30aa4784791b2800bbfb8",
           "operation": "added",
           "segments": [
@@ -148718,6 +149086,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_phase_spider.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "2a6fef768c3ec5d291642709ef9ded052b90632de1f9bd8135d009107378c8af",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/mastery_vex.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -156421,6 +156801,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_eagle.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "56b2573624ae66fe04dd21b1878ec3d443f061e3657748cdf4e34b338f07aa20",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/mastery_graze.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -182768,6 +183160,42 @@
       },
       {
         "delta": {
+          "candidateSha256": "bdc1e65138ab789ed4844f2de0792294c94fea081353432d5d8f7caffe148534",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "7"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "bdc1e65138ab789ed4844f2de0792294c94fea081353432d5d8f7caffe148534",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "7"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
           "candidateSha256": "be25d49acfbcbbdf43b8d96b8b5644efa7b5acd0f572102259aeb632666be66c",
           "operation": "added",
           "segments": [
@@ -186205,6 +186633,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "d65469c089a129dd4c5ad9b7017b6671984a7e9af5214276a4c2896401fd9edd",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/mastery_vex.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "d663f33aaf68b66a6f2b0b762e6b4fdfb082e0570d441affdd2d7688257ea36a",
           "operation": "added",
           "segments": [
@@ -186912,6 +187352,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "d98dbdb06a3fc454121f808920607b9fe6f6743f1ecc648c05cdacdeb8148e01",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/mastery_nick.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "d9eadba8caf4f187307a3a6c40f2236911ff613dcd909e22123f4d9174b6af18",
           "operation": "added",
           "segments": [
@@ -187328,6 +187780,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "dceb7b506959038e6934a14cf3aa537c23d6ed363ffcd14a2872b96440b28a74",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/mastery_graze.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "dcf9cca8693aa24978f7914d228611f3cab84d683f7439d147bdc4617113f752",
           "operation": "added",
           "segments": [
@@ -187733,6 +188197,42 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "e08b39023c15d4ad736fb93a4262013bb943358b5cb1dc91cef6bc968d2f5efa",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "e08b39023c15d4ad736fb93a4262013bb943358b5cb1dc91cef6bc968d2f5efa",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "mastery",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
       },
       {
         "delta": {
@@ -196714,7 +197214,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "b87c0fe36d2e1d73d43d8b05a1271a5021a3d89e23b7ee0f2fbb0d0af0513467",
+    "identitySha256": "750696ab01591429687fc99fa85e893e5c5c8e2e3d6d7f2027b230c16d0bf1af",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -196730,15 +197230,15 @@
       },
       {
         "changedCollectionAuthorityIds": [],
-        "deltaCount": 3565,
-        "deltaIdentitySha256": "cb91626806a483728bc8a4caf1f884bf3571e8f53a56c16375fefd8cb40d5e54",
+        "deltaCount": 3587,
+        "deltaIdentitySha256": "6978b2a262459510e7d48dc14926abecdf6252bc9cf353946351bdccf96adcaf",
         "id": "mcp-protocol-contract-migration",
         "operations": {
-          "added": 1060,
-          "changed": 923,
+          "added": 1066,
+          "changed": 939,
           "removed": 1582
         },
-        "siteSha256": "0134b24659d573949bb21d87041d58893b4c133b1dc9b855c77c5f55bfb94c38"
+        "siteSha256": "233c2b40f3a735c48945089b5fb08da30b5498ba5aefd1a6d53ea3d9705b8d19"
       },
       {
         "changedCollectionAuthorityIds": [],
@@ -196767,7 +197267,7 @@
       {
         "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
         "deltaCount": 65,
-        "deltaIdentitySha256": "74a4634cd431e4407ae81c2a4efb1d12ceb09a79e6a70c3c1d2e2628f9d1835e",
+        "deltaIdentitySha256": "78fcb9cb6a4dc2a36fbc1cfb7dc77018a6728bbb379e66e1b452edc75c69bec2",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
           "added": 43,
@@ -196779,7 +197279,7 @@
       {
         "changedCollectionAuthorityIds": [],
         "deltaCount": 4,
-        "deltaIdentitySha256": "73ab258991e27050203b991dcc6cc5a634d7c40f4fdd52869ae8f6fdcf64d770",
+        "deltaIdentitySha256": "b6e2f9616d7e52ea2c22d93254cebc4f3c2d55ffb6c71d2c7cb65998c0a67c64",
         "id": "surface-publication-contract-convergence",
         "operations": {
           "added": 0,
@@ -196790,18 +197290,18 @@
       },
       {
         "changedCollectionAuthorityIds": ["surface-content-artifacts"],
-        "deltaCount": 925,
-        "deltaIdentitySha256": "50f64ededbc378057a56ad9be7ec8bca8745e52706181faff712f63656067ad8",
+        "deltaCount": 931,
+        "deltaIdentitySha256": "656c67bf556b6bbcc5c756895133787b5bf0eefc90f9c96811710136cd517e73",
         "id": "surface-authored-contract-convergence",
         "operations": {
-          "added": 651,
+          "added": 657,
           "changed": 274,
           "removed": 0
         },
-        "siteSha256": "eaf713a63453d62a4559cfca4bb548878cb2479d02131616430c2a87f08cd966"
+        "siteSha256": "ba3b2b352a04d91ff3c1649d21d78e4692e30159ed336783fff27d7cec6408cc"
       }
     ],
-    "totalCount": 8965
+    "totalCount": 8993
   },
   "formatVersion": 2
 }

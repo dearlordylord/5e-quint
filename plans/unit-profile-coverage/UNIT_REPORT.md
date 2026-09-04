@@ -10,16 +10,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 435 Units |
+| Installed collection inventory count | 438 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 434/618 | 70.2% |
-| Authored Surface executable catalog admission | 384/530 | 72.5% |
-| Installed Unit profile classification coverage | 435/435 | 100% |
-| Supported executable Unit coverage | 220/385 | 57.1% |
+| Authored Surface Unit catalog admission | 437/621 | 70.4% |
+| Authored Surface executable catalog admission | 387/533 | 72.6% |
+| Installed Unit profile classification coverage | 438/438 | 100% |
+| Supported executable Unit coverage | 220/388 | 56.7% |
 | QNT profile modeling coverage | 156/164 | 95.1% |
 | QNT proof coverage | 153/164 | 93.3% |
 | Runtime mapping coverage | 156/164 | 95.1% |
@@ -1511,7 +1511,10 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | `wizard_evocation_savant` | profile-subset-supported | supported subset: Evocation Savant is installed as a level-3 Surface class-feature grant on subclass_wizard_evoker; Selected Wizard Evoker subclass ownership retains the level-3 Evocation Savant class-feature Unit in CharacterBuild Unit refs when Wizard class level is 3 or higher; Surface wizard_spellbook_learning represents the level-3 acquisition-time choice as exactly two Wizard Evocation spellbook spells of level 2 or lower; Surface wizard_spellbook_learning also represents the one-spell new-slot-level grant as a separate advancement trigger rather than a second acquisition-time grant; Character Creation discovers exactly two acquisition-time Wizard Evocation spellbook choices from installed Wizard Spell Access, spell school, and spell level facts without duplicating an Evoker spell roster; Character Creation finalizes selected Evocation Savant spells into the Wizard spellbook without duplicating spellbook state and rejects duplicate spellbook selections across class and feature grants; Focused QNT/runtime replay proves the later new-slot-level grant is present but does not create a level-3 Character Creation hole; deferred: Evocation Savant's one-spell new-slot-level grant starts when the Wizard later gains access to a new Wizard Spell Slot level after subclass acquisition; the first such trigger is Wizard level 5 and belongs to a future character-advancement owner, outside character-level-1-through-3 support. (closed: later-level-only) |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
 | `paladin_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `mastery_graze` | unsupported-profile | Graze is authored and installed, but Battle admission rejects its weapon-attack-miss damage mechanics because no promoted runtime profile owns optional miss damage equal to the attack ability modifier in the weapon's damage type. |
+| `mastery_nick` | unsupported-profile | Nick is authored and installed, but Battle admission rejects its Light-property extra-attack timing replacement because no promoted runtime profile owns moving that extra attack from a Bonus Action into the Attack action once per turn. |
 | `mastery_push` | profile-subset-supported | supported subset: Battle Unit admission consumes the authored Push mastery Surface shape without dispatching on mastery authored identity; the support profile preserves optional on-hit Push, Large-or-smaller target gate, 10-foot maximum distance, and straight-away movement facts; the attack resolver executes Push through the generic weapon mastery owner, including Tactical Master replacement when the current attack selects Push; the runtime consumes caller/table-supplied push disposition and records the pushed target outcome without duplicating map geometry; deferred: automatic push destination geometry, straight-line path validation, collision, and opportunity-attack adjudication (closed: table-spatial-derivation) |
+| `mastery_vex` | unsupported-profile | Vex is authored and installed, but Battle admission rejects its target-bound next-attack Advantage mechanics because no promoted runtime profile owns their creation, consumption, and expiration. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
 | `elf_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
 | `species_dragonborn_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
@@ -1714,6 +1717,9 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | srd-5.2.1 | broader ongoing Spell Effect occurrence model plus additional spell-specific dispel exception owners | profile-subset-supported | 1 | `dispel_magic` |
 | srd-5.2.1 | character inventory/equipment component legality plus runtime-detached object presentation owner | profile-subset-supported | 1 | `continual_flame` |
 | srd-5.2.1 | future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner | unsupported-profile | 1 | `gaseous_form` |
+| srd-5.2.1 | future Light-property extra-attack timing mastery owner | unsupported-profile | 1 | `mastery_nick` |
+| srd-5.2.1 | future target-bound next-attack Advantage mastery owner | unsupported-profile | 1 | `mastery_vex` |
+| srd-5.2.1 | future weapon-attack miss-damage mastery owner | unsupported-profile | 1 | `mastery_graze` |
 | srd-5.2.1 | represented Grease trap and Spiritual Weapon harmful-object placement profiles plus future hostile creature summon lifecycle, non-Spiritual-Weapon harmful object occurrence/routing, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners | profile-subset-supported | 1 | `glyph_of_warding` |
 | srd-5.2.1 | split Antimagic Field magic-item, portal, future broader ongoing Spell Effect, and future planar-travel owners | profile-subset-supported | 1 | `antimagic_field` |
 | srd-5.2.1 | split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners | unsupported-profile | 1 | `phantom_steed` |

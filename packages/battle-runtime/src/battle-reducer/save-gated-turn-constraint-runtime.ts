@@ -4,19 +4,12 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
-import {
-  disableActionOrBonusActionExclusion,
-  enableActionOrBonusActionExclusion,
-} from "@dnd/shared-algebras/action-economy-algebra";
-import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type {
   ActionSpellBattleResolutionInput,
-  BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleFill,
   BattleResolutionResult,
   BattleState,
-  BattleTurnResources,
   BonusActionDashSpellBattleResolutionInput,
   BonusActionSpellBattleResolutionInput,
 } from "../battle-state-execution.ts";
@@ -25,12 +18,14 @@ import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
-import {
-  saveGatedTurnConstraintBundleEffects,
-  turnConstraintSomaticSpellFailureOutcomeHole,
-} from "./save-gated-turn-constraint-facts.ts";
+import { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 export { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
+export {
+  battleStateWithReconciledCurrentActorTurnConstraint,
+  combatantHasSaveGatedTurnConstraintBundle,
+  saveGatedTurnConstraintActionOrBonusActionTurnResources,
+} from "./save-gated-turn-constraint-turn-resources.ts";
 
 type SaveGatedSomaticSpellFailureSubject =
   | ActionSpellBattleResolutionInput["subject"]
@@ -48,38 +43,6 @@ type TurnConstraintSomaticSpellFailureResolution =
       readonly fills: readonly BattleFillAfterTurnConstraintSomaticSpellFailureOutcome[];
     }
   | BattleResolutionResult;
-
-export function combatantHasSaveGatedTurnConstraintBundle(
-  state: BattleState,
-  combatant: BattleCreatureState | undefined,
-): boolean {
-  return saveGatedTurnConstraintBundleEffects(state, combatant).length > 0;
-}
-
-export function saveGatedTurnConstraintActionOrBonusActionTurnResources(
-  state: BattleState,
-  resources: BattleTurnResources,
-  actor: BattleCreatureState | undefined,
-): BattleTurnResources {
-  return combatantHasSaveGatedTurnConstraintBundle(state, actor)
-    ? enableActionOrBonusActionExclusion(resources)
-    : resources;
-}
-
-export function battleStateWithReconciledCurrentActorTurnConstraint(
-  state: BattleState,
-): BattleState {
-  const actor = state.combatants.get(currentActing(state.initiative));
-  const currentTurnResources = combatantHasSaveGatedTurnConstraintBundle(
-    state,
-    actor,
-  )
-    ? enableActionOrBonusActionExclusion(state.currentTurnResources)
-    : disableActionOrBonusActionExclusion(state.currentTurnResources);
-  return currentTurnResources === state.currentTurnResources
-    ? state
-    : { ...state, currentTurnResources };
-}
 
 export function resolveSaveGatedTurnConstraintSomaticSpellFailure(input: {
   readonly state: BattleState;

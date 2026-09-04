@@ -66,7 +66,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
-import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
+import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-turn-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,

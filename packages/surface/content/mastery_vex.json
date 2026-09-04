@@ -1,0 +1,27 @@
+{
+  "id": "mastery_vex",
+  "kind": "mastery",
+  "mechanics": {
+    "effect": {
+      "count": 1,
+      "expiresOn": {
+        "kind": "end_of_next_turn"
+      },
+      "kind": "modify_roll_advantage",
+      "mode": "advantage",
+      "on": [
+        "attack_roll"
+      ]
+    },
+    "family": "on_hit_trigger",
+    "optional": false,
+    "trigger": {
+      "kind": "weapon_hit_with_damage"
+    }
+  },
+  "name": "Vex",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Vex"
+  }
+}

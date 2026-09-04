@@ -1,10 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { expect, test } from "vitest";
+import ts from "typescript";
 
-import { repoRoot } from "../transcript.ts";
 import {
   assertEffectDeclarationCompilerSupport,
   copyEffectDeclarationCompilerSupport,
@@ -16,6 +16,21 @@ function filesBelow(directory: string): readonly string[] {
     const path = join(directory, entry.name);
     return entry.isDirectory() ? filesBelow(path) : [path];
   });
+}
+
+function typecheckDiagnostics(configPath: string): readonly ts.Diagnostic[] {
+  const loadedConfig = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (loadedConfig.error !== undefined) return [loadedConfig.error];
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    loadedConfig.config,
+    ts.sys,
+    dirname(configPath),
+  );
+  const program = ts.createProgram({
+    rootNames: parsedConfig.fileNames,
+    options: parsedConfig.options,
+  });
+  return [...parsedConfig.errors, ...ts.getPreEmitDiagnostics(program)];
 }
 
 test("projects only authentic declaration compiler support", () => {
@@ -56,11 +71,8 @@ test("projects only authentic declaration compiler support", () => {
         include: ["effect-consumer.ts"],
       })}\n`,
     );
-    execFileSync(
-      process.execPath,
-      [resolve(repoRoot, "node_modules/typescript/bin/tsc"), "-p", "."],
-      { cwd: directory, stdio: "pipe" },
-    );
+    const configPath = join(directory, "tsconfig.json");
+    expect(typecheckDiagnostics(configPath)).toEqual([]);
     expect(() =>
       execFileSync(
         process.execPath,
@@ -69,13 +81,7 @@ test("projects only authentic declaration compiler support", () => {
       ),
     ).toThrow();
     rmSync(join(compilerSupport, "effect"), { recursive: true });
-    expect(() =>
-      execFileSync(
-        process.execPath,
-        [resolve(repoRoot, "node_modules/typescript/bin/tsc"), "-p", "."],
-        { cwd: directory, stdio: "pipe" },
-      ),
-    ).toThrow();
+    expect(typecheckDiagnostics(configPath)).not.toHaveLength(0);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

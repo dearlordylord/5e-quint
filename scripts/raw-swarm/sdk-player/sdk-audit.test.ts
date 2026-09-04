@@ -400,10 +400,10 @@ describe("SDK player derived audit evidence", () => {
   test("counts interrupt choices at the frontier and rejects decision-hole impostors", () => {
     const { header, call } = fixture();
     const reactionChoice = {
-      kind: "reactionRollOrDamageReduction" as const,
-      reactorId: "a",
+      kind: "reactionModifier" as const,
+      responderId: "a",
       initialHoles: [],
-      choice: {
+      modifier: {
         kind: "fallDamageReduction" as const,
         procedureRef: JSON.stringify({
           scopeRef: JSON.stringify({
@@ -421,9 +421,14 @@ describe("SDK player derived audit evidence", () => {
     const interruptFrontier = {
       ...call.result.envelope.frontier,
       kind: "interruptDecision" as const,
+      trigger: "creatureFalls" as const,
       decisionHole: {
+        holeInstanceKey: "battle:a:interrupt",
+        holeId: "battle:a:interrupt",
         kind: "interruptDecision",
         label: "Respond to the interruption",
+        trigger: "creatureFalls" as const,
+        eligibleResponders: ["a"],
       },
       choices: [reactionChoice, reactionChoice],
     };

@@ -6,6 +6,7 @@ import {
   ongoingAreaSpellDurationTicks,
   ongoingAreaSpellFacts,
 } from "../ongoing-concentration-area-spell.ts";
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 //

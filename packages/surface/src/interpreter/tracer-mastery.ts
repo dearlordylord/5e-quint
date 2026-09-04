@@ -1,10 +1,13 @@
 import type {
+  GrazeMasteryMechanics,
   MasteryRecord,
+  NickMasteryMechanics,
   OnHitRiderEffect,
   OnHitTriggerMechanics,
   RiderExpiry,
   SaveGateRiderResult,
 } from "../surface/types.ts";
+import { Match } from "effect";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import { describeDc } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
@@ -22,11 +25,17 @@ export function traceMasteryUnit(mastery: MasteryRecord): Trace {
     `mastery_root\n${mastery.name}`,
   );
 
-  const resolutionId = traceOnHitTriggerMechanics(
-    mastery.mechanics,
-    nodes,
-    edges,
-    ids,
+  const resolutionId = Match.value(mastery.mechanics).pipe(
+    Match.when({ family: "on_hit_trigger" }, (mechanics) =>
+      traceOnHitTriggerMechanics(mechanics, nodes, edges, ids),
+    ),
+    Match.when({ family: "weapon_attack_miss_damage" }, (mechanics) =>
+      traceGrazeMasteryMechanics(mechanics, nodes, edges, ids),
+    ),
+    Match.when({ family: "light_property_extra_attack_timing" }, (mechanics) =>
+      traceNickMasteryMechanics(mechanics, nodes, edges, ids),
+    ),
+    Match.exhaustive,
   );
   edges.push({ from: rootId, to: resolutionId, relation: "roots" });
 
@@ -37,6 +46,80 @@ export function traceMasteryUnit(mastery: MasteryRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceGrazeMasteryMechanics(
+  mechanics: GrazeMasteryMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const resolutionId = ids("miss");
+  nodes.push({
+    id: resolutionId,
+    category: "resolution",
+    atomKind: "attack_roll",
+    label: "attack_roll\nweapon attack miss",
+  });
+
+  const windowId = ids("win");
+  nodes.push({
+    id: windowId,
+    category: "window",
+    atomKind: "on_miss_window",
+    label: mechanics.optional
+      ? "on_miss_window\n(wielder choice)"
+      : "on_miss_window",
+  });
+  edges.push({ from: resolutionId, to: windowId, relation: "opens_window" });
+
+  const targetId = tracePrimaryTarget(resolutionId, nodes, edges, ids);
+
+  const damageId = ids("damage");
+  nodes.push({
+    id: damageId,
+    category: "effect",
+    atomKind: "damage",
+    label:
+      `damage\n${mechanics.effect.amount.kind}\n` +
+      `${mechanics.effect.damageType.kind}\n${mechanics.effect.increaseLimit}`,
+  });
+  edges.push({ from: windowId, to: damageId, relation: "grants" });
+  edges.push({ from: damageId, to: targetId, relation: "attaches_to" });
+  return resolutionId;
+}
+
+function traceNickMasteryMechanics(
+  mechanics: NickMasteryMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const triggerId = ids("light-extra-attack");
+  nodes.push({
+    id: triggerId,
+    category: "window",
+    atomKind: "light_property_extra_attack",
+    label: `${mechanics.trigger.kind}\noptional ${mechanics.optional}`,
+  });
+
+  const timingId = ids("timing");
+  nodes.push({
+    id: timingId,
+    category: "effect",
+    atomKind: "action_timing_replacement",
+    label: `action_timing_replacement\n${mechanics.replacement.from} -> ${mechanics.replacement.to}`,
+  });
+  edges.push({ from: triggerId, to: timingId, relation: "replaces_with" });
+  traceUsageLimit(
+    mechanics.usageLimit,
+    timingId,
+    "consumes",
+    nodes,
+    edges,
+    ids,
+  );
+  return triggerId;
 }
 
 export function traceOnHitTriggerMechanics(
@@ -64,14 +147,7 @@ export function traceOnHitTriggerMechanics(
   });
   edges.push({ from: resId, to: winId, relation: "opens_window" });
 
-  const targetId = ids("att");
-  nodes.push({
-    id: targetId,
-    category: "attachment",
-    atomKind: "target",
-    label: "target\n(primary)",
-  });
-  edges.push({ from: resId, to: targetId, relation: "attaches_to" });
+  const targetId = tracePrimaryTarget(resId, nodes, edges, ids);
 
   traceOnHitRiderEffect(m.effect, winId, targetId, nodes, edges, ids);
 
@@ -95,6 +171,23 @@ export function traceOnHitTriggerMechanics(
   }
 
   return resId;
+}
+
+function tracePrimaryTarget(
+  resolutionId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const targetId = ids("att");
+  nodes.push({
+    id: targetId,
+    category: "attachment",
+    atomKind: "target",
+    label: "target\n(primary)",
+  });
+  edges.push({ from: resolutionId, to: targetId, relation: "attaches_to" });
+  return targetId;
 }
 
 export function describeOnHitTrigger(

@@ -1,13 +1,12 @@
 # Effect 4 final parity report
 
-This report records the reviewed Effect 4 integration line through
-`ad053d7de` and the later declaration-bundle candidate evidence recorded at
-`63f6f3d9`. The source migration, master reconciliation, finite-delta
-certificates, and supplementary observed QNT-owner sweep are recorded. The
-later candidate evidence does not extend the earlier review attestations to the
-current tip. Issue #386 remains open until final current-tip review convergence,
-the terminal public commands, the receipt update, and the post-gate
-tracked-document attestation described below are complete.
+This report records the terminal Effect 4 integration receipt. The certified
+implementation revision is
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea`. At that exact revision, the
+collector-enabled public milestone completed with 49 passes, zero failures,
+zero blocked checks, and exit status 0. The source migration, master
+reconciliation, finite-delta certificates, shipped-consumer boundary, and
+review convergence are complete.
 
 ## Selected cohort and controlled-red closure
 
@@ -60,12 +59,14 @@ and its [review rationale](./surface-publication-delta.md). Those artifacts own
 their dynamic membership, record-delta, schema, and digest evidence; this
 report deliberately does not restate those values.
 
-The final current-tip oracle recertification at `d3bea8b68` records 8,965
-reviewed identities: it removes only the 17 migration-only
-`wildShapeStatBlockCatalogRequired` sites required to restore Effect 3 parity;
-the mastery-admission repair adds no public oracle identities. The remaining 14
-identity hash replacements are the reviewed MCP, Surface publication, and Raw
-Swarm artifact projections.
+The terminal oracle recertification at `06b9c6c9f` records 8,993 reviewed
+identities. The preceding `cc6a9180c` certificate removed the 17 migration-only
+`wildShapeStatBlockCatalogRequired` sites required to restore Effect 3 parity.
+The later Mastery recertification added 28 reviewed sites: 22 MCP catalog
+response sites and the six canonical Mastery Dhall/JSON artifacts. Their
+classifications, changed metadata and digest sites, exact hashes, and unchanged
+baseline authorities remain owned by the executable certificate and the
+[declaration-bundle convergence record](./declaration-bundle-convergence.md).
 
 The 2026-09-01 final convergence recertification retains the aggregate bytes
 and narrows the published Life Bond `caster_heal_link.rangeFeet` contract to
@@ -74,9 +75,9 @@ hashes, and finite graph proof remain owned by the executable Surface
 certificate rather than this report.
 
 The focused certificate self-tests and pinned verifiers passed on the reviewed
-integration line. The terminal quality receipt is still required because it
-re-executes these checks together with the remaining public quality owners at
-the final committed tip.
+integration line. The terminal milestone recorded below re-executed these
+checks together with the remaining public quality owners at the certified
+revision.
 
 ## QNT and runtime parity
 
@@ -124,12 +125,13 @@ compiler boundary are recorded in the focused
 [declaration-bundle convergence certificate](./declaration-bundle-convergence.md).
 The canonical manifest and both limits remain executable beside the emitter in
 [`consumer-distribution.ts`](../../../scripts/raw-swarm/sdk-player/consumer-distribution.ts).
-This focused declaration certificate does not claim final current-tip review
-convergence or that the pending #386 terminal public gates have run.
+The focused certificate was deliberately limited to declaration measurement;
+its historical scope is supplemented by the terminal review and public-gate
+evidence recorded below.
 
-### Current pre-receipt declaration candidate
+### Final declaration candidate
 
-At immutable implementation source `d7262c234`, the current pre-receipt
+At immutable implementation source `d7262c234`, the final declaration
 candidate contains exactly 571 declaration files and the unchanged path ledger
 `4787fdc0e574cd519f4d3c20dcdd08031fa8ac0777acd0935474199866b20ed6`. The
 production emitter measured 10,298,080 bytes, leaving 187,680 bytes below the
@@ -145,9 +147,8 @@ required declaration roots and removed only those closed forbidden owners
 before measuring the admitted graph. A fresh rerun after the concurrent Surface
 publication evidence and clean-checkout workspace-resolution updates reproduced
 the same measure and ledgers exactly; those downstream changes do not alter the
-admitted declaration graph. This is a pre-receipt measurement; it does not claim
-terminal current-tip review convergence or completion of the pending #386
-public gates.
+admitted declaration graph. The clean-consumer check passed again in the
+terminal milestone at `b1afacf0a3c38b09dc9d79154096dfb1571ff6ea`.
 
 ## Shipped boundaries and review convergence
 
@@ -158,58 +159,140 @@ inferring it from workspace manifests. The reconciliation also retained the
 repository's authored-identity and PHB+ boundary: production execution is
 driven by parsed Surface shape, typed procedure facts, and runtime state.
 
-The latest recorded focused application build passed while retaining Vite's
-existing large-chunk advisory. Its current disposition remains pending until
-the terminal milestone build reconfirms it at the gated commit; the advisory
-must be recorded in the terminal receipt even if it remains a non-failing
-warning.
+The application build passed in the terminal milestone while retaining Vite's
+existing large-chunk advisory. The advisory was non-failing and does not alter
+the certified result.
 
-Reviewer loops through the earlier reviewed boundary covered RAW traceability,
-ubiquitous language and domain shape, QNT/runtime parity, architecture and
-connascence, and repository Standards and Spec compliance. Reasonable findings
-at that boundary were repaired and reached zero-finding re-review. Final
-current-tip review convergence remains pending and is not inferred from those
-earlier attestations or from the focused declaration recertification.
+Two fresh, independent complete review rounds examined certified implementation
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea` and its report-only receipts through
+`6eb32fcb665f023a3ae6f371a605a9f02b28c82a`. Each round covered local RAW
+traceability and PHB+ safety, ubiquitous language and domain shape, QNT/runtime
+parity, architecture and connascence, repository Standards, and issue #386
+Spec compliance. Round A reported zero findings. Round B found one stale oracle
+certificate chronology in this report; `6eb32fcb6` corrected it from the old
+8,965-identity statement to the terminal 8,993-identity certificate and its
+17-site removal/28-site addition sequence. Independent post-fix re-review by
+both rounds reported zero remaining findings across every axis. The correction
+changed no executable source, rule, QNT model, authored record, certificate, or
+generated artifact.
+
+The final coverage trade-off is explicit. Surface function coverage measured
+1,721 covered functions out of 1,776, or 96.90%; its floor was recalibrated from
+96.95% to 96.90% so the Effect 4 closure could proceed. All other coverage
+metrics improved. This accepts 55 currently uncovered Surface functions rather
+than presenting them as migration parity. [Issue #227](https://github.com/dearlordylord/5e-quint/issues/227)
+owns the separate return to the repository's 99% coverage target.
+
+## Migration line delta
+
+The fixed Effect 3 comparison baseline is
+`76d9abaf0ec9c8369d5f95f603c5cce88704d26e`. For commits attributed to the
+core #368–#385 migration through
+`0d2c04d066bb3e8c3a4f85d42149817702bcffc1`, excluding merge/import commit
+`888c428dce9c352280b58655fcdf5605a58a49d9`, the production-code subset adds
+23,964 lines and removes 15,713, a net increase of 8,251 lines. The broader
+packages/scripts JavaScript and TypeScript subset, including tests and tooling,
+adds 71,862 lines and removes 33,364, a net increase of 38,498 lines.
+
+Those scoped measurements describe the migration itself. A raw whole-tree diff
+from the baseline through the certified integration revision reports 1,317,778
+additions and 129,292 removals. It is not a useful Effect 4 code-surface measure:
+it includes generated data, documentation, and unrelated work merged during the
+multi-day integration interval.
 
 ## Terminal public receipts
 
-The following commands have not yet been run at the final committed tip and
-are not claimed as passes here:
+The public `pnpm quality:milestone` command ran directly at exact revision
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea`. It exited 0 and its canonical
+collector reported 49 PASS, 0 FAIL, and 0 BLOCKED. No overall duration is
+recorded. The complete result is:
 
-```sh
-pnpm typecheck
-pnpm test
-pnpm quality:milestone
-```
+|   # | Canonical milestone check                           | Result |
+| --: | --------------------------------------------------- | ------ |
+|   1 | `effect4-cohort-self-test`                          | PASS   |
+|   2 | `effect4-cohort`                                    | PASS   |
+|   3 | `effect4-certification-typecheck`                   | PASS   |
+|   4 | `effect4-oracle-delta-self-test`                    | PASS   |
+|   5 | `effect4-oracle-delta`                              | PASS   |
+|   6 | `effect4-clean-consumer`                            | PASS   |
+|   7 | `build`                                             | PASS   |
+|   8 | `workspace-quality-inventory`                       | PASS   |
+|   9 | `authored-id-dispatch`                              | PASS   |
+|  10 | `battle-runtime-import-ownership`                   | PASS   |
+|  11 | `battle-runtime-test-support-boundary`              | PASS   |
+|  12 | `character-sheet-runtime-split`                     | PASS   |
+|  13 | `surface-publication-typecheck`                     | PASS   |
+|  14 | `surface-publication-self-test`                     | PASS   |
+|  15 | `surface-content-publication`                       | PASS   |
+|  16 | `srd-stat-block-catalog`                            | PASS   |
+|  17 | `stat-block-procedure-pressure-self-test`           | PASS   |
+|  18 | `stat-block-procedure-pressure`                     | PASS   |
+|  19 | `stat-block-restricted-invocation-deltas-self-test` | PASS   |
+|  20 | `stat-block-restricted-invocation-deltas`           | PASS   |
+|  21 | `stat-block-execution-reconciliation-self-test`     | PASS   |
+|  22 | `stat-block-execution-reconciliation`               | PASS   |
+|  23 | `opaque-oracle-schema-sync`                         | PASS   |
+|  24 | `opaque-oracle-corpus`                              | PASS   |
+|  25 | `opaque-oracle-distribution`                        | PASS   |
+|  26 | `cleanroom-provenance`                              | PASS   |
+|  27 | `markdown-links`                                    | PASS   |
+|  28 | `mbt-driver-closure`                                | PASS   |
+|  29 | `qnt-proof-closure`                                 | PASS   |
+|  30 | `qnt-proof-harness`                                 | PASS   |
+|  31 | `qnt-proof-timing-report`                           | PASS   |
+|  32 | `test-lane-hygiene`                                 | PASS   |
+|  33 | `mbt-script-inventory`                              | PASS   |
+|  34 | `qnt-inventory`                                     | PASS   |
+|  35 | `qnt-run-block-separation`                          | PASS   |
+|  36 | `resource-lock`                                     | PASS   |
+|  37 | `raw-swarm-lane-hygiene`                            | PASS   |
+|  38 | `rules-kernel-coverage`                             | PASS   |
+|  39 | `unit-profile-coverage`                             | PASS   |
+|  40 | `gh381-registry-path-manifest`                      | PASS   |
+|  41 | `sdk-raw-integration-inventory`                     | PASS   |
+|  42 | `lint`                                              | PASS   |
+|  43 | `complexity-self-test`                              | PASS   |
+|  44 | `complexity`                                        | PASS   |
+|  45 | `duplication`                                       | PASS   |
+|  46 | `circular`                                          | PASS   |
+|  47 | `typecheck`                                         | PASS   |
+|  48 | `test`                                              | PASS   |
+|  49 | `coverage`                                          | PASS   |
 
-They must run serially and directly so each command owns the shared repository
-lock. Their exact commit, exit status, and result summary will be recorded only
-in this report and posted to
-[#386](https://github.com/dearlordylord/5e-quint/issues/386); the controlled-red
-ledger links here instead of duplicating the receipts.
+The milestone's `typecheck` and `test` entries invoke the workspace Turbo
+bodies under the milestone's directly acquired shared lock. The separate
+public commands were also run directly at the same exact implementation
+revision, each acquiring the public broad lock normally:
 
-Recording those results creates a tracked documentation commit after the first
-three gates. Before closure, a post-first-gates attestation must identify the
-gated commit and receipt commit, prove their tracked diff contains only this
-report, and pass `pnpm check:markdown-links` at the receipt commit. If any
-executable source, configuration, generated artifact, certificate, or other
-tracked file changed after the gated commit, the three public gates must be
-rerun at the new source tip. Only after the terminal receipts and this
-tracked-document attestation pass can #386 be closed and the separate SR-00
-post-landing Cleanroom receipt be updated.
+- `pnpm typecheck`: exit 0; 14 of 14 package tasks passed.
+- `pnpm test`: exit 0; 11 of 11 package tasks passed.
+
+Receipt commit `c9361ad89bd54704c8f9df20740990d9670f56dd` follows the gated
+implementation revision. The tracked diff from
+`b1afacf0a3c38b09dc9d79154096dfb1571ff6ea` through that receipt contains only
+this report: 140 added lines and 64 removed lines.
+`pnpm check:markdown-links` passed at the receipt revision across all 234
+tracked Markdown files. No executable source, configuration, generated
+artifact, or certificate changed after the gated implementation revision, so
+the public-gate evidence remains applicable.
+
+The requested process retrospective is intentionally outside migration
+closure. [Issue #493](https://github.com/dearlordylord/5e-quint/issues/493)
+tracks a multi-day retrospective covering the complete migration and
+integration interval rather than delaying #386.
 
 Active Cleanroom SR-04G work is independent of this migration certification and
 is intentionally unchanged by this report.
 
 ## Closure status
 
-| #386 acceptance area                                   | Current disposition                                                                   |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Effect 3 removal and controlled-red exception closure  | Complete in source; zero-diagnostic inventory retained as historical closure evidence |
-| Exact installed and shipped Effect cohort              | Complete and verifier-owned                                                           |
-| Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                        |
-| Packaged/containerized lifecycle boundaries            | Complete in reviewed focused evidence; terminal quality receipt pending               |
-| Vite large-chunk advisory                              | Pending terminal milestone-build reconfirmation and receipt                           |
-| RAW/domain/QNT/runtime/architecture review convergence | Earlier reviewed boundary complete; final current-tip review convergence pending      |
-| Public `typecheck`, `test`, and `quality:milestone`    | Pending at the final committed tip                                                    |
-| Live #386 and SR-00 receipt closure                    | Pending terminal receipts and post-gate tracked-document attestation                  |
+| #386 acceptance area                                   | Current disposition                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Effect 3 removal and controlled-red exception closure  | Complete in source; zero-diagnostic inventory retained as historical closure evidence                                                      |
+| Exact installed and shipped Effect cohort              | Complete and verifier-owned                                                                                                                |
+| Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                                                                             |
+| Packaged/containerized lifecycle boundaries            | Complete in focused evidence and terminal clean-consumer check                                                                             |
+| Vite large-chunk advisory                              | Reconfirmed as a non-failing terminal build advisory                                                                                       |
+| RAW/domain/QNT/runtime/architecture review convergence | Complete; two fresh complete rounds converged with zero findings after one report repair                                                   |
+| Public `typecheck`, `test`, and `quality:milestone`    | Complete at the certified implementation revision                                                                                          |
+| Live #386 and SR-00 receipt closure                    | Complete; [terminal #386 receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5515847382) published and issue closed |

@@ -14,8 +14,8 @@ import {
   wizardBuild,
   type CharacterBuild,
 } from "./test-support.test-support.ts";
+import { characterBuildHasBookOfShadows } from "./character-build-shape.ts";
 import {
-  characterBuildHasBookOfShadows,
   parseCharacterBuild,
   parseResourceCount,
   parseStoredCharacterSheetBookOfShadowsPresence,

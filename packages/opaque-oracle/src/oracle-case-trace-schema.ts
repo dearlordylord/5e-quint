@@ -27,7 +27,7 @@ import {
 import {
   CharacterSheetConstructionIssueSchema,
   FreshCharacterSheetProjectionSchema,
-} from "@dnd/character-sheet-runtime";
+} from "@dnd/character-sheet-runtime/fresh-character-sheet-schema";
 import {
   CONDITIONS,
   StatBlockId as StatBlockIdSchema,

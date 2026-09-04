@@ -144,7 +144,7 @@ import {
 import { discoverBattleActCandidatesWithoutReady } from "./battle-discovery.ts";
 import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
-import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-runtime.ts";
+import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-turn-resources.ts";
 
 import {
   saveGatedAreaControlShakeAwakeTargetChoices,
