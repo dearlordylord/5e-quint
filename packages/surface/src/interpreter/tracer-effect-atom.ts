@@ -20,6 +20,7 @@ import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
 
 const byKind = Match.discriminator("kind");
 const protectionByKind = Match.discriminator("kind");
+const relevantEffectOutcomeByKind = Match.discriminator("kind");
 
 export function traceEffectAtom(
   e: AreaDirectEffectAtom,
@@ -336,7 +337,7 @@ export function traceCreatureTypeProtections(
     id,
     category: "effect",
     atomKind: effect.kind,
-    label: `${effect.kind}\nsources: ${effect.sourceCreatureTypes.join("/")}`,
+    label: `${effect.kind}\ncreature types: ${effect.creatureTypes.join("/")}`,
   });
 
   for (const protection of effect.protections) {
@@ -347,16 +348,10 @@ export function traceCreatureTypeProtections(
         (protection) => `${protection.kind}\nmode: ${protection.mode}`,
       ),
       protectionByKind(
-        "new_relevant_effect_applications",
+        "relevant_effect_protection",
         (protection) =>
           `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
-          `possession: ${protection.possession}\nresult: ${protection.result}`,
-      ),
-      protectionByKind(
-        "new_saves_against_existing_relevant_effects",
-        (protection) =>
-          `${protection.kind}\nconditions: ${protection.conditions.join("/")}\n` +
-          `possession: ${protection.possession}\nmode: ${protection.mode}`,
+          `possession: ${protection.possession}`,
       ),
       Match.exhaustive,
     );
@@ -367,6 +362,38 @@ export function traceCreatureTypeProtections(
       label,
     });
     edges?.push({ from: id, to: protectionId, relation: "grants" });
+
+    Match.value(protection).pipe(
+      protectionByKind("attack_rolls_against_target", () => undefined),
+      protectionByKind("relevant_effect_protection", (protection) => {
+        for (const outcome of protection.outcomes) {
+          const outcomeId = ids("eff");
+          const outcomeLabel = Match.value(outcome).pipe(
+            relevantEffectOutcomeByKind(
+              "new_applications",
+              (outcome) => `${outcome.kind}\nresult: ${outcome.result}`,
+            ),
+            relevantEffectOutcomeByKind(
+              "new_saves_against_existing_effects",
+              (outcome) => `${outcome.kind}\nmode: ${outcome.mode}`,
+            ),
+            Match.exhaustive,
+          );
+          nodes.push({
+            id: outcomeId,
+            category: "effect",
+            atomKind: outcome.kind,
+            label: outcomeLabel,
+          });
+          edges?.push({
+            from: protectionId,
+            to: outcomeId,
+            relation: "grants",
+          });
+        }
+      }),
+      Match.exhaustive,
+    );
   }
 
   return id;

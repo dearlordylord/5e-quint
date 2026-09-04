@@ -37,6 +37,7 @@ import {
   spellOngoingSpecialFunctionResultPath,
   spellOngoingSpecialFunctionSpellEndingPath,
   spellOngoingSpecialFunctionTargetPath,
+  spellRelevantEffectProtectionOutcomePath,
   spellSpawnedCreatureControlPath,
   spellSpawnedCreatureDismissalPath,
   spellSpawnedCreaturePath,
@@ -150,6 +151,16 @@ describe("spell mechanics paths", () => {
           PositiveInteger(2),
         ),
         "recordMechanics/procedure:3/effect:1/effect:2",
+      ],
+      [
+        spellRelevantEffectProtectionOutcomePath(
+          spellCreatureTypeScopedProtectionPath(
+            spellOngoingOperationEffectPath(PositiveInteger(3)),
+            PositiveInteger(2),
+          ),
+          PositiveInteger(2),
+        ),
+        "recordMechanics/procedure:3/effect:1/effect:2/effect:2",
       ],
       [
         spellOngoingSpecialFunctionPath(

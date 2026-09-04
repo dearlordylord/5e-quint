@@ -266,6 +266,17 @@ export function spellCreatureTypeScopedProtectionPath(
   );
 }
 
+/** An outcome nested under its shared relevant-effect protection scope. */
+export function spellRelevantEffectProtectionOutcomePath(
+  relevantEffectProtectionPath: SpellMechanicsBranchPath,
+  outcomeOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return appendSpellMechanicsPath(
+    relevantEffectProtectionPath,
+    occurrence("effect", outcomeOrdinal),
+  );
+}
+
 export function spellOngoingSpecialFunctionPath(
   creatureTypeWardPath: SpellMechanicsBranchPath,
   specialFunctionOrdinal: PositiveInteger,

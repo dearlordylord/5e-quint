@@ -32,14 +32,20 @@
             "selection": {
               "disposition": "willing",
               "mode": "one",
-              "targetKinds": [
-                "creature"
-              ]
+              "targetKinds": ["creature"]
             }
           }
         },
         "effects": [
           {
+            "creatureTypes": [
+              "aberration",
+              "celestial",
+              "elemental",
+              "fey",
+              "fiend",
+              "undead"
+            ],
             "kind": "creature_type_protection",
             "protections": [
               {
@@ -47,31 +53,20 @@
                 "mode": "disadvantage"
               },
               {
-                "conditions": [
-                  "charmed",
-                  "frightened"
+                "conditions": ["charmed", "frightened"],
+                "kind": "relevant_effect_protection",
+                "outcomes": [
+                  {
+                    "kind": "new_applications",
+                    "result": "prevented"
+                  },
+                  {
+                    "kind": "new_saves_against_existing_effects",
+                    "mode": "advantage"
+                  }
                 ],
-                "kind": "new_relevant_effect_applications",
-                "possession": "included",
-                "result": "prevented"
-              },
-              {
-                "conditions": [
-                  "charmed",
-                  "frightened"
-                ],
-                "kind": "new_saves_against_existing_relevant_effects",
-                "mode": "advantage",
                 "possession": "included"
               }
-            ],
-            "sourceCreatureTypes": [
-              "aberration",
-              "celestial",
-              "elemental",
-              "fey",
-              "fiend",
-              "undead"
             ]
           }
         ],

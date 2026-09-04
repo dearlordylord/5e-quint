@@ -67,28 +67,46 @@ describe("Surface trace interpreter", () => {
       expect.arrayContaining([
         "creature_type_protection",
         "attack_rolls_against_target",
-        "new_relevant_effect_applications",
-        "new_saves_against_existing_relevant_effects",
+        "relevant_effect_protection",
+        "new_applications",
+        "new_saves_against_existing_effects",
       ]),
     );
     const protection = trace.nodes.find(
       (node) => node.atomKind === "creature_type_protection",
     );
     const capabilities = trace.nodes.filter((node) =>
-      [
-        "attack_rolls_against_target",
-        "new_relevant_effect_applications",
-        "new_saves_against_existing_relevant_effects",
-      ].includes(node.atomKind),
+      ["attack_rolls_against_target", "relevant_effect_protection"].includes(
+        node.atomKind,
+      ),
     );
     expect(protection).toBeDefined();
-    expect(capabilities).toHaveLength(3);
+    expect(capabilities).toHaveLength(2);
     expect(
       capabilities.every((capability) =>
         trace.edges.some(
           (edge) =>
             edge.from === protection?.id &&
             edge.to === capability.id &&
+            edge.relation === "grants",
+        ),
+      ),
+    ).toBe(true);
+    const relevantEffectProtection = capabilities.find(
+      (capability) => capability.atomKind === "relevant_effect_protection",
+    );
+    const relevantEffectOutcomes = trace.nodes.filter((node) =>
+      ["new_applications", "new_saves_against_existing_effects"].includes(
+        node.atomKind,
+      ),
+    );
+    expect(relevantEffectOutcomes).toHaveLength(2);
+    expect(
+      relevantEffectOutcomes.every((outcome) =>
+        trace.edges.some(
+          (edge) =>
+            edge.from === relevantEffectProtection?.id &&
+            edge.to === outcome.id &&
             edge.relation === "grants",
         ),
       ),
@@ -106,7 +124,7 @@ describe("Surface trace interpreter", () => {
     if (ward?.kind !== "creature_type_ward") {
       throw new Error("decoded Dispel fixture changed ward shape");
     }
-    expect(ward.sourceCreatureTypes).toEqual([
+    expect(ward.creatureTypes).toEqual([
       "celestial",
       "elemental",
       "fey",
@@ -115,7 +133,7 @@ describe("Surface trace interpreter", () => {
     ]);
     expect(
       ward.specialFunctions.every(
-        (specialFunction) => !("sourceCreatureTypes" in specialFunction),
+        (specialFunction) => !("creatureTypes" in specialFunction),
       ),
     ).toBe(true);
 
@@ -129,9 +147,7 @@ describe("Surface trace interpreter", () => {
         "end_current_spell",
       ]),
     );
-    expect(trace.atomKinds).not.toContain(
-      "new_saves_against_existing_relevant_effects",
-    );
+    expect(trace.atomKinds).not.toContain("new_saves_against_existing_effects");
     expect(
       trace.nodes.filter((node) => node.atomKind === "end_current_spell"),
     ).toHaveLength(2);
@@ -145,12 +161,23 @@ describe("Surface trace interpreter", () => {
       [];
     expect(() => decodeUnitRecordSync(protectionWithNoCapabilities)).toThrow();
 
-    const protectionWithNoSourceTypes = structuredClone(
+    const protectionWithNoCreatureTypes = structuredClone(
       protectionFromEvilAndGoodInput,
     );
-    protectionWithNoSourceTypes.mechanics.phases[0]!.effects[0]!.sourceCreatureTypes =
+    protectionWithNoCreatureTypes.mechanics.phases[0]!.effects[0]!.creatureTypes =
       [];
-    expect(() => decodeUnitRecordSync(protectionWithNoSourceTypes)).toThrow();
+    expect(() => decodeUnitRecordSync(protectionWithNoCreatureTypes)).toThrow();
+
+    const protectionWithDuplicateCreatureTypes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    protectionWithDuplicateCreatureTypes.mechanics.phases[0]!.effects[0]!.creatureTypes.push(
+      protectionWithDuplicateCreatureTypes.mechanics.phases[0]!.effects[0]!
+        .creatureTypes[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateCreatureTypes),
+    ).toThrow();
 
     const protectionWithDuplicateCapabilities = structuredClone(
       protectionFromEvilAndGoodInput,
@@ -161,6 +188,72 @@ describe("Surface trace interpreter", () => {
     );
     expect(() =>
       decodeUnitRecordSync(protectionWithDuplicateCapabilities),
+    ).toThrow();
+
+    const protectionWithNoRelevantEffectOutcomes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const relevantEffectProtection =
+      protectionWithNoRelevantEffectOutcomes.mechanics.phases[0]!.effects[0]!
+        .protections[1];
+    if (relevantEffectProtection?.outcomes === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    relevantEffectProtection.outcomes = [];
+    expect(() =>
+      decodeUnitRecordSync(protectionWithNoRelevantEffectOutcomes),
+    ).toThrow();
+
+    const protectionWithNoRelevantConditions = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const emptyConditionScope =
+      protectionWithNoRelevantConditions.mechanics.phases[0]!.effects[0]!
+        .protections[1];
+    if (emptyConditionScope?.conditions === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    emptyConditionScope.conditions = [];
+    expect(() =>
+      decodeUnitRecordSync(protectionWithNoRelevantConditions),
+    ).toThrow();
+
+    const protectionWithDuplicateRelevantConditions = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const duplicateConditionScope =
+      protectionWithDuplicateRelevantConditions.mechanics.phases[0]!.effects[0]!
+        .protections[1];
+    if (duplicateConditionScope?.conditions === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    duplicateConditionScope.conditions.push(
+      duplicateConditionScope.conditions[0]!,
+    );
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateRelevantConditions),
+    ).toThrow();
+
+    const protectionWithDuplicateRelevantEffectOutcomes = structuredClone(
+      protectionFromEvilAndGoodInput,
+    );
+    const duplicateOutcomeScope =
+      protectionWithDuplicateRelevantEffectOutcomes.mechanics.phases[0]!
+        .effects[0]!.protections[1];
+    if (duplicateOutcomeScope?.outcomes === undefined) {
+      throw new Error(
+        "decoded relevant-effect protection fixture changed shape",
+      );
+    }
+    duplicateOutcomeScope.outcomes.push(duplicateOutcomeScope.outcomes[0]!);
+    expect(() =>
+      decodeUnitRecordSync(protectionWithDuplicateRelevantEffectOutcomes),
     ).toThrow();
 
     const protectionWithAdvantageOnIncomingAttacks = structuredClone(

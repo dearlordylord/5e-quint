@@ -971,23 +971,23 @@ type EffectEndTargetState = {
 };
 
 type CreatureTypeProtections = {
-  readonly sourceCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
+  readonly creatureTypes: ReadonlyNonEmptyArray<CreatureType>;
   readonly protections: ReadonlyNonEmptyArray<
     | {
         readonly kind: "attack_rolls_against_target";
         readonly mode: "disadvantage";
       }
     | {
-        readonly kind: "new_relevant_effect_applications";
+        readonly kind: "relevant_effect_protection";
         readonly conditions: ReadonlyNonEmptyArray<Condition>;
         readonly possession: "included";
-        readonly result: "prevented";
-      }
-    | {
-        readonly kind: "new_saves_against_existing_relevant_effects";
-        readonly conditions: ReadonlyNonEmptyArray<Condition>;
-        readonly possession: "included";
-        readonly mode: "advantage";
+        readonly outcomes: ReadonlyNonEmptyArray<
+          | { readonly kind: "new_applications"; readonly result: "prevented" }
+          | {
+              readonly kind: "new_saves_against_existing_effects";
+              readonly mode: "advantage";
+            }
+        >;
       }
   >;
 };
@@ -3377,10 +3377,10 @@ const ApplyConditionEffectSchema = strictStruct({
 });
 
 const CreatureTypeProtectionsSchema = strictStruct({
-  sourceCreatureTypes: nonEmpty(CreatureTypeSchema).pipe(
+  creatureTypes: nonEmpty(CreatureTypeSchema).pipe(
     Schema.check(
       Schema.makeFilter(allValuesDistinct, {
-        message: "Source Creature Types must be unique.",
+        message: "Creature Types must be unique.",
         toJsonSchema: () => ({ uniqueItems: true }),
       }),
     ),
@@ -3392,7 +3392,7 @@ const CreatureTypeProtectionsSchema = strictStruct({
         mode: Schema.Literal("disadvantage"),
       }),
       strictStruct({
-        kind: Schema.Literal("new_relevant_effect_applications"),
+        kind: Schema.Literal("relevant_effect_protection"),
         conditions: nonEmpty(ConditionSchema).pipe(
           Schema.check(
             Schema.makeFilter(allValuesDistinct, {
@@ -3402,20 +3402,25 @@ const CreatureTypeProtectionsSchema = strictStruct({
           ),
         ),
         possession: Schema.Literal("included"),
-        result: Schema.Literal("prevented"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("new_saves_against_existing_relevant_effects"),
-        conditions: nonEmpty(ConditionSchema).pipe(
+        outcomes: nonEmpty(
+          Schema.Union([
+            strictStruct({
+              kind: Schema.Literal("new_applications"),
+              result: Schema.Literal("prevented"),
+            }),
+            strictStruct({
+              kind: Schema.Literal("new_saves_against_existing_effects"),
+              mode: Schema.Literal("advantage"),
+            }),
+          ]),
+        ).pipe(
           Schema.check(
-            Schema.makeFilter(allValuesDistinct, {
-              message: "Relevant Conditions must be unique.",
+            Schema.makeFilter(distinctKinds, {
+              message: "Relevant-effect protection outcomes must be unique.",
               toJsonSchema: () => ({ uniqueItems: true }),
             }),
           ),
         ),
-        possession: Schema.Literal("included"),
-        mode: Schema.Literal("advantage"),
       }),
     ]),
   ).pipe(
