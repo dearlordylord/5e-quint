@@ -221,21 +221,73 @@ describe("compelledNextTurnBehavior static admission", () => {
   });
 
   test("recognizes renamed synthetic mechanics independently of authored identity", () => {
+    const renamedMechanics = structuredClone(commandMechanics());
+    const renamedPhase = renamedMechanics.phases[0];
+    if (
+      renamedPhase?.kind !== "save_gate" ||
+      renamedPhase.attachment.kind !== "hole"
+    )
+      throw new Error("Expected Command target hole.");
+    Reflect.set(renamedPhase.attachment, "holeId", "synthetic_target_hole");
+    Reflect.set(renamedPhase.attachment, "label", "Synthetic target choice");
+    const originalSource = spellAdmissionSource(spellRecord(commandUnitId));
+    const renamedSource = spellAdmissionSource(
+      syntheticCommandRecord(renamedMechanics, "renamed"),
+    );
     const original = compelledNextTurnBehaviorProfile.admitMechanics(
-      mechanicsSource(spellAdmissionSource(spellRecord(commandUnitId))),
+      mechanicsSource(originalSource),
     );
     const renamed = compelledNextTurnBehaviorProfile.admitMechanics(
-      mechanicsSource(
-        spellAdmissionSource(
-          syntheticCommandRecord(commandMechanics(), "renamed"),
-        ),
-      ),
+      mechanicsSource(renamedSource),
     );
     expect(original.tag).toBe("supported");
     expect(renamed.tag).toBe("supported");
     if (original.tag !== "supported" || renamed.tag !== "supported") return;
     expect(renamed.admitted.facts).toEqual(original.admitted.facts);
     expect(renamed.admitted.evidence).toEqual(original.admitted.evidence);
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected Command caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected admission context.");
+    const castContext = {
+      ...context,
+      spellCastOptions: [
+        { spellLevel: spellSlotLevel(1), payment: { tag: "slot" as const } },
+      ],
+    };
+    const originalInvocation = original.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(originalSource),
+      { ...castContext, castingSource: originalSource.castingSource },
+    )[0];
+    const renamedInvocation = renamed.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(renamedSource),
+      { ...castContext, castingSource: renamedSource.castingSource },
+    )[0];
+    if (originalInvocation === undefined || renamedInvocation === undefined)
+      throw new Error("Expected renamed parity invocations.");
+    expect({
+      access: renamedInvocation.access,
+      resource: renamedInvocation.resource,
+      procedure: renamedInvocation.procedure,
+      actionCost: renamedInvocation.actionCost,
+      ability: renamedInvocation.ability,
+      dc: renamedInvocation.dc,
+      targeting: renamedInvocation.targeting,
+      visibility: renamedInvocation.visibility,
+    }).toEqual({
+      access: originalInvocation.access,
+      resource: originalInvocation.resource,
+      procedure: originalInvocation.procedure,
+      actionCost: originalInvocation.actionCost,
+      ability: originalInvocation.ability,
+      dc: originalInvocation.dc,
+      targeting: originalInvocation.targeting,
+      visibility: originalInvocation.visibility,
+    });
   });
 
   test("accumulates exact header and root-shape issues", () => {
@@ -377,14 +429,6 @@ describe("compelledNextTurnBehavior static admission", () => {
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
       {
-        failedFact: "attachmentHoleId",
-        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
-      },
-      {
-        failedFact: "attachmentLabel",
-        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
-      },
-      {
         failedFact: "selectionShape",
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
@@ -432,6 +476,33 @@ describe("compelledNextTurnBehavior static admission", () => {
     );
     expect(issueShape(result)).toEqual([
       { failedFact: "phaseCount", mechanicsPath: spellMechanicsRootPath() },
+    ]);
+  });
+
+  test("accumulates independent optional save branches at the authored phase", () => {
+    const result = compelledNextTurnBehaviorProfile.admitMechanics(
+      malformedCommandSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") throw new Error("Expected save gate.");
+        Reflect.set(
+          phase,
+          "autoSuccessIfCasterSlotGte",
+          "triggering_spell_level",
+        );
+        Reflect.set(phase, "autoSuccessIfTarget", {
+          kind: "all",
+          predicates: [{ kind: "creature_type", creatureType: "undead" }],
+        });
+        Reflect.set(phase, "saveAppliesIf", "unwilling_target");
+        Reflect.set(phase, "usageLimit", { kind: "once_per_turn" });
+      }),
+    );
+    const phasePath = spellActivationPhasePath(PositiveInteger(1));
+    expect(issueShape(result)).toEqual([
+      { failedFact: "autoSuccessIfCasterSlotGte", mechanicsPath: phasePath },
+      { failedFact: "autoSuccessIfTarget", mechanicsPath: phasePath },
+      { failedFact: "saveAppliesIf", mechanicsPath: phasePath },
+      { failedFact: "usageLimit", mechanicsPath: phasePath },
     ]);
   });
 
@@ -483,16 +554,7 @@ describe("compelledNextTurnBehavior static admission", () => {
     );
     const attachmentPath = spellActivationAttachmentPath(PositiveInteger(1));
     expect(issueShape(result)).toEqual([
-      { failedFact: "attachmentShape", mechanicsPath: attachmentPath },
       { failedFact: "attachmentKind", mechanicsPath: attachmentPath },
-      { failedFact: "attachmentHoleId", mechanicsPath: attachmentPath },
-      { failedFact: "attachmentLabel", mechanicsPath: attachmentPath },
-      { failedFact: "attachmentValueKind", mechanicsPath: attachmentPath },
-      { failedFact: "selectionShape", mechanicsPath: attachmentPath },
-      { failedFact: "selectionMode", mechanicsPath: attachmentPath },
-      { failedFact: "selectionTargetKinds", mechanicsPath: attachmentPath },
-      { failedFact: "visibility", mechanicsPath: attachmentPath },
-      { failedFact: "targetCount", mechanicsPath: attachmentPath },
     ]);
   });
 

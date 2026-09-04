@@ -69,6 +69,7 @@ import {
   type SaveGateTargetCountFacts,
 } from "./_save-gate-helpers.ts";
 import {
+  admitSpellTargetAttachment,
   spellConsumedMaterialEvidencePaths,
   spellDurationChildCoordinates,
   spellDurationChildFailedFact,
@@ -98,30 +99,6 @@ type CompelledBehaviorPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >;
-type CompelledBehaviorHoleAttachment = Extract<
-  CompelledBehaviorPhase["attachment"],
-  { readonly kind: "hole" }
->;
-type CompelledBehaviorTargetAttachment = CompelledBehaviorHoleAttachment & {
-  readonly value: Extract<
-    CompelledBehaviorHoleAttachment["value"],
-    { readonly kind: "target" }
-  >;
-};
-type CommandAttachmentKeySpace = Pick<
-  CompelledBehaviorTargetAttachment,
-  "kind" | "holeId" | "label" | "value"
->;
-type CommandTargetValueKeySpace = Pick<
-  CompelledBehaviorTargetAttachment["value"],
-  "kind" | "selection"
->;
-type CommandSelectionKeySpace = {
-  readonly mode: unknown;
-  readonly targetKinds?: unknown;
-  readonly count?: unknown;
-  readonly visibility?: unknown;
-};
 type CompelledBehaviorMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly ability: "wis";
   readonly dc: CompelledNextTurnBehaviorSpellInvocation["dc"];
@@ -146,9 +123,6 @@ const COMPELLED_BEHAVIOR_FAILED_FACTS = [
   "phaseShape",
   "attachmentShape",
   "attachmentKind",
-  "attachmentHoleId",
-  "attachmentLabel",
-  "attachmentValueKind",
   "selectionShape",
   "selectionMode",
   "selectionTargetKinds",
@@ -159,6 +133,10 @@ const COMPELLED_BEHAVIOR_FAILED_FACTS = [
   "saveDcShape",
   "successOutcome",
   "successShape",
+  "autoSuccessIfCasterSlotGte",
+  "autoSuccessIfTarget",
+  "saveAppliesIf",
+  "usageLimit",
   "failureEffect",
   "failureShape",
   "failureExecution",
@@ -220,9 +198,11 @@ const PHASE_FIELDS = [
   "onFail",
   "onSuccess",
   "repeatSaves",
+  "autoSuccessIfCasterSlotGte",
+  "autoSuccessIfTarget",
+  "saveAppliesIf",
+  "usageLimit",
 ] as const;
-const ATTACHMENT_FIELDS = ["kind", "holeId", "label", "value"] as const;
-const TARGET_VALUE_FIELDS = ["kind", "selection"] as const;
 const SELECTION_FIELDS = [
   "mode",
   "targetKinds",
@@ -325,12 +305,6 @@ function compelledBehaviorRepresentation(
       },
     ],
   });
-}
-
-function isCompelledBehaviorTargetAttachment(
-  attachment: CompelledBehaviorPhase["attachment"],
-): attachment is CompelledBehaviorTargetAttachment {
-  return attachment.kind === "hole" && attachment.value.kind === "target";
 }
 
 type CompelledBehaviorInspection =
@@ -446,67 +420,61 @@ function inspectCompelledBehaviorMechanics(
     push("successOutcome", spellActivationPhasePath(phaseOrdinal));
   if (!spellMechanicsObjectHasOnlyKeys(phase.onSuccess, SUCCESS_FIELDS))
     push("successShape", spellActivationPhasePath(phaseOrdinal));
+  if (phase.autoSuccessIfCasterSlotGte !== undefined)
+    push("autoSuccessIfCasterSlotGte", spellActivationPhasePath(phaseOrdinal));
+  if (phase.autoSuccessIfTarget !== undefined)
+    push("autoSuccessIfTarget", spellActivationPhasePath(phaseOrdinal));
+  if (phase.saveAppliesIf !== undefined)
+    push("saveAppliesIf", spellActivationPhasePath(phaseOrdinal));
+  if (phase.usageLimit !== undefined)
+    push("usageLimit", spellActivationPhasePath(phaseOrdinal));
   for (const [index] of (phase.repeatSaves ?? []).entries())
     push(
       "repeatSave",
       spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
     );
 
-  const targetAttachment = isCompelledBehaviorTargetAttachment(phase.attachment)
-    ? phase.attachment
-    : undefined;
   const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
-  if (
-    targetAttachment === undefined ||
-    !spellMechanicsObjectHasOnlyKeys<CommandAttachmentKeySpace>(
-      targetAttachment,
-      ATTACHMENT_FIELDS,
-    )
-  )
-    push("attachmentShape", attachmentPath);
-  if (phase.attachment.kind !== "hole") push("attachmentKind", attachmentPath);
-  if (phase.attachment.kind === "hole") {
-    if (phase.attachment.holeId !== "command_target")
-      push("attachmentHoleId", attachmentPath);
-    if (phase.attachment.label !== "target")
-      push("attachmentLabel", attachmentPath);
+  const targetAttachmentAdmission = admitSpellTargetAttachment(
+    phase.attachment,
+    SELECTION_FIELDS,
+  );
+  if (targetAttachmentAdmission.tag === "rejected")
+    for (const rejection of targetAttachmentAdmission.rejections)
+      push(
+        rejection.failedFact === "attachment" &&
+          rejection.coordinate.kind === "wrapper" &&
+          rejection.coordinate.field === "kind"
+          ? "attachmentKind"
+          : rejection.coordinate.kind === "selection"
+            ? "selectionShape"
+            : "attachmentShape",
+        attachmentPath,
+      );
+  const selection =
+    targetAttachmentAdmission.tag === "admitted"
+      ? targetAttachmentAdmission.attachment.value.selection
+      : phase.attachment.kind === "hole" &&
+          phase.attachment.value.kind === "target"
+        ? phase.attachment.value.selection
+        : undefined;
+  if (selection !== undefined) {
+    if (selection.mode !== "choose_up_to")
+      push("selectionMode", attachmentPath);
     if (
-      targetAttachment === undefined ||
-      !spellMechanicsObjectHasOnlyKeys<CommandTargetValueKeySpace>(
-        targetAttachment.value,
-        TARGET_VALUE_FIELDS,
-      )
+      selection.targetKinds?.length !== 1 ||
+      !selection.targetKinds.includes("creature")
     )
-      push("attachmentShape", attachmentPath);
-    if (phase.attachment.value.kind !== "target")
-      push("attachmentValueKind", attachmentPath);
-  } else {
-    push("attachmentHoleId", attachmentPath);
-    push("attachmentLabel", attachmentPath);
-    push("attachmentValueKind", attachmentPath);
+      push("selectionTargetKinds", attachmentPath);
   }
-  const selection = targetAttachment?.value.selection;
-  if (
-    selection === undefined ||
-    !spellMechanicsObjectHasOnlyKeys<CommandSelectionKeySpace>(
-      selection,
-      SELECTION_FIELDS,
-    )
-  )
-    push("selectionShape", attachmentPath);
-  if (selection?.mode !== "choose_up_to") push("selectionMode", attachmentPath);
-  if (
-    selection?.targetKinds?.length !== 1 ||
-    !selection.targetKinds.includes("creature")
-  )
-    push("selectionTargetKinds", attachmentPath);
   const visibility =
     selection !== undefined &&
     "visibility" in selection &&
     selection.visibility === "caster_can_see"
       ? selection.visibility
       : undefined;
-  if (visibility === undefined) push("visibility", attachmentPath);
+  if (selection !== undefined && visibility === undefined)
+    push("visibility", attachmentPath);
   const targetCount =
     selection === undefined
       ? null
@@ -529,7 +497,7 @@ function inspectCompelledBehaviorMechanics(
           },
           source.spellDefinitionRuleFacts.level,
         );
-  if (independentlyParsedTargetCount === null)
+  if (selection !== undefined && independentlyParsedTargetCount === null)
     push("targetCount", attachmentPath);
 
   const failedEffect = phase.onFail;
