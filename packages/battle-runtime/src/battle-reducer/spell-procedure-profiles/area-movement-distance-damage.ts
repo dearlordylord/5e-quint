@@ -19,6 +19,7 @@ import {
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import type {
+  AuthoredConditionalEffect,
   Components,
   DamageType,
   DiceExpr,
@@ -202,6 +203,18 @@ const DIFFICULT_TERRAIN_EFFECT_FIELDS = ["kind"] as const;
 const DAMAGE_EFFECT_FIELDS = ["kind", "damageType", "amount"] as const;
 const DAMAGE_AMOUNT_FIELDS = ["kind", "expr"] as const;
 const DICE_EXPR_FIELDS = ["dice", "dieSize", "flat"] as const;
+const RECOGNITION_FIELDS = [
+  "kind",
+  "camouflage",
+  "eligibility",
+  "attempt",
+  "recognition",
+  "timing",
+] as const;
+const RECOGNITION_ELIGIBILITY_FIELDS = ["kind"] as const;
+const RECOGNITION_ATTEMPT_FIELDS = ["action", "check"] as const;
+const RECOGNITION_CHECK_FIELDS = ["ability", "skillOptions", "dc"] as const;
+const RECOGNITION_DC_FIELDS = ["kind"] as const;
 
 function areaMovementDistanceDamageIssue(
   failedFact: AreaMovementDistanceDamageFailedFact,
@@ -214,6 +227,46 @@ function areaMovementDistanceDamageIssue(
     mechanicsPath,
     message: `Unsupported areaMovementDistanceDamage mechanics fact: ${failedFact}.`,
   };
+}
+
+function areaMovementDistanceDamageHasTableOwnedRecognition(
+  effect: AuthoredConditionalEffect,
+): boolean {
+  return Match.value(effect).pipe(
+    Match.when({ kind: "phantasm_damage" }, () => false),
+    Match.when({ kind: "camouflaged_area_recognition" }, (recognition) =>
+      Boolean(
+        recognition.camouflage === "looks_natural" &&
+        recognition.eligibility.kind === "unable_to_see_area_when_spell_cast" &&
+        recognition.attempt.action === "search" &&
+        recognition.attempt.check.ability === "wis" &&
+        recognition.attempt.check.skillOptions.length === 2 &&
+        recognition.attempt.check.skillOptions[0] === "perception" &&
+        recognition.attempt.check.skillOptions[1] === "survival" &&
+        recognition.attempt.check.dc.kind === "caster_spell_save_dc" &&
+        recognition.recognition === "terrain_as_hazardous" &&
+        recognition.timing === "before_entering_area" &&
+        spellMechanicsObjectHasOnlyKeys(recognition, RECOGNITION_FIELDS) &&
+        spellMechanicsObjectHasOnlyKeys(
+          recognition.eligibility,
+          RECOGNITION_ELIGIBILITY_FIELDS,
+        ) &&
+        spellMechanicsObjectHasOnlyKeys(
+          recognition.attempt,
+          RECOGNITION_ATTEMPT_FIELDS,
+        ) &&
+        spellMechanicsObjectHasOnlyKeys(
+          recognition.attempt.check,
+          RECOGNITION_CHECK_FIELDS,
+        ) &&
+        spellMechanicsObjectHasOnlyKeys(
+          recognition.attempt.check.dc,
+          RECOGNITION_DC_FIELDS,
+        ),
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function areaMovementDistanceDamageRepresentation(
@@ -502,7 +555,7 @@ function areaMovementDistanceDamageEvidence(
       spellOngoingOperationPath(damageOrdinal),
       spellOngoingOperationEffectPath(damageOrdinal),
     ],
-    unowned: [],
+    unowned: [spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1))],
   };
 }
 
@@ -579,11 +632,21 @@ function inspectAreaMovementDistanceDamageMechanics(
   );
   if (mechanics.initialPhase !== undefined)
     push("initialPhase", spellOngoingInitialPhasePath());
-  for (const [index] of (mechanics.authoredConditionalEffects ?? []).entries())
+  const authoredConditionalEffects = mechanics.authoredConditionalEffects ?? [];
+  const recognitionIndex = authoredConditionalEffects.findIndex(
+    areaMovementDistanceDamageHasTableOwnedRecognition,
+  );
+  if (recognitionIndex !== 0)
     push(
       "authoredConditionalEffects",
-      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+      spellOngoingAuthoredConditionalEffectPath(PositiveInteger(1)),
     );
+  for (const [index] of authoredConditionalEffects.entries())
+    if (index !== recognitionIndex || index !== 0)
+      push(
+        "authoredConditionalEffects",
+        spellOngoingAuthoredConditionalEffectPath(PositiveInteger(index + 1)),
+      );
 
   const terrainEffectIndex = mechanics.operations.findIndex(
     ({ effect }) => effect.kind === "area_is_difficult_terrain",
