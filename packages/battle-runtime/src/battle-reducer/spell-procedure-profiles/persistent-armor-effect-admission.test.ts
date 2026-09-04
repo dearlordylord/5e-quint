@@ -249,6 +249,36 @@ describe("persistentArmorEffect static admission", () => {
     expect(admitPersistentArmorEffectSpell(baseFourteen)).toBeNull();
   });
 
+  test("uses the same exact target-selection gate for Spell Access", () => {
+    const visibilityConstrained = syntheticMageArmorRecord((mechanics) => {
+      if (
+        mechanics.attachment.kind !== "hole" ||
+        mechanics.attachment.value.kind !== "target"
+      ) {
+        throw new Error("Expected the Mage Armor target attachment.");
+      }
+      return {
+        ...mechanics,
+        attachment: {
+          ...mechanics.attachment,
+          value: {
+            ...mechanics.attachment.value,
+            selection: {
+              ...mechanics.attachment.value.selection,
+              visibility: "caster_can_see" as const,
+            },
+          },
+        },
+      };
+    }, "visibility_constrained");
+    const preparedInspection = persistentArmorEffectProfile.admitMechanics(
+      mechanicsSource(spellAdmissionSource(visibilityConstrained)),
+    );
+
+    expect(preparedInspection.tag).toBe("unsupported");
+    expect(admitPersistentArmorEffectSpell(visibilityConstrained)).toBeNull();
+  });
+
   test("keeps a malformed sibling candidate represented and rejects exact owned paths", () => {
     const malformedSibling = syntheticMageArmorSource((mechanics) => {
       const operation = mechanics.operations[0];

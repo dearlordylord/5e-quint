@@ -42,10 +42,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import {
-  persistentArmorEffectExecutionFactsForSpell,
-  type PersistentArmorEffectExecutionFacts,
-} from "../../procedure-execution/persistent-armor-effect-facts.ts";
+import type { PersistentArmorEffectExecutionFacts } from "../../procedure-execution/persistent-armor-effect-facts.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
@@ -74,7 +71,7 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
-import { PositiveInteger } from "@dnd/shared/types";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   spellDurationValuePath,
@@ -92,12 +89,14 @@ import {
   spellDurationChildFailedFact,
   spellDurationChildPath,
   spellDurationEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
   spellDurationValueEvidencePaths,
   isSpellCanonicalDurationValue,
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
+  spellTouchRangeFeet,
   spellUniqueMechanicsIssues,
   type SpellCanonicalDurationValue,
   type SpellMechanicsAdmissionSource,
@@ -150,7 +149,7 @@ type PersistentArmorEffectCastingTime = Extract<
   PersistentArmorEffectMechanics["castingTime"],
   { readonly kind: "action" }
 >;
-type PersistentArmorEffectMechanicsFacts = Omit<
+export type PersistentArmorEffectMechanicsFacts = Omit<
   SpellProcedureMechanicsFacts,
   "range" | "duration"
 > & {
@@ -396,6 +395,19 @@ function persistentArmorEffectMechanicsEvidence(
       ...spellConsumedMaterialEvidencePaths(mechanics.components),
     ],
     unowned: [],
+  };
+}
+
+export function persistentArmorEffectExecutionFactsFromMechanicsFacts(
+  facts: PersistentArmorEffectMechanicsFacts,
+): PersistentArmorEffectExecutionFacts {
+  return {
+    rangeFeet: spellTouchRangeFeet(),
+    slotLevel: spellSlotLevel(facts.level),
+    baseArmorClass: facts.baseArmorClass,
+    ability: facts.ability,
+    durationTicks: spellDurationTicksFromCanonicalValue(facts.duration.value),
+    earlyEnds: [{ kind: "targetDonsArmor" }],
   };
 }
 
@@ -675,20 +687,8 @@ function admitPersistentArmorEffectMechanics(
     baseArmorClass: admittedBaseArmorClass,
     ability: "dex",
   } satisfies PersistentArmorEffectMechanicsFacts;
-  const executionFacts = persistentArmorEffectExecutionFactsForSpell({
-    mechanics,
-  });
-  if (executionFacts === null) {
-    return {
-      tag: "unsupported",
-      issues: [
-        persistentArmorEffectIssue(
-          "armorClassEffect",
-          spellOngoingOperationEffectPath(PositiveInteger(1)),
-        ),
-      ],
-    };
-  }
+  const executionFacts =
+    persistentArmorEffectExecutionFactsFromMechanicsFacts(facts);
   return {
     tag: "supported",
     admitted: {
