@@ -46,7 +46,13 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
+  CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS,
+  CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS,
+  multiBeamSpellAttackBeamCount,
   multiRaySpellAttackRayCount,
+  SLOT_LEVEL_SCALED_SPELL_ATTACK_BASE_SLOT_LEVEL,
+  SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNT_PER_SLOT,
+  SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS,
   type MultiBeamSpellAttackBeamCount,
   type MultiRaySpellAttackRayCount,
 } from "../domain-constants.ts";
@@ -73,8 +79,12 @@ import {
   admitSpellTargetAttachment,
   spellConsumedMaterialEvidencePaths,
   spellDefinitionPointRangeFeet,
+  spellCharacterLevelFromSurface,
+  spellMechanicsFixedTableEntries,
   spellMechanicsObjectHasOnlyKeys,
+  spellPositiveIntegerFromSurface,
   spellProcedureNonEmpty,
+  spellSlotLevelFromSurface,
   spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
@@ -88,7 +98,14 @@ import {
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
-import { PositiveInteger, attackBonus } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  attackBonus,
+  type CharacterLevel,
+  type MovementFeet as MovementFeetType,
+  type ReadonlyNonEmptyArray,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import { Schema } from "effect";
 
 type SpellAttackSequenceResolveInput =
@@ -97,21 +114,20 @@ type SpellAttackSequenceResolveInput =
 type SpellAttackSequenceCountFacts =
   | {
       readonly kind: "character";
-      readonly base: 1;
-      readonly tiers: readonly [
-        { readonly atLevel: 5; readonly value: 2 },
-        { readonly atLevel: 11; readonly value: 3 },
-        { readonly atLevel: 17; readonly value: 4 },
-      ];
+      readonly base: MultiBeamSpellAttackBeamCount;
+      readonly tiers: ReadonlyNonEmptyArray<{
+        readonly atLevel: CharacterLevel;
+        readonly value: MultiBeamSpellAttackBeamCount;
+      }>;
     }
   | {
       readonly kind: "slot";
-      readonly base: 3;
-      readonly baseLevel: 2;
-      readonly perSlotAboveBase: 1;
+      readonly base: MultiRaySpellAttackRayCount;
+      readonly baseLevel: SpellSlotLevel;
+      readonly perSlotAboveBase: PositiveInteger;
     };
 type SpellAttackSequenceMechanicsFacts = SpellDefinitionRuleFacts & {
-  readonly rangeFeet: import("@dnd/shared/types").MovementFeet;
+  readonly rangeFeet: MovementFeetType;
   readonly attackKind: "ranged_spell_attack";
   readonly damageAmount: DiceAmount;
   readonly damageType: DamageType;
@@ -204,15 +220,11 @@ type SpellAttackSequenceActivationPhase = Extract<
 function spellAttackSequenceCandidatePhase(
   phase: SpellAttackSequenceActivationPhase,
 ): boolean {
-  if (
-    phase.kind !== "attack_roll" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target"
-  ) {
-    return false;
-  }
-  const selection = phase.attachment.value.selection;
-  return selection.mode === "choose_up_to" && selection.repeatsAllowed === true;
+  return (
+    phase.kind === "attack_roll" &&
+    phase.attackKind === "ranged_spell_attack" &&
+    phase.onHit.some((effect) => effect.kind === "damage")
+  );
 }
 
 function spellAttackSequenceIssueResult(
@@ -232,20 +244,7 @@ function spellAttackSequenceSemanticCandidate(
 ): boolean {
   return (
     mechanics.family === "activation" &&
-    mechanics.phases.some((phase) => {
-      if (!spellAttackSequenceCandidatePhase(phase)) return false;
-      if (
-        phase.kind !== "attack_roll" ||
-        phase.attachment.kind !== "hole" ||
-        phase.attachment.value.kind !== "target"
-      ) {
-        return false;
-      }
-      const selection = phase.attachment.value.selection;
-      return (
-        selection.mode === "choose_up_to" && typeof selection.count === "object"
-      );
-    })
+    mechanics.phases.some(spellAttackSequenceCandidatePhase)
   );
 }
 
@@ -264,9 +263,9 @@ function spellAttackSequenceDistinctiveHeaderFallback(
 }
 
 function spellAttackSequenceTargetSelection(
-  attachment: Attachment,
+  attachment: Attachment | undefined,
 ): TargetSelection | undefined {
-  if (attachment.kind !== "hole") {
+  if (attachment?.kind !== "hole") {
     return undefined;
   }
   const admitted = admitSpellTargetAttachment(
@@ -303,31 +302,35 @@ function spellAttackSequenceCountFacts(
     ) &&
     count.kind === "threshold_tiers" &&
     count.axis === "character" &&
-    count.base === 1 &&
-    count.tiers.length === 3 &&
-    count.tiers.every(
-      (tier) =>
-        spellMechanicsObjectHasOnlyKeys(
-          tier,
-          SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS,
-        ) &&
-        ((tier.atLevel === 5 && tier.value === 2) ||
-          (tier.atLevel === 11 && tier.value === 3) ||
-          (tier.atLevel === 17 && tier.value === 4)),
-    ) &&
-    count.tiers.some((tier) => tier.atLevel === 5 && tier.value === 2) &&
-    count.tiers.some((tier) => tier.atLevel === 11 && tier.value === 3) &&
-    count.tiers.some((tier) => tier.atLevel === 17 && tier.value === 4)
+    count.base === CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS[0]
   ) {
-    return {
-      kind: "character",
-      base: 1,
-      tiers: [
-        { atLevel: 5, value: 2 },
-        { atLevel: 11, value: 3 },
-        { atLevel: 17, value: 4 },
-      ],
-    };
+    const base = multiBeamSpellAttackBeamCount(count.base);
+    const parsedTiers = count.tiers.flatMap((tier) => {
+      const atLevel = spellCharacterLevelFromSurface(tier.atLevel);
+      const value = multiBeamSpellAttackBeamCount(tier.value);
+      return spellMechanicsObjectHasOnlyKeys(
+        tier,
+        SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS,
+      ) &&
+        atLevel !== undefined &&
+        value !== null
+        ? [{ ...tier, atLevel, value }]
+        : [];
+    });
+    const orderedTiers = spellMechanicsFixedTableEntries(
+      parsedTiers,
+      CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS,
+      (actual, expected) =>
+        Number(actual.atLevel) === expected.atLevel &&
+        actual.value === expected.value,
+    );
+    const tiers =
+      parsedTiers.length === count.tiers.length && orderedTiers !== undefined
+        ? spellProcedureNonEmpty(orderedTiers)
+        : undefined;
+    if (base !== null && tiers !== undefined) {
+      return { kind: "character", base, tiers };
+    }
   }
   if (
     level === 2 &&
@@ -338,16 +341,20 @@ function spellAttackSequenceCountFacts(
       SPELL_ATTACK_SEQUENCE_SLOT_COUNT_FIELDS,
     ) &&
     count.kind === "linear" &&
-    count.base === 3 &&
-    count.baseLevel === 2 &&
-    count.perSlotAboveBase === 1
+    count.base === SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS[0] &&
+    count.baseLevel === SLOT_LEVEL_SCALED_SPELL_ATTACK_BASE_SLOT_LEVEL &&
+    count.perSlotAboveBase === SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNT_PER_SLOT
   ) {
-    return {
-      kind: "slot",
-      base: 3,
-      baseLevel: 2,
-      perSlotAboveBase: 1,
-    };
+    const base = multiRaySpellAttackRayCount(count.base);
+    const baseLevel = spellSlotLevelFromSurface(count.baseLevel);
+    const perSlotAboveBase = spellPositiveIntegerFromSurface(
+      count.perSlotAboveBase,
+    );
+    return base === null ||
+      baseLevel === undefined ||
+      perSlotAboveBase === undefined
+      ? undefined
+      : { kind: "slot", base, baseLevel, perSlotAboveBase };
   }
   return undefined;
 }
@@ -428,6 +435,13 @@ function admitSpellAttackSequenceMechanics(
   const hitEffect =
     hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
   const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
+  const targetAttachmentAdmission =
+    attackPhase === undefined
+      ? undefined
+      : admitSpellTargetAttachment(
+          attackPhase.attachment,
+          SPELL_ATTACK_SEQUENCE_TARGET_SELECTION_FIELDS,
+        );
   const selection =
     attackPhase === undefined
       ? undefined
@@ -511,6 +525,13 @@ function admitSpellAttackSequenceMechanics(
     attackPhase.attackKind !== "ranged_spell_attack"
   ) {
     push("attackKind", spellActivationPhasePath(phaseOrdinal));
+  }
+  if (
+    targetAttachmentAdmission === undefined ||
+    (targetAttachmentAdmission.tag === "rejected" &&
+      targetAttachmentAdmission.reason !== "targetSelectionConstraint")
+  ) {
+    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
   }
   if (selection === undefined || count === undefined) {
     push("targeting", spellActivationAttachmentPath(phaseOrdinal));
@@ -635,10 +656,11 @@ function admitSpellAttackSequence(
   );
   if (facts.count.kind === "character") {
     const characterLevel = spellAdmissionCharacterLevel(ctx);
-    let attackCount: MultiBeamSpellAttackBeamCount = facts.count.base;
-    for (const tier of facts.count.tiers) {
-      if (characterLevel >= tier.atLevel) attackCount = tier.value;
-    }
+    const attackCount = facts.count.tiers.reduce<MultiBeamSpellAttackBeamCount>(
+      (current, tier) =>
+        Number(characterLevel) >= Number(tier.atLevel) ? tier.value : current,
+      facts.count.base,
+    );
     const damageExpr = supportedDamageAmountExpr({
       amount: facts.damageAmount,
       spellLevel: facts.level,
@@ -654,7 +676,7 @@ function admitSpellAttackSequence(
         targeting: {
           kind: "spellAttackSequenceCreatureOrObject",
           countSource: "characterLevel",
-          attackCount: attackCount as MultiBeamSpellAttackBeamCount,
+          attackCount,
         },
         damage: { expr: damageExpr, damageType: facts.damageType },
         rangeFeet: facts.rangeFeet,
@@ -668,9 +690,9 @@ function admitSpellAttackSequence(
     (slot): readonly SpellAttackSequenceInvocation[] => {
       if (Number(slot.spellLevel) < facts.level) return [];
       const attackCount = multiRaySpellAttackRayCount(
-        slotCount.base +
-          (Number(slot.spellLevel) - slotCount.baseLevel) *
-            slotCount.perSlotAboveBase,
+        Number(slotCount.base) +
+          (Number(slot.spellLevel) - Number(slotCount.baseLevel)) *
+            Number(slotCount.perSlotAboveBase),
       );
       const damageExpr = supportedDamageAmountExpr({
         amount: facts.damageAmount,
@@ -687,7 +709,7 @@ function admitSpellAttackSequence(
           targeting: {
             kind: "spellAttackSequenceCreatureOrObject",
             countSource: "spellSlotLevel",
-            attackCount: attackCount as MultiRaySpellAttackRayCount,
+            attackCount,
           },
           damage: { expr: damageExpr, damageType: facts.damageType },
           rangeFeet: facts.rangeFeet,

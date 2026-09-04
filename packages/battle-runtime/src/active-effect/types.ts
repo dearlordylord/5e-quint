@@ -61,6 +61,7 @@ import type {
 } from "./execution-vocabulary.ts";
 import type {
   BattleD20RollModifierKind,
+  MARKED_TARGET_FINDING_SKILLS,
   CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
@@ -122,7 +123,7 @@ export type BattleSourceTurnActiveEffectExpiration = {
 export type MarkedDamageRiderFindingAdvantage = {
   readonly kind: "findingAdvantage";
   readonly ability: "wis";
-  readonly skills: readonly [Skill, Skill];
+  readonly skills: typeof MARKED_TARGET_FINDING_SKILLS;
 };
 export type MarkedDamageRiderAbilityCheckBehavior =
   | { readonly kind: "none" }

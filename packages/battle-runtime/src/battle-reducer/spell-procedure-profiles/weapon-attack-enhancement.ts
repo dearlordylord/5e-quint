@@ -10,7 +10,11 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // attaches a timed magic-weapon enhancement to an exact holder-plus-item weapon
 // identity supplied by the table-owned fill boundary.
 
-import { PositiveInteger, type SpellSlotLevel } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  type ReadonlyNonEmptyArray,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import type {
   Attachment,
   EffectAtom,
@@ -65,8 +69,10 @@ import {
   spellDurationValueEvidencePaths,
   spellDurationTicksFromCanonicalValue,
   isSpellCanonicalDurationValue,
+  spellMechanicsFixedTableEntries,
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureNonEmpty,
+  spellSlotLevelFromSurface,
   spellUniqueMechanicsIssues,
   type SpellCanonicalDurationValue,
   type SpellMechanicsAdmissionSource,
@@ -91,6 +97,22 @@ type WeaponAttackDamageEnhancementBonusSource = Extract<
   EffectAtom,
   { readonly kind: "grant_weapon_attack_enhancement" }
 >["bonus"];
+type WeaponAttackDamageEnhancementThresholdBonusSource = Extract<
+  WeaponAttackDamageEnhancementBonusSource,
+  { readonly kind: "threshold_tiers" }
+>;
+type WeaponAttackDamageEnhancementBonusFacts = Omit<
+  WeaponAttackDamageEnhancementThresholdBonusSource,
+  "base" | "tiers"
+> & {
+  readonly base: WeaponAttackDamageEnhancementBonus;
+  readonly tiers: ReadonlyNonEmptyArray<
+    Omit<
+      WeaponAttackDamageEnhancementThresholdBonusSource["tiers"][number],
+      "atLevel"
+    > & { readonly atLevel: SpellSlotLevel }
+  >;
+};
 type OngoingEffectMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -107,7 +129,7 @@ type WeaponAttackDamageEnhancementMechanics = Extract<
 
 type WeaponAttackDamageEnhancementMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly durationValue: SpellCanonicalDurationValue;
-  readonly bonus: WeaponAttackDamageEnhancementBonusSource;
+  readonly bonus: WeaponAttackDamageEnhancementBonusFacts;
 };
 
 export const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_FAILED_FACTS = [
@@ -182,6 +204,11 @@ const WEAPON_ENHANCEMENT_BONUS_FIELDS = [
   "base",
   "tiers",
   "sign",
+] as const;
+const WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS = ["atLevel", "value"] as const;
+const WEAPON_ENHANCEMENT_BONUS_TIER_TABLE = [
+  { atLevel: 3, value: 2 },
+  { atLevel: 6, value: 3 },
 ] as const;
 
 function weaponAttackDamageEnhancementIssueResult(
@@ -286,30 +313,44 @@ function weaponAttackEnhancementDurationIsSupported(
   );
 }
 
-function weaponAttackEnhancementBonusIsSupported(
+function weaponAttackEnhancementBonusFacts(
   bonus: WeaponAttackDamageEnhancementBonusSource,
-): boolean {
+): WeaponAttackDamageEnhancementBonusFacts | undefined {
   if (
     !spellMechanicsObjectHasOnlyKeys(bonus, WEAPON_ENHANCEMENT_BONUS_FIELDS) ||
     bonus.kind !== "threshold_tiers" ||
     bonus.axis !== "slot" ||
     bonus.base !== 1 ||
     bonus.sign !== "+" ||
-    bonus.tiers.length !== 2
+    bonus.tiers.length !== WEAPON_ENHANCEMENT_BONUS_TIER_TABLE.length
   ) {
-    return false;
+    return undefined;
   }
-  const tierFieldsValid = bonus.tiers.every(
-    (tier) =>
-      spellMechanicsObjectHasOnlyKeys(tier, ["atLevel", "value"]) &&
-      ((tier.atLevel === 3 && tier.value === 2) ||
-        (tier.atLevel === 6 && tier.value === 3)),
+  const base = weaponAttackDamageEnhancementBonusFromNumber(bonus.base);
+  const parsedTiers = bonus.tiers.flatMap((tier) => {
+    const atLevel = spellSlotLevelFromSurface(tier.atLevel);
+    return atLevel === undefined ||
+      !spellMechanicsObjectHasOnlyKeys(
+        tier,
+        WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS,
+      )
+      ? []
+      : [{ ...tier, atLevel }];
+  });
+  const orderedTiers = spellMechanicsFixedTableEntries(
+    parsedTiers,
+    WEAPON_ENHANCEMENT_BONUS_TIER_TABLE,
+    (tier, expected) =>
+      Number(tier.atLevel) === expected.atLevel &&
+      tier.value === expected.value,
   );
-  return (
-    tierFieldsValid &&
-    bonus.tiers.some((tier) => tier.atLevel === 3 && tier.value === 2) &&
-    bonus.tiers.some((tier) => tier.atLevel === 6 && tier.value === 3)
-  );
+  const tiers =
+    parsedTiers.length === bonus.tiers.length && orderedTiers !== undefined
+      ? spellProcedureNonEmpty(orderedTiers)
+      : undefined;
+  return base === null || tiers === undefined
+    ? undefined
+    : { ...bonus, base, tiers };
 }
 
 function weaponAttackEnhancementOperationIsSupported(
@@ -340,8 +381,7 @@ function weaponAttackEnhancementOperationIsSupported(
     spellMechanicsObjectHasOnlyKeys(
       operation.effect,
       WEAPON_ENHANCEMENT_EFFECT_FIELDS,
-    ) &&
-    weaponAttackEnhancementBonusIsSupported(operation.effect.bonus)
+    )
   );
 }
 
@@ -389,6 +429,11 @@ function admitWeaponAttackDamageEnhancementMechanics(
   );
   const operation =
     operationIndex < 0 ? undefined : mechanics.operations[operationIndex];
+  const bonus =
+    operation !== undefined &&
+    weaponAttackEnhancementOperationIsSupported(operation)
+      ? weaponAttackEnhancementBonusFacts(operation.effect.bonus)
+      : undefined;
   const issues: WeaponAttackDamageEnhancementMechanicsIssue[] = [];
   const push = (
     failedFact: WeaponAttackDamageEnhancementFailedFact,
@@ -467,6 +512,14 @@ function admitWeaponAttackDamageEnhancementMechanics(
       spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
     );
   }
+  if (bonus === undefined) {
+    push(
+      "enhancementBonus",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
+    );
+  }
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -479,6 +532,7 @@ function admitWeaponAttackDamageEnhancementMechanics(
   if (
     operation === undefined ||
     !weaponAttackEnhancementOperationIsSupported(operation) ||
+    bonus === undefined ||
     !weaponAttackEnhancementDurationIsSupported(mechanics.duration)
   ) {
     const issue = {
@@ -511,7 +565,7 @@ function admitWeaponAttackDamageEnhancementMechanics(
   const facts = {
     ...source.spellDefinitionRuleFacts,
     durationValue,
-    bonus: operation.effect.bonus,
+    bonus,
   } satisfies WeaponAttackDamageEnhancementMechanicsFacts;
   return {
     tag: "supported",
@@ -559,7 +613,7 @@ function admitWeaponAttackDamageEnhancement(
 }
 
 function weaponAttackDamageEnhancementBonusForSlot(
-  bonus: WeaponAttackDamageEnhancementBonusSource,
+  bonus: WeaponAttackDamageEnhancementBonusFacts,
   slotLevel: SpellSlotLevel,
 ): WeaponAttackDamageEnhancementBonus | null {
   if (
@@ -577,8 +631,8 @@ function weaponAttackDamageEnhancementBonusForSlot(
     (typeof bonus.tiers)[number] | undefined
   >((current, tier) => {
     if (
-      Number(slotLevel) < tier.atLevel ||
-      (current !== undefined && current.atLevel >= tier.atLevel)
+      Number(slotLevel) < Number(tier.atLevel) ||
+      (current !== undefined && Number(current.atLevel) >= Number(tier.atLevel))
     ) {
       return current;
     }

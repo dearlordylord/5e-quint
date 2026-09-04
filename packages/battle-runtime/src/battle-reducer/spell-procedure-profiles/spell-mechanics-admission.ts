@@ -6,10 +6,14 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
 import {
+  characterLevel,
   PositiveInteger,
   movementFeet,
+  spellSlotLevel,
+  type CharacterLevel,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
+  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
@@ -116,6 +120,33 @@ export function isSpellCanonicalDurationValue(
   value: DurationValue,
 ): value is SpellCanonicalDurationValue {
   return Number.isInteger(value.amount) && value.amount > 0;
+}
+
+/** Parse a positive Surface number once before it enters procedure facts. */
+export function spellPositiveIntegerFromSurface(
+  value: number,
+): PositiveInteger | undefined {
+  return Number.isInteger(value) && value > 0
+    ? PositiveInteger(value)
+    : undefined;
+}
+
+/** Parse a Surface spell-slot threshold without the clamping constructor. */
+export function spellSlotLevelFromSurface(
+  value: number,
+): SpellSlotLevel | undefined {
+  return Number.isInteger(value) && value >= 1 && value <= 9
+    ? spellSlotLevel(value)
+    : undefined;
+}
+
+/** Parse a Surface character-level threshold without the clamping constructor. */
+export function spellCharacterLevelFromSurface(
+  value: number,
+): CharacterLevel | undefined {
+  return Number.isInteger(value) && value >= 1 && value <= 20
+    ? characterLevel(value)
+    : undefined;
 }
 
 export function spellDurationTicksFromCanonicalValue(
@@ -380,19 +411,51 @@ export function spellMechanicsObjectHasOnlyKeys(
   return Reflect.ownKeys(value).every((field) => allowed.has(field));
 }
 
+/**
+ * Validate an unordered authored table against one fixed rule table and return
+ * the authored entries in rule order. Equal cardinality plus both-way matching
+ * rejects duplicates while retaining parsed source values for execution.
+ */
+export function spellMechanicsFixedTableEntries<Actual, Expected>(
+  actualEntries: readonly Actual[],
+  expectedEntries: readonly Expected[],
+  matches: (actual: Actual, expected: Expected) => boolean,
+): readonly Actual[] | undefined {
+  if (actualEntries.length !== expectedEntries.length) return undefined;
+  const orderedEntries = expectedEntries.flatMap((expected) => {
+    const actual = actualEntries.find((candidate) =>
+      matches(candidate, expected),
+    );
+    return actual === undefined ? [] : [actual];
+  });
+  return orderedEntries.length === expectedEntries.length &&
+    actualEntries.every((actual) =>
+      expectedEntries.some((expected) => matches(actual, expected)),
+    )
+    ? orderedEntries
+    : undefined;
+}
+
 function isSpellTargetAttachment(
-  attachment: Attachment,
+  attachment: Attachment | undefined,
 ): attachment is SpellTargetAttachment {
-  return attachment.kind === "hole" && attachment.value.kind === "target";
+  return (
+    attachment?.kind === "hole" &&
+    attachment.value !== undefined &&
+    attachment.value.kind === "target"
+  );
 }
 
 function isAdmittedSpellTargetSelection<
   const AllowedFields extends readonly SpellTargetSelectionField[],
 >(
-  selection: TargetSelection,
+  selection: TargetSelection | undefined,
   allowedFields: AllowedFields,
 ): selection is AdmittedSpellTargetSelection<AllowedFields[number]> {
-  return spellMechanicsObjectHasOnlyKeys(selection, allowedFields);
+  return (
+    selection !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(selection, allowedFields)
+  );
 }
 
 /**
@@ -405,7 +468,7 @@ function isAdmittedSpellTargetSelection<
 export function admitSpellTargetAttachment<
   const AllowedFields extends readonly SpellTargetSelectionField[],
 >(
-  attachment: Attachment,
+  attachment: Attachment | undefined,
   allowedSelectionFields: AllowedFields,
 ): SpellTargetAttachmentAdmissionResult<AllowedFields[number]> {
   if (!isSpellTargetAttachment(attachment)) {

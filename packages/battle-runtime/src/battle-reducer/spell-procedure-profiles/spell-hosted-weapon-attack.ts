@@ -82,6 +82,7 @@ import {
 } from "./profile.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  spellMechanicsFixedTableEntries,
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
@@ -187,6 +188,11 @@ const SPELL_HOSTED_BONUS_AMOUNT_FIELDS = [
 const SPELL_HOSTED_BONUS_BASE_FIELDS = ["dice", "dieSize", "flat"] as const;
 const SPELL_HOSTED_BONUS_TIER_FIELDS = ["atLevel", "override"] as const;
 const SPELL_HOSTED_BONUS_OVERRIDE_FIELDS = ["dice"] as const;
+const SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE = [
+  { atLevel: 5, dice: 1 },
+  { atLevel: 11, dice: 2 },
+  { atLevel: 17, dice: 3 },
+] as const;
 
 function spellHostedWeaponAttackIssueResult(
   issue: SpellHostedWeaponAttackMechanicsIssue,
@@ -227,19 +233,20 @@ function spellHostedWeaponAttackDistinctiveHeaderFallback(
   );
 }
 
-function spellHostedWeaponAttackBonusDamageIsSupported(
+function spellHostedWeaponAttackBonusDamageFacts(
   bonusDamage: SpellHostedWeaponAttackBonusDamage,
-): bonusDamage is SupportedSpellHostedWeaponAttackBonusDamage {
+): SupportedSpellHostedWeaponAttackBonusDamage | undefined {
   const amount = bonusDamage.amount;
+  const damageType = bonusDamage.damageType;
   if (
     !spellMechanicsObjectHasOnlyKeys(
       bonusDamage,
       SPELL_HOSTED_BONUS_DAMAGE_FIELDS,
     ) ||
-    bonusDamage.damageType !== "radiant" ||
+    damageType !== "radiant" ||
     !spellMechanicsObjectHasOnlyKeys(amount, SPELL_HOSTED_BONUS_AMOUNT_FIELDS)
   ) {
-    return false;
+    return undefined;
   }
   if (
     amount.kind !== "threshold_tiers" ||
@@ -251,54 +258,29 @@ function spellHostedWeaponAttackBonusDamageIsSupported(
     amount.base.dice !== 0 ||
     amount.base.dieSize !== 6 ||
     amount.base.flat !== undefined ||
-    amount.tiers.length !== 3
+    amount.tiers.length !== SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE.length
   ) {
-    return false;
+    return undefined;
   }
-  const tiersAreSupported = amount.tiers.every(
-    (tier) =>
+  const orderedTiers = spellMechanicsFixedTableEntries(
+    amount.tiers,
+    SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE,
+    (tier, expected) =>
       spellMechanicsObjectHasOnlyKeys(tier, SPELL_HOSTED_BONUS_TIER_FIELDS) &&
       spellMechanicsObjectHasOnlyKeys(
         tier.override,
         SPELL_HOSTED_BONUS_OVERRIDE_FIELDS,
       ) &&
-      ((tier.atLevel === 5 && tier.override.dice === 1) ||
-        (tier.atLevel === 11 && tier.override.dice === 2) ||
-        (tier.atLevel === 17 && tier.override.dice === 3)),
+      tier.atLevel === expected.atLevel &&
+      tier.override.dice === expected.dice,
   );
-  return (
-    tiersAreSupported &&
-    amount.tiers.some(
-      (tier) => tier.atLevel === 5 && tier.override.dice === 1,
-    ) &&
-    amount.tiers.some(
-      (tier) => tier.atLevel === 11 && tier.override.dice === 2,
-    ) &&
-    amount.tiers.some((tier) => tier.atLevel === 17 && tier.override.dice === 3)
-  );
-}
-
-function spellHostedWeaponAttackCanonicalBonusDamage(
-  bonusDamage: SupportedSpellHostedWeaponAttackBonusDamage,
-): SupportedSpellHostedWeaponAttackBonusDamage | undefined {
-  const amount = bonusDamage.amount;
-  const tierAtLevel5 = amount.tiers.find((tier) => tier.atLevel === 5);
-  const tierAtLevel11 = amount.tiers.find((tier) => tier.atLevel === 11);
-  const tierAtLevel17 = amount.tiers.find((tier) => tier.atLevel === 17);
-  if (
-    tierAtLevel5 === undefined ||
-    tierAtLevel11 === undefined ||
-    tierAtLevel17 === undefined
-  ) {
-    return undefined;
-  }
-  return {
-    ...bonusDamage,
-    amount: {
-      ...amount,
-      tiers: [tierAtLevel5, tierAtLevel11, tierAtLevel17],
-    },
-  };
+  const tiers =
+    orderedTiers === undefined
+      ? undefined
+      : spellProcedureNonEmpty(orderedTiers);
+  return tiers === undefined
+    ? undefined
+    : { ...bonusDamage, damageType, amount: { ...amount, tiers } };
 }
 
 function spellHostedWeaponAttackDamageTypeChoices(
@@ -372,6 +354,10 @@ function admitSpellHostedWeaponAttackMechanics(
     effect?.kind === "make_weapon_attack" ? effect : undefined;
   const damageTypeChoices =
     spellHostedWeaponAttackDamageTypeChoices(weaponEffect);
+  const bonusDamage =
+    weaponEffect?.bonusDamage === undefined
+      ? undefined
+      : spellHostedWeaponAttackBonusDamageFacts(weaponEffect.bonusDamage);
   const issues: SpellHostedWeaponAttackMechanicsIssue[] = [];
   const push = (
     failedFact: SpellHostedWeaponAttackFailedFact,
@@ -475,12 +461,7 @@ function admitSpellHostedWeaponAttackMechanics(
       ),
     );
   }
-  if (
-    damageTypeChoices === undefined ||
-    weaponEffect === undefined ||
-    weaponEffect.bonusDamage === undefined ||
-    !spellHostedWeaponAttackBonusDamageIsSupported(weaponEffect.bonusDamage)
-  ) {
+  if (damageTypeChoices === undefined || bonusDamage === undefined) {
     push(
       "bonusDamage",
       spellActivationEffectPath(
@@ -512,27 +493,7 @@ function admitSpellHostedWeaponAttackMechanics(
       ],
     };
   }
-  const admittedBonusDamage = weaponEffect?.bonusDamage;
-  if (
-    admittedBonusDamage === undefined ||
-    !spellHostedWeaponAttackBonusDamageIsSupported(admittedBonusDamage)
-  ) {
-    return {
-      tag: "unsupported",
-      issues: [
-        spellHostedWeaponAttackIssueResult({
-          failedFact: "bonusDamage",
-          mechanicsPath: spellActivationEffectPath(
-            phaseOrdinal,
-            PositiveInteger(Math.max(1, effectIndex + 1)),
-          ),
-        }),
-      ],
-    };
-  }
-  const canonicalBonusDamage =
-    spellHostedWeaponAttackCanonicalBonusDamage(admittedBonusDamage);
-  if (canonicalBonusDamage === undefined) {
+  if (bonusDamage === undefined) {
     return {
       tag: "unsupported",
       issues: [
@@ -550,8 +511,8 @@ function admitSpellHostedWeaponAttackMechanics(
     ...source.spellDefinitionRuleFacts,
     damageTypeChoices,
     bonusDamage: {
-      damageType: canonicalBonusDamage.damageType,
-      amount: canonicalBonusDamage.amount,
+      damageType: bonusDamage.damageType,
+      amount: bonusDamage.amount,
     },
   } satisfies SpellHostedWeaponAttackMechanicsFacts;
   return {

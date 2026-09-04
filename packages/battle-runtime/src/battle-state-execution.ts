@@ -4087,13 +4087,9 @@ export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
     | "afterHitDamageAndIllumination"
     | "spellHostedWeaponAttack";
 };
-export type MarkedDamageRiderFindingAdvantage = {
-  readonly kind: "findingAdvantage";
-  readonly ability: Extract<Ability, "wis">;
-  readonly skills: readonly [Skill, Skill];
-};
 export type {
   MarkedDamageRiderAbilityCheckBehavior,
+  MarkedDamageRiderFindingAdvantage,
   SpellMarkedDamageRider,
 } from "./active-effect/types.ts";
 export type AttackDamageRiderUsage = {
