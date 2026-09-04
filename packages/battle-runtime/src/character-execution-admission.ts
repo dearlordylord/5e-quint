@@ -1857,6 +1857,7 @@ export function spellProcedureExecution(
         spellRuleFacts,
         access: value.access,
         durationTicks: value.durationTicks,
+        exceptSources: value.exceptSources,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         resource: value.resource,
@@ -1915,6 +1916,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
         targeting: value.targeting,
+        visibility: value.visibility,
       }),
       conditionImmunityAndTurnStartTemporaryHitPoints: (value) => ({
         spellRuleFacts,
@@ -2390,6 +2392,7 @@ export function spellProcedureExecution(
         actionCost: value.actionCost,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
+        abilityCheckDcBase: value.abilityCheckDcBase,
         resource: value.resource,
       }),
       persistentArmorEffect: (value) =>
