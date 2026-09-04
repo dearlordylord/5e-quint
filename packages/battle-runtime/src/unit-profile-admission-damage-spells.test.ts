@@ -1,4 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
@@ -15,7 +16,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellMechanicsHeaderPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -63,7 +71,11 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleObjectId,
   cantripSpellInvocationRef,
@@ -98,8 +110,200 @@ import {
   requireCharacterSpellProcedureRefForTest,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+import { repeatedDamageAllocationProfile } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 
 const fireballObjectId = battleObjectId("unit-profile-fireball-object");
+
+function repeatedDamageMechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function expectUnsupportedRepeatedDamageMechanics(
+  mechanics: SpellMechanics,
+  failedFact: string,
+  mechanicsPath: UnitMechanicsPath,
+): void {
+  const result = repeatedDamageAllocationProfile.admitMechanics({
+    mechanics,
+    spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+  });
+  expect(result.tag).toBe("unsupported");
+  if (result.tag !== "unsupported") return;
+  expect(result.issues).toEqual([
+    expect.objectContaining({ failedFact, mechanicsPath }),
+  ]);
+}
+
+describe("repeatedDamageAllocation static admission", () => {
+  test("projects the complete repeated-damage root and binds slot-scaled execution facts", () => {
+    const source = spellAdmissionSource(spellRecord(magicMissileUnitId));
+    const result = repeatedDamageAllocationProfile.admitMechanics(
+      repeatedDamageMechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 1,
+      rangeFeet: 120,
+      repeatedEffectCount: {
+        base: 3,
+        baseLevel: 1,
+        perSlotAboveBase: 1,
+      },
+      damage: {
+        expr: { dice: 1, dieSize: 4, flat: 1 },
+        damageType: "force",
+      },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({ preparedSpells: [] });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected spell caster fixture.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        ...context,
+        castingSource: source.castingSource,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations.map((invocation) => invocation.targeting)).toEqual([
+      { kind: "repeatedEffectTargetAllocation", repeatedEffectCount: 3 },
+      { kind: "repeatedEffectTargetAllocation", repeatedEffectCount: 5 },
+    ]);
+    expect(
+      invocations.every((invocation) => !("mechanics" in invocation.spell)),
+    ).toBe(true);
+  });
+
+  test("recognizes the same mechanics after authored identity changes", () => {
+    const original = spellRecord(magicMissileUnitId);
+    const renamed = {
+      ...original,
+      id: parseSharedUnitId("synthetic_repeated_force_darts"),
+      name: "Synthetic Repeated Force Darts",
+      provenance: {
+        kind: "synthetic-test" as const,
+        section: "battle-runtime/synthetic-repeated-force-darts",
+      },
+    };
+    const originalResult = repeatedDamageAllocationProfile.admitMechanics(
+      repeatedDamageMechanicsSource(spellAdmissionSource(original)),
+    );
+    const renamedResult = repeatedDamageAllocationProfile.admitMechanics(
+      repeatedDamageMechanicsSource(spellAdmissionSource(renamed)),
+    );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test.each([rayOfFrostUnitId, fireballUnitId] as const)(
+    "does not claim unsupported %s mechanics",
+    (unitId) => {
+      const result = repeatedDamageAllocationProfile.admitMechanics(
+        repeatedDamageMechanicsSource(
+          spellAdmissionSource(spellRecord(unitId)),
+        ),
+      );
+      expect(result).toEqual({ tag: "notRepresented" });
+    },
+  );
+
+  test("rejects represented invalid range at the exact header path", () => {
+    const source = spellAdmissionSource(spellRecord(magicMissileUnitId));
+    expectUnsupportedRepeatedDamageMechanics(
+      {
+        ...source.mechanics,
+        range: { kind: "point", feet: 90 },
+      },
+      "range",
+      spellMechanicsHeaderPath("range"),
+    );
+  });
+
+  test("rejects represented invalid allocation scaling at the exact attachment path", () => {
+    const source = spellAdmissionSource(spellRecord(magicMissileUnitId));
+    if (source.mechanics.family !== "activation")
+      throw new Error("Expected activation mechanics.");
+    const phase = source.mechanics.phases[0];
+    if (
+      phase?.kind !== "direct" ||
+      phase.attachment.kind !== "hole" ||
+      phase.attachment.value.kind !== "target" ||
+      phase.attachment.value.selection.mode !== "choose_up_to"
+    )
+      throw new Error("Expected repeated target allocation mechanics.");
+    const count = phase.attachment.value.selection.count;
+    if (typeof count !== "object" || count.kind !== "linear")
+      throw new Error("Expected linearly scaled target count.");
+    const invalid = decodeSpellRecordForTest({
+      ...spellRecord(magicMissileUnitId),
+      mechanics: {
+        ...source.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection: {
+                  ...phase.attachment.value.selection,
+                  count: { ...count, perSlotAboveBase: 2 },
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+    expectUnsupportedRepeatedDamageMechanics(
+      invalid.mechanics,
+      "repeatedEffectCount",
+      spellActivationAttachmentPath(PositiveInteger(1)),
+    );
+  });
+});
 
 function spellExecutionForAct(
   session: BattleRuntimeSession,
