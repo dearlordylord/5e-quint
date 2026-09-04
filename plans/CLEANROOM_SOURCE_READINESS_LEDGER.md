@@ -307,6 +307,37 @@ This section is the sole mutable handoff for a new session.
   lifecycle, package, broad, registry, coverage, QNT, or MBT verification is
   claimed. The remaining eight legacy declarations prevent whole-package
   convergence.
+- Ongoing-spell-end evidence: Luna max produced two bounded no-edit
+  checkpoints before Sol fallback implemented initial tip `ef68bdbab`;
+  follow-up tips `7dd86712f` and `489311b0c` repaired the W10 Antimagic Field
+  and W8 Command canonical execution projections, and Dispel repair tips
+  `c0b834ce2`, `ddbef5d80`, and `7c5d48411` are integrated by
+  `e4dc4ffa3410665eaa532f83165660ebf4ac561f`. Parse-once admission owns
+  Dispel Magic's exact local-RAW level, school, Action, 120-foot range, V/S
+  components without Material, Instantaneous duration, creature/object/magical
+  effect target attachments, direct ending, spellcasting Ability Check, and
+  higher-level Spell Slot facts. It accumulates independent exact-path issues
+  at actual authored phase and effect ordinals, including mode, effect
+  cardinality, target-selection fields, and range origin. The source-derived
+  branded `abilityCheckDcBase` is threaded through facts, invocation,
+  procedure type/schema, character projector, and runtime hole; runtime no
+  longer copies `10 + contestedSpellLevel`. Execution receives no authored
+  mechanics and ignores authored spell and hole identity. The expanded W12
+  diagnostics exposed real W10 `exceptSources` and W8 `visibility` projector
+  gaps; both canonical fields were restored and focused regression-tested.
+  Required bounded local RAW searches and direct reads completed for Dispel
+  Magic, Antimagic Field, and Command. Review convergence took four rounds:
+  round one returned four Standards and two Spec/RAW findings; round two
+  returned one Standards finding and zero Spec/RAW findings; round three
+  returned zero Standards and one Spec/RAW finding; round four returned zero
+  findings on both axes. Final focused selections passed 12/12 with 19 skipped
+  for Dispel, 12/12 with nine skipped for Command, and 13/13 with eight skipped
+  for Antimagic Field. Seven-root diagnostics reported zero relevant errors;
+  17 unrelated total-program diagnostics were excluded. Scoped ESLint,
+  Prettier, and diff checks passed. Commit hooks are incidental only. No
+  lifecycle, package, broad, registry, coverage, QNT, or MBT verification is
+  claimed. The remaining seven legacy declarations prevent whole-package
+  convergence.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -323,43 +354,14 @@ This section is the sole mutable handoff for a new session.
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
 - Next action: continue the remaining top-level Battle profile migration. The
-  current integration-tip declaration audit retains exactly eight legacy
-  top-level `SpellProcedureDeclaration` `admit` fields in seven files:
+  current integration-tip declaration audit retains exactly seven legacy
+  top-level `SpellProcedureDeclaration` `admit` fields in six files:
   `creatureSizeChange`, `creatureSizeDecrease`,
   `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
   `controlledVerticalSuspension`, `spellCreatedHeldObject`,
-  `ongoingSpellEnd`, and `creatureTypeProtection`. The landed W11
-  condition-immunity and turn-start Temporary Hit Points lease is clear. The
-  current-tip write-set audit selects `ongoingSpellEnd` as W12's smallest
-  coherent remaining single-profile slice, paired with the existing focused
-  Dispel Magic admission test. Its `work/sr04g-ongoing-spell-end` branch and
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-ongoing-spell-end`
-  worktree start from exact W11 receipt
-  `6aa2774efc48c1e9802e263d0ab10a9f67016c81`. W12 owns
-  `ongoing-spell-end.ts`, `unit-profile-admission-dispel-magic.test.ts`, and
-  only the `ongoingSpellEnd` invocation source-field line in
-  `battle-state-execution.ts` required for mechanics-free execution, plus only
-  that procedure's projection field in
-  `procedure-execution/spell-procedure-execution.ts` required to retain the
-  admitted `abilityCheckDcBase` through facts, invocation, canonical procedure
-  execution, and schema instead of recomputing `10 + contestedSpellLevel` at
-  runtime, and only the matching `ongoingSpellEnd` invocation-to-execution
-  projection field in `character-execution-admission.ts` needed to copy
-  `abilityCheckDcBase: value.abilityCheckDcBase`. W12's expanded type check
-  exposed a real W10 integration diagnostic, so this lease also owns only the
-  `magicSuppressionEmanation` branch field in
-  `character-execution-admission.ts` needed to add the already-admitted
-  `exceptSources` to canonical execution projection, plus one focused
-  regression assertion in `unit-profile-admission-antimagic-field.test.ts`
-  proving `spellProcedureExecution` retains that exact tuple. The same expanded
-  diagnostic exposed a W8 integration gap, so the lease additionally owns only
-  `visibility: value.visibility` in the `compelledNextTurnBehavior` branch of
-  `character-execution-admission.ts` and one focused regression assertion in
-  `unit-profile-admission-command-control-options.test.ts` proving canonical
-  `spellProcedureExecution` retains `visibility: "caster_can_see"`. No other
-  W8, W10, or runtime file, shared schema, registry, coverage-map, QNT, MBT,
-  Surface artifact, or unrelated runtime lease is active. Luna max produced
-  two bounded no-edit checkpoints, so Sol is the W12 implementation fallback.
+  and `creatureTypeProtection`. The landed W12 ongoing-spell-end and W8/W10
+  projection-repair lease is clear. A current-tip write-set audit will select
+  the smallest coherent remaining single-profile slice before W13 activation.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -494,10 +496,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                                       | Owner                                                                             | Worktree/branch                                                                                                | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | State  |
-| --------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission                    | Codex orchestrator                                                                | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                  | `dd1350f81` | Integration checkpoint `5269bd92b`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, and condition-immunity turn-start Temporary Hit Points integrated; cumulative Surface publication delta certified; eight top-level profile migrations remain                                                                                                                                                                                                                                                                                                                                                                                                               | Active |
-| `SR-04G/W12`    | ongoing-spell-end profile admission plus W8/W10 projection repairs | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-ongoing-spell-end`; `work/sr04g-ongoing-spell-end` | `6aa2774ef` | Existing W12 leases remain: `ongoing-spell-end.ts`, `unit-profile-admission-dispel-magic.test.ts`, only the `ongoingSpellEnd` invocation source field in `battle-state-execution.ts`, its procedure-execution projection field, and its invocation-to-execution projection field in `character-execution-admission.ts`. The expanded type check exposed a real W10 gap, leasing only the `magicSuppressionEmanation` branch field in `character-execution-admission.ts` plus one focused Antimagic Field assertion for `exceptSources`; it also exposed a W8 gap, leasing only `visibility: value.visibility` in that file's `compelledNextTurnBehavior` branch plus one focused Command assertion proving canonical `spellProcedureExecution` retains `visibility: "caster_can_see"`. No other W8/W10/runtime file, shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or unrelated lease | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | State  |
+| --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `dd1350f81` | Integration checkpoint `e4dc4ffa3`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, and ongoing spell end integrated; cumulative Surface publication delta certified; seven top-level profile migrations remain | Active |
 
 ## Landing discipline
 
