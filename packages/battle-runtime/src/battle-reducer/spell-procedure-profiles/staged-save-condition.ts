@@ -191,13 +191,23 @@ type SaveGatePhase = Extract<
   }
 >;
 
+type HideousLaughterPhaseWitnesses = Readonly<{
+  slotScaledTargeting: boolean;
+  endOfTurnRepeatSave: boolean;
+  damageTriggeredRepeatSave: boolean;
+}>;
+
 function hideousLaughterPhaseWitnesses(
   phase: ActivationPhase,
-): readonly [boolean, boolean, boolean] {
+): HideousLaughterPhaseWitnesses {
   if (
     phase.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
   ) {
-    return [false, false, false];
+    return {
+      slotScaledTargeting: false,
+      endOfTurnRepeatSave: false,
+      damageTriggeredRepeatSave: false,
+    };
   }
   const attachmentValue =
     phase.attachment.kind === "hole" ? phase.attachment.value : null;
@@ -245,14 +255,31 @@ function hideousLaughterPhaseWitnesses(
           SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
             .onSuccess,
     ) === true;
-  return [targetScalingWitness, endTurnRepeatWitness, damageRepeatWitness];
+  return {
+    slotScaledTargeting: targetScalingWitness,
+    endOfTurnRepeatSave: endTurnRepeatWitness,
+    damageTriggeredRepeatSave: damageRepeatWitness,
+  };
 }
 
 function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
+  const witnesses = hideousLaughterPhaseWitnesses(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
-    witnesses: hideousLaughterPhaseWitnesses(phase),
+    witnesses: [
+      witnesses.slotScaledTargeting,
+      witnesses.endOfTurnRepeatSave,
+      witnesses.damageTriggeredRepeatSave,
+    ],
   });
+}
+
+function hideousLaughterPhaseBoundaryCompatible(
+  phase: ActivationPhase | undefined,
+): boolean {
+  if (phase === undefined) return true;
+  const witnesses = hideousLaughterPhaseWitnesses(phase);
+  return witnesses.slotScaledTargeting || witnesses.damageTriggeredRepeatSave;
 }
 
 function hideousLaughterHeaderSignature(
@@ -279,12 +306,10 @@ function hideousLaughterRootShape(
 ): boolean {
   if (mechanics.phases.some(hideousLaughterRootPhase)) return true;
   if (mechanics.phases.length > 1) return false;
-  const phase = mechanics.phases[0];
-  const phaseWitnesses =
-    phase === undefined ? null : hideousLaughterPhaseWitnesses(phase);
-  const phaseBoundaryCompatible =
-    phaseWitnesses === null || phaseWitnesses[0] || phaseWitnesses[2];
-  return phaseBoundaryCompatible && hideousLaughterHeaderSignature(mechanics);
+  return (
+    hideousLaughterPhaseBoundaryCompatible(mechanics.phases[0]) &&
+    hideousLaughterHeaderSignature(mechanics)
+  );
 }
 
 function isHideousLaughterDuration(

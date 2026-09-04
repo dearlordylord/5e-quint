@@ -193,11 +193,21 @@ type SaveGatePhase = Extract<
   { readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind }
 >;
 
+type StagedSaveConditionPhaseWitnesses = Readonly<{
+  pointSphereAttachment: boolean;
+  hitPointBudgetAutomaticSuccess: boolean;
+  stagedRepeatSave: boolean;
+}>;
+
 function stagedSaveConditionPhaseWitnesses(
   phase: ActivationPhase,
-): readonly [boolean, boolean, boolean] {
+): StagedSaveConditionPhaseWitnesses {
   if (phase.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
-    return [false, false, false];
+    return {
+      pointSphereAttachment: false,
+      hitPointBudgetAutomaticSuccess: false,
+      stagedRepeatSave: false,
+    };
   }
   const attachmentValue =
     phase.attachment.kind === "hole" ? phase.attachment.value : null;
@@ -229,14 +239,35 @@ function stagedSaveConditionPhaseWitnesses(
           STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.repeat.onFailAgain
             .condition,
     ) === true;
-  return [pointSphereWitness, automaticSuccessWitness, stagedRepeatWitness];
+  return {
+    pointSphereAttachment: pointSphereWitness,
+    hitPointBudgetAutomaticSuccess: automaticSuccessWitness,
+    stagedRepeatSave: stagedRepeatWitness,
+  };
 }
 
 function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
+  const witnesses = stagedSaveConditionPhaseWitnesses(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
-    witnesses: stagedSaveConditionPhaseWitnesses(phase),
+    witnesses: [
+      witnesses.pointSphereAttachment,
+      witnesses.hitPointBudgetAutomaticSuccess,
+      witnesses.stagedRepeatSave,
+    ],
   });
+}
+
+function stagedSaveConditionPhaseBoundaryCompatible(
+  phase: ActivationPhase | undefined,
+): boolean {
+  if (phase === undefined) return true;
+  const witnesses = stagedSaveConditionPhaseWitnesses(phase);
+  return (
+    witnesses.pointSphereAttachment ||
+    witnesses.hitPointBudgetAutomaticSuccess ||
+    witnesses.stagedRepeatSave
+  );
 }
 
 function stagedSaveConditionHeaderSignature(
@@ -262,12 +293,9 @@ function stagedSaveConditionRootShape(
 ): boolean {
   if (mechanics.phases.some(stagedSaveConditionRootPhase)) return true;
   if (mechanics.phases.length > 1) return false;
-  const phase = mechanics.phases[0];
-  const phaseBoundaryCompatible =
-    phase === undefined ||
-    stagedSaveConditionPhaseWitnesses(phase).some((witness) => witness);
   return (
-    phaseBoundaryCompatible && stagedSaveConditionHeaderSignature(mechanics)
+    stagedSaveConditionPhaseBoundaryCompatible(mechanics.phases[0]) &&
+    stagedSaveConditionHeaderSignature(mechanics)
   );
 }
 

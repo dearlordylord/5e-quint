@@ -400,10 +400,20 @@ function slowAttachmentSupported(attachment: Attachment): boolean {
   );
 }
 
-function slowPhaseWitnesses(
-  phase: ActivationPhase,
-): readonly [boolean, boolean, boolean] {
-  if (phase.kind !== "save_gate") return [false, false, false];
+type SlowPhaseWitnesses = Readonly<{
+  cubeMultiTargetAttachment: boolean;
+  turnConstraintEffect: boolean;
+  endOfTurnRepeatSave: boolean;
+}>;
+
+function slowPhaseWitnesses(phase: ActivationPhase): SlowPhaseWitnesses {
+  if (phase.kind !== "save_gate") {
+    return {
+      cubeMultiTargetAttachment: false,
+      turnConstraintEffect: false,
+      endOfTurnRepeatSave: false,
+    };
+  }
   const constraintEffectsWitness =
     phase.onFail.kind === "composite" &&
     phase.onFail.effects.some(
@@ -415,18 +425,35 @@ function slowPhaseWitnesses(
         repeatSave.cadence === "end_of_target_turn" &&
         repeatSave.onSuccess === "ends_on_target",
     ) === true;
-  return [
-    slowAttachmentSupported(phase.attachment),
-    constraintEffectsWitness,
-    repeatSaveWitness,
-  ];
+  return {
+    cubeMultiTargetAttachment: slowAttachmentSupported(phase.attachment),
+    turnConstraintEffect: constraintEffectsWitness,
+    endOfTurnRepeatSave: repeatSaveWitness,
+  };
 }
 
 function slowRootPhase(phase: ActivationPhase): boolean {
+  const witnesses = slowPhaseWitnesses(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
-    witnesses: slowPhaseWitnesses(phase),
+    witnesses: [
+      witnesses.cubeMultiTargetAttachment,
+      witnesses.turnConstraintEffect,
+      witnesses.endOfTurnRepeatSave,
+    ],
   });
+}
+
+function slowPhaseBoundaryCompatible(
+  phase: ActivationPhase | undefined,
+): boolean {
+  if (phase === undefined) return true;
+  const witnesses = slowPhaseWitnesses(phase);
+  return (
+    witnesses.cubeMultiTargetAttachment ||
+    witnesses.turnConstraintEffect ||
+    witnesses.endOfTurnRepeatSave
+  );
 }
 
 function slowDurationSupported(duration: SpellMechanics["duration"]): boolean {
@@ -458,10 +485,10 @@ function slowRootShape(
 ): boolean {
   if (mechanics.phases.some(slowRootPhase)) return true;
   if (mechanics.phases.length > 1) return false;
-  const phase = mechanics.phases[0];
-  const phaseBoundaryCompatible =
-    phase === undefined || slowPhaseWitnesses(phase).some((witness) => witness);
-  return phaseBoundaryCompatible && slowHeaderSignature(mechanics);
+  return (
+    slowPhaseBoundaryCompatible(mechanics.phases[0]) &&
+    slowHeaderSignature(mechanics)
+  );
 }
 
 function slowDurationIssues(
