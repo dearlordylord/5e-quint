@@ -14,6 +14,18 @@ import heroismInput from "../../surface/content/heroism.json";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
@@ -54,8 +66,22 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
+  spellAdmissionSource,
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
+import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
+import type {
+  BattleCreatureState,
+  BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
+import {
+  spellInvocationRequiresKnownWillingTarget,
+  spellTargetIsKnownWilling,
+} from "./battle-reducer/spells-targeting.ts";
+import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import {
   applyCondition,
   applyBattleHitPointDamage,
@@ -2325,6 +2351,649 @@ function interruptDecisionFill(
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
   return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
+
+type HeroismOngoingMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+
+function heroismMechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function mutatedHeroismSource(
+  mutate: (mechanics: HeroismOngoingMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(heroismUnitId));
+  const mechanics = structuredClone(source.mechanics);
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Heroism ongoing mechanics.");
+  mutate(mechanics);
+  return { ...heroismMechanicsSource(source), mechanics };
+}
+
+function syntheticHeroismRecord(
+  mutate: (mechanics: HeroismOngoingMechanics) => HeroismOngoingMechanics,
+): SpellRecord {
+  const mechanics = structuredClone(spellRecord(heroismUnitId).mechanics);
+  if (mechanics.family !== "ongoing_effect")
+    throw new Error("Expected Heroism ongoing mechanics.");
+  return decodeSpellRecordForTest({
+    ...heroismInput,
+    id: "synthetic_courage_aura",
+    name: "Synthetic Courage Aura",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic_courage_aura",
+    },
+    mechanics: mutate(mechanics),
+  });
+}
+
+function heroismStaticActor(): SpellAdmissionActor {
+  const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+    spellCasterId,
+  );
+  if (!isHeroismStaticActor(actor))
+    throw new Error("Expected a spellcasting character fixture.");
+  return actor;
+}
+
+function isHeroismStaticActor(
+  actor: BattleCreatureState | undefined,
+): actor is SpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
+}
+
+function heroismIssueFacts(result: {
+  readonly tag: string;
+  readonly issues?: readonly {
+    readonly failedFact: string;
+    readonly mechanicsPath: unknown;
+  }[];
+}): readonly {
+  readonly failedFact: string;
+  readonly mechanicsPath: unknown;
+}[] {
+  return result.tag === "unsupported"
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("conditionImmunityAndTurnStartTemporaryHitPoints static admission", () => {
+  test("projects exact Heroism facts, scaling, evidence, and mechanics-free execution", () => {
+    const source = spellAdmissionSource(spellRecord(heroismUnitId));
+    const result =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        heroismMechanicsSource(source),
+      );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 1,
+      rangeFeet: 5,
+      targetCount: { base: 1, baseLevel: 1, perSlotAboveBase: 1 },
+      requiredTargetDisposition: "willing",
+      condition: "frightened",
+      temporaryHitPointsAmount: "spellcastingAbilityModifier",
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+      ],
+      unowned: [],
+    });
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: heroismStaticActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    const invocation = invocations[0];
+    if (invocation === undefined)
+      throw new Error("Expected a Heroism invocation.");
+    expect(invocation.targeting.maxTargets).toBe(3);
+    expect(invocation.targeting.requiredTargetDisposition).toBe("willing");
+    expect(invocation.spell).not.toHaveProperty("mechanics");
+    const { spell: _spell, ...procedureFacts } = invocation;
+    const [conditionImmunity, turnStartTemporaryHitPoints] =
+      invocation.activeEffects;
+    if (conditionImmunity.condition !== "frightened")
+      throw new Error("Expected admitted Frightened immunity.");
+    const execution = {
+      ...procedureFacts,
+      activeEffects: [
+        { ...conditionImmunity, condition: "frightened" as const },
+        turnStartTemporaryHitPoints,
+      ] as const,
+      spellRuleFacts: spellRuleExecutionFactsWithCastingSource(
+        source.spellDefinitionRuleFacts,
+        source.castingSource,
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-heroism-static",
+      ),
+    };
+    expect(spellInvocationRequiresKnownWillingTarget(execution)).toBe(true);
+    expect(
+      spellTargetIsKnownWilling(spellCasterId, spellTargetId, execution),
+    ).toBe(false);
+    const encoded = Schema.encodeSync(
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.executionSchema,
+    )(execution);
+    expect(encoded).not.toHaveProperty("mechanics");
+    expect(encoded).toHaveProperty(
+      "targeting.requiredTargetDisposition",
+      "willing",
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(
+          conditionImmunityAndTurnStartTemporaryHitPointsProfile.executionSchema,
+        )(encoded),
+      ),
+    ).toBe(true);
+  });
+
+  test("preserves renamed spell and target-hole parity", () => {
+    const canonical = spellAdmissionSource(spellRecord(heroismUnitId));
+    const renamed = spellAdmissionSource(
+      syntheticHeroismRecord((mechanics) => {
+        if (mechanics.attachment.kind !== "hole")
+          throw new Error("Expected Heroism target hole.");
+        return {
+          ...mechanics,
+          attachment: {
+            ...mechanics.attachment,
+            holeId: "synthetic_courage_target",
+            label: "synthetic courage recipient",
+          },
+        };
+      }),
+    );
+    const canonicalResult =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        heroismMechanicsSource(canonical),
+      );
+    const renamedResult =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        heroismMechanicsSource(renamed),
+      );
+    expect(canonicalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (
+      canonicalResult.tag !== "supported" ||
+      renamedResult.tag !== "supported"
+    )
+      return;
+    expect(renamedResult.admitted.facts).toEqual(
+      canonicalResult.admitted.facts,
+    );
+    expect(renamedResult.admitted.evidence).toEqual(
+      canonicalResult.admitted.evidence,
+    );
+  });
+
+  test("accepts reordered operations and retains actual effect ordinals", () => {
+    const result =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          Reflect.set(
+            mechanics,
+            "operations",
+            [...mechanics.operations].reverse(),
+          );
+        }),
+      );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.evidence.consumed).toEqual(
+      expect.arrayContaining([
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+      ]),
+    );
+  });
+
+  test("keeps malformed effect discriminants at their actual authored ordinals", () => {
+    const result =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          const immunity = mechanics.operations[0];
+          const temporaryHitPoints = mechanics.operations[1];
+          if (immunity === undefined || temporaryHitPoints === undefined)
+            throw new Error("Expected Heroism operations.");
+          Reflect.set(immunity.effect, "kind", "none");
+          Reflect.set(temporaryHitPoints.effect, "kind", "none");
+        }),
+      );
+    expect(heroismIssueFacts(result)).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "immunityEffect",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+        },
+        {
+          failedFact: "temporaryHitPointsEffect",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+        },
+      ]),
+    );
+  });
+
+  test("accumulates nested failures for every duplicate role occurrence", () => {
+    const result =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          const immunity = mechanics.operations[0];
+          const temporaryHitPoints = mechanics.operations[1];
+          if (
+            immunity?.effect.kind !== "grant_condition_immunity" ||
+            temporaryHitPoints?.effect.kind !== "grant_temp_hp"
+          )
+            throw new Error("Expected canonical Heroism operations.");
+          const duplicateImmunity = structuredClone(immunity);
+          const duplicateTemporaryHitPoints =
+            structuredClone(temporaryHitPoints);
+          if (duplicateTemporaryHitPoints.effect.kind !== "grant_temp_hp")
+            throw new Error("Expected duplicated Temporary Hit Points effect.");
+          Reflect.set(immunity.effect, "condition", "charmed");
+          Reflect.set(immunity.effect, "syntheticExtra", true);
+          Reflect.set(duplicateImmunity.effect, "condition", "poisoned");
+          Reflect.set(duplicateImmunity.effect, "syntheticExtra", true);
+          Reflect.set(temporaryHitPoints.effect.amount, "kind", "per_level");
+          Reflect.set(temporaryHitPoints.effect, "syntheticExtra", true);
+          Reflect.set(
+            duplicateTemporaryHitPoints.effect.amount,
+            "kind",
+            "per_level",
+          );
+          Reflect.set(
+            duplicateTemporaryHitPoints.effect,
+            "syntheticExtra",
+            true,
+          );
+          Reflect.set(mechanics, "operations", [
+            immunity,
+            temporaryHitPoints,
+            duplicateImmunity,
+            duplicateTemporaryHitPoints,
+          ]);
+        }),
+      );
+    const issues = heroismIssueFacts(result);
+    for (const ordinal of [1, 3]) {
+      expect(issues).toEqual(
+        expect.arrayContaining([
+          {
+            failedFact: "immunityEffect",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+          {
+            failedFact: "immunityCondition",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+        ]),
+      );
+    }
+    for (const ordinal of [2, 4]) {
+      expect(issues).toEqual(
+        expect.arrayContaining([
+          {
+            failedFact: "temporaryHitPointsEffect",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+          {
+            failedFact: "temporaryHitPointsAmount",
+            mechanicsPath: spellOngoingOperationEffectPath(
+              PositiveInteger(ordinal),
+            ),
+          },
+        ]),
+      );
+    }
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "immunityOperation",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+        {
+          failedFact: "temporaryHitPointsOperation",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+        ...[1, 2, 3, 4].map((ordinal) => ({
+          failedFact: "operationCount",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(ordinal)),
+        })),
+      ]),
+    );
+  });
+
+  test.each([false, true])(
+    "inspects every fully malformed passive immunity candidate when reordered=$0",
+    (reordered) => {
+      const result =
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+          mutatedHeroismSource((mechanics) => {
+            const immunity = mechanics.operations[0];
+            const temporaryHitPoints = mechanics.operations[1];
+            if (immunity === undefined || temporaryHitPoints === undefined)
+              throw new Error("Expected canonical Heroism operations.");
+            const firstMalformed = structuredClone(immunity);
+            const secondMalformed = structuredClone(immunity);
+            Reflect.set(firstMalformed, "effect", { kind: "none" });
+            Reflect.set(secondMalformed, "effect", { kind: "none" });
+            const operations = [
+              firstMalformed,
+              secondMalformed,
+              temporaryHitPoints,
+            ];
+            Reflect.set(
+              mechanics,
+              "operations",
+              reordered ? [...operations].reverse() : operations,
+            );
+          }),
+        );
+      const issues = heroismIssueFacts(result);
+      const malformedOrdinals = reordered ? [2, 3] : [1, 2];
+      for (const ordinal of malformedOrdinals) {
+        expect(issues).toEqual(
+          expect.arrayContaining([
+            {
+              failedFact: "immunityEffect",
+              mechanicsPath: spellOngoingOperationEffectPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+            {
+              failedFact: "operationCount",
+              mechanicsPath: spellOngoingOperationPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+          ]),
+        );
+      }
+      expect(issues).toContainEqual({
+        failedFact: "immunityOperation",
+        mechanicsPath: spellMechanicsRootPath(),
+      });
+    },
+  );
+
+  test.each([false, true])(
+    "inspects every fully malformed turn-start Temporary Hit Points candidate when reordered=$0",
+    (reordered) => {
+      const result =
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+          mutatedHeroismSource((mechanics) => {
+            const immunity = mechanics.operations[0];
+            const temporaryHitPoints = mechanics.operations[1];
+            if (immunity === undefined || temporaryHitPoints === undefined)
+              throw new Error("Expected canonical Heroism operations.");
+            const firstMalformed = structuredClone(temporaryHitPoints);
+            const secondMalformed = structuredClone(temporaryHitPoints);
+            Reflect.set(firstMalformed, "effect", { kind: "none" });
+            Reflect.set(secondMalformed, "effect", { kind: "none" });
+            const operations = [immunity, firstMalformed, secondMalformed];
+            Reflect.set(
+              mechanics,
+              "operations",
+              reordered ? [...operations].reverse() : operations,
+            );
+          }),
+        );
+      const issues = heroismIssueFacts(result);
+      const malformedOrdinals = reordered ? [1, 2] : [2, 3];
+      for (const ordinal of malformedOrdinals) {
+        expect(issues).toEqual(
+          expect.arrayContaining([
+            {
+              failedFact: "temporaryHitPointsEffect",
+              mechanicsPath: spellOngoingOperationEffectPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+            {
+              failedFact: "operationCount",
+              mechanicsPath: spellOngoingOperationPath(
+                PositiveInteger(ordinal),
+              ),
+            },
+          ]),
+        );
+      }
+      expect(issues).toContainEqual({
+        failedFact: "temporaryHitPointsOperation",
+        mechanicsPath: spellMechanicsRootPath(),
+      });
+    },
+  );
+
+  test.each([
+    {
+      label: "before canonical roles",
+      arrange: (
+        conflict: HeroismOngoingMechanics["operations"][number],
+        canonical: HeroismOngoingMechanics["operations"],
+      ) => [conflict, ...canonical],
+      conflictOrdinal: 1,
+      canonicalTemporaryHitPointsOrdinal: 3,
+    },
+    {
+      label: "after reversed canonical roles",
+      arrange: (
+        conflict: HeroismOngoingMechanics["operations"][number],
+        canonical: HeroismOngoingMechanics["operations"],
+      ) => [...canonical].reverse().concat(conflict),
+      conflictOrdinal: 3,
+      canonicalTemporaryHitPointsOrdinal: 1,
+    },
+  ])(
+    "assigns conflicting passive Temporary Hit Points structurally $label",
+    ({ arrange, conflictOrdinal, canonicalTemporaryHitPointsOrdinal }) => {
+      const result =
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+          mutatedHeroismSource((mechanics) => {
+            const temporaryHitPoints = mechanics.operations[1];
+            if (temporaryHitPoints?.effect.kind !== "grant_temp_hp")
+              throw new Error("Expected Heroism Temporary Hit Points.");
+            const conflict = structuredClone(temporaryHitPoints);
+            Reflect.set(conflict, "trigger", { kind: "passive" });
+            Reflect.set(
+              mechanics,
+              "operations",
+              arrange(conflict, mechanics.operations),
+            );
+          }),
+        );
+      const issues = heroismIssueFacts(result);
+      expect(issues).toEqual(
+        expect.arrayContaining([
+          {
+            failedFact: "operationTrigger",
+            mechanicsPath: spellOngoingOperationPath(
+              PositiveInteger(conflictOrdinal),
+            ),
+          },
+          {
+            failedFact: "operationCount",
+            mechanicsPath: spellOngoingOperationPath(
+              PositiveInteger(conflictOrdinal),
+            ),
+          },
+        ]),
+      );
+      expect(issues).not.toContainEqual({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(
+          PositiveInteger(canonicalTemporaryHitPointsOrdinal),
+        ),
+      });
+    },
+  );
+
+  test("rejects a direct target and malformed linear scaling structurally", () => {
+    const directTarget =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          if (mechanics.attachment.kind !== "hole")
+            throw new Error("Expected Heroism target hole.");
+          Reflect.set(mechanics, "attachment", mechanics.attachment.value);
+        }),
+      );
+    expect(heroismIssueFacts(directTarget)).toContainEqual({
+      failedFact: "attachmentKind",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+
+    const malformedScaling =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          if (
+            mechanics.attachment.kind !== "hole" ||
+            mechanics.attachment.value.kind !== "target"
+          )
+            throw new Error("Expected Heroism target hole.");
+          const selection = mechanics.attachment.value.selection;
+          if (!("count" in selection))
+            throw new Error("Expected Heroism target count.");
+          const count = selection.count;
+          if (typeof count !== "object")
+            throw new Error("Expected Heroism linear target count.");
+          Reflect.set(count, "perSlotAboveBase", 2);
+        }),
+      );
+    expect(heroismIssueFacts(malformedScaling)).toContainEqual({
+      failedFact: "targetCount",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    });
+
+    const malformedLevel =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          Reflect.set(mechanics, "level", 2);
+        }),
+      );
+    expect(heroismIssueFacts(malformedLevel)).toContainEqual({
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    });
+  });
+
+  test("accumulates malformed selection, operations, extras, and conditionals", () => {
+    const result =
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admitMechanics(
+        mutatedHeroismSource((mechanics) => {
+          Reflect.set(mechanics, "syntheticRootExtra", true);
+          if (
+            mechanics.attachment.kind !== "hole" ||
+            mechanics.attachment.value.kind !== "target"
+          )
+            throw new Error("Expected Heroism target hole.");
+          Reflect.set(
+            mechanics.attachment.value.selection,
+            "disposition",
+            "hostile",
+          );
+          Reflect.set(
+            mechanics.attachment.value.selection,
+            "repeatsAllowed",
+            true,
+          );
+          const immunity = mechanics.operations[0];
+          const temporaryHitPoints = mechanics.operations[1];
+          if (immunity === undefined || temporaryHitPoints === undefined)
+            throw new Error("Expected Heroism operations.");
+          Reflect.set(immunity, "trigger", { kind: "on_effect_starts" });
+          if (temporaryHitPoints.effect.kind !== "grant_temp_hp")
+            throw new Error("Expected Heroism Temporary Hit Points effect.");
+          Reflect.set(temporaryHitPoints.effect.amount, "syntheticExtra", true);
+          Reflect.set(temporaryHitPoints, "usageLimit", { kind: "once" });
+          const conditional = spellRecord("phantasmal_force").mechanics;
+          if (
+            conditional.family !== "ongoing_effect" ||
+            conditional.authoredConditionalMechanics?.[0] === undefined
+          )
+            throw new Error("Expected an authored conditional fixture.");
+          Reflect.set(mechanics, "authoredConditionalMechanics", [
+            structuredClone(conditional.authoredConditionalMechanics[0]),
+          ]);
+        }),
+      );
+    expect(heroismIssueFacts(result)).toEqual(
+      expect.arrayContaining([
+        {
+          failedFact: "mechanics",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+        {
+          failedFact: "selectionDisposition",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+        {
+          failedFact: "repeatsAllowed",
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+        {
+          failedFact: "operationTrigger",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+        },
+        {
+          failedFact: "operationUsageLimit",
+          mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+        },
+        {
+          failedFact: "temporaryHitPointsAmount",
+          mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+        },
+        {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+            PositiveInteger(1),
+          ),
+        },
+      ]),
+    );
+  });
+});
 
 describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
   test("heroism admission rejects a creature target without willing disposition", () => {

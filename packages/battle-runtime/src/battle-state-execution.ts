@@ -2639,9 +2639,11 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
-  readonly targeting: SpellTargetListTargeting;
+  readonly targeting: SpellTargetListTargeting & {
+    readonly requiredTargetDisposition: "willing";
+  };
   readonly activeEffects: readonly [
     ConditionImmunityActiveEffectTemplate,
     BattleSpellActiveEffectTemplate<

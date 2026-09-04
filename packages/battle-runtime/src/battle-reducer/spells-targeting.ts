@@ -1340,8 +1340,6 @@ export function spellInvocationRequiresKnownWillingTarget(
   return (
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "creatureTypeProtection" ||
-    invocation.procedure ===
-      "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "linkedDefenseResistanceDamageShare" ||
     invocation.procedure === "grantedAreaSaveDamageAction" ||
     invocationHasWillingTargetList(invocation)
