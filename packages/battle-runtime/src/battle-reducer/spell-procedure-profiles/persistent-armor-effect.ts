@@ -2,6 +2,7 @@ import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
 } from "../../battle-state-execution.ts";
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-armor-effect
 // The persistentArmorEffect Spell Procedure Profile: a touch spell that
@@ -41,7 +42,10 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type PersistentArmorEffectExecutionFacts } from "../../procedure-execution/persistent-armor-effect-facts.ts";
+import {
+  persistentArmorEffectExecutionFactsForSpell,
+  type PersistentArmorEffectExecutionFacts,
+} from "../../procedure-execution/persistent-armor-effect-facts.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
@@ -70,7 +74,7 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
-import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import { PositiveInteger } from "@dnd/shared/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   spellDurationValuePath,
@@ -89,13 +93,11 @@ import {
   spellDurationChildPath,
   spellDurationEvidencePaths,
   spellDurationValueEvidencePaths,
-  spellDurationTicksFromCanonicalValue,
   isSpellCanonicalDurationValue,
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
-  spellTouchRangeFeet,
   spellUniqueMechanicsIssues,
   type SpellCanonicalDurationValue,
   type SpellMechanicsAdmissionSource,
@@ -158,7 +160,8 @@ type PersistentArmorEffectMechanicsFacts = Omit<
   readonly ability: "dex";
 };
 
-export const PERSISTENT_ARMOR_EFFECT_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for PersistentArmorEffectFailedFact.
+const PERSISTENT_ARMOR_EFFECT_FAILED_FACTS = [
   "level",
   "school",
   "range",
@@ -283,7 +286,7 @@ function persistentArmorEffectRepresentation(
   return (
     (hasBaseArmorOperation || hasTargetDonsArmorEnding) &&
     spellProcedureHasRedundantSignature({
-      kind: "twoWitnessesMayBeMissing",
+      kind: "oneOfFiveWitnessesMayBeMissing",
       witnesses: [
         { name: "baseArmorOperation", present: hasBaseArmorOperation },
         {
@@ -343,6 +346,8 @@ function persistentArmorEffectDuration(
   ) {
     return undefined;
   }
+  // The immediately preceding equality guard proves the literal while the
+  // Surface boundary parser already proves the PositiveInteger brand.
   const amount = durationValue.amount as PositiveInteger & 8;
   const value: PersistentArmorEffectDuration["value"] = {
     unit: durationValue.unit,
@@ -575,7 +580,6 @@ function admitPersistentArmorEffectMechanics(
     }
   }
 
-  let baseArmorClass: ArmorClass | undefined;
   if (
     operation === undefined ||
     !spellMechanicsObjectHasOnlyKeys(
@@ -596,6 +600,27 @@ function admitPersistentArmorEffectMechanics(
       ? operation.effect
       : undefined;
   const operationEffectPath = spellOngoingOperationEffectPath(operationOrdinal);
+  const baseArmorClass =
+    operationEffect !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      operationEffect,
+      PERSISTENT_ARMOR_EFFECT_BASE_EFFECT_FIELDS,
+    ) &&
+    operationEffect.formula.kind === "base_plus_dex" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operationEffect.formula,
+      PERSISTENT_ARMOR_EFFECT_BASE_FORMULA_FIELDS,
+    )
+      ? Schema.decodeUnknownResult(ArmorClassSchema)(
+          operationEffect.formula.base,
+        )
+      : undefined;
+  const admittedBaseArmorClass =
+    baseArmorClass !== undefined &&
+    Result.isSuccess(baseArmorClass) &&
+    baseArmorClass.success === 13
+      ? baseArmorClass.success
+      : undefined;
   if (
     operationEffect === undefined ||
     !spellMechanicsObjectHasOnlyKeys(
@@ -604,28 +629,8 @@ function admitPersistentArmorEffectMechanics(
     )
   ) {
     pushIssue("armorClassEffect", operationEffectPath);
-  } else {
-    const formula = operationEffect.formula;
-    const baseDexFormula =
-      formula.kind === "base_plus_dex" ? formula : undefined;
-    const baseResult =
-      baseDexFormula === undefined
-        ? undefined
-        : Schema.decodeUnknownResult(ArmorClassSchema)(baseDexFormula.base);
-    if (
-      baseDexFormula === undefined ||
-      !spellMechanicsObjectHasOnlyKeys(
-        baseDexFormula,
-        PERSISTENT_ARMOR_EFFECT_BASE_FORMULA_FIELDS,
-      ) ||
-      baseResult === undefined ||
-      Result.isFailure(baseResult) ||
-      baseResult.success !== 13
-    ) {
-      pushIssue("armorClassEffect", operationEffectPath);
-    } else {
-      baseArmorClass = baseResult.success;
-    }
+  } else if (admittedBaseArmorClass === undefined) {
+    pushIssue("armorClassEffect", operationEffectPath);
   }
 
   const nonEmptyIssues = spellProcedureNonEmpty(
@@ -642,7 +647,7 @@ function admitPersistentArmorEffectMechanics(
   if (
     rangeFacts === undefined ||
     durationFacts === undefined ||
-    baseArmorClass === undefined
+    admittedBaseArmorClass === undefined
   ) {
     return {
       tag: "unsupported",
@@ -667,9 +672,23 @@ function admitPersistentArmorEffectMechanics(
     ...source.spellDefinitionRuleFacts,
     range: rangeFacts,
     duration: durationFacts,
-    baseArmorClass,
+    baseArmorClass: admittedBaseArmorClass,
     ability: "dex",
   } satisfies PersistentArmorEffectMechanicsFacts;
+  const executionFacts = persistentArmorEffectExecutionFactsForSpell({
+    mechanics,
+  });
+  if (executionFacts === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        persistentArmorEffectIssue(
+          "armorClassEffect",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    };
+  }
   return {
     tag: "supported",
     admitted: {
@@ -678,7 +697,7 @@ function admitPersistentArmorEffectMechanics(
       facts,
       evidence: persistentArmorEffectMechanicsEvidence(mechanics),
       admit: (executionSource, ctx) =>
-        admitPersistentArmorEffect(executionSource, ctx, facts),
+        admitPersistentArmorEffect(executionSource, ctx, executionFacts),
     },
   };
 }
@@ -761,16 +780,8 @@ function persistentArmorEffectHasWillingCreatureTarget(
 function admitPersistentArmorEffect(
   spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
-  facts: PersistentArmorEffectMechanicsFacts,
+  executionFacts: PersistentArmorEffectExecutionFacts,
 ): readonly PersistentArmorInvocation[] {
-  const executionFacts = {
-    rangeFeet: spellTouchRangeFeet(),
-    slotLevel: spellSlotLevel(facts.level),
-    baseArmorClass: facts.baseArmorClass,
-    ability: facts.ability,
-    durationTicks: spellDurationTicksFromCanonicalValue(facts.duration.value),
-    earlyEnds: [{ kind: "targetDonsArmor" }],
-  } satisfies PersistentArmorEffectExecutionFacts;
   return ctx.spellCastOptions.flatMap((option) =>
     option.spellLevel < executionFacts.slotLevel
       ? []

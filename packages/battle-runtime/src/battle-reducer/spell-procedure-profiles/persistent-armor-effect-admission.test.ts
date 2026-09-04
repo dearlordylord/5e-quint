@@ -15,10 +15,8 @@ import {
   type BattleSpellAdmissionSource,
 } from "../../battle-state-execution.ts";
 import { spellAdmissionContextFor } from "./admission-context.ts";
-import {
-  PERSISTENT_ARMOR_EFFECT_FAILED_FACTS,
-  persistentArmorEffectProfile,
-} from "./persistent-armor-effect.ts";
+import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
+import { admitPersistentArmorEffectSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import {
   spellCasterId,
@@ -53,12 +51,12 @@ function mageArmorMechanics(): OngoingSpellMechanics {
   return mechanics;
 }
 
-function syntheticMageArmorSource(
+function syntheticMageArmorRecord(
   mutate: (mechanics: OngoingSpellMechanics) => unknown,
   suffix: string,
-): BattleSpellAdmissionSource {
+): SpellRecord {
   const mechanics = mageArmorMechanics();
-  const spell = decodeSpellRecordForTest({
+  return decodeSpellRecordForTest({
     id: `synthetic_persistent_armor_${suffix}`,
     kind: "spell",
     name: `Synthetic Persistent Armor ${suffix}`,
@@ -68,7 +66,13 @@ function syntheticMageArmorSource(
     },
     mechanics: mutate(mechanics),
   });
-  return spellAdmissionSource(spell);
+}
+
+function syntheticMageArmorSource(
+  mutate: (mechanics: OngoingSpellMechanics) => unknown,
+  suffix: string,
+): BattleSpellAdmissionSource {
+  return spellAdmissionSource(syntheticMageArmorRecord(mutate, suffix));
 }
 
 function issueShape(result: {
@@ -126,7 +130,6 @@ describe("persistentArmorEffect static admission", () => {
       ],
       unowned: [],
     });
-    expect(PERSISTENT_ARMOR_EFFECT_FAILED_FACTS).toContain("armorClassEffect");
   });
 
   test("keeps authored renaming out of static recognition and evidence", () => {
@@ -177,6 +180,73 @@ describe("persistentArmorEffect static admission", () => {
     expect(unrelatedSpellResults).toEqual(
       unrelatedSpellResults.map(() => ({ tag: "notRepresented" })),
     );
+  });
+
+  test("does not claim a roll-modifier sibling with one armor-effect mutation", () => {
+    const guidance = spellRecord("guidance");
+    if (guidance.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected the shipped Guidance mechanics to be ongoing.");
+    }
+    const operation = guidance.mechanics.operations[0];
+    if (operation === undefined) {
+      throw new Error("Expected the shipped Guidance operation.");
+    }
+    const mutatedGuidance = spellAdmissionSource(
+      decodeSpellRecordForTest({
+        id: "synthetic_roll_modifier_with_armor_effect",
+        kind: "spell",
+        name: "Synthetic Guided Armor",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic_roll_modifier_with_armor_effect",
+        },
+        mechanics: {
+          ...guidance.mechanics,
+          operations: [
+            {
+              ...operation,
+              effect: {
+                kind: "modify_ac_set_base",
+                formula: { kind: "base_plus_dex", base: 13 },
+              },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(
+      persistentArmorEffectProfile.admitMechanics(
+        mechanicsSource(mutatedGuidance),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("uses the same exact base-Armor-Class gate for Spell Access", () => {
+    const baseFourteen = syntheticMageArmorRecord((mechanics) => {
+      const operation = mechanics.operations[0];
+      if (
+        operation === undefined ||
+        operation.effect.kind !== "modify_ac_set_base" ||
+        operation.effect.formula.kind !== "base_plus_dex"
+      ) {
+        throw new Error("Expected the Mage Armor base-AC operation.");
+      }
+      return {
+        ...mechanics,
+        operations: [
+          {
+            ...operation,
+            effect: {
+              ...operation.effect,
+              formula: { ...operation.effect.formula, base: 14 },
+            },
+          },
+        ],
+      };
+    }, "base_fourteen");
+
+    expect(admitPersistentArmorEffectSpell(baseFourteen)).toBeNull();
   });
 
   test("keeps a malformed sibling candidate represented and rejects exact owned paths", () => {

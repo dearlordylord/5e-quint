@@ -1138,11 +1138,9 @@ export function spellProcedureNonEmpty<T>(
 
 /**
  * Named admission policies keep the witness count and tolerated loss coupled.
- * The three-witness policy tolerates exactly one missing witness; the
- * five-witness policy tolerates exactly two. A caller cannot provide a
- * threshold that disagrees with its witness tuple. Named witnesses are the
- * preferred form: duplicate names are rejected so one domain fact cannot be
- * counted twice under different labels.
+ * The policy names and tuple shapes prevent a caller-provided threshold from
+ * disagreeing with the admitted loss. Named witnesses are required so one
+ * domain fact cannot be counted twice under different labels.
  */
 export type SpellProcedureSignatureWitness = {
   readonly name: string;
@@ -1153,6 +1151,16 @@ export type SpellProcedureRedundantSignaturePolicy =
   | {
       readonly kind: "oneWitnessMayBeMissing";
       readonly witnesses: readonly [
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
+      ];
+    }
+  | {
+      readonly kind: "oneOfFiveWitnessesMayBeMissing";
+      readonly witnesses: readonly [
+        SpellProcedureSignatureWitness,
+        SpellProcedureSignatureWitness,
         SpellProcedureSignatureWitness,
         SpellProcedureSignatureWitness,
         SpellProcedureSignatureWitness,
@@ -1185,6 +1193,7 @@ export function spellProcedureHasRedundantSignature(
   );
   return Match.value(policy.kind).pipe(
     Match.when("oneWitnessMayBeMissing", () => matches >= 2),
+    Match.when("oneOfFiveWitnessesMayBeMissing", () => matches >= 4),
     Match.when("twoWitnessesMayBeMissing", () => matches >= 3),
     Match.exhaustive,
   );

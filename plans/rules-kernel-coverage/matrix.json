@@ -2367,7 +2367,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
