@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `11e38a0d438cc306ac8d529fc2bf8ba167197479`
+  `c4503ea9be6b1e922d175cba6f309bbf5fbc4c41`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -391,7 +391,11 @@ This section is the sole mutable handoff for a new session.
   removes all numbered generated definition names; its two affected negative
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
-- Next action: W14 is Active for the `controlledVerticalSuspension` profile on
+- Next action: complete W14's final integration composite review before any
+  W15 work. Reviewed `controlledVerticalSuspension` tip
+  `828c657f762aa614f53ec7c4d6fcb50538070ba2` is integrated by
+  non-fast-forward merge `c4503ea9be6b1e922d175cba6f309bbf5fbc4c41`
+  and remains pending that composite review. The implementation lane is
   `work/sr04g-controlled-vertical-suspension` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-controlled-vertical-suspension`,
   exact base `11e38a0d438cc306ac8d529fc2bf8ba167197479`. The six-profile
@@ -423,12 +427,29 @@ This section is the sole mutable handoff for a new session.
   existing focused lifecycle MBT remains a parity witness but is not leased or
   authorized for execution in W14; no QNT, MBT, Surface, publication,
   certificate, registry, rules-kernel mapping, lifecycle owner, glyph owner,
-  execution projector, or other Battle file is leased. The current
-  integration-tip declaration audit retains exactly six legacy top-level
-  `SpellProcedureDeclaration` `admit` fields in five files:
+  execution projector, or other Battle file is leased.
+  The Luna max implementation lane produced a bounded no-edit stall before Sol
+  completed the implementation. Review round one returned two Standards and
+  one Spec/RAW finding; exact-base comparison withdrew the Spec finding.
+  `0e490fce9` repaired the valid shared-constant Standards finding. Review round
+  two returned one Standards and zero Spec/RAW findings; `828c657f7` named the
+  remaining profile constants and removed the repeated level, range, and
+  duration literals. Review round three returned zero findings on both axes.
+  On the joined merge, the focused static-admission selection passed 5/5 with
+  11 lifecycle tests skipped; changed-root diagnostics were zero with 19
+  unrelated transitive diagnostics, and scoped ESLint, Prettier, and diff
+  checks passed. The exact-base lifecycle comparison remains debt rather than
+  verification: the W14 branch retained the same 11 lifecycle failures as
+  base `11e38a0d4`, while its five new static tests passed. The unchanged full
+  lifecycle selection was not rerun after integration and no lifecycle pass is
+  claimed. No broad typecheck/test/quality, registry-wide, Surface/publication,
+  rules-kernel generation, QNT, or MBT gate was run or claimed. The deferred
+  SR-04G convergence contract is unchanged.
+  The current integration-tip declaration audit retains exactly five legacy
+  top-level `SpellProcedureDeclaration` `admit` fields in four files:
   `creatureSizeChange`, `creatureSizeDecrease`,
   `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
-  `controlledVerticalSuspension`, and `spellCreatedHeldObject`. The original
+  and `spellCreatedHeldObject`. The original
   W13 Battle branch remains clean and
   paused at exact base `b1973765cedc85a1d7aaea1da3baecb474c32cff` with zero
   edits after proving the Surface source-model gap. W13/S supplied that
@@ -668,11 +689,11 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                     | Owner                                                                      | Worktree/branch                                                                                                                            | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | State    |
-| --------------- | ------------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission  | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `11e38a0d4`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, ongoing spell end, and W13 creature-type protection integrated; cumulative Surface publication delta certified; six top-level profile migrations remain                                                          | Active   |
-| `SR-04G/W13`    | creature-type-protection profile admission       | Codex orchestrator; Sol fallback after initial Luna max lane stalled twice | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`; `work/sr04g-creature-type-protection-battle` | `eb96dcc7f` | W13/S and W13 Battle are complete at final integrated pre-receipt `c68efa280` after composite review converged at Standards/Spec 0/0. Reviewed Battle tip `752164080` is integrated by `d65e4f804`; integration mapping `35990c92a` joined the canonical policy runtime owner and regenerated the byte-changing `matrix.json` while `REPORT.md` stayed byte-stable. No duplicate compatibility fields or first-match queries; no Surface/publication/certificate, QNT/MBT semantic change or execution, registry, other coverage, lifecycle, glyph, execution-type/projector, or other Battle lease. | Complete |
-| `SR-04G/W14`    | controlled-vertical-suspension profile admission | Luna max implementer; Codex orchestrator                                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-controlled-vertical-suspension`; `work/sr04g-controlled-vertical-suspension`   | `11e38a0d4` | Exact lease: `spell-procedure-profiles/levitated-creature.ts`, focused `unit-profile-admission-levitate.test.ts`, and only `ControlledVerticalSuspensionSpellInvocation.spell` in `battle-state-execution.ts`. Migrate the represented creature branch to parse-once static mechanics admission and mechanics-free execution while retaining exact RAW/evidence and lifecycle behavior. No Surface/publication/certificate, QNT/MBT execution or semantic change, registry, rules-kernel mapping, lifecycle, glyph, execution-projector, or other Battle lease.                                      | Active   |
+| Checkpoint/unit | Ticket/slice                                     | Owner                                                                      | Worktree/branch                                                                                                                            | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | State                                      |
+| --------------- | ------------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission  | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `c4503ea9b`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, ongoing spell end, W13 creature-type protection, and W14 controlled vertical suspension integrated; cumulative Surface publication delta certified; five top-level profile migrations remain                                                                                                                                                                  | Active                                     |
+| `SR-04G/W13`    | creature-type-protection profile admission       | Codex orchestrator; Sol fallback after initial Luna max lane stalled twice | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`; `work/sr04g-creature-type-protection-battle` | `eb96dcc7f` | W13/S and W13 Battle are complete at final integrated pre-receipt `c68efa280` after composite review converged at Standards/Spec 0/0. Reviewed Battle tip `752164080` is integrated by `d65e4f804`; integration mapping `35990c92a` joined the canonical policy runtime owner and regenerated the byte-changing `matrix.json` while `REPORT.md` stayed byte-stable. No duplicate compatibility fields or first-match queries; no Surface/publication/certificate, QNT/MBT semantic change or execution, registry, other coverage, lifecycle, glyph, execution-type/projector, or other Battle lease.                                                                                                                                              | Complete                                   |
+| `SR-04G/W14`    | controlled-vertical-suspension profile admission | Luna max stalled; Sol fallback implementer; Codex orchestrator             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-controlled-vertical-suspension`; `work/sr04g-controlled-vertical-suspension`   | `11e38a0d4` | Reviewed tip `828c657f7` is integrated by `c4503ea9b` after Standards/Spec review converged at 0/0. Exact lease stayed limited to `spell-procedure-profiles/levitated-creature.ts`, focused `unit-profile-admission-levitate.test.ts`, and only `ControlledVerticalSuspensionSpellInvocation.spell` in `battle-state-execution.ts`. Joined static admission passed 5/5 with 11 lifecycle tests skipped; changed-root diagnostics were 0 relevant/19 unrelated transitive, and scoped lint/format/diff passed. Exact-base lifecycle debt remains 11 failures on both base and W14 and is not verification. No Surface/publication/certificate, QNT/MBT, registry-wide, rules-kernel, lifecycle, glyph, execution-projector, or other Battle claim. | Integrated; final composite review pending |
 
 ## Landing discipline
 
