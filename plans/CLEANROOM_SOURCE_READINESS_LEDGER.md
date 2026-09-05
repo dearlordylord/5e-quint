@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `7920c5e00637bd91142a8dafc2fa6308869a18df`
+  `35990c92afd284222e2f5f3eb1da96c21dca0b35`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -338,6 +338,41 @@ This section is the sole mutable handoff for a new session.
   lifecycle, package, broad, registry, coverage, QNT, or MBT verification is
   claimed. The remaining seven legacy declarations prevent whole-package
   convergence.
+- Creature-type-protection Battle evidence: reviewed implementation tips
+  `3ac2bd5c6`, `fccf556ee`, and `752164080` are integrated by non-fast-forward
+  merge `d65e4f804`. Parse-once admission consumes the generic Surface
+  `creature_type_protection` and ongoing `creature_type_ward` shapes, retains
+  exact special-function paths as unowned evidence, uses
+  `BattleSpellExecutionSource`, and gives execution no authored mechanics.
+  The canonical active effect carries source Creature Types and its complete
+  discriminated protection policy. One domain query owner searches every
+  capability and outcome for attack Disadvantage, scoped new
+  Condition/possession prevention, and scoped existing-effect save Advantage;
+  Dispel Evil and Good's attack-only ward therefore cannot gain save
+  Advantage. No compatibility `protectedAgainstCreatureTypes` field or copied
+  creature-protection constants remain in production.
+  The exact lease expansions added the route consumer and compile-time-only
+  fixture migrations in the selected-identity MBT file and Hypnotic Pattern
+  test, then the canonical active-effect policy owner and focused synthetic
+  matrix test. Integration mapping `35990c92a` adds that policy owner to
+  `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION`; public
+  generation changed `matrix.json`, while `REPORT.md` remained byte-stable,
+  and the rules-kernel checker passed all 162 obligations. Review round one
+  returned three Standards and two Spec/RAW findings; round two returned one
+  Standards and one Spec/RAW finding (the stale-lease portion was corrected,
+  while the missing rules-kernel mapping remained valid); round three returned
+  zero findings on both axes.
+  The exact policy/attack selection passed 10/10 and Protection/Dispel static
+  admission passed 4/4 with eight lifecycle tests skipped. Custom diagnostics
+  across all 14 changed Battle roots reported zero relevant errors and 20
+  unrelated transitive baseline diagnostics. Scoped ESLint, supported-file
+  Prettier, JSONL parsing, and diff checks passed; the explicit `.jsonl`
+  Prettier attempt was inapplicable because no parser is registered and is not
+  a failed source-format claim. The previously reported 4-passing/19-failing
+  selection was not rerun unchanged and is not verification. No lifecycle,
+  package-wide, broad, registry, coverage-map, QNT, or MBT pass is claimed.
+  Six legacy top-level declarations remain in five files, so W13 awaits final
+  integration composite review and is not complete.
 - Surface publication evidence: exact checkpoint `73921983c` classifies
   Hunter's Mark's source-derived aggregate change without adding a schema or
   runtime claim. Regeneration was byte-stable; the public Unit and Stat Block
@@ -353,13 +388,14 @@ This section is the sole mutable handoff for a new session.
   removes all numbered generated definition names; its two affected negative
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
-- Next action: continue the remaining top-level Battle profile migration. The
-  current integration-tip declaration audit retains exactly seven legacy
-  top-level `SpellProcedureDeclaration` `admit` fields in six files:
+- Next action: complete W13's final integration composite review before
+  continuing the remaining top-level Battle profile migration. The current
+  integration-tip declaration audit retains exactly six legacy top-level
+  `SpellProcedureDeclaration` `admit` fields in five files:
   `creatureSizeChange`, `creatureSizeDecrease`,
   `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
-  `controlledVerticalSuspension`, `spellCreatedHeldObject`, and
-  `creatureTypeProtection`. The original W13 Battle branch remains clean and
+  `controlledVerticalSuspension`, and `spellCreatedHeldObject`. The original
+  W13 Battle branch remains clean and
   paused at exact base `b1973765cedc85a1d7aaea1da3baecb474c32cff` with zero
   edits after proving the Surface source-model gap. W13/S supplied that
   prerequisite from the same base without a CONTEXT or ADR change. Its source
@@ -458,6 +494,10 @@ This section is the sole mutable handoff for a new session.
   other glyph consumers, schema registry, and coverage owners likewise require no
   change. No Surface, publication, certificate, QNT, MBT, registry, coverage,
   or other Battle file is leased.
+  The Battle lane's reviewed tip `752164080` is integrated by `d65e4f804`, and
+  integration-only rules-kernel mapping `35990c92a` is pushed. W13/S remains
+  complete; W13 Battle is integrated but awaits the final composite review, so
+  W13 as a whole remains active and incomplete.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -592,10 +632,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                                                      | Worktree/branch                                                                                                                            | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | State  |
-| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `e4dc4ffa3`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, and ongoing spell end integrated; cumulative Surface publication delta certified; seven top-level profile migrations remain                                                                                              | Active |
-| `SR-04G/W13`    | creature-type-protection profile admission      | Codex orchestrator; Sol fallback after initial Luna max lane stalled twice | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`; `work/sr04g-creature-type-protection-battle` | `eb96dcc7f` | Existing lease plus new active-effect protection policy owner/test, route consumer, and compile-time fixture/assertion migration only in the selected-identity MBT file and Hypnotic Pattern test. Post-reviewed-merge integration alone owns `plans/rules-kernel-coverage/{obligations.jsonl,matrix.json,REPORT.md}` for the runtime-owner join and serialized generation. No duplicate compatibility fields or first-match queries; no Surface/publication/certificate, QNT/MBT semantic change or execution, registry, other coverage, lifecycle, glyph, execution-type/projector, or other Battle lease. | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                                                      | Worktree/branch                                                                                                                            | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | State                                      |
+| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `35990c92a`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, ongoing spell end, and W13 creature-type protection integrated; cumulative Surface publication delta certified; six top-level profile migrations remain | Active                                     |
+| `SR-04G/W13`    | creature-type-protection profile admission      | Codex orchestrator; Sol fallback after initial Luna max lane stalled twice | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`; `work/sr04g-creature-type-protection-battle` | `eb96dcc7f` | W13/S is complete. Reviewed Battle tip `752164080` is integrated by `d65e4f804`; integration mapping `35990c92a` joined the canonical policy runtime owner and regenerated the byte-changing `matrix.json` while `REPORT.md` stayed byte-stable. No duplicate compatibility fields or first-match queries; no Surface/publication/certificate, QNT/MBT semantic change or execution, registry, other coverage, lifecycle, glyph, execution-type/projector, or other Battle lease.                                                           | Integrated; final composite review pending |
 
 ## Landing discipline
 
