@@ -637,6 +637,64 @@ describe("creature size-change static mechanics admission", () => {
     ]);
   });
 
+  test("selects a partial size-mode gate after an unrelated leading save gate", () => {
+    const result = creatureSizeDecreaseProfile.admitMechanics(
+      malformedCreatureSizeChangeSource((mechanics) => {
+        const intended = mechanics.phases[0];
+        if (
+          intended?.kind !== "save_gate" ||
+          intended.onFail.kind !== "choose_effect_mode" ||
+          intended.attachment.kind !== "hole" ||
+          intended.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected the creature size-change mode gate.");
+        const unrelated = structuredClone(intended);
+        if (
+          unrelated.attachment.kind !== "hole" ||
+          unrelated.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected the cloned unrelated save gate.");
+        Reflect.set(unrelated, "ability", "wis");
+        Reflect.set(unrelated.attachment.value.selection, "targetKinds", [
+          "creature",
+        ]);
+        Reflect.set(unrelated, "onFail", { kind: "none" });
+        const increase = intended.onFail.options.find((option) =>
+          option.effects.some(
+            (effect) =>
+              effect.kind === "modify_size_category" &&
+              effect.direction === "increase",
+          ),
+        );
+        if (increase === undefined)
+          throw new Error("Expected the increase size-change mode.");
+        Reflect.set(intended.onFail, "options", [increase]);
+        Reflect.set(mechanics, "phases", [unrelated, intended]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "modeCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
   test("reports unsupported material and duration children at nested paths", () => {
     const result = creatureSizeDecreaseProfile.admitMechanics(
       malformedCreatureSizeChangeSource((mechanics) => {

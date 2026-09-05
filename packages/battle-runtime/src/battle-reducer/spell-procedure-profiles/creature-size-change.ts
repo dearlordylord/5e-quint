@@ -301,6 +301,44 @@ function creatureSizeChangeModeDirections(
   );
 }
 
+function creatureSizeChangePhaseHasIndependentSignature(
+  phase: CreatureSizeChangeSaveGate,
+): boolean {
+  const selection =
+    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : undefined;
+  const objectFilter =
+    selection !== undefined && "objectFilter" in selection
+      ? selection.objectFilter
+      : undefined;
+  return spellProcedureHasRedundantSignature({
+    kind: "oneWitnessMayBeMissing",
+    witnesses: [
+      {
+        name: "save",
+        present:
+          phase.ability === "con" && phase.dc.kind === "caster_spell_save_dc",
+      },
+      {
+        name: "applicability",
+        present:
+          phase.saveAppliesIf === "unwilling_creature_target" &&
+          phase.onSuccess.kind === "none",
+      },
+      {
+        name: "targetDomain",
+        present:
+          selection?.mode === "one" &&
+          selection.targetKinds !== undefined &&
+          sameStringSet(selection.targetKinds, ["creature", "object"]) &&
+          objectFilter?.visibility === "caster_can_see" &&
+          objectFilter.targetRelation === "not_worn_or_carried",
+      },
+    ],
+  });
+}
+
 function creatureSizeChangePhaseSelection(
   mechanics: ActivationSpellMechanics,
 ): CreatureSizeChangePhaseSelection {
@@ -313,15 +351,30 @@ function creatureSizeChangePhaseSelection(
     const directions = creatureSizeChangeModeDirections(candidate);
     return directions.has("increase") && directions.has("decrease");
   });
+  const semanticModalSaveGateIndex = mechanics.phases.findIndex(
+    (candidate) =>
+      candidate.kind === "save_gate" &&
+      candidate.onFail.kind === "choose_effect_mode" &&
+      creatureSizeChangePhaseHasIndependentSignature(candidate),
+  );
+  const modalSaveGateIndex = mechanics.phases.findIndex(
+    (candidate) =>
+      candidate.kind === "save_gate" &&
+      candidate.onFail.kind === "choose_effect_mode",
+  );
   const saveGateIndex = mechanics.phases.findIndex(
     (candidate) => candidate.kind === "save_gate",
   );
   const selectedPhaseIndex =
     characteristicPhaseIndex >= 0
       ? characteristicPhaseIndex
-      : saveGateIndex >= 0
-        ? saveGateIndex
-        : 0;
+      : semanticModalSaveGateIndex >= 0
+        ? semanticModalSaveGateIndex
+        : modalSaveGateIndex >= 0
+          ? modalSaveGateIndex
+          : saveGateIndex >= 0
+            ? saveGateIndex
+            : 0;
   const selectedPhase = mechanics.phases[selectedPhaseIndex];
   return {
     phase: selectedPhase?.kind === "save_gate" ? selectedPhase : undefined,
