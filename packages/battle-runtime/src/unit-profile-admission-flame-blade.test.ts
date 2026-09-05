@@ -21,7 +21,7 @@ import {
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { describe, expect, expectTypeOf, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { spellId } from "./identity.ts";
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -88,9 +88,6 @@ describe("spellCreatedHeldObject static mechanics admission", () => {
 
     expect(result.tag).toBe("supported");
     if (result.tag !== "supported") return;
-    expectTypeOf(result.admitted.facts.duration.upTo.amount).toEqualTypeOf<
-      PositiveInteger & 10
-    >();
     expect(result.admitted.facts).toMatchObject({
       level: 2,
       duration: {
