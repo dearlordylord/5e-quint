@@ -533,6 +533,46 @@ function removeOngoingCharacteristicEffect(
   return malformed;
 }
 
+function replaceOngoingCharacteristicEffect(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") return mechanics;
+  const characteristicIndex = mechanics.operations.findIndex(
+    ({ effect }) =>
+      effect.kind === "modify_roll_numeric" ||
+      effect.kind === "modify_roll_advantage",
+  );
+  if (characteristicIndex < 0) {
+    throw new Error("Expected an ongoing characteristic operation.");
+  }
+  return {
+    ...mechanics,
+    operations: mechanics.operations.map((operation, index) =>
+      index === characteristicIndex
+        ? { ...operation, effect: { kind: "none" } }
+        : operation,
+    ),
+  };
+}
+
+function removeRollModifierCharacteristicOperation(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") return mechanics;
+  const malformed = { ...mechanics };
+  Object.defineProperty(malformed, "operations", {
+    configurable: true,
+    enumerable: true,
+    value: mechanics.operations.filter(
+      ({ effect }) =>
+        effect.kind !== "modify_roll_numeric" &&
+        effect.kind !== "modify_roll_advantage",
+    ),
+    writable: true,
+  });
+  return malformed;
+}
+
 function removeActivationCharacteristicEffect(
   mechanics: SpellMechanics,
 ): SpellMechanics {
@@ -669,6 +709,43 @@ describe("C2 support profile static admission", () => {
     },
   );
 
+  test("roll-modifier ownership excludes canonical and renamed condition-immunity turn-start temporary-hit-point mechanics", () => {
+    const source = spellAdmissionSource(spellRecord("heroism"));
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_condition_immunity_turn_start_temp_hp"),
+      name: "Synthetic Courage Ward",
+    };
+
+    expect(rollModifierProfile.admitMechanics(mechanicsSource(source))).toEqual(
+      { tag: "notRepresented" },
+    );
+    expect(
+      rollModifierProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test.each([
+    "bless",
+    "guidance",
+    "bane",
+    "enhance_ability",
+    "pass_without_trace",
+  ] as const)(
+    "keeps renamed %s roll-modifier mechanics owned by Surface shape",
+    (spellId) => {
+      const source = spellAdmissionSource(spellRecord(spellId));
+      const renamed = {
+        ...source,
+        id: unitId(`synthetic_c2_${spellId}_roll_modifier_owner`),
+        name: "Synthetic Roll Modifier",
+      };
+      expect(
+        rollModifierProfile.admitMechanics(mechanicsSource(renamed)),
+      ).toMatchObject({ tag: "supported" });
+    },
+  );
+
   test("rejects an empty roll-modifier skill choice at the execution codec boundary", () => {
     const source = spellAdmissionSource(spellRecord("guidance"));
     const result = rollModifierProfile.admitMechanics(mechanicsSource(source));
@@ -712,6 +789,14 @@ describe("C2 support profile static admission", () => {
     [
       "roll modifier ongoing effect deletion",
       "bless",
+      rollModifierProfile,
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "roll modifier Enhance Ability effect deletion",
+      "enhance_ability",
       rollModifierProfile,
       removeOngoingCharacteristicEffect,
       "rollModifier",
@@ -766,6 +851,217 @@ describe("C2 support profile static admission", () => {
       );
     },
   );
+
+  test("direct roll-modifier inspection keeps deleted Guidance unsupported at its exact operation path", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("guidance", removeOngoingCharacteristicEffect),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "operationCount",
+          spellOngoingOperationPath(PositiveInteger(1)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "operation",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
+  test("keeps Pass without Trace characteristic-only deletion at the inferred vacant ordinal", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith(
+        "pass_without_trace",
+        removeRollModifierCharacteristicOperation,
+      ),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "operation",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+      ],
+    });
+    expect(
+      rollModifierProfile.admitMechanics(
+        sourceWith("pass_without_trace", removeOngoingCharacteristicEffect),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test.each([
+    "bless",
+    "guidance",
+    "enhance_ability",
+    "pass_without_trace",
+  ] as const)(
+    "keeps replaced %s roll-modifier mechanics represented at the characteristic effect path",
+    (spellId) => {
+      const source = sourceWith(spellId, replaceOngoingCharacteristicEffect);
+      const renamedSource = {
+        ...spellAdmissionSource(spellRecord(spellId)),
+        id: unitId(`synthetic_c2_${spellId}_replaced_roll_modifier`),
+        name: "Synthetic Replaced Roll Modifier",
+        mechanics: source.mechanics,
+        spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+      };
+      for (const candidate of [source, mechanicsSource(renamedSource)]) {
+        const result = rollModifierProfile.admitMechanics(candidate);
+        expect(result.tag).toBe("unsupported");
+        if (result.tag !== "unsupported") continue;
+        expect(result.issues).toEqual(
+          expect.arrayContaining([
+            expectedIssue(
+              "rollModifier",
+              "effect",
+              spellOngoingOperationEffectPath(PositiveInteger(1)),
+            ),
+          ]),
+        );
+      }
+    },
+  );
+
+  test("keeps reordered Pass without Trace replacement at the actual characteristic ordinal", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("pass_without_trace", (mechanics) => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        const [rollModifier, movementTrace, ...rest] = mechanics.operations;
+        if (rollModifier === undefined || movementTrace === undefined) {
+          throw new Error("Expected paired roll-modifier operations.");
+        }
+        return replaceOngoingCharacteristicEffect({
+          ...mechanics,
+          operations: [movementTrace, rollModifier, ...rest],
+        });
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "operationCount",
+          spellOngoingOperationPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "operation",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+      ],
+    });
+  });
+
+  test("closes every structural layer of the effect-missing roll-modifier envelope", () => {
+    const updates: readonly [
+      label: string,
+      update: (mechanics: OngoingEffectMechanics) => void,
+    ][] = [
+      ["root", (mechanics) => Reflect.set(mechanics, "syntheticRoot", true)],
+      [
+        "casting time",
+        (mechanics) => Reflect.set(mechanics.castingTime, "ritual", true),
+      ],
+      [
+        "components",
+        (mechanics) => Reflect.set(mechanics.components, "materialCostGp", 1),
+      ],
+      ["range", (mechanics) => Reflect.set(mechanics.range, "feet", 5)],
+      [
+        "duration",
+        (mechanics) => Reflect.set(mechanics.duration, "earlyEnd", []),
+      ],
+      [
+        "duration value",
+        (mechanics) => {
+          if (mechanics.duration.kind !== "concentration") return;
+          Reflect.set(mechanics.duration.upTo, "syntheticUnit", true);
+        },
+      ],
+      [
+        "attachment",
+        (mechanics) => Reflect.set(mechanics.attachment, "synthetic", true),
+      ],
+      [
+        "selection",
+        (mechanics) => {
+          if (
+            mechanics.attachment.kind !== "hole" ||
+            mechanics.attachment.value.kind !== "target"
+          ) {
+            return;
+          }
+          Reflect.set(
+            mechanics.attachment.value.selection,
+            "repeatsAllowed",
+            true,
+          );
+        },
+      ],
+      [
+        "operation",
+        (mechanics) => Reflect.set(mechanics.operations[0], "predicate", {}),
+      ],
+      [
+        "trigger",
+        (mechanics) =>
+          Reflect.set(
+            mechanics.operations[0]?.trigger ?? {},
+            "synthetic",
+            true,
+          ),
+      ],
+      [
+        "effect",
+        (mechanics) =>
+          Reflect.set(mechanics.operations[0]?.effect ?? {}, "synthetic", true),
+      ],
+      [
+        "operation cardinality",
+        (mechanics) => {
+          const operation = mechanics.operations[0];
+          if (operation !== undefined) mechanics.operations.push(operation);
+        },
+      ],
+    ];
+
+    for (const [label, update] of updates) {
+      const source = sourceWith("guidance", (mechanics) => {
+        const replaced = replaceOngoingCharacteristicEffect(mechanics);
+        if (replaced.family !== "ongoing_effect") return replaced;
+        const updated = structuredClone(replaced);
+        update(updated);
+        return updated;
+      });
+      expect(rollModifierProfile.admitMechanics(source), label).toEqual({
+        tag: "notRepresented",
+      });
+    }
+  });
 
   test.each([
     ["damage reduction", "resistance", damageReductionProfile],
