@@ -81,6 +81,7 @@ import {
   spellMechanicsFixedTableEntries,
   spellMechanicsObjectHasOnlyKeys,
   spellPositiveIntegerFromSurface,
+  spellProcedureHasRedundantSignature,
   spellProcedureNonEmpty,
   spellSlotLevelFromSurface,
   spellUniqueMechanicsIssues,
@@ -212,6 +213,21 @@ type SpellAttackSequenceDamageAmount = Extract<
   DiceAmount,
   { readonly kind: "fixed" }
 >;
+type SpellAttackSequenceDamageProjection =
+  | {
+      readonly kind: "character";
+      readonly damageAmount:
+        | SpellAttackSequenceCanonicalDamageAmount<1, 10>
+        | undefined;
+      readonly damageType: "force" | undefined;
+    }
+  | {
+      readonly kind: "slot";
+      readonly damageAmount:
+        | SpellAttackSequenceCanonicalDamageAmount<2, 6>
+        | undefined;
+      readonly damageType: "fire" | undefined;
+    };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SpellAttackSequenceFailedFact.
 const SPELL_ATTACK_SEQUENCE_FAILED_FACTS = [
@@ -317,13 +333,20 @@ const SPELL_ATTACK_SEQUENCE_NONE_EFFECT_FIELDS = [
   keyof Extract<EffectAtom, { readonly kind: "none" }>
 >;
 
-function spellAttackSequenceCandidatePhase(
+function spellAttackSequenceAttackPhaseHasCanonicalDamage(
   phase: SpellAttackSequenceActivationPhase,
+  level: number,
 ): boolean {
+  if (phase.kind !== "attack_roll") {
+    return false;
+  }
+  const damage = phase.onHit.find((effect) => effect.kind === "damage");
+  if (damage === undefined) return false;
+  const projection = spellAttackSequenceDamageProjection(damage, level);
   return (
-    phase.kind === "attack_roll" &&
-    phase.attackKind === "ranged_spell_attack" &&
-    phase.onHit.some((effect) => effect.kind === "damage")
+    projection !== undefined &&
+    projection.damageAmount !== undefined &&
+    projection.damageType !== undefined
   );
 }
 
@@ -339,25 +362,84 @@ function spellAttackSequenceIssueResult(
   };
 }
 
-function spellAttackSequenceSemanticCandidate(
-  mechanics: SpellMechanics,
-): boolean {
-  return (
-    mechanics.family === "activation" &&
-    mechanics.phases.some(spellAttackSequenceCandidatePhase)
-  );
-}
-
-function spellAttackSequenceDistinctiveHeaderFallback(
+function spellAttackSequenceHeaderEnvelopeIsCanonical(
   mechanics: SpellMechanics,
 ): boolean {
   return (
     mechanics.family === "activation" &&
     (mechanics.level === 0 || mechanics.level === 2) &&
+    mechanics.school === "evocation" &&
     mechanics.castingTime.kind === "action" &&
+    mechanics.castingTime.ritual === undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS,
+    ) &&
     mechanics.range.kind === "point" &&
     mechanics.range.feet === 120 &&
-    mechanics.duration.kind === "instantaneous"
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      SPELL_ATTACK_SEQUENCE_RANGE_FIELDS,
+    ) &&
+    mechanics.duration.kind === "instantaneous" &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.duration,
+      SPELL_ATTACK_SEQUENCE_DURATION_FIELDS,
+    ) &&
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      SPELL_ATTACK_SEQUENCE_COMPONENT_FIELDS,
+    ) &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      SPELL_ATTACK_SEQUENCE_ROOT_FIELDS,
+    )
+  );
+}
+
+function spellAttackSequencePhaseHasMultiAttackTargeting(
+  phase: SpellAttackSequenceActivationPhase,
+  level: number,
+): boolean {
+  if (phase.kind !== "attack_roll") return false;
+  const selection = spellAttackSequenceTargetSelection(phase.attachment);
+  return (
+    selection !== undefined &&
+    spellAttackSequenceCountFacts(selection, level) !== undefined
+  );
+}
+
+function spellAttackSequenceIsRepresented(mechanics: SpellMechanics): boolean {
+  if (mechanics.family !== "activation") return false;
+  const canonicalHeaderEnvelope =
+    spellAttackSequenceHeaderEnvelopeIsCanonical(mechanics);
+  return mechanics.phases.some((phase) =>
+    spellProcedureHasRedundantSignature({
+      kind: "oneWitnessMayBeMissing",
+      witnesses: [
+        {
+          name: "canonicalHeaderEnvelope",
+          present: canonicalHeaderEnvelope,
+        },
+        {
+          name: "multiAttackTargeting",
+          present: spellAttackSequencePhaseHasMultiAttackTargeting(
+            phase,
+            mechanics.level,
+          ),
+        },
+        {
+          name: "canonicalDamage",
+          present: spellAttackSequenceAttackPhaseHasCanonicalDamage(
+            phase,
+            mechanics.level,
+          ),
+        },
+      ],
+    }),
   );
 }
 
@@ -484,6 +566,39 @@ function spellAttackSequenceDamageAmountIsCanonical<
   );
 }
 
+function spellAttackSequenceDamageProjection(
+  damage: SpellAttackSequenceDamageEffect,
+  level: number,
+): SpellAttackSequenceDamageProjection | undefined {
+  if (level === 0) {
+    return {
+      kind: "character",
+      damageAmount: spellAttackSequenceDamageAmountIsCanonical(
+        damage.amount,
+        1,
+        10,
+      )
+        ? damage.amount
+        : undefined,
+      damageType: damage.damageType === "force" ? damage.damageType : undefined,
+    };
+  }
+  if (level === 2) {
+    return {
+      kind: "slot",
+      damageAmount: spellAttackSequenceDamageAmountIsCanonical(
+        damage.amount,
+        2,
+        6,
+      )
+        ? damage.amount
+        : undefined,
+      damageType: damage.damageType === "fire" ? damage.damageType : undefined,
+    };
+  }
+  return undefined;
+}
+
 function spellAttackSequenceMechanicsEvidence(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   phaseIndex: number,
@@ -514,10 +629,7 @@ function admitSpellAttackSequenceMechanics(
   SpellAttackSequenceInvocation,
   ReturnType<typeof spellAttackSequenceIssueResult>
 > {
-  if (
-    !spellAttackSequenceSemanticCandidate(source.mechanics) &&
-    !spellAttackSequenceDistinctiveHeaderFallback(source.mechanics)
-  ) {
+  if (!spellAttackSequenceIsRepresented(source.mechanics)) {
     return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "activation") {
@@ -535,28 +647,10 @@ function admitSpellAttackSequenceMechanics(
   const hitEffect =
     hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
   const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
-  const cantripDamageAmount =
-    mechanics.level === 0 &&
-    damageEffect !== undefined &&
-    spellAttackSequenceDamageAmountIsCanonical(damageEffect.amount, 1, 10)
-      ? damageEffect.amount
-      : undefined;
-  const rayDamageAmount =
-    mechanics.level === 2 &&
-    damageEffect !== undefined &&
-    spellAttackSequenceDamageAmountIsCanonical(damageEffect.amount, 2, 6)
-      ? damageEffect.amount
-      : undefined;
-  const damageAmount = cantripDamageAmount ?? rayDamageAmount;
-  const cantripDamageType =
-    mechanics.level === 0 && damageEffect?.damageType === "force"
-      ? damageEffect.damageType
-      : undefined;
-  const rayDamageType =
-    mechanics.level === 2 && damageEffect?.damageType === "fire"
-      ? damageEffect.damageType
-      : undefined;
-  const damageType = cantripDamageType ?? rayDamageType;
+  const damageProjection =
+    damageEffect === undefined
+      ? undefined
+      : spellAttackSequenceDamageProjection(damageEffect, mechanics.level);
   const missEffect = attackPhase?.onMiss[0];
   const targetAttachmentAdmission =
     attackPhase === undefined
@@ -695,7 +789,7 @@ function admitSpellAttackSequenceMechanics(
       SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS,
     ) ||
     damageEffect.timing !== undefined ||
-    damageAmount === undefined
+    damageProjection?.damageAmount === undefined
   ) {
     push(
       "damageAmount",
@@ -716,7 +810,7 @@ function admitSpellAttackSequenceMechanics(
   ) {
     push("missEffect", spellActivationPhasePath(phaseOrdinal));
   }
-  if (damageType === undefined) {
+  if (damageProjection?.damageType === undefined) {
     push(
       "damageType",
       spellActivationEffectPath(
@@ -735,29 +829,31 @@ function admitSpellAttackSequenceMechanics(
     rangeFeet !== undefined &&
     mechanics.level === 0 &&
     count?.kind === "character" &&
-    cantripDamageType !== undefined &&
-    cantripDamageAmount !== undefined
+    damageProjection?.kind === "character" &&
+    damageProjection.damageAmount !== undefined &&
+    damageProjection.damageType !== undefined
       ? {
           ...source.spellDefinitionRuleFacts,
           level: mechanics.level,
           rangeFeet,
           attackKind: "ranged_spell_attack",
-          damageAmount: cantripDamageAmount,
-          damageType: cantripDamageType,
+          damageAmount: damageProjection.damageAmount,
+          damageType: damageProjection.damageType,
           count,
         }
       : rangeFeet !== undefined &&
           mechanics.level === 2 &&
           count?.kind === "slot" &&
-          rayDamageType !== undefined &&
-          rayDamageAmount !== undefined
+          damageProjection?.kind === "slot" &&
+          damageProjection.damageAmount !== undefined &&
+          damageProjection.damageType !== undefined
         ? {
             ...source.spellDefinitionRuleFacts,
             level: mechanics.level,
             rangeFeet,
             attackKind: "ranged_spell_attack",
-            damageAmount: rayDamageAmount,
-            damageType: rayDamageType,
+            damageAmount: damageProjection.damageAmount,
+            damageType: damageProjection.damageType,
             count,
           }
         : undefined;

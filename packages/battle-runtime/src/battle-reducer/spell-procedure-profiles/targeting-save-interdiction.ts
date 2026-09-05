@@ -155,6 +155,7 @@ const SANCTUARY_EARLY_END_KINDS = [
   "target_casts_spell",
   "target_deals_damage",
 ] as const;
+const SANCTUARY_EARLY_END_FIELDS = ["kind"] as const;
 const SANCTUARY_ROOT_FIELDS = [
   "level",
   "school",
@@ -240,16 +241,20 @@ function targetingSaveInterdictionMechanicsRepresentation(
     mechanics.school === "abjuration" &&
     mechanics.range.kind === "point" &&
     mechanics.range.feet === 30 &&
-    mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "minute" &&
-    mechanics.duration.value.amount === 1 &&
-    mechanics.castingTime.kind === "bonus_action";
+    spellMechanicsObjectHasOnlyKeys(mechanics.range, SANCTUARY_RANGE_FIELDS) &&
+    sanctuaryComponentsSupported(mechanics.components) &&
+    sanctuaryDurationEnvelopeIsCanonical(mechanics.duration) &&
+    mechanics.castingTime.kind === "bonus_action" &&
+    mechanics.castingTime.trigger === undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SANCTUARY_CASTING_TIME_FIELDS,
+    ) &&
+    spellMechanicsObjectHasOnlyKeys(mechanics, SANCTUARY_ROOT_FIELDS);
   return (
     hasDistinctiveHeaders ||
     mechanics.operations.some(
-      (operation) =>
-        operation.trigger.kind === "on_attached_targeted" ||
-        operation.effect.kind === "save_gate",
+      (operation) => operation.trigger.kind === "on_attached_targeted",
     )
   );
 }
@@ -279,6 +284,36 @@ function sanctuaryDurationValueSupported(
     return false;
   }
   return true;
+}
+
+function sanctuaryComponentsSupported(components: Components): boolean {
+  return (
+    isGenericSpellComponents(components) &&
+    typeof components.m === "string" &&
+    components.v === true &&
+    components.s === true &&
+    spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
+      components,
+      SANCTUARY_COMPONENT_FIELDS,
+    ) &&
+    !("materialCostGp" in components) &&
+    !("materialConsumed" in components)
+  );
+}
+
+function sanctuaryDurationEnvelopeIsCanonical(
+  duration: SpellMechanics["duration"],
+): boolean {
+  if (!sanctuaryDurationValueSupported(duration)) return false;
+  const endingInspection = sanctuaryDurationEndingInspection(duration);
+  return (
+    endingInspection.unsupportedOrdinals.length === 0 &&
+    !endingInspection.missingRequiredKind &&
+    (duration.earlyEnd ?? []).every((ending) =>
+      spellMechanicsObjectHasOnlyKeys(ending, SANCTUARY_EARLY_END_FIELDS),
+    ) &&
+    duration.permanentAfter === undefined
+  );
 }
 
 type SanctuaryDurationEndingInspection = {
@@ -368,22 +403,9 @@ function admitTargetingSaveInterdictionMechanics(
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  let componentsSupported = false;
-  if (
-    isGenericSpellComponents(mechanics.components) &&
-    typeof mechanics.components.m === "string"
-  ) {
-    const components = mechanics.components;
-    componentsSupported =
-      components.v === true &&
-      components.s === true &&
-      spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
-        components,
-        SANCTUARY_COMPONENT_FIELDS,
-      ) &&
-      !("materialCostGp" in components) &&
-      !("materialConsumed" in components);
-  }
+  const componentsSupported = sanctuaryComponentsSupported(
+    mechanics.components,
+  );
   if (!componentsSupported) {
     push("components", spellMechanicsHeaderPath("components"));
     for (const path of spellConsumedMaterialEvidencePaths(
