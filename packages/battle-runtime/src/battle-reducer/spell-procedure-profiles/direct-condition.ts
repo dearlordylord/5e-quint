@@ -123,10 +123,11 @@ type DirectConditionCastingTime = Extract<
   DirectConditionActivationMechanics["castingTime"],
   { readonly kind: "action" }
 >;
-type DirectConditionDuration = Extract<
+type DirectConditionConcentrationDuration = Extract<
   SpellDefinitionRuleFacts["duration"],
   { readonly kind: "concentration" }
-> & {
+>;
+type DirectConditionDuration = DirectConditionConcentrationDuration & {
   readonly upTo: SpellCanonicalDurationValue & {
     readonly unit: "hour";
     readonly amount: 1;
@@ -278,27 +279,66 @@ function directConditionComponentsAreSupported(
   );
 }
 
-function directConditionEndingsAreSupported(
-  endings: readonly DirectConditionDurationEnding[],
-): boolean {
-  const endingKinds = endings.map(({ kind }) => kind);
-  return (
-    endings.length === DIRECT_CONDITION_EARLY_END_KINDS.length &&
-    sameStringSet(endingKinds, DIRECT_CONDITION_EARLY_END_KINDS) &&
-    endings.every((ending) =>
-      spellMechanicsObjectHasOnlyKeys(
+type DirectConditionEndingsInspection =
+  | { readonly tag: "supported" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly DirectConditionMechanicsIssue[];
+    };
+
+function inspectDirectConditionEndings(
+  duration: DirectConditionConcentrationDuration,
+): DirectConditionEndingsInspection {
+  const endings = duration.earlyEnd ?? [];
+  const seenEndKinds = new Set<string>();
+  const issues: DirectConditionMechanicsIssue[] = [];
+  for (const [index, ending] of endings.entries()) {
+    const expectedKind = DIRECT_CONDITION_EARLY_END_KINDS.some(
+      (candidate) => candidate === ending.kind,
+    );
+    const duplicateKind = seenEndKinds.has(ending.kind);
+    if (expectedKind && !duplicateKind) seenEndKinds.add(ending.kind);
+    if (
+      !expectedKind ||
+      duplicateKind ||
+      !spellMechanicsObjectHasOnlyKeys(
         ending,
         DIRECT_CONDITION_DURATION_END_KEYS,
-      ),
+      )
+    ) {
+      issues.push({
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(index + 1)),
+      });
+    }
+  }
+  if (
+    DIRECT_CONDITION_EARLY_END_KINDS.some(
+      (expectedKind) => !seenEndKinds.has(expectedKind),
     )
-  );
+  ) {
+    issues.push({
+      failedFact: "durationEnding",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    });
+  }
+  if (duration.permanentIfMaintainedFull === true) {
+    issues.push({
+      failedFact: "durationEnding",
+      mechanicsPath: spellDurationEndingPath(
+        PositiveInteger(endings.length + 1),
+      ),
+    });
+  }
+  return issues.length === 0
+    ? { tag: "supported" }
+    : { tag: "unsupported", issues };
 }
 
 function directConditionDurationIsSupported(
   duration: SpellDefinitionRuleFacts["duration"],
 ): duration is DirectConditionDuration {
   if (duration.kind !== "concentration") return false;
-  const endings = duration.earlyEnd ?? [];
   return (
     duration.upTo.unit === "hour" &&
     duration.upTo.amount === 1 &&
@@ -308,8 +348,7 @@ function directConditionDurationIsSupported(
       duration.upTo,
       DIRECT_CONDITION_DURATION_VALUE_KEYS,
     ) &&
-    directConditionEndingsAreSupported(endings) &&
-    duration.permanentIfMaintainedFull !== true &&
+    inspectDirectConditionEndings(duration).tag === "supported" &&
     duration.upTo.upcastTiers === undefined
   );
 }
@@ -573,47 +612,11 @@ function admitDirectConditionMechanics(
         spellDurationExtensionPath(PositiveInteger(index + 1)),
       );
     }
-    const ends = mechanics.duration.earlyEnd ?? [];
-    const expectedEndKinds = DIRECT_CONDITION_EARLY_END_KINDS;
-    const seenEndKinds = new Set<string>();
-    for (const [index, end] of ends.entries()) {
-      const expectedKind = expectedEndKinds.some(
-        (candidate) => candidate === end.kind,
-      );
-      const duplicateKind = seenEndKinds.has(end.kind);
-      if (expectedKind && !duplicateKind) seenEndKinds.add(end.kind);
-      if (
-        !expectedKind ||
-        duplicateKind ||
-        !spellMechanicsObjectHasOnlyKeys(
-          end,
-          DIRECT_CONDITION_DURATION_END_KEYS,
-        )
-      ) {
-        pushIssue(
-          "durationEnding",
-          spellDurationEndingPath(PositiveInteger(index + 1)),
-        );
+    const endingsInspection = inspectDirectConditionEndings(mechanics.duration);
+    if (endingsInspection.tag === "unsupported") {
+      for (const issue of endingsInspection.issues) {
+        pushIssue(issue.failedFact, issue.mechanicsPath);
       }
-    }
-    if (
-      expectedEndKinds.some((expectedKind) => !seenEndKinds.has(expectedKind))
-    ) {
-      pushIssue("durationEnding", spellMechanicsHeaderPath("duration"));
-    }
-    for (const [index] of ends.entries()) {
-      if (index >= expectedEndKinds.length) {
-        pushIssue(
-          "durationEnding",
-          spellDurationEndingPath(PositiveInteger(index + 1)),
-        );
-      }
-    }
-    if (mechanics.duration.permanentIfMaintainedFull === true) {
-      pushIssue(
-        "durationEnding",
-        spellDurationEndingPath(PositiveInteger(ends.length + 1)),
-      );
     }
   }
   if (mechanics.phases.length !== 1) {
