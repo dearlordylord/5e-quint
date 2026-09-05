@@ -51,7 +51,6 @@ import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
-  spellDurationChildPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
@@ -103,6 +102,7 @@ import {
   spellConsumedMaterialEvidencePaths,
   spellDurationChildCoordinates,
   spellDurationChildFailedFact,
+  spellDurationChildPath,
   spellDurationTicksFromCanonicalValue,
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureHasRedundantSignature,
@@ -424,9 +424,10 @@ function isSpellCreatedHeldObjectDurationMinutes(
 }
 
 function spellCreatedHeldObjectInitialEffectIsSupported(
-  effect: SpellCreatedHeldObjectEffect,
+  effect: OngoingEffectInitialEffect,
 ): boolean {
   return (
+    effect.kind === "spell_created_held_object" &&
     spellMechanicsObjectHasOnlyKeys(effect, HELD_OBJECT_FIELDS) &&
     effect.requirements.length === 1 &&
     effect.disappearsWhen.length === 1 &&

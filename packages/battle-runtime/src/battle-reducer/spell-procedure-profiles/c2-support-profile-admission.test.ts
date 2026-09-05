@@ -59,6 +59,13 @@ import { spellAdmissionContextFor } from "./admission-context.ts";
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 
+type OngoingEffectMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+type OngoingEffectMechanicsOperation =
+  OngoingEffectMechanics["operations"][number];
+
 function mechanicsSource(
   source: BattleSpellAdmissionSource,
 ): SpellMechanicsAdmissionSource {
@@ -189,21 +196,27 @@ const initialDirectPhase: ActivationPhase = {
 const ongoingOperationUpdates = [
   [
     "predicate",
-    (operation: OngoingOperation): OngoingOperation => ({
+    (
+      operation: OngoingEffectMechanicsOperation,
+    ): OngoingEffectMechanicsOperation => ({
       ...operation,
       predicate: ongoingPredicate,
     }),
   ],
   [
     "targetLimit",
-    (operation: OngoingOperation): OngoingOperation => ({
+    (
+      operation: OngoingEffectMechanicsOperation,
+    ): OngoingEffectMechanicsOperation => ({
       ...operation,
       targetLimit: ongoingTargetLimit,
     }),
   ],
   [
     "usageLimit",
-    (operation: OngoingOperation): OngoingOperation => ({
+    (
+      operation: OngoingEffectMechanicsOperation,
+    ): OngoingEffectMechanicsOperation => ({
       ...operation,
       usageLimit: ongoingUsageLimit,
     }),
@@ -340,7 +353,9 @@ const heldLightExplodingMaxDieAmount = {
 
 function updateHeldLightHurlOperation(
   mechanics: SpellMechanics,
-  update: (operation: OngoingOperation) => OngoingOperation,
+  update: (
+    operation: OngoingEffectMechanicsOperation,
+  ) => OngoingEffectMechanicsOperation,
 ): SpellMechanics {
   if (mechanics.family !== "ongoing_effect") {
     throw new Error("Expected Produce Flame ongoing-effect mechanics.");
@@ -367,7 +382,9 @@ function updateHeldLightHurlOperation(
 const heldLightHurlOptionalUpdates = [
   [
     "laterTurnsOnly",
-    (operation: OngoingOperation): OngoingOperation => {
+    (
+      operation: OngoingEffectMechanicsOperation,
+    ): OngoingEffectMechanicsOperation => {
       if (operation.trigger.kind !== "on_caster_spends_action") {
         throw new Error("Expected Produce Flame hurl trigger.");
       }
@@ -380,7 +397,9 @@ const heldLightHurlOptionalUpdates = [
   ],
   [
     "attachment",
-    (operation: OngoingOperation): OngoingOperation => {
+    (
+      operation: OngoingEffectMechanicsOperation,
+    ): OngoingEffectMechanicsOperation => {
       if (operation.effect.kind !== "attack_roll") {
         throw new Error("Expected Produce Flame hurl attack effect.");
       }
@@ -399,7 +418,9 @@ const heldLightHurlOptionalUpdates = [
   ],
   [
     "timing",
-    (operation: OngoingOperation): OngoingOperation => {
+    (
+      operation: OngoingEffectMechanicsOperation,
+    ): OngoingEffectMechanicsOperation => {
       if (operation.effect.kind !== "attack_roll") {
         throw new Error("Expected Produce Flame hurl attack effect.");
       }
