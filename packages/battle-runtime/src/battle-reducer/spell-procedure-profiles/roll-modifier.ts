@@ -115,7 +115,6 @@ import {
   spellDurationTicksFromCanonicalValue,
   spellConsumedMaterialEvidencePaths,
   spellProcedureHasRedundantSignature,
-  spellProcedureHasCompleteSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   spellPositiveIntegerFromSurface,
@@ -342,11 +341,6 @@ const ROLL_MODIFIER_TARGET_SELECTION_FIELDS = [
 ] as const;
 const ROLL_MODIFIER_AREA_SELECTION_FIELDS = [] as const;
 const ROLL_MODIFIER_AREA_OPTIONAL_FIELDS = [] as const;
-const ROLL_MODIFIER_SCHOOLS = [
-  "divination",
-  "enchantment",
-  "transmutation",
-] as const;
 const FIRST_ORDINAL = PositiveInteger(1);
 
 type RollModifierAdmittedTargetAttachment = Extract<
@@ -607,7 +601,7 @@ function rollModifierAttachmentFailedFact(
   );
 }
 
-function hasCompleteBaneFallbackSignature(
+function hasCompleteNumericSavePenaltyFallbackSignature(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
   const phase = mechanics.phases[0];
@@ -645,6 +639,112 @@ function hasCompleteBaneFallbackSignature(
   );
 }
 
+function hasCompleteOngoingRollModifierFallbackSignature(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): boolean {
+  if (mechanics.castingTime.kind !== "action") return false;
+  const attachment = rollModifierAttachmentProjection(
+    mechanics.attachment,
+    mechanics.range,
+    mechanics.level,
+  );
+  if (attachment.tag !== "supported") return false;
+
+  const hasTargetList = (
+    requiredTargetDisposition: "unrestricted" | "willing",
+    count:
+      | { readonly kind: "fixed"; readonly count: number }
+      | {
+          readonly kind: "linear";
+          readonly base: number;
+          readonly baseLevel: number;
+          readonly perSlotAboveBase: number;
+        },
+  ): boolean => {
+    const targeting = attachment.targeting;
+    if (
+      targeting.kind !== "targetList" ||
+      targeting.requiredTargetDisposition !== requiredTargetDisposition ||
+      targeting.count.kind !== count.kind
+    ) {
+      return false;
+    }
+    return count.kind === "fixed"
+      ? targeting.count.kind === "fixed" &&
+          targeting.count.count === count.count
+      : targeting.count.kind === "linear" &&
+          targeting.count.base === count.base &&
+          targeting.count.baseLevel === count.baseLevel &&
+          targeting.count.perSlotAboveBase === count.perSlotAboveBase;
+  };
+
+  return Match.value(mechanics).pipe(
+    Match.when(
+      {
+        level: 1,
+        school: "enchantment",
+        range: { kind: "point", feet: 30 },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+      },
+      () =>
+        hasTargetList("unrestricted", {
+          kind: "linear",
+          base: 3,
+          baseLevel: 1,
+          perSlotAboveBase: 1,
+        }),
+    ),
+    Match.when(
+      {
+        level: 0,
+        school: "divination",
+        range: { kind: "touch" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+      },
+      () => hasTargetList("willing", { kind: "fixed", count: 1 }),
+    ),
+    Match.when(
+      {
+        level: 2,
+        school: "transmutation",
+        range: { kind: "touch" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "hour" },
+        },
+      },
+      () =>
+        hasTargetList("unrestricted", {
+          kind: "linear",
+          base: 1,
+          baseLevel: 2,
+          perSlotAboveBase: 1,
+        }),
+    ),
+    Match.when(
+      {
+        level: 2,
+        school: "abjuration",
+        range: { kind: "self" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "hour" },
+        },
+      },
+      () =>
+        attachment.targeting.kind === "selfAndChosenLegalTargets" &&
+        attachment.rangeFeet === movementFeet(30),
+    ),
+    Match.orElse(() => false),
+  );
+}
+
 function isRollModifierRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is RollModifierMechanics {
@@ -671,23 +771,8 @@ function isRollModifierRepresentation(
           effect.kind === "modify_roll_numeric" ||
           effect.kind === "modify_roll_advantage",
       );
-      const hasRollModifierSchool = ROLL_MODIFIER_SCHOOLS.some(
-        (school) => school === ongoing.school,
-      );
       if (!hasRollEffectRole) {
-        return spellProcedureHasCompleteSignature([
-          {
-            name: "castingTime",
-            present: ongoing.castingTime.kind === "action",
-          },
-          { name: "range", present: hasSupportedRangeRole },
-          { name: "attachment", present: hasAttachmentRole },
-          {
-            name: "duration",
-            present: isRollModifierDuration(ongoing.duration),
-          },
-          { name: "rollModifierSchool", present: hasRollModifierSchool },
-        ]);
+        return hasCompleteOngoingRollModifierFallbackSignature(ongoing);
       }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
@@ -713,7 +798,7 @@ function isRollModifierRepresentation(
           phase.onFail.kind === "modify_roll_numeric",
       );
       if (!hasNumericFailureEffect) {
-        return hasCompleteBaneFallbackSignature(activation);
+        return hasCompleteNumericSavePenaltyFallbackSignature(activation);
       }
       return true;
     }),

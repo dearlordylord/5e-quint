@@ -533,6 +533,23 @@ function removeOngoingCharacteristicEffect(
   return malformed;
 }
 
+function replaceOngoingCharacteristicEffect(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") return mechanics;
+  const operation = mechanics.operations[0];
+  if (operation === undefined) {
+    throw new Error("Expected an ongoing characteristic operation.");
+  }
+  return {
+    ...mechanics,
+    operations: [
+      { ...operation, effect: { kind: "none" } },
+      ...mechanics.operations.slice(1),
+    ],
+  };
+}
+
 function removeActivationCharacteristicEffect(
   mechanics: SpellMechanics,
 ): SpellMechanics {
@@ -669,6 +686,43 @@ describe("C2 support profile static admission", () => {
     },
   );
 
+  test("roll-modifier ownership excludes canonical and renamed condition-immunity turn-start temporary-hit-point mechanics", () => {
+    const source = spellAdmissionSource(spellRecord("heroism"));
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_condition_immunity_turn_start_temp_hp"),
+      name: "Synthetic Courage Ward",
+    };
+
+    expect(rollModifierProfile.admitMechanics(mechanicsSource(source))).toEqual(
+      { tag: "notRepresented" },
+    );
+    expect(
+      rollModifierProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test.each([
+    "bless",
+    "guidance",
+    "bane",
+    "enhance_ability",
+    "pass_without_trace",
+  ] as const)(
+    "keeps renamed %s roll-modifier mechanics owned by Surface shape",
+    (spellId) => {
+      const source = spellAdmissionSource(spellRecord(spellId));
+      const renamed = {
+        ...source,
+        id: unitId(`synthetic_c2_${spellId}_roll_modifier_owner`),
+        name: "Synthetic Roll Modifier",
+      };
+      expect(
+        rollModifierProfile.admitMechanics(mechanicsSource(renamed)),
+      ).toMatchObject({ tag: "supported" });
+    },
+  );
+
   test("rejects an empty roll-modifier skill choice at the execution codec boundary", () => {
     const source = spellAdmissionSource(spellRecord("guidance"));
     const result = rollModifierProfile.admitMechanics(mechanicsSource(source));
@@ -712,6 +766,30 @@ describe("C2 support profile static admission", () => {
     [
       "roll modifier ongoing effect deletion",
       "bless",
+      rollModifierProfile,
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "roll modifier Guidance effect deletion",
+      "guidance",
+      rollModifierProfile,
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "roll modifier Enhance Ability effect deletion",
+      "enhance_ability",
+      rollModifierProfile,
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ],
+    [
+      "roll modifier Pass without Trace effect deletion",
+      "pass_without_trace",
       rollModifierProfile,
       removeOngoingCharacteristicEffect,
       "rollModifier",
@@ -764,6 +842,39 @@ describe("C2 support profile static admission", () => {
           ),
         ]),
       );
+    },
+  );
+
+  test.each([
+    "bless",
+    "guidance",
+    "enhance_ability",
+    "pass_without_trace",
+  ] as const)(
+    "keeps replaced %s roll-modifier mechanics represented at the characteristic effect path",
+    (spellId) => {
+      const source = sourceWith(spellId, replaceOngoingCharacteristicEffect);
+      const renamedSource = {
+        ...spellAdmissionSource(spellRecord(spellId)),
+        id: unitId(`synthetic_c2_${spellId}_replaced_roll_modifier`),
+        name: "Synthetic Replaced Roll Modifier",
+        mechanics: source.mechanics,
+        spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+      };
+      for (const candidate of [source, mechanicsSource(renamedSource)]) {
+        const result = rollModifierProfile.admitMechanics(candidate);
+        expect(result.tag).toBe("unsupported");
+        if (result.tag !== "unsupported") continue;
+        expect(result.issues).toEqual(
+          expect.arrayContaining([
+            expectedIssue(
+              "rollModifier",
+              "effect",
+              spellOngoingOperationEffectPath(PositiveInteger(1)),
+            ),
+          ]),
+        );
+      }
     },
   );
 
