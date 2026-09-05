@@ -453,9 +453,10 @@ This section is the sole mutable handoff for a new session.
   Spec 2, and then converged at Standards 0 and Spec 0. Focused TDD evidence
   covers exact complete-root facts and evidence, mechanics-free execution,
   reordered renamed synthetic parity, unrelated and envelope-only rejection,
-  partial-root ownership selection, accumulated exact nested issue paths, and
-  the existing runtime lifecycle.
-  The exact-base focused file had 7/7 inherited transition failures. The
+  partial-root ownership selection, and accumulated exact nested issue paths.
+  The seven lifecycle cases remain present but are transition-blocked before
+  their assertions and unverified. The exact-base focused file had 7/7
+  inherited transition failures. The
   reviewed tip added seven static passes and retained the same seven lifecycle
   failures, so lifecycle behavior remains unverified. The integrated joined
   W14-W17 static selection passed 28/28 with 51 skipped. At source commit
