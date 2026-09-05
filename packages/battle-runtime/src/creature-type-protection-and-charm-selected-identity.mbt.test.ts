@@ -2082,10 +2082,24 @@ function protectionFromEvilAndGoodEffectPresentOnProtectedTarget(
         (effect) =>
           effect.kind === "creatureTypeProtection" &&
           effect.sourceCombatantId === casterId &&
-          effect.attackRollMode === "disadvantage" &&
-          effect.preventedConditions.includes("charmed") &&
-          effect.preventedConditions.includes("frightened") &&
-          effect.preventsPossession,
+          effect.protections.some(
+            (protection) =>
+              protection.kind === "attack_rolls_against_target" &&
+              protection.mode === "disadvantage",
+          ) &&
+          effect.protections.some(
+            (protection) =>
+              protection.kind === "relevant_effect_protection" &&
+              protection.conditions.includes("charmed") &&
+              protection.conditions.includes("frightened") &&
+              protection.outcomes.some(
+                (outcome) => outcome.kind === "new_applications",
+              ) &&
+              protection.outcomes.some(
+                (outcome) =>
+                  outcome.kind === "new_saves_against_existing_effects",
+              ),
+          ),
       ) ?? false
   );
 }

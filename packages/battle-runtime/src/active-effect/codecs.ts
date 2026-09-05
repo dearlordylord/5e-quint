@@ -1,5 +1,6 @@
 import {
   AbilitySchema,
+  CreatureTypeProtectionSchema,
   DamageTypeSchema,
   DiceExprSchema,
 } from "@dnd/surface/surface/schema";
@@ -14,6 +15,7 @@ import {
 } from "../identity.ts";
 import type {
   BattleActiveEffect,
+  CreatureTypeProtectionPolicy,
   MarkedDamageRiderAbilityCheckBehavior,
   MarkedDamageRiderTransferState,
   SpellMarkedDamageRider,
@@ -206,6 +208,42 @@ export const PerceptionGatedAttackRollDefenseTemplateSchema =
       kind: Schema.Literal("perceptionGatedAttackRollDefense"),
       expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
       ...BattleEffectOccurrenceTemplateSchemaFields,
+    }),
+  );
+
+type CreatureTypeProtectionActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "creatureTypeProtection" }
+>;
+export type CreatureTypeProtectionTemplate = {
+  readonly effectRef?: never;
+  readonly sourceCombatantId: CombatantId;
+  readonly kind: "creatureTypeProtection";
+  readonly expiresAt: BattleActiveEffectExpiration;
+} & CreatureTypeProtectionPolicy;
+
+const CreatureTypeProtectionMechanicalFields = {
+  sourceCombatantId: CombatantId,
+  kind: Schema.Literal("creatureTypeProtection"),
+  creatureTypes: CreatureTypeProtectionSchema.fields.creatureTypes,
+  protections: CreatureTypeProtectionSchema.fields.protections,
+  expiresAt: BattleActiveEffectExpirationSchema,
+};
+
+export const CreatureTypeProtectionTemplateSchema =
+  exactSchema<CreatureTypeProtectionTemplate>()(
+    Schema.Struct({
+      ...CreatureTypeProtectionMechanicalFields,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
+    }),
+  );
+
+export const CreatureTypeProtectionActiveEffectSchema =
+  exactSchema<CreatureTypeProtectionActiveEffect>()(
+    Schema.Struct({
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      effectRef: BattleEffectExecutionRef,
+      ...CreatureTypeProtectionMechanicalFields,
     }),
   );
 

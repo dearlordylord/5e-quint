@@ -6,7 +6,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { Condition, CreatureType } from "@dnd/shared/game-facts";
+import type { Condition } from "@dnd/shared/game-facts";
 import { movementFeet, type DamageDieSize } from "@dnd/shared/types";
 import { Schema } from "effect";
 import type {
@@ -567,22 +567,3 @@ export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID = holeId(
 );
 export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:hunters-prey:horde-breaker:damage-disposition");
-export const CREATURE_TYPE_PROTECTION_CREATURE_TYPES = [
-  "aberration",
-  "celestial",
-  "elemental",
-  "fey",
-  "fiend",
-  "undead",
-] as const satisfies ReadonlyArray<CreatureType>;
-export const CREATURE_TYPE_DISMISSAL_CREATURE_TYPES = [
-  "celestial",
-  "elemental",
-  "fey",
-  "fiend",
-  "undead",
-] as const satisfies ReadonlyArray<CreatureType>;
-export const CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS = [
-  "charmed",
-  "frightened",
-] as const satisfies ReadonlyArray<Condition>;

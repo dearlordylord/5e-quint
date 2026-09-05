@@ -26,6 +26,7 @@ import {
   type Ability,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
+import { creatureTypeProtectionGrantsAttackDisadvantage } from "../active-effect/creature-type-protection.ts";
 import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
@@ -865,9 +866,10 @@ export function activeEffectGrantsAttackRollMode(
         (effect.kind === "afterHitDamageAndIllumination" &&
           mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
-          effect.attackRollMode === mode &&
+          mode === "disadvantage" &&
           attackerCreatureType !== null &&
-          effect.protectedAgainstCreatureTypes.includes(
+          creatureTypeProtectionGrantsAttackDisadvantage(
+            effect,
             attackerCreatureType,
           )) ||
         (effect.kind === "perceptionGatedAttackRollDefense" &&

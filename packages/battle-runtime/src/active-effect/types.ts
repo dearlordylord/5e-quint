@@ -23,7 +23,6 @@ import type { ArmorClass } from "@dnd/shared-algebras/armor-class-values";
 import type { AttackOnceOrDashDisengageHideUtilizeActionRestriction } from "@dnd/shared-algebras/action-economy-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { CreatureType } from "@dnd/shared/game-facts";
 import type {
   AbilityModifier,
   AttackBonus,
@@ -36,6 +35,7 @@ import type {
 import type { GlyphStoredSpellRelease } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   Ability,
+  CreatureTypeProtection as SurfaceCreatureTypeProtection,
   CreatureSense,
   DamageType,
   DcSource,
@@ -63,7 +63,6 @@ import type {
 import type {
   BattleD20RollModifierKind,
   MARKED_TARGET_FINDING_SKILLS,
-  CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   DuplicateHitInterceptionDuplicateCount,
@@ -167,8 +166,14 @@ export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
 export type SpellConditionAbilityCheckActor =
   (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
-export type CreatureTypeProtectionPreventedCondition =
-  (typeof CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS)[number];
+export type CreatureTypeProtectionPolicy = Pick<
+  SurfaceCreatureTypeProtection,
+  "creatureTypes" | "protections"
+>;
+export type CreatureTypeProtectionPreventedCondition = Extract<
+  Condition,
+  "charmed" | "frightened"
+>;
 export type BattlePossessionAttemptDisposition =
   | {
       readonly tag: "prevented";
@@ -829,14 +834,11 @@ export type BattleActiveEffect = (
         { readonly kind: "duration" }
       >;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "creatureTypeProtection";
-      readonly attackRollMode: "disadvantage";
-      readonly protectedAgainstCreatureTypes: readonly CreatureType[];
-      readonly preventedConditions: readonly CreatureTypeProtectionPreventedCondition[];
-      readonly preventsPossession: boolean;
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      CreatureTypeProtectionPolicy & {
+        readonly kind: "creatureTypeProtection";
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "conditionSavingThrowRollMode";
       readonly condition: Condition;

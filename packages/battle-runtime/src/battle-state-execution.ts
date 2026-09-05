@@ -2501,7 +2501,7 @@ export type CreatureTypeProtectionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureTypeProtection";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly targeting: CreatureTypeProtectionSpellTargeting;
   readonly activeEffect: BattleSpellActiveEffectTemplate<
