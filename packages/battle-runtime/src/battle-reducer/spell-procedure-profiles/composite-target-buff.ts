@@ -126,6 +126,10 @@ type CompositeTargetBuffEffectOccurrence = {
   readonly effect: EffectAtom;
   readonly authoredOrdinal: PositiveInteger;
 };
+type CompositeTargetBuffPhaseSelection = {
+  readonly phase: DirectPhase | undefined;
+  readonly authoredOrdinal: PositiveInteger;
+};
 type CompositeTargetBuffSpeedRatio = Extract<
   EffectAtom,
   { readonly kind: "set_speed_ratio" }
@@ -260,14 +264,38 @@ function compositeTargetBuffIssue(
   };
 }
 
+function compositeTargetBuffPhaseSelection(
+  mechanics: ActivationMechanics,
+): CompositeTargetBuffPhaseSelection {
+  const characteristicPhaseIndex = mechanics.phases.findIndex(
+    (candidate) =>
+      candidate.kind === "direct" &&
+      (candidate.effects ?? []).some(
+        (effect) => effect.kind === "effect_end_target_state",
+      ),
+  );
+  const directPhaseIndex = mechanics.phases.findIndex(
+    (candidate) => candidate.kind === "direct",
+  );
+  const selectedPhaseIndex =
+    characteristicPhaseIndex >= 0
+      ? characteristicPhaseIndex
+      : directPhaseIndex >= 0
+        ? directPhaseIndex
+        : 0;
+  const selectedPhase = mechanics.phases[selectedPhaseIndex];
+  return {
+    phase: selectedPhase?.kind === "direct" ? selectedPhase : undefined,
+    authoredOrdinal: PositiveInteger(selectedPhaseIndex + 1),
+  };
+}
+
 function compositeTargetBuffRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ActivationMechanics {
   return Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) => {
-      const phase = activation.phases.find(
-        (candidate): candidate is DirectPhase => candidate.kind === "direct",
-      );
+      const { phase } = compositeTargetBuffPhaseSelection(activation);
       const effects = (phase?.effects ?? []).flatMap(
         (effect): readonly EffectAtom[] =>
           isEffectAtom(effect) ? [effect] : [],
@@ -460,21 +488,8 @@ function admitCompositeTargetBuffMechanics(
   if (!compositeTargetBuffRepresentation(source.mechanics))
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const semanticIndex = mechanics.phases.findIndex(
-    (candidate) =>
-      candidate.kind === "direct" &&
-      (candidate.effects ?? []).some(
-        (effect) => effect.kind === "effect_end_target_state",
-      ),
-  );
-  const directIndex = mechanics.phases.findIndex(
-    (candidate) => candidate.kind === "direct",
-  );
-  const inspectedIndex =
-    semanticIndex >= 0 ? semanticIndex : directIndex >= 0 ? directIndex : 0;
-  const phaseOrdinal = PositiveInteger(inspectedIndex + 1);
-  const candidatePhase = mechanics.phases[inspectedIndex];
-  const phase = candidatePhase?.kind === "direct" ? candidatePhase : undefined;
+  const { phase, authoredOrdinal: phaseOrdinal } =
+    compositeTargetBuffPhaseSelection(mechanics);
   const authoredEffects = phase?.effects ?? [];
   const effects = authoredEffects.flatMap(
     (effect, index): readonly CompositeTargetBuffEffectOccurrence[] =>
@@ -572,7 +587,7 @@ function admitCompositeTargetBuffMechanics(
   if (mechanics.phases.length === 0)
     push("phaseCount", spellActivationPhasePath(phaseOrdinal));
   for (const [index] of mechanics.phases.entries())
-    if (index !== inspectedIndex)
+    if (PositiveInteger(index + 1) !== phaseOrdinal)
       push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
   if (phase === undefined)
     push("phase", spellActivationPhasePath(phaseOrdinal));

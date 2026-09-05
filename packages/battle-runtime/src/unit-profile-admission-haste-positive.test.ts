@@ -395,6 +395,48 @@ describe("compositeTargetBuffWithAftermath static mechanics admission", () => {
     ]);
   });
 
+  test("selects the characteristic phase behind a leading extra direct phase", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        const characteristicPhase = mechanics.phases[0];
+        if (characteristicPhase?.kind !== "direct")
+          throw new Error("Expected Haste direct mechanics.");
+        const speedRatio = characteristicPhase.effects?.[0];
+        if (speedRatio?.kind !== "set_speed_ratio")
+          throw new Error("Expected Haste's speed-ratio effect.");
+        Reflect.set(speedRatio, "numerator", 3);
+        Reflect.set(mechanics, "phases", [
+          {
+            ...characteristicPhase,
+            effects: [
+              {
+                kind: "audible",
+                audibleRadiusFeet: 30,
+                sound: "synthetic prelude",
+              },
+            ],
+          },
+          characteristicPhase,
+        ]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "speedRatio",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
   test("retains original ordinals when a non-Effect child shifts a malformed owned effect", () => {
     const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
       malformedCompositeTargetBuffSource((mechanics) => {
