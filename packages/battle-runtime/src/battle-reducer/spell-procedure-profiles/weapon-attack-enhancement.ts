@@ -81,10 +81,13 @@ import {
 } from "./spell-mechanics-admission.ts";
 import {
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
+  type UnitMechanicsPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 
@@ -157,15 +160,20 @@ type WeaponAttackEnhancementEffect = Extract<
   EffectAtom,
   { readonly kind: "grant_weapon_attack_enhancement" }
 >;
-type WeaponAttackDamageEnhancementMechanics = Extract<
+type WeaponAttackEnhancementOngoingRoot = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 > & {
-  readonly duration: Extract<
-    BattleSpellAdmissionSource["mechanics"]["duration"],
-    { readonly kind: "timed" }
-  >;
+  readonly initialPhase?: never;
+  readonly authoredConditionalMechanics?: never;
 };
+type WeaponAttackDamageEnhancementMechanics =
+  WeaponAttackEnhancementOngoingRoot & {
+    readonly duration: Extract<
+      BattleSpellAdmissionSource["mechanics"]["duration"],
+      { readonly kind: "timed" }
+    >;
+  };
 
 type WeaponAttackDamageEnhancementMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly durationValue: SpellCanonicalDurationValue;
@@ -184,6 +192,8 @@ const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_FAILED_FACTS = [
   "durationExtension",
   "castingTime",
   "attachment",
+  "initialPhase",
+  "authoredConditionalMechanics",
   "operationCount",
   "operations",
   "operation",
@@ -195,7 +205,7 @@ type WeaponAttackDamageEnhancementFailedFact =
 
 type WeaponAttackDamageEnhancementMechanicsIssue = {
   readonly failedFact: WeaponAttackDamageEnhancementFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly mechanicsPath: UnitMechanicsPath;
 };
 
 const WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS = [
@@ -204,6 +214,19 @@ const WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS = [
   "label",
   "value",
 ] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementAttachment>;
+const WEAPON_ENHANCEMENT_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "initialPhase",
+  "operations",
+  "authoredConditionalMechanics",
+] as const satisfies ReadonlyArray<keyof OngoingEffectMechanics>;
 const WEAPON_ENHANCEMENT_OBJECT_FIELDS = [
   "kind",
   "count",
@@ -329,6 +352,16 @@ function weaponAttackEnhancementComponentsAreSupported(
       components,
       WEAPON_ENHANCEMENT_COMPONENT_FIELDS,
     )
+  );
+}
+
+function weaponAttackEnhancementRootIsSupported(
+  mechanics: OngoingEffectMechanics,
+): mechanics is WeaponAttackEnhancementOngoingRoot {
+  return (
+    mechanics.initialPhase === undefined &&
+    mechanics.authoredConditionalMechanics === undefined &&
+    spellMechanicsObjectHasOnlyKeys(mechanics, WEAPON_ENHANCEMENT_ROOT_FIELDS)
   );
 }
 
@@ -566,7 +599,7 @@ function admitWeaponAttackDamageEnhancementMechanics(
   const issues: WeaponAttackDamageEnhancementMechanicsIssue[] = [];
   const push = (
     failedFact: WeaponAttackDamageEnhancementFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ) => issues.push({ failedFact, mechanicsPath });
 
   if (mechanics.level !== 2) push("level", spellMechanicsHeaderPath("level"));
@@ -590,6 +623,17 @@ function admitWeaponAttackDamageEnhancementMechanics(
   }
   if (!weaponAttackEnhancementCastingTimeIsSupported(mechanics.castingTime)) {
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (
+    !spellMechanicsObjectHasOnlyKeys(mechanics, WEAPON_ENHANCEMENT_ROOT_FIELDS)
+  ) {
+    push("operations", spellMechanicsHeaderPath("family"));
+  }
+  if (mechanics.initialPhase !== undefined) {
+    push("initialPhase", spellOngoingInitialPhasePath());
+  }
+  if (mechanics.authoredConditionalMechanics !== undefined) {
+    push("authoredConditionalMechanics", spellMechanicsRootPath());
   }
   if (!weaponAttackEnhancementAttachmentIsSupported(mechanics.attachment)) {
     push("attachment", spellOngoingAttachmentPath());
@@ -644,6 +688,7 @@ function admitWeaponAttackDamageEnhancementMechanics(
     !weaponAttackEnhancementOperationIsSupported(operation) ||
     !weaponAttackEnhancementOperationHasSupportedEffect(operation) ||
     bonus === undefined ||
+    !weaponAttackEnhancementRootIsSupported(mechanics) ||
     !weaponAttackEnhancementDurationIsSupported(mechanics.duration)
   ) {
     const issue = {

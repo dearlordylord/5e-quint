@@ -6,6 +6,7 @@ import {
   spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   spellOngoingAttachmentPath,
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
@@ -831,23 +832,51 @@ describe("SR-04G-A4 static spell procedure admission", () => {
     ]);
   });
 
-  test("retains weapon-enhancement ownership with an extra root field", () => {
+  test("rejects typed weapon-enhancement root branches while retaining ownership", () => {
     const base = spellRecord("magic_weapon");
-    const mechanics = Object.defineProperty(
-      { ...base.mechanics },
-      "syntheticUnownedField",
+    const initialPhaseSource = spellRecord("spiritual_weapon");
+    const conditionalSource = spellRecord("phantasmal_force");
+    if (
+      base.mechanics.family !== "ongoing_effect" ||
+      initialPhaseSource.mechanics.family !== "ongoing_effect" ||
+      initialPhaseSource.mechanics.initialPhase === undefined ||
+      conditionalSource.mechanics.family !== "ongoing_effect" ||
+      conditionalSource.mechanics.authoredConditionalMechanics?.[0] ===
+        undefined
+    ) {
+      throw new Error("Expected typed ongoing root branch fixtures.");
+    }
+    const cases = [
       {
-        configurable: true,
-        enumerable: true,
-        value: true,
-        writable: true,
+        mechanics: {
+          ...base.mechanics,
+          initialPhase: initialPhaseSource.mechanics.initialPhase,
+        },
+        issue: {
+          failedFact: "initialPhase",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        },
       },
-    );
-    expect(
-      weaponAttackDamageEnhancementProfile.admitMechanics(
-        mechanicsSource({ ...base, mechanics }),
-      ).tag,
-    ).toBe("supported");
+      {
+        mechanics: {
+          ...base.mechanics,
+          authoredConditionalMechanics: [
+            conditionalSource.mechanics.authoredConditionalMechanics[0],
+          ],
+        },
+        issue: {
+          failedFact: "authoredConditionalMechanics",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+      },
+    ];
+    for (const { mechanics, issue } of cases) {
+      const result = weaponAttackDamageEnhancementProfile.admitMechanics(
+        mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
+      );
+      expect(result.tag).toBe("unsupported");
+      expect(issuesOf(result)).toEqual([issue]);
+    }
   });
 
   test("reports the full dependent issue set for deleted and replaced spatial-proxy attachments", () => {
@@ -1244,6 +1273,7 @@ describe("SR-04G-A4 static spell procedure admission", () => {
     [spatialMeleeSpellAttackProxyProfile, "spiritual_weapon", "operation"],
     [spellAttackSequenceProfile, "eldritch_blast", "phase"],
     [spellHostedWeaponAttackProfile, "true_strike", "phase"],
+    [weaponAttackDamageEnhancementProfile, "magic_weapon", "operations"],
   ] as const)(
     "fails $1 closed on an extra owned-root field at the exact path",
     (profile, spellId, failedFact) => {
