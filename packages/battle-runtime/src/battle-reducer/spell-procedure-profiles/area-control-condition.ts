@@ -72,6 +72,7 @@ import {
   spellDurationChildCoordinates,
   spellDurationChildPath,
   spellDurationTicksFromCanonicalValue,
+  spellProcedureHasCompleteSignature,
   spellProcedureNonEmpty,
   spellConsumedMaterialEvidencePaths,
   type SpellMechanicsAdmissionSource,
@@ -258,6 +259,7 @@ function isSaveGatedAreaControlDc(
 
 export const SAVE_GATED_AREA_CONTROL_FAILED_FACTS = [
   "level",
+  "school",
   "castingTime",
   "range",
   "duration",
@@ -340,7 +342,7 @@ function saveGatedAreaControlDurationIssues(
   const endingCount = durationChildren.filter(
     (child) => child.branch === "ending",
   ).length;
-  if (!targetTakesDamageSeen && duration.permanentIfMaintainedFull !== true) {
+  if (!targetTakesDamageSeen) {
     issues.push(
       saveGatedAreaControlIssue(
         "durationEnding",
@@ -351,22 +353,62 @@ function saveGatedAreaControlDurationIssues(
   return issues;
 }
 
+function hasCompleteSaveGatedAreaControlFailedRoleSet(
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  if (phase.onFail.kind !== "composite") return false;
+  const roles = new Set(
+    phase.onFail.effects.flatMap((effect) => {
+      const roleEffect = saveGatedAreaControlFailedRoleEffect(effect);
+      return roleEffect === undefined
+        ? []
+        : [saveGatedAreaControlFailedEffectRole(roleEffect)];
+    }),
+  );
+  return SAVE_GATED_AREA_CONTROL_FAILED_EFFECT_ROLES.every((role) =>
+    roles.has(role),
+  );
+}
+
+function hasCompleteSaveGatedAreaControlEnvelope(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  return spellProcedureHasCompleteSignature([
+    { name: "singlePhase", present: mechanics.phases.length === 1 },
+    { name: "level", present: mechanics.level === 3 },
+    { name: "school", present: mechanics.school === "illusion" },
+    { name: "castingTime", present: mechanics.castingTime.kind === "action" },
+    {
+      name: "range",
+      present:
+        isSaveGatedAreaControlRange(mechanics.range) &&
+        mechanics.range.feet === 120,
+    },
+    {
+      name: "duration",
+      present:
+        isSaveGatedAreaControlDuration(mechanics.duration) &&
+        saveGatedAreaControlDurationIssues(mechanics.duration).length === 0,
+    },
+    { name: "ability", present: isSaveGatedAreaControlAbility(phase.ability) },
+    { name: "dc", present: isSaveGatedAreaControlDc(phase.dc) },
+    {
+      name: "attachment",
+      present: isSaveGatedAreaControlAttachment(phase.attachment),
+    },
+  ]);
+}
+
 function isSaveGatedAreaControlRootShape(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   phase: ActivationPhase | undefined,
 ): phase is Extract<ActivationPhase, { readonly kind: "save_gate" }> {
-  if (phase?.kind !== "save_gate" || phase.onFail.kind !== "composite") {
-    return false;
-  }
-  // Damage-led composite save gates belong to the save-gated-damage owner.
-  if (phase.onFail.effects[0]?.kind === "damage") {
-    return false;
-  }
-  return phase.onFail.effects.some(
-    (effect) =>
-      isApplyConditionEffect(effect, "charmed") ||
-      isApplyConditionEffect(effect, "incapacitated") ||
-      (effect.kind === "set_speed" && effect.feet === 0) ||
-      isSaveGatedAreaControlShakeAwakeEffect(effect),
+  return (
+    phase?.kind === "save_gate" &&
+    phase.onFail.kind === "composite" &&
+    (hasCompleteSaveGatedAreaControlFailedRoleSet(phase) ||
+      hasCompleteSaveGatedAreaControlEnvelope(mechanics, phase))
   );
 }
 
@@ -378,7 +420,7 @@ function admitSaveGatedAreaControlMechanics(
   }
   const mechanics = source.mechanics;
   const phase = source.mechanics.phases[0];
-  if (!isSaveGatedAreaControlRootShape(phase)) {
+  if (!isSaveGatedAreaControlRootShape(mechanics, phase)) {
     return { tag: "notRepresented" };
   }
   const issues: SaveGatedAreaControlIssue[] = [];
@@ -395,6 +437,11 @@ function admitSaveGatedAreaControlMechanics(
   if (source.mechanics.level !== 3) {
     issues.push(
       saveGatedAreaControlIssue("level", spellMechanicsHeaderPath("level")),
+    );
+  }
+  if (source.mechanics.school !== "illusion") {
+    issues.push(
+      saveGatedAreaControlIssue("school", spellMechanicsHeaderPath("school")),
     );
   }
   if (source.mechanics.castingTime.kind !== "action") {
